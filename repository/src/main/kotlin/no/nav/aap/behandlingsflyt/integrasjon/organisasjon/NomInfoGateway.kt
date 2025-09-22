@@ -48,6 +48,19 @@ class NomInfoGateway : AnsattInfoGateway {
         return mapResponse(navIdent, checkNotNull(response.ressurs))
     }
 
+    override fun hentAnsattVisningsnavn(navIdent: String): String {
+        if (Miljø.erLokal()) {
+            return "Isak Sbehandlersen"
+        }
+
+        val request = GraphqlRequest(navnQuery, NomRessursVariables(navIdent))
+        val response = checkNotNull(query(request).data) {
+            "Fant ikke ansatt i NOM"
+        }
+
+        return response.ressurs?.visningsnavn ?: navIdent
+    }
+
     private fun query(request: GraphqlRequest<NomRessursVariables>): GraphQLResponse<NomData> {
         val httpRequest = PostRequest(body = request)
         return requireNotNull(client.post(uri = graphqlUrl, request = httpRequest))
@@ -91,3 +104,20 @@ val ressursQuery = """
       }
     }
 """.trimIndent()
+
+val navnQuery = """
+    query($navIdent: String!) {
+      ressurs(where: {navident: $navIdent}) {
+        visningsnavn
+      }
+    }
+""".trimIndent()
+
+val flereNavnQuery = """
+    ressurser(where: {navidenter: [$navIdenter]}) {
+        ressurs {
+            navident
+            visningsnavn
+        }
+    }
+}

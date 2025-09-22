@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.Azp
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
+import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
@@ -59,6 +60,7 @@ fun NormalOpenAPIRoute.saksApi(
     val tilgangGateway = gatewayProvider.provide<TilgangGateway>()
     val identGateway = gatewayProvider.provide(IdentGateway::class)
     val personinfoGateway = gatewayProvider.provide(PersoninfoGateway::class)
+    val ansattInfoService = AnsattInfoService(gatewayProvider)
 
     route("/api/sak").tag(Tags.Sak) {
         route("/ekstern/finn").authorizedPost<Unit, List<SaksinfoDTO>, FinnSakForIdentDTO>(
@@ -452,7 +454,14 @@ fun NormalOpenAPIRoute.saksApi(
 
                 saksHistorikkService.utledSaksHistorikk(sakId)
             }
-            respond(historikk)
+            val historikkMedVisningsnavn = historikk.map{
+                val nyeHendelser = it.hendelser.map{
+                    val navn = if (it.utførtAv != null) ansattInfoService.hentAnsattNavn(it.utførtAv) else it.utførtAv
+                    it.copy(utførtAv = navn)
+                }
+                it.copy(hendelser = nyeHendelser)
+            }
+            respond(historikkMedVisningsnavn)
         }
     }
 }
