@@ -5,6 +5,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReposito
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -37,11 +39,18 @@ class MottattHendelseService(
 
         log.info("Mottok dokumenthendelse. Brevkategori: ${dto.type} Mottattdato: ${dto.mottattTidspunkt}")
 
-        if (kanIkkeAvbryteRevurdering(dto, behandlingRepository)) {
-            log.warn(
-                "Kan ikke avbryte revurdering når behandling er avsluttet. " +
-                        "Ignorerer dokument med referanse {} og type {}", dto.referanse, dto.type
-            )
+        if (erBehandlingAvsluttetOgKanIkkeOppretteNyttVurderingsbehov(dto, behandlingRepository)) {
+            when (val melding = dto.melding) {
+                is NyÅrsakTilBehandlingV0 -> log.warn(
+                    "Kan ikke opprette nytt vurderingsbehov når behandling er avsluttet. Ignorerer dokument med referanse {} og nyÅrsakTilBehandling: {}",
+                    dto.referanse, melding
+                )
+
+                else -> log.warn(
+                    "Kan ikke opprette nytt vurderingsbehov når behandling er avsluttet. Ignorerer dokument med referanse {} og type {}",
+                    dto.referanse, dto.type
+                )
+            }
             return
         }
 
@@ -63,20 +72,15 @@ class MottattHendelseService(
     }
 }
 
-private fun kanIkkeAvbryteRevurdering(
+private fun erBehandlingAvsluttetOgKanIkkeOppretteNyttVurderingsbehov(
     innsending: Innsending,
     behandlingRepository: BehandlingRepository
 ): Boolean {
-    if (!erRevurderingAvbrutt(innsending)) return false
     if (innsending.referanse.type != InnsendingReferanse.Type.BEHANDLING_REFERANSE) return false
     if (innsending.type != InnsendingType.NY_ÅRSAK_TIL_BEHANDLING) return false
 
     val behandling = behandlingRepository.hent(innsending.referanse.asBehandlingReferanse)
     return behandling.status().erAvsluttet()
-}
-
-private fun erRevurderingAvbrutt(innsending: Innsending): Boolean {
-    return innsending.melding.toString().contains(Vurderingsbehov.REVURDERING_AVBRUTT.toString())
 }
 
 
