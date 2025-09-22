@@ -175,7 +175,6 @@ class VurderLovvalgSteg private constructor(
         if (alleVilkårOppfylt
             && grunnlag.medlemskapArbeidInntektGrunnlag?.manuellVurdering == null
             && !manueltTriggetVurderingsbehov(kontekst)
-            && !manueltTriggetLøsning(avklaringsbehovene)
         ) {
             avklaringsbehovService.avbrytForSteg(kontekst.behandlingId, type())
         }
