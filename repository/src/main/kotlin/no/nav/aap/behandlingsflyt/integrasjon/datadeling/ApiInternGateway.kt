@@ -150,6 +150,7 @@ class ApiInternGatewayImpl() : ApiInternGateway {
             restClient.post(
                 uri.resolve("/api/insert/meldekort-detaljer"),
                 PostRequest(body = detaljertMeldekortListe),
+                mapper = { _, _ -> }
             )
         } catch (e: Exception) {
             log.warn("Klarte ikke sende meldekort-detaljer. Feil:", e)
