@@ -2,9 +2,13 @@ package no.nav.aap.behandlingsflyt.hendelse.mottak
 
 import no.nav.aap.behandlingsflyt.dokumentHendelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.repository.RepositoryProvider
@@ -15,11 +19,13 @@ class MottattHendelseService(
     private val sakRepository: SakRepository,
     private val mottattDokumentRepository: MottattDokumentRepository,
     private val flytJobbRepository: FlytJobbRepository,
+    private val behandlingRepository: BehandlingRepository
 ) {
     constructor(repositoryProvider: RepositoryProvider) : this(
         sakRepository = repositoryProvider.provide<SakRepository>(),
         mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>(),
-        flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
+        flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>(),
+        behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
     )
 
     private val log = LoggerFactory.getLogger(MottattHendelseService::class.java)
@@ -30,6 +36,14 @@ class MottattHendelseService(
         val sak = sakRepository.hent(dto.saksnummer)
 
         log.info("Mottok dokumenthendelse. Brevkategori: ${dto.type} Mottattdato: ${dto.mottattTidspunkt}")
+
+        if (kanIkkeAvbryteRevurdering(dto, behandlingRepository)) {
+            log.warn(
+                "Kan ikke avbryte revurdering når behandling er avsluttet. " +
+                        "Ignorerer dokument med referanse {} og type {}", dto.referanse, dto.type
+            )
+            return
+        }
 
         if (kjennerTilDokumentFraFør(dto, sak, mottattDokumentRepository)) {
             log.warn("Allerede håndtert dokument med referanse {}", dto.referanse)
@@ -48,6 +62,23 @@ class MottattHendelseService(
         }
     }
 }
+
+private fun kanIkkeAvbryteRevurdering(
+    innsending: Innsending,
+    behandlingRepository: BehandlingRepository
+): Boolean {
+    if (!erRevurderingAvbrutt(innsending)) return false
+    if (innsending.referanse.type != InnsendingReferanse.Type.BEHANDLING_REFERANSE) return false
+    if (innsending.type != InnsendingType.NY_ÅRSAK_TIL_BEHANDLING) return false
+
+    val behandling = behandlingRepository.hent(innsending.referanse.asBehandlingReferanse)
+    return behandling.status().erAvsluttet()
+}
+
+private fun erRevurderingAvbrutt(innsending: Innsending): Boolean {
+    return innsending.melding.toString().contains(Vurderingsbehov.REVURDERING_AVBRUTT.toString())
+}
+
 
 private fun kjennerTilDokumentFraFør(
     innsending: Innsending,
