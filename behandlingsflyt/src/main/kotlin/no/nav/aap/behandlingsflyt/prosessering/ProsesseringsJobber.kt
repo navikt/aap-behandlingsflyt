@@ -8,7 +8,7 @@ object ProsesseringsJobber {
         // Legger her alle oppgavene som skal utføres i systemet
         return listOf(
             ProsesserBehandlingJobbUtfører,
-            StoppetHendelseJobbUtfører,
+            VarsleOppgaveOmHendelseJobbUtFører,
             GjenopptaBehandlingJobbUtfører,
             HendelseMottattHåndteringJobbUtfører,
             StatistikkJobbUtfører,

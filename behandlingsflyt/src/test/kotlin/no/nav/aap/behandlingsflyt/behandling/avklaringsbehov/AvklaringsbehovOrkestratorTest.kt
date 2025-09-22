@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
-import no.nav.aap.behandlingsflyt.prosessering.StoppetHendelseJobbUtfører
+import no.nav.aap.behandlingsflyt.prosessering.VarsleOppgaveOmHendelseJobbUtFører
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -49,7 +49,7 @@ class AvklaringsbehovOrkestratorTest {
         }
         assertThat(uthentedeJobber).haveAtLeastOne(
             Condition(
-                { it == StoppetHendelseJobbUtfører.type },
+                { it == VarsleOppgaveOmHendelseJobbUtFører.type },
                 "skal være av rett type"
             )
         )
