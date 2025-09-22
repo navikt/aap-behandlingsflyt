@@ -73,6 +73,8 @@ class VurderLovvalgSteg private constructor(
                     .vurder(grunnlag.value)
                 vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
 
+                avbrytTidligereUnødvendigeBehov(kontekst, grunnlag.value)
+
                 if (norgeIkkeKompetentStat(kontekst)) {
                     return FantVentebehov(
                         Ventebehov(
@@ -164,6 +166,18 @@ class VurderLovvalgSteg private constructor(
     private fun manueltTriggetVurderingsbehov(kontekst: FlytKontekstMedPerioder): Boolean {
         return kontekst.vurderingsbehovRelevanteForSteg
             .any { it == Vurderingsbehov.REVURDER_LOVVALG || it == Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP }
+    }
+
+    private fun avbrytTidligereUnødvendigeBehov(kontekst: FlytKontekstMedPerioder, grunnlag: MedlemskapLovvalgGrunnlag) {
+        val alleVilkårOppfylt =
+            vilkårsresultatRepository.hent(kontekst.behandlingId).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
+                .all { it.erOppfylt() }
+        if (alleVilkårOppfylt
+            && grunnlag.medlemskapArbeidInntektGrunnlag?.manuellVurdering == null
+            && !manueltTriggetVurderingsbehov(kontekst)
+        ) {
+            avklaringsbehovService.avbrytForSteg(kontekst.behandlingId, type())
+        }
     }
 
     private fun hentGrunnlag(sakId: SakId, behandlingId: BehandlingId): MedlemskapLovvalgGrunnlag {
