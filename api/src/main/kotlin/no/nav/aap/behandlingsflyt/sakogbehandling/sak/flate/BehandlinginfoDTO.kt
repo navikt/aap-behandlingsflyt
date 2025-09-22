@@ -13,5 +13,5 @@ data class BehandlinginfoDTO(
     val status: Status,
     val vurderingsbehov: List<Vurderingsbehov>,
     val årsakTilOpprettelse: ÅrsakTilOpprettelse?,
-    val opprettet: LocalDateTime,
+    val opprettet: LocalDateTime
 )

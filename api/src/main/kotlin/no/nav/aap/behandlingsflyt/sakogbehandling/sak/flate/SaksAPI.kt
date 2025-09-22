@@ -322,8 +322,6 @@ fun NormalOpenAPIRoute.saksApi(
                                 søknadErTrukket =
                                     resultatUtleder.utledResultatFørstegangsBehandling(behandling) == Resultat.TRUKKET
                             }
-
-
                             val vurderingsbehov = behandling.vurderingsbehov().map(VurderingsbehovMedPeriode::type)
                             BehandlinginfoDTO(
                                 referanse = behandling.referanse.referanse,
@@ -331,7 +329,7 @@ fun NormalOpenAPIRoute.saksApi(
                                 status = behandling.status(),
                                 vurderingsbehov = vurderingsbehov,
                                 årsakTilOpprettelse = behandling.årsakTilOpprettelse,
-                                opprettet = behandling.opprettetTidspunkt,
+                                opprettet = behandling.opprettetTidspunkt
                             )
                         }
 
