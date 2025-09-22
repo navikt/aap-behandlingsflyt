@@ -25,7 +25,7 @@ dependencies {
     implementation(libs.tidslinje)
     implementation(kotlin("reflect"))
     implementation("org.flywaydb:flyway-database-postgresql:11.13.1")
-    runtimeOnly("org.postgresql:postgresql:42.7.8")
+    runtimeOnly("org.postgresql:postgresql:42.7.7")
 
 
     testImplementation(project(":lib-test"))
