@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.UnparsedStrukturertDokument
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterMottattDokumentService
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Klage
@@ -20,6 +21,7 @@ import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import no.nav.aap.verdityper.dokument.Kanal
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
+import java.util.UUID
 
 private const val BREVKODE = "brevkode"
 private const val KANAL = "kanal"
@@ -70,7 +72,7 @@ class HendelseMottattHåndteringJobbUtfører(
                 require(parsedMelding is NyÅrsakTilBehandlingV0) { "Melding må være av typen NyÅrsakTilBehandlingV0" }
                 håndterMottattDokumentService.oppdaterÅrsakerTilBehandlingPåEksisterendeÅpenBehandling(
                     sakId = sakId,
-                    behandlingsreferanse = referanse.asBehandlingReferanse,
+                    behandlingsreferanse = BehandlingReferanse(UUID.fromString(parsedMelding.behandlingReferanse)),
                     innsendingType = innsendingType,
                     melding = parsedMelding
                 )
