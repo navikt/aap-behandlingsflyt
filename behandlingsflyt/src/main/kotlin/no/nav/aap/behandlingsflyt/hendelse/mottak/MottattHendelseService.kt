@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.hendelse.mottak
 
 import no.nav.aap.behandlingsflyt.dokumentHendelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
@@ -14,6 +15,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import org.slf4j.LoggerFactory
+import java.util.*
 
 class MottattHendelseService(
     private val sakRepository: SakRepository,
@@ -77,11 +79,18 @@ private fun erBehandlingAvsluttetOgKanIkkeOppretteNyttVurderingsbehov(
     innsending: Innsending,
     behandlingRepository: BehandlingRepository
 ): Boolean {
-    if (innsending.referanse.type != InnsendingReferanse.Type.BEHANDLING_REFERANSE) return false
-    if (innsending.type != InnsendingType.NY_ÅRSAK_TIL_BEHANDLING) return false
+    if (innsending.referanse.type != InnsendingReferanse.Type.SAKSBEHANDLER_KELVIN_REFERANSE ||
+        innsending.type != InnsendingType.NY_ÅRSAK_TIL_BEHANDLING
+    ) {
+        return false
+    }
 
-    val behandling = behandlingRepository.hent(innsending.referanse.asBehandlingReferanse)
-    return behandling.status().erAvsluttet()
+    val melding = innsending.melding
+    if (melding is NyÅrsakTilBehandlingV0) {
+        val behandling = behandlingRepository.hent(BehandlingReferanse(UUID.fromString(melding.behandlingReferanse)))
+        return behandling.status().erAvsluttet()
+    }
+    return false
 }
 
 
