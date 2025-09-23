@@ -169,6 +169,8 @@ class StatistikkJobbUtfører(
                 Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT
                 Vurderingsbehov.OVERGANG_UFORE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.OVERGANG_UFORE
                 Vurderingsbehov.OVERGANG_ARBEID -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.OVERGANG_ARBEID
+                Vurderingsbehov.DØDSFALL_BRUKER -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.DØDSFALL_BRUKER
+                Vurderingsbehov.DØDSFALL_BARN -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.DØDSFALL_BARN
             }
         }.distinct()
 
