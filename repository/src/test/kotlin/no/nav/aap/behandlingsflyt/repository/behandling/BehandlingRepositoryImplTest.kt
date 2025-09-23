@@ -107,7 +107,13 @@ internal class BehandlingRepositoryImplTest {
 
             assertThat(hententMedReferanse.referanse).isEqualTo(skapt.referanse)
             assertThat(hententMedReferanse.vurderingsbehov()).containsExactlyElementsOf(skapt.vurderingsbehov())
-            assertThat(hententMedReferanse.vurderingsbehov()).containsExactlyElementsOf(listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTTATT_SØKNAD)))
+            assertThat(hententMedReferanse.vurderingsbehov()).containsExactlyElementsOf(
+                listOf(
+                    VurderingsbehovMedPeriode(
+                        type = Vurderingsbehov.MOTTATT_SØKNAD
+                    )
+                )
+            )
             assertThat(hententMedReferanse.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
             assertThat(hententMedReferanse.årsakTilOpprettelse).isEqualTo(ÅrsakTilOpprettelse.SØKNAD)
         }
@@ -286,7 +292,8 @@ internal class BehandlingRepositoryImplTest {
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
             // Legger til nye vurderingsbehov og årsak
-            finnEllerOpprettBehandling(connection, sak,
+            finnEllerOpprettBehandling(
+                connection, sak,
                 vurderingsbehov = listOf(
                     VurderingsbehovMedPeriode(
                         type = Vurderingsbehov.BARNETILLEGG
@@ -304,13 +311,66 @@ internal class BehandlingRepositoryImplTest {
 
             val vurderingsbehovOgÅrsakSøknad = vurderingsbehovOgÅrsaker.find { it.årsak == ÅrsakTilOpprettelse.SØKNAD }
             assertThat(vurderingsbehovOgÅrsakSøknad).isNotNull
-            assertThat(vurderingsbehovOgÅrsakSøknad?.vurderingsbehov?.map { it.type})
+            assertThat(vurderingsbehovOgÅrsakSøknad?.vurderingsbehov?.map { it.type })
                 .containsExactlyInAnyOrder(Vurderingsbehov.MOTTATT_SØKNAD)
 
-            val vurderingbehovOgÅrsakManuellOpprettelse = vurderingsbehovOgÅrsaker.find { it.årsak == ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE }
+            val vurderingbehovOgÅrsakManuellOpprettelse =
+                vurderingsbehovOgÅrsaker.find { it.årsak == ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE }
             assertThat(vurderingbehovOgÅrsakManuellOpprettelse).isNotNull
             assertThat(vurderingbehovOgÅrsakManuellOpprettelse?.vurderingsbehov?.map { it.type })
                 .containsExactlyInAnyOrder(Vurderingsbehov.BARNETILLEGG, Vurderingsbehov.REVURDER_MEDLEMSKAP)
+        }
+    }
+
+    @Test
+    fun `Kan hente lagre duplikate vurderingsbehov`() {
+        dataSource.transaction { connection ->
+            val behandlingRepository = BehandlingRepositoryImpl(connection)
+
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+
+            // Simuler meldekort og korrigering av samme meldekort
+            // Første meldekort
+            finnEllerOpprettBehandling(
+                connection, sak,
+                vurderingsbehov = listOf(
+                    VurderingsbehovMedPeriode(
+                        type = Vurderingsbehov.MOTTATT_MELDEKORT,
+                        periode = sak.rettighetsperiode,
+                    ),
+                ),
+                årsakTilOpprettelse = ÅrsakTilOpprettelse.MELDEKORT
+            )
+            // Korrigering av meldekort (samme periode)
+            finnEllerOpprettBehandling(
+                connection, sak,
+                vurderingsbehov = listOf(
+                    VurderingsbehovMedPeriode(
+                        type = Vurderingsbehov.MOTTATT_MELDEKORT,
+                        periode = sak.rettighetsperiode,
+                    ),
+                ),
+                årsakTilOpprettelse = ÅrsakTilOpprettelse.MELDEKORT
+            )
+
+            val vurderingsbehovOgÅrsaker = behandlingRepository.hentVurderingsbehovOgÅrsaker(behandling.id)
+            assertThat(vurderingsbehovOgÅrsaker).hasSize(2)
+            assertThat(vurderingsbehovOgÅrsaker.map { Pair(it.årsak, it.vurderingsbehov) })
+                .containsExactlyInAnyOrder(
+                    ÅrsakTilOpprettelse.SØKNAD to listOf(
+                        VurderingsbehovMedPeriode(
+                            type = Vurderingsbehov.MOTTATT_SØKNAD,
+                            periode = null
+                        )
+                    ),
+                    ÅrsakTilOpprettelse.MELDEKORT to listOf(
+                        VurderingsbehovMedPeriode(
+                            type = Vurderingsbehov.MOTTATT_MELDEKORT,
+                            periode = sak.rettighetsperiode
+                        )
+                    )
+                )
         }
     }
 
