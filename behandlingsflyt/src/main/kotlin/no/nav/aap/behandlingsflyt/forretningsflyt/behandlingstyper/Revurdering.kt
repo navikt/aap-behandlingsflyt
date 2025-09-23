@@ -127,6 +127,16 @@ object Revurdering : BehandlingType {
                 )
             )
             .medSteg(
+                steg = VurderBistandsbehovSteg, vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.MOTTATT_DIALOGMELDING,
+                    Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
+                    Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
+                    Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
+                    Vurderingsbehov.HELHETLIG_VURDERING,
+                )
+            )
+            .medSteg(
                 steg = FritakMeldepliktSteg, vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
                     Vurderingsbehov.MOTTATT_DIALOGMELDING,
@@ -138,16 +148,6 @@ object Revurdering : BehandlingType {
             )
             .medSteg(
                 steg = FastsettArbeidsevneSteg, vurderingsbehovRelevanteForSteg = listOf(
-                    Vurderingsbehov.MOTTATT_SØKNAD,
-                    Vurderingsbehov.MOTTATT_DIALOGMELDING,
-                    Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
-                    Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
-                    Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
-                    Vurderingsbehov.HELHETLIG_VURDERING,
-                )
-            )
-            .medSteg(
-                steg = VurderBistandsbehovSteg, vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
                     Vurderingsbehov.MOTTATT_DIALOGMELDING,
                     Vurderingsbehov.MOTTATT_LEGEERKLÆRING,

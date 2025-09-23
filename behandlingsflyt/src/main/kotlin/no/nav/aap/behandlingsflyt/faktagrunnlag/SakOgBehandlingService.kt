@@ -223,7 +223,7 @@ class SakOgBehandlingService(
             sakId = sakId,
             vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
                 vurderingsbehov = listOf(VurderingsbehovMedPeriode(vurderingsbehov)),
-                årsak = ÅrsakTilOpprettelse.AKTIVITETSPLIKT
+                årsak = ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
             ),
             typeBehandling = behandlingstype,
             forrigeBehandlingId = forrige,

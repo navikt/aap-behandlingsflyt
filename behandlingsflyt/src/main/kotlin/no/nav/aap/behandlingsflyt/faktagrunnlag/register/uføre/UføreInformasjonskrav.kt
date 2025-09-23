@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
 import java.time.Duration
 
 class UføreInformasjonskrav(
@@ -34,6 +35,7 @@ class UføreInformasjonskrav(
     )
 
     override val navn = Companion.navn
+    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun erRelevant(
         kontekst: FlytKontekstMedPerioder,
@@ -46,11 +48,13 @@ class UføreInformasjonskrav(
     }
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
+        log.info("Oppdaterer uførehistorikk for behandlingen")
         val behandlingId = kontekst.behandlingId
         val uføregrader = hentUføregrader(behandlingId)
         val eksisterendeGrunnlag = uføreRepository.hentHvisEksisterer(behandlingId)
 
         if (harEndringerUføre(eksisterendeGrunnlag, uføregrader)) {
+            log.info("Fant endringer i uførehistorikk for behandlingen")
             uføreRepository.lagre(behandlingId, uføregrader)
             return ENDRET
         }
@@ -88,7 +92,11 @@ class UføreInformasjonskrav(
             eksisterende: UføreGrunnlag?,
             uføregrader: List<Uføre>
         ): Boolean {
-            return eksisterende == null || uføregrader.toSet() != eksisterende.vurderinger.toSet()
+            return if (eksisterende == null) {
+                uføregrader.isNotEmpty()
+            } else {
+                uføregrader.toSet() != eksisterende.vurderinger.toSet()
+            }
         }
     }
 }

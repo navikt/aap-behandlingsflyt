@@ -4033,14 +4033,15 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         val trekkKlageBehandling = sendInnDokument(
             ident, NyÅrsakTilBehandlingHendelse(
                 referanse = InnsendingReferanse(
-                    type = InnsendingReferanse.Type.BEHANDLING_REFERANSE,
+                    type = InnsendingReferanse.Type.SAKSBEHANDLER_KELVIN_REFERANSE,
                     verdi = klagebehandling.referanse.referanse.toString()
                 ),
                 mottattTidspunkt = LocalDateTime.now().minusMonths(4),
                 innsendingType = InnsendingType.NY_ÅRSAK_TIL_BEHANDLING,
                 strukturertDokument = StrukturertDokument(
                     NyÅrsakTilBehandlingV0(
-                        årsakerTilBehandling = listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.KLAGE_TRUKKET)
+                        årsakerTilBehandling = listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.KLAGE_TRUKKET),
+                        klagebehandling.referanse.referanse.toString()
                     ),
                 ),
                 periode = periode
@@ -4528,8 +4529,16 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             NyÅrsakTilBehandlingHendelse(
                 LocalDateTime.now(),
                 InnsendingType.NY_ÅRSAK_TIL_BEHANDLING,
-                InnsendingReferanse(InnsendingReferanse.Type.BEHANDLING_REFERANSE, revurdering1.referanse.toString()),
-                StrukturertDokument(NyÅrsakTilBehandlingV0(listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDERING_AVBRUTT))),
+                InnsendingReferanse(
+                    InnsendingReferanse.Type.SAKSBEHANDLER_KELVIN_REFERANSE,
+                    UUID.randomUUID().toString()
+                ),
+                StrukturertDokument(
+                    NyÅrsakTilBehandlingV0(
+                        listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDERING_AVBRUTT),
+                        revurdering1.referanse.toString()
+                    )
+                ),
                 sak.rettighetsperiode
             )
         )

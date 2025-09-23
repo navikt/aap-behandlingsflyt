@@ -35,7 +35,10 @@ class MottattHendelseService(
     ) {
         val sak = sakRepository.hent(dto.saksnummer)
 
-        log.info("Mottok dokumenthendelse. Brevkategori: ${dto.type} Mottattdato: ${dto.mottattTidspunkt}")
+        when (val melding = dto.melding) {
+            is NyÅrsakTilBehandlingV0 -> log.info("Mottok dokumenthendelse. Brevkategori: ${dto.type} Mottattdato: ${dto.mottattTidspunkt} Referanse: ${dto.referanse} behandlingReferanse: ${melding.behandlingReferanse} Årsak: ${melding.årsakerTilBehandling}")
+            else -> log.info("Mottok dokumenthendelse. Brevkategori: ${dto.type} Mottattdato: ${dto.mottattTidspunkt} Referanse: ${dto.referanse}")
+        }
 
         if (erBehandlingAvsluttetOgKanIkkeOppretteNyttVurderingsbehov(dto, behandlingRepository)) {
             when (val melding = dto.melding) {

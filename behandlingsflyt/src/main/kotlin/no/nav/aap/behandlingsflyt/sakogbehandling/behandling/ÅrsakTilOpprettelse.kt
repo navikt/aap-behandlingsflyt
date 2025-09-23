@@ -17,6 +17,7 @@ enum class ÅrsakTilOpprettelse {
 
     // Oppfølgingsbehandling
     OPPFØLGINGSOPPGAVE,
+    OPPFØLGINGSOPPGAVE_SAMORDNING_GRADERING,
 
     // Klage-behandling
     SVAR_FRA_KLAGEINSTANS,

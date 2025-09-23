@@ -39,7 +39,7 @@ class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::
         val oppfølgingsbehandling = sendInnDokument(
             ident, DokumentMottattPersonHendelse(
                 referanse = InnsendingReferanse(
-                    InnsendingReferanse.Type.BEHANDLING_REFERANSE,
+                    InnsendingReferanse.Type.SAKSBEHANDLER_KELVIN_REFERANSE,
                     UUID.randomUUID().toString(),
                 ),
                 mottattTidspunkt = LocalDateTime.now().minusMonths(3),
@@ -103,7 +103,7 @@ class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::
         sendInnDokument(
             ident, DokumentMottattPersonHendelse(
                 referanse = InnsendingReferanse(
-                    InnsendingReferanse.Type.BEHANDLING_REFERANSE,
+                    InnsendingReferanse.Type.SAKSBEHANDLER_KELVIN_REFERANSE,
                     UUID.randomUUID().toString(),
                 ),
                 mottattTidspunkt = LocalDateTime.now().minusMonths(3),
