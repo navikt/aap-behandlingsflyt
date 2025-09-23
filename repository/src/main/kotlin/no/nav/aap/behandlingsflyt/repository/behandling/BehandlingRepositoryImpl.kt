@@ -436,6 +436,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         val vurderingsbehovQuery = """
             INSERT INTO vurderingsbehov (behandling_id, aarsak, periode, behandling_aarsak_id)
             VALUES (?, ?, ?::daterange, ?)
+            ON CONFLICT DO NOTHING
         """.trimIndent()
 
         connection.executeBatch(vurderingsbehovQuery, vurderingsbehovOgÅrsak.vurderingsbehov) {

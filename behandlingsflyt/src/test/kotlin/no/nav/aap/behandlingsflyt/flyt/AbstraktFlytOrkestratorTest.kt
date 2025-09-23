@@ -827,7 +827,9 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
     ): Behandling {
         hendelsesMottak.håndtere(ident, hendelse)
         motor.kjørJobber()
-        return hentBehandling(hendelse.referanse.asBehandlingReferanse)
+        val behandlingsreferanse =
+            BehandlingReferanse(UUID.fromString(hendelse.strukturertDokument?.data?.behandlingReferanse))
+        return hentBehandling(behandlingsreferanse)
     }
 
     protected fun hentBrevAvType(behandling: Behandling, typeBrev: TypeBrev) =

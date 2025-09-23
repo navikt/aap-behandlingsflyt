@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.hendelse.mottak
 import no.nav.aap.behandlingsflyt.dokumentHendelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -29,7 +30,10 @@ class MottattHendelseService(
     ) {
         val sak = sakRepository.hent(dto.saksnummer)
 
-        log.info("Mottok dokumenthendelse. Brevkategori: ${dto.type} Mottattdato: ${dto.mottattTidspunkt}")
+        when (val melding = dto.melding) {
+            is NyÅrsakTilBehandlingV0 -> log.info("Mottok dokumenthendelse. Brevkategori: ${dto.type} Mottattdato: ${dto.mottattTidspunkt} Referanse: ${dto.referanse} behandlingReferanse: ${melding.behandlingReferanse} Årsak: ${melding.årsakerTilBehandling}")
+            else -> log.info("Mottok dokumenthendelse. Brevkategori: ${dto.type} Mottattdato: ${dto.mottattTidspunkt} Referanse: ${dto.referanse}")
+        }
 
         if (kjennerTilDokumentFraFør(dto, sak, mottattDokumentRepository)) {
             log.warn("Allerede håndtert dokument med referanse {}", dto.referanse)
