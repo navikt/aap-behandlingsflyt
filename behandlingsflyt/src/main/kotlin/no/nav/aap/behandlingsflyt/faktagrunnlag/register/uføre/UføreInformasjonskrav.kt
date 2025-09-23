@@ -88,7 +88,11 @@ class UføreInformasjonskrav(
             eksisterende: UføreGrunnlag?,
             uføregrader: List<Uføre>
         ): Boolean {
-            return eksisterende == null || uføregrader.toSet() != eksisterende.vurderinger.toSet()
+            return if (eksisterende == null) {
+                uføregrader.isNotEmpty()
+            } else {
+                uføregrader.toSet() != eksisterende.vurderinger.toSet()
+            }
         }
     }
 }
