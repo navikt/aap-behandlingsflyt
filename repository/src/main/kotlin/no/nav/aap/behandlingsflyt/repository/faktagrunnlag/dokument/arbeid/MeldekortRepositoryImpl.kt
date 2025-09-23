@@ -59,7 +59,11 @@ class MeldekortRepositoryImpl(private val connection: DBConnection) : MeldekortR
                 setLong(1, meldekorteneId)
             }
             setRowMapper {
-                Meldekort(JournalpostId(it.getString("journalpost")), hentTimerPerPeriode(it.getLong("id")), mottattTidspunkt = it.getLocalDateTime("mottatt_tidspunkt"))
+                Meldekort(
+                    JournalpostId(it.getString("journalpost")),
+                    hentTimerPerPeriode(it.getLong("id")),
+                    it.getLocalDateTime("mottatt_tidspunkt")
+                )
             }
         }.toSet()
 
@@ -184,12 +188,14 @@ class MeldekortRepositoryImpl(private val connection: DBConnection) : MeldekortR
 
         val meldekorteneIds = getMeldekorteneIds(behandlingId)
         val meldekortIds = getMeldekortIds(meldekorteneIds)
-        val deletedRows = connection.executeReturnUpdated("""
+        val deletedRows = connection.executeReturnUpdated(
+            """
             delete from meldekort_grunnlag where behandling_id = ?; 
             delete from meldekort_periode where meldekort_id = ANY(?::bigint[]);
             delete from meldekort where meldekortene_id = ANY(?::bigint[]);
             delete from meldekortene where id = ANY(?::bigint[]);
-        """.trimIndent()) {
+        """.trimIndent()
+        ) {
             setParams {
                 setLong(1, behandlingId.id)
                 setLongArray(2, meldekortIds)
