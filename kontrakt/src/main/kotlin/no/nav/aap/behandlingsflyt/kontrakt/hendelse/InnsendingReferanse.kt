@@ -14,6 +14,8 @@ public data class InnsendingReferanse(
         BRUDD_AKTIVITETSPLIKT_INNSENDING_ID,
         AVVIST_LEGEERKLÆRING_ID,
         REVURDERING_ID,
+        @Deprecated(message = "Brukes ikke lenger, beholdes for bakoverkompatibilitet")
+        BEHANDLING_REFERANSE,
         SAKSBEHANDLER_KELVIN_REFERANSE,
         MANUELL_OPPRETTELSE,
         KABAL_HENDELSE_ID
