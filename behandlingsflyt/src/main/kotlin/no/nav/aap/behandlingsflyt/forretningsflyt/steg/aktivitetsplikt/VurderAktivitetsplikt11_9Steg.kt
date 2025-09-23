@@ -24,6 +24,12 @@ class VurderAktivitetsplikt11_9Steg(
                 "Steg ${StegType.VURDER_AKTIVITETSPLIKT_11_9} er deaktivert i unleash, kan ikke utføre steg."
             )
         }
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+
+        if (!avklaringsbehovene.erVurdertTidligereIBehandlingen(Definisjon.VURDER_BRUDD_11_9)) {
+            return FantAvklaringsbehov(Definisjon.VURDER_BRUDD_11_9)
+        }
+        
         return Fullført
     }
 
