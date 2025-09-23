@@ -39,7 +39,10 @@ enum class Vurderingsbehov {
     AKTIVITETSPLIKT_11_9,
     EFFEKTUER_AKTIVITETSPLIKT,
     OVERGANG_UFORE,
-    OVERGANG_ARBEID;
+    OVERGANG_ARBEID,
+    DØDSFALL_BRUKER,
+    DØDSFALL_BARN,
+    ;
 
     companion object {
         /**
@@ -100,4 +103,6 @@ fun EksponertÅrsak.tilVurderingsbehov() =
         EksponertÅrsak.EFFEKTUER_AKTIVITETSPLIKT -> Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT
         EksponertÅrsak.OVERGANG_UFORE -> Vurderingsbehov.OVERGANG_UFORE
         EksponertÅrsak.OVERGANG_ARBEID -> Vurderingsbehov.OVERGANG_ARBEID
+        EksponertÅrsak.DØDSFALL_BRUKER -> Vurderingsbehov.DØDSFALL_BRUKER
+        EksponertÅrsak.DØDSFALL_BARN -> Vurderingsbehov.DØDSFALL_BARN
     }
