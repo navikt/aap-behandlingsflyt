@@ -97,7 +97,6 @@ object Revurdering : BehandlingType {
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
                     Vurderingsbehov.HELHETLIG_VURDERING,
-                    Vurderingsbehov.DØDSFALL_BRUKER,
                 )
             )
             .medSteg(
