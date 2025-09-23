@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.prosessering.StoppetHendelseJobbUtfører
+import no.nav.aap.behandlingsflyt.prosessering.VarsleOppgaveOmHendelseJobbUtFører
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
@@ -52,7 +52,7 @@ class BehandlingHendelseServiceImplTest {
         behandlingHendelseSerice.stoppet(behandling, avklaringsbehovene)
 
         val hendelse = InMemoryFlytJobbRepository.hentJobberForBehandling(behandling.id.toLong())
-            .single { it.type() == StoppetHendelseJobbUtfører.type }
+            .single { it.type() == VarsleOppgaveOmHendelseJobbUtFører.type }
             .payload<BehandlingFlytStoppetHendelse>()
         assertThat(hendelse.avklaringsbehov.map { it.avklaringsbehovDefinisjon })
             .containsExactly(Definisjon.AVKLAR_STUDENT, Definisjon.AVKLAR_SYKDOM, Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP)

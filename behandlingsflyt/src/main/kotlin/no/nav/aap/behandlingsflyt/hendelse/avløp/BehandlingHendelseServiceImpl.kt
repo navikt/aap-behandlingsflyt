@@ -46,7 +46,7 @@ import no.nav.aap.behandlingsflyt.prosessering.DatadelingMeldePerioderOgSakStatu
 import no.nav.aap.behandlingsflyt.prosessering.DatadelingMeldekortJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.MeldeperiodeTilMeldekortBackendJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.StatistikkJobbUtfører
-import no.nav.aap.behandlingsflyt.prosessering.StoppetHendelseJobbUtfører
+import no.nav.aap.behandlingsflyt.prosessering.VarsleOppgaveOmHendelseJobbUtFører
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
@@ -134,7 +134,7 @@ class BehandlingHendelseServiceImpl(
 
         log.info("Legger til flytjobber til statistikk og stoppethendelse for behandling: ${behandling.id}")
         flytJobbRepository.leggTil(
-            JobbInput(jobb = StoppetHendelseJobbUtfører).medPayload(hendelse)
+            JobbInput(jobb = VarsleOppgaveOmHendelseJobbUtFører).medPayload(hendelse)
                 .forBehandling(sak.id.id, behandling.id.id)
         )
         flytJobbRepository.leggTil(

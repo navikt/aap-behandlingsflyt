@@ -10,7 +10,7 @@ import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import org.slf4j.LoggerFactory
 
 
-class StoppetHendelseJobbUtfører private constructor(
+class VarsleOppgaveOmHendelseJobbUtFører private constructor(
     private val oppgavestyringGateway: OppgavestyringGateway,
 ) : JobbUtfører {
 
@@ -25,13 +25,13 @@ class StoppetHendelseJobbUtfører private constructor(
 
     companion object : ProvidersJobbSpesifikasjon {
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
-            return StoppetHendelseJobbUtfører(
+            return VarsleOppgaveOmHendelseJobbUtFører(
                 gatewayProvider.provide(),
             )
         }
 
         override val type = "flyt.hendelse"
-        override val navn = "Oppgavestyrings hendelse"
+        override val navn = "Oppgavestyringshendelse"
         override val beskrivelse = "Produsere hendelse til oppgavestyring"
     }
 }
