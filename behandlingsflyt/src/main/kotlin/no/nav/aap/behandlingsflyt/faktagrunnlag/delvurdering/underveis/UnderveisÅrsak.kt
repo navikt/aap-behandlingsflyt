@@ -11,6 +11,8 @@ enum class UnderveisÅrsak {
     VARIGHETSKVOTE_BRUKT_OPP,
     BRUDD_PÅ_AKTIVITETSPLIKT_11_7_STANS,
     BRUDD_PÅ_AKTIVITETSPLIKT_11_7_OPPHØR,
+
+    @Suppress("EnumEntryName")
     @Deprecated("Ble delt i to. Brukes fremdeles i dev-db", level = ERROR)
     BRUDD_PÅ_AKTIVITETSPLIKT
 }
