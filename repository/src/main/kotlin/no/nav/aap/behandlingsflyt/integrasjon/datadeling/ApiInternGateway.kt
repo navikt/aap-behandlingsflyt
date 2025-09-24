@@ -13,12 +13,13 @@ import no.nav.aap.behandlingsflyt.kontrakt.datadeling.SakDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.UnderveisDTO
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
-import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -132,19 +133,12 @@ class ApiInternGatewayImpl() : ApiInternGateway {
             })
     }
 
-    override fun sendDetaljertMeldekortListe(detaljertMeldekortListe: List<DetaljertMeldekortDTO>) {
-        if (detaljertMeldekortListe.isEmpty()) {
-            log.info("Ingen meldekort-detaljer å sende")
-            return
-        }
-
-        if (log.isInfoEnabled) {
-            val meldekort = detaljertMeldekortListe.first()
-            val saksnummer = meldekort.saksnummer
-            val fom = meldekort.meldeperiodeFom
-            val tom = meldekort.meldeperiodeTom
-            log.info("Sender meldekort-detaljer for sak=${saksnummer}, meldeperiode=${fom}-${tom}-")
-        }
+    override fun sendDetaljertMeldekortListe(
+        detaljertMeldekortListe: List<DetaljertMeldekortDTO>,
+        sakId: SakId,
+        behandlingId: BehandlingId
+    ) {
+        log.info("Sender meldekort-detaljer for sakId=${sakId}, behandlingId=${behandlingId}")
 
         try {
             restClient.post(
@@ -153,10 +147,9 @@ class ApiInternGatewayImpl() : ApiInternGateway {
                 mapper = { _, _ -> }
             )
         } catch (e: Exception) {
-            log.warn("Klarte ikke sende meldekort-detaljer. Feil:", e)
+            log.warn("Klarte ikke sende meldekort-detaljer for sakId=${sakId}, behandlingId=${behandlingId}", e)
             throw e
         }
-
 
     }
 }
