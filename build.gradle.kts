@@ -4,7 +4,7 @@ allprojects {
     configurations.configureEach {
         resolutionStrategy {
             // Lås postgres-versjonen til en "known good" versjon for nå
-            force("org.postgresql:postgresql:42.7.6")
+            force("org.postgresql:postgresql:42.7.7")
         }
     }
 }
