@@ -150,6 +150,13 @@ internal fun Application.server(
     }
 
     val dataSource = initDatasource(dbConfig)
+    Runtime.getRuntime().addShutdownHook(Thread {
+        try {
+            dataSource.connection.close()
+        } finally {
+            // Ignorer om den feks allerede er closed
+        }
+    })
     Migrering.migrate(dataSource)
     val motor = startMotor(dataSource, repositoryRegistry, gatewayProvider)
 
