@@ -81,10 +81,6 @@ class YrkesskadeInformasjonskrav private constructor(
         val mottattDokumenter = mottattDokumentRepository.hentDokumenterAvType(id, InnsendingType.SØKNAD)
 
         if (harOppgittYrkesskade(mottattDokumenter)) {
-            if (Miljø.er() in listOf(MiljøKode.DEV, MiljøKode.LOKALT)) {
-                return fakeOppgittYrkesskade(periode)
-            }
-
             /* TODO: Modeller og vis informasjon fra søknad i kelvin. */
         }
 
@@ -99,25 +95,6 @@ class YrkesskadeInformasjonskrav private constructor(
             }
             yrkesskadeString == "JA"
         }
-    }
-
-    private fun fakeOppgittYrkesskade(
-        periode: Periode?
-    ): Yrkesskade {
-        check(Miljø.er() in listOf(MiljøKode.DEV, MiljøKode.LOKALT))
-        check(!Miljø.erProd())
-
-        val skadedato = if (periode != null) {
-            periode.fom.minusDays(60)
-        } else {
-            null
-        }
-        return Yrkesskade(
-            ref = "YRK" + "-" + Math.floor(Math.random() * 100),
-            saksnummer = null,
-            kildesystem = "KELVIN",
-            skadedato = skadedato,
-        )
     }
 
     companion object : Informasjonskravkonstruktør {
