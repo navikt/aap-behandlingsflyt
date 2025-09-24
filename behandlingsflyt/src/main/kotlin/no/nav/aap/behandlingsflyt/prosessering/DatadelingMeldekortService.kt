@@ -46,11 +46,21 @@ class DatadelingMeldekortService(
 
         val kontraktObjekter = meldekortene.mapNotNull { meldekort ->
             val arbeidsperiode = arbeidsperiodeFraMeldekort(meldekort)
+            val meldekortetsPeriode = finnMeldekortPeriode(arbeidsperiode, meldekortPeriodene)
+
             if (arbeidsperiode == null) {
-                log.error("Meldekort uten arbeidstimer ble ignorert. journalpostId=${meldekort.journalpostId}, behandlingId=${behandlingId.id}")
+                log.warn(
+                    "Meldekort uten arbeidstimer ble ignorert. " +
+                            "journalpostId=${meldekort.journalpostId}, behandlingId=${behandlingId.id}"
+                )
+                null
+            } else if (meldekortetsPeriode == null) {
+                log.warn(
+                    "Meldekort med arbeidstimer som ikke samsvarer med noen meldekortperiode ble ignorert. " +
+                            "journalpostId=${meldekort.journalpostId}, behandlingId=${behandlingId.id}, arbeidsperiode=$arbeidsperiode"
+                )
                 null
             } else {
-                val meldekortetsPeriode = finnMeldekortPeriode(arbeidsperiode, meldekortPeriodene)
                 tilKontrakt(
                     meldekort,
                     personIdent,
@@ -117,12 +127,14 @@ class DatadelingMeldekortService(
     }
 
     private fun finnMeldekortPeriode(
-        arbeidsperiode: Periode, meldeperioder: List<Periode>
-    ): Periode {
-        return meldeperioder.first {
-            // Alle arbeidsperiodene i meldekortet må være innenfor en og samme meldekortperiode.
-            // MeldekortPerioder overlapper ikke med hverandre.
-            it.inneholder(arbeidsperiode)
+        arbeidsperiode: Periode?, meldeperioder: List<Periode>
+    ): Periode? {
+        return arbeidsperiode?.let {
+            meldeperioder.firstOrNull {
+                // Alle arbeidsperiodene i meldekortet må være innenfor en og samme meldekortperiode.
+                // MeldekortPerioder overlapper ikke med hverandre.
+                it.inneholder(arbeidsperiode)
+            }
         }
     }
 
