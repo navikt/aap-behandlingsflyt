@@ -194,6 +194,9 @@ class BehandlingHendelseServiceImpl(
             ÅrsakTilReturKode.MANGLENDE_UTREDNING -> ÅrsakTilReturKodeKontrakt.MANGLENDE_UTREDNING
             ÅrsakTilReturKode.FEIL_LOVANVENDELSE -> ÅrsakTilReturKodeKontrakt.FEIL_LOVANVENDELSE
             ÅrsakTilReturKode.ANNET -> ÅrsakTilReturKodeKontrakt.ANNET
+            ÅrsakTilReturKode.SKRIVEFEIL -> ÅrsakTilReturKodeKontrakt.SKRIVEFEIL
+            ÅrsakTilReturKode.FOR_DETALJERT -> ÅrsakTilReturKodeKontrakt.FOR_DETALJERT
+            ÅrsakTilReturKode.IKKE_INDIVIDUELL_OG_KONKRET -> ÅrsakTilReturKodeKontrakt.IKKE_INDIVIDUELL_OG_KONKRET
         }
     }
 
