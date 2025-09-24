@@ -319,7 +319,7 @@ val postgresConfig = Properties().apply {
     put("tcpKeepAlive", true) // kreves av Hikari
 
     put("socketTimeout", 300) // sekunder, makstid for overføring av svaret fra db
-    put("statement_timeout", 300) // sekunder, makstid for db til å utføre spørring
+    put("statement_timeout", 300_000) // millisekunder, makstid for db til å utføre spørring
 
     put("logUnclosedConnections", true) // vår kode skal lukke alle connections
     put("logServerErrorDetail", false) // ikke lekk person-data fra queries etc til logger ved feil
