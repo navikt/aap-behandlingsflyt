@@ -16,7 +16,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRe
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettGrunnlagSteg
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -50,52 +49,53 @@ class InntektInformasjonskrav private constructor(
         oppdatert: InformasjonskravOppdatert?
     ): Boolean {
         return kontekst.erFørstegangsbehandlingEllerRevurdering() &&
-                oppdatert.ikkeKjørtSiste(Duration.ofHours(1)) &&
+                (harBehovForOppdaterteInntekter(kontekst) || oppdatert.ikkeKjørtSiste(Duration.ofHours(1))) &&
                 !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
+    }
+
+    private fun harBehovForOppdaterteInntekter(kontekst: FlytKontekstMedPerioder): Boolean {
+        val relevanteÅrEksisterendeGrunnlag = hentHvisEksisterer(kontekst.behandlingId)?.inntekter?.map { it.år }?.toSet() ?: emptySet()
+        val relevanteÅrFraGjeldendeInntektsbehov = hentInntektsbehov(kontekst.behandlingId).utledAlleRelevanteÅr()
+
+        return relevanteÅrEksisterendeGrunnlag != relevanteÅrFraGjeldendeInntektsbehov
     }
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val behandlingId = kontekst.behandlingId
-
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
+        val inntektsbehovRelevanteÅr = hentInntektsbehov(behandlingId).utledAlleRelevanteÅr()
+        val sak = sakService.hent(kontekst.sakId)
 
-        val inntekter =
-            if (!tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, FastsettGrunnlagSteg.type())) {
-                val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
-                val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId)
-                val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
-                val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
-                val uføreGrunnlag = uføreRepository.hentHvisEksisterer(behandlingId)
-
-                if (beregningVurdering?.tidspunktVurdering?.nedsattArbeidsevneDato == null && studentGrunnlag?.studentvurdering?.avbruttStudieDato == null) {
-                    log.error("Verken tidspunktVurdering eller studentGrunnlag fantes. Returner IKKE_ENDRET. BehandlingId $behandlingId. Sak: ${kontekst.sakId}")
-                    return IKKE_ENDRET
-                }
-                val nedsettelsesDato = utledNedsettelsesdato(
-                    beregningVurdering?.tidspunktVurdering?.nedsattArbeidsevneDato,
-                    studentGrunnlag?.studentvurdering?.avbruttStudieDato
-                )
-                val behov = Inntektsbehov(
-                    Input(
-                        nedsettelsesDato = nedsettelsesDato,
-                        inntekter = emptySet(),
-                        uføregrad = uføreGrunnlag?.vurderinger.orEmpty(),
-                        yrkesskadevurdering = sykdomGrunnlag?.yrkesskadevurdering,
-                        registrerteYrkesskader = yrkesskadeGrunnlag?.yrkesskader,
-                        beregningGrunnlag = beregningVurdering
-                    )
-                )
-                val inntektsBehov = behov.utledAlleRelevanteÅr()
-
-                val sak = sakService.hent(kontekst.sakId)
-                inntektRegisterGateway.innhent(sak.person, inntektsBehov)
-            } else {
-                emptySet()
-            }
+        log.info("Henter inntekter for følgende år: $inntektsbehovRelevanteÅr")
+        val inntekter = inntektRegisterGateway.innhent(sak.person, inntektsbehovRelevanteÅr)
 
         inntektGrunnlagRepository.lagre(behandlingId, inntekter)
 
         return if (eksisterendeGrunnlag?.inntekter == inntekter) IKKE_ENDRET else ENDRET
+    }
+
+    private fun hentInntektsbehov(behandlingId: BehandlingId): Inntektsbehov {
+        val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
+        val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId)
+        val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
+        val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
+        val uføreGrunnlag = uføreRepository.hentHvisEksisterer(behandlingId)
+
+        val nedsettelsesDato = utledNedsettelsesdato(
+            beregningVurdering?.tidspunktVurdering?.nedsattArbeidsevneDato,
+            studentGrunnlag?.studentvurdering?.avbruttStudieDato
+        )
+
+        return Inntektsbehov(
+            Input(
+                nedsettelsesDato = nedsettelsesDato,
+                inntekter = emptySet(),
+                uføregrad = uføreGrunnlag?.vurderinger.orEmpty(),
+                yrkesskadevurdering = sykdomGrunnlag?.yrkesskadevurdering,
+                registrerteYrkesskader = yrkesskadeGrunnlag?.yrkesskader,
+                beregningGrunnlag = beregningVurdering
+            )
+        )
     }
 
     private fun utledNedsettelsesdato(
