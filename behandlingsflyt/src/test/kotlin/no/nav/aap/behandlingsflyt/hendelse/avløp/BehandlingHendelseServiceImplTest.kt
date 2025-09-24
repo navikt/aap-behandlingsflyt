@@ -10,7 +10,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBrevbestillingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryFlytJobbRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMottattDokumentRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPipRepository
@@ -29,7 +28,6 @@ class BehandlingHendelseServiceImplTest {
 
     val behandlingHendelseSerice = BehandlingHendelseServiceImpl(
         flytJobbRepository = InMemoryFlytJobbRepository,
-        brevbestillingRepository = InMemoryBrevbestillingRepository,
         sakService = SakService(InMemorySakRepository),
         dokumentRepository = InMemoryMottattDokumentRepository,
         pipRepository = InMemoryPipRepository,
