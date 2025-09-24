@@ -268,14 +268,12 @@ fun Application.startMotor(
         environment.log.info("Forbereder stopp av applikasjon, stopper motor.")
         motor.stop()
     }
+    // Logg disse for å sammenligne timestamp med meldingen over
     monitor.subscribe(ApplicationStopping) { application ->
         application.environment.log.info("Server stopper...")
-        // Release resources and unsubscribe from events
-        application.monitor.unsubscribe(ApplicationStarted) {}
-        application.monitor.unsubscribe(ApplicationStopped) {}
     }
-    monitor.subscribe(ApplicationStopped) { application ->
-        application.environment.log.info("Server har stoppet.")
+    monitor.subscribe(ApplicationStopped) { environment ->
+        environment.log.info("Server har stoppet.")
     }
 
     return motor
@@ -299,8 +297,9 @@ fun Application.startKabalKonsument(
         }
         t.start()
     }
-    monitor.subscribe(ApplicationStopped) {
-        log.info("Applikasjonen er stoppet, lukker KabalKafkaKonsument.")
+    monitor.subscribe(ApplicationStopPreparing) { environment ->
+        environment.log.info("Forbereder stopp av applikasjon, lukker KabalKafkaKonsument.")
+
         konsument.lukk()
     }
 
