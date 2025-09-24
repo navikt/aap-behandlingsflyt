@@ -49,13 +49,13 @@ class DatadelingMeldekortService(
             val meldekortetsPeriode = finnMeldekortPeriode(arbeidsperiode, meldekortPeriodene)
 
             if (arbeidsperiode == null) {
-                log.error(
+                log.warn(
                     "Meldekort uten arbeidstimer ble ignorert. " +
                             "journalpostId=${meldekort.journalpostId}, behandlingId=${behandlingId.id}"
                 )
                 null
             } else if (meldekortetsPeriode == null) {
-                log.error(
+                log.warn(
                     "Meldekort med arbeidstimer som ikke samsvarer med noen meldekortperiode ble ignorert. " +
                             "journalpostId=${meldekort.journalpostId}, behandlingId=${behandlingId.id}, arbeidsperiode=$arbeidsperiode"
                 )
