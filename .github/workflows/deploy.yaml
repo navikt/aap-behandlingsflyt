@@ -34,7 +34,7 @@ jobs:
 
       - name: Print ut eksplisitte avhengigheter
         run: |
-          ls -R app/build/libs/app/lib
+          ls -R app/build/libs/
 
       - name: Test
         run: gradle test --rerun-tasks
