@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling
 
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
@@ -53,6 +54,7 @@ class ResultatUtleder(
         return null
     }
 
+    @WithSpan
     fun utledResultatFørstegangsBehandling(behandling: Behandling): Resultat {
 
         require(behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling) {
