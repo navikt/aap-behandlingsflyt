@@ -118,9 +118,9 @@ class VurderLovvalgSteg private constructor(
 
     private fun norgeIkkeKompetentStat(kontekst: FlytKontekstMedPerioder): Boolean =
         vilkårsresultatRepository.hent(kontekst.behandlingId)
-            .finnVilkår(Vilkårtype.LOVVALG)
-            .vilkårsperioder()
-            .any { it.avslagsårsak == Avslagsårsak.NORGE_IKKE_KOMPETENT_STAT }
+            .optionalVilkår(Vilkårtype.LOVVALG)
+            ?.vilkårsperioder()
+            ?.any { it.avslagsårsak == Avslagsårsak.NORGE_IKKE_KOMPETENT_STAT } == true
 
     private fun vedtakBehøverVurdering(
         kontekst: FlytKontekstMedPerioder,
