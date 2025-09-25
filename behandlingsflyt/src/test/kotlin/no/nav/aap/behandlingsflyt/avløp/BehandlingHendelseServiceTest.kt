@@ -64,7 +64,6 @@ class BehandlingHendelseServiceTest {
         val behandlingHendelseService =
             BehandlingHendelseServiceImpl(
                 flytJobbRepository,
-                brevbestillingRepository,
                 sakService,
                 mottattDokumentRepository,
                 pipRepository,

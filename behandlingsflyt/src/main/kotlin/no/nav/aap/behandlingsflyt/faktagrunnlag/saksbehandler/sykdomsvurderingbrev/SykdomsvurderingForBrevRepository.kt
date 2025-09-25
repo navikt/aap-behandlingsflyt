@@ -5,8 +5,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.lookup.repository.Repository
 
 interface SykdomsvurderingForBrevRepository : Repository {
-    fun lagre(behandlingId: BehandlingId, vurdering: SykdomsvurderingForBrev): SykdomsvurderingForBrev
+    fun lagre(behandlingId: BehandlingId, vurdering: SykdomsvurderingForBrev)
     fun hent(behandlingId: BehandlingId): SykdomsvurderingForBrev?
     fun hent(sakId: SakId): List<SykdomsvurderingForBrev>
-
+    fun deaktiverEksisterende(behandlingId: BehandlingId)
 }

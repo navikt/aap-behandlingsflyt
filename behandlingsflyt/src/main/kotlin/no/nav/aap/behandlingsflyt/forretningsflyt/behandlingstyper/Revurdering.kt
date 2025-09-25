@@ -103,7 +103,6 @@ object Revurdering : BehandlingType {
                 steg = VurderLovvalgSteg,
                 informasjonskrav = listOf(PersonopplysningInformasjonskrav, LovvalgInformasjonskrav),
                 vurderingsbehovRelevanteForSteg = listOf(
-                    Vurderingsbehov.DØDSFALL_BRUKER,
                     Vurderingsbehov.MOTTATT_SØKNAD,
                     Vurderingsbehov.REVURDER_LOVVALG,
                     Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
@@ -119,7 +118,6 @@ object Revurdering : BehandlingType {
                 // UføreService trengs her for å trigge ytterligere nedsatt arbeidsevne-vurdering
                 informasjonskrav = listOf(YrkesskadeInformasjonskrav, LegeerklæringInformasjonskrav, UføreInformasjonskrav),
                 vurderingsbehovRelevanteForSteg = listOf(
-                    Vurderingsbehov.DØDSFALL_BRUKER,
                     Vurderingsbehov.MOTTATT_SØKNAD,
                     Vurderingsbehov.MOTTATT_DIALOGMELDING,
                     Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
@@ -136,6 +134,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
                     Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
                     Vurderingsbehov.HELHETLIG_VURDERING,
+                    Vurderingsbehov.DØDSFALL_BRUKER,
                 )
             )
             .medSteg(

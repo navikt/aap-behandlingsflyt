@@ -74,7 +74,8 @@ class HendelseMottattHåndteringJobbUtfører(
                     sakId = sakId,
                     behandlingsreferanse = BehandlingReferanse(UUID.fromString(parsedMelding.behandlingReferanse)),
                     innsendingType = innsendingType,
-                    melding = parsedMelding
+                    melding = parsedMelding,
+                    referanse = referanse
                 )
             }
             InnsendingType.KLAGE -> {

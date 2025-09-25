@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.hendelse.mottak
 
-import no.nav.aap.behandlingsflyt.behandling.samordning.AvklaringsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -177,7 +176,8 @@ class HåndterMottattDokumentService(
         sakId: SakId,
         behandlingsreferanse: BehandlingReferanse,
         innsendingType: InnsendingType,
-        melding: NyÅrsakTilBehandlingV0
+        melding: NyÅrsakTilBehandlingV0,
+        referanse: InnsendingReferanse
     ) {
         val behandling = sakOgBehandlingService.finnBehandling(behandlingsreferanse)
         val årsakTilOpprettelse = utledÅrsakTilOpprettelse(innsendingType, melding)
@@ -186,7 +186,7 @@ class HåndterMottattDokumentService(
             val vurderingsbehov =
                 melding.årsakerTilBehandling.map { VurderingsbehovMedPeriode(it.tilVurderingsbehov()) }
             sakOgBehandlingService.oppdaterVurderingsbehovTilBehandling(behandling, VurderingsbehovOgÅrsak(vurderingsbehov, årsakTilOpprettelse))
-
+            mottaDokumentService.markerSomBehandlet(sakId, behandling.id, referanse)
             prosesserBehandling.triggProsesserBehandling(
                 sakId,
                 behandling.id,
