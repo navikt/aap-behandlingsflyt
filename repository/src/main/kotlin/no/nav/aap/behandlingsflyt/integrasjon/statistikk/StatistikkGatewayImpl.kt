@@ -33,7 +33,16 @@ class StatistikkGatewayImpl : StatistikkGateway {
             uri = uri.resolve("/stoppetBehandling"),
             request = PostRequest(body = hendelse),
             mapper = { body, _ ->
-                DefaultJsonMapper.fromJson(body as InputStream)
+                DefaultJsonMapper.fromJson(body)
+            })
+    }
+
+    override fun resendBehandling(hendelse: StoppetBehandling) {
+        restClient.post<_, Unit>(
+            uri = uri.resolve("/oppdatertBehandling"),
+            request = PostRequest(body = hendelse),
+            mapper = { body, _ ->
+                DefaultJsonMapper.fromJson(body)
             })
     }
 }
