@@ -1,13 +1,14 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrev
-import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
-import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
@@ -16,6 +17,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvbrytRevurderingRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySykdomsvurderingForBrevRepository
@@ -30,7 +33,15 @@ class SykdomsvurderingBrevStegTest {
 
     private val random = Random(1235123)
 
-    private val steg = SykdomsvurderingBrevSteg(InMemorySykdomsvurderingForBrevRepository, FakeTidligereVurderinger())
+    private val steg = SykdomsvurderingBrevSteg(
+        InMemorySykdomsvurderingForBrevRepository, AvklaringsbehovService(
+            InMemoryAvklaringsbehovRepository,
+            AvbrytRevurderingService(InMemoryAvbrytRevurderingRepository)
+        ),
+        InMemoryAvklaringsbehovRepository,
+        InMemoryBehandlingRepository,
+        FakeTidligereVurderinger()
+    )
     private val sakRepository = InMemorySakRepository
     private val behandlingRepository = InMemoryBehandlingRepository
 
@@ -41,9 +52,13 @@ class SykdomsvurderingBrevStegTest {
         val behandling = behandling(sak, typeBehandling = TypeBehandling.Førstegangsbehandling)
         val kontekstMedPerioder = flytKontekstMedPerioder(sak, behandling, VurderingType.FØRSTEGANGSBEHANDLING)
 
-        val resultat = steg.utfør(kontekstMedPerioder)
+        opprettOgLøsSykdombehov(behandling)
 
-        assertThat(resultat).isEqualTo(FantAvklaringsbehov(avklaringsbehov = listOf(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)))
+        steg.utfør(kontekstMedPerioder)
+
+        val behov = hentBrevBehov(behandling)
+
+        assertThat(behov).isNotNull
     }
 
     @Test
@@ -51,18 +66,18 @@ class SykdomsvurderingBrevStegTest {
         val person = person()
         val sak = sak(person)
         val behandling = behandling(sak, typeBehandling = TypeBehandling.Førstegangsbehandling)
-        val kontekstMedPerioder = flytKontekstMedPerioder(sak, behandling, VurderingType.FØRSTEGANGSBEHANDLING)
 
+        InMemorySykdomsvurderingForBrevRepository.lagre(
+            behandling.id, SykdomsvurderingForBrev(
+                behandlingId = behandling.id,
+                vurdering = "En vurdering",
+                vurdertAv = "ident",
+            )
+        )
 
-        InMemorySykdomsvurderingForBrevRepository.lagre(behandling.id, SykdomsvurderingForBrev(
-            behandlingId = behandling.id,
-            vurdering = "En vurdering",
-            vurdertAv = "ident",
-        ))
+        val resultat = hentBrevBehov(behandling)
 
-        val resultat = steg.utfør(kontekstMedPerioder)
-
-        assertThat(resultat).isEqualTo(Fullført)
+        assertThat(resultat).isNull()
     }
 
     @Test
@@ -70,11 +85,36 @@ class SykdomsvurderingBrevStegTest {
         val person = person()
         val sak = sak(person)
         val behandling = behandling(sak, typeBehandling = TypeBehandling.Revurdering)
-        val kontekstMedPerioder = flytKontekstMedPerioder(sak, behandling, VurderingType.REVURDERING, setOf(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND))
+        val kontekstMedPerioder = flytKontekstMedPerioder(
+            sak,
+            behandling,
+            VurderingType.REVURDERING,
+            setOf(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
+        )
 
-        val resultat = steg.utfør(kontekstMedPerioder)
+        opprettOgLøsSykdombehov(behandling)
 
-        assertThat(resultat).isEqualTo(FantAvklaringsbehov(avklaringsbehov = listOf(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)))
+        steg.utfør(kontekstMedPerioder)
+
+        val behov = hentBrevBehov(behandling)
+
+        assertThat(behov).isNotNull
+    }
+
+    private fun hentBrevBehov(behandling: Behandling): Avklaringsbehov? =
+        InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+            .hentBehovForDefinisjon(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
+
+    private fun opprettOgLøsSykdombehov(behandling: Behandling) {
+        InMemoryAvklaringsbehovRepository.opprett(
+            behandling.id,
+            Definisjon.AVKLAR_SYKDOM,
+            Definisjon.AVKLAR_SYKDOM.løsesISteg,
+            null,
+            "..."
+        )
+        InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+            .løsAvklaringsbehov(Definisjon.AVKLAR_SYKDOM, "...", "meg")
     }
 
     private fun flytKontekstMedPerioder(
