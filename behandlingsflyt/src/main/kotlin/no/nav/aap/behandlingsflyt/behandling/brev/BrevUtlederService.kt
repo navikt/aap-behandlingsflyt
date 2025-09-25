@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.Innvilgelse.GrunnlagBeregning.
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
@@ -49,6 +50,7 @@ class BrevUtlederService(
     private val beregningVurderingRepository: BeregningVurderingRepository,
     private val tilkjentYtelseRepository: TilkjentYtelseRepository,
     private val underveisRepository: UnderveisRepository,
+    private val aktivitetsplikt11_7Repository: Aktivitetsplikt11_7Repository,
     private val unleashGateway: UnleashGateway
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
@@ -60,6 +62,7 @@ class BrevUtlederService(
         beregningVurderingRepository = repositoryProvider.provide(),
         tilkjentYtelseRepository = repositoryProvider.provide(),
         underveisRepository = repositoryProvider.provide(),
+        aktivitetsplikt11_7Repository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide()
     )
 
@@ -116,7 +119,14 @@ class BrevUtlederService(
             }
 
             TypeBehandling.Aktivitetsplikt -> {
-                return VedtakAktivitetsplikt11_7
+                val grunnlag = aktivitetsplikt11_7Repository.hentHvisEksisterer(behandlingId)
+                val vurderingForBehandling = grunnlag?.vurderinger?.firstOrNull { it.vurdertIBehandling == behandlingId }
+                    ?: error("Finner ingen vurdering av aktivitetsplikt 11-7 for denne behandlingen - kan ikke utlede brevtype")
+                return if (vurderingForBehandling.erOppfylt) {
+                    VedtakEndring
+                } else {
+                    VedtakAktivitetsplikt11_7
+                }
             }
             
             TypeBehandling.Aktivitetsplikt11_9 -> {
