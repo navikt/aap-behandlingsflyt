@@ -32,6 +32,10 @@ jobs:
       - name: Bygg
         run: gradle app:build :app:copyRuntimeLibs -x test --continue
 
+      - name: Print ut eksplisitte avhengigheter
+        run: |
+          ls -R app/build/libs/
+
       - name: Test
         run: gradle test --rerun-tasks
 

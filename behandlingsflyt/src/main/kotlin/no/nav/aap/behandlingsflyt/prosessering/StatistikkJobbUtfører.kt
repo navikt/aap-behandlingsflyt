@@ -20,9 +20,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageResultatType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.AVSLUTTET
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvklaringsbehovHendelseDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvsluttetBehandlingDTO
@@ -82,20 +84,20 @@ class StatistikkJobbUtfører(
     override fun utfør(input: JobbInput) {
 
         log.info("Utfører jobbinput statistikk: $input")
-        val payload = input.payload<BehandlingFlytStoppetHendelse>()
+        val payload = input.payload<BehandlingFlytStoppetHendelseTilStatistikk>()
 
         håndterBehandlingStoppet(payload)
     }
 
 
-    private fun håndterBehandlingStoppet(hendelse: BehandlingFlytStoppetHendelse) {
+    private fun håndterBehandlingStoppet(hendelse: BehandlingFlytStoppetHendelseTilStatistikk) {
 
         val statistikkHendelse = oversettHendelseTilKontrakt(hendelse)
 
         statistikkGateway.avgiStatistikk(statistikkHendelse)
     }
 
-    private fun oversettHendelseTilKontrakt(hendelse: BehandlingFlytStoppetHendelse): StoppetBehandling {
+    private fun oversettHendelseTilKontrakt(hendelse: BehandlingFlytStoppetHendelseTilStatistikk): StoppetBehandling {
         log.info("Oversetter hendelse for behandling ${hendelse.referanse} og saksnr ${hendelse.saksnummer}")
         val behandling = behandlingRepository.hent(hendelse.referanse)
         val søknaderForSak = hentSøknanderForSak(behandling)
@@ -219,7 +221,7 @@ class StatistikkJobbUtfører(
      * Skal kalles når en behandling er avsluttet for å levere statistikk til statistikk-appen.
      * Payload er JSON siden dette kommer fra en jobb.
      */
-    private fun hentAvsluttetBehandlingDTO(hendelse: BehandlingFlytStoppetHendelse): AvsluttetBehandlingDTO {
+    private fun hentAvsluttetBehandlingDTO(hendelse: BehandlingFlytStoppetHendelseTilStatistikk): AvsluttetBehandlingDTO {
         val behandling = behandlingRepository.hent(hendelse.referanse)
         val vilkårsresultat = vilkårsresultatRepository.hent(behandling.id)
         val sak = sakService.hent(behandling.sakId)
@@ -447,3 +449,20 @@ class StatistikkJobbUtfører(
         override val beskrivelse = "Skal ta i mot data fra steg i en behandling og sender til statistikk-appen."
     }
 }
+
+/**
+ * @param status Status på behandlingen.
+ * @param opprettetTidspunkt Når behandlingen ble opprettet.
+ * @param hendelsesTidspunkt Når denne hendelsen ble opprettet i Behandlingsflyt.
+ */
+data class BehandlingFlytStoppetHendelseTilStatistikk(
+    val personIdent: String,
+    val saksnummer: Saksnummer,
+    val referanse: BehandlingReferanse,
+    val behandlingType: TypeBehandling,
+    val status: Status,
+    val avklaringsbehov: List<AvklaringsbehovHendelseDto>,
+    val opprettetTidspunkt: LocalDateTime,
+    val hendelsesTidspunkt: LocalDateTime,
+    val versjon: String
+)

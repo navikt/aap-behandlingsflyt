@@ -42,6 +42,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.TypeBrev
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.ÅrsakTilRetur
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.pip.PipRepository
+import no.nav.aap.behandlingsflyt.prosessering.BehandlingFlytStoppetHendelseTilStatistikk
 import no.nav.aap.behandlingsflyt.prosessering.DatadelingMeldePerioderOgSakStatusJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.DatadelingMeldekortJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.MeldeperiodeTilMeldekortBackendJobbUtfører
@@ -138,7 +139,19 @@ class BehandlingHendelseServiceImpl(
                 .forBehandling(sak.id.id, behandling.id.id)
         )
         flytJobbRepository.leggTil(
-            JobbInput(jobb = StatistikkJobbUtfører).medPayload(hendelse)
+            JobbInput(jobb = StatistikkJobbUtfører).medPayload(
+                BehandlingFlytStoppetHendelseTilStatistikk(
+                    personIdent = hendelse.personIdent,
+                    saksnummer = hendelse.saksnummer,
+                    referanse = hendelse.referanse,
+                    behandlingType = hendelse.behandlingType,
+                    status = hendelse.status,
+                    avklaringsbehov = hendelse.avklaringsbehov,
+                    opprettetTidspunkt = hendelse.opprettetTidspunkt,
+                    hendelsesTidspunkt = hendelse.hendelsesTidspunkt,
+                    versjon = hendelse.versjon
+                )
+            )
                 .forBehandling(sak.id.id, behandling.id.id)
         )
         flytJobbRepository.leggTil(
