@@ -65,7 +65,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.Fakes
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvbrytRevurderingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMottattDokumentRepository
@@ -75,6 +74,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTilkjentYtelseReposi
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.json.DefaultJsonMapper
@@ -550,7 +550,7 @@ class StatistikkJobbUtførerTest {
                         trukketSøknadRepository = InMemoryTrukketSøknadRepository
                     ),
                     klageresultatUtleder = DummyKlageresultatUtleder(),
-                    avbrytRevurderingService = AvbrytRevurderingService(InMemoryAvbrytRevurderingRepository),
+                    avbrytRevurderingService = AvbrytRevurderingService(inMemoryRepositoryProvider),
                 )
             )
 

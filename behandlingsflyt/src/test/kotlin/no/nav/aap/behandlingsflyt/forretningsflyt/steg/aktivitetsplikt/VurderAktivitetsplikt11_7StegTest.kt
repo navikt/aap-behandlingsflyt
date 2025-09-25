@@ -1,8 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg.aktivitetsplikt
 
-import no.nav.aap.behandlingsflyt.behandling.brev.SignaturService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Vurdering
@@ -11,6 +9,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FantVentebehov
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.testutil.FakeBrevbestillingGateway
+import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -31,6 +30,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepos
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBrevbestillingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -271,17 +271,11 @@ class VurderAktivitetsplikt11_7StegTest {
             vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.AKTIVITETSPLIKT_11_7)
         )
 
-    private fun opprettVurderAktivitetsplikt11_7Steg(): VurderAktivitetsplikt11_7Steg = VurderAktivitetsplikt11_7Steg(
-        unleashGateway = FakeUnleashFasttrackAktivitetsplikt,
-        avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-        aktivitetsplikt11_7Repository = InMemoryAktivitetsplikt11_7Repository,
-        behandlingRepository = InMemoryBehandlingRepository,
-        BrevbestillingService(
-            signaturService = SignaturService(avklaringsbehovRepository = InMemoryAvklaringsbehovRepository),
-            brevbestillingGateway = FakeBrevbestillingGateway(),
-            brevbestillingRepository = InMemoryBrevbestillingRepository,
-            behandlingRepository = InMemoryBehandlingRepository,
-            sakRepository = InMemorySakRepository,
-        )
+    private fun opprettVurderAktivitetsplikt11_7Steg(): VurderAktivitetsplikt11_7Steg = VurderAktivitetsplikt11_7Steg.konstruer(
+        inMemoryRepositoryProvider,
+        createGatewayProvider {
+            register<FakeUnleashFasttrackAktivitetsplikt>()
+            register<FakeBrevbestillingGateway>()
+        }
     )
 }

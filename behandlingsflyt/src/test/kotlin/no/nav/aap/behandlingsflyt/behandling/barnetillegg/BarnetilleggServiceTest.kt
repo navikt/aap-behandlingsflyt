@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifik
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
+import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
@@ -16,11 +17,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBarnRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemorySakOgBehandlingService
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
@@ -29,13 +31,13 @@ import java.time.LocalDate
 import java.util.*
 
 class BarnetilleggServiceTest {
+    val gatewayProvider = createGatewayProvider {
+        register<FakeUnleash>()
+    }
 
     @Test
     fun `ingen barn gir ingen rett til barnetillegg`() {
-        val service = BarnetilleggService(
-            sakOgBehandlingService = InMemorySakOgBehandlingService,
-            barnRepository = InMemoryBarnRepository
-        )
+        val service = BarnetilleggService(inMemoryRepositoryProvider, gatewayProvider)
 
         val (sak, behandling) = opprettPersonBehandlingOgSak()
 
@@ -50,10 +52,7 @@ class BarnetilleggServiceTest {
 
     @Test
     fun `tidslinjen stopper når barnet blir 18 år`() {
-        val service = BarnetilleggService(
-            sakOgBehandlingService = InMemorySakOgBehandlingService,
-            barnRepository = InMemoryBarnRepository
-        )
+        val service = BarnetilleggService(inMemoryRepositoryProvider, gatewayProvider)
 
         val (sak, behandling) = opprettPersonBehandlingOgSak()
 
@@ -89,10 +88,7 @@ class BarnetilleggServiceTest {
 
     @Test
     fun `avklarer manuelt barn, får barnetillegg fram til 18 år`() {
-        val service = BarnetilleggService(
-            sakOgBehandlingService = InMemorySakOgBehandlingService,
-            barnRepository = InMemoryBarnRepository
-        )
+        val service = BarnetilleggService(inMemoryRepositoryProvider, gatewayProvider)
 
         val (sak, behandling) = opprettPersonBehandlingOgSak()
 

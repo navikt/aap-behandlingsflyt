@@ -12,11 +12,10 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettMeldeperiodeSteg
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.MockDataSource
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMeldekortRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTilkjentYtelseRepository
-import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryRegistry
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
@@ -31,12 +30,6 @@ import java.util.*
 
 @Fakes
 class TilkjentYtelseAPITest : BaseApiTest() {
-    private val repositoryRegistry = RepositoryRegistry()
-        .register<InMemoryTilkjentYtelseRepository>()
-        .register<InMemoryBehandlingRepository>()
-        .register<InMemoryMeldekortRepository>()
-        .register<InMemoryMeldeperiodeRepository>()
-
     @Test
     fun `teste v2`() {
         val ds = MockDataSource()
@@ -45,7 +38,7 @@ class TilkjentYtelseAPITest : BaseApiTest() {
 
         testApplication {
             installApplication {
-                tilkjentYtelseAPI(ds, repositoryRegistry)
+                tilkjentYtelseAPI(ds, inMemoryRepositoryRegistry)
             }
             val rettighetsperiode = sak.rettighetsperiode
 

@@ -9,22 +9,14 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.MockDataSource
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryContextRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMellomlagretVurderingRepository
-import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryRegistry
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
 @Fakes
 class MellomlagretVurderingAPITest : BaseApiTest() {
-    private val repositoryRegistry = RepositoryRegistry()
-        .register<InMemoryMellomlagretVurderingRepository>()
-        .register<InMemoryBehandlingRepository>()
-        .register<InMemoryContextRepository>()
-
-
     @Test
     fun `hente ut mellomlagret vurdering fra API`() {
         val ds = MockDataSource()
@@ -44,7 +36,7 @@ class MellomlagretVurderingAPITest : BaseApiTest() {
 
         testApplication {
             installApplication {
-                mellomlagretVurderingApi(ds, repositoryRegistry)
+                mellomlagretVurderingApi(ds, inMemoryRepositoryRegistry)
             }
 
             val response =
@@ -87,7 +79,7 @@ class MellomlagretVurderingAPITest : BaseApiTest() {
 
         testApplication {
             installApplication {
-                mellomlagretVurderingApi(ds, repositoryRegistry)
+                mellomlagretVurderingApi(ds, inMemoryRepositoryRegistry)
             }
 
             val nyMellomlagretVurdering = MellomlagretVurderingRequest(
@@ -121,7 +113,7 @@ class MellomlagretVurderingAPITest : BaseApiTest() {
         val avklaringsbehovKode = AvklaringsbehovKode.`8001`
         testApplication {
             installApplication {
-                mellomlagretVurderingApi(ds, repositoryRegistry)
+                mellomlagretVurderingApi(ds, inMemoryRepositoryRegistry)
             }
 
             val response =
@@ -157,7 +149,7 @@ class MellomlagretVurderingAPITest : BaseApiTest() {
 
         testApplication {
             installApplication {
-                mellomlagretVurderingApi(ds, repositoryRegistry)
+                mellomlagretVurderingApi(ds, inMemoryRepositoryRegistry)
             }
 
 

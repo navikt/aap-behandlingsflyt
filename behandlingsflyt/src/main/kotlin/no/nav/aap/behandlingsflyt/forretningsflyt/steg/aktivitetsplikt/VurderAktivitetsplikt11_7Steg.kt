@@ -158,7 +158,7 @@ class VurderAktivitetsplikt11_7Steg(
         override fun konstruer(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
-        ): BehandlingSteg {
+        ): VurderAktivitetsplikt11_7Steg {
             return VurderAktivitetsplikt11_7Steg(
                 unleashGateway = gatewayProvider.provide(),
                 avklaringsbehovRepository = repositoryProvider.provide(),
