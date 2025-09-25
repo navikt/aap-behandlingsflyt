@@ -12,9 +12,8 @@ object InMemorySykdomsvurderingForBrevRepository : SykdomsvurderingForBrevReposi
     override fun lagre(
         behandlingId: BehandlingId,
         vurdering: SykdomsvurderingForBrev
-    ): SykdomsvurderingForBrev {
+    ) {
         grunnlag[behandlingId] = vurdering
-        return grunnlag[behandlingId]!!
     }
 
     override fun hent(behandlingId: BehandlingId): SykdomsvurderingForBrev? {
@@ -23,6 +22,10 @@ object InMemorySykdomsvurderingForBrevRepository : SykdomsvurderingForBrevReposi
 
     override fun hent(sakId: SakId): List<SykdomsvurderingForBrev> {
         return emptyList()
+    }
+
+    override fun deaktiverEksisterende(behandlingId: BehandlingId) {
+        TODO("Not yet implemented")
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
