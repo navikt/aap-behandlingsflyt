@@ -26,6 +26,7 @@ object ProsesseringsJobber {
             OppdagEndretInformasjonskravJobbUtfører,
             HentSamIdJobbUtfører,
             VarsleVedtakJobbUtfører,
+            IverksettUtbetalingJobbUtfører,
             KafkaFeilJobbUtfører
         )
     }

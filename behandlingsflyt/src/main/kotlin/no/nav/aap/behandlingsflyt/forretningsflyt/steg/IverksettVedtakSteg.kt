@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.mellomlagring.MellomlagretVurderingRepository
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
@@ -21,6 +21,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.DatadelingBehandlingJobbUtfører
+import no.nav.aap.behandlingsflyt.prosessering.IverksettUtbetalingJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.VarsleVedtakJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -33,6 +34,7 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
+import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseDto
 import org.slf4j.LoggerFactory
 
 class IverksettVedtakSteg private constructor(
@@ -51,8 +53,12 @@ class IverksettVedtakSteg private constructor(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING && trukketSøknadService.søknadErTrukket(kontekst.behandlingId)
-            || kontekst.vurderingType == VurderingType.REVURDERING && avbrytRevurderingService.revurderingErAvbrutt(kontekst.behandlingId)
+        if (kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING && trukketSøknadService.søknadErTrukket(
+                kontekst.behandlingId
+            )
+            || kontekst.vurderingType == VurderingType.REVURDERING && avbrytRevurderingService.revurderingErAvbrutt(
+                kontekst.behandlingId
+            )
         ) {
             return Fullført
         }
@@ -68,7 +74,7 @@ class IverksettVedtakSteg private constructor(
 
         val tilkjentYtelseDto = utbetalingService.lagTilkjentYtelseForUtbetaling(kontekst.sakId, kontekst.behandlingId)
         if (tilkjentYtelseDto != null) {
-            utbetalingGateway.utbetal(tilkjentYtelseDto)
+            utbetal(kontekst, tilkjentYtelseDto)
         } else {
             log.info("Fant ikke tilkjent ytelse for behandingsref ${kontekst.behandlingId}. Virkningstidspunkt: $virkningstidspunkt.")
         }
@@ -86,6 +92,25 @@ class IverksettVedtakSteg private constructor(
         mellomlagretVurderingRepository.slett(kontekst.behandlingId)
 
         return Fullført
+    }
+
+    private fun utbetal(
+        kontekst: FlytKontekstMedPerioder,
+        tilkjentYtelseDto: TilkjentYtelseDto
+    ) {
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.IverksettUtbetalingSomSelvstendigJobb)) {
+            /**
+             * Må opprette jobb med sakId, men uten behandlingId for at disse skal bli kjørt sekvensielt i riktig rekkefølge.
+             * Viktig at eldste jobb kjøres først slik at utbetaling blir konsistent med Kelvin
+             */
+            flytJobbRepository.leggTil(
+                jobbInput = JobbInput(jobb = IverksettUtbetalingJobbUtfører)
+                    .medPayload(kontekst.behandlingId)
+                    .forSak(sakId = kontekst.sakId.toLong())
+            )
+        } else {
+            utbetalingGateway.utbetal(tilkjentYtelseDto)
+        }
     }
 
     companion object : FlytSteg {
