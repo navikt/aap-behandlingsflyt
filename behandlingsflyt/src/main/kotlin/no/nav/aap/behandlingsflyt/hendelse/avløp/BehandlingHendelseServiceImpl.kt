@@ -39,6 +39,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.EndringDTO
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.MottattDokumentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.TypeBrev
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.ÅrsakTilRetur
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.pip.PipRepository
@@ -52,7 +54,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
@@ -127,7 +131,7 @@ class BehandlingHendelseServiceImpl(
             relevanteIdenterPåBehandling = pipRepository.finnIdenterPåBehandling(behandling.referanse).map { it.ident },
             erPåVent = erPåVent,
             mottattDokumenter = mottattDokumenter,
-            reserverTil = hentReservertTil(behandling.id),
+            reserverTil = hentReservertTil(behandling.id, sak),
             opprettetTidspunkt = behandling.opprettetTidspunkt,
             hendelsesTidspunkt = LocalDateTime.now(),
             versjon = ApplikasjonsVersjon.versjon
@@ -167,11 +171,29 @@ class BehandlingHendelseServiceImpl(
         }
     }
 
-    private fun hentReservertTil(behandlingId: BehandlingId): String? {
+    private fun hentReservertTil(behandlingId: BehandlingId, sak: Sak): String? {
         val oppfølgingsoppgavedokument =
-            MottaDokumentService(dokumentRepository).hentOppfølgingsBehandlingDokument(behandlingId) ?: return null
+            MottaDokumentService(dokumentRepository).hentOppfølgingsBehandlingDokument(behandlingId)
 
-        return oppfølgingsoppgavedokument.reserverTilBruker
+        val revurderingAvbruttDokument = MottaDokumentService(dokumentRepository).hentMottattDokumentAvType(
+            sak,
+            InnsendingType.NY_ÅRSAK_TIL_BEHANDLING
+        )
+
+        var reserverTilBruker: String? = null
+        val parsedMelding = if (revurderingAvbruttDokument?.ustrukturerteData() != null) {
+            DefaultJsonMapper.fromJson<Melding>(revurderingAvbruttDokument.ustrukturerteData()!!)
+        } else null
+
+        if (parsedMelding is NyÅrsakTilBehandlingV0) {
+            reserverTilBruker =
+                if (parsedMelding.årsakerTilBehandling.contains(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDERING_AVBRUTT)) {
+                    parsedMelding.reserverTilBruker
+                } else null
+
+        }
+
+        return oppfølgingsoppgavedokument?.reserverTilBruker ?: reserverTilBruker
     }
 
     private fun hentMottattDokumenter(

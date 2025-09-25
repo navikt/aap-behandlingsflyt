@@ -4041,7 +4041,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 strukturertDokument = StrukturertDokument(
                     NyÅrsakTilBehandlingV0(
                         årsakerTilBehandling = listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.KLAGE_TRUKKET),
-                        klagebehandling.referanse.referanse.toString()
+                        klagebehandling.referanse.referanse.toString(),
+                        null
                     ),
                 ),
                 periode = periode
@@ -4536,7 +4537,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 StrukturertDokument(
                     NyÅrsakTilBehandlingV0(
                         listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDERING_AVBRUTT),
-                        revurdering1.referanse.toString()
+                        revurdering1.referanse.toString(),
+                        null
                     )
                 ),
                 sak.rettighetsperiode
