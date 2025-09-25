@@ -9,11 +9,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.MottattDokumentDto
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.TypeBrev
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.ÅrsakTilRetur
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.pip.PipRepository
 import no.nav.aap.behandlingsflyt.prosessering.DatadelingMeldePerioderOgSakStatusJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.DatadelingMeldekortJobbUtfører
@@ -72,7 +69,7 @@ class BehandlingHendelseServiceImpl(
             relevanteIdenterPåBehandling = pipRepository.finnIdenterPåBehandling(behandling.referanse).map { it.ident },
             erPåVent = erPåVent,
             mottattDokumenter = mottattDokumenter,
-            reserverTil = hentReservertTil(behandling.id, sak),
+            reserverTil = hentReservertTil(behandling.id),
             opprettetTidspunkt = behandling.opprettetTidspunkt,
             hendelsesTidspunkt = LocalDateTime.now(),
             versjon = ApplikasjonsVersjon.versjon
@@ -112,7 +109,7 @@ class BehandlingHendelseServiceImpl(
         }
     }
 
-    private fun hentReservertTil(behandlingId: BehandlingId, sak: Sak): String? {
+    private fun hentReservertTil(behandlingId: BehandlingId): String? {
         val oppfølgingsoppgavedokument =
             MottaDokumentService(dokumentRepository).hentOppfølgingsBehandlingDokument(behandlingId)
 
