@@ -1,0 +1,53 @@
+package no.nav.aap.behandlingsflyt.prosessering
+
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.motor.FlytJobbRepository
+import no.nav.aap.motor.JobbInput
+import no.nav.aap.motor.JobbUtfører
+import no.nav.aap.motor.ProvidersJobbSpesifikasjon
+import no.nav.aap.motor.cron.CronExpression
+import org.slf4j.LoggerFactory
+
+class HåndterUbehandledeDokumenterJobbUtfører(
+    private val mottattDokumentRepository: MottattDokumentRepository,
+    private val flytJobbRepository: FlytJobbRepository
+) : JobbUtfører {
+    private val log = LoggerFactory.getLogger(javaClass)
+
+    override fun utfør(input: JobbInput) {
+        
+        val ubehandledeDokumenter = mottattDokumentRepository.hentAlleUbehandledeDokumenter()
+
+        var hoppetOver = 0
+        ubehandledeDokumenter.forEach { dokument ->
+            when (dokument.type) {
+                InnsendingType.MELDEKORT -> flytJobbRepository.leggTil(HåndterUbehandletDokumentJobbUtfører.nyJobb(dokument.sakId, dokument.referanse))
+                else -> {
+                    hoppetOver++
+                }
+            }
+        }
+        log.info("Håndterte ${ubehandledeDokumenter.size - hoppetOver} dokumenter, hoppet over $hoppetOver dokumenter")
+    }
+
+    companion object : ProvidersJobbSpesifikasjon {
+        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
+            return HåndterUbehandledeDokumenterJobbUtfører(
+                mottattDokumentRepository = repositoryProvider.provide(),
+                flytJobbRepository = repositoryProvider.provide()
+            )
+        }
+
+        override val type = "batch.HåndterUbehandledeDokumenter"
+
+        override val navn = "Håndter ubehandlede dokumenter"
+
+        override val beskrivelse =
+            "Periodisk jobb som sjekker om det finnes ubehandlede dokumenter på en sak og håndterer disse."
+
+        override val cron = CronExpression.createWithoutSeconds("0 5 * * *")
+    }
+}
