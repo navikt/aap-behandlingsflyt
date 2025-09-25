@@ -497,6 +497,13 @@ public enum class Definisjon(
         løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
         kreverToTrinn = true
     ),
+    VURDER_BRUDD_11_9(
+        kode = AvklaringsbehovKode.`4201`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.VURDER_AKTIVITETSPLIKT_11_9,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
+        kreverToTrinn = true
+    ),
     SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV(
         kode = AvklaringsbehovKode.`5052`,
         løsesISteg = StegType.VURDER_AKTIVITETSPLIKT_11_7,

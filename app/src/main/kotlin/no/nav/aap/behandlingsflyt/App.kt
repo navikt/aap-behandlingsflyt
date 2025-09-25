@@ -26,8 +26,8 @@ import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.alder.aldersGrun
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.fritakmeldeplikt.meldepliktsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.refusjon.refusjonGrunnlagAPI
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.bistand.bistandsgrunnlagApi
-import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.overgangufore.overgangUforeGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.overgangarbeid.overgangArbeidGrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.overgangufore.overgangUforeGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykdom.sykdomsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykepengergrunnlag.sykepengerGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.manuellinntekt.manglendeGrunnlagApi
@@ -54,10 +54,10 @@ import no.nav.aap.behandlingsflyt.behandling.mellomlagring.mellomlagretVurdering
 import no.nav.aap.behandlingsflyt.behandling.oppfolgingsbehandling.avklarOppfolgingsoppgaveGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.oppfolgingsbehandling.oppfølgingsOppgaveApi
 import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.rettighetsperiodeGrunnlagAPI
+import no.nav.aap.behandlingsflyt.behandling.revurdering.avbrytRevurderingGrunnlagAPI
 import no.nav.aap.behandlingsflyt.behandling.simulering.simuleringAPI
 import no.nav.aap.behandlingsflyt.behandling.student.studentgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.svarfraandreinstans.svarfraandreinstans.svarFraAndreinstansGrunnlagApi
-import no.nav.aap.behandlingsflyt.behandling.revurdering.avbrytRevurderingGrunnlagAPI
 import no.nav.aap.behandlingsflyt.behandling.søknad.trukketSøknadGrunnlagAPI
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilkjentYtelseAPI
 import no.nav.aap.behandlingsflyt.behandling.underveis.meldepliktOverstyringGrunnlagApi
@@ -93,6 +93,7 @@ import no.nav.aap.motor.Motor
 import no.nav.aap.motor.api.motorApi
 import no.nav.aap.motor.retry.RetryService
 import org.slf4j.LoggerFactory
+import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
 
@@ -149,6 +150,13 @@ internal fun Application.server(
     }
 
     val dataSource = initDatasource(dbConfig)
+    Runtime.getRuntime().addShutdownHook(Thread {
+        try {
+            dataSource.connection.close()
+        } finally {
+            // Ignorer om den feks allerede er closed
+        }
+    })
     Migrering.migrate(dataSource)
     val motor = startMotor(dataSource, repositoryRegistry, gatewayProvider)
 
@@ -307,10 +315,23 @@ class DbConfig(
     val password: String = System.getenv("NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_PASSWORD")
 )
 
+val postgresConfig = Properties().apply {
+    put("tcpKeepAlive", true) // kreves av Hikari
+
+    put("socketTimeout", 300) // sekunder, makstid for overføring av svaret fra db
+    put("statement_timeout", 300_000) // millisekunder, makstid for db til å utføre spørring
+
+    put("logUnclosedConnections", true) // vår kode skal lukke alle connections
+    put("logServerErrorDetail", false) // ikke lekk person-data fra queries etc til logger ved feil
+
+    put("assumeMinServerVersion", "16.0") // raskere oppstart av driver
+}
+
 fun initDatasource(dbConfig: DbConfig): DataSource = HikariDataSource(HikariConfig().apply {
     jdbcUrl = dbConfig.url
     username = dbConfig.username
     password = dbConfig.password
+    dataSourceProperties = postgresConfig
     maximumPoolSize = 10 + (ANTALL_WORKERS * 2)
     minimumIdle = 1
     connectionTestQuery = "SELECT 1"

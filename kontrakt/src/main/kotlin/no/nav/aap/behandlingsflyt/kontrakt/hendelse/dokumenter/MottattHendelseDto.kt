@@ -79,7 +79,7 @@ public class Innsending(
             }
 
             InnsendingType.NY_ÅRSAK_TIL_BEHANDLING -> {
-                require(referanse.type == InnsendingReferanse.Type.BEHANDLING_REFERANSE)
+                require(referanse.type == InnsendingReferanse.Type.SAKSBEHANDLER_KELVIN_REFERANSE)
                 require(melding is NyÅrsakTilBehandling)
             }
 

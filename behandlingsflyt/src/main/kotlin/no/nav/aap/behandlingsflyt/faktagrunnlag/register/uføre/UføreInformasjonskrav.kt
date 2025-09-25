@@ -10,7 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.KanTriggeRevurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSiste
+import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
@@ -18,7 +18,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
-import java.time.Duration
+import org.slf4j.LoggerFactory
 
 class UføreInformasjonskrav(
     private val sakOgBehandlingService: SakOgBehandlingService,
@@ -34,23 +34,26 @@ class UføreInformasjonskrav(
     )
 
     override val navn = Companion.navn
+    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun erRelevant(
         kontekst: FlytKontekstMedPerioder,
         steg: StegType,
         oppdatert: InformasjonskravOppdatert?
     ): Boolean {
-        return kontekst.erFørstegangsbehandlingEllerRevurdering() &&
-                oppdatert.ikkeKjørtSiste(Duration.ofHours(1)) &&
-                !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
+        return kontekst.erFørstegangsbehandlingEllerRevurdering()
+                && !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
+                && (oppdatert.ikkeKjørtSisteKalenderdag() || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode)
     }
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
+        log.info("Oppdaterer uførehistorikk for behandlingen")
         val behandlingId = kontekst.behandlingId
         val uføregrader = hentUføregrader(behandlingId)
         val eksisterendeGrunnlag = uføreRepository.hentHvisEksisterer(behandlingId)
 
         if (harEndringerUføre(eksisterendeGrunnlag, uføregrader)) {
+            log.info("Fant endringer i uførehistorikk for behandlingen")
             uføreRepository.lagre(behandlingId, uføregrader)
             return ENDRET
         }
@@ -88,7 +91,11 @@ class UføreInformasjonskrav(
             eksisterende: UføreGrunnlag?,
             uføregrader: List<Uføre>
         ): Boolean {
-            return eksisterende == null || uføregrader.toSet() != eksisterende.vurderinger.toSet()
+            return if (eksisterende == null) {
+                uføregrader.isNotEmpty()
+            } else {
+                uføregrader.toSet() != eksisterende.vurderinger.toSet()
+            }
         }
     }
 }

@@ -210,7 +210,7 @@ class InnsendingTest {
         val s = """{
   "saksnummer": "4LDQPDS",
   "referanse": {
-    "type": "BEHANDLING_REFERANSE",
+    "type": "SAKSBEHANDLER_KELVIN_REFERANSE",
     "verdi": "e8a9ca4b-83b9-44dc-b54a-df2199a4a244"
   },
   "type": "OPPFØLGINGSOPPGAVE",
