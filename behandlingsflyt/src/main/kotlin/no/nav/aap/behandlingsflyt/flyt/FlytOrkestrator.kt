@@ -154,7 +154,7 @@ class FlytOrkestrator(
             val tidligsteÅpneAvklaringsbehov = avklaringsbehovene.åpne()
                 .minWithOrNull(compareBy(behandlingFlyt.stegComparator, { it.løsesISteg() }))
             if (tidligsteÅpneAvklaringsbehov != null) {
-                if (behandlingFlyt.erStegFørEllerLik(tidligsteÅpneAvklaringsbehov.løsesISteg(), behandling.aktivtSteg())) {
+                if (behandlingFlyt.erStegFør(tidligsteÅpneAvklaringsbehov.løsesISteg(), behandling.aktivtSteg())) {
                     log.error(
                         """
                         Behandlingen er i steg ${behandling.aktivtSteg()} og har passert det åpne 
