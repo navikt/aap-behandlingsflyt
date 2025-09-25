@@ -537,7 +537,7 @@ class StatistikkJobbUtførerTest {
             StatistikkJobbUtfører(
                 statistikkGateway = StatistikkGatewayImpl(),
                 statistikkMetoder = StatistikkMetoder(
-                    vilkårsresultatRepository =vilkårsResultatRepository ,
+                    vilkårsresultatRepository = vilkårsResultatRepository,
                     behandlingRepository = behandlingRepository,
                     sakService = sakService,
                     tilkjentYtelseRepository = tilkjentYtelseRepository,
@@ -599,7 +599,9 @@ class StatistikkJobbUtførerTest {
         assertThat(hendelser).isNotEmpty()
         assertThat(hendelser.size).isEqualTo(1)
 
-        assertThat(hendelser.first()).isEqualTo(
+        assertThat(hendelser.first())
+            .usingRecursiveComparison()
+            .isEqualTo(
             StoppetBehandling(
                 saksnummer = Saksnummer.valueOf(sakId.id).toString(),
                 behandlingReferanse = referanse.referanse,
@@ -613,7 +615,7 @@ class StatistikkJobbUtførerTest {
                 mottattTid = tidligsteMottattTid,
                 sakStatus = UTREDES,
                 hendelsesTidspunkt = hendelsesTidspunkt,
-                identerForSak = listOf("123"),
+                identerForSak = listOf("1234"),
                 vurderingsbehov = listOf(Vurderingsbehov.SØKNAD)
             )
         )
