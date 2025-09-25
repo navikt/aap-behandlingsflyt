@@ -116,25 +116,29 @@ class BehandlingHendelseServiceImpl(
         val oppfølgingsoppgavedokument =
             MottaDokumentService(dokumentRepository).hentOppfølgingsBehandlingDokument(behandlingId)
 
-        val revurderingAvbruttDokument = MottaDokumentService(dokumentRepository).hentMottattDokumentAvType(
-            sak,
+        val reserverTilBruker = finnReserverTilBrukerVedAvbruttRevurdering(behandlingId)
+
+        return oppfølgingsoppgavedokument?.reserverTilBruker ?: reserverTilBruker
+    }
+
+    private fun finnReserverTilBrukerVedAvbruttRevurdering(behandlingId: BehandlingId): String? {
+        val nyÅrsakTilBehandlingDokumenter = MottaDokumentService(dokumentRepository).hentMottattDokumenterAvType(
+            behandlingId,
             InnsendingType.NY_ÅRSAK_TIL_BEHANDLING
         )
 
-        var reserverTilBruker: String? = null
-        val parsedMelding = if (revurderingAvbruttDokument?.ustrukturerteData() != null) {
-            DefaultJsonMapper.fromJson<Melding>(revurderingAvbruttDokument.ustrukturerteData()!!)
-        } else null
-
-        if (parsedMelding is NyÅrsakTilBehandlingV0) {
-            reserverTilBruker =
-                if (parsedMelding.årsakerTilBehandling.contains(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDERING_AVBRUTT)) {
-                    parsedMelding.reserverTilBruker
-                } else null
-
+        val revurderingAvbruttDokument = nyÅrsakTilBehandlingDokumenter.find { dokument ->
+            val melding = dokument.ustrukturerteData()?.let { DefaultJsonMapper.fromJson<Melding>(it) }
+            melding is NyÅrsakTilBehandlingV0 &&
+                    melding.årsakerTilBehandling.contains(
+                        no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDERING_AVBRUTT
+                    )
         }
 
-        return oppfølgingsoppgavedokument?.reserverTilBruker ?: reserverTilBruker
+        return (revurderingAvbruttDokument
+            ?.ustrukturerteData()
+            ?.let { DefaultJsonMapper.fromJson<Melding>(it) } as? NyÅrsakTilBehandlingV0)
+            ?.reserverTilBruker
     }
 
     private fun hentMottattDokumenter(

@@ -54,7 +54,7 @@ class BehandlingHendelseServiceTest {
 
         every {
             mottattDokumentRepository.hentDokumenterAvType(
-                any<SakId>(),
+                any<BehandlingId>(),
                 InnsendingType.NY_ÅRSAK_TIL_BEHANDLING
             )
         } returns emptySet()

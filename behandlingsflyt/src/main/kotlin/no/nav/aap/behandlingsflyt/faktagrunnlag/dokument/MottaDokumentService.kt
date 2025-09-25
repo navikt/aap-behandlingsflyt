@@ -12,7 +12,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Meldekort
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Oppfølgingsoppgave
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Søknad
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -136,8 +135,8 @@ class MottaDokumentService(
         mottattDokumentRepository.oppdaterBehandlingId(referanse, behandlingId, sakId)
     }
 
-    fun hentMottattDokumentAvType(sak: Sak, type: InnsendingType): MottattDokument? {
-        val uthentetDokument = mottattDokumentRepository.hentDokumenterAvType(sak.id, type).firstOrNull()
+    fun hentMottattDokumenterAvType(behandlingId: BehandlingId, type: InnsendingType): Set<MottattDokument> {
+        val uthentetDokument = mottattDokumentRepository.hentDokumenterAvType(behandlingId, type)
 
         return uthentetDokument
     }
