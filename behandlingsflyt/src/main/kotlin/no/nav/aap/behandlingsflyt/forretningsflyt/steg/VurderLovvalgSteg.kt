@@ -48,8 +48,13 @@ class VurderLovvalgSteg private constructor(
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val grunnlag = lazy { hentGrunnlag(kontekst.sakId, kontekst.behandlingId) }
+        var grunnlag = lazy { hentGrunnlag(kontekst.sakId, kontekst.behandlingId) }
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+
+        if (utenlandsLovvalgslandTattAvVent(kontekst, avklaringsbehovene)) {
+            tilbakestillGrunnlag(kontekst, grunnlag.value)
+            grunnlag = lazy { hentGrunnlag(kontekst.sakId, kontekst.behandlingId) }
+        }
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
             avklaringsbehovene = avklaringsbehovene,
@@ -158,6 +163,23 @@ class VurderLovvalgSteg private constructor(
         }
     }
 
+    private fun utenlandsLovvalgslandTattAvVent(
+        kontekst: FlytKontekstMedPerioder,
+        avklaringsbehovene: Avklaringsbehovene
+    ): Boolean {
+        val norgeIkkeKompetentStat = norgeIkkeKompetentStat(kontekst)
+        val finnesÅpneAvklaringsbehov =
+            avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)?.status()?.erÅpent() == true
+        val overstyrtBehov =
+            avklaringsbehovene.hentBehovForDefinisjon(Definisjon.MANUELL_OVERSTYRING_LOVVALG)?.status()
+                ?.erÅpent() == true
+        val finnesÅpneVentebehov =
+            avklaringsbehovene.hentBehovForDefinisjon(Definisjon.VENTE_PÅ_UTENLANDSK_VIDEREFØRING_AVKLARING)?.status()
+                ?.erÅpent() == true
+
+        return norgeIkkeKompetentStat && !finnesÅpneVentebehov && !finnesÅpneAvklaringsbehov && !overstyrtBehov
+    }
+
     private fun manueltTriggetLøsning(avklaringsbehovene: Avklaringsbehovene): Boolean {
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
         return avklaringsbehov != null
@@ -168,7 +190,10 @@ class VurderLovvalgSteg private constructor(
             .any { it == Vurderingsbehov.REVURDER_LOVVALG || it == Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP }
     }
 
-    private fun avbrytTidligereUnødvendigeBehov(kontekst: FlytKontekstMedPerioder, grunnlag: MedlemskapLovvalgGrunnlag) {
+    private fun avbrytTidligereUnødvendigeBehov(
+        kontekst: FlytKontekstMedPerioder,
+        grunnlag: MedlemskapLovvalgGrunnlag
+    ) {
         val alleVilkårOppfylt =
             vilkårsresultatRepository.hent(kontekst.behandlingId).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
                 .all { it.erOppfylt() }
