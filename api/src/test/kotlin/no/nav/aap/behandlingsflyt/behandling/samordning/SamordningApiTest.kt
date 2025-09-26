@@ -16,11 +16,8 @@ import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NorgGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.MockDataSource
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningVurderingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningYtelseRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTjenestePensjonRepository
-import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryRegistry
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
@@ -30,12 +27,6 @@ import java.time.LocalDate
 
 @Fakes
 class SamordningApiKtTest : BaseApiTest() {
-    private val repositoryRegistry = RepositoryRegistry()
-        .register<InMemorySamordningVurderingRepository>()
-        .register<InMemorySamordningYtelseRepository>()
-        .register<InMemoryBehandlingRepository>()
-        .register<InMemoryTjenestePensjonRepository>()
-
 
     @Test
     fun `hente ut samordningsgrunnlag fra API`() {
@@ -62,7 +53,7 @@ class SamordningApiKtTest : BaseApiTest() {
 
         testApplication {
             installApplication {
-                samordningGrunnlag(ds, repositoryRegistry, createGatewayProvider {
+                samordningGrunnlag(ds, inMemoryRepositoryRegistry, createGatewayProvider {
                     register<NomInfoGateway>()
                     register<NorgGateway>()
                 })

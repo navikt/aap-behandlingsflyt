@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
+import no.nav.aap.behandlingsflyt.prosessering.statistikk.ResendStatistikkJobbUtfører
+import no.nav.aap.behandlingsflyt.prosessering.statistikk.StatistikkJobbUtfører
 import no.nav.aap.motor.JobbSpesifikasjon
 
 object ProsesseringsJobber {
@@ -12,6 +14,7 @@ object ProsesseringsJobber {
             GjenopptaBehandlingJobbUtfører,
             HendelseMottattHåndteringJobbUtfører,
             StatistikkJobbUtfører,
+            ResendStatistikkJobbUtfører,
             DatadelingMeldePerioderOgSakStatusJobbUtfører,
             DatadelingBehandlingJobbUtfører,
             DatadelingMeldekortJobbUtfører,

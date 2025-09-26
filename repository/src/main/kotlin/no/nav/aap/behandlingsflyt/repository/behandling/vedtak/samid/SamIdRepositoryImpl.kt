@@ -15,12 +15,15 @@ class SamIdRepositoryImpl(private val connection: DBConnection) : SamIdRepositor
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): String? {
         val query = """
-            SELECT * FROM SAM_ID WHERE behandling_id = ?
+            SELECT sam_id FROM SAM_ID WHERE behandling_id = ?
         """.trimIndent()
 
         return connection.queryFirstOrNull(query) {
             setParams {
                 setLong(1, behandlingId.id)
+            }
+            setRowMapper {
+                it.getStringOrNull("sam_id")
             }
         }
     }

@@ -67,7 +67,7 @@ class VurderBistandsbehovSteg private constructor(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (Miljø.erDev() || Miljø.erDev() || Miljø.erProd()) {
+        if (Miljø.erProd()) {
             return gammelUtfør(kontekst)
         }
 
@@ -158,6 +158,7 @@ class VurderBistandsbehovSteg private constructor(
             it in listOf(
                 Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
                 Vurderingsbehov.MOTTATT_SØKNAD,
+                Vurderingsbehov.DØDSFALL_BRUKER,
                 Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
                 Vurderingsbehov.HELHETLIG_VURDERING
             )

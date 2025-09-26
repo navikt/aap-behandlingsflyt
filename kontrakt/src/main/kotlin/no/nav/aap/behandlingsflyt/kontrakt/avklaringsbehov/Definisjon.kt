@@ -58,8 +58,7 @@ public enum class Definisjon(
         løsesISteg = StegType.AVBRYT_REVURDERING,
         type = BehovType.MANUELT_PÅKREVD,
         løsesAv = listOf(
-            Rolle.SAKSBEHANDLER_OPPFOLGING,
-            Rolle.SAKSBEHANDLER_NASJONAL
+            Rolle.BESLUTTER
         ),
     ),
     BESTILL_LEGEERKLÆRING(
@@ -494,6 +493,13 @@ public enum class Definisjon(
         kode = AvklaringsbehovKode.`4101`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.VURDER_AKTIVITETSPLIKT_11_7,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
+        kreverToTrinn = true
+    ),
+    VURDER_BRUDD_11_9(
+        kode = AvklaringsbehovKode.`4201`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.VURDER_AKTIVITETSPLIKT_11_9,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
         kreverToTrinn = true
     ),

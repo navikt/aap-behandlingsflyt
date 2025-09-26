@@ -22,12 +22,4 @@ data class Input(
     val yrkesskadevurdering: Yrkesskadevurdering?,
     val registrerteYrkesskader: Yrkesskader?,
     val beregningGrunnlag: BeregningGrunnlag?,
-) {
-
-    fun datoerForInnhenting(): Set<LocalDate> {
-        val ytterligereNedsattArbeidsevneDato =
-            beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato ?: return setOf(nedsettelsesDato)
-
-        return setOf(nedsettelsesDato, ytterligereNedsattArbeidsevneDato)
-    }
-}
+)

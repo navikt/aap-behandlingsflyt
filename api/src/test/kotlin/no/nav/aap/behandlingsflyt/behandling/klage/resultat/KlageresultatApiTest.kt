@@ -25,9 +25,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.MockDataSource
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMottattDokumentRepository
-import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryRegistry
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -37,9 +36,6 @@ import kotlin.random.Random
 
 @Fakes
 class KlageresultatApiTest : BaseApiTest() {
-    private val repositoryRegistry = RepositoryRegistry()
-        .register<InMemoryMottattDokumentRepository>()
-        .register<InMemoryBehandlingRepository>()
 
     @Test
     fun `skal returnere resultat med tom liste dersom klageresultater fra kabal ikke finnes`() {
@@ -48,7 +44,7 @@ class KlageresultatApiTest : BaseApiTest() {
 
         testApplication {
             installApplication {
-                klageresultatApi(ds, repositoryRegistry)
+                klageresultatApi(ds, inMemoryRepositoryRegistry)
             }
 
             val response = createClient().get("/api/klage/${behandling.referanse.referanse}/kabal-resultat") {
@@ -83,7 +79,7 @@ class KlageresultatApiTest : BaseApiTest() {
 
         testApplication {
             installApplication {
-                klageresultatApi(ds, repositoryRegistry)
+                klageresultatApi(ds, inMemoryRepositoryRegistry)
             }
 
             val response = createClient().get("/api/klage/${behandling.referanse.referanse}/kabal-resultat") {
@@ -153,7 +149,7 @@ class KlageresultatApiTest : BaseApiTest() {
 
         testApplication {
             installApplication {
-                klageresultatApi(ds, repositoryRegistry)
+                klageresultatApi(ds, inMemoryRepositoryRegistry)
             }
 
             val response = createClient().get("/api/klage/${behandling.referanse.referanse}/kabal-resultat") {
@@ -191,7 +187,7 @@ class KlageresultatApiTest : BaseApiTest() {
 
         testApplication {
             installApplication {
-                klageresultatApi(ds, repositoryRegistry)
+                klageresultatApi(ds, inMemoryRepositoryRegistry)
             }
 
             val response = createClient().get("/api/klage/${UUID.randomUUID()}/kabal-resultat") {

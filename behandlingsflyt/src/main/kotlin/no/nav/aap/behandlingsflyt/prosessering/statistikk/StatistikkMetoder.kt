@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.prosessering
+package no.nav.aap.behandlingsflyt.prosessering.statistikk
 
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
@@ -19,10 +19,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.IKlageresultatUtl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageResultatType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
-import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.AVSLUTTET
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvsluttetBehandlingDTO
@@ -47,19 +45,14 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.lookup.repository.RepositoryProvider
-import no.nav.aap.motor.JobbInput
-import no.nav.aap.motor.JobbUtfører
-import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import no.nav.aap.verdityper.dokument.Kanal
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
-
-class StatistikkJobbUtfører(
+class StatistikkMetoder(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val behandlingRepository: BehandlingRepository,
     private val sakService: SakService,
@@ -69,33 +62,32 @@ class StatistikkJobbUtfører(
     private val dokumentRepository: MottattDokumentRepository,
     private val sykdomRepository: SykdomRepository,
     private val underveisRepository: UnderveisRepository,
-    private val trukketSøknadService: TrukketSøknadService,
+    trukketSøknadService: TrukketSøknadService,
     private val klageresultatUtleder: IKlageresultatUtleder,
-    private val statistikkGateway: StatistikkGateway,
-    private val avbrytRevurderingService: AvbrytRevurderingService
-) : JobbUtfører {
+    avbrytRevurderingService: AvbrytRevurderingService
+) {
+
+    constructor(repositoryProvider: RepositoryProvider) : this(
+        vilkårsresultatRepository = repositoryProvider.provide(),
+        behandlingRepository = repositoryProvider.provide(),
+        sakService = SakService(repositoryProvider.provide()),
+        tilkjentYtelseRepository = repositoryProvider.provide(),
+        beregningsgrunnlagRepository = repositoryProvider.provide(),
+        pipRepository = repositoryProvider.provide(),
+        dokumentRepository = repositoryProvider.provide(),
+        sykdomRepository = repositoryProvider.provide(),
+        underveisRepository = repositoryProvider.provide(),
+        trukketSøknadService = TrukketSøknadService(repositoryProvider.provide()),
+        klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
+        avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider)
+    )
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     private val resultatUtleder =
         ResultatUtleder(underveisRepository, behandlingRepository, trukketSøknadService, avbrytRevurderingService)
 
-    private val log = LoggerFactory.getLogger(javaClass)
-    override fun utfør(input: JobbInput) {
-
-        log.info("Utfører jobbinput statistikk: $input")
-        val payload = input.payload<BehandlingFlytStoppetHendelse>()
-
-        håndterBehandlingStoppet(payload)
-    }
-
-
-    private fun håndterBehandlingStoppet(hendelse: BehandlingFlytStoppetHendelse) {
-
-        val statistikkHendelse = oversettHendelseTilKontrakt(hendelse)
-
-        statistikkGateway.avgiStatistikk(statistikkHendelse)
-    }
-
-    private fun oversettHendelseTilKontrakt(hendelse: BehandlingFlytStoppetHendelse): StoppetBehandling {
+    fun oversettHendelseTilKontrakt(hendelse: BehandlingFlytStoppetHendelseTilStatistikk): StoppetBehandling {
         log.info("Oversetter hendelse for behandling ${hendelse.referanse} og saksnr ${hendelse.saksnummer}")
         val behandling = behandlingRepository.hent(hendelse.referanse)
         val søknaderForSak = hentSøknanderForSak(behandling)
@@ -169,6 +161,8 @@ class StatistikkJobbUtfører(
                 Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT
                 Vurderingsbehov.OVERGANG_UFORE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.OVERGANG_UFORE
                 Vurderingsbehov.OVERGANG_ARBEID -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.OVERGANG_ARBEID
+                Vurderingsbehov.DØDSFALL_BRUKER -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.DØDSFALL_BRUKER
+                Vurderingsbehov.DØDSFALL_BARN -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.DØDSFALL_BARN
             }
         }.distinct()
 
@@ -177,9 +171,7 @@ class StatistikkJobbUtfører(
     }
 
     private fun hentSøknadsKanal(behandling: Behandling, hentDokumenterAvType: Set<MottattDokument>): Kanal {
-        val kanaler = hentDokumenterAvType
-            .filter { it.behandlingId == behandling.id }
-            .map { it.kanal }
+        val kanaler = hentDokumenterAvType.filter { it.behandlingId == behandling.id }.map { it.kanal }
 
         // Om minst én av søknadene er papir, regn med at hele behandlingen er papir
         return kanaler.reduceOrNull { acc, curr ->
@@ -191,12 +183,10 @@ class StatistikkJobbUtfører(
     }
 
     private fun utledMottattTidspunkt(
-        behandling: Behandling,
-        hentDokumenterAvType: Set<MottattDokument>
+        behandling: Behandling, hentDokumenterAvType: Set<MottattDokument>
     ): LocalDateTime {
-        val mottattTidspunkt = hentDokumenterAvType
-            .filter { it.behandlingId == behandling.id }
-            .minOfOrNull { it.mottattTidspunkt }
+        val mottattTidspunkt =
+            hentDokumenterAvType.filter { it.behandlingId == behandling.id }.minOfOrNull { it.mottattTidspunkt }
 
         if (mottattTidspunkt == null) {
             log.info("Ingen søknader funnet for behandling ${behandling.referanse} av type ${behandling.typeBehandling()}.")
@@ -207,8 +197,7 @@ class StatistikkJobbUtfører(
 
     private fun hentSøknanderForSak(behandling: Behandling): Set<MottattDokument> {
         val hentDokumenterAvType = dokumentRepository.hentDokumenterAvType(
-            behandling.sakId,
-            InnsendingType.SØKNAD
+            behandling.sakId, InnsendingType.SØKNAD
         )
         return hentDokumenterAvType
     }
@@ -217,7 +206,7 @@ class StatistikkJobbUtfører(
      * Skal kalles når en behandling er avsluttet for å levere statistikk til statistikk-appen.
      * Payload er JSON siden dette kommer fra en jobb.
      */
-    private fun hentAvsluttetBehandlingDTO(hendelse: BehandlingFlytStoppetHendelse): AvsluttetBehandlingDTO {
+    private fun hentAvsluttetBehandlingDTO(hendelse: BehandlingFlytStoppetHendelseTilStatistikk): AvsluttetBehandlingDTO {
         val behandling = behandlingRepository.hent(hendelse.referanse)
         val vilkårsresultat = vilkårsresultatRepository.hent(behandling.id)
         val sak = sakService.hent(behandling.sakId)
@@ -227,11 +216,8 @@ class StatistikkJobbUtfører(
         }
 
         val tilkjentYtelse =
-            tilkjentYtelseRepository.hentHvisEksisterer(behandling.id)
-                ?.map { Segment(it.periode, it.tilkjent) }
-                ?.let(::Tidslinje)?.mapValue { it }
-                ?.komprimer()
-                ?.map {
+            tilkjentYtelseRepository.hentHvisEksisterer(behandling.id)?.map { Segment(it.periode, it.tilkjent) }
+                ?.let(::Tidslinje)?.mapValue { it }?.komprimer()?.map {
                     val verdi = it.verdi
                     TilkjentYtelsePeriodeDTO(
                         fraDato = it.periode.fom,
@@ -249,38 +235,32 @@ class StatistikkJobbUtfører(
             log.info("Ingen tilkjente ytelser knyttet til avsluttet behandling ${behandling.id}.")
         }
 
-        val grunnlag =
-            beregningsgrunnlagRepository.hentHvisEksisterer(behandling.id)
+        val grunnlag = beregningsgrunnlagRepository.hentHvisEksisterer(behandling.id)
 
         val beregningsGrunnlagDTO: BeregningsgrunnlagDTO? =
             if (grunnlag == null) null else beregningsgrunnlagDTO(grunnlag)
 
         log.info("Kaller aap-statistikk for sak ${sak.saksnummer} og behandling ${behandling.referanse}")
 
-        val rettighetstypePerioder =
-            underveisRepository.hentHvisEksisterer(behandling.id)?.perioder.orEmpty()
-                .filter { it.rettighetsType != null }
-                .map { Segment(it.periode, it.rettighetsType) }
-                .let(::Tidslinje)
-                .komprimer()
-                .map {
-                    RettighetstypePeriode(
-                        fraDato = it.periode.fom,
-                        tilDato = it.periode.tom,
-                        rettighetstype = when (requireNotNull(it.verdi)) {
-                            RettighetsType.BISTANDSBEHOV -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.BISTANDSBEHOV
-                            RettighetsType.SYKEPENGEERSTATNING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.SYKEPENGEERSTATNING
-                            RettighetsType.STUDENT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.STUDENT
-                            RettighetsType.ARBEIDSSØKER -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.ARBEIDSSØKER
-                            RettighetsType.VURDERES_FOR_UFØRETRYGD -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.VURDERES_FOR_UFØRETRYGD
-                        }
-                    )
-                }
+        val rettighetstypePerioder = underveisRepository.hentHvisEksisterer(behandling.id)?.perioder.orEmpty()
+            .filter { it.rettighetsType != null }.map { Segment(it.periode, it.rettighetsType) }.let(::Tidslinje)
+            .komprimer().map {
+                RettighetstypePeriode(
+                    fraDato = it.periode.fom,
+                    tilDato = it.periode.tom,
+                    rettighetstype = when (requireNotNull(it.verdi)) {
+                        RettighetsType.BISTANDSBEHOV -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.BISTANDSBEHOV
+                        RettighetsType.SYKEPENGEERSTATNING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.SYKEPENGEERSTATNING
+                        RettighetsType.STUDENT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.STUDENT
+                        RettighetsType.ARBEIDSSØKER -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.ARBEIDSSØKER
+                        RettighetsType.VURDERES_FOR_UFØRETRYGD -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.VURDERES_FOR_UFØRETRYGD
+                    }
+                )
+            }
 
         val avsluttetBehandlingDTO = AvsluttetBehandlingDTO(
             vilkårsResultat = VilkårsResultatDTO(
-                typeBehandling = behandling.typeBehandling(),
-                vilkår = vilkårsresultat.alle().map { res ->
+                typeBehandling = behandling.typeBehandling(), vilkår = vilkårsresultat.alle().map { res ->
                     VilkårDTO(
                         vilkårType = Vilkårtype.valueOf(res.type.toString()),
                         perioder = res.vilkårsperioder().map { periode ->
@@ -292,10 +272,8 @@ class StatistikkJobbUtfører(
                                 innvilgelsesårsak = periode.innvilgelsesårsak.toString(),
                                 avslagsårsak = periode.avslagsårsak.toString()
                             )
-                        }
-                    )
-                }
-            ),
+                        })
+                }),
             tilkjentYtelse = TilkjentYtelseDTO(perioder = tilkjentYtelse.orEmpty()),
             beregningsGrunnlag = beregningsGrunnlagDTO,
             diagnoser = hentDiagnose(behandling),
@@ -347,9 +325,8 @@ class StatistikkJobbUtfører(
     }
 
     private fun hentDiagnose(behandling: Behandling): Diagnoser? {
-        val sykdomsvurdering =
-            sykdomRepository.hentHvisEksisterer(behandling.id)?.sykdomsvurderinger.orEmpty()
-                .maxByOrNull { it.opprettet }
+        val sykdomsvurdering = sykdomRepository.hentHvisEksisterer(behandling.id)?.sykdomsvurderinger.orEmpty()
+            .maxByOrNull { it.opprettet }
 
         if (sykdomsvurdering == null) {
             log.info("Fant ikke sykdomsvurdering for behandling ${behandling.referanse} (id: ${behandling.id})")
@@ -384,8 +361,7 @@ class StatistikkJobbUtfører(
                 uføreYtterligereNedsattArbeidsevneÅr = grunnlag.uføreYtterligereNedsattArbeidsevneÅr().value,
                 uføregrad = grunnlag.uføregrad().prosentverdi(),
                 uføreInntekterFraForegåendeÅr = grunnlag.uføreInntekterFraForegåendeÅr()
-                    .associate { it.år.value.toString() to it.inntektIKroner.verdi().toDouble() }
-            )
+                    .associate { it.år.value.toString() to it.inntektIKroner.verdi().toDouble() })
         )
 
         is GrunnlagYrkesskade -> BeregningsgrunnlagDTO(
@@ -398,8 +374,7 @@ class StatistikkJobbUtfører(
                 andelYrkesskade = grunnlag.andelYrkesskade().prosentverdi(),
                 andelSomSkyldesYrkesskade = grunnlag.andelSomSkyldesYrkesskade().verdi(),
                 andelSomIkkeSkyldesYrkesskade = grunnlag.andelSomIkkeSkyldesYrkesskade().verdi(),
-                antattÅrligInntektYrkesskadeTidspunktet = grunnlag.antattÅrligInntektYrkesskadeTidspunktet()
-                    .verdi(),
+                antattÅrligInntektYrkesskadeTidspunktet = grunnlag.antattÅrligInntektYrkesskadeTidspunktet().verdi(),
                 benyttetAndelForYrkesskade = grunnlag.benyttetAndelForYrkesskade().prosentverdi(),
                 grunnlagForBeregningAvYrkesskadeandel = grunnlag.grunnlagForBeregningAvYrkesskadeandel().verdi(),
                 grunnlagEtterYrkesskadeFordel = grunnlag.grunnlagEtterYrkesskadeFordel().verdi(),
@@ -419,29 +394,4 @@ class StatistikkJobbUtfører(
         er6GBegrenset = false,
         erGjennomsnitt = false
     )
-
-
-    companion object : ProvidersJobbSpesifikasjon {
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
-            return StatistikkJobbUtfører(
-                vilkårsresultatRepository = repositoryProvider.provide(),
-                behandlingRepository = repositoryProvider.provide(),
-                sakService = SakService(repositoryProvider),
-                tilkjentYtelseRepository = repositoryProvider.provide(),
-                beregningsgrunnlagRepository = repositoryProvider.provide(),
-                pipRepository = repositoryProvider.provide(),
-                dokumentRepository = repositoryProvider.provide(),
-                sykdomRepository = repositoryProvider.provide(),
-                underveisRepository = repositoryProvider.provide(),
-                trukketSøknadService = TrukketSøknadService(repositoryProvider.provide()),
-                klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
-                statistikkGateway = gatewayProvider.provide(),
-                avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider)
-            )
-        }
-
-        override val type = "flyt.statistikk"
-        override val navn = "Lagrer statistikk"
-        override val beskrivelse = "Skal ta i mot data fra steg i en behandling og sender til statistikk-appen."
-    }
 }

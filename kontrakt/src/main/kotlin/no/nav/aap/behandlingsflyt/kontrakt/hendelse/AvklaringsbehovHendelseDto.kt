@@ -9,15 +9,14 @@ import java.time.LocalDateTime
  * @param avklaringsbehovDefinisjon Hva slags avklaringsbehov denne hendelsen gjelder.
  * @param status Status for avklaringsbehovet.
  * @param endringer Alle endringer som har skjedd på en gitt behandling.
- * @param typeBrev Type brev relatert til et avklaringsbehov. Relevant for `Definisjon.SKRIV_BREV`
  */
 public data class AvklaringsbehovHendelseDto(
     val avklaringsbehovDefinisjon: Definisjon,
     val status: Status,
-    val endringer: List<EndringDTO>,
-    val typeBrev: TypeBrev? = null,
+    val endringer: List<EndringDTO>
 )
 
+@Deprecated("Ikke i bruk.")
 public enum class TypeBrev {
     VEDTAK_AVSLAG,
     VEDTAK_INNVILGELSE,
@@ -50,7 +49,10 @@ public enum class ÅrsakTilReturKode {
     MANGELFULL_BEGRUNNELSE,
     MANGLENDE_UTREDNING,
     FEIL_LOVANVENDELSE,
-    ANNET
+    ANNET,
+    SKRIVEFEIL,
+    FOR_DETALJERT,
+    IKKE_INDIVIDUELL_OG_KONKRET,
 }
 
 

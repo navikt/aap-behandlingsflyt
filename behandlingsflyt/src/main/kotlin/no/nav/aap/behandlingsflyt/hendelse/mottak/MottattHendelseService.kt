@@ -2,24 +2,32 @@ package no.nav.aap.behandlingsflyt.hendelse.mottak
 
 import no.nav.aap.behandlingsflyt.dokumentHendelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import org.slf4j.LoggerFactory
+import java.util.*
 
 class MottattHendelseService(
     private val sakRepository: SakRepository,
     private val mottattDokumentRepository: MottattDokumentRepository,
     private val flytJobbRepository: FlytJobbRepository,
+    private val behandlingRepository: BehandlingRepository
 ) {
     constructor(repositoryProvider: RepositoryProvider) : this(
         sakRepository = repositoryProvider.provide<SakRepository>(),
         mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>(),
-        flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
+        flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>(),
+        behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
     )
 
     private val log = LoggerFactory.getLogger(MottattHendelseService::class.java)
@@ -29,7 +37,25 @@ class MottattHendelseService(
     ) {
         val sak = sakRepository.hent(dto.saksnummer)
 
-        log.info("Mottok dokumenthendelse. Brevkategori: ${dto.type} Mottattdato: ${dto.mottattTidspunkt}")
+        when (val melding = dto.melding) {
+            is NyÅrsakTilBehandlingV0 -> log.info("Mottok dokumenthendelse. Brevkategori: ${dto.type} Mottattdato: ${dto.mottattTidspunkt} Referanse: ${dto.referanse} behandlingReferanse: ${melding.behandlingReferanse} Årsak: ${melding.årsakerTilBehandling}")
+            else -> log.info("Mottok dokumenthendelse. Brevkategori: ${dto.type} Mottattdato: ${dto.mottattTidspunkt} Referanse: ${dto.referanse}")
+        }
+
+        if (erBehandlingAvsluttetOgKanIkkeOppretteNyttVurderingsbehov(dto, behandlingRepository)) {
+            when (val melding = dto.melding) {
+                is NyÅrsakTilBehandlingV0 -> log.warn(
+                    "Kan ikke opprette nytt vurderingsbehov når behandling er avsluttet. Ignorerer dokument med referanse {} og nyÅrsakTilBehandling: {}",
+                    dto.referanse, melding
+                )
+
+                else -> log.warn(
+                    "Kan ikke opprette nytt vurderingsbehov når behandling er avsluttet. Ignorerer dokument med referanse {} og type {}",
+                    dto.referanse, dto.type
+                )
+            }
+            return
+        }
 
         if (kjennerTilDokumentFraFør(dto, sak, mottattDokumentRepository)) {
             log.warn("Allerede håndtert dokument med referanse {}", dto.referanse)
@@ -48,6 +74,25 @@ class MottattHendelseService(
         }
     }
 }
+
+private fun erBehandlingAvsluttetOgKanIkkeOppretteNyttVurderingsbehov(
+    innsending: Innsending,
+    behandlingRepository: BehandlingRepository
+): Boolean {
+    if (innsending.referanse.type != InnsendingReferanse.Type.SAKSBEHANDLER_KELVIN_REFERANSE ||
+        innsending.type != InnsendingType.NY_ÅRSAK_TIL_BEHANDLING
+    ) {
+        return false
+    }
+
+    val melding = innsending.melding
+    if (melding is NyÅrsakTilBehandlingV0) {
+        val behandling = behandlingRepository.hent(BehandlingReferanse(UUID.fromString(melding.behandlingReferanse)))
+        return behandling.status().erAvsluttet()
+    }
+    return false
+}
+
 
 private fun kjennerTilDokumentFraFør(
     innsending: Innsending,

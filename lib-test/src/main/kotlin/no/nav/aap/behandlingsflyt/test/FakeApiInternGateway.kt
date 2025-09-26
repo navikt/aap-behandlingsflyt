@@ -7,7 +7,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DetaljertMeldekortDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -41,6 +43,10 @@ class FakeApiInternGateway : ApiInternGateway {
     ) {
     }
 
-    override fun sendDetaljertMeldekortListe(detaljertMeldekortListe: List<DetaljertMeldekortDTO>){
+    override fun sendDetaljertMeldekortListe(
+        detaljertMeldekortListe: List<DetaljertMeldekortDTO>,
+        sakId: SakId,
+        behandlingId: BehandlingId
+    ){
     }
 }

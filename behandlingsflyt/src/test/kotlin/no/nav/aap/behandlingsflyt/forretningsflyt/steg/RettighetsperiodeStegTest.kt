@@ -74,7 +74,6 @@ class RettighetsperiodeStegTest {
             AvklaringsbehovService(avklaringsbehovRepository, avbrytRevurderingService),
             tidligereVurderinger,
             rettighetsperiodeRepository,
-            erProd = false
         )
     }
 

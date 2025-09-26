@@ -4,17 +4,13 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBist
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SykdomsvurderingForBrevLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
-import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ArbeidIPeriodeV0
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
@@ -35,11 +31,8 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
-import no.nav.aap.komponenter.verdityper.Prosent.Companion.`50_PROSENT`
-import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import java.time.LocalDate
-import java.time.LocalDateTime
 import kotlin.test.Test
 
 class FasttrackMeldekortFlytTest :
@@ -47,14 +40,18 @@ class FasttrackMeldekortFlytTest :
 
     @Test
     fun `Meldekortgrunnlag skal flettes inn i åpen behandling før UnderveisSteg`() {
-        val sak = happyCaseFørstegangsbehandling()
+        val søknadsdato = LocalDate.now().minusMonths(3)
+        val sak = happyCaseFørstegangsbehandling(søknadsdato)
         val åpenBehandling = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom)
 
         assertThat(åpenBehandling.vurderingsbehov().map { it.type })
             .hasSameElementsAs(listOf(Vurderingsbehov.MOTTATT_SØKNAD))
         val aktivtStegFørMeldekort = åpenBehandling.aktivtSteg()
 
-        åpenBehandling.sendInnMeldekort(sak.rettighetsperiode)
+        sak.sendInnMeldekort(
+            journalpostId = journalpostId(),
+            timerArbeidet = mapOf(søknadsdato to 5.0),
+        )
 
         dataSource.transaction { connection ->
             val behandlingRepo = BehandlingRepositoryImpl(connection)
@@ -134,14 +131,11 @@ class FasttrackMeldekortFlytTest :
             TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(åpenBehandling.id)
         }
 
-        åpenBehandling.sendInnMeldekort(
-            sak.rettighetsperiode, listOf(
-                ArbeidIPeriodeV0(
-                    fraOgMedDato = revurderingGjelderFra,
-                    tilOgMedDato = revurderingGjelderFra.plusDays(13),
-                    timerArbeid = 5.0,
-                )
-            )
+        sak.sendInnMeldekort(
+            journalpostId = journalpostId(),
+            timerArbeidet = Periode(revurderingGjelderFra, revurderingGjelderFra.plusDays(13))
+                .dager()
+                .associateWith { 1.0 }
         )
 
         åpenBehandling = dataSource.transaction { connection ->
@@ -203,25 +197,14 @@ class FasttrackMeldekortFlytTest :
         val (førsteMeldeperiode, andreMeldeperiode) = dataSource.transaction { connection ->
             MeldeperiodeRepositoryImpl(connection).hent(åpenBehandling.id)
         }
-        åpenBehandling.sendInnMeldekort(
-            sak.rettighetsperiode,
-            listOf(
-                ArbeidIPeriodeV0(
-                    fraOgMedDato = førsteMeldeperiode.fom,
-                    tilOgMedDato = førsteMeldeperiode.tom,
-                    timerArbeid = 37.5 / 2,
-                ),
-            ),
+        sak.sendInnMeldekort(
+            journalpostId = journalpostId(),
+            timerArbeidet = førsteMeldeperiode.dager().associateWith { 1.0 },
             mottattTidspunkt = førsteMeldeperiode.tom.plusDays(1).atTime(8, 0),
         )
-        åpenBehandling.sendInnMeldekort(
-            sak.rettighetsperiode, listOf(
-                ArbeidIPeriodeV0(
-                    fraOgMedDato = andreMeldeperiode.fom,
-                    tilOgMedDato = andreMeldeperiode.tom,
-                    timerArbeid = 37.5,
-                )
-            ),
+        sak.sendInnMeldekort(
+            journalpostId = journalpostId(),
+            timerArbeidet = andreMeldeperiode.dager().associateWith { 2.0 },
             mottattTidspunkt = andreMeldeperiode.tom.plusDays(1).atTime(8, 0),
         )
         motor.kjørJobber()
@@ -247,7 +230,7 @@ class FasttrackMeldekortFlytTest :
             assertTidslinje(
                 andelArbeidetTidslinje(connection, førsteMeldekort),
                 førsteMeldeperiode to {
-                    assertThat(it).isEqualTo(Prosent(24))
+                    assertThat(it).isEqualTo(Prosent(18))
                 },
                 Periode(førsteMeldeperiode.tom.plusDays(1), sak.rettighetsperiode.tom) to {
                     assertThat(it).isEqualTo(`0_PROSENT`)
@@ -259,10 +242,10 @@ class FasttrackMeldekortFlytTest :
             assertTidslinje(
                 andelArbeidetTidslinje(connection, andreMeldekort),
                 førsteMeldeperiode to {
-                    assertThat(it).isEqualTo(Prosent(24))
+                    assertThat(it).isEqualTo(Prosent(18))
                 },
                 andreMeldeperiode to {
-                    assertThat(it).isEqualTo(`50_PROSENT`)
+                    assertThat(it).isEqualTo(Prosent(37))
                 },
                 Periode(andreMeldeperiode.tom.plusDays(1), sak.rettighetsperiode.tom) to {
                     assertThat(it).isEqualTo(`0_PROSENT`)
@@ -274,10 +257,10 @@ class FasttrackMeldekortFlytTest :
             assertTidslinje(
                 andelArbeidetTidslinje(connection, åpenBehandling),
                 førsteMeldeperiode to {
-                    assertThat(it).isEqualTo(Prosent(24))
+                    assertThat(it).isEqualTo(Prosent(18))
                 },
                 andreMeldeperiode to {
-                    assertThat(it).isEqualTo(`50_PROSENT`)
+                    assertThat(it).isEqualTo(Prosent(37))
                 },
                 Periode(andreMeldeperiode.tom.plusDays(1), sak.rettighetsperiode.tom) to {
                     assertThat(it).isEqualTo(`0_PROSENT`)
@@ -318,35 +301,4 @@ class FasttrackMeldekortFlytTest :
         return meldekortRespoitory.hentHvisEksisterer(behandlingId)
     }
 
-    private var nesteJournalpostId = (300..1000000)
-        .asSequence()
-        .map { JournalpostId(it.toString()) }
-        .iterator()
-
-    private fun Behandling.sendInnMeldekort(
-        periode: Periode,
-        timerArbeidIPeriode: List<ArbeidIPeriodeV0> = listOf(
-            ArbeidIPeriodeV0(
-                fraOgMedDato = LocalDate.now().minusMonths(3),
-                tilOgMedDato = LocalDate.now().plusMonths(3),
-                timerArbeid = 0.0,
-            )
-        ),
-        journalpostId: JournalpostId = nesteJournalpostId.next(),
-        mottattTidspunkt: LocalDateTime = LocalDateTime.now()
-    ) {
-        this.sendInnDokument(
-            DokumentMottattPersonHendelse(
-                journalpost = journalpostId,
-                mottattTidspunkt = mottattTidspunkt,
-                strukturertDokument = StrukturertDokument(
-                    MeldekortV0(
-                        harDuArbeidet = timerArbeidIPeriode.any { it.timerArbeid > 0.0 },
-                        timerArbeidPerPeriode = timerArbeidIPeriode
-                    ),
-                ),
-                periode = periode
-            )
-        )
-    }
 }

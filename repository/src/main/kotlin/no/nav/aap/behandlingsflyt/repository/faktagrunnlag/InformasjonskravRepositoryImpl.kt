@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
 import java.time.Instant
@@ -18,7 +19,7 @@ class InformasjonskravRepositoryImpl(
 
     override fun hentOppdateringer(sakId: SakId, krav: List<InformasjonskravNavn>): List<InformasjonskravOppdatert> {
         return connection.queryList("""
-            select distinct on (informasjonskrav) behandling_id, oppdatert, informasjonskrav
+            select distinct on (informasjonskrav) behandling_id, oppdatert, informasjonskrav, rettighetsperiode
             from informasjonskrav_oppdatert
             where sak_id = ? and informasjonskrav = any(?::text[])
             order by informasjonskrav, oppdatert desc
@@ -32,6 +33,7 @@ class InformasjonskravRepositoryImpl(
                     behandlingId = BehandlingId(it.getLong("behandling_id")),
                     navn = it.getEnum("informasjonskrav"),
                     oppdatert = it.getInstant("oppdatert"),
+                    rettighetsperiode = it.getPeriodeOrNull("rettighetsperiode"),
                 )
             }
         }
@@ -41,17 +43,19 @@ class InformasjonskravRepositoryImpl(
         sakId: SakId,
         behandlingId: BehandlingId,
         informasjonskrav: List<InformasjonskravNavn>,
-        oppdatert: Instant
+        oppdatert: Instant,
+        rettighetsperiode: Periode,
     ) {
         connection.executeBatch("""
-            insert into informasjonskrav_oppdatert (sak_id, behandling_id, informasjonskrav, oppdatert)
-            values (?, ?, ?, ?)
+            insert into informasjonskrav_oppdatert (sak_id, behandling_id, informasjonskrav, oppdatert, rettighetsperiode)
+            values (?, ?, ?, ?, ?::daterange)
         """.trimIndent(), informasjonskrav) {
             setParams { krav ->
                 setLong(1, sakId.toLong())
                 setLong(2, behandlingId.toLong())
                 setEnumName(3, krav)
                 setInstant(4, oppdatert)
+                setPeriode(5, rettighetsperiode)
             }
         }
     }

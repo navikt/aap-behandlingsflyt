@@ -8,4 +8,6 @@ public sealed interface NyÅrsakTilBehandling : Melding
 @JsonIgnoreProperties(ignoreUnknown = true)
 public data class NyÅrsakTilBehandlingV0(
     public val årsakerTilBehandling: List<Vurderingsbehov>,
+    public val behandlingReferanse: String,
+    public val reserverTilBruker: String?,
 ) : NyÅrsakTilBehandling

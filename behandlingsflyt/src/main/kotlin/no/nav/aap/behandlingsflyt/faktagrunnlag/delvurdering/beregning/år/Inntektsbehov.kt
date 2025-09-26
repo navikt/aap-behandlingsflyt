@@ -3,6 +3,10 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -16,16 +20,14 @@ class Inntektsbehov(private val input: Input) {
     private val log = LoggerFactory.getLogger(javaClass)
 
     fun utledAlleRelevanteÅr(): Set<Year> {
-        return input.datoerForInnhenting().flatMap(::treÅrForutFor).toSortedSet()
+        val ytterligereNedsattArbeidsevneDato =
+            input.beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
+        val nedsettelsesDato = input.nedsettelsesDato
+        return utledAlleRelevanteÅr(nedsettelsesDato, ytterligereNedsattArbeidsevneDato)
     }
 
     fun hentYtterligereNedsattArbeidsevneDato(): LocalDate? {
         return input.beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
-    }
-
-    private fun treÅrForutFor(nedsettelsesdato: LocalDate): SortedSet<Year> {
-        val nedsettelsesår = Year.from(nedsettelsesdato)
-        return 3.downTo(1L).map(nedsettelsesår::minusYears).toSortedSet()
     }
 
     fun utledForOrdinær(): Set<InntektPerÅr> {
@@ -113,6 +115,39 @@ class Inntektsbehov(private val input: Input) {
 
     fun andelYrkesskade(): Prosent {
         return requireNotNull(input.yrkesskadevurdering?.andelAvNedsettelsen)
+    }
+
+    companion object {
+        fun utledAlleRelevanteÅr(nedsettelsesDato: LocalDate, ytterligereNedsattArbeidsevneDato: LocalDate?): Set<Year> {
+            val datoerForInnhenting = setOfNotNull(nedsettelsesDato, ytterligereNedsattArbeidsevneDato)
+            return datoerForInnhenting.flatMap(::treÅrForutFor).toSortedSet()
+        }
+
+        fun utledAlleRelevanteÅr(beregningGrunnlag: BeregningGrunnlag?, studentGrunnlag: StudentGrunnlag?): Set<Year> {
+            val nedsettelsesDato =
+                utledNedsettelsesdato(beregningGrunnlag?.tidspunktVurdering, studentGrunnlag?.studentvurdering)
+            val ytterligereNedsattArbeidsevneDato =
+                beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
+
+            return utledAlleRelevanteÅr(nedsettelsesDato, ytterligereNedsattArbeidsevneDato)
+        }
+
+        fun utledNedsettelsesdato(
+            beregningVurdering: BeregningstidspunktVurdering?,
+            studentVurdering: StudentVurdering?
+        ): LocalDate {
+            val nedsettelsesdatoer = setOfNotNull(
+                beregningVurdering?.nedsattArbeidsevneDato,
+                studentVurdering?.avbruttStudieDato
+            )
+
+            return nedsettelsesdatoer.min()
+        }
+
+        private fun treÅrForutFor(nedsettelsesdato: LocalDate): SortedSet<Year> {
+            val nedsettelsesår = Year.from(nedsettelsesdato)
+            return 3.downTo(1L).map(nedsettelsesår::minusYears).toSortedSet()
+        }
     }
 }
 

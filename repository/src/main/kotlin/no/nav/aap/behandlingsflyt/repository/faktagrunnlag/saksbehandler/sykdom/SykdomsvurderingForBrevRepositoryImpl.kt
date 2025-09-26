@@ -13,7 +13,7 @@ class SykdomsvurderingForBrevRepositoryImpl(private val connection: DBConnection
     override fun lagre(
         behandlingId: BehandlingId,
         vurdering: SykdomsvurderingForBrev
-    ): SykdomsvurderingForBrev {
+    ) {
         val eksisterende = hent(behandlingId)
         if (eksisterende != null) {
             deaktiverEksisterende(behandlingId)
@@ -35,10 +35,9 @@ class SykdomsvurderingForBrevRepositoryImpl(private val connection: DBConnection
                 require(rowsUpdated == 1)
             }
         }
-        return requireNotNull(hent(behandlingId)) { "Fant ikke forventet SykdomsvurderingForBrev" }
     }
 
-    private fun deaktiverEksisterende(behandlingId: BehandlingId) {
+    override fun deaktiverEksisterende(behandlingId: BehandlingId) {
         connection.execute("UPDATE SYKDOM_VURDERING_BREV SET aktiv = false WHERE behandling_id = ? AND aktiv = true") {
             setParams {
                 setLong(1, behandlingId.toLong())
