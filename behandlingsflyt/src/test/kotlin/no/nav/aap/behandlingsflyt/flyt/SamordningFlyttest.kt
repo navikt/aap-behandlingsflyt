@@ -12,20 +12,16 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.FritaksvurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.SamordningVurderingData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
-import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.InstitusjonsoppholdJSON
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
@@ -217,7 +213,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
 
         motor.kjørJobber()
         val sak = hentSak(behandling)
-        var revurdering = opprettManuellRevurdering(sak, listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SAMORDNING_OG_AVREGNING))
+        var revurdering = sak.opprettManuellRevurdering(listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SAMORDNING_OG_AVREGNING))
 
         // Avklar samordning i revurdering
         revurdering = løsAvklaringsBehov(
@@ -275,23 +271,10 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         val ident = person.aktivIdent()
         var behandling = opprettSamordning(ident, periode, sykePengerPeriode)
         val sak = hentSak(behandling)
-        var revurdering = opprettManuellRevurdering(sak, listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SAMORDNING_OG_AVREGNING))
+        var revurdering = sak.opprettManuellRevurdering(listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SAMORDNING_OG_AVREGNING))
 
         // Opprett manuell revurdering før ta av vent
-        revurdering = sendInnDokument(
-            ident, DokumentMottattPersonHendelse(
-                mottattTidspunkt = LocalDateTime.now(),
-                strukturertDokument = StrukturertDokument(
-                    ManuellRevurderingV0(
-                        årsakerTilBehandling = listOf(SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
-                        beskrivelse = "en begrunnelse",
-                    ),
-                ),
-                journalpost = JournalpostId("121321"),
-                innsendingType = InnsendingType.MANUELL_REVURDERING,
-                periode = periode,
-            )
-        )
+        revurdering = sak.opprettManuellRevurdering(listOf(SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND))
         assertThat(revurdering.vurderingsbehov().map { it.type }).describedAs("Ny årsak skal være lagt til")
             .contains(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
 
@@ -329,7 +312,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         val ident = person.aktivIdent()
         val behandling = opprettSamordning(ident, periode, sykePengerPeriode)
         val sak = hentSak(behandling)
-        var revurdering = opprettManuellRevurdering(sak, listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SAMORDNING_OG_AVREGNING))
+        var revurdering = sak.opprettManuellRevurdering(listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SAMORDNING_OG_AVREGNING))
 
 
         // Nytt institusjonsopphold
@@ -361,20 +344,17 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         sykePengerPeriode: Periode
     ): Behandling {
         // Sender inn en søknad
-        var behandling = sendInnDokument(
-            ident, DokumentMottattPersonHendelse(
-                journalpost = JournalpostId("20"),
-                mottattTidspunkt = LocalDateTime.now().minusMonths(0),
-                strukturertDokument = StrukturertDokument(
-                    SøknadV0(
-                        student = SøknadStudentDto("NEI"),
-                        yrkesskade = "NEI",
-                        oppgitteBarn = null,
-                        medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
-                    ),
-                ),
-                periode = periode
-            )
+        var behandling = sendInnSøknad(
+            ident = ident,
+            periode = periode,
+            journalpostId = JournalpostId("20"),
+            mottattTidspunkt = LocalDateTime.now().minusMonths(0),
+            søknad = SøknadV0(
+                student = SøknadStudentDto("NEI"),
+                yrkesskade = "NEI",
+                oppgitteBarn = null,
+                medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
+            ),
         )
         assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
 

@@ -2,14 +2,12 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.VurderRettighetsperiodeRepository
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
-import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
@@ -20,28 +18,22 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.miljo.Miljø.erProd
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
-class RettighetsperiodeSteg constructor(
+class RettighetsperiodeSteg(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val sakService: SakService,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val avklaringsbehovService: AvklaringsbehovService,
     private val tidligereVurderinger: TidligereVurderinger,
     private val rettighetsperiodeRepository: VurderRettighetsperiodeRepository,
-    private val erProd: Boolean = erProd()
 ) : BehandlingSteg {
 
     private val logger = LoggerFactory.getLogger(RettighetsperiodeSteg::class.java)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         logger.info("Utfører rettighetsperiodesteg for behandling=${kontekst.behandlingId}")
-
-        if (erProd) {
-            return gammelUtfør(kontekst)
-        }
 
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val rettighetsperiodeVurdering = rettighetsperiodeRepository.hentVurdering(kontekst.behandlingId)
@@ -88,40 +80,6 @@ class RettighetsperiodeSteg constructor(
             }
         }
         return Fullført
-    }
-
-    private fun gammelUtfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
-                val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-
-                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
-                    avklaringsbehovene.avbrytForSteg(type())
-                    return Fullført
-                }
-
-                if (manueltTriggetVurderingsbehov(kontekst)) {
-                    if (erIkkeVurdertTidligereIBehandlingen(avklaringsbehovene)) {
-                        avklaringsbehovene.avbrytÅpneAvklaringsbehov()
-                        return FantAvklaringsbehov(Definisjon.VURDER_RETTIGHETSPERIODE)
-                    } else {
-                        oppdaterVilkårsresultatForNyPeriode(kontekst)
-                    }
-                }
-            }
-
-            VurderingType.IKKE_RELEVANT, VurderingType.MELDEKORT, VurderingType.EFFEKTUER_AKTIVITETSPLIKT -> {
-                // Ikke relevant
-            }
-        }
-
-        return Fullført
-    }
-
-    private fun erIkkeVurdertTidligereIBehandlingen(
-        avklaringsbehovene: Avklaringsbehovene
-    ): Boolean {
-        return !avklaringsbehovene.erVurdertTidligereIBehandlingen(Definisjon.VURDER_RETTIGHETSPERIODE)
     }
 
     private fun manueltTriggetVurderingsbehov(kontekst: FlytKontekstMedPerioder): Boolean {
@@ -176,6 +134,5 @@ class RettighetsperiodeSteg constructor(
         override fun toString(): String {
             return "FlytSteg(type:${type()})"
         }
-
     }
 }
