@@ -76,6 +76,7 @@ dependencies {
     implementation("io.micrometer:micrometer-registry-prometheus:1.15.4")
     implementation("ch.qos.logback:logback-classic:1.5.18")
     implementation("net.logstash.logback:logstash-logback-encoder:8.1")
+    implementation("org.slf4j:jul-to-slf4j:2.0.13") // trengs for postgres-logging
 
     implementation(libs.motor)
     implementation(libs.dbconnect)

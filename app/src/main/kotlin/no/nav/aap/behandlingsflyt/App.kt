@@ -93,8 +93,11 @@ import no.nav.aap.motor.Motor
 import no.nav.aap.motor.api.motorApi
 import no.nav.aap.motor.retry.RetryService
 import org.slf4j.LoggerFactory
+import org.slf4j.bridge.SLF4JBridgeHandler
 import java.util.*
 import java.util.concurrent.TimeUnit
+import java.util.logging.Level
+import java.util.logging.Logger
 import javax.sql.DataSource
 
 fun utledSubtypesTilMottattHendelseDTO(): List<Class<*>> {
@@ -110,6 +113,9 @@ fun main() {
         LoggerFactory.getLogger(App::class.java).error("Uhåndtert feil av type ${e.javaClass}.", e)
         prometheus.uhåndtertExceptionTeller(e::class.java.name).increment()
     }
+
+    aktiverPostgresLogging()
+
     embeddedServer(Netty, configure = {
         connectionGroupSize = 8
         workerGroupSize = 8
@@ -120,6 +126,14 @@ fun main() {
             port = 8080
         }
     }) { server(DbConfig(), postgresRepositoryRegistry, defaultGatewayProvider()) }.start(wait = true)
+}
+
+private fun aktiverPostgresLogging() {
+    // Basert på on https://www.baeldung.com/java-jul-to-slf4j-bridge#1-programmatic-configuration
+    SLF4JBridgeHandler.install();
+    // Overrider log level fra postgres-jdbc's default, som ikke logger noe som helst
+    Logger.getLogger("org.postgresql").level = Level.WARNING // minste-nivå
+    // Vi kan fra nå av bruke org.postgresql loggeren i logback.xml
 }
 
 internal fun Application.server(
