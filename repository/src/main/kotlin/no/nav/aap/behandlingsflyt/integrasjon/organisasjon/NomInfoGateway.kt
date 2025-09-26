@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.integrasjon.organisasjon
 
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfo
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoGateway
+import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattVisningsnavn
 import no.nav.aap.behandlingsflyt.integrasjon.util.GraphQLResponse
 import no.nav.aap.behandlingsflyt.integrasjon.util.GraphQLResponseHandler
 import no.nav.aap.behandlingsflyt.integrasjon.util.GraphqlRequest
@@ -48,17 +49,21 @@ class NomInfoGateway : AnsattInfoGateway {
         return mapResponse(navIdent, checkNotNull(response.ressurs))
     }
 
-    override fun hentAnsattVisningsnavn(navIdent: String): String {
+    override fun hentAnsatteVisningsnavn(navIdenter: List<String>): List<AnsattVisningsnavn> {
         if (Miljø.erLokal()) {
-            return "Isak Sbehandlersen"
+            return navIdenter.map { AnsattVisningsnavn(it, "navn $it" ) }
         }
-
-        val request = GraphqlRequest(navnQuery, NomRessursVariables(navIdent))
-        val response = checkNotNull(query(request).data) {
+        val request = GraphqlRequest(flereNavnQuery, NomRessurserVariables(navIdenter))
+        val response = checkNotNull(flereNavnQuery(request).data) {
             "Fant ikke ansatt i NOM"
         }
 
-        return response.ressurs?.visningsnavn ?: navIdent
+        return response.ressurser.map { AnsattVisningsnavn(it.ressurs.navident, it.ressurs.visningsnavn) }
+    }
+
+    private fun flereNavnQuery(request: GraphqlRequest<NomRessurserVariables>): GraphQLResponse<NomRessurserVisningsnavn> {
+        val httpRequest = PostRequest(body = request)
+        return requireNotNull(client.post(uri = graphqlUrl, request = httpRequest))
     }
 
     private fun query(request: GraphqlRequest<NomRessursVariables>): GraphQLResponse<NomData> {
@@ -105,19 +110,14 @@ val ressursQuery = """
     }
 """.trimIndent()
 
-val navnQuery = """
-    query($navIdent: String!) {
-      ressurs(where: {navident: $navIdent}) {
-        visningsnavn
-      }
-    }
-""".trimIndent()
-
+private const val navIdenter = "\$navIdenter"
 val flereNavnQuery = """
-    ressurser(where: {navidenter: [$navIdenter]}) {
-        ressurs {
-            navident
-            visningsnavn
+    query($navIdenter: [String!]) {
+        ressurser(where: {navidenter: [$navIdenter]}) {
+            ressurs {
+                navident
+                visningsnavn
+            }
         }
     }
-}
+""".trimIndent()
