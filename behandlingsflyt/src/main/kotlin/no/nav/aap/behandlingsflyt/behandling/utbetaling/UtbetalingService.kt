@@ -17,7 +17,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseDetaljerDto
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseDto
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelsePeriodeDto
@@ -37,6 +39,23 @@ class UtbetalingService(
     private val underveisRepository: UnderveisRepository,
     private val unleashGateway: UnleashGateway,
 ) {
+    constructor(
+        repositoryProvider: RepositoryProvider,
+        gatewayProvider: GatewayProvider,
+    ) : this(
+        sakRepository = repositoryProvider.provide<SakRepository>(),
+        behandlingRepository = repositoryProvider.provide<BehandlingRepository>(),
+        tilkjentYtelseRepository = repositoryProvider.provide<TilkjentYtelseRepository>(),
+        avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>(),
+        vedtakRepository = repositoryProvider.provide<VedtakRepository>(),
+        refusjonskravRepository = repositoryProvider.provide<RefusjonkravRepository>(),
+        tjenestepensjonRefusjonsKravVurderingRepository = repositoryProvider.provide<TjenestepensjonRefusjonsKravVurderingRepository>(),
+        samordningAndreStatligeYtelserRepository = repositoryProvider.provide<SamordningAndreStatligeYtelserRepository>(),
+        samordningArbeidsgiverRepository = repositoryProvider.provide<SamordningArbeidsgiverRepository>(),
+        underveisRepository = repositoryProvider.provide<UnderveisRepository>(),
+        unleashGateway = gatewayProvider.provide<UnleashGateway>()
+    )
+
 
     fun lagTilkjentYtelseForUtbetaling(sakId: SakId, behandlingId: BehandlingId, simulering: Boolean = false): TilkjentYtelseDto? {
         val sak = sakRepository.hent(sakId)

@@ -1,20 +1,13 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.mellomlagring.MellomlagretVurderingRepository
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingGateway
 import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingService
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -27,7 +20,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -118,41 +110,17 @@ class IverksettVedtakSteg private constructor(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
         ): BehandlingSteg {
-            val sakRepository = repositoryProvider.provide<SakRepository>()
             val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-            val refusjonskravRepository = repositoryProvider.provide<RefusjonkravRepository>()
-            val tilkjentYtelseRepository = repositoryProvider.provide<TilkjentYtelseRepository>()
-            val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
             val vedtakRepository = repositoryProvider.provide<VedtakRepository>()
-            val samordningAndreStatligeYtelserRepository =
-                repositoryProvider.provide<SamordningAndreStatligeYtelserRepository>()
-            val samordningArbeidsgiverRepository =
-                repositoryProvider.provide<SamordningArbeidsgiverRepository>()
             val utbetalingGateway = gatewayProvider.provide<UtbetalingGateway>()
-            val unleashGateway = gatewayProvider.provide<UnleashGateway>()
             val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
             val virkningstidspunktUtlederService = VirkningstidspunktUtleder(
                 vilkårsresultatRepository = repositoryProvider.provide(),
             )
-            val tjenestepensjonRefusjonsKravVurderingRepository =
-                repositoryProvider.provide<TjenestepensjonRefusjonsKravVurderingRepository>()
-            val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
             val mellomlagretVurderingRepository = repositoryProvider.provide<MellomlagretVurderingRepository>()
             return IverksettVedtakSteg(
                 behandlingRepository = behandlingRepository,
-                utbetalingService = UtbetalingService(
-                    sakRepository = sakRepository,
-                    behandlingRepository = behandlingRepository,
-                    tilkjentYtelseRepository = tilkjentYtelseRepository,
-                    avklaringsbehovRepository = avklaringsbehovRepository,
-                    vedtakRepository = vedtakRepository,
-                    refusjonskravRepository = refusjonskravRepository,
-                    tjenestepensjonRefusjonsKravVurderingRepository = tjenestepensjonRefusjonsKravVurderingRepository,
-                    samordningAndreStatligeYtelserRepository = samordningAndreStatligeYtelserRepository,
-                    samordningArbeidsgiverRepository = samordningArbeidsgiverRepository,
-                    underveisRepository = underveisRepository,
-                    unleashGateway = unleashGateway,
-                ),
+                utbetalingService = UtbetalingService(repositoryProvider = repositoryProvider, gatewayProvider = gatewayProvider),
                 vedtakService = VedtakService(vedtakRepository, behandlingRepository),
                 utbetalingGateway = utbetalingGateway,
                 virkningstidspunktUtleder = virkningstidspunktUtlederService,
