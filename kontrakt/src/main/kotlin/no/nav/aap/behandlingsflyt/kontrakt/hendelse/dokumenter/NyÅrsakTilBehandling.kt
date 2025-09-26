@@ -1,9 +1,7 @@
 package no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
-import java.util.UUID
 
 public sealed interface NyÅrsakTilBehandling : Melding
 
@@ -11,4 +9,5 @@ public sealed interface NyÅrsakTilBehandling : Melding
 public data class NyÅrsakTilBehandlingV0(
     public val årsakerTilBehandling: List<Vurderingsbehov>,
     public val behandlingReferanse: String,
+    public val reserverTilBruker: String?,
 ) : NyÅrsakTilBehandling

@@ -52,6 +52,13 @@ class BehandlingHendelseServiceTest {
             )
         } returns emptySet()
 
+        every {
+            mottattDokumentRepository.hentDokumenterAvType(
+                any<BehandlingId>(),
+                InnsendingType.NY_ÅRSAK_TIL_BEHANDLING
+            )
+        } returns emptySet()
+
         every { pipRepository.finnIdenterPåBehandling(any<BehandlingReferanse>()) } returns emptyList()
 
         val behandlingHendelseService =

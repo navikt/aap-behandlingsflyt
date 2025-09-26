@@ -9,6 +9,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.MottattDokumentDto
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
 import no.nav.aap.behandlingsflyt.pip.PipRepository
 import no.nav.aap.behandlingsflyt.prosessering.DatadelingMeldePerioderOgSakStatusJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.DatadelingMeldekortJobbUtfører
@@ -21,6 +23,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
@@ -107,9 +110,31 @@ class BehandlingHendelseServiceImpl(
 
     private fun hentReservertTil(behandlingId: BehandlingId): String? {
         val oppfølgingsoppgavedokument =
-            MottaDokumentService(dokumentRepository).hentOppfølgingsBehandlingDokument(behandlingId) ?: return null
+            MottaDokumentService(dokumentRepository).hentOppfølgingsBehandlingDokument(behandlingId)
 
-        return oppfølgingsoppgavedokument.reserverTilBruker
+        val reserverTilBruker = finnReserverTilBrukerVedAvbruttRevurdering(behandlingId)
+
+        return oppfølgingsoppgavedokument?.reserverTilBruker ?: reserverTilBruker
+    }
+
+    private fun finnReserverTilBrukerVedAvbruttRevurdering(behandlingId: BehandlingId): String? {
+        val nyÅrsakTilBehandlingDokumenter = MottaDokumentService(dokumentRepository).hentMottattDokumenterAvType(
+            behandlingId,
+            InnsendingType.NY_ÅRSAK_TIL_BEHANDLING
+        )
+
+        val revurderingAvbruttDokument = nyÅrsakTilBehandlingDokumenter.find { dokument ->
+            val melding = dokument.ustrukturerteData()?.let { DefaultJsonMapper.fromJson<Melding>(it) }
+            melding is NyÅrsakTilBehandlingV0 &&
+                    melding.årsakerTilBehandling.contains(
+                        no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDERING_AVBRUTT
+                    )
+        }
+
+        return (revurderingAvbruttDokument
+            ?.ustrukturerteData()
+            ?.let { DefaultJsonMapper.fromJson<Melding>(it) } as? NyÅrsakTilBehandlingV0)
+            ?.reserverTilBruker
     }
 
     private fun hentMottattDokumenter(

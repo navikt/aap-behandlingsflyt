@@ -58,8 +58,7 @@ public enum class Definisjon(
         løsesISteg = StegType.AVBRYT_REVURDERING,
         type = BehovType.MANUELT_PÅKREVD,
         løsesAv = listOf(
-            Rolle.SAKSBEHANDLER_OPPFOLGING,
-            Rolle.SAKSBEHANDLER_NASJONAL
+            Rolle.BESLUTTER
         ),
     ),
     BESTILL_LEGEERKLÆRING(
