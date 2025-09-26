@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.Innvilgelse.GrunnlagBeregning.
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
@@ -14,6 +15,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagU
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.UføreInntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Avslått
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.DelvisOmgjøres
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
@@ -48,7 +50,8 @@ class BrevUtlederService(
     private val beregningVurderingRepository: BeregningVurderingRepository,
     private val tilkjentYtelseRepository: TilkjentYtelseRepository,
     private val underveisRepository: UnderveisRepository,
-    private val unleashGateway: UnleashGateway,
+    private val aktivitetsplikt11_7Repository: Aktivitetsplikt11_7Repository,
+    private val unleashGateway: UnleashGateway
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
@@ -59,7 +62,8 @@ class BrevUtlederService(
         beregningVurderingRepository = repositoryProvider.provide(),
         tilkjentYtelseRepository = repositoryProvider.provide(),
         underveisRepository = repositoryProvider.provide(),
-        unleashGateway = gatewayProvider.provide(),
+        aktivitetsplikt11_7Repository = repositoryProvider.provide(),
+        unleashGateway = gatewayProvider.provide()
     )
 
     fun utledBehovForMeldingOmVedtak(behandlingId: BehandlingId): BrevBehov? {
@@ -70,18 +74,36 @@ class BrevUtlederService(
                 val resultat = resultatUtleder.utledResultat(behandlingId)
 
                 return when (resultat) {
-                    Resultat.INNVILGELSE -> brevBehovInnvilgelse(behandling)
+                    Resultat.INNVILGELSE -> {
+                        val vurderesForUføretrygd = underveisRepository.hentHvisEksisterer(behandling.id)
+                            ?.perioder
+                            .orEmpty()
+                            .any { it.rettighetsType == RettighetsType.VURDERES_FOR_UFØRETRYGD }
+                        if (vurderesForUføretrygd &&
+                            unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_18)
+                        ) {
+                            VurderesForUføretrygd
+                        } else {
+                            brevBehovInnvilgelse(behandling)
+                        }
+                    }
+
                     Resultat.AVSLAG -> Avslag
                     Resultat.TRUKKET -> null
+                    Resultat.AVBRUTT -> null
                 }
             }
 
             TypeBehandling.Revurdering -> {
+                val resultat = resultatUtleder.utledRevurderingResultat(behandlingId)
                 val vurderingsbehov = behandling.vurderingsbehov().map { it.type }.toSet()
                 if (setOf(MOTTATT_MELDEKORT, FASTSATT_PERIODE_PASSERT, EFFEKTUER_AKTIVITETSPLIKT).containsAll(
                         vurderingsbehov
                     )
                 ) {
+                    return null
+                }
+                if (resultat == Resultat.AVBRUTT) {
                     return null
                 }
                 return VedtakEndring
@@ -96,7 +118,22 @@ class BrevUtlederService(
                 }
             }
 
-            TypeBehandling.Tilbakekreving, TypeBehandling.SvarFraAndreinstans, TypeBehandling.OppfølgingsBehandling, TypeBehandling.Aktivitetsplikt ->
+            TypeBehandling.Aktivitetsplikt -> {
+                val grunnlag = aktivitetsplikt11_7Repository.hentHvisEksisterer(behandlingId)
+                val vurderingForBehandling = grunnlag?.vurderinger?.firstOrNull { it.vurdertIBehandling == behandlingId }
+                    ?: error("Finner ingen vurdering av aktivitetsplikt 11-7 for denne behandlingen - kan ikke utlede brevtype")
+                return if (vurderingForBehandling.erOppfylt) {
+                    VedtakEndring
+                } else {
+                    VedtakAktivitetsplikt11_7
+                }
+            }
+            
+            TypeBehandling.Aktivitetsplikt11_9 -> {
+                return VedtakAktivitetsplikt11_9
+            }
+
+            TypeBehandling.Tilbakekreving, TypeBehandling.SvarFraAndreinstans, TypeBehandling.OppfølgingsBehandling, TypeBehandling.Aktivitetsplikt11_9 ->
                 return null // TODO
         }
     }

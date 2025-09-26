@@ -1,6 +1,11 @@
 package no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.KabalHendelseId
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.verdityper.dokument.Kanal
 import java.time.LocalDateTime
 import java.util.*
 
@@ -26,6 +31,17 @@ public data class KabalHendelseKafkaMelding(
             type = type,
             detaljer = detaljer
         )
+    
+    public fun tilInnsending(saksnummer: Saksnummer): Innsending {
+        return Innsending(
+            saksnummer = saksnummer,
+            referanse = InnsendingReferanse(KabalHendelseId(value = this.eventId)),
+            type = InnsendingType.KABAL_HENDELSE,
+            kanal = Kanal.DIGITAL,
+            mottattTidspunkt = LocalDateTime.now(),
+            melding = this.tilKabalHendelseV0()
+        )
+    }
 }
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -103,15 +119,15 @@ public data class OmgjoeringskravbehandlingAvsluttetDetaljer(
 
 // Enums
 public enum class KlageUtfall {
-    TRUKKET, RETUR, OPPHEVET, MEDHOLD, DELVIS_MEDHOLD, STADFESTELSE, UGUNST, AVVIST
+    TRUKKET, RETUR, OPPHEVET, MEDHOLD, DELVIS_MEDHOLD, STADFESTELSE, UGUNST, AVVIST, HENLAGT
 }
 
 public enum class AnkeUtfall {
-    TRUKKET, RETUR, OPPHEVET, MEDHOLD, DELVIS_MEDHOLD, STADFESTELSE, UGUNST, AVVIST, HEVET
+    TRUKKET, RETUR, OPPHEVET, MEDHOLD, DELVIS_MEDHOLD, STADFESTELSE, UGUNST, AVVIST, HEVET, HENLAGT
 }
 
 public enum class TrygderettUtfall {
-    TRUKKET, OPPHEVET, MEDHOLD, DELVIS_MEDHOLD, INNSTILLING_STADFESTELSE, INNSTILLING_AVVIST
+    TRUKKET, OPPHEVET, MEDHOLD, DELVIS_MEDHOLD, INNSTILLING_STADFESTELSE, INNSTILLING_AVVIST, HENLAGT
 }
 
 public enum class FeilregistrertType {
@@ -140,3 +156,11 @@ public fun BehandlingDetaljer.opprettetTidspunkt(): LocalDateTime? {
         else -> null
     }
 }
+
+// Må minimum parse dette for å kunne håndtere meldingen
+@JsonIgnoreProperties(ignoreUnknown = true)
+public data class KabalHendelseKilde(
+    val kilde: String,
+    val kildeReferanse: String,
+    val eventId: String
+)

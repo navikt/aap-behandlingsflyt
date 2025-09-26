@@ -29,8 +29,6 @@ public data class StoppetBehandling(
     val soknadsFormat: Kanal = Kanal.DIGITAL,
     val ident: String,
     val versjon: String,
-    @Deprecated("Kan fjernes etter at statistikk har byttet til å bruke vurderingsbehov")
-    val årsakTilBehandling: List<Vurderingsbehov>,
     val vurderingsbehov: List<Vurderingsbehov>,
     val avklaringsbehov: List<AvklaringsbehovHendelseDto>,
     val hendelsesTidspunkt: LocalDateTime,
@@ -74,6 +72,7 @@ public enum class Vurderingsbehov {
     UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT, // Utenlandsopphold før søknadstidspunkt
     VURDER_RETTIGHETSPERIODE, // Må ta stilling til rettighetsperioden
     SØKNAD_TRUKKET,
+    REVURDERING_AVBRUTT,
     FRITAK_MELDEPLIKT,
     KLAGE_TRUKKET,
     REVURDER_MANUELL_INNTEKT,   // Manuell inntekt
@@ -82,9 +81,13 @@ public enum class Vurderingsbehov {
     HELHETLIG_VURDERING,
     REVURDER_MELDEPLIKT_RIMELIG_GRUNN,
     AKTIVITETSPLIKT_11_7,
+    AKTIVITETSPLIKT_11_9,
     OVERGANG_UFORE,
     OVERGANG_ARBEID,
-    EFFEKTUER_AKTIVITETSPLIKT;
+    EFFEKTUER_AKTIVITETSPLIKT,
+    DØDSFALL_BRUKER,
+    DØDSFALL_BARN,
+    ;
 }
 
 /**

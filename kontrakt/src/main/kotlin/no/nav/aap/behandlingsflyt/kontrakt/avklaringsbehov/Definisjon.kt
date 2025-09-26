@@ -53,6 +53,15 @@ public enum class Definisjon(
             Rolle.SAKSBEHANDLER_NASJONAL
         ),
     ),
+    AVBRYT_REVURDERING(
+        kode = AvklaringsbehovKode.`5033`,
+        løsesISteg = StegType.AVBRYT_REVURDERING,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesAv = listOf(
+            Rolle.SAKSBEHANDLER_OPPFOLGING,
+            Rolle.SAKSBEHANDLER_NASJONAL
+        ),
+    ),
     BESTILL_LEGEERKLÆRING(
         kode = AvklaringsbehovKode.`9003`,
         løsesISteg = StegType.UDEFINERT,
@@ -95,7 +104,7 @@ public enum class Definisjon(
     VURDER_RETTIGHETSPERIODE(
         kode = AvklaringsbehovKode.`5029`,
         løsesISteg = StegType.VURDER_RETTIGHETSPERIODE,
-        type = BehovType.MANUELT_FRIVILLIG,
+        type = BehovType.MANUELT_PÅKREVD,
         kreverToTrinn = true,
         løsesAv = listOf(
             Rolle.SAKSBEHANDLER_NASJONAL
@@ -249,6 +258,7 @@ public enum class Definisjon(
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
         kreverToTrinn = true,
     ),
+    @Deprecated("Ikke lenger i bruk, erstattet av oppfølgingsoppgave")
     SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT(
         kode = AvklaringsbehovKode.`5025`,
         type = BehovType.VENTEPUNKT,
@@ -277,14 +287,6 @@ public enum class Definisjon(
         type = BehovType.BREV_VENTEPUNKT,
         løsesISteg = StegType.EFFEKTUER_11_7,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
-    ),
-    SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV(
-        kode = AvklaringsbehovKode.`5052`,
-        løsesISteg = StegType.EFFEKTUER_11_7,
-        type = BehovType.MANUELT_PÅKREVD,
-        løsesAv = listOf(
-            Rolle.SAKSBEHANDLER_OPPFOLGING
-        )
     ),
     VENTE_PÅ_FRIST_EFFEKTUER_11_7(
         kode = AvklaringsbehovKode.`5018`,
@@ -494,6 +496,26 @@ public enum class Definisjon(
         løsesISteg = StegType.VURDER_AKTIVITETSPLIKT_11_7,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
         kreverToTrinn = true
+    ),
+    VURDER_BRUDD_11_9(
+        kode = AvklaringsbehovKode.`4201`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.VURDER_AKTIVITETSPLIKT_11_9,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
+        kreverToTrinn = true
+    ),
+    SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV(
+        kode = AvklaringsbehovKode.`5052`,
+        løsesISteg = StegType.VURDER_AKTIVITETSPLIKT_11_7,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
+    ),
+    VENTE_PÅ_FRIST_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT(
+        kode = AvklaringsbehovKode.`4102`,
+        type = BehovType.VENTEPUNKT,
+        løsesISteg = StegType.VURDER_AKTIVITETSPLIKT_11_7,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
+        defaultFrist = Period.ofWeeks(3),
     );
 
     public companion object {

@@ -45,7 +45,7 @@ class FatteVedtakLøser(
             val tidligsteStegMedRetur = vurderingerSomErSendtTilbake
                 .map { Definisjon.forKode(it.definisjon) }
                 .map { it.løsesISteg }
-                .minWith(flyt.compareable())
+                .minWith(flyt.stegComparator)
 
             val vurderingerFørRetur = løsning.vurderinger
                 .filter { it.godkjent == true }

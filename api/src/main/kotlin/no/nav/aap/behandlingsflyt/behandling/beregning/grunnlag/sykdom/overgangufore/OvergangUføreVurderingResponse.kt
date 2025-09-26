@@ -10,6 +10,5 @@ data class OvergangUføreVurderingResponse(
     val brukerRettPåAAP: Boolean?,
     val virkningsdato: LocalDate?,
     val vurdertAv: VurdertAvResponse,
-    val vurderingenGjelderFra: LocalDate?,
     val erGjeldende: Boolean?
 )

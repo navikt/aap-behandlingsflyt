@@ -7,6 +7,7 @@ public enum class StegGruppe(public val skalVises: Boolean, public val obligator
     SEND_FORVALTNINGSMELDING(false, true),
     RETTIGHETSPERIODE(true, false),
     SØKNAD(true, false),
+    AVBRYT_REVURDERING(true, false),
     ALDER(true, true),
     LOVVALG(true, true),
     MEDLEMSKAP(true, true),
@@ -41,5 +42,6 @@ public enum class StegGruppe(public val skalVises: Boolean, public val obligator
     AVKLAR_OPPPFØLGING(true, true),
     
     // Aktivitetsplikt
-    AKTIVITETSPLIKT_11_7(true, true)
+    AKTIVITETSPLIKT_11_7(true, true),
+    AKTIVITETSPLIKT_11_9(true, true)
 }

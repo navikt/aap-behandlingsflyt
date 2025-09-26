@@ -176,6 +176,10 @@ public enum class StegType(
         gruppe = StegGruppe.IVERKSETT_VEDTAK,
         status = Status.IVERKSETTES
     ),
+    AVBRYT_REVURDERING(
+        gruppe = StegGruppe.AVBRYT_REVURDERING,
+        status = Status.UTREDES
+    ),
     BREV(
         gruppe = StegGruppe.BREV,
         status = Status.IVERKSETTES,
@@ -253,7 +257,12 @@ public enum class StegType(
         gruppe = StegGruppe.UDEFINERT,
         status = Status.IVERKSETTES,
     ),
-    
+
+    VURDER_AKTIVITETSPLIKT_11_9(
+        gruppe = StegGruppe.AKTIVITETSPLIKT_11_9,
+        status = Status.UTREDES,
+    ),
+
     // Aktivitetsplikt slutt
     
     UDEFINERT(

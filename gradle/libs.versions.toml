@@ -1,8 +1,8 @@
 [versions]
-ktor = "3.2.3"
-komponenter = "1.0.353"
-tilgang = "1.0.121"
-utbetaling = "0.0.57"
+ktor = "3.3.0"
+komponenter = "1.0.373"
+tilgang = "1.0.127"
+utbetaling = "0.0.60"
 junit = "5.13.4"
 
 [libraries]
@@ -34,7 +34,7 @@ utbetalKontrakt = { module = "no.nav.aap.utbetal:api-kontrakt", version.ref = "u
 junitApi = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
 junitJupiterEngine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
 junitJupiterParams = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit" }
-assertJ = { module = "org.assertj:assertj-core", version = "3.27.4" }
+assertJ = { module = "org.assertj:assertj-core", version = "3.27.6" }
 
 [bundles]
 junit = ["junitApi", "junitJupiterEngine", "junitJupiterParams", "assertJ"]

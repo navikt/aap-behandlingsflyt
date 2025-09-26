@@ -10,6 +10,10 @@ import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
 import java.time.Year
+import kotlin.collections.filterNot
+import kotlin.collections.orEmpty
+import kotlin.collections.plus
+import kotlin.collections.toSet
 
 class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection) :
     ManuellInntektGrunnlagRepository {
@@ -88,6 +92,16 @@ class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection)
 
     override fun lagre(behandlingId: BehandlingId, manuellVurdering: ManuellInntektVurdering) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
+
+        // Hvis det finnes en vurdering på samme år, så overskrives denne
+        val kombinerteEntries = (eksisterendeGrunnlag?.manuelleInntekter.orEmpty()
+            .filterNot { it.år == manuellVurdering.år } + manuellVurdering).toSet()
+
+        lagre(behandlingId, kombinerteEntries)
+    }
+
+    override fun lagre(behandlingId: BehandlingId, manuellVurderinger: Set<ManuellInntektVurdering>) {
+        val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         if (eksisterendeGrunnlag != null) {
             deaktiverEksisterende(behandlingId)
         }
@@ -97,11 +111,8 @@ class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection)
         """.trimIndent()
         val manuellInntektVurderingerId =
             connection.executeReturnKey(manuellInntektVurderingerQuery)
-        lagreVurdering(
-            manuellVurdering,
-            eksisterendeGrunnlag?.manuelleInntekter,
-            manuellInntektVurderingerId
-        )
+
+        lagreVurdering(manuellVurderinger, manuellInntektVurderingerId)
 
         val grunnlagQuery = """
             INSERT INTO MANUELL_INNTEKT_VURDERING_GRUNNLAG (BEHANDLING_ID, MANUELL_INNTEKT_VURDERINGER_ID) VALUES (?, ?)
@@ -115,18 +126,14 @@ class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection)
     }
 
     private fun lagreVurdering(
-        vurdering: ManuellInntektVurdering,
-        eksisterendeVurderinger: Set<ManuellInntektVurdering>?,
+        manuellVurderinger: Set<ManuellInntektVurdering>,
         manuellInntektVurderingerId: Long
     ) {
-        val kombinerteEntries = (eksisterendeVurderinger.orEmpty()
-            .filterNot { it.år == vurdering.år } + vurdering).toSet()
-
         val query = """
             INSERT INTO MANUELL_INNTEKT_VURDERING (AR, BEGRUNNELSE, BELOP, VURDERT_AV, MANUELL_INNTEKT_VURDERINGER_ID) VALUES (?, ?, ?, ?, ?)
         """.trimIndent()
 
-        connection.executeBatch(query, kombinerteEntries) {
+        connection.executeBatch(query, manuellVurderinger) {
             setParams {
                 setInt(1, it.år.value)
                 setString(2, it.begrunnelse)

@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -47,7 +48,16 @@ class BarnetilleggSteg(
         }
 
         VurderingType.REVURDERING -> {
-            vurder(kontekst)
+            if (Vurderingsbehov.DØDSFALL_BARN in kontekst.vurderingsbehovRelevanteForSteg) {
+                FantAvklaringsbehov(Definisjon.AVKLAR_BARNETILLEGG)
+            } else if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                log.info("Revurdering gir ingen behandlingsgrunnlag, avbryter steg. BehandlingId: ${kontekst.behandlingId}.")
+                avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+                    .avbrytForSteg(type())
+                Fullført
+            } else {
+                vurder(kontekst)
+            }
         }
 
         VurderingType.MELDEKORT,

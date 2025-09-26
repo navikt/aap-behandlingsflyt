@@ -52,11 +52,14 @@ class BeregnTilkjentYtelseSteg private constructor(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING &&
-            tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(
+        if ((kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING && tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(
                 kontekst,
                 type()
-            )
+            ))
+            || (kontekst.vurderingType == VurderingType.REVURDERING && tidligereVurderinger.girIngenBehandlingsgrunnlag(
+                kontekst,
+                type()
+            ))
         ) {
             return Fullført
         }
@@ -64,8 +67,8 @@ class BeregnTilkjentYtelseSteg private constructor(
         val beregningsgrunnlag = beregningsgrunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
         val underveisgrunnlag = underveisRepository.hent(kontekst.behandlingId)
         val fødselsdato =
-            requireNotNull(personopplysningRepository.hentBrukerPersonOpplysningHvisEksisterer(kontekst.behandlingId)?.fødselsdato)
-        val barnetilleggGrunnlag = requireNotNull(barnetilleggRepository.hentHvisEksisterer(kontekst.behandlingId))
+            requireNotNull(personopplysningRepository.hentBrukerPersonOpplysningHvisEksisterer(kontekst.behandlingId)?.fødselsdato) { "Finner ikke fødselsdato. BehandlingId: ${kontekst.behandlingId}" }
+        val barnetilleggGrunnlag = requireNotNull(barnetilleggRepository.hentHvisEksisterer(kontekst.behandlingId)) { "Finner ikke barnetillegggrunnlag. BehandlingId: ${kontekst.behandlingId}" }
         val samordningGrunnlag = samordningRepository.hentHvisEksisterer(kontekst.behandlingId) ?: SamordningGrunnlag(
             id = 0L,
             samordningPerioder = emptyList()
@@ -92,7 +95,10 @@ class BeregnTilkjentYtelseSteg private constructor(
 
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): BehandlingSteg {
             return BeregnTilkjentYtelseSteg(repositoryProvider)
         }
 

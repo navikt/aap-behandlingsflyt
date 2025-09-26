@@ -1,5 +1,6 @@
-package no.nav.aap.behandlingsflyt.prosessering
+package no.nav.aap.behandlingsflyt.prosessering.statistikk
 
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
@@ -19,14 +20,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.IKlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageResultat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.integrasjon.statistikk.StatistikkGatewayImpl
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvklaringsbehovHendelseDto
@@ -48,14 +47,10 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårsPeriodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårsResultatDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.pip.IdentPåSak
-import no.nav.aap.behandlingsflyt.pip.PipRepository
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.pip.PipRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
@@ -70,15 +65,16 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.Fakes
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvbrytRevurderingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMottattDokumentRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPipRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemorySakOgBehandlingService
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.json.DefaultJsonMapper
@@ -196,24 +192,9 @@ class StatistikkJobbUtførerTest {
         // Act
 
         dataSource.transaction { connection ->
-            val sakService = SakService(SakRepositoryImpl(connection))
-            val vilkårsResultatRepository = VilkårsresultatRepositoryImpl(connection = connection)
-            val behandlingRepository = BehandlingRepositoryImpl(connection)
-            val beregningsgrunnlagRepository = BeregningsgrunnlagRepositoryImpl(connection)
-
             StatistikkJobbUtfører(
-                vilkårsResultatRepository,
-                behandlingRepository,
-                sakService,
-                TilkjentYtelseRepositoryImpl(connection),
-                beregningsgrunnlagRepository,
-                dokumentRepository = MottattDokumentRepositoryImpl(connection),
-                pipRepository = PipRepositoryImpl(connection),
-                sykdomRepository = SykdomRepositoryImpl(connection),
-                underveisRepository = UnderveisRepositoryImpl(connection),
-                trukketSøknadService = TrukketSøknadService(postgresRepositoryRegistry.provider(connection)),
-                klageresultatUtleder = KlageresultatUtleder(postgresRepositoryRegistry.provider(connection)),
-                statistikkGateway = StatistikkGatewayImpl()
+                statistikkMetoder = StatistikkMetoder(postgresRepositoryRegistry.provider(connection)),
+                statistikkGateway = StatistikkGatewayImpl(),
             ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
             )
@@ -398,24 +379,9 @@ class StatistikkJobbUtførerTest {
         // Act
 
         dataSource.transaction { connection ->
-            val sakService = SakService(SakRepositoryImpl(connection))
-            val vilkårsResultatRepository = VilkårsresultatRepositoryImpl(connection = connection)
-            val behandlingRepository = BehandlingRepositoryImpl(connection)
-            val beregningsgrunnlagRepository = BeregningsgrunnlagRepositoryImpl(connection)
-
             StatistikkJobbUtfører(
-                vilkårsResultatRepository,
-                behandlingRepository,
-                sakService,
-                TilkjentYtelseRepositoryImpl(connection),
-                beregningsgrunnlagRepository,
-                PipRepositoryImpl(connection),
-                MottattDokumentRepositoryImpl(connection),
-                sykdomRepository = SykdomRepositoryImpl(connection),
-                underveisRepository = UnderveisRepositoryImpl(connection),
-                trukketSøknadService = TrukketSøknadService(postgresRepositoryRegistry.provider(connection)),
-                klageresultatUtleder = KlageresultatUtleder(postgresRepositoryRegistry.provider(connection)),
                 statistikkGateway = StatistikkGatewayImpl(),
+                statistikkMetoder = StatistikkMetoder(postgresRepositoryRegistry.provider(connection)),
             ).utfør(
                 JobbInput(StatistikkJobbUtfører).medPayload(hendelse2)
             )
@@ -535,27 +501,6 @@ class StatistikkJobbUtførerTest {
             )
         )
 
-        val pipRepository = object : PipRepository {
-            override fun finnIdenterPåSak(saksnummer: Saksnummer): List<IdentPåSak> {
-                return listOf(
-                    IdentPåSak(
-                        ident = "123",
-                        opprinnelse = IdentPåSak.Opprinnelse.PERSON
-                    )
-                )
-            }
-
-            override fun finnIdenterPåBehandling(behandlingReferanse: BehandlingReferanse): List<IdentPåSak> {
-                TODO("Not yet implemented")
-            }
-
-            override fun slett(behandlingId: BehandlingId) {
-            }
-
-            override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
-            }
-        }
-
         val sykdomRepository = object : SykdomRepository {
             override fun lagre(behandlingId: BehandlingId, sykdomsvurderinger: List<Sykdomsvurdering>) {
                 TODO("Not yet implemented")
@@ -590,20 +535,23 @@ class StatistikkJobbUtførerTest {
 
         val utfører =
             StatistikkJobbUtfører(
-                vilkårsResultatRepository,
-                behandlingRepository,
-                sakService,
-                tilkjentYtelseRepository,
-                beregningsgrunnlagRepository,
-                pipRepository,
-                dokumentRepository,
-                sykdomRepository = sykdomRepository,
-                underveisRepository = InMemoryUnderveisRepository,
-                trukketSøknadService = TrukketSøknadService(
-                    InMemoryTrukketSøknadRepository
-                ),
-                klageresultatUtleder = DummyKlageresultatUtleder(),
                 statistikkGateway = StatistikkGatewayImpl(),
+                statistikkMetoder = StatistikkMetoder(
+                    vilkårsresultatRepository = vilkårsResultatRepository,
+                    behandlingRepository = behandlingRepository,
+                    sakService = sakService,
+                    tilkjentYtelseRepository = tilkjentYtelseRepository,
+                    beregningsgrunnlagRepository = beregningsgrunnlagRepository,
+                    pipRepository = InMemoryPipRepository,
+                    dokumentRepository = dokumentRepository,
+                    sykdomRepository = sykdomRepository,
+                    underveisRepository = InMemoryUnderveisRepository,
+                    trukketSøknadService = TrukketSøknadService(
+                        trukketSøknadRepository = InMemoryTrukketSøknadRepository
+                    ),
+                    klageresultatUtleder = DummyKlageresultatUtleder(),
+                    avbrytRevurderingService = AvbrytRevurderingService(InMemoryAvbrytRevurderingRepository),
+                )
             )
 
         val avklaringsbehov = listOf(
@@ -651,7 +599,9 @@ class StatistikkJobbUtførerTest {
         assertThat(hendelser).isNotEmpty()
         assertThat(hendelser.size).isEqualTo(1)
 
-        assertThat(hendelser.first()).isEqualTo(
+        assertThat(hendelser.first())
+            .usingRecursiveComparison()
+            .isEqualTo(
             StoppetBehandling(
                 saksnummer = Saksnummer.valueOf(sakId.id).toString(),
                 behandlingReferanse = referanse.referanse,
@@ -665,8 +615,7 @@ class StatistikkJobbUtførerTest {
                 mottattTid = tidligsteMottattTid,
                 sakStatus = UTREDES,
                 hendelsesTidspunkt = hendelsesTidspunkt,
-                identerForSak = listOf("123"),
-                årsakTilBehandling = listOf(Vurderingsbehov.SØKNAD),
+                identerForSak = listOf("1234"),
                 vurderingsbehov = listOf(Vurderingsbehov.SØKNAD)
             )
         )

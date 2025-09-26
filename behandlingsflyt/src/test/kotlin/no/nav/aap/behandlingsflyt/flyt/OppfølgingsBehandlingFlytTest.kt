@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.flyt
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOppfølgingNAYLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VentPåOppfølgingLøsning
 import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.KonsekvensAvOppfølging
-import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.OppfølgingsBehandlingRepository
 import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.OppfølgingsoppgaveGrunnlagDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
@@ -21,19 +20,14 @@ import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningVurderingRepository
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.repository.RepositoryRegistry
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
-import kotlin.reflect.KClass
 
-class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class as KClass<UnleashGateway>) {
+class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
     @Test
     fun `opprette oppfølgingsbehandling`() {
         val sak = happyCaseFørstegangsbehandling()
@@ -45,7 +39,7 @@ class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::
         val oppfølgingsbehandling = sendInnDokument(
             ident, DokumentMottattPersonHendelse(
                 referanse = InnsendingReferanse(
-                    InnsendingReferanse.Type.BEHANDLING_REFERANSE,
+                    InnsendingReferanse.Type.SAKSBEHANDLER_KELVIN_REFERANSE,
                     UUID.randomUUID().toString(),
                 ),
                 mottattTidspunkt = LocalDateTime.now().minusMonths(3),
@@ -109,7 +103,7 @@ class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::
         sendInnDokument(
             ident, DokumentMottattPersonHendelse(
                 referanse = InnsendingReferanse(
-                    InnsendingReferanse.Type.BEHANDLING_REFERANSE,
+                    InnsendingReferanse.Type.SAKSBEHANDLER_KELVIN_REFERANSE,
                     UUID.randomUUID().toString(),
                 ),
                 mottattTidspunkt = LocalDateTime.now().minusMonths(3),

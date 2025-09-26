@@ -4,34 +4,36 @@ import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.FeatureToggle
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 
-object FakeUnleash : UnleashGateway {
-    private val flags = mapOf(
+open class FakeUnleashBase(
+    private val flags: Map<BehandlingsflytFeature, Boolean>,
+) : UnleashGateway {
+    override fun isEnabled(featureToggle: FeatureToggle) = requireNotNull(flags[featureToggle]) {
+        "feature toggle $featureToggle ikke definert for fake"
+    }
+
+    override fun isEnabled(featureToggle: FeatureToggle, ident: String) = isEnabled(featureToggle)
+}
+
+
+object FakeUnleash : FakeUnleashBase(
+    mapOf(
         BehandlingsflytFeature.OverstyrStarttidspunkt to true,
         BehandlingsflytFeature.Samvarsling to true,
         BehandlingsflytFeature.IngenValidering to false,
         BehandlingsflytFeature.SendForvaltningsmelding to true,
         BehandlingsflytFeature.SosialHjelpFlereKontorer to false,
+        BehandlingsflytFeature.NyBrevtype11_18 to true,
         BehandlingsflytFeature.BrevBeregningsgrunnlag to true,
         BehandlingsflytFeature.Aktivitetsplikt11_7 to false,
+        BehandlingsflytFeature.Aktivitetsplikt11_9 to false,
         BehandlingsflytFeature.OverforingsdatoNullForAvregning to true,
+        BehandlingsflytFeature.OvergangUfore to false,
+        BehandlingsflytFeature.AutomatiskTilbakeforUlostAvklaringsbehov to false,
     )
+)
 
-    override fun isEnabled(featureToggle: FeatureToggle) = requireNotNull(flags[featureToggle]) {
-        "feature toggle $featureToggle ikke definert for fake"
-    }
-
-    override fun isEnabled(
-        featureToggle: FeatureToggle,
-        ident: String,
-    ): Boolean {
-        return requireNotNull(flags[featureToggle]) {
-            "feature toggle $featureToggle ikke definert for fake"
-        }
-    }
-}
-
-object FakeUnleashFasttrackAktivitetsplikt : UnleashGateway {
-    private val flags = mapOf(
+object FakeUnleashFasttrackAktivitetsplikt : FakeUnleashBase(
+    mapOf(
         BehandlingsflytFeature.OverstyrStarttidspunkt to true,
         BehandlingsflytFeature.Samvarsling to true,
         BehandlingsflytFeature.IngenValidering to false,
@@ -39,18 +41,9 @@ object FakeUnleashFasttrackAktivitetsplikt : UnleashGateway {
         BehandlingsflytFeature.SosialHjelpFlereKontorer to false,
         BehandlingsflytFeature.BrevBeregningsgrunnlag to true,
         BehandlingsflytFeature.Aktivitetsplikt11_7 to true,
+        BehandlingsflytFeature.Aktivitetsplikt11_9 to true,
+        BehandlingsflytFeature.NyBrevtype11_18 to true,
+        BehandlingsflytFeature.OvergangUfore to true,
+        BehandlingsflytFeature.AutomatiskTilbakeforUlostAvklaringsbehov to true,
     )
-
-    override fun isEnabled(featureToggle: FeatureToggle) = requireNotNull(flags[featureToggle]) {
-        "feature toggle $featureToggle ikke definert for fake"
-    }
-
-    override fun isEnabled(
-        featureToggle: FeatureToggle,
-        ident: String,
-    ): Boolean {
-        return requireNotNull(flags[featureToggle]) {
-            "feature toggle $featureToggle ikke definert for fake"
-        }
-    }
-}
+)

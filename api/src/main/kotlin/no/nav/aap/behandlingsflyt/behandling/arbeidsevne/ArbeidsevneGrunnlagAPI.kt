@@ -37,9 +37,9 @@ fun NormalOpenAPIRoute.arbeidsevneGrunnlagApi(
 
         ) { behandlingReferanse ->
 
-            arbeidsevneGrunnlag(dataSource, behandlingReferanse, kanSaksbehandle(), repositoryRegistry, gatewayProvider)?.let {
+            arbeidsevneGrunnlag(dataSource, behandlingReferanse, kanSaksbehandle(), repositoryRegistry, gatewayProvider).let {
                 respond(it)
-            } ?: respondWithStatus(HttpStatusCode.NoContent)
+            }
         }
 
         route("/simulering") {
@@ -59,7 +59,7 @@ private fun arbeidsevneGrunnlag(
     kanSaksbehandle: Boolean,
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,
-): ArbeidsevneGrunnlagDto? {
+): ArbeidsevneGrunnlagDto {
     return dataSource.transaction { connection ->
         val repositoryProvider = repositoryRegistry.provider(connection)
         val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()

@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadeSak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -187,12 +188,13 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
 
         connection.executeBatch(
             """
-            INSERT INTO YRKESSKADE_RELATERTE_SAKER (vurdering_id, referanse) VALUES (?, ?)
+            INSERT INTO YRKESSKADE_RELATERTE_SAKER (vurdering_id, referanse, manuell_yrkesskade_dato) VALUES (?, ?, ?)
         """.trimIndent(), vurdering.relevanteSaker
         ) {
             setParams { sak ->
                 setLong(1, id)
-                setString(2, sak)
+                setString(2, sak.referanse)
+                setLocalDate(3, sak.manuellYrkesskadeDato)
             }
         }
 
@@ -235,26 +237,21 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                 }
             }
 
-            vurdering.dokumenterBruktIVurdering.forEach {
-                lagreSykdomDokument(id, it)
-            }
-
-            vurdering.bidiagnoser?.forEach {
-                lagreBidiagnose(id, it)
-            }
+            lagreSykdomDokumenter(id, vurdering.dokumenterBruktIVurdering)
+            lagreBidiagnose(id, vurdering.bidiagnoser.orEmpty())
         }
 
         return sykdomsvurderingerId
     }
 
-    private fun lagreBidiagnose(sykdomsId: Long, kode: String) {
+    private fun lagreBidiagnose(sykdomsId: Long, bidiagnoser: List<String>) {
         val query = """
             INSERT INTO SYKDOM_VURDERING_BIDIAGNOSER (VURDERING_ID, KODE) 
             VALUES (?, ?)
         """.trimIndent()
 
-        connection.execute(query) {
-            setParams {
+        connection.executeBatch(query, bidiagnoser) {
+            setParams { kode ->
                 setLong(1, sykdomsId)
                 setString(2, kode)
             }
@@ -262,16 +259,16 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
     }
 
 
-    private fun lagreSykdomDokument(sykdomsId: Long, journalpostId: JournalpostId) {
+    private fun lagreSykdomDokumenter(sykdomsId: Long, journalpostIder: List<JournalpostId>) {
         val query = """
             INSERT INTO SYKDOM_VURDERING_DOKUMENTER (VURDERING_ID, JOURNALPOST) 
             VALUES (?, ?)
         """.trimIndent()
 
-        connection.execute(query) {
+        connection.executeBatch(query, journalpostIder) {
             setParams {
                 setLong(1, sykdomsId)
-                setString(2, journalpostId.identifikator)
+                setString(2, it.identifikator)
             }
         }
     }
@@ -318,8 +315,22 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
     private fun mapSykdommer(sykdomVurderingerId: Long?): List<Sykdomsvurdering> {
         return connection.queryList(
             """
-            SELECT id, BEGRUNNELSE, VURDERINGEN_GJELDER_FRA, HAR_SYKDOM_SKADE_LYTE, ER_SYKDOM_SKADE_LYTE_VESETLING_DEL, ER_NEDSETTELSE_MER_ENN_HALVPARTEN, ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE, ER_NEDSETTELSE_AV_EN_VISS_VARIGHET, ER_ARBEIDSEVNE_NEDSATT, YRKESSKADE_BEGRUNNELSE, KODEVERK, DIAGNOSE, OPPRETTET_TID, VURDERT_AV_IDENT
-            FROM SYKDOM_VURDERING WHERE SYKDOM_VURDERINGER_ID = ?
+            SELECT id,
+                   BEGRUNNELSE,
+                   VURDERINGEN_GJELDER_FRA,
+                   HAR_SYKDOM_SKADE_LYTE,
+                   ER_SYKDOM_SKADE_LYTE_VESETLING_DEL,
+                   ER_NEDSETTELSE_MER_ENN_HALVPARTEN,
+                   ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE,
+                   ER_NEDSETTELSE_AV_EN_VISS_VARIGHET,
+                   ER_ARBEIDSEVNE_NEDSATT,
+                   YRKESSKADE_BEGRUNNELSE,
+                   KODEVERK,
+                   DIAGNOSE,
+                   OPPRETTET_TID,
+                   VURDERT_AV_IDENT
+            FROM SYKDOM_VURDERING
+            WHERE SYKDOM_VURDERINGER_ID = ?
             """.trimIndent()
         ) {
             setParams {
@@ -403,7 +414,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
         }
     }
 
-    private fun hentRelevanteSaker(vurderingId: Long): List<String> {
+    private fun hentRelevanteSaker(vurderingId: Long): List<YrkesskadeSak> {
         val query = """
             SELECT * FROM YRKESSKADE_RELATERTE_SAKER WHERE vurdering_id = ?
         """.trimIndent()
@@ -412,7 +423,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                 setLong(1, vurderingId)
             }
             setRowMapper { row ->
-                row.getString("REFERANSE")
+                YrkesskadeSak(row.getString("REFERANSE"), row.getLocalDateOrNull("manuell_yrkesskade_dato"))
             }
         }
     }

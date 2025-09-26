@@ -5,6 +5,8 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
+import no.nav.aap.behandlingsflyt.behandling.Resultat
+import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
@@ -24,6 +26,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.MANUELT_SATT_PÅ_VENT
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ResultatKode
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegGruppe
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.mdc.LogKontekst
@@ -77,6 +80,7 @@ fun NormalOpenAPIRoute.flytApi(
             ) { req ->
                 val dto = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
+                    val resultatUtleder = ResultatUtleder(repositoryProvider)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val vilkårsresultatRepository =
                         repositoryProvider.provide<VilkårsresultatRepository>()
@@ -132,6 +136,12 @@ fun NormalOpenAPIRoute.flytApi(
                         utledVurdertGruppe(prosessering, aktivtSteg, flyt, avklaringsbehovene)
                     val vilkårsresultat = vilkårResultat(vilkårsresultatRepository, behandling.id)
                     val alleAvklaringsbehov = alleAvklaringsbehovInkludertFrivillige.alle()
+                    val resultatKode = when {
+                        ((behandling.typeBehandling() == TypeBehandling.Revurdering) && (resultatUtleder.utledResultatRevurderingsBehandling(
+                            behandling) == Resultat.AVBRUTT)) -> ResultatKode.AVBRUTT
+
+                        else -> null
+                    }
 
                     LoggingKontekst(
                         repositoryProvider,
@@ -189,7 +199,8 @@ fun NormalOpenAPIRoute.flytApi(
                             avklaringsbehov = alleAvklaringsbehov,
                             bruker = bruker(),
                             behandlingStatus = behandling.status(),
-                            unleashGateway = unleashGateway
+                            unleashGateway = unleashGateway,
+                            resultatKode
                         )
                     )
                 }
@@ -310,7 +321,12 @@ fun NormalOpenAPIRoute.flytApi(
     }
 }
 
-private fun sjekkTilgangTilSettPåVent(avklaringsbehovene: Avklaringsbehovene, tilgangGateway: TilgangGateway, behandlingsreferanse: UUID, token: OidcToken) {
+private fun sjekkTilgangTilSettPåVent(
+    avklaringsbehovene: Avklaringsbehovene,
+    tilgangGateway: TilgangGateway,
+    behandlingsreferanse: UUID,
+    token: OidcToken
+) {
     val åpentAvklaringsbehov = avklaringsbehovene.åpne().first().definisjon
     val harTilgang =
         tilgangGateway.sjekkTilgangTilBehandling(
@@ -391,7 +407,8 @@ private fun utledVisning(
     avklaringsbehov: List<Avklaringsbehov>,
     bruker: Bruker,
     behandlingStatus: Status,
-    unleashGateway: UnleashGateway
+    unleashGateway: UnleashGateway,
+    resultatKode: ResultatKode?
 ): Visning {
     val brukerHarIngenValidering = unleashGateway.isEnabled(BehandlingsflytFeature.IngenValidering, bruker.ident)
 
@@ -440,7 +457,8 @@ private fun utledVisning(
             visBrevkort = false,
             typeBehandling = typeBehandling,
             brukerHarBesluttet = brukerHarBesluttet,
-            brukerHarKvalitetssikret = brukerHarKvalitetssikret
+            brukerHarKvalitetssikret = brukerHarKvalitetssikret,
+            resultatKode = resultatKode
         )
     } else {
         return Visning(
@@ -461,7 +479,8 @@ private fun utledVisning(
                 false
             } else {
                 brukerHarKvalitetssikret
-            }
+            },
+            resultatKode = resultatKode
         )
     }
 }

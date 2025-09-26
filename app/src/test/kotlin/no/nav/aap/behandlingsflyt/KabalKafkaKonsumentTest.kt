@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KabalHendelseKafk
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlageUtfall
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlagebehandlingAvsluttetDetaljer
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
+import no.nav.aap.behandlingsflyt.prosessering.KafkaFeilJobbUtfører
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
@@ -60,7 +61,7 @@ class KabalKafkaKonsumentTest {
         private val motor =
             ManuellMotorImpl(
                 dataSource,
-                jobber = listOf(HendelseMottattHåndteringJobbUtfører),
+                jobber = listOf(HendelseMottattHåndteringJobbUtfører, KafkaFeilJobbUtfører),
                 repositoryRegistry = repositoryRegistry,
                 gatewayProvider = createGatewayProvider { register<FakeUnleash>() }
             )
@@ -156,6 +157,28 @@ class KabalKafkaKonsumentTest {
         assertThat(hendelser.first().strukturertDokument).isNotNull
     }
 
+    @Test
+    fun `Skal opprette feiljobb for meldinger som skal til Kelvin, men som vi ikke finner saksnummer for`() {
+        val konsument = KabalKafkaKonsument(
+            testConfig(kafka.bootstrapServers),
+            dataSource = dataSource,
+            repositoryRegistry = repositoryRegistry,
+            pollTimeout = Duration.ofMillis(50),
+        )
+        
+        val melding = """{"kilde": "KELVIN", "eventId": "123", "kildeReferanse": "123", "resten": "Noe tull"}"""
+
+        konsument.håndter(melding)
+
+        dataSource.transaction { connection ->
+            val jobber = hentJobber(connection)
+            assertThat(jobber).hasSize(1)
+            assertThat(jobber.first().type).isEqualTo(KafkaFeilJobbUtfører.type)
+            assertThat(jobber.first().parameters.trimIndent()).isEqualTo("meldingkilde=KABAL")
+            assertThat(jobber.first().payload).isEqualTo(melding)
+        }
+    }
+
     private fun lagBehandlingEvent(kilde: String, kildereferanse: String): KabalHendelseKafkaMelding {
         return KabalHendelseKafkaMelding(
             UUID.randomUUID(),
@@ -208,6 +231,29 @@ class KabalKafkaKonsumentTest {
             PersonRepositoryImpl(connection),
             SakRepositoryImpl(connection)
         ).finnEllerOpprett(ident(), periode)
+    }
+
+    private data class JobbInfo(
+        val type: String,
+        val payload: String,
+        val parameters: String
+
+    )
+
+    private fun hentJobber(connection: DBConnection): List<JobbInfo> {
+        return connection.queryList(
+            """
+            SELECT * FROM JOBB
+        """.trimIndent()
+        ) {
+            setRowMapper { row ->
+                JobbInfo(
+                    row.getString("type"),
+                    row.getString("payload"),
+                    row.getString("parameters")
+                )
+            }
+        }
     }
 
 }

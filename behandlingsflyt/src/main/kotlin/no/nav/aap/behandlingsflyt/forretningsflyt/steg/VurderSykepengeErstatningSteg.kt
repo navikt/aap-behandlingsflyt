@@ -67,6 +67,17 @@ class VurderSykepengeErstatningSteg private constructor(
 
             VurderingType.REVURDERING -> {
                 // TODO: Dette må gjøres mye mer robust og sjekkes konsistent mot 11-6...
+
+                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                    log.info("Ingen behandlingsgrunnlag for behandlingId ${kontekst.behandlingId}, avbryter steg ${type()}")
+                    avklaringsbehovService.avbrytForSteg(kontekst.behandlingId, type())
+                    vilkårService.ingenNyeVurderinger(
+                        kontekst,
+                        Vilkårtype.BISTANDSVILKÅRET,
+                        "mangler behandlingsgrunnlag",
+                    )
+                    return Fullført
+                }
                 vurder(kontekst)
             }
 
@@ -85,16 +96,14 @@ class VurderSykepengeErstatningSteg private constructor(
         val sykdomsvurderinger =
             sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)?.sykdomsvurderinger.orEmpty()
 
-        val behandlingsType = kontekst.behandlingType
         val kravDato = kontekst.rettighetsperiode.fom
 
-        val erRelevantÅVurdereSykepengererstatning = sykdomsvurderinger.any {
-            it.erOppfyltSettBortIfraVissVarighet() && !it.erOppfylt(
-                behandlingsType, kravDato
-            ) || (!vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET).harPerioderSomErOppfylt() && it.erOppfylt(
-                behandlingsType,
-                kravDato
-            ))
+        val overgangUføre = vilkårsresultat.optionalVilkår(Vilkårtype.OVERGANGUFØREVILKÅRET)
+            ?.harPerioderSomErOppfylt() != true
+        val behovForBistand = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET).harPerioderSomErOppfylt()
+        val erRelevantÅVurdereSykepengererstatning = sykdomsvurderinger.any { sykdomsvurdering ->
+            (sykdomsvurdering.erOppfyltSettBortIfraVissVarighet() && !sykdomsvurdering.erOppfylt(kravDato))
+                    || !(behovForBistand && overgangUføre) && sykdomsvurdering.erOppfylt(kravDato)
         }
 
         log.info("Relevant å vurdere sykepengeerstatning: $erRelevantÅVurdereSykepengererstatning for behandlingId ${kontekst.behandlingId}.")

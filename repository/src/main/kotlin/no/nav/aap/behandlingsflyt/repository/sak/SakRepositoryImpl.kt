@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.repository.sak
 
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -26,6 +27,7 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
 
     private val personRepository = PersonRepositoryImpl(connection)
 
+    @WithSpan
     override fun finnEllerOpprett(person: Person, periode: Periode): Sak {
         val relevantesaker = finnSakerFor(person, periode)
 
@@ -36,6 +38,7 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
         return relevantesaker.first()
     }
 
+    @WithSpan
     private fun opprett(person: Person, periode: Periode): Sak {
         val sakId = connection.queryFirst("SELECT nextval('SEQ_SAKSNUMMER') as nextval") {
             setRowMapper { row ->
@@ -57,6 +60,7 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
         return Sak(SakId(keys), saksnummer, person, periode)
     }
 
+    @WithSpan
     override fun oppdaterSakStatus(sakId: SakId, status: Status) {
         val query = """UPDATE sak SET status = ? WHERE ID = ?"""
 
@@ -197,6 +201,7 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
         opprettetTidspunkt = row.getLocalDateTime("opprettet_tid")
     )
 
+    @WithSpan
     override fun oppdaterRettighetsperiode(sakId: SakId, periode: Periode) {
         val query = """
             UPDATE SAK SET rettighetsperiode = ?::daterange WHERE id = ?

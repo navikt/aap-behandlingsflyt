@@ -15,7 +15,7 @@ class FrivilligeAvklaringsbehovTest {
     fun `skal få frem frivillige avklaringsbehov mellom aktivt steg og start`() {
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, BehandlingId(133L))
         val frivilligeAvklaringsbehov =
-            FrivilligeAvklaringsbehov(avklaringsbehovene, Førstegangsbehandling.flyt(), StegType.VURDER_BISTANDSBEHOV)
+            FrivilligeAvklaringsbehov(avklaringsbehovene, Førstegangsbehandling.flyt(), StegType.VURDER_SYKEPENGEERSTATNING)
 
         assertThat(frivilligeAvklaringsbehov.alle()).isNotEmpty
     }

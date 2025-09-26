@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.flyt.testutil.FakeBrevbestillingGateway
+import no.nav.aap.behandlingsflyt.flyt.testutil.FakeEregGateway
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
@@ -27,6 +28,7 @@ internal class AvklaringsbehovsLøserTest {
                     createGatewayProvider {
                         register<FakeUnleash>()
                         register<FakeBrevbestillingGateway>()
+                        register<FakeEregGateway>()
                     }
                 ).forBehov()
             }

@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling
 
+import io.opentelemetry.instrumentation.annotations.WithSpan
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
@@ -13,6 +15,7 @@ enum class Resultat {
     INNVILGELSE,
     AVSLAG,
     TRUKKET,
+    AVBRUTT
 }
 
 
@@ -20,11 +23,13 @@ class ResultatUtleder(
     private val underveisRepository: UnderveisRepository,
     private val behandlingRepository: BehandlingRepository,
     private val trukketSøknadService: TrukketSøknadService,
+    private val avbrytRevurderingService: AvbrytRevurderingService
 ) {
     constructor(repositoryProvider: RepositoryProvider) : this(
         underveisRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         trukketSøknadService = TrukketSøknadService(repositoryProvider),
+        avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider)
     )
 
     fun utledResultat(behandlingId: BehandlingId): Resultat {
@@ -32,6 +37,24 @@ class ResultatUtleder(
         return utledResultatFørstegangsBehandling(behandling)
     }
 
+    fun utledRevurderingResultat(behandlingId: BehandlingId): Resultat? {
+        val behandling = behandlingRepository.hent(behandlingId)
+        return utledResultatRevurderingsBehandling(behandling)
+    }
+
+    fun utledResultatRevurderingsBehandling(behandling: Behandling): Resultat? {
+        require(behandling.typeBehandling() == TypeBehandling.Revurdering) {
+            "Kan ikke utlede resultat for ${behandling.typeBehandling()} ennå."
+        }
+
+        if (avbrytRevurderingService.revurderingErAvbrutt(behandling.id)) {
+            return Resultat.AVBRUTT
+        }
+
+        return null
+    }
+
+    @WithSpan
     fun utledResultatFørstegangsBehandling(behandling: Behandling): Resultat {
 
         require(behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling) {
@@ -47,10 +70,6 @@ class ResultatUtleder(
             .orEmpty()
             .any { it.utfall == Utfall.OPPFYLT }
 
-        return if (harOppfyltPeriode) {
-            Resultat.INNVILGELSE
-        } else {
-            Resultat.AVSLAG
-        }
+        return if (harOppfyltPeriode) Resultat.INNVILGELSE else Resultat.AVSLAG
     }
 }

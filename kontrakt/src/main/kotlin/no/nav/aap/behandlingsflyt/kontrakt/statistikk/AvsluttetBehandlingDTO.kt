@@ -24,7 +24,8 @@ public enum class ResultatKode {
     KLAGE_OMGJØRES,
     KLAGE_DELVIS_OMGJØRES,
     KLAGE_AVSLÅTT,
-    KLAGE_TRUKKET
+    KLAGE_TRUKKET,
+    AVBRUTT
 }
 
 public data class Diagnoser(

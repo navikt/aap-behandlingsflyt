@@ -12,6 +12,7 @@ enum class Vurderingsbehov {
     MOTTATT_DIALOGMELDING,
     MOTATT_KLAGE,
     SØKNAD_TRUKKET,
+    REVURDERING_AVBRUTT,
     KLAGE_TRUKKET,
     REVURDER_MEDLEMSKAP,
     REVURDER_SAMORDNING,
@@ -35,9 +36,13 @@ enum class Vurderingsbehov {
     MOTTATT_KABAL_HENDELSE,
     OPPFØLGINGSOPPGAVE,
     AKTIVITETSPLIKT_11_7,
+    AKTIVITETSPLIKT_11_9,
     EFFEKTUER_AKTIVITETSPLIKT,
     OVERGANG_UFORE,
-    OVERGANG_ARBEID;
+    OVERGANG_ARBEID,
+    DØDSFALL_BRUKER,
+    DØDSFALL_BARN,
+    ;
 
     companion object {
         /**
@@ -85,6 +90,7 @@ fun EksponertÅrsak.tilVurderingsbehov() =
         EksponertÅrsak.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT -> Vurderingsbehov.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT
         EksponertÅrsak.VURDER_RETTIGHETSPERIODE -> Vurderingsbehov.VURDER_RETTIGHETSPERIODE
         EksponertÅrsak.SØKNAD_TRUKKET -> Vurderingsbehov.SØKNAD_TRUKKET
+        EksponertÅrsak.REVURDERING_AVBRUTT -> Vurderingsbehov.REVURDERING_AVBRUTT
         EksponertÅrsak.FRITAK_MELDEPLIKT -> Vurderingsbehov.FRITAK_MELDEPLIKT
         EksponertÅrsak.KLAGE_TRUKKET -> Vurderingsbehov.KLAGE_TRUKKET
         EksponertÅrsak.REVURDER_MANUELL_INNTEKT -> Vurderingsbehov.REVURDER_MANUELL_INNTEKT
@@ -93,7 +99,10 @@ fun EksponertÅrsak.tilVurderingsbehov() =
         EksponertÅrsak.HELHETLIG_VURDERING -> Vurderingsbehov.HELHETLIG_VURDERING
         EksponertÅrsak.REVURDER_MELDEPLIKT_RIMELIG_GRUNN -> Vurderingsbehov.REVURDER_MELDEPLIKT_RIMELIG_GRUNN
         EksponertÅrsak.AKTIVITETSPLIKT_11_7 -> Vurderingsbehov.AKTIVITETSPLIKT_11_7
+        EksponertÅrsak.AKTIVITETSPLIKT_11_9 -> Vurderingsbehov.AKTIVITETSPLIKT_11_9
         EksponertÅrsak.EFFEKTUER_AKTIVITETSPLIKT -> Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT
         EksponertÅrsak.OVERGANG_UFORE -> Vurderingsbehov.OVERGANG_UFORE
         EksponertÅrsak.OVERGANG_ARBEID -> Vurderingsbehov.OVERGANG_ARBEID
+        EksponertÅrsak.DØDSFALL_BRUKER -> Vurderingsbehov.DØDSFALL_BRUKER
+        EksponertÅrsak.DØDSFALL_BARN -> Vurderingsbehov.DØDSFALL_BARN
     }

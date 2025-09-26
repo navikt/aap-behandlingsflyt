@@ -80,7 +80,6 @@ private fun OvergangUføreVurdering.tilResponse(erGjeldende: Boolean? = false, a
         brukerHarSøktUføretrygd = brukerHarSøktOmUføretrygd,
         brukerHarFåttVedtakOmUføretrygd = brukerHarFåttVedtakOmUføretrygd,
         brukerRettPåAAP = brukerRettPåAAP,
-        vurderingenGjelderFra = vurderingenGjelderFra,
         virkningsdato = virkningsdato,
         vurdertAv = VurdertAvResponse(
             ident = vurdertAv,

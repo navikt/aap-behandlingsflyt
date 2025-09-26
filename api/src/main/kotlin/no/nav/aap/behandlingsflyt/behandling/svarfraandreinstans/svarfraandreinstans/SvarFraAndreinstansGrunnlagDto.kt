@@ -46,7 +46,8 @@ enum class Utfall {
     HEVET,
     INNSTILLING_STADFESTELSE,
     INNSTILLING_AVVIST,
-    MEDHOLD_ETTER_FVL_35;
+    MEDHOLD_ETTER_FVL_35,
+    HENLAGT;
 
     companion object {
         fun fraHendelse(hendelse: KabalHendelseV0): Utfall? {
@@ -81,6 +82,7 @@ enum class Utfall {
                 KlageUtfall.STADFESTELSE -> STADFESTELSE
                 KlageUtfall.UGUNST -> UGUNST
                 KlageUtfall.AVVIST -> AVVIST
+                KlageUtfall.HENLAGT -> HENLAGT
             }
         }
 
@@ -95,6 +97,7 @@ enum class Utfall {
                 AnkeUtfall.UGUNST -> UGUNST
                 AnkeUtfall.AVVIST -> AVVIST
                 AnkeUtfall.HEVET -> HEVET
+                AnkeUtfall.HENLAGT -> HENLAGT
             }
         }
 
@@ -106,6 +109,7 @@ enum class Utfall {
                 TrygderettUtfall.DELVIS_MEDHOLD -> DELVIS_MEDHOLD
                 TrygderettUtfall.INNSTILLING_STADFESTELSE -> INNSTILLING_STADFESTELSE
                 TrygderettUtfall.INNSTILLING_AVVIST -> INNSTILLING_AVVIST
+                TrygderettUtfall.HENLAGT -> HENLAGT
             }
         }
 

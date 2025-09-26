@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Av
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
@@ -72,11 +71,7 @@ class Bistandsvilkåret(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<B
         } else if (bistandsvurdering?.skalVurdereAapIOvergangTilArbeid == true) {
             innvilgelsesårsak = Innvilgelsesårsak.ARBEIDSSØKER
             utfall = Utfall.OPPFYLT
-        } else if (bistandsvurdering?.skalVurdereAapIOvergangTilUføre == true) {
-            utfall = Utfall.OPPFYLT
-            innvilgelsesårsak = Innvilgelsesårsak.VURDERES_FOR_UFØRETRYGD
-        } else if (bistandsvurdering?.erBehovForBistand() == true
-        ) {
+        } else if (bistandsvurdering?.erBehovForBistand() == true) {
             utfall = Utfall.OPPFYLT
         } else {
             utfall = Utfall.IKKE_OPPFYLT
@@ -84,15 +79,12 @@ class Bistandsvilkåret(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<B
         }
 
         return Vilkårsvurdering(
-            Vilkårsperiode(
-                periode = Periode(grunnlag.vurderingsdato, grunnlag.sisteDagMedMuligYtelse),
-                utfall = utfall,
-                begrunnelse = null,
-                innvilgelsesårsak = innvilgelsesårsak,
-                avslagsårsak = avslagsårsak,
-                faktagrunnlag = grunnlag,
-                manuellVurdering = false
-            )
+            utfall = utfall,
+            begrunnelse = null,
+            innvilgelsesårsak = innvilgelsesårsak,
+            avslagsårsak = avslagsårsak,
+            faktagrunnlag = grunnlag,
+            manuellVurdering = true,
         )
     }
 }

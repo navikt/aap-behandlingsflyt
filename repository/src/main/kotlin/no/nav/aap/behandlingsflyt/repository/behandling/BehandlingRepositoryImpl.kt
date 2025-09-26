@@ -126,7 +126,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             status = row.getEnum("status"),
             stegTilstand = hentAktivtSteg(behandlingId),
             versjon = row.getLong("versjon"),
-            vurderingsbehov = hentVurderingsbehov(behandlingId),
+            vurderingsbehov = hentVurderingsbehov(behandlingId).distinct(),
             opprettetTidspunkt = row.getLocalDateTime("opprettet_tid"),
             årsakTilOpprettelse = row.getEnumOrNull("aarsak_til_opprettelse"),
             forrigeBehandlingId = row.getLongOrNull("forrige_id")?.let { BehandlingId(it) }
@@ -419,8 +419,6 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
     }
 
     override fun oppdaterVurderingsbehovOgÅrsak(behandling: Behandling, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak) {
-        val nyeVurderingsbehov = vurderingsbehovOgÅrsak.vurderingsbehov.filter { !behandling.vurderingsbehov().contains(it) }
-
         val årsakQuery = """
             INSERT INTO behandling_aarsak(behandling_id, aarsak, begrunnelse, opprettet_tid)
             VALUES (?, ?, ?, ?)
@@ -438,9 +436,10 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         val vurderingsbehovQuery = """
             INSERT INTO vurderingsbehov (behandling_id, aarsak, periode, behandling_aarsak_id)
             VALUES (?, ?, ?::daterange, ?)
+            ON CONFLICT DO NOTHING
         """.trimIndent()
 
-        connection.executeBatch(vurderingsbehovQuery, nyeVurderingsbehov) {
+        connection.executeBatch(vurderingsbehovQuery, vurderingsbehovOgÅrsak.vurderingsbehov) {
             setParams {
                 setLong(1, behandling.id.toLong())
                 setEnumName(2, it.type)

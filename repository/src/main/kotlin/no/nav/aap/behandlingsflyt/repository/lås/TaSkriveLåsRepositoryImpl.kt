@@ -61,6 +61,19 @@ class TaSkriveLåsRepositoryImpl(private val connection: DBConnection): TaSkrive
     }
 
     override fun lås(behandlingUUid: UUID): Skrivelås {
+        /* Lås sak før vi låser behandling. Hvis vi låser sak i setRowMapper, så
+         * låses behandling først, og så sak.
+         **/
+        val sakId = connection.queryFirst("""select sak_id from behandling where referanse = ?""") {
+            setParams {
+                setUUID(1, behandlingUUid)
+            }
+            setRowMapper {
+                SakId(it.getLong("sak_id"))
+            }
+        }
+        val sakLås = låsSak(sakId)
+
         val query = """SELECT id, sak_id, versjon FROM BEHANDLING WHERE referanse = ? FOR UPDATE"""
 
         return connection.queryFirst(query) {
@@ -69,7 +82,7 @@ class TaSkriveLåsRepositoryImpl(private val connection: DBConnection): TaSkrive
             }
             setRowMapper {
                 Skrivelås(
-                    låsSak(SakId(it.getLong("sak_id"))),
+                    sakLås,
                     BehandlingSkrivelås(
                         BehandlingId(it.getLong("id")),
                         it.getLong("versjon")

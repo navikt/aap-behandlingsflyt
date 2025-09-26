@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.SamIdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -13,6 +12,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
@@ -26,7 +27,6 @@ class DatadelingBehandlingJobbUtfører(
     private val behandlingRepository: BehandlingRepository,
     private val tilkjentRepository: TilkjentYtelseRepository,
     private val underveisRepository: UnderveisRepository,
-    private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val vedtakRepository: VedtakRepository,
     private val samIdRepository: SamIdRepository,
     private val beregningsgrunnlagRepository: BeregningsgrunnlagRepository,
@@ -54,7 +54,10 @@ class DatadelingBehandlingJobbUtfører(
         }
 
         val underveis = underveisRepository.hentHvisEksisterer(behandling.id)
-        val vilkårsresultatTidslinje = vilkårsresultatRepository.hent(behandling.id).rettighetstypeTidslinje()
+        val vilkårsresultatTidslinje = underveis?.perioder.orEmpty()
+            .mapNotNull { if (it.rettighetsType != null) Segment(it.periode, it.rettighetsType) else null }
+            .let(::Tidslinje)
+
         val vedtakId = vedtakRepository.hentId(behandling.id)
         val samId = samIdRepository.hentHvisEksisterer(behandling.id)
 
@@ -93,7 +96,6 @@ class DatadelingBehandlingJobbUtfører(
                 behandlingRepository = repositoryProvider.provide(),
                 tilkjentRepository = repositoryProvider.provide(),
                 underveisRepository = repositoryProvider.provide(),
-                vilkårsresultatRepository = repositoryProvider.provide(),
                 vedtakRepository = repositoryProvider.provide(),
                 samIdRepository = repositoryProvider.provide(),
                 beregningsgrunnlagRepository = repositoryProvider.provide(),

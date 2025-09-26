@@ -53,6 +53,7 @@ class AvklarSykdomLøser(
 
         val gjeldendeVurderinger = eksisterendeSykdomsvurderinger
             .kombiner(nyeSykdomsvurderinger, StandardSammenslåere.prioriterHøyreSideCrossJoin())
+            .komprimer()
             .toList()
             .map { it.verdi }
 

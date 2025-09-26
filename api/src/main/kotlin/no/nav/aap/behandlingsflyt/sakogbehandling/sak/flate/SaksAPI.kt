@@ -11,9 +11,7 @@ import no.nav.aap.behandlingsflyt.Azp
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
-import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopiererImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.VURDER_BRUDD_11_7_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
@@ -23,9 +21,6 @@ import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
@@ -97,6 +92,7 @@ fun NormalOpenAPIRoute.saksApi(
                                     Resultat.INNVILGELSE -> ResultatKode.INNVILGET
                                     Resultat.AVSLAG -> ResultatKode.AVSLAG
                                     Resultat.TRUKKET -> ResultatKode.TRUKKET
+                                    Resultat.AVBRUTT -> ResultatKode.AVBRUTT
                                     null -> null
                                 }
                             })
@@ -107,51 +103,26 @@ fun NormalOpenAPIRoute.saksApi(
             respond(saker)
         }
         route("/{saksnummer}/opprettAktivitetspliktBehandling")
-            .authorizedPost<SaksnummerParameter, BehandlingAvTypeDTO, Unit>(
+            .authorizedPost<SaksnummerParameter, BehandlingAvTypeDTO, OpprettAktivitetspliktBehandlingDto>(
                 routeConfig = AuthorizationParamPathConfig(
                     sakPathParam = SakPathParam("saksnummer"),
                     operasjon = Operasjon.SE, // TODO: Skriveoperasjon krever behandlingsreferanse - bruker 'SE' enn så lenge
                 )
-            ) { req, _ ->
+            ) { req, body ->
                 if (Miljø.erProd()) {
                     throw UgyldigForespørselException("Ikke produksjon enda")
                 }
                 val dto = dataSource.transaction { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
 
-                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-
                     val sakRepository = repositoryProvider.provide<SakRepository>()
                     val sakId = sakRepository.hent(Saksnummer(req.saksnummer)).id
 
                     val sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider)
 
-                    val sisteYtelseBehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sakId)
-
-                    if (sisteYtelseBehandling == null) {
-                        throw UgyldigForespørselException("Kan ikke opprette aktiviterspliktbehandling uten en ytelsebehandling")
-                    }
-                    val aktivitetspliktBehandlinger = behandlingRepository.hentAlleFor(
-                        sakId = sakId,
-                        behandlingstypeFilter = listOf(TypeBehandling.Aktivitetsplikt)
+                    val behandling = sakOgBehandlingService.opprettAktivitetspliktBehandling(
+                        sakId, body.vurderingsbehov.tilVurderingsbehov()
                     )
-                    val forrige = aktivitetspliktBehandlinger.firstOrNull()?.id
-
-                    val åpenAktivitetspliktBehandling = aktivitetspliktBehandlinger.filter { it.status().erÅpen() }
-
-
-                    if (åpenAktivitetspliktBehandling.isNotEmpty()) {
-                        throw UgyldigForespørselException("Finnes allerede en åpen behandling for aktivitetsplikt")
-                    }
-
-                    val behandling = sakOgBehandlingService.opprettAktivitetsPliktBehandling(
-                        sakId, VurderingsbehovOgÅrsak(
-                            vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.AKTIVITETSPLIKT_11_7)),
-                            årsak = ÅrsakTilOpprettelse.AKTIVITETSPLIKT
-                        ), forrigeBehandlingId = forrige
-                    ).also { behandling ->
-                        forrige?.let { GrunnlagKopiererImpl(repositoryProvider).overfør(it, behandling.id) }
-                    }
 
                     ProsesserBehandlingService(repositoryProvider, gatewayProvider).triggProsesserBehandling(behandling)
 
@@ -199,6 +170,7 @@ fun NormalOpenAPIRoute.saksApi(
                                     Resultat.INNVILGELSE -> ResultatKode.INNVILGET
                                     Resultat.AVSLAG -> ResultatKode.AVSLAG
                                     Resultat.TRUKKET -> ResultatKode.TRUKKET
+                                    Resultat.AVBRUTT -> ResultatKode.AVBRUTT
                                     null -> null
                                 }
                             })
@@ -382,7 +354,7 @@ fun NormalOpenAPIRoute.saksApi(
 
             val saker = dataSource.transaction(readOnly = true) { connection ->
                 val repositoryProvider = repositoryRegistry.provider(connection)
-                SøkPåSakService(repositoryProvider).søkEtterSaker(søkDto.søketekst)
+                SøkPåSakService(repositoryProvider).søkEtterSaker(søkDto.søketekst.trim())
             }
 
             if (saker.isNotEmpty()) {
@@ -452,6 +424,8 @@ fun NormalOpenAPIRoute.saksApi(
                     SakPersoninfoDTO(
                         fnr = personinfo.ident.identifikator,
                         navn = personinfo.fulltNavn(),
+                        fødselsdato = personinfo.fødselsdato,
+                        dødsdato = personinfo.dødsdato,
                     )
                 )
             }

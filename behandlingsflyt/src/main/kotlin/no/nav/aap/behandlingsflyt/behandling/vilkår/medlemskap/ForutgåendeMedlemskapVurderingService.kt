@@ -150,14 +150,14 @@ class ForutgåendeMedlemskapVurderingService {
     }
 
     private fun utenlandskAdresse(
-        grunnlag: PersonopplysningMedHistorikkGrunnlag,
+        grunnlag: PersonopplysningMedHistorikkGrunnlag?,
         forutgåendePeriode: Periode
     ): TilhørighetVurdering {
         val bosattUtenforNorge =
-            grunnlag.brukerPersonopplysning.folkeregisterStatuser.any { it.status != PersonStatus.bosatt }
+            grunnlag?.brukerPersonopplysning?.folkeregisterStatuser?.any { it.status != PersonStatus.bosatt }
 
-        val utenlandsAddresserGrunnlag = grunnlag.brukerPersonopplysning.utenlandsAddresser?.map {
-            UtenlandsAdresseGrunnlag(
+        val adresser = grunnlag?.brukerPersonopplysning?.utenlandsAddresser?.map {
+            UtenlandskAdresseDto(
                 gyldigFraOgMed = it.gyldigFraOgMed,
                 gyldigTilOgMed = it.gyldigTilOgMed,
                 adresseNavn = it.adresseNavn,
@@ -171,13 +171,16 @@ class ForutgåendeMedlemskapVurderingService {
                     || forutgåendePeriode.inneholder(it.gyldigTilOgMed)
                     || (it.gyldigFraOgMed != null && forutgåendePeriode.inneholder(it.gyldigFraOgMed))
         }
+        val folkeregisterStatuserDto = grunnlag?.brukerPersonopplysning?.folkeregisterStatuser?.map{
+            FolkeregisterStatusDto(it.status, it.gyldighetstidspunkt, it.opphoerstidspunkt)
+        }
 
         return TilhørighetVurdering(
             kilde = listOf(Kilde.PDL),
             indikasjon = Indikasjon.UTENFOR_NORGE,
             opplysning = "Har hatt utenlandsk adresse i perioden",
-            resultat = bosattUtenforNorge || !utenlandsAddresserGrunnlag.isNullOrEmpty(),
-            utenlandsAddresserGrunnlag = utenlandsAddresserGrunnlag,
+            resultat = bosattUtenforNorge == true || !adresser.isNullOrEmpty(),
+            utenlandsAddresserGrunnlag = UtenlandsAdresserGrunnlag(adresser, folkeregisterStatuserDto),
             vurdertPeriode = VurdertPeriode.SISTE_5_ÅR.beskrivelse
         )
     }
@@ -205,19 +208,19 @@ class ForutgåendeMedlemskapVurderingService {
     }
 
     private fun manglerStatsborgerskapIEØSiPerioden(
-        grunnlag: PersonopplysningMedHistorikkGrunnlag,
+        grunnlag: PersonopplysningMedHistorikkGrunnlag?,
         forutgåendePeriode: Periode
     ): TilhørighetVurdering {
         val fantStatsborgerskapUtenforEØSiPerioden =
-            grunnlag.brukerPersonopplysning.statsborgerskap.any { it.land !in enumValues<EØSLand>().map { eøsLand -> eøsLand.name } }
+            grunnlag?.brukerPersonopplysning?.statsborgerskap?.any { it.land !in enumValues<EØSLand>().map { eøsLand -> eøsLand.name } }
 
-        val manglerStatsborgerskapGrunnlag = grunnlag.brukerPersonopplysning.statsborgerskap.map {
+        val manglerStatsborgerskapGrunnlag = grunnlag?.brukerPersonopplysning?.statsborgerskap?.map {
             ManglerStatsborgerskapGrunnlag(
                 land = it.land,
                 gyldigFraOgMed = it.gyldigFraOgMed,
                 gyldigTilOgMed = it.gyldigTilOgMed
             )
-        }.filter {
+        }?.filter {
             (it.gyldigTilOgMed == null)
                     || forutgåendePeriode.inneholder(it.gyldigTilOgMed)
                     || (it.gyldigFraOgMed != null && forutgåendePeriode.inneholder(it.gyldigFraOgMed))
@@ -227,7 +230,7 @@ class ForutgåendeMedlemskapVurderingService {
             kilde = listOf(Kilde.PDL),
             indikasjon = Indikasjon.UTENFOR_NORGE,
             opplysning = "Har statsborgerskap utenfor EØS i perioden",
-            resultat = fantStatsborgerskapUtenforEØSiPerioden,
+            resultat = fantStatsborgerskapUtenforEØSiPerioden == true,
             manglerStatsborgerskapGrunnlag = manglerStatsborgerskapGrunnlag,
             vurdertPeriode = VurdertPeriode.SISTE_5_ÅR.beskrivelse
         )

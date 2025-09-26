@@ -7,9 +7,10 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarForutgåendeMedlemskapLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarLovvalgMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarManuellInntektVurderingLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangArbeidLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrkesskadeLøsning
@@ -23,27 +24,30 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevA
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedtaksbrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SykdomsvurderingForBrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderRettighetsperiodeLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.YrkesskadevurderingDto
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.mellomlagring.MellomlagretVurdering
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
+import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLand
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøknadsTidspunktDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskapDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskapDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedSøknadsTidspunktDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flate.OvergangUføreVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.flate.OvergangArbeidVurderingLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flate.OvergangUføreVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadevurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.flyt.internals.NyÅrsakTilBehandlingHendelse
@@ -112,6 +116,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -145,7 +150,7 @@ import kotlin.reflect.KClass
 
 @Fakes
 @ExtendWith(TestDatabaseExtension::class)
-open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) {
+open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway>) {
     @TestDatabase
     lateinit var dataSource: DataSource
 
@@ -431,8 +436,6 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) {
                 ),
             )
             .medKontekst {
-                assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
-                    .containsExactlyInAnyOrder(Definisjon.AVKLAR_BISTANDSBEHOV)
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }
     }
@@ -713,7 +716,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) {
     /**
      * Denne må brukes med omhu, da siste opprettede behandling ikke nødvendigvis er siste behandling
      * i den lenkede listen av behandlinger. Ref. fasttrack/atomære behandlinger
-     * 
+     *
      * Bruk i stedet: [SakOgBehandlingService.finnSisteYtelsesbehandlingFor]
      */
     protected fun hentSisteOpprettedeBehandlingForSak(
@@ -824,13 +827,16 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) {
     ): Behandling {
         hendelsesMottak.håndtere(ident, hendelse)
         motor.kjørJobber()
-        return hentBehandling(hendelse.referanse.asBehandlingReferanse)
+        val behandlingsreferanse =
+            BehandlingReferanse(UUID.fromString(hendelse.strukturertDokument?.data?.behandlingReferanse))
+        return hentBehandling(behandlingsreferanse)
     }
 
     protected fun hentBrevAvType(behandling: Behandling, typeBrev: TypeBrev) =
         dataSource.transaction(readOnly = true) {
-            BrevbestillingRepositoryImpl(it).hent(behandling.id)
-                .first { it.typeBrev == typeBrev }
+            val brev = BrevbestillingRepositoryImpl(it).hent(behandling.id)
+            brev.firstOrNull { it.typeBrev == typeBrev }
+                ?: error("Ingen brev av type $typeBrev. Følgende finnes: ${brev.joinToString { it.typeBrev.toString() }}")
         }
 
     protected fun løsForutgåendeMedlemskap(
@@ -895,6 +901,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) {
                     yrkesskadesvurdering = YrkesskadevurderingDto(
                         begrunnelse = "",
                         relevanteSaker = emptyList(),
+                        relevanteYrkesskadeSaker = emptyList(),
                         andelAvNedsettelsen = null,
                         erÅrsakssammenheng = true
                     )
@@ -929,6 +936,17 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) {
         )
     }
 
+    protected fun Behandling.løsLovvalg(): Behandling {
+        return løsAvklaringsBehov(
+            this,
+            AvklarLovvalgMedlemskapLøsning(
+                ManuellVurderingForLovvalgMedlemskapDto(
+                    lovvalgVedSøknadsTidspunkt = LovvalgVedSøknadsTidspunktDto("", EØSLand.NOR),
+                    medlemskapVedSøknadsTidspunkt = MedlemskapVedSøknadsTidspunktDto("", true)
+                )
+            )
+        )
+    }
 
     protected fun kvalitetssikreOk(
         behandling: Behandling,
@@ -1064,10 +1082,17 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) {
         return this.løsAvklaringsBehov(vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
     }
 
-    protected fun leggTilVurderingsbehovForBehandling(behandling: Behandling, vurderingsbehov: List<VurderingsbehovMedPeriode>) {
+    protected fun leggTilVurderingsbehovForBehandling(
+        behandling: Behandling,
+        vurderingsbehov: List<VurderingsbehovMedPeriode>,
+        årsakTilOpprettelse: ÅrsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD
+    ) {
         dataSource.transaction { connection ->
             SakOgBehandlingService(postgresRepositoryRegistry.provider(connection), gatewayProvider)
-                .finnEllerOpprettOrdinærBehandling(behandling.sakId, VurderingsbehovOgÅrsak(vurderingsbehov, ÅrsakTilOpprettelse.SØKNAD))
+                .finnEllerOpprettOrdinærBehandling(
+                    behandling.sakId,
+                    VurderingsbehovOgÅrsak(vurderingsbehov, årsakTilOpprettelse)
+                )
         }
         prosesserBehandling(behandling)
     }

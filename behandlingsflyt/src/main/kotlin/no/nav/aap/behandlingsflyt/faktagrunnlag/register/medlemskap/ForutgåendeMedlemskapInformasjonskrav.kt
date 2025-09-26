@@ -10,7 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_END
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSiste
+import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMaaned
@@ -24,10 +24,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.utils.withMdc
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
-import java.time.Duration
 import java.time.YearMonth
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
@@ -51,22 +51,26 @@ class ForutgåendeMedlemskapInformasjonskrav private constructor(
         oppdatert: InformasjonskravOppdatert?
     ): Boolean {
         return kontekst.erFørstegangsbehandlingEllerRevurdering()
-                && (oppdatert.ikkeKjørtSiste(Duration.ofHours(1))
-                || kontekst.vurderingsbehovRelevanteForSteg.contains(Vurderingsbehov.VURDER_RETTIGHETSPERIODE))
                 && !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
+                && (oppdatert.ikkeKjørtSisteKalenderdag() || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode)
     }
 
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val sak = sakService.hent(kontekst.sakId)
 
-        val medlemskapPerioder = medlemskapGateway.innhent(
+        val medlemskapPerioderFuture = CompletableFuture.supplyAsync(withMdc{ medlemskapGateway.innhent(
             sak.person,
             Periode(sak.rettighetsperiode.fom.minusYears(5), sak.rettighetsperiode.fom)
-        )
-        val arbeidGrunnlag = innhentAARegisterGrunnlag5år(sak)
-        val inntektGrunnlag = innhentAInntektGrunnlag5år(sak)
+        ) }, executor)
+        val arbeidGrunnlagFuture = CompletableFuture.supplyAsync(withMdc{ innhentAARegisterGrunnlag5år(sak) }, executor)
+        val inntektGrunnlagFuture = CompletableFuture.supplyAsync(withMdc{ innhentAInntektGrunnlag5år(sak) }, executor)
+
+        val medlemskapPerioder = medlemskapPerioderFuture.get()
+        val arbeidGrunnlag = arbeidGrunnlagFuture.get()
+        val inntektGrunnlag = inntektGrunnlagFuture.get()
         val enhetGrunnlag = innhentEREGGrunnlag(inntektGrunnlag)
+
         val eksisterendeData = grunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
         lagre(kontekst.behandlingId, medlemskapPerioder, arbeidGrunnlag, inntektGrunnlag, enhetGrunnlag)
 
@@ -102,7 +106,7 @@ class ForutgåendeMedlemskapInformasjonskrav private constructor(
         // EREG har ikke batch-oppslag
         val executor = Executors.newVirtualThreadPerTaskExecutor()
         val futures = orgnumre.map { orgnummer ->
-            CompletableFuture.supplyAsync({
+            CompletableFuture.supplyAsync(withMdc{
                 val response = enhetsregisteretGateway.hentEREGData(Organisasjonsnummer(orgnummer))
                 response?.let {
                     EnhetGrunnlag(
@@ -136,6 +140,8 @@ class ForutgåendeMedlemskapInformasjonskrav private constructor(
     }
 
     companion object : Informasjonskravkonstruktør {
+        private val executor = Executors.newVirtualThreadPerTaskExecutor()
+
         override val navn = InformasjonskravNavn.FORUTGÅENDE_MEDLEMSKAP
 
         override fun konstruer(

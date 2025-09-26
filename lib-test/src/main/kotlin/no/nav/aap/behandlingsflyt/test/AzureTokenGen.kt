@@ -42,7 +42,9 @@ class AzureTokenGen(private val issuer: String, private val audience: String) {
                         "bestill-varselbrev",
                         "brev",
                         "pip-api",
-                        "medlemskaplovvalg-api"
+                        "medlemskaplovvalg-api",
+                        "oppdater-behandlingsflyt-oppgaver",
+                        "oppdater-postmottak-oppgaver",
                     )
                 )
                 .claim(

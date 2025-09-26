@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.søknad.SøknadInformas
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.utils.withMdc
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Instant
@@ -13,7 +14,7 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 
 class InformasjonskravGrunnlagImpl(
-    private val informasjonskravRepository: InformasjonkskravRepository,
+    private val informasjonskravRepository: InformasjonskravRepository,
     private val repositoryProvider: RepositoryProvider,
     private val gatewayProvider: GatewayProvider,
 ) : InformasjonskravGrunnlag {
@@ -71,7 +72,7 @@ class InformasjonskravGrunnlagImpl(
         val informasjonskravFutures = relevanteInformasjonskrav
             .filter { !it.second.equals(SøknadInformasjonskrav) } // ikke kjør SøknadService dobbelt
             .map { triple ->
-                CompletableFuture.supplyAsync({
+                CompletableFuture.supplyAsync(withMdc{
                     val krav = triple.second
                     val span = tracer.spanBuilder("informasjonskrav ${krav.navn}")
                         .setSpanKind(SpanKind.INTERNAL)
@@ -102,7 +103,8 @@ class InformasjonskravGrunnlagImpl(
             kontekst.sakId,
             kontekst.behandlingId,
             relevanteInformasjonskrav.map { (_, krav, _) -> krav.navn },
-            Instant.now()
+            Instant.now(),
+            kontekst.rettighetsperiode,
         )
         return endredeInformasjonskrav.map { (konstruktør, _, _) -> konstruktør }
     }

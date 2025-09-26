@@ -1,0 +1,2 @@
+alter table informasjonskrav_oppdatert
+add column rettighetsperiode daterange null;

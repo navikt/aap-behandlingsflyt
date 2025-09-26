@@ -7,12 +7,15 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.MeldekortPerioderDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DatadelingDTO
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DetaljertMeldekortDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.RettighetsTypePeriode
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.SakDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.UnderveisDTO
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
@@ -128,5 +131,25 @@ class ApiInternGatewayImpl() : ApiInternGateway {
             ),
             mapper = { _, _ ->
             })
+    }
+
+    override fun sendDetaljertMeldekortListe(
+        detaljertMeldekortListe: List<DetaljertMeldekortDTO>,
+        sakId: SakId,
+        behandlingId: BehandlingId
+    ) {
+        log.info("Sender meldekort-detaljer for sakId=${sakId}, behandlingId=${behandlingId}")
+
+        try {
+            restClient.post(
+                uri.resolve("/api/insert/meldekort-detaljer"),
+                PostRequest(body = detaljertMeldekortListe),
+                mapper = { _, _ -> }
+            )
+        } catch (e: Exception) {
+            log.warn("Klarte ikke sende meldekort-detaljer for sakId=${sakId}, behandlingId=${behandlingId}", e)
+            throw e
+        }
+
     }
 }

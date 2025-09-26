@@ -24,7 +24,6 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDate
-import java.time.LocalDateTime
 import kotlin.test.Test
 
 @ExtendWith(MockKExtension::class)
@@ -167,6 +166,48 @@ class AvventUtbetalingServiceTest {
         assertThat(avventUtbetaling?.årsak).isEqualTo(AvventÅrsak.AVVENT_REFUSJONSKRAV)
         assertThat(avventUtbetaling?.feilregistrering).isFalse()
     }
+
+    @Test
+    fun `Tjenestepensjon refusjonskrav utenover vedtaksdato fører til at vedtaksdato - 1 blir satt som tom`() {
+        val refusjonkravRepositoryMock = mockk<RefusjonkravRepository>()
+        val tjenestepensjonRefusjonsKravVurderingRepositoryMock =
+            mockk<TjenestepensjonRefusjonsKravVurderingRepository>()
+        val samordningAndreStatligeYtelserRepositoryMock = mockk<SamordningAndreStatligeYtelserRepository>()
+        val samordningArbeidsgiverRepositoryMock = mockk<SamordningArbeidsgiverRepository>()
+        every { refusjonkravRepositoryMock.hentHvisEksisterer(any()) } returns null
+        every { tjenestepensjonRefusjonsKravVurderingRepositoryMock.hentHvisEksisterer(any()) } returns
+                TjenestepensjonRefusjonskravVurdering(
+                    true,
+                    LocalDate.parse("2025-01-04"),
+                    LocalDate.parse("2025-01-20"),
+                    "bla bla"
+                )
+        every { samordningAndreStatligeYtelserRepositoryMock.hentHvisEksisterer(any()) } returns null
+        every { samordningArbeidsgiverRepositoryMock.hentHvisEksisterer(any()) } returns null
+        val service = AvventUtbetalingService(
+            refusjonkravRepositoryMock,
+            tjenestepensjonRefusjonsKravVurderingRepositoryMock,
+            samordningAndreStatligeYtelserRepositoryMock,
+            samordningArbeidsgiverRepositoryMock,
+            FakeUnleash
+        )
+
+        val avventUtbetaling = service.finnEventuellAvventUtbetaling(
+            behandlingId = BehandlingId(123L),
+            førsteVedtaksdato = LocalDate.parse("2025-01-15"),
+            tilkjentYtelseHelePerioden = Periode(LocalDate.parse("2025-01-01"), LocalDate.parse("2025-01-31"))
+        )
+
+        assertNotNull(avventUtbetaling)
+        assertThat(avventUtbetaling?.fom).isEqualTo(LocalDate.parse("2025-01-04"))
+        assertThat(avventUtbetaling?.tom).isEqualTo(LocalDate.parse("2025-01-14")) //første vedtaksdato - 1
+        assertThat(avventUtbetaling?.overføres).isEqualTo(LocalDate.parse("2025-01-15").plusDays(42))
+        assertThat(avventUtbetaling?.årsak).isEqualTo(AvventÅrsak.AVVENT_REFUSJONSKRAV)
+        assertThat(avventUtbetaling?.feilregistrering).isFalse()
+    }
+
+
+
 
     @Test
     fun `Samordning med andre statlige ytelser overlapper med tilkjent ytelse skal føre til avvent utbetaling`() {

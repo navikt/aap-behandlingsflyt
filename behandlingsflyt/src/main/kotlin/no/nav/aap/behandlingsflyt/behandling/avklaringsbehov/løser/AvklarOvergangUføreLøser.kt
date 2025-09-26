@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
@@ -15,13 +14,11 @@ import java.time.LocalDate
 class AvklarOvergangUføreLøser(
     private val behandlingRepository: BehandlingRepository,
     private val overgangUforeRepository: OvergangUføreRepository,
-    private val sykdomRepository: SykdomRepository,
 ) : AvklaringsbehovsLøser<AvklarOvergangUføreLøsning> {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
         overgangUforeRepository = repositoryProvider.provide(),
-        sykdomRepository = repositoryProvider.provide(),
     )
 
 
@@ -32,13 +29,7 @@ class AvklarOvergangUføreLøser(
 
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
 
-        val nyesteSykdomsvurdering = sykdomRepository.hentHvisEksisterer(behandling.id)
-            ?.sykdomsvurderinger?.maxByOrNull { it.opprettet }
-
-        val overgangUføreVurdering = løsning.overgangUføreVurdering.tilOvergangUføreVurdering(
-            kontekst.bruker,
-            nyesteSykdomsvurdering?.vurderingenGjelderFra
-        )
+        val overgangUføreVurdering = løsning.overgangUføreVurdering.tilOvergangUføreVurdering(kontekst.bruker)
 
         val eksisterendeOverganguforevurderinger = behandling.forrigeBehandlingId
             ?.let { overgangUforeRepository.hentHvisEksisterer(it) }

@@ -41,10 +41,15 @@ object PdlPersoninfoBulkGateway : PersoninfoBulkGateway {
         val navn = data.person?.navn?.firstOrNull()
 
         if (navn == null) {
-            return Personinfo(Ident(data.ident!!), "Ukjent", null, null)
+            return Personinfo(Ident(data.ident!!), fornavn = "Ukjent", mellomnavn = null, etternavn = null)
         }
 
-        return Personinfo(Ident(data.ident!!), navn.fornavn, navn.mellomnavn, navn.etternavn)
+        return Personinfo(
+            Ident(data.ident!!),
+            fornavn = navn.fornavn,
+            mellomnavn = navn.mellomnavn,
+            etternavn = navn.etternavn
+        )
     }
 }
 

@@ -31,10 +31,14 @@ data class Sykdomsvurdering(
     }
 
     fun erOppfylt(behandlingType: TypeBehandling, kravDato: LocalDate): Boolean {
+        /* Det stemmer vel ikke å se på behandlingstypen her? For poenget er vel at vurderingen som gjelder
+         * fra kravdatoen (som som oftest stammer fra en førstegangsbehandling) har en viss varighet.
+         * Se `erOppfylt(LocalDate)` nedenfor.
+         */
         return when (behandlingType) {
             TypeBehandling.Førstegangsbehandling -> erOppfyltSettBortIfraVissVarighet() && erNedsettelseIArbeidsevneAvEnVissVarighet == true
             TypeBehandling.Revurdering -> {
-                if (vurderingenGjelderFra == null || kravDato == vurderingenGjelderFra) {
+                if (erFørsteVurdering(kravDato)) {
                     erOppfyltSettBortIfraVissVarighet() && erNedsettelseIArbeidsevneAvEnVissVarighet == true
                 } else {
                     erOppfyltSettBortIfraVissVarighet()
@@ -43,6 +47,17 @@ data class Sykdomsvurdering(
 
             else -> error("Ugyldig behandlingsType: $behandlingType for vurdering av sykdom.")
         }
+    }
+
+    /* Denne metoden må sannsynligvis generaliseres når vi skal implementere gjeninntreden etter opphør. */
+    fun erFørsteVurdering(kravdato: LocalDate): Boolean {
+        return vurderingenGjelderFra == null || vurderingenGjelderFra == kravdato
+    }
+
+    fun erOppfylt(kravdato: LocalDate): Boolean {
+        return erOppfyltSettBortIfraVissVarighet() &&
+                if (erFørsteVurdering(kravdato)) erNedsettelseIArbeidsevneAvEnVissVarighet == true
+                else true
     }
 
     fun erOppfyltSettBortIfraVissVarighet(): Boolean {
@@ -70,21 +85,22 @@ data class Sykdomsvurdering(
     }
 }
 
+/**
+ * @param relevanteSaker Liste over saksnumre til yrkesskadesaker fra register.
+ */
 data class Yrkesskadevurdering(
     val id: Long? = null,
     val begrunnelse: String,
-    val relevanteSaker: List<String>,
+    val relevanteSaker: List<YrkesskadeSak>,
     val erÅrsakssammenheng: Boolean,
     val andelAvNedsettelsen: Prosent?,
     val vurdertAv: String,
     val vurdertTidspunkt: LocalDateTime? = null,
 )
 
-data class YrkesskadevurderingDto(
-    val begrunnelse: String,
-    val relevanteSaker: List<String>,
-    val andelAvNedsettelsen: Int?,
-    val erÅrsakssammenheng: Boolean
+data class YrkesskadeSak(
+    val referanse: String,
+    val manuellYrkesskadeDato: LocalDate?,
 )
 
 

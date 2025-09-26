@@ -40,15 +40,15 @@ class AvventUtbetalingService(
         if (harKrav) {
 
             val periodeMedKravFom = perioderMedKrav
-                .map {it.fom}
-                .filter {it != null}
+                .map { it.fom }
+                .filter { it != null }
                 .minOfOrNull { it!! }
             val periodeMedKravTom = perioderMedKrav
-                .map {it.tom}
-                .filter {it != null}
-                .minOfOrNull { it!! }
+                .map { it.tom }
+                .filter { it != null }
+                .maxOfOrNull { it!! }
             val fom = periodeMedKravFom!!
-            val tom = periodeMedKravTom ?: førsteVedtaksdato.minusDays(1).coerceAtLeast(fom)
+            val tom = (periodeMedKravTom?.coerceAtMost(førsteVedtaksdato.minusDays(1)) ?: førsteVedtaksdato.minusDays(1)).coerceAtLeast(fom)
             return TilkjentYtelseAvventDto(
                 fom = fom,
                 tom = tom,
@@ -68,7 +68,7 @@ class AvventUtbetalingService(
 
         if (harKrav) {
             val fom = tpRefusjonskrav.fom!!
-            val tom = tpRefusjonskrav.tom ?: førsteVedtaksdato.minusDays(1).coerceAtLeast(fom)
+            val tom = tpRefusjonskrav.tom?.coerceAtMost(førsteVedtaksdato.minusDays(1)) ?: førsteVedtaksdato.minusDays(1).coerceAtLeast(fom)
             return TilkjentYtelseAvventDto(
                 fom = fom,
                 tom = tom,
@@ -88,6 +88,8 @@ class AvventUtbetalingService(
         }
         val fom = samordningAndreStatligeYtelser.vurdering.vurderingPerioder.minOf {it.periode.fom}
         val tom = samordningAndreStatligeYtelser.vurdering.vurderingPerioder.maxOf {it.periode.tom}
+            .coerceAtMost(førsteVedtaksdato.minusDays(1))
+            .coerceAtLeast(fom)
 
         val overføres = if (unleashGateway.isEnabled(BehandlingsflytFeature.OverforingsdatoNullForAvregning)) {
             null
@@ -116,7 +118,9 @@ class AvventUtbetalingService(
         }
         return TilkjentYtelseAvventDto(
             fom = samordningArbeidsgiverYtelser.vurdering.fom,
-            tom = samordningArbeidsgiverYtelser.vurdering.tom,
+            tom = samordningArbeidsgiverYtelser.vurdering.tom
+                .coerceAtMost(førsteVedtaksdato.minusDays(1))
+                .coerceAtLeast(samordningArbeidsgiverYtelser.vurdering.fom),
             overføres = overføres,
             årsak = AvventÅrsak.AVVENT_AVREGNING,
             feilregistrering = false
