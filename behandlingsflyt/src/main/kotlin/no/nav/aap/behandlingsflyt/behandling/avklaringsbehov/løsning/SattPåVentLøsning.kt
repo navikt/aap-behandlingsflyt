@@ -17,7 +17,7 @@ class SattPåVentLøsning(
         required = true,
         defaultValue = MANUELT_SATT_PÅ_VENT_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`9001`
-) : AvklaringsbehovLøsning {
+) : EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return SattPåVentLøser(repositoryProvider).løs(kontekst, this)
     }

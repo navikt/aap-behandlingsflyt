@@ -24,7 +24,7 @@ class FastsettYrkesskadeInntektLøsning(
         required = true,
         defaultValue = FASTSETT_YRKESSKADE_BELØP_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5014`
-) : AvklaringsbehovLøsning {
+) : EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return FastsettYrkesskadeInntektLøser(repositoryProvider).løs(kontekst, this)
     }

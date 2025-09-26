@@ -22,7 +22,7 @@ class VurderFormkravLøsning(
         required = true,
         defaultValue = VURDER_FORMKRAV_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`6000`
-) : AvklaringsbehovLøsning {
+) : EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return VurderFormkravLøser(repositoryProvider).løs(kontekst, this)
     }

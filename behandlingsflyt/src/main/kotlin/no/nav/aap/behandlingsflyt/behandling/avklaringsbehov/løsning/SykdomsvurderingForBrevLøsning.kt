@@ -15,7 +15,7 @@ class SykdomsvurderingForBrevLøsning(
     @param:JsonProperty("behovstype", required = true, defaultValue = SKRIV_SYKDOMSVURDERING_BREV_KODE)
     val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5053`,
     @param:JsonProperty("vurdering") val vurdering: String?,
-) : AvklaringsbehovLøsning {
+) : EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return SykdomsvurderingForBrevLøser(repositoryProvider).løs(kontekst, this)
     }

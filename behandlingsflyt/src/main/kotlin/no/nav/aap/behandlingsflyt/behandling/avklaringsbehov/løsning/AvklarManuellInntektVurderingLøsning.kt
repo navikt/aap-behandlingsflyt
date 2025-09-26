@@ -24,7 +24,7 @@ class AvklarManuellInntektVurderingLøsning(
         required = true,
         defaultValue = FASTSETT_MANUELL_INNTEKT
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`7001`
-) : AvklaringsbehovLøsning {
+) : EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return AvklarManuellInntektVurderingLøser(repositoryProvider).løs(kontekst, this)
     }

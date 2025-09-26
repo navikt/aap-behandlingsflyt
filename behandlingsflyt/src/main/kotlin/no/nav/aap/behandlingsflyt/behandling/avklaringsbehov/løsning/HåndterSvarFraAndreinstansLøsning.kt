@@ -26,7 +26,7 @@ class HåndterSvarFraAndreinstansLøsning(
         required = true,
         defaultValue = HÅNDTER_SVAR_FRA_ANDREINSTANS_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`6008`
-) : AvklaringsbehovLøsning {
+) : EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         // TODO: Støtt konsekvens 'BEHANDLE_PÅ_NYTT' i steget
         if (svarFraAndreinstansVurdering.konsekvens == SvarFraAndreinstansKonsekvens.BEHANDLE_PÅ_NYTT) {

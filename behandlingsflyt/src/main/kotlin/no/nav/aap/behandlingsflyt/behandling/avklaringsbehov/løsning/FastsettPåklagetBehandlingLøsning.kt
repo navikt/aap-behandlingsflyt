@@ -22,7 +22,7 @@ class FastsettPåklagetBehandlingLøsning(
         required = true,
         defaultValue = FASTSETT_PÅKLAGET_BEHANDLING_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5999`
-) : AvklaringsbehovLøsning {
+) : EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return FastsettPåklagetBehandlingLøser(repositoryProvider).løs(kontekst, this)
     }

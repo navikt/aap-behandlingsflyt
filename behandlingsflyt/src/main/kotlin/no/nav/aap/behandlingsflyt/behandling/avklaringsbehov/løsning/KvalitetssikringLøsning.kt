@@ -19,7 +19,7 @@ class KvalitetssikringLøsning(
         required = true,
         defaultValue = KVALITETSSIKRING_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5097`
-) : AvklaringsbehovLøsning {
+) : EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return KvalitetssikrerLøser(repositoryProvider, gatewayProvider).løs(kontekst, this)
     }

@@ -19,7 +19,7 @@ class FatteVedtakLøsning(
         required = true,
         defaultValue = FATTE_VEDTAK_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5099`
-) : AvklaringsbehovLøsning {
+) : EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return FatteVedtakLøser(repositoryProvider, gatewayProvider).løs(kontekst, this)
     }
