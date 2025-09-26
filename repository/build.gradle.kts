@@ -14,7 +14,7 @@ dependencies {
     implementation(libs.httpklient)
     implementation(libs.infrastructure)
     implementation(libs.tidslinje)
-    implementation("org.flywaydb:flyway-database-postgresql:11.13.1")
+    implementation("org.flywaydb:flyway-database-postgresql:11.13.2")
     implementation("io.getunleash:unleash-client-java:11.1.0")
     runtimeOnly("org.postgresql:postgresql") // låst versjon i root build.gradle.kts
     implementation("no.bekk.bekkopen:nocommons:0.16.0")
