@@ -135,6 +135,12 @@ class MottaDokumentService(
         mottattDokumentRepository.oppdaterBehandlingId(referanse, behandlingId, sakId)
     }
 
+    fun hentMottattDokumenterAvType(behandlingId: BehandlingId, type: InnsendingType): Set<MottattDokument> {
+        val uthentetDokument = mottattDokumentRepository.hentDokumenterAvType(behandlingId, type)
+
+        return uthentetDokument
+    }
+
     fun hentOppfølgingsBehandlingDokument(behandlingId: BehandlingId): BehandletOppfølgingsOppgave? {
         val uthentede = mottattDokumentRepository.hentDokumenterAvType(behandlingId, InnsendingType.OPPFØLGINGSOPPGAVE)
 
