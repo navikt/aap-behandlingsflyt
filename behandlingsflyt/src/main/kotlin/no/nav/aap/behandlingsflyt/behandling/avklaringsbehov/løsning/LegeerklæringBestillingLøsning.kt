@@ -17,7 +17,7 @@ class LegeerklæringBestillingLøsning(
     @param:JsonProperty(
         "behovstype", required = true, defaultValue = BESTILL_LEGEERKLÆRING_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`9003`
-) : AvklaringsbehovLøsning {
+) : EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return LegeerklæringBestillingLøser(repositoryProvider).løs(kontekst, this)
     }

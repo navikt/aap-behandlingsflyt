@@ -21,7 +21,7 @@ class AvklarSykdomLøsning(
         required = true,
         defaultValue = AVKLAR_SYKDOM_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5003`
-) : AvklaringsbehovLøsning {
+) : EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return AvklarSykdomLøser(repositoryProvider).løs(kontekst, this)
     }

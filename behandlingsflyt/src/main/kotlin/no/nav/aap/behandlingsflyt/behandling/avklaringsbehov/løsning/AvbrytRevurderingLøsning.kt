@@ -16,7 +16,7 @@ class AvbrytRevurderingLøsning(
     @param:JsonProperty("behovstype", required = true, defaultValue = AVBRYT_REVURDERING_KODE)
     val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5033`,
     val vurdering: AvbrytRevurderingVurderingDto
-) : AvklaringsbehovLøsning {
+) : EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return AvbrytRevurderingLøser(repositoryProvider).løs(kontekst, this)
     }

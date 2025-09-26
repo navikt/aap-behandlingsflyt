@@ -17,7 +17,7 @@ class VentPåOppfølgingLøsning(
         required = true,
         defaultValue = VENT_PÅ_OPPFØLGING
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`8002`
-) : AvklaringsbehovLøsning {
+) : EnkeltAvklaringsbehovLøsning {
     override fun løs(
         repositoryProvider: RepositoryProvider,
         kontekst: AvklaringsbehovKontekst,

@@ -21,7 +21,7 @@ class AvklarYrkesskadeLøsning(
         required = true,
         defaultValue = AVKLAR_YRKESSKADE_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5013`
-) : AvklaringsbehovLøsning {
+) : EnkeltAvklaringsbehovLøsning {
     override fun løs(
         repositoryProvider: RepositoryProvider,
         kontekst: AvklaringsbehovKontekst,

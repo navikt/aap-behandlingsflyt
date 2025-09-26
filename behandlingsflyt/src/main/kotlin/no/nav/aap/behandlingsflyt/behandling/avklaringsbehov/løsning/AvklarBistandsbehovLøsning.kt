@@ -23,7 +23,7 @@ class AvklarBistandsbehovLøsning(
         required = true,
         defaultValue = AVKLAR_BISTANDSBEHOV_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5006`
-) : AvklaringsbehovLøsning {
+) : EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return AvklarBistandLøser(repositoryProvider, gatewayProvider).løs(kontekst, this)
     }

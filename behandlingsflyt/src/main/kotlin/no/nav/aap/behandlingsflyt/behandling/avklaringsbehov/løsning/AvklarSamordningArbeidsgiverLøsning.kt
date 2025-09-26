@@ -24,7 +24,7 @@ class AvklarSamordningArbeidsgiverLøsning(
         required = true,
         defaultValue = AVKLAR_SAMORDNING_ARBEIDSGIVER_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5030`
-) : AvklaringsbehovLøsning {
+) : EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return AvklarSamordningArbeidsgiverLøser(repositoryProvider).løs(kontekst, this)
     }

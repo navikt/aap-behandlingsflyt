@@ -22,7 +22,7 @@ class AvklarStudentLøsning(
         defaultValue = AVKLAR_STUDENT_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5001`
 ) :
-    AvklaringsbehovLøsning {
+    EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return AvklarStudentLøser(repositoryProvider).løs(kontekst, this)
     }
