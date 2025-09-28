@@ -432,8 +432,13 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
         return requireNotNull(hentHvisEksisterer(behandlingId)) { "Fant ikke sykdomsgrunnlag for behandling med ID $behandlingId." }
     }
 
-    override fun hentHistoriskeSykdomsvurderinger(sakId: SakId, behandlingId: BehandlingId): List<Sykdomsvurdering> {
-        val query = """
+    override fun hentHistoriskeSykdomsvurderinger(
+        sakId: SakId,
+        behandlingId: BehandlingId,
+        ekskluderteBehandlingIdListe: List<BehandlingId>
+    ): List<Sykdomsvurdering> {
+        val harEkskludering = ekskluderteBehandlingIdListe.isNotEmpty()
+        var query = """
             SELECT DISTINCT on(vurdering.opprettet_tid) vurdering.*
             FROM SYKDOM_GRUNNLAG grunnlag
             INNER JOIN SYKDOM_VURDERINGER vurderinger ON grunnlag.SYKDOM_VURDERINGER_ID = vurderinger.ID
@@ -442,10 +447,18 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
             WHERE grunnlag.AKTIV AND behandling.SAK_ID = ?
               AND behandling.opprettet_tid < (SELECT a.opprettet_tid from behandling a where id = ?)
             """.trimIndent()
+
+        if (harEkskludering) {
+            query = "$query AND behandling.ID <> ALL(?::bigint[])"
+        }
+
         return connection.queryList(query) {
             setParams {
                 setLong(1, sakId.id)
                 setLong(2, behandlingId.id)
+                if (harEkskludering) {
+                    setLongArray(3, ekskluderteBehandlingIdListe.map { it.toLong() })
+                }
             }
             setRowMapper(::sykdomsvurderingRowmapper)
         }

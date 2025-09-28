@@ -559,7 +559,7 @@ internal class BistandRepositoryImplTest {
         val revurderingUtenOppdatertBistandsvurdering = dataSource.transaction { connection ->
             val repo = BistandRepositoryImpl(connection)
             val revurdering = revurdering(connection, førstegangsbehandling, sak)
-            val historikk = repo.hentHistoriskeBistandsvurderinger(revurdering.sakId, revurdering.id)
+            val historikk = repo.hentHistoriskeBistandsvurderinger(revurdering.sakId, revurdering.id, emptyList())
             assertEquals(listOf(bistandsvurdering2), historikk)
             revurdering
         }
@@ -579,7 +579,7 @@ internal class BistandRepositoryImplTest {
                 overgangBegrunnelse = null,
             )
             repo.lagre(revurdering.id, listOf(bistandsvurdering3))
-            val historikk = repo.hentHistoriskeBistandsvurderinger(revurdering.sakId, revurdering.id)
+            val historikk = repo.hentHistoriskeBistandsvurderinger(revurdering.sakId, revurdering.id, emptyList())
             assertEquals(listOf(bistandsvurdering2), historikk)
         }
     }

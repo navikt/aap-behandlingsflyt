@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.beregning.manuellinntekt
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.beregning.BeregningService
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
@@ -53,9 +54,13 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(dataSource: DataSource, repositoryRe
                     val behandlingRepository = provider.provide<BehandlingRepository>()
                     val beregningService = BeregningService(provider)
                     val manuellInntektRepository = provider.provide<ManuellInntektGrunnlagRepository>()
+                    val avbrytRevurderingService = AvbrytRevurderingService(provider)
 
                     val behandling = behandlingRepository.hent(req.referanse.let(::BehandlingReferanse))
                     val relevanteÅr = beregningService.utledRelevanteBeregningsÅr(behandling.id)
+                    val behandlingerIderMedAvbrutteRevurdering =
+                        avbrytRevurderingService.hentBehandlingerMedAvbruttRevurderingForSak(behandling.sakId)
+                            .map { it.id }
 
                     val grunnlag = manuellInntektRepository.hentHvisEksisterer(behandling.id)
                     val manuellInntekter = grunnlag?.manuelleInntekter
@@ -64,8 +69,11 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(dataSource: DataSource, repositoryRe
                         log.warn("Fant flere manuelle inntekter for behandling ${behandling.id}. Per nå gjør vi antakelse om kun én.")
                     }
 
-                    val historiskeVurderinger =
-                        manuellInntektRepository.hentHistoriskeVurderinger(behandling.sakId, behandling.id)
+                    val historiskeVurderinger = manuellInntektRepository.hentHistoriskeVurderinger(
+                        behandling.sakId,
+                        behandling.id,
+                        behandlingerIderMedAvbrutteRevurdering
+                    )
 
                     Triple(manuellInntekter?.firstOrNull(), relevanteÅr.max(), historiskeVurderinger)
                 }

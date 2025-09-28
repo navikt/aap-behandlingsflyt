@@ -12,7 +12,7 @@ import no.nav.aap.lookup.repository.Repository
 
 interface MedlemskapArbeidInntektForutgåendeRepository : Repository {
     fun hentHvisEksisterer(behandlingId: BehandlingId): ForutgåendeMedlemskapArbeidInntektGrunnlag?
-    fun hentHistoriskeVurderinger(sakId: SakId, behandlingId: BehandlingId): List<HistoriskManuellVurderingForForutgåendeMedlemskap>
+    fun hentHistoriskeVurderinger(sakId: SakId, behandlingId: BehandlingId, ekskluderteBehandlingIdListe: List<BehandlingId>): List<HistoriskManuellVurderingForForutgåendeMedlemskap>
     fun lagreArbeidsforholdOgInntektINorge(behandlingId: BehandlingId, arbeidGrunnlag: List<ArbeidINorgeGrunnlag>, inntektGrunnlag: List<ArbeidsInntektMaaned>, medlId: Long?, enhetGrunnlag: List<EnhetGrunnlag>)
     fun lagreManuellVurdering(behandlingId: BehandlingId, manuellVurdering: ManuellVurderingForForutgåendeMedlemskap)
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)

@@ -4,6 +4,7 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrevRepository
@@ -34,9 +35,10 @@ fun NormalOpenAPIRoute.sykdomsvurderingForBrevApi(
                 val repositoryProvider = repositoryRegistry.provider(connection)
                 val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                 val sykdomsvurderingForBrevRepository = repositoryProvider.provide<SykdomsvurderingForBrevRepository>()
+                val avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider)
 
                 val sykdomsvurderingForBrev = hentSykdomsvurderingForBrev(behandlingReferanse, behandlingRepository, sykdomsvurderingForBrevRepository)
-                val historiskeSykdomsvurderingerForBrev = hentHistoriskeSykdomsvurderingerForBrev(behandlingReferanse, behandlingRepository, sykdomsvurderingForBrevRepository)
+                val historiskeSykdomsvurderingerForBrev = hentHistoriskeSykdomsvurderingerForBrev(behandlingReferanse, behandlingRepository, sykdomsvurderingForBrevRepository, avbrytRevurderingService)
 
                 SykdomsvurderingForBrevDto(
                     vurdering = sykdomsvurderingForBrev?.toDto(ansattInfoService),
@@ -62,11 +64,16 @@ private fun hentSykdomsvurderingForBrev(
 private fun hentHistoriskeSykdomsvurderingerForBrev(
     behandlingReferanse: BehandlingReferanse,
     behandlingRepository: BehandlingRepository,
-    sykdomsvurderingForBrevRepository: SykdomsvurderingForBrevRepository
+    sykdomsvurderingForBrevRepository: SykdomsvurderingForBrevRepository,
+    avbrytRevurderingService: AvbrytRevurderingService
 ): List<SykdomsvurderingForBrev> {
     val behandling = behandlingRepository.hent(behandlingReferanse)
+    val behandlingerIderMedAvbrutteRevurdering =
+        avbrytRevurderingService.hentBehandlingerMedAvbruttRevurderingForSak(behandling.sakId)
+            .map { it.id }
     return sykdomsvurderingForBrevRepository.hent(behandling.sakId)
         .filter { it.behandlingId != behandling.id }
+        .filter { it.behandlingId !in behandlingerIderMedAvbrutteRevurdering }
         .sortedByDescending { it.vurdertTidspunkt }
 }
 

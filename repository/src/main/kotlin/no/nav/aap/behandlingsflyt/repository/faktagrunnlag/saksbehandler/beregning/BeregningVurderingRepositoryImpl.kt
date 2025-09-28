@@ -102,9 +102,11 @@ class BeregningVurderingRepositoryImpl(private val connection: DBConnection) : B
 
     override fun hentHistoriskeVurderinger(
         sakId: SakId,
-        behandlingId: BehandlingId
+        behandlingId: BehandlingId,
+        ekskluderteBehandlingIdListe: List<BehandlingId>
     ): List<BeregningGrunnlag> {
-        val query = """
+        val harEkskludering = ekskluderteBehandlingIdListe.isNotEmpty()
+        var query = """
             SELECT TIDSPUNKT_VURDERING_ID,  YRKESSKADE_VURDERING_ID
             FROM BEREGNINGSFAKTA_GRUNNLAG BG
                      JOIN BEHANDLING B ON BG.BEHANDLING_ID = B.ID
@@ -113,10 +115,17 @@ class BeregningVurderingRepositoryImpl(private val connection: DBConnection) : B
               AND B.OPPRETTET_TID < (SELECT A.OPPRETTET_TID FROM BEHANDLING A WHERE ID = ?)
         """.trimIndent()
 
+        if (harEkskludering) {
+            query = "$query AND B.ID <> ALL(?::bigint[])"
+        }
+
         return connection.queryList(query) {
             setParams {
                 setLong(1, sakId.id)
                 setLong(2, behandlingId.id)
+                if (harEkskludering) {
+                    setLongArray(3, ekskluderteBehandlingIdListe.map { it.toLong() })
+                }
             }
             setRowMapper { row ->
                 BeregningGrunnlag(

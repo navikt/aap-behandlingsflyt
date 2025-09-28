@@ -64,8 +64,13 @@ class OvergangArbeidRepositoryImpl(private val connection: DBConnection) : Overg
         )
     }
 
-    override fun hentHistoriskeOvergangArbeidVurderinger(sakId: SakId, behandlingId: BehandlingId): List<OvergangArbeidVurdering> {
-        val query = """
+    override fun hentHistoriskeOvergangArbeidVurderinger(
+        sakId: SakId,
+        behandlingId: BehandlingId,
+        ekskluderteBehandlingIdListe: List<BehandlingId>
+    ): List<OvergangArbeidVurdering> {
+        val harEkskludering = ekskluderteBehandlingIdListe.isNotEmpty()
+        var query = """
             SELECT DISTINCT overgang_arbeid_vurdering.*
             FROM overgang_arbeid_grunnlag grunnlag
             INNER JOIN overgang_arbeid_vurderinger ON grunnlag.vurderinger_id = overgang_arbeid_vurderinger.id
@@ -76,10 +81,20 @@ class OvergangArbeidRepositoryImpl(private val connection: DBConnection) : Overg
             ORDER BY overgang_arbeid_vurdering.opprettet_tid
         """.trimIndent()
 
+        if (harEkskludering) {
+            query = query.replace(
+                "ORDER BY overgang_arbeid_vurdering.opprettet_tid",
+                "AND behandling.ID <> ALL(?::bigint[]) ORDER BY overgang_arbeid_vurdering.opprettet_tid"
+            )
+        }
+
         return connection.queryList(query) {
             setParams {
                 setLong(1, sakId.id)
                 setLong(2, behandlingId.id)
+                if (harEkskludering) {
+                    setLongArray(3, ekskluderteBehandlingIdListe.map { it.toLong() })
+                }
             }
             setRowMapper(::overgangArbeidvurderingRowMapper)
         }
@@ -105,12 +120,14 @@ class OvergangArbeidRepositoryImpl(private val connection: DBConnection) : Overg
 
         val overgangArbeidVurderingerIds = getOvergangArbeidVurderingerIds(behandlingId)
 
-        val deletedRows = connection.executeReturnUpdated("""
+        val deletedRows = connection.executeReturnUpdated(
+            """
             delete from overgang_arbeid_grunnlag where behandling_id = ?; 
             delete from overgang_arbeid_vurdering where vurderinger_id = ANY(?::bigint[]);
             delete from overgang_arbeid_vurderinger where id = ANY(?::bigint[]);
            
-        """.trimIndent()) {
+        """.trimIndent()
+        ) {
             setParams {
                 setLong(1, behandlingId.id)
                 setLongArray(2, overgangArbeidVurderingerIds)
@@ -146,7 +163,8 @@ class OvergangArbeidRepositoryImpl(private val connection: DBConnection) : Overg
     }
 
     private fun lagreOvergangArbeidvurderinger(vurderinger: List<OvergangArbeidVurdering>): Long {
-        val overgangarbeidvurderingerId = connection.executeReturnKey("""INSERT INTO OVERGANG_ARBEID_VURDERINGER DEFAULT VALUES""")
+        val overgangarbeidvurderingerId =
+            connection.executeReturnKey("""INSERT INTO OVERGANG_ARBEID_VURDERINGER DEFAULT VALUES""")
 
         connection.executeBatch(
             "INSERT INTO OVERGANG_ARBEID_VURDERING (BEGRUNNELSE, BRUKER_RETT_PAA_AAP, VIRKNINGSDATO, VURDERT_AV, VURDERINGER_ID, VURDERINGEN_GJELDER_FRA) VALUES (?, ?, ?, ?, ?, ?)",

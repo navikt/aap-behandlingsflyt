@@ -4,6 +4,7 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -36,14 +37,23 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagAPI(
                         val lovvalgMedlemskapRepository =
                             repositoryProvider
                                 .provide<MedlemskapArbeidInntektRepository>()
+                        val avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider)
                         val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
+                        val behandlingerIderMedAvbrutteRevurdering =
+                            avbrytRevurderingService.hentBehandlingerMedAvbruttRevurderingForSak(behandling.sakId)
+                                .map { it.id }
 
                         val gjeldendeManuellVurdering =
                             lovvalgMedlemskapRepository.hentHvisEksisterer(behandling.id)?.manuellVurdering
                         val historiskeManuelleVurderinger =
-                            lovvalgMedlemskapRepository.hentHistoriskeVurderinger(behandling.sakId, behandling.id)
-                        val ansattNavnOgEnhet = gjeldendeManuellVurdering?.let { ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv)}
-                        
+                            lovvalgMedlemskapRepository.hentHistoriskeVurderinger(
+                                behandling.sakId,
+                                behandling.id,
+                                behandlingerIderMedAvbrutteRevurdering
+                            )
+                        val ansattNavnOgEnhet =
+                            gjeldendeManuellVurdering?.let { ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv) }
+
                         LovvalgMedlemskapGrunnlagResponse(
                             kanSaksbehandle(),
                             gjeldendeManuellVurdering?.toResponse(ansattNavnOgEnhet),

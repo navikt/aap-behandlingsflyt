@@ -4,6 +4,7 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidVurdering
@@ -40,12 +41,19 @@ fun NormalOpenAPIRoute.overgangArbeidGrunnlagApi(
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val overgangUforeRepository = repositoryProvider.provide<OvergangArbeidRepository>()
                     val sykdomRepository = repositoryProvider.provide<SykdomRepository>()
+                    val avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider)
 
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
+                    val behandlingerIderMedAvbrutteRevurdering =
+                        avbrytRevurderingService.hentBehandlingerMedAvbruttRevurderingForSak(behandling.sakId)
+                            .map { it.id }
 
-                    val historiskeVurderinger =
-                        overgangUforeRepository.hentHistoriskeOvergangArbeidVurderinger(behandling.sakId, behandling.id)
+                    val historiskeVurderinger = overgangUforeRepository.hentHistoriskeOvergangArbeidVurderinger(
+                        behandling.sakId,
+                        behandling.id,
+                        behandlingerIderMedAvbrutteRevurdering
+                    )
                     val grunnlag = overgangUforeRepository.hentHvisEksisterer(behandling.id)
                     val nåTilstand = grunnlag?.vurderinger.orEmpty()
                     val vedtatteOvergangArbeidvurderinger = behandling.forrigeBehandlingId
@@ -61,9 +69,17 @@ fun NormalOpenAPIRoute.overgangArbeidGrunnlagApi(
                     OvergangArbeidGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         vurdering = vurdering?.tilResponse(ansattInfoService = ansattInfoService),
-                        gjeldendeVedtatteVurderinger = vedtatteOvergangArbeidvurderinger.map { it.tilResponse(ansattInfoService = ansattInfoService) },
+                        gjeldendeVedtatteVurderinger = vedtatteOvergangArbeidvurderinger.map {
+                            it.tilResponse(
+                                ansattInfoService = ansattInfoService
+                            )
+                        },
                         historiskeVurderinger = historiskeVurderinger.map { it.tilResponse(ansattInfoService = ansattInfoService) },
-                        gjeldendeSykdsomsvurderinger = gjeldendeSykdomsvurderinger.map { it.tilResponse(ansattInfoService) },
+                        gjeldendeSykdsomsvurderinger = gjeldendeSykdomsvurderinger.map {
+                            it.tilResponse(
+                                ansattInfoService
+                            )
+                        },
                     )
                 }
 
@@ -73,7 +89,10 @@ fun NormalOpenAPIRoute.overgangArbeidGrunnlagApi(
     }
 }
 
-private fun OvergangArbeidVurdering.tilResponse(erGjeldende: Boolean? = false, ansattInfoService: AnsattInfoService): OvergangArbeidVurderingResponse {
+private fun OvergangArbeidVurdering.tilResponse(
+    erGjeldende: Boolean? = false,
+    ansattInfoService: AnsattInfoService
+): OvergangArbeidVurderingResponse {
     val navnOgEnhet = ansattInfoService.hentAnsattNavnOgEnhet(vurdertAv)
     return OvergangArbeidVurderingResponse(
         begrunnelse = begrunnelse,

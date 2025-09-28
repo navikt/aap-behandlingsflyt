@@ -116,7 +116,7 @@ internal class SykdomRepositoryImplTest {
 
             repo.lagre(revurdering.id, listOf(sykdomsvurdering2))
 
-            val historikk = repo.hentHistoriskeSykdomsvurderinger(revurdering.sakId, revurdering.id)
+            val historikk = repo.hentHistoriskeSykdomsvurderinger(revurdering.sakId, revurdering.id, emptyList())
             assertEquals(listOf(sykdomsvurdering1), historikk)
         }
     }

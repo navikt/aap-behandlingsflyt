@@ -176,19 +176,30 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
 
             val førstegangsBehandling =
                 opprettBehandlingMedVurdering(TypeBehandling.Førstegangsbehandling, sak.id, null, emptyList(), null)
+
+            val avbrutteRevurdering = opprettBehandlingMedVurdering(
+                TypeBehandling.Revurdering,
+                sak.id,
+                førstegangsBehandling.id,
+                listOf(VurderingsbehovMedPeriode(Vurderingsbehov.REVURDERING_AVBRUTT)),
+                null,
+                ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
+            )
+
             val revurdering = opprettBehandlingMedVurdering(
                 TypeBehandling.Revurdering,
                 sak.id,
                 førstegangsBehandling.id,
                 emptyList(),
-                null
+                null,
+                ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
             )
 
-            val historikk = forutgåendeRepo.hentHistoriskeVurderinger(sak.id, revurdering.id)
+            val historikk = forutgåendeRepo.hentHistoriskeVurderinger(sak.id, revurdering.id, listOf(avbrutteRevurdering.id))
             assertEquals(1, historikk.size)
             opprettBehandlingMedVurdering(TypeBehandling.Førstegangsbehandling, sak2.id, null, emptyList(), null)
 
-            val nyHistorikk = forutgåendeRepo.hentHistoriskeVurderinger(sak.id, revurdering.id)
+            val nyHistorikk = forutgåendeRepo.hentHistoriskeVurderinger(sak.id, revurdering.id, listOf(avbrutteRevurdering.id))
             assertEquals(1, nyHistorikk.size)
         }
     }
@@ -198,7 +209,8 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
         sakId: SakId,
         forrigeBehandlingId: BehandlingId?,
         årsaker: List<VurderingsbehovMedPeriode>,
-        utenlandsOppholdData: UtenlandsOppholdData?
+        utenlandsOppholdData: UtenlandsOppholdData?,
+        årsakTilOpprettelse: ÅrsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD
     )
             : Behandling {
         return dataSource.transaction { connection ->
@@ -208,7 +220,7 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
                 sakId,
                 typeBehandling,
                 forrigeBehandlingId,
-                VurderingsbehovOgÅrsak(årsaker, ÅrsakTilOpprettelse.SØKNAD)
+                VurderingsbehovOgÅrsak(årsaker, årsakTilOpprettelse),
             )
             lagNyFullVurdering(behandling.id, forutgåendeRepo, "Heftig vurdering", connection, utenlandsOppholdData)
             behandling

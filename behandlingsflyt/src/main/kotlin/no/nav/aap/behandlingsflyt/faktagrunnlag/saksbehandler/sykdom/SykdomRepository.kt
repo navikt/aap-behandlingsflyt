@@ -19,5 +19,9 @@ interface SykdomRepository : Repository {
     fun hentHvisEksisterer(behandlingId: BehandlingId): SykdomGrunnlag?
     fun hent(behandlingId: BehandlingId): SykdomGrunnlag
 
-    fun hentHistoriskeSykdomsvurderinger(sakId: SakId, behandlingId: BehandlingId): List<Sykdomsvurdering>
+    fun hentHistoriskeSykdomsvurderinger(
+        sakId: SakId,
+        behandlingId: BehandlingId,
+        ekskluderteBehandlingIdListe: List<BehandlingId>
+    ): List<Sykdomsvurdering>
 }

@@ -38,8 +38,13 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
         }
     }
 
-    override fun hentHistoriskeVurderinger(sakId: SakId, behandlingId: BehandlingId): List<SamordningVurderingGrunnlag> {
-        val query = """
+    override fun hentHistoriskeVurderinger(
+        sakId: SakId,
+        behandlingId: BehandlingId,
+        ekskluderteBehandlingIdListe: List<BehandlingId>
+    ): List<SamordningVurderingGrunnlag> {
+        val harEkskludering = ekskluderteBehandlingIdListe.isNotEmpty()
+        var query = """
             SELECT VURDERINGER_ID
             FROM SAMORDNING_YTELSEVURDERING_GRUNNLAG GRUNNLAG 
                 JOIN BEHANDLING B1 ON B1.ID = GRUNNLAG.BEHANDLING_ID
@@ -48,10 +53,17 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
             AND B1.OPPRETTET_TID < (SELECT B2.OPPRETTET_TID FROM BEHANDLING B2 WHERE ID = ?)
         """.trimIndent()
 
+        if (harEkskludering) {
+            query = "$query AND B1.ID <> ALL(?::bigint[])"
+        }
+
         return connection.queryList(query) {
             setParams {
                 setLong(1, sakId.id)
                 setLong(2, behandlingId.id)
+                if (harEkskludering) {
+                    setLongArray(3, ekskluderteBehandlingIdListe.map { it.toLong() })
+                }
             }
             setRowMapper {
                 hentSamordningVurderinger(it.getLong("vurderinger_id"))!!
@@ -221,13 +233,15 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
         val samordningVurderingYtelseIds = getSamordningYtelseVurderingIds(behandlingId)
         val samordningVurderingIds = getSamordningVurderingIds(samordningVurderingYtelseIds)
 
-        val deletedRows = connection.executeReturnUpdated("""
+        val deletedRows = connection.executeReturnUpdated(
+            """
             delete from samordning_ytelsevurdering_grunnlag where behandling_id = ?; 
             delete from samordning_vurdering_periode where vurdering_id = ANY(?::bigint[]);
             delete from samordning_vurdering where vurderinger_id = ANY(?::bigint[]);
             delete from samordning_vurderinger where id = ANY(?::bigint[]);
            
-        """.trimIndent()) {
+        """.trimIndent()
+        ) {
             setParams {
                 setLong(1, behandlingId.id)
                 setLongArray(2, samordningVurderingIds)

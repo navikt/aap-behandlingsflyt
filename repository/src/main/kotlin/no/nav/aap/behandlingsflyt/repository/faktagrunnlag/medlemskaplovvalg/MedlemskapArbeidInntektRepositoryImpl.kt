@@ -152,9 +152,11 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
 
     override fun hentHistoriskeVurderinger(
         sakId: SakId,
-        behandlingId: BehandlingId
+        behandlingId: BehandlingId,
+        ekskluderteBehandlingIdListe: List<BehandlingId>
     ): List<HistoriskManuellVurderingForLovvalgMedlemskap> {
-        val query = """
+        val harEkskludering = ekskluderteBehandlingIdListe.isNotEmpty()
+        var query = """
             SELECT vurdering.*
             FROM MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG grunnlag
             INNER JOIN LOVVALG_MEDLEMSKAP_MANUELL_VURDERING vurdering ON grunnlag.MANUELL_VURDERING_ID = vurdering.ID
@@ -163,10 +165,17 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
               AND behandling.opprettet_tid < (SELECT a.opprettet_tid from behandling a where id = ?)
         """.trimIndent()
 
+        if (harEkskludering) {
+            query = "$query AND behandling.ID <> ALL(?::bigint[])"
+        }
+
         val vurderinger = connection.queryList(query) {
             setParams {
                 setLong(1, sakId.id)
                 setLong(2, behandlingId.id)
+                if (harEkskludering) {
+                    setLongArray(3, ekskluderteBehandlingIdListe.map { it.toLong() })
+                }
             }
             setRowMapper {
                 InternalHistoriskManuellVurderingForLovvalgMedlemskap(

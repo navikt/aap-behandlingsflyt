@@ -4,6 +4,7 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykdom.SykdomsvurderingResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
@@ -47,12 +48,20 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(
                     val bistandRepository = repositoryProvider.provide<BistandRepository>()
                     val sykdomRepository = repositoryProvider.provide<SykdomRepository>()
                     val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
+                    val avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider)
 
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
+                    val behandlingerIderMedAvbrutteRevurdering =
+                        avbrytRevurderingService.hentBehandlingerMedAvbruttRevurderingForSak(behandling.sakId)
+                            .map { it.id }
 
                     val historiskeVurderinger =
-                        bistandRepository.hentHistoriskeBistandsvurderinger(behandling.sakId, behandling.id)
+                        bistandRepository.hentHistoriskeBistandsvurderinger(
+                            behandling.sakId,
+                            behandling.id,
+                            behandlingerIderMedAvbrutteRevurdering
+                        )
                     val grunnlag = bistandRepository.hentHvisEksisterer(behandling.id)
                     val nåTilstand = grunnlag?.vurderinger.orEmpty()
                     val vedtatteBistandsvurderinger = behandling.forrigeBehandlingId

@@ -16,7 +16,8 @@ object InMemorySamordningVurderingRepository : SamordningVurderingRepository {
 
     override fun hentHistoriskeVurderinger(
         sakId: SakId,
-        behandlingId: BehandlingId
+        behandlingId: BehandlingId,
+        ekskluderteBehandlingIdListe: List<BehandlingId>
     ): List<SamordningVurderingGrunnlag> {
         synchronized(lock) {
             return emptyList()

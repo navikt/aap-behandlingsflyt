@@ -65,8 +65,13 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
         )
     }
 
-    override fun hentHistoriskeOvergangUforeVurderinger(sakId: SakId, behandlingId: BehandlingId): List<OvergangUføreVurdering> {
-        val query = """
+    override fun hentHistoriskeOvergangUforeVurderinger(
+        sakId: SakId,
+        behandlingId: BehandlingId,
+        ekskluderteBehandlingIdListe: List<BehandlingId>
+    ): List<OvergangUføreVurdering> {
+        val harEkskludering = ekskluderteBehandlingIdListe.isNotEmpty()
+        var query = """
             SELECT DISTINCT overgang_ufore_vurdering.*
             FROM overgang_ufore_grunnlag grunnlag
             INNER JOIN overgang_ufore_vurderinger ON grunnlag.vurderinger_id = overgang_ufore_vurderinger.id
@@ -77,10 +82,20 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
             ORDER BY overgang_ufore_vurdering.opprettet_tid
         """.trimIndent()
 
+        if (harEkskludering) {
+            query = query.replace(
+                "ORDER BY overgang_ufore_vurdering.opprettet_tid",
+                "AND behandling.ID <> ALL(?::bigint[]) ORDER BY overgang_ufore_vurdering.opprettet_tid"
+            )
+        }
+
         return connection.queryList(query) {
             setParams {
                 setLong(1, sakId.id)
                 setLong(2, behandlingId.id)
+                if (harEkskludering) {
+                    setLongArray(3, ekskluderteBehandlingIdListe.map { it.toLong() })
+                }
             }
             setRowMapper(::overgangUforevurderingRowMapper)
         }
@@ -106,12 +121,14 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
 
         val overgangUforeVurderingerIds = getOvergangUforeVurderingerIds(behandlingId)
 
-        val deletedRows = connection.executeReturnUpdated("""
+        val deletedRows = connection.executeReturnUpdated(
+            """
             delete from overgang_ufore_grunnlag where behandling_id = ?; 
             delete from overgang_ufore_vurdering where vurderinger_id = ANY(?::bigint[]);
             delete from overgang_ufore_vurderinger where id = ANY(?::bigint[]);
            
-        """.trimIndent()) {
+        """.trimIndent()
+        ) {
             setParams {
                 setLong(1, behandlingId.id)
                 setLongArray(2, overgangUforeVurderingerIds)
@@ -147,7 +164,8 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
     }
 
     private fun lagreOvergangUforevurderinger(vurderinger: List<OvergangUføreVurdering>): Long {
-        val overganguforevurderingerId = connection.executeReturnKey("""INSERT INTO OVERGANG_UFORE_VURDERINGER DEFAULT VALUES""")
+        val overganguforevurderingerId =
+            connection.executeReturnKey("""INSERT INTO OVERGANG_UFORE_VURDERINGER DEFAULT VALUES""")
 
         connection.executeBatch(
             "INSERT INTO OVERGANG_UFORE_VURDERING (BEGRUNNELSE, BRUKER_SOKT_UFORETRYGD, BRUKER_VEDTAK_UFORETRYGD, BRUKER_RETT_PAA_AAP, VIRKNINGSDATO, VURDERT_AV, VURDERINGER_ID) VALUES (?, ?, ?, ?, ?, ?, ?)",

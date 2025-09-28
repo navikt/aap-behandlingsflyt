@@ -8,7 +8,7 @@ interface BeregningVurderingRepository : Repository {
     fun hent(behandlingId: BehandlingId): BeregningGrunnlag
     fun lagre(behandlingId: BehandlingId, vurdering: BeregningstidspunktVurdering?)
     fun hentHvisEksisterer(behandlingId: BehandlingId): BeregningGrunnlag?
-    fun hentHistoriskeVurderinger(sakId: SakId, behandlingId: BehandlingId): List<BeregningGrunnlag>
+    fun hentHistoriskeVurderinger(sakId: SakId, behandlingId: BehandlingId, ekskluderteBehandlingIdListe: List<BehandlingId>): List<BeregningGrunnlag>
     fun lagre(behandlingId: BehandlingId, vurdering: List<YrkesskadeBeløpVurdering>)
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
 }

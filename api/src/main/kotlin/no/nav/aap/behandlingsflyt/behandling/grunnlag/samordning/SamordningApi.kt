@@ -4,6 +4,7 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.samordning.EndringStatus
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningPeriodeSammenligner
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
@@ -239,15 +240,22 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                         val samordningRepository = repositoryProvider.provide<SamordningVurderingRepository>()
                         val samordningYtelseRepository = repositoryProvider.provide<SamordningYtelseRepository>()
                         val tjenestePensjonRepository = repositoryProvider.provide<TjenestePensjonRepository>()
+                        val avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider)
 
                         val behandling =
                             BehandlingReferanseService(
                                 repositoryProvider.provide<BehandlingRepository>()
                             ).behandling(req)
+                        val behandlingerIderMedAvbrutteRevurdering =
+                            avbrytRevurderingService.hentBehandlingerMedAvbruttRevurderingForSak(behandling.sakId)
+                                .map { it.id }
 
                         val samordning = samordningRepository.hentHvisEksisterer(behandling.id)
-                        val historiskeVurderinger =
-                            samordningRepository.hentHistoriskeVurderinger(behandling.sakId, behandling.id)
+                        val historiskeVurderinger = samordningRepository.hentHistoriskeVurderinger(
+                            behandling.sakId,
+                            behandling.id,
+                            behandlingerIderMedAvbrutteRevurdering
+                        )
 
                         val perioderMedEndringer =
                             SamordningPeriodeSammenligner(samordningYtelseRepository).hentPerioderMarkertMedEndringer(

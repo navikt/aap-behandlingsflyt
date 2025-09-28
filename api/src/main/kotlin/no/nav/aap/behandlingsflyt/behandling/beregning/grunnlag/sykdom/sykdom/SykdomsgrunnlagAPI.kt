@@ -4,6 +4,7 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.utledNyesteKvalitetssikring
@@ -47,7 +48,11 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
                     val sykdomRepository = repositoryProvider.provide<SykdomRepository>()
                     val yrkesskadeRepository = repositoryProvider.provide<YrkesskadeRepository>()
                     val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
+                    val avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider)
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
+                    val behandlingerIderMedAvbrutteRevurdering =
+                        avbrytRevurderingService.hentBehandlingerMedAvbruttRevurderingForSak(behandling.sakId)
+                            .map { it.id }
 
                     val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandlingId = behandling.id)
                     val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId = behandling.id)
@@ -58,7 +63,11 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
                     val nåTilstand = sykdomGrunnlag?.sykdomsvurderinger.orEmpty()
 
                     val historikkSykdomsvurderinger =
-                        sykdomRepository.hentHistoriskeSykdomsvurderinger(behandling.sakId, behandling.id)
+                        sykdomRepository.hentHistoriskeSykdomsvurderinger(
+                            behandling.sakId,
+                            behandling.id,
+                            behandlingerIderMedAvbrutteRevurdering
+                        )
 
                     val vedtatteSykdomsvurderinger = behandling.forrigeBehandlingId
                         ?.let { sykdomRepository.hentHvisEksisterer(it) }
