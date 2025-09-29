@@ -62,22 +62,23 @@ class PdlHendelseKafkaKonsument(
         dataSource.transaction {
             val repositoryProvider = repositoryRegistry.provider(it)
             val sakRepository: SakRepository = repositoryProvider.provide()
+            val personRepository: PersonRepository = repositoryProvider.provide()
             val personHendelse = DefaultJsonMapper.fromJson<Personhendelse>(melding.value())
             val hendelseService = MottattHendelseService(repositoryProvider)
             log.info("Leser personhendelse $personHendelse")
             if (personHendelse.opplysningstype == Opplysningstype.AVDOED_PDL_V1) {
-                val personIdenter = personHendelse.personidenter
-                for (ident in personIdenter) {
-                    val person = repositoryProvider.provide<PersonRepository>().finn(Ident(ident))
-                    if (person != null) {
-                        val sakerForPerson = sakRepository.finnSakerFor(person)
-                        if (sakerForPerson.isNotEmpty()) {
-                            sakerForPerson.forEach { sak ->
-                                hendelseService.registrerMottattHendelse(personHendelse.tilInnsending(sak.saksnummer))
-                            }
+                log.info("Håndterer hendelse med ${personHendelse.opplysningstype} og ${personHendelse.endringstype}")
+                personHendelse.personidenter
+                    .mapNotNull { ident -> personRepository.finn(Ident(ident)) }
+                    .forEach { person ->
+                        sakRepository.finnSakerFor(person).forEach { sak ->
+                            hendelseService.registrerMottattHendelse(
+                                personHendelse.tilInnsending(sak.saksnummer)
+                            )
                         }
                     }
-                }
+            } else {
+                log.info("Ignorerer hendelse med ${personHendelse.opplysningstype} og ${personHendelse.endringstype}")
             }
         }
     }
