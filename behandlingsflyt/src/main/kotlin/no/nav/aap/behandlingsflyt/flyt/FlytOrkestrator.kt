@@ -161,7 +161,7 @@ class FlytOrkestrator(
                         avklaringsbehovet ${tidligsteÅpneAvklaringsbehov.definisjon} som skal løses i 
                         steg ${tidligsteÅpneAvklaringsbehov.løsesISteg()}. Med mindre det har skjedd 
                         en endring i rekkefølgen av stegene, så er dette en bug.
-                        """.trimIndent()
+                        """.trimIndent().replace("\n", " ")
                     )
 
                     val tilbakeflyt = behandlingFlyt.tilbakeflyt(tidligsteÅpneAvklaringsbehov)
