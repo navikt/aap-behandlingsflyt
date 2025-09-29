@@ -163,7 +163,7 @@ class FlytOrkestrator(
                 val sendtTilbakeFraKvalitetssikrerNå =
                     tidligsteÅpneAvklaringsbehov.status() == SENDT_TILBAKE_FRA_KVALITETSSIKRER && behandling.aktivtSteg() == StegType.KVALITETSSIKRING
                 if (sendtTilbakeFraBeslutterNå || sendtTilbakeFraKvalitetssikrerNå) {
-                    // Vil tilbakeføres ved prosessering
+                    log.info("Avklaringsbehov som er sendt tilbake fra beslutter/kvalitetssikrer håndteres i prosessering - returnerer")
                     return
                 }
                 if (behandlingFlyt.erStegFør(tidligsteÅpneAvklaringsbehov.løsesISteg(), behandling.aktivtSteg())) {
