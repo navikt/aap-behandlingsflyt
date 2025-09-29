@@ -124,6 +124,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
                     Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
                     Vurderingsbehov.HELHETLIG_VURDERING,
+                    Vurderingsbehov.DØDSFALL_BRUKER,
                 )
             )
             .medSteg(
