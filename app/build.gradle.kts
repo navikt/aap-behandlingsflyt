@@ -1,7 +1,6 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 val opentelemetryVersion = "2.20.1-alpha"
-val jacksonVersjon = "2.20.0"
 
 plugins {
     id("behandlingsflyt.conventions")
@@ -103,7 +102,7 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.5.19")
     implementation("io.opentelemetry.instrumentation:opentelemetry-logback-mdc-1.0:${opentelemetryVersion}")
     implementation("io.opentelemetry.instrumentation:opentelemetry-ktor-3.0:${opentelemetryVersion}")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jacksonVersjon}")
+    testImplementation("org.springframework.kafka:spring-kafka-test:3.1.3")
     testImplementation(project(":lib-test"))
     implementation(libs.dbtest)
     implementation(libs.motorTestUtils)
