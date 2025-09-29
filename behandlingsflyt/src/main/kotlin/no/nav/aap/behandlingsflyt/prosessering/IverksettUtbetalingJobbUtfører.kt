@@ -2,11 +2,9 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingGateway
 import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
@@ -15,37 +13,40 @@ import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import org.slf4j.LoggerFactory
 
 class IverksettUtbetalingJobbUtfører(
-    private val sakRepository: SakRepository,
-    private val behandlingRepository: BehandlingRepository,
     private val utbetalingGateway: UtbetalingGateway,
-    private val utbetalingService: UtbetalingService
+    private val utbetalingService: UtbetalingService,
+    private val sakOgBehandlingService: SakOgBehandlingService
 ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
         val behandlingId = input.payload<BehandlingId>()
-        val behandling = behandlingRepository.hentSisteIverksatteBehandling(behandlingId)
-        val sak = sakRepository.hent(behandling.sakId)
-        val tilkjentYtelseDto = utbetalingService.lagTilkjentYtelseForUtbetaling(sak.id, behandlingId)
-            ?: throw IllegalStateException("Ingen tilkjent ytelse på en iverksatt utbetalingsjobb")
-        log.info("Iverksetter tilkjent ytelse for behandling $behandlingId")
+        val sakId = SakId(input.sakId())
+        val sisteFattedeVedtakBehandling = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId)
+            ?: error("Finner ingen fattede vedtaksbehandlinger for sak med id $sakId")
+
+        if (sisteFattedeVedtakBehandling.id != behandlingId) {
+            log.warn("Iverksetter tilkjent ytelse for annen behandling [${sisteFattedeVedtakBehandling.id}] enn den som trigget iverksettUtbetaling-jobben [$behandlingId] for sak $sakId. " +
+                    "Det som trolig har skjedd er at jobber er opprettet i ulik rekkefølge og Kelvin sikrer dette med å kun utbetale nyeste fattede vedtak.")
+        }
+
+        val tilkjentYtelseDto = utbetalingService.lagTilkjentYtelseForUtbetaling(sakId, sisteFattedeVedtakBehandling.id)
+            ?: throw IllegalStateException("Ingen tilkjent ytelse på for siste utbetalingsjobb")
+
+        log.info("Iverksetter tilkjent ytelse for behandling ${sisteFattedeVedtakBehandling.id} for sak med id $sakId")
         utbetalingGateway.utbetal(tilkjentYtelseDto)
     }
 
     companion object : ProvidersJobbSpesifikasjon {
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
-            val sakRepository = repositoryProvider.provide<SakRepository>()
-            val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                repositoryProvider.provide<SamordningAndreStatligeYtelserRepository>()
             val utbetalingGateway = gatewayProvider.provide<UtbetalingGateway>()
-                repositoryProvider.provide<TjenestepensjonRefusjonsKravVurderingRepository>()
             val utbetalingService = UtbetalingService(repositoryProvider, gatewayProvider)
+            val sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider)
             return IverksettUtbetalingJobbUtfører(
-                sakRepository = sakRepository,
-                behandlingRepository = behandlingRepository,
                 utbetalingGateway = utbetalingGateway,
                 utbetalingService = utbetalingService,
+                sakOgBehandlingService = sakOgBehandlingService
             )
         }
 

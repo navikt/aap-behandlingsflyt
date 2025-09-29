@@ -100,7 +100,7 @@ class BehandlingHendelseServiceImpl(
         // Sender meldekort til API-intern
         flytJobbRepository.leggTil(DatadelingMeldekortJobbUtfører.nyJobb(sak.id, behandling.id))
 
-        if (behandling.typeBehandling() in listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)) {
+        if (behandling.typeBehandling().erYtelsesbehandling()) {
             flytJobbRepository.leggTil(MeldeperiodeTilMeldekortBackendJobbUtfører.nyJobb(sak.id, behandling.id))
         }
     }
