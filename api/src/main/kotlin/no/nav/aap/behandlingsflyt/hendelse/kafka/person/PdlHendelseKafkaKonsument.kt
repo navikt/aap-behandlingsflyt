@@ -1,16 +1,27 @@
 package no.nav.aap.behandlingsflyt.hendelse.kafka.person
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.PdlHendelseId
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Endringstype
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.PdlHendelseKafkaMelding
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Opplysningstype
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.PdlHendelse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Personhendelse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.innsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.tilInnsending
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -50,24 +61,25 @@ class PdlHendelseKafkaKonsument(
         )
         dataSource.transaction {
             val repositoryProvider = repositoryRegistry.provider(it)
-            val behandlingRepository: BehandlingRepository = repositoryProvider.provide()
-            // Finn riktig sak og behandling for person
-            val personHendelse = DefaultJsonMapper.fromJson<PdlHendelseKafkaMelding>(melding.value())
-            val saksnummer =
-                behandlingRepository.finnSaksnummer(BehandlingReferanse(UUID.fromString(personHendelse.kildeReferanse)))
+            val sakRepository: SakRepository = repositoryProvider.provide()
+            val personHendelse = DefaultJsonMapper.fromJson<Personhendelse>(melding.value())
             val hendelseService = MottattHendelseService(repositoryProvider)
-            hendelseService.registrerMottattHendelse(personHendelse.tilInnsending(saksnummer))
-
+            log.info("Leser personhendelse $personHendelse")
+            if (personHendelse.opplysningstype == Opplysningstype.AVDOED_PDL_V1) {
+                val personIdenter = personHendelse.personidenter
+                for (ident in personIdenter) {
+                    val person = repositoryProvider.provide<PersonRepository>().finn(Ident(ident))
+                    if (person != null) {
+                        val sakerForPerson = sakRepository.finnSakerFor(person)
+                        if (sakerForPerson.isNotEmpty()) {
+                            sakerForPerson.forEach { sak ->
+                                hendelseService.registrerMottattHendelse(personHendelse.tilInnsending(sak.saksnummer))
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
-    private fun PdlHendelseKafkaMelding.tilInnsending(saksnummer: Saksnummer) =
-        Innsending(
-            saksnummer = saksnummer,
-            referanse = InnsendingReferanse(PdlHendelseId(value = this.eventId)),
-            type = InnsendingType.PDL_HENDELSE,
-            kanal = Kanal.DIGITAL,
-            mottattTidspunkt = LocalDateTime.now(),
-            melding = this.tilPdlHendelseV0()
-        )
 }
