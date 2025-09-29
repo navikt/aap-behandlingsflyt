@@ -44,7 +44,7 @@ class HåndterUbehandletDokumentJobbUtfører(
 
     private fun håndterUbehandletMeldekort(dokument: MottattDokument) {
         val skrivelås = taSkrivelåsRepository.låsSak(dokument.sakId)
-        
+
         val nyesteBehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(dokument.sakId)
         requireNotNull(nyesteBehandling) {
             "Fant meldekort men ingen behandling for sak ${dokument.sakId}"
@@ -87,7 +87,6 @@ class HåndterUbehandletDokumentJobbUtfører(
             JobbInput(HåndterUbehandletDokumentJobbUtfører)
                 .apply {
                     forSak(sakId.toLong())
-                    medCallId()
                         .medParameter(INNSENDINGSREFERANSE_VERDI, innsendingsreferanse.verdi)
                         .medParameter(INNSENDINGSREFERANSE_TYPE, innsendingsreferanse.type.name)
                 }

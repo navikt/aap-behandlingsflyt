@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.prosessering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.miljo.Miljø.erProd
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
@@ -18,13 +19,23 @@ class HåndterUbehandledeDokumenterJobbUtfører(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
-        
+
+        if (erProd()) {
+            return
+        }
+
         val ubehandledeDokumenter = mottattDokumentRepository.hentAlleUbehandledeDokumenter()
 
         var hoppetOver = 0
         ubehandledeDokumenter.forEach { dokument ->
             when (dokument.type) {
-                InnsendingType.MELDEKORT -> flytJobbRepository.leggTil(HåndterUbehandletDokumentJobbUtfører.nyJobb(dokument.sakId, dokument.referanse))
+                InnsendingType.MELDEKORT -> flytJobbRepository.leggTil(
+                    HåndterUbehandletDokumentJobbUtfører.nyJobb(
+                        dokument.sakId,
+                        dokument.referanse
+                    )
+                )
+
                 else -> {
                     hoppetOver++
                 }
