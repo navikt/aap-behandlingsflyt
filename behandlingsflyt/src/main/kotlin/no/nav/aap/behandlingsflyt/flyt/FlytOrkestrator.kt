@@ -162,22 +162,20 @@ class FlytOrkestrator(
                     tidligsteÅpneAvklaringsbehov.status() == SENDT_TILBAKE_FRA_BESLUTTER && behandling.aktivtSteg() == StegType.FATTE_VEDTAK
                 val sendtTilbakeFraKvalitetssikrerNå =
                     tidligsteÅpneAvklaringsbehov.status() == SENDT_TILBAKE_FRA_KVALITETSSIKRER && behandling.aktivtSteg() == StegType.KVALITETSSIKRING
-                if (sendtTilbakeFraBeslutterNå || sendtTilbakeFraKvalitetssikrerNå) {
-                    log.info("Avklaringsbehov som er sendt tilbake fra beslutter/kvalitetssikrer håndteres i prosessering - returnerer")
-                    return
-                }
                 if (behandlingFlyt.erStegFør(tidligsteÅpneAvklaringsbehov.løsesISteg(), behandling.aktivtSteg())) {
-                    log.error(
-                        """
+                    if (!sendtTilbakeFraBeslutterNå && !sendtTilbakeFraKvalitetssikrerNå) {
+                        log.error(
+                            """
                         Behandlingen er i steg ${behandling.aktivtSteg()} og har passert det åpne 
                         avklaringsbehovet ${tidligsteÅpneAvklaringsbehov.definisjon} som skal løses i 
                         steg ${tidligsteÅpneAvklaringsbehov.løsesISteg()}. Med mindre det har skjedd 
                         en endring i rekkefølgen av stegene, så er dette en bug.
                         """.trimIndent()
-                    )
+                        )
 
-                    val tilbakeflyt = behandlingFlyt.tilbakeflyt(tidligsteÅpneAvklaringsbehov)
-                    tilbakefør(kontekst, behandling, tilbakeflyt, avklaringsbehovene)
+                        val tilbakeflyt = behandlingFlyt.tilbakeflyt(tidligsteÅpneAvklaringsbehov)
+                        tilbakefør(kontekst, behandling, tilbakeflyt, avklaringsbehovene)
+                    }
                 }
             }
         }
