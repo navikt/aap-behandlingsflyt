@@ -371,6 +371,12 @@ public enum class Definisjon(
         løsesISteg = StegType.REFUSJON_KRAV,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
     ),
+    AVKLAR_OPPHOLDSKRAV(
+        kode = AvklaringsbehovKode.`5035`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.VURDER_OPPHOLDSKRAV,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
+    ),
     FASTSETT_PÅKLAGET_BEHANDLING(
         kode = AvklaringsbehovKode.`5999`,
         type = BehovType.MANUELT_PÅKREVD,

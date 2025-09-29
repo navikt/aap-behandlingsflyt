@@ -43,6 +43,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.inntekt.Innt
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.medlemsskap.MedlemskapRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.opphold.OppholdskravGrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.uføre.UføreRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.yrkesskade.YrkesskadeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepositoryImpl
@@ -136,5 +137,6 @@ val postgresRepositoryRegistry = RepositoryRegistry()
     .register<Aktivitetsplikt11_7RepositoryImpl>()
     .register<OvergangUføreRepositoryImpl>()
     .register<OvergangArbeidRepositoryImpl>()
+    .register<OppholdskravGrunnlagRepositoryImpl>()
     .register<AvbrytRevurderingRepositoryImpl>()
 
