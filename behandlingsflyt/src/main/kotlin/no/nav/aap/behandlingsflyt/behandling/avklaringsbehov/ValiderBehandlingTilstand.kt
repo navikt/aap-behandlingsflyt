@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
+import no.nav.aap.behandlingsflyt.exception.OutdatedBehandlingException
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -92,7 +93,7 @@ internal object ValiderBehandlingTilstand {
         validerStatus(behandling.status())
         if (behandling.versjon != versjon) {
             log.warn("Behandlingen har blitt oppdatert. Versjonsnummer[$versjon] ulikt fra siste[${behandling.versjon}]. Behandlingreferanse: ${behandling.referanse}")
-            throw UgyldigForespørselException("Behandlingen har blitt oppdatert. Versjonsnummer[$versjon] ulikt fra siste[${behandling.versjon}]")
+            throw OutdatedBehandlingException("Behandlingen har blitt oppdatert i bakgrunnen. Last siden på nytt for å hente endringene.")
         }
     }
 
