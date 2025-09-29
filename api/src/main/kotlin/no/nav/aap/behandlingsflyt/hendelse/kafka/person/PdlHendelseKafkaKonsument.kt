@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.hendelse.kafka.person
 
-import no.nav.aap.behandlingsflyt.hendelse.MottattHendelseService
+import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
