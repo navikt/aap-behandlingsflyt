@@ -2,9 +2,6 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag
 
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
-import no.nav.aap.behandlingsflyt.flyt.BehandlingType
-import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Aktivitetsplikt
-import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Aktivitetsplikt11_9
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -12,6 +9,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
@@ -61,10 +59,7 @@ class SakOgBehandlingService(
          * Behandlingene er i praksis en singly-linked list. Pekerne går "feil vei",
          * så vi regner ut bakover-pekerne.
         **/
-        val ytelsesbehandlinger = behandlingRepository.hentAlleFor(
-            sakId,
-            listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)
-        )
+        val ytelsesbehandlinger = behandlingRepository.hentAlleFor(sakId,TypeBehandling.ytelseBehandlingstyper())
         val nesteId = mutableMapOf<BehandlingId, BehandlingId>()
         for (behandling in ytelsesbehandlinger) {
             // Hopp over hvis behandlingen er avbrutt
@@ -85,6 +80,12 @@ class SakOgBehandlingService(
             behandling = nesteId[behandling]!!
         }
         return ytelsesbehandlinger.find { it.id == behandling }
+    }
+
+    fun finnBehandlingMedSisteFattedeVedtak(sakId: SakId): BehandlingMedVedtak? {
+        val sak = sakRepository.hent(sakId)
+        val alleBehandlingerMedVedtak = behandlingRepository.hentAlleMedVedtakFor(sak.person, TypeBehandling.ytelseBehandlingstyper())
+        return alleBehandlingerMedVedtak.maxByOrNull { it.vedtakstidspunkt }
     }
 
     sealed interface OpprettetBehandling {
