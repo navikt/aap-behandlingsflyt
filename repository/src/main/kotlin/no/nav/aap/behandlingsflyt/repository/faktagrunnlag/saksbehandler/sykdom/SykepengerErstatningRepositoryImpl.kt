@@ -37,12 +37,12 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
     private fun lagreGrunnlag(behandlingId: BehandlingId, nyttGrunnlag: SykepengerErstatningGrunnlag) {
         val vurdering: SykepengerVurdering? = nyttGrunnlag.vurdering
         var vurderingId: Long? = null
-        var key: Long? = null
+        var vurderingerId: Long? = null
         if (vurdering != null) {
             val insert = """
                 INSERT INTO SYKEPENGE_VURDERINGER DEFAULT VALUES;
             """.trimIndent()
-            key = connection.executeReturnKey(insert)
+            vurderingerId = connection.executeReturnKey(insert)
 
 
             val query = """
@@ -55,7 +55,7 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
                     setBoolean(2, vurdering.harRettPå)
                     setEnumName(3, vurdering.grunn)
                     setString(4, vurdering.vurdertAv)
-                    setLong(5, key)
+                    setLong(5, vurderingerId)
                 }
             }
 
@@ -71,7 +71,7 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, vurderingId)
-                setLong(3, key)
+                setLong(3, vurderingerId)
             }
         }
     }
