@@ -128,7 +128,6 @@ class OppholdskravGrunnlagRepositoryImpl(private val connection: DBConnection) :
         behandlingId: BehandlingId,
         oppholdskravVurdering: OppholdskravVurdering
     ) {
-
         val eksisternedeGrunnlagId = hentGrunnlagsId(behandlingId)
 
         if (eksisternedeGrunnlagId != null) {
@@ -244,6 +243,18 @@ class OppholdskravGrunnlagRepositoryImpl(private val connection: DBConnection) :
                 setLong(1, grunnlagId)
                 setLong(2, fraBehandling.toLong())
             }
+        }
+    }
+
+    override fun tilbakestillGrunnlag(behandlingId: BehandlingId, forrigeBehandling: BehandlingId?) {
+        val eksisternedeGrunnlagId = hentGrunnlagsId(behandlingId)
+
+        if (eksisternedeGrunnlagId != null) {
+            deaktiverGrunnlag(behandlingId)
+        }
+
+        if (forrigeBehandling != null) {
+            kopier(forrigeBehandling, behandlingId)
         }
     }
 
