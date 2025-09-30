@@ -1,0 +1,113 @@
+package no.nav.aap.behandlingsflyt
+
+import io.confluent.kafka.serializers.KafkaAvroSerializer
+import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
+import no.nav.aap.behandlingsflyt.hendelse.kafka.SchemaRegistryConfig
+import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PdlHendelseKafkaKonsument
+import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
+import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.person.pdl.leesah.Personhendelse
+import org.apache.kafka.clients.producer.KafkaProducer
+import org.apache.kafka.clients.producer.ProducerConfig
+import org.apache.kafka.clients.producer.ProducerRecord
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
+import org.testcontainers.containers.wait.strategy.Wait
+import org.testcontainers.kafka.KafkaContainer
+import org.apache.kafka.common.serialization.StringSerializer
+import org.testcontainers.utility.DockerImageName
+import java.time.Duration
+import java.time.Instant
+import java.util.Properties
+import kotlin.concurrent.thread
+import kotlin.test.Test
+
+class PdlHendelseKafkaKonsumentTest {
+
+    companion object {
+        val kafka = KafkaContainer(DockerImageName.parse("apache/kafka-native:4.0.0"))
+            .withReuse(true)
+            .waitingFor(Wait.forListeningPort())
+            .withStartupTimeout(Duration.ofSeconds(60))
+
+
+        val dataSource = InitTestDatabase.freshDatabase()
+        val repositoryRegistry = postgresRepositoryRegistry
+
+        @BeforeAll
+        @JvmStatic
+        internal fun beforeAll() {
+            kafka.start()
+        }
+
+        @AfterAll
+        @JvmStatic
+        internal fun afterAll() {
+            kafka.stop()
+            InitTestDatabase.closerFor(dataSource)
+        }
+    }
+
+    @Test
+    fun `PdlHendelseKafkaKonsument konsumerer Avro Personhendelse`() {
+
+        val konsument = PdlHendelseKafkaKonsument(
+            testConfig(kafka.bootstrapServers),
+            dataSource = dataSource,
+            repositoryRegistry = repositoryRegistry,
+            pollTimeout = Duration.ofMillis(50),
+        )
+
+        val topic = "pdl.leesah-v1"
+
+        val avroHendelse = Personhendelse.newBuilder()
+            .setHendelseId("test-hendelse-1")
+            .setPersonidenter(listOf("12345678901"))
+            .setMaster("FREG")
+            .setOpprettet(Instant.now())
+            .setOpplysningstype("AVDOED_PDL_V1")
+            .setEndringstype(no.nav.person.pdl.leesah.Endringstype.OPPRETTET)
+            .build()
+
+        val producerProps = Properties().apply {
+            put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.bootstrapServers)
+            put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer::class.java.name)
+            put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer::class.java.name)
+            put("schema.registry.url", "mock://schema-registry")
+        }
+
+        KafkaProducer<String, Personhendelse>(producerProps).use { producer ->
+            producer.send(ProducerRecord(topic, avroHendelse.hendelseId, avroHendelse))
+            producer.flush()
+        }
+
+
+        val pollThread = thread(start = true) {
+            konsument.konsumer()
+        }
+
+        while (konsument.antallMeldinger == 0) {
+            Thread.sleep(100)
+        }
+
+        assertThat(konsument.antallMeldinger).isEqualTo(1)
+
+        konsument.lukk()
+        kafka.stop()
+        pollThread.join()
+    }
+
+    private fun testConfig(brokers: String) = KafkaConsumerConfig<String, Personhendelse>(
+        applicationId = "behandlingsflyt-test",
+        brokers = brokers,
+        ssl = null,
+        schemaRegistry = SchemaRegistryConfig(
+            url = "mock://kafka",
+            user = "",
+            password = "",
+        )
+    )
+
+
+}

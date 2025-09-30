@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.hendelse.kafka
 
-import no.nav.person.pdl.leesah.Personhendelse
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.errors.WakeupException
@@ -10,7 +9,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 abstract class KafkaKonsument<K, V>(
     val topic: String,
-    config: KafkaConsumerConfig,
+    config: KafkaConsumerConfig<K, V>,
     private val pollTimeout: Duration = Duration.ofSeconds(10L),
 ) {
     private val log = LoggerFactory.getLogger(javaClass)

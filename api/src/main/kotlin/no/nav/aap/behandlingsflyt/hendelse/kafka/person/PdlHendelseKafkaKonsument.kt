@@ -24,7 +24,7 @@ import javax.sql.DataSource
 const val PDL_HENDELSE_TOPIC = "pdl.leesah-v1"
 
 class PdlHendelseKafkaKonsument(
-    config: KafkaConsumerConfig,
+    config: KafkaConsumerConfig<String, Personhendelse>,
     pollTimeout: Duration = Duration.ofSeconds(10L),
     private val dataSource: DataSource,
     private val repositoryRegistry: RepositoryRegistry
