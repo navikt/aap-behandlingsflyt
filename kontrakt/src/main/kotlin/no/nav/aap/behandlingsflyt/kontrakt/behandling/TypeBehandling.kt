@@ -25,10 +25,16 @@ public enum class TypeBehandling(
         public fun from(identifikator: String): TypeBehandling {
             return entries.first { it.identifikator == identifikator }
         }
+
+        public fun ytelseBehandlingstyper(): List<TypeBehandling> =
+            listOf(Førstegangsbehandling, Revurdering)
+
     }
 
     public fun erYtelsesbehandling(): Boolean {
         return this == Førstegangsbehandling || this == Revurdering
     }
+
+
 }
 

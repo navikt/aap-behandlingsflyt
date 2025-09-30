@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
 import no.nav.aap.behandlingsflyt.exception.OutdatedBehandlingException
-import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -19,46 +18,60 @@ internal object ValiderBehandlingTilstand {
         eksisterendeAvklaringsbehov: List<Avklaringsbehov>
     ) {
         validerStatus(behandling.status())
+
         if (avklaringsbehov != null) {
-            if (!eksisterendeAvklaringsbehov.map { a -> a.definisjon }
-                    .contains(avklaringsbehov) && !avklaringsbehov.erFrivillig() && !avklaringsbehov.erOverstyring()) {
-                log.warn("Forsøker å løse avklaringsbehov $avklaringsbehov ikke knyttet til behandlingen, har $eksisterendeAvklaringsbehov")
-                throw UgyldigForespørselException(
-                    "Forsøker å løse avklaringsbehov $avklaringsbehov ikke knyttet til behandlingen, har $eksisterendeAvklaringsbehov. Åpne behov: ${
-                        eksisterendeAvklaringsbehov.filter { it.erÅpent() }.map { it.definisjon }
-                    }"
-                )
-            }
-            val flyt = behandling.flyt()
-            if (!flyt.erStegFørEllerLik(
-                    avklaringsbehov.løsesISteg,
-                    behandling.aktivtSteg()
-                ) && !avklaringsbehov.erVentebehov()
-            ) {
-                val errorMsg = "Forsøker å løse avklaringsbehov $avklaringsbehov som er definert i et steg etter " +
-                        "nåværende steg[${behandling.aktivtSteg()}] ${
-                            behandling.typeBehandling().toLogString()
-                        }. Skal løses i steg[${avklaringsbehov.løsesISteg}]"
+            validerAvklaringsbehov(avklaringsbehov, eksisterendeAvklaringsbehov)
 
-                log.warn(errorMsg)
-                throw UgyldigForespørselException(errorMsg)
-            }
-            if (løserAvklaringsbehovForTidligereStegEtterAtBehandlingenErLåst(flyt, avklaringsbehov, behandling)) {
-                val errorMsg = "Forsøker å løse avklaringsbehov $avklaringsbehov som er definert i et steg før " +
-                        "nåværende steg[${behandling.aktivtSteg()}], men dette er ikke tillatt for behandlingens " +
-                        "gjeldende steg ${behandling.typeBehandling().toLogString()}"
+            validerRekkefølge(behandling, avklaringsbehov)
 
-                log.warn(errorMsg)
-                throw UgyldigForespørselException(errorMsg)
-            }
+            validerAvklaringsbehovOgLås(behandling, avklaringsbehov)
+        }
+    }
+
+    private fun validerAvklaringsbehov(
+        avklaringsbehov: Definisjon,
+        eksisterendeAvklaringsbehov: List<Avklaringsbehov>
+    ) {
+        val avklaringsbehovFinnesIBehandlingen = eksisterendeAvklaringsbehov.any { it.definisjon == avklaringsbehov }
+
+        if (!avklaringsbehovFinnesIBehandlingen && !avklaringsbehov.erFrivillig() && !avklaringsbehov.erOverstyring()) {
+            log.warn("Forsøker å løse avklaringsbehov $avklaringsbehov ikke knyttet til behandlingen, har $eksisterendeAvklaringsbehov")
+
+            throw UgyldigForespørselException(
+                "Forsøker å løse avklaringsbehov '${avklaringsbehov.name}' som ikke hører til behandlingen."
+            )
+        }
+    }
+
+    private fun validerRekkefølge(behandling: Behandling, avklaringsbehov: Definisjon) {
+        val gyldigRekkefølgeSteg = behandling
+            .flyt()
+            .erStegFørEllerLik(avklaringsbehov.løsesISteg, behandling.aktivtSteg())
+
+        if (!gyldigRekkefølgeSteg && !avklaringsbehov.erVentebehov()) {
+            log.warn("Bruker forsøkte å løse '${avklaringsbehov.name}' før nåværende steg '${behandling.aktivtSteg().name}'")
+
+            throw UgyldigForespørselException("Aktivt steg ${behandling.aktivtSteg().name} må løses før du kan løse ${avklaringsbehov.name}.")
+        }
+    }
+
+    private fun validerAvklaringsbehovOgLås(behandling: Behandling, avklaringsbehov: Definisjon) {
+        if (løserAvklaringsbehovForTidligereStegEtterAtBehandlingenErLåst(avklaringsbehov, behandling)) {
+            val errorMsg = "Forsøker å løse avklaringsbehov $avklaringsbehov som er definert i et steg før " +
+                    "nåværende steg[${behandling.aktivtSteg()}], men dette er ikke tillatt for behandlingens " +
+                    "gjeldende steg ${behandling.typeBehandling().toLogString()}"
+
+            log.warn(errorMsg)
+            throw UgyldigForespørselException(errorMsg)
         }
     }
 
     private fun løserAvklaringsbehovForTidligereStegEtterAtBehandlingenErLåst(
-        flyt: BehandlingFlyt,
         avklaringsbehov: Definisjon,
         behandling: Behandling
     ): Boolean {
+        val flyt = behandling.flyt()
+
         val forsøkerÅLøseAvklaringsbehovFørGjeldendeSteg =
             flyt.erStegFør(avklaringsbehov.løsesISteg, behandling.aktivtSteg())
         val erGjeldendeStegLåstForOppdateringAvOpplysninger =
@@ -80,14 +93,14 @@ internal object ValiderBehandlingTilstand {
         validerStatus(behandling.status())
         if (behandling.versjon != versjon) {
             log.warn("Behandlingen har blitt oppdatert. Versjonsnummer[$versjon] ulikt fra siste[${behandling.versjon}]. Behandlingreferanse: ${behandling.referanse}")
-            throw OutdatedBehandlingException("Behandlingen har blitt oppdatert. Versjonsnummer[$versjon] ulikt fra siste[${behandling.versjon}]")
+            throw OutdatedBehandlingException("Behandlingen har blitt oppdatert i bakgrunnen. Last siden på nytt for å hente endringene.")
         }
     }
 
     private fun validerStatus(behandlingStatus: Status) {
         if (Status.AVSLUTTET == behandlingStatus) {
             log.warn("Forsøker manipulere på behandling som er avsluttet")
-            throw IllegalArgumentException("Forsøker manipulere på behandling som er avsluttet")
+            throw UgyldigForespørselException("Behandlingen er avsluttet og kan ikke lenger endres")
         }
     }
 }

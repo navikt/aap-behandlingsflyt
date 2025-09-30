@@ -1,38 +1,32 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.mellomlagring.MellomlagretVurderingRepository
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingGateway
 import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingService
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.DatadelingBehandlingJobbUtfører
+import no.nav.aap.behandlingsflyt.prosessering.IverksettUtbetalingJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.VarsleVedtakJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
+import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseDto
 import org.slf4j.LoggerFactory
 
 class IverksettVedtakSteg private constructor(
@@ -51,8 +45,12 @@ class IverksettVedtakSteg private constructor(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING && trukketSøknadService.søknadErTrukket(kontekst.behandlingId)
-            || kontekst.vurderingType == VurderingType.REVURDERING && avbrytRevurderingService.revurderingErAvbrutt(kontekst.behandlingId)
+        if (kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING && trukketSøknadService.søknadErTrukket(
+                kontekst.behandlingId
+            )
+            || kontekst.vurderingType == VurderingType.REVURDERING && avbrytRevurderingService.revurderingErAvbrutt(
+                kontekst.behandlingId
+            )
         ) {
             return Fullført
         }
@@ -68,7 +66,7 @@ class IverksettVedtakSteg private constructor(
 
         val tilkjentYtelseDto = utbetalingService.lagTilkjentYtelseForUtbetaling(kontekst.sakId, kontekst.behandlingId)
         if (tilkjentYtelseDto != null) {
-            utbetalingGateway.utbetal(tilkjentYtelseDto)
+            utbetal(kontekst, tilkjentYtelseDto)
         } else {
             log.info("Fant ikke tilkjent ytelse for behandingsref ${kontekst.behandlingId}. Virkningstidspunkt: $virkningstidspunkt.")
         }
@@ -88,46 +86,41 @@ class IverksettVedtakSteg private constructor(
         return Fullført
     }
 
+    private fun utbetal(
+        kontekst: FlytKontekstMedPerioder,
+        tilkjentYtelseDto: TilkjentYtelseDto
+    ) {
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.IverksettUtbetalingSomSelvstendigJobb)) {
+            /**
+             * Må opprette jobb med sakId, men uten behandlingId for at disse skal bli kjørt sekvensielt i riktig rekkefølge.
+             * Viktig at eldste jobb kjøres først slik at utbetaling blir konsistent med Kelvin
+             */
+            flytJobbRepository.leggTil(
+                jobbInput = JobbInput(jobb = IverksettUtbetalingJobbUtfører)
+                    .medPayload(kontekst.behandlingId)
+                    .forSak(sakId = kontekst.sakId.toLong())
+            )
+        } else {
+            utbetalingGateway.utbetal(tilkjentYtelseDto)
+        }
+    }
+
     companion object : FlytSteg {
         override fun konstruer(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
         ): BehandlingSteg {
-            val sakRepository = repositoryProvider.provide<SakRepository>()
             val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-            val refusjonskravRepository = repositoryProvider.provide<RefusjonkravRepository>()
-            val tilkjentYtelseRepository = repositoryProvider.provide<TilkjentYtelseRepository>()
-            val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
             val vedtakRepository = repositoryProvider.provide<VedtakRepository>()
-            val samordningAndreStatligeYtelserRepository =
-                repositoryProvider.provide<SamordningAndreStatligeYtelserRepository>()
-            val samordningArbeidsgiverRepository =
-                repositoryProvider.provide<SamordningArbeidsgiverRepository>()
             val utbetalingGateway = gatewayProvider.provide<UtbetalingGateway>()
-            val unleashGateway = gatewayProvider.provide<UnleashGateway>()
             val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
             val virkningstidspunktUtlederService = VirkningstidspunktUtleder(
                 vilkårsresultatRepository = repositoryProvider.provide(),
             )
-            val tjenestepensjonRefusjonsKravVurderingRepository =
-                repositoryProvider.provide<TjenestepensjonRefusjonsKravVurderingRepository>()
-            val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
             val mellomlagretVurderingRepository = repositoryProvider.provide<MellomlagretVurderingRepository>()
             return IverksettVedtakSteg(
                 behandlingRepository = behandlingRepository,
-                utbetalingService = UtbetalingService(
-                    sakRepository = sakRepository,
-                    behandlingRepository = behandlingRepository,
-                    tilkjentYtelseRepository = tilkjentYtelseRepository,
-                    avklaringsbehovRepository = avklaringsbehovRepository,
-                    vedtakRepository = vedtakRepository,
-                    refusjonskravRepository = refusjonskravRepository,
-                    tjenestepensjonRefusjonsKravVurderingRepository = tjenestepensjonRefusjonsKravVurderingRepository,
-                    samordningAndreStatligeYtelserRepository = samordningAndreStatligeYtelserRepository,
-                    samordningArbeidsgiverRepository = samordningArbeidsgiverRepository,
-                    underveisRepository = underveisRepository,
-                    unleashGateway = unleashGateway,
-                ),
+                utbetalingService = UtbetalingService(repositoryProvider = repositoryProvider, gatewayProvider = gatewayProvider),
                 vedtakService = VedtakService(vedtakRepository, behandlingRepository),
                 utbetalingGateway = utbetalingGateway,
                 virkningstidspunktUtleder = virkningstidspunktUtlederService,
