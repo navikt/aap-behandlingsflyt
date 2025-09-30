@@ -220,6 +220,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     ),
                 )
             )
+            .løsBeregningstidspunkt()
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.FORESLÅ_VEDTAK)
@@ -262,6 +263,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     ),
                 )
             )
+            // TODO denne burde det ikke være behov for når sykepengererstatning av avslått?
+            .løsBeregningstidspunkt()
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.FORESLÅ_VEDTAK)
@@ -287,20 +290,13 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         val sak = happyCaseFørstegangsbehandling()
         val gjelderFra = sak.rettighetsperiode.fom.plusMonths(1)
 
-        revurdereFramTilOgMedSykdom(sak, gjelderFra)
-            .løsAvklaringsBehov(
-                AvklarBistandsbehovLøsning(
-                    bistandsVurdering = BistandVurderingLøsningDto(
-                        begrunnelse = "Trenger hjelp fra nav",
-                        erBehovForAktivBehandling = true,
-                        erBehovForArbeidsrettetTiltak = false,
-                        erBehovForAnnenOppfølging = null,
-                        skalVurdereAapIOvergangTilUføre = null,
-                        skalVurdereAapIOvergangTilArbeid = null,
-                        overgangBegrunnelse = null
-                    ),
-                )
-            )
+        val revurdering = sak.opprettManuellRevurdering(
+            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
+        )
+
+        revurdering
+            .løsSykdom(gjelderFra)
+            .løsBistand()
             .løsSykdomsvurderingBrev()
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
@@ -325,25 +321,13 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
     fun `hopper over foreslå vedtak-steg når revurdering ikke skal innom NAY`() {
         val sak = happyCaseFørstegangsbehandling()
         // Revurdering av sykdom uten 11-13
-        val behandling = revurdereFramTilOgMedSykdom(
-            sak = sak,
-            gjelderFra = sak.rettighetsperiode.fom,
-            vissVarighet = true
+        val behandling = sak.opprettManuellRevurdering(
+            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
         )
 
-        behandling.løsAvklaringsBehov(
-            AvklarBistandsbehovLøsning(
-                bistandsVurdering = BistandVurderingLøsningDto(
-                    begrunnelse = "Trenger hjelp fra nav",
-                    erBehovForAktivBehandling = true,
-                    erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = null,
-                    skalVurdereAapIOvergangTilUføre = null,
-                    skalVurdereAapIOvergangTilArbeid = null,
-                    overgangBegrunnelse = null
-                ),
-            )
-        )
+        behandling
+            .løsSykdom()
+            .løsBistand()
             .løsSykdomsvurderingBrev()
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov.map { it.definisjon }).describedAs {
@@ -372,8 +356,9 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                         grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR
                     ),
                     behovstype = Definisjon.AVKLAR_SYKEPENGEERSTATNING.kode
-                )
-            ).medKontekst {
+                ))
+            .løsBeregningstidspunkt()
+            .medKontekst {
                 assertThat(this.åpneAvklaringsbehov.map { it.definisjon }).describedAs {
                     "Revurdering av sykdom skal innom foreslå vedtak-steg når vurdering av sykepengeerstatning er gjort av NAY"
                 }.containsExactly(Definisjon.FORESLÅ_VEDTAK)

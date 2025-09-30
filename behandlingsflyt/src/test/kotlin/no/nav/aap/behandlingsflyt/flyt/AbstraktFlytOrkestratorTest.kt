@@ -530,7 +530,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         return behandling
     }
 
-    protected fun løsSykdom(behandling: Behandling): Behandling {
+    protected fun løsSykdom(behandling: Behandling, vurderingenGjelderFra: LocalDate? = null): Behandling {
         return løsAvklaringsBehov(
             behandling,
             AvklarSykdomLøsning(
@@ -545,7 +545,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                         erArbeidsevnenNedsatt = true,
                         yrkesskadeBegrunnelse = null,
-                        vurderingenGjelderFra = null,
+                        vurderingenGjelderFra = vurderingenGjelderFra,
                     )
                 )
             ),
@@ -658,8 +658,8 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
     }
 
     @JvmName("løsSykdomExt")
-    protected fun Behandling.løsSykdom(): Behandling {
-        return løsSykdom(this)
+    protected fun Behandling.løsSykdom(gjelderFra: LocalDate? = null): Behandling {
+        return løsSykdom(this, gjelderFra)
     }
 
     @JvmName("mellomlagreSykdomExt")

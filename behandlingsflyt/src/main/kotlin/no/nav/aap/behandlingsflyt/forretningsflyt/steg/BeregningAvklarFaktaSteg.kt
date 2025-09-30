@@ -146,6 +146,7 @@ class BeregningAvklarFaktaSteg private constructor(
     private fun manueltTriggetVurderingsbehovBeregning(kontekst: FlytKontekstMedPerioder): Boolean {
         return kontekst.vurderingsbehovRelevanteForSteg.any {
             it in listOf(
+                Vurderingsbehov.MOTTATT_SØKNAD,
                 Vurderingsbehov.HELHETLIG_VURDERING,
                 Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
                 Vurderingsbehov.REVURDER_BEREGNING
@@ -156,6 +157,7 @@ class BeregningAvklarFaktaSteg private constructor(
     private fun manueltTriggetVurderingsbehovYrkesskade(kontekst: FlytKontekstMedPerioder): Boolean {
         return kontekst.vurderingsbehovRelevanteForSteg.any {
             it in listOf(
+                Vurderingsbehov.MOTTATT_SØKNAD,
                 Vurderingsbehov.HELHETLIG_VURDERING,
                 Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
                 Vurderingsbehov.REVURDER_YRKESSKADE
