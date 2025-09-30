@@ -65,6 +65,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.meldepliktOverstyringGrun
 import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerAPI
 import no.nav.aap.behandlingsflyt.drift.driftAPI
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
 import no.nav.aap.behandlingsflyt.flyt.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flytApi
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
@@ -78,6 +79,8 @@ import no.nav.aap.behandlingsflyt.pip.behandlingsflytPip
 import no.nav.aap.behandlingsflyt.prosessering.BehandlingsflytLogInfoProvider
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -104,6 +107,8 @@ fun utledSubtypesTilMottattHendelseDTO(): List<Class<*>> {
 
 class App
 
+private val log = LoggerFactory.getLogger(App::class.java)
+
 private const val ANTALL_WORKERS = 4
 
 fun main() {
@@ -123,6 +128,37 @@ fun main() {
     }) { server(DbConfig(), postgresRepositoryRegistry, defaultGatewayProvider()) }.start(wait = true)
 }
 
+/**
+ * Midlertidig. Brukes for å etterfylle verdier i sykepengeerstatningstabllen.
+ */
+fun etterFyllSykepengeTabell(
+    dataSource: DataSource,
+) {
+    dataSource.transaction { connection ->
+        val provider = postgresRepositoryRegistry.provider(connection)
+        val skriveLåsRepository = provider.provide<TaSkriveLåsRepository>()
+        val sykepengeRepo = provider.provide<SykepengerErstatningRepository>()
+
+        val idSpørring = "select behandling_id from sykepenge_erstatning_grunnlag where vurderinger_id is null"
+        val behandlingIds = connection.queryList(idSpørring) {
+            setRowMapper {
+                BehandlingId(it.getLong("behandling_id"))
+            }
+        }
+
+        log.info("Fant ${behandlingIds.size} grunnlag uten vurderinger_id.")
+
+        for (behandlingId in behandlingIds) {
+            val lås = skriveLåsRepository.låsBehandling(behandlingId)
+
+            val original = sykepengeRepo.hent(behandlingId)
+            sykepengeRepo.lagre(behandlingId, original.vurdering)
+
+            skriveLåsRepository.verifiserSkrivelås(lås)
+        }
+    }
+}
+
 internal fun Application.server(
     dbConfig: DbConfig,
     repositoryRegistry: RepositoryRegistry,
@@ -132,9 +168,7 @@ internal fun Application.server(
         .registerSubtypes(utledSubtypesTilAvklaringsbehovLøsning() + utledSubtypesTilMottattHendelseDTO())
 
     commonKtorModule(
-        prometheus,
-        AzureConfig(),
-        InfoModel(
+        prometheus, AzureConfig(), InfoModel(
             title = "AAP - Behandlingsflyt", version = ApplikasjonsVersjon.versjon,
             description = """
                 For å teste API i dev, besøk
@@ -161,6 +195,7 @@ internal fun Application.server(
     Migrering.migrate(dataSource)
     val motor = startMotor(dataSource, repositoryRegistry, gatewayProvider)
 
+    etterFyllSykepengeTabell(dataSource)
     if (!Miljø.erLokal()) {
         startKabalKonsument(dataSource, repositoryRegistry)
     }
@@ -282,13 +317,10 @@ fun Application.startMotor(
 }
 
 fun Application.startKabalKonsument(
-    dataSource: DataSource,
-    repositoryRegistry: RepositoryRegistry
+    dataSource: DataSource, repositoryRegistry: RepositoryRegistry
 ): KafkaKonsument {
     val konsument = KabalKafkaKonsument(
-        config = KafkaConsumerConfig(),
-        dataSource = dataSource,
-        repositoryRegistry = repositoryRegistry
+        config = KafkaConsumerConfig(), dataSource = dataSource, repositoryRegistry = repositoryRegistry
     )
     monitor.subscribe(ApplicationStarted) {
         val t = Thread() {
