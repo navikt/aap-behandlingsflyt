@@ -98,6 +98,7 @@ import no.nav.aap.komponenter.server.plugins.NavIdentInterceptor
 import no.nav.aap.motor.Motor
 import no.nav.aap.motor.api.motorApi
 import no.nav.aap.motor.retry.RetryService
+import no.nav.person.pdl.leesah.Personhendelse
 import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -415,7 +416,7 @@ fun Application.startMotor(
 fun Application.startKabalKonsument(
     dataSource: DataSource, repositoryRegistry: RepositoryRegistry
 ): KafkaKonsument {
-    val konsument = KabalKafkaKonsument(
+    val konsument = KabalKafkaKonsument<String, String>(
         config = KafkaConsumerConfig(), dataSource = dataSource, repositoryRegistry = repositoryRegistry
     )
     monitor.subscribe(ApplicationStarted) {
@@ -439,7 +440,7 @@ fun Application.startKabalKonsument(
 fun Application.startPDLHendelseKonsument(
     dataSource: DataSource,
     repositoryRegistry: RepositoryRegistry
-): KafkaKonsument {
+): KafkaKonsument<String, Personhendelse> {
     val konsument = PdlHendelseKafkaKonsument(
         config = KafkaConsumerConfig(),
         dataSource = dataSource,

@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.hendelse.kafka
 
+import no.nav.person.pdl.leesah.Personhendelse
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.errors.WakeupException
@@ -7,7 +8,7 @@ import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicBoolean
 
-abstract class KafkaKonsument(
+abstract class KafkaKonsument<K, V>(
     val topic: String,
     config: KafkaConsumerConfig,
     private val pollTimeout: Duration = Duration.ofSeconds(10L),
@@ -32,7 +33,7 @@ abstract class KafkaKonsument(
             konsument.subscribe(listOf(topic))
             while (!lukket.get()) {
                 val meldinger: ConsumerRecords<String, String> = konsument.poll(pollTimeout)
-                håndter(meldinger)
+                håndter(meldinger as ConsumerRecords<K, V>)
                 konsument.commitSync()
                 antallMeldinger += meldinger.count()
             }
@@ -46,5 +47,6 @@ abstract class KafkaKonsument(
         }
     }
 
-    abstract fun håndter(meldinger: ConsumerRecords<String, String>)
+    abstract fun håndter(meldinger: ConsumerRecords<K, V>)
+
 }

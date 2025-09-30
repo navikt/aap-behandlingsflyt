@@ -13,7 +13,7 @@ import java.time.LocalDateTime
 
 public sealed interface PdlHendelse : Melding
 
-public data class Personhendelse(
+public data class PdlPersonHendelse(
     val hendelseId: String,
     val personidenter: List<String>,
     val master: String,
@@ -60,7 +60,7 @@ public fun tilPdlHendelseV0(): PdlHendelse =
         innsendingstype = InnsendingType.PDL_HENDELSE
     )
 
-public fun Personhendelse.tilInnsending(saksnummer: Saksnummer): Innsending =
+public fun PdlPersonHendelse.tilInnsending(saksnummer: Saksnummer): Innsending =
     Innsending(
         saksnummer = saksnummer,
         referanse = InnsendingReferanse(PdlHendelseId(value = this.hendelseId)),

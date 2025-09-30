@@ -13,6 +13,7 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.motor.FlytJobbRepository
+import no.nav.person.pdl.leesah.Personhendelse
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.slf4j.LoggerFactory
@@ -27,7 +28,7 @@ class KabalKafkaKonsument(
     pollTimeout: Duration = Duration.ofSeconds(10L),
     private val dataSource: DataSource,
     private val repositoryRegistry: RepositoryRegistry
-) : KafkaKonsument(
+) : KafkaKonsument<String, String>(
     topic = KABAL_EVENT_TOPIC,
     config = config,
     pollTimeout = pollTimeout,
