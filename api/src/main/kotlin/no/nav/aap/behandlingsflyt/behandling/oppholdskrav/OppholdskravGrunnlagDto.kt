@@ -7,7 +7,7 @@ import java.time.LocalDate
 data class OppholdskravGrunnlagResponse(
     val harTilgangTilÅSaksbehandle: Boolean,
     val oppholdskravVurdering: OppholdskravVurderingDto?,
-    val gjeldendeVedtatteVurderinger: List<OppholdskravVurderingDto>
+    val gjeldendeVedtatteVurderinger: List<TidligereOppholdskravVurderingDto>
 )
 
 data class OppholdskravVurderingDto(
@@ -16,6 +16,15 @@ data class OppholdskravVurderingDto(
 )
 
 data class OppholdskravPeriodeDto(
+    val oppfylt: Boolean,
+    val begrunnelse: String,
+    val land: String?,
+    val fom: LocalDate,
+    val tom: LocalDate? = null,
+)
+
+data class TidligereOppholdskravVurderingDto(
+    val vurdertAv: VurdertAvResponse? = null,
     val oppfylt: Boolean,
     val begrunnelse: String,
     val land: String?,

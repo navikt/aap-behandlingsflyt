@@ -12,13 +12,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
-import org.slf4j.LoggerFactory
 
 class VurderOppholdskravSteg private constructor(
     private val oppholdskravGrunnlagRepository: OppholdskravGrunnlagRepository
 ) : BehandlingSteg {
-
-    private val log = LoggerFactory.getLogger(javaClass)
 
     constructor(repositoryProvider: RepositoryProvider) : this(
         oppholdskravGrunnlagRepository = repositoryProvider.provide()

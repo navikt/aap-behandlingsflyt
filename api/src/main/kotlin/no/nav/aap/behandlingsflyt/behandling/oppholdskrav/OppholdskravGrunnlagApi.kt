@@ -6,6 +6,7 @@ import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.HttpStatusCode
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -17,6 +18,7 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
+import java.time.LocalDate
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.oppholdskravGrunnlagApi(
@@ -48,7 +50,19 @@ fun NormalOpenAPIRoute.oppholdskravGrunnlagApi(
                     OppholdskravGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         oppholdskravVurdering = vurdering?.tilDto(ansattInfoService),
-                        gjeldendeVedtatteVurderinger = gjeldendeVedtatteVurderinger.map { it.tilDto(ansattInfoService) }
+                        gjeldendeVedtatteVurderinger = gjeldendeVedtatteVurderinger
+                            .tilTidslinje()
+                            .segmenter()
+                            .map { segment ->
+                                TidligereOppholdskravVurderingDto(
+                                    vurdertAv = VurdertAvResponse.fraIdent(segment.verdi.vurdertAv, segment.verdi.opprettet.toLocalDate(), ansattInfoService),
+                                    fom = segment.fom(),
+                                    tom = if (segment.tom().isEqual( LocalDate.MAX)) null else segment.tom(),
+                                    begrunnelse = segment.verdi.begrunnelse,
+                                    land = segment.verdi.land,
+                                    oppfylt = segment.verdi.oppfylt,
+                                )
+                            }
                     )
                 }
 

@@ -14,29 +14,31 @@ data class OppholdskravGrunnlag(
     val opprettet: LocalDateTime = LocalDateTime.now(),
 ) {
     fun tidslinje(): Tidslinje<OppholdakravTidslinjeData> {
-        return vurderinger
-            .sortedBy { it.opprettet }
-            .map { vurdering ->
-                Tidslinje(
-                    vurdering.perioder.map { periode ->
-                        Segment(
-                            periode = Periode(fom = periode.fom, tom = periode.tom ?: LocalDate.MAX),
-                            verdi = OppholdakravTidslinjeData(
-                                land = periode.land,
-                                opprettet = vurdering.opprettet,
-                                oppfylt = periode.oppfylt,
-                                begrunnelse = periode.begrunnelse,
-                                vurdertAv = vurdering.vurdertAv
-                            )
-                        )
-                    }
-                )
-            }
-            .fold(Tidslinje()) { acc, other ->
-                acc.kombiner(other, StandardSammenslåere.prioriterHøyreSideCrossJoin())
-            }
+        return vurderinger.tilTidslinje()
     }
 }
+
+fun List<OppholdskravVurdering>.tilTidslinje(): Tidslinje<OppholdakravTidslinjeData>  =
+    this.sortedBy { it.opprettet }
+        .map { vurdering ->
+            Tidslinje(
+                vurdering.perioder.map { periode ->
+                    Segment(
+                        periode = Periode(fom = periode.fom, tom = periode.tom ?: LocalDate.MAX),
+                        verdi = OppholdakravTidslinjeData(
+                            land = periode.land,
+                            opprettet = vurdering.opprettet,
+                            oppfylt = periode.oppfylt,
+                            begrunnelse = periode.begrunnelse,
+                            vurdertAv = vurdering.vurdertAv
+                        )
+                    )
+                }
+            )
+        }
+        .fold(Tidslinje()) { acc, other ->
+            acc.kombiner(other, StandardSammenslåere.prioriterHøyreSideCrossJoin())
+        }
 
 data class OppholdskravVurdering(
     val opprettet: LocalDateTime = LocalDateTime.now(),
