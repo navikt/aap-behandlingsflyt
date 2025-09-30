@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBist
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarForutgåendeMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarLovvalgMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarManuellInntektVurderingLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOppholdskravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangArbeidLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
@@ -28,6 +29,9 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderRett
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.YrkesskadevurderingDto
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.mellomlagring.MellomlagretVurdering
+import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.AvklarOppholdkravLøsningPeriodeDto
+import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.AvklarOppholdskravLøsningDto
+
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLand
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
@@ -586,6 +590,26 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                         brukerRettPåAAP = false,
                         virkningsdato = null,
                         overgangBegrunnelse = null
+                    )
+                )
+        )
+    }
+
+    protected fun Behandling.løsOppholdskrav(): Behandling {
+        return løsAvklaringsBehov(
+            behandling = this,
+            avklaringsBehovLøsning =
+                AvklarOppholdskravLøsning(
+                    vurdering = AvklarOppholdskravLøsningDto(
+                        perioder = listOf(
+                            AvklarOppholdkravLøsningPeriodeDto(
+                                oppfylt = true,
+                                land = "SE:Sverige",
+                                fom = LocalDate.now(),
+                                begrunnelse = "Fiske"
+
+                            )
+                        )
                     )
                 )
         )

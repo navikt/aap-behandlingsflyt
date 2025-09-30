@@ -35,6 +35,10 @@ public enum class StegType(
         gruppe = StegGruppe.MEDLEMSKAP,
         status = Status.UTREDES
     ),
+    VURDER_OPPHOLDSKRAV(
+        gruppe = StegGruppe.OPPHOLDSKRAV,
+        status = Status.UTREDES,
+    ),
     FASTSETT_MELDEPERIODER(
         gruppe = StegGruppe.UDEFINERT,
         status = Status.UTREDES

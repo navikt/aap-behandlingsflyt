@@ -11,6 +11,7 @@ public enum class StegGruppe(public val skalVises: Boolean, public val obligator
     ALDER(true, true),
     LOVVALG(true, true),
     MEDLEMSKAP(true, true),
+    OPPHOLDSKRAV(true, true),
     BARNETILLEGG(true, false),
     STUDENT(true, false),
     SYKDOM(true, true),
