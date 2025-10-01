@@ -139,18 +139,73 @@ fun etterFyllSykepengeTabell(
         val skriveLåsRepository = provider.provide<TaSkriveLåsRepository>()
         val sykepengeRepo = provider.provide<SykepengerErstatningRepository>()
 
-        val idSpørring = "select behandling_id from sykepenge_erstatning_grunnlag where vurderinger_id is null"
-        val behandlingIds = connection.queryList(idSpørring) {
+        val idSpørring = "select id, behandling_id from sykepenge_erstatning_grunnlag where vurderinger_id is null"
+        val grunnlagIds = connection.queryList(idSpørring) {
             setRowMapper {
-                BehandlingId(it.getLong("behandling_id"))
+                Pair(it.getLong("id"), BehandlingId(it.getLong("behandling_id")))
             }
         }
 
-        log.info("Fant ${behandlingIds.size} grunnlag uten vurderinger_id.")
+        log.info("Fant ${grunnlagIds.size} grunnlag uten vurderinger_id.")
 
-        for (behandlingId in behandlingIds) {
+        for ((id, behandlingId) in grunnlagIds) {
             val lås = skriveLåsRepository.låsBehandling(behandlingId)
 
+            val vurderingerUtenVurderingerId = connection.queryFirstOrNull(
+                """select v.id, v.opprettet_tid
+                 from sykepenge_vurdering v join sykepenge_erstatning_grunnlag sg on v.id = sg.vurdering_id
+                 where v.vurderinger_id is null and sg.id = ?"""
+            ) {
+                setParams {
+                    setLong(1, id)
+                }
+                setRowMapper { Pair(it.getLong("id"), it.getLocalDateTime("opprettet_tid")) }
+            }
+
+            if (vurderingerUtenVurderingerId != null) {
+                val vurderingerId = connection.executeReturnKey(
+                    """insert into sykepenge_vurderinger (opprettet_tid)
+                    values (?)
+                """.trimMargin()
+                ) {
+                    setParams {
+                        setLocalDateTime(1, vurderingerUtenVurderingerId.second)
+                    }
+                }
+
+                connection.execute(
+                    """
+                    update sykepenge_vurdering set vurderinger_id = ? where id = ? and vurderinger_id is null
+                """.trimIndent()
+                ) {
+                    setParams {
+                        setLong(1, vurderingerId)
+                        setLong(2, vurderingerUtenVurderingerId.first)
+                    }
+                    setResultValidator {
+                        log.info("Oppdaterte $it rader.")
+                    }
+                }
+
+                connection.execute(
+                    """
+                    update sykepenge_erstatning_grunnlag g
+                    set vurderinger_id = ?
+                    where g.behandling_id = ? and g.id = ? and g.vurderinger_id is null
+                """.trimIndent()
+                ) {
+                    setParams {
+                        setLong(1, vurderingerId)
+                        setLong(2, behandlingId.id)
+                        setLong(3, id)
+                    }
+                    setResultValidator {
+                        log.info("Oppdaterte $it rader i sykepenge_erstatning_grunnlag.")
+                    }
+                }
+            } else {
+                log.info("Fant ingen vurderinger for behandling $behandlingId.")
+            }
             val original = sykepengeRepo.hent(behandlingId)
             sykepengeRepo.lagre(behandlingId, original.vurdering)
 
@@ -195,7 +250,10 @@ internal fun Application.server(
     Migrering.migrate(dataSource)
     val motor = startMotor(dataSource, repositoryRegistry, gatewayProvider)
 
-    etterFyllSykepengeTabell(dataSource)
+    if (!Miljø.erProd()) {
+        etterFyllSykepengeTabell(dataSource)
+    }
+
     if (!Miljø.erLokal()) {
         startKabalKonsument(dataSource, repositoryRegistry)
     }
