@@ -334,7 +334,7 @@ public enum class Definisjon(
         kode = AvklaringsbehovKode.`5019`,
         type = BehovType.VENTEPUNKT,
         løsesISteg = StegType.VURDER_LOVVALG,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
         defaultFrist = Period.ofYears(5),
     ),
     AVKLAR_FORUTGÅENDE_MEDLEMSKAP(
