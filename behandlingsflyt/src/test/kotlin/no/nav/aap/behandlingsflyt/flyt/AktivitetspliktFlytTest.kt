@@ -13,6 +13,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7LøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Vurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_9LøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_9Vurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Brudd
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Grunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall as VilkårsresultatUtfall
@@ -36,6 +40,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.FakeUnleashFasttrackAktivitetsplikt
+import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -421,7 +426,16 @@ class AktivitetspliktFlytTest :
 
             }
             .løsAvklaringsBehov(
-                VurderBrudd11_9Løsning()
+                VurderBrudd11_9Løsning(
+                    aktivitetsplikt11_9Vurderinger = setOf(
+                        Aktivitetsplikt11_9LøsningDto(
+                            begrunnelse = "Det var et brudd",
+                            dato = 2 januar 2020,
+                            grunn = Grunn.IKKE_RIMELIG_GRUNN,
+                            brudd = Brudd.IKKE_MØTT_TIL_TILTAK,
+                        )
+                    )
+                )
             )
             .medKontekst {
                 assertThat(this.behandling).extracting { it.aktivtSteg() }
