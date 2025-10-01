@@ -45,10 +45,10 @@ internal class Aktivitetsplikt11_9RepositoryImplTest {
                 vurdertIBehandling = behandling.id,
             )
 
-            aktivitetspliktRepository.lagre(behandling.id, listOf(vurdering))
+            aktivitetspliktRepository.lagre(behandling.id, setOf(vurdering))
             val grunnlag = aktivitetspliktRepository.hentHvisEksisterer(behandling.id)
 
-            assertThat(grunnlag).isEqualTo(Aktivitetsplikt11_9Grunnlag(listOf(vurdering)))
+            assertThat(grunnlag).isEqualTo(Aktivitetsplikt11_9Grunnlag(setOf(vurdering)))
 
             val vurdering2 = Aktivitetsplikt11_9Vurdering(
                 begrunnelse = "Begrunnelse",
@@ -62,11 +62,11 @@ internal class Aktivitetsplikt11_9RepositoryImplTest {
          
             aktivitetspliktRepository.lagre(
                 behandling.id,
-                listOf(vurdering, vurdering2)
+                setOf(vurdering, vurdering2)
             )
 
             val grunnlag2 = aktivitetspliktRepository.hentHvisEksisterer(behandling.id)
-            assertThat(grunnlag2).isEqualTo(Aktivitetsplikt11_9Grunnlag(listOf(vurdering, vurdering2)))
+            assertThat(grunnlag2).isEqualTo(Aktivitetsplikt11_9Grunnlag(setOf(vurdering, vurdering2)))
         }
     }
 }

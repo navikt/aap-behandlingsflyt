@@ -20,29 +20,42 @@ class Aktivitetsplikt11_9RepositoryImpl(private val connection: DBConnection) : 
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): Aktivitetsplikt11_9Grunnlag? {
         val query = """
-            select v.* 
+            select * 
             from aktivitetsplikt_11_9_grunnlag g
-            inner join aktivitetsplikt_11_9_vurderinger vs on g.vurderinger_id = vs.id
-            inner join aktivitetsplikt_11_9_vurdering v  on vs.id = v.vurderinger_id
             where g.aktiv = true and g.behandling_id = ?
         """.trimIndent()
 
-        val vurderinger = connection.queryList(query) {
+        return connection.queryFirstOrNull(query) {
             setParams {
                 setLong(1, behandlingId.toLong())
             }
+            setRowMapper(::mapGrunnlag)
+        }
+    }
+    
+    private fun mapGrunnlag(row: Row): Aktivitetsplikt11_9Grunnlag {
+        return Aktivitetsplikt11_9Grunnlag(vurderinger = mapVurderinger(row.getLong("vurderinger_id")))
+    }
+    
+    private fun mapVurderinger(vurderingerId: Long): Set<Aktivitetsplikt11_9Vurdering> {
+        val query = """
+            select * 
+            from aktivitetsplikt_11_9_vurdering 
+            where vurderinger_id = ?
+            order by opprettet_tid desc
+        """.trimIndent()
+
+        return connection.queryList(query) {
+            setParams {
+                setLong(1, vurderingerId)
+            }
             setRowMapper(::mapVurdering)
-        }
-        return if (vurderinger.isEmpty()) {
-            null
-        } else {
-            Aktivitetsplikt11_9Grunnlag(vurderinger = vurderinger)
-        }
+        }.toSet()
     }
 
     override fun lagre(
         behandlingId: BehandlingId,
-        vurderinger: List<Aktivitetsplikt11_9Vurdering>
+        vurderinger: Set<Aktivitetsplikt11_9Vurdering>
     ) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         val nyttGrunnlag = Aktivitetsplikt11_9Grunnlag(vurderinger = vurderinger)
@@ -80,7 +93,7 @@ class Aktivitetsplikt11_9RepositoryImpl(private val connection: DBConnection) : 
 
     override fun slett(behandlingId: BehandlingId) {
         // TODO: Avgjør om vi trenger dette. Gjør ingenting inntil videre
-        log.warn("Forsøkte å slette aktivitetsplikt-grunnlag, men sletting er ikke implementert")
+        log.warn("Forsøkte å slette aktivitetsplikt-11-9-grunnlag, men sletting er ikke implementert")
     }
 
     private fun lagre(behandlingId: BehandlingId, nyttGrunnlag: Aktivitetsplikt11_9Grunnlag) {
@@ -98,7 +111,7 @@ class Aktivitetsplikt11_9RepositoryImpl(private val connection: DBConnection) : 
         }
     }
 
-    private fun lagreVurderinger(vurderinger: List<Aktivitetsplikt11_9Vurdering>): Long {
+    private fun lagreVurderinger(vurderinger: Set<Aktivitetsplikt11_9Vurdering>): Long {
         val vurderingerId = connection.executeReturnKey(
             """
             insert into aktivitetsplikt_11_9_vurderinger default values
