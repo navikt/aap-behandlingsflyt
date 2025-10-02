@@ -2231,7 +2231,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 )
             )
             .medKontekst {
-                val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.MEDLEMSKAP).vilkårsperioder()
+                val vilkårsResultat =
+                    hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.MEDLEMSKAP).vilkårsperioder()
                 assertTrue(åpneAvklaringsbehov.none { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP })
                 assertTrue(vilkårsResultat.none { it.erOppfylt() })
             }
@@ -2243,7 +2244,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
         // Oppretter vanlig søknad
-        var behandling = sendInnSøknad(
+        sendInnSøknad(
             ident, periode, SøknadV0(
                 student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto(
@@ -2251,34 +2252,24 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 ),
             )
         )
-
-        behandling = løsFramTilForutgåendeMedlemskap(behandling, harYrkesskade = false)
-
-        // Validér avklaring
-        var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
-        assertTrue(åpneAvklaringsbehov.all { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP })
-
-        // Trigger manuell vurdering
-        behandling = løsAvklaringsBehov(
-            behandling, AvklarForutgåendeMedlemskapLøsning(
-                manuellVurderingForForutgåendeMedlemskap = ManuellVurderingForForutgåendeMedlemskapDto(
-                    "begrunnelse", true, true, null
-                ),
-                behovstype = AvklaringsbehovKode.`5020`
+            .løsFramTilForutgåendeMedlemskap(harYrkesskade = false).medKontekst {
+                assertTrue(åpneAvklaringsbehov.all { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP })
+            }
+            // Trigger manuell vurdering
+            .løsAvklaringsBehov(
+                AvklarForutgåendeMedlemskapLøsning(
+                    manuellVurderingForForutgåendeMedlemskap = ManuellVurderingForForutgåendeMedlemskapDto(
+                        "begrunnelse", true, true, null
+                    ),
+                    behovstype = AvklaringsbehovKode.`5020`
+                )
             )
-        )
-
-        // Validér riktig resultat
-        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
-        val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.MEDLEMSKAP).vilkårsperioder()
-        assertTrue(åpneAvklaringsbehov.none { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP })
-        assertTrue(vilkårsResultat.all { it.erOppfylt() })
-
-        // Teste å trekke søknad
-        leggTilVurderingsbehovForBehandling(
-            behandling,
-            listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SØKNAD_TRUKKET))
-        )
+            .medKontekst {
+                assertTrue(this.åpneAvklaringsbehov.none { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP })
+                // Validér riktig resultat
+                val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.MEDLEMSKAP).vilkårsperioder()
+                assertTrue(vilkårsResultat.all { it.erOppfylt() })
+            }
     }
 
     @Test
