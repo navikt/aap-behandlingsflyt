@@ -61,6 +61,7 @@ public enum class Vurderingsbehov {
     REVURDER_BEREGNING,         // Beregningstidspunkt
     REVURDER_LOVVALG,
     REVURDER_SAMORDNING,
+    REVURDER_STUDENT,
     KLAGE,
     LOVVALG_OG_MEDLEMSKAP,      // Lovvalg og medlemskap
     FORUTGAENDE_MEDLEMSKAP,     // Forutgående medlemskap
