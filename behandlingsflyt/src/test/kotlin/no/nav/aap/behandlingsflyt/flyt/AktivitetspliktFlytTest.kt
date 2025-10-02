@@ -1,7 +1,9 @@
 package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivForhåndsvarselBruddAktivitetspliktBrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SykdomsvurderingForBrevLøsning
@@ -45,6 +47,7 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -437,6 +440,12 @@ class AktivitetspliktFlytTest :
                     )
                 )
             )
+            .medKontekst {
+                assertThat(this.behandling).extracting { it.aktivtSteg() }
+                    .isEqualTo(StegType.FATTE_VEDTAK)
+
+            }
+            .fattVedtakEllerSendRetur()
             .medKontekst {
                 assertThat(this.behandling).extracting { it.aktivtSteg() }
                     .isEqualTo(StegType.BREV)
