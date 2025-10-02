@@ -158,6 +158,7 @@ private fun utledEndringerSidenSist(
 
 private fun beslutterVurdering(avklaringsbehovene: Avklaringsbehovene, flyt: BehandlingFlyt): List<TotrinnsVurdering> {
     return avklaringsbehovene.alle()
+        .filter { it.status() != Status.AVBRUTT }
         .filter { it.erTotrinn() }
         .sortedWith(compareBy(flyt.stegComparator) { it.løsesISteg() })
         .map { tilKvalitetssikring(it) }
@@ -166,7 +167,15 @@ private fun beslutterVurdering(avklaringsbehovene: Avklaringsbehovene, flyt: Beh
 private fun tilKvalitetssikring(it: Avklaringsbehov): TotrinnsVurdering {
     return if (it.erTotrinnsVurdert() || it.harVærtSendtTilbakeFraBeslutterTidligere()) {
         val sisteVurdering =
-            it.historikk.lastOrNull { it.status in setOf(Status.SENDT_TILBAKE_FRA_BESLUTTER, Status.TOTRINNS_VURDERT) }
+            it.historikk
+                .filter { it.status in setOf(Status.SENDT_TILBAKE_FRA_BESLUTTER, Status.TOTRINNS_VURDERT) }
+                .lastOrNull { vurdering ->
+                    // Sjekker at siste vurdering ikke senere har blitt avbrutt
+                    it.historikk
+                        .filter { it.tidsstempel > vurdering.tidsstempel }
+                        .none { it.status == Status.AVBRUTT }
+                }
+
         val godkjent = it.status() == Status.TOTRINNS_VURDERT
 
         TotrinnsVurdering(

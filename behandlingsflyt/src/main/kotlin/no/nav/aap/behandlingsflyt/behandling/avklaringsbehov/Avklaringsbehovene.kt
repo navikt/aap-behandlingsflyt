@@ -181,8 +181,9 @@ class Avklaringsbehovene(
         return avklaringsbehovene
     }
 
-    override fun alleEkskludertVentebehov(): List<Avklaringsbehov> {
-        return avklaringsbehovene.filterNot { it.definisjon.erVentebehov() }
+    override fun alleEkskludertAvbruttOgVentebehov(): List<Avklaringsbehov> {
+        return avklaringsbehovene
+            .filterNot { it.status() == Status.AVBRUTT || it.definisjon.erVentebehov() }
     }
 
     fun åpne(): List<Avklaringsbehov> {

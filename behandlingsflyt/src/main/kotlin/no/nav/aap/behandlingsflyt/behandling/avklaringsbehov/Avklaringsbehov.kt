@@ -185,11 +185,25 @@ class Avklaringsbehov(
     }
 
     fun harVærtSendtTilbakeFraBeslutterTidligere(): Boolean {
-        return historikk.any { it.status == Status.SENDT_TILBAKE_FRA_BESLUTTER }
+        // false hvis avklaringsbehovet er avbrutt etter at det er sendt tilbake fra beslutter
+        return historikk
+            .filter { it.status == Status.SENDT_TILBAKE_FRA_BESLUTTER }
+            .any { endring ->
+                historikk
+                    .filter { it.tidsstempel > endring.tidsstempel }
+                    .none { it.status == Status.AVBRUTT }
+            }
     }
 
     fun harVærtSendtTilbakeFraKvalitetssikrerTidligere(): Boolean {
-        return historikk.any { it.status == Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER }
+        // false hvis avklaringsbehovet er avbrutt etter at det er sendt tilbake fra kvalitetssikrer
+        return historikk
+            .filter { it.status == Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER }
+            .any { endring ->
+                historikk
+                    .filter { it.tidsstempel > endring.tidsstempel }
+                    .none { it.status == Status.AVBRUTT }
+            }
     }
 
     fun løsesISteg(): StegType {

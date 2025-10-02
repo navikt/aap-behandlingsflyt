@@ -145,6 +145,7 @@ private fun utledEndringerSidenSist(
 
 private fun kvalitetssikringsVurdering(avklaringsbehovene: Avklaringsbehovene): List<TotrinnsVurdering> {
     return avklaringsbehovene.alle()
+        .filter { it.status() != Status.AVBRUTT }
         .filter { it.definisjon.kvalitetssikres }
         .map { tilKvalitetssikring(it) }
 }
@@ -152,12 +153,18 @@ private fun kvalitetssikringsVurdering(avklaringsbehovene: Avklaringsbehovene): 
 private fun tilKvalitetssikring(it: no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov): TotrinnsVurdering {
     return if (it.erKvalitetssikretTidligere() || it.harVærtSendtTilbakeFraKvalitetssikrerTidligere()) {
         val sisteVurdering =
-            it.historikk.lastOrNull {
-                it.status in setOf(
+            it.historikk
+                .filter { it.status in setOf(
                     Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER,
-                    Status.KVALITETSSIKRET
-                )
-            }
+                    Status.KVALITETSSIKRET)
+                }
+                .lastOrNull { vurdering ->
+                    // Sjekker at siste vurdering ikke senere har blitt avbrutt
+                    it.historikk
+                        .filter { it.tidsstempel > vurdering.tidsstempel }
+                        .none { it.status == Status.AVBRUTT }
+                }
+
         val godkjent = it.status() == Status.KVALITETSSIKRET
 
         TotrinnsVurdering(
