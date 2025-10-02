@@ -30,25 +30,6 @@ data class Sykdomsvurdering(
         return erNedsettelseIArbeidsevneMerEnnHalvparten == true || erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true
     }
 
-    fun erOppfylt(behandlingType: TypeBehandling, kravDato: LocalDate): Boolean {
-        /* Det stemmer vel ikke å se på behandlingstypen her? For poenget er vel at vurderingen som gjelder
-         * fra kravdatoen (som som oftest stammer fra en førstegangsbehandling) har en viss varighet.
-         * Se `erOppfylt(LocalDate)` nedenfor.
-         */
-        return when (behandlingType) {
-            TypeBehandling.Førstegangsbehandling -> erOppfyltSettBortIfraVissVarighet() && erNedsettelseIArbeidsevneAvEnVissVarighet == true
-            TypeBehandling.Revurdering -> {
-                if (erFørsteVurdering(kravDato)) {
-                    erOppfyltSettBortIfraVissVarighet() && erNedsettelseIArbeidsevneAvEnVissVarighet == true
-                } else {
-                    erOppfyltSettBortIfraVissVarighet()
-                }
-            }
-
-            else -> error("Ugyldig behandlingsType: $behandlingType for vurdering av sykdom.")
-        }
-    }
-
     /* Denne metoden må sannsynligvis generaliseres når vi skal implementere gjeninntreden etter opphør. */
     fun erFørsteVurdering(kravdato: LocalDate): Boolean {
         return vurderingenGjelderFra == null || vurderingenGjelderFra == kravdato
@@ -60,8 +41,19 @@ data class Sykdomsvurdering(
                 else true
     }
 
+    fun erOppfyltForYrkesskade(): Boolean {
+        return harSkadeSykdomEllerLyte
+                && erArbeidsevnenNedsatt == true
+                && erSkadeSykdomEllerLyteVesentligdel == true
+                && (erNedsettelseIArbeidsevneMerEnnHalvparten == true
+                || erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true) // trengs viss varighet for yrkesskade?
+    }
+
     fun erOppfyltSettBortIfraVissVarighet(): Boolean {
-        return harSkadeSykdomEllerLyte && erArbeidsevnenNedsatt == true && erSkadeSykdomEllerLyteVesentligdel == true && erAndelNedsattNok()
+        return harSkadeSykdomEllerLyte
+                && erArbeidsevnenNedsatt == true
+                && erSkadeSykdomEllerLyteVesentligdel == true
+                && erNedsettelseIArbeidsevneMerEnnHalvparten == true
     }
 
     fun erKonsistentForSykdom(harYrkesskadeRegistrert: Boolean, typeBehandling: TypeBehandling): Boolean {

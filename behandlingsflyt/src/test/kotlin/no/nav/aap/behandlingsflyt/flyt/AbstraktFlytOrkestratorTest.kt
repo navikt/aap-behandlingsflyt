@@ -1275,21 +1275,6 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         return this.løsAvklaringsBehov(vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
     }
 
-    protected fun leggTilVurderingsbehovForBehandling(
-        behandling: Behandling,
-        vurderingsbehov: List<VurderingsbehovMedPeriode>,
-        årsakTilOpprettelse: ÅrsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD
-    ) {
-        dataSource.transaction { connection ->
-            SakOgBehandlingService(postgresRepositoryRegistry.provider(connection), gatewayProvider)
-                .finnEllerOpprettOrdinærBehandling(
-                    behandling.sakId,
-                    VurderingsbehovOgÅrsak(vurderingsbehov, årsakTilOpprettelse)
-                )
-        }
-        prosesserBehandling(behandling)
-    }
-
     protected fun prosesserBehandling(behandling: Behandling): Behandling {
         dataSource.transaction { connection ->
             FlytOrkestrator(
