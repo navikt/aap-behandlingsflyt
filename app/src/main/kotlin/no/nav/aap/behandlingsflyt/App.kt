@@ -12,6 +12,7 @@ import io.ktor.server.netty.*
 import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.routing.*
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.aap.behandlingsflyt.api.actuator.actuator
 import no.nav.aap.behandlingsflyt.api.config.definisjoner.configApi
 import no.nav.aap.behandlingsflyt.auditlog.auditlogApi
@@ -130,6 +131,7 @@ fun main() {
 /**
  * Midlertidig. Brukes for å etterfylle verdier i sykepengeerstatningstabllen.
  */
+@WithSpan
 fun etterFyllSykepengeTabell(
     dataSource: DataSource,
 ) {
@@ -137,7 +139,8 @@ fun etterFyllSykepengeTabell(
         val provider = postgresRepositoryRegistry.provider(connection)
         val skriveLåsRepository = provider.provide<TaSkriveLåsRepository>()
 
-        val idSpørring = "select id, behandling_id from sykepenge_erstatning_grunnlag where vurderinger_id is null"
+        val idSpørring =
+            "select id, behandling_id from sykepenge_erstatning_grunnlag" // -- where vurderinger_id is null
         val grunnlagIds = connection.queryList(idSpørring) {
             setRowMapper {
                 Pair(it.getLong("id"), BehandlingId(it.getLong("behandling_id")))
@@ -171,6 +174,8 @@ fun etterFyllSykepengeTabell(
                     }
                 }
 
+                val vurderingId = vurderingerUtenVurderingerId.first
+
                 connection.execute(
                     """
                     update sykepenge_vurdering set vurderinger_id = ? where id = ? and vurderinger_id is null
@@ -178,7 +183,7 @@ fun etterFyllSykepengeTabell(
                 ) {
                     setParams {
                         setLong(1, vurderingerId)
-                        setLong(2, vurderingerUtenVurderingerId.first)
+                        setLong(2, vurderingId)
                     }
                     setResultValidator {
                         log.info("Oppdaterte $it rader.")
@@ -189,13 +194,12 @@ fun etterFyllSykepengeTabell(
                     """
                     update sykepenge_erstatning_grunnlag g
                     set vurderinger_id = ?
-                    where g.behandling_id = ? and g.id = ? and g.vurderinger_id is null
+                    where g.vurdering_id = ? and g.vurderinger_id is null
                 """.trimIndent()
                 ) {
                     setParams {
                         setLong(1, vurderingerId)
-                        setLong(2, behandlingId.id)
-                        setLong(3, id)
+                        setLong(2, vurderingId)
                     }
                     setResultValidator {
                         log.info("Oppdaterte $it rader i sykepenge_erstatning_grunnlag.")
