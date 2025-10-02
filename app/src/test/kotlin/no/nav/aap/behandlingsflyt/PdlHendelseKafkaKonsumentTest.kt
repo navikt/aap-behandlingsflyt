@@ -12,6 +12,7 @@ import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.clients.producer.ProducerRecord
+import org.apache.kafka.common.serialization.Deserializer
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
@@ -76,7 +77,7 @@ class PdlHendelseKafkaKonsumentTest {
         val producerProps = Properties().apply {
             put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.bootstrapServers)
             put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer::class.java.name)
-            put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer::class.java.name)
+            put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer::class.java.name)
             put("schema.registry.url", "mock://schema-registry")
         }
 
@@ -106,17 +107,16 @@ class PdlHendelseKafkaKonsumentTest {
         brokers = brokers,
         ssl = null,
         schemaRegistry = SchemaRegistryConfig(
-            url = "mock://kafka",
+            url = "mock://schema-registry",
             user = "",
             password = "",
-        )
-    ).apply {
-        consumerProperties()[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] =
-            StringDeserializer::class.java.name
-        consumerProperties()[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] =
-            KafkaAvroDeserializer::class.java.name
-        consumerProperties()["specific.avro.reader"] = "true"
-    }
+        ),
+        keyDeserializer =
+            StringDeserializer::class.java as Class<out Deserializer<String>>,
+        valueDeserializer = KafkaAvroDeserializer::class.java as Class<out Deserializer<Personhendelse>>,
+        additionalProperties = Properties().apply {
+            put("specific.avro.reader", true)
+        })
 
 
 }

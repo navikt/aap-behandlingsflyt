@@ -458,8 +458,9 @@ fun Application.startPDLHendelseKonsument(
         }
         t.start()
     }
-    monitor.subscribe(ApplicationStopped) {
-        log.info("Applikasjonen er stoppet, lukker PDLHendelseKonsument.")
+    monitor.subscribe(ApplicationStopPreparing) { environment ->
+        environment.log.info("Forbereder stopp av applikasjon, lukker PDLHendelseKonsument.")
+
         konsument.lukk()
     }
 
