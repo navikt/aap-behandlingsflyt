@@ -140,16 +140,16 @@ fun etterFyllSykepengeTabell(
         val skriveLåsRepository = provider.provide<TaSkriveLåsRepository>()
 
         val idSpørring =
-            "select id, behandling_id from sykepenge_erstatning_grunnlag" // -- where vurderinger_id is null
+            "select id, behandling_id, vurdering_id from sykepenge_erstatning_grunnlag where vurderinger_id is null"
         val grunnlagIds = connection.queryList(idSpørring) {
             setRowMapper {
-                Pair(it.getLong("id"), BehandlingId(it.getLong("behandling_id")))
+                Triple(it.getLong("id"), BehandlingId(it.getLong("behandling_id")), it.getLong("vurdering_id"))
             }
         }
 
         log.info("Fant ${grunnlagIds.size} grunnlag uten vurderinger_id.")
 
-        for ((id, behandlingId) in grunnlagIds) {
+        for ((id, behandlingId, vurderingId) in grunnlagIds) {
             val lås = skriveLåsRepository.låsBehandling(behandlingId)
 
             val vurderingerUtenVurderingerId = connection.queryFirstOrNull(
@@ -206,6 +206,39 @@ fun etterFyllSykepengeTabell(
                     }
                 }
             } else {
+                log.info("Fant ingen vurderinger for behandling $behandlingId med vurdering $vurderingId.")
+                // Etterfyll gamle
+                val vurderingerId = connection.queryFirstOrNull(
+                    """
+                    select * from sykepenge_erstatning_grunnlag where vurderinger_id is not null and vurdering_id = ?
+                """.trimIndent()
+                ) {
+                    setParams {
+                        setLong(1, vurderingId)
+                    }
+                    setRowMapper {
+                        it.getLong("vurderinger_id")
+                    }
+                }
+
+                if (vurderingerId != null) {
+                    connection.execute(
+                        """
+                        update sykepenge_erstatning_grunnlag g set vurderinger_id = ? where g.id = ?
+                    """.trimIndent()
+                    ) {
+                        setParams {
+                            setLong(1, vurderingerId)
+                            setLong(2, id)
+                        }
+                        setResultValidator {
+                            log.info("Oppdaterte $it rader i sykepenge_erstatning_grunnlag.")
+                        }
+                    }
+                } else {
+                    log.info("Fant ingen grunnlag med vurderinger_id for id $id")
+                }
+
                 log.info("Fant ingen vurderinger for behandling $behandlingId.")
             }
 
