@@ -74,8 +74,9 @@ dependencies {
     implementation(libs.ktorServerStatusPages)
 
     implementation("io.micrometer:micrometer-registry-prometheus:1.15.4")
-    implementation("ch.qos.logback:logback-classic:1.5.18")
+    implementation("ch.qos.logback:logback-classic:1.5.19")
     implementation("net.logstash.logback:logstash-logback-encoder:8.1")
+    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.20.1")
 
     implementation(libs.motor)
     implementation(libs.dbconnect)
@@ -98,7 +99,7 @@ dependencies {
 
     runtimeOnly("org.postgresql:postgresql") // låst versjon i root build.gradle.kts
 
-    implementation("ch.qos.logback:logback-classic:1.5.18")
+    implementation("ch.qos.logback:logback-classic:1.5.19")
     implementation("io.opentelemetry.instrumentation:opentelemetry-logback-mdc-1.0:${opentelemetryVersion}")
     implementation("io.opentelemetry.instrumentation:opentelemetry-ktor-3.0:${opentelemetryVersion}")
 

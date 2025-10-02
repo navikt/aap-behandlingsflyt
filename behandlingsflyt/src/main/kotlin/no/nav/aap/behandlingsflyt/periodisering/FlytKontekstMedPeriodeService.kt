@@ -85,6 +85,7 @@ class FlytKontekstMedPeriodeService(
             Vurderingsbehov.REVURDER_YRKESSKADE,
             Vurderingsbehov.REVURDER_LOVVALG,
             Vurderingsbehov.REVURDER_SAMORDNING,
+            Vurderingsbehov.REVURDER_STUDENT,
             Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
             Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP,
             Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
@@ -103,6 +104,7 @@ class FlytKontekstMedPeriodeService(
             Vurderingsbehov.REVURDER_MELDEPLIKT_RIMELIG_GRUNN,
             Vurderingsbehov.OVERGANG_UFORE,
             Vurderingsbehov.OVERGANG_ARBEID,
+            Vurderingsbehov.OPPHOLDSKRAV,
             Vurderingsbehov.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT ->
                 REVURDERING
 

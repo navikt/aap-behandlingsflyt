@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom
 
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -27,7 +26,7 @@ class SykdomsvurderingTest {
             opprettet = Instant.now(),
         )
 
-        assertThat(vurdering.erOppfylt(TypeBehandling.Førstegangsbehandling, LocalDate.now())).isFalse
+        assertThat(vurdering.erOppfylt(LocalDate.now())).isFalse
         assertThat(vurdering.erOppfyltSettBortIfraVissVarighet()).isTrue
     }
 
@@ -52,7 +51,7 @@ class SykdomsvurderingTest {
             opprettet = Instant.now(),
         )
 
-        assertThat(vurdering.erOppfylt(TypeBehandling.Revurdering, gjelderFra.plusMonths(1))).isTrue
+        assertThat(vurdering.erOppfylt(gjelderFra.plusMonths(1))).isTrue
     }
 
     @Test
@@ -73,7 +72,7 @@ class SykdomsvurderingTest {
             opprettet = Instant.now(),
         )
 
-        assertThat(vurdering.erOppfylt(TypeBehandling.Revurdering, gjelderFra)).isFalse
+        assertThat(vurdering.erOppfylt(gjelderFra)).isFalse
     }
 
     companion object {

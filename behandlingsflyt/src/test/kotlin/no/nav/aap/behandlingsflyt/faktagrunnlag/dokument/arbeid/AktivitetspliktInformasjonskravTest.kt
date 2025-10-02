@@ -10,12 +10,9 @@ import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7RepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.avbrytrevurdering.AvbrytRevurderingRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.søknad.TrukketSøknadRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -34,7 +31,6 @@ import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDatabase
-import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.assertj.core.api.Assertions.assertThat
@@ -44,13 +40,7 @@ import java.time.ZoneOffset
 import javax.sql.DataSource
 
 class AktivitetspliktInformasjonskravTest {
-    private val repositoryRegistry = RepositoryRegistry()
-        .register<TrukketSøknadRepositoryImpl>()
-        .register<AvklaringsbehovRepositoryImpl>()
-        .register<Aktivitetsplikt11_7RepositoryImpl>()
-        .register<VilkårsresultatRepositoryImpl>()
-        .register<BehandlingRepositoryImpl>()
-        .register<AvbrytRevurderingRepositoryImpl>()
+
 
     @TestDatabase
     lateinit var dataSource: DataSource
@@ -120,7 +110,7 @@ class AktivitetspliktInformasjonskravTest {
             )
 
             val aktivitetspliktInformasjonskrav = AktivitetspliktInformasjonskrav.konstruer(
-                repositoryRegistry.provider(connection),
+                postgresRepositoryRegistry.provider(connection),
                 createGatewayProvider { register<FakeUnleashFasttrackAktivitetsplikt>() },
             )
             val flytKontekstMedPerioder = flytKontekstMedPerioder(effektueringsbehandling, sak)
@@ -183,7 +173,7 @@ class AktivitetspliktInformasjonskravTest {
         vurdering: (behandlingId: BehandlingId) -> Aktivitetsplikt11_7Vurdering,
     ): Behandling {
         return dataSource.transaction { connection ->
-            val repositoryProvider = repositoryRegistry.provider(connection)
+            val repositoryProvider = postgresRepositoryRegistry.provider(connection)
             val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
             val Aktivitetsplikt11_7Repository = repositoryProvider.provide<Aktivitetsplikt11_7Repository>()
 
@@ -218,9 +208,9 @@ class AktivitetspliktInformasjonskravTest {
             PersonRepositoryImpl(connection),
             SakRepositoryImpl(connection)
         ).finnEllerOpprett(
-                ident(),
-                Periode(fom = LocalDate.of(2020, 1, 1), tom = LocalDate.of(2020, 2, 2))
-            )
+            ident(),
+            Periode(fom = LocalDate.of(2020, 1, 1), tom = LocalDate.of(2020, 2, 2))
+        )
     }
 
 }

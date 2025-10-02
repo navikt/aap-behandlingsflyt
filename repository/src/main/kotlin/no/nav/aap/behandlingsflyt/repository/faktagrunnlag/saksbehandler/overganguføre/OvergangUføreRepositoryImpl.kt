@@ -101,12 +101,12 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
         }
     }
 
-    override fun lagre(behandlingId: BehandlingId, overganguforevurderinger: List<OvergangUføreVurdering>) {
+    override fun lagre(behandlingId: BehandlingId, overgangUføreVurderinger: List<OvergangUføreVurdering>) {
         val overgangUforeGrunnlag = hentHvisEksisterer(behandlingId)
 
         val nyttGrunnlag = OvergangUføreGrunnlag(
             id = null,
-            vurderinger = overganguforevurderinger
+            vurderinger = overgangUføreVurderinger
         )
 
         if (overgangUforeGrunnlag != nyttGrunnlag) {
