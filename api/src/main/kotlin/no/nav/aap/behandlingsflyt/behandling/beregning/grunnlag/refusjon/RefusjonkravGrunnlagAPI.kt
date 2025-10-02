@@ -4,7 +4,6 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
-import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.navenheter.NavKontorService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
@@ -41,13 +40,9 @@ fun NormalOpenAPIRoute.refusjonGrunnlagAPI(
                     dataSource.transaction(readOnly = true) { connection ->
                         val repositoryProvider = repositoryRegistry.provider(connection)
                         val refusjonkravRepository = repositoryProvider.provide<RefusjonkravRepository>()
-                        val avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider)
 
                         val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                         val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
-                        val behandlingerIderMedAvbrutteRevurdering =
-                            avbrytRevurderingService.hentBehandlingerMedAvbruttRevurderingForSak(behandling.sakId)
-                                .map { it.id }
 
                         //TODO: Skal fikses etter prodsetting slik at det bare er gjeldendeVurderinger man skal forholde seg til
                         val gjeldendeVurderinger = refusjonkravRepository.hentHvisEksisterer(behandling.id)?.map {
@@ -55,11 +50,10 @@ fun NormalOpenAPIRoute.refusjonGrunnlagAPI(
                             }
                         val gjeldendeVurdering =
                             gjeldendeVurderinger?.firstOrNull()
-                        val historiskeVurderinger = refusjonkravRepository.hentHistoriskeVurderinger(
-                            behandling.sakId,
-                            behandling.id,
-                            behandlingerIderMedAvbrutteRevurdering
-                        ).map { it.tilResponse(ansattInfoService) }
+                        val historiskeVurderinger =
+                            refusjonkravRepository
+                                .hentHistoriskeVurderinger(behandling.sakId, behandling.id)
+                                .map { it.tilResponse(ansattInfoService) }
 
                         RefusjonkravGrunnlagResponse(
                             harTilgangTilÅSaksbehandle = kanSaksbehandle(),

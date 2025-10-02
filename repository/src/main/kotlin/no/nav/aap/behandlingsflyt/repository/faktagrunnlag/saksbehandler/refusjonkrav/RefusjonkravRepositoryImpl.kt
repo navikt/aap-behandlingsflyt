@@ -73,32 +73,22 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
         }.flatten()
     }
 
-    override fun hentHistoriskeVurderinger(
-        sakId: SakId,
-        behandlingId: BehandlingId,
-        ekskluderteBehandlingIdListe: List<BehandlingId>
-    ): List<RefusjonkravVurdering> {
-        val harEkskludering = ekskluderteBehandlingIdListe.isNotEmpty()
-        var query = """
+    override fun hentHistoriskeVurderinger(sakId: SakId, behandlingId: BehandlingId): List<RefusjonkravVurdering> {
+        val query = """
             SELECT REFUSJONKRAV_VURDERINGER_ID
             FROM REFUSJONKRAV_GRUNNLAG G
                 JOIN BEHANDLING B1 ON B1.ID = G.BEHANDLING_ID
+                LEFT JOIN AVBRYT_REVURDERING_GRUNNLAG AR ON AR.BEHANDLING_ID = B1.ID
             WHERE G.AKTIV
             AND B1.SAK_ID = ?
-            AND B1.OPPRETTET_TID < (SELECT B2.OPPRETTET_TID FROM BEHANDLING B2 WHERE ID = ?)
+            AND B1.OPPRETTET_TID < (SELECT B2.OPPRETTET_TID FROM BEHANDLING B2 WHERE B2.ID = ?)
+            AND AR.BEHANDLING_ID IS NULL
         """.trimIndent()
-
-        if (harEkskludering) {
-            query = "$query AND B1.ID <> ALL(?::bigint[])"
-        }
 
         return connection.queryList(query) {
             setParams {
                 setLong(1, sakId.id)
                 setLong(2, behandlingId.id)
-                if (harEkskludering) {
-                    setLongArray(3, ekskluderteBehandlingIdListe.map { it.toLong() })
-                }
             }
             setRowMapper {
                 hentRefusjonkrav(it.getLong("REFUSJONKRAV_VURDERINGER_ID"))
@@ -137,15 +127,13 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
     override fun slett(behandlingId: BehandlingId) {
         val refusjonskravVurderingerIds = getRefusjonskravVurderingerIds(behandlingId)
 
-        val deletedRows = connection.executeReturnUpdated(
-            """
+        val deletedRows = connection.executeReturnUpdated("""
             delete from REFUSJONKRAV_GRUNNLAG where behandling_id = ?;
             delete from REFUSJONKRAV_VURDERING where refusjonkrav_vurderinger_id = ANY(?::bigint[]);
             delete from REFUSJONKRAV_VURDERINGER where id = ANY(?::bigint[]);
  
             
-        """.trimIndent()
-        ) {
+        """.trimIndent()) {
             setParams {
                 setLong(1, behandlingId.id)
                 setLongArray(2, refusjonskravVurderingerIds)

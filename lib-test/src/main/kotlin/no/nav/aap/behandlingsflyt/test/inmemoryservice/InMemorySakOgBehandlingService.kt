@@ -23,7 +23,6 @@ val InMemorySakOgBehandlingService = SakOgBehandlingService(
     ),
     unleashGateway = FakeUnleash,
     avbrytRevurderingService = AvbrytRevurderingService(
-        InMemoryAvbrytRevurderingRepository,
-        InMemoryBehandlingRepository
+        InMemoryAvbrytRevurderingRepository
     )
 )

@@ -55,30 +55,23 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
 
     override fun hentHistoriskeVurderinger(
         sakId: SakId,
-        behandlingId: BehandlingId,
-        ekskluderteBehandlingIdListe: List<BehandlingId>
+        behandlingId: BehandlingId
     ): List<HistoriskManuellVurderingForForutgåendeMedlemskap> {
-        val harEkskludering = ekskluderteBehandlingIdListe.isNotEmpty()
-        var query = """
+        val query = """
             SELECT vurdering.*
             FROM FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG grunnlag
             INNER JOIN FORUTGAAENDE_MEDLEMSKAP_MANUELL_VURDERING vurdering ON grunnlag.MANUELL_VURDERING_ID = vurdering.ID
             JOIN BEHANDLING behandling ON grunnlag.BEHANDLING_ID = behandling.ID
+            LEFT JOIN AVBRYT_REVURDERING_GRUNNLAG ar ON ar.BEHANDLING_ID = behandling.ID
             WHERE grunnlag.AKTIV AND behandling.SAK_ID = ?
-              AND behandling.opprettet_tid < (SELECT a.opprettet_tid from behandling a where id = ?)
+                AND behandling.opprettet_tid < (SELECT a.opprettet_tid from behandling a where a.id = ?)
+                AND ar.BEHANDLING_ID IS NULL
         """.trimIndent()
-
-        if (harEkskludering) {
-            query = "$query AND behandling.ID <> ALL(?::bigint[])"
-        }
 
         val vurderinger = connection.queryList(query) {
             setParams {
                 setLong(1, sakId.id)
                 setLong(2, behandlingId.id)
-                if (harEkskludering) {
-                    setLongArray(3, ekskluderteBehandlingIdListe.map { it.toLong() })
-                }
             }
             setRowMapper {
                 InternalHistoriskManuellVurderingForForutgåendeMedlemskap(

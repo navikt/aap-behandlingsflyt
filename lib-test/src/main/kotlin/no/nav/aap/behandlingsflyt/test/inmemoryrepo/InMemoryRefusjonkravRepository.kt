@@ -16,8 +16,7 @@ object InMemoryRefusjonKravRepository : RefusjonkravRepository {
 
     override fun hentHistoriskeVurderinger(
         sakId: SakId,
-        behandlingId: BehandlingId,
-        ekskluderteBehandlingIdListe: List<BehandlingId>
+        behandlingId: BehandlingId
     ): List<RefusjonkravVurdering> {
         return emptyList()
     }

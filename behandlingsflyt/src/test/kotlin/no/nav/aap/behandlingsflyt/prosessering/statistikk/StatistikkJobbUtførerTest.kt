@@ -527,8 +527,7 @@ class StatistikkJobbUtførerTest {
 
             override fun hentHistoriskeSykdomsvurderinger(
                 sakId: SakId,
-                behandlingId: BehandlingId,
-                ekskluderteBehandlingIdListe: List<BehandlingId>
+                behandlingId: BehandlingId
             ): List<Sykdomsvurdering> {
                 TODO("Not yet implemented")
             }

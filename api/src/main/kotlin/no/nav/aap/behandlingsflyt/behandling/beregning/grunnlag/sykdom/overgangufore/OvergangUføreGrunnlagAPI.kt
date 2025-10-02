@@ -4,7 +4,6 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
-import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreVurdering
@@ -41,19 +40,12 @@ fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val overgangUforeRepository = repositoryProvider.provide<OvergangUføreRepository>()
                     val sykdomRepository = repositoryProvider.provide<SykdomRepository>()
-                    val avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider)
 
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
-                    val behandlingerIderMedAvbrutteRevurdering =
-                        avbrytRevurderingService.hentBehandlingerMedAvbruttRevurderingForSak(behandling.sakId)
-                            .map { it.id }
 
-                    val historiskeVurderinger = overgangUforeRepository.hentHistoriskeOvergangUforeVurderinger(
-                        behandling.sakId,
-                        behandling.id,
-                        behandlingerIderMedAvbrutteRevurdering
-                    )
+                    val historiskeVurderinger =
+                        overgangUforeRepository.hentHistoriskeOvergangUforeVurderinger(behandling.sakId, behandling.id)
                     val grunnlag = overgangUforeRepository.hentHvisEksisterer(behandling.id)
                     val nåTilstand = grunnlag?.vurderinger.orEmpty()
                     val vedtatteOvergangUførevurderinger = behandling.forrigeBehandlingId
@@ -69,17 +61,9 @@ fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(
                     OvergangUføreGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         vurdering = vurdering?.tilResponse(ansattInfoService = ansattInfoService),
-                        gjeldendeVedtatteVurderinger = vedtatteOvergangUførevurderinger.map {
-                            it.tilResponse(
-                                ansattInfoService = ansattInfoService
-                            )
-                        },
+                        gjeldendeVedtatteVurderinger = vedtatteOvergangUførevurderinger.map { it.tilResponse(ansattInfoService = ansattInfoService) },
                         historiskeVurderinger = historiskeVurderinger.map { it.tilResponse(ansattInfoService = ansattInfoService) },
-                        gjeldendeSykdsomsvurderinger = gjeldendeSykdomsvurderinger.map {
-                            it.tilResponse(
-                                ansattInfoService
-                            )
-                        },
+                        gjeldendeSykdsomsvurderinger = gjeldendeSykdomsvurderinger.map { it.tilResponse(ansattInfoService) },
                     )
                 }
 
@@ -89,10 +73,7 @@ fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(
     }
 }
 
-private fun OvergangUføreVurdering.tilResponse(
-    erGjeldende: Boolean? = false,
-    ansattInfoService: AnsattInfoService
-): OvergangUføreVurderingResponse {
+private fun OvergangUføreVurdering.tilResponse(erGjeldende: Boolean? = false, ansattInfoService: AnsattInfoService): OvergangUføreVurderingResponse {
     val navnOgEnhet = ansattInfoService.hentAnsattNavnOgEnhet(vurdertAv)
     return OvergangUføreVurderingResponse(
         begrunnelse = begrunnelse,

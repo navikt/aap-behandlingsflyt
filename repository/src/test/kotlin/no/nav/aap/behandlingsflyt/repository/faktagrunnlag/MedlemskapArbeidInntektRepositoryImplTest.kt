@@ -109,7 +109,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
                 )
             lagNyFullVurdering(behandling.id, repo, "Første begrunnelse")
 
-            val historikk = repo.hentHistoriskeVurderinger(sak.id, behandling.id, emptyList())
+            val historikk = repo.hentHistoriskeVurderinger(sak.id, behandling.id)
             assertEquals(0, historikk.size)
 
             behandling
@@ -131,7 +131,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
                     )
                 )
 
-            val historikk = repo.hentHistoriskeVurderinger(revurdering.sakId, revurdering.id, emptyList())
+            val historikk = repo.hentHistoriskeVurderinger(revurdering.sakId, revurdering.id)
             lagNyFullVurdering(revurdering.id, repo, "Andre begrunnelse")
             assertEquals(1, historikk.size)
         }

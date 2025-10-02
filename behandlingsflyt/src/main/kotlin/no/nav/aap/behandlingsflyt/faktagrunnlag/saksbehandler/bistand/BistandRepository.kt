@@ -6,12 +6,7 @@ import no.nav.aap.lookup.repository.Repository
 
 interface BistandRepository : Repository {
     fun hentHvisEksisterer(behandlingId: BehandlingId): BistandGrunnlag?
-    fun hentHistoriskeBistandsvurderinger(
-        sakId: SakId,
-        behandlingId: BehandlingId,
-        ekskluderteBehandlingIdListe: List<BehandlingId>
-    ): List<BistandVurdering>
-
+    fun hentHistoriskeBistandsvurderinger(sakId: SakId, behandlingId: BehandlingId): List<BistandVurdering>
     fun lagre(behandlingId: BehandlingId, bistandsvurderinger: List<BistandVurdering>)
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
 }

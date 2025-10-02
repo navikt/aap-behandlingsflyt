@@ -5,7 +5,6 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattNavnOgEnhet
-import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
@@ -46,11 +45,7 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val uføreRepository = repositoryProvider.provide<UføreRepository>()
                     val beregningVurderingRepository = repositoryProvider.provide<BeregningVurderingRepository>()
-                    val avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider)
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
-                    val behandlingerIderMedAvbrutteRevurdering =
-                        avbrytRevurderingService.hentBehandlingerMedAvbruttRevurderingForSak(behandling.sakId)
-                            .map { it.id }
 
                     // Dette er logikk, burde i egen service
                     val skalVurdereUføre =
@@ -58,11 +53,8 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(
 
                     val beregningGrunnlag =
                         beregningVurderingRepository.hentHvisEksisterer(behandlingId = behandling.id)
-                    val historiskeVurderinger = beregningVurderingRepository.hentHistoriskeVurderinger(
-                        behandling.sakId,
-                        behandling.id,
-                        behandlingerIderMedAvbrutteRevurdering
-                    )
+                    val historiskeVurderinger =
+                        beregningVurderingRepository.hentHistoriskeVurderinger(behandling.sakId, behandling.id)
 
                     BeregningTidspunktAvklaringResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
@@ -88,24 +80,16 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(
                     val sykdomRepository = repositoryProvider.provide<SykdomRepository>()
                     val yrkesskadeRepository = repositoryProvider.provide<YrkesskadeRepository>()
                     val beregningVurderingRepository = repositoryProvider.provide<BeregningVurderingRepository>()
-                    val avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider)
 
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
-                    val behandlingerIderMedAvbrutteRevurdering =
-                        avbrytRevurderingService.hentBehandlingerMedAvbruttRevurderingForSak(behandling.sakId)
-                            .map { it.id }
                     val yrkesskadevurdering =
                         sykdomRepository.hentHvisEksisterer(behandling.id)?.yrkesskadevurdering
                     val registerYrkeskade =
                         yrkesskadeRepository.hentHvisEksisterer(behandling.id)?.yrkesskader?.yrkesskader.orEmpty()
                     val beregningGrunnlag = beregningVurderingRepository
                         .hentHvisEksisterer(behandlingId = behandling.id)
-                    val historiskeVurderinger =
-                        beregningVurderingRepository.hentHistoriskeVurderinger(
-                            behandling.sakId,
-                            behandling.id,
-                            behandlingerIderMedAvbrutteRevurdering
-                        )
+                    val historiskeVurderinger = beregningVurderingRepository
+                        .hentHistoriskeVurderinger(behandling.sakId, behandling.id)
 
                     val relevanteSaker = yrkesskadevurdering?.relevanteSaker.orEmpty()
                     val sakerMedDato =

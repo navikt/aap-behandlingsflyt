@@ -68,13 +68,7 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
         )
     }
 
-    override fun hentHistoriskeBistandsvurderinger(
-        sakId: SakId,
-        behandlingId: BehandlingId,
-        ekskluderteBehandlingIdListe: List<BehandlingId>
-    ): List<BistandVurdering> {
-        val harEkskludering = ekskluderteBehandlingIdListe.isNotEmpty()
-        val whereEkskludering = if (harEkskludering) "AND beh.id <> ALL(?::bigint[])" else ""
+    override fun hentHistoriskeBistandsvurderinger(sakId: SakId, behandlingId: BehandlingId): List<BistandVurdering> {
         val query = """WITH vurderinger_historikk AS (
             SELECT DISTINCT ON (
                 b.begrunnelse,
@@ -92,6 +86,7 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
                      JOIN bistand_vurderinger v ON g.bistand_vurderinger_id = v.id
                      JOIN bistand b ON b.bistand_vurderinger_id = v.id
                      JOIN behandling beh ON g.behandling_id = beh.id
+                     LEFT JOIN avbryt_revurdering_grunnlag ar ON ar.behandling_id = beh.id
             WHERE g.aktiv
               AND beh.sak_id = ?
               AND beh.opprettet_tid < (
@@ -99,7 +94,7 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
                 FROM behandling
                 WHERE id = ?
             )
-            $whereEkskludering
+                AND ar.behandling_id IS NULL
         )
         SELECT * FROM vurderinger_historikk;
         """.trimIndent()
@@ -108,9 +103,6 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
             setParams {
                 setLong(1, sakId.id)
                 setLong(2, behandlingId.id)
-                if (harEkskludering) {
-                    setLongArray(3, ekskluderteBehandlingIdListe.map { it.toLong() })
-                }
             }
             setRowMapper(::bistandvurderingRowMapper)
         }
@@ -136,14 +128,12 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
 
         val bistandVurderingerIds = getBistandVurderingerIds(behandlingId)
 
-        val deletedRows = connection.executeReturnUpdated(
-            """
+        val deletedRows = connection.executeReturnUpdated("""
             delete from bistand_grunnlag where behandling_id = ?; 
             delete from bistand where bistand_vurderinger_id = ANY(?::bigint[]);
             delete from bistand_vurderinger where id = ANY(?::bigint[]);
            
-        """.trimIndent()
-        ) {
+        """.trimIndent()) {
             setParams {
                 setLong(1, behandlingId.id)
                 setLongArray(2, bistandVurderingerIds)

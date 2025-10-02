@@ -10,5 +10,5 @@ interface ManuellInntektGrunnlagRepository : Repository {
     fun lagre(behandlingId: BehandlingId, manuellVurderinger: Set<ManuellInntektVurdering>)
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
     fun hentHvisEksisterer(behandlingId: BehandlingId): ManuellInntektGrunnlag?
-    fun hentHistoriskeVurderinger(sakId: SakId, behandlingId: BehandlingId, ekskluderteBehandlingIdListe: List<BehandlingId>): List<ManuellInntektVurdering>
+    fun hentHistoriskeVurderinger(sakId: SakId, behandlingId: BehandlingId): List<ManuellInntektVurdering>
 }

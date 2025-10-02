@@ -4,7 +4,6 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
-import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektForutgåendeRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -28,25 +27,18 @@ fun NormalOpenAPIRoute.forutgåendeMedlemskapAPI(
         route("/{referanse}/grunnlag/forutgaaendemedlemskap") {
             getGrunnlag<BehandlingReferanse, ForutgåendeMedlemskapGrunnlagResponse>(
                 behandlingPathParam = BehandlingPathParam("referanse"),
-                avklaringsbehovKode = Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP.kode.toString()
+                avklaringsbehovKode =  Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP.kode.toString()
             ) { req ->
                 val grunnlag = dataSource.transaction { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val forutgåendeRepository =
                         repositoryProvider.provide<MedlemskapArbeidInntektForutgåendeRepository>()
-                    val avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider)
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
-                    val behandlingerIderMedAvbrutteRevurdering =
-                        avbrytRevurderingService.hentBehandlingerMedAvbruttRevurderingForSak(behandling.sakId)
-                            .map { it.id }
 
                     val data = forutgåendeRepository.hentHvisEksisterer(behandling.id)?.manuellVurdering
-                    val historiskeManuelleVurderinger = forutgåendeRepository.hentHistoriskeVurderinger(
-                        behandling.sakId,
-                        behandling.id,
-                        behandlingerIderMedAvbrutteRevurdering
-                    )
+                    val historiskeManuelleVurderinger =
+                        forutgåendeRepository.hentHistoriskeVurderinger(behandling.sakId, behandling.id)
                     val ansattNavnOgEnhet = data?.let { ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv) }
 
 

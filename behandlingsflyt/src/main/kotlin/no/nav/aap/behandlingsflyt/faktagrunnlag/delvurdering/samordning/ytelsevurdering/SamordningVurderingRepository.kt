@@ -6,12 +6,7 @@ import no.nav.aap.lookup.repository.Repository
 
 interface SamordningVurderingRepository : Repository {
     fun hentHvisEksisterer(behandlingId: BehandlingId): SamordningVurderingGrunnlag?
-    fun hentHistoriskeVurderinger(
-        sakId: SakId,
-        behandlingId: BehandlingId,
-        ekskluderteBehandlingIdListe: List<BehandlingId>
-    ): List<SamordningVurderingGrunnlag>
-
+    fun hentHistoriskeVurderinger(sakId: SakId, behandlingId: BehandlingId): List<SamordningVurderingGrunnlag>
     fun lagreVurderinger(
         behandlingId: BehandlingId,
         samordningVurderinger: SamordningVurderingGrunnlag
