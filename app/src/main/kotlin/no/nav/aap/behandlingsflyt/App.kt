@@ -65,7 +65,6 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.meldepliktOverstyringGrun
 import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerAPI
 import no.nav.aap.behandlingsflyt.drift.driftAPI
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
 import no.nav.aap.behandlingsflyt.flyt.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flytApi
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
@@ -137,7 +136,6 @@ fun etterFyllSykepengeTabell(
     dataSource.transaction { connection ->
         val provider = postgresRepositoryRegistry.provider(connection)
         val skriveLåsRepository = provider.provide<TaSkriveLåsRepository>()
-        val sykepengeRepo = provider.provide<SykepengerErstatningRepository>()
 
         val idSpørring = "select id, behandling_id from sykepenge_erstatning_grunnlag where vurderinger_id is null"
         val grunnlagIds = connection.queryList(idSpørring) {
@@ -206,10 +204,9 @@ fun etterFyllSykepengeTabell(
             } else {
                 log.info("Fant ingen vurderinger for behandling $behandlingId.")
             }
-            val original = sykepengeRepo.hent(behandlingId)
-            sykepengeRepo.lagre(behandlingId, original.vurdering)
 
             skriveLåsRepository.verifiserSkrivelås(lås)
+            connection.markerSavepoint()
         }
     }
 }
@@ -381,7 +378,7 @@ fun Application.startKabalKonsument(
         config = KafkaConsumerConfig(), dataSource = dataSource, repositoryRegistry = repositoryRegistry
     )
     monitor.subscribe(ApplicationStarted) {
-        val t = Thread() {
+        val t = Thread {
             konsument.konsumer()
         }
         t.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, e ->
