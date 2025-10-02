@@ -29,8 +29,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderRett
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.YrkesskadevurderingDto
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.mellomlagring.MellomlagretVurdering
-import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.AvklarOppholdkravLøsningPeriodeDto
-import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.AvklarOppholdskravLøsningDto
+import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.AvklarOppholdkravLøsningForPeriodeDto
 
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLand
@@ -623,15 +622,12 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
             behandling = this,
             avklaringsBehovLøsning =
                 AvklarOppholdskravLøsning(
-                    vurdering = AvklarOppholdskravLøsningDto(
-                        perioder = listOf(
-                            AvklarOppholdkravLøsningPeriodeDto(
-                                oppfylt = true,
-                                land = "SE:Sverige",
-                                fom = LocalDate.now(),
-                                begrunnelse = "Fiske"
-
-                            )
+                    løsningerForPerioder = listOf(
+                        AvklarOppholdkravLøsningForPeriodeDto(
+                            oppfylt = true,
+                            land = "",
+                            fom = LocalDate.now(),
+                            begrunnelse = "Fiske"
                         )
                     )
                 )

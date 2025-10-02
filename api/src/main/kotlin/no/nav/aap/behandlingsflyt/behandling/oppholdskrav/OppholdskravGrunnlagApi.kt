@@ -49,12 +49,14 @@ fun NormalOpenAPIRoute.oppholdskravGrunnlagApi(
 
                     OppholdskravGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
-                        oppholdskravVurdering = vurdering?.tilDto(ansattInfoService),
-                        gjeldendeVedtatteVurderinger = gjeldendeVedtatteVurderinger
+                        behøverVurderinger = emptyList(), // TODO: må beregnes
+                        kanVurderes = emptyList(), // TODO: Skal være hele rettighetsperioden
+                        nyeVurderinger = vurdering?.tilDto(ansattInfoService) ?: emptyList(),
+                        sisteVedtatteVurderinger = gjeldendeVedtatteVurderinger
                             .tilTidslinje()
                             .segmenter()
                             .map { segment ->
-                                TidligereOppholdskravVurderingDto(
+                                OppholdskravVurderingDto(
                                     vurdertAv = VurdertAvResponse.fraIdent(segment.verdi.vurdertAv, segment.verdi.opprettet.toLocalDate(), ansattInfoService),
                                     fom = segment.fom(),
                                     tom = if (segment.tom().isEqual( LocalDate.MAX)) null else segment.tom(),

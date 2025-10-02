@@ -1,47 +1,39 @@
 package no.nav.aap.behandlingsflyt.behandling.oppholdskrav
 
+import no.nav.aap.behandlingsflyt.PeriodiserteVurderingerDto
+import no.nav.aap.behandlingsflyt.VurderingDto
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
 
 data class OppholdskravGrunnlagResponse(
-    val harTilgangTilÅSaksbehandle: Boolean,
-    val oppholdskravVurdering: OppholdskravVurderingDto?,
-    val gjeldendeVedtatteVurderinger: List<TidligereOppholdskravVurderingDto>
-)
+    override val harTilgangTilÅSaksbehandle: Boolean,
+    override val sisteVedtatteVurderinger: List<OppholdskravVurderingDto>,
+    override val nyeVurderinger: List<OppholdskravVurderingDto>,
+    override val kanVurderes: List<Periode>,
+    override val behøverVurderinger: List<Periode>
+) : PeriodiserteVurderingerDto<OppholdskravVurderingDto>
 
 data class OppholdskravVurderingDto(
-    val vurdertAv: VurdertAvResponse? = null,
-    val perioder: List<OppholdskravPeriodeDto>,
-)
-
-data class OppholdskravPeriodeDto(
     val oppfylt: Boolean,
     val begrunnelse: String,
     val land: String?,
-    val fom: LocalDate,
-    val tom: LocalDate? = null,
-)
+    override val fom: LocalDate,
+    override val tom: LocalDate?,
+    override val vurdertAv: VurdertAvResponse?,
+    override val kvalitetssikretAv: VurdertAvResponse? = null,
+    override val besluttetAv: VurdertAvResponse? = null
+): VurderingDto
 
-data class TidligereOppholdskravVurderingDto(
-    val vurdertAv: VurdertAvResponse? = null,
-    val oppfylt: Boolean,
-    val begrunnelse: String,
-    val land: String?,
-    val fom: LocalDate,
-    val tom: LocalDate? = null,
-)
-
-fun OppholdskravVurdering.tilDto(ansattInfoService: AnsattInfoService): OppholdskravVurderingDto =
-    OppholdskravVurderingDto(
-        perioder = perioder.map {
-            OppholdskravPeriodeDto(
-                oppfylt = it.oppfylt,
-                begrunnelse = it.begrunnelse,
-                land = it.land,
-                fom = it.fom,
-                tom = it.tom,
-            )
-        },
-        vurdertAv = VurdertAvResponse.fraIdent(vurdertAv, opprettet.toLocalDate(), ansattInfoService)
-    )
+fun OppholdskravVurdering.tilDto(ansattInfoService: AnsattInfoService): List<OppholdskravVurderingDto> =
+    perioder.map {
+        OppholdskravVurderingDto(
+            oppfylt = it.oppfylt,
+            begrunnelse = it.begrunnelse,
+            land = it.land,
+            fom = it.fom,
+            tom = it.tom,
+            vurdertAv = VurdertAvResponse.fraIdent(vurdertAv, opprettet.toLocalDate(), ansattInfoService)
+        )
+    }

@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.oppholdskrav
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.utils.Validation
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -20,24 +21,7 @@ data class OppholdskravGrunnlag(
 
 fun List<OppholdskravVurdering>.tilTidslinje(): Tidslinje<OppholdakravTidslinjeData> =
     this.sortedBy { it.opprettet }
-        .map { vurdering ->
-            Tidslinje(
-                vurdering.perioder
-                    .sortedBy { it.fom }
-                    .map { periode ->
-                        Segment(
-                            periode = Periode(fom = periode.fom, tom = periode.tom ?: LocalDate.MAX),
-                            verdi = OppholdakravTidslinjeData(
-                                land = periode.land,
-                                opprettet = vurdering.opprettet,
-                                oppfylt = periode.oppfylt,
-                                begrunnelse = periode.begrunnelse,
-                                vurdertAv = vurdering.vurdertAv
-                            )
-                        )
-                    }
-            )
-        }
+        .map { it.tilTidslinje() }
         .fold(Tidslinje()) { acc, other ->
             acc.kombiner(other, StandardSammenslåere.prioriterHøyreSideCrossJoin())
         }
@@ -47,7 +31,49 @@ data class OppholdskravVurdering(
     val vurdertAv: String,
     val vurdertIBehandling: BehandlingId,
     val perioder: List<OppholdskravPeriode>,
-)
+) {
+    fun tilTidslinje(): Tidslinje<OppholdakravTidslinjeData> {
+        return Tidslinje(
+            perioder.sortedBy { it.fom }
+                .map { periode ->
+                    Segment(
+                        periode = Periode(fom = periode.fom, tom = periode.tom ?: LocalDate.MAX),
+                        verdi = OppholdakravTidslinjeData(
+                            land = periode.land,
+                            opprettet = opprettet,
+                            oppfylt = periode.oppfylt,
+                            begrunnelse = periode.begrunnelse,
+                            vurdertAv = vurdertAv
+                        )
+                    )
+                }
+        )
+    }
+
+    fun validerGyldigForRettighetsperiode(rettighetsperiode: Periode): Validation<OppholdskravVurdering> {
+        return tilTidslinje()
+            .validerGyldigForRettighetsperiode(rettighetsperiode)
+            .map { this }
+    }
+}
+
+fun Tidslinje<OppholdakravTidslinjeData>.validerGyldigForRettighetsperiode(rettighetsperiode: Periode): Validation<Tidslinje<OppholdakravTidslinjeData>> {
+    val periodeForVurdering = helePerioden()
+
+    if (!erSammenhengende()) {
+        return Validation.Invalid(this, "Periodene for oppholdskrav er ikke sammenhengende")
+    }
+
+    if(periodeForVurdering.fom > rettighetsperiode.fom) {
+        return Validation.Invalid(this, "Det er ikke tatt stilling til hele rettighetsperioden. Rettisgetsperioden for saken starter ${rettighetsperiode.fom} mens vurderingens første periode starter ${periodeForVurdering.fom}. ")
+    }
+
+    if(periodeForVurdering.tom < rettighetsperiode.tom) {
+        return Validation.Invalid(this, "Det er ikke tatt stilling til hele rettighetsperioden. Rettisgetsperioden for saken slutter ${rettighetsperiode.tom} mens vurderingens siste periode slutter ${periodeForVurdering.tom}. ")
+    }
+
+    return Validation.Valid(this)
+}
 
 data class OppholdskravPeriode(
     val fom: LocalDate,
