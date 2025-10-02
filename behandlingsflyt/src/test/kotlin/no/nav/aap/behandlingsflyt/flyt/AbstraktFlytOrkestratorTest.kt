@@ -1275,11 +1275,12 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         return this.løsAvklaringsBehov(vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
     }
 
+    @JvmName("leggTilVurderingsbehovForBehandlingExt")
     protected fun leggTilVurderingsbehovForBehandling(
         behandling: Behandling,
         vurderingsbehov: List<VurderingsbehovMedPeriode>,
         årsakTilOpprettelse: ÅrsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD
-    ) {
+    ): Behandling {
         dataSource.transaction { connection ->
             SakOgBehandlingService(postgresRepositoryRegistry.provider(connection), gatewayProvider)
                 .finnEllerOpprettOrdinærBehandling(
@@ -1287,7 +1288,14 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                     VurderingsbehovOgÅrsak(vurderingsbehov, årsakTilOpprettelse)
                 )
         }
-        prosesserBehandling(behandling)
+        return prosesserBehandling(behandling)
+    }
+
+    protected fun Behandling.leggTilVurderingsbehovForBehandling(
+        vurderingsbehov: List<VurderingsbehovMedPeriode>,
+        årsakTilOpprettelse: ÅrsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD
+    ): Behandling {
+        return leggTilVurderingsbehovForBehandling(this, vurderingsbehov, årsakTilOpprettelse)
     }
 
     protected fun prosesserBehandling(behandling: Behandling): Behandling {
