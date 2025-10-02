@@ -481,42 +481,42 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         )
     }
 
-    protected fun løsFramTilGrunnlag(behandling: Behandling) {
-        var behandling = behandling
-        behandling = løsSykdom(behandling)
-        behandling = løsAvklaringsBehov(
-            behandling,
-            AvklarBistandsbehovLøsning(
-                bistandsVurdering = BistandVurderingLøsningDto(
-                    begrunnelse = "Trenger hjelp fra nav",
-                    erBehovForAktivBehandling = true,
-                    erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = null,
-                    skalVurdereAapIOvergangTilArbeid = null,
-                    overgangBegrunnelse = null,
-                    skalVurdereAapIOvergangTilUføre = null,
+    @JvmName("løsFramTilGrunnlagExt")
+    protected fun Behandling.løsFramTilGrunnlag(): Behandling {
+        return løsFramTilGrunnlag(this)
+    }
 
-                    ),
-            ),
-        )
+    protected fun løsFramTilGrunnlag(behandling: Behandling): Behandling {
+        return behandling
+            .løsSykdom()
+            .løsAvklaringsBehov(
+                AvklarBistandsbehovLøsning(
+                    bistandsVurdering = BistandVurderingLøsningDto(
+                        begrunnelse = "Trenger hjelp fra nav",
+                        erBehovForAktivBehandling = true,
+                        erBehovForArbeidsrettetTiltak = false,
+                        erBehovForAnnenOppfølging = null,
+                        skalVurdereAapIOvergangTilArbeid = null,
+                        overgangBegrunnelse = null,
+                        skalVurdereAapIOvergangTilUføre = null,
 
-        behandling = løsAvklaringsBehov(
-            behandling,
-            RefusjonkravLøsning(
-                listOf(
-                    RefusjonkravVurderingDto(
-                        harKrav = true,
-                        fom = LocalDate.now(),
-                        tom = null,
-                        navKontor = "",
+                        ),
+                ),
+            )
+            .løsAvklaringsBehov(
+                RefusjonkravLøsning(
+                    listOf(
+                        RefusjonkravVurderingDto(
+                            harKrav = true,
+                            fom = LocalDate.now(),
+                            tom = null,
+                            navKontor = "",
+                        )
                     )
                 )
             )
-        )
-
-        behandling = løsSykdomsvurderingBrev(behandling)
-
-        kvalitetssikreOk(behandling)
+            .løsSykdomsvurderingBrev()
+            .kvalitetssikreOk()
     }
 
     protected fun mellomlagreSykdom(behandling: Behandling): Behandling {

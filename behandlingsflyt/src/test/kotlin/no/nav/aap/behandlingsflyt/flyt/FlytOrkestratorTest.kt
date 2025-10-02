@@ -2488,7 +2488,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
         // Oppretter vanlig søknad
-        var behandling = sendInnSøknad(
+        sendInnSøknad(
             ident, periode, SøknadV0(
                 student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null)
@@ -2549,7 +2549,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
 
     @Test
     fun `kan hente inn manuell inntektsdata i grunnlag og benytte i beregning`() {
-        val ident = nyPerson(false, false, mutableListOf())
+        val ident = nyPerson(harYrkesskade = false, harUtenlandskOpphold = false, inntekter = mutableListOf())
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
         val nedsattDato = LocalDate.now()
 
@@ -2560,34 +2560,36 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null)
             )
         )
-        løsFramTilGrunnlag(behandling)
-
-        løsAvklaringsBehov(
-            behandling,
-            FastsettBeregningstidspunktLøsning(
-                beregningVurdering = BeregningstidspunktVurderingDto(
-                    begrunnelse = "Trenger hjelp fra Nav",
-                    nedsattArbeidsevneDato = nedsattDato,
-                    ytterligereNedsattArbeidsevneDato = null,
-                    ytterligereNedsattBegrunnelse = null
+            .løsFramTilGrunnlag()
+            .løsAvklaringsBehov(
+                FastsettBeregningstidspunktLøsning(
+                    beregningVurdering = BeregningstidspunktVurderingDto(
+                        begrunnelse = "Trenger hjelp fra Nav",
+                        nedsattArbeidsevneDato = nedsattDato,
+                        ytterligereNedsattArbeidsevneDato = null,
+                        ytterligereNedsattBegrunnelse = null
+                    ),
                 ),
-            ),
-        )
-        var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
-        assertTrue(åpneAvklaringsbehov.all { Definisjon.FASTSETT_MANUELL_INNTEKT == it.definisjon })
+            )
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov)
+                    .extracting<Definisjon> { it.definisjon }
+                    .containsOnly(Definisjon.FASTSETT_MANUELL_INNTEKT)
 
-        løsAvklaringsBehov(
-            behandling,
-            AvklarManuellInntektVurderingLøsning(
-                manuellVurderingForManglendeInntekt = ManuellInntektVurderingDto(
-                    begrunnelse = "Mangler ligning",
-                    belop = BigDecimal(300000),
+            }
+            .løsAvklaringsBehov(
+                AvklarManuellInntektVurderingLøsning(
+                    manuellVurderingForManglendeInntekt = ManuellInntektVurderingDto(
+                        begrunnelse = "Mangler ligning",
+                        belop = BigDecimal(300000),
+                    )
                 )
             )
-        )
-
-        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
-        assertThat(åpneAvklaringsbehov).noneMatch { it.definisjon == Definisjon.FASTSETT_MANUELL_INNTEKT }
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov)
+                    .extracting<Definisjon> { it.definisjon }
+                    .doesNotContain(Definisjon.FASTSETT_MANUELL_INNTEKT)
+            }
 
         val beregningsGrunnlag = dataSource.transaction {
             BeregningsgrunnlagRepositoryImpl(it).hentHvisEksisterer(behandling.id) as Grunnlag11_19
@@ -2612,9 +2614,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null)
             )
-        )
-
-        løsFramTilGrunnlag(behandling)
+        ).løsFramTilGrunnlag()
 
         løsAvklaringsBehov(
             behandling,
