@@ -85,6 +85,7 @@ class FlytKontekstMedPeriodeService(
             Vurderingsbehov.REVURDER_YRKESSKADE,
             Vurderingsbehov.REVURDER_LOVVALG,
             Vurderingsbehov.REVURDER_SAMORDNING,
+            Vurderingsbehov.REVURDER_STUDENT,
             Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
             Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP,
             Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
