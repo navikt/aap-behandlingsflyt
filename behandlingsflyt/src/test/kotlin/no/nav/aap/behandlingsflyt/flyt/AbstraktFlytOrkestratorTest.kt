@@ -1048,6 +1048,11 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         return løsForutgåendeMedlemskap(this)
     }
 
+    @JvmName("løsFramTilForutgåendeMedlemskapExt")
+    protected fun Behandling.løsFramTilForutgåendeMedlemskap(harYrkesskade: Boolean = false): Behandling {
+        return løsFramTilForutgåendeMedlemskap(this, harYrkesskade)
+    }
+
     protected fun løsFramTilForutgåendeMedlemskap(
         behandling: Behandling,
         harYrkesskade: Boolean = false,

@@ -201,9 +201,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
     @Test
     fun `happy case førstegangsbehandling + revurder førstegangssøknad, gi sykepengererstatning hele perioden`() {
         val sak = happyCaseFørstegangsbehandling()
-        val behandling = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom)
 
-        behandling
+        revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom)
             .løsSykdomsvurderingBrev()
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
@@ -325,25 +324,24 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
     fun `hopper over foreslå vedtak-steg når revurdering ikke skal innom NAY`() {
         val sak = happyCaseFørstegangsbehandling()
         // Revurdering av sykdom uten 11-13
-        val behandling = revurdereFramTilOgMedSykdom(
+        revurdereFramTilOgMedSykdom(
             sak = sak,
             gjelderFra = sak.rettighetsperiode.fom,
             vissVarighet = true
         )
-
-        behandling.løsAvklaringsBehov(
-            AvklarBistandsbehovLøsning(
-                bistandsVurdering = BistandVurderingLøsningDto(
-                    begrunnelse = "Trenger hjelp fra nav",
-                    erBehovForAktivBehandling = true,
-                    erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = null,
-                    skalVurdereAapIOvergangTilUføre = null,
-                    skalVurdereAapIOvergangTilArbeid = null,
-                    overgangBegrunnelse = null
-                ),
+            .løsAvklaringsBehov(
+                AvklarBistandsbehovLøsning(
+                    bistandsVurdering = BistandVurderingLøsningDto(
+                        begrunnelse = "Trenger hjelp fra nav",
+                        erBehovForAktivBehandling = true,
+                        erBehovForArbeidsrettetTiltak = false,
+                        erBehovForAnnenOppfølging = null,
+                        skalVurdereAapIOvergangTilUføre = null,
+                        skalVurdereAapIOvergangTilArbeid = null,
+                        overgangBegrunnelse = null
+                    ),
+                )
             )
-        )
             .løsSykdomsvurderingBrev()
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov.map { it.definisjon }).describedAs {
@@ -356,12 +354,11 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
     fun `revurdering skal innom foreslå vedtak-steg når NAY-saksbehandler har løst avklaringsbehov`() {
         val sak = happyCaseFørstegangsbehandling()
         // Revurdering som krever 11-13-vurdering
-        val behandling = revurdereFramTilOgMedSykdom(
+        revurdereFramTilOgMedSykdom(
             sak = sak,
             gjelderFra = sak.rettighetsperiode.fom,
             vissVarighet = false
         )
-        behandling
             .løsSykdomsvurderingBrev()
             .løsAvklaringsBehov(
                 AvklarSykepengerErstatningLøsning(
@@ -401,7 +398,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             person = person,
             periode = periode,
         )
-        behandling.løsSykdom()
+        behandling
+            .løsSykdom()
             .løsBistand()
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
@@ -530,7 +528,6 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         val periode = Periode(fom, fom.plusYears(3))
 
         val person = TestPersoner.STANDARD_PERSON()
-        val ident = person.aktivIdent()
 
         val manueltBarnIPDL = TestPerson(
             navn = PersonNavn("Yousef", "Yosso"),
@@ -591,7 +588,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 ),
             )
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).describedAs("Vi avklarte bare ett barn, behovet skal fortsatt være åpent")
+                assertThat(åpneAvklaringsbehov.map { it.definisjon })
+                    .describedAs("Vi avklarte bare ett barn, behovet skal fortsatt være åpent")
                     .containsExactly(Definisjon.AVKLAR_BARNETILLEGG)
 
             }
@@ -648,7 +646,6 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 )
                 assertThat(periodeMedBarneTilleggForEttBarn).isEqualTo(Periode(periode.fom.plusYears(1), periode.tom))
 
-                println(tilkjentYtelse)
                 assertTidslinje(
                     tilkjentYtelse,
                     periodeMedBarneTilleggForToBarn to {
@@ -787,7 +784,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         val vedtak = hentVedtak(behandling.id)
         assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
 
-        var brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
+        val brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
 
         // Det er bestilt vedtaksbrev som er klar for forhåndsvisning og editering
         assertThat(brevbestilling.status).isEqualTo(
@@ -796,16 +793,17 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
 
         behandling = behandling.medKontekst {
             // Venter på at brevet skal fullføres
-            assertThat(åpneAvklaringsbehov).anySatisfy { assertTrue(it.definisjon == Definisjon.SKRIV_VEDTAKSBREV) }
+            assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.SKRIV_VEDTAKSBREV) }
         }
             .løsVedtaksbrev()
-
-        brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
-        // Brevet er fullført
-        assertThat(brevbestilling.status).isEqualTo(
-            no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status.FULLFØRT
-        )
-        assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
+            .medKontekst {
+                val brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
+                // Brevet er fullført
+                assertThat(brevbestilling.status).isEqualTo(
+                    no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status.FULLFØRT
+                )
+                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
+            }
 
         // Henter vurder alder-vilkår
         // Assert utfall
@@ -869,7 +867,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
     fun `kan trekke søknad som har passert manuelt vurdert lovvalg`() {
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
-        var (sak, behandling) = sendInnFørsteSøknad(
+        val (_, behandling) = sendInnFørsteSøknad(
             periode = periode,
             søknad = SøknadV0(
                 student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
@@ -877,37 +875,33 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             )
         )
 
-        // Validér avklaring
-        var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
-        assertTrue(åpneAvklaringsbehov.all { Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP == it.definisjon })
-
-        // Løs lovvalg
-        behandling.løsLovvalg()
-
-        // Validér avklaring
-        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
-        assertTrue(åpneAvklaringsbehov.all { Definisjon.AVKLAR_SYKDOM == it.definisjon })
-
-        // Trekk søknad
-        leggTilVurderingsbehovForBehandling(
-            behandling,
-            listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SØKNAD_TRUKKET))
-        )
-
-        assertThat(hentAlleAvklaringsbehov(behandling)).anySatisfy { avklaringsbehov -> assertThat(avklaringsbehov.erÅpent() && avklaringsbehov.definisjon == Definisjon.VURDER_TREKK_AV_SØKNAD).isTrue() }
-        behandling = løsAvklaringsBehov(
-            behandling,
-            TrekkSøknadLøsning(begrunnelse = "trekker søknaden"),
-        )
-        assertThat(hentAlleAvklaringsbehov(behandling)).anySatisfy { avklaringsbehov -> assertThat(avklaringsbehov.erAvsluttet()).isTrue() }
-        assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
+        behandling.medKontekst {
+            assertTrue(åpneAvklaringsbehov.all { Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP == it.definisjon })
+        }
+            // Løs lovvalg
+            .løsLovvalg()
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                    .containsExactly(Definisjon.AVKLAR_SYKDOM)
+            }
+            // Trekk søknad
+            .leggTilVurderingsbehov(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SØKNAD_TRUKKET)
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                    .contains(Definisjon.VURDER_TREKK_AV_SØKNAD)
+            }
+            .løsAvklaringsBehov(TrekkSøknadLøsning(begrunnelse = "trekker søknaden"))
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).isEmpty()
+                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
+            }
     }
 
     @Test
     fun `kan trekke søknad som har passert forutgående medlemskap`() {
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
-        var (sak, behandling) = sendInnFørsteSøknad(
+        val (_, behandling) = sendInnFørsteSøknad(
             periode = periode,
             søknad = SøknadV0(
                 student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
@@ -915,32 +909,29 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             )
         )
 
-        // Løs fram til forutgående
         behandling
             .løsLovvalg()
-        løsFramTilForutgåendeMedlemskap(behandling)
-
-
-        // Validér avklaring
-        var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
-        assertTrue(åpneAvklaringsbehov.all { Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP == it.definisjon })
-
-        // Løs forutgående
-        behandling.løsForutgåendeMedlemskap()
-
-        // Trekk søknad
-        leggTilVurderingsbehovForBehandling(
-            behandling,
-            listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SØKNAD_TRUKKET))
-        )
-
-        assertThat(hentAlleAvklaringsbehov(behandling)).anySatisfy { avklaringsbehov -> assertThat(avklaringsbehov.erÅpent() && avklaringsbehov.definisjon == Definisjon.VURDER_TREKK_AV_SØKNAD).isTrue() }
-        behandling = løsAvklaringsBehov(
-            behandling,
-            TrekkSøknadLøsning(begrunnelse = "trekker søknaden"),
-        )
-        assertThat(hentAlleAvklaringsbehov(behandling)).anySatisfy { avklaringsbehov -> assertThat(avklaringsbehov.erAvsluttet()).isTrue() }
-        assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
+            // Løs fram til forutgående
+            .løsFramTilForutgåendeMedlemskap()
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov)
+                    .extracting<Definisjon> { it.definisjon }
+                    .contains(Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP)
+            }
+            // Løs forutgående
+            .løsForutgåendeMedlemskap()
+            // Trekk søknad
+            .leggTilVurderingsbehov(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SØKNAD_TRUKKET)
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov)
+                    .extracting<Definisjon> { it.definisjon }
+                    .contains(Definisjon.VURDER_TREKK_AV_SØKNAD)
+            }
+            .løsAvklaringsBehov(TrekkSøknadLøsning(begrunnelse = "trekker søknaden"))
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).isEmpty()
+                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
+            }
     }
 
     @Test
@@ -948,20 +939,18 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         // Sender inn en søknad
         var (sak, behandling) = sendInnFørsteSøknad()
 
-        løsSykdom(behandling)
-        leggTilVurderingsbehovForBehandling(
-            behandling,
-            listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SØKNAD_TRUKKET))
-        )
-        assertThat(hentAlleAvklaringsbehov(behandling)).anySatisfy { avklaringsbehov -> assertThat(avklaringsbehov.erÅpent() && avklaringsbehov.definisjon == Definisjon.VURDER_TREKK_AV_SØKNAD).isTrue() }
-
-        behandling = løsAvklaringsBehov(
-            behandling,
-            TrekkSøknadLøsning(begrunnelse = "trekker søknaden"),
-        )
-
-        assertThat(hentAlleAvklaringsbehov(behandling)).anySatisfy { avklaringsbehov -> assertThat(avklaringsbehov.erAvsluttet()).isTrue() }
-        assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
+        behandling = løsSykdom(behandling)
+            .leggTilVurderingsbehov(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SØKNAD_TRUKKET)
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov)
+                    .extracting<Definisjon> { it.definisjon }
+                    .contains(Definisjon.VURDER_TREKK_AV_SØKNAD)
+            }
+            .løsAvklaringsBehov(TrekkSøknadLøsning(begrunnelse = "trekker søknaden"))
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).isEmpty()
+                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
+            }
 
         behandling = sak.sendInnSøknad(
             SøknadV0(
@@ -1136,7 +1125,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKEPENGEERSTATNING) }
+                assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                    .contains(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
             }
             .løsAvklaringsBehov(
                 AvklarSykepengerErstatningLøsning(
@@ -1171,7 +1161,9 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(behandling.id)
                 }
                 assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
-            }.løsVedtaksbrev().medKontekst {
+            }
+            .løsVedtaksbrev()
+            .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
 
                 val vilkårsresultat = hentVilkårsresultat(behandlingId = behandling.id)
