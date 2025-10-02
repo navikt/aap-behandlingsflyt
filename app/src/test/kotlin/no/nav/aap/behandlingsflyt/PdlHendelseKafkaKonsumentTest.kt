@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt
 
+import io.confluent.kafka.serializers.KafkaAvroDeserializer
 import io.confluent.kafka.serializers.KafkaAvroSerializer
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.SchemaRegistryConfig
@@ -7,9 +8,11 @@ import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PdlHendelseKafkaKonsumen
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.person.pdl.leesah.Personhendelse
+import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.clients.producer.ProducerRecord
+import org.apache.kafka.common.serialization.StringDeserializer
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -73,7 +76,7 @@ class PdlHendelseKafkaKonsumentTest {
         val producerProps = Properties().apply {
             put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.bootstrapServers)
             put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer::class.java.name)
-            put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer::class.java.name)
+            put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer::class.java.name)
             put("schema.registry.url", "mock://schema-registry")
         }
 
@@ -107,7 +110,13 @@ class PdlHendelseKafkaKonsumentTest {
             user = "",
             password = "",
         )
-    )
+    ).apply {
+        consumerProperties()[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] =
+            StringDeserializer::class.java.name
+        consumerProperties()[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] =
+            KafkaAvroDeserializer::class.java.name
+        consumerProperties()["specific.avro.reader"] = "true"
+    }
 
 
 }

@@ -25,7 +25,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     OvergangUfore,
     AutomatiskTilbakeforUlostAvklaringsbehov,
     IverksettUtbetalingSomSelvstendigJobb,
-    PDLHendelser
     ;
 
     override fun key(): String = name

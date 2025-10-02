@@ -415,8 +415,8 @@ fun Application.startMotor(
 
 fun Application.startKabalKonsument(
     dataSource: DataSource, repositoryRegistry: RepositoryRegistry
-): KafkaKonsument {
-    val konsument = KabalKafkaKonsument<String, String>(
+): KafkaKonsument<String, String> {
+    val konsument = KabalKafkaKonsument(
         config = KafkaConsumerConfig(), dataSource = dataSource, repositoryRegistry = repositoryRegistry
     )
     monitor.subscribe(ApplicationStarted) {
@@ -442,7 +442,10 @@ fun Application.startPDLHendelseKonsument(
     repositoryRegistry: RepositoryRegistry
 ): KafkaKonsument<String, Personhendelse> {
     val konsument = PdlHendelseKafkaKonsument(
-        config = KafkaConsumerConfig(),
+        config = KafkaConsumerConfig(
+            keyDeserializer = org.apache.kafka.common.serialization.StringDeserializer::class.java,
+            valueDeserializer = io.confluent.kafka.serializers.KafkaAvroDeserializer::class.java
+        ),
         dataSource = dataSource,
         repositoryRegistry = repositoryRegistry
     )

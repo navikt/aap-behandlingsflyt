@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.hendelse.kafka
 
+import io.confluent.kafka.serializers.KafkaAvroDeserializer
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.consumer.ConsumerConfig
