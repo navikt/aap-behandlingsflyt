@@ -60,7 +60,9 @@ class PdlHendelseKafkaKonsument(
                 personHendelse.personidenter
                     .mapNotNull { ident -> personRepository.finn(Ident(ident)) }
                     .forEach { person ->
-                        sakRepository.finnSakerFor(person).forEach { sak ->
+                        sakRepository.finnSakerFor(person).forEach {
+                            sak ->
+                            log.info("Registrerer mottatt hendelse på ${sak.saksnummer} ")
                             hendelseService.registrerMottattHendelse(
                                 personHendelse.tilInnsending(sak.saksnummer)
                             )
