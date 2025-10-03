@@ -257,6 +257,7 @@ public enum class Definisjon(
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
         kreverToTrinn = true,
     ),
+
     @Deprecated("Ikke lenger i bruk, erstattet av oppfølgingsoppgave")
     SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT(
         kode = AvklaringsbehovKode.`5025`,
@@ -281,12 +282,23 @@ public enum class Definisjon(
     ),
 
     @Deprecated("Ikke i bruk")
+    EFFEKTUER_11_7(
+        kode = AvklaringsbehovKode.`5015`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.EFFEKTUER_11_7,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
+        kreverToTrinn = true,
+    ),
+
+    @Deprecated("Ikke i bruk")
     FORHÅNDSVARSEL_AKTIVITETSPLIKT(
         kode = AvklaringsbehovKode.`5016`,
         type = BehovType.BREV_VENTEPUNKT,
         løsesISteg = StegType.EFFEKTUER_11_7,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
     ),
+
+    @Deprecated("Ikke i bruk")
     VENTE_PÅ_FRIST_EFFEKTUER_11_7(
         kode = AvklaringsbehovKode.`5018`,
         type = BehovType.VENTEPUNKT,
@@ -299,13 +311,6 @@ public enum class Definisjon(
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.VURDER_LOVVALG,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
-        kreverToTrinn = true,
-    ),
-    EFFEKTUER_11_7(
-        kode = AvklaringsbehovKode.`5015`,
-        type = BehovType.MANUELT_PÅKREVD,
-        løsesISteg = StegType.EFFEKTUER_11_7,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
         kreverToTrinn = true,
     ),
 
