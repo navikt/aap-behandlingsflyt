@@ -106,7 +106,10 @@ class BeregningService(
                 it.value.first()
             }
 
-        return (inntekterByÅr + manuelleByÅr).values.toSet()
+        // Hvis begge deler finnes for samme år, foretrekkes verdien fra register
+        val kombinerteInntekter = (manuelleByÅr + inntekterByÅr).values.toSet()
+
+        return kombinerteInntekter
     }
 
     private fun utledInput(
