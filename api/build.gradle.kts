@@ -1,7 +1,7 @@
 
 plugins {
     id("behandlingsflyt.conventions")
-    id("com.github.davidmc24.gradle.plugin.avro") version "1.5.0"
+    id("com.github.davidmc24.gradle.plugin.avro") version "1.9.1"
 }
 
 repositories {
