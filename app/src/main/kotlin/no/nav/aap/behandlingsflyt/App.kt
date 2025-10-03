@@ -284,9 +284,7 @@ internal fun Application.server(
     Migrering.migrate(dataSource)
     val motor = startMotor(dataSource, repositoryRegistry, gatewayProvider)
 
-    if (!Miljø.erProd()) {
-        etterFyllSykepengeTabell(dataSource)
-    }
+    etterFyllSykepengeTabell(dataSource)
 
     if (!Miljø.erLokal()) {
         startKabalKonsument(dataSource, repositoryRegistry)
