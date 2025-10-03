@@ -52,7 +52,7 @@ fun NormalOpenAPIRoute.aktivitetsplikt11_9GrunnlagApi(
                     )
                 }
 
-                val nåTilstand = grunnlag?.vurderinger.orEmpty()
+                val nåTilstand = grunnlag?.gjeldendeVurderinger().orEmpty()
 
                 val vedtatteVurderinger = behandling.forrigeBehandlingId
                     ?.let { aktivitetsplikt11_9Repository.hentHvisEksisterer(it) }

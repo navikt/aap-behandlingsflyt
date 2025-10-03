@@ -26,14 +26,10 @@ class VurderBrudd11_9Løser(
             løsning.aktivitetsplikt11_9Vurderinger
                 .map { it.tilVurdering(kontekst.behandlingId(), kontekst.bruker, LocalDateTime.now()) }
                 .toSet()
+        
+        val alleVurderinger = nyeVurderinger + iverksatteVurderinger
 
-        /**
-         * TODO: Sjekk om vi bør filtrere ut overskrevede vurderinger
-         * Gjeldende vil altså være nyeste vurdering på en gitt dato
-         **/
-        val gjeldendeVurderinger = nyeVurderinger + iverksatteVurderinger
-
-        aktivitetsplikt11_9Repository.lagre(kontekst.behandlingId(), gjeldendeVurderinger)
+        aktivitetsplikt11_9Repository.lagre(kontekst.behandlingId(), alleVurderinger)
 
         return LøsningsResultat("Fullført")
     }
