@@ -12,7 +12,6 @@ import io.ktor.server.netty.*
 import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.routing.*
-import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.aap.behandlingsflyt.api.actuator.actuator
 import no.nav.aap.behandlingsflyt.api.config.definisjoner.configApi
 import no.nav.aap.behandlingsflyt.auditlog.auditlogApi
@@ -81,8 +80,6 @@ import no.nav.aap.behandlingsflyt.pip.behandlingsflytPip
 import no.nav.aap.behandlingsflyt.prosessering.BehandlingsflytLogInfoProvider
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -110,8 +107,6 @@ fun utledSubtypesTilMottattHendelseDTO(): List<Class<*>> {
 
 class App
 
-private val log = LoggerFactory.getLogger(App::class.java)
-
 private const val ANTALL_WORKERS = 4
 
 fun main() {
@@ -129,126 +124,6 @@ fun main() {
             port = 8080
         }
     }) { server(DbConfig(), postgresRepositoryRegistry, defaultGatewayProvider()) }.start(wait = true)
-}
-
-/**
- * Midlertidig. Brukes for å etterfylle verdier i sykepengeerstatningstabllen.
- */
-@WithSpan
-fun etterFyllSykepengeTabell(
-    dataSource: DataSource,
-) {
-    dataSource.transaction { connection ->
-        val provider = postgresRepositoryRegistry.provider(connection)
-        val skriveLåsRepository = provider.provide<TaSkriveLåsRepository>()
-
-        val idSpørring =
-            "select id, behandling_id, vurdering_id from sykepenge_erstatning_grunnlag where vurderinger_id is null"
-        val grunnlagIds = connection.queryList(idSpørring) {
-            setRowMapper {
-                Triple(it.getLong("id"), BehandlingId(it.getLong("behandling_id")), it.getLong("vurdering_id"))
-            }
-        }
-
-        log.info("Fant ${grunnlagIds.size} grunnlag uten vurderinger_id.")
-
-        for ((id, behandlingId, vurderingId) in grunnlagIds) {
-            val lås = skriveLåsRepository.låsBehandling(behandlingId)
-
-            val vurderingerUtenVurderingerId = connection.queryFirstOrNull(
-                """select v.id, v.opprettet_tid
-                 from sykepenge_vurdering v join sykepenge_erstatning_grunnlag sg on v.id = sg.vurdering_id
-                 where v.vurderinger_id is null and sg.id = ?"""
-            ) {
-                setParams {
-                    setLong(1, id)
-                }
-                setRowMapper { Pair(it.getLong("id"), it.getLocalDateTime("opprettet_tid")) }
-            }
-
-            if (vurderingerUtenVurderingerId != null) {
-                val vurderingerId = connection.executeReturnKey(
-                    """insert into sykepenge_vurderinger (opprettet_tid)
-                    values (?)
-                """.trimMargin()
-                ) {
-                    setParams {
-                        setLocalDateTime(1, vurderingerUtenVurderingerId.second)
-                    }
-                }
-
-                val vurderingId = vurderingerUtenVurderingerId.first
-
-                connection.execute(
-                    """
-                    update sykepenge_vurdering set vurderinger_id = ? where id = ? and vurderinger_id is null
-                """.trimIndent()
-                ) {
-                    setParams {
-                        setLong(1, vurderingerId)
-                        setLong(2, vurderingId)
-                    }
-                    setResultValidator {
-                        log.info("Oppdaterte $it rader.")
-                    }
-                }
-
-                connection.execute(
-                    """
-                    update sykepenge_erstatning_grunnlag g
-                    set vurderinger_id = ?
-                    where g.vurdering_id = ? and g.vurderinger_id is null
-                """.trimIndent()
-                ) {
-                    setParams {
-                        setLong(1, vurderingerId)
-                        setLong(2, vurderingId)
-                    }
-                    setResultValidator {
-                        log.info("Oppdaterte $it rader i sykepenge_erstatning_grunnlag.")
-                    }
-                }
-            } else {
-                log.info("Fant ingen vurderinger for behandling $behandlingId med vurdering $vurderingId.")
-                // Etterfyll gamle
-                val vurderingerId = connection.queryFirstOrNull(
-                    """
-                    select * from sykepenge_erstatning_grunnlag where vurderinger_id is not null and vurdering_id = ?
-                """.trimIndent()
-                ) {
-                    setParams {
-                        setLong(1, vurderingId)
-                    }
-                    setRowMapper {
-                        it.getLong("vurderinger_id")
-                    }
-                }
-
-                if (vurderingerId != null) {
-                    connection.execute(
-                        """
-                        update sykepenge_erstatning_grunnlag g set vurderinger_id = ? where g.id = ?
-                    """.trimIndent()
-                    ) {
-                        setParams {
-                            setLong(1, vurderingerId)
-                            setLong(2, id)
-                        }
-                        setResultValidator {
-                            log.info("Oppdaterte $it rader i sykepenge_erstatning_grunnlag.")
-                        }
-                    }
-                } else {
-                    log.info("Fant ingen grunnlag med vurderinger_id for id $id")
-                }
-
-                log.info("Fant ingen vurderinger for behandling $behandlingId.")
-            }
-
-            skriveLåsRepository.verifiserSkrivelås(lås)
-            connection.markerSavepoint()
-        }
-    }
 }
 
 internal fun Application.server(
@@ -286,8 +161,6 @@ internal fun Application.server(
     })
     Migrering.migrate(dataSource)
     val motor = startMotor(dataSource, repositoryRegistry, gatewayProvider)
-
-    etterFyllSykepengeTabell(dataSource)
 
     if (!Miljø.erLokal()) {
         startKabalKonsument(dataSource, repositoryRegistry)
