@@ -971,8 +971,7 @@ class BeregnTilkjentYtelseServiceTest {
     // https://confluence.adeo.no/spaces/PAAP/pages/720916013/Utbetalingsgrad
     @CsvSource(
         useHeadersInDisplayName = true,
-        textBlock = """
-arbeidsgrad,	sykepengegrad,	uforegrad,	institusjon,	   effektivGradering
+        textBlock = """arbeidsgrad,	sykepengegrad,	uforegrad,	institusjon,	   effektivGradering
 25	               ,25	         ,25  	      ,0	                  ,25
 0	               ,50	         ,0  	      ,50	                  ,25
 10	               ,25	         ,25	      ,50	                  ,20

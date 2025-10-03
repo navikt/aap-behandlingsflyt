@@ -21,7 +21,7 @@ data class ForeldrepengerResponse(
  */
 data class Ytelse(
     val ytelse: Ytelser,
-    val saksnummer: String,
+    val saksnummer: String?,
     val kildesystem: String,
     val ytelseStatus: String,
     val vedtattTidspunkt: LocalDate,
