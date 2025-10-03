@@ -25,7 +25,7 @@ import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
@@ -111,9 +111,30 @@ internal class OvergangUføreRepositoryImplTest {
 
     @Test
     fun `historikk viser kun vurderinger fra tidligere behandlinger og ikke inkluderer vurdering fra avbrutt revurdering`() {
-        val overgangUføreVurdering1 = lagOvergangUføreVurdering("B1")
-        val overgangUføreVurdering2 = lagOvergangUføreVurdering("B2")
-        val overgangUføreVurdering3 = lagOvergangUføreVurdering("B3")
+        val overgangUføreVurdering1 = OvergangUføreVurdering(
+            begrunnelse = "B1",
+            brukerHarSøktOmUføretrygd = true,
+            brukerHarFåttVedtakOmUføretrygd = "NEI",
+            brukerRettPåAAP = true,
+            virkningsdato = LocalDate.of(2024, 5, 22),
+            vurdertAv = "Z00000",
+        )
+        val overgangUføreVurdering2 = OvergangUføreVurdering(
+            begrunnelse = "B2",
+            brukerHarSøktOmUføretrygd = true,
+            brukerHarFåttVedtakOmUføretrygd = "JA",
+            brukerRettPåAAP = true,
+            virkningsdato = LocalDate.of(2024, 5, 1),
+            vurdertAv = "Z00001",
+        )
+        val overgangUføreVurdering3 = OvergangUføreVurdering(
+            begrunnelse = "B3",
+            brukerHarSøktOmUføretrygd = true,
+            brukerHarFåttVedtakOmUføretrygd = "NEI",
+            brukerRettPåAAP = true,
+            virkningsdato = LocalDate.of(2024, 4, 15),
+            vurdertAv = "Z00002",
+        )
 
         val førstegangsbehandling = dataSource.transaction { connection ->
             val overgangUføreRepo = OvergangUføreRepositoryImpl(connection)
@@ -154,29 +175,29 @@ internal class OvergangUføreRepositoryImplTest {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
         fun assertEquals(expected: List<OvergangUføreVurdering>, actual: List<OvergangUføreVurdering>) {
-            Assertions.assertEquals(expected.size, actual.size)
+            assertEquals(expected.size, actual.size)
             for ((expected, actual) in expected.zip(actual)) {
                 assertEquals(expected, actual)
             }
         }
 
         fun assertEquals(expected: OvergangUføreVurdering, actual: OvergangUføreVurdering) {
-            Assertions.assertEquals(expected.begrunnelse, actual.begrunnelse)
-            Assertions.assertEquals(expected.brukerHarSøktOmUføretrygd, actual.brukerHarSøktOmUføretrygd)
+            assertEquals(expected.begrunnelse, actual.begrunnelse)
+            assertEquals(expected.brukerHarSøktOmUføretrygd, actual.brukerHarSøktOmUføretrygd)
 
             if (expected.brukerHarFåttVedtakOmUføretrygd != null && actual.brukerHarFåttVedtakOmUføretrygd != null) {
-                Assertions.assertEquals(expected.brukerHarFåttVedtakOmUføretrygd, actual.brukerHarFåttVedtakOmUføretrygd)
+                assertEquals(expected.brukerHarFåttVedtakOmUføretrygd, actual.brukerHarFåttVedtakOmUføretrygd)
             }
 
             if (expected.brukerRettPåAAP != null && actual.brukerRettPåAAP != null) {
-                Assertions.assertEquals(expected.brukerRettPåAAP, actual.brukerRettPåAAP)
+                assertEquals(expected.brukerRettPåAAP, actual.brukerRettPåAAP)
             }
 
             if (expected.virkningsdato != null && actual.virkningsdato != null) {
-                Assertions.assertEquals(expected.virkningsdato, actual.virkningsdato)
+                assertEquals(expected.virkningsdato, actual.virkningsdato)
             }
 
-            Assertions.assertEquals(expected.vurdertAv, actual.vurdertAv)
+            assertEquals(expected.vurdertAv, actual.vurdertAv)
         }
     }
 
@@ -186,17 +207,6 @@ internal class OvergangUføreRepositoryImplTest {
             PersonRepositoryImpl(connection),
             SakRepositoryImpl(connection)
         ).finnEllerOpprett(ident(), periode)
-    }
-
-    private fun lagOvergangUføreVurdering(begrunnelse: String): OvergangUføreVurdering {
-        return OvergangUføreVurdering(
-            begrunnelse = begrunnelse,
-            brukerHarSøktOmUføretrygd = true,
-            brukerHarFåttVedtakOmUføretrygd = "NEI",
-            brukerRettPåAAP = true,
-            virkningsdato = LocalDate.now(),
-            vurdertAv = "Saksbehandler",
-        )
     }
 
     private fun revurderingOvergangUføre(connection: DBConnection, behandling: Behandling): Behandling {
