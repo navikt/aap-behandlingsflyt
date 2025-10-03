@@ -58,7 +58,7 @@ class Aktivitetsplikt11_7RegelTest {
 
         val vurderinger = grunnlag.tilAktivitetspliktVurderingTidslinje(rettighetsperiode)
 
-        assertEquals(2, vurderinger.segmenter().size)
+        assertEquals(2, vurderinger.segmenter().count())
         
         vurderinger.assertTidslinje(
             Segment(Periode(1 februar 2020, 13 februar 2020)) {

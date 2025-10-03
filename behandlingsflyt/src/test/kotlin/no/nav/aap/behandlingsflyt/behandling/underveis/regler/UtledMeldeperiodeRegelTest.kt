@@ -65,14 +65,14 @@ class UtledMeldeperiodeRegelTest {
         )
         val resultat = UtledMeldeperiodeRegel().vurder(input, Tidslinje(segmenter))
 
-        assertEquals(2, resultat.segmenter().size)
+        assertEquals(2, resultat.segmenter().count())
         assertEquals(
             Vurdering(meldeperiode = meldeperiode(6 april 2020)),
-            resultat.segmenter().first.verdi
+            resultat.segmenter().first().verdi
         )
         assertEquals(
             Vurdering(meldeperiode = meldeperiode(6 april 2020)),
-            resultat.segmenter().last.verdi
+            resultat.segmenter().last().verdi
         )
     }
 

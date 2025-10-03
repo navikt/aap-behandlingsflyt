@@ -41,7 +41,7 @@ class FastsettPåklagetBehandlingLøser(
     }
 
     private fun Behandling.valider(): Behandling {
-        if (this.typeBehandling() !in listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)) {
+        if (!this.typeBehandling().erYtelsesbehandling()) {
             throw IllegalArgumentException("Kan ikke klage på type ${this.typeBehandling()}")
         }
 

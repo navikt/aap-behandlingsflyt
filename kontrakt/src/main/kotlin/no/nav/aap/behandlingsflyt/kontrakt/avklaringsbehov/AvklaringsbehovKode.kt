@@ -5,6 +5,7 @@ package no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov
  */
 public const val VURDER_BRUDD_11_7_KODE: String = "4101"
 public const val VENTE_PÅ_FRIST_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT: String = "4102"
+public const val VURDER_BRUDD_11_9_KODE: String = "4201"
 public const val AVKLAR_STUDENT_KODE: String = "5001"
 public const val OVERSTYR_IKKE_OPPFYKT_MELDEPLIKT_KODE: String = "5002"
 public const val AVKLAR_SYKDOM_KODE: String = "5003"
@@ -19,10 +20,7 @@ public const val AVKLAR_HELSEINSTITUSJON_KODE: String = "5011"
 public const val AVKLAR_SAMORDNING_GRADERING_KODE: String = "5012"
 public const val AVKLAR_YRKESSKADE_KODE: String = "5013"
 public const val FASTSETT_YRKESSKADE_BELØP_KODE: String = "5014"
-public const val EFFEKTUER_11_7_KODE: String = "5015"
-public const val FORHÅNDSVARSEL_AKTIVITETSPLIKT_KODE: String = "5016"
 public const val AVKLAR_LOVVALG_MEDLEMSKAP_KODE: String = "5017"
-public const val VENTE_PÅ_FIRST_EFFEKTUER_11_7_KODE: String = "5018"
 public const val AVKLAR_UTENLANDSK_MEDLEMSKAP_KODE: String = "5019"
 public const val AVKLAR_FORUTGÅENDE_MEDLEMSKAP_KODE: String = "5020"
 public const val MANUELL_OVERSTYRING_LOVVALG: String = "5021"
@@ -38,6 +36,7 @@ public const val AVKLAR_SAMORDNING_ARBEIDSGIVER_KODE: String = "5030"
 public const val AVKLAR_OVERGANG_UFORE: String = "5031"
 public const val AVKLAR_OVERGANG_ARBEID: String = "5032"
 public const val AVBRYT_REVURDERING_KODE: String = "5033"
+public const val AVKLAR_OPPHOLDSKRAV: String = "5035"
 public const val SKRIV_BREV_KODE: String = "5050"
 public const val SKRIV_VEDTAKSBREV_KODE: String = "5051"
 public const val SKRIV_FORHÅNDSVARSEL_AKTIVITETSPLIKT_BREV_KODE: String = "5052"
@@ -74,10 +73,16 @@ public enum class AvklaringsbehovKode {
      * [VURDER_BRUDD_11_7_KODE]
      */
     `4101`,
+
     /**
      * [VENTE_PÅ_FRIST_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT]
      */
     `4102`,
+
+    /**
+     * [VURDER_BRUDD_11_9_KODE]
+     */
+    `4201`,
 
     /**
      * [AVKLAR_STUDENT_KODE]
@@ -152,11 +157,13 @@ public enum class AvklaringsbehovKode {
     /**
      * [EFFEKTUER_11_7_KODE]
      */
+    @Deprecated("Ikke i bruk")
     `5015`,
 
     /**
      * [FORHÅNDSVARSEL_AKTIVITETSPLIKT_KODE]
      */
+    @Deprecated("Ikke i bruk")
     `5016`,
 
     /**
@@ -167,6 +174,7 @@ public enum class AvklaringsbehovKode {
     /**
      * [VENTE_PÅ_FIRST_EFFEKTUER_11_7_KODE]
      */
+    @Deprecated("Ikke i bruk")
     `5018`,
 
     /**
@@ -243,6 +251,11 @@ public enum class AvklaringsbehovKode {
      * [AVBRYT_REVURDERING_KODE]
      */
     `5033`,
+
+    /**
+     * [AVKLAR_OPPHOLDSKRAV_KODE]
+     */
+    `5035`,
 
     /**
      * [SKRIV_BREV_KODE]

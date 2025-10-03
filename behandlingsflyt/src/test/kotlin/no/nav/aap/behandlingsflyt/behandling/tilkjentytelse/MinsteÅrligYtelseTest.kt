@@ -9,7 +9,7 @@ import java.time.LocalDate
 class MinsteÅrligYtelseTest {
     @Test
     fun `tidslinja er kontinuerlig`() {
-        val perioder = MINSTE_ÅRLIG_YTELSE_TIDSLINJE.map(Segment<GUnit>::periode)
+        val perioder = MINSTE_ÅRLIG_YTELSE_TIDSLINJE.segmenter().map(Segment<GUnit>::periode)
 
         assertThat(perioder.first().fom).isEqualTo(LocalDate.MIN)
         assertThat(perioder.last().tom).isEqualTo(LocalDate.MAX)

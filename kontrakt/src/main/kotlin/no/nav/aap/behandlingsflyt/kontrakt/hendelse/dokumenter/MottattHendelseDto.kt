@@ -79,7 +79,7 @@ public class Innsending(
             }
 
             InnsendingType.NY_ÅRSAK_TIL_BEHANDLING -> {
-                require(referanse.type == InnsendingReferanse.Type.BEHANDLING_REFERANSE)
+                require(referanse.type == InnsendingReferanse.Type.SAKSBEHANDLER_KELVIN_REFERANSE)
                 require(melding is NyÅrsakTilBehandling)
             }
 
@@ -91,6 +91,12 @@ public class Innsending(
 
             InnsendingType.OPPFØLGINGSOPPGAVE -> {
                 requireNotNull(melding)
+            }
+
+            InnsendingType.PDL_HENDELSE -> {
+                require(referanse.type == InnsendingReferanse.Type.PDL_HENDELSE_ID)
+                requireNotNull(melding)
+                require(melding is PdlHendelse)
             }
         }
     }
@@ -115,6 +121,7 @@ public fun Melding.innsendingType(): InnsendingType = when (this) {
     is Klage -> InnsendingType.KLAGE
     is NyÅrsakTilBehandling -> InnsendingType.NY_ÅRSAK_TIL_BEHANDLING
     is KabalHendelse -> InnsendingType.KABAL_HENDELSE
+    is PdlHendelse -> InnsendingType.PDL_HENDELSE
     is Oppfølgingsoppgave -> InnsendingType.OPPFØLGINGSOPPGAVE
     is OmgjøringKlageRevurdering -> InnsendingType.OMGJØRING_KLAGE_REVURDERING
 
@@ -148,8 +155,10 @@ private fun example(innsending: Innsending) {
 
         is KabalHendelse -> TODO()
 
-        null -> TODO()
         is OppfølgingsoppgaveV0 -> TODO()
         is OmgjøringKlageRevurdering -> TODO()
+        is PdlHendelse -> TODO()
+
+        null -> TODO()
     }
 }

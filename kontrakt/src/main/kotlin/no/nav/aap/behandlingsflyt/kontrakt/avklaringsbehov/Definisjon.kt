@@ -58,8 +58,7 @@ public enum class Definisjon(
         løsesISteg = StegType.AVBRYT_REVURDERING,
         type = BehovType.MANUELT_PÅKREVD,
         løsesAv = listOf(
-            Rolle.SAKSBEHANDLER_OPPFOLGING,
-            Rolle.SAKSBEHANDLER_NASJONAL
+            Rolle.BESLUTTER
         ),
     ),
     BESTILL_LEGEERKLÆRING(
@@ -258,6 +257,7 @@ public enum class Definisjon(
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
         kreverToTrinn = true,
     ),
+
     @Deprecated("Ikke lenger i bruk, erstattet av oppfølgingsoppgave")
     SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT(
         kode = AvklaringsbehovKode.`5025`,
@@ -282,12 +282,23 @@ public enum class Definisjon(
     ),
 
     @Deprecated("Ikke i bruk")
+    EFFEKTUER_11_7(
+        kode = AvklaringsbehovKode.`5015`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.EFFEKTUER_11_7,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
+        kreverToTrinn = true,
+    ),
+
+    @Deprecated("Ikke i bruk")
     FORHÅNDSVARSEL_AKTIVITETSPLIKT(
         kode = AvklaringsbehovKode.`5016`,
         type = BehovType.BREV_VENTEPUNKT,
         løsesISteg = StegType.EFFEKTUER_11_7,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
     ),
+
+    @Deprecated("Ikke i bruk")
     VENTE_PÅ_FRIST_EFFEKTUER_11_7(
         kode = AvklaringsbehovKode.`5018`,
         type = BehovType.VENTEPUNKT,
@@ -300,13 +311,6 @@ public enum class Definisjon(
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.VURDER_LOVVALG,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
-        kreverToTrinn = true,
-    ),
-    EFFEKTUER_11_7(
-        kode = AvklaringsbehovKode.`5015`,
-        type = BehovType.MANUELT_PÅKREVD,
-        løsesISteg = StegType.EFFEKTUER_11_7,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
         kreverToTrinn = true,
     ),
 
@@ -335,7 +339,7 @@ public enum class Definisjon(
         kode = AvklaringsbehovKode.`5019`,
         type = BehovType.VENTEPUNKT,
         løsesISteg = StegType.VURDER_LOVVALG,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
         defaultFrist = Period.ofYears(5),
     ),
     AVKLAR_FORUTGÅENDE_MEDLEMSKAP(
@@ -371,6 +375,12 @@ public enum class Definisjon(
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.REFUSJON_KRAV,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
+    ),
+    AVKLAR_OPPHOLDSKRAV(
+        kode = AvklaringsbehovKode.`5035`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.VURDER_OPPHOLDSKRAV,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
     ),
     FASTSETT_PÅKLAGET_BEHANDLING(
         kode = AvklaringsbehovKode.`5999`,
@@ -494,6 +504,13 @@ public enum class Definisjon(
         kode = AvklaringsbehovKode.`4101`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.VURDER_AKTIVITETSPLIKT_11_7,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
+        kreverToTrinn = true
+    ),
+    VURDER_BRUDD_11_9(
+        kode = AvklaringsbehovKode.`4201`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.VURDER_AKTIVITETSPLIKT_11_9,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
         kreverToTrinn = true
     ),

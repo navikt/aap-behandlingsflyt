@@ -1,70 +1,84 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrevRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
-import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
-import org.slf4j.LoggerFactory
 
 class SykdomsvurderingBrevSteg internal constructor(
     private val sykdomsvurderingForBrevRepository: SykdomsvurderingForBrevRepository,
-    private val tidligereVurderinger: TidligereVurderinger,
+    private val avklaringsbehovService: AvklaringsbehovService,
+    private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val behandlingRepository: BehandlingRepository,
+    private val tidligereVurderinger: TidligereVurderinger
 ) : BehandlingSteg {
-    private val logger = LoggerFactory.getLogger(javaClass)
 
     constructor(repositoryProvider: RepositoryProvider) : this(
         sykdomsvurderingForBrevRepository = repositoryProvider.provide(),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+        avklaringsbehovRepository = repositoryProvider.provide(),
+        behandlingRepository = repositoryProvider.provide(),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider)
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING -> {
-                if (tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())) {
-                    return Fullført
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+        avklaringsbehovService.oppdaterAvklaringsbehov(
+            avklaringsbehovene = avklaringsbehovene,
+            definisjon = Definisjon.SKRIV_SYKDOMSVURDERING_BREV,
+            vedtakBehøverVurdering = {
+                when (kontekst.vurderingType) {
+                    VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
+                        if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                            return@oppdaterAvklaringsbehov false
+                        }
+
+                        val behandling = behandlingRepository.hent(kontekst.behandlingId)
+                        val sykdomsSteggruppedefinisjoner =
+                            Definisjon.entries.filter {
+                                behandling.flyt()
+                                    .erStegFør(it.løsesISteg, Definisjon.SKRIV_SYKDOMSVURDERING_BREV.løsesISteg)
+                            }
+
+                        val behov = avklaringsbehovene.hentBehovForDefinisjon(sykdomsSteggruppedefinisjoner)
+
+                        val finnesAvsluttede =
+                            behov.any { it.status().erAvsluttet() && it.status() != Status.AVBRUTT }
+                        finnesAvsluttede
+                    }
+
+                    else -> false
                 }
-
-                return vurder(kontekst)
-            }
-
-            VurderingType.REVURDERING -> {
-                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
-                    return Fullført
-                }
-                return vurder(kontekst)
-            }
-
-            VurderingType.MELDEKORT,
-            VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
-            VurderingType.IKKE_RELEVANT -> {
-                return Fullført
-            }
-        }
-    }
-
-    fun vurder(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val vurdering = sykdomsvurderingForBrevRepository.hent(kontekst.behandlingId)
-        if (vurdering != null) {
-            logger.info("Fant sykdomsvurdering for brev for behandling ${kontekst.behandlingId}")
-            return Fullført
-        }
-
-        logger.info("Mangler sykdomsvurdering for brev for behandling ${kontekst.behandlingId}")
-        return FantAvklaringsbehov(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
+            },
+            erTilstrekkeligVurdert = {
+                sykdomsvurderingForBrevRepository.hent(kontekst.behandlingId)?.vurdering?.isNotBlank() == true
+            },
+            tilbakestillGrunnlag = {
+                sykdomsvurderingForBrevRepository.deaktiverEksisterende(kontekst.behandlingId)
+            },
+            kontekst = kontekst
+        )
+        return Fullført
     }
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): BehandlingSteg {
             return SykdomsvurderingBrevSteg(repositoryProvider)
         }
 

@@ -67,7 +67,7 @@ class VurderBistandsbehovSteg private constructor(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (Miljø.erDev() || Miljø.erDev() || Miljø.erProd()) {
+        if (Miljø.erProd()) {
             return gammelUtfør(kontekst)
         }
 
@@ -96,7 +96,9 @@ class VurderBistandsbehovSteg private constructor(
         /* Dette skal på sikt ut av denne metoden, og samles i et eget fastsett-steg. */
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
         vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.BISTANDSVILKÅRET)
-        if (avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_BISTANDSBEHOV)?.status() in setOf(Status.AVSLUTTET, Status.AVBRUTT)) {
+        if (avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_BISTANDSBEHOV)
+                ?.status() in setOf(Status.AVSLUTTET, Status.AVBRUTT)
+        ) {
             val grunnlag = BistandFaktagrunnlag(
                 kontekst.rettighetsperiode.fom,
                 kontekst.rettighetsperiode.tom,
@@ -116,7 +118,9 @@ class VurderBistandsbehovSteg private constructor(
             VurderingType.REVURDERING -> {
                 val perioderBistandsvilkåretErRelevant = perioderHvorBistandsvilkåretErRelevant(kontekst)
 
-                if (perioderBistandsvilkåretErRelevant.any { it.verdi } && vurderingsbehovTvingerVurdering(kontekst)) {
+                if (perioderBistandsvilkåretErRelevant.segmenter().any { it.verdi } && vurderingsbehovTvingerVurdering(
+                        kontekst
+                    )) {
                     return true
                 }
 
@@ -144,7 +148,7 @@ class VurderBistandsbehovSteg private constructor(
 
                 perioderBistandsvilkåretErRelevant.leftJoin(perioderBistandsvilkåretErVurdert) { erRelevant, erVurdert ->
                     erRelevant && erVurdert != true
-                }.any { it.verdi }
+                }.segmenter().any { it.verdi }
             }
 
             VurderingType.MELDEKORT -> false
@@ -158,6 +162,7 @@ class VurderBistandsbehovSteg private constructor(
             it in listOf(
                 Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
                 Vurderingsbehov.MOTTATT_SØKNAD,
+                Vurderingsbehov.DØDSFALL_BRUKER,
                 Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
                 Vurderingsbehov.HELHETLIG_VURDERING
             )
@@ -274,7 +279,7 @@ class VurderBistandsbehovSteg private constructor(
     ): Boolean {
         val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
         val erIkkeAvslagPåVilkårTidligere =
-            erIkkeAvslagPåVilkårTidligere(vilkårsresultat, sykdomsvurderinger, typeBehandling, periode.fom)
+            erIkkeAvslagPåVilkårTidligere(vilkårsresultat, sykdomsvurderinger, periode.fom)
         if (!erIkkeAvslagPåVilkårTidligere || studentGrunnlag?.studentvurdering?.erOppfylt() == true) {
             return false
         }
@@ -322,12 +327,11 @@ class VurderBistandsbehovSteg private constructor(
     private fun erIkkeAvslagPåVilkårTidligere(
         vilkårsresultat: Vilkårsresultat,
         sykdomsvurderinger: List<Sykdomsvurdering>,
-        typeBehandling: TypeBehandling,
         kravDato: LocalDate,
     ): Boolean {
         return vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET).harPerioderSomErOppfylt()
                 && vilkårsresultat.finnVilkår(Vilkårtype.LOVVALG).harPerioderSomErOppfylt()
-                && sykdomsvurderinger.any { it.erOppfylt(typeBehandling, kravDato) }
+                && sykdomsvurderinger.any { it.erOppfylt(kravDato) }
     }
 
 

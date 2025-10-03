@@ -100,6 +100,12 @@ class VurderAktivitetsplikt11_7Steg(
             }
             return FantAvklaringsbehov(Definisjon.VURDER_BRUDD_11_7)
         }
+        // Har sendt forhåndsvarselbrev, men har åpent avklaringsbehov - lukk denne
+        val avklaringsbehovForForhåndsvarselBrev =
+            avklaringsbehovene.hentBehovForDefinisjon(Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV)
+        if (brevbestilling.status == Status.FULLFØRT && avklaringsbehovForForhåndsvarselBrev?.status()?.erÅpent() == true) {
+            avklaringsbehovene.avslutt(Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV)
+        }
 
 
         return Fullført
@@ -158,7 +164,7 @@ class VurderAktivitetsplikt11_7Steg(
         override fun konstruer(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
-        ): BehandlingSteg {
+        ): VurderAktivitetsplikt11_7Steg {
             return VurderAktivitetsplikt11_7Steg(
                 unleashGateway = gatewayProvider.provide(),
                 avklaringsbehovRepository = repositoryProvider.provide(),

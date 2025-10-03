@@ -50,7 +50,7 @@ internal class SamordningServiceTest {
             val hentedeVurderinger = service.hentVurderinger(behandlingId)
             val hentedeYtelser = service.hentYtelser(behandlingId)
             val tidligereVurderinger = service.vurderingTidslinje(hentedeVurderinger)
-            assertThat(service.vurder(hentedeYtelser, tidligereVurderinger)).isNotEmpty
+            assertThat(service.vurder(hentedeYtelser, tidligereVurderinger).segmenter()).isNotEmpty
         }
     }
 
@@ -119,8 +119,8 @@ internal class SamordningServiceTest {
         }
 
         // Forvent at ikke-vurderte perioder er fra 1 jan til 4 jan
-        assertThat(ikkeVurdertePerioder).hasSize(1)
-        assertThat(ikkeVurdertePerioder.first().periode).isEqualTo(
+        assertThat(ikkeVurdertePerioder.segmenter()).hasSize(1)
+        assertThat(ikkeVurdertePerioder.segmenter().first().periode).isEqualTo(
             Periode(1 januar 2024, 4 januar 2024)
         )
     }

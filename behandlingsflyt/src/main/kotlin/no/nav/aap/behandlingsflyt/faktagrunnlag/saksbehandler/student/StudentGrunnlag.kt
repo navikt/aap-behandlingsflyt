@@ -9,13 +9,6 @@ class StudentGrunnlag(
     val studentvurdering: StudentVurdering?,
     val oppgittStudent: OppgittStudent?
 ) {
-    fun erKonsistent(): Boolean {
-        if (oppgittStudent == null || !oppgittStudent.erStudent()) {
-            return true
-        }
-        return studentvurdering != null
-    }
-
     fun somTidslinje(rettighetsperiode: Periode): Tidslinje<StudentVurdering> {
         /* TODO: periodisering av studentvilkåret */
         return if (studentvurdering == null) {

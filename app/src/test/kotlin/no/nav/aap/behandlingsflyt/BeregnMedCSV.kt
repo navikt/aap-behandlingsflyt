@@ -151,7 +151,7 @@ fun beregnForInput(input: Input, fødselsdato: Fødselsdato): Triple<Year, GUnit
         samordningArbeidsgiver = null
     )
 
-    val dagsats = tilkjent.beregnTilkjentYtelse().mapValue { it.dagsats }.komprimer().first().verdi.verdi
+    val dagsats = tilkjent.beregnTilkjentYtelse().mapValue { it.dagsats }.komprimer().segmenter().first().verdi.verdi
 
     return Triple(Year.of(input.nedsettelsesDato.year), beregnet.grunnlaget(), dagsats.toDouble())
 }

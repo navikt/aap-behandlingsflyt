@@ -27,7 +27,7 @@ fun List<VurdertPeriode>.komprimerLikeFelter(): List<VurdertPeriode> {
         .flatMap { (_, perioderMedLikeFelter) ->
             perioderMedLikeFelter.map { Segment(it.periode, it.felter) }
                 .let(::Tidslinje).komprimer()
-                .toList()
+                .segmenter()
                 .map { VurdertPeriode(it.periode, it.verdi) }
         }
         .sortedBy { it.periode.fom }

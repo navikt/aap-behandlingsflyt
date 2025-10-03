@@ -149,6 +149,7 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
                     .mapValue { it.rettighetsType != null }
                     .filter { it.verdi }
                     .komprimer()
+                    .segmenter()
                     .map { it.periode }
                     .somKontraktperioder,
                 meldeplikt = MeldepliktRegel().fastsatteDagerMedMeldeplikt(

@@ -51,7 +51,7 @@ class VurderBrudd11_7Løser(
             .komprimer()
 
         aktivitetsplikt11_7Repository.lagre(
-            kontekst.kontekst.behandlingId, vurderinger = nyGjeldende.toList().map { it.verdi })
+            kontekst.kontekst.behandlingId, vurderinger = nyGjeldende.segmenter().map { it.verdi })
 
         settPåVentHvisInnenforFristenOgBrevAlleredeSendt(kontekst.behandlingId(), vurdering)
 

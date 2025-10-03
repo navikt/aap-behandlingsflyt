@@ -1,7 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling
 
-import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
-import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
@@ -22,11 +20,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvbrytRevurderingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemorySakOgBehandlingService
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.type.Periode
@@ -39,16 +36,7 @@ import org.junit.jupiter.api.assertThrows
 import java.math.BigDecimal
 
 class ResultatUtlederTest {
-    private val resultatUtleder = ResultatUtleder(
-        underveisRepository = InMemoryUnderveisRepository,
-        InMemoryBehandlingRepository,
-        trukketSøknadService = TrukketSøknadService(
-            InMemoryTrukketSøknadRepository
-        ),
-        avbrytRevurderingService = AvbrytRevurderingService(
-            InMemoryAvbrytRevurderingRepository
-        )
-    )
+    private val resultatUtleder = ResultatUtleder(inMemoryRepositoryProvider)
 
     @Test
     fun `innvilgelse betyr minst en periode med oppfylt`() {

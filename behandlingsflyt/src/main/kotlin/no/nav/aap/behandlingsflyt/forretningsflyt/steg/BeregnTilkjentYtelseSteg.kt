@@ -87,7 +87,7 @@ class BeregnTilkjentYtelseSteg private constructor(
         ).beregnTilkjentYtelse()
         tilkjentYtelseRepository.lagre(
             behandlingId = kontekst.behandlingId,
-            tilkjent = beregnetTilkjentYtelse.map { TilkjentYtelsePeriode(it.periode, it.verdi) })
+            tilkjent = beregnetTilkjentYtelse.segmenter().map { TilkjentYtelsePeriode(it.periode, it.verdi) })
         log.info("Beregnet tilkjent ytelse: $beregnetTilkjentYtelse")
 
         return Fullført

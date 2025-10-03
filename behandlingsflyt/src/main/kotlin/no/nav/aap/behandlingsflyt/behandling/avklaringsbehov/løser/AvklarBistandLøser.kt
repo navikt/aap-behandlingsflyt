@@ -59,7 +59,7 @@ class AvklarBistandLøser(
 
         val gjeldende = eksisterendeBistandsvurderinger
             .kombiner(ny, StandardSammenslåere.prioriterHøyreSideCrossJoin())
-            .toList().map { it.verdi }
+            .segmenter().map { it.verdi }
 
         bistandRepository.lagre(
             behandlingId = behandling.id,

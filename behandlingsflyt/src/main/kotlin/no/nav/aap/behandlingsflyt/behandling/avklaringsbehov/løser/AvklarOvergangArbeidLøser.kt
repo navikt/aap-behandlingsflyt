@@ -54,7 +54,7 @@ class AvklarOvergangArbeidLøser(
 
         val gjeldende = eksisterendeOvergangarbeidvurderinger
             .kombiner(ny, StandardSammenslåere.prioriterHøyreSideCrossJoin())
-            .toList().map { it.verdi }
+            .segmenter().map { it.verdi }
 
         overgangArbeidRepository.lagre(
             behandlingId = behandling.id,

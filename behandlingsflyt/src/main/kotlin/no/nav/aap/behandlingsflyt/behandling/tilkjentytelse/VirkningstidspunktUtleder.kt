@@ -10,6 +10,6 @@ class VirkningstidspunktUtleder(
     fun utledVirkningsTidspunkt(behandlingId: BehandlingId): LocalDate? {
         val vilkårsResultat = vilkårsresultatRepository.hent(behandlingId)
         
-        return vilkårsResultat.rettighetstypeTidslinje().firstOrNull()?.periode?.fom
+        return vilkårsResultat.rettighetstypeTidslinje().segmenter().firstOrNull()?.periode?.fom
     }
 }

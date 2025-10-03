@@ -5,13 +5,10 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VentPåOpp
 import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.KonsekvensAvOppfølging
 import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.OppfølgingsoppgaveGrunnlagDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
-import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattPersonHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.HvemSkalFølgeOpp
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppfølgingsoppgaveV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Opprinnelse
@@ -25,7 +22,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.*
 
 class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
     @Test
@@ -33,26 +29,14 @@ class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::
         val sak = happyCaseFørstegangsbehandling()
         val førstegangsbehandling = hentSisteOpprettedeBehandlingForSak(sak.id)
 
-        val ident = sak.person.aktivIdent()
-        val periode = sak.rettighetsperiode
-
-        val oppfølgingsbehandling = sendInnDokument(
-            ident, DokumentMottattPersonHendelse(
-                referanse = InnsendingReferanse(
-                    InnsendingReferanse.Type.BEHANDLING_REFERANSE,
-                    UUID.randomUUID().toString(),
-                ),
-                mottattTidspunkt = LocalDateTime.now().minusMonths(3),
-                strukturertDokument = StrukturertDokument(
-                    OppfølgingsoppgaveV0(
-                        datoForOppfølging = LocalDate.now().plusDays(1),
-                        hvaSkalFølgesOpp = "noe",
-                        hvemSkalFølgeOpp = HvemSkalFølgeOpp.NasjonalEnhet,
-                        reserverTilBruker = "MEGSELV"
-                    )
-                ),
-                periode = periode
-            )
+        val oppfølgingsbehandling = sak.sendInnOppfølgingsoppgave(
+            oppfølgingsoppgave = OppfølgingsoppgaveV0(
+                datoForOppfølging = LocalDate.now().plusDays(1),
+                hvaSkalFølgesOpp = "noe",
+                hvemSkalFølgeOpp = HvemSkalFølgeOpp.NasjonalEnhet,
+                reserverTilBruker = "MEGSELV"
+            ),
+            mottattTidspunkt = LocalDateTime.now().minusMonths(3),
         )
             .medKontekst {
                 assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.OppfølgingsBehandling)
@@ -98,29 +82,18 @@ class OppfølgingsBehandlingFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::
         val sak = happyCaseFørstegangsbehandling()
         val førstegangsbehandling = hentSisteOpprettedeBehandlingForSak(sak.id)
 
-        val ident = sak.person.aktivIdent()
-        val periode = sak.rettighetsperiode
-        sendInnDokument(
-            ident, DokumentMottattPersonHendelse(
-                referanse = InnsendingReferanse(
-                    InnsendingReferanse.Type.BEHANDLING_REFERANSE,
-                    UUID.randomUUID().toString(),
-                ),
-                mottattTidspunkt = LocalDateTime.now().minusMonths(3),
-                strukturertDokument = StrukturertDokument(
-                    OppfølgingsoppgaveV0(
-                        datoForOppfølging = LocalDate.now().plusDays(1),
-                        hvaSkalFølgesOpp = "noe",
-                        hvemSkalFølgeOpp = HvemSkalFølgeOpp.NasjonalEnhet,
-                        reserverTilBruker = "MEGSELV",
-                        opprinnelse = Opprinnelse(
-                            behandlingsreferanse = førstegangsbehandling.referanse.toString(),
-                            avklaringsbehovKode = AvklaringsbehovKode.`5028`.toString()
-                        )
-                    )
-                ),
-                periode = periode
-            )
+        sak.sendInnOppfølgingsoppgave(
+            oppfølgingsoppgave = OppfølgingsoppgaveV0(
+                datoForOppfølging = LocalDate.now().plusDays(1),
+                hvaSkalFølgesOpp = "noe",
+                hvemSkalFølgeOpp = HvemSkalFølgeOpp.NasjonalEnhet,
+                reserverTilBruker = "MEGSELV",
+                opprinnelse = Opprinnelse(
+                    behandlingsreferanse = førstegangsbehandling.referanse.toString(),
+                    avklaringsbehovKode = AvklaringsbehovKode.`5028`.toString()
+                )
+            ),
+            mottattTidspunkt = LocalDateTime.now().minusMonths(3),
         )
         val oppretteOppfølgingsoppgave = dataSource.transaction { connection ->
 

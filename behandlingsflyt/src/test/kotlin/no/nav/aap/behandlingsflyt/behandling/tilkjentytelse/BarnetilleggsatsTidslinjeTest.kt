@@ -9,7 +9,7 @@ import java.time.LocalDate
 class BarnetilleggsatsTidslinjeTest {
     @Test
     fun `tidslinja er kontinuerlig`() {
-        val perioder = BARNETILLEGGSATS_TIDSLINJE.map(Segment<Beløp>::periode)
+        val perioder = BARNETILLEGGSATS_TIDSLINJE.segmenter().map(Segment<Beløp>::periode)
 
         assertThat(perioder.first().fom).isEqualTo(LocalDate.MIN)
         assertThat(perioder.last().tom).isEqualTo(LocalDate.MAX)

@@ -5,4 +5,6 @@ import no.nav.aap.komponenter.gateway.Gateway
 
 interface StatistikkGateway : Gateway {
     fun avgiStatistikk(hendelse: StoppetBehandling)
+
+    fun resendBehandling(hendelse: StoppetBehandling)
 }

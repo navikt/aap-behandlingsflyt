@@ -16,8 +16,11 @@ import no.nav.aap.behandlingsflyt.flyt.ventebehov.VentebehovEvaluererServiceImpl
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_FRA_BESLUTTER
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status.UTREDES
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.periodisering.FlytKontekstMedPeriodeService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -27,6 +30,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -56,6 +61,7 @@ class FlytOrkestrator(
     private val ventebehovEvaluererService: VentebehovEvaluererService,
     private val stegOrkestrator: StegOrkestrator,
     private val stoppNårStatus: Set<Status> = emptySet(),
+    private val unleashGateway: UnleashGateway,
 ) {
     constructor(
         repositoryProvider: RepositoryProvider,
@@ -73,6 +79,7 @@ class FlytOrkestrator(
         behandlingHendelseService = BehandlingHendelseServiceImpl(repositoryProvider),
         stegOrkestrator = StegOrkestrator(repositoryProvider, gatewayProvider, markSavepointAt),
         stoppNårStatus = stoppNårStatus,
+        unleashGateway = gatewayProvider.provide(),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -146,6 +153,34 @@ class FlytOrkestrator(
             }
         }
 
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.AutomatiskTilbakeforUlostAvklaringsbehov)) {
+            val tidligsteÅpneAvklaringsbehov = avklaringsbehovene.åpne()
+                .minWithOrNull(compareBy(behandlingFlyt.stegComparator, { it.løsesISteg() }))
+
+            if (tidligsteÅpneAvklaringsbehov != null) {
+                val sendtTilbakeFraBeslutterNå =
+                    tidligsteÅpneAvklaringsbehov.status() == SENDT_TILBAKE_FRA_BESLUTTER && behandling.aktivtSteg() == StegType.FATTE_VEDTAK
+                val sendtTilbakeFraKvalitetssikrerNå =
+                    tidligsteÅpneAvklaringsbehov.status() == SENDT_TILBAKE_FRA_KVALITETSSIKRER && behandling.aktivtSteg() == StegType.KVALITETSSIKRING
+                if (behandlingFlyt.erStegFør(tidligsteÅpneAvklaringsbehov.løsesISteg(), behandling.aktivtSteg())) {
+                    if (!sendtTilbakeFraBeslutterNå && !sendtTilbakeFraKvalitetssikrerNå) {
+                        log.error(
+                            """
+                        Behandlingen er i steg ${behandling.aktivtSteg()} og har passert det åpne 
+                        avklaringsbehovet ${tidligsteÅpneAvklaringsbehov.definisjon} som skal løses i 
+                        steg ${tidligsteÅpneAvklaringsbehov.løsesISteg()}. Med mindre det har skjedd 
+                        en endring i rekkefølgen av stegene, så er dette en bug.
+                        """.trimIndent().replace("\n", " ")
+                        )
+
+                        val tilbakeflyt = behandlingFlyt.tilbakeflyt(tidligsteÅpneAvklaringsbehov)
+                        tilbakefør(kontekst, behandling, tilbakeflyt, avklaringsbehovene)
+                    }
+                }
+            }
+        }
+
+        log.info("Oppdaterer faktagrunnlag for kravliste")
         val oppdaterFaktagrunnlagForKravliste =
             informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
                 kravkonstruktører = behandlingFlyt.alleFaktagrunnlagFørGjeldendeSteg(),

@@ -79,6 +79,7 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource, repositoryRegis
                             },
                             meldekortStatus = null,
                             vurdertePerioder = begrensetTil
+                                .segmenter()
                                 .map {
                                     VurdertPeriode(
                                         periode = it.periode,

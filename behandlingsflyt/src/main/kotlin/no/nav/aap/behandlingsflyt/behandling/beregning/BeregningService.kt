@@ -82,26 +82,9 @@ class BeregningService(
     }
 
     fun utledRelevanteBeregningsÅr(behandlingId: BehandlingId): Set<Year> {
-        val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
         val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId)
-        val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
-        val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
-        val uføreGrunnlag = uføreRepository.hentHvisEksisterer(behandlingId)
-
-        val nedsettelsesDato =
-            utledNedsettelsesdato(beregningVurdering?.tidspunktVurdering, studentGrunnlag?.studentvurdering)
-        // TODO: her lages Inntektsbehov kun for å bruke utledAlleRelevanteÅr. Trekk ut metoder i felles sted
-        val behov = Inntektsbehov(
-            Input(
-                nedsettelsesDato = nedsettelsesDato,
-                inntekter = emptySet(),
-                uføregrad = uføreGrunnlag?.vurderinger.orEmpty(),
-                yrkesskadevurdering = sykdomGrunnlag?.yrkesskadevurdering,
-                registrerteYrkesskader = yrkesskadeGrunnlag?.yrkesskader,
-                beregningGrunnlag = beregningVurdering
-            )
-        )
-        return behov.utledAlleRelevanteÅr()
+        val beregningGrunnlag = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
+        return Inntektsbehov.utledAlleRelevanteÅr(beregningGrunnlag, studentGrunnlag)
     }
 
     private fun kombinerInntektOgManuellInntekt(
@@ -136,7 +119,7 @@ class BeregningService(
     ): Inntektsbehov {
         return Inntektsbehov(
             Input(
-                nedsettelsesDato = utledNedsettelsesdato(vurdering?.tidspunktVurdering, studentVurdering),
+                nedsettelsesDato = Inntektsbehov.utledNedsettelsesdato(vurdering?.tidspunktVurdering, studentVurdering),
                 inntekter = inntekter,
                 uføregrad = uføregrad,
                 yrkesskadevurdering = yrkesskadevurdering,
@@ -145,17 +128,4 @@ class BeregningService(
             )
         )
     }
-
-    private fun utledNedsettelsesdato(
-        beregningVurdering: BeregningstidspunktVurdering?,
-        studentVurdering: StudentVurdering?
-    ): LocalDate {
-        val nedsettelsesdatoer = setOf(
-            beregningVurdering?.nedsattArbeidsevneDato,
-            studentVurdering?.avbruttStudieDato
-        ).filterNotNull()
-
-        return nedsettelsesdatoer.min()
-    }
-
 }

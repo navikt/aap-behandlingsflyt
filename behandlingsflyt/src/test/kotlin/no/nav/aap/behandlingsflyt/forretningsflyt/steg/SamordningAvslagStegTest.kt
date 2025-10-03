@@ -72,9 +72,9 @@ class SamordningAvslagStegTest {
         every { vilkårsresultatRepository.lagre(any(), capture(vilkårSlot)) } just Runs
         steg.utfør(kontekst = kontekst)
         val vilkårTidslinje = vilkårSlot.captured.finnVilkår(Vilkårtype.SAMORDNING).tidslinje()
-        assertThat(vilkårTidslinje.segmenter().size).isEqualTo(1)
-        assertThat(vilkårTidslinje.first().verdi.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
-        assertThat(vilkårTidslinje.first().periode).isEqualTo(periode)
+        assertThat(vilkårTidslinje.segmenter().count()).isEqualTo(1)
+        assertThat(vilkårTidslinje.segmenter().first().verdi.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
+        assertThat(vilkårTidslinje.segmenter().first().periode).isEqualTo(periode)
 
     }
 
@@ -86,9 +86,9 @@ class SamordningAvslagStegTest {
         every { vilkårsresultatRepository.lagre(any(), capture(vilkårSlot)) } just Runs
         steg.utfør(kontekst = kontekst)
         val vilkårTidslinje = vilkårSlot.captured.finnVilkår(Vilkårtype.SAMORDNING).tidslinje()
-        assertThat(vilkårTidslinje.segmenter().size).isEqualTo(1)
-        assertThat(vilkårTidslinje.first().verdi.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
-        assertThat(vilkårTidslinje.first().periode).isEqualTo(periode)
+        assertThat(vilkårTidslinje.segmenter().count()).isEqualTo(1)
+        assertThat(vilkårTidslinje.segmenter().first().verdi.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
+        assertThat(vilkårTidslinje.segmenter().first().periode).isEqualTo(periode)
     }
 
     @Test
@@ -104,7 +104,7 @@ class SamordningAvslagStegTest {
         every { vilkårsresultatRepository.lagre(any(), capture(vilkårSlot)) } just Runs
         steg.utfør(kontekst = kontekst)
         val vilkårTidslinje = vilkårSlot.captured.finnVilkår(Vilkårtype.SAMORDNING).tidslinje()
-        assertThat(vilkårTidslinje.segmenter().size).isEqualTo(1)
+        assertThat(vilkårTidslinje.segmenter().count()).isEqualTo(1)
         assertThat(vilkårTidslinje.segmenter().first().verdi.utfall).isEqualTo(Utfall.IKKE_VURDERT)
         assertThat(vilkårTidslinje.segmenter().first().periode).isEqualTo(periode)
     }

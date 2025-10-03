@@ -6,13 +6,14 @@ plugins {
 dependencies {
     api(project(":kontrakt"))
     implementation("io.micrometer:micrometer-registry-prometheus:1.15.4")
-    implementation("ch.qos.logback:logback-classic:1.5.18")
+    implementation("ch.qos.logback:logback-classic:1.5.19")
     implementation("net.logstash.logback:logstash-logback-encoder:8.1")
+    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.20.1")
 
     api(libs.tilgangPlugin)
     api(libs.tilgangKontrakt)
-    api("no.nav.aap.brev:kontrakt:0.0.152")
-    api("no.nav.aap.meldekort:kontrakt:0.0.116")
+    api("no.nav.aap.brev:kontrakt:0.0.156")
+    api("no.nav.aap.meldekort:kontrakt:0.0.125")
     api(libs.motor)
     api(libs.gateway)
     api(libs.utbetalKontrakt)
@@ -24,8 +25,8 @@ dependencies {
     implementation(libs.verdityper)
     implementation(libs.tidslinje)
     implementation(kotlin("reflect"))
-    implementation("org.flywaydb:flyway-database-postgresql:11.13.1")
-    runtimeOnly("org.postgresql:postgresql:42.7.8")
+    implementation("org.flywaydb:flyway-database-postgresql:11.13.2")
+    runtimeOnly("org.postgresql:postgresql") // låst versjon i root build.gradle.kts
 
 
     testImplementation(project(":lib-test"))
@@ -40,6 +41,6 @@ dependencies {
             because("https://github.com/advisories/GHSA-4g9r-vxhx-9pgx")
         }
     }
-    testImplementation("io.mockk:mockk:1.14.5")
+    testImplementation("io.mockk:mockk:1.14.6")
     testImplementation(kotlin("test"))
 }

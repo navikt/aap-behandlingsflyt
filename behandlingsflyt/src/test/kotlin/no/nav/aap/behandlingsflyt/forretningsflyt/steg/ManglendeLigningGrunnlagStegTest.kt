@@ -102,7 +102,6 @@ class ManglendeLigningGrunnlagStegTest {
             manuellInntektGrunnlagRepository,
             tidligereVurderinger,
             beregningService,
-            erProd = false,
             avklaringsbehovService
         )
     }

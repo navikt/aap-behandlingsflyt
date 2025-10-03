@@ -126,11 +126,11 @@ class EtAnnetStedUtlederService(
     ): Tidslinje<InstitusjonsOpphold> {
         var result = Tidslinje<InstitusjonsOpphold>()
         // Kjører gjennom noen ganger for å ta med per vi får med et og et nytt opphold basert på den dumme regelen her
-        IntStream.range(0, max(helseoppholdUtenBarnetillegg.segmenter().size - 1, 0)).forEach { i ->
+        IntStream.range(0, max(helseoppholdUtenBarnetillegg.segmenter().count() - 1, 0)).forEach { i ->
             val oppholdSomKanGiReduksjon = Tidslinje(
                 oppholdSomLiggerMindreEnnTreMånederFraForrigeSomGaReduksjon(
                     helseoppholdUtenBarnetillegg, perioderSomTrengerVurdering
-                ).mapNotNull {
+                ).segmenter().mapNotNull {
                     val fom = it.fom().withDayOfMonth(1).plusMonths(1)
 
                     if (fom.isAfter(it.tom())) {

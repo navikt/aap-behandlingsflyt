@@ -22,6 +22,7 @@ class Aktivitetsplikt11_7Regel : UnderveisRegel {
             Tidslinje(
                 this
                     .tidslinje()
+                    .segmenter()
                     .mapNotNull { segment ->
                         when (segment.verdi.erOppfylt) {
                             false -> Segment(segment.periode, AktivitetspliktVurdering(vurdering = segment.verdi))

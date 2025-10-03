@@ -102,7 +102,7 @@ class SoningRegelTest {
 
         val resultat = regel.vurder(input, tidligereResultatTidslinje)
 
-        assertEquals(3, resultat.count())
+        assertEquals(3, resultat.segmenter().count())
 
         //Soner ikke
         assertEquals(

@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.kontrakt.hendelse
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonValue
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.util.*
 
@@ -15,9 +14,12 @@ public data class InnsendingReferanse(
         BRUDD_AKTIVITETSPLIKT_INNSENDING_ID,
         AVVIST_LEGEERKLÆRING_ID,
         REVURDERING_ID,
+        @Deprecated(message = "Brukes ikke lenger, beholdes for bakoverkompatibilitet")
         BEHANDLING_REFERANSE,
+        SAKSBEHANDLER_KELVIN_REFERANSE,
         MANUELL_OPPRETTELSE,
-        KABAL_HENDELSE_ID
+        KABAL_HENDELSE_ID,
+        PDL_HENDELSE_ID
     }
 
     @get:JsonIgnore
@@ -30,12 +32,6 @@ public data class InnsendingReferanse(
     val asInnsendingId: InnsendingId
         get() = InnsendingId(verdi).also {
             require(type == Type.BRUDD_AKTIVITETSPLIKT_INNSENDING_ID)
-        }
-
-    @get:JsonIgnore
-    val asBehandlingReferanse: BehandlingReferanse
-        get() = BehandlingReferanse(UUID.fromString(verdi)).also {
-            require(type == Type.BEHANDLING_REFERANSE)
         }
 
     @get:JsonIgnore
@@ -54,6 +50,7 @@ public data class InnsendingReferanse(
     public constructor(id: JournalpostId) : this(Type.JOURNALPOST, id.identifikator)
     public constructor(id: AvvistLegeerklæringId) : this(Type.AVVIST_LEGEERKLÆRING_ID, id.asString)
     public constructor(id: KabalHendelseId) : this(Type.KABAL_HENDELSE_ID, id.asString)
+    public constructor(id: PdlHendelseId) : this(Type.PDL_HENDELSE_ID, id.asString)
 }
 
 public data class InnsendingId(@JsonValue val value: UUID) {
@@ -85,3 +82,14 @@ public data class KabalHendelseId(@JsonValue val value: UUID) {
         public fun ny(): KabalHendelseId = KabalHendelseId(UUID.randomUUID())
     }
 }
+
+public data class PdlHendelseId(@JsonValue val value: UUID) {
+    val asString: String get() = value.toString()
+
+    public constructor(value: String) : this(UUID.fromString(value))
+
+    public companion object {
+        public fun ny(): PdlHendelseId = PdlHendelseId(UUID.randomUUID())
+    }
+}
+

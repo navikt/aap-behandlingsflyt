@@ -191,13 +191,13 @@ class AvklaringsbehovService(
                 when (kontekst.vurderingType) {
                     VurderingType.FØRSTEGANGSBEHANDLING,
                     VurderingType.REVURDERING -> {
-                        val perioderBistandsvilkåretErRelevant = nårVurderingErRelevant(kontekst)
+                        val perioderVilkåretErRelevant = nårVurderingErRelevant(kontekst)
 
-                        if (perioderBistandsvilkåretErRelevant.any { it.verdi } && kontekst.vurderingsbehovRelevanteForSteg.any { it in tvingerAvklaringsbehov }) {
+                        if (perioderVilkåretErRelevant.segmenter().any { it.verdi } && kontekst.vurderingsbehovRelevanteForSteg.any { it in tvingerAvklaringsbehov }) {
                             return@oppdaterAvklaringsbehov true
                         }
 
-                        val perioderBistandsvilkåretErVurdert = kontekst.forrigeBehandlingId
+                        val perioderVilkåretErVurdert = kontekst.forrigeBehandlingId
                             ?.let { forrigeBehandlingId ->
                                 val forrigeBehandling = behandlingRepository.hent(forrigeBehandlingId)
                                 val forrigeRettighetsperiode =
@@ -219,9 +219,9 @@ class AvklaringsbehovService(
                             }
                             ?: tidslinjeOf()
 
-                        perioderBistandsvilkåretErRelevant.leftJoin(perioderBistandsvilkåretErVurdert) { erRelevant, erVurdert ->
+                        perioderVilkåretErRelevant.leftJoin(perioderVilkåretErVurdert) { erRelevant, erVurdert ->
                             erRelevant && erVurdert != true
-                        }.any { it.verdi }
+                        }.segmenter().any { it.verdi }
                     }
 
                     VurderingType.MELDEKORT -> false

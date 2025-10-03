@@ -37,6 +37,7 @@ fun vurderRettighetsType(vilkårsresultat: Vilkårsresultat): Tidslinje<Rettighe
                 else -> null
             }
         }
+        .segmenter()
         .mapNotNull { segment -> segment.verdi?.let { Segment(segment.periode, it) } }
         .let(::Tidslinje)
         .komprimer()

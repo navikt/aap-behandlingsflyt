@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt
 
+import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovHendelseHåndterer
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
@@ -9,6 +10,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBist
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarForutgåendeMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarLovvalgMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarManuellInntektVurderingLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOppholdskravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangArbeidLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
@@ -27,13 +29,15 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderRett
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.YrkesskadevurderingDto
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.mellomlagring.MellomlagretVurdering
+import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.AvklarOppholdkravLøsningPeriodeDto
+import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.AvklarOppholdskravLøsningDto
+
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLand
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøknadsTidspunktDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskapDto
@@ -49,9 +53,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.Refus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
-import no.nav.aap.behandlingsflyt.flyt.internals.DokumentMottattPersonHendelse
-import no.nav.aap.behandlingsflyt.flyt.internals.NyÅrsakTilBehandlingHendelse
-import no.nav.aap.behandlingsflyt.flyt.internals.TestHendelsesMottak
+import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
+import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
 import no.nav.aap.behandlingsflyt.integrasjon.aordning.InntektkomponentenGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.AARegisterGateway
 import no.nav.aap.behandlingsflyt.integrasjon.arbeidsforhold.EREGGateway
@@ -89,16 +92,25 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.KabalHendelseId
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ArbeidIPeriodeV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KabalHendelseV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Klage
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManueltOppgittBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppfølgingsoppgaveV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppgitteBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Søknad
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
@@ -136,6 +148,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.motor.testutil.ManuellMotorImpl
 import no.nav.aap.verdityper.dokument.JournalpostId
+import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
@@ -162,8 +175,6 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
             gatewayProvider = gatewayProvider
         )
     }
-
-    protected val hendelsesMottak by lazy { TestHendelsesMottak(dataSource, gatewayProvider) }
 
     protected val gatewayProvider = createGatewayProvider {
         register<PdlBarnGateway>()
@@ -204,6 +215,13 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
             System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
         }
     }
+
+    private var nesteJournalpostId = (300..1000000)
+        .asSequence()
+        .map { JournalpostId(it.toString()) }
+        .iterator()
+
+    protected fun journalpostId() = nesteJournalpostId.next()
 
     @BeforeEach
     fun beforeEachClearDatabase() {
@@ -289,15 +307,15 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
 
     fun happyCaseFørstegangsbehandling(
         fom: LocalDate = LocalDate.now().minusMonths(3),
-        person: TestPerson = TestPersoner.STANDARD_PERSON()
+        person: TestPerson = TestPersoner.STANDARD_PERSON(),
+        periode: Periode = Periode(fom, fom.plusYears(3))
     ): Sak {
-        val periode = Periode(fom, fom.plusYears(3))
-
-        // Simulerer et svar fra YS-løsning om at det finnes en yrkesskade
-        val ident = person.aktivIdent()
-
         // Sender inn en søknad
-        var behandling = sendInnSøknad(ident, periode, TestSøknader.STANDARD_SØKNAD)
+        var (sak, behandling) = sendInnFørsteSøknad(
+            person = person,
+            mottattTidspunkt = fom.atStartOfDay(),
+            periode = periode,
+        )
 
         assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
         behandling = behandling.medKontekst {
@@ -330,27 +348,15 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                 )
             )
             .løsSykdomsvurderingBrev()
-            // Sender inn en søknad
-            .sendInnDokument(
-                DokumentMottattPersonHendelse(
-                    journalpost = JournalpostId("220"),
-                    mottattTidspunkt = LocalDateTime.now(),
-                    strukturertDokument = StrukturertDokument(
-                        MeldekortV0(
-                            harDuArbeidet = false,
-                            timerArbeidPerPeriode = listOf(
-                                ArbeidIPeriodeV0(
-                                    fraOgMedDato = LocalDate.now().minusMonths(3),
-                                    tilOgMedDato = LocalDate.now().plusMonths(3),
-                                    timerArbeid = 0.0,
-                                )
-                            )
-                        ),
-                    ),
-                    periode = periode
-                )
-            )
-            .kvalitetssikreOk()
+
+        sak.sendInnMeldekort(
+            journalpostId = JournalpostId("220"),
+            mottattTidspunkt = fom.atStartOfDay(),
+            timerArbeidet = sak.rettighetsperiode.dager()
+                .associateWith { 0.0 }
+        )
+
+        behandling = behandling.kvalitetssikreOk()
             .løsAvklaringsBehov(
                 FastsettBeregningstidspunktLøsning(
                     beregningVurdering = BeregningstidspunktVurderingDto(
@@ -394,23 +400,15 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
     }
 
     fun revurdereFramTilOgMedSykdom(sak: Sak, gjelderFra: LocalDate, vissVarighet: Boolean? = null): Behandling {
-        val ident = sak.person.aktivIdent()
-        val periode = sak.rettighetsperiode
-
-        return sendInnDokument(
-            ident, DokumentMottattPersonHendelse(
-                journalpost = JournalpostId("29"),
-                mottattTidspunkt = LocalDateTime.now().minusMonths(3),
-                strukturertDokument = StrukturertDokument(
-                    SøknadV0(
-                        student = SøknadStudentDto("NEI"),
-                        yrkesskade = "NEI",
-                        oppgitteBarn = null,
-                        medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
-                    ),
-                ),
-                periode = periode
-            )
+        return sak.sendInnSøknad(
+            journalpostId = JournalpostId("29"),
+            mottattTidspunkt = gjelderFra.atStartOfDay(),
+            søknad = SøknadV0(
+                student = SøknadStudentDto("NEI"),
+                yrkesskade = "NEI",
+                oppgitteBarn = null,
+                medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
+            ),
         )
             .medKontekst {
                 assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
@@ -483,42 +481,42 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         )
     }
 
-    protected fun løsFramTilGrunnlag(behandling: Behandling) {
-        var behandling = behandling
-        behandling = løsSykdom(behandling)
-        behandling = løsAvklaringsBehov(
-            behandling,
-            AvklarBistandsbehovLøsning(
-                bistandsVurdering = BistandVurderingLøsningDto(
-                    begrunnelse = "Trenger hjelp fra nav",
-                    erBehovForAktivBehandling = true,
-                    erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = null,
-                    skalVurdereAapIOvergangTilArbeid = null,
-                    overgangBegrunnelse = null,
-                    skalVurdereAapIOvergangTilUføre = null,
+    @JvmName("løsFramTilGrunnlagExt")
+    protected fun Behandling.løsFramTilGrunnlag(): Behandling {
+        return løsFramTilGrunnlag(this)
+    }
 
-                    ),
-            ),
-        )
+    protected fun løsFramTilGrunnlag(behandling: Behandling): Behandling {
+        return behandling
+            .løsSykdom()
+            .løsAvklaringsBehov(
+                AvklarBistandsbehovLøsning(
+                    bistandsVurdering = BistandVurderingLøsningDto(
+                        begrunnelse = "Trenger hjelp fra nav",
+                        erBehovForAktivBehandling = true,
+                        erBehovForArbeidsrettetTiltak = false,
+                        erBehovForAnnenOppfølging = null,
+                        skalVurdereAapIOvergangTilArbeid = null,
+                        overgangBegrunnelse = null,
+                        skalVurdereAapIOvergangTilUføre = null,
 
-        behandling = løsAvklaringsBehov(
-            behandling,
-            RefusjonkravLøsning(
-                listOf(
-                    RefusjonkravVurderingDto(
-                        harKrav = true,
-                        fom = LocalDate.now(),
-                        tom = null,
-                        navKontor = "",
+                        ),
+                ),
+            )
+            .løsAvklaringsBehov(
+                RefusjonkravLøsning(
+                    listOf(
+                        RefusjonkravVurderingDto(
+                            harKrav = true,
+                            fom = LocalDate.now(),
+                            tom = null,
+                            navKontor = "",
+                        )
                     )
                 )
             )
-        )
-
-        behandling = løsSykdomsvurderingBrev(behandling)
-
-        kvalitetssikreOk(behandling)
+            .løsSykdomsvurderingBrev()
+            .kvalitetssikreOk()
     }
 
     protected fun mellomlagreSykdom(behandling: Behandling): Behandling {
@@ -592,6 +590,26 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                         brukerRettPåAAP = false,
                         virkningsdato = null,
                         overgangBegrunnelse = null
+                    )
+                )
+        )
+    }
+
+    protected fun Behandling.løsOppholdskrav(): Behandling {
+        return løsAvklaringsBehov(
+            behandling = this,
+            avklaringsBehovLøsning =
+                AvklarOppholdskravLøsning(
+                    vurdering = AvklarOppholdskravLøsningDto(
+                        perioder = listOf(
+                            AvklarOppholdkravLøsningPeriodeDto(
+                                oppfylt = true,
+                                land = "SE:Sverige",
+                                fom = LocalDate.now(),
+                                begrunnelse = "Fiske"
+
+                            )
+                        )
                     )
                 )
         )
@@ -688,6 +706,12 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         }
     }
 
+    protected fun hentSak(saksnummer: Saksnummer): Sak {
+        return dataSource.transaction { connection ->
+            SakRepositoryImpl(connection).hent(saksnummer)
+        }
+    }
+
     protected fun opprettBehandling(
         sakId: SakId,
         vurderingsbehov: List<VurderingsbehovMedPeriode>,
@@ -730,6 +754,19 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
             )
             requireNotNull(finnSisteBehandlingFor)
         }
+    }
+
+    /**
+     * Denne må brukes med omhu, da siste opprettede behandling ikke nødvendigvis er siste behandling
+     * i den lenkede listen av behandlinger. Ref. fasttrack/atomære behandlinger
+     *
+     * Bruk i stedet: [SakOgBehandlingService.finnSisteYtelsesbehandlingFor]
+     */
+    protected fun hentSisteOpprettedeBehandlingForSak(
+        saksnummer: Saksnummer,
+        typeBehandling: List<TypeBehandling> = TypeBehandling.entries
+    ): Behandling {
+        return hentSisteOpprettedeBehandlingForSak(hentSak(saksnummer).id, typeBehandling)
     }
 
     protected fun hentBehandling(behandlingReferanse: BehandlingReferanse): Behandling {
@@ -776,58 +813,211 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         }
     }
 
-    protected fun sendInnSøknad(ident: Ident, periode: Periode, søknad: Søknad): Behandling {
-        return sendInnDokument(
-            ident, DokumentMottattPersonHendelse(
-                journalpost = JournalpostId(Random().nextInt(1000000).toString()),
-                mottattTidspunkt = LocalDateTime.now(),
-                strukturertDokument = StrukturertDokument(søknad),
-                periode = periode
+    protected fun sendInnFørsteSøknad(
+        søknad: Søknad = TestSøknader.STANDARD_SØKNAD,
+        person: TestPerson = TestPersoner.STANDARD_PERSON(),
+        mottattTidspunkt: LocalDateTime? = null,
+        periode: Periode? = null,
+        journalpostId: JournalpostId = journalpostId(),
+    ): Pair<Sak, Behandling> {
+        val mottattTidspunkt = mottattTidspunkt ?: periode?.fom?.atStartOfDay() ?: LocalDateTime.now().minusMonths(3)
+        val periode = periode ?: Periode(mottattTidspunkt.toLocalDate(), mottattTidspunkt.toLocalDate().plusYears(1))
+        val sak = dataSource.transaction { connection ->
+            SakRepositoryImpl(connection).finnEllerOpprett(
+                PersonRepositoryImpl(connection).finnEllerOpprett(listOf(person.aktivIdent())),
+                periode
             )
-        )
+        }
+
+        val behandling = sak.sendInnSøknad(søknad, mottattTidspunkt, journalpostId)
+
+        return Pair(sak, behandling)
     }
 
-    protected fun opprettManuellRevurdering(sak: Sak, vurderingsbehov: List<Vurderingsbehov>): Behandling {
-        return sendInnDokument(
-            sak.person.aktivIdent(), DokumentMottattPersonHendelse(
-                journalpost = JournalpostId(Random().nextInt(1000000).toString()),
-                mottattTidspunkt = LocalDateTime.now(),
-                innsendingType = InnsendingType.MANUELL_REVURDERING,
-                periode = sak.rettighetsperiode,
-                strukturertDokument = StrukturertDokument(
-                    ManuellRevurderingV0(
-                        årsakerTilBehandling = vurderingsbehov, ""
-                    ),
-                ),
-            )
-        )
-    }
 
-    protected fun sendInnDokument(
+    @Deprecated("Bruk opprettSak for førstegangsbehandling eller Sak.sendInnSøknad hvis saken allerede eksisterer")
+    protected fun sendInnSøknad(
         ident: Ident,
-        dokumentMottattPersonHendelse: DokumentMottattPersonHendelse
+        periode: Periode,
+        søknad: Søknad,
+        mottattTidspunkt: LocalDateTime = LocalDateTime.now(),
+        journalpostId: JournalpostId = journalpostId(),
     ): Behandling {
-        hendelsesMottak.håndtere(ident, dokumentMottattPersonHendelse)
-        motor.kjørJobber()
-        val sak = hentSak(ident, dokumentMottattPersonHendelse.periode)
-        val behandling = hentSisteOpprettedeBehandlingForSak(sak.id)
+        return hentSak(ident, periode).sendInnSøknad(
+            søknad,
+            mottattTidspunkt,
+            journalpostId
+        )
+    }
+
+    protected fun Sak.sendInnSøknad(
+        søknad: Søknad,
+        mottattTidspunkt: LocalDateTime = LocalDateTime.now(),
+        journalpostId: JournalpostId = journalpostId(),
+    ): Behandling {
+        sendInn(
+            referanse = InnsendingReferanse(journalpostId),
+            type = InnsendingType.SØKNAD,
+            kanal = Kanal.DIGITAL,
+            mottattTidspunkt = mottattTidspunkt,
+            melding = søknad,
+        )
+        return hentSisteOpprettedeBehandlingForSak(id)
+    }
+
+    protected fun Sak.opprettManuellRevurdering(
+        vurderingsbehov: List<Vurderingsbehov>,
+    ): Behandling {
+        sendInn(
+            referanse = InnsendingReferanse(
+                InnsendingReferanse.Type.REVURDERING_ID,
+                /* Dette kan da neppe være riktig. Hva slags referanse genereres i disse tilfellene? */
+                journalpostId().identifikator,
+            ),
+            type = InnsendingType.MANUELL_REVURDERING,
+            kanal = Kanal.DIGITAL,
+            mottattTidspunkt = LocalDateTime.now(),
+            melding = ManuellRevurderingV0(
+                årsakerTilBehandling = vurderingsbehov, ""
+            ),
+        )
+        return hentSisteOpprettedeBehandlingForSak(id)
+    }
+
+    protected fun Sak.sendInnKabalHendelse(
+        mottattTidspunkt: LocalDateTime = LocalDateTime.now(),
+        kabalHendelse: KabalHendelseV0,
+    ): Behandling {
+        sendInn(
+            referanse = InnsendingReferanse(KabalHendelseId(kabalHendelse.eventId)),
+            type = InnsendingType.KABAL_HENDELSE,
+            kanal = Kanal.DIGITAL,
+            mottattTidspunkt = mottattTidspunkt,
+            melding = kabalHendelse,
+        )
+        return hentSisteOpprettedeBehandlingForSak(saksnummer)
+    }
+
+    protected fun Sak.sendInnOppfølgingsoppgave(
+        oppfølgingsoppgave: OppfølgingsoppgaveV0,
+        mottattTidspunkt: LocalDateTime = LocalDateTime.now(),
+    ): Behandling {
+        sendInn(
+            referanse = InnsendingReferanse(
+                InnsendingReferanse.Type.BEHANDLING_REFERANSE,
+                UUID.randomUUID().toString(),
+            ),
+            type = InnsendingType.OPPFØLGINGSOPPGAVE,
+            kanal = Kanal.DIGITAL,
+            mottattTidspunkt = mottattTidspunkt,
+            melding = oppfølgingsoppgave,
+        )
+        return hentSisteOpprettedeBehandlingForSak(saksnummer)
+    }
+
+    protected fun Sak.sendInnKlage(
+        journalpostId: JournalpostId = journalpostId(),
+        mottattTidspunkt: LocalDateTime,
+        klage: Klage,
+    ): Behandling {
+        sendInn(
+            referanse = InnsendingReferanse(journalpostId),
+            type = InnsendingType.KLAGE,
+            kanal = Kanal.DIGITAL,
+            mottattTidspunkt = mottattTidspunkt,
+            melding = klage,
+        )
+        val behandling = hentSisteOpprettedeBehandlingForSak(saksnummer)
         return behandling
     }
 
-    protected fun Behandling.sendInnDokument(
-        dokumentMottattPersonHendelse: DokumentMottattPersonHendelse
-    ): Behandling {
-        val aktivIdent = hentSak(this).person.aktivIdent()
-        return sendInnDokument(aktivIdent, dokumentMottattPersonHendelse)
+
+    protected fun Sak.sendInnMeldekort(
+        journalpostId: JournalpostId,
+        timerArbeidet: Map<LocalDate, Double>,
+        mottattTidspunkt: LocalDateTime = LocalDateTime.now(),
+    ) {
+        sendInn(
+            referanse = InnsendingReferanse(journalpostId),
+            type = InnsendingType.MELDEKORT,
+            kanal = Kanal.DIGITAL,
+            mottattTidspunkt = mottattTidspunkt,
+            melding = MeldekortV0(
+                harDuArbeidet = timerArbeidet.any { (_, timer) -> timer > 0.0 },
+                timerArbeidPerPeriode = timerArbeidet.map { (dato, timer) ->
+                    ArbeidIPeriodeV0(
+                        fraOgMedDato = dato,
+                        tilOgMedDato = dato,
+                        timerArbeid = timer,
+                    )
+                }
+            ),
+        )
     }
 
-    protected fun sendInnDokument(
-        ident: Ident,
-        hendelse: NyÅrsakTilBehandlingHendelse
-    ): Behandling {
-        hendelsesMottak.håndtere(ident, hendelse)
+    protected fun Behandling.leggTilVurderingsbehov(vurderingsbehov: Vurderingsbehov): Behandling {
+        return leggTilVurderingsbehov(listOf(vurderingsbehov))
+    }
+
+    protected fun Behandling.leggTilVurderingsbehov(vurderingsbehov: List<Vurderingsbehov>): Behandling {
+        hentSak(this).leggTilVurderingsbehov(this.referanse, vurderingsbehov)
+        return hentBehandling(this.referanse)
+    }
+
+    protected fun Sak.leggTilVurderingsbehov(
+        behandlingReferanse: BehandlingReferanse,
+        vurderingsbehov: List<Vurderingsbehov>
+    ) {
+        sendInn(
+            referanse = InnsendingReferanse(
+                type = InnsendingReferanse.Type.SAKSBEHANDLER_KELVIN_REFERANSE,
+                verdi = UUID.randomUUID().toString(),
+            ),
+            mottattTidspunkt = LocalDateTime.now().minusMonths(4),
+            type = InnsendingType.NY_ÅRSAK_TIL_BEHANDLING,
+            kanal = Kanal.DIGITAL,
+            melding = NyÅrsakTilBehandlingV0(
+                årsakerTilBehandling = vurderingsbehov,
+                behandlingReferanse = behandlingReferanse.toString(),
+                null
+            ),
+        )
+    }
+
+    protected fun Sak.sendInn(
+        referanse: InnsendingReferanse,
+        type: InnsendingType,
+        kanal: Kanal,
+        mottattTidspunkt: LocalDateTime,
+        melding: Melding?,
+    ) {
+        dataSource.transaction { connection ->
+            MottattHendelseService(postgresRepositoryRegistry.provider(connection)).registrerMottattHendelse(
+                Innsending(
+                    saksnummer = saksnummer,
+                    referanse = referanse,
+                    type = type,
+                    kanal = kanal,
+                    mottattTidspunkt = mottattTidspunkt,
+                    melding = melding,
+                )
+            )
+        }
         motor.kjørJobber()
-        return hentBehandling(hendelse.referanse.asBehandlingReferanse)
+    }
+
+    fun settBehandlingPåVent(key: BehandlingId, hendelse: BehandlingSattPåVent) {
+        dataSource.transaction { connection ->
+            AvklaringsbehovOrkestrator(postgresRepositoryRegistry.provider(connection), gatewayProvider)
+                .settBehandlingPåVent(key, hendelse)
+        }
+    }
+
+    fun bestillLegeerklæring(key: BehandlingId) {
+        dataSource.transaction { connection ->
+            AvklaringsbehovOrkestrator(postgresRepositoryRegistry.provider(connection), gatewayProvider)
+                .settPåVentMensVentePåMedisinskeOpplysninger(key, SYSTEMBRUKER)
+        }
     }
 
     protected fun hentBrevAvType(behandling: Behandling, typeBrev: TypeBrev) =
@@ -856,6 +1046,11 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
     @JvmName("losForutgaaendeMedlemskapExt")
     protected fun Behandling.løsForutgåendeMedlemskap(): Behandling {
         return løsForutgåendeMedlemskap(this)
+    }
+
+    @JvmName("løsFramTilForutgåendeMedlemskapExt")
+    protected fun Behandling.løsFramTilForutgåendeMedlemskap(harYrkesskade: Boolean = false): Behandling {
+        return løsFramTilForutgåendeMedlemskap(this, harYrkesskade)
     }
 
     protected fun løsFramTilForutgåendeMedlemskap(
@@ -1078,21 +1273,6 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         val brevbestilling = hentBrevAvType(this, typeBrev)
 
         return this.løsAvklaringsBehov(vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
-    }
-
-    protected fun leggTilVurderingsbehovForBehandling(
-        behandling: Behandling,
-        vurderingsbehov: List<VurderingsbehovMedPeriode>,
-        årsakTilOpprettelse: ÅrsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD
-    ) {
-        dataSource.transaction { connection ->
-            SakOgBehandlingService(postgresRepositoryRegistry.provider(connection), gatewayProvider)
-                .finnEllerOpprettOrdinærBehandling(
-                    behandling.sakId,
-                    VurderingsbehovOgÅrsak(vurderingsbehov, årsakTilOpprettelse)
-                )
-        }
-        prosesserBehandling(behandling)
     }
 
     protected fun prosesserBehandling(behandling: Behandling): Behandling {

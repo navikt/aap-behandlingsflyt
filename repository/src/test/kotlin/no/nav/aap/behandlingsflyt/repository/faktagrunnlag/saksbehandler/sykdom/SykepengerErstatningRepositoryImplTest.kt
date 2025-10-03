@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerGrunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerVurdering
 import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
@@ -10,16 +11,20 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDatabase
+import no.nav.aap.komponenter.dbtest.TestDatabaseExtension
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDate
+import javax.sql.DataSource
 
+@ExtendWith(TestDatabaseExtension::class)
 internal class SykepengerErstatningRepositoryImplTest {
-
-    private val dataSource = InitTestDatabase.freshDatabase()
+    @TestDatabase
+    lateinit var dataSource: DataSource
 
     @Test
     fun `lagre og hente ut igjen`() {
@@ -41,12 +46,43 @@ internal class SykepengerErstatningRepositoryImplTest {
             SykepengerErstatningRepositoryImpl(it).hent(behandling.id)
         }
 
-        assertThat(res.vurdering?.begrunnelse).isEqualTo(vurdering.begrunnelse)
-        assertThat(res.vurdering?.dokumenterBruktIVurdering).isEqualTo(vurdering.dokumenterBruktIVurdering)
-        assertThat(res.vurdering?.harRettPå).isEqualTo(vurdering.harRettPå)
-        assertThat(res.vurdering?.grunn).isEqualTo(vurdering.grunn)
-        assertThat(res.vurdering?.vurdertAv).isEqualTo(vurdering.vurdertAv)
+        assertThat(res.vurdering).usingRecursiveComparison()
+            .ignoringFields("vurdertTidspunkt")
+            .isEqualTo(vurdering)
         assertThat(res.vurdering?.vurdertTidspunkt).isNotNull()
+
+        // Lagre nytt, hent ut nyeste
+
+        val vurdering2 = SykepengerVurdering(
+            begrunnelse = "yolo x2",
+            dokumenterBruktIVurdering = listOf(JournalpostId("456")),
+            harRettPå = false,
+            grunn = SykepengerGrunn.SYKEPENGER_FORTSATT_ARBEIDSUFOR,
+            vurdertAv = "saksbehandler!!"
+        )
+
+        dataSource.transaction { connection ->
+            SykepengerErstatningRepositoryImpl(connection).lagre(behandling.id, vurdering)
+        }
+
+        val res2 = dataSource.transaction {
+            SykepengerErstatningRepositoryImpl(it).hent(behandling.id)
+        }
+        assertThat(res2.vurdering).usingRecursiveComparison()
+            .ignoringFields("vurdertTidspunkt")
+            .isEqualTo(vurdering)
+        assertThat(res2.vurdering?.vurdertTidspunkt).isNotNull()
+
+        // Test sletting
+
+        dataSource.transaction { connection ->
+            SykepengerErstatningRepositoryImpl(connection).slett(behandling.id)
+        }
+
+        val res3 = dataSource.transaction {
+            SykepengerErstatningRepositoryImpl(it).hentHvisEksisterer(behandling.id)
+        }
+        assertThat(res3).isNull()
 
     }
 

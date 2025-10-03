@@ -7,14 +7,14 @@ import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicBoolean
 
-abstract class KafkaKonsument(
+abstract class KafkaKonsument<K, V>(
     val topic: String,
-    config: KafkaConsumerConfig,
+    config: KafkaConsumerConfig<K, V>,
     private val pollTimeout: Duration = Duration.ofSeconds(10L),
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
     private val lukket: AtomicBoolean = AtomicBoolean(false)
-    private val konsument = KafkaConsumer<String, String>(config.consumerProperties())
+    private val konsument = KafkaConsumer<K, V>(config.consumerProperties())
 
     var antallMeldinger = 0
         private set
@@ -31,7 +31,7 @@ abstract class KafkaKonsument(
             log.info("Starter konsumering av $topic")
             konsument.subscribe(listOf(topic))
             while (!lukket.get()) {
-                val meldinger: ConsumerRecords<String, String> = konsument.poll(pollTimeout)
+                val meldinger: ConsumerRecords<K, V> = konsument.poll(pollTimeout)
                 håndter(meldinger)
                 konsument.commitSync()
                 antallMeldinger += meldinger.count()
@@ -46,5 +46,6 @@ abstract class KafkaKonsument(
         }
     }
 
-    abstract fun håndter(meldinger: ConsumerRecords<String, String>)
+    abstract fun håndter(meldinger: ConsumerRecords<K, V>)
+
 }

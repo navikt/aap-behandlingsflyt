@@ -26,8 +26,8 @@ import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.alder.aldersGrun
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.fritakmeldeplikt.meldepliktsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.refusjon.refusjonGrunnlagAPI
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.bistand.bistandsgrunnlagApi
-import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.overgangufore.overgangUforeGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.overgangarbeid.overgangArbeidGrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.overgangufore.overgangUforeGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykdom.sykdomsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykepengergrunnlag.sykepengerGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.manuellinntekt.manglendeGrunnlagApi
@@ -53,11 +53,12 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.lovvalgMedlemskap
 import no.nav.aap.behandlingsflyt.behandling.mellomlagring.mellomlagretVurderingApi
 import no.nav.aap.behandlingsflyt.behandling.oppfolgingsbehandling.avklarOppfolgingsoppgaveGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.oppfolgingsbehandling.oppfølgingsOppgaveApi
+import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.oppholdskravGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.rettighetsperiodeGrunnlagAPI
+import no.nav.aap.behandlingsflyt.behandling.revurdering.avbrytRevurderingGrunnlagAPI
 import no.nav.aap.behandlingsflyt.behandling.simulering.simuleringAPI
 import no.nav.aap.behandlingsflyt.behandling.student.studentgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.svarfraandreinstans.svarfraandreinstans.svarFraAndreinstansGrunnlagApi
-import no.nav.aap.behandlingsflyt.behandling.revurdering.avbrytRevurderingGrunnlagAPI
 import no.nav.aap.behandlingsflyt.behandling.søknad.trukketSøknadGrunnlagAPI
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilkjentYtelseAPI
 import no.nav.aap.behandlingsflyt.behandling.underveis.meldepliktOverstyringGrunnlagApi
@@ -70,6 +71,8 @@ import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KABAL_EVENT_TOPIC
 import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KabalKafkaKonsument
+import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PdlHendelseKafkaKonsument
+import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PDL_HENDELSE_TOPIC
 import no.nav.aap.behandlingsflyt.hendelse.mottattHendelseApi
 import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
@@ -92,7 +95,9 @@ import no.nav.aap.komponenter.server.plugins.NavIdentInterceptor
 import no.nav.aap.motor.Motor
 import no.nav.aap.motor.api.motorApi
 import no.nav.aap.motor.retry.RetryService
+import no.nav.person.pdl.leesah.Personhendelse
 import org.slf4j.LoggerFactory
+import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
 
@@ -130,9 +135,7 @@ internal fun Application.server(
         .registerSubtypes(utledSubtypesTilAvklaringsbehovLøsning() + utledSubtypesTilMottattHendelseDTO())
 
     commonKtorModule(
-        prometheus,
-        AzureConfig(),
-        InfoModel(
+        prometheus, AzureConfig(), InfoModel(
             title = "AAP - Behandlingsflyt", version = ApplikasjonsVersjon.versjon,
             description = """
                 For å teste API i dev, besøk
@@ -149,11 +152,23 @@ internal fun Application.server(
     }
 
     val dataSource = initDatasource(dbConfig)
+    Runtime.getRuntime().addShutdownHook(Thread {
+        try {
+            dataSource.connection.close()
+        } finally {
+            // Ignorer om den feks allerede er closed
+        }
+    })
     Migrering.migrate(dataSource)
     val motor = startMotor(dataSource, repositoryRegistry, gatewayProvider)
 
     if (!Miljø.erLokal()) {
         startKabalKonsument(dataSource, repositoryRegistry)
+
+    }
+    if (Miljø.erDev()) {
+        // TODO: Bestille tilgang
+        //startPDLHendelseKonsument(dataSource, repositoryRegistry)
     }
 
     routing {
@@ -178,6 +193,7 @@ internal fun Application.server(
                 sykdomsgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 sykdomsvurderingForBrevApi(dataSource, repositoryRegistry, gatewayProvider)
                 sykepengerGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                oppholdskravGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 institusjonAPI(dataSource, repositoryRegistry, gatewayProvider)
                 avklaringsbehovApi(dataSource, repositoryRegistry, gatewayProvider)
                 tilkjentYtelseAPI(dataSource, repositoryRegistry)
@@ -260,25 +276,50 @@ fun Application.startMotor(
         environment.log.info("Forbereder stopp av applikasjon, stopper motor.")
         motor.stop()
     }
+    // Logg disse for å sammenligne timestamp med meldingen over
     monitor.subscribe(ApplicationStopping) { application ->
         application.environment.log.info("Server stopper...")
-        // Release resources and unsubscribe from events
-        application.monitor.unsubscribe(ApplicationStarted) {}
-        application.monitor.unsubscribe(ApplicationStopped) {}
     }
-    monitor.subscribe(ApplicationStopped) { application ->
-        application.environment.log.info("Server har stoppet.")
+    monitor.subscribe(ApplicationStopped) { environment ->
+        environment.log.info("Server har stoppet.")
     }
 
     return motor
 }
 
 fun Application.startKabalKonsument(
+    dataSource: DataSource, repositoryRegistry: RepositoryRegistry
+): KafkaKonsument<String, String> {
+    val konsument = KabalKafkaKonsument(
+        config = KafkaConsumerConfig(), dataSource = dataSource, repositoryRegistry = repositoryRegistry
+    )
+    monitor.subscribe(ApplicationStarted) {
+        val t = Thread {
+            konsument.konsumer()
+        }
+        t.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, e ->
+            log.error("Konsumering av $KABAL_EVENT_TOPIC ble lukket pga uhåndtert feil", e)
+        }
+        t.start()
+    }
+    monitor.subscribe(ApplicationStopPreparing) { environment ->
+        environment.log.info("Forbereder stopp av applikasjon, lukker KabalKafkaKonsument.")
+
+        konsument.lukk()
+    }
+
+    return konsument
+}
+
+fun Application.startPDLHendelseKonsument(
     dataSource: DataSource,
     repositoryRegistry: RepositoryRegistry
-): KafkaKonsument {
-    val konsument = KabalKafkaKonsument(
-        config = KafkaConsumerConfig(),
+): KafkaKonsument<String, Personhendelse> {
+    val konsument = PdlHendelseKafkaKonsument(
+        config = KafkaConsumerConfig(
+            keyDeserializer = org.apache.kafka.common.serialization.StringDeserializer::class.java,
+            valueDeserializer = io.confluent.kafka.serializers.KafkaAvroDeserializer::class.java
+        ),
         dataSource = dataSource,
         repositoryRegistry = repositoryRegistry
     )
@@ -287,12 +328,13 @@ fun Application.startKabalKonsument(
             konsument.konsumer()
         }
         t.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, e ->
-            log.error("Konsumering av $KABAL_EVENT_TOPIC ble lukket pga uhåndtert feil", e)
+            log.error("Konsumering av $PDL_HENDELSE_TOPIC ble lukket pga uhåndtert feil", e)
         }
         t.start()
     }
-    monitor.subscribe(ApplicationStopped) {
-        log.info("Applikasjonen er stoppet, lukker KabalKafkaKonsument.")
+    monitor.subscribe(ApplicationStopPreparing) { environment ->
+        environment.log.info("Forbereder stopp av applikasjon, lukker PDLHendelseKonsument.")
+
         konsument.lukk()
     }
 
@@ -307,10 +349,23 @@ class DbConfig(
     val password: String = System.getenv("NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_PASSWORD")
 )
 
+val postgresConfig = Properties().apply {
+    put("tcpKeepAlive", true) // kreves av Hikari
+
+    put("socketTimeout", 300) // sekunder, makstid for overføring av svaret fra db
+    put("statement_timeout", 300_000) // millisekunder, makstid for db til å utføre spørring
+
+    put("logUnclosedConnections", true) // vår kode skal lukke alle connections
+    put("logServerErrorDetail", false) // ikke lekk person-data fra queries etc til logger ved feil
+
+    put("assumeMinServerVersion", "16.0") // raskere oppstart av driver
+}
+
 fun initDatasource(dbConfig: DbConfig): DataSource = HikariDataSource(HikariConfig().apply {
     jdbcUrl = dbConfig.url
     username = dbConfig.username
     password = dbConfig.password
+    dataSourceProperties = postgresConfig
     maximumPoolSize = 10 + (ANTALL_WORKERS * 2)
     minimumIdle = 1
     connectionTestQuery = "SELECT 1"

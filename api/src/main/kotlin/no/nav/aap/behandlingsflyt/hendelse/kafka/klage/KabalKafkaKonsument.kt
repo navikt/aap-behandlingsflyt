@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.hendelse.kafka.klage
 
-import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
+import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KabalHendelseKafkaMelding
@@ -23,11 +23,11 @@ import javax.sql.DataSource
 const val KABAL_EVENT_TOPIC = "klage.behandling-events.v1"
 
 class KabalKafkaKonsument(
-    config: KafkaConsumerConfig,
+    config: KafkaConsumerConfig<String, String>,
     pollTimeout: Duration = Duration.ofSeconds(10L),
     private val dataSource: DataSource,
     private val repositoryRegistry: RepositoryRegistry
-) : KafkaKonsument(
+) : KafkaKonsument<String, String>(
     topic = KABAL_EVENT_TOPIC,
     config = config,
     pollTimeout = pollTimeout,

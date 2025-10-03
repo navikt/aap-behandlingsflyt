@@ -61,6 +61,7 @@ internal class SykdomsvurderingForBrevRepositoryImplTest {
 
         val oppdatertLagretVurdering = dataSource.transaction { connection ->
             SykdomsvurderingForBrevRepositoryImpl(connection).lagre(behandling.id, oppdatertVurdering)
+            SykdomsvurderingForBrevRepositoryImpl(connection).hent(behandling.id)!!
         }
 
         assertThat(oppdatertLagretVurdering.vurdering).isEqualTo(oppdatertVurdering.vurdering)
@@ -92,6 +93,7 @@ internal class SykdomsvurderingForBrevRepositoryImplTest {
 
         val oppdatertLagretVurdering = dataSource.transaction { connection ->
             SykdomsvurderingForBrevRepositoryImpl(connection).lagre(behandling.id, oppdatertVurdering)
+            SykdomsvurderingForBrevRepositoryImpl(connection).hent(behandling.id)!!
         }
 
         assertThat(oppdatertLagretVurdering.vurdering).isEqualTo(oppdatertVurdering.vurdering)

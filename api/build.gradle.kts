@@ -1,6 +1,12 @@
 
 plugins {
     id("behandlingsflyt.conventions")
+    id("com.github.davidmc24.gradle.plugin.avro") version "1.5.0"
+}
+
+repositories {
+    mavenCentral()
+    maven { url = uri("https://packages.confluent.io/maven/") }
 }
 
 val mockOAuth2ServerVersion = "3.0.0"
@@ -14,6 +20,8 @@ dependencies {
     implementation(libs.motorApi)
     implementation(libs.verdityper)
     implementation(libs.tidslinje)
+    implementation("org.apache.avro:avro:1.11.2")
+    implementation("io.confluent:kafka-avro-serializer:7.6.0")
     implementation("org.apache.kafka:kafka-clients:${kafkaVersion}")
     api(libs.tilgangPlugin)
     api(libs.tilgangKontrakt)

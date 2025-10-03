@@ -149,7 +149,7 @@ class GraderingArbeidRegel : UnderveisRegel {
                 }
             }
 
-        return manglerOpplysninger.none { it.verdi }
+        return manglerOpplysninger.segmenter().none { it.verdi }
     }
 
     private fun harRettTidslinje(vurderinger: Tidslinje<Vurdering>): Tidslinje<OpplysningerOmArbeid> {
@@ -205,14 +205,14 @@ class GraderingArbeidRegel : UnderveisRegel {
         opplysningerOmArbeid: Tidslinje<OpplysningerOmArbeid>,
     ): Tidslinje<ArbeidsGradering> {
         val antallHverdager = opplysningerOmArbeid
-            .sumOf {
+            .segmenter().sumOf {
                 if (it.verdi.harRett == true)
                     BigDecimal(it.periode.antallHverdager().asInt)
                 else
                     BigDecimal.ZERO
             }
 
-        if (antallHverdager == BigDecimal.ZERO || opplysningerOmArbeid.any { it.verdi.harRett == true && it.verdi.timerArbeid == null }) {
+        if (antallHverdager == BigDecimal.ZERO || opplysningerOmArbeid.segmenter().any { it.verdi.harRett == true && it.verdi.timerArbeid == null }) {
             /* mangler opplysninger for hele perioden, vet derfor ikke hva som er
              * totalt antall timer.
              */
@@ -228,7 +228,7 @@ class GraderingArbeidRegel : UnderveisRegel {
         }
 
 
-        val timerArbeidet = opplysningerOmArbeid.sumOf {
+        val timerArbeidet = opplysningerOmArbeid.segmenter().sumOf {
             if (it.verdi.harRett == true)
                 it.verdi.timerArbeid!!.antallTimer * BigDecimal(it.periode.antallDager())
             else

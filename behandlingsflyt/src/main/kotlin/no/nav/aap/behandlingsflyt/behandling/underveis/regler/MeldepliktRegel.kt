@@ -57,15 +57,16 @@ class MeldepliktRegel(
                 .outerJoin(førVedtakTidslinje(input), MeldepliktData.Companion::merge)
                 .outerJoin(førsteDagMedRettTidslinje(resultat), MeldepliktData.Companion::merge)
                 .outerJoin(utenRettTidslinje(resultat), MeldepliktData.Companion::merge)
-                .splittOppIPerioder(resultat.map { vurdering -> vurdering.verdi.meldeperiode() })
+                .splittOppIPerioder(resultat.segmenter().map { vurdering -> vurdering.verdi.meldeperiode() })
 
 
         val meldepliktVurderinger = meldepliktDataTidslinje
+            .segmenter()
             .fold(Tidslinje<MeldepliktVurdering>()) { meldeperioderVurdert, nåværendeMeldeperiodeSegment ->
                 val neste = vurderMeldeperiode(
                     meldeperiode = nåværendeMeldeperiodeSegment.periode,
                     dataForMeldeperiode = nåværendeMeldeperiodeSegment.verdi,
-                    forrigeSegmentOppfylt = meldeperioderVurdert.lastOrNull()?.verdi?.utfall == OPPFYLT
+                    forrigeSegmentOppfylt = meldeperioderVurdert.segmenter().lastOrNull()?.verdi?.utfall == OPPFYLT
                 )
                 meldeperioderVurdert.kombiner(neste, StandardSammenslåere.xor())
             }.begrensetTil(input.rettighetsperiode)
@@ -78,10 +79,10 @@ class MeldepliktRegel(
     }
 
     private fun førsteDagMedRettTidslinje(vurderinger: Tidslinje<Vurdering>): Tidslinje<MeldepliktData> {
-        val dagenFørVurderinger = vurderinger.firstOrNull()?.periode?.fom?.minusDays(1) ?: return Tidslinje()
+        val dagenFørVurderinger = vurderinger.segmenter().firstOrNull()?.periode?.fom?.minusDays(1) ?: return Tidslinje()
         val virtuellPrefixUtenRett = listOf(Segment(Periode(dagenFørVurderinger, dagenFørVurderinger), null))
 
-        return (virtuellPrefixUtenRett + vurderinger.mapValue { it.fårAapEtter }.komprimer())
+        return (virtuellPrefixUtenRett + vurderinger.mapValue { it.fårAapEtter }.komprimer().segmenter())
             .asSequence()
             .windowed(2, 1)
             .flatMap { (segment1, segment2) ->
@@ -123,8 +124,8 @@ class MeldepliktRegel(
             .asSequence()
             .map { Periode(it.fom, it.fom.plusDays(7)) }
             .filter { fastsatteDager -> meldepliktFraOgMed <= fastsatteDager.fom }
-            .filter { fastsatteDager -> fritak.begrensetTil(fastsatteDager).none { it.verdi.harFritak } }
-            .filter { fastsatteDager -> harRett.begrensetTil(fastsatteDager).any { harRett -> harRett.verdi } }
+            .filter { fastsatteDager -> fritak.begrensetTil(fastsatteDager).segmenter().none { it.verdi.harFritak } }
+            .filter { fastsatteDager -> harRett.begrensetTil(fastsatteDager).segmenter().any { harRett -> harRett.verdi } }
             .toList()
     }
 
@@ -233,7 +234,7 @@ class MeldepliktRegel(
         check(meldeperiode.inneholder(dagensDato))
 
         if (dagensDato <= meldefrist) {
-            return vanligVurdering.map {
+            return vanligVurdering.segmenter().map {
                 if (it.verdi.utfall == OPPFYLT) {
                     return@map it
                 }

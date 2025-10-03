@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.flyt
 
+import no.nav.aap.brev.kontrakt.EkspederBehandlerBestillingRequest
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov as EksponertÅrsak
 
 enum class Vurderingsbehov {
@@ -19,11 +20,13 @@ enum class Vurderingsbehov {
     REVURDER_LOVVALG,
     REVURDER_BEREGNING,         // Beregningstidspunkt
     REVURDER_YRKESSKADE,        // Yrkesskade
+    REVURDER_STUDENT,
     REVURDER_MANUELL_INNTEKT,   // Manuell inntekt
     REVURDER_MELDEPLIKT_RIMELIG_GRUNN,
     G_REGULERING,
     LOVVALG_OG_MEDLEMSKAP,      // Lovvalg og medlemskap
     FORUTGAENDE_MEDLEMSKAP,     // Forutgående medlemskap
+    OPPHOLDSKRAV,
     SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND, // Sykdom, arbeidsevne og behov for bistand
     BARNETILLEGG,               // Barnetillegg
     INSTITUSJONSOPPHOLD,        // Institusjonsopphold
@@ -39,7 +42,11 @@ enum class Vurderingsbehov {
     AKTIVITETSPLIKT_11_9,
     EFFEKTUER_AKTIVITETSPLIKT,
     OVERGANG_UFORE,
-    OVERGANG_ARBEID;
+    OVERGANG_ARBEID,
+    MOTTATT_PDL_HENDELSE,
+    DØDSFALL_BRUKER,
+    DØDSFALL_BARN,
+    ;
 
     companion object {
         /**
@@ -76,6 +83,7 @@ fun EksponertÅrsak.tilVurderingsbehov() =
         EksponertÅrsak.REVURDER_BEREGNING -> Vurderingsbehov.REVURDER_BEREGNING
         EksponertÅrsak.REVURDER_LOVVALG -> Vurderingsbehov.REVURDER_LOVVALG
         EksponertÅrsak.REVURDER_SAMORDNING -> Vurderingsbehov.REVURDER_SAMORDNING
+        EksponertÅrsak.REVURDER_STUDENT -> Vurderingsbehov.REVURDER_STUDENT
         EksponertÅrsak.KLAGE -> Vurderingsbehov.MOTATT_KLAGE
         EksponertÅrsak.LOVVALG_OG_MEDLEMSKAP -> Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP
         EksponertÅrsak.FORUTGAENDE_MEDLEMSKAP -> Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP
@@ -98,6 +106,10 @@ fun EksponertÅrsak.tilVurderingsbehov() =
         EksponertÅrsak.AKTIVITETSPLIKT_11_7 -> Vurderingsbehov.AKTIVITETSPLIKT_11_7
         EksponertÅrsak.AKTIVITETSPLIKT_11_9 -> Vurderingsbehov.AKTIVITETSPLIKT_11_9
         EksponertÅrsak.EFFEKTUER_AKTIVITETSPLIKT -> Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT
+        EksponertÅrsak.OPPHOLDSKRAV -> Vurderingsbehov.OPPHOLDSKRAV
         EksponertÅrsak.OVERGANG_UFORE -> Vurderingsbehov.OVERGANG_UFORE
         EksponertÅrsak.OVERGANG_ARBEID -> Vurderingsbehov.OVERGANG_ARBEID
+        EksponertÅrsak.DØDSFALL_BRUKER -> Vurderingsbehov.DØDSFALL_BRUKER
+        EksponertÅrsak.DØDSFALL_BARN -> Vurderingsbehov.DØDSFALL_BARN
+        EksponertÅrsak.MOTTATT_PDL_HENDELSE -> Vurderingsbehov.MOTTATT_PDL_HENDELSE
     }

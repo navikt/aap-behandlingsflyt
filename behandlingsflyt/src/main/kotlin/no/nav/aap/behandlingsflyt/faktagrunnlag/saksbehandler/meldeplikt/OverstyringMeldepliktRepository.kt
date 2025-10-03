@@ -7,5 +7,5 @@ interface OverstyringMeldepliktRepository  : Repository {
     fun hentHvisEksisterer(behandlingId: BehandlingId): OverstyringMeldepliktGrunnlag?
     fun lagre(behandlingId: BehandlingId, vurdering: OverstyringMeldepliktVurdering)
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
-    override fun slett(behandling: BehandlingId)
+    override fun slett(behandlingId: BehandlingId)
 }
