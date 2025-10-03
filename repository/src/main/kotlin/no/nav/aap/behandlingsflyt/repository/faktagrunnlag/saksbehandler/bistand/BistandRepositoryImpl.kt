@@ -86,6 +86,7 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
                      JOIN bistand_vurderinger v ON g.bistand_vurderinger_id = v.id
                      JOIN bistand b ON b.bistand_vurderinger_id = v.id
                      JOIN behandling beh ON g.behandling_id = beh.id
+                     LEFT JOIN avbryt_revurdering_grunnlag ar ON ar.behandling_id = beh.id
             WHERE g.aktiv
               AND beh.sak_id = ?
               AND beh.opprettet_tid < (
@@ -93,6 +94,7 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
                 FROM behandling
                 WHERE id = ?
             )
+                AND ar.behandling_id IS NULL
         )
         SELECT * FROM vurderinger_historikk;
         """.trimIndent()

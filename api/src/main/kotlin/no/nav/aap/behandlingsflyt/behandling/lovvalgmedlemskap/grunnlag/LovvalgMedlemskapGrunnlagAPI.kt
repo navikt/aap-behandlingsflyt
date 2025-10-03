@@ -43,7 +43,7 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagAPI(
                         val historiskeManuelleVurderinger =
                             lovvalgMedlemskapRepository.hentHistoriskeVurderinger(behandling.sakId, behandling.id)
                         val ansattNavnOgEnhet = gjeldendeManuellVurdering?.let { ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv)}
-                        
+
                         LovvalgMedlemskapGrunnlagResponse(
                             kanSaksbehandle(),
                             gjeldendeManuellVurdering?.toResponse(ansattNavnOgEnhet),

@@ -27,7 +27,7 @@ class AvklaringsbehovService(
 ) {
     constructor(repositoryProvider: RepositoryProvider): this(
         avklaringsbehovRepository = repositoryProvider.provide(),
-        avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider.provide())
+        avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider)
     )
 
     fun avbrytForSteg(behandlingId: BehandlingId, steg: StegType) {
