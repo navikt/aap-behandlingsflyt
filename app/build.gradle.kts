@@ -2,6 +2,11 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 val opentelemetryVersion = "2.20.1-alpha"
 
+repositories {
+    mavenCentral()
+    maven { url = uri("https://packages.confluent.io/maven/") }
+}
+
 plugins {
     id("behandlingsflyt.conventions")
     alias(libs.plugins.ktor)
@@ -76,7 +81,6 @@ dependencies {
     implementation("io.micrometer:micrometer-registry-prometheus:1.15.4")
     implementation("ch.qos.logback:logback-classic:1.5.19")
     implementation("net.logstash.logback:logstash-logback-encoder:8.1")
-    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.20.1")
 
     implementation(libs.motor)
     implementation(libs.dbconnect)
@@ -102,7 +106,9 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.5.19")
     implementation("io.opentelemetry.instrumentation:opentelemetry-logback-mdc-1.0:${opentelemetryVersion}")
     implementation("io.opentelemetry.instrumentation:opentelemetry-ktor-3.0:${opentelemetryVersion}")
-
+    implementation("org.apache.avro:avro:1.11.2")
+    implementation("io.confluent:kafka-avro-serializer:7.6.0")
+    testImplementation("org.springframework.kafka:spring-kafka-test:3.1.3")
     testImplementation(project(":lib-test"))
     implementation(libs.dbtest)
     implementation(libs.motorTestUtils)

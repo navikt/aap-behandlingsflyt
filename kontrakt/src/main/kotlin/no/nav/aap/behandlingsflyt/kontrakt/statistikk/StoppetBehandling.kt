@@ -85,6 +85,7 @@ public enum class Vurderingsbehov {
     AKTIVITETSPLIKT_11_9,
     OVERGANG_UFORE,
     OVERGANG_ARBEID,
+    MOTTATT_PDL_HENDELSE,
     DØDSFALL_BRUKER,
     DØDSFALL_BARN,
     OPPHOLDSKRAV,

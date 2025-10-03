@@ -1283,6 +1283,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     )
                 )
             )
+            .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
             .medKontekst {
@@ -1401,6 +1402,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     )
                 )
             )
+            .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
             .medKontekst {

@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.flyt
 
+import no.nav.aap.brev.kontrakt.EkspederBehandlerBestillingRequest
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov as EksponertÅrsak
 
 enum class Vurderingsbehov {
@@ -42,6 +43,7 @@ enum class Vurderingsbehov {
     EFFEKTUER_AKTIVITETSPLIKT,
     OVERGANG_UFORE,
     OVERGANG_ARBEID,
+    MOTTATT_PDL_HENDELSE,
     DØDSFALL_BRUKER,
     DØDSFALL_BARN,
     ;
@@ -109,4 +111,5 @@ fun EksponertÅrsak.tilVurderingsbehov() =
         EksponertÅrsak.OVERGANG_ARBEID -> Vurderingsbehov.OVERGANG_ARBEID
         EksponertÅrsak.DØDSFALL_BRUKER -> Vurderingsbehov.DØDSFALL_BRUKER
         EksponertÅrsak.DØDSFALL_BARN -> Vurderingsbehov.DØDSFALL_BARN
+        EksponertÅrsak.MOTTATT_PDL_HENDELSE -> Vurderingsbehov.MOTTATT_PDL_HENDELSE
     }
