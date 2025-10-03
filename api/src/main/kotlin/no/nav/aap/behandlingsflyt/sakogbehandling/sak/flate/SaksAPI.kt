@@ -451,8 +451,8 @@ fun NormalOpenAPIRoute.saksApi(
 
                 saksHistorikkService.utledSaksHistorikk(sakId)
             }
-            val navidenterIHistorikk = historikk.flatMap { it.hendelser.map{ it.utførtAv} }.filter { it != null }
-            val visningsnavn = ansattInfoService.hentAnsatteVisningsnavn(navidenterIHistorikk as List<String>)
+            val navidenterIHistorikk = historikk.flatMap { it.hendelser.mapNotNull{ it.utførtAv} }
+            val visningsnavn = ansattInfoService.hentAnsatteVisningsnavn(navidenterIHistorikk).mapNotNull { it }
             val visningsnavnMap = visningsnavn.associateBy( { it.navident }, {it.visningsnavn })
             val historikkMedVisningsnavn = historikk.map{
                 val nyeHendelser = it.hendelser.map{

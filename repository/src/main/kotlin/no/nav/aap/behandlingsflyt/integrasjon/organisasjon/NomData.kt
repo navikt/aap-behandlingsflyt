@@ -25,7 +25,7 @@ data class NomRessurserVisningsnavn(
 )
 
 data class NomRessursResponse(
-    val ressurs: NomRessursVisningsnavn
+    val ressurs: NomRessursVisningsnavn?
 )
 
 data class NomRessursVisningsnavn(

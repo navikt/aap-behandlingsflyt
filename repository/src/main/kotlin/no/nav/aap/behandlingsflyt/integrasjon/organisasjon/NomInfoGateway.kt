@@ -49,7 +49,7 @@ class NomInfoGateway : AnsattInfoGateway {
         return mapResponse(navIdent, checkNotNull(response.ressurs))
     }
 
-    override fun hentAnsatteVisningsnavn(navIdenter: List<String>): List<AnsattVisningsnavn> {
+    override fun hentAnsatteVisningsnavn(navIdenter: List<String>): List<AnsattVisningsnavn?> {
         if (Miljø.erLokal()) {
             return navIdenter.map { AnsattVisningsnavn(it, "navn $it" ) }
         }
@@ -58,7 +58,9 @@ class NomInfoGateway : AnsattInfoGateway {
             "Fant ikke ansatt i NOM"
         }
 
-        return response.ressurser.map { AnsattVisningsnavn(it.ressurs.navident, it.ressurs.visningsnavn) }
+        return response.ressurser.map {
+            if(it.ressurs != null) AnsattVisningsnavn(it.ressurs.navident, it.ressurs.visningsnavn) else null
+        }
     }
 
     private fun flereNavnQuery(request: GraphqlRequest<NomRessurserVariables>): GraphQLResponse<NomRessurserVisningsnavn> {
