@@ -24,6 +24,11 @@ class Avklaringsbehov(
         }
     }
 
+    val aktivHistorikk: List<Endring>
+        get() = historikk.takeLastWhile {
+            it.status != Status.AVBRUTT
+        }
+
     fun erTotrinn(): Boolean {
         if (definisjon.kreverToTrinn) {
             return true
