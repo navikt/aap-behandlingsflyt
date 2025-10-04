@@ -41,8 +41,20 @@ class InntektInformasjonskrav(
         oppdatert: InformasjonskravOppdatert?
     ): Boolean {
         return kontekst.erFørstegangsbehandlingEllerRevurdering() &&
+                // Avhengig av å vite hvilke år vi skal hente inntekt for
+                kanUtledeRelevanteÅr(kontekst) &&
+                // Oppdaterer inntekt uavhengig av om relevante år har endret seg en gang i døgnet / hvis ikke hver gang relevante år endrer seg
                 (oppdatert.ikkeKjørtSisteKalenderdag() || relevanteÅrErEndret(kontekst)) &&
                 !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
+    }
+
+    private fun kanUtledeRelevanteÅr(kontekst: FlytKontekstMedPerioder): Boolean {
+        val studentGrunnlag = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
+        val beregningGrunnlag = beregningVurderingRepository.hentHvisEksisterer(kontekst.behandlingId)
+
+        val nedsattArbeidsevneDato = beregningGrunnlag?.tidspunktVurdering?.nedsattArbeidsevneDato
+        val avbruttStudieDato = studentGrunnlag?.studentvurdering?.avbruttStudieDato
+        return nedsattArbeidsevneDato != null || avbruttStudieDato != null
     }
 
     private fun relevanteÅrErEndret(kontekst: FlytKontekstMedPerioder): Boolean {
@@ -54,7 +66,7 @@ class InntektInformasjonskrav(
 
     override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
         val behandlingId = kontekst.behandlingId
-        val eksisterendeGrunnlag = inntektGrunnlagRepository.hentHvisEksisterer(behandlingId)
+        val inntektGrunnlag = inntektGrunnlagRepository.hentHvisEksisterer(behandlingId)
 
         val relevanteÅr = utledAlleRelevanteÅr(behandlingId)
         val sak = sakService.hent(kontekst.sakId)
@@ -64,7 +76,7 @@ class InntektInformasjonskrav(
 
         inntektGrunnlagRepository.lagre(behandlingId, oppdaterteInntekter)
 
-        return if (eksisterendeGrunnlag?.inntekter == oppdaterteInntekter) IKKE_ENDRET else ENDRET
+        return if (inntektGrunnlag?.inntekter == oppdaterteInntekter) IKKE_ENDRET else ENDRET
     }
 
     private fun utledAlleRelevanteÅr(behandlingId: BehandlingId): Set<Year> {
