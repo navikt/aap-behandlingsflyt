@@ -1,12 +1,10 @@
 package no.nav.aap.behandlingsflyt.flyt
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SykdomsvurderingForBrevLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -42,10 +40,14 @@ class FasttrackMeldekortFlytTest :
     fun `Meldekortgrunnlag skal flettes inn i åpen behandling før UnderveisSteg`() {
         val søknadsdato = LocalDate.now().minusMonths(3)
         val sak = happyCaseFørstegangsbehandling(søknadsdato)
-        val åpenBehandling = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom)
+        val åpenBehandling = sak.opprettManuellRevurdering(
+            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
+        )
+            .løsSykdom()
+            .løsBistand()
 
         assertThat(åpenBehandling.vurderingsbehov().map { it.type })
-            .hasSameElementsAs(listOf(Vurderingsbehov.MOTTATT_SØKNAD))
+            .hasSameElementsAs(listOf(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND))
         val aktivtStegFørMeldekort = åpenBehandling.aktivtSteg()
 
         sak.sendInnMeldekort(
@@ -84,21 +86,11 @@ class FasttrackMeldekortFlytTest :
         val sak = happyCaseFørstegangsbehandling()
 
         val revurderingGjelderFra = sak.rettighetsperiode.fom.plusWeeks(2)
-        var åpenBehandling = revurdereFramTilOgMedSykdom(sak, revurderingGjelderFra)
-
-        åpenBehandling = åpenBehandling.løsAvklaringsBehov(
-            AvklarBistandsbehovLøsning(
-                bistandsVurdering = BistandVurderingLøsningDto(
-                    begrunnelse = "Trenger hjelp fra nav",
-                    erBehovForAktivBehandling = true,
-                    erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = null,
-                    skalVurdereAapIOvergangTilUføre = null,
-                    skalVurdereAapIOvergangTilArbeid = null,
-                    overgangBegrunnelse = null
-                ),
-            )
+        var åpenBehandling = sak.opprettManuellRevurdering(
+            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
         )
+            .løsSykdom()
+            .løsBistand()
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
@@ -114,7 +106,7 @@ class FasttrackMeldekortFlytTest :
             }
 
         assertThat(åpenBehandling.vurderingsbehov().map { it.type })
-            .hasSameElementsAs(listOf(Vurderingsbehov.MOTTATT_SØKNAD))
+            .hasSameElementsAs(listOf(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND))
 
         val aktivtStegFørMeldekort = åpenBehandling.aktivtSteg()
         assertThat(aktivtStegFørMeldekort).isEqualTo(StegType.FATTE_VEDTAK)
@@ -191,8 +183,12 @@ class FasttrackMeldekortFlytTest :
     @Test
     fun `sender inn to meldekort, resultat reflektert i åpen behandling`() {
         val sak = happyCaseFørstegangsbehandling(fom = 25 august 2025)
-        val åpenBehandling = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom.plusWeeks(2))
-        åpenBehandling.løsSykdom().løsBistand().løsSykdomsvurderingBrev()
+        val åpenBehandling = sak.opprettManuellRevurdering(
+            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
+        )
+            .løsSykdom(gjelderFra =  sak.rettighetsperiode.fom.plusWeeks(2))
+            .løsBistand()
+            .løsSykdomsvurderingBrev()
 
         val (førsteMeldeperiode, andreMeldeperiode) = dataSource.transaction { connection ->
             MeldeperiodeRepositoryImpl(connection).hent(åpenBehandling.id)
@@ -253,7 +249,7 @@ class FasttrackMeldekortFlytTest :
             )
 
             assertThat(åpenBehandling.årsakTilOpprettelse)
-                .isEqualTo(ÅrsakTilOpprettelse.SØKNAD)
+                .isEqualTo(ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE)
             assertTidslinje(
                 andelArbeidetTidslinje(connection, åpenBehandling),
                 førsteMeldeperiode to {

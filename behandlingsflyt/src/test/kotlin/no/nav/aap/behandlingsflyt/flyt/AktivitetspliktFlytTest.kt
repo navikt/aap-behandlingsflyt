@@ -15,7 +15,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt1
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Vurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall as VilkårsresultatUtfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -45,6 +44,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.ZoneOffset
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall as VilkårsresultatUtfall
 
 class AktivitetspliktFlytTest :
     AbstraktFlytOrkestratorTest(FakeUnleashFasttrackAktivitetsplikt::class) {
@@ -53,7 +53,10 @@ class AktivitetspliktFlytTest :
     fun `Happy-case flyt for aktivitetsplikt 11_7`() {
         val person = TestPersoner.STANDARD_PERSON()
         val sak = happyCaseFørstegangsbehandling(person = person)
-        var åpenBehandling = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom, vissVarighet = true)
+        var åpenBehandling = sak.opprettManuellRevurdering(
+            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
+        )
+            .løsSykdom()
 
         var aktivitetspliktBehandling = dataSource.transaction { connection ->
             assertThat(
@@ -246,21 +249,11 @@ class AktivitetspliktFlytTest :
     fun `Åpen behandling skal trekkes tilbake ved effktuering av aktivitetsplikt`() {
         val person = TestPersoner.STANDARD_PERSON()
         val sak = happyCaseFørstegangsbehandling(person = person)
-        var åpenBehandling = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom, vissVarighet = true)
-
-        åpenBehandling = åpenBehandling.løsAvklaringsBehov(
-            AvklarBistandsbehovLøsning(
-                bistandsVurdering = BistandVurderingLøsningDto(
-                    begrunnelse = "Trenger hjelp fra nav",
-                    erBehovForAktivBehandling = true,
-                    erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = null,
-                    skalVurdereAapIOvergangTilUføre = null,
-                    skalVurdereAapIOvergangTilArbeid = null,
-                    overgangBegrunnelse = null
-                ),
-            )
+        var åpenBehandling = sak.opprettManuellRevurdering(
+            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
         )
+            .løsSykdom()
+            .løsBistand()
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
@@ -395,7 +388,10 @@ class AktivitetspliktFlytTest :
     fun `Happy-case-flyt for aktivitetsplikt § 11-9`() {
         val person = TestPersoner.STANDARD_PERSON()
         val sak = happyCaseFørstegangsbehandling(person = person)
-        var åpenBehandling = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom)
+        var åpenBehandling = sak.opprettManuellRevurdering(
+            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
+        )
+            .løsSykdom()
 
         var aktivitetspliktBehandling = dataSource.transaction { connection ->
             assertThat(
