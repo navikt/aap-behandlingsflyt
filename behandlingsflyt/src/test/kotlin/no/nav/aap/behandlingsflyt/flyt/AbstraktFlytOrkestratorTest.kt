@@ -110,6 +110,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Søknad
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UtenlandsPeriodeDto
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
@@ -275,6 +276,24 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         val STANDARD_SØKNAD = SøknadV0(
             student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
             medlemskap = SøknadMedlemskapDto("JA", "JA", "NEI", "NEI", null)
+        )
+
+        val SØKNAD_INGEN_MEDLEMSKAP = SøknadV0(
+            student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+            medlemskap = SøknadMedlemskapDto(
+                "JA", null, "JA", null,
+                listOf(
+                    UtenlandsPeriodeDto(
+                        "SWE",
+                        LocalDate.now().plusMonths(1),
+                        LocalDate.now().minusMonths(1),
+                        "JA",
+                        null,
+                        LocalDate.now().plusMonths(1),
+                        LocalDate.now().minusMonths(1),
+                    )
+                )
+            )
         )
 
         val SØKNAD_STUDENT = SøknadV0(
