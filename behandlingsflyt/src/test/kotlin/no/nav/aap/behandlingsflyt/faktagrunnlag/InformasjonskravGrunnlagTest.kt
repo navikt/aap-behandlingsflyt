@@ -1,8 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgInformasjonskrav
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus
@@ -20,23 +18,10 @@ import no.nav.aap.behandlingsflyt.integrasjon.medlemsskap.MedlemskapGateway
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlBarnGateway
 import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeRegisterGatewayImpl
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.InformasjonskravRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektForutgåendeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningForutgåendeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.barn.BarnRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.medlemsskap.MedlemskapRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.yrkesskade.YrkesskadeRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.avbrytrevurdering.AvbrytRevurderingRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.søknad.TrukketSøknadRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.lås.TaSkriveLåsRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.pip.PipRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -53,7 +38,6 @@ import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
-import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
@@ -73,29 +57,7 @@ class InformasjonskravGrunnlagTest {
             InitTestDatabase.closerFor(dataSource)
         }
     }
-
-    private val repositoryRegistry =
-        RepositoryRegistry().register(BehandlingRepositoryImpl::class)
-            .register(PersonRepositoryImpl::class)
-            .register(SakRepositoryImpl::class)
-            .register(AvklaringsbehovRepositoryImpl::class)
-            .register(VilkårsresultatRepositoryImpl::class)
-            .register(PipRepositoryImpl::class)
-            .register(TaSkriveLåsRepositoryImpl::class)
-            .register(BeregningsgrunnlagRepositoryImpl::class)
-            .register(PersonopplysningRepositoryImpl::class)
-            .register<MottattDokumentRepositoryImpl>()
-            .register<YrkesskadeRepositoryImpl>()
-            .register<MedlemskapArbeidInntektRepositoryImpl>()
-            .register<MedlemskapArbeidInntektForutgåendeRepositoryImpl>()
-            .register<PersonopplysningForutgåendeRepositoryImpl>()
-            .register<RefusjonkravRepositoryImpl>()
-            .register<TrukketSøknadRepositoryImpl>()
-            .register<MedlemskapRepositoryImpl>()
-            .register<BarnRepositoryImpl>()
-            .register<ManuellInntektGrunnlagRepositoryImpl>()
-            .register<AvbrytRevurderingRepositoryImpl>()
-
+    
     private val gatewayProvider = createGatewayProvider {
         register<MedlemskapGateway>()
         register<AARegisterGateway>()
@@ -112,7 +74,7 @@ class InformasjonskravGrunnlagTest {
         dataSource.transaction { connection ->
             val (ident, kontekst) = klargjør(connection)
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
-                InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection), gatewayProvider
+                InformasjonskravRepositoryImpl(connection), postgresRepositoryRegistry.provider(connection), gatewayProvider
             )
 
             FakePersoner.leggTil(
@@ -146,7 +108,7 @@ class InformasjonskravGrunnlagTest {
         dataSource.transaction { connection ->
             val (ident, kontekst) = klargjør(connection)
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
-                InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection), gatewayProvider
+                InformasjonskravRepositoryImpl(connection), postgresRepositoryRegistry.provider(connection), gatewayProvider
             )
 
             FakePersoner.leggTil(
@@ -173,7 +135,7 @@ class InformasjonskravGrunnlagTest {
         dataSource.transaction { connection ->
             val (_, kontekst) = klargjør(connection)
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
-                InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection), gatewayProvider
+                InformasjonskravRepositoryImpl(connection), postgresRepositoryRegistry.provider(connection), gatewayProvider
             )
 
             val erOppdatert = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
@@ -190,7 +152,7 @@ class InformasjonskravGrunnlagTest {
         dataSource.transaction { connection ->
             val (ident, kontekst) = klargjør(connection)
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
-                InformasjonskravRepositoryImpl(connection), repositoryRegistry.provider(connection), gatewayProvider
+                InformasjonskravRepositoryImpl(connection), postgresRepositoryRegistry.provider(connection), gatewayProvider
             )
 
             FakePersoner.leggTil(
@@ -227,7 +189,7 @@ class InformasjonskravGrunnlagTest {
             val (ident, kontekst) = klargjør(connection, VurderingType.FØRSTEGANGSBEHANDLING)
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
                 InformasjonskravRepositoryImpl(connection),
-                repositoryRegistry.provider(connection),
+                postgresRepositoryRegistry.provider(connection),
                 gatewayProvider
             )
             val kravKonstruktører = listOf(StegType.BARNETILLEGG to BarnInformasjonskrav)
@@ -256,7 +218,7 @@ class InformasjonskravGrunnlagTest {
             )
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
                 InformasjonskravRepositoryImpl(connection),
-                repositoryRegistry.provider(connection),
+                postgresRepositoryRegistry.provider(connection),
                 gatewayProvider
             )
             val kravKonstruktører = listOf(StegType.BARNETILLEGG to BarnInformasjonskrav)
@@ -285,7 +247,7 @@ class InformasjonskravGrunnlagTest {
             )
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
                 InformasjonskravRepositoryImpl(connection),
-                repositoryRegistry.provider(connection),
+                postgresRepositoryRegistry.provider(connection),
                 gatewayProvider
             )
             val kravKonstruktører = listOf(StegType.BARNETILLEGG to BarnInformasjonskrav)

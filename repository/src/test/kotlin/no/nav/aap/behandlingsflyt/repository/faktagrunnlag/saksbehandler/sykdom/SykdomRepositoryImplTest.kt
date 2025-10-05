@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskader
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingVurdering
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadeSak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
@@ -8,6 +9,7 @@ import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.avbrytrevurdering.AvbrytRevurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -122,6 +124,43 @@ internal class SykdomRepositoryImplTest {
     }
 
     @Test
+    fun `historikk viser kun vurderinger fra tidligere behandlinger og ikke inkluderer vurdering fra avbrutt revurdering`() {
+        val førstegangsbehandling = dataSource.transaction { connection ->
+            val repo = SykdomRepositoryImpl(connection)
+            val sak = sak(connection)
+            val førstegangsbehandling = finnEllerOpprettBehandling(connection, sak)
+
+            repo.lagre(førstegangsbehandling.id, listOf(sykdomsvurdering1))
+            førstegangsbehandling
+        }
+
+        dataSource.transaction { connection ->
+            val sykdomRepo = SykdomRepositoryImpl(connection)
+            val avbrytRevurderingRepo = AvbrytRevurderingRepositoryImpl(connection)
+            val revurderingAvbrutt = revurdering(connection, førstegangsbehandling)
+
+            // Marker revurderingen som avbrutt
+            avbrytRevurderingRepo.lagre(
+                revurderingAvbrutt.id, AvbrytRevurderingVurdering(
+                    AvbrytRevurderingÅrsak.REVURDERINGEN_BLE_OPPRETTET_VED_EN_FEIL, "avbryte pga. feil",
+                    Bruker("Z00000")
+                )
+            )
+            sykdomRepo.lagre(revurderingAvbrutt.id, listOf(sykdomsvurdering2))
+        }
+
+        dataSource.transaction { connection ->
+            val sykdomRepo = SykdomRepositoryImpl(connection)
+            val revurdering = revurdering(connection, førstegangsbehandling)
+
+            sykdomRepo.lagre(revurdering.id, listOf(sykdomsvurdering3))
+
+            val historikk = sykdomRepo.hentHistoriskeSykdomsvurderinger(revurdering.sakId, revurdering.id)
+            assertEquals(listOf(sykdomsvurdering1), historikk)
+        }
+    }
+
+    @Test
     fun `test sletting`() {
         InitTestDatabase.freshDatabase().transaction { connection ->
             val sak = sak(connection)
@@ -184,6 +223,21 @@ internal class SykdomRepositoryImplTest {
             opprettet = Instant.now(),
         )
 
+        private val sykdomsvurdering3 = Sykdomsvurdering(
+            begrunnelse = "b3",
+            vurderingenGjelderFra = LocalDate.of(2020, 2, 2),
+            dokumenterBruktIVurdering = listOf(JournalpostId("3")),
+            harSkadeSykdomEllerLyte = true,
+            erSkadeSykdomEllerLyteVesentligdel = true,
+            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
+            yrkesskadeBegrunnelse = "y",
+            erArbeidsevnenNedsatt = true,
+            vurdertAv = Bruker("Z00000"),
+            opprettet = Instant.now(),
+        )
+
         fun assertEquals(expected: List<Sykdomsvurdering>, actual: List<Sykdomsvurdering>) {
             assertEquals(expected.size, actual.size)
             for ((expected, actual) in expected.zip(actual)) {
@@ -231,8 +285,8 @@ internal class SykdomRepositoryImplTest {
             typeBehandling = TypeBehandling.Revurdering,
             forrigeBehandlingId = behandling.id,
             vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
-                vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
-                årsak = ÅrsakTilOpprettelse.SØKNAD
+                vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)),
+                årsak = ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
             )
         )
     }

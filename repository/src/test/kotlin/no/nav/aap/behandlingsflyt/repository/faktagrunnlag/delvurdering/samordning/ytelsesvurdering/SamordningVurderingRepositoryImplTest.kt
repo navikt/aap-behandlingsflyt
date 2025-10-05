@@ -1,13 +1,23 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering
 
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingVurdering
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingÅrsak
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.avbrytrevurdering.AvbrytRevurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
@@ -16,25 +26,17 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 
 
 internal class SamordningVurderingRepositoryImplTest {
-    companion object {
-        private val dataSource = InitTestDatabase.freshDatabase()
-
-        @AfterAll
-        @JvmStatic
-        fun afterAll() {
-            InitTestDatabase.closerFor(dataSource)
-        }
-    }
-
     private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
     @Test
@@ -59,6 +61,7 @@ internal class SamordningVurderingRepositoryImplTest {
                 )
             )
         )
+
         // Lagre vurdering
         val vurdering2 = SamordningVurdering(
             ytelseType = Ytelse.OPPLÆRINGSPENGER,
@@ -345,6 +348,147 @@ internal class SamordningVurderingRepositoryImplTest {
                 samordningVurderingRepository.slett(behandling.id)
             }
         }
+    }
+
+    @Test
+    fun `historikk viser kun vurderinger fra tidligere behandlinger og ikke inkluderer vurdering fra avbrutt revurdering`() {
+        val samordningGrunnlag1 = lagSamordningGrunnlag("B1", "Z00001", Ytelse.SYKEPENGER)
+        val samordningGrunnlag2 = lagSamordningGrunnlag("B2", "Z00002", Ytelse.FORELDREPENGER)
+        val samordningGrunnlag3 = lagSamordningGrunnlag("B3", "Z00003", Ytelse.OMSORGSPENGER)
+
+        val førstegangsbehandling = dataSource.transaction { connection ->
+            val samordningRepo = SamordningVurderingRepositoryImpl(connection)
+            val sak = sak(connection)
+            val førstegangsbehandling = finnEllerOpprettBehandling(connection, sak)
+
+            samordningRepo.lagreVurderinger(førstegangsbehandling.id, samordningGrunnlag1)
+            førstegangsbehandling
+        }
+
+        dataSource.transaction { connection ->
+            val samordningRepo = SamordningVurderingRepositoryImpl(connection)
+            val avbrytRevurderingRepo = AvbrytRevurderingRepositoryImpl(connection)
+            val revurderingAvbrutt = revurderingSamordning(connection, førstegangsbehandling)
+
+            // Marker revurderingen som avbrutt
+            avbrytRevurderingRepo.lagre(
+                revurderingAvbrutt.id, AvbrytRevurderingVurdering(
+                    AvbrytRevurderingÅrsak.REVURDERINGEN_BLE_OPPRETTET_VED_EN_FEIL, "avbryte pga. feil",
+                    Bruker("Z00001")
+                )
+            )
+            samordningRepo.lagreVurderinger(revurderingAvbrutt.id, samordningGrunnlag2)
+        }
+
+        dataSource.transaction { connection ->
+            val samordningRepo = SamordningVurderingRepositoryImpl(connection)
+            val revurdering = revurderingSamordning(connection, førstegangsbehandling)
+
+            samordningRepo.lagreVurderinger(revurdering.id, samordningGrunnlag3)
+
+            val historikk = samordningRepo.hentHistoriskeVurderinger(revurdering.sakId, revurdering.id)
+            assertEqualsSamordningVurderingGrunnlag(listOf(samordningGrunnlag1), historikk)
+        }
+    }
+
+    private fun lagSamordningGrunnlag(
+        begrunnelse: String,
+        vurdertAv: String,
+        ytelse: Ytelse
+    ): SamordningVurderingGrunnlag {
+        return SamordningVurderingGrunnlag(
+            begrunnelse = begrunnelse,
+            maksDatoEndelig = false,
+            fristNyRevurdering = null,
+            vurdertAv = vurdertAv,
+            vurderinger = listOf(
+                SamordningVurdering(
+                    ytelseType = ytelse,
+                    vurderingPerioder = listOf(
+                        SamordningVurderingPeriode(
+                            periode = Periode(11 januar 2024, 15 januar 2024),
+                            gradering = Prosent.`50_PROSENT`,
+                            manuell = false,
+                        )
+                    )
+                )
+            )
+        )
+    }
+
+    private companion object {
+        private val dataSource = InitTestDatabase.freshDatabase()
+
+        fun assertEqualsSamordningVurderingGrunnlag(expected: List<SamordningVurderingGrunnlag>, actual: List<SamordningVurderingGrunnlag>) {
+            assertEquals(expected.size, actual.size)
+            for ((expected, actual) in expected.zip(actual)) {
+                assertEquals(expected, actual)
+            }
+        }
+
+        fun assertEquals(expected: SamordningVurderingGrunnlag, actual: SamordningVurderingGrunnlag) {
+            if (expected.vurderingerId != null && actual.vurderingerId != null) {
+                assertEquals(expected.vurderingerId, actual.vurderingerId)
+            }
+
+            if (expected.begrunnelse != null && actual.begrunnelse != null) {
+                assertEquals(expected.begrunnelse, actual.begrunnelse)
+            }
+
+            if (expected.maksDatoEndelig != null && actual.maksDatoEndelig != null) {
+                assertEquals(expected.maksDatoEndelig, actual.maksDatoEndelig)
+            }
+            if (expected.fristNyRevurdering != null && actual.fristNyRevurdering != null) {
+                assertEquals(expected.fristNyRevurdering, actual.fristNyRevurdering)
+            }
+            assertEqualsSamordningVurdering(expected.vurderinger, actual.vurderinger)
+            assertEquals(actual.vurdertAv, expected.vurdertAv)
+        }
+
+        fun assertEqualsSamordningVurdering(expected: List<SamordningVurdering>, actual: List<SamordningVurdering>) {
+            assertEquals(expected.size, actual.size)
+            for ((expected, actual) in expected.zip(actual)) {
+                assertEquals(expected.ytelseType, actual.ytelseType)
+                assertEqualsSamordningVurderingPeriode(expected.vurderingPerioder, actual.vurderingPerioder)
+            }
+        }
+
+        fun assertEqualsSamordningVurderingPeriode(expected: List<SamordningVurderingPeriode>, actual: List<SamordningVurderingPeriode>) {
+            assertEquals(expected.size, actual.size)
+            for ((expected, actual) in expected.zip(actual)) {
+                assertEquals(expected.periode, actual.periode)
+
+                if (expected.gradering != null && actual.gradering != null) {
+                    assertEquals(expected.gradering, actual.gradering)
+                }
+
+                if (expected.kronesum != null && actual.kronesum != null) {
+                    assertEquals(expected.kronesum, actual.kronesum)
+                }
+
+                if (expected.manuell != null && actual.manuell != null) {
+                    assertEquals(expected.manuell, actual.manuell)
+                }
+            }
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun afterAll() {
+            InitTestDatabase.closerFor(dataSource)
+        }
+    }
+
+    private fun revurderingSamordning(connection: DBConnection, behandling: Behandling): Behandling {
+        return BehandlingRepositoryImpl(connection).opprettBehandling(
+            behandling.sakId,
+            typeBehandling = TypeBehandling.Revurdering,
+            forrigeBehandlingId = behandling.id,
+            vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SAMORDNING_OG_AVREGNING)),
+                årsak = ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
+            )
+        )
     }
 
     private fun sak(connection: DBConnection): Sak {

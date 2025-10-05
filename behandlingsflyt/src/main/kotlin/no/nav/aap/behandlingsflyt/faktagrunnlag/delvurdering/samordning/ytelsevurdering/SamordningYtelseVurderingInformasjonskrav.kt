@@ -114,7 +114,7 @@ class SamordningYtelseVurderingInformasjonskrav(
                         )
                     },
                     kilde = ytelse.kildesystem,
-                    saksRef = ytelse.saksnummer.toString()
+                    saksRef = ytelse.saksnummer
                 )
             }
 

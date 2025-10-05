@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBist
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarForutgåendeMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarLovvalgMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarManuellInntektVurderingLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOppholdskravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangArbeidLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
@@ -28,6 +29,9 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderRett
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.YrkesskadevurderingDto
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.mellomlagring.MellomlagretVurdering
+import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.AvklarOppholdkravLøsningPeriodeDto
+import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.AvklarOppholdskravLøsningDto
+
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLand
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
@@ -477,42 +481,42 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         )
     }
 
-    protected fun løsFramTilGrunnlag(behandling: Behandling) {
-        var behandling = behandling
-        behandling = løsSykdom(behandling)
-        behandling = løsAvklaringsBehov(
-            behandling,
-            AvklarBistandsbehovLøsning(
-                bistandsVurdering = BistandVurderingLøsningDto(
-                    begrunnelse = "Trenger hjelp fra nav",
-                    erBehovForAktivBehandling = true,
-                    erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = null,
-                    skalVurdereAapIOvergangTilArbeid = null,
-                    overgangBegrunnelse = null,
-                    skalVurdereAapIOvergangTilUføre = null,
+    @JvmName("løsFramTilGrunnlagExt")
+    protected fun Behandling.løsFramTilGrunnlag(): Behandling {
+        return løsFramTilGrunnlag(this)
+    }
 
-                    ),
-            ),
-        )
+    protected fun løsFramTilGrunnlag(behandling: Behandling): Behandling {
+        return behandling
+            .løsSykdom()
+            .løsAvklaringsBehov(
+                AvklarBistandsbehovLøsning(
+                    bistandsVurdering = BistandVurderingLøsningDto(
+                        begrunnelse = "Trenger hjelp fra nav",
+                        erBehovForAktivBehandling = true,
+                        erBehovForArbeidsrettetTiltak = false,
+                        erBehovForAnnenOppfølging = null,
+                        skalVurdereAapIOvergangTilArbeid = null,
+                        overgangBegrunnelse = null,
+                        skalVurdereAapIOvergangTilUføre = null,
 
-        behandling = løsAvklaringsBehov(
-            behandling,
-            RefusjonkravLøsning(
-                listOf(
-                    RefusjonkravVurderingDto(
-                        harKrav = true,
-                        fom = LocalDate.now(),
-                        tom = null,
-                        navKontor = "",
+                        ),
+                ),
+            )
+            .løsAvklaringsBehov(
+                RefusjonkravLøsning(
+                    listOf(
+                        RefusjonkravVurderingDto(
+                            harKrav = true,
+                            fom = LocalDate.now(),
+                            tom = null,
+                            navKontor = "",
+                        )
                     )
                 )
             )
-        )
-
-        behandling = løsSykdomsvurderingBrev(behandling)
-
-        kvalitetssikreOk(behandling)
+            .løsSykdomsvurderingBrev()
+            .kvalitetssikreOk()
     }
 
     protected fun mellomlagreSykdom(behandling: Behandling): Behandling {
@@ -586,6 +590,26 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                         brukerRettPåAAP = false,
                         virkningsdato = null,
                         overgangBegrunnelse = null
+                    )
+                )
+        )
+    }
+
+    protected fun Behandling.løsOppholdskrav(): Behandling {
+        return løsAvklaringsBehov(
+            behandling = this,
+            avklaringsBehovLøsning =
+                AvklarOppholdskravLøsning(
+                    vurdering = AvklarOppholdskravLøsningDto(
+                        perioder = listOf(
+                            AvklarOppholdkravLøsningPeriodeDto(
+                                oppfylt = true,
+                                land = "SE:Sverige",
+                                fom = LocalDate.now(),
+                                begrunnelse = "Fiske"
+
+                            )
+                        )
                     )
                 )
         )
@@ -1024,6 +1048,11 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         return løsForutgåendeMedlemskap(this)
     }
 
+    @JvmName("løsFramTilForutgåendeMedlemskapExt")
+    protected fun Behandling.løsFramTilForutgåendeMedlemskap(harYrkesskade: Boolean = false): Behandling {
+        return løsFramTilForutgåendeMedlemskap(this, harYrkesskade)
+    }
+
     protected fun løsFramTilForutgåendeMedlemskap(
         behandling: Behandling,
         harYrkesskade: Boolean = false,
@@ -1244,21 +1273,6 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         val brevbestilling = hentBrevAvType(this, typeBrev)
 
         return this.løsAvklaringsBehov(vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
-    }
-
-    protected fun leggTilVurderingsbehovForBehandling(
-        behandling: Behandling,
-        vurderingsbehov: List<VurderingsbehovMedPeriode>,
-        årsakTilOpprettelse: ÅrsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD
-    ) {
-        dataSource.transaction { connection ->
-            SakOgBehandlingService(postgresRepositoryRegistry.provider(connection), gatewayProvider)
-                .finnEllerOpprettOrdinærBehandling(
-                    behandling.sakId,
-                    VurderingsbehovOgÅrsak(vurderingsbehov, årsakTilOpprettelse)
-                )
-        }
-        prosesserBehandling(behandling)
     }
 
     protected fun prosesserBehandling(behandling: Behandling): Behandling {

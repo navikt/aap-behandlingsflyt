@@ -85,6 +85,7 @@ class FlytKontekstMedPeriodeService(
             Vurderingsbehov.REVURDER_YRKESSKADE,
             Vurderingsbehov.REVURDER_LOVVALG,
             Vurderingsbehov.REVURDER_SAMORDNING,
+            Vurderingsbehov.REVURDER_STUDENT,
             Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
             Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP,
             Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
@@ -103,6 +104,7 @@ class FlytKontekstMedPeriodeService(
             Vurderingsbehov.REVURDER_MELDEPLIKT_RIMELIG_GRUNN,
             Vurderingsbehov.OVERGANG_UFORE,
             Vurderingsbehov.OVERGANG_ARBEID,
+            Vurderingsbehov.OPPHOLDSKRAV,
             Vurderingsbehov.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT ->
                 REVURDERING
 
@@ -111,11 +113,12 @@ class FlytKontekstMedPeriodeService(
             Vurderingsbehov.FRITAK_MELDEPLIKT -> MELDEKORT
 
             Vurderingsbehov.MOTATT_KLAGE,
-            Vurderingsbehov.KLAGE_TRUKKET, Vurderingsbehov.MOTTATT_KABAL_HENDELSE ->
+            Vurderingsbehov.KLAGE_TRUKKET, Vurderingsbehov.MOTTATT_KABAL_HENDELSE,  ->
                 IKKE_RELEVANT // TODO: Verifiser at dette er korrekt.
             Vurderingsbehov.OPPFØLGINGSOPPGAVE -> IKKE_RELEVANT
             Vurderingsbehov.AKTIVITETSPLIKT_11_7, Vurderingsbehov.AKTIVITETSPLIKT_11_9 -> IKKE_RELEVANT
             Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT -> EFFEKTUER_AKTIVITETSPLIKT
+            Vurderingsbehov.MOTTATT_PDL_HENDELSE -> IKKE_RELEVANT
         }
     }
 }

@@ -22,5 +22,8 @@ enum class ÅrsakTilOpprettelse {
     // Klage-behandling
     SVAR_FRA_KLAGEINSTANS,
     KLAGE,
-    AKTIVITETSPLIKT
+    AKTIVITETSPLIKT,
+
+    // Registeroppdatering
+    OPPDATERING_FRA_PDL
 }

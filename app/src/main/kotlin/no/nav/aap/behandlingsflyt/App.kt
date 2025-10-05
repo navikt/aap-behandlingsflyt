@@ -53,6 +53,7 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.lovvalgMedlemskap
 import no.nav.aap.behandlingsflyt.behandling.mellomlagring.mellomlagretVurderingApi
 import no.nav.aap.behandlingsflyt.behandling.oppfolgingsbehandling.avklarOppfolgingsoppgaveGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.oppfolgingsbehandling.oppfølgingsOppgaveApi
+import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.oppholdskravGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.rettighetsperiodeGrunnlagAPI
 import no.nav.aap.behandlingsflyt.behandling.revurdering.avbrytRevurderingGrunnlagAPI
 import no.nav.aap.behandlingsflyt.behandling.simulering.simuleringAPI
@@ -70,6 +71,8 @@ import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KABAL_EVENT_TOPIC
 import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KabalKafkaKonsument
+import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PdlHendelseKafkaKonsument
+import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PDL_HENDELSE_TOPIC
 import no.nav.aap.behandlingsflyt.hendelse.mottattHendelseApi
 import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
@@ -92,6 +95,7 @@ import no.nav.aap.komponenter.server.plugins.NavIdentInterceptor
 import no.nav.aap.motor.Motor
 import no.nav.aap.motor.api.motorApi
 import no.nav.aap.motor.retry.RetryService
+import no.nav.person.pdl.leesah.Personhendelse
 import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -131,9 +135,7 @@ internal fun Application.server(
         .registerSubtypes(utledSubtypesTilAvklaringsbehovLøsning() + utledSubtypesTilMottattHendelseDTO())
 
     commonKtorModule(
-        prometheus,
-        AzureConfig(),
-        InfoModel(
+        prometheus, AzureConfig(), InfoModel(
             title = "AAP - Behandlingsflyt", version = ApplikasjonsVersjon.versjon,
             description = """
                 For å teste API i dev, besøk
@@ -162,6 +164,11 @@ internal fun Application.server(
 
     if (!Miljø.erLokal()) {
         startKabalKonsument(dataSource, repositoryRegistry)
+
+    }
+    if (Miljø.erDev()) {
+        // TODO: Bestille tilgang
+        //startPDLHendelseKonsument(dataSource, repositoryRegistry)
     }
 
     routing {
@@ -186,6 +193,7 @@ internal fun Application.server(
                 sykdomsgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 sykdomsvurderingForBrevApi(dataSource, repositoryRegistry, gatewayProvider)
                 sykepengerGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                oppholdskravGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 institusjonAPI(dataSource, repositoryRegistry, gatewayProvider)
                 avklaringsbehovApi(dataSource, repositoryRegistry, gatewayProvider)
                 tilkjentYtelseAPI(dataSource, repositoryRegistry)
@@ -280,16 +288,13 @@ fun Application.startMotor(
 }
 
 fun Application.startKabalKonsument(
-    dataSource: DataSource,
-    repositoryRegistry: RepositoryRegistry
-): KafkaKonsument {
+    dataSource: DataSource, repositoryRegistry: RepositoryRegistry
+): KafkaKonsument<String, String> {
     val konsument = KabalKafkaKonsument(
-        config = KafkaConsumerConfig(),
-        dataSource = dataSource,
-        repositoryRegistry = repositoryRegistry
+        config = KafkaConsumerConfig(), dataSource = dataSource, repositoryRegistry = repositoryRegistry
     )
     monitor.subscribe(ApplicationStarted) {
-        val t = Thread() {
+        val t = Thread {
             konsument.konsumer()
         }
         t.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, e ->
@@ -299,6 +304,36 @@ fun Application.startKabalKonsument(
     }
     monitor.subscribe(ApplicationStopPreparing) { environment ->
         environment.log.info("Forbereder stopp av applikasjon, lukker KabalKafkaKonsument.")
+
+        konsument.lukk()
+    }
+
+    return konsument
+}
+
+fun Application.startPDLHendelseKonsument(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry
+): KafkaKonsument<String, Personhendelse> {
+    val konsument = PdlHendelseKafkaKonsument(
+        config = KafkaConsumerConfig(
+            keyDeserializer = org.apache.kafka.common.serialization.StringDeserializer::class.java,
+            valueDeserializer = io.confluent.kafka.serializers.KafkaAvroDeserializer::class.java
+        ),
+        dataSource = dataSource,
+        repositoryRegistry = repositoryRegistry
+    )
+    monitor.subscribe(ApplicationStarted) {
+        val t = Thread() {
+            konsument.konsumer()
+        }
+        t.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, e ->
+            log.error("Konsumering av $PDL_HENDELSE_TOPIC ble lukket pga uhåndtert feil", e)
+        }
+        t.start()
+    }
+    monitor.subscribe(ApplicationStopPreparing) { environment ->
+        environment.log.info("Forbereder stopp av applikasjon, lukker PDLHendelseKonsument.")
 
         konsument.lukk()
     }

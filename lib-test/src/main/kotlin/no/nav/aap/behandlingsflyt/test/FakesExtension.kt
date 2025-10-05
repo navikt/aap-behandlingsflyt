@@ -19,26 +19,25 @@ internal class FakesExtension() : BeforeAllCallback, ParameterResolver,
         Thread.currentThread().setUncaughtExceptionHandler { _, e -> log.error("Uhåndtert feil", e) }
     }
 
-    override fun beforeAll(context: ExtensionContext?) {
+    override fun beforeAll(context: ExtensionContext) {
         FakeServers.start()
     }
 
-    override fun beforeEach(context: ExtensionContext?) {
+    override fun beforeEach(context: ExtensionContext) {
         FakeServers.statistikkHendelser.clear()
         FakeServers.legeerklæringStatuser.clear()
         FakePersoner.nullstillPersoner()
     }
 
     override fun supportsParameter(
-        parameterContext: ParameterContext?,
-        extensionContext: ExtensionContext?
+        parameterContext: ParameterContext,
+        extensionContext: ExtensionContext
     ): Boolean {
-        val parameter = parameterContext?.parameter
+        val parameter = parameterContext.parameter
 
-        val parameterizedType = parameter?.parameterizedType
+        val parameterizedType = parameter.parameterizedType
         if (parameterizedType is ParameterizedType) {
-            val firstParamType = parameterizedType.actualTypeArguments[0]
-            return when (firstParamType) {
+            return when (val firstParamType = parameterizedType.actualTypeArguments[0]) {
                 is Class<*> -> {
                     firstParamType == StoppetBehandling::class.java
                 }
@@ -52,12 +51,9 @@ internal class FakesExtension() : BeforeAllCallback, ParameterResolver,
     }
 
     override fun resolveParameter(
-        parameterContext: ParameterContext?,
-        extensionContext: ExtensionContext?
-    ): Any? {
-        if (parameterContext == null) {
-            throw IllegalArgumentException("ParameterContext cannot be null")
-        }
+        parameterContext: ParameterContext,
+        extensionContext: ExtensionContext
+    ): Any {
         if (parameterContext.parameter.type == List::class.java) {
             val parameterizedType = parameterContext.parameter.parameterizedType
             if (parameterizedType is ParameterizedType) {

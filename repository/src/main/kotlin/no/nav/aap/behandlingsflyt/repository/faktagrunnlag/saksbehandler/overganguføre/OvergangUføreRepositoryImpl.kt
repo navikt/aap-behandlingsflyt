@@ -72,8 +72,10 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
             INNER JOIN overgang_ufore_vurderinger ON grunnlag.vurderinger_id = overgang_ufore_vurderinger.id
             INNER JOIN overgang_ufore_vurdering ON overgang_ufore_vurdering.vurderinger_id = overgang_ufore_vurderinger.id
             INNER JOIN behandling ON grunnlag.behandling_id = behandling.id
+            LEFT JOIN avbryt_revurdering_grunnlag ar ON ar.behandling_id = behandling.id
             WHERE grunnlag.aktiv AND behandling.sak_id = ?
                 AND behandling.opprettet_tid < (select a.opprettet_tid from behandling a where id = ?)
+                AND ar.behandling_id IS NULL
             ORDER BY overgang_ufore_vurdering.opprettet_tid
         """.trimIndent()
 
@@ -86,12 +88,12 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
         }
     }
 
-    override fun lagre(behandlingId: BehandlingId, overganguforevurderinger: List<OvergangUføreVurdering>) {
+    override fun lagre(behandlingId: BehandlingId, overgangUføreVurderinger: List<OvergangUføreVurdering>) {
         val overgangUforeGrunnlag = hentHvisEksisterer(behandlingId)
 
         val nyttGrunnlag = OvergangUføreGrunnlag(
             id = null,
-            vurderinger = overganguforevurderinger
+            vurderinger = overgangUføreVurderinger
         )
 
         if (overgangUforeGrunnlag != nyttGrunnlag) {

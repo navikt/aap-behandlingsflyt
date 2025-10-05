@@ -214,7 +214,7 @@ class KabalKafkaKonsumentTest {
         }
     }
 
-    private fun testConfig(brokers: String) = KafkaConsumerConfig(
+    private fun testConfig(brokers: String) = KafkaConsumerConfig<String, String>(
         applicationId = "behandlingsflyt-test",
         brokers = brokers,
         ssl = null,

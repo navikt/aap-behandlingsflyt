@@ -40,7 +40,6 @@ fun NormalOpenAPIRoute.forutgåendeMedlemskapAPI(
                     val historiskeManuelleVurderinger =
                         forutgåendeRepository.hentHistoriskeVurderinger(behandling.sakId, behandling.id)
                     val ansattNavnOgEnhet = data?.let { ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv) }
-                    
 
                     ForutgåendeMedlemskapGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),

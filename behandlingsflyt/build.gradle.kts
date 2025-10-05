@@ -6,14 +6,14 @@ plugins {
 dependencies {
     api(project(":kontrakt"))
     implementation("io.micrometer:micrometer-registry-prometheus:1.15.4")
-    implementation("ch.qos.logback:logback-classic:1.5.18")
+    implementation("ch.qos.logback:logback-classic:1.5.19")
     implementation("net.logstash.logback:logstash-logback-encoder:8.1")
     implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.20.1")
 
     api(libs.tilgangPlugin)
     api(libs.tilgangKontrakt)
-    api("no.nav.aap.brev:kontrakt:0.0.153")
-    api("no.nav.aap.meldekort:kontrakt:0.0.122")
+    api("no.nav.aap.brev:kontrakt:0.0.156")
+    api("no.nav.aap.meldekort:kontrakt:0.0.125")
     api(libs.motor)
     api(libs.gateway)
     api(libs.utbetalKontrakt)
@@ -41,6 +41,6 @@ dependencies {
             because("https://github.com/advisories/GHSA-4g9r-vxhx-9pgx")
         }
     }
-    testImplementation("io.mockk:mockk:1.14.5")
+    testImplementation("io.mockk:mockk:1.14.6")
     testImplementation(kotlin("test"))
 }
