@@ -31,6 +31,7 @@ public enum class Opplysningstype {
     ADRESSEBESKYTTELSE_V1,
     DOEDFOEDT_BARN_V1,
     DOEDSFALL_V1,
+    DELT_BOSTED_V1,
     FALSK_ID_V1,
     FAMILIERELASJON_V1,
     FOEDSEL_V1,
@@ -47,7 +48,9 @@ public enum class Opplysningstype {
     TELEFONNUMMER_V1,
     KONTAKTADRESSE_V1,
     BOSTEDSADRESSE_V1,
-    OPPHOLDSADRESSE_V1
+    OPPHOLDSADRESSE_V1,
+
+    UNKNOWN
 }
 
 

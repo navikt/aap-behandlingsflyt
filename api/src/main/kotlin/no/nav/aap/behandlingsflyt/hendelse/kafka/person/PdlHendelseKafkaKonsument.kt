@@ -80,7 +80,12 @@ class PdlHendelseKafkaKonsument(
             personidenter = this.personidenter,
             master = this.master,
             opprettet = this.opprettet,
-            opplysningstype = Opplysningstype.valueOf(this.opplysningstype),
+            opplysningstype = try {
+                Opplysningstype.valueOf(this.opplysningstype)
+            } catch (e: IllegalArgumentException) {
+                log.info("Fant ukjent opplysningstype fra PDL: ${this.opplysningstype}")
+                Opplysningstype.UNKNOWN
+            },
             endringstype = Endringstype.valueOf(this.endringstype.toString()),
             tidligereHendelseId = this.tidligereHendelseId,
             navn = this.navn?.let {
