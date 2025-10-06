@@ -1,9 +1,7 @@
 package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivForhåndsvarselBruddAktivitetspliktBrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SykdomsvurderingForBrevLøsning
@@ -16,7 +14,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt1
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Vurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_9LøsningDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_9Vurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Brudd
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Grunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Utfall
@@ -32,6 +29,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7RepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_9RepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -50,12 +48,10 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import java.time.LocalDate
 import java.time.ZoneOffset
 
 class AktivitetspliktFlytTest :
@@ -168,7 +164,6 @@ class AktivitetspliktFlytTest :
             )
         }!!
 
-        effektueringsbehandling = hentBehandling(effektueringsbehandling.referanse)
         assertThat(effektueringsbehandling.typeBehandling() == TypeBehandling.Revurdering)
         assertThat(effektueringsbehandling.status()).isEqualTo(Status.AVSLUTTET)
         assertThat(effektueringsbehandling.forrigeBehandlingId).isEqualTo(åpenBehandling.forrigeBehandlingId)
@@ -420,7 +415,7 @@ class AktivitetspliktFlytTest :
 
         var aktivitetspliktBehandling = dataSource.transaction { connection ->
             assertThat(
-                Aktivitetsplikt11_7RepositoryImpl(connection)
+                Aktivitetsplikt11_9RepositoryImpl(connection)
                     .hentHvisEksisterer(åpenBehandling.id)
             ).isNull()
 
@@ -466,6 +461,21 @@ class AktivitetspliktFlytTest :
             }.løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_11_9).medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
             }
+
+        var effektueringsbehandling = dataSource.transaction { connection ->
+            BehandlingRepositoryImpl(connection).finnSisteOpprettedeBehandlingFor(
+                sak.id,
+                listOf(TypeBehandling.Revurdering)
+            )
+        }!!
+
+        assertThat(effektueringsbehandling.typeBehandling() == TypeBehandling.Revurdering)
+        assertThat(
+            effektueringsbehandling.vurderingsbehov()
+                .map { it.type }).containsExactlyInAnyOrder(Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9)
+        assertThat(effektueringsbehandling.forrigeBehandlingId).isEqualTo(åpenBehandling.forrigeBehandlingId)
+        assertThat(effektueringsbehandling.status()).isEqualTo(Status.AVSLUTTET)
+
     }
 
     private fun opprettAktivitetspliktBehandling(

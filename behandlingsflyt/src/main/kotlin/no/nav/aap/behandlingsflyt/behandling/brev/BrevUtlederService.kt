@@ -28,6 +28,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.FASTSATT_PERIODE_PASSERT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_MELDEKORT
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
@@ -97,7 +98,12 @@ class BrevUtlederService(
             TypeBehandling.Revurdering -> {
                 val resultat = resultatUtleder.utledRevurderingResultat(behandlingId)
                 val vurderingsbehov = behandling.vurderingsbehov().map { it.type }.toSet()
-                if (setOf(MOTTATT_MELDEKORT, FASTSATT_PERIODE_PASSERT, EFFEKTUER_AKTIVITETSPLIKT).containsAll(
+                if (setOf(
+                        MOTTATT_MELDEKORT,
+                        FASTSATT_PERIODE_PASSERT,
+                        EFFEKTUER_AKTIVITETSPLIKT,
+                        EFFEKTUER_AKTIVITETSPLIKT_11_9
+                    ).containsAll(
                         vurderingsbehov
                     )
                 ) {
@@ -120,15 +126,16 @@ class BrevUtlederService(
 
             TypeBehandling.Aktivitetsplikt -> {
                 val grunnlag = aktivitetsplikt11_7Repository.hentHvisEksisterer(behandlingId)
-                val vurderingForBehandling = grunnlag?.vurderinger?.firstOrNull { it.vurdertIBehandling == behandlingId }
-                    ?: error("Finner ingen vurdering av aktivitetsplikt 11-7 for denne behandlingen - kan ikke utlede brevtype")
+                val vurderingForBehandling =
+                    grunnlag?.vurderinger?.firstOrNull { it.vurdertIBehandling == behandlingId }
+                        ?: error("Finner ingen vurdering av aktivitetsplikt 11-7 for denne behandlingen - kan ikke utlede brevtype")
                 return if (vurderingForBehandling.erOppfylt) {
                     VedtakEndring
                 } else {
                     VedtakAktivitetsplikt11_7
                 }
             }
-            
+
             TypeBehandling.Aktivitetsplikt11_9 -> {
                 return VedtakAktivitetsplikt11_9
             }
