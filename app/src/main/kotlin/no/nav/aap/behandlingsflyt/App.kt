@@ -175,7 +175,7 @@ internal fun Application.server(
 
     }
     if (Miljø.erDev()) {
-        //startPDLHendelseKonsument(dataSource, repositoryRegistry)
+        startPDLHendelseKonsument(dataSource, repositoryRegistry)
     }
 
     routing {
