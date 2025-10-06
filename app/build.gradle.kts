@@ -108,7 +108,7 @@ dependencies {
     implementation("io.opentelemetry.instrumentation:opentelemetry-ktor-3.0:${opentelemetryVersion}")
     implementation("org.apache.avro:avro:1.12.0")
     implementation("io.confluent:kafka-avro-serializer:7.6.0")
-    testImplementation("org.springframework.kafka:spring-kafka-test:3.1.3")
+    testImplementation("org.springframework.kafka:spring-kafka-test:3.3.10")
     testImplementation(project(":lib-test"))
     implementation(libs.dbtest)
     implementation(libs.motorTestUtils)
