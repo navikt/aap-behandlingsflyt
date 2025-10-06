@@ -22,6 +22,15 @@ class AnsattInfoService(private val ansattInfoGateway: AnsattInfoGateway, privat
         }
     }
 
+    fun hentAnsatteVisningsnavn(navIdenter: List<String>): List<AnsattVisningsnavn?> {
+        try {
+            return ansattInfoGateway.hentAnsatteVisningsnavn(navIdenter)
+        } catch (e: Exception) {
+            logger.info("Kunne ikke hente ansattnavn.", e)
+            return emptyList()
+        }
+    }
+
     fun hentAnsattEnhet(navIdent: String): String? {
         return try {
             val ansattInfo = ansattInfoGateway.hentAnsattInfo(navIdent)
