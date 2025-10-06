@@ -20,7 +20,7 @@ dependencies {
     implementation(libs.motorApi)
     implementation(libs.verdityper)
     implementation(libs.tidslinje)
-    implementation("org.apache.avro:avro:1.11.2")
+    implementation("org.apache.avro:avro:1.12.0")
     implementation("io.confluent:kafka-avro-serializer:7.6.0")
     implementation("org.apache.kafka:kafka-clients:${kafkaVersion}")
     api(libs.tilgangPlugin)
