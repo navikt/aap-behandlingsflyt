@@ -153,6 +153,7 @@ class VurderBistandsbehovSteg private constructor(
 
             VurderingType.MELDEKORT -> false
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT -> false
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9 -> false
             VurderingType.IKKE_RELEVANT -> false
         }
     }
@@ -243,6 +244,7 @@ class VurderBistandsbehovSteg private constructor(
 
             VurderingType.MELDEKORT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
             VurderingType.IKKE_RELEVANT -> {
                 // Skal ikke gjøre noe
             }

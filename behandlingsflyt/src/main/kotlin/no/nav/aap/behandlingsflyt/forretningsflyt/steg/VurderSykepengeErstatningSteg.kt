@@ -81,7 +81,8 @@ class VurderSykepengeErstatningSteg private constructor(
                 vurder(kontekst)
             }
 
-            VurderingType.MELDEKORT, VurderingType.EFFEKTUER_AKTIVITETSPLIKT, VurderingType.IKKE_RELEVANT -> {
+            VurderingType.MELDEKORT, VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9, VurderingType.IKKE_RELEVANT -> {
                 log.info("Vurderingtype ${kontekst.vurderingType} ikke relevant for steg ${type()} for behandlingId ${kontekst.behandlingId}, fullfører steg.")
                 // Do nothing
                 Fullført

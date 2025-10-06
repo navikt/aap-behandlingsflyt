@@ -69,6 +69,7 @@ class ManglendeLigningGrunnlagSteg internal constructor(
 
                     VurderingType.MELDEKORT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
+                    VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
                     VurderingType.IKKE_RELEVANT ->
                         false
                 }
@@ -76,7 +77,8 @@ class ManglendeLigningGrunnlagSteg internal constructor(
             erTilstrekkeligVurdert = {
                 val sisteRelevanteÅr = hentSisteRelevanteÅr(kontekst)
                 val inntektGrunnlagSisteRelevanteÅr = hentInntektGrunnlag(inntektGrunnlag, sisteRelevanteÅr)
-                val manuellInntektVurderingSisteRelevanteÅr = hentManuellInntektVurdering(manuellInntektGrunnlag, sisteRelevanteÅr)
+                val manuellInntektVurderingSisteRelevanteÅr =
+                    hentManuellInntektVurdering(manuellInntektGrunnlag, sisteRelevanteÅr)
 
                 // Har enten inntekt fra register eller manuelt satt inntekt for siste relevante år
                 inntektGrunnlagSisteRelevanteÅr != null || manuellInntektVurderingSisteRelevanteÅr != null
@@ -89,7 +91,7 @@ class ManglendeLigningGrunnlagSteg internal constructor(
                 val gjeldendeManuelleInntekter = manuellInntektGrunnlag?.manuelleInntekter.orEmpty()
 
                 if (forrigeManuelleInntekter != gjeldendeManuelleInntekter) {
-                   manuellInntektGrunnlagRepository.lagre(kontekst.behandlingId, forrigeManuelleInntekter)
+                    manuellInntektGrunnlagRepository.lagre(kontekst.behandlingId, forrigeManuelleInntekter)
                 }
             },
             kontekst
@@ -101,8 +103,11 @@ class ManglendeLigningGrunnlagSteg internal constructor(
         return kontekst.vurderingsbehovRelevanteForSteg.any { it == Vurderingsbehov.REVURDER_MANUELL_INNTEKT }
     }
 
-    private fun hentManuellInntektVurdering(manuellInntektGrunnlag: ManuellInntektGrunnlag?, sisteRelevanteÅr: Year): ManuellInntektVurdering? {
-        return manuellInntektGrunnlag?.manuelleInntekter?.firstOrNull { it.år == sisteRelevanteÅr}
+    private fun hentManuellInntektVurdering(
+        manuellInntektGrunnlag: ManuellInntektGrunnlag?,
+        sisteRelevanteÅr: Year
+    ): ManuellInntektVurdering? {
+        return manuellInntektGrunnlag?.manuelleInntekter?.firstOrNull { it.år == sisteRelevanteÅr }
     }
 
     private fun hentInntektGrunnlag(inntektGrunnlag: InntektGrunnlag?, sisteRelevanteÅr: Year): InntektPerÅr? {

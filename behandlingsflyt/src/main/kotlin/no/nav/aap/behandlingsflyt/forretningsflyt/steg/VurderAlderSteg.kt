@@ -49,6 +49,7 @@ class VurderAlderSteg private constructor(
 
             VurderingType.MELDEKORT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
             VurderingType.IKKE_RELEVANT -> {
                 // Do nothing
             }
