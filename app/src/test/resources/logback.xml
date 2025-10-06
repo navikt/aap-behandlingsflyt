@@ -21,11 +21,14 @@
         <appender-ref ref="pretty"/>
     </root>
 
-    <logger name="secureLog" level="TRACE" additivity="false">
+    <logger level="TRACE" name="secureLog"  additivity="false">
         <appender-ref ref="pretty"/>
     </logger>
 
-    <logger name="io.netty" level="INFO" />
+    <logger level="INFO" name="io.netty"  />
+    <logger level="WARN" name="org.postgresql"/>
+    <logger level="WARN" name="com.zaxxer.hikari"/>
+
     <logger name="no.nav" level="INFO" />
 
 </configuration>
