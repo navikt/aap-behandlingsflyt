@@ -1,7 +1,9 @@
 package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivForhåndsvarselBruddAktivitetspliktBrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SykdomsvurderingForBrevLøsning
@@ -13,8 +15,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7LøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Vurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_9LøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_9Vurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Brudd
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Grunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall as VilkårsresultatUtfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
@@ -35,15 +42,20 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅ
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.FakeUnleashFasttrackAktivitetsplikt
+import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
 import java.time.ZoneOffset
 
 class AktivitetspliktFlytTest :
@@ -393,8 +405,17 @@ class AktivitetspliktFlytTest :
 
     @Test
     fun `Happy-case-flyt for aktivitetsplikt § 11-9`() {
-        val person = TestPersoner.STANDARD_PERSON()
-        val sak = happyCaseFørstegangsbehandling(person = person)
+        val person = FakePersoner.leggTil(
+            TestPerson(
+                fødselsdato = Fødselsdato(1 januar 1990),
+                yrkesskade = emptyList(),
+                sykepenger = emptyList()
+            )
+        )
+        val sak = happyCaseFørstegangsbehandling(
+            fom = 1 januar 2023,
+            person = person,
+        )
         var åpenBehandling = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom)
 
         var aktivitetspliktBehandling = dataSource.transaction { connection ->
@@ -421,8 +442,23 @@ class AktivitetspliktFlytTest :
 
             }
             .løsAvklaringsBehov(
-                VurderBrudd11_9Løsning()
+                VurderBrudd11_9Løsning(
+                    aktivitetsplikt11_9Vurderinger = setOf(
+                        Aktivitetsplikt11_9LøsningDto(
+                            begrunnelse = "Det var et brudd",
+                            dato = 2 januar 2024,
+                            grunn = Grunn.IKKE_RIMELIG_GRUNN,
+                            brudd = Brudd.IKKE_MØTT_TIL_TILTAK,
+                        )
+                    )
+                )
             )
+            .medKontekst {
+                assertThat(this.behandling).extracting { it.aktivtSteg() }
+                    .isEqualTo(StegType.FATTE_VEDTAK)
+
+            }
+            .fattVedtakEllerSendRetur()
             .medKontekst {
                 assertThat(this.behandling).extracting { it.aktivtSteg() }
                     .isEqualTo(StegType.BREV)

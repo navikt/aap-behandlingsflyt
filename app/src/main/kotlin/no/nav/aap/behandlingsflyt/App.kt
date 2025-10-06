@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.api.actuator.actuator
 import no.nav.aap.behandlingsflyt.api.config.definisjoner.configApi
 import no.nav.aap.behandlingsflyt.auditlog.auditlogApi
 import no.nav.aap.behandlingsflyt.behandling.aktivitetsplikt.brudd_11_7.aktivitetsplikt11_7GrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.aktivitetsplikt.brudd_11_9.aktivitetsplikt11_9GrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.arbeidsevne.arbeidsevneGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.avklaringsbehovApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.fatteVedtakGrunnlagApi
@@ -97,8 +98,11 @@ import no.nav.aap.motor.api.motorApi
 import no.nav.aap.motor.retry.RetryService
 import no.nav.person.pdl.leesah.Personhendelse
 import org.slf4j.LoggerFactory
+import org.slf4j.bridge.SLF4JBridgeHandler
 import java.util.*
 import java.util.concurrent.TimeUnit
+import java.util.logging.Level
+import java.util.logging.Logger
 import javax.sql.DataSource
 
 fun utledSubtypesTilMottattHendelseDTO(): List<Class<*>> {
@@ -114,6 +118,9 @@ fun main() {
         LoggerFactory.getLogger(App::class.java).error("Uhåndtert feil av type ${e.javaClass}.", e)
         prometheus.uhåndtertExceptionTeller(e::class.java.name).increment()
     }
+
+    aktiverPostgresLogging()
+
     embeddedServer(Netty, configure = {
         connectionGroupSize = 8
         workerGroupSize = 8
@@ -124,6 +131,14 @@ fun main() {
             port = 8080
         }
     }) { server(DbConfig(), postgresRepositoryRegistry, defaultGatewayProvider()) }.start(wait = true)
+}
+
+private fun aktiverPostgresLogging() {
+    // Basert på on https://www.baeldung.com/java-jul-to-slf4j-bridge#1-programmatic-configuration
+    SLF4JBridgeHandler.install();
+    // Overrider log level fra postgres-jdbc's default, som ikke logger noe som helst
+    Logger.getLogger("org.postgresql").level = Level.WARNING // minste-nivå
+    // Vi kan fra nå av bruke org.postgresql loggeren i logback.xml
 }
 
 internal fun Application.server(
@@ -152,13 +167,6 @@ internal fun Application.server(
     }
 
     val dataSource = initDatasource(dbConfig)
-    Runtime.getRuntime().addShutdownHook(Thread {
-        try {
-            dataSource.connection.close()
-        } finally {
-            // Ignorer om den feks allerede er closed
-        }
-    })
     Migrering.migrate(dataSource)
     val motor = startMotor(dataSource, repositoryRegistry, gatewayProvider)
 
@@ -226,6 +234,7 @@ internal fun Application.server(
                 oppfølgingsOppgaveApi(dataSource, repositoryRegistry)
                 // Aktivitetsplikt
                 aktivitetsplikt11_7GrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                aktivitetsplikt11_9GrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 // Flytt
                 brevApi(dataSource, repositoryRegistry, gatewayProvider)
                 dokumentinnhentingAPI(dataSource, repositoryRegistry, gatewayProvider)
@@ -250,7 +259,7 @@ internal fun Application.server(
 }
 
 fun Application.startMotor(
-    dataSource: DataSource,
+    dataSource: HikariDataSource,
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,
 ): Motor {
@@ -272,15 +281,21 @@ fun Application.startMotor(
         motor.start()
     }
     monitor.subscribe(ApplicationStopPreparing) { environment ->
+        // Denne vil vanligvis kjøres i to ulike tråder, både main og KtorShutdownHook
+        // Det som kjøres her må derfor støtte at det blir kjørt flere ganger på samme tid
         environment.log.info("Forbereder stopp av applikasjon, stopper motor.")
         motor.stop()
     }
-    // Logg disse for å sammenligne timestamp med meldingen over
-    monitor.subscribe(ApplicationStopping) { application ->
-        application.environment.log.info("Server stopper...")
+    monitor.subscribe(ApplicationStopping) { environment ->
+        environment.log.info("Server stopper...")
     }
     monitor.subscribe(ApplicationStopped) { environment ->
         environment.log.info("Server har stoppet.")
+        try {
+            dataSource.close()
+        } catch (e: Exception) {
+            environment.log.warn("Feilet ved lukking av datasource", e)
+        }
     }
 
     return motor
@@ -360,7 +375,7 @@ val postgresConfig = Properties().apply {
     put("assumeMinServerVersion", "16.0") // raskere oppstart av driver
 }
 
-fun initDatasource(dbConfig: DbConfig): DataSource = HikariDataSource(HikariConfig().apply {
+fun initDatasource(dbConfig: DbConfig): HikariDataSource = HikariDataSource(HikariConfig().apply {
     jdbcUrl = dbConfig.url
     username = dbConfig.username
     password = dbConfig.password

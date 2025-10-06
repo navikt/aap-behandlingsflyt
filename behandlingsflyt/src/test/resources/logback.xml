@@ -16,6 +16,9 @@
     </logger>
 
     <logger name="io.netty" level="INFO" />
+    <logger level="WARN" name="org.postgresql"/>
+    <logger level="WARN" name="com.zaxxer.hikari"/>
+
     <logger name="no.nav" level="INFO" />
 
 </configuration>

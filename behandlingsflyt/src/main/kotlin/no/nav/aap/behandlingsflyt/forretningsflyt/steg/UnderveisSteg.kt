@@ -46,7 +46,7 @@ class UnderveisSteg(
                 }
             }
 
-            VurderingType.MELDEKORT, VurderingType.EFFEKTUER_AKTIVITETSPLIKT -> {
+            VurderingType.MELDEKORT, VurderingType.EFFEKTUER_AKTIVITETSPLIKT, VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9 -> {
                 underveisService.vurder(kontekst.sakId, kontekst.behandlingId)
             }
 
@@ -57,7 +57,10 @@ class UnderveisSteg(
     }
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): BehandlingSteg {
             return UnderveisSteg(repositoryProvider, gatewayProvider)
         }
 

@@ -35,6 +35,7 @@ data class KafkaConsumerConfig<K, V>(
         this[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = enableAutoCommit
         this[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = keyDeserializer
         this[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = valueDeserializer
+        put("specific.avro.reader", true)
     }
 }
 
