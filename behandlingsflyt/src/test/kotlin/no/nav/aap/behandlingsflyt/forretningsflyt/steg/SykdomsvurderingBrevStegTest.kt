@@ -36,7 +36,6 @@ class SykdomsvurderingBrevStegTest {
         InMemorySykdomsvurderingForBrevRepository,
         AvklaringsbehovService(inMemoryRepositoryProvider),
         InMemoryAvklaringsbehovRepository,
-        InMemoryBehandlingRepository,
         FakeTidligereVurderinger()
     )
     private val sakRepository = InMemorySakRepository
