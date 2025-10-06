@@ -288,10 +288,14 @@ fun Application.startMotor(
     }
     monitor.subscribe(ApplicationStopping) { environment ->
         environment.log.info("Server stopper...")
-        dataSource.close()
     }
     monitor.subscribe(ApplicationStopped) { environment ->
         environment.log.info("Server har stoppet.")
+        try {
+            dataSource.close()
+        } catch (e: Exception) {
+            environment.log.warn("Feilet ved lukking av datasource", e)
+        }
     }
 
     return motor
