@@ -166,13 +166,6 @@ internal fun Application.server(
     }
 
     val dataSource = initDatasource(dbConfig)
-    Runtime.getRuntime().addShutdownHook(Thread {
-        try {
-            dataSource.connection.close()
-        } finally {
-            // Ignorer om den feks allerede er closed
-        }
-    })
     Migrering.migrate(dataSource)
     val motor = startMotor(dataSource, repositoryRegistry, gatewayProvider)
 
@@ -264,7 +257,7 @@ internal fun Application.server(
 }
 
 fun Application.startMotor(
-    dataSource: DataSource,
+    dataSource: HikariDataSource,
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,
 ): Motor {
@@ -286,12 +279,14 @@ fun Application.startMotor(
         motor.start()
     }
     monitor.subscribe(ApplicationStopPreparing) { environment ->
+        // Denne vil vanligvis kjøres i to ulike tråder, både main og KtorShutdownHook
+        // Det som kjøres her må derfor støtte at det blir kjørt flere ganger på samme tid
         environment.log.info("Forbereder stopp av applikasjon, stopper motor.")
         motor.stop()
     }
-    // Logg disse for å sammenligne timestamp med meldingen over
-    monitor.subscribe(ApplicationStopping) { application ->
-        application.environment.log.info("Server stopper...")
+    monitor.subscribe(ApplicationStopping) { environment ->
+        environment.log.info("Server stopper...")
+        dataSource.close()
     }
     monitor.subscribe(ApplicationStopped) { environment ->
         environment.log.info("Server har stoppet.")
@@ -374,7 +369,7 @@ val postgresConfig = Properties().apply {
     put("assumeMinServerVersion", "16.0") // raskere oppstart av driver
 }
 
-fun initDatasource(dbConfig: DbConfig): DataSource = HikariDataSource(HikariConfig().apply {
+fun initDatasource(dbConfig: DbConfig): HikariDataSource = HikariDataSource(HikariConfig().apply {
     jdbcUrl = dbConfig.url
     username = dbConfig.username
     password = dbConfig.password
