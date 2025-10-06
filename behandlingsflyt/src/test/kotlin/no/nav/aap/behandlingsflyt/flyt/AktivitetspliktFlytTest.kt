@@ -21,6 +21,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Brudd
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Grunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall as VilkårsresultatUtfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
@@ -41,8 +42,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅ
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.FakeUnleashFasttrackAktivitetsplikt
 import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -52,6 +55,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
 import java.time.ZoneOffset
 
 class AktivitetspliktFlytTest :
@@ -401,8 +405,17 @@ class AktivitetspliktFlytTest :
 
     @Test
     fun `Happy-case-flyt for aktivitetsplikt § 11-9`() {
-        val person = TestPersoner.STANDARD_PERSON()
-        val sak = happyCaseFørstegangsbehandling(person = person)
+        val person = FakePersoner.leggTil(
+            TestPerson(
+                fødselsdato = Fødselsdato(1 januar 1990),
+                yrkesskade = emptyList(),
+                sykepenger = emptyList()
+            )
+        )
+        val sak = happyCaseFørstegangsbehandling(
+            fom = 1 januar 2023,
+            person = person,
+        )
         var åpenBehandling = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom)
 
         var aktivitetspliktBehandling = dataSource.transaction { connection ->
@@ -433,7 +446,7 @@ class AktivitetspliktFlytTest :
                     aktivitetsplikt11_9Vurderinger = setOf(
                         Aktivitetsplikt11_9LøsningDto(
                             begrunnelse = "Det var et brudd",
-                            dato = 2 januar 2020,
+                            dato = 2 januar 2024,
                             grunn = Grunn.IKKE_RIMELIG_GRUNN,
                             brudd = Brudd.IKKE_MØTT_TIL_TILTAK,
                         )
