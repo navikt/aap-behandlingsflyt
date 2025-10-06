@@ -394,7 +394,7 @@ class StatistikkMetoder(
         inntekter = beregningsgrunnlag.inntekter()
             .associate { it.år.value.toString() to it.inntektIKroner.verdi().toDouble() },
         grunnlaget = beregningsgrunnlag.grunnlaget().verdi().toDouble(),
-        er6GBegrenset = false,
-        erGjennomsnitt = false
+        er6GBegrenset = beregningsgrunnlag.inntekter().any { it.er6GBegrenset },
+        erGjennomsnitt = beregningsgrunnlag.erGjennomsnitt(),
     )
 }
