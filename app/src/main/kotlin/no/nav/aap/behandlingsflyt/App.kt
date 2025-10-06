@@ -286,10 +286,10 @@ fun Application.startMotor(
     }
     monitor.subscribe(ApplicationStopping) { environment ->
         environment.log.info("Server stopper...")
-        dataSource.close()
     }
     monitor.subscribe(ApplicationStopped) { environment ->
         environment.log.info("Server har stoppet.")
+        dataSource.close()
     }
 
     return motor
