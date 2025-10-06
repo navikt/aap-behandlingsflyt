@@ -70,7 +70,7 @@ class PdlHendelseKafkaKonsumentTest {
             .setPersonidenter(listOf("12345678901"))
             .setMaster("FREG")
             .setOpprettet(Instant.now())
-            .setOpplysningstype("AVDOED_PDL_V1")
+            .setOpplysningstype("DOEDSFALL_V1")
             .setEndringstype(no.nav.person.pdl.leesah.Endringstype.OPPRETTET)
             .build()
 
