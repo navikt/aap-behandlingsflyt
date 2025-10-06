@@ -70,7 +70,7 @@ class IverksettVedtakSteg private constructor(
         } else {
             log.info("Fant ikke tilkjent ytelse for behandingsref ${kontekst.behandlingId}. Virkningstidspunkt: $virkningstidspunkt.")
         }
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.Samvarsling && kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING)) {
+        if (kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING) {
             flytJobbRepository.leggTil(
                 jobbInput = JobbInput(jobb = VarsleVedtakJobbUtfører).medPayload(kontekst.behandlingId)
             )

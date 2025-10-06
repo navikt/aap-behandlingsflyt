@@ -12,7 +12,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     FritakMeldeplikt,
     IngenValidering,
     InnhentEnhetsregisterData,
-    Samvarsling,
     SendForvaltningsmelding,
     SosialHjelpFlereKontorer,
     BrevBeregningsgrunnlag,
