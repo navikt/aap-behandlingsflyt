@@ -107,10 +107,12 @@ class BeregningVurderingRepositoryImpl(private val connection: DBConnection) : B
         val query = """
             SELECT TIDSPUNKT_VURDERING_ID,  YRKESSKADE_VURDERING_ID
             FROM BEREGNINGSFAKTA_GRUNNLAG BG
-                     JOIN BEHANDLING B ON BG.BEHANDLING_ID = B.ID
+                JOIN BEHANDLING B ON BG.BEHANDLING_ID = B.ID
+                LEFT JOIN AVBRYT_REVURDERING_GRUNNLAG AR ON AR.BEHANDLING_ID = B.ID
             WHERE BG.AKTIV
-              AND B.SAK_ID = ?
-              AND B.OPPRETTET_TID < (SELECT A.OPPRETTET_TID FROM BEHANDLING A WHERE ID = ?)
+                AND B.SAK_ID = ?
+                AND B.OPPRETTET_TID < (SELECT A.OPPRETTET_TID FROM BEHANDLING A WHERE A.ID = ?)
+                AND AR.BEHANDLING_ID IS NULL
         """.trimIndent()
 
         return connection.queryList(query) {

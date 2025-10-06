@@ -167,8 +167,7 @@ internal fun Application.server(
 
     }
     if (Miljø.erDev()) {
-        // TODO: Bestille tilgang
-        //startPDLHendelseKonsument(dataSource, repositoryRegistry)
+        startPDLHendelseKonsument(dataSource, repositoryRegistry)
     }
 
     routing {

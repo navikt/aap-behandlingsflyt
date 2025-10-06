@@ -1,14 +1,22 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.bistand
 
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingVurdering
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandVurdering
 import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.avbrytrevurdering.AvbrytRevurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
@@ -16,6 +24,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -584,8 +593,108 @@ internal class BistandRepositoryImplTest {
         }
     }
 
+    @Test
+    fun `historikk viser kun vurderinger fra tidligere behandlinger og ikke inkluderer vurdering fra avbrutt revurdering`() {
+        val bistandsvurdering1 = BistandVurdering(
+            begrunnelse = "B1",
+            erBehovForAktivBehandling = false,
+            erBehovForArbeidsrettetTiltak = false,
+            erBehovForAnnenOppfølging = false,
+            vurderingenGjelderFra = null,
+            vurdertAv = "Z00000",
+            skalVurdereAapIOvergangTilUføre = null,
+            skalVurdereAapIOvergangTilArbeid = null,
+            overgangBegrunnelse = null,
+        )
+
+        val bistandsvurdering2 = BistandVurdering(
+            begrunnelse = "B2",
+            erBehovForAktivBehandling = false,
+            erBehovForArbeidsrettetTiltak = true,
+            erBehovForAnnenOppfølging = false,
+            vurderingenGjelderFra = null,
+            vurdertAv = "Z00001",
+            skalVurdereAapIOvergangTilUføre = null,
+            skalVurdereAapIOvergangTilArbeid = null,
+            overgangBegrunnelse = "o1",
+        )
+
+        val bistandsvurdering3 = BistandVurdering(
+            begrunnelse = "B3",
+            erBehovForAktivBehandling = false,
+            erBehovForArbeidsrettetTiltak = false,
+            erBehovForAnnenOppfølging = true,
+            vurderingenGjelderFra = null,
+            vurdertAv = "Z00002",
+            skalVurdereAapIOvergangTilUføre = null,
+            skalVurdereAapIOvergangTilArbeid = null,
+            overgangBegrunnelse = "o2",
+        )
+
+        val førstegangsbehandling = dataSource.transaction { connection ->
+            val repo = BistandRepositoryImpl(connection)
+            val sak = sak(connection)
+            val førstegangsbehandling = finnEllerOpprettBehandling(connection, sak)
+
+            repo.lagre(førstegangsbehandling.id, listOf(bistandsvurdering1))
+            førstegangsbehandling
+        }
+
+        dataSource.transaction { connection ->
+            val bistandRepo = BistandRepositoryImpl(connection)
+            val avbrytRevurderingRepo = AvbrytRevurderingRepositoryImpl(connection)
+            val revurderingAvbrutt = revurderingSykdomArbeidsEvneBehovForBistand(connection, førstegangsbehandling)
+
+            // Marker revurderingen som avbrutt
+            avbrytRevurderingRepo.lagre(
+                revurderingAvbrutt.id, AvbrytRevurderingVurdering(
+                    AvbrytRevurderingÅrsak.REVURDERINGEN_BLE_OPPRETTET_VED_EN_FEIL, "avbryte pga. feil",
+                    Bruker("Z00000")
+                )
+            )
+            bistandRepo.lagre(revurderingAvbrutt.id, listOf(bistandsvurdering2))
+        }
+
+        dataSource.transaction { connection ->
+            val bistandRepo = BistandRepositoryImpl(connection)
+            val revurdering = revurderingSykdomArbeidsEvneBehovForBistand(connection, førstegangsbehandling)
+            bistandRepo.lagre(revurdering.id, listOf(bistandsvurdering3))
+
+            val historikk = bistandRepo.hentHistoriskeBistandsvurderinger(revurdering.sakId, revurdering.id)
+            assertEquals(listOf(bistandsvurdering1), historikk)
+        }
+    }
+
     private companion object {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+
+        fun assertEquals(expected: List<BistandVurdering>, actual: List<BistandVurdering>) {
+            assertEquals(expected.size, actual.size)
+            for ((expected, actual) in expected.zip(actual)) {
+                assertEquals(expected, actual)
+            }
+        }
+
+        fun assertEquals(expected: BistandVurdering, actual: BistandVurdering) {
+            assertEquals(expected.begrunnelse, actual.begrunnelse)
+            assertEquals(expected.erBehovForAktivBehandling, actual.erBehovForAktivBehandling)
+            assertEquals(expected.erBehovForArbeidsrettetTiltak, actual.erBehovForArbeidsrettetTiltak)
+            assertEquals(expected.erBehovForAnnenOppfølging, actual.erBehovForAnnenOppfølging)
+
+            if (expected.overgangBegrunnelse != null && actual.overgangBegrunnelse != null) {
+                assertEquals(expected.overgangBegrunnelse, actual.overgangBegrunnelse)
+            }
+
+            if (expected.skalVurdereAapIOvergangTilArbeid != null && actual.skalVurdereAapIOvergangTilArbeid != null) {
+                assertEquals(expected.skalVurdereAapIOvergangTilArbeid, actual.skalVurdereAapIOvergangTilArbeid)
+            }
+
+            if (expected.skalVurdereAapIOvergangTilUføre != null && actual.skalVurdereAapIOvergangTilUføre != null) {
+                assertEquals(expected.skalVurdereAapIOvergangTilUføre, actual.skalVurdereAapIOvergangTilUføre)
+            }
+
+            assertEquals(expected.vurdertAv, actual.vurdertAv)
+        }
     }
 
     private fun sak(connection: DBConnection): Sak {
@@ -600,6 +709,18 @@ internal class BistandRepositoryImplTest {
         BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
 
         return finnEllerOpprettBehandling(connection, sak)
+    }
+
+    private fun revurderingSykdomArbeidsEvneBehovForBistand(connection: DBConnection, behandling: Behandling): Behandling {
+        return BehandlingRepositoryImpl(connection).opprettBehandling(
+            behandling.sakId,
+            typeBehandling = TypeBehandling.Revurdering,
+            forrigeBehandlingId = behandling.id,
+            vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)),
+                årsak = ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
+            )
+        )
     }
 
 }

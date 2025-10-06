@@ -66,9 +66,11 @@ class SykdomsvurderingForBrevRepositoryImpl(private val connection: DBConnection
     override fun hent(sakId: SakId): List<SykdomsvurderingForBrev> {
         val query = """
             SELECT * FROM SYKDOM_VURDERING_BREV s 
-            JOIN BEHANDLING b ON s.behandling_id = b.id 
+            JOIN BEHANDLING b ON s.behandling_id = b.id
+            LEFT JOIN AVBRYT_REVURDERING_GRUNNLAG ar ON ar.BEHANDLING_ID = b.ID 
             WHERE sak_id = ?
             AND s.aktiv = true
+            AND ar.BEHANDLING_ID IS NULL
         """.trimIndent()
 
         return connection.queryList(query) {

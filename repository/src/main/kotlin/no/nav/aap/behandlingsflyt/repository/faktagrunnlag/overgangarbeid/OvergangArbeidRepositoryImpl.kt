@@ -71,8 +71,10 @@ class OvergangArbeidRepositoryImpl(private val connection: DBConnection) : Overg
             INNER JOIN overgang_arbeid_vurderinger ON grunnlag.vurderinger_id = overgang_arbeid_vurderinger.id
             INNER JOIN overgang_arbeid_vurdering ON overgang_arbeid_vurdering.vurderinger_id = overgang_arbeid_vurderinger.id
             INNER JOIN behandling ON grunnlag.behandling_id = behandling.id
+            LEFT JOIN avbryt_revurdering_grunnlag ON avbryt_revurdering_grunnlag.behandling_id = behandling.id
             WHERE grunnlag.aktiv AND behandling.sak_id = ?
-                AND behandling.opprettet_tid < (select a.opprettet_tid from behandling a where id = ?)
+                AND behandling.opprettet_tid < (select a.opprettet_tid from behandling a where a.id = ?)
+                AND avbryt_revurdering_grunnlag.behandling_id IS NULL
             ORDER BY overgang_arbeid_vurdering.opprettet_tid
         """.trimIndent()
 

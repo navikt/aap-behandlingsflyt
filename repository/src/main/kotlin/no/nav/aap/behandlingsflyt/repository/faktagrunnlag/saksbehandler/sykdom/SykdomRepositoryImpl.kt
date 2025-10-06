@@ -439,9 +439,12 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
             INNER JOIN SYKDOM_VURDERINGER vurderinger ON grunnlag.SYKDOM_VURDERINGER_ID = vurderinger.ID
             INNER JOIN SYKDOM_VURDERING vurdering ON vurdering.SYKDOM_VURDERINGER_ID = vurderinger.ID
             JOIN BEHANDLING behandling ON grunnlag.BEHANDLING_ID = behandling.ID
-            WHERE grunnlag.AKTIV AND behandling.SAK_ID = ?
-              AND behandling.opprettet_tid < (SELECT a.opprettet_tid from behandling a where id = ?)
+            LEFT JOIN AVBRYT_REVURDERING_GRUNNLAG AR ON behandling.ID = AR.BEHANDLING_ID
+            WHERE grunnlag.AKTIV AND behandling.SAK_ID = ?            
+                AND behandling.opprettet_tid < (SELECT a.opprettet_tid from behandling a where a.id = ?)
+                AND AR.BEHANDLING_ID IS NULL
             """.trimIndent()
+
         return connection.queryList(query) {
             setParams {
                 setLong(1, sakId.id)
