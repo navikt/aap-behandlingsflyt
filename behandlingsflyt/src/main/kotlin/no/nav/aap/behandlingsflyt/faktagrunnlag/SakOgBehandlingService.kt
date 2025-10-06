@@ -120,7 +120,8 @@ class SakOgBehandlingService(
         Vurderingsbehov.FRITAK_MELDEPLIKT,
         Vurderingsbehov.MOTTATT_MELDEKORT,
         Vurderingsbehov.FASTSATT_PERIODE_PASSERT,
-        Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT
+        Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT,
+        Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9
     )
 
     fun finnEllerOpprettBehandling(sakId: SakId, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak): OpprettetBehandling {
@@ -128,6 +129,9 @@ class SakOgBehandlingService(
         val vurderingsbehov = vurderingsbehovOgÅrsak.vurderingsbehov
         val fasttrackkandidat = vurderingsbehov.isNotEmpty()
                 && vurderingsbehov.all { it.type in fasttrackKandidater }
+                && (vurderingsbehov.none { it.type == Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9 } || unleashGateway.isEnabled(
+            BehandlingsflytFeature.Aktivitetsplikt11_9
+        ))
                 && (vurderingsbehov.none { it.type == Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT } || unleashGateway.isEnabled(
             BehandlingsflytFeature.Aktivitetsplikt11_7
         ))
