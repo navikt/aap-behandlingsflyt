@@ -37,10 +37,6 @@ class NomInfoGateway : AnsattInfoGateway {
     )
 
     override fun hentAnsattInfo(navIdent: String): AnsattInfo {
-        if (Miljø.erLokal()) {
-            return AnsattInfo(navIdent = navIdent, navn = navIdent, enhetsnummer = "2024")
-        }
-
         val request = GraphqlRequest(ressursQuery, NomRessursVariables(navIdent))
         val response = checkNotNull(query(request).data) {
             "Fant ikke ansatt i NOM"
@@ -50,9 +46,6 @@ class NomInfoGateway : AnsattInfoGateway {
     }
 
     override fun hentAnsatteVisningsnavn(navIdenter: List<String>): List<AnsattVisningsnavn?> {
-        if (Miljø.erLokal()) {
-            return navIdenter.map { AnsattVisningsnavn(it, "navn $it" ) }
-        }
         val request = GraphqlRequest(flereNavnQuery, NomRessurserVariables(navIdenter))
         val response = checkNotNull(flereNavnQuery(request).data) {
             "Fant ikke ansatt i NOM"

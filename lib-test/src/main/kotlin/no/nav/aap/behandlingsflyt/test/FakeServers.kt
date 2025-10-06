@@ -48,6 +48,9 @@ import no.nav.aap.behandlingsflyt.integrasjon.medlemsskap.MedlemskapRequest
 import no.nav.aap.behandlingsflyt.integrasjon.medlemsskap.MedlemskapResponse
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomData
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomDataRessurs
+import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomRessursResponse
+import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomRessursVisningsnavn
+import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomRessurserVisningsnavn
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NorgEnhet
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.OrgEnhet
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.OrgTilknytning
@@ -122,7 +125,6 @@ import java.time.LocalDateTime
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
-
 
 object FakeServers : AutoCloseable {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -1758,21 +1760,31 @@ object FakeServers : AutoCloseable {
             }
 
         }
-
         routing {
             post("/graphql") {
-                val data = NomData(
-                    NomDataRessurs(
-                        orgTilknytning = listOf(
-                            OrgTilknytning(
-                                OrgEnhet("1234"),
-                                true,
-                                LocalDate.now(),
-                                null
-                            )
-                        ), visningsnavn = "Test Testesen"
+
+                val requestBody = call.receiveText()
+                val data = if(requestBody.contains("ressurser")){
+                   NomRessurserVisningsnavn(
+                           ressurser = listOf(
+                               NomRessursResponse(NomRessursVisningsnavn("ABC1245", "Sak Behandlersen")),
+                               NomRessursResponse(NomRessursVisningsnavn("DEFG123", "Annen Testesen")),
+                           )
+                       )
+                } else {
+                    NomData(
+                        NomDataRessurs(
+                            orgTilknytning = listOf(
+                                OrgTilknytning(
+                                    OrgEnhet("1234"),
+                                    true,
+                                    LocalDate.now(),
+                                    null
+                                )
+                            ), visningsnavn = "Test Testesen"
+                        )
                     )
-                )
+                }
                 val response = GraphQLResponse(
                     data,
                     emptyList()
