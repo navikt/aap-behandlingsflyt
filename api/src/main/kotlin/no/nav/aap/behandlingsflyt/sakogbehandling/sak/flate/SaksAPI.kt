@@ -109,9 +109,6 @@ fun NormalOpenAPIRoute.saksApi(
                     operasjon = Operasjon.SE, // TODO: Skriveoperasjon krever behandlingsreferanse - bruker 'SE' enn så lenge
                 )
             ) { req, body ->
-                if (Miljø.erProd()) {
-                    throw UgyldigForespørselException("Ikke produksjon enda")
-                }
                 val dto = dataSource.transaction { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
 
