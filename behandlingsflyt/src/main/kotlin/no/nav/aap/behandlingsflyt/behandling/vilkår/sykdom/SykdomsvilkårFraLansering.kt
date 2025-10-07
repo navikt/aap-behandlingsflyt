@@ -9,14 +9,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
-import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
 import org.slf4j.LoggerFactory
 
@@ -50,43 +49,20 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
                 t1.kombiner(t2, StandardSammenslåere.prioriterHøyreSideCrossJoin())
             }
 
-        val sykepengeerstatningTidslinje = grunnlag.sykepengerErstatningFaktagrunnlag?.vurdering?.let {
-            Tidslinje(Periode(grunnlag.kravDato, grunnlag.sisteDagMedMuligYtelse), it)
-        }.orEmpty()
-
-        val bistandvurderingtidslinje = grunnlag.bistandvurderingFaktagrunnlag?.vurderinger.orEmpty()
-            .sortedBy { it.opprettet }
-            .map { vurdering ->
-                Tidslinje(
-                    Periode(
-                        fom = vurdering.vurderingenGjelderFra ?: grunnlag.kravDato,
-                        tom = grunnlag.sisteDagMedMuligYtelse
-                    ),
-                    vurdering
-                )
-            }
-            .fold(Tidslinje<BistandVurdering>()) { acc, tidslinje ->
-                acc.kombiner(
-                    tidslinje,
-                    StandardSammenslåere.prioriterHøyreSideCrossJoin()
-                )
-            }
+        val sykepengerVurdering = grunnlag.sykepengerErstatningFaktagrunnlag?.vurdering
 
         val tidslinje =
-            kombinerAlleTidslinjer(
+            Tidslinje.zip3(
                 studentVurderingTidslinje,
                 yrkesskadeVurderingTidslinje,
                 sykdomsvurderingTidslinje,
-                sykepengeerstatningTidslinje,
-                bistandvurderingtidslinje
             )
-                .mapValue { (studentVurdering, yrkesskadeVurdering, sykdomVurdering, sykepengerVurdering, bistandVurdering) ->
+                .mapValue { (studentVurdering, yrkesskadeVurdering, sykdomVurdering) ->
                     opprettVilkårsvurdering(
                         studentVurdering,
                         sykdomVurdering,
                         yrkesskadeVurdering,
                         sykepengerVurdering,
-                        bistandVurdering,
                         grunnlag
                     )
                 }
@@ -94,74 +70,39 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
         vilkår.leggTilVurderinger(tidslinje)
     }
 
-    private fun kombinerAlleTidslinjer(
-        studentVurderingTidslinje: Tidslinje<StudentVurdering?>,
-        yrkesskadeVurderingTidslinje: Tidslinje<Yrkesskadevurdering?>,
-        sykdomsvurderingTidslinje: Tidslinje<Sykdomsvurdering>,
-        sykepengerVurderingTidslinje: Tidslinje<SykepengerVurdering>,
-        bistandvurderingTidslinje: Tidslinje<BistandVurdering>,
-    ): Tidslinje<LokaltSegment> {
-        val zip3 = Tidslinje.zip3(
-            studentVurderingTidslinje,
-            yrkesskadeVurderingTidslinje,
-            sykdomsvurderingTidslinje,
-        )
-
-        return Tidslinje.zip3(
-            zip3,
-            sykepengerVurderingTidslinje,
-            bistandvurderingTidslinje,
-        ).mapValue { (a, b, c) ->
-            LokaltSegment(
-                studentVurdering = a?.first,
-                yrkesskadeVurdering = a?.second,
-                sykdomVurdering = a?.third,
-                sykepengerVurdering = b,
-                bistandVurdering = c
-            )
-        }
-    }
-
-    internal data class LokaltSegment(
-        val studentVurdering: StudentVurdering?,
-        val yrkesskadeVurdering: Yrkesskadevurdering?,
-        val sykdomVurdering: Sykdomsvurdering?,
-        val sykepengerVurdering: SykepengerVurdering?,
-        val bistandVurdering: BistandVurdering?
-    )
-
     private fun opprettVilkårsvurdering(
         studentVurdering: StudentVurdering?,
         sykdomVurdering: Sykdomsvurdering?,
         yrkesskadeVurdering: Yrkesskadevurdering?,
         sykepengerVurdering: SykepengerVurdering?,
-        bistandVurdering: BistandVurdering?,
         grunnlag: SykdomsFaktagrunnlag
     ): Vilkårsvurdering {
         var utfall: Utfall
         var avslagsårsak: Avslagsårsak? = null
-        var innvilgelsesårsak: Innvilgelsesårsak?
+        var innvilgelsesårsak: Innvilgelsesårsak? = null
 
         if (studentVurdering?.erOppfylt() == true) {
             utfall = Utfall.OPPFYLT
             innvilgelsesårsak = Innvilgelsesårsak.STUDENT
-        } else if (sykdomVurdering?.erOppfyltForYrkesskade() == true && sykdomVurdering.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true && yrkesskadeVurdering != null && yrkesskadeVurdering.erÅrsakssammenheng) {
+        } else if (harSykdomBlittVurdertTilGodkjent(sykdomVurdering, yrkesskadeVurdering)) {
             utfall = Utfall.OPPFYLT
-            innvilgelsesårsak = Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG
-        } else if (sykdomVurdering?.erOppfylt(grunnlag.kravDato) == true && bistandVurdering?.erBehovForBistand() == true) {
-            utfall = Utfall.OPPFYLT
-            innvilgelsesårsak = null
-        } else if (sykepengerVurdering?.harRettPå == true && sykdomVurdering?.erOppfyltSettBortIfraVissVarighet() == true) {
-            utfall = Utfall.OPPFYLT
-            innvilgelsesårsak = Innvilgelsesårsak.SYKEPENGEERSTATNING
+            if (yrkesskadeVurdering != null && yrkesskadeVurdering.erÅrsakssammenheng) {
+                innvilgelsesårsak = Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG
+            }
+            if (sykepengerVurdering?.harRettPå == true) {
+                innvilgelsesårsak = Innvilgelsesårsak.SYKEPENGEERSTATNING
+            }
         } else {
-            innvilgelsesårsak = null
             utfall = Utfall.IKKE_OPPFYLT
             avslagsårsak = if (sykdomVurdering?.erSkadeSykdomEllerLyteVesentligdel == false) {
                 Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL
             } else if (sykdomVurdering?.erNedsettelseIArbeidsevneMerEnnHalvparten == false && sykdomVurdering.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense != true) {
                 Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE
-            } else if (sykdomVurdering?.erNedsettelseIArbeidsevneAvEnVissVarighet == false) {
+            } else if (sykdomVurdering?.erNedsettelseIArbeidsevneAvEnVissVarighet == false && relevantÅVurdereSykepengerErstatning(
+                    grunnlag,
+                    sykdomVurdering
+                )
+            ) {
                 Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET
             } else {
                 // TODO: dekk alle muligheter for nei her
@@ -169,6 +110,12 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
             }
 
             log.info("Avslagsårsak $avslagsårsak. Er nedsettelse i arbeidsevne: ${sykdomVurdering?.erNedsettelseIArbeidsevneAvEnVissVarighet}. Har rett på sykepengeerstatning: ${sykepengerVurdering?.harRettPå}")
+
+            if (sykepengerVurdering?.harRettPå == true && avslagsårsak == Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET) {
+                utfall = Utfall.OPPFYLT
+                innvilgelsesårsak = Innvilgelsesårsak.SYKEPENGEERSTATNING
+                avslagsårsak = null
+            }
         }
 
         return Vilkårsvurdering(
@@ -183,4 +130,25 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
         )
     }
 
+    private fun relevantÅVurdereSykepengerErstatning(
+        grunnlag: SykdomsFaktagrunnlag,
+        sykdomVurdering: Sykdomsvurdering?
+    ): Boolean {
+        return (grunnlag.kravDato == (sykdomVurdering?.vurderingenGjelderFra ?: grunnlag.kravDato))
+                || (grunnlag.typeBehandling == TypeBehandling.Førstegangsbehandling)
+    }
+
+    private fun harSykdomBlittVurdertTilGodkjent(
+        sykdomsvurdering: Sykdomsvurdering?,
+        yrkesskadevurdering: Yrkesskadevurdering?
+    ): Boolean {
+        if (sykdomsvurdering == null) {
+            return false
+        }
+        return sykdomsvurdering.run {
+            erSkadeSykdomEllerLyteVesentligdel == true &&
+                    erArbeidsevnenNedsatt == true && (erNedsettelseIArbeidsevneAvEnVissVarighet == null || erNedsettelseIArbeidsevneAvEnVissVarighet) && (erNedsettelseIArbeidsevneMerEnnHalvparten == true ||
+                    (erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true && yrkesskadevurdering?.erÅrsakssammenheng == true))
+        }
+    }
 }
