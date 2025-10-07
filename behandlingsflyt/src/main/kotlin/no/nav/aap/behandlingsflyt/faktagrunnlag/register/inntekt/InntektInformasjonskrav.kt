@@ -41,11 +41,11 @@ class InntektInformasjonskrav(
         oppdatert: InformasjonskravOppdatert?
     ): Boolean {
         return kontekst.erFørstegangsbehandlingEllerRevurdering() &&
+                !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg) &&
                 // Avhengig av å vite hvilke år vi skal hente inntekt for
                 kanUtledeRelevanteÅr(kontekst) &&
                 // Oppdaterer inntekt uavhengig av om relevante år har endret seg en gang i døgnet / hvis ikke hver gang relevante år endrer seg
-                (oppdatert.ikkeKjørtSisteKalenderdag() || relevanteÅrErEndret(kontekst)) &&
-                !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
+                (oppdatert.ikkeKjørtSisteKalenderdag() || relevanteÅrErEndret(kontekst))
     }
 
     private fun kanUtledeRelevanteÅr(kontekst: FlytKontekstMedPerioder): Boolean {
