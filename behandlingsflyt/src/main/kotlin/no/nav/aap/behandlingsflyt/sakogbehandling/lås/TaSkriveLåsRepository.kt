@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.lås
 
-import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.lookup.repository.Repository
@@ -16,8 +15,6 @@ interface TaSkriveLåsRepository: Repository {
     fun withLåstBehandling(behandlingId: BehandlingId, block: (it: BehandlingSkrivelås) -> Unit)
 
     fun lås(behandlingUUid: UUID): Skrivelås
-
-    fun låsSak(saksnummer: Saksnummer): SakSkrivelås
 
     fun låsSak(sakId: SakId): SakSkrivelås
 
