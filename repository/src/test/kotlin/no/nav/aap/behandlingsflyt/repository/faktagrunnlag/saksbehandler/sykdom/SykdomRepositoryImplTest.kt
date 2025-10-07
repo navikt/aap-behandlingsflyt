@@ -57,7 +57,8 @@ internal class SykdomRepositoryImplTest {
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
             repo.lagre(behandling.id, listOf(sykdomsvurdering1))
-            assertThat(repo.hent(behandling.id).sykdomsvurderinger).containsExactly(sykdomsvurdering1)
+            assertThat(repo.hent(behandling.id).sykdomsvurderinger).usingRecursiveComparison()
+                .ignoringFields("id", "opprettet").isEqualTo(listOf(sykdomsvurdering1))
         }
     }
 
@@ -69,10 +70,12 @@ internal class SykdomRepositoryImplTest {
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
             repo.lagre(behandling.id, listOf(sykdomsvurdering1, sykdomsvurdering2))
-            assertThat(repo.hent(behandling.id).sykdomsvurderinger).containsExactly(
-                sykdomsvurdering1,
-                sykdomsvurdering2
-            )
+            assertThat(repo.hent(behandling.id).sykdomsvurderinger).usingRecursiveComparison()
+                .ignoringFields("id", "opprettet").isEqualTo(
+                    listOf(
+                        sykdomsvurdering1, sykdomsvurdering2
+                    )
+                )
         }
     }
 
@@ -87,8 +90,7 @@ internal class SykdomRepositoryImplTest {
                 begrunnelse = "begr",
                 relevanteSaker = listOf(
                     YrkesskadeSak(
-                        referanse = "gokk",
-                        manuellYrkesskadeDato = LocalDate.now()
+                        referanse = "gokk", manuellYrkesskadeDato = LocalDate.now()
                     )
                 ),
                 erÅrsakssammenheng = true,
@@ -97,9 +99,8 @@ internal class SykdomRepositoryImplTest {
                 vurdertTidspunkt = LocalDateTime.now()
             )
             repo.lagre(behandling.id, vurdering)
-            assertThat(repo.hent(behandling.id).yrkesskadevurdering)
-                .usingRecursiveComparison().ignoringFields("id", "vurdertTidspunkt")
-                .isEqualTo(vurdering)
+            assertThat(repo.hent(behandling.id).yrkesskadevurdering).usingRecursiveComparison()
+                .ignoringFields("id", "vurdertTidspunkt").isEqualTo(vurdering)
         }
     }
 
@@ -121,7 +122,10 @@ internal class SykdomRepositoryImplTest {
             repo.lagre(revurdering.id, listOf(sykdomsvurdering2))
 
             val historikk = repo.hentHistoriskeSykdomsvurderinger(revurdering.sakId, revurdering.id)
-            assertThat(historikk).containsExactly(sykdomsvurdering1)
+            assertThat(historikk)
+                .usingRecursiveComparison()
+                .ignoringFields("id", "opprettet")
+                .isEqualTo(listOf(sykdomsvurdering1))
         }
     }
 
@@ -144,7 +148,8 @@ internal class SykdomRepositoryImplTest {
             // Marker revurderingen som avbrutt
             avbrytRevurderingRepo.lagre(
                 revurderingAvbrutt.id, AvbrytRevurderingVurdering(
-                    AvbrytRevurderingÅrsak.REVURDERINGEN_BLE_OPPRETTET_VED_EN_FEIL, "avbryte pga. feil",
+                    AvbrytRevurderingÅrsak.REVURDERINGEN_BLE_OPPRETTET_VED_EN_FEIL,
+                    "avbryte pga. feil",
                     Bruker("Z00000")
                 )
             )
@@ -158,9 +163,7 @@ internal class SykdomRepositoryImplTest {
             sykdomRepo.lagre(revurdering.id, listOf(sykdomsvurdering3))
 
             val historikk = sykdomRepo.hentHistoriskeSykdomsvurderinger(revurdering.sakId, revurdering.id)
-            assertThat(historikk)
-                .usingRecursiveComparison()
-                .ignoringFields("id", "opprettet")
+            assertThat(historikk).usingRecursiveComparison().ignoringFields("id", "opprettet")
                 .isEqualTo(listOf(sykdomsvurdering1))
         }
     }
@@ -247,9 +250,7 @@ internal class SykdomRepositoryImplTest {
 
     private fun sak(connection: DBConnection): Sak {
         return PersonOgSakService(
-            FakePdlGateway,
-            PersonRepositoryImpl(connection),
-            SakRepositoryImpl(connection)
+            FakePdlGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection)
         ).finnEllerOpprett(ident(), periode)
     }
 
