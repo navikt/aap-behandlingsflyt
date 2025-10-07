@@ -101,10 +101,7 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
-        val hentHvisEksisterer = hentHvisEksisterer(fraBehandling)
-        if (hentHvisEksisterer == null) {
-            return
-        }
+        hentHvisEksisterer(fraBehandling) ?: return
 
         val query = """
             INSERT INTO SYKEPENGE_ERSTATNING_GRUNNLAG (behandling_id, vurderinger_id)

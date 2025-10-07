@@ -46,7 +46,7 @@ class AvklarSykdomLøserTest {
 
         every { sykdomMock.hentHvisEksisterer(any()) } returns
                 SykdomGrunnlag(
-                    id = 1L, yrkesskadevurdering = null, sykdomsvurderinger = listOf(
+                    yrkesskadevurdering = null, sykdomsvurderinger = listOf(
                         sykdomsvurdering(vurderingenGjelderFra = 1 januar 2025),
                         sykdomsvurdering(
                             erNedsettelseIArbeidsevneMerEnnHalvparten = false,

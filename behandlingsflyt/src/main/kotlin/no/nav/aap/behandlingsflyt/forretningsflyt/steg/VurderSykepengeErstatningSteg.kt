@@ -27,7 +27,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -137,7 +136,7 @@ class VurderSykepengeErstatningSteg private constructor(
                     return Fullført
                 }
 
-                vurder(kontekst)
+                gammelVurder(kontekst)
             }
 
             VurderingType.REVURDERING -> {
@@ -153,7 +152,7 @@ class VurderSykepengeErstatningSteg private constructor(
                     )
                     return Fullført
                 }
-                vurder(kontekst)
+                gammelVurder(kontekst)
             }
 
             VurderingType.MELDEKORT, VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
@@ -165,7 +164,7 @@ class VurderSykepengeErstatningSteg private constructor(
         }
     }
 
-    private fun vurder(kontekst: FlytKontekstMedPerioder): StegResultat {
+    private fun gammelVurder(kontekst: FlytKontekstMedPerioder): StegResultat {
         log.info("Vurderer sykepengeerstatning for behandlingId ${kontekst.behandlingId}")
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
 

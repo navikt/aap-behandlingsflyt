@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykepengerErstatningLøsning
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykepengerVurderingDto
@@ -11,10 +10,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
-import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.lookup.repository.RepositoryProvider
-import java.time.LocalDate
 
 class AvklarSykepengerErstatningLøser(
     private val behandlingRepository: BehandlingRepository,
@@ -34,28 +30,22 @@ class AvklarSykepengerErstatningLøser(
     ): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
 
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.SykepengerPeriodisert)) {
+        // prøve å bryte opp SykdomsvilkårFraLansering
 
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.SykepengerPeriodisert)) {
             val nyVurdering = tilVurdering(løsning.sykepengeerstatningVurdering, kontekst.bruker.ident)
-                .let(::listOf)
-                .let(::SykepengerErstatningGrunnlag)
-                .somTidslinje(LocalDate.MIN, LocalDate.MAX)
+
 
             val eksisterendeVurderinger =
-                behandling.forrigeBehandlingId?.let { sykepengerErstatningRepository.hentHvisEksisterer(it) }
-                    ?.somTidslinje(LocalDate.MIN, LocalDate.MAX)
-                    ?: Tidslinje()
+                behandling.forrigeBehandlingId
+                    ?.let { sykepengerErstatningRepository.hentHvisEksisterer(it) }
+                    ?.vurderinger.orEmpty()
 
-            val gjeldendeVurderinger = eksisterendeVurderinger
-                .kombiner(nyVurdering, StandardSammenslåere.prioriterHøyreSideCrossJoin())
-                .komprimer()
-                .segmenter()
-                .map { it.verdi }
-
+            val nyeVurderinger = eksisterendeVurderinger + nyVurdering
 
             sykepengerErstatningRepository.lagre(
                 behandlingId = behandling.id,
-                vurderinger = gjeldendeVurderinger
+                vurderinger = nyeVurderinger
             )
         } else {
             sykepengerErstatningRepository.lagre(

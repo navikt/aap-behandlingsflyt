@@ -9,7 +9,8 @@ data class SykepengerGrunnlagResponse(
     val harTilgangTilÅSaksbehandle: Boolean,
     @Deprecated("Bruk vurderinger")
     val vurdering: SykepengerVurderingResponse?,
-    val vurderinger: List<SykepengerVurderingResponse>
+    val vurderinger: List<SykepengerVurderingResponse>,
+    val vedtatteVurderinger: List<SykepengerVurderingResponse>
 )
 
 data class SykepengerVurderingResponse(

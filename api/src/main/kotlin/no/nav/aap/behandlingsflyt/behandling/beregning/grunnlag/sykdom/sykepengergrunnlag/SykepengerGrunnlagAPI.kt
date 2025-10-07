@@ -34,24 +34,27 @@ fun NormalOpenAPIRoute.sykepengerGrunnlagApi(
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = Definisjon.AVKLAR_SYKEPENGEERSTATNING.kode.toString()
             ) { req ->
-                val sykepengerErstatningGrunnlag = dataSource.transaction(readOnly = true) { connection ->
+                val response = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                    val sykeRepository = repositoryProvider.provide<SykepengerErstatningRepository>()
-                    val behandling: Behandling =
-                        BehandlingReferanseService(behandlingRepository).behandling(req)
-                    sykeRepository.hentHvisEksisterer(behandling.id)
-                }
+                    val sykepengerErstatningRepository = repositoryProvider.provide<SykepengerErstatningRepository>()
+                    val behandling: Behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
 
-                respond(
+                    val vedtatteVurderinger =
+                        behandling.forrigeBehandlingId?.let { sykepengerErstatningRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
+
+                    val sykepengerErstatningGrunnlag = sykepengerErstatningRepository.hentHvisEksisterer(behandling.id)
+
                     SykepengerGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         vurdering = sykepengerErstatningGrunnlag?.vurderinger.orEmpty().firstOrNull()
                             ?.tilResponse(ansattInfoService),
                         vurderinger = sykepengerErstatningGrunnlag?.vurderinger.orEmpty()
-                            .map { it.tilResponse(ansattInfoService) }
+                            .map { it.tilResponse(ansattInfoService) },
+                        vedtatteVurderinger = vedtatteVurderinger.map { it.tilResponse(ansattInfoService) }
                     )
-                )
+                }
+                respond(response)
             }
         }
     }
