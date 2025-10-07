@@ -50,9 +50,10 @@ class SykdomsvilkårFraLanseringV2(vilkårsresultat: Vilkårsresultat) : Vilkår
                 t1.kombiner(t2, StandardSammenslåere.prioriterHøyreSideCrossJoin())
             }
 
-        val sykepengeerstatningTidslinje = grunnlag.sykepengerErstatningFaktagrunnlag?.vurdering?.let {
-            Tidslinje(Periode(grunnlag.kravDato, grunnlag.sisteDagMedMuligYtelse), it)
-        }.orEmpty()
+        val sykepengeerstatningTidslinje = grunnlag.sykepengerErstatningFaktagrunnlag?.somTidslinje(
+            kravDato = grunnlag.kravDato,
+            sisteMuligDagMedYtelse = grunnlag.sisteDagMedMuligYtelse
+        ).orEmpty()
 
         val bistandvurderingtidslinje = grunnlag.bistandvurderingFaktagrunnlag?.vurderinger.orEmpty()
             .sortedBy { it.opprettet }

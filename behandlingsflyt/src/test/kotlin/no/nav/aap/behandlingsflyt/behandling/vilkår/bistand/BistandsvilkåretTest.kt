@@ -220,7 +220,7 @@ class BistandsvilkåretTest {
                 .lagre(revurdering.id, listOf(sykdomsvurdering))
 
             val bistandsvurdering2 = BistandVurderingLøsningDto(
-                begrunnelse = "Begrunnelse",
+                begrunnelse = "Begrunnelse 2",
                 erBehovForAktivBehandling = false,
                 erBehovForArbeidsrettetTiltak = false,
                 erBehovForAnnenOppfølging = false,
@@ -257,23 +257,24 @@ class BistandsvilkåretTest {
             )
         }
 
-        dataSource.transaction { connection ->
-            val vilkåret =
-                VilkårsresultatRepositoryImpl(connection).hent(revurdering.id).finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
-            assertThat(vilkåret.vilkårsperioder()).hasSize(2)
-
-            val segment1 = vilkåret.vilkårsperioder().first()
-            val segment2 = vilkåret.vilkårsperioder().last()
-            assertThat(segment1.periode).isEqualTo(Periode(now, now.plusDays(9)))
-            assertThat(segment1.utfall).isEqualTo(Utfall.OPPFYLT)
-            assertThat(segment2.periode).isEqualTo(
-                Periode(
-                    now.plusDays(10),
-                    sak.rettighetsperiode.tom
-                )
-            )
-            assertThat(segment2.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
+        val vilkåret = dataSource.transaction { connection ->
+            VilkårsresultatRepositoryImpl(connection).hent(revurdering.id).finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
         }
+
+        assertThat(vilkåret.vilkårsperioder()).hasSize(2)
+
+        val segment1 = vilkåret.vilkårsperioder().first()
+        val segment2 = vilkåret.vilkårsperioder().last()
+        assertThat(segment1.periode).isEqualTo(Periode(now, now.plusDays(9)))
+        assertThat(segment1.utfall).isEqualTo(Utfall.OPPFYLT)
+        assertThat(segment2.periode).isEqualTo(
+            Periode(
+                now.plusDays(10),
+                sak.rettighetsperiode.tom
+            )
+        )
+        assertThat(segment2.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
+
     }
 
 

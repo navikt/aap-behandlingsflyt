@@ -33,7 +33,6 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
             }
             setRowMapper { row ->
                 BistandGrunnlag(
-                    id = row.getLong("ID"),
                     vurderinger = mapBistandsvurderinger(row.getLongOrNull("BISTAND_VURDERINGER_ID"))
                 )
             }
@@ -112,11 +111,14 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
         val eksisterendeBistandGrunnlag = hentHvisEksisterer(behandlingId)
 
         val nyttGrunnlag = BistandGrunnlag(
-            id = null,
             vurderinger = bistandsvurderinger
         )
 
-        if (eksisterendeBistandGrunnlag != nyttGrunnlag) {
+        val eksisterendeVurderinger =
+            eksisterendeBistandGrunnlag?.vurderinger?.let { it.map { it.copy(opprettet = null) } }.orEmpty().toSet()
+        val nyeVurderinger = bistandsvurderinger.map { it.copy(opprettet = null) }.toSet()
+
+        if (eksisterendeVurderinger != nyeVurderinger) {
             eksisterendeBistandGrunnlag?.let {
                 deaktiverEksisterende(behandlingId)
             }
@@ -128,12 +130,14 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
 
         val bistandVurderingerIds = getBistandVurderingerIds(behandlingId)
 
-        val deletedRows = connection.executeReturnUpdated("""
+        val deletedRows = connection.executeReturnUpdated(
+            """
             delete from bistand_grunnlag where behandling_id = ?; 
             delete from bistand where bistand_vurderinger_id = ANY(?::bigint[]);
             delete from bistand_vurderinger where id = ANY(?::bigint[]);
            
-        """.trimIndent()) {
+        """.trimIndent()
+        ) {
             setParams {
                 setLong(1, behandlingId.id)
                 setLongArray(2, bistandVurderingerIds)

@@ -107,7 +107,6 @@ class SykdomsvilkårTest {
     }
 
     private fun bistandGrunnlag(startDato: LocalDate): BistandGrunnlag = BistandGrunnlag(
-        id = null,
         vurderinger = listOf(
             BistandVurdering(
                 begrunnelse = "bistand",
@@ -183,7 +182,7 @@ class SykdomsvilkårTest {
                 ),
                 studentvurdering = null,
                 sykepengerErstatningFaktagrunnlag = null,
-                bistandvurderingFaktagrunnlag = bistandGrunnlag(startDato),
+                bistandvurderingFaktagrunnlag = bistandGrunnlag(startDato)
             )
         )
 
@@ -226,13 +225,15 @@ class SykdomsvilkårTest {
                 bistandvurderingFaktagrunnlag = null,
                 sykepengerErstatningFaktagrunnlag =
                     SykepengerErstatningGrunnlag(
-                        vurdering = SykepengerVurdering(
-                            begrunnelse = "",
-                            dokumenterBruktIVurdering = emptyList(),
-                            harRettPå = true,
-                            grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
-                            vurdertAv = "abc123",
-                            vurdertTidspunkt = LocalDateTime.now(),
+                        vurderinger = listOf(
+                            SykepengerVurdering(
+                                begrunnelse = "",
+                                dokumenterBruktIVurdering = emptyList(),
+                                harRettPå = true,
+                                grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
+                                vurdertAv = "abc123",
+                                vurdertTidspunkt = LocalDateTime.now(),
+                            )
                         )
                     ),
             )
