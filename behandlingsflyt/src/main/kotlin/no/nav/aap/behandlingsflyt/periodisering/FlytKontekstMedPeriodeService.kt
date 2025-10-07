@@ -66,6 +66,7 @@ class FlytKontekstMedPeriodeService(
             REVURDERING in vurderingTyper -> REVURDERING
             MELDEKORT in vurderingTyper -> MELDEKORT
             EFFEKTUER_AKTIVITETSPLIKT in vurderingTyper -> EFFEKTUER_AKTIVITETSPLIKT
+            EFFEKTUER_AKTIVITETSPLIKT_11_9 in vurderingTyper -> EFFEKTUER_AKTIVITETSPLIKT_11_9
             else -> IKKE_RELEVANT
         }
     }
