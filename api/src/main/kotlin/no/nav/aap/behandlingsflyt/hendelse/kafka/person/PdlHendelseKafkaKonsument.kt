@@ -40,6 +40,7 @@ class PdlHendelseKafkaKonsument(
             val personHendelse = record.value().tilDomain()
             håndter(record, personHendelse)
         }
+
     }
 
     fun håndter(melding: ConsumerRecord<String, Personhendelse>, personHendelse: PdlPersonHendelse) {
@@ -55,14 +56,13 @@ class PdlHendelseKafkaKonsument(
             val personRepository: PersonRepository = repositoryProvider.provide()
             val hendelseService = MottattHendelseService(repositoryProvider)
             log.info("Leser personhendelse med opplysningtype ${personHendelse.opplysningstype}")
-            try {
+
             if (personHendelse.opplysningstype == Opplysningstype.DOEDSFALL_V1 && personHendelse.endringstype == Endringstype.OPPRETTET) {
                 log.info("Håndterer hendelse med ${personHendelse.opplysningstype} og ${personHendelse.endringstype}")
                 personHendelse.personidenter
                     .mapNotNull { ident -> personRepository.finn(Ident(ident)) }
                     .forEach { person ->
-                        sakRepository.finnSakerFor(person).forEach {
-                            sak ->
+                        sakRepository.finnSakerFor(person).forEach { sak ->
                             log.info("Registrerer mottatt hendelse på ${sak.saksnummer} ")
                             hendelseService.registrerMottattHendelse(
                                 personHendelse.tilInnsendingDødsfallBruker(sak.saksnummer)
@@ -71,11 +71,6 @@ class PdlHendelseKafkaKonsument(
                     }
             } else {
                 log.info("Ignorerer hendelse med ${personHendelse.opplysningstype} og ${personHendelse.endringstype}")
-            }
-        }
-            catch (e: Exception)
-            {
-                log.warn("Feil ved innlesing av hendelse fra PDL, ${e.message} ",)
             }
         }
     }
