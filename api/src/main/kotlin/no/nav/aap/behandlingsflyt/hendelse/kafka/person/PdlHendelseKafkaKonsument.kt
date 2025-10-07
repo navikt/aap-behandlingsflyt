@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Endringstype
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Navn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Opplysningstype
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.PdlPersonHendelse
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.tilInnsending
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.tilInnsendingDødsfallBruker
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
@@ -64,7 +64,7 @@ class PdlHendelseKafkaKonsument(
                             sak ->
                             log.info("Registrerer mottatt hendelse på ${sak.saksnummer} ")
                             hendelseService.registrerMottattHendelse(
-                                personHendelse.tilInnsending(sak.saksnummer)
+                                personHendelse.tilInnsendingDødsfallBruker(sak.saksnummer)
                             )
                         }
                     }
