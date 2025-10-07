@@ -120,7 +120,6 @@ class FlytKontekstMedPeriodeService(
             Vurderingsbehov.AKTIVITETSPLIKT_11_7, Vurderingsbehov.AKTIVITETSPLIKT_11_9 -> IKKE_RELEVANT
             Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT -> EFFEKTUER_AKTIVITETSPLIKT
             Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9 -> EFFEKTUER_AKTIVITETSPLIKT_11_9
-            Vurderingsbehov.MOTTATT_PDL_HENDELSE -> IKKE_RELEVANT
         }
     }
 }

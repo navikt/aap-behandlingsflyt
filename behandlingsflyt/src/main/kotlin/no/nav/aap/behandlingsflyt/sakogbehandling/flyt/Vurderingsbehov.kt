@@ -44,7 +44,6 @@ enum class Vurderingsbehov {
     EFFEKTUER_AKTIVITETSPLIKT_11_9,
     OVERGANG_UFORE,
     OVERGANG_ARBEID,
-    MOTTATT_PDL_HENDELSE,
     DØDSFALL_BRUKER,
     DØDSFALL_BARN,
     ;
@@ -113,5 +112,4 @@ fun EksponertÅrsak.tilVurderingsbehov() =
         EksponertÅrsak.OVERGANG_ARBEID -> Vurderingsbehov.OVERGANG_ARBEID
         EksponertÅrsak.DØDSFALL_BRUKER -> Vurderingsbehov.DØDSFALL_BRUKER
         EksponertÅrsak.DØDSFALL_BARN -> Vurderingsbehov.DØDSFALL_BARN
-        EksponertÅrsak.MOTTATT_PDL_HENDELSE -> Vurderingsbehov.MOTTATT_PDL_HENDELSE
     }
