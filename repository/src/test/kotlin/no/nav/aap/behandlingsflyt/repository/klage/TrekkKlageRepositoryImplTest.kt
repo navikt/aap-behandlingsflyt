@@ -24,14 +24,14 @@ import java.time.ZoneOffset
 
 internal class TrekkKlageRepositoryImplTest {
     private val dataSource = InitTestDatabase.freshDatabase()
-    
+
     @Test
     fun `Lagrer og henter trukket klage`() {
         dataSource.transaction { connection ->
             val sak = sak(connection)
             finnEllerOpprettBehandling(connection, sak)
             val klageBehandling = finnEllerOpprettBehandling(connection, sak, Vurderingsbehov.MOTATT_KLAGE)
-            
+
             val trekkKlageRepository = TrekkKlageRepositoryImpl(connection)
             val vurdering = TrekkKlageVurdering(
                 begrunnelse = "En begrunnelse",
@@ -40,10 +40,10 @@ internal class TrekkKlageRepositoryImplTest {
                 vurdert = LocalDateTime.now().toInstant(ZoneOffset.UTC),
                 vurdertAv = Bruker(ident = "12345"),
             )
-            
+
             trekkKlageRepository.lagreTrekkKlageVurdering(behandlingId = klageBehandling.id, vurdering = vurdering)
             val grunnlag = trekkKlageRepository.hentTrekkKlageGrunnlag(klageBehandling.id)!!
-            assertEqualVurdering(grunnlag.vurdering, vurdering)
+            assertThat(grunnlag.vurdering).usingRecursiveComparison().ignoringFields("vurdert").isEqualTo(vurdering)
         }
     }
 
@@ -74,7 +74,9 @@ internal class TrekkKlageRepositoryImplTest {
             trekkKlageRepository.lagreTrekkKlageVurdering(behandlingId = klageBehandling.id, vurdering = vurdering1)
             trekkKlageRepository.lagreTrekkKlageVurdering(behandlingId = klageBehandling.id, vurdering = vurdering2)
             val grunnlag = trekkKlageRepository.hentTrekkKlageGrunnlag(klageBehandling.id)!!
-            assertEqualVurdering(grunnlag.vurdering, vurdering2)
+            assertThat(grunnlag.vurdering)
+                .usingRecursiveComparison()
+                .ignoringFields("vurdert").isEqualTo(vurdering2)
         }
     }
 
@@ -84,14 +86,6 @@ internal class TrekkKlageRepositoryImplTest {
             PersonRepositoryImpl(connection),
             SakRepositoryImpl(connection)
         ).finnEllerOpprett(ident(), periode)
-    }
-
-    private fun assertEqualVurdering(vurdering1: TrekkKlageVurdering, vurdering2: TrekkKlageVurdering) {
-        assertThat(vurdering1.vurdertAv.ident).isEqualTo(vurdering2.vurdertAv.ident)
-        assertThat(vurdering1.skalTrekkes).isEqualTo(vurdering2.skalTrekkes)
-        assertThat(vurdering1.hvorforTrekkes).isEqualTo(vurdering2.hvorforTrekkes)
-        assertThat(vurdering1.begrunnelse).isEqualTo(vurdering2.begrunnelse)
-        assertThat(vurdering1.hvorforTrekkes).isEqualTo(vurdering2.hvorforTrekkes)
     }
 
     private companion object {

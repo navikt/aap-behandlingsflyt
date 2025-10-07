@@ -30,7 +30,6 @@ import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
@@ -387,7 +386,10 @@ internal class SamordningVurderingRepositoryImplTest {
             samordningRepo.lagreVurderinger(revurdering.id, samordningGrunnlag3)
 
             val historikk = samordningRepo.hentHistoriskeVurderinger(revurdering.sakId, revurdering.id)
-            assertEqualsSamordningVurderingGrunnlag(listOf(samordningGrunnlag1), historikk)
+            assertThat(historikk)
+                .usingRecursiveComparison()
+                .ignoringFields("vurderingerId", "vurdertTidspunkt")
+                .isEqualTo(listOf(samordningGrunnlag1))
         }
     }
 
@@ -418,59 +420,6 @@ internal class SamordningVurderingRepositoryImplTest {
 
     private companion object {
         private val dataSource = InitTestDatabase.freshDatabase()
-
-        fun assertEqualsSamordningVurderingGrunnlag(expected: List<SamordningVurderingGrunnlag>, actual: List<SamordningVurderingGrunnlag>) {
-            assertEquals(expected.size, actual.size)
-            for ((expected, actual) in expected.zip(actual)) {
-                assertEquals(expected, actual)
-            }
-        }
-
-        fun assertEquals(expected: SamordningVurderingGrunnlag, actual: SamordningVurderingGrunnlag) {
-            if (expected.vurderingerId != null && actual.vurderingerId != null) {
-                assertEquals(expected.vurderingerId, actual.vurderingerId)
-            }
-
-            if (expected.begrunnelse != null && actual.begrunnelse != null) {
-                assertEquals(expected.begrunnelse, actual.begrunnelse)
-            }
-
-            if (expected.maksDatoEndelig != null && actual.maksDatoEndelig != null) {
-                assertEquals(expected.maksDatoEndelig, actual.maksDatoEndelig)
-            }
-            if (expected.fristNyRevurdering != null && actual.fristNyRevurdering != null) {
-                assertEquals(expected.fristNyRevurdering, actual.fristNyRevurdering)
-            }
-            assertEqualsSamordningVurdering(expected.vurderinger, actual.vurderinger)
-            assertEquals(actual.vurdertAv, expected.vurdertAv)
-        }
-
-        fun assertEqualsSamordningVurdering(expected: List<SamordningVurdering>, actual: List<SamordningVurdering>) {
-            assertEquals(expected.size, actual.size)
-            for ((expected, actual) in expected.zip(actual)) {
-                assertEquals(expected.ytelseType, actual.ytelseType)
-                assertEqualsSamordningVurderingPeriode(expected.vurderingPerioder, actual.vurderingPerioder)
-            }
-        }
-
-        fun assertEqualsSamordningVurderingPeriode(expected: List<SamordningVurderingPeriode>, actual: List<SamordningVurderingPeriode>) {
-            assertEquals(expected.size, actual.size)
-            for ((expected, actual) in expected.zip(actual)) {
-                assertEquals(expected.periode, actual.periode)
-
-                if (expected.gradering != null && actual.gradering != null) {
-                    assertEquals(expected.gradering, actual.gradering)
-                }
-
-                if (expected.kronesum != null && actual.kronesum != null) {
-                    assertEquals(expected.kronesum, actual.kronesum)
-                }
-
-                if (expected.manuell != null && actual.manuell != null) {
-                    assertEquals(expected.manuell, actual.manuell)
-                }
-            }
-        }
 
         @AfterAll
         @JvmStatic
