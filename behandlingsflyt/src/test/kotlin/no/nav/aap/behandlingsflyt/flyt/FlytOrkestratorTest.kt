@@ -1298,6 +1298,11 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 val oppfyltPeriode = underveisTidslinje.filter { it.verdi.rettighetsType != null }.helePerioden()
                 val vilkårsresultat = hentVilkårsresultat(behandlingId = this.behandling.id)
 
+                assertThat(
+                    underveisTidslinje.map { it.rettighetsType }.segmenter().map { it.verdi }).containsSubsequence(
+                    RettighetsType.SYKEPENGEERSTATNING, RettighetsType.BISTANDSBEHOV, RettighetsType.SYKEPENGEERSTATNING
+                )
+
                 assertThat(oppfyltPeriode.fom).isEqualTo(periode.fom)
                 // Oppfylt ut rettighetsperioden
                 assertThat(oppfyltPeriode.tom).isEqualTo(periode.tom)

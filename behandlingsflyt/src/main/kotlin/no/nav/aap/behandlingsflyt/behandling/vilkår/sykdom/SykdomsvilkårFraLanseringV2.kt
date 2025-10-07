@@ -26,58 +26,71 @@ class SykdomsvilkårFraLanseringV2(vilkårsresultat: Vilkårsresultat) : Vilkår
 
     override fun vurder(grunnlag: SykdomsFaktagrunnlag) {
         val studentVurderingTidslinje = Tidslinje(
-            Periode(grunnlag.kravDato, grunnlag.sisteDagMedMuligYtelse), grunnlag.studentvurdering
+            Periode(grunnlag.kravDato, grunnlag.sisteDagMedMuligYtelse),
+            grunnlag.studentvurdering
         )
 
         val yrkesskadeVurderingTidslinje = Tidslinje(
-            Periode(grunnlag.kravDato, grunnlag.sisteDagMedMuligYtelse), grunnlag.yrkesskadevurdering
+            Periode(grunnlag.kravDato, grunnlag.sisteDagMedMuligYtelse),
+            grunnlag.yrkesskadevurdering
         )
 
-        val sykdomsvurderingTidslinje = grunnlag.sykdomsvurderinger.sortedBy { it.opprettet }.map { vurdering ->
+        val sykdomsvurderingTidslinje = grunnlag.sykdomsvurderinger
+            .sortedBy { it.opprettet }
+            .map { vurdering ->
                 Tidslinje(
                     Periode(
                         fom = vurdering.vurderingenGjelderFra ?: grunnlag.kravDato,
                         tom = grunnlag.sisteDagMedMuligYtelse
-                    ), vurdering
+                    ),
+                    vurdering
                 )
-            }.fold(Tidslinje<Sykdomsvurdering>()) { t1, t2 ->
+            }
+            .fold(Tidslinje<Sykdomsvurdering>()) { t1, t2 ->
                 t1.kombiner(t2, StandardSammenslåere.prioriterHøyreSideCrossJoin())
             }
 
-        val sykepengeerstatningTidslinje =
-            grunnlag.sykepengerErstatningFaktagrunnlag?.somTidslinje(grunnlag.kravDato, grunnlag.sisteDagMedMuligYtelse)
-                .orEmpty()
+        val sykepengeerstatningTidslinje = grunnlag.sykepengerErstatningFaktagrunnlag?.somTidslinje(
+            kravDato = grunnlag.kravDato,
+            sisteMuligDagMedYtelse = grunnlag.sisteDagMedMuligYtelse
+        ).orEmpty()
 
-        val bistandvurderingtidslinje =
-            grunnlag.bistandvurderingFaktagrunnlag?.vurderinger.orEmpty().sortedBy { it.opprettet }.map { vurdering ->
-                    Tidslinje(
-                        Periode(
-                            fom = vurdering.vurderingenGjelderFra ?: grunnlag.kravDato,
-                            tom = grunnlag.sisteDagMedMuligYtelse
-                        ), vurdering
-                    )
-                }.fold(Tidslinje<BistandVurdering>()) { acc, tidslinje ->
-                    acc.kombiner(
-                        tidslinje, StandardSammenslåere.prioriterHøyreSideCrossJoin()
-                    )
-                }
-
-        val tidslinje = kombinerAlleTidslinjer(
-            studentVurderingTidslinje,
-            yrkesskadeVurderingTidslinje,
-            sykdomsvurderingTidslinje,
-            sykepengeerstatningTidslinje,
-            bistandvurderingtidslinje
-        ).mapValue { (studentVurdering, yrkesskadeVurdering, sykdomVurdering, sykepengerVurdering, bistandVurdering) ->
-                opprettVilkårsvurdering(
-                    studentVurdering,
-                    sykdomVurdering,
-                    yrkesskadeVurdering,
-                    sykepengerVurdering,
-                    bistandVurdering,
-                    grunnlag
+        val bistandvurderingtidslinje = grunnlag.bistandvurderingFaktagrunnlag?.vurderinger.orEmpty()
+            .sortedBy { it.opprettet }
+            .map { vurdering ->
+                Tidslinje(
+                    Periode(
+                        fom = vurdering.vurderingenGjelderFra ?: grunnlag.kravDato,
+                        tom = grunnlag.sisteDagMedMuligYtelse
+                    ),
+                    vurdering
                 )
             }
+            .fold(Tidslinje<BistandVurdering>()) { acc, tidslinje ->
+                acc.kombiner(
+                    tidslinje,
+                    StandardSammenslåere.prioriterHøyreSideCrossJoin()
+                )
+            }
+
+        val tidslinje =
+            kombinerAlleTidslinjer(
+                studentVurderingTidslinje,
+                yrkesskadeVurderingTidslinje,
+                sykdomsvurderingTidslinje,
+                sykepengeerstatningTidslinje,
+                bistandvurderingtidslinje
+            )
+                .mapValue { (studentVurdering, yrkesskadeVurdering, sykdomVurdering, sykepengerVurdering, bistandVurdering) ->
+                    opprettVilkårsvurdering(
+                        studentVurdering,
+                        sykdomVurdering,
+                        yrkesskadeVurdering,
+                        sykepengerVurdering,
+                        bistandVurdering,
+                        grunnlag
+                    )
+                }
 
         vilkår.leggTilVurderinger(tidslinje)
     }

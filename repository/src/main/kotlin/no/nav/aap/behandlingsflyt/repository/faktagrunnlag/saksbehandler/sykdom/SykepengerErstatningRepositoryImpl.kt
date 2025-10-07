@@ -127,7 +127,6 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
             }
             setRowMapper { row ->
                 SykepengerErstatningGrunnlag(
-                    row.getLong("id"),
                     row.getLongOrNull("vurderinger_id")?.let(::mapVurdering).orEmpty()
                 )
             }

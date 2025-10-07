@@ -30,11 +30,8 @@ class AvklarSykepengerErstatningLøser(
     ): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
 
-        // prøve å bryte opp SykdomsvilkårFraLansering
-
         if (unleashGateway.isEnabled(BehandlingsflytFeature.SykepengerPeriodisert)) {
             val nyVurdering = tilVurdering(løsning.sykepengeerstatningVurdering, kontekst.bruker.ident)
-
 
             val eksisterendeVurderinger =
                 behandling.forrigeBehandlingId
