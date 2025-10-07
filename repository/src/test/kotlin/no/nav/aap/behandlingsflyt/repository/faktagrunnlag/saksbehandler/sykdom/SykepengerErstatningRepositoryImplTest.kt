@@ -33,7 +33,7 @@ internal class SykepengerErstatningRepositoryImplTest {
         }
         val vurdering = SykepengerVurdering(
             begrunnelse = "yolo",
-            dokumenterBruktIVurdering = listOf(JournalpostId("123")),
+            dokumenterBruktIVurdering = listOf(JournalpostId("123"), JournalpostId("321")),
             harRettPå = true,
             grunn = null,
             vurdertAv = "saksbehandler"
@@ -62,7 +62,7 @@ internal class SykepengerErstatningRepositoryImplTest {
         )
 
         dataSource.transaction { connection ->
-            SykepengerErstatningRepositoryImpl(connection).lagre(behandling.id, vurdering)
+            SykepengerErstatningRepositoryImpl(connection).lagre(behandling.id, vurdering2)
         }
 
         val res2 = dataSource.transaction {
@@ -70,7 +70,7 @@ internal class SykepengerErstatningRepositoryImplTest {
         }
         assertThat(res2.vurdering).usingRecursiveComparison()
             .ignoringFields("vurdertTidspunkt")
-            .isEqualTo(vurdering)
+            .isEqualTo(vurdering2)
         assertThat(res2.vurdering?.vurdertTidspunkt).isNotNull()
 
         // Test sletting

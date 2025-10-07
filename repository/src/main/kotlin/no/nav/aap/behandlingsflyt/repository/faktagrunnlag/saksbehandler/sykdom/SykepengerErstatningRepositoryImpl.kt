@@ -59,9 +59,7 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
                 }
             }
 
-            vurdering.dokumenterBruktIVurdering.forEach {
-                lagreDokument(vurderingId, it)
-            }
+            lagreDokumenter(vurderingId, vurdering.dokumenterBruktIVurdering)
         }
         val grunnlagQuery = """
              INSERT INTO SYKEPENGE_ERSTATNING_GRUNNLAG (behandling_id, vurdering_id, vurderinger_id) VALUES (?, ?, ?)
@@ -76,16 +74,16 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
         }
     }
 
-    private fun lagreDokument(vurderingId: Long, journalpostId: JournalpostId) {
+    private fun lagreDokumenter(vurderingId: Long, journalpostIder: List<JournalpostId>) {
         val query = """
             INSERT INTO SYKEPENGE_VURDERING_DOKUMENTER (vurdering_id, journalpost) 
             VALUES (?, ?)
         """.trimIndent()
 
-        connection.execute(query) {
+        connection.executeBatch(query, journalpostIder) {
             setParams {
                 setLong(1, vurderingId)
-                setString(2, journalpostId.identifikator)
+                setString(2, it.identifikator)
             }
         }
     }
