@@ -3,6 +3,8 @@ package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
+import no.nav.aap.komponenter.verdityper.Prosent.Companion.`100_PROSENT`
 import java.math.RoundingMode
 import java.time.LocalDate
 
@@ -29,6 +31,17 @@ data class Tilkjent(
         return Beløp(
             dagsats.multiplisert(gradering.endeligGradering)
                 .pluss(barnetillegg.multiplisert(gradering.endeligGradering)).verdi().setScale(0, RoundingMode.HALF_UP)
+        )
+    }
+
+    fun dagsatsFor11_9Reduksjon(): Beløp {
+        val justertGraderingUtenomArbeid = `100_PROSENT`.minus(gradering.samordningGradering ?: `0_PROSENT`)
+            .minus(gradering.samordningArbeidsgiverGradering ?: `0_PROSENT`)
+            .minus(gradering.institusjonGradering ?: `0_PROSENT`)
+            .minus(gradering.samordningUføregradering ?: `0_PROSENT`)
+        return Beløp(
+            dagsats.multiplisert(justertGraderingUtenomArbeid)
+                .pluss(barnetillegg.multiplisert(justertGraderingUtenomArbeid)).verdi().setScale(0, RoundingMode.HALF_UP)
         )
     }
 }
