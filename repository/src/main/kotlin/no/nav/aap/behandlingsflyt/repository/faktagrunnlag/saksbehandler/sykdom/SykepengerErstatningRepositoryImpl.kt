@@ -128,7 +128,7 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
                 setLong(1, behandlingId.toLong())
             }
             setRowMapper { row ->
-                SykepengerErstatningGrunnlag(row.getLong("id"), row.getLongOrNull("vurdering_id")?.let(::mapVurdering))
+                SykepengerErstatningGrunnlag(row.getLongOrNull("vurdering_id")?.let(::mapVurdering))
             }
         }
     }
