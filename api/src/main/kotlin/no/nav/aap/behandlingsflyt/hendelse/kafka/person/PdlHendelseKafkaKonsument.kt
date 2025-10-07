@@ -54,7 +54,7 @@ class PdlHendelseKafkaKonsument(
             val sakRepository: SakRepository = repositoryProvider.provide()
             val personRepository: PersonRepository = repositoryProvider.provide()
             val hendelseService = MottattHendelseService(repositoryProvider)
-            log.info("Leser personhendelse ${personHendelse.navn}")
+            log.info("Leser personhendelse med opplysningtype ${personHendelse.opplysningstype}")
             if (personHendelse.opplysningstype == Opplysningstype.DOEDSFALL_V1 && personHendelse.endringstype == Endringstype.OPPRETTET) {
                 log.info("Håndterer hendelse med ${personHendelse.opplysningstype} og ${personHendelse.endringstype}")
                 personHendelse.personidenter
