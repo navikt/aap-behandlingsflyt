@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagY
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.UføreInntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Avslått
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.DelvisOmgjøres
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
@@ -76,11 +77,7 @@ class BrevUtlederService(
 
                 return when (resultat) {
                     Resultat.INNVILGELSE -> {
-                        val vurderesForUføretrygd = underveisRepository.hentHvisEksisterer(behandling.id)
-                            ?.perioder
-                            .orEmpty()
-                            .any { it.rettighetsType == RettighetsType.VURDERES_FOR_UFØRETRYGD }
-                        if (vurderesForUføretrygd &&
+                        if (vurderesForUføretrygd(behandling.id) &&
                             unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_18)
                         ) {
                             VurderesForUføretrygd
@@ -111,6 +108,13 @@ class BrevUtlederService(
                 }
                 if (resultat == Resultat.AVBRUTT) {
                     return null
+                }
+                if (unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_18) &&
+                    vurderesForUføretrygd(behandlingId) &&
+                    behandling.forrigeBehandlingId != null &&
+                    !vurderesForUføretrygd(behandling.forrigeBehandlingId)
+                ) {
+                    return VurderesForUføretrygd
                 }
                 return VedtakEndring
             }
@@ -316,5 +320,15 @@ class BrevUtlederService(
         val grunnlaget = grunnlag?.grunnlaget() ?: return null
         val grunnlagetBeløp = grunnlaget.multiplisert(Grunnbeløp.finnGrunnbeløp(virkningstidspunkt))
         return Beløp(grunnlagetBeløp.verdi.setScale(0, RoundingMode.HALF_UP))
+    }
+
+    private fun vurderesForUføretrygd(behandlingId: BehandlingId): Boolean {
+        return underveisRepository.hentHvisEksisterer(behandlingId)
+            ?.perioder
+            .orEmpty()
+            .any {
+                it.utfall == Utfall.OPPFYLT &&
+                        it.rettighetsType == RettighetsType.VURDERES_FOR_UFØRETRYGD
+            }
     }
 }
