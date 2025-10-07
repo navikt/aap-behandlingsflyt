@@ -34,6 +34,7 @@ class PdlHendelseKafkaKonsument(
     pollTimeout = pollTimeout,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
+    private val secureLogger = LoggerFactory.getLogger("secureLog")
 
     override fun håndter(meldinger: ConsumerRecords<String, Personhendelse>) {
         meldinger.forEach { record ->
@@ -60,7 +61,10 @@ class PdlHendelseKafkaKonsument(
             if (personHendelse.opplysningstype == Opplysningstype.DOEDSFALL_V1 && personHendelse.endringstype == Endringstype.OPPRETTET) {
                 log.info("Håndterer hendelse med ${personHendelse.opplysningstype} og ${personHendelse.endringstype}")
                 personHendelse.personidenter
-                    .mapNotNull { ident -> personRepository.finn(Ident(ident)) }
+                    .mapNotNull { ident ->
+                        secureLogger.info("Registrert dødsfall på bruker med ident: $ident") // TODO: Fjerne før prodsetting
+                        personRepository.finn(Ident(ident))
+                    }
                     .forEach { person ->
                         sakRepository.finnSakerFor(person).forEach { sak ->
                             log.info("Registrerer mottatt hendelse på ${sak.saksnummer} ")
