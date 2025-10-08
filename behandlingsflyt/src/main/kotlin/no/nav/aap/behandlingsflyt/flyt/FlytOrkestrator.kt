@@ -187,6 +187,7 @@ class FlytOrkestrator(
                 kontekst = flytKontekstMedPeriodeService.utled(kontekst, behandling.aktivtSteg()),
             )
 
+        log.info("Sjekker om noe skal tilbakeføres etter oppdatering av informasjonskrav")
         val tilbakeføringsflyt = behandlingFlyt.tilbakeflytEtterEndringer(oppdaterFaktagrunnlagForKravliste, triggere)
 
         if (!tilbakeføringsflyt.erTom()) {
