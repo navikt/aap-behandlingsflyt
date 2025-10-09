@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Opplysningstype
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.PdlPersonHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.tilInnsendingDødsfallBruker
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -58,18 +59,22 @@ class PdlHendelseKafkaKonsument(
             val hendelseService = MottattHendelseService(repositoryProvider)
             if (personHendelse.opplysningstype == Opplysningstype.DOEDSFALL_V1 && personHendelse.endringstype == Endringstype.OPPRETTET) {
                 log.info("Håndterer hendelse med ${personHendelse.opplysningstype} og ${personHendelse.endringstype}")
-                personHendelse.personidenter
-                    .mapNotNull { ident ->
-                        personRepository.finn(Ident(ident))
+                var person: Person? = null
+
+                for (ident in personHendelse.personidenter) {
+                    person = personRepository.finn(Ident(ident))
+                    //Håndterer D-nummer og Fnr
+                    if (person != null) break
+                }
+
+                person?.let { personMedSak->
+                    sakRepository.finnSakerFor(personMedSak).forEach { sak ->
+                        log.info("Registrerer mottatt hendelse på ${sak.saksnummer}")
+                        hendelseService.registrerMottattHendelse(
+                            personHendelse.tilInnsendingDødsfallBruker(sak.saksnummer)
+                        )
                     }
-                    .forEach { person ->
-                        sakRepository.finnSakerFor(person).forEach { sak ->
-                            log.info("Registrerer mottatt hendelse på ${sak.saksnummer} ")
-                            hendelseService.registrerMottattHendelse(
-                                personHendelse.tilInnsendingDødsfallBruker(sak.saksnummer)
-                            )
-                        }
-                    }
+                }
             } else {
                 log.info("Ignorerer hendelse med ${personHendelse.opplysningstype} og ${personHendelse.endringstype}")
             }
