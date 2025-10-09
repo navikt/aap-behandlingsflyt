@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamGateway
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamordneVedtakRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -43,11 +44,16 @@ class VarsleVedtakJobbUtfører(
             utvidetFrist = null,
         )
 
-        samGateway.varsleVedtak(request)
+        // For nå: kun varsle ved førstegangsbehandlinger.
+        // På sikt skal vi varsle hver gang det skjer en "betydelig" endring i ytelsen. F.eks rettighetstype, stans,
+        // etc.
+        if (behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling) {
+            samGateway.varsleVedtak(request)
+        }
 
         val tpRefusjonskravVurdering = tjenestepensjonRefusjonskravVurdering.hentHvisEksisterer(behandlingId)
 
-        if(tpRefusjonskravVurdering != null && tpRefusjonskravVurdering.harKrav) {
+        if (tpRefusjonskravVurdering != null && tpRefusjonskravVurdering.harKrav) {
             flytJobbRepository.leggTil(JobbInput(HentSamIdJobbUtfører).medPayload(behandling.id))
         }
     }
