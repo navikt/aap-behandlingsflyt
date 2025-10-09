@@ -26,7 +26,6 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -153,6 +152,7 @@ class VurderBistandsbehovSteg private constructor(
 
             VurderingType.MELDEKORT -> false
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT -> false
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9 -> false
             VurderingType.IKKE_RELEVANT -> false
         }
     }
@@ -226,7 +226,6 @@ class VurderBistandsbehovSteg private constructor(
                         bistandsGrunnlag,
                         vilkårsresultat,
                         avklaringsbehovene,
-                        kontekst.behandlingType,
                     )
                 ) {
                     return FantAvklaringsbehov(Definisjon.AVKLAR_BISTANDSBEHOV)
@@ -243,6 +242,7 @@ class VurderBistandsbehovSteg private constructor(
 
             VurderingType.MELDEKORT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
             VurderingType.IKKE_RELEVANT -> {
                 // Skal ikke gjøre noe
             }
@@ -275,7 +275,6 @@ class VurderBistandsbehovSteg private constructor(
         bistandsGrunnlag: BistandGrunnlag?,
         vilkårsresultat: Vilkårsresultat,
         avklaringsbehovene: Avklaringsbehovene,
-        typeBehandling: TypeBehandling,
     ): Boolean {
         val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
         val erIkkeAvslagPåVilkårTidligere =
@@ -333,7 +332,6 @@ class VurderBistandsbehovSteg private constructor(
                 && vilkårsresultat.finnVilkår(Vilkårtype.LOVVALG).harPerioderSomErOppfylt()
                 && sykdomsvurderinger.any { it.erOppfylt(kravDato) }
     }
-
 
     private fun harInnvilgetForStudentUtenÅVæreStudent(vilkår: Vilkår, erStudentStegOppfylt: Boolean): Boolean {
 

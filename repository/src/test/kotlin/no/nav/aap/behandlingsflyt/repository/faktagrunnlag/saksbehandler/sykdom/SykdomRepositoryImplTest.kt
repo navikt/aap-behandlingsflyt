@@ -23,12 +23,11 @@ import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
-import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.Instant
@@ -46,7 +45,7 @@ internal class SykdomRepositoryImplTest {
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
             repo.lagre(behandling.id, emptyList())
-            assertEquals(emptyList(), repo.hent(behandling.id).sykdomsvurderinger)
+            assertThat(repo.hent(behandling.id).sykdomsvurderinger).isEmpty()
         }
     }
 
@@ -58,7 +57,8 @@ internal class SykdomRepositoryImplTest {
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
             repo.lagre(behandling.id, listOf(sykdomsvurdering1))
-            assertEquals(listOf(sykdomsvurdering1), repo.hent(behandling.id).sykdomsvurderinger)
+            assertThat(repo.hent(behandling.id).sykdomsvurderinger).usingRecursiveComparison()
+                .ignoringFields("id", "opprettet").isEqualTo(listOf(sykdomsvurdering1))
         }
     }
 
@@ -70,7 +70,12 @@ internal class SykdomRepositoryImplTest {
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
             repo.lagre(behandling.id, listOf(sykdomsvurdering1, sykdomsvurdering2))
-            assertEquals(listOf(sykdomsvurdering1, sykdomsvurdering2), repo.hent(behandling.id).sykdomsvurderinger)
+            assertThat(repo.hent(behandling.id).sykdomsvurderinger).usingRecursiveComparison()
+                .ignoringFields("id", "opprettet").isEqualTo(
+                    listOf(
+                        sykdomsvurdering1, sykdomsvurdering2
+                    )
+                )
         }
     }
 
@@ -85,8 +90,7 @@ internal class SykdomRepositoryImplTest {
                 begrunnelse = "begr",
                 relevanteSaker = listOf(
                     YrkesskadeSak(
-                        referanse = "gokk",
-                        manuellYrkesskadeDato = LocalDate.now()
+                        referanse = "gokk", manuellYrkesskadeDato = LocalDate.now()
                     )
                 ),
                 erÅrsakssammenheng = true,
@@ -95,9 +99,8 @@ internal class SykdomRepositoryImplTest {
                 vurdertTidspunkt = LocalDateTime.now()
             )
             repo.lagre(behandling.id, vurdering)
-            assertThat(repo.hent(behandling.id).yrkesskadevurdering)
-                .usingRecursiveComparison().ignoringFields("id", "vurdertTidspunkt")
-                .isEqualTo(vurdering)
+            assertThat(repo.hent(behandling.id).yrkesskadevurdering).usingRecursiveComparison()
+                .ignoringFields("id", "vurdertTidspunkt").isEqualTo(vurdering)
         }
     }
 
@@ -119,7 +122,10 @@ internal class SykdomRepositoryImplTest {
             repo.lagre(revurdering.id, listOf(sykdomsvurdering2))
 
             val historikk = repo.hentHistoriskeSykdomsvurderinger(revurdering.sakId, revurdering.id)
-            assertEquals(listOf(sykdomsvurdering1), historikk)
+            assertThat(historikk)
+                .usingRecursiveComparison()
+                .ignoringFields("id", "opprettet")
+                .isEqualTo(listOf(sykdomsvurdering1))
         }
     }
 
@@ -142,7 +148,8 @@ internal class SykdomRepositoryImplTest {
             // Marker revurderingen som avbrutt
             avbrytRevurderingRepo.lagre(
                 revurderingAvbrutt.id, AvbrytRevurderingVurdering(
-                    AvbrytRevurderingÅrsak.REVURDERINGEN_BLE_OPPRETTET_VED_EN_FEIL, "avbryte pga. feil",
+                    AvbrytRevurderingÅrsak.REVURDERINGEN_BLE_OPPRETTET_VED_EN_FEIL,
+                    "avbryte pga. feil",
                     Bruker("Z00000")
                 )
             )
@@ -156,7 +163,8 @@ internal class SykdomRepositoryImplTest {
             sykdomRepo.lagre(revurdering.id, listOf(sykdomsvurdering3))
 
             val historikk = sykdomRepo.hentHistoriskeSykdomsvurderinger(revurdering.sakId, revurdering.id)
-            assertEquals(listOf(sykdomsvurdering1), historikk)
+            assertThat(historikk).usingRecursiveComparison().ignoringFields("id", "opprettet")
+                .isEqualTo(listOf(sykdomsvurdering1))
         }
     }
 
@@ -238,44 +246,11 @@ internal class SykdomRepositoryImplTest {
             opprettet = Instant.now(),
         )
 
-        fun assertEquals(expected: List<Sykdomsvurdering>, actual: List<Sykdomsvurdering>) {
-            assertEquals(expected.size, actual.size)
-            for ((expected, actual) in expected.zip(actual)) {
-                assertEquals(expected, actual)
-            }
-        }
-
-        fun assertEquals(expected: Sykdomsvurdering, actual: Sykdomsvurdering) {
-            if (expected.id != null && actual.id != null) {
-                assertEquals(expected.id, actual.id)
-            }
-            assertEquals(expected.begrunnelse, actual.begrunnelse)
-            assertEquals(expected.vurderingenGjelderFra, actual.vurderingenGjelderFra)
-            assertEquals(expected.dokumenterBruktIVurdering, actual.dokumenterBruktIVurdering)
-            assertEquals(expected.harSkadeSykdomEllerLyte, actual.harSkadeSykdomEllerLyte)
-            assertEquals(expected.erSkadeSykdomEllerLyteVesentligdel, actual.erSkadeSykdomEllerLyteVesentligdel)
-            assertEquals(
-                expected.erNedsettelseIArbeidsevneAvEnVissVarighet,
-                actual.erNedsettelseIArbeidsevneAvEnVissVarighet
-            )
-            assertEquals(
-                expected.erNedsettelseIArbeidsevneMerEnnHalvparten,
-                actual.erNedsettelseIArbeidsevneMerEnnHalvparten
-            )
-            assertEquals(
-                expected.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
-                actual.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense
-            )
-            assertEquals(expected.yrkesskadeBegrunnelse, actual.yrkesskadeBegrunnelse)
-            assertEquals(expected.erArbeidsevnenNedsatt, actual.erArbeidsevnenNedsatt)
-        }
     }
 
     private fun sak(connection: DBConnection): Sak {
         return PersonOgSakService(
-            FakePdlGateway,
-            PersonRepositoryImpl(connection),
-            SakRepositoryImpl(connection)
+            FakePdlGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection)
         ).finnEllerOpprett(ident(), periode)
     }
 

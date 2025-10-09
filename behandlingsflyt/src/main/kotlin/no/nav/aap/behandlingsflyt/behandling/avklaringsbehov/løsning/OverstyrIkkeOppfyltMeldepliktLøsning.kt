@@ -21,7 +21,7 @@ class OverstyrIkkeOppfyltMeldepliktLøsning(
         required = true,
         defaultValue = OVERSTYR_IKKE_OPPFYKT_MELDEPLIKT_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5002`
-) : AvklaringsbehovLøsning {
+) : EnkeltAvklaringsbehovLøsning {
 
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return OverstyrIkkeOppfyltMeldepliktLøser(repositoryProvider).løs(kontekst, this)

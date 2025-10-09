@@ -39,7 +39,6 @@ class AvklarSykdomLøser(
             .map { it.toSykdomsvurdering(kontekst.bruker) }
             .let {
                 SykdomGrunnlag(
-                    id = null,
                     sykdomsvurderinger = it,
                     yrkesskadevurdering = null,
                 ).somSykdomsvurderingstidslinje(LocalDate.MIN)

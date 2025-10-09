@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.utils.withMdc
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
@@ -23,7 +24,7 @@ class InformasjonskravGrunnlagImpl(
         repositoryProvider = repositoryProvider,
         gatewayProvider
     )
-
+    private val log = LoggerFactory.getLogger(javaClass)
     private val tracer = GlobalOpenTelemetry.getTracer("informasjonskrav")
 
     override fun oppdaterFaktagrunnlagForKravliste(
@@ -54,6 +55,7 @@ class InformasjonskravGrunnlagImpl(
         // Når SøknadService er relevant, må denne kjøre før de andre for å forhindre race conditions
         val søknadInformasjonskrav = informasjonskravene.find { it.second.navn == SøknadInformasjonskrav.navn }
         val søknadInformasjonRelevantOgEndret = if (SøknadInformasjonskrav.navn in relevanteInformasjonskrav.map { it.second.navn }) {
+            log.info("Sjekker søknadsinformasjonskrav for endringer")
             val span = tracer.spanBuilder("informasjonskrav ${SøknadInformasjonskrav.navn}")
                 .setSpanKind(SpanKind.INTERNAL)
                 .setAttribute("informasjonskrav", SøknadInformasjonskrav.navn.toString())
@@ -68,7 +70,7 @@ class InformasjonskravGrunnlagImpl(
         } else {
             false
         }
-
+        log.info("Sjekker andre informasjonskrav for endringer")
         val informasjonskravFutures = relevanteInformasjonskrav
             .filter { !it.second.equals(SøknadInformasjonskrav) } // ikke kjør SøknadService dobbelt
             .map { triple ->
@@ -99,6 +101,7 @@ class InformasjonskravGrunnlagImpl(
                 endredeAsyncInformasjonskrav
             }
 
+        log.info("Registrerer oppdateringer fra informasjonskrav")
         informasjonskravRepository.registrerOppdateringer(
             kontekst.sakId,
             kontekst.behandlingId,

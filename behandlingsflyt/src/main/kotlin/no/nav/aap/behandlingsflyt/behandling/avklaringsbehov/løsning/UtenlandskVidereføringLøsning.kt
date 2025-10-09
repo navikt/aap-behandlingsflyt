@@ -17,7 +17,7 @@ class UtenlandskVidereføringLøsning(
     @param:JsonProperty(
         "behovstype", required = true, defaultValue = AVKLAR_UTENLANDSK_MEDLEMSKAP_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5019`
-) : AvklaringsbehovLøsning {
+) : EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return UtenlandskVidereføringLøser(repositoryProvider).løs(kontekst, this)
     }

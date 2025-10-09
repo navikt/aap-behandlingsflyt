@@ -60,6 +60,7 @@ class VurderOppholdskravSteg private constructor(
             VurderingType.MELDEKORT -> false
             VurderingType.IKKE_RELEVANT -> false
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT -> false
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9 -> false
         }
     }
 

@@ -29,5 +29,10 @@ sealed interface AvklaringsbehovLøsning {
 }
 
 fun utledSubtypesTilAvklaringsbehovLøsning(): List<Class<*>> {
-    return AvklaringsbehovLøsning::class.sealedSubclasses.map { it.java }.toList()
+    return AvklaringsbehovLøsning::class.sealedSubclasses.flatMap {
+        if (it.isSealed)
+            it.sealedSubclasses.map { it.java }
+        else
+            listOf(it.java)
+    }.toList()
 }

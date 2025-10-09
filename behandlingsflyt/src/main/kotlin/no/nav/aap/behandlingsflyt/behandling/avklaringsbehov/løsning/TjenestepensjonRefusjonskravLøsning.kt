@@ -24,7 +24,7 @@ class TjenestepensjonRefusjonskravLøsning (
         required = true,
         defaultValue = SAMORDNING_REFUSJONS_KRAV
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5056`
-): AvklaringsbehovLøsning {
+): EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return TjenestepensjonRefusjonskravLøser(repositoryProvider).løs(kontekst, this)
     }

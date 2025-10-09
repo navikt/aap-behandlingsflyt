@@ -41,9 +41,9 @@ enum class Vurderingsbehov {
     AKTIVITETSPLIKT_11_7,
     AKTIVITETSPLIKT_11_9,
     EFFEKTUER_AKTIVITETSPLIKT,
+    EFFEKTUER_AKTIVITETSPLIKT_11_9,
     OVERGANG_UFORE,
     OVERGANG_ARBEID,
-    MOTTATT_PDL_HENDELSE,
     DØDSFALL_BRUKER,
     DØDSFALL_BARN,
     ;
@@ -106,10 +106,10 @@ fun EksponertÅrsak.tilVurderingsbehov() =
         EksponertÅrsak.AKTIVITETSPLIKT_11_7 -> Vurderingsbehov.AKTIVITETSPLIKT_11_7
         EksponertÅrsak.AKTIVITETSPLIKT_11_9 -> Vurderingsbehov.AKTIVITETSPLIKT_11_9
         EksponertÅrsak.EFFEKTUER_AKTIVITETSPLIKT -> Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT
+        EksponertÅrsak.EFFEKTUER_AKTIVITETSPLIKT_11_9 -> Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9
         EksponertÅrsak.OPPHOLDSKRAV -> Vurderingsbehov.OPPHOLDSKRAV
         EksponertÅrsak.OVERGANG_UFORE -> Vurderingsbehov.OVERGANG_UFORE
         EksponertÅrsak.OVERGANG_ARBEID -> Vurderingsbehov.OVERGANG_ARBEID
         EksponertÅrsak.DØDSFALL_BRUKER -> Vurderingsbehov.DØDSFALL_BRUKER
         EksponertÅrsak.DØDSFALL_BARN -> Vurderingsbehov.DØDSFALL_BARN
-        EksponertÅrsak.MOTTATT_PDL_HENDELSE -> Vurderingsbehov.MOTTATT_PDL_HENDELSE
     }

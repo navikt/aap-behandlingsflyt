@@ -21,7 +21,7 @@ class FritakMeldepliktLøsning(
         required = true,
         defaultValue = FRITAK_MELDEPLIKT_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5005`
-) : AvklaringsbehovLøsning {
+) : EnkeltAvklaringsbehovLøsning {
 
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return FritakFraMeldepliktLøser(repositoryProvider).løs(kontekst, this)

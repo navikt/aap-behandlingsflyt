@@ -27,6 +27,7 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -133,7 +134,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
 
             val historikk = repo.hentHistoriskeVurderinger(revurdering.sakId, revurdering.id)
             lagNyFullVurdering(revurdering.id, repo, "Andre begrunnelse")
-            assertEquals(1, historikk.size)
+            assertThat(historikk).hasSize(1)
         }
     }
 

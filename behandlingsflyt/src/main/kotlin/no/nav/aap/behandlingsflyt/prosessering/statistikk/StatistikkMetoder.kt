@@ -160,12 +160,12 @@ class StatistikkMetoder(
                 Vurderingsbehov.AKTIVITETSPLIKT_11_7 -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.AKTIVITETSPLIKT_11_7
                 Vurderingsbehov.AKTIVITETSPLIKT_11_9 -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.AKTIVITETSPLIKT_11_9
                 Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT
+                Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9 -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9
                 Vurderingsbehov.OPPHOLDSKRAV -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.OPPHOLDSKRAV
                 Vurderingsbehov.OVERGANG_UFORE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.OVERGANG_UFORE
                 Vurderingsbehov.OVERGANG_ARBEID -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.OVERGANG_ARBEID
                 Vurderingsbehov.DØDSFALL_BRUKER -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.DØDSFALL_BRUKER
                 Vurderingsbehov.DØDSFALL_BARN -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.DØDSFALL_BARN
-                Vurderingsbehov.MOTTATT_PDL_HENDELSE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.MOTTATT_PDL_HENDELSE
             }
         }.distinct()
 
@@ -394,7 +394,7 @@ class StatistikkMetoder(
         inntekter = beregningsgrunnlag.inntekter()
             .associate { it.år.value.toString() to it.inntektIKroner.verdi().toDouble() },
         grunnlaget = beregningsgrunnlag.grunnlaget().verdi().toDouble(),
-        er6GBegrenset = false,
-        erGjennomsnitt = false
+        er6GBegrenset = beregningsgrunnlag.inntekter().any { it.er6GBegrenset },
+        erGjennomsnitt = beregningsgrunnlag.erGjennomsnitt(),
     )
 }

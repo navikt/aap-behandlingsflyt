@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
@@ -20,16 +21,35 @@ class IverksettBruddSteg private constructor(
     private val prosesserBehandlingService: ProsesserBehandlingService
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val effektueringsbehandling = sakOgBehandlingService.finnEllerOpprettBehandling(
-            kontekst.sakId,
-            VurderingsbehovOgÅrsak(
-                årsak = ÅrsakTilOpprettelse.AKTIVITETSPLIKT, vurderingsbehov = listOf(
-                    VurderingsbehovMedPeriode(
-                        Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT
+        val effektueringsbehandling = when (kontekst.behandlingType) {
+            TypeBehandling.Aktivitetsplikt -> {
+                sakOgBehandlingService.finnEllerOpprettBehandling(
+                    kontekst.sakId,
+                    VurderingsbehovOgÅrsak(
+                        årsak = ÅrsakTilOpprettelse.AKTIVITETSPLIKT, vurderingsbehov = listOf(
+                            VurderingsbehovMedPeriode(
+                                Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT
+                            )
+                        )
                     )
                 )
-            )
-        )
+            }
+
+            TypeBehandling.Aktivitetsplikt11_9 -> {
+                sakOgBehandlingService.finnEllerOpprettBehandling(
+                    kontekst.sakId,
+                    VurderingsbehovOgÅrsak(
+                        årsak = ÅrsakTilOpprettelse.AKTIVITETSPLIKT_11_9, vurderingsbehov = listOf(
+                            VurderingsbehovMedPeriode(
+                                Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9
+                            )
+                        )
+                    )
+                )
+            }
+
+            else -> error("Behandlingstype ikke støttet")
+        }
         prosesserBehandlingService.triggProsesserBehandling(effektueringsbehandling)
 
         return Fullført

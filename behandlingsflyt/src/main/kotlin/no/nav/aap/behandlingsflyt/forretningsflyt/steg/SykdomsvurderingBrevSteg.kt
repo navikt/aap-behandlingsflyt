@@ -12,7 +12,6 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -22,7 +21,6 @@ class SykdomsvurderingBrevSteg internal constructor(
     private val sykdomsvurderingForBrevRepository: SykdomsvurderingForBrevRepository,
     private val avklaringsbehovService: AvklaringsbehovService,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
-    private val behandlingRepository: BehandlingRepository,
     private val tidligereVurderinger: TidligereVurderinger
 ) : BehandlingSteg {
 
@@ -30,7 +28,6 @@ class SykdomsvurderingBrevSteg internal constructor(
         sykdomsvurderingForBrevRepository = repositoryProvider.provide(),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
         avklaringsbehovRepository = repositoryProvider.provide(),
-        behandlingRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider)
     )
 
@@ -46,14 +43,10 @@ class SykdomsvurderingBrevSteg internal constructor(
                             return@oppdaterAvklaringsbehov false
                         }
 
-                        val behandling = behandlingRepository.hent(kontekst.behandlingId)
-                        val sykdomsSteggruppedefinisjoner =
-                            Definisjon.entries.filter {
-                                behandling.flyt()
-                                    .erStegFør(it.løsesISteg, Definisjon.SKRIV_SYKDOMSVURDERING_BREV.løsesISteg)
-                            }
-
-                        val behov = avklaringsbehovene.hentBehovForDefinisjon(sykdomsSteggruppedefinisjoner)
+                        // Kun aktuelt dersom sykdom og bistand er vurdert
+                        val behov = avklaringsbehovene.hentBehovForDefinisjon(
+                            listOf(Definisjon.AVKLAR_SYKDOM, Definisjon.AVKLAR_BISTANDSBEHOV)
+                        )
 
                         val finnesAvsluttede =
                             behov.any { it.status().erAvsluttet() && it.status() != Status.AVBRUTT }

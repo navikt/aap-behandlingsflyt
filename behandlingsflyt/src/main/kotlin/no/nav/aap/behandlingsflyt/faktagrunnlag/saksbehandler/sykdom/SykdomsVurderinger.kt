@@ -26,9 +26,6 @@ data class Sykdomsvurdering(
     val opprettet: Instant,
     val vurdertAv: Bruker,
 ) {
-    private fun erAndelNedsattNok(): Boolean {
-        return erNedsettelseIArbeidsevneMerEnnHalvparten == true || erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true
-    }
 
     /* Denne metoden må sannsynligvis generaliseres når vi skal implementere gjeninntreden etter opphør. */
     fun erFørsteVurdering(kravdato: LocalDate): Boolean {

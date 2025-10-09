@@ -13,10 +13,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
-import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.verdityper.dokument.JournalpostId
-import org.junit.jupiter.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.Instant
 
@@ -43,10 +43,7 @@ class TrukketSøknadRepositoryImplTest {
 
         dataSource.transaction { connection ->
             val repo = TrukketSøknadRepositoryImpl(connection)
-            Assertions.assertEquals(
-                emptyList<TrukketSøknadVurdering>(),
-                repo.hentTrukketSøknadVurderinger(behandling1)
-            )
+            assertThat(repo.hentTrukketSøknadVurderinger(behandling1)).isEqualTo(emptyList<TrukketSøknadVurdering>())
         }
 
         dataSource.transaction { connection ->
@@ -55,10 +52,7 @@ class TrukketSøknadRepositoryImplTest {
                 behandling1,
                 vurdering1
             )
-            Assertions.assertEquals(
-                listOf(vurdering1),
-                repo.hentTrukketSøknadVurderinger(behandling1)
-            )
+            assertThat(repo.hentTrukketSøknadVurderinger(behandling1)).isEqualTo(listOf(vurdering1))
         }
 
 
@@ -68,14 +62,8 @@ class TrukketSøknadRepositoryImplTest {
             repo.kopier(behandling1, behandling2)
             repo.lagreTrukketSøknadVurdering(behandling2, vurdering2)
 
-            Assertions.assertEquals(
-                listOf(vurdering1),
-                repo.hentTrukketSøknadVurderinger(behandling1)
-            )
-            Assertions.assertEquals(
-                listOf(vurdering1, vurdering2),
-                repo.hentTrukketSøknadVurderinger(behandling2)
-            )
+            assertThat(repo.hentTrukketSøknadVurderinger(behandling1)).isEqualTo(listOf(vurdering1))
+            assertThat(repo.hentTrukketSøknadVurderinger(behandling2)).isEqualTo(listOf(vurdering1, vurdering2))
         }
     }
 

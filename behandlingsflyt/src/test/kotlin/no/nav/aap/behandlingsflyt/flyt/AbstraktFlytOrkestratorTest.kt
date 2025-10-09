@@ -110,6 +110,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Søknad
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UtenlandsPeriodeDto
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
@@ -275,6 +276,24 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         val STANDARD_SØKNAD = SøknadV0(
             student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
             medlemskap = SøknadMedlemskapDto("JA", "JA", "NEI", "NEI", null)
+        )
+
+        val SØKNAD_INGEN_MEDLEMSKAP = SøknadV0(
+            student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+            medlemskap = SøknadMedlemskapDto(
+                "JA", null, "JA", null,
+                listOf(
+                    UtenlandsPeriodeDto(
+                        "SWE",
+                        LocalDate.now().plusMonths(1),
+                        LocalDate.now().minusMonths(1),
+                        "JA",
+                        null,
+                        LocalDate.now().plusMonths(1),
+                        LocalDate.now().minusMonths(1),
+                    )
+                )
+            )
         )
 
         val SØKNAD_STUDENT = SøknadV0(
@@ -534,7 +553,11 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         return behandling
     }
 
-    protected fun løsSykdom(behandling: Behandling, vurderingenGjelderFra: LocalDate? = null): Behandling {
+    protected fun løsSykdom(
+        behandling: Behandling,
+        vurderingGjelderFra: LocalDate? = null,
+        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean? = null
+    ): Behandling {
         return løsAvklaringsBehov(
             behandling,
             AvklarSykdomLøsning(
@@ -546,10 +569,10 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                         erSkadeSykdomEllerLyteVesentligdel = true,
                         erNedsettelseIArbeidsevneMerEnnHalvparten = true,
                         erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-                        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
                         erArbeidsevnenNedsatt = true,
-                        yrkesskadeBegrunnelse = null,
-                        vurderingenGjelderFra = vurderingenGjelderFra,
+                        yrkesskadeBegrunnelse = if (erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense != null) "test" else null,
+                        vurderingenGjelderFra = vurderingGjelderFra,
                     )
                 )
             ),
@@ -682,8 +705,15 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
     }
 
     @JvmName("løsSykdomExt")
-    protected fun Behandling.løsSykdom(gjelderFra: LocalDate? = null): Behandling {
-        return løsSykdom(this, gjelderFra)
+    protected fun Behandling.løsSykdom(
+        vurderingGjelderFra: LocalDate? = null,
+        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean? = null
+    ): Behandling {
+        return løsSykdom(
+            behandling = this,
+            vurderingGjelderFra = vurderingGjelderFra,
+            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense
+        )
     }
 
     @JvmName("mellomlagreSykdomExt")

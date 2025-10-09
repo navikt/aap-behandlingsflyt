@@ -25,7 +25,7 @@ class FastsettFullmektigLøsning(
         required = true,
         defaultValue = FASTSETT_FULLMEKTIG_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`6009`
-) : AvklaringsbehovLøsning {
+) : EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return FastsettFullmektigLøser(repositoryProvider, gatewayProvider).løs(kontekst, this)
     }

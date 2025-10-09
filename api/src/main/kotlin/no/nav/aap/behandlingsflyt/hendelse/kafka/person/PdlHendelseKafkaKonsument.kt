@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Endringstype
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Navn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Opplysningstype
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.PdlPersonHendelse
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.tilInnsending
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.tilInnsendingDødsfallBruker
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
@@ -34,12 +34,14 @@ class PdlHendelseKafkaKonsument(
     pollTimeout = pollTimeout,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
+    private val secureLogger = LoggerFactory.getLogger("secureLog")
 
     override fun håndter(meldinger: ConsumerRecords<String, Personhendelse>) {
         meldinger.forEach { record ->
             val personHendelse = record.value().tilDomain()
             håndter(record, personHendelse)
         }
+
     }
 
     fun håndter(melding: ConsumerRecord<String, Personhendelse>, personHendelse: PdlPersonHendelse) {
@@ -54,20 +56,17 @@ class PdlHendelseKafkaKonsument(
             val sakRepository: SakRepository = repositoryProvider.provide()
             val personRepository: PersonRepository = repositoryProvider.provide()
             val hendelseService = MottattHendelseService(repositoryProvider)
-            log.info("Leser personhendelse $personHendelse")
-            if (personHendelse.opplysningstype == Opplysningstype.AVDOED_PDL_V1) {
+            if (personHendelse.opplysningstype == Opplysningstype.DOEDSFALL_V1 && personHendelse.endringstype == Endringstype.OPPRETTET) {
                 log.info("Håndterer hendelse med ${personHendelse.opplysningstype} og ${personHendelse.endringstype}")
-                personHendelse.personidenter
-                    .mapNotNull { ident -> personRepository.finn(Ident(ident)) }
-                    .forEach { person ->
-                        sakRepository.finnSakerFor(person).forEach {
-                            sak ->
-                            log.info("Registrerer mottatt hendelse på ${sak.saksnummer} ")
-                            hendelseService.registrerMottattHendelse(
-                                personHendelse.tilInnsending(sak.saksnummer)
-                            )
-                        }
+                personHendelse.personidenter.firstOrNull()?.let { ident ->
+                    val person = personRepository.finn(Ident(ident)) ?: return@let
+                    sakRepository.finnSakerFor(person).forEach { sak ->
+                        log.info("Registrerer mottatt hendelse på ${sak.saksnummer}")
+                        hendelseService.registrerMottattHendelse(
+                            personHendelse.tilInnsendingDødsfallBruker(sak.saksnummer)
+                        )
                     }
+                }
             } else {
                 log.info("Ignorerer hendelse med ${personHendelse.opplysningstype} og ${personHendelse.endringstype}")
             }
@@ -80,7 +79,12 @@ class PdlHendelseKafkaKonsument(
             personidenter = this.personidenter,
             master = this.master,
             opprettet = this.opprettet,
-            opplysningstype = Opplysningstype.valueOf(this.opplysningstype),
+            opplysningstype = try {
+                Opplysningstype.valueOf(this.opplysningstype)
+            } catch (e: IllegalArgumentException) {
+                log.info("Fant ukjent opplysningstype fra PDL: ${this.opplysningstype}")
+                Opplysningstype.UNKNOWN
+            },
             endringstype = Endringstype.valueOf(this.endringstype.toString()),
             tidligereHendelseId = this.tidligereHendelseId,
             navn = this.navn?.let {
