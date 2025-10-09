@@ -39,13 +39,9 @@ class UtbetalingService(
     private val tilkjentYtelseRepository: TilkjentYtelseRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val vedtakRepository: VedtakRepository,
-    private val refusjonskravRepository: RefusjonkravRepository,
-    private val tjenestepensjonRefusjonsKravVurderingRepository: TjenestepensjonRefusjonsKravVurderingRepository,
-    private val samordningAndreStatligeYtelserRepository: SamordningAndreStatligeYtelserRepository,
-    private val samordningArbeidsgiverRepository: SamordningArbeidsgiverRepository,
     private val underveisRepository: UnderveisRepository,
     private val reduksjon11_9Repository: Reduksjon11_9Repository,
-    private val unleashGateway: UnleashGateway,
+    private val avventUtbetalingService: AvventUtbetalingService,
 ) {
     constructor(
         repositoryProvider: RepositoryProvider,
@@ -56,13 +52,15 @@ class UtbetalingService(
         tilkjentYtelseRepository = repositoryProvider.provide<TilkjentYtelseRepository>(),
         avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>(),
         vedtakRepository = repositoryProvider.provide<VedtakRepository>(),
-        refusjonskravRepository = repositoryProvider.provide<RefusjonkravRepository>(),
-        tjenestepensjonRefusjonsKravVurderingRepository = repositoryProvider.provide<TjenestepensjonRefusjonsKravVurderingRepository>(),
-        samordningAndreStatligeYtelserRepository = repositoryProvider.provide<SamordningAndreStatligeYtelserRepository>(),
-        samordningArbeidsgiverRepository = repositoryProvider.provide<SamordningArbeidsgiverRepository>(),
         underveisRepository = repositoryProvider.provide<UnderveisRepository>(),
         reduksjon11_9Repository = repositoryProvider.provide<Reduksjon11_9Repository>(),
-        unleashGateway = gatewayProvider.provide<UnleashGateway>()
+        avventUtbetalingService = AvventUtbetalingService(
+            refusjonskravRepository = repositoryProvider.provide<RefusjonkravRepository>(),
+            tjenestepensjonRefusjonsKravVurderingRepository = repositoryProvider.provide<TjenestepensjonRefusjonsKravVurderingRepository>(),
+            samordningAndreStatligeYtelserRepository = repositoryProvider.provide<SamordningAndreStatligeYtelserRepository>(),
+            samordningArbeidsgiverYtelserRepository = repositoryProvider.provide<SamordningArbeidsgiverRepository>(),
+            unleashGateway = gatewayProvider.provide<UnleashGateway>(),
+        ),
     )
 
 
@@ -162,13 +160,6 @@ class UtbetalingService(
     ): TilkjentYtelseAvventDto? {
         val avventUtbetaling = if (tilkjentYtelse.isNotEmpty()) {
             val førsteVedtaksdato = finnFørsteVedtaksdato(sakId) ?: LocalDate.now()
-            val avventUtbetalingService = AvventUtbetalingService(
-                refusjonskravRepository = refusjonskravRepository,
-                tjenestepensjonRefusjonsKravVurderingRepository = tjenestepensjonRefusjonsKravVurderingRepository,
-                samordningAndreStatligeYtelserRepository = samordningAndreStatligeYtelserRepository,
-                samordningArbeidsgiverYtelserRepository = samordningArbeidsgiverRepository,
-                unleashGateway = unleashGateway,
-            )
             avventUtbetalingService.finnEventuellAvventUtbetaling(
                 behandlingId,
                 førsteVedtaksdato,
