@@ -411,7 +411,7 @@ class AktivitetspliktFlytTest :
             fom = 1 januar 2023,
             person = person,
         )
-        var åpenBehandlingForbiUnderveis = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom, vissVarighet = true)
+        var åpenBehandlingForbiTilkjentYtelse = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom, vissVarighet = true)
             .løsAvklaringsBehov(
                 AvklarBistandsbehovLøsning(
                     bistandsVurdering = BistandVurderingLøsningDto(
@@ -442,7 +442,7 @@ class AktivitetspliktFlytTest :
         var aktivitetspliktBehandling = dataSource.transaction { connection ->
             assertThat(
                 Aktivitetsplikt11_9RepositoryImpl(connection)
-                    .hentHvisEksisterer(åpenBehandlingForbiUnderveis.id)
+                    .hentHvisEksisterer(åpenBehandlingForbiTilkjentYtelse.id)
             ).isNull()
 
             opprettAktivitetspliktBehandling(
@@ -484,7 +484,7 @@ class AktivitetspliktFlytTest :
             val grunnlagIAktivitetspliktBehandling = Aktivitetsplikt11_9RepositoryImpl(connection)
                 .hentHvisEksisterer(aktivitetspliktBehandling.id)
             val grunnlagIÅpenBehandling = Aktivitetsplikt11_9RepositoryImpl(connection)
-                .hentHvisEksisterer(åpenBehandlingForbiUnderveis.id)
+                .hentHvisEksisterer(åpenBehandlingForbiTilkjentYtelse.id)
 
             assertThat(grunnlagIAktivitetspliktBehandling).isNotNull
             assertThat(grunnlagIÅpenBehandling).isNull()
@@ -510,7 +510,7 @@ class AktivitetspliktFlytTest :
         assertThat(
             effektueringsbehandling.vurderingsbehov()
                 .map { it.type }).containsExactlyInAnyOrder(Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9)
-        assertThat(effektueringsbehandling.forrigeBehandlingId).isEqualTo(åpenBehandlingForbiUnderveis.forrigeBehandlingId)
+        assertThat(effektueringsbehandling.forrigeBehandlingId).isEqualTo(åpenBehandlingForbiTilkjentYtelse.forrigeBehandlingId)
         assertThat(effektueringsbehandling.status()).isEqualTo(Status.AVSLUTTET)
 
         motor.kjørJobber()
@@ -521,7 +521,7 @@ class AktivitetspliktFlytTest :
             val grunnlagIEffektueringsbehandling = Aktivitetsplikt11_9RepositoryImpl(connection)
                 .hentHvisEksisterer(effektueringsbehandling.id)
             val grunnlagIÅpenBehandling = Aktivitetsplikt11_9RepositoryImpl(connection)
-                .hentHvisEksisterer(åpenBehandlingForbiUnderveis.id)
+                .hentHvisEksisterer(åpenBehandlingForbiTilkjentYtelse.id)
 
             assertThat(grunnlagIAktivitetspliktBehandling).isNotNull
             assertThat(grunnlagIEffektueringsbehandling).isEqualTo(grunnlagIAktivitetspliktBehandling)

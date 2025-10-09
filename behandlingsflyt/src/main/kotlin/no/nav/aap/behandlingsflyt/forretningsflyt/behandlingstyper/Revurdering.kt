@@ -360,11 +360,12 @@ object Revurdering : BehandlingType {
                 vurderingsbehovRelevanteForSteg = Vurderingsbehov.alleInklusivGRegulering(),
                 informasjonskrav = listOf(MeldekortInformasjonskrav, Aktivitetsplikt11_7Informasjonskrav)
             )
-            .medSteg(steg = UnderveisSteg, informasjonskrav = listOf(Aktivitetsplikt11_9Informasjonskrav))
+            .medSteg(steg = UnderveisSteg)
             .medSteg(steg = Effektuer11_7Steg)
             .medSteg(
                 steg = BeregnTilkjentYtelseSteg,
-                vurderingsbehovRelevanteForSteg = Vurderingsbehov.alleInklusivGRegulering()
+                vurderingsbehovRelevanteForSteg = Vurderingsbehov.alleInklusivGRegulering(),
+                informasjonskrav = listOf(Aktivitetsplikt11_9Informasjonskrav)
             )
             .medSteg(
                 steg = SimulerUtbetalingSteg,
