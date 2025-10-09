@@ -192,6 +192,16 @@ internal fun Application.server(
         startPDLHendelseKonsument(dataSource, repositoryRegistry)
     }
 
+    monitor.subscribe(ApplicationStopPreparing) { environment ->
+        environment.log.info("ktor forbereder seg på å stoppe.")
+    }
+    monitor.subscribe(ApplicationStopping) { environment ->
+        environment.log.info("ktor stopper nå å ta imot nye requester, og lar pågående requester kjøre frem til timeout.")
+    }
+    monitor.subscribe(ApplicationStopped) { environment ->
+        environment.log.info("ktor har fullført nedstoppingen sin. Eventuelle requester som ikke fullførtes innen timeout ble avbrutt.")
+    }
+
     routing {
         authenticate(AZURE) {
             install(NavIdentInterceptor)
@@ -297,14 +307,9 @@ fun Application.startMotor(
     monitor.subscribe(ApplicationStopPreparing) { environment ->
         // Denne vil vanligvis kjøres i to ulike tråder, både main og KtorShutdownHook
         // Det som kjøres her må derfor støtte at det blir kjørt flere ganger på samme tid
-        environment.log.info("Forbereder stopp av applikasjon, stopper motor.")
         motor.stop(/* TODO AppConfig.stansArbeidTimeout */)
     }
-    monitor.subscribe(ApplicationStopping) { environment ->
-        environment.log.info("Server stopper å ta imot requester...")
-    }
     monitor.subscribe(ApplicationStopped) { environment ->
-        environment.log.info("Server har stoppet helt å prosessere requester")
         try {
             dataSource.close()
         } catch (e: Exception) {
@@ -331,7 +336,7 @@ fun Application.startKabalKonsument(
         t.start()
     }
     monitor.subscribe(ApplicationStopPreparing) { environment ->
-        environment.log.info("Forbereder stopp av applikasjon, lukker KabalKafkaKonsument.")
+        environment.log.info("Lukker KabalKafkaKonsument fordi ktor forbereder å stoppe.")
 
         konsument.lukk()
     }
