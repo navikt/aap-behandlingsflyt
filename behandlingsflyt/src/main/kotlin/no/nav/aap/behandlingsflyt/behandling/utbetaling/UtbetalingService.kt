@@ -29,6 +29,7 @@ import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseDetaljerDto
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseDto
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelsePeriodeDto
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseTrekkDto
+import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -42,6 +43,9 @@ class UtbetalingService(
     private val reduksjon11_9Repository: Reduksjon11_9Repository,
     private val avventUtbetalingService: AvventUtbetalingService,
 ) {
+
+    private val log = LoggerFactory.getLogger(javaClass)
+
     constructor(
         repositoryProvider: RepositoryProvider,
         gatewayProvider: GatewayProvider,
@@ -107,6 +111,9 @@ class UtbetalingService(
                 vedtaksdatoGjeldendeBehandling = vedtakstidspunkt.toLocalDate(),
                 vedtaksdatoForrigeBehandling = vedtakstidspunktFraForrigeBehandling?.toLocalDate()
             )
+
+            log.info("Ny meldeperiode for tilkjent ytelse: $nyMeldeperiode")
+
             TilkjentYtelseDto(
                 saksnummer = saksnummer,
                 behandlingsreferanse = behandlingsreferanse,
@@ -136,6 +143,7 @@ class UtbetalingService(
         vedtaksdatoForrigeBehandling: LocalDate?,
     ): MeldeperiodeDto? {
 
+        log.info("Utleder ny meldeperiode for tilkjent ytelse med vedtaksdato: $vedtaksdatoGjeldendeBehandling")
         val alleredeUtbetaltPeriode = forrigeTilkjentYtelse?.filter {
             it.tilkjent.utbetalingsdato <= vedtaksdatoForrigeBehandling && it.periode.tom <= vedtaksdatoForrigeBehandling
         }?.let {
@@ -146,8 +154,13 @@ class UtbetalingService(
             }
         }
 
+        log.info("Allerede utbetalt periode: $alleredeUtbetaltPeriode")
+
         val perioderSomKanUtbetales =
             tilkjentYtelse.filter { it.tilkjent.utbetalingsdato <= vedtaksdatoGjeldendeBehandling && it.periode.tom <= vedtaksdatoGjeldendeBehandling }
+
+        log.info("Antall perioder som kan utbetales: ${perioderSomKanUtbetales.size}")
+
         val nyePerioderSomKanUtbetales =
             alleredeUtbetaltPeriode?.let { periode -> perioderSomKanUtbetales.filterNot { periode.inneholder(it.periode) } }
                 ?: perioderSomKanUtbetales
