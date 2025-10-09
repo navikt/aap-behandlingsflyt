@@ -35,13 +35,9 @@ data class Tilkjent(
     }
 
     fun dagsatsFor11_9Reduksjon(): Beløp {
-        val justertGraderingUtenomArbeid = `100_PROSENT`.minus(gradering.samordningGradering ?: `0_PROSENT`)
-            .minus(gradering.samordningArbeidsgiverGradering ?: `0_PROSENT`)
-            .minus(gradering.institusjonGradering ?: `0_PROSENT`)
-            .minus(gradering.samordningUføregradering ?: `0_PROSENT`)
         return Beløp(
-            dagsats.multiplisert(justertGraderingUtenomArbeid)
-                .pluss(barnetillegg.multiplisert(justertGraderingUtenomArbeid)).verdi().setScale(0, RoundingMode.HALF_UP)
+            dagsats.multiplisert(gradering.graderingForDagsats11_9Reduksjon())
+                .pluss(barnetillegg.multiplisert(gradering.graderingForDagsats11_9Reduksjon())).verdi().setScale(0, RoundingMode.HALF_UP)
         )
     }
 }
@@ -53,7 +49,13 @@ data class TilkjentGradering(
     val arbeidGradering: Prosent?,
     val samordningUføregradering: Prosent?,
     val samordningArbeidsgiverGradering: Prosent?
-)
+) {
+    fun graderingForDagsats11_9Reduksjon() = `100_PROSENT`
+        .minus(samordningGradering ?: `0_PROSENT`)
+        .minus(samordningArbeidsgiverGradering ?: `0_PROSENT`)
+        .minus(institusjonGradering ?: `0_PROSENT`)
+        .minus(samordningUføregradering ?: `0_PROSENT`)
+}
 
 data class TilkjentGUnit(val dagsats: GUnit, val gradering: TilkjentGradering, val utbetalingsdato: LocalDate) {
     private fun redusertDagsats(): GUnit {
