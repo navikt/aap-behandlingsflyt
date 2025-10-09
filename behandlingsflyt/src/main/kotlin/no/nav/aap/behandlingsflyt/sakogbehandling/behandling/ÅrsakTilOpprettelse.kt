@@ -27,6 +27,4 @@ enum class ÅrsakTilOpprettelse {
     AKTIVITETSPLIKT, // 11-7
     AKTIVITETSPLIKT_11_9,
 
-    // Registeroppdatering
-    OPPDATERING_FRA_PDL
 }

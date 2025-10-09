@@ -56,12 +56,9 @@ class PdlHendelseKafkaKonsument(
             val sakRepository: SakRepository = repositoryProvider.provide()
             val personRepository: PersonRepository = repositoryProvider.provide()
             val hendelseService = MottattHendelseService(repositoryProvider)
-            log.info("Leser personhendelse med opplysningtype ${personHendelse.personidenter}")
-
             if (personHendelse.opplysningstype == Opplysningstype.DOEDSFALL_V1 && personHendelse.endringstype == Endringstype.OPPRETTET) {
                 log.info("Håndterer hendelse med ${personHendelse.opplysningstype} og ${personHendelse.endringstype}")
                 personHendelse.personidenter.firstOrNull()?.let { ident ->
-                    secureLogger.info("Registrert dødsfall på bruker med ident: $ident") // TODO: Fjerne før prodsetting
                     val person = personRepository.finn(Ident(ident)) ?: return@let
                     sakRepository.finnSakerFor(person).forEach { sak ->
                         log.info("Registrerer mottatt hendelse på ${sak.saksnummer}")
