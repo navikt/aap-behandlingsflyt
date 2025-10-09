@@ -1,10 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.gosysoppgave
 
 import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalDateTime.now
-import java.time.ZoneId.systemDefault
-import java.util.*
 
 data class OpprettOppgaveRequest(
     val oppgavetype: String, // se kodeverk
@@ -22,13 +18,6 @@ data class OpprettOppgaveRequest(
     val behandlingstype: String? = null, // se kodeverk
     val fristFerdigstillelse: LocalDate? = null
 )
-
-fun finnStandardOppgavefrist(nå: LocalDateTime = now()): LocalDate {
-    return with(nå) {
-        now().atZone(systemDefault()).toLocalDate()
-    }
-}
-
 
 typealias NavEnhet = String
 

@@ -46,24 +46,6 @@ class Medlemskapvilkåret(
         leggTilVurdering(rettighetsPeriode, grunnlag, vurderingsResultat, vurdertManuelt)
     }
 
-    fun vurderOverstyrt(grunnlag: MedlemskapLovvalgGrunnlag) {
-        val manuellVurderingForLovvalgMedlemskap = grunnlag.medlemskapArbeidInntektGrunnlag?.manuellVurdering
-        val lovvalgsLand = manuellVurderingForLovvalgMedlemskap?.lovvalgVedSøknadsTidspunkt?.lovvalgsEØSLand
-        val varMedlemIFolketrygd = manuellVurderingForLovvalgMedlemskap?.medlemskapVedSøknadsTidspunkt?.varMedlemIFolketrygd
-
-        val annetLandMedAvtaleIEØS = lovvalgsLand != null && lovvalgsLand != EØSLand.NOR && lovvalgsLand in enumValues<EØSLand>().map { it }
-
-        val vurderingsResultat = if (annetLandMedAvtaleIEØS) {
-            VurderingsResultat(Utfall.IKKE_OPPFYLT, Avslagsårsak.NORGE_IKKE_KOMPETENT_STAT, null)
-        } else if (varMedlemIFolketrygd != true) {
-            VurderingsResultat(Utfall.IKKE_OPPFYLT, Avslagsårsak.IKKE_MEDLEM, null)
-        } else {
-            VurderingsResultat(Utfall.OPPFYLT, null, null)
-        }
-
-        leggTilVurdering(rettighetsPeriode, grunnlag, vurderingsResultat, true)
-    }
-
     private fun leggTilVurdering(
         periode: Periode,
         grunnlag: MedlemskapLovvalgGrunnlag,
