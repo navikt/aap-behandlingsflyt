@@ -100,7 +100,6 @@ class BeregnTilkjentYtelseSteg private constructor(
             samordningArbeidsgiver
         ).beregnTilkjentYtelse()
 
-        // TODO: Reelle data
         val aktivitetsplikt11_9Grunnlag = aktivitetsplikt11_9repository.hentHvisEksisterer(kontekst.behandlingId)
         val reduksjoner11_9 = (aktivitetsplikt11_9Grunnlag?.gjeldendeVurderinger() ?: emptyList())
             .map { vurdering -> tilReduksjon11_9(vurdering, beregnetTilkjentYtelse) }
