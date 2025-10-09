@@ -7,13 +7,10 @@ import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
-import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
 
 class OppholdskravGrunnlagRepositoryImpl(private val connection: DBConnection) : OppholdskravGrunnlagRepository {
-
-    private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<OppholdskravGrunnlagRepository> {
         override fun konstruer(connection: DBConnection): OppholdskravGrunnlagRepository {

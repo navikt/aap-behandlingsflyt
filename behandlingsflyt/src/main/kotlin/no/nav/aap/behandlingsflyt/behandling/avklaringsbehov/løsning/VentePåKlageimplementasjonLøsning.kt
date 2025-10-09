@@ -15,7 +15,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class VentePåKlageimplementasjonLøsning(
     @param:JsonProperty("behovstype", required = true, defaultValue = VENTE_PÅ_KLAGE_IMPLEMENTASJON_KODE)
     val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5023`
-) : AvklaringsbehovLøsning {
+) : EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return LøsningsResultat(
             begrunnelse = "",

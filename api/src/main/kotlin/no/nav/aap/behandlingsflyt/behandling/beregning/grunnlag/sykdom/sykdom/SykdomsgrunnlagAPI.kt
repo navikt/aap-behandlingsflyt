@@ -60,9 +60,10 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
                     val historikkSykdomsvurderinger =
                         sykdomRepository.hentHistoriskeSykdomsvurderinger(behandling.sakId, behandling.id)
 
-                    val vedtatteSykdomsvurderinger = behandling.forrigeBehandlingId
+                    val vedtatteSykdomGrunnlag = behandling.forrigeBehandlingId
                         ?.let { sykdomRepository.hentHvisEksisterer(it) }
-                        ?.sykdomsvurderinger.orEmpty()
+
+                    val vedtatteSykdomsvurderinger = vedtatteSykdomGrunnlag?.sykdomsvurderinger.orEmpty()
 
                     val vedtatteSykdomsvurderingerIder = vedtatteSykdomsvurderinger.map { it.id }
                     val sykdomsvurderinger = nåTilstand.filterNot { it.id in vedtatteSykdomsvurderingerIder }
@@ -73,6 +74,7 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
                             innhentedeYrkesskader = innhentedeYrkesskader,
                         ),
                         skalVurdereYrkesskade = innhentedeYrkesskader.isNotEmpty(),
+                        erÅrsakssammenhengYrkesskade = vedtatteSykdomGrunnlag?.yrkesskadevurdering?.erÅrsakssammenheng ?: false,
                         sykdomsvurderinger = sykdomsvurderinger
                             .sortedBy { it.vurderingenGjelderFra ?: LocalDate.MIN }
                             .map { it.toDto(ansattInfoService) },

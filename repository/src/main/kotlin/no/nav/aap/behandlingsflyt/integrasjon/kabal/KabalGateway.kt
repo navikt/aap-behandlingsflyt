@@ -143,11 +143,6 @@ data class OversendtSak(
     val fagsystem: Fagsystem,
 )
 
-data class OversendtDokumentReferanse(
-    val type: MottakDokumentType,
-    val journalpostId: String,
-)
-
 data class OversendtProsessfullmektigV4(
     val id: OversendtPartId?,
     val navn: String?,

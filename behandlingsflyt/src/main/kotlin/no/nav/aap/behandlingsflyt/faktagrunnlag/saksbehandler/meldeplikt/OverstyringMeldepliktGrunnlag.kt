@@ -58,10 +58,6 @@ enum class MeldepliktOverstyringStatus(val value: String) {
     RIMELIG_GRUNN("RIMELIG_GRUNN"),
     IKKE_MELDT_SEG("IKKE_MELDT_SEG"),
     HAR_MELDT_SEG("HAR_MELDT_SEG");
-
-    fun toBoolean(): Boolean {
-        return this != IKKE_MELDT_SEG
-    }
 }
 
 data class OverstyringMeldepliktVurderingPeriode(

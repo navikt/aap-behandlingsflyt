@@ -7,5 +7,5 @@ import java.time.LocalDate
 class SykepengerErstatningFaktagrunnlag(
     val vurderingsdato: LocalDate,
     val sisteDagMedMuligYtelse: LocalDate,
-    val vurdering: SykepengerVurdering
+    val vurderinger: List<SykepengerVurdering>
 ) : Faktagrunnlag

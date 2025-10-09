@@ -8,6 +8,7 @@ import java.time.LocalDate
 data class SykdomGrunnlagResponse(
     val harTilgangTilÅSaksbehandle: Boolean,
     val skalVurdereYrkesskade: Boolean,
+    val erÅrsakssammenhengYrkesskade: Boolean,
     val opplysninger: InnhentetSykdomsOpplysninger,
     val sykdomsvurderinger: List<SykdomsvurderingResponse>,
     val historikkSykdomsvurderinger: List<SykdomsvurderingResponse>,

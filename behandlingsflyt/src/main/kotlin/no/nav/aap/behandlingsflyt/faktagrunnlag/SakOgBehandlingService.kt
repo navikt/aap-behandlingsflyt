@@ -59,7 +59,7 @@ class SakOgBehandlingService(
          * Behandlingene er i praksis en singly-linked list. Pekerne går "feil vei",
          * så vi regner ut bakover-pekerne.
         **/
-        val ytelsesbehandlinger = behandlingRepository.hentAlleFor(sakId,TypeBehandling.ytelseBehandlingstyper())
+        val ytelsesbehandlinger = behandlingRepository.hentAlleFor(sakId, TypeBehandling.ytelseBehandlingstyper())
         val nesteId = mutableMapOf<BehandlingId, BehandlingId>()
         for (behandling in ytelsesbehandlinger) {
             // Hopp over hvis behandlingen er avbrutt
@@ -84,7 +84,8 @@ class SakOgBehandlingService(
 
     fun finnBehandlingMedSisteFattedeVedtak(sakId: SakId): BehandlingMedVedtak? {
         val sak = sakRepository.hent(sakId)
-        val alleBehandlingerMedVedtak = behandlingRepository.hentAlleMedVedtakFor(sak.person, TypeBehandling.ytelseBehandlingstyper())
+        val alleBehandlingerMedVedtak =
+            behandlingRepository.hentAlleMedVedtakFor(sak.person, TypeBehandling.ytelseBehandlingstyper())
         return alleBehandlingerMedVedtak.maxByOrNull { it.vedtakstidspunkt }
     }
 
@@ -120,7 +121,8 @@ class SakOgBehandlingService(
         Vurderingsbehov.FRITAK_MELDEPLIKT,
         Vurderingsbehov.MOTTATT_MELDEKORT,
         Vurderingsbehov.FASTSATT_PERIODE_PASSERT,
-        Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT
+        Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT,
+        Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9
     )
 
     fun finnEllerOpprettBehandling(sakId: SakId, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak): OpprettetBehandling {
@@ -128,9 +130,6 @@ class SakOgBehandlingService(
         val vurderingsbehov = vurderingsbehovOgÅrsak.vurderingsbehov
         val fasttrackkandidat = vurderingsbehov.isNotEmpty()
                 && vurderingsbehov.all { it.type in fasttrackKandidater }
-                && (vurderingsbehov.none { it.type == Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT } || unleashGateway.isEnabled(
-            BehandlingsflytFeature.Aktivitetsplikt11_7
-        ))
 
         val mottokKabalHendelse = vurderingsbehov.any { it.type == Vurderingsbehov.MOTTATT_KABAL_HENDELSE }
         val mottokKlage = vurderingsbehov.any { it.type == Vurderingsbehov.MOTATT_KLAGE }
@@ -202,10 +201,11 @@ class SakOgBehandlingService(
             else -> throw UgyldigForespørselException("Kan kun opprette behandling for aktivitetsplikt")
         }
 
-        val sisteYtelseBehandling = finnSisteYtelsesbehandlingFor(sakId)
+        val førstegangsbehandling = behandlingRepository.finnFørstegangsbehandling(sakId)
+            ?: throw UgyldigForespørselException("Kan ikke opprette aktiviterspliktbehandling uten en førstegangsbehandling")
 
-        if (sisteYtelseBehandling == null) {
-            throw UgyldigForespørselException("Kan ikke opprette aktiviterspliktbehandling uten en ytelsebehandling")
+        if (!førstegangsbehandling.status().erAvsluttet()) {
+            throw UgyldigForespørselException("Førstegangsbehandling må være avsluttet før man kan opprette en aktivitetspliktbehandling")
         }
 
         val aktivitetspliktBehandlinger = behandlingRepository.hentAlleFor(

@@ -87,7 +87,10 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
      * Denne må brukes med omhu, da siste opprettede behandling ikke nødvendigvis er siste behandling
      * i den lenkede listen av behandlinger. Ref. fasttrack/atomære behandlinger
      */
-    override fun finnSisteOpprettedeBehandlingFor(sakId: SakId, behandlingstypeFilter: List<TypeBehandling>): Behandling? {
+    override fun finnSisteOpprettedeBehandlingFor(
+        sakId: SakId,
+        behandlingstypeFilter: List<TypeBehandling>
+    ): Behandling? {
         val query = """
             SELECT * FROM BEHANDLING WHERE sak_id = ? AND type = ANY(?::text[]) ORDER BY opprettet_tid DESC LIMIT 1
             """.trimIndent()
@@ -210,7 +213,12 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                     årsak = vurderingsbehovOgÅrsak.first().årsak,
                     beskrivelse = vurderingsbehovOgÅrsak.first().beskrivelse,
                     opprettet = vurderingsbehovOgÅrsak.first().opprettet,
-                    vurderingsbehov = vurderingsbehovOgÅrsak.map { VurderingsbehovMedPeriode(it.vurderingsbehovType, it.vurderingsbehovPeriode) }
+                    vurderingsbehov = vurderingsbehovOgÅrsak.map {
+                        VurderingsbehovMedPeriode(
+                            it.vurderingsbehovType,
+                            it.vurderingsbehovPeriode
+                        )
+                    }
                 )
             }
     }
@@ -418,7 +426,26 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         }
     }
 
-    override fun oppdaterVurderingsbehovOgÅrsak(behandling: Behandling, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak) {
+    override fun finnFørstegangsbehandling(sakId: SakId): Behandling? {
+        val query = """
+            SELECT * FROM BEHANDLING WHERE sak_id = ? AND type = ?
+            """.trimIndent()
+
+        return connection.queryFirst(query) {
+            setParams {
+                setLong(1, sakId.toLong())
+                setString(2, TypeBehandling.Førstegangsbehandling.identifikator())
+            }
+            setRowMapper {
+                mapBehandling(it)
+            }
+        }
+    }
+
+    override fun oppdaterVurderingsbehovOgÅrsak(
+        behandling: Behandling,
+        vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak
+    ) {
         val årsakQuery = """
             INSERT INTO behandling_aarsak(behandling_id, aarsak, begrunnelse, opprettet_tid)
             VALUES (?, ?, ?, ?)

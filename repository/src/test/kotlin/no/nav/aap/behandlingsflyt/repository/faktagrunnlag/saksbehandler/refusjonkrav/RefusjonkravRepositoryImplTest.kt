@@ -26,7 +26,6 @@ import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
@@ -168,32 +167,9 @@ class RefusjonkravRepositoryImplTest {
             refusjonskravRepo.lagre(førstegangsbehandling.sakId, revurdering.id, listOf(refusjonkravVurdering3))
 
             val historikk = refusjonskravRepo.hentHistoriskeVurderinger(revurdering.sakId, revurdering.id)
-            assertEquals(listOf(refusjonkravVurdering1), historikk)
-        }
-    }
-
-    private companion object {
-        fun assertEquals(expected: List<RefusjonkravVurdering>, actual: List<RefusjonkravVurdering>) {
-            Assertions.assertEquals(expected.size, actual.size)
-            for ((expected, actual) in expected.zip(actual)) {
-                assertEquals(expected, actual)
-            }
-        }
-
-        fun assertEquals(expected: RefusjonkravVurdering, actual: RefusjonkravVurdering) {
-            Assertions.assertEquals(expected.harKrav, actual.harKrav)
-            if (expected.fom != null && actual.fom != null) {
-                Assertions.assertEquals(expected.fom, actual.fom)
-            }
-
-            if (expected.tom != null && actual.tom != null) {
-                Assertions.assertEquals(expected.tom, actual.tom)
-            }
-
-            if (expected.navKontor != null && actual.navKontor != null) {
-                Assertions.assertEquals(expected.navKontor, actual.navKontor)
-            }
-            Assertions.assertEquals(expected.vurdertAv, actual.vurdertAv)
+            assertThat(historikk).usingRecursiveComparison()
+                .ignoringFields("id", "opprettetTid")
+                .isEqualTo(listOf(refusjonkravVurdering1))
         }
     }
 

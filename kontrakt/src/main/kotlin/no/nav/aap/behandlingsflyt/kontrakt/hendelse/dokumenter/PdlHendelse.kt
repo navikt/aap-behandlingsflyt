@@ -64,13 +64,13 @@ public data class PdlHendelseV0(
 ) : PdlHendelse
 
 public fun tilPdlHendelseV0(): PdlHendelse = PdlHendelseV0(
-    innsendingstype = InnsendingType.PDL_HENDELSE
+    innsendingstype = InnsendingType.PDL_HENDELSE_DODSFALL_BRUKER
 )
 
-public fun PdlPersonHendelse.tilInnsending(saksnummer: Saksnummer): Innsending = Innsending(
+public fun PdlPersonHendelse.tilInnsendingDødsfallBruker(saksnummer: Saksnummer): Innsending = Innsending(
     saksnummer = saksnummer,
     referanse = InnsendingReferanse(PdlHendelseId(value = this.hendelseId)),
-    type = InnsendingType.PDL_HENDELSE,
+    type = InnsendingType.PDL_HENDELSE_DODSFALL_BRUKER,
     kanal = Kanal.DIGITAL,
     mottattTidspunkt = LocalDateTime.now(),
     melding = tilPdlHendelseV0()

@@ -21,7 +21,7 @@ class FastsettBeregningstidspunktLøsning(
         required = true,
         defaultValue = FASTSETT_BEREGNINGSTIDSPUNKT_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5008`
-) : AvklaringsbehovLøsning {
+) : EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return FastsettBeregningstidspunktLøser(repositoryProvider).løs(kontekst, this)
     }

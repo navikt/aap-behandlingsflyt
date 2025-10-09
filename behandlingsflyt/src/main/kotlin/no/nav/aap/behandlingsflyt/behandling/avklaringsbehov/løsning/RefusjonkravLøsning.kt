@@ -24,7 +24,7 @@ class RefusjonkravLøsning(
         required = true,
         defaultValue = REFUSJON_KRAV
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5026`
-) : AvklaringsbehovLøsning {
+) : EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return RefusjonkravLøser(repositoryProvider).løs(kontekst, this)
     }

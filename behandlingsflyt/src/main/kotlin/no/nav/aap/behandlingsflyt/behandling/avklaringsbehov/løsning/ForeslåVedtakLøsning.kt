@@ -17,7 +17,7 @@ class ForeslåVedtakLøsning(
         required = true,
         defaultValue = FORESLÅ_VEDTAK_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5098`
-) : AvklaringsbehovLøsning {
+) : EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return ForeslåVedtakLøser(repositoryProvider).løs(kontekst, this)
     }
