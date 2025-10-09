@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.utbetal.tilkjentytelse.MeldeperiodeDto
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseAvventDto
@@ -30,6 +31,7 @@ import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseDto
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelsePeriodeDto
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseTrekkDto
 import org.slf4j.LoggerFactory
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -145,7 +147,7 @@ class UtbetalingService(
 
         log.info("Utleder ny meldeperiode for tilkjent ytelse med vedtaksdato: $vedtaksdatoGjeldendeBehandling")
         val alleredeUtbetaltPeriode = forrigeTilkjentYtelse?.filter {
-            it.tilkjent.utbetalingsdato <= vedtaksdatoForrigeBehandling && it.periode.tom <= vedtaksdatoForrigeBehandling
+            it.tilkjent.utbetalingsdato <= vedtaksdatoForrigeBehandling && it.periode.tom <= vedtaksdatoForrigeBehandling && it.tilkjent.redusertDagsats().verdi() > BigDecimal.ZERO
         }?.let {
             if (it.isNotEmpty()) {
                 it.tilTidslinje().helePerioden()
@@ -157,7 +159,7 @@ class UtbetalingService(
         log.info("Allerede utbetalt periode: $alleredeUtbetaltPeriode")
 
         val perioderSomKanUtbetales =
-            tilkjentYtelse.filter { it.tilkjent.utbetalingsdato <= vedtaksdatoGjeldendeBehandling && it.periode.tom <= vedtaksdatoGjeldendeBehandling }
+            tilkjentYtelse.filter { it.tilkjent.utbetalingsdato <= vedtaksdatoGjeldendeBehandling && it.periode.tom <= vedtaksdatoGjeldendeBehandling && it.tilkjent.redusertDagsats().verdi() > BigDecimal.ZERO }
 
         log.info("Antall perioder som kan utbetales: ${perioderSomKanUtbetales.size}")
 
