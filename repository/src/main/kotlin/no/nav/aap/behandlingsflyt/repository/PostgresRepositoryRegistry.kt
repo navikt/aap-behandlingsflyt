@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.brev.bestilling.BrevbestillingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.mellomlagring.MellomlagretVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.oppfølgingsbehandling.OppfølgingsBehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.Reduksjon11_9RepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.vedtak.VedtakRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.vedtak.samid.SamIdRepositoryImpl
@@ -141,4 +142,5 @@ val postgresRepositoryRegistry = RepositoryRegistry()
     .register<OppholdskravGrunnlagRepositoryImpl>()
     .register<AvbrytRevurderingRepositoryImpl>()
     .register<Aktivitetsplikt11_9RepositoryImpl>()
+    .register<Reduksjon11_9RepositoryImpl>()
 

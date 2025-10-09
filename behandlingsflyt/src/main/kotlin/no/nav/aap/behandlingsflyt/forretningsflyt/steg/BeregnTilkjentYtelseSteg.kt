@@ -1,10 +1,17 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelseService
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_9Grunnlag
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Reduksjon11_9
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Reduksjon11_9Repository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_9Repository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_9Vurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Grunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningGrunnlag
@@ -21,6 +28,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
@@ -35,7 +44,10 @@ class BeregnTilkjentYtelseSteg private constructor(
     private val samordningUføreRepository: SamordningUføreRepository,
     private val samordningArbeidsgiverRepository: SamordningArbeidsgiverRepository,
     private val tidligereVurderinger: TidligereVurderinger,
-) : BehandlingSteg {
+    private val reduksjon11_9Repository: Reduksjon11_9Repository,
+    private val aktivitetsplikt11_9repository: Aktivitetsplikt11_9Repository,
+
+    ) : BehandlingSteg {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
         underveisRepository = repositoryProvider.provide(),
@@ -47,6 +59,8 @@ class BeregnTilkjentYtelseSteg private constructor(
         samordningUføreRepository = repositoryProvider.provide(),
         samordningArbeidsgiverRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        reduksjon11_9Repository = repositoryProvider.provide(),
+        aktivitetsplikt11_9repository = repositoryProvider.provide(),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -85,12 +99,41 @@ class BeregnTilkjentYtelseSteg private constructor(
             samordningUføre,
             samordningArbeidsgiver
         ).beregnTilkjentYtelse()
+
+        val aktivitetsplikt11_9Grunnlag = aktivitetsplikt11_9repository.hentHvisEksisterer(kontekst.behandlingId)
+        val reduksjoner11_9 = (aktivitetsplikt11_9Grunnlag?.gjeldendeVurderinger() ?: emptyList())
+            .map { vurdering -> tilReduksjon11_9(vurdering, beregnetTilkjentYtelse) }
+
         tilkjentYtelseRepository.lagre(
             behandlingId = kontekst.behandlingId,
             tilkjent = beregnetTilkjentYtelse.segmenter().map { TilkjentYtelsePeriode(it.periode, it.verdi) })
         log.info("Beregnet tilkjent ytelse: $beregnetTilkjentYtelse")
 
+        log.info("Lagrer ned reduksjoner pga aktivitetsplikt 11-9: [${reduksjoner11_9.size}]")
+        reduksjon11_9Repository.lagre(
+            behandlingId = kontekst.behandlingId,
+            reduksjoner = reduksjoner11_9
+        )
         return Fullført
+    }
+
+    /**
+     * Dersom en vurdering er endret fra et brudd uten rimelig grunn til å ha rimelig grunn må disse tas
+     * vare på og oversendes til aap-utbetal for å kunne "nulle ut" riktig. Brudd må følgelig ikke slettes etter
+     * å ha blitt vedtatt.
+     */
+    private fun tilReduksjon11_9(
+        vurdering: Aktivitetsplikt11_9Vurdering,
+        beregnetTilkjentYtelse: Tidslinje<Tilkjent>
+    ): Reduksjon11_9 {
+        return if (vurdering.grunn == Grunn.RIMELIG_GRUNN) {
+            Reduksjon11_9(dato = vurdering.dato, dagsats = Beløp(0))
+        } else {
+            val dagsatsSomSkalTrekkes =
+                beregnetTilkjentYtelse.segment(vurdering.dato)?.verdi?.dagsatsFor11_9Reduksjon()
+                    ?: error("Fant ikke tilkjent ytelse for 11-9-trekk på aktivitetsplikt-dato ${vurdering.dato}")
+            Reduksjon11_9(dato = vurdering.dato, dagsats = dagsatsSomSkalTrekkes)
+        }
     }
 
 
