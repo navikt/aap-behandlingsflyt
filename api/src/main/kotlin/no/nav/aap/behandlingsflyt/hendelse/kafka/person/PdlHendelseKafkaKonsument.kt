@@ -61,6 +61,7 @@ class PdlHendelseKafkaKonsument(
                 personHendelse.personidenter.firstOrNull()?.let { ident ->
                     secureLogger.info("Registrert dødsfall på bruker med ident: $ident")
                     val person = personRepository.finn(Ident(ident)) ?: return@let
+                    secureLogger.info("Kelvin: funnet person med ${ident}  ${person}")
                     sakRepository.finnSakerFor(person).forEach { sak ->
                         log.info("Registrerer mottatt hendelse på ${sak.saksnummer}")
                         hendelseService.registrerMottattHendelse(
