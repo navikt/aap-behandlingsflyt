@@ -28,6 +28,7 @@ import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.utbetal.tilkjentytelse.MeldeperiodeDto
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.util.*
@@ -40,16 +41,28 @@ class UtbetalingServiceTest {
     val andreTilkjentYtelsePeriode = Periode(LocalDate.of(2025, 1, 14), LocalDate.of(2025, 1, 28))
     val tredjeTilkjentYtelsePeriode = Periode(LocalDate.of(2025, 1, 29), LocalDate.of(2025, 2, 9))
 
+    val sakRepository = mockk<SakRepository>()
+    val behandlingRepository = mockk<BehandlingRepository>()
+    val avventUtbetalingService = mockk<AvventUtbetalingService>(relaxed = true)
+    val tilkjentYtelseRepository = mockk<TilkjentYtelseRepository>()
+    val avklaringsbehovRepository = mockk<AvklaringsbehovRepository>(relaxed = true)
+    val vedtakRepository = mockk<VedtakRepository>()
+    val underveisRepository = mockk<UnderveisRepository>()
+    val reduksjon11_9Repository = mockk<Reduksjon11_9Repository>(relaxed = true)
+
+    val utbetalingService = UtbetalingService(
+        sakRepository = sakRepository,
+        behandlingRepository = behandlingRepository,
+        avventUtbetalingService = avventUtbetalingService,
+        tilkjentYtelseRepository = tilkjentYtelseRepository,
+        avklaringsbehovRepository = avklaringsbehovRepository,
+        vedtakRepository = vedtakRepository,
+        underveisRepository = underveisRepository,
+        reduksjon11_9Repository = reduksjon11_9Repository
+    )
+
     @Test
-    fun `skal utlede nye meldeperioder i tilkjent ytelse basert på hva som er utbetalt tidligere`() {
-        val sakRepository = mockk<SakRepository>()
-        val behandlingRepository = mockk<BehandlingRepository>()
-        val avventUtbetalingService = mockk<AvventUtbetalingService>(relaxed = true)
-        val tilkjentYtelseRepository = mockk<TilkjentYtelseRepository>()
-        val avklaringsbehovRepository = mockk<AvklaringsbehovRepository>(relaxed = true)
-        val vedtakRepository = mockk<VedtakRepository>()
-        val underveisRepository = mockk<UnderveisRepository>()
-        val reduksjon11_9Repository = mockk<Reduksjon11_9Repository>(relaxed = true)
+    fun `skal ha nye meldeperioder fra revurderingens nye tilkjente ytelsesperioder når førstegangsbehandlingen sine perioder allerede er utbetalt`() {
 
         every { sakRepository.hent(any<SakId>()) } returns sak
         every { behandlingRepository.hent(førstegangsbehandling.id) } returns førstegangsbehandling
@@ -69,17 +82,6 @@ class UtbetalingServiceTest {
         every { tilkjentYtelseRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns tilkjentYtelseForFørstegangsbehandling()
         every { tilkjentYtelseRepository.hentHvisEksisterer(revurdering.id) } returns tilkjentYtelseForRevurdering()
 
-        val utbetalingService = UtbetalingService(
-            sakRepository = sakRepository,
-            behandlingRepository = behandlingRepository,
-            avventUtbetalingService = avventUtbetalingService,
-            tilkjentYtelseRepository = tilkjentYtelseRepository,
-            avklaringsbehovRepository = avklaringsbehovRepository,
-            vedtakRepository = vedtakRepository,
-            underveisRepository = underveisRepository,
-            reduksjon11_9Repository = reduksjon11_9Repository
-        )
-
         val tilkjentYtelseDtoFørstegangsbehandling = utbetalingService.lagTilkjentYtelseForUtbetaling(sak.id, førstegangsbehandling.id)
         assertThat(tilkjentYtelseDtoFørstegangsbehandling).isNotNull
         assertThat(tilkjentYtelseDtoFørstegangsbehandling?.nyMeldeperiode).isNotNull
@@ -89,6 +91,38 @@ class UtbetalingServiceTest {
         assertThat(tilkjentYtelseDtoRevurdering).isNotNull
         assertThat(tilkjentYtelseDtoRevurdering?.nyMeldeperiode).isNotNull
         assertThat(tilkjentYtelseDtoRevurdering?.nyMeldeperiode).isEqualTo(MeldeperiodeDto(tredjeTilkjentYtelsePeriode.fom, tredjeTilkjentYtelsePeriode.tom))
+    }
+
+    @Test
+    fun `alle perioder meldeperioder i tilkjent ytelse er nye dersom førstegangsbehandlingen ikke er utbetalt tidligere`() {
+
+        every { sakRepository.hent(any<SakId>()) } returns sak
+        every { behandlingRepository.hent(førstegangsbehandling.id) } returns førstegangsbehandling
+        every { behandlingRepository.hent(revurdering.id) } returns revurdering
+        every { behandlingRepository.hentAlleFor(any<SakId>()) } returns emptyList()
+
+        every { vedtakRepository.hent(førstegangsbehandling.id) } returns Vedtak(
+            førstegangsbehandling.id,
+            førsteTilkjentYtelsePeriode.tom.plusDays(1).atStartOfDay(), søknadsDato
+        )
+        every { vedtakRepository.hent(revurdering.id) } returns Vedtak(
+            revurdering.id,
+            tredjeTilkjentYtelsePeriode.tom.plusDays(1).atStartOfDay(),
+            søknadsDato
+        )
+
+        every { tilkjentYtelseRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns tilkjentYtelseForFørstegangsbehandling()
+        every { tilkjentYtelseRepository.hentHvisEksisterer(revurdering.id) } returns tilkjentYtelseForRevurdering()
+
+
+        val tilkjentYtelseDtoFørstegangsbehandling = utbetalingService.lagTilkjentYtelseForUtbetaling(sak.id, førstegangsbehandling.id)
+        assertThat(tilkjentYtelseDtoFørstegangsbehandling).isNotNull
+        assertThat(tilkjentYtelseDtoFørstegangsbehandling?.nyMeldeperiode).isNull()
+
+        val tilkjentYtelseDtoRevurdering = utbetalingService.lagTilkjentYtelseForUtbetaling(sak.id, revurdering.id)
+        assertThat(tilkjentYtelseDtoRevurdering).isNotNull
+        assertThat(tilkjentYtelseDtoRevurdering?.nyMeldeperiode).isNotNull
+        assertThat(tilkjentYtelseDtoRevurdering?.nyMeldeperiode).isEqualTo(MeldeperiodeDto(førsteTilkjentYtelsePeriode.fom, tredjeTilkjentYtelsePeriode.tom))
 
 
     }

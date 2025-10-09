@@ -21,7 +21,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.utbetal.tilkjentytelse.MeldeperiodeDto
@@ -97,7 +96,8 @@ class UtbetalingService(
             } else {
                 vedtakRepository.hent(behandlingId)?.vedtakstidspunkt ?: error("Fant ikke vedtak")
             }
-            val vedtakstidspunktFraForrigeBehandling = forrigeBehandling?.id?.let { vedtakRepository.hent(it)?.vedtakstidspunkt }
+            val vedtakstidspunktFraForrigeBehandling =
+                forrigeBehandling?.id?.let { vedtakRepository.hent(it)?.vedtakstidspunkt }
             val avventUtbetaling = utledAvventUtbetaling(tilkjentYtelse, sakId, behandlingId)
             val reduksjoner = reduksjon11_9Repository.hent(behandlingId)
 
@@ -138,10 +138,19 @@ class UtbetalingService(
 
         val alleredeUtbetaltPeriode = forrigeTilkjentYtelse?.filter {
             it.tilkjent.utbetalingsdato <= vedtaksdatoForrigeBehandling && it.periode.tom <= vedtaksdatoForrigeBehandling
-        }?.tilTidslinje()?.helePerioden()
+        }?.let {
+            if (it.isNotEmpty()) {
+                it.tilTidslinje().helePerioden()
+            } else {
+                null
+            }
+        }
 
-        val perioderSomKanUtbetales = tilkjentYtelse.filter { it.tilkjent.utbetalingsdato <= vedtaksdatoGjeldendeBehandling && it.periode.tom <= vedtaksdatoGjeldendeBehandling }
-        val nyePerioderSomKanUtbetales = alleredeUtbetaltPeriode?.let { periode -> perioderSomKanUtbetales.filterNot { periode.inneholder(it.periode)}} ?: perioderSomKanUtbetales
+        val perioderSomKanUtbetales =
+            tilkjentYtelse.filter { it.tilkjent.utbetalingsdato <= vedtaksdatoGjeldendeBehandling && it.periode.tom <= vedtaksdatoGjeldendeBehandling }
+        val nyePerioderSomKanUtbetales =
+            alleredeUtbetaltPeriode?.let { periode -> perioderSomKanUtbetales.filterNot { periode.inneholder(it.periode) } }
+                ?: perioderSomKanUtbetales
 
         return if (nyePerioderSomKanUtbetales.isNotEmpty()) {
             MeldeperiodeDto(
