@@ -706,12 +706,12 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
 
     @JvmName("løsSykdomExt")
     protected fun Behandling.løsSykdom(
-        vurderingGjelderFra: LocalDate? = null,
+        gjelderFra: LocalDate? = null,
         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean? = null
     ): Behandling {
         return løsSykdom(
             behandling = this,
-            vurderingGjelderFra = vurderingGjelderFra,
+            vurderingGjelderFra = gjelderFra,
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense
         )
     }

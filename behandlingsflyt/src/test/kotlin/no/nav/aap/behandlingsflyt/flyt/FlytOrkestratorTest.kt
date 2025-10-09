@@ -1190,7 +1190,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         val revurdering = sak.opprettManuellRevurdering(
             listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
         )
-            .løsSykdom(vurderingGjelderFra = LocalDate.now().plusMonths(1))
+            .løsSykdom(gjelderFra = LocalDate.now().plusMonths(1))
             .løsBistand()
             .løsSykdomsvurderingBrev()
             .medKontekst {
