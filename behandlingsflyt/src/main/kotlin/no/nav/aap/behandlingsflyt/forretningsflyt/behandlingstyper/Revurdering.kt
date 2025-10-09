@@ -6,7 +6,8 @@ import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.VurderRettighetsp
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingInformasjonskrav
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktInformasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Aktivitetsplikt11_7Informasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Aktivitetsplikt11_9Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.søknad.SøknadInformasjonskrav
@@ -116,7 +117,11 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = VurderSykdomSteg,
                 // UføreService trengs her for å trigge ytterligere nedsatt arbeidsevne-vurdering
-                informasjonskrav = listOf(YrkesskadeInformasjonskrav, LegeerklæringInformasjonskrav, UføreInformasjonskrav),
+                informasjonskrav = listOf(
+                    YrkesskadeInformasjonskrav,
+                    LegeerklæringInformasjonskrav,
+                    UføreInformasjonskrav
+                ),
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
                     Vurderingsbehov.MOTTATT_DIALOGMELDING,
@@ -283,7 +288,10 @@ object Revurdering : BehandlingType {
             )
             .medSteg(
                 steg = VurderForutgåendeMedlemskapSteg,
-                informasjonskrav = listOf(PersonopplysningForutgåendeInformasjonskrav, ForutgåendeMedlemskapInformasjonskrav),
+                informasjonskrav = listOf(
+                    PersonopplysningForutgåendeInformasjonskrav,
+                    ForutgåendeMedlemskapInformasjonskrav
+                ),
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
                     Vurderingsbehov.REVURDER_MEDLEMSKAP,
@@ -308,7 +316,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.REVURDER_LOVVALG,
                     Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
 
-                )
+                    )
             )
             .medSteg(
                 steg = EtAnnetStedSteg,
@@ -328,7 +336,10 @@ object Revurdering : BehandlingType {
                 ),
             )
             .medSteg(steg = SamordningUføreSteg, informasjonskrav = listOf(UføreInformasjonskrav))
-            .medSteg(steg = TjenestepensjonRefusjonskravSteg, informasjonskrav = listOf(TjenestePensjonInformasjonskrav))
+            .medSteg(
+                steg = TjenestepensjonRefusjonskravSteg,
+                informasjonskrav = listOf(TjenestePensjonInformasjonskrav)
+            )
             .medSteg(
                 steg = SamordningAndreStatligeYtelserSteg,
                 vurderingsbehovRelevanteForSteg = listOf(
@@ -347,13 +358,14 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = IkkeOppfyltMeldepliktSteg,
                 vurderingsbehovRelevanteForSteg = Vurderingsbehov.alleInklusivGRegulering(),
-                informasjonskrav = listOf(MeldekortInformasjonskrav, AktivitetspliktInformasjonskrav)
+                informasjonskrav = listOf(MeldekortInformasjonskrav, Aktivitetsplikt11_7Informasjonskrav)
             )
             .medSteg(steg = UnderveisSteg)
             .medSteg(steg = Effektuer11_7Steg)
             .medSteg(
                 steg = BeregnTilkjentYtelseSteg,
-                vurderingsbehovRelevanteForSteg = Vurderingsbehov.alleInklusivGRegulering()
+                vurderingsbehovRelevanteForSteg = Vurderingsbehov.alleInklusivGRegulering(),
+                informasjonskrav = listOf(Aktivitetsplikt11_9Informasjonskrav)
             )
             .medSteg(
                 steg = SimulerUtbetalingSteg,
