@@ -8,9 +8,9 @@ create table reduksjon_11_9_grunnlag
 
 create table reduksjon_11_9
 (
-    id                                      bigserial primary key,
-    dato                                    date                                                           not null,
-    dagsats                                 numeric(21, 0)                                                 not null,
+    id                         bigserial primary key,
+    dato                       date                                           not null,
+    dagsats                    numeric(21, 0)                                 not null,
     reduksjon_11_9_grunnlag_id bigint references reduksjon_11_9_grunnlag (id) not null
 );
 
