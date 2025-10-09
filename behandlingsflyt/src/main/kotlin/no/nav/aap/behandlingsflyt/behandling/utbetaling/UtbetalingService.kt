@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Reduksjon11_9
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Reduksjon11_9Repository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverRepository
@@ -20,6 +21,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.utbetal.tilkjentytelse.MeldeperiodeDto
@@ -79,6 +81,8 @@ class UtbetalingService(
 
         val forrigeBehandling = behandling.forrigeBehandlingId?.let { behandlingRepository.hent(it) }
         val tilkjentYtelse = tilkjentYtelseRepository.hentHvisEksisterer(behandlingId)
+        val forrigeTilkjentYtelse =
+            forrigeBehandling?.id?.let { tilkjentYtelseRepository.hentHvisEksisterer(forrigeBehandling.id) }
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
 
         return if (tilkjentYtelse != null) {
@@ -95,9 +99,16 @@ class UtbetalingService(
             } else {
                 vedtakRepository.hent(behandlingId)?.vedtakstidspunkt ?: error("Fant ikke vedtak")
             }
+            val vedtakstidspunktFraForrigeBehandling = forrigeBehandling?.id?.let { vedtakRepository.hent(it)?.vedtakstidspunkt }
             val avventUtbetaling = utledAvventUtbetaling(tilkjentYtelse, sakId, behandlingId)
             val reduksjoner = reduksjon11_9Repository.hent(behandlingId)
 
+            val nyMeldeperiode = utledNyMeldeperiode(
+                tilkjentYtelse = tilkjentYtelse,
+                forrigeTilkjentYtelse = forrigeTilkjentYtelse,
+                vedtaksdatoGjeldendeBehandling = vedtakstidspunkt.toLocalDate(),
+                vedtaksdatoForrigeBehandling = vedtakstidspunktFraForrigeBehandling?.toLocalDate()
+            )
             TilkjentYtelseDto(
                 saksnummer = saksnummer,
                 behandlingsreferanse = behandlingsreferanse,
@@ -109,10 +120,36 @@ class UtbetalingService(
                 perioder = tilkjentYtelse.tilTilkjentYtelsePeriodeDtoer(),
                 avvent = avventUtbetaling,
                 trekk = reduksjoner.tilTilkjentYtelseTrekkDtoer(),
-                nyMeldeperiode = null // TODO: Hvordan finner vi ut om det er en "ny" meldeperiode?
-
+                nyMeldeperiode = nyMeldeperiode
             )
 
+        } else {
+            null
+        }
+    }
+
+    /**
+     *  aap-utbetal utleder nye perioder som skal sendes basert på vedtakstidspunkt >= utbetalingsdato og periode.tom <= vedtaksdato
+     */
+    private fun utledNyMeldeperiode(
+        tilkjentYtelse: List<TilkjentYtelsePeriode>,
+        forrigeTilkjentYtelse: List<TilkjentYtelsePeriode>?,
+        vedtaksdatoGjeldendeBehandling: LocalDate,
+        vedtaksdatoForrigeBehandling: LocalDate?,
+    ): MeldeperiodeDto? {
+
+        val alleredeUtbetaltPeriode = forrigeTilkjentYtelse?.filter {
+            it.tilkjent.utbetalingsdato <= vedtaksdatoForrigeBehandling && it.periode.tom <= vedtaksdatoForrigeBehandling
+        }?.tilTidslinje()?.helePerioden()
+
+        val perioderSomKanUtbetales = tilkjentYtelse.filter { it.tilkjent.utbetalingsdato <= vedtaksdatoGjeldendeBehandling && it.periode.tom <= vedtaksdatoGjeldendeBehandling }
+        val nyePerioderSomKanUtbetales = alleredeUtbetaltPeriode?.let { periode -> perioderSomKanUtbetales.filterNot { periode.inneholder(it.periode)}} ?: perioderSomKanUtbetales
+
+        return if (nyePerioderSomKanUtbetales.isNotEmpty()) {
+            MeldeperiodeDto(
+                fom = nyePerioderSomKanUtbetales.minOf { it.periode.fom },
+                tom = nyePerioderSomKanUtbetales.maxOf { it.periode.tom }
+            )
         } else {
             null
         }
