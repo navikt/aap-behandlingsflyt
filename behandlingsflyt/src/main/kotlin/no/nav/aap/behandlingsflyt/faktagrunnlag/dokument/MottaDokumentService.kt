@@ -70,15 +70,6 @@ class MottaDokumentService(
         return requireNotNull(dokument.strukturerteData<Meldekort>()?.data)
     }
 
-    fun aktivitetskortSomIkkeErBehandlet(sakId: SakId): Set<InnsendingId> {
-        val ubehandledeAktivitetskort =
-            mottattDokumentRepository.hentUbehandledeDokumenterAvType(sakId, InnsendingType.AKTIVITETSKORT)
-
-        return ubehandledeAktivitetskort
-            .map { it.referanse.asInnsendingId }
-            .toSet()
-    }
-
     fun søknaderSomIkkeHarBlittBehandlet(sakId: SakId): Set<UbehandletSøknad> {
         val ubehandledeSøknader =
             mottattDokumentRepository.hentUbehandledeDokumenterAvType(sakId, InnsendingType.SØKNAD)
