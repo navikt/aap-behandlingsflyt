@@ -64,10 +64,12 @@ class PdlHendelseKafkaKonsument(
             val hendelseService = MottattHendelseService(repositoryProvider)
             if (personHendelse.opplysningstype == Opplysningstype.DOEDSFALL_V1 && personHendelse.endringstype == Endringstype.OPPRETTET) {
                 log.info("Håndterer hendelse med ${personHendelse.opplysningstype} og ${personHendelse.endringstype}")
+
                 var person: Person? = null
                 var funnetIdent: Ident? = null
 
                 for (ident in personHendelse.personidenter) {
+                    secureLogger.info("Håndterer hendelse for ${ident}")
                     person = personRepository.finn(Ident(ident))
                     //Håndterer D-nummer og Fnr
                     if (person != null) {
@@ -84,8 +86,8 @@ class PdlHendelseKafkaKonsument(
                             personHendelse.tilInnsendingDødsfallBruker(sak.saksnummer)
                         )
                     }
-                    val behandlingIds = barnRepository.hentBehandlingIdForBarn(funnetIdent!!)
-                    log.info("Sjekker mottatt hendelse for barn ")
+                    val behandlingIds = barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForBarn(funnetIdent!!)
+                    log.info("Sjekker mottatt hendelse for barn $behandlingIds")
                     behandlingIds
                         .map { behandlingRepository.hent(it) }
                         .map { it.sakId }

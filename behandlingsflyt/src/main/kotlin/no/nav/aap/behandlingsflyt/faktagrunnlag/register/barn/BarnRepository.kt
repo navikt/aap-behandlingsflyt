@@ -25,6 +25,6 @@ interface BarnRepository : Repository {
      * Lagre vurderinger på barn. Gjøres i løseren, [no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarBarnetilleggLøser].
      */
     fun lagreVurderinger(behandlingId: BehandlingId, vurdertAv: String, vurderteBarn: List<VurdertBarn>)
-    fun hentBehandlingIdForBarn(ident: Ident): List<BehandlingId>
+    fun hentBehandlingIdForSakSomFårBarnetilleggForBarn(ident: Ident): List<BehandlingId>
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
 }
