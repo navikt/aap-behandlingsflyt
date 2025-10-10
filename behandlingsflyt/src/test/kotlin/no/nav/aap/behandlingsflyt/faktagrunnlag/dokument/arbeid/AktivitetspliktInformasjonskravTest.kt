@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.IngenInput
+import no.nav.aap.behandlingsflyt.faktagrunnlag.IngenRegisterData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Vurdering
@@ -124,7 +126,7 @@ class AktivitetspliktInformasjonskravTest {
                 )
             ).isTrue
 
-            aktivitetsplikt11_7Informasjonskrav.oppdater(flytKontekstMedPerioder)
+            aktivitetsplikt11_7Informasjonskrav.oppdater(IngenInput, IngenRegisterData, flytKontekstMedPerioder)
                 .let {
                     assertThat(it)
                         .describedAs { "Skal ikke returnere endret ved oppdatering i effektueringsbehandling" }
