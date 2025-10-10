@@ -25,7 +25,6 @@ import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
@@ -167,38 +166,15 @@ internal class OvergangUføreRepositoryImplTest {
             overgangUføreRepo.lagre(revurdering.id, listOf(overgangUføreVurdering3))
 
             val historikk = overgangUføreRepo.hentHistoriskeOvergangUforeVurderinger(revurdering.sakId, revurdering.id)
-            assertEquals(listOf(overgangUføreVurdering1), historikk)
+            assertThat(historikk)
+                .usingRecursiveComparison()
+                .ignoringFields("opprettet")
+                .isEqualTo(listOf(overgangUføreVurdering1))
         }
     }
 
     private companion object {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-
-        fun assertEquals(expected: List<OvergangUføreVurdering>, actual: List<OvergangUføreVurdering>) {
-            assertEquals(expected.size, actual.size)
-            for ((expected, actual) in expected.zip(actual)) {
-                assertEquals(expected, actual)
-            }
-        }
-
-        fun assertEquals(expected: OvergangUføreVurdering, actual: OvergangUføreVurdering) {
-            assertEquals(expected.begrunnelse, actual.begrunnelse)
-            assertEquals(expected.brukerHarSøktOmUføretrygd, actual.brukerHarSøktOmUføretrygd)
-
-            if (expected.brukerHarFåttVedtakOmUføretrygd != null && actual.brukerHarFåttVedtakOmUføretrygd != null) {
-                assertEquals(expected.brukerHarFåttVedtakOmUføretrygd, actual.brukerHarFåttVedtakOmUføretrygd)
-            }
-
-            if (expected.brukerRettPåAAP != null && actual.brukerRettPåAAP != null) {
-                assertEquals(expected.brukerRettPåAAP, actual.brukerRettPåAAP)
-            }
-
-            if (expected.virkningsdato != null && actual.virkningsdato != null) {
-                assertEquals(expected.virkningsdato, actual.virkningsdato)
-            }
-
-            assertEquals(expected.vurdertAv, actual.vurdertAv)
-        }
     }
 
     private fun sak(connection: DBConnection): Sak {
