@@ -5,8 +5,10 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravInput
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.KanTriggeRevurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
@@ -16,6 +18,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGateway as IInstitusjonsoppholdGateway
@@ -25,7 +28,8 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
     private val institusjonsoppholdRepository: InstitusjonsoppholdRepository,
     private val institusjonsoppholdRegisterGateway: IInstitusjonsoppholdGateway,
     private val tidligereVurderinger: TidligereVurderinger,
-) : Informasjonskrav, KanTriggeRevurdering {
+) : Informasjonskrav<InstitusjonsoppholdInformasjonskrav.Input, InstitusjonsoppholdInformasjonskrav.InstitusjonsoppholdRegisterdata>,
+    KanTriggeRevurdering {
     override val navn = Companion.navn
 
     override fun erRelevant(
@@ -38,10 +42,33 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
                 && (oppdatert.ikkeKjørtSisteKalenderdag() || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode)
     }
 
-    override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
-        val eksisterendeGrunnlag = hentHvisEksisterer(kontekst.behandlingId)
-        val institusjonsopphold = hentInstitusjonsopphold(kontekst.behandlingId)
+    data class Input(val sak: Sak) : InformasjonskravInput
 
+    data class InstitusjonsoppholdRegisterdata(val opphold: List<Institusjonsopphold>) : InformasjonskravRegisterdata
+
+    override fun klargjør(kontekst: FlytKontekstMedPerioder): Input {
+        return Input(sakOgBehandlingService.hentSakFor(kontekst.behandlingId))
+    }
+
+    override fun hentData(input: Input): InstitusjonsoppholdRegisterdata {
+        val sak = input.sak
+
+        return InstitusjonsoppholdRegisterdata(
+            opphold = institusjonsoppholdRegisterGateway
+                .innhent(sak.person)
+                .filter { it.periode().overlapper(sak.rettighetsperiode) }
+        )
+    }
+
+    override fun oppdater(
+        input: Input,
+        registerdata: InstitusjonsoppholdRegisterdata,
+        kontekst: FlytKontekstMedPerioder
+    ): Informasjonskrav.Endret {
+        val eksisterendeGrunnlag = hentHvisEksisterer(kontekst.behandlingId)
+        val institusjonsopphold = registerdata.opphold
+
+        // TODO: lagre kun hvis forskjell!
         institusjonsoppholdRepository.lagreOpphold(kontekst.behandlingId, institusjonsopphold)
 
         return if (erEndret(eksisterendeGrunnlag, institusjonsopphold)) ENDRET else IKKE_ENDRET

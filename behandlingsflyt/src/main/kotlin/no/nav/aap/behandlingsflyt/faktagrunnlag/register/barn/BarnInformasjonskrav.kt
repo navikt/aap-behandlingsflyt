@@ -5,10 +5,12 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravInput
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.KanTriggeRevurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.BarnInnhentingRespons
@@ -34,7 +36,7 @@ class BarnInformasjonskrav private constructor(
     private val identGateway: IdentGateway,
     private val tidligereVurderinger: TidligereVurderinger,
     private val sakOgBehandlingService: SakOgBehandlingService
-) : Informasjonskrav, KanTriggeRevurdering {
+) : Informasjonskrav<BarnInformasjonskrav.BarnInput, BarnInformasjonskrav.Registerdata>, KanTriggeRevurdering {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -55,15 +57,15 @@ class BarnInformasjonskrav private constructor(
 
     data class BarnInput(
         val barnGrunnlag: BarnGrunnlag?,
-        val person: Person,
-    )
+        val person: Person
+    ) : InformasjonskravInput
 
     data class Registerdata(
         val barnInnhentingRespons: BarnInnhentingRespons,
         val identlisteForBarn: Map<BarnIdentifikator.BarnIdent, List<Ident>>
-    )
+    ) : InformasjonskravRegisterdata
 
-    fun hentInput(kontekst: FlytKontekstMedPerioder): BarnInput {
+    override fun klargjør(kontekst: FlytKontekstMedPerioder): BarnInput {
         val behandlingId = kontekst.behandlingId
         val barnGrunnlag = barnRepository.hentHvisEksisterer(behandlingId)
         val sak = sakOgBehandlingService.hentSakFor(behandlingId)
@@ -75,7 +77,7 @@ class BarnInformasjonskrav private constructor(
         )
     }
 
-    fun hentData(input: BarnInput): Registerdata {
+    override fun hentData(input: BarnInput): Registerdata {
         val (barnGrunnlag, person) = input
         val oppgitteBarnIdenter = barnGrunnlag?.oppgitteBarn?.oppgitteBarn?.mapNotNull { it.ident }.orEmpty()
         val barn = barnGateway.hentBarn(person, oppgitteBarnIdenter)
@@ -94,15 +96,17 @@ class BarnInformasjonskrav private constructor(
         return Registerdata(barnInnhentingRespons = barn, identlisteForBarn = identListeForBarn)
     }
 
-    fun sammenlign(
-        kontekst: FlytKontekstMedPerioder,
+    override fun oppdater(
         input: BarnInput,
-        registerdata: Registerdata
+        registerdata: Registerdata,
+        kontekst: FlytKontekstMedPerioder
     ): Informasjonskrav.Endret {
+        log.info("Oppdaterer barnegrunnlag for behandling ${kontekst.behandlingId} av type ${kontekst.behandlingType} med årsak(er) ${kontekst.vurderingsbehovRelevanteForSteg}")
         val behandlingId = kontekst.behandlingId
         val barnGrunnlag = input.barnGrunnlag
         val registerbarn = registerdata.barnInnhentingRespons.registerBarn
         val barn = registerdata.barnInnhentingRespons
+
         if (harEndringer(barnGrunnlag, registerbarn)) {
             val barnMedPersonId = oppdaterPersonIdenter(barn.alleBarn(), registerdata.identlisteForBarn)
 
@@ -112,15 +116,6 @@ class BarnInformasjonskrav private constructor(
             return ENDRET
         }
         return IKKE_ENDRET
-    }
-
-    override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
-        log.info("Oppdaterer barnegrunnlag for behandling ${kontekst.behandlingId} av type ${kontekst.behandlingType} med årsak(er) ${kontekst.vurderingsbehovRelevanteForSteg}")
-        val input = hentInput(kontekst)
-
-        val data = hentData(input)
-
-        return sammenlign(kontekst, input, data)
     }
 
     private fun oppdaterPersonIdenter(
@@ -180,7 +175,7 @@ class BarnInformasjonskrav private constructor(
         override fun konstruer(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
-        ): BarnInformasjonskrav {
+        ): Informasjonskrav<BarnInput, Registerdata> {
             return BarnInformasjonskrav(
                 repositoryProvider.provide(),
                 repositoryProvider.provide(),

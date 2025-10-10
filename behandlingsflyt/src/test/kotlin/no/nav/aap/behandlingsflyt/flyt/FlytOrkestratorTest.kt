@@ -4390,7 +4390,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         val førstegangsbehandling = hentSisteOpprettedeBehandlingForSak(sak.id)
 
         // Revurdering 1 - skal bli avbrutt
-        var revurdering1 = sak.opprettManuellRevurdering(
+        val revurdering1 = sak.opprettManuellRevurdering(
             listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
         )
             .medKontekst {
@@ -4419,7 +4419,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         )
 
         val avklaringsbehovene: List<Avklaringsbehov> = hentAlleAvklaringsbehov(revurdering1)
-        var revurdering1FraRepo = hentBehandling(revurdering1.referanse)
+        val revurdering1FraRepo = hentBehandling(revurdering1.referanse)
         assertThat(revurdering1FraRepo.status()).isEqualTo(Status.AVSLUTTET)
         assertThat(avklaringsbehovene.none { it.erÅpent() }).isTrue()
         assertStatusForDefinisjon(avklaringsbehovene, Definisjon.AVBRYT_REVURDERING, AvklaringsbehovStatus.AVSLUTTET)
@@ -4427,7 +4427,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         assertStatusForDefinisjon(avklaringsbehovene, Definisjon.AVKLAR_BISTANDSBEHOV, AvklaringsbehovStatus.AVBRUTT)
 
         // Revurdering 2 - skal ikke kopiere data fra revurdering1 men fra førstegangsbehandling
-        var revurdering2 = sak.opprettManuellRevurdering(
+        val revurdering2 = sak.opprettManuellRevurdering(
             listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP)
         )
             .medKontekst {
