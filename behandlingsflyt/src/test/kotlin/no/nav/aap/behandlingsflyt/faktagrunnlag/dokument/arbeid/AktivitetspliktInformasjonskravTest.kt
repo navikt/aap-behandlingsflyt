@@ -109,7 +109,7 @@ class AktivitetspliktInformasjonskravTest {
                 )
             )
 
-            val aktivitetspliktInformasjonskrav = AktivitetspliktInformasjonskrav.konstruer(
+            val aktivitetsplikt11_7Informasjonskrav = Aktivitetsplikt11_7Informasjonskrav.konstruer(
                 postgresRepositoryRegistry.provider(connection),
                 createGatewayProvider { register<FakeUnleashFasttrackAktivitetsplikt>() },
             )
@@ -117,14 +117,14 @@ class AktivitetspliktInformasjonskravTest {
 
 
             assertThat(
-                aktivitetspliktInformasjonskrav.erRelevant(
+                aktivitetsplikt11_7Informasjonskrav.erRelevant(
                     flytKontekstMedPerioder,
                     StegType.AVKLAR_SYKDOM,
                     null
                 )
             ).isTrue
 
-            aktivitetspliktInformasjonskrav.oppdater(flytKontekstMedPerioder)
+            aktivitetsplikt11_7Informasjonskrav.oppdater(flytKontekstMedPerioder)
                 .let {
                     assertThat(it)
                         .describedAs { "Skal ikke returnere endret ved oppdatering i effektueringsbehandling" }

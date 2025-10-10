@@ -20,7 +20,7 @@ class VurderBrudd11_9Løsning(
         required = true,
         defaultValue = VURDER_BRUDD_11_9_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`4201`
-) : AvklaringsbehovLøsning {
+) : EnkeltAvklaringsbehovLøsning {
     override fun løs(
         repositoryProvider: RepositoryProvider,
         kontekst: AvklaringsbehovKontekst,

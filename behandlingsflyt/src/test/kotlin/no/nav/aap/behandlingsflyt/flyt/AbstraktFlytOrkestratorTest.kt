@@ -553,7 +553,11 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         return behandling
     }
 
-    protected fun løsSykdom(behandling: Behandling): Behandling {
+    protected fun løsSykdom(
+        behandling: Behandling,
+        vurderingGjelderFra: LocalDate? = null,
+        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean? = null
+    ): Behandling {
         return løsAvklaringsBehov(
             behandling,
             AvklarSykdomLøsning(
@@ -565,10 +569,10 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                         erSkadeSykdomEllerLyteVesentligdel = true,
                         erNedsettelseIArbeidsevneMerEnnHalvparten = true,
                         erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-                        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
                         erArbeidsevnenNedsatt = true,
-                        yrkesskadeBegrunnelse = null,
-                        vurderingenGjelderFra = null,
+                        yrkesskadeBegrunnelse = if (erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense != null) "test" else null,
+                        vurderingenGjelderFra = vurderingGjelderFra,
                     )
                 )
             ),
@@ -701,8 +705,15 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
     }
 
     @JvmName("løsSykdomExt")
-    protected fun Behandling.løsSykdom(): Behandling {
-        return løsSykdom(this)
+    protected fun Behandling.løsSykdom(
+        vurderingGjelderFra: LocalDate? = null,
+        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean? = null
+    ): Behandling {
+        return løsSykdom(
+            behandling = this,
+            vurderingGjelderFra = vurderingGjelderFra,
+            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense
+        )
     }
 
     @JvmName("mellomlagreSykdomExt")

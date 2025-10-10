@@ -32,7 +32,7 @@ class SykdomsvurderingTest {
 
     @ParameterizedTest
     @MethodSource("trueFalseNullSource")
-    fun `skal ikke ta hensyn til viss varighet for revurdering`(erNedsettelseIArbeidsevneAvEnVissVarighet: Boolean?) {
+    fun `skal ikke ta hensyn til viss varighet for vurderinger hvor kravdato != gjelderFra`(erNedsettelseIArbeidsevneAvEnVissVarighet: Boolean?) {
         // Parameterisert test. Skal ignorere verdien av erNedsettelseIArbeidsevneAvEnVissVarighet
 
         val gjelderFra = LocalDate.now()
@@ -46,7 +46,7 @@ class SykdomsvurderingTest {
             erArbeidsevnenNedsatt = true,
             yrkesskadeBegrunnelse = null,
             erNedsettelseIArbeidsevneAvEnVissVarighet = erNedsettelseIArbeidsevneAvEnVissVarighet,
-            vurderingenGjelderFra = gjelderFra,
+            vurderingenGjelderFra = gjelderFra.plusDays(1),
             vurdertAv = Bruker("Z00000"),
             opprettet = Instant.now(),
         )

@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
@@ -31,6 +30,6 @@ class AbakusSykepengerGatewayTest {
             LocalDate.now().plusDays(1),
         )
         assertThat(response).hasSize(1)
-        assertEquals(50, response[0].grad)
+        assertThat(response[0].grad).isEqualTo(50)
     }
 }

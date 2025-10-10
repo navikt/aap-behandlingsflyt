@@ -8,12 +8,15 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import java.time.LocalDate
 
-class Sykdomsvilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<SykdomsFaktagrunnlag> {
+class Sykdomsvilkår(vilkårsresultat: Vilkårsresultat, brukRefaktorertVersjon: Boolean) :
+    Vilkårsvurderer<SykdomsFaktagrunnlag> {
     private val regelTidslinje = Tidslinje(
         listOf(
             Segment(
                 Periode(LocalDate.of(2023, 1, 1), Tid.MAKS),
-                SykdomsvilkårFraLansering(vilkårsresultat) // TODO: Finne en bedre variant her enn å instansiere opp alle sammen
+                if (brukRefaktorertVersjon) SykdomsvilkårFraLanseringV2(vilkårsresultat) else SykdomsvilkårFraLansering(
+                    vilkårsresultat
+                ) // TODO: Finne en bedre variant her enn å instansiere opp alle sammen
             )
         )
     )

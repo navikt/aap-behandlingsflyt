@@ -26,13 +26,16 @@ import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Assertions.assertEquals
+import org.assertj.core.api.recursive.comparison.RecursiveComparisonConfiguration
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 
 internal class BistandRepositoryImplTest {
     private val dataSource = InitTestDatabase.freshDatabase()
+
+    val sammenlinger: RecursiveComparisonConfiguration =
+        RecursiveComparisonConfiguration.builder().withIgnoredFields("opprettet").build()
 
     @Test
     fun `Finner ikke bistand hvis ikke lagret`() {
@@ -70,21 +73,23 @@ internal class BistandRepositoryImplTest {
                 )
             )
             val bistandGrunnlag = bistandRepository.hentHvisEksisterer(behandling.id)
-            assertThat(bistandGrunnlag?.vurderinger).isEqualTo(
-                listOf(
-                    BistandVurdering(
-                        begrunnelse = "begrunnelse",
-                        erBehovForAktivBehandling = false,
-                        erBehovForArbeidsrettetTiltak = false,
-                        erBehovForAnnenOppfølging = false,
-                        vurderingenGjelderFra = null,
-                        vurdertAv = "Z00000",
-                        skalVurdereAapIOvergangTilUføre = null,
-                        skalVurdereAapIOvergangTilArbeid = null,
-                        overgangBegrunnelse = null,
+            assertThat(bistandGrunnlag?.vurderinger)
+                .usingRecursiveComparison(sammenlinger)
+                .isEqualTo(
+                    listOf(
+                        BistandVurdering(
+                            begrunnelse = "begrunnelse",
+                            erBehovForAktivBehandling = false,
+                            erBehovForArbeidsrettetTiltak = false,
+                            erBehovForAnnenOppfølging = false,
+                            vurderingenGjelderFra = null,
+                            vurdertAv = "Z00000",
+                            skalVurdereAapIOvergangTilUføre = null,
+                            skalVurdereAapIOvergangTilArbeid = null,
+                            overgangBegrunnelse = null,
+                        )
                     )
                 )
-            )
         }
     }
 
@@ -202,8 +207,8 @@ internal class BistandRepositoryImplTest {
                 setRowMapper { row -> row.getString("BEGRUNNELSE") }
             }
             assertThat(opplysninger)
-                .hasSize(2)
                 .containsExactly("en begrunnelse", "annen begrunnelse")
+                .hasSize(2)
         }
     }
 
@@ -234,21 +239,23 @@ internal class BistandRepositoryImplTest {
             val behandling2 = finnEllerOpprettBehandling(connection, sak)
 
             val bistandGrunnlag = bistandRepository.hentHvisEksisterer(behandling2.id)
-            assertThat(bistandGrunnlag?.vurderinger).isEqualTo(
-                listOf(
-                    BistandVurdering(
-                        begrunnelse = "begrunnelse",
-                        erBehovForAktivBehandling = false,
-                        erBehovForArbeidsrettetTiltak = false,
-                        erBehovForAnnenOppfølging = false,
-                        vurderingenGjelderFra = null,
-                        vurdertAv = "Z00000",
-                        skalVurdereAapIOvergangTilUføre = null,
-                        skalVurdereAapIOvergangTilArbeid = null,
-                        overgangBegrunnelse = null,
+            assertThat(bistandGrunnlag?.vurderinger)
+                .usingRecursiveComparison(sammenlinger)
+                .isEqualTo(
+                    listOf(
+                        BistandVurdering(
+                            begrunnelse = "begrunnelse",
+                            erBehovForAktivBehandling = false,
+                            erBehovForArbeidsrettetTiltak = false,
+                            erBehovForAnnenOppfølging = false,
+                            vurderingenGjelderFra = null,
+                            vurdertAv = "Z00000",
+                            skalVurdereAapIOvergangTilUføre = null,
+                            skalVurdereAapIOvergangTilArbeid = null,
+                            overgangBegrunnelse = null,
+                        )
                     )
                 )
-            )
         }
     }
 
@@ -305,21 +312,24 @@ internal class BistandRepositoryImplTest {
             val behandling2 = finnEllerOpprettBehandling(connection, sak)
 
             val bistandGrunnlag = bistandRepository.hentHvisEksisterer(behandling2.id)
-            assertThat(bistandGrunnlag?.vurderinger).isEqualTo(
-                listOf(
-                    BistandVurdering(
-                        begrunnelse = "annen begrunnelse",
-                        erBehovForAktivBehandling = false,
-                        erBehovForArbeidsrettetTiltak = false,
-                        erBehovForAnnenOppfølging = false,
-                        vurderingenGjelderFra = null,
-                        vurdertAv = "Z00000",
-                        skalVurdereAapIOvergangTilUføre = null,
-                        skalVurdereAapIOvergangTilArbeid = null,
-                        overgangBegrunnelse = null,
+
+            assertThat(bistandGrunnlag?.vurderinger)
+                .usingRecursiveComparison(sammenlinger)
+                .isEqualTo(
+                    listOf(
+                        BistandVurdering(
+                            begrunnelse = "annen begrunnelse",
+                            erBehovForAktivBehandling = false,
+                            erBehovForArbeidsrettetTiltak = false,
+                            erBehovForAnnenOppfølging = false,
+                            vurderingenGjelderFra = null,
+                            vurdertAv = "Z00000",
+                            skalVurdereAapIOvergangTilUføre = null,
+                            skalVurdereAapIOvergangTilArbeid = null,
+                            overgangBegrunnelse = null,
+                        )
                     )
                 )
-            )
         }
     }
 
@@ -347,21 +357,23 @@ internal class BistandRepositoryImplTest {
                 )
             )
             val orginaltGrunnlag = bistandRepository.hentHvisEksisterer(behandling.id)
-            assertThat(orginaltGrunnlag?.vurderinger).isEqualTo(
-                listOf(
-                    BistandVurdering(
-                        begrunnelse = "en begrunnelse",
-                        erBehovForAktivBehandling = false,
-                        erBehovForArbeidsrettetTiltak = false,
-                        erBehovForAnnenOppfølging = false,
-                        vurderingenGjelderFra = null,
-                        vurdertAv = "Z00000",
-                        skalVurdereAapIOvergangTilUføre = null,
-                        skalVurdereAapIOvergangTilArbeid = null,
-                        overgangBegrunnelse = null,
+            assertThat(orginaltGrunnlag?.vurderinger)
+                .usingRecursiveComparison(sammenlinger)
+                .isEqualTo(
+                    listOf(
+                        BistandVurdering(
+                            begrunnelse = "en begrunnelse",
+                            erBehovForAktivBehandling = false,
+                            erBehovForArbeidsrettetTiltak = false,
+                            erBehovForAnnenOppfølging = false,
+                            vurderingenGjelderFra = null,
+                            vurdertAv = "Z00000",
+                            skalVurdereAapIOvergangTilUføre = null,
+                            skalVurdereAapIOvergangTilArbeid = null,
+                            overgangBegrunnelse = null,
+                        )
                     )
                 )
-            )
 
             bistandRepository.lagre(
                 behandling.id,
@@ -380,21 +392,23 @@ internal class BistandRepositoryImplTest {
                 )
             )
             val oppdatertGrunnlag = bistandRepository.hentHvisEksisterer(behandling.id)
-            assertThat(oppdatertGrunnlag?.vurderinger).isEqualTo(
-                listOf(
-                    BistandVurdering(
-                        begrunnelse = "annen begrunnelse",
-                        erBehovForAktivBehandling = false,
-                        erBehovForArbeidsrettetTiltak = false,
-                        erBehovForAnnenOppfølging = false,
-                        vurderingenGjelderFra = null,
-                        vurdertAv = "Z00000",
-                        skalVurdereAapIOvergangTilUføre = null,
-                        skalVurdereAapIOvergangTilArbeid = null,
-                        overgangBegrunnelse = null,
+            assertThat(oppdatertGrunnlag?.vurderinger)
+                .usingRecursiveComparison(sammenlinger)
+                .isEqualTo(
+                    listOf(
+                        BistandVurdering(
+                            begrunnelse = "annen begrunnelse",
+                            erBehovForAktivBehandling = false,
+                            erBehovForArbeidsrettetTiltak = false,
+                            erBehovForAnnenOppfølging = false,
+                            vurderingenGjelderFra = null,
+                            vurdertAv = "Z00000",
+                            skalVurdereAapIOvergangTilUføre = null,
+                            skalVurdereAapIOvergangTilArbeid = null,
+                            overgangBegrunnelse = null,
+                        )
                     )
                 )
-            )
 
             data class Opplysning(
                 val aktiv: Boolean,
@@ -569,7 +583,7 @@ internal class BistandRepositoryImplTest {
             val repo = BistandRepositoryImpl(connection)
             val revurdering = revurdering(connection, førstegangsbehandling, sak)
             val historikk = repo.hentHistoriskeBistandsvurderinger(revurdering.sakId, revurdering.id)
-            assertEquals(listOf(bistandsvurdering2), historikk)
+            assertThat(historikk).usingRecursiveComparison(sammenlinger).isEqualTo(listOf(bistandsvurdering2))
             revurdering
         }
 
@@ -589,7 +603,9 @@ internal class BistandRepositoryImplTest {
             )
             repo.lagre(revurdering.id, listOf(bistandsvurdering3))
             val historikk = repo.hentHistoriskeBistandsvurderinger(revurdering.sakId, revurdering.id)
-            assertEquals(listOf(bistandsvurdering2), historikk)
+            assertThat(historikk)
+                .usingRecursiveComparison(sammenlinger)
+                .isEqualTo(listOf(bistandsvurdering2))
         }
     }
 
@@ -661,40 +677,12 @@ internal class BistandRepositoryImplTest {
             bistandRepo.lagre(revurdering.id, listOf(bistandsvurdering3))
 
             val historikk = bistandRepo.hentHistoriskeBistandsvurderinger(revurdering.sakId, revurdering.id)
-            assertEquals(listOf(bistandsvurdering1), historikk)
+            assertThat(historikk).usingRecursiveComparison(sammenlinger).isEqualTo(listOf(bistandsvurdering1))
         }
     }
 
     private companion object {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-
-        fun assertEquals(expected: List<BistandVurdering>, actual: List<BistandVurdering>) {
-            assertEquals(expected.size, actual.size)
-            for ((expected, actual) in expected.zip(actual)) {
-                assertEquals(expected, actual)
-            }
-        }
-
-        fun assertEquals(expected: BistandVurdering, actual: BistandVurdering) {
-            assertEquals(expected.begrunnelse, actual.begrunnelse)
-            assertEquals(expected.erBehovForAktivBehandling, actual.erBehovForAktivBehandling)
-            assertEquals(expected.erBehovForArbeidsrettetTiltak, actual.erBehovForArbeidsrettetTiltak)
-            assertEquals(expected.erBehovForAnnenOppfølging, actual.erBehovForAnnenOppfølging)
-
-            if (expected.overgangBegrunnelse != null && actual.overgangBegrunnelse != null) {
-                assertEquals(expected.overgangBegrunnelse, actual.overgangBegrunnelse)
-            }
-
-            if (expected.skalVurdereAapIOvergangTilArbeid != null && actual.skalVurdereAapIOvergangTilArbeid != null) {
-                assertEquals(expected.skalVurdereAapIOvergangTilArbeid, actual.skalVurdereAapIOvergangTilArbeid)
-            }
-
-            if (expected.skalVurdereAapIOvergangTilUføre != null && actual.skalVurdereAapIOvergangTilUføre != null) {
-                assertEquals(expected.skalVurdereAapIOvergangTilUføre, actual.skalVurdereAapIOvergangTilUføre)
-            }
-
-            assertEquals(expected.vurdertAv, actual.vurdertAv)
-        }
     }
 
     private fun sak(connection: DBConnection): Sak {
@@ -711,7 +699,10 @@ internal class BistandRepositoryImplTest {
         return finnEllerOpprettBehandling(connection, sak)
     }
 
-    private fun revurderingSykdomArbeidsEvneBehovForBistand(connection: DBConnection, behandling: Behandling): Behandling {
+    private fun revurderingSykdomArbeidsEvneBehovForBistand(
+        connection: DBConnection,
+        behandling: Behandling
+    ): Behandling {
         return BehandlingRepositoryImpl(connection).opprettBehandling(
             behandling.sakId,
             typeBehandling = TypeBehandling.Revurdering,

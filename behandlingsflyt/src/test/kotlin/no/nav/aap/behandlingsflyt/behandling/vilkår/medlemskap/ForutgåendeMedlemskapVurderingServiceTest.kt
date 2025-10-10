@@ -15,7 +15,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Stat
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
-import org.junit.jupiter.api.Assertions.assertEquals
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
@@ -27,21 +27,21 @@ class ForutgåendeMedlemskapVurderingServiceTest {
     fun `automatisk om inntekt er oppfylt`() {
         val grunnlag = lagGrunnlag(false, true, false)
         val resultat = service.vurderTilhørighet(grunnlag, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
-        assertEquals(true, resultat.kanBehandlesAutomatisk)
+        assertThat(resultat.kanBehandlesAutomatisk).isTrue
     }
 
     @Test
     fun `stopp om inntekt har hull sste 5 år`() {
         val grunnlag = lagGrunnlag(false, false, true)
         val resultat = service.vurderTilhørighet(grunnlag, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
-        assertEquals(false, resultat.kanBehandlesAutomatisk)
+        assertThat(resultat.kanBehandlesAutomatisk).isFalse
     }
 
     @Test
     fun `automatisk om medl er oppfylt`() {
         val grunnlag = lagGrunnlag(true, false, true)
         val resultat = service.vurderTilhørighet(grunnlag, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
-        assertEquals(true, resultat.kanBehandlesAutomatisk)
+        assertThat(resultat.kanBehandlesAutomatisk).isTrue
     }
 
     private fun lagGrunnlag(

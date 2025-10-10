@@ -24,7 +24,7 @@ class AvklarSamordningGraderingLøsning(
         required = true,
         defaultValue = AVKLAR_SAMORDNING_GRADERING_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5012`
-) : AvklaringsbehovLøsning {
+) : EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return AvklarSamordningGraderingLøser(repositoryProvider).løs(kontekst, this)
     }

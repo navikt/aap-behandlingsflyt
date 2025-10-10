@@ -20,7 +20,7 @@ import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
-class AktivitetspliktInformasjonskrav(
+class Aktivitetsplikt11_7Informasjonskrav(
     private val tidligereVurderinger: TidligereVurderinger,
     private val behandlingRepository: BehandlingRepository,
     private val aktivitetsplikt11_7Repository: Aktivitetsplikt11_7Repository,
@@ -32,8 +32,8 @@ class AktivitetspliktInformasjonskrav(
         override fun konstruer(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
-        ): AktivitetspliktInformasjonskrav {
-            return AktivitetspliktInformasjonskrav(
+        ): Aktivitetsplikt11_7Informasjonskrav {
+            return Aktivitetsplikt11_7Informasjonskrav(
                 TidligereVurderingerImpl(repositoryProvider),
                 repositoryProvider.provide(),
                 repositoryProvider.provide(),

@@ -15,7 +15,7 @@ class TrekkSøknadLøsning(
     @param:JsonProperty("behovstype", required = true, defaultValue = VURDER_TREKK_AV_SØKNAD_KODE)
     val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5028`,
     @param:JsonProperty("begrunnelse", required = true) val begrunnelse: String,
-) : AvklaringsbehovLøsning {
+) : EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return TrekkSøknadLøser(repositoryProvider).løs(kontekst, this)
     }

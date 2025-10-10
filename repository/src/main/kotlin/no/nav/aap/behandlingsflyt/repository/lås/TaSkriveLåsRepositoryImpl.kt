@@ -39,6 +39,7 @@ class TaSkriveLåsRepositoryImpl(private val connection: DBConnection): TaSkrive
     }
 
     override fun låsBehandling(behandlingId: BehandlingId): BehandlingSkrivelås {
+        log.info("Tar lås for behandling med id $behandlingId")
         val query = """SELECT versjon FROM BEHANDLING WHERE ID = ? FOR UPDATE"""
 
         return connection.queryFirst(query) {
@@ -64,6 +65,7 @@ class TaSkriveLåsRepositoryImpl(private val connection: DBConnection): TaSkrive
         /* Lås sak før vi låser behandling. Hvis vi låser sak i setRowMapper, så
          * låses behandling først, og så sak.
          **/
+        log.info("Tar lås for behandling med referanse $behandlingUUid (samt tilhørende sak)")
         val sakId = connection.queryFirst("""select sak_id from behandling where referanse = ?""") {
             setParams {
                 setUUID(1, behandlingUUid)
@@ -72,6 +74,7 @@ class TaSkriveLåsRepositoryImpl(private val connection: DBConnection): TaSkrive
                 SakId(it.getLong("sak_id"))
             }
         }
+        log.info("Tar lås for sak med $sakId for behandling med referanse $behandlingUUid")
         val sakLås = låsSak(sakId)
 
         val query = """SELECT id, sak_id, versjon FROM BEHANDLING WHERE referanse = ? FOR UPDATE"""
@@ -92,20 +95,8 @@ class TaSkriveLåsRepositoryImpl(private val connection: DBConnection): TaSkrive
         }
     }
 
-    override fun låsSak(saksnummer: Saksnummer): SakSkrivelås {
-        val query = """SELECT id,versjon FROM SAK WHERE saksnummer = ? FOR UPDATE"""
-
-        return connection.queryFirst(query) {
-            setParams {
-                setString(1, saksnummer.toString())
-            }
-            setRowMapper {
-                SakSkrivelås(SakId(it.getLong("id")), it.getLong("versjon"))
-            }
-        }
-    }
-
     override fun låsSak(sakId: SakId): SakSkrivelås {
+        log.info("Tar lås for sak med id $sakId")
         val query = """SELECT versjon FROM SAK WHERE ID = ? FOR UPDATE"""
 
         return connection.queryFirst(query) {

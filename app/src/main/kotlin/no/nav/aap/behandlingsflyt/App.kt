@@ -72,8 +72,8 @@ import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KABAL_EVENT_TOPIC
 import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KabalKafkaKonsument
-import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PdlHendelseKafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PDL_HENDELSE_TOPIC
+import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PdlHendelseKafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.mottattHendelseApi
 import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
@@ -100,10 +100,10 @@ import no.nav.person.pdl.leesah.Personhendelse
 import org.slf4j.LoggerFactory
 import org.slf4j.bridge.SLF4JBridgeHandler
 import java.util.*
-import java.util.concurrent.TimeUnit
 import java.util.logging.Level
 import java.util.logging.Logger
 import javax.sql.DataSource
+import kotlin.time.Duration.Companion.seconds
 
 fun utledSubtypesTilMottattHendelseDTO(): List<Class<*>> {
     return Innsending::class.sealedSubclasses.map { it.java }.toList()
@@ -111,7 +111,21 @@ fun utledSubtypesTilMottattHendelseDTO(): List<Class<*>> {
 
 class App
 
-private const val ANTALL_WORKERS = 4
+internal object AppConfig {
+    // Matcher terminationGracePeriodSeconds for podden i Kubernetes-manifestet.
+    val kubernetesTimeout = 30.seconds
+
+    // Tid før ktor avslutter uansett. Må være litt mindre enn `kubernetesTimeout`.
+    val endeligShutdownTimeout = kubernetesTimeout - 3.seconds
+
+    // Tid appen får til å fullføre påbegynte requests, jobber etc. Må være mindre enn `endeligShutdownTimeout`.
+    val pågåendeRequesterTimeout = endeligShutdownTimeout - 7.seconds
+
+    // Tid appen får til å avslutte Motor, Kafka, etc
+    val stansArbeidTimeout = pågåendeRequesterTimeout
+
+    const val ANTALL_WORKERS = 4
+}
 
 fun main() {
     Thread.currentThread().setUncaughtExceptionHandler { _, e ->
@@ -125,8 +139,8 @@ fun main() {
         connectionGroupSize = 8
         workerGroupSize = 8
         callGroupSize = 16
-        shutdownGracePeriod = TimeUnit.SECONDS.toMillis(5)
-        shutdownTimeout = TimeUnit.SECONDS.toMillis(10)
+        shutdownGracePeriod = AppConfig.pågåendeRequesterTimeout.inWholeMilliseconds
+        shutdownTimeout = AppConfig.endeligShutdownTimeout.inWholeMilliseconds
         connector {
             port = 8080
         }
@@ -135,7 +149,7 @@ fun main() {
 
 private fun aktiverPostgresLogging() {
     // Basert på on https://www.baeldung.com/java-jul-to-slf4j-bridge#1-programmatic-configuration
-    SLF4JBridgeHandler.install();
+    SLF4JBridgeHandler.install()
     // Overrider log level fra postgres-jdbc's default, som ikke logger noe som helst
     Logger.getLogger("org.postgresql").level = Level.WARNING // minste-nivå
     // Vi kan fra nå av bruke org.postgresql loggeren i logback.xml
@@ -176,6 +190,16 @@ internal fun Application.server(
     }
     if (Miljø.erDev()) {
         startPDLHendelseKonsument(dataSource, repositoryRegistry)
+    }
+
+    monitor.subscribe(ApplicationStopPreparing) { environment ->
+        environment.log.info("ktor forbereder seg på å stoppe.")
+    }
+    monitor.subscribe(ApplicationStopping) { environment ->
+        environment.log.info("ktor stopper nå å ta imot nye requester, og lar pågående requester kjøre frem til timeout.")
+    }
+    monitor.subscribe(ApplicationStopped) { environment ->
+        environment.log.info("ktor har fullført nedstoppingen sin. Eventuelle requester som ikke fullførtes innen timeout ble avbrutt.")
     }
 
     routing {
@@ -265,7 +289,7 @@ fun Application.startMotor(
 ): Motor {
     val motor = Motor(
         dataSource = dataSource,
-        antallKammer = ANTALL_WORKERS,
+        antallKammer = AppConfig.ANTALL_WORKERS,
         logInfoProvider = BehandlingsflytLogInfoProvider,
         jobber = ProsesseringsJobber.alle(),
         prometheus = prometheus,
@@ -283,18 +307,13 @@ fun Application.startMotor(
     monitor.subscribe(ApplicationStopPreparing) { environment ->
         // Denne vil vanligvis kjøres i to ulike tråder, både main og KtorShutdownHook
         // Det som kjøres her må derfor støtte at det blir kjørt flere ganger på samme tid
-        environment.log.info("Forbereder stopp av applikasjon, stopper motor.")
-        motor.stop()
-    }
-    monitor.subscribe(ApplicationStopping) { environment ->
-        environment.log.info("Server stopper...")
+        motor.stop(/* TODO AppConfig.stansArbeidTimeout */)
     }
     monitor.subscribe(ApplicationStopped) { environment ->
-        environment.log.info("Server har stoppet.")
         try {
             dataSource.close()
         } catch (e: Exception) {
-            environment.log.warn("Feilet ved lukking av datasource", e)
+            environment.log.warn("Feil ved lukking av datasource", e)
         }
     }
 
@@ -317,7 +336,7 @@ fun Application.startKabalKonsument(
         t.start()
     }
     monitor.subscribe(ApplicationStopPreparing) { environment ->
-        environment.log.info("Forbereder stopp av applikasjon, lukker KabalKafkaKonsument.")
+        environment.log.info("Lukker KabalKafkaKonsument fordi ktor forbereder å stoppe.")
 
         konsument.lukk()
     }
@@ -380,7 +399,7 @@ fun initDatasource(dbConfig: DbConfig): HikariDataSource = HikariDataSource(Hika
     username = dbConfig.username
     password = dbConfig.password
     dataSourceProperties = postgresConfig
-    maximumPoolSize = 10 + (ANTALL_WORKERS * 2)
+    maximumPoolSize = 10 + (AppConfig.ANTALL_WORKERS * 2)
     minimumIdle = 1
     connectionTestQuery = "SELECT 1"
     metricRegistry = prometheus

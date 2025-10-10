@@ -28,7 +28,6 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.lookup.repository.RepositoryProvider
-import org.slf4j.LoggerFactory
 
 class OvergangUføreSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
@@ -52,8 +51,6 @@ class OvergangUføreSteg private constructor(
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
         unleashGateway = gatewayProvider.provide(),
     )
-
-    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         if (unleashGateway.isDisabled(BehandlingsflytFeature.OvergangUfore)) {

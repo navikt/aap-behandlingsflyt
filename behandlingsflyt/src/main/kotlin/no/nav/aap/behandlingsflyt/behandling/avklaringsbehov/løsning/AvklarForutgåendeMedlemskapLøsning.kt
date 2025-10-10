@@ -24,7 +24,7 @@ class AvklarForutgåendeMedlemskapLøsning(
         required = true,
         defaultValue = AVKLAR_FORUTGÅENDE_MEDLEMSKAP_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5020`
-) : AvklaringsbehovLøsning {
+) : EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return AvklarForutgåendeMedlemskapLøser(repositoryProvider).løs(kontekst, this)
     }

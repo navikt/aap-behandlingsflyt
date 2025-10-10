@@ -16,7 +16,7 @@ class TrekkKlageLøsning(
     @param:JsonProperty("behovstype", required = true, defaultValue = VURDER_TREKK_AV_KLAGE_KODE)
     val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`6010`,
     val vurdering: TrekkKlageVurderingDto
-) : AvklaringsbehovLøsning {
+) : EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return TrekkKlageLøser(repositoryProvider).løs(kontekst, this)
     }

@@ -6,7 +6,6 @@ import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
@@ -44,8 +43,6 @@ fun NormalOpenAPIRoute.barnetilleggApi(
                 val dto = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                    val vilkårsresultatRepository =
-                        repositoryProvider.provide<VilkårsresultatRepository>()
 
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
@@ -80,7 +77,7 @@ fun NormalOpenAPIRoute.barnetilleggApi(
                             )
                         },
                         vurderteBarn = vurderteBarn?.barn.orEmpty().map {
-                            val barn = hentBarn(it.ident, barnGrunnlag);
+                            val barn = hentBarn(it.ident, barnGrunnlag)
                             when (val vurdertBartIdent = it.ident) {
                                 is BarnIdentifikator.BarnIdent -> ExtendedVurdertBarnDto(
                                         ident = vurdertBartIdent.ident.identifikator, null,

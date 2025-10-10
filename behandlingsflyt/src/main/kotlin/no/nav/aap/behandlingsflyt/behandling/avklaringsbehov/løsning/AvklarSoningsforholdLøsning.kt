@@ -22,7 +22,7 @@ class AvklarSoningsforholdLøsning(
         defaultValue = AVKLAR_SONINGSFORRHOLD_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5010`
 ) :
-    AvklaringsbehovLøsning {
+    EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return AvklarSoningsforholdLøser(repositoryProvider).løs(kontekst, this)
     }

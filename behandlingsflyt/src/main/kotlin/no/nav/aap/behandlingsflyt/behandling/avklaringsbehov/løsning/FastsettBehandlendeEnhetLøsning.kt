@@ -22,7 +22,7 @@ class FastsettBehandlendeEnhetLøsning(
         required = true,
         defaultValue = FASTSETT_BEHANDLENDE_ENHET_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`6001`
-) : AvklaringsbehovLøsning {
+) : EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return FastsettBehandlendeEnhetLøser(repositoryProvider).løs(kontekst, this)
     }

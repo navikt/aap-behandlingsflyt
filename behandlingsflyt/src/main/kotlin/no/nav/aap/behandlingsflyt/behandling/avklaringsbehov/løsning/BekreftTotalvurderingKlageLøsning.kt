@@ -17,7 +17,7 @@ class BekreftTotalvurderingKlageLøsning(
         required = true,
         defaultValue = BEKREFT_TOTALVURDERING_KLAGE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`6006`
-) : AvklaringsbehovLøsning {
+) : EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return BekreftTotalvurderingKlageLøser(repositoryProvider).løs(kontekst, this)
     }

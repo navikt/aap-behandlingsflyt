@@ -25,7 +25,7 @@ class AvklarHelseinstitusjonLøsning(
         defaultValue = AVKLAR_HELSEINSTITUSJON_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5011`
 ) :
-    AvklaringsbehovLøsning {
+    EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return AvklarHelseinstitusjonLøser(repositoryProvider).løs(kontekst, this)
     }

@@ -40,7 +40,6 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
     ) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         val nyttGrunnlag = SykdomGrunnlag(
-            null,
             yrkesskadevurdering = eksisterendeGrunnlag?.yrkesskadevurdering,
             sykdomsvurderinger = sykdomsvurderinger
         )
@@ -59,7 +58,6 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
     ) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         val nyttGrunnlag = SykdomGrunnlag(
-            null,
             yrkesskadevurdering = yrkesskadevurdering,
             sykdomsvurderinger = eksisterendeGrunnlag?.sykdomsvurderinger.orEmpty(),
         )
@@ -306,7 +304,6 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
 
     private fun mapGrunnlag(row: Row): SykdomGrunnlag {
         return SykdomGrunnlag(
-            row.getLong("ID"),
             mapYrkesskade(row.getLongOrNull("YRKESSKADE_ID")),
             mapSykdommer(row.getLongOrNull("SYKDOM_VURDERINGER_ID")),
         )

@@ -52,7 +52,6 @@ class AvklarBistandLøser(
 
         val ny = bistandsVurdering.let {
             BistandGrunnlag(
-                id = null,
                 vurderinger = listOf(it),
             ).somBistandsvurderingstidslinje(LocalDate.MIN)
         }

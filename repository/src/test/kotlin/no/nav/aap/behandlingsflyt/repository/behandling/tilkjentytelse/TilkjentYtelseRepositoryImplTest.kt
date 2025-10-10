@@ -18,7 +18,6 @@ import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
@@ -87,7 +86,7 @@ class TilkjentYtelseRepositoryImplTest {
             tilkjentYtelseRepository.lagre(behandling.id, tilkjentYtelse)
             val tilkjentYtelseHentet = tilkjentYtelseRepository.hentHvisEksisterer(behandling.id)
             assertNotNull(tilkjentYtelseHentet)
-            assertEquals(tilkjentYtelse, tilkjentYtelseHentet)
+            assertThat(tilkjentYtelseHentet).isEqualTo(tilkjentYtelse)
             // Dobbeltsjekke at vi avrunder redusert dagsats til nærmeste heltall
             assertThat(tilkjentYtelse.first().tilkjent.redusertDagsats()).isEqualTo(Beløp(BigDecimal("1319")))
         }

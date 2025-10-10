@@ -12,7 +12,7 @@ dependencies {
 
     api(libs.tilgangPlugin)
     api(libs.tilgangKontrakt)
-    api("no.nav.aap.brev:kontrakt:0.0.156")
+    api("no.nav.aap.brev:kontrakt:0.0.157")
     api("no.nav.aap.meldekort:kontrakt:0.0.129")
     api(libs.motor)
     api(libs.gateway)
@@ -25,7 +25,7 @@ dependencies {
     implementation(libs.verdityper)
     implementation(libs.tidslinje)
     implementation(kotlin("reflect"))
-    implementation("org.flywaydb:flyway-database-postgresql:11.13.2")
+    implementation("org.flywaydb:flyway-database-postgresql:11.13.3")
     runtimeOnly("org.postgresql:postgresql") // låst versjon i root build.gradle.kts
 
 
