@@ -17,7 +17,6 @@ open class FakeUnleashBase(
 
 object FakeUnleash : FakeUnleashBase(
     mapOf(
-        BehandlingsflytFeature.OverstyrStarttidspunkt to true,
         BehandlingsflytFeature.IngenValidering to false,
         BehandlingsflytFeature.SendForvaltningsmelding to true,
         BehandlingsflytFeature.SosialHjelpFlereKontorer to false,
@@ -36,7 +35,6 @@ object FakeUnleash : FakeUnleashBase(
 
 object FakeUnleashFasttrackAktivitetsplikt : FakeUnleashBase(
     mapOf(
-        BehandlingsflytFeature.OverstyrStarttidspunkt to true,
         BehandlingsflytFeature.IngenValidering to false,
         BehandlingsflytFeature.SendForvaltningsmelding to true,
         BehandlingsflytFeature.SosialHjelpFlereKontorer to false,
