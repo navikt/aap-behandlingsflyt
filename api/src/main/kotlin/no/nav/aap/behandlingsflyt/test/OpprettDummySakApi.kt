@@ -32,7 +32,8 @@ fun NormalOpenAPIRoute.opprettDummySakApi(
                         ident = Ident(req.ident),
                         erStudent = req.erStudent,
                         harYrkesskade = req.harYrkesskade,
-                        harMedlemskap = req.harMedlemskap
+                        harMedlemskap = req.harMedlemskap,
+                        andreUtbetalinger = req.andreUtbetalinger
                     )
                 }
                 respondWithStatus(HttpStatusCode.Accepted)
@@ -48,4 +49,5 @@ data class OpprettDummySakDto(
     val erStudent: Boolean,
     val harYrkesskade: Boolean,
     val harMedlemskap: Boolean,
+    val andreUtbetalinger: AndreUtbetalinger?
 )

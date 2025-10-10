@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PdlQ
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AndreUtbetalinger
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
@@ -80,6 +81,7 @@ class TestSakService(
             student = SøknadStudentDto(erStudent = erStudent.toJaNei()),
             yrkesskade = if (harYrkesskade) "Ja" else "Nei",
             oppgitteBarn = null,
+            andreUtbetalinger = andreUtbetalinger,
             medlemskap = SøknadMedlemskapDto(
                 harBoddINorgeSiste5År = if (harMedlemskap) "JA" else "NEI",
                 harArbeidetINorgeSiste5År = null,

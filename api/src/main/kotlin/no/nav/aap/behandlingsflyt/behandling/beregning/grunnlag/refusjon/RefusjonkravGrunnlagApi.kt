@@ -5,13 +5,17 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.navenheter.NavKontorService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SøknadSteg
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SøkPåSakService
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -50,6 +54,16 @@ fun NormalOpenAPIRoute.refusjonGrunnlagApi(
                         val gjeldendeVurderinger = refusjonkravRepository.hentHvisEksisterer(behandling.id)?.map {
                                 it.tilResponse(ansattInfoService)
                             }
+
+                        val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
+                        val søknader = mottattDokumentRepository.hentDokumenterAvType(behandling.id, InnsendingType.SØKNAD)
+
+
+                        println(søknader.size)
+                        println(søknader.first().ustrukturerteData())
+                        søknader.first()
+
+
                         val gjeldendeVurdering =
                             gjeldendeVurderinger?.firstOrNull()
                         val historiskeVurderinger =
