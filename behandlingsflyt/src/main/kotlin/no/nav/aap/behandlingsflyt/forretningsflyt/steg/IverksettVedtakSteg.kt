@@ -70,11 +70,10 @@ class IverksettVedtakSteg private constructor(
         } else {
             log.info("Fant ikke tilkjent ytelse for behandingsref ${kontekst.behandlingId}. Virkningstidspunkt: $virkningstidspunkt.")
         }
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.Samvarsling)) {
-            flytJobbRepository.leggTil(
-                jobbInput = JobbInput(jobb = VarsleVedtakJobbUtfører).medPayload(kontekst.behandlingId)
-            )
-        }
+        flytJobbRepository.leggTil(
+            jobbInput = JobbInput(jobb = VarsleVedtakJobbUtfører).medPayload(kontekst.behandlingId)
+        )
+
 
         flytJobbRepository.leggTil(
             JobbInput(jobb = DatadelingBehandlingJobbUtfører).medPayload(Pair(kontekst.behandlingId, vedtakstidspunkt))
@@ -120,7 +119,10 @@ class IverksettVedtakSteg private constructor(
             val mellomlagretVurderingRepository = repositoryProvider.provide<MellomlagretVurderingRepository>()
             return IverksettVedtakSteg(
                 behandlingRepository = behandlingRepository,
-                utbetalingService = UtbetalingService(repositoryProvider = repositoryProvider, gatewayProvider = gatewayProvider),
+                utbetalingService = UtbetalingService(
+                    repositoryProvider = repositoryProvider,
+                    gatewayProvider = gatewayProvider
+                ),
                 vedtakService = VedtakService(vedtakRepository, behandlingRepository),
                 utbetalingGateway = utbetalingGateway,
                 virkningstidspunktUtleder = virkningstidspunktUtlederService,
