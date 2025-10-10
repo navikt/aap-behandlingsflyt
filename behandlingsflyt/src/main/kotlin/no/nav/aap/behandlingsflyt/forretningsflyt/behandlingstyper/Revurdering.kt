@@ -62,6 +62,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderAlderSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderBistandsbehovSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderForutgåendeMedlemskapSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderLovvalgSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderOppholdskravSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderStudentSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykdomSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykepengeErstatningSteg
@@ -303,6 +304,16 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
                 )
             )
+            /**
+            .medSteg(
+                steg = VurderOppholdskravSteg,
+                vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.OPPHOLDSKRAV,
+                    Vurderingsbehov.HELHETLIG_VURDERING,
+                )
+            )
+            */
             .medSteg(
                 // TODO: Midlertidig duplikat av BarnService, skal på sikt kun være i StartBehandlingSteg
                 informasjonskrav = listOf(BarnInformasjonskrav),
