@@ -63,8 +63,12 @@ public data class PdlHendelseV0(
     val innsendingstype: InnsendingType,
 ) : PdlHendelse
 
-public fun tilPdlHendelseV0(): PdlHendelse = PdlHendelseV0(
+public fun tilPdlHendelseDodsfallBrukerV0(): PdlHendelse = PdlHendelseV0(
     innsendingstype = InnsendingType.PDL_HENDELSE_DODSFALL_BRUKER
+)
+
+public fun tilPdlHendelseDodsfallBarnV0(): PdlHendelse = PdlHendelseV0(
+    innsendingstype = InnsendingType.PDL_HENDELSE_DODSFALL_BARN
 )
 
 public fun PdlPersonHendelse.tilInnsendingDødsfallBruker(saksnummer: Saksnummer): Innsending = Innsending(
@@ -73,7 +77,7 @@ public fun PdlPersonHendelse.tilInnsendingDødsfallBruker(saksnummer: Saksnummer
     type = InnsendingType.PDL_HENDELSE_DODSFALL_BRUKER,
     kanal = Kanal.DIGITAL,
     mottattTidspunkt = LocalDateTime.now(),
-    melding = tilPdlHendelseV0()
+    melding = tilPdlHendelseDodsfallBrukerV0()
 )
 
 public fun PdlPersonHendelse.tilInnsendingDødsfallBarn(saksnummer: Saksnummer): Innsending = Innsending(
@@ -82,7 +86,7 @@ public fun PdlPersonHendelse.tilInnsendingDødsfallBarn(saksnummer: Saksnummer):
     type = InnsendingType.PDL_HENDELSE_DODSFALL_BARN,
     kanal = Kanal.DIGITAL,
     mottattTidspunkt = LocalDateTime.now(),
-    melding = tilPdlHendelseV0()
+    melding = tilPdlHendelseDodsfallBarnV0()
 )
 
 

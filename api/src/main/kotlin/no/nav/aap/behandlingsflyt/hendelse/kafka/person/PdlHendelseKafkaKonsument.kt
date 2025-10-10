@@ -87,11 +87,11 @@ class PdlHendelseKafkaKonsument(
                     val behandlingIds = barnRepository.hentBehandlingIdForBarn(funnetIdent!!)
                     log.info("Sjekker mottatt hendelse for barn ")
                     behandlingIds
-                        ?.map { behandlingRepository.hent(it) }
-                        ?.map { it.sakId }
-                        ?.distinct()
-                        ?.map { sakRepository.hent(it) }
-                        ?.forEach { sak ->
+                        .map { behandlingRepository.hent(it) }
+                        .map { it.sakId }
+                        .distinct()
+                        .map { sakRepository.hent(it) }
+                        .forEach { sak ->
                             log.info("Registrerer mottatt hendelse på barn for ${sak.saksnummer}")
                             hendelseService.registrerMottattHendelse(
                                 personHendelse.tilInnsendingDødsfallBarn(sak.saksnummer)
