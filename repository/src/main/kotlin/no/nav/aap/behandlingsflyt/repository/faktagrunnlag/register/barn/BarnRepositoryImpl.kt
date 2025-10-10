@@ -75,6 +75,57 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         return requireNotNull(hentHvisEksisterer(behandlingId))
     }
 
+    override fun hentBehandlingIdForBarn(ident: Ident): List<BehandlingId> {
+        log.info("Henter info for ident {}", ident)
+        val registerBarnId = getRegisterBarnId(ident)
+        log.info("Henter registerbarnid for registerBarnId {}", registerBarnId)
+        if (registerBarnId != null) {
+            val behandlingId = hentBehandlingIdForBarneId(registerBarnId)
+            log.info("Henter behandling for behandlingId {}", behandlingId)
+            return behandlingId
+        }
+        return emptyList()
+    }
+
+
+    private fun hentBehandlingIdForBarneId(id: Long): List<BehandlingId> {
+
+
+        val behandlingIds = connection.queryList(
+            """
+            SELECT BEHANDLING_ID 
+            FROM BARNOPPLYSNING_GRUNNLAG g 
+            WHERE g.AKTIV AND g.REGISTER_BARN_ID = ?
+        """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, id)
+            }
+            setRowMapper {
+                BehandlingId(
+                    id = it.getLong("behandling_id"),
+                )
+            }
+        }
+
+        return behandlingIds
+    }
+
+
+    private fun getRegisterBarnId(ident: Ident): Long? = connection.queryFirstOrNull(
+        """
+                    SELECT bgb_id
+                    FROM barnopplysning
+                    WHERE ident = ? AND ident is not null
+                 
+                """.trimIndent()
+    ) {
+        setParams { setString(1, ident.identifikator) }
+        setRowMapper { row ->
+            row.getLong("bgb_id")
+        }
+    }
+
     private fun hentOppgittBarn(id: Long): OppgitteBarn {
         return OppgitteBarn(
             id, connection.queryList(
@@ -201,6 +252,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
                 }
             })
     }
+
 
     override fun lagreOppgitteBarn(behandlingId: BehandlingId, oppgitteBarn: OppgitteBarn) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)

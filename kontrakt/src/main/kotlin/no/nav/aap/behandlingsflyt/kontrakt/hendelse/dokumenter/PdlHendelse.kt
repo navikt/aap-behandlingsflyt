@@ -76,4 +76,13 @@ public fun PdlPersonHendelse.tilInnsendingDødsfallBruker(saksnummer: Saksnummer
     melding = tilPdlHendelseV0()
 )
 
+public fun PdlPersonHendelse.tilInnsendingDødsfallBarn(saksnummer: Saksnummer): Innsending = Innsending(
+    saksnummer = saksnummer,
+    referanse = InnsendingReferanse(PdlHendelseId(value = this.hendelseId)),
+    type = InnsendingType.PDL_HENDELSE_DODSFALL_BARN,
+    kanal = Kanal.DIGITAL,
+    mottattTidspunkt = LocalDateTime.now(),
+    melding = tilPdlHendelseV0()
+)
+
 

@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.RegisterBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.VurderteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import java.time.LocalDateTime
@@ -96,6 +97,11 @@ object InMemoryBarnRepository : BarnRepository {
         fraBehandling: BehandlingId,
         tilBehandling: BehandlingId
     ) {
+        TODO("Not yet implemented")
+    }
+
+    override fun hentBehandlingIdForBarn(ident: Ident): List<BehandlingId>
+    {
         TODO("Not yet implemented")
     }
 
