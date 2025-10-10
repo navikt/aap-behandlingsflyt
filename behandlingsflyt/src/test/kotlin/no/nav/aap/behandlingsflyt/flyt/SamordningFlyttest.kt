@@ -104,7 +104,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             .kvalitetssikreOk()
             .løsBeregningstidspunkt()
             .løsForutgåendeMedlemskap()
-            //.løsOppholdskrav()
+            .løsOppholdskrav()
             .medKontekst {
                 assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
             }
@@ -407,7 +407,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                     ),
                 ),
             ).løsForutgåendeMedlemskap()
-            //.løsOppholdskrav()
+            .løsOppholdskrav()
 
         assertThat(hentÅpneAvklaringsbehov(behandling.id).map { it.definisjon }).containsExactly(Definisjon.AVKLAR_SAMORDNING_GRADERING)
 
