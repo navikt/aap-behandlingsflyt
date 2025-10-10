@@ -57,7 +57,7 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(
                         ?.let { bistandRepository.hentHvisEksisterer(it) }
                         ?.vurderinger.orEmpty()
                     val vurdering = nåTilstand
-                        .filterNot { it in vedtatteBistandsvurderinger }
+                        .filterNot { gjeldendeVurdering -> gjeldendeVurdering.copy(opprettet = null) in vedtatteBistandsvurderinger.map { it.copy(opprettet = null) } }
                         .singleOrNull()
 
                     val gjeldendeSykdomsvurderinger =
