@@ -153,29 +153,27 @@ class FlytOrkestrator(
             }
         }
 
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.AutomatiskTilbakeforUlostAvklaringsbehov)) {
-            val tidligsteÅpneAvklaringsbehov = avklaringsbehovene.åpne()
-                .minWithOrNull(compareBy(behandlingFlyt.stegComparator, { it.løsesISteg() }))
+        val tidligsteÅpneAvklaringsbehov = avklaringsbehovene.åpne()
+            .minWithOrNull(compareBy(behandlingFlyt.stegComparator, { it.løsesISteg() }))
 
-            if (tidligsteÅpneAvklaringsbehov != null) {
-                val sendtTilbakeFraBeslutterNå =
-                    tidligsteÅpneAvklaringsbehov.status() == SENDT_TILBAKE_FRA_BESLUTTER && behandling.aktivtSteg() == StegType.FATTE_VEDTAK
-                val sendtTilbakeFraKvalitetssikrerNå =
-                    tidligsteÅpneAvklaringsbehov.status() == SENDT_TILBAKE_FRA_KVALITETSSIKRER && behandling.aktivtSteg() == StegType.KVALITETSSIKRING
-                if (behandlingFlyt.erStegFør(tidligsteÅpneAvklaringsbehov.løsesISteg(), behandling.aktivtSteg())) {
-                    if (!sendtTilbakeFraBeslutterNå && !sendtTilbakeFraKvalitetssikrerNå) {
-                        log.error(
-                            """
-                        Behandlingen er i steg ${behandling.aktivtSteg()} og har passert det åpne 
-                        avklaringsbehovet ${tidligsteÅpneAvklaringsbehov.definisjon} som skal løses i 
-                        steg ${tidligsteÅpneAvklaringsbehov.løsesISteg()}. Med mindre det har skjedd 
-                        en endring i rekkefølgen av stegene, så er dette en bug.
-                        """.trimIndent().replace("\n", " ")
-                        )
+        if (tidligsteÅpneAvklaringsbehov != null) {
+            val sendtTilbakeFraBeslutterNå =
+                tidligsteÅpneAvklaringsbehov.status() == SENDT_TILBAKE_FRA_BESLUTTER && behandling.aktivtSteg() == StegType.FATTE_VEDTAK
+            val sendtTilbakeFraKvalitetssikrerNå =
+                tidligsteÅpneAvklaringsbehov.status() == SENDT_TILBAKE_FRA_KVALITETSSIKRER && behandling.aktivtSteg() == StegType.KVALITETSSIKRING
+            if (behandlingFlyt.erStegFør(tidligsteÅpneAvklaringsbehov.løsesISteg(), behandling.aktivtSteg())) {
+                if (!sendtTilbakeFraBeslutterNå && !sendtTilbakeFraKvalitetssikrerNå) {
+                    log.error(
+                        """
+                    Behandlingen er i steg ${behandling.aktivtSteg()} og har passert det åpne 
+                    avklaringsbehovet ${tidligsteÅpneAvklaringsbehov.definisjon} som skal løses i 
+                    steg ${tidligsteÅpneAvklaringsbehov.løsesISteg()}. Med mindre det har skjedd 
+                    en endring i rekkefølgen av stegene, så er dette en bug.
+                    """.trimIndent().replace("\n", " ")
+                    )
 
-                        val tilbakeflyt = behandlingFlyt.tilbakeflyt(tidligsteÅpneAvklaringsbehov)
-                        tilbakefør(kontekst, behandling, tilbakeflyt, avklaringsbehovene)
-                    }
+                    val tilbakeflyt = behandlingFlyt.tilbakeflyt(tidligsteÅpneAvklaringsbehov)
+                    tilbakefør(kontekst, behandling, tilbakeflyt, avklaringsbehovene)
                 }
             }
         }
