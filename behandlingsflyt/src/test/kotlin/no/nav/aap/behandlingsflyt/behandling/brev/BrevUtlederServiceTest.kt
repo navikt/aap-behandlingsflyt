@@ -11,12 +11,15 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt1
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Vurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagInntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -32,7 +35,9 @@ import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Dagsatser
+import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import org.assertj.core.api.Assertions.assertThat
@@ -41,10 +46,13 @@ import org.junit.jupiter.api.assertThrows
 import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate
+import java.time.Year
 import kotlin.random.Random
 
 class BrevUtlederServiceTest {
     val behandlingRepository = mockk<BehandlingRepository>()
+    val beregningsgrunnlagRepository = mockk<BeregningsgrunnlagRepository>()
+    val beregningVurderingRepository = mockk<BeregningVurderingRepository>()
     val aktivitetspliktRepository = mockk<Aktivitetsplikt11_7Repository>()
     val underveisRepository = mockk<UnderveisRepository>()
     val avbrytRevurderingService = mockk<AvbrytRevurderingService>()
@@ -59,8 +67,8 @@ class BrevUtlederServiceTest {
         klageresultatUtleder = mockk<KlageresultatUtleder>(),
         behandlingRepository = behandlingRepository,
         vedtakRepository = mockk<VedtakRepository>(),
-        beregningsgrunnlagRepository = mockk<BeregningsgrunnlagRepository>(),
-        beregningVurderingRepository = mockk<BeregningVurderingRepository>(),
+        beregningsgrunnlagRepository = beregningsgrunnlagRepository,
+        beregningVurderingRepository = beregningVurderingRepository,
         tilkjentYtelseRepository = mockk<TilkjentYtelseRepository>(),
         underveisRepository = underveisRepository,
         aktivitetsplikt11_7Repository = aktivitetspliktRepository,
@@ -166,9 +174,37 @@ class BrevUtlederServiceTest {
                 utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.OPPFYLT,
             )
         )
+        every { beregningsgrunnlagRepository.hentHvisEksisterer(revurdering.id) } returns Grunnlag11_19(
+            grunnlaget = GUnit(2),
+            erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(0),
+            inntekter = listOf(
+                grunnlagInntekt(2024, 220_000),
+                grunnlagInntekt(2023, 210_000),
+                grunnlagInntekt(2022, 200_000),
+            )
+        )
+        every { beregningVurderingRepository.hentHvisEksisterer(revurdering.id) } returns BeregningGrunnlag(null, null)
 
         assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)).isEqualTo(
-            VurderesForUføretrygd
+            VurderesForUføretrygd(
+                listOf(
+                    InntektPerÅr(Year.of(2024), inntekt = BigDecimal("220000.00")),
+                    InntektPerÅr(Year.of(2023), inntekt = BigDecimal("210000.00")),
+                    InntektPerÅr(Year.of(2022), inntekt = BigDecimal("200000.00")),
+                )
+            )
+        )
+    }
+
+    private fun grunnlagInntekt(år: Int, inntekt: Int): GrunnlagInntekt {
+        return GrunnlagInntekt(
+            år = Year.of(år),
+            inntektIKroner = Beløp(inntekt),
+            grunnbeløp = Beløp(0),
+            inntektIG = GUnit(0),
+            inntekt6GBegrenset = GUnit(0),
+            er6GBegrenset = false
         )
     }
 
