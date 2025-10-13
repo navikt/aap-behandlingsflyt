@@ -18,7 +18,10 @@ data class MedlemskapArbeidInntektGrunnlag(
     val medlemskapGrunnlag: MedlemskapUnntakGrunnlag?,
     val inntekterINorgeGrunnlag: List<InntektINorgeGrunnlag>,
     val arbeiderINorgeGrunnlag: List<ArbeidINorgeGrunnlag>,
+
+    @Deprecated("Ikke periodisert - skal fases ut")
     val manuellVurdering: ManuellVurderingForLovvalgMedlemskap?,
+
     val vurderinger: Set<ManuellVurderingForLovvalgMedlemskap>,
 )
 
