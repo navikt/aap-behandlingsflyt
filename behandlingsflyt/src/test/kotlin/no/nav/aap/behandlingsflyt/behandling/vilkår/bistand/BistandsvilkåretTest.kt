@@ -163,11 +163,11 @@ class BistandsvilkåretTest {
         )
 
         val (førstegangsbehandling, sak) = dataSource.transaction { connection ->
-            val repo = BistandRepositoryImpl(connection)
+            val bistandRepo = BistandRepositoryImpl(connection)
             val sak = sak(connection)
             val førstegangsbehandling = finnEllerOpprettBehandling(connection, sak)
 
-            repo.lagre(førstegangsbehandling.id, listOf(bistandsvurdering1))
+            bistandRepo.lagre(førstegangsbehandling.id, listOf(bistandsvurdering1))
             Pair(førstegangsbehandling, sak)
         }
 

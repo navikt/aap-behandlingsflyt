@@ -155,8 +155,8 @@ class SamordningYtelseVurderingServiceTest {
         ).isFalse()
     }
 
-    private fun opprettVurderingData(repo: SamordningVurderingRepositoryImpl, behandlingId: BehandlingId) {
-        repo.lagreVurderinger(
+    private fun opprettVurderingData(samordningVurderingRepo: SamordningVurderingRepositoryImpl, behandlingId: BehandlingId) {
+        samordningVurderingRepo.lagreVurderinger(
             behandlingId,
             SamordningVurderingGrunnlag(
                 begrunnelse = "En god begrunnelse",
@@ -181,8 +181,8 @@ class SamordningYtelseVurderingServiceTest {
         )
     }
 
-    private fun opprettYtelseData(repo: SamordningYtelseRepositoryImpl, behandlingId: BehandlingId) {
-        repo.lagre(
+    private fun opprettYtelseData(samordningYtelseRepo: SamordningYtelseRepositoryImpl, behandlingId: BehandlingId) {
+        samordningYtelseRepo.lagre(
             behandlingId,
             listOf(
                 SamordningYtelse(
