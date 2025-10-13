@@ -22,7 +22,7 @@ data class MedlemskapArbeidInntektGrunnlag(
     @Deprecated("Ikke periodisert - skal fases ut")
     val manuellVurdering: ManuellVurderingForLovvalgMedlemskap?,
 
-    val vurderinger: Set<ManuellVurderingForLovvalgMedlemskap>,
+    val vurderinger: Set<ManuellVurderingForLovvalgMedlemskap> = emptySet()
 )
 
 data class InntektINorgeGrunnlag(
