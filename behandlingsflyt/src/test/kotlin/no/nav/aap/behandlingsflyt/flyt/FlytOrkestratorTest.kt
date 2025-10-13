@@ -865,6 +865,40 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
     }
 
     @Test
+    fun `skal ikke vise avklaringsbehov for yrkesskade ved avslag i tidligere steg`() {
+        val personMedYrkesskade = TestPersoner.PERSON_MED_YRKESSKADE()
+        val (_, behandling) = sendInnFørsteSøknad(
+            person = personMedYrkesskade,
+        )
+
+        val oppdatertBehandling = behandling
+            .løsAvklaringsBehov(
+                AvklarSykdomLøsning(
+                    sykdomsvurderinger = listOf(
+                        SykdomsvurderingLøsningDto(
+                            begrunnelse = "Er ikke syk nok",
+                            dokumenterBruktIVurdering = listOf(JournalpostId("1231299")),
+                            harSkadeSykdomEllerLyte = false,
+                            vurderingenGjelderFra = null,
+                            erArbeidsevnenNedsatt = null,
+                            erSkadeSykdomEllerLyteVesentligdel = null,
+                            erNedsettelseIArbeidsevneAvEnVissVarighet = null,
+                            erNedsettelseIArbeidsevneMerEnnHalvparten = null,
+                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                            yrkesskadeBegrunnelse = null,
+                        )
+                    )
+                )
+            )
+            .løsSykdomsvurderingBrev()
+            .kvalitetssikreOk()
+            .fattVedtakEllerSendRetur()
+            .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_AVSLAG)
+
+        assertThat(oppdatertBehandling.status()).isEqualTo(Status.AVSLUTTET)
+    }
+
+    @Test
     fun `kan trekke søknad som har passert manuelt vurdert lovvalg`() {
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 

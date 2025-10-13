@@ -69,7 +69,7 @@ class VurderYrkesskadeSteg private constructor(
     ): Boolean {
         return when (flytKontekstMedPerioder.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
-                return if (tidligereVurderinger.girIngenBehandlingsgrunnlag(flytKontekstMedPerioder, type())) {
+                return if (tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(flytKontekstMedPerioder, type())) {
                     false
                 } else if (yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() != true) {
                     false
