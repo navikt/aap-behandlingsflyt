@@ -5,17 +5,21 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravInput
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.KanTriggeRevurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreInformasjonskrav.UføreRegisterdata
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -25,7 +29,7 @@ class UføreInformasjonskrav(
     private val uføreRepository: UføreRepository,
     private val uføreRegisterGateway: UføreRegisterGateway,
     private val tidligereVurderinger: TidligereVurderinger,
-) : Informasjonskrav, KanTriggeRevurdering {
+) : Informasjonskrav<UføreInformasjonskrav.UføreInput, UføreRegisterdata>, KanTriggeRevurdering {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
         uføreRepository = repositoryProvider.provide(),
@@ -46,10 +50,29 @@ class UføreInformasjonskrav(
                 && (oppdatert.ikkeKjørtSisteKalenderdag() || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode)
     }
 
-    override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
+    data class UføreInput(val sak: Sak) : InformasjonskravInput
+
+    data class UføreRegisterdata(val innhentMedHistorikk: List<Uføre>) : InformasjonskravRegisterdata
+
+    override fun klargjør(kontekst: FlytKontekstMedPerioder): UføreInput {
+        return UføreInput(sakOgBehandlingService.hentSakFor(kontekst.behandlingId))
+    }
+
+    override fun hentData(input: UføreInput): UføreRegisterdata {
+        val sak = input.sak
+
+        return UføreRegisterdata(uføreRegisterGateway.innhentMedHistorikk(sak.person, sak.rettighetsperiode.fom))
+    }
+
+    override fun oppdater(
+        input: UføreInput,
+        registerdata: UføreRegisterdata,
+        kontekst: FlytKontekstMedPerioder
+    ): Informasjonskrav.Endret {
         log.info("Oppdaterer uførehistorikk for behandlingen")
         val behandlingId = kontekst.behandlingId
-        val uføregrader = hentUføregrader(behandlingId)
+        val uføregrader = registerdata.innhentMedHistorikk
+
         val eksisterendeGrunnlag = uføreRepository.hentHvisEksisterer(behandlingId)
 
         if (harEndringerUføre(eksisterendeGrunnlag, uføregrader)) {
@@ -72,7 +95,7 @@ class UføreInformasjonskrav(
 
         // Ønsker ikke trigge revurdering automatisk i dette tilfellet enn så lenge
         val gikkFraNullTilTomtGrunnlag = uføregrader.isEmpty() && eksisterendeGrunnlag == null
-        
+
         return if (harEndringerUføre(eksisterendeGrunnlag, uføregrader) && !gikkFraNullTilTomtGrunnlag) {
             listOf(VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING))
         } else {
@@ -83,7 +106,10 @@ class UføreInformasjonskrav(
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.UFØRE
 
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): UføreInformasjonskrav {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): UføreInformasjonskrav {
             return UføreInformasjonskrav(repositoryProvider, gatewayProvider)
         }
 

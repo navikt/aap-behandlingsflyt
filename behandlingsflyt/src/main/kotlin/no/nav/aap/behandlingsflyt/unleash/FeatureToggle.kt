@@ -22,7 +22,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     OverforingsdatoNullForAvregning,
     NyeSykdomVilkar,
     OvergangUfore,
-    AutomatiskTilbakeforUlostAvklaringsbehov,
     IverksettUtbetalingSomSelvstendigJobb,
     RefaktorereFastsettSykdomsvilkar,
     SykepengerPeriodisert

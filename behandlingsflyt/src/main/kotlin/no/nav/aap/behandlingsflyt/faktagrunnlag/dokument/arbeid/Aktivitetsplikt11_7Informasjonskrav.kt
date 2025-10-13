@@ -8,6 +8,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_END
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.IngenInput
+import no.nav.aap.behandlingsflyt.faktagrunnlag.IngenRegisterData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -25,7 +27,7 @@ class Aktivitetsplikt11_7Informasjonskrav(
     private val behandlingRepository: BehandlingRepository,
     private val aktivitetsplikt11_7Repository: Aktivitetsplikt11_7Repository,
     private val unleashGateway: UnleashGateway
-) : Informasjonskrav {
+) : Informasjonskrav<IngenInput, IngenRegisterData> {
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.AKTIVITETSPLIKT
 
@@ -54,8 +56,16 @@ class Aktivitetsplikt11_7Informasjonskrav(
                 && !tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, steg)
     }
 
-    override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
-        if (kontekst.vurderingType == VurderingType.EFFEKTUER_AKTIVITETSPLIKT) {
+    override fun klargjør(kontekst: FlytKontekstMedPerioder) = IngenInput
+
+    override fun hentData(input: IngenInput) = IngenRegisterData
+
+    override fun oppdater(
+        input: IngenInput,
+        registerdata: IngenRegisterData,
+        kontekst: FlytKontekstMedPerioder
+    ): Informasjonskrav.Endret {
+        if (kontekst.vurderingType == VurderingType.EFFEKTUER_AKTIVITETSPLIKT) { /// vurdere å fjerne denne?
             val nyesteIverksatteAktivitetspliktBehandling =
                 behandlingRepository
                     .hentAlleFor(kontekst.sakId, listOf(TypeBehandling.Aktivitetsplikt))

@@ -6,6 +6,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_END
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.IngenInput
+import no.nav.aap.behandlingsflyt.faktagrunnlag.IngenRegisterData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
@@ -22,7 +24,7 @@ class SøknadInformasjonskrav private constructor(
     private val studentRepository: StudentRepository,
     private val barnRepository: BarnRepository,
     private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository
-) : Informasjonskrav {
+) : Informasjonskrav<IngenInput, IngenRegisterData> {
 
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.SØKNAD
@@ -51,7 +53,15 @@ class SøknadInformasjonskrav private constructor(
         return kontekst.erFørstegangsbehandlingEllerRevurdering()
     }
 
-    override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
+    override fun klargjør(kontekst: FlytKontekstMedPerioder) = IngenInput
+
+    override fun hentData(input: IngenInput) = IngenRegisterData
+
+    override fun oppdater(
+        input: IngenInput,
+        registerdata: IngenRegisterData,
+        kontekst: FlytKontekstMedPerioder
+    ): Informasjonskrav.Endret {
         val ubehandletSøknader = mottaDokumentService.søknaderSomIkkeHarBlittBehandlet(kontekst.sakId)
         if (ubehandletSøknader.isEmpty()) {
             return IKKE_ENDRET

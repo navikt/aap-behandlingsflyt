@@ -81,7 +81,7 @@ dependencies {
     implementation("io.micrometer:micrometer-registry-prometheus:1.15.4")
     implementation("ch.qos.logback:logback-classic:1.5.19")
     implementation("net.logstash.logback:logstash-logback-encoder:8.1")
-    implementation("org.slf4j:jul-to-slf4j:2.0.13") // trengs for postgres-logging
+    implementation("org.slf4j:jul-to-slf4j:2.0.17") // trengs for postgres-logging
 
     implementation(libs.motor)
     implementation(libs.dbconnect)
@@ -109,7 +109,6 @@ dependencies {
     implementation("io.opentelemetry.instrumentation:opentelemetry-ktor-3.0:${opentelemetryVersion}")
     implementation("org.apache.avro:avro:1.12.0")
     implementation("io.confluent:kafka-avro-serializer:7.6.0")
-    testImplementation("org.springframework.kafka:spring-kafka-test:3.1.3")
     testImplementation(project(":lib-test"))
     implementation(libs.dbtest)
     implementation(libs.motorTestUtils)

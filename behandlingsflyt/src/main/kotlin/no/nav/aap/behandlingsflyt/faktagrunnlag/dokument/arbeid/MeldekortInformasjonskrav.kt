@@ -8,6 +8,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_END
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.IngenInput
+import no.nav.aap.behandlingsflyt.faktagrunnlag.IngenRegisterData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -23,14 +25,16 @@ class MeldekortInformasjonskrav private constructor(
     private val mottaDokumentService: MottaDokumentService,
     private val meldekortRepository: MeldekortRepository,
     private val tidligereVurderinger: TidligereVurderinger,
-
-    ) : Informasjonskrav {
+) : Informasjonskrav<IngenInput, IngenRegisterData> {
     override val navn = Companion.navn
 
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.MELDEKORT
 
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): MeldekortInformasjonskrav {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): MeldekortInformasjonskrav {
             return MeldekortInformasjonskrav(
                 MottaDokumentService(repositoryProvider),
                 repositoryProvider.provide<MeldekortRepository>(),
@@ -39,12 +43,24 @@ class MeldekortInformasjonskrav private constructor(
         }
     }
 
-    override fun erRelevant(kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?): Boolean {
+    override fun erRelevant(
+        kontekst: FlytKontekstMedPerioder,
+        steg: StegType,
+        oppdatert: InformasjonskravOppdatert?
+    ): Boolean {
         return kontekst.vurderingType in setOf(FØRSTEGANGSBEHANDLING, REVURDERING, MELDEKORT) &&
                 !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
     }
 
-    override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
+    override fun klargjør(kontekst: FlytKontekstMedPerioder) = IngenInput
+
+    override fun hentData(input: IngenInput) = IngenRegisterData
+
+    override fun oppdater(
+        input: IngenInput,
+        registerdata: IngenRegisterData,
+        kontekst: FlytKontekstMedPerioder
+    ): Informasjonskrav.Endret {
         val meldekortSomIkkeErBehandlet = mottaDokumentService.meldekortSomIkkeErBehandlet(kontekst.sakId)
         if (meldekortSomIkkeErBehandlet.isEmpty()) {
             return IKKE_ENDRET
@@ -77,7 +93,8 @@ class MeldekortInformasjonskrav private constructor(
 
     override fun flettOpplysningerFraAtomærBehandling(kontekst: FlytKontekst): Informasjonskrav.Endret {
         val forrigeBehandlingId = kontekst.forrigeBehandlingId ?: return IKKE_ENDRET
-        val forrigeBehandlingGrunnlag = meldekortRepository.hentHvisEksisterer(forrigeBehandlingId) ?: return IKKE_ENDRET
+        val forrigeBehandlingGrunnlag =
+            meldekortRepository.hentHvisEksisterer(forrigeBehandlingId) ?: return IKKE_ENDRET
 
         val meldekortIBehandling = meldekortRepository.hentHvisEksisterer(kontekst.behandlingId)
             ?.meldekortene

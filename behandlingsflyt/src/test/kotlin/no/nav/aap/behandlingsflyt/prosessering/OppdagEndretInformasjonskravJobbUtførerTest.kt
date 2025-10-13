@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonForhold
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonInformasjonskrav
@@ -12,6 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.UtbetaltePerioder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.BarnInnhentingRespons
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonsopphold
@@ -231,12 +233,25 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
                 rettighetsperiode = sak.rettighetsperiode,
                 vurderingsbehovRelevanteForSteg = emptySet()
             )
-            BarnInformasjonskrav.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
-            SamordningYtelseVurderingInformasjonskrav.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
-            TjenestePensjonInformasjonskrav.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
-            UføreInformasjonskrav.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
-            InstitusjonsoppholdInformasjonskrav.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
-            PersonopplysningInformasjonskrav.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
+
+            fun klargjørInformasjonskrav(informasjonskrav: List<Informasjonskravkonstruktør>) {
+                informasjonskrav.forEach {
+                    val krav = it.konstruer(repositoryProvider, gatewayProvider)
+                    val input = krav.klargjør(kontekst)
+                    val data = krav.hentData(input)
+                    krav.oppdater(input, data, kontekst)
+                }
+            }
+
+            listOf(
+                BarnInformasjonskrav,
+                SamordningYtelseVurderingInformasjonskrav,
+                TjenestePensjonInformasjonskrav,
+                UføreInformasjonskrav,
+                InstitusjonsoppholdInformasjonskrav,
+                PersonopplysningInformasjonskrav
+            ).let(::klargjørInformasjonskrav)
+
 
             repositoryProvider.provide<BehandlingRepository>()
                 .oppdaterBehandlingStatus(førstegangsbehandlingen.id, Status.AVSLUTTET)

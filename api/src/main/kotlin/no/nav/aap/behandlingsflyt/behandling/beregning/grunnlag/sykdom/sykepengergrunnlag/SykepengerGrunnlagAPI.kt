@@ -43,14 +43,16 @@ fun NormalOpenAPIRoute.sykepengerGrunnlagApi(
                     val vedtatteVurderinger =
                         behandling.forrigeBehandlingId?.let { sykepengerErstatningRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
 
-                    val sykepengerErstatningGrunnlag = sykepengerErstatningRepository.hentHvisEksisterer(behandling.id)
+                    val nåTilstand = sykepengerErstatningRepository.hentHvisEksisterer(behandling.id)?.vurderinger.orEmpty()
+
+                    val vurdering = nåTilstand
+                        .filterNot { gjeldendeVurdering -> gjeldendeVurdering.copy(vurdertTidspunkt = null) in vedtatteVurderinger.map { it.copy(vurdertTidspunkt = null) } }
+                        .singleOrNull()
 
                     SykepengerGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
-                        vurdering = sykepengerErstatningGrunnlag?.vurderinger.orEmpty().firstOrNull()
-                            ?.tilResponse(ansattInfoService),
-                        vurderinger = sykepengerErstatningGrunnlag?.vurderinger.orEmpty()
-                            .map { it.tilResponse(ansattInfoService) },
+                        vurdering = vurdering?.tilResponse(ansattInfoService),
+                        vurderinger = nåTilstand.map { it.tilResponse(ansattInfoService) },
                         vedtatteVurderinger = vedtatteVurderinger.map { it.tilResponse(ansattInfoService) }
                     )
                 }

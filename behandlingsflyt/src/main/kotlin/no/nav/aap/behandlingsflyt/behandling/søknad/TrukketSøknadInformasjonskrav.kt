@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.søknad
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.IngenInput
+import no.nav.aap.behandlingsflyt.faktagrunnlag.IngenRegisterData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
@@ -20,7 +22,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
  */
 class TrukketSøknadInformasjonskrav(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
-) : Informasjonskrav {
+) : Informasjonskrav<IngenInput, IngenRegisterData> {
     constructor(repositoryProvider: RepositoryProvider) : this(
         avklaringsbehovRepository = repositoryProvider.provide(),
     )
@@ -35,7 +37,19 @@ class TrukketSøknadInformasjonskrav(
         return Vurderingsbehov.SØKNAD_TRUKKET in kontekst.vurderingsbehovRelevanteForSteg
     }
 
-    override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
+    override fun klargjør(kontekst: FlytKontekstMedPerioder): IngenInput {
+        return IngenInput
+    }
+
+    override fun hentData(input: IngenInput): IngenRegisterData {
+        return IngenRegisterData
+    }
+
+    override fun oppdater(
+        input: IngenInput,
+        registerdata: IngenRegisterData,
+        kontekst: FlytKontekstMedPerioder
+    ): Informasjonskrav.Endret {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val vurderTrekkAvklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.VURDER_TREKK_AV_SØKNAD)
 
@@ -51,7 +65,7 @@ class TrukketSøknadInformasjonskrav(
         override fun konstruer(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
-        ): Informasjonskrav {
+        ): Informasjonskrav<IngenInput, IngenRegisterData> {
             return TrukketSøknadInformasjonskrav(repositoryProvider)
         }
     }

@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.hendelse.kafka.person
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
@@ -7,8 +8,10 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Endringstype
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Navn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Opplysningstype
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.PdlPersonHendelse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.tilInnsendingDødsfallBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.tilInnsendingDødsfallBruker
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
@@ -55,26 +58,50 @@ class PdlHendelseKafkaKonsument(
         dataSource.transaction {
             val repositoryProvider = repositoryRegistry.provider(it)
             val sakRepository: SakRepository = repositoryProvider.provide()
+            val behandlingRepository: BehandlingRepository = repositoryProvider.provide()
             val personRepository: PersonRepository = repositoryProvider.provide()
+            val barnRepository: BarnRepository = repositoryProvider.provide()
             val hendelseService = MottattHendelseService(repositoryProvider)
             if (personHendelse.opplysningstype == Opplysningstype.DOEDSFALL_V1 && personHendelse.endringstype == Endringstype.OPPRETTET) {
                 log.info("Håndterer hendelse med ${personHendelse.opplysningstype} og ${personHendelse.endringstype}")
+
                 var person: Person? = null
+                var funnetIdent: Ident? = null
 
                 for (ident in personHendelse.personidenter) {
+                    secureLogger.info("Håndterer hendelse for ${ident}")
                     person = personRepository.finn(Ident(ident))
                     //Håndterer D-nummer og Fnr
-                    if (person != null) break
+                    if (person != null) {
+                        funnetIdent = Ident(ident)
+                        break
+                    }
+
                 }
 
-                person?.let { personMedSak->
-                    sakRepository.finnSakerFor(personMedSak).forEach { sak ->
+                person?.let { personIKelvin ->
+                    sakRepository.finnSakerFor(personIKelvin).forEach { sak ->
                         log.info("Registrerer mottatt hendelse på ${sak.saksnummer}")
                         hendelseService.registrerMottattHendelse(
                             personHendelse.tilInnsendingDødsfallBruker(sak.saksnummer)
                         )
                     }
+                    val behandlingIds = barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForBarn(funnetIdent!!)
+                    log.info("Sjekker mottatt hendelse for barn $behandlingIds")
+                    behandlingIds
+                        .map { behandlingRepository.hent(it) }
+                        .map { it.sakId }
+                        .distinct()
+                        .map { sakRepository.hent(it) }
+                        .forEach { sak ->
+                            log.info("Registrerer mottatt hendelse på barn for ${sak.saksnummer}")
+                            hendelseService.registrerMottattHendelse(
+                                personHendelse.tilInnsendingDødsfallBarn(sak.saksnummer)
+                            )
+                        }
+
                 }
+
             } else {
                 log.info("Ignorerer hendelse med ${personHendelse.opplysningstype} og ${personHendelse.endringstype}")
             }

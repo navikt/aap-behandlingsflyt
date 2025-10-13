@@ -5,9 +5,11 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravInput
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ARBEIDSFORHOLDSTATUSER
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdGateway
@@ -44,8 +46,20 @@ class LovvalgInformasjonskrav private constructor(
     private val arbeidsForholdGateway: ArbeidsforholdGateway,
     private val enhetsregisteretGateway: EnhetsregisteretGateway,
     private val inntektskomponentenGateway: InntektkomponentenGateway
-) : Informasjonskrav {
+) : Informasjonskrav<LovvalgInformasjonskrav.LovvalgInput, LovvalgInformasjonskrav.LovvalgRegisterData> {
     private val log = LoggerFactory.getLogger(javaClass)
+
+    data class LovvalgInput(
+        val sak: Sak,
+        val eksisterendeData: MedlemskapArbeidInntektGrunnlag?
+    ) : InformasjonskravInput
+
+    data class LovvalgRegisterData(
+        val medlemskapPerioder: List<MedlemskapDataIntern>,
+        val arbeidGrunnlag: List<ArbeidINorgeGrunnlag>,
+        val inntektGrunnlag: List<ArbeidsInntektMaaned>,
+        val enhetGrunnlag: List<EnhetGrunnlag>
+    ) : InformasjonskravRegisterdata
 
     override val navn = Companion.navn
 
@@ -59,9 +73,17 @@ class LovvalgInformasjonskrav private constructor(
                 && (oppdatert.ikkeKjørtSisteKalenderdag() || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode)
     }
 
-    override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
+    override fun klargjør(kontekst: FlytKontekstMedPerioder): LovvalgInput {
         val sak = sakService.hent(kontekst.sakId)
+        val eksisterendeData = medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)
+        return LovvalgInput(
+            sak = sak,
+            eksisterendeData = eksisterendeData
+        )
+    }
 
+    override fun hentData(input: LovvalgInput): LovvalgRegisterData {
+        val sak = input.sak
         val medlemskapPerioderFuture = CompletableFuture
             .supplyAsync(withMdc { medlemskapGateway.innhent(sak.person, sak.rettighetsperiode) }, executor)
         val arbeidGrunnlagFuture = CompletableFuture
@@ -74,11 +96,34 @@ class LovvalgInformasjonskrav private constructor(
         val inntektGrunnlag = inntektGrunnlagFuture.get()
         val enhetGrunnlag = innhentEREGGrunnlag(inntektGrunnlag)
 
-        val eksisterendeData = medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)
-        lagre(kontekst.behandlingId, medlemskapPerioder, arbeidGrunnlag, inntektGrunnlag, enhetGrunnlag)
-        val nyeData = medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)
+        return LovvalgRegisterData(
+            medlemskapPerioder = medlemskapPerioder,
+            arbeidGrunnlag = arbeidGrunnlag,
+            inntektGrunnlag = inntektGrunnlag,
+            enhetGrunnlag = enhetGrunnlag
+        )
+    }
 
-        return if (nyeData == eksisterendeData) IKKE_ENDRET else ENDRET
+    override fun oppdater(
+        input: LovvalgInput,
+        registerdata: LovvalgRegisterData,
+        kontekst: FlytKontekstMedPerioder
+    ): Informasjonskrav.Endret {
+        val (medlemskapPerioder, arbeidGrunnlag, inntektGrunnlag, enhetGrunnlag) = registerdata
+
+        val eksisterendeData = input.eksisterendeData
+        // TODO: kun lagre hvis forskjell!
+        lagre(
+            behandlingId = kontekst.behandlingId,
+            medlemskapGrunnlag = medlemskapPerioder,
+            arbeidGrunnlag = arbeidGrunnlag,
+            inntektGrunnlag = inntektGrunnlag,
+            enhetGrunnlag = enhetGrunnlag
+        )
+
+        val nyData = medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)
+
+        return if (nyData == eksisterendeData) IKKE_ENDRET else ENDRET
     }
 
     private fun innhentAARegisterGrunnlag(sak: Sak): List<ArbeidINorgeGrunnlag> {
@@ -145,7 +190,8 @@ class LovvalgInformasjonskrav private constructor(
         )
     }
 
-    companion object : Informasjonskravkonstruktør {
+    companion object :
+        Informasjonskravkonstruktør {
         private val executor = Executors.newVirtualThreadPerTaskExecutor()
 
         override val navn = InformasjonskravNavn.LOVVALG

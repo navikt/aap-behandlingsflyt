@@ -12,6 +12,8 @@ import io.ktor.server.netty.*
 import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.routing.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import no.nav.aap.behandlingsflyt.api.actuator.actuator
 import no.nav.aap.behandlingsflyt.api.config.definisjoner.configApi
 import no.nav.aap.behandlingsflyt.auditlog.auditlogApi
@@ -112,17 +114,17 @@ fun utledSubtypesTilMottattHendelseDTO(): List<Class<*>> {
 class App
 
 internal object AppConfig {
-    // Matcher terminationGracePeriodSeconds for podden i Kubernetes-manifestet.
+    // Matcher terminationGracePeriodSeconds for podden i Kubernetes-manifestet ("nais.yaml")
     val kubernetesTimeout = 30.seconds
 
     // Tid før ktor avslutter uansett. Må være litt mindre enn `kubernetesTimeout`.
-    val endeligShutdownTimeout = kubernetesTimeout - 3.seconds
+    val endeligShutdownTimeout = kubernetesTimeout - 2.seconds
 
     // Tid appen får til å fullføre påbegynte requests, jobber etc. Må være mindre enn `endeligShutdownTimeout`.
-    val pågåendeRequesterTimeout = endeligShutdownTimeout - 7.seconds
+    val pågåendeRequesterTimeout = endeligShutdownTimeout - 3.seconds
 
     // Tid appen får til å avslutte Motor, Kafka, etc
-    val stansArbeidTimeout = pågåendeRequesterTimeout
+    val stansArbeidTimeout = pågåendeRequesterTimeout - 1.seconds
 
     const val ANTALL_WORKERS = 4
 }
@@ -196,10 +198,17 @@ internal fun Application.server(
         environment.log.info("ktor forbereder seg på å stoppe.")
     }
     monitor.subscribe(ApplicationStopping) { environment ->
-        environment.log.info("ktor stopper nå å ta imot nye requester, og lar pågående requester kjøre frem til timeout.")
+        environment.log.info("ktor stopper nå å ta imot nye requester, og lar mottatte requester kjøre frem til timeout.")
     }
     monitor.subscribe(ApplicationStopped) { environment ->
-        environment.log.info("ktor har fullført nedstoppingen sin. Eventuelle requester som ikke fullførtes innen timeout ble avbrutt.")
+        environment.log.info("ktor har fullført nedstoppingen sin. Eventuelle requester og annet arbeid som ikke ble fullført innen timeout ble avbrutt.")
+
+        try {
+            // Helt til slutt, nå som vi har stanset Motor, etc. Lukk database-koblingen.
+            dataSource.close()
+        } catch (_: Exception) {
+            // Ignorert
+        }
     }
 
     routing {
@@ -304,16 +313,10 @@ fun Application.startMotor(
     monitor.subscribe(ApplicationStarted) {
         motor.start()
     }
-    monitor.subscribe(ApplicationStopPreparing) { environment ->
-        // Denne vil vanligvis kjøres i to ulike tråder, både main og KtorShutdownHook
-        // Det som kjøres her må derfor støtte at det blir kjørt flere ganger på samme tid
-        motor.stop(/* TODO AppConfig.stansArbeidTimeout */)
-    }
-    monitor.subscribe(ApplicationStopped) { environment ->
-        try {
-            dataSource.close()
-        } catch (e: Exception) {
-            environment.log.warn("Feil ved lukking av datasource", e)
+    monitor.subscribe(ApplicationStopping) { env ->
+        // ktor sine eventer kjøres synkront, så vi må kjøre dette asynkront for ikke å blokkere nedstengings-sekvensen
+        env.launch(Dispatchers.IO) {
+            motor.stop(AppConfig.stansArbeidTimeout)
         }
     }
 
@@ -335,10 +338,11 @@ fun Application.startKabalKonsument(
         }
         t.start()
     }
-    monitor.subscribe(ApplicationStopPreparing) { environment ->
-        environment.log.info("Lukker KabalKafkaKonsument fordi ktor forbereder å stoppe.")
-
-        konsument.lukk()
+    monitor.subscribe(ApplicationStopping) { env ->
+        // ktor sine eventer kjøres synkront, så vi må kjøre dette asynkront for ikke å blokkere nedstengings-sekvensen
+        env.launch(Dispatchers.IO) {
+            konsument.lukk()
+        }
     }
 
     return konsument
