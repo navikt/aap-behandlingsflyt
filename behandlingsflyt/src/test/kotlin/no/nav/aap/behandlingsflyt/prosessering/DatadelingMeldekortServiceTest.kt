@@ -128,17 +128,18 @@ class DatadelingMeldekortServiceTest {
                 assertThat(behandlingId).isEqualTo(testBehandling.id.id)
                 assertThat(personIdent).isEqualTo(testIdent.identifikator)
 
-                assertThat(mottattTidspunkt).isEqualTo(testMeldekort.mottattTidspunkt)
                 assertThat(meldeperiodeFom).isEqualTo(meldeperioder.first().fom)
                 assertThat(meldeperiodeTom).isEqualTo(meldeperioder.first().tom)
 
-                for (dag in timerArbeidPerPeriode) {
+                for (dag in detaljertArbeidIPeriode) {
                     val antall = meldeperioder.filter { it.overlapper(Periode(dag.periodeFom, dag.periodeTom)) }
                     assertThat(antall).hasSize(1)
+                    assertThat(dag.mottattTidspunkt).isEqualTo(testMeldekort.mottattTidspunkt)
+                    assertThat(dag.journalpostId).isEqualTo(testMeldekort.journalpostId.identifikator)
                 }
-                val timetall = timerArbeidPerPeriode.sumOf { it.timerArbeidet }
-                assertThat(timetall).isEqualTo(16.0.toBigDecimal())
 
+                val timetall = detaljertArbeidIPeriode.sumOf { it.timerArbeidet }
+                assertThat(timetall).isEqualTo(16.0.toBigDecimal())
 
                 assertThat(avslagsårsakKode).isEqualTo(testUnderveisperiode.avslagsårsak?.name)
                 assertThat(rettighetsTypeKode).isEqualTo(testUnderveisperiode.rettighetsType?.name)

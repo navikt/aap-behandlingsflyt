@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.MeldekortPerioderDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DatadelingDTO
-import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DetaljertMeldekortDTO
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DetaljertTimeArbeidetListeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.RettighetsTypePeriode
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.SakDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.UnderveisDTO
@@ -134,7 +134,7 @@ class ApiInternGatewayImpl() : ApiInternGateway {
     }
 
     override fun sendDetaljertMeldekortListe(
-        detaljertMeldekortListe: List<DetaljertMeldekortDTO>,
+        detaljertMeldekortListe: List<DetaljertTimeArbeidetListeDTO>,
         sakId: SakId,
         behandlingId: BehandlingId
     ) {
