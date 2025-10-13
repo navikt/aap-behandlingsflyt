@@ -98,7 +98,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         }
 
         val grunnlagQuery = """
-            INSERT INTO MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG (behandling_id, arbeider_id, inntekter_i_norge_id, medlemskap_unntak_person_id, manuell_vurdering_id) VALUES (?, ?, ?, ?, ?)
+            INSERT INTO MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG (behandling_id, arbeider_id, inntekter_i_norge_id, medlemskap_unntak_person_id, vurderinger_id, manuell_vurdering_id) VALUES (?, ?, ?, ?, ?, ?)
         """.trimIndent()
 
         connection.execute(grunnlagQuery) {
@@ -107,7 +107,8 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 setLong(2, grunnlagOppslag?.arbeiderId)
                 setLong(3, grunnlagOppslag?.inntektINorgeId)
                 setLong(4, grunnlagOppslag?.medlId)
-                setLong(5, manuellVurderingId)
+                setLong(5, grunnlagOppslag?.vurderingerId)
+                setLong(6, manuellVurderingId)
             }
             setResultValidator { require(it == 1) }
         }
@@ -126,8 +127,8 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
 
         val grunnlagQuery = """
             INSERT INTO MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG 
-            (behandling_id, arbeider_id, inntekter_i_norge_id, medlemskap_unntak_person_id, vurderinger_id) 
-            VALUES (?, ?, ?, ?, ?)
+            (behandling_id, arbeider_id, inntekter_i_norge_id, medlemskap_unntak_person_id, manuell_vurdering_id, vurderinger_id) 
+            VALUES (?, ?, ?, ?, ?, ?)
         """.trimIndent()
 
         connection.execute(grunnlagQuery) {
@@ -136,7 +137,8 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 setLong(2, grunnlagOppslag?.arbeiderId)
                 setLong(3, grunnlagOppslag?.inntektINorgeId)
                 setLong(4, grunnlagOppslag?.medlId)
-                setLong(5, vurderingerId)
+                setLong(5, grunnlagOppslag?.manuellVurderingId)
+                setLong(6, vurderingerId)
             }
             setResultValidator { require(it == 1) }
         }
@@ -564,7 +566,8 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                     it.getLongOrNull("medlemskap_unntak_person_id"),
                     it.getLongOrNull("inntekter_i_norge_id"),
                     it.getLongOrNull("arbeider_id"),
-                    it.getLongOrNull("manuell_vurdering_id")
+                    it.getLongOrNull("manuell_vurdering_id"),
+                    it.getLongOrNull("vurderinger_id")
                 )
             }
         }
@@ -758,7 +761,8 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         val medlId: Long?,
         val inntektINorgeId: Long?,
         val arbeiderId: Long?,
-        val manuellVurderingId: Long?
+        val manuellVurderingId: Long?,
+        val vurderingerId: Long?
     )
 
     internal data class InternalHistoriskManuellVurderingForLovvalgMedlemskap(
