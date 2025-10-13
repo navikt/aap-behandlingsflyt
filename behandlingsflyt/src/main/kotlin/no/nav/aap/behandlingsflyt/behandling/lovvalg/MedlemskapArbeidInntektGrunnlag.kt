@@ -18,7 +18,8 @@ data class MedlemskapArbeidInntektGrunnlag(
     val medlemskapGrunnlag: MedlemskapUnntakGrunnlag?,
     val inntekterINorgeGrunnlag: List<InntektINorgeGrunnlag>,
     val arbeiderINorgeGrunnlag: List<ArbeidINorgeGrunnlag>,
-    val manuellVurdering: ManuellVurderingForLovvalgMedlemskap?
+    val manuellVurdering: ManuellVurderingForLovvalgMedlemskap?,
+    val vurderinger: Set<ManuellVurderingForLovvalgMedlemskap>,
 )
 
 data class InntektINorgeGrunnlag(
