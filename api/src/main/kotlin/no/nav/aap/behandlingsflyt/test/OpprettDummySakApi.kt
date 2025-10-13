@@ -24,7 +24,6 @@ fun NormalOpenAPIRoute.opprettDummySakApi(
             require(!Miljø.erProd()) {
                 "Kan ikke opprette dummy-sak i produksjonsmiljøet"
             }
-
             try {
                 dataSource.transaction(readOnly = false) { connection ->
                     val sakService = TestSakService(repositoryRegistry.provider(connection), gatewayProvider)

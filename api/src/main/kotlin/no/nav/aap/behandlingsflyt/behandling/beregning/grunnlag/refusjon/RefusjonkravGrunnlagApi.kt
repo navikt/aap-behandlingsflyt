@@ -13,6 +13,8 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SøknadSteg
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SøkPåSakService
@@ -20,6 +22,7 @@ import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
@@ -59,9 +62,10 @@ fun NormalOpenAPIRoute.refusjonGrunnlagApi(
                         val søknader = mottattDokumentRepository.hentDokumenterAvType(behandling.id, InnsendingType.SØKNAD)
 
 
-                        println(søknader.size)
-                        println(søknader.first().ustrukturerteData())
-                        søknader.first()
+
+                        val søknad = if (søknader.first().ustrukturerteData() != null){
+                            søknader.first().ustrukturerteData()?.let { DefaultJsonMapper.fromJson<SøknadV0>(it) }
+                        } else null
 
 
                         val gjeldendeVurdering =
@@ -75,7 +79,8 @@ fun NormalOpenAPIRoute.refusjonGrunnlagApi(
                             harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                             gjeldendeVurdering = gjeldendeVurdering,
                             gjeldendeVurderinger = gjeldendeVurderinger,
-                            historiskeVurderinger = historiskeVurderinger
+                            historiskeVurderinger = historiskeVurderinger,
+                            andreUtbetalingerYtelser = søknad?.andreUtbetalinger?.stønad
                         )
                     }
                 respond(response)

@@ -23,6 +23,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.InstitusjonsoppholdJSON
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AndreUtbetalinger
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Ident
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManueltOppgittBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppgitteBarn
@@ -216,7 +217,10 @@ private fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPers
     }
     val harMedlemskap = if (dto.medlemskap) "JA" else "NEI"
     return SøknadV0(
-        student = SøknadStudentDto(erStudent), harYrkesskade, oppgitteBarn,
+        andreUtbetalinger = AndreUtbetalinger(lønn = dto.andreUtbetalinger?.lønn, afp = dto.andreUtbetalinger?.afp, stønad = dto.andreUtbetalinger?.stønad),
+        student = SøknadStudentDto(erStudent),
+        yrkesskade =   harYrkesskade,
+        oppgitteBarn =  oppgitteBarn,
         medlemskap = SøknadMedlemskapDto(harMedlemskap, null, null, null, emptyList()),
     )
 }
