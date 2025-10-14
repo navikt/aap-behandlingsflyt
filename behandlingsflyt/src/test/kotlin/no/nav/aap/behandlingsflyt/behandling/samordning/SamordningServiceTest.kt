@@ -146,7 +146,7 @@ internal class SamordningServiceTest {
     }
 
     private fun opprettVurderingData(
-        repo: SamordningVurderingRepositoryImpl,
+        samordningVurderingRepo: SamordningVurderingRepositoryImpl,
         behandlingId: BehandlingId,
         vurderinger: SamordningVurderingGrunnlag = SamordningVurderingGrunnlag(
             begrunnelse = "En god begrunnelse",
@@ -169,11 +169,11 @@ internal class SamordningServiceTest {
             )
         )
     ) {
-        repo.lagreVurderinger(behandlingId, vurderinger)
+        samordningVurderingRepo.lagreVurderinger(behandlingId, vurderinger)
     }
 
     private fun opprettYtelseData(
-        repo: SamordningYtelseRepositoryImpl,
+        samordningYtelseRepo: SamordningYtelseRepositoryImpl,
         behandlingId: BehandlingId,
         ytelser: List<SamordningYtelse> = listOf(
             SamordningYtelse(
@@ -190,7 +190,7 @@ internal class SamordningServiceTest {
             )
         )
     ) {
-        repo.lagre(behandlingId, ytelser)
+        samordningYtelseRepo.lagre(behandlingId, ytelser)
     }
 
     private fun opprettSakdata(connection: DBConnection): BehandlingId {

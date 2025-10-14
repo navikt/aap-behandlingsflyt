@@ -38,15 +38,15 @@ class ManuellInntektGrunnlagRepositoryImplTest {
             vurdertAv = "Kungen"
         )
         dataSource.transaction {
-            val repo = ManuellInntektGrunnlagRepositoryImpl(it)
+            val manuellInntektGrunnlagRepo = ManuellInntektGrunnlagRepositoryImpl(it)
 
-            repo.lagre(behandling.id, manuellVurdering)
+            manuellInntektGrunnlagRepo.lagre(behandling.id, manuellVurdering)
         }
 
         dataSource.transaction {
-            val repo = ManuellInntektGrunnlagRepositoryImpl(it)
+            val manuellInntektGrunnlagRepo = ManuellInntektGrunnlagRepositoryImpl(it)
 
-            val uthentet = repo.hentHvisEksisterer(behandling.id)
+            val uthentet = manuellInntektGrunnlagRepo.hentHvisEksisterer(behandling.id)
 
             assertThat(uthentet).isNotNull.extracting { it!!.manuelleInntekter }
                 .usingRecursiveComparison().withEqualsForType(
@@ -59,10 +59,10 @@ class ManuellInntektGrunnlagRepositoryImplTest {
 
         // Sett inn på samme år, nytt beløp
         dataSource.transaction {
-            val repo = ManuellInntektGrunnlagRepositoryImpl(it)
+            val manuellInntektGrunnlagRepo = ManuellInntektGrunnlagRepositoryImpl(it)
 
-            repo.lagre(behandling.id, manuellVurdering.copy(belop = BigDecimal(123.41).let(::Beløp)))
-            val uthentet = repo.hentHvisEksisterer(behandling.id)
+            manuellInntektGrunnlagRepo.lagre(behandling.id, manuellVurdering.copy(belop = BigDecimal(123.41).let(::Beløp)))
+            val uthentet = manuellInntektGrunnlagRepo.hentHvisEksisterer(behandling.id)
             assertThat(uthentet).isNotNull.extracting { it!!.manuelleInntekter }
                 .usingRecursiveComparison().withEqualsForType(
                     { a, b -> a.minus(b).abs().toDouble() < 0.0001 },
@@ -74,9 +74,9 @@ class ManuellInntektGrunnlagRepositoryImplTest {
 
         // Test sletting
         dataSource.transaction {
-            val repo = ManuellInntektGrunnlagRepositoryImpl(it)
-            repo.slett(behandling.id)
-            val uthentet = repo.hentHvisEksisterer(behandling.id)
+            val manuellInntektGrunnlagRepo = ManuellInntektGrunnlagRepositoryImpl(it)
+            manuellInntektGrunnlagRepo.slett(behandling.id)
+            val uthentet = manuellInntektGrunnlagRepo.hentHvisEksisterer(behandling.id)
             assertThat(uthentet).isNull()
         }
     }
@@ -105,10 +105,10 @@ class ManuellInntektGrunnlagRepositoryImplTest {
         )
 
         dataSource.transaction {
-            val repo = ManuellInntektGrunnlagRepositoryImpl(it)
+            val manuellInntektGrunnlagRepo = ManuellInntektGrunnlagRepositoryImpl(it)
 
-            repo.lagre(behandling.id, setOf(manuellVurdering2024, manuellVurdering2025))
-            val uthentet = repo.hentHvisEksisterer(behandling.id)
+            manuellInntektGrunnlagRepo.lagre(behandling.id, setOf(manuellVurdering2024, manuellVurdering2025))
+            val uthentet = manuellInntektGrunnlagRepo.hentHvisEksisterer(behandling.id)
 
             assertThat(uthentet?.manuelleInntekter).hasSize(2)
         }
@@ -138,15 +138,15 @@ class ManuellInntektGrunnlagRepositoryImplTest {
         )
 
         dataSource.transaction {
-            val repo = ManuellInntektGrunnlagRepositoryImpl(it)
+            val manuellInntektGrunnlagRepo = ManuellInntektGrunnlagRepositoryImpl(it)
 
-            repo.lagre(behandling.id, setOf(manuellVurdering2024, manuellVurdering2025))
-            val uthentet = repo.hentHvisEksisterer(behandling.id)
+            manuellInntektGrunnlagRepo.lagre(behandling.id, setOf(manuellVurdering2024, manuellVurdering2025))
+            val uthentet = manuellInntektGrunnlagRepo.hentHvisEksisterer(behandling.id)
 
             assertThat(uthentet?.manuelleInntekter).hasSize(2)
 
-            repo.lagre(behandling.id, setOf(manuellVurdering2024))
-            val uthentetEtterSletting = repo.hentHvisEksisterer(behandling.id)
+            manuellInntektGrunnlagRepo.lagre(behandling.id, setOf(manuellVurdering2024))
+            val uthentetEtterSletting = manuellInntektGrunnlagRepo.hentHvisEksisterer(behandling.id)
 
             assertThat(uthentetEtterSletting?.manuelleInntekter).hasSize(1)
         }

@@ -85,10 +85,10 @@ internal class BehandlingRepositoryImplTest {
                 ident(),
                 Periode(LocalDate.now(), LocalDate.now().plusYears(3))
             )
-            val repo = BehandlingRepositoryImpl(connection)
+            val behandlingRepo = BehandlingRepositoryImpl(connection)
 
             // Opprett
-            repo.opprettBehandling(
+            behandlingRepo.opprettBehandling(
                 sakId = sak.id,
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null,
@@ -100,10 +100,10 @@ internal class BehandlingRepositoryImplTest {
         }
 
         dataSource.transaction { connection ->
-            val repo = BehandlingRepositoryImpl(connection)
+            val behandlingRepo = BehandlingRepositoryImpl(connection)
 
             // Hent ut igjen
-            val hententMedReferanse = repo.hent(skapt.referanse)
+            val hententMedReferanse = behandlingRepo.hent(skapt.referanse)
 
             assertThat(hententMedReferanse.referanse).isEqualTo(skapt.referanse)
             assertThat(hententMedReferanse.vurderingsbehov()).containsExactlyElementsOf(skapt.vurderingsbehov())
@@ -130,10 +130,10 @@ internal class BehandlingRepositoryImplTest {
                 ident(),
                 Periode(LocalDate.now(), LocalDate.now().plusYears(3))
             )
-            val repo = BehandlingRepositoryImpl(connection)
+            val behandlingRepo = BehandlingRepositoryImpl(connection)
 
             // Opprett
-            repo.opprettBehandling(
+            behandlingRepo.opprettBehandling(
                 sakId = sak.id,
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null,
@@ -145,10 +145,10 @@ internal class BehandlingRepositoryImplTest {
         }
 
         dataSource.transaction { connection ->
-            val repo = BehandlingRepositoryImpl(connection)
+            val behandlingRepo = BehandlingRepositoryImpl(connection)
 
             // Hent ut igjen
-            val hententMedReferanse = repo.hent(skapt.referanse)
+            val hententMedReferanse = behandlingRepo.hent(skapt.referanse)
 
             assertThat(hententMedReferanse.opprettetTidspunkt).isEqualTo(skapt.opprettetTidspunkt)
         }
@@ -165,10 +165,10 @@ internal class BehandlingRepositoryImplTest {
                 ident(),
                 Periode(LocalDate.now(), LocalDate.now().plusYears(3))
             )
-            val repo = BehandlingRepositoryImpl(connection)
+            val behandlingRepo = BehandlingRepositoryImpl(connection)
 
             // Opprett
-            val førstegang = repo.opprettBehandling(
+            val førstegang = behandlingRepo.opprettBehandling(
                 sakId = sak.id,
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null,
@@ -178,7 +178,7 @@ internal class BehandlingRepositoryImplTest {
                 ),
             )
 
-            val klage = repo.opprettBehandling(
+            val klage = behandlingRepo.opprettBehandling(
                 sakId = sak.id,
                 typeBehandling = TypeBehandling.Klage,
                 forrigeBehandlingId = null,
@@ -191,17 +191,17 @@ internal class BehandlingRepositoryImplTest {
         }
 
         dataSource.transaction { connection ->
-            val repo = BehandlingRepositoryImpl(connection)
+            val behandlingRepo = BehandlingRepositoryImpl(connection)
 
             // Hent ut igjen
-            val alleDefault = repo.hentAlleFor(sak.id)
+            val alleDefault = behandlingRepo.hentAlleFor(sak.id)
             assertThat(alleDefault).hasSize(2)
 
-            val alleFørstegang = repo.hentAlleFor(sak.id, listOf(TypeBehandling.Førstegangsbehandling))
+            val alleFørstegang = behandlingRepo.hentAlleFor(sak.id, listOf(TypeBehandling.Førstegangsbehandling))
             assertThat(alleFørstegang).hasSize(1)
             assertThat(alleFørstegang[0].referanse).isEqualTo(førstegang.referanse)
 
-            val alleKlage = repo.hentAlleFor(sak.id, listOf(TypeBehandling.Klage))
+            val alleKlage = behandlingRepo.hentAlleFor(sak.id, listOf(TypeBehandling.Klage))
             assertThat(alleKlage).hasSize(1)
             assertThat(alleKlage[0].referanse).isEqualTo(klage.referanse)
         }
@@ -222,11 +222,11 @@ internal class BehandlingRepositoryImplTest {
                 ident(),
                 Periode(LocalDate.now(), LocalDate.now().plusYears(3))
             )
-            val repo = BehandlingRepositoryImpl(connection)
+            val behandlingRepo = BehandlingRepositoryImpl(connection)
             val vedtakRepo = VedtakRepositoryImpl(connection)
 
             // Opprett
-            val førstegang = repo.opprettBehandling(
+            val førstegang = behandlingRepo.opprettBehandling(
                 sakId = sak.id,
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null,
@@ -242,7 +242,7 @@ internal class BehandlingRepositoryImplTest {
                 virkningstidspunkt = virkningstidspunkt,
             )
 
-            val klage = repo.opprettBehandling(
+            val klage = behandlingRepo.opprettBehandling(
                 sakId = sak.id,
                 typeBehandling = TypeBehandling.Klage,
                 forrigeBehandlingId = null,
@@ -255,13 +255,13 @@ internal class BehandlingRepositoryImplTest {
         }
 
         dataSource.transaction { connection ->
-            val repo = BehandlingRepositoryImpl(connection)
+            val behandlingRepo = BehandlingRepositoryImpl(connection)
 
             // Hent ut igjen
-            val alleDefault = repo.hentAlleMedVedtakFor(sak.person)
+            val alleDefault = behandlingRepo.hentAlleMedVedtakFor(sak.person)
             assertThat(alleDefault).hasSize(1)
 
-            val alleFørstegang = repo.hentAlleMedVedtakFor(sak.person, listOf(TypeBehandling.Førstegangsbehandling))
+            val alleFørstegang = behandlingRepo.hentAlleMedVedtakFor(sak.person, listOf(TypeBehandling.Førstegangsbehandling))
             assertThat(alleFørstegang).hasSize(1)
             assertThat(alleFørstegang[0].saksnummer).isEqualTo(sak.saksnummer)
             assertThat(alleFørstegang[0].referanse).isEqualTo(førstegang.referanse)
