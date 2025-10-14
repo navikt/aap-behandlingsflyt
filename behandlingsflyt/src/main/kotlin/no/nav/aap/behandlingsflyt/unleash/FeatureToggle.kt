@@ -14,7 +14,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     InnhentEnhetsregisterData,
     SendForvaltningsmelding,
     SosialHjelpFlereKontorer,
-    BrevBeregningsgrunnlag,
     NyBrevtype11_18,
     Aktivitetsplikt11_7,
     Aktivitetsplikt11_9,
