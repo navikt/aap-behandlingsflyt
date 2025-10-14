@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.overganguføre
+package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.overgangarbeid
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidVurdering

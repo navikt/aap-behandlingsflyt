@@ -82,7 +82,6 @@ data class KvoteTilstand(
     var erKvoteOversteget: Boolean = false
         set(erKvoteOversteget) {
             require(erKvoteOversteget)
-            field = erKvoteOversteget
         }
 
     val ubruktKvote: Hverdager

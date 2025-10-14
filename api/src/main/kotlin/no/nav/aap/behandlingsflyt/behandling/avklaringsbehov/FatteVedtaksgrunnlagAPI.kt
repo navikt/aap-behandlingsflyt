@@ -135,7 +135,6 @@ fun utledHistorikk(avklaringsbehovene: Avklaringsbehovene): List<Historikk> {
                     Aksjon.FATTET_VEDTAK
                 }
             }
-            tidsstempelForrigeBehov = behov.endring.tidsstempel
             Historikk(aksjon, behov.endring.tidsstempel, behov.endring.endretAv)
         }.sorted()
         .toList()

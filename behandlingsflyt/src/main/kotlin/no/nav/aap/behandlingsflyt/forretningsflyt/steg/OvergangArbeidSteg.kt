@@ -134,7 +134,7 @@ VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
         if (sisteSykdomsvurdering == null) {
             return false
         } else {
-            if (sisteSykdomsvurdering.harSkadeSykdomEllerLyte == false || sisteSykdomsvurdering.erArbeidsevnenNedsatt == false || sisteSykdomsvurdering.erSkadeSykdomEllerLyteVesentligdel == false) {
+            if (!sisteSykdomsvurdering.harSkadeSykdomEllerLyte || sisteSykdomsvurdering.erArbeidsevnenNedsatt == false || sisteSykdomsvurdering.erSkadeSykdomEllerLyteVesentligdel == false) {
                 return true
             } else
                 return false

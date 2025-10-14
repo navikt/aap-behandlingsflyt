@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.integrasjon.oppgave
+package no.nav.aap.behandlingsflyt.integrasjon.gosys
 
 import no.bekk.bekkopen.date.NorwegianDateUtil.addWorkingDaysToDate
 import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.OppgaveGateway
@@ -79,7 +79,7 @@ class GosysGateway : OppgaveGateway {
         val request = PostRequest(oppgaveRequest)
         try {
             client.post(path, request) { _, _ -> }
-            log.info("Opprettet refusjonsoppgave mot Gosys: ${oppgaveRequest} ")
+            log.info("Opprettet refusjonsoppgave mot Gosys: $oppgaveRequest ")
         } catch (e: Exception) {
             log.error("Feil mot oppgaveApi under opprettelse av oppgave: ${e.message}", e)
             throw e

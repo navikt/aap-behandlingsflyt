@@ -16,9 +16,7 @@ data class Aktivitetsplikt11_7Grunnlag(
 
         other as Aktivitetsplikt11_7Grunnlag
 
-        if (vurderinger.toSet() != other.vurderinger.toSet()) return false
-
-        return true
+        return vurderinger.toSet() == other.vurderinger.toSet()
     }
 
     override fun hashCode(): Int {

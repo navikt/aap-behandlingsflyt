@@ -3109,7 +3109,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         // OpprettholdelseSteg
         val steghistorikk = hentStegHistorikk(klagebehandling.id)
         assertThat(steghistorikk)
-            .anySatisfy { it -> assertThat(it.steg() == StegType.OMGJØRING && it.status() == StegStatus.AVSLUTTER).isTrue }
+            .anySatisfy { assertThat(it.steg() == StegType.OMGJØRING && it.status() == StegStatus.AVSLUTTER).isTrue }
 
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
         assertThat(åpneAvklaringsbehov).hasSize(0)
@@ -3329,7 +3329,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         // OpprettholdelseSteg
         val steghistorikk = hentStegHistorikk(klagebehandling.id)
         assertThat(steghistorikk)
-            .anySatisfy { it -> assertThat(it.steg() == StegType.OMGJØRING && it.status() == StegStatus.AVSLUTTER).isTrue }
+            .anySatisfy { assertThat(it.steg() == StegType.OMGJØRING && it.status() == StegStatus.AVSLUTTER).isTrue }
 
     }
 
@@ -3545,7 +3545,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         // OpprettholdelseSteg
         val steghistorikk = hentStegHistorikk(klagebehandling.id)
         assertThat(steghistorikk)
-            .anySatisfy { it -> assertThat(it.steg() == StegType.OPPRETTHOLDELSE && it.status() == StegStatus.AVSLUTTER).isTrue }
+            .anySatisfy { assertThat(it.steg() == StegType.OPPRETTHOLDELSE && it.status() == StegStatus.AVSLUTTER).isTrue }
 
         // MeldingOmVedtakBrevSteg
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)

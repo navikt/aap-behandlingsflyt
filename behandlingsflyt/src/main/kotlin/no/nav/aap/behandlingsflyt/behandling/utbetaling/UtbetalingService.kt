@@ -22,7 +22,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.utbetal.tilkjentytelse.MeldeperiodeDto
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseAvventDto

@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.flyt
 
-import no.nav.aap.brev.kontrakt.EkspederBehandlerBestillingRequest
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov as EksponertÅrsak
 
 enum class Vurderingsbehov {
