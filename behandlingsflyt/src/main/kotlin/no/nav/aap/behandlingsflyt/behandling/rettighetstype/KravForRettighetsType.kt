@@ -28,10 +28,10 @@ fun vurderRettighetsType(vilkårsresultat: Vilkårsresultat): Tidslinje<Rettighe
         .mapValue {
             when {
                 /* Prioritert rekkefølge */
-                KravForSykepengeerstatning.oppfyllesAv(it) -> RettighetsType.SYKEPENGEERSTATNING
                 KravForStudent.oppfyllesAv(it) -> RettighetsType.STUDENT
-                KravForOvergangArbeid.oppfyllesAv(it) -> RettighetsType.ARBEIDSSØKER
                 KravForOvergangUføretrygd.oppfyllesAv(it) -> RettighetsType.VURDERES_FOR_UFØRETRYGD
+                KravForSykepengeerstatning.oppfyllesAv(it) -> RettighetsType.SYKEPENGEERSTATNING
+                KravForOvergangArbeid.oppfyllesAv(it) -> RettighetsType.ARBEIDSSØKER
                 KravForOrdinærAap.oppfyllesAv(it) -> RettighetsType.BISTANDSBEHOV
                 KravForYrkesskade.oppfyllesAv(it) -> RettighetsType.BISTANDSBEHOV
                 else -> null

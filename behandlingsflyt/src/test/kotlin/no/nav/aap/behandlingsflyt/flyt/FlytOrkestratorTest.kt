@@ -1416,7 +1416,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             dataSource.transaction { ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(behandling.id) }
         assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
 
-        behandling = behandling.løsVedtaksbrev()
+
+        behandling = behandling.løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_11_18)
 
         assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
 
@@ -1435,9 +1436,13 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
 
         assertTidslinje(
             vilkårsresultat.rettighetstypeTidslinje(),
-            periode to {
+            Periode(periode.fom, periode.fom.plusMonths(8).minusDays(1)) to {
+                assertThat(it).isEqualTo(RettighetsType.VURDERES_FOR_UFØRETRYGD)
+            },
+            Periode(periode.fom.plusMonths(8), periode.tom) to {
                 assertThat(it).isEqualTo(RettighetsType.SYKEPENGEERSTATNING)
-            })
+            }
+        )
     }
 
     @Test
