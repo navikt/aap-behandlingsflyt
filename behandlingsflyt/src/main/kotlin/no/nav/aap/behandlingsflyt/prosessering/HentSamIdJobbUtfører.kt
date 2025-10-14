@@ -39,17 +39,16 @@ class HentSamIdJobbUtfører(
             val samId = samGateway.hentSamId(sak.person.aktivIdent(), sak.id.id, vedtakId)
 
             samIdRepository.lagre(behandlingId, samId.toString())
-            flytJobbRepository.leggTil(
-                jobbInput = JobbInput(DatadelingBehandlingJobbUtfører).medPayload(
-                    payload = Pair(
-                        behandlingId,
-                        vedtaksTidspunkt
-                    )
-                ).forSak(sak.id.id)
-            )
         }
-    }
 
+        flytJobbRepository.leggTil(
+            jobbInput = JobbInput(DatadelingBehandlingJobbUtfører).medPayload(
+                Pair(
+                    behandlingId, vedtaksTidspunkt
+                )
+            ).forSak(sak.id.id)
+        )
+    }
 
     companion object : ProvidersJobbSpesifikasjon {
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
