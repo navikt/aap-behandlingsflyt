@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.integrasjon.brev
 
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevBehov
 import no.nav.aap.behandlingsflyt.behandling.brev.Innvilgelse
+import no.nav.aap.behandlingsflyt.behandling.brev.VurderesForUføretrygd
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingGateway
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.HåndterConflictResponseHandler
@@ -266,6 +267,18 @@ class BrevGateway : BrevbestillingGateway {
                         )
                     }
                 }
+
+            is VurderesForUføretrygd -> {
+                buildSet {
+                    Faktagrunnlag.GrunnlagBeregning(
+                        beregningstidspunkt = null,
+                        beregningsgrunnlag = null,
+                        inntekterPerÅr = brevBehov.inntekterPerÅr.map {
+                            Faktagrunnlag.GrunnlagBeregning.InntektPerÅr(it.år, it.inntekt)
+                        },
+                    )
+                }
+            }
 
             else -> emptySet()
         }
