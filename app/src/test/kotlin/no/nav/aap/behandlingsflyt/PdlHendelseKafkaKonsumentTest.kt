@@ -30,7 +30,7 @@ import kotlin.test.Test
 class PdlHendelseKafkaKonsumentTest {
 
     companion object {
-        val kafka = KafkaContainer(DockerImageName.parse("apache/kafka-native:4.0.0"))
+        val kafka = KafkaContainer(DockerImageName.parse("apache/kafka-native:4.1.0"))
             .withReuse(true)
             .waitingFor(Wait.forListeningPort())
             .withStartupTimeout(Duration.ofSeconds(60))
