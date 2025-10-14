@@ -9,7 +9,6 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.bistand.BistandFaktagrunnla
 import no.nav.aap.behandlingsflyt.behandling.vilkår.bistand.Bistandsvilkåret
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
@@ -20,7 +19,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRep
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
-import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
@@ -32,7 +30,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
@@ -47,7 +44,6 @@ class VurderBistandsbehovSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val tidligereVurderinger: TidligereVurderinger,
-    private val vilkårService: VilkårService,
     private val behandlingRepository: BehandlingRepository,
     private val avklaringsbehovService: AvklaringsbehovService
 ) : BehandlingSteg {
@@ -58,7 +54,6 @@ class VurderBistandsbehovSteg private constructor(
         vilkårsresultatRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
-        vilkårService = VilkårService(repositoryProvider),
         behandlingRepository = repositoryProvider.provide(),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
     )
@@ -66,10 +61,6 @@ class VurderBistandsbehovSteg private constructor(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (Miljø.erProd()) {
-            return gammelUtfør(kontekst)
-        }
-
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         avklaringsbehovService.oppdaterAvklaringsbehov(
             avklaringsbehovene = avklaringsbehovene,
@@ -193,67 +184,6 @@ class VurderBistandsbehovSteg private constructor(
                     }
                 }
             }
-    }
-
-    fun gammelUtfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val bistandsGrunnlag = bistandRepository.hentHvisEksisterer(kontekst.behandlingId)
-        val studentGrunnlag = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
-        val sykdomsvurderinger =
-            sykdomsRepository.hentHvisEksisterer(kontekst.behandlingId)?.sykdomsvurderinger.orEmpty()
-
-        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-
-        when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
-                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
-                    log.info("Ingen behandlingsgrunnlag for vilkårtype ${Vilkårtype.BISTANDSVILKÅRET} for behandlingId ${kontekst.behandlingId}. Avbryter steg.")
-                    avklaringsbehovene.avbrytForSteg(type())
-                    vilkårService.ingenNyeVurderinger(
-                        kontekst.behandlingId,
-                        Vilkårtype.BISTANDSVILKÅRET,
-                        kontekst.rettighetsperiode,
-                        "mangler behandlingsgrunnlag",
-                    )
-                    return Fullført
-                }
-
-                // sjekk behovet for avklaring for periode
-                if (erBehovForAvklarForPerioden(
-                        kontekst.rettighetsperiode,
-                        studentGrunnlag,
-                        sykdomsvurderinger,
-                        bistandsGrunnlag,
-                        vilkårsresultat,
-                        avklaringsbehovene,
-                    )
-                ) {
-                    return FantAvklaringsbehov(Definisjon.AVKLAR_BISTANDSBEHOV)
-                }
-
-                // Vurder vilkår
-                vurderVilkårForPeriode(
-                    kontekst.rettighetsperiode,
-                    bistandsGrunnlag,
-                    studentGrunnlag,
-                    vilkårsresultat
-                )
-            }
-
-            VurderingType.MELDEKORT,
-            VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
-            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
-            VurderingType.IKKE_RELEVANT -> {
-                // Skal ikke gjøre noe
-            }
-        }
-        if (kontekst.harNoeTilBehandling()) {
-            vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
-        }
-
-        postcondition(vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET))
-
-        return Fullført
     }
 
     private fun erIkkeVurdertTidligereIBehandlingen(

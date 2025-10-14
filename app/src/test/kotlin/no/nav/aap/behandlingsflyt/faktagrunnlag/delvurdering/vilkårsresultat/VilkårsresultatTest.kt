@@ -323,5 +323,48 @@ class VilkårsresultatTest {
                 },
             )
         }
+
+
+        @Test
+        fun `om 11-5 ikke er oppfylt, men både 11-18 og 11-13 er oppfylt skal vi innvilge basert på 11-18 (inntil videre)`() {
+            val v = tomVurdering()
+            val nå = LocalDate.now()
+
+            val sykepengerPeriode = nå.plusDays(30)
+            v.leggTilHvisIkkeEksisterer(Vilkårtype.OVERGANGUFØREVILKÅRET).leggTilVurdering(
+                Vilkårsperiode(
+                    Periode(nå, sykepengerPeriode),
+                    utfall = Utfall.OPPFYLT,
+                    begrunnelse = null,
+                    innvilgelsesårsak = null,
+                )
+            )
+
+            v.leggTilHvisIkkeEksisterer(BISTANDSVILKÅRET).leggTilVurdering(
+                Vilkårsperiode(
+                    Periode(nå, sykepengerPeriode),
+                    utfall = Utfall.IKKE_RELEVANT,
+                    begrunnelse = null,
+                )
+            )
+            v.leggTilHvisIkkeEksisterer(SYKDOMSVILKÅRET).leggTilVurdering(
+                Vilkårsperiode(
+                    Periode(nå, sykepengerPeriode),
+                    innvilgelsesårsak = Innvilgelsesårsak.SYKEPENGEERSTATNING,
+                    utfall = Utfall.OPPFYLT,
+                    begrunnelse = null,
+                )
+            )
+            v.leggTilFellesVilkår(Periode(nå, sykepengerPeriode))
+
+            val res = v.rettighetstypeTidslinje().komprimer()
+            assertTidslinje(
+                res,
+                Periode(nå, sykepengerPeriode) to {
+                    assertThat(it).isEqualTo(RettighetsType.VURDERES_FOR_UFØRETRYGD)
+                },
+            )
+        }
     }
+
 }
