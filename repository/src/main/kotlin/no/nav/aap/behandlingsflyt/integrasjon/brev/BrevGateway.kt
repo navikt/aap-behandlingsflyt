@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.integrasjon.brev
 
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevBehov
+import no.nav.aap.behandlingsflyt.behandling.brev.GrunnlagBeregning
 import no.nav.aap.behandlingsflyt.behandling.brev.Innvilgelse
 import no.nav.aap.behandlingsflyt.behandling.brev.VurderesForUføretrygd
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingGateway
@@ -43,6 +44,7 @@ import no.nav.aap.komponenter.json.DefaultJsonMapper
 import org.slf4j.LoggerFactory
 import java.io.InputStream
 import java.net.URI
+import kotlin.collections.orEmpty
 
 class BrevGateway : BrevbestillingGateway {
 
@@ -257,30 +259,32 @@ class BrevGateway : BrevbestillingGateway {
                     }
                     if (brevBehov.grunnlagBeregning != null) {
                         add(
-                            Faktagrunnlag.GrunnlagBeregning(
-                                beregningstidspunkt = brevBehov.grunnlagBeregning?.beregningstidspunkt,
-                                beregningsgrunnlag = brevBehov.grunnlagBeregning?.beregningsgrunnlag?.verdi,
-                                inntekterPerÅr = brevBehov.grunnlagBeregning?.inntekterPerÅr?.map {
-                                    Faktagrunnlag.GrunnlagBeregning.InntektPerÅr(it.år, it.inntekt)
-                                }.orEmpty(),
-                            )
-                        )
+                            grunnlagBeregningTilFaktagrunnlag(brevBehov.grunnlagBeregning!!)                        )
                     }
                 }
 
             is VurderesForUføretrygd -> {
                 buildSet {
-                    Faktagrunnlag.GrunnlagBeregning(
-                        beregningstidspunkt = null,
-                        beregningsgrunnlag = null,
-                        inntekterPerÅr = brevBehov.inntekterPerÅr.map {
-                            Faktagrunnlag.GrunnlagBeregning.InntektPerÅr(it.år, it.inntekt)
-                        },
-                    )
+                    if (brevBehov.grunnlagBeregning != null) {
+                        add(
+                            grunnlagBeregningTilFaktagrunnlag(brevBehov.grunnlagBeregning!!)
+                        )
+                    }
                 }
             }
 
             else -> emptySet()
         }
+    }
+
+    private fun grunnlagBeregningTilFaktagrunnlag(grunnlagBeregning: GrunnlagBeregning): Faktagrunnlag.GrunnlagBeregning {
+        return Faktagrunnlag.GrunnlagBeregning(
+            beregningstidspunkt = grunnlagBeregning.beregningstidspunkt,
+            beregningsgrunnlag = grunnlagBeregning.beregningsgrunnlag?.verdi,
+            inntekterPerÅr = grunnlagBeregning.inntekterPerÅr.map {
+                Faktagrunnlag.GrunnlagBeregning.InntektPerÅr(it.år, it.inntekt)
+            },
+        )
+
     }
 }
