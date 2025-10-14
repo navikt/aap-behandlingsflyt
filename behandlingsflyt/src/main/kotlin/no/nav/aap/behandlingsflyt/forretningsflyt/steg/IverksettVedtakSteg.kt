@@ -71,7 +71,7 @@ class IverksettVedtakSteg private constructor(
             log.info("Fant ikke tilkjent ytelse for behandingsref ${kontekst.behandlingId}. Virkningstidspunkt: $virkningstidspunkt.")
         }
         flytJobbRepository.leggTil(
-            jobbInput = JobbInput(jobb = VarsleVedtakJobbUtfører).medPayload(kontekst.behandlingId).forBehandling(kontekst.sakId.id,kontekst.behandlingId.id)
+            jobbInput = JobbInput(jobb = VarsleVedtakJobbUtfører).medPayload(kontekst.behandlingId).forSak(kontekst.sakId.id)
         )
 
 
