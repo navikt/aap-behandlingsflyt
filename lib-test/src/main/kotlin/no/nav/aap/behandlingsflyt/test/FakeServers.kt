@@ -93,6 +93,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.Yrkesskader
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.HentSakDTO
 import no.nav.aap.behandlingsflyt.test.modell.MockUnleashFeature
 import no.nav.aap.behandlingsflyt.test.modell.MockUnleashFeatures
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
@@ -117,6 +118,9 @@ import no.nav.aap.tilgang.JournalpostTilgangRequest
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.SakTilgangRequest
 import no.nav.aap.tilgang.TilgangResponse
+import no.nav.aap.utbetal.trekk.TrekkDto
+import no.nav.aap.utbetal.trekk.TrekkPosteringDto
+import no.nav.aap.utbetal.trekk.TrekkResponsDto
 import org.intellij.lang.annotations.Language
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayInputStream
@@ -1713,6 +1717,23 @@ object FakeServers : AutoCloseable {
         routing {
             post("/tilkjentytelse") {
                 call.respond(HttpStatusCode.NoContent)
+            }
+            get("/trekk/{saksnummer}") {
+                val saksnummer = call.parameters["saksnummer"] ?: error("Mangler saksnummer")
+                val trekkRespons = TrekkResponsDto(
+                    listOf(
+                        TrekkDto(
+                            saksnummer, UUID.randomUUID(), LocalDate.now(), 1234, listOf(
+                                TrekkPosteringDto(LocalDate.now(), 400),
+                                TrekkPosteringDto(LocalDate.now().plusDays(1), 834)
+                            )
+                        ),
+                        TrekkDto(
+                            saksnummer, UUID.randomUUID(), LocalDate.now().minusDays(1), 200, emptyList()
+                        )
+                    )
+                )
+                call.respond(trekkRespons)
             }
         }
 
