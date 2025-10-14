@@ -39,7 +39,7 @@ class NomInfoGateway : AnsattInfoGateway {
     override fun hentAnsattInfo(navIdent: String): AnsattInfo {
         val request = GraphqlRequest(ressursQuery, NomRessursVariables(navIdent))
         val response = checkNotNull(query(request).data) {
-            "Fant ikke ansatt i NOM"
+            "Fant ikke ansatt ($navIdent) i NOM"
         }
 
         return mapResponse(navIdent, checkNotNull(response.ressurs))

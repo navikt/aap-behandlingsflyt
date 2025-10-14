@@ -40,24 +40,24 @@ internal class SykdomRepositoryImplTest {
     @Test
     fun `kan lagre tom liste`() {
         dataSource.transaction { connection ->
-            val repo = SykdomRepositoryImpl(connection)
+            val sykdomRepo = SykdomRepositoryImpl(connection)
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
-            repo.lagre(behandling.id, emptyList())
-            assertThat(repo.hent(behandling.id).sykdomsvurderinger).isEmpty()
+            sykdomRepo.lagre(behandling.id, emptyList())
+            assertThat(sykdomRepo.hent(behandling.id).sykdomsvurderinger).isEmpty()
         }
     }
 
     @Test
     fun `kan lagre singleton-liste`() {
         dataSource.transaction { connection ->
-            val repo = SykdomRepositoryImpl(connection)
+            val sykdomRepo = SykdomRepositoryImpl(connection)
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
-            repo.lagre(behandling.id, listOf(sykdomsvurdering1))
-            assertThat(repo.hent(behandling.id).sykdomsvurderinger).usingRecursiveComparison()
+            sykdomRepo.lagre(behandling.id, listOf(sykdomsvurdering1))
+            assertThat(sykdomRepo.hent(behandling.id).sykdomsvurderinger).usingRecursiveComparison()
                 .ignoringFields("id", "opprettet").isEqualTo(listOf(sykdomsvurdering1))
         }
     }
@@ -65,12 +65,12 @@ internal class SykdomRepositoryImplTest {
     @Test
     fun `kan lagre to elementer`() {
         dataSource.transaction { connection ->
-            val repo = SykdomRepositoryImpl(connection)
+            val sykdomRepo = SykdomRepositoryImpl(connection)
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
-            repo.lagre(behandling.id, listOf(sykdomsvurdering1, sykdomsvurdering2))
-            assertThat(repo.hent(behandling.id).sykdomsvurderinger).usingRecursiveComparison()
+            sykdomRepo.lagre(behandling.id, listOf(sykdomsvurdering1, sykdomsvurdering2))
+            assertThat(sykdomRepo.hent(behandling.id).sykdomsvurderinger).usingRecursiveComparison()
                 .ignoringFields("id", "opprettet").isEqualTo(
                     listOf(
                         sykdomsvurdering1, sykdomsvurdering2
@@ -82,7 +82,7 @@ internal class SykdomRepositoryImplTest {
     @Test
     fun `lagre og hente ned yrkesskade-vurdering`() {
         dataSource.transaction { connection ->
-            val repo = SykdomRepositoryImpl(connection)
+            val sykdomRepo = SykdomRepositoryImpl(connection)
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
@@ -98,8 +98,8 @@ internal class SykdomRepositoryImplTest {
                 vurdertAv = "Grokki Grokk",
                 vurdertTidspunkt = LocalDateTime.now()
             )
-            repo.lagre(behandling.id, vurdering)
-            assertThat(repo.hent(behandling.id).yrkesskadevurdering).usingRecursiveComparison()
+            sykdomRepo.lagre(behandling.id, vurdering)
+            assertThat(sykdomRepo.hent(behandling.id).yrkesskadevurdering).usingRecursiveComparison()
                 .ignoringFields("id", "vurdertTidspunkt").isEqualTo(vurdering)
         }
     }
@@ -107,21 +107,21 @@ internal class SykdomRepositoryImplTest {
     @Test
     fun `historikk viser kun vurderinger fra tidligere behandlinger`() {
         val førstegangsbehandling = dataSource.transaction { connection ->
-            val repo = SykdomRepositoryImpl(connection)
+            val sykdomRepo = SykdomRepositoryImpl(connection)
             val sak = sak(connection)
             val førstegangsbehandling = finnEllerOpprettBehandling(connection, sak)
 
-            repo.lagre(førstegangsbehandling.id, listOf(sykdomsvurdering1))
+            sykdomRepo.lagre(førstegangsbehandling.id, listOf(sykdomsvurdering1))
             førstegangsbehandling
         }
 
         dataSource.transaction { connection ->
-            val repo = SykdomRepositoryImpl(connection)
+            val sykdomRepo = SykdomRepositoryImpl(connection)
             val revurdering = revurdering(connection, førstegangsbehandling)
 
-            repo.lagre(revurdering.id, listOf(sykdomsvurdering2))
+            sykdomRepo.lagre(revurdering.id, listOf(sykdomsvurdering2))
 
-            val historikk = repo.hentHistoriskeSykdomsvurderinger(revurdering.sakId, revurdering.id)
+            val historikk = sykdomRepo.hentHistoriskeSykdomsvurderinger(revurdering.sakId, revurdering.id)
             assertThat(historikk)
                 .usingRecursiveComparison()
                 .ignoringFields("id", "opprettet")
@@ -132,11 +132,11 @@ internal class SykdomRepositoryImplTest {
     @Test
     fun `historikk viser kun vurderinger fra tidligere behandlinger og ikke inkluderer vurdering fra avbrutt revurdering`() {
         val førstegangsbehandling = dataSource.transaction { connection ->
-            val repo = SykdomRepositoryImpl(connection)
+            val sykdomRepo = SykdomRepositoryImpl(connection)
             val sak = sak(connection)
             val førstegangsbehandling = finnEllerOpprettBehandling(connection, sak)
 
-            repo.lagre(førstegangsbehandling.id, listOf(sykdomsvurdering1))
+            sykdomRepo.lagre(førstegangsbehandling.id, listOf(sykdomsvurdering1))
             førstegangsbehandling
         }
 

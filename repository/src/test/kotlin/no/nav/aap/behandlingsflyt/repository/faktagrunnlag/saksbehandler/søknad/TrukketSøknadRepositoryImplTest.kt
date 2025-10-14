@@ -42,28 +42,28 @@ class TrukketSøknadRepositoryImplTest {
         )
 
         dataSource.transaction { connection ->
-            val repo = TrukketSøknadRepositoryImpl(connection)
-            assertThat(repo.hentTrukketSøknadVurderinger(behandling1)).isEqualTo(emptyList<TrukketSøknadVurdering>())
+            val trukketSøknadRepo = TrukketSøknadRepositoryImpl(connection)
+            assertThat(trukketSøknadRepo.hentTrukketSøknadVurderinger(behandling1)).isEqualTo(emptyList<TrukketSøknadVurdering>())
         }
 
         dataSource.transaction { connection ->
-            val repo = TrukketSøknadRepositoryImpl(connection)
-            repo.lagreTrukketSøknadVurdering(
+            val trukketSøknadRepo = TrukketSøknadRepositoryImpl(connection)
+            trukketSøknadRepo.lagreTrukketSøknadVurdering(
                 behandling1,
                 vurdering1
             )
-            assertThat(repo.hentTrukketSøknadVurderinger(behandling1)).isEqualTo(listOf(vurdering1))
+            assertThat(trukketSøknadRepo.hentTrukketSøknadVurderinger(behandling1)).isEqualTo(listOf(vurdering1))
         }
 
 
         dataSource.transaction { connection ->
-            val repo = TrukketSøknadRepositoryImpl(connection)
+            val trukketSøknadRepo = TrukketSøknadRepositoryImpl(connection)
 
-            repo.kopier(behandling1, behandling2)
-            repo.lagreTrukketSøknadVurdering(behandling2, vurdering2)
+            trukketSøknadRepo.kopier(behandling1, behandling2)
+            trukketSøknadRepo.lagreTrukketSøknadVurdering(behandling2, vurdering2)
 
-            assertThat(repo.hentTrukketSøknadVurderinger(behandling1)).isEqualTo(listOf(vurdering1))
-            assertThat(repo.hentTrukketSøknadVurderinger(behandling2)).isEqualTo(listOf(vurdering1, vurdering2))
+            assertThat(trukketSøknadRepo.hentTrukketSøknadVurderinger(behandling1)).isEqualTo(listOf(vurdering1))
+            assertThat(trukketSøknadRepo.hentTrukketSøknadVurderinger(behandling2)).isEqualTo(listOf(vurdering1, vurdering2))
         }
     }
 

@@ -56,7 +56,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
                 SakRepositoryImpl(connection)
             )
             val behandlingRepo = BehandlingRepositoryImpl(connection)
-            val repo = MedlemskapArbeidInntektRepositoryImpl(connection)
+            val medlemskapArbeidInntektRepo = MedlemskapArbeidInntektRepositoryImpl(connection)
 
             val sak =
                 personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
@@ -70,9 +70,9 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
                         ÅrsakTilOpprettelse.SØKNAD
                     )
                 )
-            lagNyFullVurdering(behandling.id, repo, "Første begrunnelse")
+            lagNyFullVurdering(behandling.id, medlemskapArbeidInntektRepo, "Første begrunnelse")
 
-            val lagretInntekt = repo.hentHvisEksisterer(behandling.id)!!
+            val lagretInntekt = medlemskapArbeidInntektRepo.hentHvisEksisterer(behandling.id)!!
 
             val inntekt1 = lagretInntekt.inntekterINorgeGrunnlag.first { it.identifikator == "1234" }
             val inntekt2 = lagretInntekt.inntekterINorgeGrunnlag.first { it.identifikator == "4321" }
@@ -94,7 +94,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
                 SakRepositoryImpl(connection)
             )
             val behandlingRepo = BehandlingRepositoryImpl(connection)
-            val repo = MedlemskapArbeidInntektRepositoryImpl(connection)
+            val medlemskapArbeidInntektRepo = MedlemskapArbeidInntektRepositoryImpl(connection)
 
             val sak =
                 personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
@@ -108,9 +108,9 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
                         ÅrsakTilOpprettelse.SØKNAD
                     )
                 )
-            lagNyFullVurdering(behandling.id, repo, "Første begrunnelse")
+            lagNyFullVurdering(behandling.id, medlemskapArbeidInntektRepo, "Første begrunnelse")
 
-            val historikk = repo.hentHistoriskeVurderinger(sak.id, behandling.id)
+            val historikk = medlemskapArbeidInntektRepo.hentHistoriskeVurderinger(sak.id, behandling.id)
             assertEquals(0, historikk.size)
 
             behandling
@@ -119,7 +119,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
         // Revurdering
         dataSource.transaction { connection ->
             val behandlingRepo = BehandlingRepositoryImpl(connection)
-            val repo = MedlemskapArbeidInntektRepositoryImpl(connection)
+            val medlemskapArbeidInntektRepo = MedlemskapArbeidInntektRepositoryImpl(connection)
 
             val revurdering =
                 behandlingRepo.opprettBehandling(
@@ -132,18 +132,18 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
                     )
                 )
 
-            val historikk = repo.hentHistoriskeVurderinger(revurdering.sakId, revurdering.id)
-            lagNyFullVurdering(revurdering.id, repo, "Andre begrunnelse")
+            val historikk = medlemskapArbeidInntektRepo.hentHistoriskeVurderinger(revurdering.sakId, revurdering.id)
+            lagNyFullVurdering(revurdering.id, medlemskapArbeidInntektRepo, "Andre begrunnelse")
             assertThat(historikk).hasSize(1)
         }
     }
 
     private fun lagNyFullVurdering(
         behandlingId: BehandlingId,
-        repo: MedlemskapArbeidInntektRepositoryImpl,
+        medlemskapArbeidInntektRepo: MedlemskapArbeidInntektRepositoryImpl,
         begrunnelse: String
     ) {
-        repo.lagreArbeidsforholdOgInntektINorge(
+        medlemskapArbeidInntektRepo.lagreArbeidsforholdOgInntektINorge(
             behandlingId, emptyList(),
             listOf(
                 ArbeidsInntektMaaned(
@@ -182,7 +182,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
                 EnhetGrunnlag("4321", "Rotte AS")
             )
         )
-        repo.lagreManuellVurdering(
+        medlemskapArbeidInntektRepo.lagreManuellVurdering(
             behandlingId,
             ManuellVurderingForLovvalgMedlemskap(
                 LovvalgVedSøknadsTidspunktDto(begrunnelse, EØSLand.NOR),
@@ -191,7 +191,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
                 LocalDateTime.now()
             )
         )
-        repo.lagreOppgittUtenlandsOppplysninger(
+        medlemskapArbeidInntektRepo.lagreOppgittUtenlandsOppplysninger(
             behandlingId,
             JournalpostId("1"),
             UtenlandsOppholdData(true, false, false, false, null)
