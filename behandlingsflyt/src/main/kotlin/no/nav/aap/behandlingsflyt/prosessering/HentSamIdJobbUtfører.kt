@@ -26,7 +26,7 @@ class HentSamIdJobbUtfører(
     private val flytJobbRepository: FlytJobbRepository = repositoryProvider.provide(),
     private val tjenestepensjonRefusjonsKravVurderingRepository: TjenestepensjonRefusjonsKravVurderingRepository = repositoryProvider.provide(),
 
-    ) : JobbUtfører {
+    ): JobbUtfører {
     override fun utfør(input: JobbInput) {
         val behandlingId = input.payload<BehandlingId>()
         val behandling = behandlingRepository.hent(behandlingId)
