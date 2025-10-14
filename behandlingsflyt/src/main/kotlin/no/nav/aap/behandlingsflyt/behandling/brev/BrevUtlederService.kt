@@ -167,11 +167,11 @@ class BrevUtlederService(
     }
 
     private fun brevBehovVurderesForUføretrygd(behandling: Behandling): VurderesForUføretrygd {
-        // Bruker per nå bare inntekter så sender ikke med dato
+        // Sender per nå ikke med dato som betyr at beregningsgrunnlag (beløp) blir null
         val grunnlagBeregning = hentGrunnlagBeregning(behandling.id, null)
 
         return VurderesForUføretrygd(
-            inntekterPerÅr = grunnlagBeregning.inntekterPerÅr
+            grunnlagBeregning = grunnlagBeregning
         )
     }
 

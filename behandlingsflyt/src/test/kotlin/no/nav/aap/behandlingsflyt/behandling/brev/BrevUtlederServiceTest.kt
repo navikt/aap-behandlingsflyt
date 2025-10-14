@@ -21,6 +21,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -184,15 +185,28 @@ class BrevUtlederServiceTest {
                 grunnlagInntekt(2022, 200_000),
             )
         )
-        every { beregningVurderingRepository.hentHvisEksisterer(revurdering.id) } returns BeregningGrunnlag(null, null)
+        every { beregningVurderingRepository.hentHvisEksisterer(revurdering.id) } returns BeregningGrunnlag(
+            BeregningstidspunktVurdering(
+                begrunnelse = "",
+                nedsattArbeidsevneDato = LocalDate.of(2023, 2, 20),
+                ytterligereNedsattBegrunnelse = null,
+                ytterligereNedsattArbeidsevneDato = null,
+                vurdertAv = ""
+            ), null
+        )
 
         assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)).isEqualTo(
             VurderesForUføretrygd(
-                listOf(
-                    InntektPerÅr(Year.of(2024), inntekt = BigDecimal("220000.00")),
-                    InntektPerÅr(Year.of(2023), inntekt = BigDecimal("210000.00")),
-                    InntektPerÅr(Year.of(2022), inntekt = BigDecimal("200000.00")),
+                GrunnlagBeregning(
+                    beregningstidspunkt = LocalDate.of(2023, 2, 20),
+                    inntekterPerÅr = listOf(
+                        InntektPerÅr(Year.of(2024), inntekt = BigDecimal("220000.00")),
+                        InntektPerÅr(Year.of(2023), inntekt = BigDecimal("210000.00")),
+                        InntektPerÅr(Year.of(2022), inntekt = BigDecimal("200000.00")),
+                    ),
+                    beregningsgrunnlag = null
                 )
+
             )
         )
     }
