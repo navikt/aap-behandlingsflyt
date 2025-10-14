@@ -54,7 +54,7 @@ class VarsleVedtakJobbUtfører(
         val tpRefusjonskravVurdering = tjenestepensjonRefusjonskravVurdering.hentHvisEksisterer(behandlingId)
 
         if (tpRefusjonskravVurdering != null && tpRefusjonskravVurdering.harKrav) {
-            flytJobbRepository.leggTil(JobbInput(HentSamIdJobbUtfører).medPayload(behandling.id))
+            flytJobbRepository.leggTil(JobbInput(HentSamIdJobbUtfører).medPayload(behandling.id).forBehandling(sak.id.id,behandlingId.id))
         }
     }
 
