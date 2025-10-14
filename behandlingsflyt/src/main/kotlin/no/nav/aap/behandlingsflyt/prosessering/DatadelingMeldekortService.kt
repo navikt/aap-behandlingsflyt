@@ -24,50 +24,46 @@ class DatadelingMeldekortService(
     private val log = org.slf4j.LoggerFactory.getLogger(javaClass)
 
     internal fun opprettKontraktObjekter(
-        sakId: SakId,
-        behandlingId: BehandlingId
+        sakId: SakId, behandlingId: BehandlingId
     ): List<DetaljertMeldekortDTO> {
         val sak = saksRepository.hent(sakId)
         val personIdent = sak.person.aktivIdent()
 
         val meldekortene = meldekortRepository.hentHvisEksisterer(behandlingId)?.meldekort().orEmpty()
         if (meldekortene.isEmpty()) {
-            log.debug("Ingen meldekort funnet for behandlingId=${behandlingId.id}")
             return emptyList()
         }
-        val meldekortPeriodene = meldeperiodeRepository.hent(behandlingId)
+
+        val meldePeriodene = meldeperiodeRepository.hent(behandlingId)
+        if (meldePeriodene.isEmpty()) {
+            log.warn("Ingen meldeperioder funnet for behandlingId=${behandlingId.id}")
+            return emptyList()
+        }
 
         val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandlingId)
         if (underveisGrunnlag == null) {
-            log.debug("Ingen UnderveisGrunnlag funnet for behandlingId=${behandlingId.id}")
+            log.warn("Ingen UnderveisGrunnlag funnet for behandlingId=${behandlingId.id}")
             // hvis det ikke finnes UnderveisGrunnlag, finnes det heller ingen meldekort å rapportere
             return emptyList()
         }
 
         val kontraktObjekter = meldekortene.mapNotNull { meldekort ->
             val arbeidsperiode = arbeidsperiodeFraMeldekort(meldekort)
-            val meldekortetsPeriode = finnMeldekortPeriode(arbeidsperiode, meldekortPeriodene)
+            val meldekortetsPeriode = finnMeldekortetsPeriode(arbeidsperiode, meldePeriodene)
 
             if (arbeidsperiode == null) {
                 log.warn(
-                    "Meldekort uten arbeidstimer ble ignorert. " +
-                            "journalpostId=${meldekort.journalpostId}, behandlingId=${behandlingId.id}"
+                    "Meldekort uten arbeidstimer ble ignorert. journalpostId=${meldekort.journalpostId.identifikator}, behandlingId=${behandlingId.id}"
                 )
                 null
             } else if (meldekortetsPeriode == null) {
                 log.warn(
-                    "Meldekort med arbeidstimer som ikke samsvarer med noen meldekortperiode ble ignorert. " +
-                            "journalpostId=${meldekort.journalpostId}, behandlingId=${behandlingId.id}, arbeidsperiode=$arbeidsperiode"
+                    "Meldekort med arbeidstimer som ikke samsvarer med noen meldekortperiode for behandlingen ble ignorert. journalpostId=${meldekort.journalpostId.identifikator}, behandlingId=${behandlingId.id}, arbeidsperiode=$arbeidsperiode"
                 )
                 null
             } else {
                 tilKontrakt(
-                    meldekort,
-                    personIdent,
-                    sak.saksnummer,
-                    behandlingId,
-                    underveisGrunnlag,
-                    meldekortetsPeriode
+                    meldekort, personIdent, sak.saksnummer, behandlingId, underveisGrunnlag, meldekortetsPeriode
                 )
             }
         }
@@ -80,9 +76,9 @@ class DatadelingMeldekortService(
         saksnummer: Saksnummer,
         behandlingId: BehandlingId,
         underveisGrunnlag: UnderveisGrunnlag,
-        meldekortetsPeriode: Periode,
+        meldeperiode: Periode,
     ): DetaljertMeldekortDTO {
-        val meldekortetsUnderveisperiode = underveisperiodeOmBareEn(underveisGrunnlag, meldekortetsPeriode)
+        val meldekortetsUnderveisperiode = underveisperiodeOmBareEn(underveisGrunnlag, meldeperiode, behandlingId)
         val meldepliktStatus = meldekortetsUnderveisperiode?.meldepliktStatus
         val rettighetsType = meldekortetsUnderveisperiode?.rettighetsType
         val avslagsårsak = meldekortetsUnderveisperiode?.avslagsårsak
@@ -92,14 +88,12 @@ class DatadelingMeldekortService(
             saksnummer = saksnummer,
             behandlingId = behandlingId.id,
             journalpostId = meldekort.journalpostId.identifikator,
-            meldeperiodeFom = meldekortetsPeriode.fom,
-            meldeperiodeTom = meldekortetsPeriode.tom,
+            meldeperiodeFom = meldeperiode.fom,
+            meldeperiodeTom = meldeperiode.tom,
             mottattTidspunkt = meldekort.mottattTidspunkt,
             timerArbeidPerPeriode = meldekort.timerArbeidPerPeriode.map {
                 ArbeidIPeriodeDTO(
-                    it.periode.fom,
-                    it.periode.tom,
-                    it.timerArbeid.antallTimer
+                    it.periode.fom, it.periode.tom, it.timerArbeid.antallTimer
                 )
             },
             meldepliktStatusKode = meldepliktStatus?.name,
@@ -109,24 +103,29 @@ class DatadelingMeldekortService(
     }
 
     private fun underveisperiodeOmBareEn(
-        underveisGrunnlag: UnderveisGrunnlag,
-        meldekortetsPeriode: Periode
+        underveisGrunnlag: UnderveisGrunnlag, meldeperiode: Periode, behandlingId: BehandlingId
     ): Underveisperiode? {
-        // TODO: kan det være flere underveisperioder som overlapper med meldekortets periode?
-        // Vi støtter her bare at det er en. Hva gjør vi hvis det er flere?
-        // hva om det ikke finnest noen?
-        val underveisPerioder = underveisGrunnlag.perioder.filter {
-            it.meldePeriode.overlapp(meldekortetsPeriode) != null
+        val underveisPerioderEksakt = underveisGrunnlag.perioder.filter {
+            it.meldePeriode == meldeperiode
         }
-        val meldekortetsUnderveisperiode = if (underveisPerioder.size == 1) {
-            underveisPerioder.first()
+        if (underveisPerioderEksakt.size == 1) {
+            return underveisPerioderEksakt.first()
+        } else if (underveisPerioderEksakt.isEmpty()) {
+            log.warn(
+                "Ingen underveisperiode som matcher meldeperiode=$meldeperiode funnet på behandlingId=${behandlingId}. "
+            )
+            return null
         } else {
-            null
+            log.info(
+                "Flere underveisperioder funnet for samme meldeperiode på behandlingId=${behandlingId}. " +
+                        "Kan da ikke entydig angi statuser for hele meldeperioden under ett."
+            )
+            return null
         }
-        return meldekortetsUnderveisperiode
+
     }
 
-    private fun finnMeldekortPeriode(
+    private fun finnMeldekortetsPeriode(
         arbeidsperiode: Periode?, meldeperioder: List<Periode>
     ): Periode? {
         return arbeidsperiode?.let {

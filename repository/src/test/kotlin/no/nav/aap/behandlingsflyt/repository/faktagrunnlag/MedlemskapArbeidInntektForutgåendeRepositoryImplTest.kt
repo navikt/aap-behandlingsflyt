@@ -55,7 +55,7 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
                 SakRepositoryImpl(connection)
             )
             val behandlingRepo = BehandlingRepositoryImpl(connection)
-            val repo = MedlemskapArbeidInntektForutgåendeRepositoryImpl(connection)
+            val medlemskapArbeidInntektForutgåendeRepo = MedlemskapArbeidInntektForutgåendeRepositoryImpl(connection)
 
             val sak =
                 personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
@@ -69,9 +69,9 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
                         ÅrsakTilOpprettelse.SØKNAD
                     )
                 )
-            lagNyFullVurdering(behandling.id, repo, "Første begrunnelse", connection)
+            lagNyFullVurdering(behandling.id, medlemskapArbeidInntektForutgåendeRepo, "Første begrunnelse", connection)
 
-            val lagretInntekt = repo.hentHvisEksisterer(behandling.id)!!
+            val lagretInntekt = medlemskapArbeidInntektForutgåendeRepo.hentHvisEksisterer(behandling.id)!!
 
             val inntekt1 = lagretInntekt.inntekterINorgeGrunnlag.first { it.identifikator == "1234" }
             val inntekt2 = lagretInntekt.inntekterINorgeGrunnlag.first { it.identifikator == "4321" }

@@ -96,14 +96,14 @@ class VilkårsresultatRepositoryImplTest {
             )
         )
         dataSource.transaction { connection ->
-            val repo = VilkårsresultatRepositoryImpl(connection)
-            repo.lagre(behandling.id, resultat)
+            val vilkårsResultatRepo = VilkårsresultatRepositoryImpl(connection)
+            vilkårsResultatRepo.lagre(behandling.id, resultat)
         }
 
         val uthentetVilkårsResultat = dataSource.transaction { connection ->
             val behandlingId = behandling.id
-            val repo = VilkårsresultatRepositoryImpl(connection)
-            repo.hent(behandlingId)
+            val vilkårsResultatRepo = VilkårsresultatRepositoryImpl(connection)
+            vilkårsResultatRepo.hent(behandlingId)
         }
 
         assertThat(uthentetVilkårsResultat.alle().size).isEqualTo(3)

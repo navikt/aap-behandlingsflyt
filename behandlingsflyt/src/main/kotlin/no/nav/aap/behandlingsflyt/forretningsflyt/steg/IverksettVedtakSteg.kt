@@ -13,7 +13,6 @@ import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.prosessering.DatadelingBehandlingJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.IverksettUtbetalingJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.VarsleVedtakJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -71,13 +70,7 @@ class IverksettVedtakSteg private constructor(
             log.info("Fant ikke tilkjent ytelse for behandingsref ${kontekst.behandlingId}. Virkningstidspunkt: $virkningstidspunkt.")
         }
         flytJobbRepository.leggTil(
-            jobbInput = JobbInput(jobb = VarsleVedtakJobbUtfører).medPayload(kontekst.behandlingId)
-        )
-
-
-        flytJobbRepository.leggTil(
-            JobbInput(jobb = DatadelingBehandlingJobbUtfører).medPayload(Pair(kontekst.behandlingId, vedtakstidspunkt))
-                .forBehandling(kontekst.sakId.id, kontekst.behandlingId.id)
+            jobbInput = JobbInput(jobb = VarsleVedtakJobbUtfører).medPayload(kontekst.behandlingId).forSak(kontekst.sakId.id)
         )
 
         mellomlagretVurderingRepository.slett(kontekst.behandlingId)

@@ -570,25 +570,25 @@ internal class BistandRepositoryImplTest {
         )
 
         val (førstegangsbehandling, sak) = dataSource.transaction { connection ->
-            val repo = BistandRepositoryImpl(connection)
+            val bistandRepo = BistandRepositoryImpl(connection)
             val sak = sak(connection)
             val førstegangsbehandling = finnEllerOpprettBehandling(connection, sak)
 
-            repo.lagre(førstegangsbehandling.id, listOf(bistandsvurdering1))
-            repo.lagre(førstegangsbehandling.id, listOf(bistandsvurdering2))
+            bistandRepo.lagre(førstegangsbehandling.id, listOf(bistandsvurdering1))
+            bistandRepo.lagre(førstegangsbehandling.id, listOf(bistandsvurdering2))
             Pair(førstegangsbehandling, sak)
         }
 
         val revurderingUtenOppdatertBistandsvurdering = dataSource.transaction { connection ->
-            val repo = BistandRepositoryImpl(connection)
+            val bistandRepo = BistandRepositoryImpl(connection)
             val revurdering = revurdering(connection, førstegangsbehandling, sak)
-            val historikk = repo.hentHistoriskeBistandsvurderinger(revurdering.sakId, revurdering.id)
+            val historikk = bistandRepo.hentHistoriskeBistandsvurderinger(revurdering.sakId, revurdering.id)
             assertThat(historikk).usingRecursiveComparison(sammenlinger).isEqualTo(listOf(bistandsvurdering2))
             revurdering
         }
 
         dataSource.transaction { connection ->
-            val repo = BistandRepositoryImpl(connection)
+            val bistandRepo = BistandRepositoryImpl(connection)
             val revurdering = revurdering(connection, revurderingUtenOppdatertBistandsvurdering, sak)
             val bistandsvurdering3 = BistandVurdering(
                 begrunnelse = "Tredje begrunnelse",
@@ -601,8 +601,8 @@ internal class BistandRepositoryImplTest {
                 skalVurdereAapIOvergangTilArbeid = null,
                 overgangBegrunnelse = null,
             )
-            repo.lagre(revurdering.id, listOf(bistandsvurdering3))
-            val historikk = repo.hentHistoriskeBistandsvurderinger(revurdering.sakId, revurdering.id)
+            bistandRepo.lagre(revurdering.id, listOf(bistandsvurdering3))
+            val historikk = bistandRepo.hentHistoriskeBistandsvurderinger(revurdering.sakId, revurdering.id)
             assertThat(historikk)
                 .usingRecursiveComparison(sammenlinger)
                 .isEqualTo(listOf(bistandsvurdering2))
@@ -648,11 +648,11 @@ internal class BistandRepositoryImplTest {
         )
 
         val førstegangsbehandling = dataSource.transaction { connection ->
-            val repo = BistandRepositoryImpl(connection)
+            val bistandRepo = BistandRepositoryImpl(connection)
             val sak = sak(connection)
             val førstegangsbehandling = finnEllerOpprettBehandling(connection, sak)
 
-            repo.lagre(førstegangsbehandling.id, listOf(bistandsvurdering1))
+            bistandRepo.lagre(førstegangsbehandling.id, listOf(bistandsvurdering1))
             førstegangsbehandling
         }
 

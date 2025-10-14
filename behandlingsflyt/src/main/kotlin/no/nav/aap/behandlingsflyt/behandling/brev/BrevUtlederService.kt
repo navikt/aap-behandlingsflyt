@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.behandling.brev
 
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
-import no.nav.aap.behandlingsflyt.behandling.brev.Innvilgelse.GrunnlagBeregning.InntektPerÅr
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
@@ -80,7 +79,7 @@ class BrevUtlederService(
                         if (vurderesForUføretrygd(behandling.id) &&
                             unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_18)
                         ) {
-                            VurderesForUføretrygd
+                            brevBehovVurderesForUføretrygd(behandling)
                         } else {
                             brevBehovInnvilgelse(behandling)
                         }
@@ -114,7 +113,7 @@ class BrevUtlederService(
                     behandling.forrigeBehandlingId != null &&
                     !vurderesForUføretrygd(behandling.forrigeBehandlingId)
                 ) {
-                    return VurderesForUføretrygd
+                    return brevBehovVurderesForUføretrygd(behandling)
                 }
                 return VedtakEndring
             }
@@ -156,17 +155,9 @@ class BrevUtlederService(
         checkNotNull(vedtak.virkningstidspunkt) {
             "Vedtak for behandling med innvilgelse mangler virkningstidspunkt"
         }
-        val grunnlagBeregning = if (unleashGateway.isEnabled(BehandlingsflytFeature.BrevBeregningsgrunnlag)) {
-            hentGrunnlagBeregning(behandling.id, vedtak.virkningstidspunkt)
-        } else {
-            null
-        }
+        val grunnlagBeregning = hentGrunnlagBeregning(behandling.id, vedtak.virkningstidspunkt)
 
-        val tilkjentYtelse = if (unleashGateway.isEnabled(BehandlingsflytFeature.BrevBeregningsgrunnlag)) {
-            utledDagsats(behandling.id, vedtak.virkningstidspunkt)
-        } else {
-            null
-        }
+        val tilkjentYtelse = utledTilkjentYtelse(behandling.id, vedtak.virkningstidspunkt)
 
         return Innvilgelse(
             virkningstidspunkt = vedtak.virkningstidspunkt,
@@ -175,12 +166,21 @@ class BrevUtlederService(
         )
     }
 
+    private fun brevBehovVurderesForUføretrygd(behandling: Behandling): VurderesForUføretrygd {
+        // Bruker per nå bare inntekter så sender ikke med dato
+        val grunnlagBeregning = hentGrunnlagBeregning(behandling.id, null)
+
+        return VurderesForUføretrygd(
+            inntekterPerÅr = grunnlagBeregning.inntekterPerÅr
+        )
+    }
+
     private fun hentGrunnlagBeregning(
         behandlingId: BehandlingId,
-        virkningstidspunkt: LocalDate
-    ): Innvilgelse.GrunnlagBeregning {
+        dato: LocalDate?
+    ): GrunnlagBeregning {
         val grunnlag = beregningsgrunnlagRepository.hentHvisEksisterer(behandlingId)
-        val beregningsgrunnlag = beregnBeregningsgrunnlagBeløp(grunnlag, virkningstidspunkt)
+        val beregningsgrunnlag = beregnBeregningsgrunnlagBeløp(grunnlag, dato)
         val beregningstidspunktVurdering =
             beregningVurderingRepository.hentHvisEksisterer(behandlingId)?.tidspunktVurdering
 
@@ -207,7 +207,7 @@ class BrevUtlederService(
                 }
             }
 
-            null -> Innvilgelse.GrunnlagBeregning(null, emptyList(), beregningsgrunnlag)
+            null -> GrunnlagBeregning(null, emptyList(), beregningsgrunnlag)
         }
     }
 
@@ -215,10 +215,10 @@ class BrevUtlederService(
         grunnlag: Grunnlag11_19,
         beregningstidspunktVurdering: BeregningstidspunktVurdering?,
         beregningsgrunnlag: Beløp?,
-    ): Innvilgelse.GrunnlagBeregning {
+    ): GrunnlagBeregning {
         val beregningstidspunkt = beregningstidspunktVurdering?.nedsattArbeidsevneDato
         val inntekter = grunnlag.inntekter().grunnlagInntektTilInntektPerÅr()
-        return Innvilgelse.GrunnlagBeregning(
+        return GrunnlagBeregning(
             beregningstidspunkt = beregningstidspunkt,
             inntekterPerÅr = inntekter,
             beregningsgrunnlag = beregningsgrunnlag,
@@ -229,17 +229,17 @@ class BrevUtlederService(
         grunnlag: GrunnlagUføre,
         beregningstidspunktVurdering: BeregningstidspunktVurdering?,
         beregningsgrunnlag: Beløp?,
-    ): Innvilgelse.GrunnlagBeregning {
+    ): GrunnlagBeregning {
         val beregningstidspunkt = utledBeregningstidspunktUføre(grunnlag, beregningstidspunktVurdering)
         val inntekter = utledInntekterPerÅrUføre(grunnlag)
-        return Innvilgelse.GrunnlagBeregning(
+        return GrunnlagBeregning(
             beregningstidspunkt = beregningstidspunkt,
             inntekterPerÅr = inntekter,
             beregningsgrunnlag = beregningsgrunnlag,
         )
     }
 
-    private fun utledDagsats(behandlingId: BehandlingId, virkningstidspunkt: LocalDate): Innvilgelse.TilkjentYtelse? {
+    private fun utledTilkjentYtelse(behandlingId: BehandlingId, virkningstidspunkt: LocalDate): TilkjentYtelse? {
         /**
          * Henter data basert på virkningstidspunkt.
          */
@@ -278,7 +278,7 @@ class BrevUtlederService(
                         .setScale(0, RoundingMode.HALF_UP)
                 )
 
-            Innvilgelse.TilkjentYtelse(
+            TilkjentYtelse(
                 dagsats = tilkjent.dagsats,
                 gradertDagsats = gradertDagsats,
                 barnetillegg = tilkjent.barnetillegg,
@@ -316,9 +316,12 @@ class BrevUtlederService(
         return this.map { InntektPerÅr(it.år, it.inntektIKroner.verdi()) }
     }
 
-    private fun beregnBeregningsgrunnlagBeløp(grunnlag: Beregningsgrunnlag?, virkningstidspunkt: LocalDate): Beløp? {
+    private fun beregnBeregningsgrunnlagBeløp(grunnlag: Beregningsgrunnlag?, dato: LocalDate?): Beløp? {
+        if (dato == null) {
+            return null
+        }
         val grunnlaget = grunnlag?.grunnlaget() ?: return null
-        val grunnlagetBeløp = grunnlaget.multiplisert(Grunnbeløp.finnGrunnbeløp(virkningstidspunkt))
+        val grunnlagetBeløp = grunnlaget.multiplisert(Grunnbeløp.finnGrunnbeløp(dato))
         return Beløp(grunnlagetBeløp.verdi.setScale(0, RoundingMode.HALF_UP))
     }
 
