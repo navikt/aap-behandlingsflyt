@@ -25,7 +25,7 @@ dependencies {
     implementation(libs.verdityper)
     implementation(libs.tidslinje)
     implementation(kotlin("reflect"))
-    implementation("org.flywaydb:flyway-database-postgresql:11.13.3")
+    implementation("org.flywaydb:flyway-database-postgresql:11.14.0")
     runtimeOnly("org.postgresql:postgresql") // låst versjon i root build.gradle.kts
 
 
