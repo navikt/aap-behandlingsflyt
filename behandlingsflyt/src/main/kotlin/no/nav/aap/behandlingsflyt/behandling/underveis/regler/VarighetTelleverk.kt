@@ -80,9 +80,9 @@ data class KvoteTilstand(
     private var hverdagerBrukt: Hverdager = Hverdager(0),
 ) {
     var erKvoteOversteget: Boolean = false
-        set(value) {
-            if (value) {
-                field = value
+        set(kvoteErOversteget) {
+            if (kvoteErOversteget) {
+                field = kvoteErOversteget
             }
         }
 
