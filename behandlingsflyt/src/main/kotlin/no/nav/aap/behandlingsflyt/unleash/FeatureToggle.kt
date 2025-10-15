@@ -13,7 +13,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     IngenValidering,
     InnhentEnhetsregisterData,
     SendForvaltningsmelding,
-    SosialHjelpFlereKontorer,
     NyBrevtype11_18,
     Aktivitetsplikt11_7,
     Aktivitetsplikt11_9,
