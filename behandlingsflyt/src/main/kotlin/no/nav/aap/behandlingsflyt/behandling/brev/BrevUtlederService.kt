@@ -76,8 +76,8 @@ class BrevUtlederService(
 
                 return when (resultat) {
                     Resultat.INNVILGELSE -> {
-                        if (vurderesForUføretrygd(behandling.id) &&
-                            unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_18)
+                        if (unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_18) &&
+                            harRettighetsType(behandling.id, RettighetsType.VURDERES_FOR_UFØRETRYGD)
                         ) {
                             brevBehovVurderesForUføretrygd(behandling)
                         } else {
@@ -109,11 +109,18 @@ class BrevUtlederService(
                     return null
                 }
                 if (unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_18) &&
-                    vurderesForUføretrygd(behandlingId) &&
+                    harRettighetsType(behandling.id, RettighetsType.VURDERES_FOR_UFØRETRYGD) &&
                     behandling.forrigeBehandlingId != null &&
-                    !vurderesForUføretrygd(behandling.forrigeBehandlingId)
+                    !harRettighetsType(behandling.forrigeBehandlingId, RettighetsType.VURDERES_FOR_UFØRETRYGD)
                 ) {
                     return brevBehovVurderesForUføretrygd(behandling)
+                }
+                if (unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) &&
+                    harRettighetsType(behandling.id, RettighetsType.ARBEIDSSØKER) &&
+                    behandling.forrigeBehandlingId != null &&
+                    !harRettighetsType(behandling.forrigeBehandlingId, RettighetsType.ARBEIDSSØKER)
+                ) {
+                    return Arbeidssøker
                 }
                 return VedtakEndring
             }
@@ -325,13 +332,13 @@ class BrevUtlederService(
         return Beløp(grunnlagetBeløp.verdi.setScale(0, RoundingMode.HALF_UP))
     }
 
-    private fun vurderesForUføretrygd(behandlingId: BehandlingId): Boolean {
+    private fun harRettighetsType(behandlingId: BehandlingId, rettighetsType: RettighetsType): Boolean {
         return underveisRepository.hentHvisEksisterer(behandlingId)
             ?.perioder
             .orEmpty()
             .any {
                 it.utfall == Utfall.OPPFYLT &&
-                        it.rettighetsType == RettighetsType.VURDERES_FOR_UFØRETRYGD
+                        it.rettighetsType == rettighetsType
             }
     }
 }
