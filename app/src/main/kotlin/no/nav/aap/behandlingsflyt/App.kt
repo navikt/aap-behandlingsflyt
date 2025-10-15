@@ -127,7 +127,7 @@ internal object AppConfig {
     val stansArbeidTimeout = shutdownGracePeriod - 1.seconds
 
     // Vi skrur opp ktor sin default-verdi, som er "antall CPUer", fordi vi har en del venting på IO (db, kafka, http):
-    private val ktorParallellitet = 8
+    private val ktorParallellitet = 6
     // Vi følger ktor sin metodikk for å regne ut tuning parametre som funksjon av parallellitet
     // https://github.com/ktorio/ktor/blob/3.3.1/ktor-server/ktor-server-core/common/src/io/ktor/server/engine/ApplicationEngine.kt#L30
     val connectionGroupSize = ktorParallellitet / 2 + 1
