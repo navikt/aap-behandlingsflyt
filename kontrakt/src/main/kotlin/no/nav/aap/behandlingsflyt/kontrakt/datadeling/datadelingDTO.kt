@@ -71,6 +71,14 @@ public data class MeldtArbeidIPeriodeDTO(
     val journalpostId: String,
 )
 
+public data class UnderveisStatuserDTO(
+    val periodeFom: LocalDate,
+    val periodeTom: LocalDate,
+    val meldepliktstatusKode: String?,
+    val rettighetsTypeKode: String?,
+    val avslagsÅrsakKode: String?
+)
+
 public data class DetaljertTimeArbeidetListeDTO(
     val personIdent: String,
     val saksnummer: Saksnummer,
@@ -78,7 +86,5 @@ public data class DetaljertTimeArbeidetListeDTO(
     val meldeperiodeFom: LocalDate,
     val meldeperiodeTom: LocalDate,
     val detaljertArbeidIPeriode: List<MeldtArbeidIPeriodeDTO>,
-    val meldepliktStatusKode: String?,
-    val rettighetsTypeKode: String?,
-    val avslagsårsakKode: String?
+    val underveisStatuser: List<UnderveisStatuserDTO>,
 )

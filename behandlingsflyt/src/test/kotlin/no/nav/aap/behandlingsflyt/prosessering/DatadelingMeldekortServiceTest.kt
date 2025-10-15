@@ -46,6 +46,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import java.math.BigDecimal
 import java.time.LocalDate
 import javax.sql.DataSource
+import kotlin.time.Duration.Companion.minutes
 
 
 @ExtendWith(TestDatabaseExtension::class)
@@ -141,9 +142,12 @@ class DatadelingMeldekortServiceTest {
                 val timetall = detaljertArbeidIPeriode.sumOf { it.timerArbeidet }
                 assertThat(timetall).isEqualTo(16.0.toBigDecimal())
 
-                assertThat(avslagsårsakKode).isEqualTo(testUnderveisperiode.avslagsårsak?.name)
-                assertThat(rettighetsTypeKode).isEqualTo(testUnderveisperiode.rettighetsType?.name)
-                assertThat(meldepliktStatusKode).isEqualTo(testUnderveisperiode.meldepliktStatus?.name)
+                underveisStatuser.first().apply {
+
+                    assertThat(avslagsÅrsakKode).isEqualTo(testUnderveisperiode.avslagsårsak?.name)
+                    assertThat(rettighetsTypeKode).isEqualTo(testUnderveisperiode.rettighetsType?.name)
+                    assertThat(meldepliktstatusKode).isEqualTo(testUnderveisperiode.meldepliktStatus?.name)
+                }
             }
 
         }
@@ -235,12 +239,12 @@ private fun lagreMeldekort(
             Meldekort(
                 mottattMeldekort.referanse.asJournalpostId, setOf(
                     ArbeidIPeriode(
-                        Periode(periodeStart, periodeStart.plusDays(1)), TimerArbeid(4.0.toBigDecimal())
+                        Periode(periodeStart, periodeStart), TimerArbeid(4.0.toBigDecimal())
                     ), ArbeidIPeriode(
-                        Periode(periodeStart.plusDays(2), periodeStart.plusDays(3)),
+                        Periode(periodeStart.plusDays(2), periodeStart.plusDays(2)),
                         TimerArbeid(4.5.toBigDecimal())
                     ), ArbeidIPeriode(
-                        Periode(periodeStart.plusDays(4), periodeStart.plusDays(5)),
+                        Periode(periodeStart.plusDays(5), periodeStart.plusDays(5)),
                         TimerArbeid(7.5.toBigDecimal())
                     )
                 ), mottattTidspunkt = mottattMeldekort.mottattTidspunkt

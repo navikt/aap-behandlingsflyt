@@ -3,17 +3,23 @@ package no.nav.aap.behandlingsflyt.prosessering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DetaljertTimeArbeidetListeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.MeldtArbeidIPeriodeDTO
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.UnderveisStatuserDTO
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.prosessering.OpplysningerOmArbeidFraMeldekort.Companion.mergePrioriterHøyre
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.TimerArbeid
+import java.math.BigDecimal
+import java.math.RoundingMode
+import java.time.LocalDateTime
 
 class DatadelingMeldekortService(
     private val saksRepository: SakRepository,
@@ -47,44 +53,27 @@ class DatadelingMeldekortService(
             return emptyList()
         }
 
-        val arbeidIPeriodeTilMeldekort = meldekortene.mapNotNull { meldekort ->
-            val arbeidsperiode = arbeidsperiodeFraMeldekort(meldekort)
-            // et meldekort kan noen ganger ha data for flere meldeperioder
-            val meldekortetsPerioder = finnMeldekortetsPerioder(arbeidsperiode, meldePeriodene)
+        val timerArbeidetTidslinje = somTidslinje(meldekortene)
 
-            if (arbeidsperiode == null) {
-                log.warn(
-                    "Meldekort uten arbeidstimer ble ignorert. journalpostId=${meldekort.journalpostId.identifikator}, behandlingId=${behandlingId.id}"
-                )
-                null
-            } else if (meldekortetsPerioder.isEmpty()) {
-                log.warn(
-                    "Meldekort med arbeidstimer som ikke samsvarer med noen meldeperiode for behandlingen ble ignorert. journalpostId=${meldekort.journalpostId.identifikator}, behandlingId=${behandlingId.id}, arbeidsperiode=$arbeidsperiode"
-                )
-                null
-            } else {
-                meldekort
-            }
+        val meldeperiodeTilArbeidIPeriode = meldePeriodene.associateWith { meldePeriode ->
+            timerArbeidetTidslinje.segmenter().filter { it.periode.overlapper(meldePeriode) }
         }
-            // Flater ut til par (ArbeidIPeriode -> Meldekort)
-            .flatMap { meldekort -> meldekort.timerArbeidPerPeriode.map { it to meldekort } }
-            // Hvis samme ArbeidIPeriode finnes i flere meldekort vil siste vinne.
-            .toMap()
 
-        val meldeperiodeTilArbeidIPeriode = meldePeriodene.associateWith { periode ->
-                arbeidIPeriodeTilMeldekort.keys.filter {
-                    it.periode.overlapper(
-                        periode
-                    )
-                }
-            }.filterValues { it.isNotEmpty() }
+        val meldeperiodeMedArbeid = meldeperiodeTilArbeidIPeriode.mapValues { (_, segment) ->
+            segment.map {
+                MeldtArbeidIPeriodeDTO(
+                    it.periode.fom,
+                    it.periode.tom,
+                    it.verdi.timerArbeid.antallTimer,
+                    it.verdi.opplysningerFørstMottatt,
+                    it.verdi.journalpostId
+                )
+            }
+        }.filterValues { it.isNotEmpty() }
 
-        return meldeperiodeTilArbeidIPeriode.map { (meldeperiode, arbeidstimerListe) ->
-            val arbeidsTimerListeMedKilde =
-                arbeidIPeriodeTilMeldekort.filter { (key, _) -> arbeidstimerListe.contains(key) }
+        return meldeperiodeMedArbeid.map { (meldeperiode, meldtArbeidIPeriodeDTO) ->
             tilKontrakt(
-                meldeperiode, arbeidstimerListe, personIdent, sak.saksnummer, behandlingId, underveisGrunnlag,
-                arbeidsTimerListeMedKilde
+                meldeperiode, meldtArbeidIPeriodeDTO, personIdent, sak.saksnummer, behandlingId, underveisGrunnlag,
             )
         }
 
@@ -92,16 +81,15 @@ class DatadelingMeldekortService(
 
     internal fun tilKontrakt(
         meldeperiode: Periode,
-        arbeidIPerioden: List<ArbeidIPeriode>,
+        meldtArbeidIPeriode: List<MeldtArbeidIPeriodeDTO>,
         personIdent: Ident,
         saksnummer: Saksnummer,
         behandlingId: BehandlingId,
         underveisGrunnlag: UnderveisGrunnlag,
-        arbeidIPeriodeTilMeldekort: Map<ArbeidIPeriode, Meldekort>
     ): DetaljertTimeArbeidetListeDTO {
-        val underVeisPeriode = underveisGrunnlag.perioder.filter {
+        val underVeisPerioder = underveisGrunnlag.perioder.filter {
             it.meldePeriode == meldeperiode
-        }.maxByOrNull { it.id!!.asLong } // FIXME antar her at en underveisperiode representerer status for slutten av meldeperioden
+        }
 
         return DetaljertTimeArbeidetListeDTO(
             personIdent = personIdent.identifikator,
@@ -109,48 +97,66 @@ class DatadelingMeldekortService(
             behandlingId = behandlingId.id,
             meldeperiodeFom = meldeperiode.fom,
             meldeperiodeTom = meldeperiode.tom,
-            detaljertArbeidIPeriode = arbeidIPerioden.map {
-                val opplysningskilde = arbeidIPeriodeTilMeldekort.getValue(it)
-                MeldtArbeidIPeriodeDTO(
+            detaljertArbeidIPeriode = meldtArbeidIPeriode,
+            underveisStatuser = underVeisPerioder.map {
+                UnderveisStatuserDTO(
                     it.periode.fom,
                     it.periode.tom,
-                    it.timerArbeid.antallTimer,
-                    opplysningskilde.mottattTidspunkt,
-                    opplysningskilde.journalpostId.identifikator
+                    it.meldepliktStatus?.name,
+                    it.rettighetsType?.name,
+                    it.avslagsårsak?.name
                 )
             },
-            meldepliktStatusKode = underVeisPeriode?.meldepliktStatus?.name,
-            rettighetsTypeKode = underVeisPeriode?.rettighetsType?.name,
-            avslagsårsakKode = underVeisPeriode?.avslagsårsak?.name,
         )
 
     }
+}
 
-    private fun finnMeldekortetsPerioder(
-        arbeidsperiode: Periode?, meldeperioder: List<Periode>
-    ): List<Periode> {
-        return arbeidsperiode?.let {
-            meldeperioder.filter {
-                // arbeidsperiode overlapper med meldeperiode
-                it.overlapper(arbeidsperiode)
-            }
-        } ?: emptyList()
+fun somTidslinje(meldekort: List<Meldekort>): Tidslinje<OpplysningerOmArbeidFraMeldekort> {
+    var tidslinje = Tidslinje<OpplysningerOmArbeidFraMeldekort>()
+
+    for (meldekort in meldekort.sortedBy { it.mottattTidspunkt }) {
+        tidslinje = tidslinje.outerJoin(meldekort.somTidslinje()) { tidligereOpplysninger, meldekortopplysninger ->
+            /* Opplysninger fra nyeste meldekort, opplysningerFørstMottatt fra eldste meldekort */
+            val timerArbeidetOpplysninger = OpplysningerOmArbeidFraMeldekort(
+                timerArbeid = meldekortopplysninger?.let { (timerArbeidet, antallDager) ->
+                    TimerArbeid(
+                        timerArbeidet.antallTimer.divide(
+                            BigDecimal(antallDager),
+                            3,
+                            RoundingMode.HALF_UP
+                        )
+                    )
+                } ?: error("Vi sender bare inn non-null verdier i tidslinjen, så dette skal ikke kunne skje"),
+                opplysningerFørstMottatt = meldekort.mottattTidspunkt,
+                journalpostId = meldekort.journalpostId.identifikator
+            )
+
+            mergePrioriterHøyre(tidligereOpplysninger, timerArbeidetOpplysninger)
+        }
     }
 
-    /**
-    @return Tidsperioden meldekortet inneholder arbeidstimer for.
-    Merk at det kan være dager i perioden meldekortet gjelder for som det ikke er rapportert timer på.
-    @param meldekort -
-     **/
-    private fun arbeidsperiodeFraMeldekort(meldekort: Meldekort): Periode? {
-        val timerArbeidPerPeriode = meldekort.timerArbeidPerPeriode
-        if (timerArbeidPerPeriode.isEmpty()) {
-            return null
-        }
-        val arbeidPerioder = timerArbeidPerPeriode.map { it.periode }
-        val arbeidsPerioderStart = arbeidPerioder.minBy { it.fom }.fom
-        val arbeidsPerioderSlutt = arbeidPerioder.maxBy { it.tom }.tom
+    return tidslinje
+}
 
-        return Periode(arbeidsPerioderStart, arbeidsPerioderSlutt)
+class OpplysningerOmArbeidFraMeldekort(
+    val timerArbeid: TimerArbeid,
+    val opplysningerFørstMottatt: LocalDateTime,
+    val journalpostId: String
+) {
+    companion object {
+        fun mergePrioriterHøyre(
+            venstre: OpplysningerOmArbeidFraMeldekort?,
+            høyre: OpplysningerOmArbeidFraMeldekort
+        ): OpplysningerOmArbeidFraMeldekort {
+            val eldsteJournalpostId = listOfNotNull(venstre?.journalpostId, høyre.journalpostId).first()
+            val eldsteTidspunkt = listOfNotNull(venstre?.opplysningerFørstMottatt, høyre.opplysningerFørstMottatt).min()
+            return OpplysningerOmArbeidFraMeldekort(
+                timerArbeid = høyre.timerArbeid,
+                opplysningerFørstMottatt = eldsteTidspunkt,
+                journalpostId = eldsteJournalpostId,
+            )
+        }
+
     }
 }
