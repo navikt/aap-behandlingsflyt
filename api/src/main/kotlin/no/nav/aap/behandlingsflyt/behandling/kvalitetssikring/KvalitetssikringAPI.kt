@@ -121,6 +121,7 @@ private fun utledKvalitetssikringHistorikk(avklaringsbehovene: Avklaringsbehoven
                     Aksjon.KVALITETSSIKRET
                 }
             }
+            // Ikke ubrukt, brukes i neste entry
             tidsstempelForrigeBehov = behov.endring.tidsstempel
             Historikk(aksjon, behov.endring.tidsstempel, behov.endring.endretAv)
         }.sorted()

@@ -69,7 +69,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.Institusjonsop
 import no.nav.aap.behandlingsflyt.integrasjon.kabal.KabalGateway
 import no.nav.aap.behandlingsflyt.integrasjon.medlemsskap.MedlemskapGateway
 import no.nav.aap.behandlingsflyt.integrasjon.meldekort.MeldekortGatewayImpl
-import no.nav.aap.behandlingsflyt.integrasjon.oppgave.GosysGateway
+import no.nav.aap.behandlingsflyt.integrasjon.gosys.GosysGateway
 import no.nav.aap.behandlingsflyt.integrasjon.oppgave.OppgavestyringGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomInfoGateway
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NorgGateway
@@ -797,8 +797,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
 
     protected fun hentBehandling(behandlingReferanse: BehandlingReferanse): Behandling {
         return dataSource.transaction(readOnly = true) { connection ->
-            val behandling = BehandlingRepositoryImpl(connection).hent(behandlingReferanse)
-            requireNotNull(behandling)
+            BehandlingRepositoryImpl(connection).hent(behandlingReferanse)
         }
     }
 

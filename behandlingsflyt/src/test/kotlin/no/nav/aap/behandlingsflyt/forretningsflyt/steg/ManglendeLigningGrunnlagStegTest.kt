@@ -94,7 +94,7 @@ class ManglendeLigningGrunnlagStegTest {
 
         avklaringsbehovService = AvklaringsbehovService(
             avklaringsbehovRepository, avbrytRevurderingService
-        );
+        )
 
         steg = ManglendeLigningGrunnlagSteg(
             avklaringsbehovRepository,

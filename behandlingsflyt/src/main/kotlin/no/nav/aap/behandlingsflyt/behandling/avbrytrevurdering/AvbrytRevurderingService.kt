@@ -9,6 +9,6 @@ class AvbrytRevurderingService (
     constructor(repositoryProvider: RepositoryProvider) : this(repositoryProvider.provide())
 
     fun revurderingErAvbrutt(behandlingId: BehandlingId): Boolean {
-        return avbrytRevurderingRepository.hentHvisEksisterer(behandlingId)?.vurdering != null;
+        return avbrytRevurderingRepository.hentHvisEksisterer(behandlingId)?.vurdering != null
     }
 }

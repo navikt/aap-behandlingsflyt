@@ -31,7 +31,7 @@ class AvklarSamordningGraderingLøser(
             begrunnelse = vurderingerForSamordning.begrunnelse,
             maksDatoEndelig = vurderingerForSamordning.maksDatoEndelig,
             fristNyRevurdering = vurderingerForSamordning.fristNyRevurdering,
-            vurderinger = vurderingerForSamordning.vurderteSamordningerData.groupBy { it.ytelseType }.map { it ->
+            vurderinger = vurderingerForSamordning.vurderteSamordningerData.groupBy { it.ytelseType }.map {
                 SamordningVurdering(
                     ytelseType = it.key,
                     vurderingPerioder = it.value.map { vurdering ->

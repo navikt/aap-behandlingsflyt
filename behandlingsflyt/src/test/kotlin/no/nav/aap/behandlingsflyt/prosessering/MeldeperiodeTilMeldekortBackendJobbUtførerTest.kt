@@ -37,7 +37,7 @@ import java.util.*
 import kotlin.test.Test
 
 class MeldeperiodeTilMeldekortBackendJobbUtførerTest {
-    private val underveisperioder = listOf<Underveisperiode>(
+    private val underveisperioder = listOf(
         underveisperiode("2025-03-31,2025-04-14", "2025-03-31,2025-04-14", IKKE_GRUNNLEGGENDE_RETT, null, FØR_VEDTAK),
         underveisperiode("2025-04-14,2025-04-28", "2025-04-14,2025-04-28", IKKE_GRUNNLEGGENDE_RETT, null, IKKE_MELDT_SEG),
         underveisperiode("2025-04-28,2025-05-12", "2025-04-28,2025-05-12", IKKE_GRUNNLEGGENDE_RETT, null, FREMTIDIG_IKKE_OPPFYLT),
@@ -129,7 +129,7 @@ class MeldeperiodeTilMeldekortBackendJobbUtførerTest {
             Periode(LocalDate.parse("2026-03-16"), LocalDate.parse("2026-03-29")),
             Periode(LocalDate.parse("2026-03-30"), LocalDate.parse("2026-04-12")),
         ))
-        assertEquals(opplysninger.meldeplikt.map { Periode(it.fom, it.tom) }.toSet(), setOf<Periode>(
+        assertEquals(opplysninger.meldeplikt.map { Periode(it.fom, it.tom) }.toSet(), setOf(
             LocalDate.parse("2025-05-26").let { Periode(it, it.plusDays(7))},
             LocalDate.parse("2025-06-09").let { Periode(it, it.plusDays(7))},
             LocalDate.parse("2025-06-23").let { Periode(it, it.plusDays(7))},

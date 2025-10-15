@@ -88,7 +88,7 @@ class NomInfoGateway : AnsattInfoGateway {
     }
 }
 
-private const val navIdent = "\$navIdent"
+private const val navIdent = $$"$navIdent"
 val ressursQuery = """
     query($navIdent: String!) {
       ressurs(where: {navident: $navIdent}) {
@@ -105,7 +105,7 @@ val ressursQuery = """
     }
 """.trimIndent()
 
-private const val navIdenter = "\$navIdenter"
+private const val navIdenter = $$"$navIdenter"
 val flereNavnQuery = """
     query($navIdenter: [String!]) {
         ressurser(where: {navidenter: [$navIdenter]}) {
