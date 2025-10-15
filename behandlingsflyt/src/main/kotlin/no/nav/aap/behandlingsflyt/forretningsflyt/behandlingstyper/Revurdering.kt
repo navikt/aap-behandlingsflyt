@@ -300,7 +300,7 @@ object Revurdering : BehandlingType {
                 )
             )
             .apply {
-                if(Miljø.erLokal()) {
+                if(!Miljø.erProd()) {
                     medSteg(
                         steg = VurderOppholdskravSteg,
                         vurderingsbehovRelevanteForSteg = listOf(
