@@ -6,6 +6,14 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedtaksbrevLøsning
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.YtelseTypeCode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.SamhandlerForholdDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.SamhandlerYtelseDto
@@ -13,10 +21,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjeneste
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TpOrdning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
-import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.InstitusjonsoppholdJSON
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.SamordningVurderingData
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
 import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
+import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.InstitusjonsoppholdJSON
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Ident
@@ -27,11 +38,15 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskap
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
+import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
+import no.nav.aap.behandlingsflyt.repository.behandling.brev.bestilling.BrevbestillingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.AzurePortHolder
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.FakeServers
@@ -40,10 +55,11 @@ import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.behandlingsflyt.test.modell.defaultInntekt
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.motor.FlytJobbRepository
+import no.nav.aap.motor.testutil.ManuellMotorImpl
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import org.slf4j.LoggerFactory
@@ -53,10 +69,14 @@ import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
+import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
 
 private val log = LoggerFactory.getLogger("TestApp")
+lateinit var testScenarioOrkestrator: TestScenarioOrkestrator
+lateinit var motor: ManuellMotorImpl
+lateinit var datasource: DataSource
 
 // Kjøres opp for å få logback i console uten json
 fun main() {
@@ -78,19 +98,44 @@ fun main() {
             username = postgres.username,
             password = postgres.password
         )
+
+        val gatewayProvider = defaultGatewayProvider()
+
         // Useful for connecting to the test database locally
         // jdbc URL contains the host and port and database name.
         println("jdbcUrl: ${postgres.jdbcUrl}. Password: ${postgres.password}. Username: ${postgres.username}.")
-        server(dbConfig, postgresRepositoryRegistry, defaultGatewayProvider())
+        server(dbConfig, postgresRepositoryRegistry, gatewayProvider)
 
-        val datasource = initDatasource(dbConfig)
-        opprettTestKlage(datasource, alderIkkeOppfyltTestCase)
+        datasource = initDatasource(dbConfig)
+        motor = lazy {
+            ManuellMotorImpl(
+                datasource,
+                jobber = ProsesseringsJobber.alle(),
+                repositoryRegistry = postgresRepositoryRegistry,
+                gatewayProvider
+            )
+        }.value
+
+        testScenarioOrkestrator = TestScenarioOrkestrator(gatewayProvider, datasource, motor)
+
+        opprettTestKlage(alderIkkeOppfyltTestCase)
 
         apiRouting {
             route("/test") {
                 route("/opprett") {
                     post<Unit, OpprettTestcaseDTO, OpprettTestcaseDTO> { _, dto ->
-                        sendInnSøknad(datasource, dto)
+                        sendInnSøknad(dto)
+                        respond(dto)
+                    }
+                }
+            }
+        }
+
+        apiRouting {
+            route("/test") {
+                route("/opprett-og-fullfoer") {
+                    post<Unit, OpprettTestcaseDTO, OpprettTestcaseDTO> { _, dto ->
+                        sendInnOgFullførFørstegangsbehandling(dto)
                         respond(dto)
                     }
                 }
@@ -155,7 +200,7 @@ fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPerson>): S�
     )
 }
 
-private fun sendInnSøknad(datasource: DataSource, dto: OpprettTestcaseDTO): Sak {
+private fun sendInnSøknad(dto: OpprettTestcaseDTO): Sak {
     val ident = genererIdent(dto.fødselsdato)
     val barn = dto.barn.filter { it.harRelasjon }.map { genererBarn(it) }
     val urelaterteBarnIPDL = dto.barn.filter { !it.harRelasjon && it.skalFinnesIPDL }.map { genererBarn(it) }
@@ -238,7 +283,103 @@ private fun sendInnSøknad(datasource: DataSource, dto: OpprettTestcaseDTO): Sak
     return sak
 }
 
-private fun sendInnKlage(datasource: DataSource, sak: Sak) {
+private fun sendInnOgFullførFørstegangsbehandling(dto: OpprettTestcaseDTO): Sak {
+    val sak = sendInnSøknad(dto)
+    motor.kjørJobber()
+
+    // fullfør førstegangsbehandling
+    log.info("Fullfører førstegangsbehandling for sak ${sak.id}")
+    val behandling = hentSisteBehandlingForSak(sak.id)
+
+    if (dto.student) {
+        behandling.løsStudent()
+    }
+
+    if (!dto.student) {
+        behandling.løsSykdom()
+            .løsBistand()
+    }
+
+    behandling.løsRefusjonskrav()
+        .løsSykdomsvurderingBrev()
+        .kvalitetssikreOk()
+
+    if (dto.yrkesskade) {
+        behandling.løsYrkesSkade()
+    }
+
+    behandling.løsBeregningstidspunkt()
+
+    if (dto.inntekterPerAr == null || dto.inntekterPerAr.isEmpty()) {
+        behandling.løsManuellInntektVurdering()
+    }
+
+    if (dto.yrkesskade) {
+        behandling.løsFastsettYrkesskadeInntekt()
+    } else {
+        behandling.løsForutgåendeMedlemskap()
+    }
+
+    if (dto.institusjoner.fengsel == true) {
+        behandling.løsSoningsforhold()
+    }
+
+    if (dto.barn.isNotEmpty() && !dto.barn.all { it.harRelasjon }) {
+        behandling.løsBarnetillegg()
+    }
+
+    if (dto.sykepenger.isEmpty()) {
+        behandling.løsUtenSamordning()
+    } else {
+        behandling.løsSamordning(dto.sykepenger.first().periode)
+    }
+
+    if (dto.tjenestePensjon != null && dto.tjenestePensjon) {
+        behandling.løsTjenestepensjonRefusjonskravVurdering()
+    }
+
+    behandling.løsAvklaringsBehov(ForeslåVedtakLøsning())
+        .fattVedtakEllerSendRetur()
+        .løsVedtaksbrev()
+
+    return sak
+}
+
+fun Behandling.løsVedtaksbrev(typeBrev: TypeBrev = TypeBrev.VEDTAK_INNVILGELSE): Behandling {
+    val brevbestilling = hentBrevAvType(this, typeBrev)
+
+    return this.løsAvklaringsBehov(vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
+}
+
+private fun vedtaksbrevLøsning(brevbestillingReferanse: UUID): AvklaringsbehovLøsning {
+    return SkrivVedtaksbrevLøsning(
+        brevbestillingReferanse = brevbestillingReferanse,
+        handling = SkrivBrevAvklaringsbehovLøsning.Handling.FERDIGSTILL
+    )
+}
+
+private fun hentBrevAvType(behandling: Behandling, typeBrev: TypeBrev) =
+    datasource.transaction(readOnly = true) {
+        val brev = BrevbestillingRepositoryImpl(it).hent(behandling.id)
+        brev.firstOrNull { it.typeBrev == typeBrev }
+            ?: error("Ingen brev av type $typeBrev. Følgende finnes: ${brev.joinToString { it.typeBrev.toString() }}")
+    }
+
+fun hentSisteBehandlingForSak(sakId: SakId): Behandling {
+    return datasource.transaction { connection ->
+        val repositoryProvider = postgresRepositoryRegistry.provider(connection)
+        val sbService = SakOgBehandlingService(
+            repositoryProvider,
+            defaultGatewayProvider()
+        )
+
+        val behandling = sbService.finnSisteYtelsesbehandlingFor(sakId)
+        requireNotNull(behandling) { "Finner ikke behandling for sakId: $sakId" }
+        behandling
+    }
+}
+
+private fun sendInnKlage(sak: Sak) {
     datasource.transaction { connection ->
         val flytJobbRepository = FlytJobbRepository(connection)
 
@@ -258,9 +399,127 @@ private fun sendInnKlage(datasource: DataSource, sak: Sak) {
     }
 }
 
-private fun opprettTestKlage(datasource: DataSource, testcaseDTO: OpprettTestcaseDTO) {
-    val sak = sendInnSøknad(datasource, testcaseDTO)
-    sendInnKlage(datasource, sak)
+@JvmName("løsStudentExt")
+fun Behandling.løsStudent(): Behandling {
+    return testScenarioOrkestrator.løsStudent(this)
+}
+
+@JvmName("løsSykdomExt")
+fun Behandling.løsSykdom(
+    vurderingGjelderFra: LocalDate? = null,
+    erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean? = null
+): Behandling {
+    return testScenarioOrkestrator.løsSykdom(
+        this,
+        vurderingGjelderFra = vurderingGjelderFra,
+        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense
+    )
+}
+
+@JvmName("løsSykdomsvurderingBrevExt")
+fun Behandling.løsSykdomsvurderingBrev(): Behandling {
+    return testScenarioOrkestrator.løsSykdomsvurderingBrev(this)
+}
+
+@JvmName("løsYrkesSkadeExt")
+fun Behandling.løsYrkesSkade(): Behandling {
+    return testScenarioOrkestrator.løsYrkesSkade(this)
+}
+
+@JvmName("løsBistandExt")
+fun Behandling.løsBistand(): Behandling {
+    return testScenarioOrkestrator.løsBistand(this)
+}
+
+@JvmName("løsRefusjonskravExt")
+fun Behandling.løsRefusjonskrav(): Behandling {
+    return testScenarioOrkestrator.løsRefusjonskrav(this)
+}
+
+@JvmName("kvalitetssikreOkExt")
+fun Behandling.kvalitetssikreOk(): Behandling {
+    return testScenarioOrkestrator.kvalitetssikreOk(this)
+}
+
+@JvmName("løsBeregningstidspunktExt")
+fun Behandling.løsBeregningstidspunkt(): Behandling {
+    return testScenarioOrkestrator.løsBeregningstidspunkt(this)
+}
+
+@JvmName("løsManuellInntektVurderingExt")
+fun Behandling.løsManuellInntektVurdering(): Behandling {
+    return testScenarioOrkestrator.løsManuellInntektVurdering(this)
+}
+
+@JvmName("løsFastsettYrkesskadeInntektExt")
+fun Behandling.løsFastsettYrkesskadeInntekt(): Behandling {
+    return testScenarioOrkestrator.løsFastsettYrkesskadeInntekt(this)
+}
+
+@JvmName("løsBarnetilleggExt")
+fun Behandling.løsBarnetillegg(): Behandling {
+    return testScenarioOrkestrator.løsBarnetillegg(this)
+}
+
+@JvmName("løsForutgaaendeMedlemskapExt")
+fun Behandling.løsForutgåendeMedlemskap(): Behandling {
+    return testScenarioOrkestrator.løsForutgåendeMedlemskap(this)
+}
+
+@JvmName("løsSoningsforholdExt")
+fun Behandling.løsSoningsforhold(): Behandling {
+    return testScenarioOrkestrator.løsSoningsforhold(this)
+}
+
+@JvmName("fattVedtakExt")
+fun Behandling.fattVedtakEllerSendRetur(returVed: Definisjon? = null): Behandling {
+    return testScenarioOrkestrator.fattVedtakEllerSendRetur(this, returVed)
+}
+
+
+fun Behandling.løsUtenSamordning(): Behandling {
+    return this.løsAvklaringsBehov(
+        AvklarSamordningGraderingLøsning(
+            vurderingerForSamordning = VurderingerForSamordning("", true, null, emptyList())
+        )
+    )
+}
+
+@JvmName("tjenestepensjonRefusjonskravVurderingExt")
+fun Behandling.løsTjenestepensjonRefusjonskravVurdering(returVed: Definisjon? = null): Behandling {
+    return testScenarioOrkestrator.løsTjenestepensjonRefusjonskravVurdering(this)
+}
+
+fun Behandling.løsSamordning(periode: Periode): Behandling {
+    return this.løsAvklaringsBehov(
+        AvklarSamordningGraderingLøsning(
+            vurderingerForSamordning = VurderingerForSamordning(
+                "samordning ok",
+                true,
+                null,
+                listOf(SamordningVurderingData(Ytelse.OMSORGSPENGER, periode, gradering = 70))
+            )
+        )
+    )
+}
+
+@JvmName("løsAvklaringsBehovExt")
+fun Behandling.løsAvklaringsBehov(
+    avklaringsBehovLøsning: AvklaringsbehovLøsning,
+    bruker: Bruker = Bruker("SAKSBEHANDLER"),
+    ingenEndringIGruppe: Boolean = false
+): Behandling {
+    return testScenarioOrkestrator.løsAvklaringsBehov(
+        behandling = this,
+        avklaringsBehovLøsning = avklaringsBehovLøsning,
+        bruker = bruker,
+        ingenEndringIGruppe = ingenEndringIGruppe
+    )
+}
+
+private fun opprettTestKlage(testcaseDTO: OpprettTestcaseDTO) {
+    val sak = sendInnSøknad(testcaseDTO)
+    sendInnKlage(sak)
 }
 
 private val alderIkkeOppfyltTestCase = OpprettTestcaseDTO(
