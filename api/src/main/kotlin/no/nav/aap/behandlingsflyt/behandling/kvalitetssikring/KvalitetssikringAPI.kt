@@ -115,14 +115,13 @@ private fun utledKvalitetssikringHistorikk(avklaringsbehovene: Avklaringsbehoven
             } else {
                 val endringerSidenSist =
                     utledEndringerSidenSist(alleBehov, tidsstempelForrigeBehov, behov.endring.tidsstempel)
-                tidsstempelForrigeBehov = behov.endring.tidsstempel
                 if (endringerSidenSist.any { it.endring.status == Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER }) {
                     Aksjon.RETURNERT_FRA_KVALITETSSIKRER
                 } else {
                     Aksjon.KVALITETSSIKRET
                 }
             }
-
+            tidsstempelForrigeBehov = behov.endring.tidsstempel
             Historikk(aksjon, behov.endring.tidsstempel, behov.endring.endretAv)
         }.sorted()
         .toList()
