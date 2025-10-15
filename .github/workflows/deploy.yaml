@@ -121,7 +121,12 @@ jobs:
                 name: ${{ steps.tag.outputs.version }}
                 body: |
                     Endringer siden sist:
-                    ${{ steps.notes.outputs.CHANGELOG }}                
+                    ${{ steps.notes.outputs.CHANGELOG }}
+          - name: Delete Package Versions
+            uses: actions/delete-package-versions@v5.0.0
+            with:
+              package-type: maven
+              min-versions-to-keep: 10
 
   deploy-dev:
     needs: build
