@@ -11,9 +11,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.IngenRegisterData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.andreYtelser.AndreYtelserRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.OppgittStudent
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AndreUtbetalinger
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -23,7 +25,8 @@ class SøknadInformasjonskrav private constructor(
     private val mottaDokumentService: MottaDokumentService,
     private val studentRepository: StudentRepository,
     private val barnRepository: BarnRepository,
-    private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository
+    private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
+    private val andreYtelserRepository: AndreYtelserRepository
 ) : Informasjonskrav<IngenInput, IngenRegisterData> {
 
     companion object : Informasjonskravkonstruktør {
@@ -38,7 +41,8 @@ class SøknadInformasjonskrav private constructor(
                 MottaDokumentService(repositoryProvider),
                 repositoryProvider.provide<StudentRepository>(),
                 repositoryProvider.provide(),
-                medlemskapArbeidInntektRepository
+                medlemskapArbeidInntektRepository,
+                repositoryProvider.provide<AndreYtelserRepository>()
             )
         }
     }
@@ -78,6 +82,10 @@ class SøknadInformasjonskrav private constructor(
                         skalGjenopptaStudieStatus = ubehandletSøknad.studentData.skalGjenopptaStudie
                     )
             )
+            if (ubehandletSøknad.andreUtbetalinger != null){
+                andreYtelserRepository.lagre(behandlingId,ubehandletSøknad.andreUtbetalinger)
+
+            }
 
             if (ubehandletSøknad.oppgitteBarn != null) {
                 barnRepository.lagreOppgitteBarn(kontekst.behandlingId, ubehandletSøknad.oppgitteBarn)

@@ -87,23 +87,31 @@ public data class OppgitteBarn(
 )
 
 public data class AndreUtbetalinger(
-    public val lønn: String?,
-    public val afp: String?,
+    public val lønn: Boolean?,
     public val stønad: List<AndreUtbetalingerYtelser>?
 
 )
 
-public enum class AndreUtbetalingerYtelser(public val navn: String) {
-    ØKONOMISK_SOSIALHJELP("ØKONOMISK_SOSIALHJELP"),
-    OMSORGSSTØNAD("OMSORGSSTØNAD"),
-    INTRODUKSJONSSTØNAD("INTRODUKSJONSSTØNAD"),
-    KVALIFISERINGSSTØNAD("KVALIFISERINGSSTØNAD"),
-    VERV("VERV"),
-    UTLAND("UTLAND"),
-    AFP("AFP"),
-    STIPEND("STIPEND"),
-    LÅN("LÅN"),
-    NEI("NEI")
+public enum class AndreUtbetalingerYtelser{
+    ØKONOMISK_SOSIALHJELP,
+    OMSORGSSTØNAD,
+    INTRODUKSJONSSTØNAD,
+    KVALIFISERINGSSTØNAD,
+    VERV,
+    UTLAND,
+    AFP,
+    STIPEND,
+    LÅN,
+    NEI;
+    public companion object {
+        public fun fromDb(value: String): AndreUtbetalingerYtelser = value.uppercase().let {
+            try {
+                valueOf(it)
+            } catch (e: IllegalArgumentException) {
+                throw IllegalArgumentException("Unknown YtelseType: $value")
+            }
+        }
+    }
 }
 
 
