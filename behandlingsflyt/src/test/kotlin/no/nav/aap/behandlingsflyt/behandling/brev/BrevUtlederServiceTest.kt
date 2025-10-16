@@ -151,7 +151,68 @@ class BrevUtlederServiceTest {
     }
 
     @Test
-    fun `skal utlede brev for uføretrygd ved innvilgelse av revurdering etter hjemmel § 11-18 dersom det samme ikke gjelder forrige behandling`() {
+    fun `skal utlede brev etter rettighetstype § 11-17 ved innvilgelse av revurdering`() {
+        val førstegangsbehandling = behandling(typeBehandling = TypeBehandling.Førstegangsbehandling)
+        val revurdering = behandling(
+            typeBehandling = TypeBehandling.Revurdering,
+            forrigeBehandlingId = førstegangsbehandling.id,
+            vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_ARBEID)
+        )
+        every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
+        every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_18) } returns true
+        every { underveisRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns underveisGrunnlag(
+            underveisperiode(
+                periode = Periode(1 januar 2023, 31 desember 2023),
+                rettighetsType = RettighetsType.BISTANDSBEHOV,
+                utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.OPPFYLT,
+            )
+        )
+        every { behandlingRepository.hent(revurdering.id) } returns revurdering
+        every { avbrytRevurderingService.revurderingErAvbrutt(revurdering.id) } returns false
+        every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns underveisGrunnlag(
+            underveisperiode(
+                periode = Periode(1 januar 2023, 31 desember 2023),
+                rettighetsType = RettighetsType.ARBEIDSSØKER,
+                utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.OPPFYLT,
+            )
+        )
+
+        assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)).isEqualTo(Arbeidssøker)
+    }
+
+    @Test
+    fun `skal ikke utlede brev etter rettighetstype § 11-17 ved innvilgelse av revurdering dersom det samme gjelder forrige behandling`() {
+        val forrigeBehandling = behandling(typeBehandling = TypeBehandling.Revurdering)
+        val revurdering = behandling(
+            typeBehandling = TypeBehandling.Revurdering,
+            forrigeBehandlingId = forrigeBehandling.id,
+            vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_ARBEID)
+        )
+        every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
+        every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_18) } returns true
+        every { underveisRepository.hentHvisEksisterer(forrigeBehandling.id) } returns underveisGrunnlag(
+            underveisperiode(
+                periode = Periode(1 januar 2023, 31 desember 2023),
+                rettighetsType = RettighetsType.ARBEIDSSØKER,
+                utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.OPPFYLT,
+            )
+        )
+        every { behandlingRepository.hent(revurdering.id) } returns revurdering
+        every { avbrytRevurderingService.revurderingErAvbrutt(revurdering.id) } returns false
+        every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns underveisGrunnlag(
+            underveisperiode(
+                periode = Periode(1 januar 2023, 31 desember 2023),
+                rettighetsType = RettighetsType.ARBEIDSSØKER,
+                utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.OPPFYLT,
+            )
+        )
+
+        assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)).isEqualTo(VedtakEndring)
+    }
+
+
+    @Test
+    fun `skal utlede brev etter rettighetstype § 11-18 ved innvilgelse av revurdering`() {
         val førstegangsbehandling = behandling(typeBehandling = TypeBehandling.Førstegangsbehandling)
         val revurdering = behandling(
             typeBehandling = TypeBehandling.Revurdering,
@@ -211,25 +272,15 @@ class BrevUtlederServiceTest {
         )
     }
 
-    private fun grunnlagInntekt(år: Int, inntekt: Int): GrunnlagInntekt {
-        return GrunnlagInntekt(
-            år = Year.of(år),
-            inntektIKroner = Beløp(inntekt),
-            grunnbeløp = Beløp(0),
-            inntektIG = GUnit(0),
-            inntekt6GBegrenset = GUnit(0),
-            er6GBegrenset = false
-        )
-    }
-
     @Test
-    fun `skal ikke utlede brev for uføretrygd ved innvilgelse av revurdering etter hjemmel § 11-18 dersom det samme gjelder forrige behandling`() {
+    fun `skal ikke utlede brev etter rettighetstype § 11-18 ved innvilgelse av revurdering dersom det samme gjelder forrige behandling`() {
         val førstegangsbehandling = behandling(typeBehandling = TypeBehandling.Førstegangsbehandling)
         val revurdering = behandling(
             typeBehandling = TypeBehandling.Revurdering,
             forrigeBehandlingId = førstegangsbehandling.id,
             vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_UFORE)
         )
+        every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
         every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_18) } returns true
         every { underveisRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns underveisGrunnlag(
             underveisperiode(
@@ -250,6 +301,18 @@ class BrevUtlederServiceTest {
 
         assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)).isEqualTo(
             VedtakEndring
+        )
+    }
+
+
+    private fun grunnlagInntekt(år: Int, inntekt: Int): GrunnlagInntekt {
+        return GrunnlagInntekt(
+            år = Year.of(år),
+            inntektIKroner = Beløp(inntekt),
+            grunnbeløp = Beløp(0),
+            inntektIG = GUnit(0),
+            inntekt6GBegrenset = GUnit(0),
+            er6GBegrenset = false
         )
     }
 
