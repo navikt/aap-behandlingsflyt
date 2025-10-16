@@ -16,6 +16,7 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.Rolle
+import org.slf4j.LoggerFactory
 
 class AndreinstansService(
     private val klageresultatUtleder: KlageresultatUtleder,
@@ -43,18 +44,15 @@ class AndreinstansService(
         fullmektigRepository = repositoryProvider.provide()
     )
 
+    private val log = LoggerFactory.getLogger(javaClass)
+
     fun oversendTilAndreinstans(klageBehandlingId: BehandlingId) {
         val klageBehandling = behandlingRepository.hent(klageBehandlingId)
         val sak = sakRepository.hent(klageBehandling.sakId)
         val klageresultat = klageresultatUtleder.utledKlagebehandlingResultat(klageBehandlingId)
         val avklarinsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(klageBehandlingId)
-        val besluttersEnhet = if (Miljø.erDev() || Miljø.erLokal()) {
-            "0300" // Det finnes ikke testdata i NOM - bruker hardkodet enhet i dev
-        } else {
-            val beslutter = utledBeslutter(avklarinsbehovene)
-            ansattInfoService.hentAnsattEnhet(beslutter)
-        }
-        requireNotNull(besluttersEnhet) {
+        val sisteSaksbehandlersEnhet = utledEnhetForSisteSaksbehandler(avklarinsbehovene)
+        requireNotNull(sisteSaksbehandlersEnhet) {
             "Fant ikke beslutters enhet"
         }
 
@@ -82,15 +80,28 @@ class AndreinstansService(
             kravDato = kravdato,
             klagenGjelder = sak.person,
             klageresultat = klageresultat,
-            saksbehandlersEnhet = besluttersEnhet,
+            saksbehandlersEnhet = sisteSaksbehandlersEnhet,
             kommentar = kommentarBuilder.toString(),
             fullmektig = fullmektig?.vurdering
         )
     }
 
-    private fun utledBeslutter(avklaringsbehovene: Avklaringsbehovene): String {
-        val definisjoner = Definisjon.entries.filter { it.løsesAv.contains(Rolle.BESLUTTER) }
-        return avklaringsbehovene.hentBehovForDefinisjon(definisjoner).mapNotNull { avklaringsbehov ->
+    private fun utledEnhetForSisteSaksbehandler(avklarinsbehovene: Avklaringsbehovene): String? {
+        if (Miljø.erLokal()) {
+            return "0300"
+        }
+        val sisteSaksbehandler = utledSisteSaksbehandler(avklarinsbehovene)
+        val enhet = if (Miljø.erDev()) {
+            log.info("Siste saksbehandler i saken er $sisteSaksbehandler")
+            "0300" // Det finnes ikke testdata i NOM - bruker hardkodet enhet i dev
+        } else {
+            ansattInfoService.hentAnsattEnhet(sisteSaksbehandler)
+        }
+        return enhet
+    }
+
+    private fun utledSisteSaksbehandler(avklaringsbehovene: Avklaringsbehovene): String {
+        return avklaringsbehovene.alle().mapNotNull { avklaringsbehov ->
             avklaringsbehov.historikk.filter { it.endretAv.erNavIdent() && it.status == Status.AVSLUTTET }.maxOrNull()
         }.max().endretAv
     }
