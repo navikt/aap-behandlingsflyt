@@ -78,7 +78,7 @@ dependencies {
     implementation(libs.ktorServerCors)
     implementation(libs.ktorServerStatusPages)
 
-    implementation("io.micrometer:micrometer-registry-prometheus:1.15.4")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.15.5")
     implementation("ch.qos.logback:logback-classic:1.5.19")
     implementation("net.logstash.logback:logstash-logback-encoder:8.1")
     implementation("org.slf4j:jul-to-slf4j:2.0.17") // trengs for postgres-logging
@@ -94,7 +94,7 @@ dependencies {
     implementation(libs.tidslinje)
 
     // Auditlogging
-    runtimeOnly(group = "com.papertrailapp", name = "logback-syslog4j", version = "1.0.0")
+    runtimeOnly("com.papertrailapp:logback-syslog4j:1.0.0")
 
     implementation(project(":api"))
     implementation(project(":behandlingsflyt"))

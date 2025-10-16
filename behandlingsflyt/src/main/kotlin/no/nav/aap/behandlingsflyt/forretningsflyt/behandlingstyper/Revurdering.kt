@@ -185,24 +185,19 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
                 )
             )
-            .apply {
-                // TODO legge ut 11-17 når det er klart
-                if (Miljø.erLokal()) {
-                    medSteg(
-                        steg = OvergangArbeidSteg,
-                        vurderingsbehovRelevanteForSteg = listOf(
-                            Vurderingsbehov.MOTTATT_SØKNAD,
-                            Vurderingsbehov.MOTTATT_DIALOGMELDING,
-                            Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
-                            Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
-                            Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
-                            Vurderingsbehov.HELHETLIG_VURDERING,
-                            Vurderingsbehov.REVURDER_LOVVALG,
-                            Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
-                        )
-                    )
-                }
-            }
+            .medSteg(
+                steg = OvergangArbeidSteg,
+                vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.MOTTATT_DIALOGMELDING,
+                    Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
+                    Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
+                    Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
+                    Vurderingsbehov.HELHETLIG_VURDERING,
+                    Vurderingsbehov.REVURDER_LOVVALG,
+                    Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
+                )
+            )
             .medSteg(
                 steg = RefusjonkravSteg, vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
@@ -304,16 +299,18 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
                 )
             )
-            /**
-            .medSteg(
-                steg = VurderOppholdskravSteg,
-                vurderingsbehovRelevanteForSteg = listOf(
-                    Vurderingsbehov.MOTTATT_SØKNAD,
-                    Vurderingsbehov.OPPHOLDSKRAV,
-                    Vurderingsbehov.HELHETLIG_VURDERING,
-                )
-            )
-            */
+            .apply {
+                if(!Miljø.erProd()) {
+                    medSteg(
+                        steg = VurderOppholdskravSteg,
+                        vurderingsbehovRelevanteForSteg = listOf(
+                            Vurderingsbehov.MOTTATT_SØKNAD,
+                            Vurderingsbehov.OPPHOLDSKRAV,
+                            Vurderingsbehov.HELHETLIG_VURDERING,
+                        )
+                    )
+                }
+            }
             .medSteg(
                 // TODO: Midlertidig duplikat av BarnService, skal på sikt kun være i StartBehandlingSteg
                 informasjonskrav = listOf(BarnInformasjonskrav),

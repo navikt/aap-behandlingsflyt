@@ -74,7 +74,7 @@ fun main() {
         )
 
     val writer = BufferedWriter(FileWriter("../openapi.json"))
-    writer.use { it ->
+    writer.use {
         it.write(openApiDoc)
     }
 

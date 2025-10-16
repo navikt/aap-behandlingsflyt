@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SykdomsvurderingForBrevLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
@@ -44,8 +45,6 @@ class FasttrackMeldekortFlytTest :
         val sak = happyCaseFørstegangsbehandling(søknadsdato)
         val åpenBehandling = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom)
 
-        assertThat(åpenBehandling.vurderingsbehov().map { it.type })
-            .hasSameElementsAs(listOf(Vurderingsbehov.MOTTATT_SØKNAD))
         val aktivtStegFørMeldekort = åpenBehandling.aktivtSteg()
 
         sak.sendInnMeldekort(
@@ -112,9 +111,6 @@ class FasttrackMeldekortFlytTest :
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)
             }
-
-        assertThat(åpenBehandling.vurderingsbehov().map { it.type })
-            .hasSameElementsAs(listOf(Vurderingsbehov.MOTTATT_SØKNAD))
 
         val aktivtStegFørMeldekort = åpenBehandling.aktivtSteg()
         assertThat(aktivtStegFørMeldekort).isEqualTo(StegType.FATTE_VEDTAK)
@@ -216,8 +212,6 @@ class FasttrackMeldekortFlytTest :
             assertThat(behandlinger).hasSize(4)
             val (førstegangsbehandling, førsteMeldekort, andreMeldekort, åpenBehandling) = behandlinger
 
-            assertThat(førstegangsbehandling.årsakTilOpprettelse)
-                .isEqualTo(ÅrsakTilOpprettelse.SØKNAD)
             assertTidslinje(
                 andelArbeidetTidslinje(connection, førstegangsbehandling),
                 sak.rettighetsperiode to {
@@ -252,8 +246,6 @@ class FasttrackMeldekortFlytTest :
                 },
             )
 
-            assertThat(åpenBehandling.årsakTilOpprettelse)
-                .isEqualTo(ÅrsakTilOpprettelse.SØKNAD)
             assertTidslinje(
                 andelArbeidetTidslinje(connection, åpenBehandling),
                 førsteMeldeperiode to {

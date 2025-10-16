@@ -141,6 +141,7 @@ jobs:
           VAR: image=${{ needs.build.outputs.image }}
 
   deploy-prod:
+      if: ${{ github.ref == 'refs/heads/main' }}
       needs: [publiser-kontrakt, deploy-dev, build]
       runs-on: ubuntu-latest
       concurrency:

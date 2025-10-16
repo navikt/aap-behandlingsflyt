@@ -296,7 +296,6 @@ class OppholdskravGrunnlagRepositoryImpl(private val connection: DBConnection) :
 
 
     private fun slettPeriodeOgVurderingPåVurderingID(vurderinger: List<Long>) {
-
             connection.execute("""
                     DELETE FROM OPPHOLDSKRAV_VURDERING_PERIODE
                     WHERE OPPHOLDSKRAV_VURDERING_ID = ANY (?)
@@ -352,7 +351,7 @@ class OppholdskravGrunnlagRepositoryImpl(private val connection: DBConnection) :
 
 
     private fun deaktiverGrunnlag(behandlingId: BehandlingId) {
-        connection.execute("UPDATE OPPHOLDSKRAV_GRUNNLAG SET aktiv = false WHERE behandling_id = ?") {
+        connection.execute("UPDATE OPPHOLDSKRAV_GRUNNLAG SET aktiv = false WHERE behandling_id = ? AND aktiv=true") {
             setParams {
                 setLong(1, behandlingId.toLong())
             }

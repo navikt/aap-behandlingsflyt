@@ -17,7 +17,7 @@ data class Soningsvurderinger(
         vurderinger
             .sortedBy { it.fraDato }
             .map { Tidslinje(Periode(it.fraDato, Tid.MAKS), it) }
-            .fold(Tidslinje<Soningsvurdering>()) { acc, tidslinje ->
+            .fold(Tidslinje()) { acc, tidslinje ->
                 acc.kombiner(tidslinje, StandardSammenslåere.prioriterHøyreSideCrossJoin())
             }
 }

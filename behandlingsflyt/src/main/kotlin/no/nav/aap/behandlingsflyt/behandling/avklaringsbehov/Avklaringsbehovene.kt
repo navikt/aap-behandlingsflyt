@@ -255,6 +255,10 @@ class Avklaringsbehovene(
         return hentBehovForDefinisjon(definisjon)?.historikk?.filter { it.status == Status.KVALITETSSIKRET }?.maxOrNull()
     }
 
+    fun beslutningFor(definisjon: Definisjon): Endring? {
+        return hentBehovForDefinisjon(definisjon)?.historikk?.filter { it.status == Status.TOTRINNS_VURDERT }?.maxOrNull()
+    }
+
     fun validateTilstand(behandling: Behandling, avklaringsbehov: Definisjon? = null) {
         ValiderBehandlingTilstand.validerTilstandBehandling(
             behandling = behandling,
