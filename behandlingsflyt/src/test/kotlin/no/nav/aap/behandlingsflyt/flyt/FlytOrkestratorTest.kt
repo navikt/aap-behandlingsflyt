@@ -373,7 +373,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     ),
                     behovstype = Definisjon.AVKLAR_SYKEPENGEERSTATNING.kode
                 )
-            ).medKontekst {
+            )
+            .medKontekst {
                 assertThat(this.åpneAvklaringsbehov.map { it.definisjon }).describedAs {
                     "Revurdering av sykdom skal innom foreslå vedtak-steg når vurdering av sykepengeerstatning er gjort av NAY"
                 }.containsExactly(Definisjon.FORESLÅ_VEDTAK)
@@ -409,6 +410,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .kvalitetssikreOk()
             .løsBeregningstidspunkt()
             .løsForutgåendeMedlemskap()
+            .løsOppholdskrav(fom)
 
         val barn = dataSource.transaction {
             BarnRepositoryImpl(it).hent(behandling.id)
@@ -489,6 +491,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .kvalitetssikreOk()
             .løsBeregningstidspunkt()
             .løsForutgåendeMedlemskap()
+            .løsOppholdskrav(fom)
 
         val barn = dataSource.transaction {
             BarnRepositoryImpl(it).hent(behandling.id)
@@ -567,6 +570,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .kvalitetssikreOk()
             .løsBeregningstidspunkt()
             .løsForutgåendeMedlemskap()
+            .løsOppholdskrav(fom)
             .medKontekst {
                 assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsExactly(Definisjon.AVKLAR_BARNETILLEGG)
             }
@@ -715,6 +719,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             )
             .løsBeregningstidspunkt()
             .løsForutgåendeMedlemskap()
+            .løsOppholdskrav(fom)
             .løsAvklaringsBehov(
                 AvklarSamordningUføreLøsning(
                     samordningUføreVurdering = SamordningUføreVurderingDto(
@@ -751,6 +756,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             )
             .løsBeregningstidspunkt()
             .løsForutgåendeMedlemskap()
+            .løsOppholdskrav(fom)
             .løsAvklaringsBehov(
                 AvklarSamordningUføreLøsning(
                     samordningUføreVurdering = SamordningUføreVurderingDto(
@@ -957,6 +963,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             }
             // Løs forutgående
             .løsForutgåendeMedlemskap()
+            .løsOppholdskrav(periode.fom)
             // Trekk søknad
             .leggTilVurderingsbehov(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SØKNAD_TRUKKET)
             .medKontekst {
@@ -1074,6 +1081,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     )
                 )
             )
+            .løsOppholdskrav(sak.rettighetsperiode.fom)
             .medKontekst {
                 // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
                 assertThat(åpneAvklaringsbehov).anySatisfy { avklaringsbehov ->
@@ -1184,6 +1192,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             )
             .løsBeregningstidspunkt()
             .løsForutgåendeMedlemskap()
+            .løsOppholdskrav(periode.fom)
             .medKontekst {
                 assertThat(åpneAvklaringsbehov).anySatisfy { avklaringsbehov ->
                     assertThat(avklaringsbehov.definisjon).isEqualTo(
@@ -1433,6 +1442,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             )
             .løsBeregningstidspunkt()
             .løsForutgåendeMedlemskap()
+            .løsOppholdskrav(periode.fom)
             .medKontekst {
                 assertThat(åpneAvklaringsbehov).anySatisfy { avklaringsbehov -> assertThat(avklaringsbehov.definisjon == Definisjon.FORESLÅ_VEDTAK).isTrue() }
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
@@ -1557,6 +1567,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             )
             .løsBeregningstidspunkt()
             .løsForutgåendeMedlemskap()
+            .løsOppholdskrav(periode.fom)
             .medKontekst {
                 assertThat(åpneAvklaringsbehov).anySatisfy { avklaringsbehov -> assertThat(avklaringsbehov.definisjon == Definisjon.FORESLÅ_VEDTAK).isTrue() }
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
@@ -1695,6 +1706,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .kvalitetssikreOk()
             .løsBeregningstidspunkt()
             .løsForutgåendeMedlemskap()
+            .løsOppholdskrav(sak.rettighetsperiode.fom)
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtakEllerSendRetur()
             .løsVedtaksbrev()
@@ -1861,6 +1873,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 ),
             )
             .løsForutgåendeMedlemskap()
+            .løsOppholdskrav(periode.fom)
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .medKontekst {
                 // Saken står til To-trinnskontroll hos beslutter
@@ -1901,6 +1914,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 ),
                 Bruker("SAKSBEHANDLER")
             ).løsForutgåendeMedlemskap()
+            .løsOppholdskrav(periode.fom)
             .medKontekst {
                 assertThat(behandling.status()).isEqualTo(Status.UTREDES)
                 // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
@@ -2007,6 +2021,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         )
 
         behandling = løsForutgåendeMedlemskap(behandling)
+            .løsOppholdskrav(sak.rettighetsperiode.fom)
         behandling = løsAvklaringsBehov(
             behandling, AvklarSamordningGraderingLøsning(
                 VurderingerForSamordning(
@@ -2371,6 +2386,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         assertTrue(åpneAvklaringsbehov.none { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP })
 
         behandling
+            .løsOppholdskrav(sak.rettighetsperiode.fom)
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtakEllerSendRetur()
             .løsVedtaksbrev()

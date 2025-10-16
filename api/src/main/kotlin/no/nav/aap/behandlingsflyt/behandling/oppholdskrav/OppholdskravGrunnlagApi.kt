@@ -12,10 +12,12 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import java.time.LocalDate
@@ -38,22 +40,27 @@ fun NormalOpenAPIRoute.oppholdskravGrunnlagApi(
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val oppholdskravRepository = repositoryProvider.provide<OppholdskravGrunnlagRepository>()
+                    val sakRepository = repositoryProvider.provide<SakRepository>()
 
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
 
-                    val grunnlag = oppholdskravRepository.hentHvisEksisterer(behandling.id) ?: return@transaction null
+                    val sak = sakRepository.hent(behandling.sakId)
 
-                    val vurdering = grunnlag.vurderinger.firstOrNull { it.vurdertIBehandling == behandling.id }
-                    val gjeldendeVedtatteVurderinger = grunnlag.vurderinger.filter { it.vurdertIBehandling != behandling.id }
+                    val grunnlag = oppholdskravRepository.hentHvisEksisterer(behandling.id)
+
+                    val vurdering = grunnlag?.vurderinger?.firstOrNull { it.vurdertIBehandling == behandling.id }
+                    val gjeldendeVedtatteVurderinger = grunnlag?.vurderinger?.filter { it.vurdertIBehandling != behandling.id }?.tilTidslinje() ?: Tidslinje()
+
+                    val perioderSomTrengerVurdering = if (gjeldendeVedtatteVurderinger.isEmpty()) listOf(sak.rettighetsperiode) else sak.rettighetsperiode.minus(gjeldendeVedtatteVurderinger.helePerioden())
 
                     OppholdskravGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
-                        behøverVurderinger = emptyList(), // TODO: må beregnes
-                        kanVurderes = emptyList(), // TODO: Skal være hele rettighetsperioden
+                        behøverVurderinger = perioderSomTrengerVurdering.toList(),
+                        kanVurderes = listOf(sak.rettighetsperiode),
                         nyeVurderinger = vurdering?.tilDto(ansattInfoService) ?: emptyList(),
                         sisteVedtatteVurderinger = gjeldendeVedtatteVurderinger
-                            .tilTidslinje()
+                            .komprimer()
                             .segmenter()
                             .map { segment ->
                                 OppholdskravVurderingDto(
@@ -67,12 +74,7 @@ fun NormalOpenAPIRoute.oppholdskravGrunnlagApi(
                             }
                     )
                 }
-
-            if(oppholdskravGrunnlag == null) {
-                respondWithStatus(HttpStatusCode.NoContent)
-            } else {
-                respond(oppholdskravGrunnlag)
-            }
+            respond(oppholdskravGrunnlag)
         }
     }
 }

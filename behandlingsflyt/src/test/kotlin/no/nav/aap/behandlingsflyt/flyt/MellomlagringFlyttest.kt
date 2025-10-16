@@ -51,6 +51,7 @@ class MellomlagringFlyttest() : AbstraktFlytOrkestratorTest(FakeUnleash::class) 
             .kvalitetssikreOk()
             .løsBeregningstidspunkt()
             .løsForutgåendeMedlemskap()
+            .løsOppholdskrav(periode.fom)
             .medKontekst {
                 val mellomlagretVerdi = hentMellomlagretVerdi()
                 assertThat(mellomlagretVerdi).isNotNull()

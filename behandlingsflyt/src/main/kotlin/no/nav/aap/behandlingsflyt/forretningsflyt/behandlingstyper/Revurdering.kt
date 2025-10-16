@@ -299,16 +299,18 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
                 )
             )
-            /**
-            .medSteg(
-                steg = VurderOppholdskravSteg,
-                vurderingsbehovRelevanteForSteg = listOf(
-                    Vurderingsbehov.MOTTATT_SØKNAD,
-                    Vurderingsbehov.OPPHOLDSKRAV,
-                    Vurderingsbehov.HELHETLIG_VURDERING,
-                )
-            )
-            */
+            .apply {
+                if(!Miljø.erProd()) {
+                    medSteg(
+                        steg = VurderOppholdskravSteg,
+                        vurderingsbehovRelevanteForSteg = listOf(
+                            Vurderingsbehov.MOTTATT_SØKNAD,
+                            Vurderingsbehov.OPPHOLDSKRAV,
+                            Vurderingsbehov.HELHETLIG_VURDERING,
+                        )
+                    )
+                }
+            }
             .medSteg(
                 // TODO: Midlertidig duplikat av BarnService, skal på sikt kun være i StartBehandlingSteg
                 informasjonskrav = listOf(BarnInformasjonskrav),
