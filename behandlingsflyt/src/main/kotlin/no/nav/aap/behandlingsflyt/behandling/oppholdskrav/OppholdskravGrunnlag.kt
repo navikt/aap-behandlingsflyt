@@ -14,17 +14,18 @@ data class OppholdskravGrunnlag(
     val vurderinger: List<OppholdskravVurdering>,
     val opprettet: LocalDateTime = LocalDateTime.now(),
 ) {
-    fun tidslinje(): Tidslinje<OppholdakravTidslinjeData> {
+    fun tidslinje(): Tidslinje<OppholdskravTidslinjeData> {
         return vurderinger.tilTidslinje()
     }
 }
 
-fun List<OppholdskravVurdering>.tilTidslinje(): Tidslinje<OppholdakravTidslinjeData> =
+fun List<OppholdskravVurdering>.tilTidslinje(): Tidslinje<OppholdskravTidslinjeData> =
     this.sortedBy { it.opprettet }
         .map { it.tilTidslinje() }
         .fold(Tidslinje()) { acc, other ->
             acc.kombiner(other, StandardSammenslåere.prioriterHøyreSideCrossJoin())
         }
+
 
 data class OppholdskravVurdering(
     val opprettet: LocalDateTime = LocalDateTime.now(),
@@ -32,13 +33,13 @@ data class OppholdskravVurdering(
     val vurdertIBehandling: BehandlingId,
     val perioder: List<OppholdskravPeriode>,
 ) {
-    fun tilTidslinje(): Tidslinje<OppholdakravTidslinjeData> {
+    fun tilTidslinje(): Tidslinje<OppholdskravTidslinjeData> {
         return Tidslinje(
             perioder.sortedBy { it.fom }
                 .map { periode ->
                     Segment(
                         periode = Periode(fom = periode.fom, tom = periode.tom ?: LocalDate.MAX),
-                        verdi = OppholdakravTidslinjeData(
+                        verdi = OppholdskravTidslinjeData(
                             land = periode.land,
                             opprettet = opprettet,
                             oppfylt = periode.oppfylt,
@@ -51,7 +52,13 @@ data class OppholdskravVurdering(
     }
 }
 
-fun Tidslinje<OppholdakravTidslinjeData>.validerGyldigForRettighetsperiode(rettighetsperiode: Periode): Validation<Tidslinje<OppholdakravTidslinjeData>> {
+/**
+ * Dette er domenespefisikke valideringer. Datamodellen er mer fleksibel enn det disse valideringene legger opp til, så om
+ * man endrer funskjonaliteten i frontend så kan det være man også trenger å oppdatere valideringen her. Datamodellen kan f.eks.
+ * godta at tidslinjen har hull eller at man ikke vurderer hele rettighetsperioden. Hva som er default oppførsel om en periode
+ * mangler vurdering bestemmes av OppholdskravRegel.
+ */
+fun Tidslinje<OppholdskravTidslinjeData>.validerGyldigForRettighetsperiode(rettighetsperiode: Periode): Validation<Tidslinje<OppholdskravTidslinjeData>> {
     val periodeForVurdering = helePerioden()
 
     if (!erSammenhengende()) {
@@ -77,7 +84,7 @@ data class OppholdskravPeriode(
     val begrunnelse: String,
 )
 
-data class OppholdakravTidslinjeData(
+data class OppholdskravTidslinjeData(
     val land: String?,
     val oppfylt: Boolean,
     val begrunnelse: String,

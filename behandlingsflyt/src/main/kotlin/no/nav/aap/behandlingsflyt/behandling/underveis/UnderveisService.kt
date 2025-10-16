@@ -1,11 +1,14 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis
 
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedUtlederService
+import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlagRepository
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.AapEtterRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.GraderingArbeidRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.InstitusjonRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MapInstitusjonoppholdTilRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktRegel
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.OppholdskravRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.SammenstiltAktivitetspliktRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.SoningRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UnderveisInput
@@ -47,6 +50,7 @@ class UnderveisService(
     private val meldepliktRepository: MeldepliktRepository,
     private val overstyringMeldepliktRepository: OverstyringMeldepliktRepository,
     private val meldeperiodeRepository: MeldeperiodeRepository,
+    private val oppholdskravRepository: OppholdskravGrunnlagRepository,
     private val vedtakService: VedtakService,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): this(
@@ -60,6 +64,7 @@ class UnderveisService(
         meldepliktRepository = repositoryProvider.provide(),
         meldeperiodeRepository = repositoryProvider.provide(),
         overstyringMeldepliktRepository = repositoryProvider.provide(),
+        oppholdskravRepository = repositoryProvider.provide(),
         vedtakService = VedtakService(repositoryProvider),
     )
 
@@ -70,6 +75,7 @@ class UnderveisService(
             AapEtterRegel(),
             UtledMeldeperiodeRegel(),
             InstitusjonRegel(),
+            OppholdskravRegel(),
             SoningRegel(),
             MeldepliktRegel(),
             SammenstiltAktivitetspliktRegel(),
@@ -156,6 +162,9 @@ class UnderveisService(
 
         val meldeperioder = meldeperiodeRepository.hent(behandlingId)
 
+        val oppholdskravGrunnlag = oppholdskravRepository.hentHvisEksisterer(behandlingId)
+            ?: OppholdskravGrunnlag(vurderinger = emptyList())
+
         val vedtaksdatoFørstegangsbehandling = vedtakService.vedtakstidspunktFørstegangsbehandling(sakId)
 
         return UnderveisInput(
@@ -170,6 +179,7 @@ class UnderveisService(
             arbeidsevneGrunnlag = arbeidsevneGrunnlag,
             meldepliktGrunnlag = meldepliktGrunnlag,
             overstyringMeldepliktGrunnlag = overstyringMeldepliktGrunnlag,
+            oppholdskravGrunnlag = oppholdskravGrunnlag,
             meldeperioder = meldeperioder,
             vedtaksdatoFørstegangsbehandling = vedtaksdatoFørstegangsbehandling?.toLocalDate(),
         )
