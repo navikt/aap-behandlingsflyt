@@ -55,11 +55,13 @@ fun NormalOpenAPIRoute.barnetilleggApi(
                     )
                     val barnetilleggTidslinje = barnetilleggService.beregn(behandling.id)
 
-                    val folkeregister = barnetilleggTidslinje.segmenter().map { it.verdi.registerBarn() }.flatten().toSet()
+                    val folkeregister =
+                        barnetilleggTidslinje.segmenter().map { it.verdi.registerBarn() }.flatten().toSet()
 
                     log.info("Fant ${folkeregister.size} folkeregister-barn for behandling ${behandling.referanse}.")
 
-                    val uavklarteBarn = barnetilleggTidslinje.segmenter().map { it.verdi.barnTilAvklaring() }.flatten().toSet()
+                    val uavklarteBarn =
+                        barnetilleggTidslinje.segmenter().map { it.verdi.barnTilAvklaring() }.flatten().toSet()
 
                     val vurderteBarn = barnRepository.hentVurderteBarnHvisEksisterer(behandling.id)
                     val barnGrunnlag = barnRepository.hentHvisEksisterer(behandling.id)
@@ -80,32 +82,32 @@ fun NormalOpenAPIRoute.barnetilleggApi(
                             val barn = hentBarn(it.ident, barnGrunnlag)
                             when (val vurdertBartIdent = it.ident) {
                                 is BarnIdentifikator.BarnIdent -> ExtendedVurdertBarnDto(
-                                        ident = vurdertBartIdent.ident.identifikator, null,
-                                        vurderinger = it.vurderinger.map {
-                                            VurderingAvForeldreAnsvarDto(
-                                                fraDato = it.fraDato,
-                                                harForeldreAnsvar = it.harForeldreAnsvar,
-                                                begrunnelse = it.begrunnelse,
-                                                erFosterForelder = it.erFosterForelder,
-                                            )
-                                        },
-                                        fødselsdato = barn.fodselsDato,
-                                        oppgittForeldreRelasjon = barn.oppgittForeldreRelasjon,
-                                    )
+                                    ident = vurdertBartIdent.ident.identifikator, null,
+                                    vurderinger = it.vurderinger.map {
+                                        VurderingAvForeldreAnsvarDto(
+                                            fraDato = it.fraDato,
+                                            harForeldreAnsvar = it.harForeldreAnsvar,
+                                            begrunnelse = it.begrunnelse,
+                                            erFosterForelder = it.erFosterForelder,
+                                        )
+                                    },
+                                    fødselsdato = barn.fodselsDato,
+                                    oppgittForeldreRelasjon = barn.oppgittForeldreRelasjon,
+                                )
 
                                 is BarnIdentifikator.NavnOgFødselsdato -> ExtendedVurdertBarnDto(
-                                        ident = null,
-                                        vurderinger = it.vurderinger.map {
-                                            VurderingAvForeldreAnsvarDto(
-                                                fraDato = it.fraDato,
-                                                harForeldreAnsvar = it.harForeldreAnsvar,
-                                                begrunnelse = it.begrunnelse,
-                                                erFosterForelder = it.erFosterForelder,
-                                            )
-                                        },
-                                        navn = vurdertBartIdent.navn,
-                                        fødselsdato = vurdertBartIdent.fødselsdato.toLocalDate(),
-                                        oppgittForeldreRelasjon = barn.oppgittForeldreRelasjon,
+                                    ident = null,
+                                    vurderinger = it.vurderinger.map {
+                                        VurderingAvForeldreAnsvarDto(
+                                            fraDato = it.fraDato,
+                                            harForeldreAnsvar = it.harForeldreAnsvar,
+                                            begrunnelse = it.begrunnelse,
+                                            erFosterForelder = it.erFosterForelder,
+                                        )
+                                    },
+                                    navn = vurdertBartIdent.navn,
+                                    fødselsdato = vurdertBartIdent.fødselsdato.toLocalDate(),
+                                    oppgittForeldreRelasjon = barn.oppgittForeldreRelasjon,
 
                                     )
                             }
@@ -163,7 +165,7 @@ fun hentBarn(ident: BarnIdentifikator, barnGrunnlag: BarnGrunnlag?): Identifiser
                 ident = ident.ident,
                 fodselsDato = fødselsdato?.toLocalDate(),
                 navn = oppgittBarn?.navn,
-                forsorgerPeriode = fødselsdato?.let { Barn.periodeMedRettTil(fødselsdato) },
+                forsorgerPeriode = fødselsdato?.let { Barn.periodeMedRettTil(fødselsdato, barn?.dødsdato) },
                 oppgittForeldreRelasjon = oppgittBarn?.relasjon
             )
         }
