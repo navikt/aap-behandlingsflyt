@@ -12,7 +12,7 @@ dependencies {
 
     api(libs.tilgangPlugin)
     api(libs.tilgangKontrakt)
-    api("no.nav.aap.brev:kontrakt:0.0.160")
+    api("no.nav.aap.brev:kontrakt:0.0.161")
     api("no.nav.aap.meldekort:kontrakt:0.0.137")
     api(libs.motor)
     api(libs.gateway)
