@@ -14,7 +14,6 @@ import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
-import no.nav.aap.komponenter.miljo.Miljø
 import java.net.URI
 import java.time.LocalDate
 
@@ -108,7 +107,7 @@ val ressursQuery = """
 private const val navIdenter = $$"$navIdenter"
 val flereNavnQuery = """
     query($navIdenter: [String!]) {
-        ressurser(where: {navidenter: [$navIdenter]}) {
+        ressurser(where: {navidenter: $navIdenter}) {
             ressurs {
                 navident
                 visningsnavn
