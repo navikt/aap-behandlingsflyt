@@ -88,12 +88,31 @@ class IverksettVedtakSteg private constructor(
         val navkontorSosialRefusjon = refusjonkravRepository.hentHvisEksisterer(kontekst.behandlingId)
         if (navkontorSosialRefusjon == null) return Fullført
 
-        val alleVurderinger = refusjonkravRepository.hentAlleVurderingerPåSak(kontekst.sakId)
+        val alleBehandlinger = behandlingRepository.hentAlleFor(kontekst.sakId)
+        val alleVurderingerPerBehandling: List<List<RefusjonkravVurdering>> = alleBehandlinger.map { behandling ->
+            refusjonkravRepository.hentHvisEksisterer(behandling.id) ?: emptyList()
+        }
+
+        val nyesteBehandling = alleBehandlinger[0]
+        val nestNyesteBehandling = alleBehandlinger[1]
+
+        val newestVurderinger = refusjonkravRepository.hentHvisEksisterer(nyesteBehandling.id) ?: emptyList()
+        val secondNewestVurderinger =
+            refusjonkravRepository.hentHvisEksisterer(nestNyesteBehandling.id) ?: emptyList()
+
+        val alleVurderingerErLike = newestVurderinger.size == secondNewestVurderinger.size &&
+                newestVurderinger.zip(secondNewestVurderinger).all { (a, b) ->
+                    a.navKontor == b.navKontor &&
+                            a.harKrav == b.harKrav &&
+                            a.fom == b.fom &&
+                            a.tom == b.tom
+                }
 
 
-        if (erNyesteLikNesteNyeste(alleVurderinger)) {
+        if (alleVurderingerErLike) {
             return Fullført
         } else {
+
             val navKontorList = navkontorSosialRefusjon
                 .filter { it.harKrav && it.navKontor != null }
                 .map {
@@ -110,6 +129,7 @@ class IverksettVedtakSteg private constructor(
                 opprettOppgave(navKontorList, aktivIdent, kontekst)
             }
         }
+
 
 
         return Fullført
@@ -158,16 +178,6 @@ class IverksettVedtakSteg private constructor(
         }
     }
 
-    private fun erNyesteLikNesteNyeste(vurderinger: List<RefusjonkravVurdering>): Boolean {
-        val newest = vurderinger.getOrNull(0)
-        val secondNewest = vurderinger.getOrNull(1)
-
-        return newest != null && secondNewest != null &&
-                newest.navKontor == secondNewest.navKontor &&
-                newest.harKrav == secondNewest.harKrav &&
-                newest.fom == secondNewest.fom &&
-                newest.tom == secondNewest.tom
-    }
 
     companion object : FlytSteg {
         override fun konstruer(
