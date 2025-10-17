@@ -56,6 +56,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.OrgEnhet
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.OrgTilknytning
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.BARN_RELASJON_QUERY
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.ForelderBarnRelasjon
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.ForelderBarnRelasjonRolle
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.HentPerson
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.HentPersonBolkResult
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PDLDødsfall
@@ -93,7 +94,6 @@ import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.Yrkesskader
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.HentSakDTO
 import no.nav.aap.behandlingsflyt.test.modell.MockUnleashFeature
 import no.nav.aap.behandlingsflyt.test.modell.MockUnleashFeatures
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
@@ -1503,7 +1503,12 @@ object FakeServers : AutoCloseable {
             data = PdlRelasjonData(
                 hentPerson = PdlPersoninfo(
                     forelderBarnRelasjon = testPerson.barn
-                        .map { ForelderBarnRelasjon(it.identer.first().identifikator) }
+                        .map {
+                            ForelderBarnRelasjon(
+                                it.identer.first().identifikator,
+                                relatertPersonsRolle = ForelderBarnRelasjonRolle.BARN,
+                            )
+                        }
                         .toList(),
                     statsborgerskap = setOf(PdlStatsborgerskap("NOR", LocalDate.now().minusYears(5), LocalDate.now())),
                     folkeregisterpersonstatus = setOf(PdlFolkeregisterPersonStatus(PersonStatus.bosatt, null))
