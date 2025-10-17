@@ -452,7 +452,7 @@ fun NormalOpenAPIRoute.saksApi(
             val visningsnavnMap = visningsnavn.associateBy( { it.navident }, {it.visningsnavn })
             val historikkMedVisningsnavn = historikk.map{
                 val nyeHendelser = it.hendelser.map{
-                    val navn = if (it.utførtAv != null) visningsnavnMap[it.utførtAv] else it.utførtAv
+                    val navn = visningsnavnMap[it.utførtAv] ?: it.utførtAv
                     it.copy(utførtAv = navn)
                 }
                 it.copy(hendelser = nyeHendelser)
