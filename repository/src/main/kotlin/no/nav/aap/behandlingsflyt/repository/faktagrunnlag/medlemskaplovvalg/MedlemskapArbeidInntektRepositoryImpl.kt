@@ -5,9 +5,9 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalg.EnhetGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapArbeidInntektGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.HistoriskManuellVurderingForLovvalgMedlemskap
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøknadsTidspunktDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedSøknadsTidspunktDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMaaned
@@ -123,7 +123,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
             deaktiverGrunnlag(behandlingId)
         }
 
-        val vurderingerId = lagreVurderinger(grunnlagOppslag?.vurderingerId, vurderinger)
+        val vurderingerId = lagreVurderinger(behandlingId, vurderinger, grunnlagOppslag?.vurderingerId)
 
         val grunnlagQuery = """
             INSERT INTO MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG 
@@ -144,7 +144,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         }
     }
 
-    private fun lagreVurderinger(tidligereVurderingerId: Long?, vurderinger: Set<ManuellVurderingForLovvalgMedlemskap>): Long {
+    private fun lagreVurderinger(behandlingId: BehandlingId, vurderinger: Set<ManuellVurderingForLovvalgMedlemskap>, tidligereVurderingerId: Long?, ): Long {
         val overstyrt = vurderinger.any { it.overstyrt }
 
         val vurderingerId = connection.executeReturnKey(
@@ -161,12 +161,14 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
             SELECT fom, tom, tekstvurdering_lovvalg, lovvalgs_land, tekstvurdering_medlemskap, var_medlem_i_folketrygden, overstyrt, vurdert_av, opprettet_tid, vurdert_i_behandling, ?
                 FROM LOVVALG_MEDLEMSKAP_MANUELL_VURDERING 
                 WHERE vurderinger_id = ?
+                AND vurdert_i_behandling != ? 
         """.trimIndent()
 
             connection.execute(query) {
                 setParams {
                     setLong(1, vurderingerId)
                     setLong(2, tidligereVurderingerId)
+                    setLong(3, behandlingId.id)
                 }
             }
         }
@@ -762,11 +764,11 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
 
     private fun mapManuellVurderingForLovvalgMedlemskap(row: Row): ManuellVurderingForLovvalgMedlemskap =
         ManuellVurderingForLovvalgMedlemskap(
-            lovvalgVedSøknadsTidspunkt = LovvalgVedSøknadsTidspunktDto(
+            lovvalgVedSøknadsTidspunkt = LovvalgDto(
                 begrunnelse = row.getString("tekstvurdering_lovvalg"),
                 lovvalgsEØSLand = row.getEnumOrNull("lovvalgs_land")
             ),
-            medlemskapVedSøknadsTidspunkt = MedlemskapVedSøknadsTidspunktDto(
+            medlemskapVedSøknadsTidspunkt = MedlemskapDto(
                 begrunnelse = row.getStringOrNull("tekstvurdering_medlemskap"),
                 varMedlemIFolketrygd = row.getBooleanOrNull("var_medlem_i_folketrygden")
             ),
