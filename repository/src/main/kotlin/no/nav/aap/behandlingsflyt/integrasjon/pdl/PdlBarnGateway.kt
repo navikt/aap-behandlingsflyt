@@ -96,7 +96,7 @@ val BARN_RELASJON_QUERY = $$"""
     query($ident: ID!) {
         hentPerson(ident: $ident) {
             forelderBarnRelasjon {
-                minRolleForPerson
+                relatertPersonsRolle
                 relatertPersonsIdent
                 relatertPersonUtenFolkeregisteridentifikator {
                   foedselsdato
