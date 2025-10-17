@@ -10,6 +10,8 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBarn
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarForutgåendeMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarManuellInntektVurderingLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOppholdskravLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSoningsforholdLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
@@ -18,12 +20,18 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.Avklarings
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBeregningstidspunktLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettYrkesskadeInntektLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.RefusjonkravLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedtaksbrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SykdomsvurderingForBrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.TjenestepensjonRefusjonskravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.YrkesskadeSakDto
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.YrkesskadevurderingDto
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.AvklarOppholdkravLøsningForPeriodeDto
+import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
@@ -39,6 +47,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.Bist
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.SoningsvurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.SoningsvurderingerDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.SamordningVurderingData
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonskravVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
@@ -46,6 +56,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.behandling.brev.bestilling.BrevbestillingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.mellomlagring.MellomlagretVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -54,6 +65,7 @@ import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDatabaseExtension
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.motor.testutil.ManuellMotorImpl
@@ -62,6 +74,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.extension.ExtendWith
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.util.*
 import javax.sql.DataSource
 
 @Fakes
@@ -287,6 +300,29 @@ class TestScenarioOrkestrator(
         )
     }
 
+    fun løsUtenSamordning(behandling: Behandling): Behandling {
+        return this.løsAvklaringsBehov(
+            behandling,
+            AvklarSamordningGraderingLøsning(
+                vurderingerForSamordning = VurderingerForSamordning("", true, null, emptyList())
+            )
+        )
+    }
+
+    fun løsSamordning(behandling: Behandling, periode: Periode): Behandling {
+        return this.løsAvklaringsBehov(
+            behandling,
+            AvklarSamordningGraderingLøsning(
+                vurderingerForSamordning = VurderingerForSamordning(
+                    "samordning ok",
+                    true,
+                    null,
+                    listOf(SamordningVurderingData(Ytelse.OMSORGSPENGER, periode, gradering = 70))
+                )
+            )
+        )
+    }
+
     fun løsTjenestepensjonRefusjonskravVurdering(behandling: Behandling): Behandling {
         return løsAvklaringsBehov(
             behandling,
@@ -310,6 +346,23 @@ class TestScenarioOrkestrator(
                     harForutgåendeMedlemskap = true,
                     varMedlemMedNedsattArbeidsevne = true,
                     medlemMedUnntakAvMaksFemAar = null
+                )
+            )
+        )
+    }
+
+    fun løsOppholdskrav(behandling: Behandling): Behandling {
+        return løsAvklaringsBehov(
+            behandling,
+            AvklarOppholdskravLøsning(
+                løsningerForPerioder = listOf(
+                    AvklarOppholdkravLøsningForPeriodeDto(
+                        begrunnelse = "Oppholdskrav ok",
+                        fom = LocalDate.now().minusMonths(2),
+                        tom = null,
+                        oppfylt = true,
+                        land = "Norge"
+                    )
                 )
             )
         )
@@ -360,6 +413,10 @@ class TestScenarioOrkestrator(
         return hentBehandling(behandling.referanse, datasource)
     }
 
+    fun løsForeslåVedtakLøsning(behandling: Behandling) {
+        løsAvklaringsBehov(behandling, ForeslåVedtakLøsning())
+    }
+
     fun fattVedtakEllerSendRetur(behandling: Behandling, returVed: Definisjon? = null): Behandling =
         løsAvklaringsBehov(
             behandling,
@@ -374,6 +431,12 @@ class TestScenarioOrkestrator(
             Bruker("BESLUTTER")
         )
 
+    fun løsVedtaksbrev(behandling: Behandling, typeBrev: TypeBrev = TypeBrev.VEDTAK_INNVILGELSE): Behandling {
+        val brevbestilling = hentBrevAvType(behandling, typeBrev)
+
+        return this.løsAvklaringsBehov(behandling, vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
+    }
+
     protected fun hentFørsteYrkesskadeMedSkadeDato(behandlingId: BehandlingId): Yrkesskade? {
         var yrkesskadeUtenSkadedato: Yrkesskade? = null
         datasource.transaction { connection ->
@@ -384,6 +447,20 @@ class TestScenarioOrkestrator(
         }
         return yrkesskadeUtenSkadedato
     }
+
+    private fun vedtaksbrevLøsning(brevbestillingReferanse: UUID): AvklaringsbehovLøsning {
+        return SkrivVedtaksbrevLøsning(
+            brevbestillingReferanse = brevbestillingReferanse,
+            handling = SkrivBrevAvklaringsbehovLøsning.Handling.FERDIGSTILL
+        )
+    }
+
+    private fun hentBrevAvType(behandling: Behandling, typeBrev: TypeBrev) =
+        no.nav.aap.behandlingsflyt.datasource.transaction(readOnly = true) {
+            val brev = BrevbestillingRepositoryImpl(it).hent(behandling.id)
+            brev.firstOrNull { it.typeBrev == typeBrev }
+                ?: error("Ingen brev av type $typeBrev. Følgende finnes: ${brev.joinToString { it.typeBrev.toString() }}")
+        }
 
     protected fun hentBehandling(behandlingReferanse: BehandlingReferanse, datasource: DataSource): Behandling {
         return datasource.transaction(readOnly = true) { connection ->
