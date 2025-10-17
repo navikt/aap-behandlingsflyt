@@ -29,6 +29,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅ
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
+import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.behandlingsflyt.test.november
@@ -165,7 +166,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
     }
 
     @Test
-    fun `skal kopiere grunnlag fra forrige behandling`() {
+    fun `skal kopiere grunnlag fra forrige behandling ved revurdering og ta med tidligere vurderinger når nye opprettes`() {
         val behandling = dataSource.transaction { connection ->
             val medlemskapArbeidInntektRepository = MedlemskapArbeidInntektRepositoryImpl(connection)
             val medlemskapRepository = MedlemskapRepositoryImpl(connection)
@@ -229,12 +230,23 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
 
             medlemskapArbeidInntektRepository.kopier(behandling.id, revurdering.id)
 
+            medlemskapArbeidInntektRepository.lagreVurderinger(
+                revurdering.id,
+                setOf(
+                    manuellVurdering(
+                        fom = 1 desember  2025,
+                        tom = null,
+                        vurdertIBehandling = revurdering.id
+                    ),
+                )
+            )
+
             val medlemskapArbeidInntektGrunnlag = medlemskapArbeidInntektRepository.hentHvisEksisterer(revurdering.id)
 
             assertThat(medlemskapArbeidInntektGrunnlag?.inntekterINorgeGrunnlag?.size).isEqualTo(2)
             assertThat(medlemskapArbeidInntektGrunnlag?.arbeiderINorgeGrunnlag?.size).isEqualTo(1)
             assertThat(medlemskapArbeidInntektGrunnlag?.medlemskapGrunnlag).isNotNull
-            assertThat(medlemskapArbeidInntektGrunnlag?.vurderinger?.size).isEqualTo(2)
+            assertThat(medlemskapArbeidInntektGrunnlag?.vurderinger?.size).isEqualTo(3)
         }
     }
 

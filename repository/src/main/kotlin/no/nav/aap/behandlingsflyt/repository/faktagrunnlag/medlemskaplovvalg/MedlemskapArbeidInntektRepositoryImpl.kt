@@ -123,7 +123,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
             deaktiverGrunnlag(behandlingId)
         }
 
-        val vurderingerId = lagreVurderinger(vurderinger)
+        val vurderingerId = lagreVurderinger(grunnlagOppslag?.vurderingerId, vurderinger)
 
         val grunnlagQuery = """
             INSERT INTO MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG 
@@ -144,7 +144,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         }
     }
 
-    private fun lagreVurderinger(vurderinger: Set<ManuellVurderingForLovvalgMedlemskap>): Long {
+    private fun lagreVurderinger(tidligereVurderingerId: Long?, vurderinger: Set<ManuellVurderingForLovvalgMedlemskap>): Long {
         val overstyrt = vurderinger.any { it.overstyrt }
 
         val vurderingerId = connection.executeReturnKey(
@@ -152,6 +152,24 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
             INSERT INTO lovvalg_medlemskap_manuell_vurderinger DEFAULT VALUES
         """.trimIndent()
         )
+
+        // kopierer inn eksisterende vurderinger
+        if (tidligereVurderingerId != null) {
+            val query = """
+            INSERT INTO LOVVALG_MEDLEMSKAP_MANUELL_VURDERING 
+                (fom, tom, tekstvurdering_lovvalg, lovvalgs_land, tekstvurdering_medlemskap, var_medlem_i_folketrygden, overstyrt, vurdert_av, opprettet_tid, vurdert_i_behandling, vurderinger_id)  
+            SELECT fom, tom, tekstvurdering_lovvalg, lovvalgs_land, tekstvurdering_medlemskap, var_medlem_i_folketrygden, overstyrt, vurdert_av, opprettet_tid, vurdert_i_behandling, ?
+                FROM LOVVALG_MEDLEMSKAP_MANUELL_VURDERING 
+                WHERE vurderinger_id = ?
+        """.trimIndent()
+
+            connection.execute(query) {
+                setParams {
+                    setLong(1, vurderingerId)
+                    setLong(2, tidligereVurderingerId)
+                }
+            }
+        }
 
         val query = """
                 INSERT INTO LOVVALG_MEDLEMSKAP_MANUELL_VURDERING 
