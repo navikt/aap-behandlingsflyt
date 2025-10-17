@@ -34,8 +34,6 @@ class FatteVedtakSteg(
         trekkKlageService = TrekkKlageService(repositoryProvider),
     )
 
-    private val log = LoggerFactory.getLogger(javaClass)
-
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 

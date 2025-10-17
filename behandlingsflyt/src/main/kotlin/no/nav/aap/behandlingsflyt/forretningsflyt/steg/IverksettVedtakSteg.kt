@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.NavKontorPeriodeDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -78,7 +79,8 @@ class IverksettVedtakSteg private constructor(
             log.info("Fant ikke tilkjent ytelse for behandingsref ${kontekst.behandlingId}. Virkningstidspunkt: $virkningstidspunkt.")
         }
         flytJobbRepository.leggTil(
-            jobbInput = JobbInput(jobb = VarsleVedtakJobbUtfører).medPayload(kontekst.behandlingId).forSak(kontekst.sakId.id)
+            jobbInput = JobbInput(jobb = VarsleVedtakJobbUtfører).medPayload(kontekst.behandlingId)
+                .forSak(kontekst.sakId.id)
         )
 
         mellomlagretVurderingRepository.slett(kontekst.behandlingId)
@@ -86,21 +88,29 @@ class IverksettVedtakSteg private constructor(
         val navkontorSosialRefusjon = refusjonkravRepository.hentHvisEksisterer(kontekst.behandlingId)
         if (navkontorSosialRefusjon == null) return Fullført
 
-        val navKontorList = navkontorSosialRefusjon
-            .filter { it.harKrav && it.navKontor != null }
-            .map {
-                NavKontorPeriodeDto(
-                    enhetsNummer = navKontorEnhetsNummer(it.navKontor)!!,
-                    fom = it.fom,
-                    tom = it.tom
-                )
+        val alleVurderinger = refusjonkravRepository.hentAlleVurderingerPåSak(kontekst.sakId)
+
+
+        if (erNyesteLikNesteNyeste(alleVurderinger)) {
+            return Fullført
+        } else {
+            val navKontorList = navkontorSosialRefusjon
+                .filter { it.harKrav && it.navKontor != null }
+                .map {
+                    NavKontorPeriodeDto(
+                        enhetsNummer = navKontorEnhetsNummer(it.navKontor)!!,
+                        fom = it.fom,
+                        tom = it.tom
+                    )
+                }
+
+            if (navKontorList.isNotEmpty()) {
+                val aktivIdent = sakRepository.hent(kontekst.sakId).person.aktivIdent()
+
+                opprettOppgave(navKontorList, aktivIdent, kontekst)
             }
-
-        if (navKontorList.isNotEmpty()) {
-            val aktivIdent = sakRepository.hent(kontekst.sakId).person.aktivIdent()
-
-            opprettOppgave(navKontorList, aktivIdent, kontekst)
         }
+
 
         return Fullført
     }
@@ -148,7 +158,16 @@ class IverksettVedtakSteg private constructor(
         }
     }
 
+    private fun erNyesteLikNesteNyeste(vurderinger: List<RefusjonkravVurdering>): Boolean {
+        val newest = vurderinger.getOrNull(0)
+        val secondNewest = vurderinger.getOrNull(1)
 
+        return newest != null && secondNewest != null &&
+                newest.navKontor == secondNewest.navKontor &&
+                newest.harKrav == secondNewest.harKrav &&
+                newest.fom == secondNewest.fom &&
+                newest.tom == secondNewest.tom
+    }
 
     companion object : FlytSteg {
         override fun konstruer(
@@ -157,7 +176,7 @@ class IverksettVedtakSteg private constructor(
         ): BehandlingSteg {
             val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
             val sakRepository = repositoryProvider.provide<SakRepository>()
-            val refusjonkravRepository =  repositoryProvider.provide<RefusjonkravRepository>()
+            val refusjonkravRepository = repositoryProvider.provide<RefusjonkravRepository>()
             val vedtakRepository = repositoryProvider.provide<VedtakRepository>()
             val utbetalingGateway = gatewayProvider.provide<UtbetalingGateway>()
             val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()

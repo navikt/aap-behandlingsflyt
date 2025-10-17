@@ -60,7 +60,7 @@ class RefusjonkravRepositoryImpl(private val connection: DBConnection) : Refusjo
     override fun hentAlleVurderingerPåSak(sakId: SakId): List<RefusjonkravVurdering> {
         // TODO: trenger ikke lagre sak_id i tabell
         val query = """
-            SELECT * FROM REFUSJONKRAV_GRUNNLAG WHERE sak_id = ? and aktiv = true
+            SELECT * FROM REFUSJONKRAV_GRUNNLAG WHERE sak_id = ? and aktiv = true ORDER BY OPPRETTET_TID DESC
         """.trimIndent()
 
         return connection.queryList(query) {
