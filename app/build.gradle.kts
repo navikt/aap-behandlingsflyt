@@ -107,7 +107,7 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.5.19")
     implementation("io.opentelemetry.instrumentation:opentelemetry-logback-mdc-1.0:${opentelemetryVersion}")
     implementation("io.opentelemetry.instrumentation:opentelemetry-ktor-3.0:${opentelemetryVersion}")
-    implementation("org.apache.avro:avro:1.12.0")
+    implementation("org.apache.avro:avro:1.12.1")
     implementation("io.confluent:kafka-avro-serializer:7.6.0")
     testImplementation(project(":lib-test"))
     implementation(libs.dbtest)
