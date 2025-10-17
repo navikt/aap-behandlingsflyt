@@ -11,7 +11,6 @@ import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.NavKontorPeriodeDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -85,54 +84,35 @@ class IverksettVedtakSteg private constructor(
 
         mellomlagretVurderingRepository.slett(kontekst.behandlingId)
 
-        val navkontorSosialRefusjon = refusjonkravRepository.hentHvisEksisterer(kontekst.behandlingId)
-        if (navkontorSosialRefusjon == null) return Fullført
-
-        val alleBehandlinger = behandlingRepository.hentAlleFor(kontekst.sakId)
-        val alleVurderingerPerBehandling: List<List<RefusjonkravVurdering>> = alleBehandlinger.map { behandling ->
-            refusjonkravRepository.hentHvisEksisterer(behandling.id) ?: emptyList()
-        }
-
-        val nyesteBehandling = alleBehandlinger[0]
-        val nestNyesteBehandling = alleBehandlinger[1]
-
-        val newestVurderinger = refusjonkravRepository.hentHvisEksisterer(nyesteBehandling.id) ?: emptyList()
-        val secondNewestVurderinger =
-            refusjonkravRepository.hentHvisEksisterer(nestNyesteBehandling.id) ?: emptyList()
-
-        val alleVurderingerErLike = newestVurderinger.size == secondNewestVurderinger.size &&
-                newestVurderinger.zip(secondNewestVurderinger).all { (a, b) ->
-                    a.navKontor == b.navKontor &&
-                            a.harKrav == b.harKrav &&
-                            a.fom == b.fom &&
-                            a.tom == b.tom
-                }
-
-
-        if (alleVurderingerErLike) {
-            return Fullført
-        } else {
-
-            val navKontorList = navkontorSosialRefusjon
-                .filter { it.harKrav && it.navKontor != null }
-                .map {
-                    NavKontorPeriodeDto(
-                        enhetsNummer = navKontorEnhetsNummer(it.navKontor)!!,
-                        fom = it.fom,
-                        tom = it.tom
-                    )
-                }
-
-            if (navKontorList.isNotEmpty()) {
-                val aktivIdent = sakRepository.hent(kontekst.sakId).person.aktivIdent()
-
-                opprettOppgave(navKontorList, aktivIdent, kontekst)
-            }
-        }
-
-
+        opprettOppfølgingsoppgaveForNavkontorVedSosialRefusjon(kontekst)
 
         return Fullført
+    }
+
+    private fun opprettOppfølgingsoppgaveForNavkontorVedSosialRefusjon(kontekst: FlytKontekstMedPerioder) {
+        val navkontorSosialRefusjon = refusjonkravRepository.hentHvisEksisterer(kontekst.behandlingId)
+        if (navkontorSosialRefusjon != null) {
+            val forrigeIverksatteSosialRefusjonsVurderinger =
+                kontekst.forrigeBehandlingId?.let { refusjonkravRepository.hentHvisEksisterer(it) } ?: emptyList()
+
+            val gjeldendeSosialRefusjonDtoer = navkontorSosialRefusjon
+                .filter { it.harKrav && it.navKontor != null }
+                .map { it.tilNavKontorPeriodeDto() }
+                .toSet()
+
+            val forrigeSosialRefusjonDtoer = forrigeIverksatteSosialRefusjonsVurderinger
+                .filter { it.harKrav && it.navKontor != null }
+                .map { it.tilNavKontorPeriodeDto() }
+                .toSet()
+
+            val sosialRefusjonerSomManglerOppgave = gjeldendeSosialRefusjonDtoer - forrigeSosialRefusjonDtoer
+
+            log.info("Fant ${sosialRefusjonerSomManglerOppgave.size} refusjonskrav som mangler oppgave")
+            val aktivIdent = sakRepository.hent(kontekst.sakId).person.aktivIdent()
+
+            // TODO - Hein: Trekk ut koden nedenfor til å være i en egen jobb
+            opprettOppgave(sosialRefusjonerSomManglerOppgave.toList(), aktivIdent, kontekst)
+        }
     }
 
     private fun utbetal(
@@ -152,11 +132,6 @@ class IverksettVedtakSteg private constructor(
         } else {
             utbetalingGateway.utbetal(tilkjentYtelseDto)
         }
-    }
-
-
-    fun navKontorEnhetsNummer(input: String?): String? {
-        return input?.substringAfterLast(" - ")
     }
 
     private fun opprettOppgave(
