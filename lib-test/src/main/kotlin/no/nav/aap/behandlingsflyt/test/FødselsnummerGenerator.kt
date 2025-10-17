@@ -10,6 +10,8 @@ class FødselsnummerGenerator private constructor(
     private val identType: IdentType,
     private val fodselsdato: LocalDate
 ) {
+    // Opprettes på nytt for hver instans av klassen for å få forskjellige random seeds på dem
+    private val random: Random = Random()
 
     private fun generate(): String {
         var day = String.format("%02d", fodselsdato.dayOfMonth)
@@ -74,7 +76,6 @@ class FødselsnummerGenerator private constructor(
         private val LOG: Logger = LoggerFactory.getLogger(javaClass)
         private const val NAV_SYNTETISK_IDENT_OFFSET_MND = 40
         private const val DNR_OFFSETT_DAYS = 40
-        private val random: Random = Random()
 
         private fun getDigit(text: String, index: Int): Int {
             return text.substring(index, index + 1).toInt()
@@ -86,7 +87,7 @@ class FødselsnummerGenerator private constructor(
     }
 
     class Builder {
-        private var kjonn: Kjønn = Kjønn.entries.random()
+        private var kjonn: Kjønn = Kjønn.random()
         private var identType: IdentType = IdentType.FNR
         private var fodselsdato: LocalDate = LocalDate.now().minusYears(25).minusDays(Holder.hent())
 

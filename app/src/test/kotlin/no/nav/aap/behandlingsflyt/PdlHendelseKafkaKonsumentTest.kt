@@ -7,8 +7,8 @@ import no.nav.aap.behandlingsflyt.hendelse.kafka.SchemaRegistryConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PdlHendelseKafkaKonsument
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.person.pdl.leesah.Endringstype
 import no.nav.person.pdl.leesah.Personhendelse
-import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.clients.producer.ProducerRecord
@@ -30,7 +30,7 @@ import kotlin.test.Test
 class PdlHendelseKafkaKonsumentTest {
 
     companion object {
-        val kafka = KafkaContainer(DockerImageName.parse("apache/kafka-native:4.0.0"))
+        val kafka: KafkaContainer = KafkaContainer(DockerImageName.parse("apache/kafka-native:4.1.0"))
             .withReuse(true)
             .waitingFor(Wait.forListeningPort())
             .withStartupTimeout(Duration.ofSeconds(60))
@@ -71,7 +71,7 @@ class PdlHendelseKafkaKonsumentTest {
             .setMaster("FREG")
             .setOpprettet(Instant.now())
             .setOpplysningstype("DOEDSFALL_V1")
-            .setEndringstype(no.nav.person.pdl.leesah.Endringstype.OPPRETTET)
+            .setEndringstype(Endringstype.OPPRETTET)
             .build()
 
         val producerProps = Properties().apply {

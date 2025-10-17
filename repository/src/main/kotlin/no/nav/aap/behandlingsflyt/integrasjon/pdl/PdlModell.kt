@@ -154,8 +154,16 @@ data class PdlFoedsel(
 
 data class ForelderBarnRelasjon(
     val relatertPersonsIdent: String?,
+    val relatertPersonsRolle: ForelderBarnRelasjonRolle,
     val relatertPersonUtenFolkeregisteridentifikator: RelatertBiPerson? = null
 )
+
+enum class ForelderBarnRelasjonRolle {
+    BARN,
+    FAR,
+    MEDMOR,
+    MOR,
+}
 
 data class RelatertBiPerson(
     val foedselsdato: LocalDate?,

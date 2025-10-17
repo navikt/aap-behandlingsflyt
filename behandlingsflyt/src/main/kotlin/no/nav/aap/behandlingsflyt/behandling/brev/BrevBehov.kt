@@ -12,7 +12,8 @@ data class Innvilgelse(
 ) : BrevBehov(TypeBrev.VEDTAK_INNVILGELSE) {
 }
 
-data class VurderesForUføretrygd(val inntekterPerÅr: List<InntektPerÅr>) : BrevBehov(TypeBrev.VEDTAK_11_18)
+data class VurderesForUføretrygd(val grunnlagBeregning: GrunnlagBeregning?) : BrevBehov(TypeBrev.VEDTAK_11_18)
+object Arbeidssøker : BrevBehov(TypeBrev.VEDTAK_11_17)
 object Avslag : BrevBehov(TypeBrev.VEDTAK_AVSLAG)
 object VedtakEndring : BrevBehov(TypeBrev.VEDTAK_ENDRING)
 object VarselOmBestilling : BrevBehov(TypeBrev.VARSEL_OM_BESTILLING)

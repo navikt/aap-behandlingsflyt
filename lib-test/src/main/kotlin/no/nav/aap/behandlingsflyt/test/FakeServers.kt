@@ -56,6 +56,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.OrgEnhet
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.OrgTilknytning
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.BARN_RELASJON_QUERY
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.ForelderBarnRelasjon
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.ForelderBarnRelasjonRolle
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.HentPerson
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.HentPersonBolkResult
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PDLDødsfall
@@ -117,6 +118,9 @@ import no.nav.aap.tilgang.JournalpostTilgangRequest
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.SakTilgangRequest
 import no.nav.aap.tilgang.TilgangResponse
+import no.nav.aap.utbetal.trekk.TrekkDto
+import no.nav.aap.utbetal.trekk.TrekkPosteringDto
+import no.nav.aap.utbetal.trekk.TrekkResponsDto
 import org.intellij.lang.annotations.Language
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayInputStream
@@ -1499,7 +1503,12 @@ object FakeServers : AutoCloseable {
             data = PdlRelasjonData(
                 hentPerson = PdlPersoninfo(
                     forelderBarnRelasjon = testPerson.barn
-                        .map { ForelderBarnRelasjon(it.identer.first().identifikator) }
+                        .map {
+                            ForelderBarnRelasjon(
+                                it.identer.first().identifikator,
+                                relatertPersonsRolle = ForelderBarnRelasjonRolle.BARN,
+                            )
+                        }
                         .toList(),
                     statsborgerskap = setOf(PdlStatsborgerskap("NOR", LocalDate.now().minusYears(5), LocalDate.now())),
                     folkeregisterpersonstatus = setOf(PdlFolkeregisterPersonStatus(PersonStatus.bosatt, null))
@@ -1713,6 +1722,23 @@ object FakeServers : AutoCloseable {
         routing {
             post("/tilkjentytelse") {
                 call.respond(HttpStatusCode.NoContent)
+            }
+            get("/trekk/{saksnummer}") {
+                val saksnummer = call.parameters["saksnummer"] ?: error("Mangler saksnummer")
+                val trekkRespons = TrekkResponsDto(
+                    listOf(
+                        TrekkDto(
+                            saksnummer, UUID.randomUUID(), LocalDate.now(), 1234, listOf(
+                                TrekkPosteringDto(LocalDate.now(), 400),
+                                TrekkPosteringDto(LocalDate.now().plusDays(1), 834)
+                            )
+                        ),
+                        TrekkDto(
+                            saksnummer, UUID.randomUUID(), LocalDate.now().minusDays(1), 200, emptyList()
+                        )
+                    )
+                )
+                call.respond(trekkRespons)
             }
         }
 

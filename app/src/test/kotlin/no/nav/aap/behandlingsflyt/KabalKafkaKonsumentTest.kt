@@ -65,7 +65,7 @@ class KabalKafkaKonsumentTest {
                 repositoryRegistry = repositoryRegistry,
                 gatewayProvider = createGatewayProvider { register<FakeUnleash>() }
             )
-        val kafka = KafkaContainer(DockerImageName.parse("apache/kafka-native:4.0.0"))
+        val kafka: KafkaContainer = KafkaContainer(DockerImageName.parse("apache/kafka-native:4.1.0"))
             .withReuse(true)
             .waitingFor(Wait.forListeningPort())
             .withStartupTimeout(Duration.ofSeconds(60))

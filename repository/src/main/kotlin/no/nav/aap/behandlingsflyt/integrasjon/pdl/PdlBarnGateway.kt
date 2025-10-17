@@ -43,7 +43,8 @@ class PdlBarnGateway : BarnGateway {
         val request = PdlRequest(BARN_RELASJON_QUERY, IdentVariables(person.aktivIdent().identifikator))
         val response = PdlGateway.query<PdlRelasjonDataResponse>(request)
 
-        val relasjoner = response.data?.hentPerson?.forelderBarnRelasjon ?: return emptyList()
+        val relasjoner = response.data?.hentPerson?.forelderBarnRelasjon.orEmpty()
+            .filter { it.relatertPersonsRolle == ForelderBarnRelasjonRolle.BARN }
 
         return relasjoner.map { relasjon ->
             if (relasjon.relatertPersonsIdent == null) {
@@ -95,6 +96,7 @@ val BARN_RELASJON_QUERY = $$"""
     query($ident: ID!) {
         hentPerson(ident: $ident) {
             forelderBarnRelasjon {
+                relatertPersonsRolle
                 relatertPersonsIdent
                 relatertPersonUtenFolkeregisteridentifikator {
                   foedselsdato

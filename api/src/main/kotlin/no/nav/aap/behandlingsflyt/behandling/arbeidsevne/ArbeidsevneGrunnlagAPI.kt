@@ -37,9 +37,7 @@ fun NormalOpenAPIRoute.arbeidsevneGrunnlagApi(
 
         ) { behandlingReferanse ->
 
-            arbeidsevneGrunnlag(dataSource, behandlingReferanse, kanSaksbehandle(), repositoryRegistry, gatewayProvider).let {
-                respond(it)
-            }
+            respond(arbeidsevneGrunnlag(dataSource, behandlingReferanse, kanSaksbehandle(), repositoryRegistry, gatewayProvider))
         }
 
         route("/simulering") {

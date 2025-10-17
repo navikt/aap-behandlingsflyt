@@ -80,9 +80,10 @@ data class KvoteTilstand(
     private var hverdagerBrukt: Hverdager = Hverdager(0),
 ) {
     var erKvoteOversteget: Boolean = false
-        set(erKvoteOversteget) {
-            require(erKvoteOversteget)
-            field = erKvoteOversteget
+        set(kvoteErOversteget) {
+            if (kvoteErOversteget) {
+                field = kvoteErOversteget
+            }
         }
 
     val ubruktKvote: Hverdager

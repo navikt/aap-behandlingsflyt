@@ -69,7 +69,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.Institusjonsop
 import no.nav.aap.behandlingsflyt.integrasjon.kabal.KabalGateway
 import no.nav.aap.behandlingsflyt.integrasjon.medlemsskap.MedlemskapGateway
 import no.nav.aap.behandlingsflyt.integrasjon.meldekort.MeldekortGatewayImpl
-import no.nav.aap.behandlingsflyt.integrasjon.oppgave.GosysGateway
+import no.nav.aap.behandlingsflyt.integrasjon.gosys.GosysGateway
 import no.nav.aap.behandlingsflyt.integrasjon.oppgave.OppgavestyringGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomInfoGateway
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NorgGateway
@@ -386,6 +386,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                 ),
             )
             .løsForutgåendeMedlemskap()
+            .løsOppholdskrav(sak.rettighetsperiode.fom)
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtakEllerSendRetur()
 
@@ -418,39 +419,14 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
     }
 
     fun revurdereFramTilOgMedSykdom(sak: Sak, gjelderFra: LocalDate, vissVarighet: Boolean? = null): Behandling {
-        return sak.sendInnSøknad(
-            journalpostId = JournalpostId("29"),
-            mottattTidspunkt = gjelderFra.atStartOfDay(),
-            søknad = SøknadV0(
-                student = SøknadStudentDto("NEI"),
-                yrkesskade = "NEI",
-                oppgitteBarn = null,
-                medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
-            ),
+        return sak.opprettManuellRevurdering(
+            vurderingsbehov = listOf(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
         )
             .medKontekst {
                 assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }
-            .løsAvklaringsBehov(
-                AvklarSykdomLøsning(
-                    sykdomsvurderinger = listOf(
-                        SykdomsvurderingLøsningDto(
-                            begrunnelse = "Er syk nok",
-                            dokumenterBruktIVurdering = listOf(JournalpostId("1349532")),
-                            harSkadeSykdomEllerLyte = true,
-                            erSkadeSykdomEllerLyteVesentligdel = true,
-                            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-                            erNedsettelseIArbeidsevneAvEnVissVarighet = vissVarighet,
-                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                            erArbeidsevnenNedsatt = true,
-                            yrkesskadeBegrunnelse = null,
-                            // Ny revurdering
-                            vurderingenGjelderFra = gjelderFra
-                        )
-                    )
-                ),
-            )
+            .løsSykdom(vurderingGjelderFra = gjelderFra, vissVarighet = vissVarighet)
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }
@@ -555,7 +531,8 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
     protected fun løsSykdom(
         behandling: Behandling,
         vurderingGjelderFra: LocalDate? = null,
-        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean? = null
+        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean? = null,
+        vissVarighet: Boolean? = true
     ): Behandling {
         return løsAvklaringsBehov(
             behandling,
@@ -567,7 +544,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                         harSkadeSykdomEllerLyte = true,
                         erSkadeSykdomEllerLyteVesentligdel = true,
                         erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-                        erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                        erNedsettelseIArbeidsevneAvEnVissVarighet = vissVarighet,
                         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
                         erArbeidsevnenNedsatt = true,
                         yrkesskadeBegrunnelse = if (erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense != null) "test" else null,
@@ -617,7 +594,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         )
     }
 
-    protected fun Behandling.løsOppholdskrav(): Behandling {
+    protected fun Behandling.løsOppholdskrav(startDato: LocalDate): Behandling {
         return løsAvklaringsBehov(
             behandling = this,
             avklaringsBehovLøsning =
@@ -626,7 +603,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                         AvklarOppholdkravLøsningForPeriodeDto(
                             oppfylt = true,
                             land = "",
-                            fom = LocalDate.now(),
+                            fom = startDato,
                             begrunnelse = "Fiske"
                         )
                     )
@@ -703,12 +680,14 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
     @JvmName("løsSykdomExt")
     protected fun Behandling.løsSykdom(
         vurderingGjelderFra: LocalDate? = null,
-        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean? = null
+        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean? = null,
+        vissVarighet: Boolean? = true
     ): Behandling {
         return løsSykdom(
             behandling = this,
             vurderingGjelderFra = vurderingGjelderFra,
-            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense
+            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
+            vissVarighet = vissVarighet
         )
     }
 
@@ -797,8 +776,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
 
     protected fun hentBehandling(behandlingReferanse: BehandlingReferanse): Behandling {
         return dataSource.transaction(readOnly = true) { connection ->
-            val behandling = BehandlingRepositoryImpl(connection).hent(behandlingReferanse)
-            requireNotNull(behandling)
+            BehandlingRepositoryImpl(connection).hent(behandlingReferanse)
         }
     }
 

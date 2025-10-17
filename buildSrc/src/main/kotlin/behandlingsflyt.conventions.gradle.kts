@@ -21,11 +21,24 @@ testing {
     }
 }
 
+private fun bestemAntallTestTråder(): Int {
+    val isCiBuild =
+        providers.environmentVariable("CI").isPresent || providers.environmentVariable("GITHUB_ACTIONS").isPresent
+    val processors = Runtime.getRuntime().availableProcessors()
+    val antallTråder =
+        if (isCiBuild) {
+            processors - 1 // behold en cpu til testcontainer
+        } else {
+            // reduser antall tråder ved lokal kjøring for å unngå at utvikler-maskinen blir for treg
+            processors / 2
+        }
+    return antallTråder
+}
 
 tasks {
     test {
         useJUnitPlatform()
-        maxParallelForks = Runtime.getRuntime().availableProcessors() / 2
+        maxParallelForks = bestemAntallTestTråder()
         testLogging {
             events("passed", "skipped", "failed")
         }

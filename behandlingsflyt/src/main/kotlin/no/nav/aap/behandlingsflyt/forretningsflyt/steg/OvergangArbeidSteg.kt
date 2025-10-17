@@ -27,6 +27,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -40,6 +42,7 @@ class OvergangArbeidSteg private constructor(
     private val sykdomRepository: SykdomRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val vilkårService: VilkårService,
+    private val unleashGateway: UnleashGateway,
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         vilkårsresultatRepository = repositoryProvider.provide(),
@@ -48,11 +51,16 @@ class OvergangArbeidSteg private constructor(
         sykdomRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
         vilkårService = VilkårService(repositoryProvider),
+        unleashGateway = gatewayProvider.provide(),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        if (unleashGateway.isDisabled(BehandlingsflytFeature.OvergangArbeid)) {
+            return Fullført
+        }
+
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val overgangArbeidGrunnlag = overgangArbeidRepository.hentHvisEksisterer(kontekst.behandlingId)
@@ -126,7 +134,7 @@ VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
         if (sisteSykdomsvurdering == null) {
             return false
         } else {
-            if (sisteSykdomsvurdering.harSkadeSykdomEllerLyte == false || sisteSykdomsvurdering.erArbeidsevnenNedsatt == false || sisteSykdomsvurdering.erSkadeSykdomEllerLyteVesentligdel == false) {
+            if (!sisteSykdomsvurdering.harSkadeSykdomEllerLyte || sisteSykdomsvurdering.erArbeidsevnenNedsatt == false || sisteSykdomsvurdering.erSkadeSykdomEllerLyteVesentligdel == false) {
                 return true
             } else
                 return false

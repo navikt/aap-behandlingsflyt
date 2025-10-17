@@ -2,22 +2,15 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.bistand.BistandFaktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.bistand.Bistandsvilkåret
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -32,10 +25,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
-import java.time.LocalDate
 
 class VurderBistandsbehovSteg private constructor(
     private val bistandRepository: BistandRepository,
@@ -184,89 +175,6 @@ class VurderBistandsbehovSteg private constructor(
                     }
                 }
             }
-    }
-
-    private fun erIkkeVurdertTidligereIBehandlingen(
-        avklaringsbehovene: Avklaringsbehovene
-    ): Boolean {
-        return !avklaringsbehovene.erVurdertTidligereIBehandlingen(Definisjon.AVKLAR_BISTANDSBEHOV)
-    }
-
-    private fun postcondition(vilkår: Vilkår) {
-        if (vilkår.harPerioderSomIkkeErVurdert(vilkår.vilkårsperioder().map { it.periode }.toSet())) {
-            throw IllegalStateException("Det finnes perioder som ikke er vurdert")
-        }
-    }
-
-    private fun erBehovForAvklarForPerioden(
-        periode: Periode,
-        studentGrunnlag: StudentGrunnlag?,
-        sykdomsvurderinger: List<Sykdomsvurdering>,
-        bistandsGrunnlag: BistandGrunnlag?,
-        vilkårsresultat: Vilkårsresultat,
-        avklaringsbehovene: Avklaringsbehovene,
-    ): Boolean {
-        val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
-        val erIkkeAvslagPåVilkårTidligere =
-            erIkkeAvslagPåVilkårTidligere(vilkårsresultat, sykdomsvurderinger, periode.fom)
-        if (!erIkkeAvslagPåVilkårTidligere || studentGrunnlag?.studentvurdering?.erOppfylt() == true) {
-            return false
-        }
-        return harBehovForAvklaring(
-            bistandsGrunnlag,
-            periode,
-            vilkår,
-            studentGrunnlag?.studentvurdering?.erOppfylt() == true
-        ) || erIkkeVurdertTidligereIBehandlingen(avklaringsbehovene)
-    }
-
-
-    private fun vurderVilkårForPeriode(
-        periode: Periode,
-        bistandsGrunnlag: BistandGrunnlag?,
-        studentGrunnlag: StudentGrunnlag?,
-        vilkårsresultat: Vilkårsresultat
-    ) {
-        val grunnlag = BistandFaktagrunnlag(
-            periode.fom,
-            periode.tom,
-            bistandsGrunnlag?.vurderinger.orEmpty(),
-            studentGrunnlag?.studentvurdering
-        )
-        Bistandsvilkåret(vilkårsresultat).vurder(grunnlag = grunnlag)
-    }
-
-    private fun harBehovForAvklaring(
-        bistandsGrunnlag: BistandGrunnlag?,
-        periodeTilVurdering: Periode,
-        vilkår: Vilkår,
-        erStudentStegOppfylt: Boolean
-    ): Boolean {
-        return !harVurdertPerioden(periodeTilVurdering, bistandsGrunnlag)
-                || harInnvilgetForStudentUtenÅVæreStudent(vilkår, erStudentStegOppfylt)
-    }
-
-    private fun harVurdertPerioden(
-        periode: Periode,
-        grunnlag: BistandGrunnlag?
-    ): Boolean {
-        return grunnlag?.harVurdertPeriode(periode) == true
-    }
-
-    private fun erIkkeAvslagPåVilkårTidligere(
-        vilkårsresultat: Vilkårsresultat,
-        sykdomsvurderinger: List<Sykdomsvurdering>,
-        kravDato: LocalDate,
-    ): Boolean {
-        return vilkårsresultat.finnVilkår(Vilkårtype.ALDERSVILKÅRET).harPerioderSomErOppfylt()
-                && vilkårsresultat.finnVilkår(Vilkårtype.LOVVALG).harPerioderSomErOppfylt()
-                && sykdomsvurderinger.any { it.erOppfylt(kravDato) }
-    }
-
-    private fun harInnvilgetForStudentUtenÅVæreStudent(vilkår: Vilkår, erStudentStegOppfylt: Boolean): Boolean {
-
-        return !erStudentStegOppfylt && vilkår.vilkårsperioder()
-            .any { it.innvilgelsesårsak == Innvilgelsesårsak.STUDENT }
     }
 
     companion object : FlytSteg {

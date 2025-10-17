@@ -21,6 +21,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -150,7 +151,68 @@ class BrevUtlederServiceTest {
     }
 
     @Test
-    fun `skal utlede brev for uføretrygd ved innvilgelse av revurdering etter hjemmel § 11-18 dersom det samme ikke gjelder forrige behandling`() {
+    fun `skal utlede brev etter rettighetstype § 11-17 ved innvilgelse av revurdering`() {
+        val førstegangsbehandling = behandling(typeBehandling = TypeBehandling.Førstegangsbehandling)
+        val revurdering = behandling(
+            typeBehandling = TypeBehandling.Revurdering,
+            forrigeBehandlingId = førstegangsbehandling.id,
+            vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_ARBEID)
+        )
+        every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
+        every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_18) } returns true
+        every { underveisRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns underveisGrunnlag(
+            underveisperiode(
+                periode = Periode(1 januar 2023, 31 desember 2023),
+                rettighetsType = RettighetsType.BISTANDSBEHOV,
+                utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.OPPFYLT,
+            )
+        )
+        every { behandlingRepository.hent(revurdering.id) } returns revurdering
+        every { avbrytRevurderingService.revurderingErAvbrutt(revurdering.id) } returns false
+        every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns underveisGrunnlag(
+            underveisperiode(
+                periode = Periode(1 januar 2023, 31 desember 2023),
+                rettighetsType = RettighetsType.ARBEIDSSØKER,
+                utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.OPPFYLT,
+            )
+        )
+
+        assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)).isEqualTo(Arbeidssøker)
+    }
+
+    @Test
+    fun `skal ikke utlede brev etter rettighetstype § 11-17 ved innvilgelse av revurdering dersom det samme gjelder forrige behandling`() {
+        val forrigeBehandling = behandling(typeBehandling = TypeBehandling.Revurdering)
+        val revurdering = behandling(
+            typeBehandling = TypeBehandling.Revurdering,
+            forrigeBehandlingId = forrigeBehandling.id,
+            vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_ARBEID)
+        )
+        every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
+        every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_18) } returns true
+        every { underveisRepository.hentHvisEksisterer(forrigeBehandling.id) } returns underveisGrunnlag(
+            underveisperiode(
+                periode = Periode(1 januar 2023, 31 desember 2023),
+                rettighetsType = RettighetsType.ARBEIDSSØKER,
+                utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.OPPFYLT,
+            )
+        )
+        every { behandlingRepository.hent(revurdering.id) } returns revurdering
+        every { avbrytRevurderingService.revurderingErAvbrutt(revurdering.id) } returns false
+        every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns underveisGrunnlag(
+            underveisperiode(
+                periode = Periode(1 januar 2023, 31 desember 2023),
+                rettighetsType = RettighetsType.ARBEIDSSØKER,
+                utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.OPPFYLT,
+            )
+        )
+
+        assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)).isEqualTo(VedtakEndring)
+    }
+
+
+    @Test
+    fun `skal utlede brev etter rettighetstype § 11-18 ved innvilgelse av revurdering`() {
         val førstegangsbehandling = behandling(typeBehandling = TypeBehandling.Førstegangsbehandling)
         val revurdering = behandling(
             typeBehandling = TypeBehandling.Revurdering,
@@ -184,38 +246,41 @@ class BrevUtlederServiceTest {
                 grunnlagInntekt(2022, 200_000),
             )
         )
-        every { beregningVurderingRepository.hentHvisEksisterer(revurdering.id) } returns BeregningGrunnlag(null, null)
+        every { beregningVurderingRepository.hentHvisEksisterer(revurdering.id) } returns BeregningGrunnlag(
+            BeregningstidspunktVurdering(
+                begrunnelse = "",
+                nedsattArbeidsevneDato = LocalDate.of(2023, 2, 20),
+                ytterligereNedsattBegrunnelse = null,
+                ytterligereNedsattArbeidsevneDato = null,
+                vurdertAv = ""
+            ), null
+        )
 
         assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)).isEqualTo(
             VurderesForUføretrygd(
-                listOf(
-                    InntektPerÅr(Year.of(2024), inntekt = BigDecimal("220000.00")),
-                    InntektPerÅr(Year.of(2023), inntekt = BigDecimal("210000.00")),
-                    InntektPerÅr(Year.of(2022), inntekt = BigDecimal("200000.00")),
+                GrunnlagBeregning(
+                    beregningstidspunkt = LocalDate.of(2023, 2, 20),
+                    inntekterPerÅr = listOf(
+                        InntektPerÅr(Year.of(2024), inntekt = BigDecimal("220000.00")),
+                        InntektPerÅr(Year.of(2023), inntekt = BigDecimal("210000.00")),
+                        InntektPerÅr(Year.of(2022), inntekt = BigDecimal("200000.00")),
+                    ),
+                    beregningsgrunnlag = null
                 )
+
             )
         )
     }
 
-    private fun grunnlagInntekt(år: Int, inntekt: Int): GrunnlagInntekt {
-        return GrunnlagInntekt(
-            år = Year.of(år),
-            inntektIKroner = Beløp(inntekt),
-            grunnbeløp = Beløp(0),
-            inntektIG = GUnit(0),
-            inntekt6GBegrenset = GUnit(0),
-            er6GBegrenset = false
-        )
-    }
-
     @Test
-    fun `skal ikke utlede brev for uføretrygd ved innvilgelse av revurdering etter hjemmel § 11-18 dersom det samme gjelder forrige behandling`() {
+    fun `skal ikke utlede brev etter rettighetstype § 11-18 ved innvilgelse av revurdering dersom det samme gjelder forrige behandling`() {
         val førstegangsbehandling = behandling(typeBehandling = TypeBehandling.Førstegangsbehandling)
         val revurdering = behandling(
             typeBehandling = TypeBehandling.Revurdering,
             forrigeBehandlingId = førstegangsbehandling.id,
             vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_UFORE)
         )
+        every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
         every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_18) } returns true
         every { underveisRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns underveisGrunnlag(
             underveisperiode(
@@ -236,6 +301,18 @@ class BrevUtlederServiceTest {
 
         assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)).isEqualTo(
             VedtakEndring
+        )
+    }
+
+
+    private fun grunnlagInntekt(år: Int, inntekt: Int): GrunnlagInntekt {
+        return GrunnlagInntekt(
+            år = Year.of(år),
+            inntektIKroner = Beløp(inntekt),
+            grunnbeløp = Beløp(0),
+            inntektIG = GUnit(0),
+            inntekt6GBegrenset = GUnit(0),
+            er6GBegrenset = false
         )
     }
 
