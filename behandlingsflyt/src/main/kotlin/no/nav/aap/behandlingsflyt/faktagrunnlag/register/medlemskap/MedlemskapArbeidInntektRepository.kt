@@ -23,6 +23,6 @@ interface MedlemskapArbeidInntektRepository : Repository {
     @Deprecated("Ikke periodisert - skal fases ut")
     fun lagreManuellVurdering(behandlingId: BehandlingId, manuellVurdering: ManuellVurderingForLovvalgMedlemskap?)
 
-    fun lagreVurderinger(behandlingId: BehandlingId, vurderinger: Set<ManuellVurderingForLovvalgMedlemskap>)
+    fun lagreVurderinger(behandlingId: BehandlingId, vurderinger: List<ManuellVurderingForLovvalgMedlemskap>)
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
 }

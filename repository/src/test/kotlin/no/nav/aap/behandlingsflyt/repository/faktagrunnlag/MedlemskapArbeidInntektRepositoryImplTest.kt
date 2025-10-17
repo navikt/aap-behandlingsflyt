@@ -3,9 +3,9 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.EnhetGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLand
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøknadsTidspunktDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedSøknadsTidspunktDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektInformasjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMaaned
@@ -272,8 +272,8 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
     }
 
     private fun manuellVurderingIkkePeriodisert(begrunnelse: String): ManuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskap(
-        LovvalgDto(begrunnelse, EØSLand.NOR),
-        MedlemskapDto(begrunnelse, true),
+        LovvalgVedSøknadsTidspunktDto(begrunnelse, EØSLand.NOR),
+        MedlemskapVedSøknadsTidspunktDto(begrunnelse, true),
         "SAKSBEHANDLER",
         LocalDateTime.now()
     )
@@ -282,8 +282,8 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
         ManuellVurderingForLovvalgMedlemskap(
             fom = fom,
             tom = tom,
-            lovvalgVedSøknadsTidspunkt = LovvalgDto("begrunnelse", EØSLand.NOR),
-            medlemskapVedSøknadsTidspunkt = MedlemskapDto("begrunnelse", true),
+            lovvalgVedSøknadsTidspunkt = LovvalgVedSøknadsTidspunktDto("begrunnelse", EØSLand.NOR),
+            medlemskapVedSøknadsTidspunkt = MedlemskapVedSøknadsTidspunktDto("begrunnelse", true),
             vurdertAv = "SAKSBEHANDLER",
             vurdertDato = LocalDateTime.now(),
             vurdertIBehandling = vurdertIBehandling

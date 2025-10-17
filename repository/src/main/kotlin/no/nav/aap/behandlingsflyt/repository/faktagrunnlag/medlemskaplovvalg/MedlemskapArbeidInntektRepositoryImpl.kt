@@ -5,9 +5,9 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalg.EnhetGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapArbeidInntektGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.HistoriskManuellVurderingForLovvalgMedlemskap
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøknadsTidspunktDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedSøknadsTidspunktDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMaaned
@@ -744,11 +744,11 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
 
     private fun mapManuellVurderingForLovvalgMedlemskap(row: Row): ManuellVurderingForLovvalgMedlemskap =
         ManuellVurderingForLovvalgMedlemskap(
-            lovvalgVedSøknadsTidspunkt = LovvalgDto(
+            lovvalgVedSøknadsTidspunkt = LovvalgVedSøknadsTidspunktDto(
                 begrunnelse = row.getString("tekstvurdering_lovvalg"),
                 lovvalgsEØSLand = row.getEnumOrNull("lovvalgs_land")
             ),
-            medlemskapVedSøknadsTidspunkt = MedlemskapDto(
+            medlemskapVedSøknadsTidspunkt = MedlemskapVedSøknadsTidspunktDto(
                 begrunnelse = row.getStringOrNull("tekstvurdering_medlemskap"),
                 varMedlemIFolketrygd = row.getBooleanOrNull("var_medlem_i_folketrygden")
             ),
