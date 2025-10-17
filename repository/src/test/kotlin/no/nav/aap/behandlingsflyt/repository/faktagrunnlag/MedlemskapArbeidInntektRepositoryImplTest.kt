@@ -140,7 +140,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
 
             medlemskapArbeidInntektRepository.lagreVurderinger(
                 behandling.id,
-                setOf(
+                listOf(
                     manuellVurdering(
                         fom = 1 mai 2025,
                         tom = 31 oktober 2025,
@@ -168,6 +168,18 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
 
             val sak = opprettSak(connection, periode)
             val behandling = finnEllerOpprettBehandling(connection, sak)
+            val vurderinger = listOf(
+                manuellVurdering(
+                    fom = 1 mai 2025,
+                    tom = 31 oktober 2025,
+                    vurdertIBehandling = behandling.id
+                ),
+                manuellVurdering(
+                    fom = 1 november 2025,
+                    tom = null,
+                    vurdertIBehandling = behandling.id
+                ),
+            )
 
             val medlId = medlemskapRepository.lagreUnntakMedlemskap(
                 behandlingId = behandling.id,
@@ -190,18 +202,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
 
             medlemskapArbeidInntektRepository.lagreVurderinger(
                 behandling.id,
-                setOf(
-                    manuellVurdering(
-                        fom = 1 mai 2025,
-                        tom = 31 oktober 2025,
-                        vurdertIBehandling = behandling.id
-                    ),
-                    manuellVurdering(
-                        fom = 1 november 2025,
-                        tom = null,
-                        vurdertIBehandling = behandling.id
-                    ),
-                )
+                vurderinger
             )
 
             behandling
@@ -225,28 +226,16 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
 
             medlemskapArbeidInntektRepository.kopier(behandling.id, revurdering.id)
 
-            medlemskapArbeidInntektRepository.lagreVurderinger(
-                revurdering.id,
-                setOf(
-                    manuellVurdering(
-                        fom = 1 desember  2025,
-                        tom = null,
-                        vurdertIBehandling = revurdering.id
-                    ),
+            val eksisterendeVurderinger = medlemskapArbeidInntektRepository.hentHvisEksisterer(revurdering.id)
+            val vurderinger = listOf(
+                manuellVurdering(
+                    fom = 15 desember  2025,
+                    tom = null,
+                    vurdertIBehandling = revurdering.id
                 )
-            )
+            ) + (eksisterendeVurderinger?.vurderinger ?: emptyList())
 
-            // Disse vurderingene skal skrive over de forrige siden de inngår i samme behandling
-            medlemskapArbeidInntektRepository.lagreVurderinger(
-                revurdering.id,
-                setOf(
-                    manuellVurdering(
-                        fom = 15 desember  2025,
-                        tom = null,
-                        vurdertIBehandling = revurdering.id
-                    ),
-                )
-            )
+            medlemskapArbeidInntektRepository.lagreVurderinger(revurdering.id, vurderinger)
 
             val medlemskapArbeidInntektGrunnlag = medlemskapArbeidInntektRepository.hentHvisEksisterer(revurdering.id)
 
