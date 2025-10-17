@@ -27,6 +27,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.FRITAK_MELDEPLIKT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.FASTSATT_PERIODE_PASSERT
@@ -95,6 +96,7 @@ class BrevUtlederService(
                 val resultat = resultatUtleder.utledRevurderingResultat(behandlingId)
                 val vurderingsbehov = behandling.vurderingsbehov().map { it.type }.toSet()
                 if (setOf(
+                        FRITAK_MELDEPLIKT,
                         MOTTATT_MELDEKORT,
                         FASTSATT_PERIODE_PASSERT,
                         EFFEKTUER_AKTIVITETSPLIKT,
