@@ -90,8 +90,8 @@ class IverksettVedtakSteg private constructor(
     }
 
     private fun opprettOppfølgingsoppgaveForNavkontorVedSosialRefusjon(kontekst: FlytKontekstMedPerioder) {
-        val navkontorSosialRefusjon = refusjonkravRepository.hentHvisEksisterer(kontekst.behandlingId)
-        if (navkontorSosialRefusjon != null) {
+        val navkontorSosialRefusjon = refusjonkravRepository.hentHvisEksisterer(kontekst.behandlingId) ?: emptyList()
+        if (navkontorSosialRefusjon.isNotEmpty()) {
             val forrigeIverksatteSosialRefusjonsVurderinger =
                 kontekst.forrigeBehandlingId?.let { refusjonkravRepository.hentHvisEksisterer(it) } ?: emptyList()
 
@@ -110,8 +110,7 @@ class IverksettVedtakSteg private constructor(
             log.info("Fant ${sosialRefusjonerSomManglerOppgave.size} refusjonskrav som mangler oppgave")
             val aktivIdent = sakRepository.hent(kontekst.sakId).person.aktivIdent()
 
-            // TODO - Hein: Trekk ut koden nedenfor til å være i en egen jobb
-            opprettOppgave(sosialRefusjonerSomManglerOppgave.toList(), aktivIdent, kontekst)
+            opprettGosysOppgaverForSosialrefusjon(sosialRefusjonerSomManglerOppgave, aktivIdent, kontekst)
         }
     }
 
@@ -134,15 +133,15 @@ class IverksettVedtakSteg private constructor(
         }
     }
 
-    private fun opprettOppgave(
-        navKontorList: List<NavKontorPeriodeDto>,
+    private fun opprettGosysOppgaverForSosialrefusjon(
+        navKontorerSomSkalHaOppgave: Set<NavKontorPeriodeDto>,
         aktivIdent: Ident,
         kontekst: FlytKontekstMedPerioder
     ) {
-        navKontorList.forEach { navKontor ->
-            log.info("Oppretter Gosysoppgave for $navKontor")
-            // Dersom det er oppgitt et enhetsnummer en oppgave skal opprettes til
+        navKontorerSomSkalHaOppgave.forEach { navKontor ->
+            // TODO: Opprett egen jobb-kjøring for å opprette gosysoppgave
             if (navKontor.enhetsNummer.isNotEmpty()) {
+                log.info("Oppretter Gosysoppgave for $navKontor")
                 gosysService.opprettOppgave(
                     aktivIdent,
                     kontekst.behandlingId.toString(),
