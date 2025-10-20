@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.oppholdskrav
 
+import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.februar
@@ -38,7 +39,7 @@ class OppholdskravGrunnlagTest {
                     vurdertIBehandling = BehandlingId(2L),
                     perioder = listOf(
                         OppholdskravPeriode(
-                            fom = 1 februar  2024,
+                            fom = 2 februar  2024,
                             tom = 1 mars 2024,
                             oppfylt = false,
                             land = "Behamas",
@@ -56,10 +57,21 @@ class OppholdskravGrunnlagTest {
             ),
         )
 
-        val tidslinje = grunnlag.tidslinje()
+        val rettighetsperiode = Periode(fom = 1 januar 2024, tom = 31 desember 2024)
+        val tidslinje = grunnlag.tidslinje().begrensetTil(rettighetsperiode)
 
         assertThat(tidslinje.perioder()).hasSize(3)
-        assertThat(tidslinje.segmenter()).anyMatch { it.fom().equals(1 februar  2024) && it.tom().equals(1 mars 2024) && !it.verdi.oppfylt }
+        assertTidslinje(tidslinje,
+            Periode(fom = rettighetsperiode.fom, tom = 1 februar 2024) to {
+                assertThat(it.oppfylt).isTrue
+            },
+            Periode(fom = 2 februar  2024, tom = 1 mars 2024) to {
+                assertThat(it.oppfylt).isFalse
+            },
+            Periode(fom = 2 mars 2024, tom = rettighetsperiode.tom) to {
+                assertThat(it.oppfylt).isTrue
+            },
+        )
     }
 
     @Test
