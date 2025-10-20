@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravTidslinjeData
-import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 
@@ -17,15 +16,11 @@ class OppholdskravRegel : UnderveisRegel {
 }
 
 fun OppholdskravGrunnlag.tilUnderveisTidslinje(rettighetsperiode: Periode): Tidslinje<OppholdskravUnderveisVurdering> =
-    Tidslinje(
         this.tidslinje()
-            .segmenter()
             .filter { !it.verdi.oppfylt }
-            .map { it.toVurderingSegment() }
-    ).begrensetTil(rettighetsperiode)
+            .map { OppholdskravUnderveisVurdering(it) }
+            .begrensetTil(rettighetsperiode)
 
-fun Segment<OppholdskravTidslinjeData>.toVurderingSegment() =
-    Segment(periode, OppholdskravUnderveisVurdering(verdi))
 
 class OppholdskravUnderveisVurdering(
     val vurdering: OppholdskravTidslinjeData,
