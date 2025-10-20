@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLand
 import no.nav.aap.behandlingsflyt.historiskevurderinger.HistoriskVurderingDto
 import no.nav.aap.behandlingsflyt.historiskevurderinger.ÅpenPeriodeDto
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -11,7 +12,12 @@ data class ManuellVurderingForLovvalgMedlemskap(
     val medlemskapVedSøknadsTidspunkt: MedlemskapVedSøknadsTidspunktDto?,
     val vurdertAv: String,
     val vurdertDato: LocalDateTime? = null,
-    val overstyrt: Boolean = false
+    val overstyrt: Boolean = false,
+
+    // Nye felter for å støtte periodisering - skal gjøres obligatoriske etter migrering
+    val fom: LocalDate? = null,
+    val tom: LocalDate? = null,
+    val vurdertIBehandling: BehandlingId? = null,
 )
 
 data class ManuellVurderingForLovvalgMedlemskapDto(

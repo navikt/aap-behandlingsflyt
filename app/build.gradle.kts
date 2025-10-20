@@ -100,14 +100,14 @@ dependencies {
     implementation(project(":behandlingsflyt"))
     implementation(project(":repository"))
     implementation("com.zaxxer:HikariCP:7.0.2")
-    implementation("org.flywaydb:flyway-database-postgresql:11.14.0")
+    implementation("org.flywaydb:flyway-database-postgresql:11.14.1")
 
     runtimeOnly("org.postgresql:postgresql") // låst versjon i root build.gradle.kts
 
     implementation("ch.qos.logback:logback-classic:1.5.19")
     implementation("io.opentelemetry.instrumentation:opentelemetry-logback-mdc-1.0:${opentelemetryVersion}")
     implementation("io.opentelemetry.instrumentation:opentelemetry-ktor-3.0:${opentelemetryVersion}")
-    implementation("org.apache.avro:avro:1.12.0")
+    implementation("org.apache.avro:avro:1.12.1")
     implementation("io.confluent:kafka-avro-serializer:7.6.0")
     testImplementation(project(":lib-test"))
     implementation(libs.dbtest)

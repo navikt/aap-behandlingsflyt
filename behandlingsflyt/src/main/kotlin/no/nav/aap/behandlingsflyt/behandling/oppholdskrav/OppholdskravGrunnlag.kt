@@ -49,12 +49,6 @@ data class OppholdskravVurdering(
                 }
         )
     }
-
-    fun validerGyldigForRettighetsperiode(rettighetsperiode: Periode): Validation<OppholdskravVurdering> {
-        return tilTidslinje()
-            .validerGyldigForRettighetsperiode(rettighetsperiode)
-            .map { this }
-    }
 }
 
 fun Tidslinje<OppholdakravTidslinjeData>.validerGyldigForRettighetsperiode(rettighetsperiode: Periode): Validation<Tidslinje<OppholdakravTidslinjeData>> {
