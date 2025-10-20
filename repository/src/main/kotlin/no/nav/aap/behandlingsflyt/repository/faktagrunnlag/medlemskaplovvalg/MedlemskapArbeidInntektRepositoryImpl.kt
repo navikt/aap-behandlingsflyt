@@ -123,7 +123,15 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
             deaktiverGrunnlag(behandlingId)
         }
 
-        val vurderingerId = lagreVurderinger(vurderinger)
+        var vurderingerId: Long? = null
+        var manuellVurderingId: Long? = null
+
+        if (vurderinger.isNotEmpty()) {
+            vurderingerId = lagreVurderinger(vurderinger)
+
+            // TODO midlertidig henting av manuell id for å sikre at dataene er konsistent ved migrering i neste steg
+            manuellVurderingId = if (vurderinger.size == 1) hentVurderinger(vurderingerId).first().id else null
+        }
 
         val grunnlagQuery = """
             INSERT INTO MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG 
@@ -137,7 +145,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 setLong(2, grunnlagOppslag?.arbeiderId)
                 setLong(3, grunnlagOppslag?.inntektINorgeId)
                 setLong(4, grunnlagOppslag?.medlId)
-                setLong(5, grunnlagOppslag?.manuellVurderingId)
+                setLong(5, manuellVurderingId ?: grunnlagOppslag?.manuellVurderingId)
                 setLong(6, vurderingerId)
             }
             setResultValidator { require(it == 1) }
@@ -405,6 +413,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
             }
             setRowMapper {
                 mapManuellVurderingForLovvalgMedlemskap(it).copy(
+                    id = it.getLongOrNull("id"),
                     fom = it.getLocalDateOrNull("fom"),
                     tom = it.getLocalDateOrNull("tom"),
                     vurdertIBehandling = it.getLongOrNull("vurdert_i_behandling")?.let { BehandlingId(it) }

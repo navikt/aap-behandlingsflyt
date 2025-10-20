@@ -272,6 +272,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
     }
 
     private fun manuellVurderingIkkePeriodisert(begrunnelse: String): ManuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskap(
+        id = 1,
         LovvalgVedSøknadsTidspunktDto(begrunnelse, EØSLand.NOR),
         MedlemskapVedSøknadsTidspunktDto(begrunnelse, true),
         "SAKSBEHANDLER",
