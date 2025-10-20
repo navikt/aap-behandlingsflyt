@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import java.time.LocalDate
 
 data class AlderDTO (
-    val fødselsdato: LocalDate,
+    val fødselsdato: LocalDate? = null,
     val vilkårsperioder: List<Vilkårsperiode>,
     val vurdertDato: LocalDate? = null
 )

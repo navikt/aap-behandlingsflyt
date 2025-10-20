@@ -135,7 +135,7 @@ internal object AppConfig {
     val callGroupSize = ktorParallellitet
 
     const val ANTALL_WORKERS_FOR_MOTOR = 4
-    val hikariMaxPoolSize = 10 + 2 * ANTALL_WORKERS_FOR_MOTOR
+    val hikariMaxPoolSize = ktorParallellitet + 2 * ANTALL_WORKERS_FOR_MOTOR
 }
 
 fun main() {

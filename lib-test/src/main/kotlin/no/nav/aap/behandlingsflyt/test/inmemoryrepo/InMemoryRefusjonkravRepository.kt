@@ -10,10 +10,6 @@ object InMemoryRefusjonKravRepository : RefusjonkravRepository {
         return null
     }
 
-    override fun hentAlleVurderingerPåSak(sakId: SakId): List<RefusjonkravVurdering> {
-        return emptyList()
-    }
-
     override fun hentHistoriskeVurderinger(
         sakId: SakId,
         behandlingId: BehandlingId
