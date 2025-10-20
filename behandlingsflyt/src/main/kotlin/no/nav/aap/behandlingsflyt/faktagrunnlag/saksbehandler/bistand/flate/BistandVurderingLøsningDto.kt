@@ -1,8 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandVurdering
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import java.time.LocalDate
@@ -28,22 +26,11 @@ data class BistandVurderingLøsningDto(
         vurdertAv = bruker.ident
     )
 
-    fun valider(unleashGateway: UnleashGateway) {
+    fun valider() {
         val gyldigAnnenOppfølging =
             (erBehovForAktivBehandling || erBehovForArbeidsrettetTiltak) xor (erBehovForAnnenOppfølging != null)
         if (!gyldigAnnenOppfølging) throw UgyldigForespørselException(
             "erBehovForAnnenOppfølging kan bare bli besvart hvis erBehovForAktivBehandling og erBehovForArbeidsrettetTiltak er besvart med nei"
         )
-
-        if (unleashGateway.isDisabled(BehandlingsflytFeature.OvergangUfore)) {
-            val harOppfølgingsbehov =
-                (erBehovForAktivBehandling || erBehovForArbeidsrettetTiltak || erBehovForAnnenOppfølging == true)
-            val erGydlig = (harOppfølgingsbehov) xor (skalVurdereAapIOvergangTilUføre != null)
-            if (!erGydlig) {
-                throw UgyldigForespørselException(
-                    "skalVurdereAapIOvergangTilUføre skal besvares hvis og bare hvis oppfølgingsbehov er vurdert til nei"
-                )
-            }
-        }
     }
 }

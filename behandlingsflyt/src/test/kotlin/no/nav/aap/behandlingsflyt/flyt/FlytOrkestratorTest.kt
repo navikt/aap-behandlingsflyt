@@ -1312,13 +1312,9 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     ),
                 ),
             )
+            .løsOvergangUføre()
             .apply {
-                if (gatewayProvider.provide<UnleashGateway>().isEnabled(BehandlingsflytFeature.OvergangUfore)) {
-                    løsOvergangUføre()
-                }
-            }
-            .apply {
-                if (gatewayProvider.provide<UnleashGateway>().isEnabled(BehandlingsflytFeature.OvergangUfore)) {
+                if (gatewayProvider.provide<UnleashGateway>().isEnabled(BehandlingsflytFeature.OvergangArbeid)) {
                     løsOvergangArbeid(Utfall.IKKE_OPPFYLT)
                 }
             }
@@ -1368,9 +1364,6 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
 
     @Test
     fun `avslag på 11-6 er også inngang til 11-13 og 11-18`() {
-        if (gatewayProvider.provide<UnleashGateway>().isDisabled(BehandlingsflytFeature.OvergangUfore)) {
-            return
-        }
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
         // Sender inn en søknad
@@ -1492,9 +1485,6 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
 
     @Test
     fun `11-18 uføre underveis i en behandling`() {
-        if (gatewayProvider.provide<UnleashGateway>().isDisabled(BehandlingsflytFeature.OvergangUfore)) {
-            return
-        }
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
         val virkningsdatoOvergangUføre = periode.fom.plusDays(20)
 
