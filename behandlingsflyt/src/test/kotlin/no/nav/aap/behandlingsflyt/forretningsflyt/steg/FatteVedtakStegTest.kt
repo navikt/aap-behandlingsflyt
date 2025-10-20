@@ -80,12 +80,9 @@ class FatteVedtakStegTest {
 
         val steg = FatteVedtakSteg(
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-            sakRepository = InMemorySakRepository,
-            refusjonkravRepository = InMemoryRefusjonKravRepository,
             tidligereVurderinger = tidligereVurderinger,
             klageresultatUtleder = klageresultatUtleder,
             trekkKlageService = trekkKlageService,
-            gosysService = gosysService
         )
 
         val resultat = steg.utfør(kontekst)
@@ -127,12 +124,9 @@ class FatteVedtakStegTest {
 
         val steg = FatteVedtakSteg(
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-            sakRepository = InMemorySakRepository,
-            refusjonkravRepository = InMemoryRefusjonKravRepository,
             tidligereVurderinger = tidligereVurderinger,
             klageresultatUtleder = klageresultatUtleder,
             trekkKlageService = trekkKlageService,
-            gosysService = gosysService
         )
 
         val resultat = steg.utfør(kontekst)
@@ -173,12 +167,9 @@ class FatteVedtakStegTest {
 
         val steg = FatteVedtakSteg(
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-            sakRepository = InMemorySakRepository,
-            refusjonkravRepository = InMemoryRefusjonKravRepository,
             tidligereVurderinger = tidligereVurderinger,
             klageresultatUtleder = klageresultatUtleder,
             trekkKlageService = trekkKlageService,
-            gosysService = gosysService
         )
 
         val resultat = steg.utfør(kontekst)
