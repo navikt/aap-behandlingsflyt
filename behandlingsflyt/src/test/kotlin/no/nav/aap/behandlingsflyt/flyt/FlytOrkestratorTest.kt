@@ -1317,7 +1317,11 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     løsOvergangUføre()
                 }
             }
-            .løsOvergangArbeid(Utfall.IKKE_OPPFYLT)
+            .apply {
+                if (gatewayProvider.provide<UnleashGateway>().isEnabled(BehandlingsflytFeature.OvergangUfore)) {
+                    løsOvergangArbeid(Utfall.IKKE_OPPFYLT)
+                }
+            }
             .løsSykdomsvurderingBrev()
             .løsAvklaringsBehov(
                 AvklarSykepengerErstatningLøsning(
