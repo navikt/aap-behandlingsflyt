@@ -12,23 +12,11 @@ updates:
       directory: /
       schedule:
           interval: daily
-    - package-ecosystem: gradle
-      directory: /
-      schedule:
-          interval: daily
-      allow:
-        - dependency-name: "no.nav.aap.*"
-      groups:
-        aap:
-          patterns:
-            - "no.nav.aap*"
 
     - package-ecosystem: gradle
       directory: /
       schedule:
-          interval: weekly
-      ignore:
-        - dependency-name: "no.nav.aap.*"
+          interval: daily
       cooldown:
         default-days: 3
         exclude:
