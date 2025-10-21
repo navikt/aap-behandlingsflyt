@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetSted
+import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.underveis.Kvoter
 import no.nav.aap.behandlingsflyt.behandling.underveis.tomKvoter
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Grunnlag
@@ -39,6 +40,7 @@ fun tomUnderveisInput(
     kvoter: Kvoter = tomKvoter,
     aktivitetsplikt11_7Grunnlag: Aktivitetsplikt11_7Grunnlag = Aktivitetsplikt11_7Grunnlag(emptyList()),
     etAnnetSted: List<EtAnnetSted> = emptyList(),
+    oppholdskravGrunnlag: OppholdskravGrunnlag = OppholdskravGrunnlag(emptyList()),
     arbeidsevneGrunnlag: ArbeidsevneGrunnlag = ArbeidsevneGrunnlag(emptyList()),
     meldepliktGrunnlag: MeldepliktGrunnlag = MeldepliktGrunnlag(emptyList()),
     overstyringMeldepliktGrunnlag: OverstyringMeldepliktGrunnlag = OverstyringMeldepliktGrunnlag(emptyList()),
@@ -59,6 +61,7 @@ fun tomUnderveisInput(
         overstyringMeldepliktGrunnlag = overstyringMeldepliktGrunnlag,
         meldeperioder = meldeperioder,
         vedtaksdatoFørstegangsbehandling = vedtaksdatoFørstegangsbehandling,
+        oppholdskravGrunnlag = oppholdskravGrunnlag,
     )
 }
 
