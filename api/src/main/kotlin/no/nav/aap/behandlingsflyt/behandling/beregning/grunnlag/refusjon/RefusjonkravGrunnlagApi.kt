@@ -5,26 +5,18 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.navenheter.NavKontorService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.andreYtelser.AndreYtelserRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.andreYtelserOppgittISøknad.AndreYtelserOppgittISøknadRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SøknadSteg
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AndreUtbetalinger
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SøkPåSakService
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
@@ -60,7 +52,7 @@ fun NormalOpenAPIRoute.refusjonGrunnlagApi(
                                 it.tilResponse(ansattInfoService)
                             }
 
-                        val andreYtelserRepository = repositoryProvider.provide<AndreYtelserRepository>()
+                        val andreYtelserRepository = repositoryProvider.provide<AndreYtelserOppgittISøknadRepository>()
                         val andreUtbetalinger = andreYtelserRepository.hentHvisEksisterer(behandling.id)
 
                         val gjeldendeVurdering =

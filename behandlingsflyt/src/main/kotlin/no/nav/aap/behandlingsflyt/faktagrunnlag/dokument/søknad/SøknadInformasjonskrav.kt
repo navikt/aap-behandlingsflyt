@@ -11,11 +11,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.IngenRegisterData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.andreYtelser.AndreYtelserRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.andreYtelserOppgittISøknad.AndreYtelserOppgittISøknadRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.OppgittStudent
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AndreUtbetalinger
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -26,7 +25,7 @@ class SøknadInformasjonskrav private constructor(
     private val studentRepository: StudentRepository,
     private val barnRepository: BarnRepository,
     private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
-    private val andreYtelserRepository: AndreYtelserRepository
+    private val andreYtelserRepository: AndreYtelserOppgittISøknadRepository
 ) : Informasjonskrav<IngenInput, IngenRegisterData> {
 
     companion object : Informasjonskravkonstruktør {
@@ -42,7 +41,7 @@ class SøknadInformasjonskrav private constructor(
                 repositoryProvider.provide<StudentRepository>(),
                 repositoryProvider.provide(),
                 medlemskapArbeidInntektRepository,
-                repositoryProvider.provide<AndreYtelserRepository>()
+                repositoryProvider.provide<AndreYtelserOppgittISøknadRepository>()
             )
         }
     }

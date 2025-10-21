@@ -49,7 +49,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.medlemsskap.
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.opphold.OppholdskravGrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.uføre.UføreRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.yrkesskade.YrkesskadeRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.andreYtelser.AndreYtelserRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.andreYtelserOppgittISøknad.AndreYtelserOppgittISøknadRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsgiver.SamordningArbeidsgiverRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.avbrytrevurdering.AvbrytRevurderingRepositoryImpl
@@ -98,7 +98,7 @@ val postgresRepositoryRegistry = RepositoryRegistry()
     .register<BeregningVurderingRepositoryImpl>()
     .register<SykdomRepositoryImpl>()
     .register<YrkesskadeRepositoryImpl>()
-    .register<AndreYtelserRepositoryImpl>()
+    .register<AndreYtelserOppgittISøknadRepositoryImpl>()
     .register<UføreRepositoryImpl>()
     .register<MedlemskapArbeidInntektRepositoryImpl>()
     .register<SykepengerErstatningRepositoryImpl>()
