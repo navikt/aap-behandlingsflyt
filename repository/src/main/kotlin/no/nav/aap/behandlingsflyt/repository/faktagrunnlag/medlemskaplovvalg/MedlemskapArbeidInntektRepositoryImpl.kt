@@ -129,7 +129,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         if (vurderinger.isNotEmpty()) {
             vurderingerId = lagreVurderinger(vurderinger)
 
-            // TODO midlertidig henting av manuell id for å sikre at dataene er konsistent ved migrering i neste steg
+            // TODO henter ut manuell id for lagring i grunnlag inntil vi har kjørt migrering - gir kun mening hvis det er én vurdering
             manuellVurderingId = if (vurderinger.size == 1) hentVurderinger(vurderingerId).first().id else null
         }
 
