@@ -13,7 +13,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.UtbetaltePerioder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.BarnInnhentingRespons
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonsopphold
@@ -183,7 +182,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
             assertThat(sisteYtelsesbehandling.vurderingsbehov().toSet())
                 .isEqualTo(
                     setOf(
-                        VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING),
+                        VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER),
                         VurderingsbehovMedPeriode(Vurderingsbehov.INSTITUSJONSOPPHOLD),
                     )
                 )

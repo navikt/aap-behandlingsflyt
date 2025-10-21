@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
@@ -54,7 +55,9 @@ class SamordningUføreSteg(
             }
 
             VurderingType.REVURDERING -> {
-                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                if (erManueltTriggetRevurdering(kontekst, avklaringsbehovene)) {
+                    return FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_UFØRE)
+                } else if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
                     avklaringsbehovene.avbrytForSteg(type())
                     return Fullført
                 }
@@ -90,6 +93,14 @@ class SamordningUføreSteg(
         return uføreGrunnlag?.vurderinger?.all { uføre ->
             vurderinger?.any { vurdering -> vurdering.virkningstidspunkt == uføre.virkningstidspunkt } ?: false
         } ?: true
+    }
+
+    private fun erManueltTriggetRevurdering(
+        kontekst: FlytKontekstMedPerioder,
+        avklaringsbehovene: Avklaringsbehovene
+    ): Boolean {
+        return erIkkeVurdertTidligereIBehandlingen(avklaringsbehovene) &&
+                kontekst.erRevurderingMedVurderingsbehov(Vurderingsbehov.REVURDER_SAMORDNING_UFØRE)
     }
 
     private fun erIkkeVurdertTidligereIBehandlingen(
