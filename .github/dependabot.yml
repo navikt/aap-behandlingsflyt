@@ -16,6 +16,15 @@ updates:
       directory: /
       schedule:
           interval: daily
+      groups:
+        minor:
+          applies-to: version-updates
+          exclude-patterns:
+            - "no.nav.aap*"
+          update-types:
+            - "minor"
+            - "patch"
+
       registries:
           - maven-github
     - package-ecosystem: docker
