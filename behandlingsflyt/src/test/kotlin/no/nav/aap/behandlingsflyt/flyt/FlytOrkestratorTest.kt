@@ -1239,10 +1239,6 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     })
             }
 
-        if (gatewayProvider.provide<UnleashGateway>().isDisabled(BehandlingsflytFeature.SykepengerPeriodisert)) {
-            return
-        }
-
         // Verifisere at det går an å kun 1 mnd med sykepengeerstatning
         val revurdering = sak.opprettManuellRevurdering(
             listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
