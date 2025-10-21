@@ -411,14 +411,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
             setParams {
                 setLong(1, vurderingerId)
             }
-            setRowMapper {
-                mapManuellVurderingForLovvalgMedlemskap(it).copy(
-                    id = it.getLongOrNull("id"),
-                    fom = it.getLocalDateOrNull("fom"),
-                    tom = it.getLocalDateOrNull("tom"),
-                    vurdertIBehandling = it.getLongOrNull("vurdert_i_behandling")?.let { BehandlingId(it) }
-                )
-            }
+            setRowMapper(::mapManuellVurderingForLovvalgMedlemskap)
         }
     }
 
@@ -763,7 +756,11 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
             ),
             overstyrt = row.getBoolean("overstyrt"),
             vurdertAv = row.getString("vurdert_av"),
-            vurdertDato = row.getLocalDateTime("opprettet_tid")
+            vurdertDato = row.getLocalDateTime("opprettet_tid"),
+            id = row.getLongOrNull("id"),
+            fom = row.getLocalDateOrNull("fom"),
+            tom = row.getLocalDateOrNull("tom"),
+            vurdertIBehandling = row.getLongOrNull("vurdert_i_behandling")?.let { BehandlingId(it) }
         )
 
     internal data class GrunnlagOppslag(
