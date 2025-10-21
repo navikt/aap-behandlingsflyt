@@ -10,7 +10,7 @@ object InMemoryPersonopplysningRepository : PersonopplysningRepository {
     private val personopplysninger = ConcurrentHashMap<BehandlingId, Personopplysning>()
     private val lock = Object()
 
-    override fun hentHvisEksisterer(behandlingId: BehandlingId): PersonopplysningGrunnlag? {
+    fun hentHvisEksisterer(behandlingId: BehandlingId): PersonopplysningGrunnlag? {
         synchronized(lock) {
             val personopplysning = personopplysninger[behandlingId]
 
