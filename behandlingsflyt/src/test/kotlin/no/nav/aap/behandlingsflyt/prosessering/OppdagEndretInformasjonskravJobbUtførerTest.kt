@@ -178,11 +178,12 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
                 .finnSisteYtelsesbehandlingFor(førstegangsbehandlingen.sakId)!!
             assertThat(sisteYtelsesbehandling.id)
                 .isNotEqualTo(førstegangsbehandlingen.id)
-            assertThat(sisteYtelsesbehandling.vurderingsbehov()).hasSize(2)
+            assertThat(sisteYtelsesbehandling.vurderingsbehov()).hasSize(3)
             assertThat(sisteYtelsesbehandling.vurderingsbehov().toSet())
                 .isEqualTo(
                     setOf(
                         VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER),
+                        VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING_UFØRE),
                         VurderingsbehovMedPeriode(Vurderingsbehov.INSTITUSJONSOPPHOLD),
                     )
                 )
