@@ -176,7 +176,7 @@ fun hentBarn(ident: BarnIdentifikator, barnGrunnlag: BarnGrunnlag?): Identifiser
                 ident = null,
                 fodselsDato = ident.fødselsdato.toLocalDate(),
                 navn = ident.navn,
-                forsorgerPeriode = Barn.periodeMedRettTil(ident.fødselsdato),
+                forsorgerPeriode = Barn.periodeMedRettTil(ident.fødselsdato, null),
                 oppgittForeldreRelasjon = oppgittBarn?.relasjon
             )
         }
