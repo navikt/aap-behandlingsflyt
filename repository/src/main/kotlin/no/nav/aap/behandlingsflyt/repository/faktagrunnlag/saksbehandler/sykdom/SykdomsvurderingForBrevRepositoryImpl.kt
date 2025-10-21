@@ -43,7 +43,7 @@ class SykdomsvurderingForBrevRepositoryImpl(private val connection: DBConnection
                 setLong(1, behandlingId.toLong())
             }
             setResultValidator { rowsUpdated ->
-                require(rowsUpdated == 1) { "Nøyaktig en rad skal oppdateres, men oppdaterte $rowsUpdated. BehandlingId: $behandlingId."}
+                require(rowsUpdated <= 1) { "Mindre enn én rad skal oppdateres, men oppdaterte $rowsUpdated. BehandlingId: $behandlingId."}
             }
         }
     }
