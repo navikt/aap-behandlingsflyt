@@ -1,13 +1,14 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.barnetillegg.BarnetilleggService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
-import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
@@ -23,53 +24,63 @@ import org.slf4j.LoggerFactory
 class BarnetilleggSteg(
     private val barnetilleggService: BarnetilleggService,
     private val barnetilleggRepository: BarnetilleggRepository,
+    private val barnRepository: BarnRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val tidligereVurderinger: TidligereVurderinger,
+    private val avklaringsbehovService: AvklaringsbehovService
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         barnetilleggService = BarnetilleggService(repositoryProvider, gatewayProvider),
         barnetilleggRepository = repositoryProvider.provide(),
+        barnRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    override fun utfør(kontekst: FlytKontekstMedPerioder) = when (kontekst.vurderingType) {
-        VurderingType.FØRSTEGANGSBEHANDLING -> {
-            if (tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())) {
-                log.info("Gir avslag eller ingen behandlingsgrunnlag, avbryter steg. BehandlingId: ${kontekst.behandlingId}.")
-                avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-                    .avbrytForSteg(type())
-                Fullført
-            } else {
-                vurder(kontekst)
-            }
-        }
+    override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
-        VurderingType.REVURDERING -> {
-            if (Vurderingsbehov.DØDSFALL_BARN in kontekst.vurderingsbehovRelevanteForSteg) {
-                FantAvklaringsbehov(Definisjon.AVKLAR_BARNETILLEGG)
-            } else if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
-                log.info("Revurdering gir ingen behandlingsgrunnlag, avbryter steg. BehandlingId: ${kontekst.behandlingId}.")
-                avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-                    .avbrytForSteg(type())
-                Fullført
-            } else {
-                vurder(kontekst)
-            }
-        }
+        avklaringsbehovService.oppdaterAvklaringsbehov(
+            avklaringsbehovene = avklaringsbehovene,
+            definisjon = Definisjon.AVKLAR_BARNETILLEGG,
+            vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst) },
+            erTilstrekkeligVurdert = { !harPerioderMedBarnTilAvklaring(kontekst) },
+            tilbakestillGrunnlag = {
+                val vedtatteBarnetillegg = kontekst.forrigeBehandlingId
+                    ?.let { barnetilleggRepository.hentHvisEksisterer(it) }
+                    ?.perioder
+                    ?: emptyList()
+                barnetilleggRepository.lagre(kontekst.behandlingId, vedtatteBarnetillegg)
+            },
+            kontekst
+        )
+        return Fullført
+    }
 
-        VurderingType.MELDEKORT,
-        VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
-        VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
-        VurderingType.IKKE_RELEVANT -> {
-            /* do nothing */
-            Fullført
+    fun vedtakBehøverVurdering(kontekst: FlytKontekstMedPerioder): Boolean {
+        return when (kontekst.vurderingType) {
+            VurderingType.FØRSTEGANGSBEHANDLING ->
+                tidligereVurderinger.muligMedRettTilAAP(kontekst, type())
+                        && kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty()
+                        && barnRepository.hentHvisEksisterer(kontekst.behandlingId)?.oppgitteBarn != null
+
+            VurderingType.REVURDERING ->
+                !tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())
+                        || (Vurderingsbehov.DØDSFALL_BARN in kontekst.vurderingsbehovRelevanteForSteg)
+                        && kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty()
+
+            VurderingType.MELDEKORT,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
+            VurderingType.IKKE_RELEVANT ->
+                false
         }
     }
 
-    private fun vurder(kontekst: FlytKontekstMedPerioder): StegResultat {
+    private fun harPerioderMedBarnTilAvklaring(kontekst: FlytKontekstMedPerioder): Boolean {
         val barnetillegg = barnetilleggService.beregn(kontekst.behandlingId)
 
         barnetilleggRepository.lagre(
@@ -83,13 +94,13 @@ class BarnetilleggSteg(
                 }
         )
 
-        if (barnetillegg.segmenter().any { it.verdi.harBarnTilAvklaring() }) {
+        val finnesBarnTilAvklaring = barnetillegg.segmenter().any { it.verdi.harBarnTilAvklaring() }
+        if (finnesBarnTilAvklaring) {
             val perioderTilAvklaring = barnetillegg.segmenter().filter { it.verdi.harBarnTilAvklaring() }
             log.info("Det finnes perioder med barn som ikke har blitt avklart. Antall: ${perioderTilAvklaring.size}")
-            return FantAvklaringsbehov(Definisjon.AVKLAR_BARNETILLEGG)
         }
 
-        return Fullført
+        return finnesBarnTilAvklaring
     }
 
     companion object : FlytSteg {
