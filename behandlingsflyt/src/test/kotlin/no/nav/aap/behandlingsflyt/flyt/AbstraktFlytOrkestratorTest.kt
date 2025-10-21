@@ -857,7 +857,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
     }
 
 
-    @Deprecated("Bruk opprettSak for førstegangsbehandling eller Sak.sendInnSøknad hvis saken allerede eksisterer")
+    @Deprecated("Bruk sendInnFørsteSøknad for førstegangsbehandling eller Sak.sendInnSøknad hvis saken allerede eksisterer")
     protected fun sendInnSøknad(
         ident: Ident,
         periode: Periode,
