@@ -135,7 +135,7 @@ class TjenestePensjonInformasjonskrav(
         val gikkFraNullTilTomtGrunnlag = tjenestePensjon.isEmpty() && eksisterendeData == null
 
         return if (!gikkFraNullTilTomtGrunnlag && harEndringerITjenestePensjon(eksisterendeData, tjenestePensjon)) {
-            listOf(VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING))
+            listOf(VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING_TJENESTEPENSJON))
         } else {
             emptyList()
         }

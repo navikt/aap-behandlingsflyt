@@ -97,7 +97,7 @@ class UføreInformasjonskrav(
         val gikkFraNullTilTomtGrunnlag = uføregrader.isEmpty() && eksisterendeGrunnlag == null
 
         return if (harEndringerUføre(eksisterendeGrunnlag, uføregrader) && !gikkFraNullTilTomtGrunnlag) {
-            listOf(VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING))
+            listOf(VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING_UFØRE))
         } else {
             emptyList()
         }

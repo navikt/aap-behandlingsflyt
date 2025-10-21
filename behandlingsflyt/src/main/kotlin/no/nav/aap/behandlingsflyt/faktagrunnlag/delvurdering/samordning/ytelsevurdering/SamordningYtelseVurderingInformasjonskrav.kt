@@ -177,7 +177,7 @@ class SamordningYtelseVurderingInformasjonskrav(
         val gikkFraNullTilTomtGrunnlag = samordningYtelser.isEmpty() && eksisterendeData == null
 
         return if (!gikkFraNullTilTomtGrunnlag && harEndringerIYtelser(eksisterendeData, samordningYtelser)) listOf(
-            VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING)
+            VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER)
         )
         else emptyList()
     }
