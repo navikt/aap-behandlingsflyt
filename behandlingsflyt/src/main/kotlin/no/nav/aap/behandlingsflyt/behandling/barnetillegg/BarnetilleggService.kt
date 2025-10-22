@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.IBarn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -87,7 +88,12 @@ class BarnetilleggService(
                 Tidslinje(
                     listOf(
                         Segment(
-                            Barn.periodeMedRettTil(barnet.fødselsdato()),
+                            Barn.periodeMedRettTil(
+                                barnet.fødselsdato(), when (barnet) {
+                                    is Barn -> barnet.dødsdato
+                                    is OppgitteBarn.OppgittBarn -> null
+                                }
+                            ),
                             barnet.identifikator()
                         )
                     )

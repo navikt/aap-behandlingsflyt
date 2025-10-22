@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.barn
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
@@ -73,7 +74,7 @@ internal class BarnRepositoryImplTest {
             BarnIdentifikator.BarnIdent("12345678910"), BarnIdentifikator.BarnIdent("12345"),
         ).map {
             Barn(
-                it, Fødselsdato(LocalDate.now().minusYears(10))
+                it, Fødselsdato(LocalDate.now().minusYears(10)), Dødsdato(LocalDate.now().minusYears(5))
             )
         } + listOf(
             Barn(
