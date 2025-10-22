@@ -1,10 +1,7 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="TestApp" type="KtorApplicationConfigurationType" factoryName="Ktor">
+  <configuration default="false" name="TestApp (med testcontainers)" type="KtorApplicationConfigurationType" factoryName="Ktor">
     <envs>
       <env name="NAIS_CLUSTER_NAME" value="LOCAL" />
-      <env name="NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_JDBC_URL" value="jdbc:postgresql://localhost:5438/postgres" />
-      <env name="NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_USERNAME" value="postgres" />
-      <env name="NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_PASSWORD" value="" />
     </envs>
     <option name="MAIN_CLASS_NAME" value="no.nav.aap.behandlingsflyt.TestAppKt" />
     <module name="aap-behandlingsflyt.app.test" />
@@ -13,6 +10,16 @@
         <option name="PATTERN" value="no.nav.aap.behandlingsflyt.*" />
         <option name="ENABLED" value="true" />
       </pattern>
+    </extension>
+    <extension name="net.ashald.envfile">
+      <option name="IS_ENABLED" value="false" />
+      <option name="IS_SUBST" value="false" />
+      <option name="IS_PATH_MACRO_SUPPORTED" value="false" />
+      <option name="IS_IGNORE_MISSING_FILES" value="false" />
+      <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false" />
+      <ENTRIES>
+        <ENTRY IS_ENABLED="true" PARSER="runconfig" IS_EXECUTABLE="false" />
+      </ENTRIES>
     </extension>
     <option name="alternativeJrePath" />
     <option name="alternativeJrePathEnabled" value="false" />
