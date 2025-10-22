@@ -2,7 +2,9 @@ package no.nav.aap.behandlingsflyt.flyt.steg
 
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 
+@Deprecated("Styr avklaringsbehov med AvklaringsbehovService")
 class FantAvklaringsbehov(private val avklaringsbehov: List<Definisjon>) : StegResultat {
+    @Deprecated("Styr avklaringsbehov med AvklaringsbehovService")
     constructor(definisjon: Definisjon) : this(listOf(definisjon))
 
     init {
