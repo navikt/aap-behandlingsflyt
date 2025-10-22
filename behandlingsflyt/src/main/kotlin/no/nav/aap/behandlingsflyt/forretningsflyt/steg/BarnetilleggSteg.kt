@@ -65,7 +65,6 @@ class BarnetilleggSteg(
             VurderingType.FØRSTEGANGSBEHANDLING ->
                 tidligereVurderinger.muligMedRettTilAAP(kontekst, type())
                         && kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty()
-                        && barnRepository.hentHvisEksisterer(kontekst.behandlingId)?.oppgitteBarn != null
 
             VurderingType.REVURDERING ->
                 !tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())

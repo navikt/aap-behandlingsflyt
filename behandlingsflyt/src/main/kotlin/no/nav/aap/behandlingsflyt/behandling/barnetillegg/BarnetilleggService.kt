@@ -33,6 +33,7 @@ class BarnetilleggService(
         val folkeregisterBarn =
             barnGrunnlag.registerbarn?.barn.orEmpty()
         val folkeregisterBarnTidslinje = tilTidslinje(folkeregisterBarn)
+        val vurderteBarn = barnGrunnlag.vurderteBarn?.barn.orEmpty()
 
         resultat =
             resultat.kombiner(folkeregisterBarnTidslinje, JoinStyle.LEFT_JOIN { periode, venstreSegment, høyreSegment ->
@@ -43,7 +44,6 @@ class BarnetilleggService(
                 Segment(periode, venstreVerdi)
             })
 
-        val vurderteBarn = barnGrunnlag.vurderteBarn?.barn.orEmpty()
         val vurderteBarnIdenter = vurderteBarn.map { it.ident }
         val oppgittBarnSomIkkeErVurdert =
             barnGrunnlag.oppgitteBarn?.oppgitteBarn

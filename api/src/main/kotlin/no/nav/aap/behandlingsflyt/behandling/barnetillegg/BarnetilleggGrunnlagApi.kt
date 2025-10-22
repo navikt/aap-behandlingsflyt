@@ -69,6 +69,47 @@ fun NormalOpenAPIRoute.barnetilleggApi(
                     val ansattNavnOgEnhet =
                         vurderteBarn?.let { ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv) }
 
+                    val vurderteBarnDto = vurderteBarn?.barn.orEmpty().map {
+                        val barn = hentBarn(it.ident, barnGrunnlag)
+                        when (val vurdertBartIdent = it.ident) {
+                            is BarnIdentifikator.BarnIdent -> ExtendedVurdertBarnDto(
+                                ident = vurdertBartIdent.ident.identifikator, null,
+                                vurderinger = it.vurderinger.map {
+                                    VurderingAvForeldreAnsvarDto(
+                                        fraDato = it.fraDato,
+                                        harForeldreAnsvar = it.harForeldreAnsvar,
+                                        begrunnelse = it.begrunnelse,
+                                        erFosterForelder = it.erFosterForelder,
+                                    )
+                                },
+                                fødselsdato = barn.fodselsDato,
+                                oppgittForeldreRelasjon = barn.oppgittForeldreRelasjon,
+                            )
+
+                            is BarnIdentifikator.NavnOgFødselsdato -> ExtendedVurdertBarnDto(
+                                ident = null,
+                                vurderinger = it.vurderinger.map {
+                                    VurderingAvForeldreAnsvarDto(
+                                        fraDato = it.fraDato,
+                                        harForeldreAnsvar = it.harForeldreAnsvar,
+                                        begrunnelse = it.begrunnelse,
+                                        erFosterForelder = it.erFosterForelder,
+                                    )
+                                },
+                                navn = vurdertBartIdent.navn,
+                                fødselsdato = vurdertBartIdent.fødselsdato.toLocalDate(),
+                                oppgittForeldreRelasjon = barn.oppgittForeldreRelasjon,
+
+                                )
+                        }
+                    }
+
+                    val (vurderteFolkeregisterBarnDto, vurderteManuelleBarnDto) = vurderteBarnDto.partition { barn ->
+                        barn.ident?.let { ident ->
+                            folkeregister.any { identifikator -> identifikator.er(BarnIdent(ident)) }
+                        } ?: false
+                    }
+
                     BarnetilleggDto(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         søknadstidspunkt = sakOgBehandlingService.hentSakFor(behandling.id).rettighetsperiode.fom,
@@ -78,40 +119,7 @@ fun NormalOpenAPIRoute.barnetilleggApi(
                                 barnGrunnlag
                             )
                         },
-                        vurderteBarn = vurderteBarn?.barn.orEmpty().map {
-                            val barn = hentBarn(it.ident, barnGrunnlag)
-                            when (val vurdertBartIdent = it.ident) {
-                                is BarnIdentifikator.BarnIdent -> ExtendedVurdertBarnDto(
-                                    ident = vurdertBartIdent.ident.identifikator, null,
-                                    vurderinger = it.vurderinger.map {
-                                        VurderingAvForeldreAnsvarDto(
-                                            fraDato = it.fraDato,
-                                            harForeldreAnsvar = it.harForeldreAnsvar,
-                                            begrunnelse = it.begrunnelse,
-                                            erFosterForelder = it.erFosterForelder,
-                                        )
-                                    },
-                                    fødselsdato = barn.fodselsDato,
-                                    oppgittForeldreRelasjon = barn.oppgittForeldreRelasjon,
-                                )
-
-                                is BarnIdentifikator.NavnOgFødselsdato -> ExtendedVurdertBarnDto(
-                                    ident = null,
-                                    vurderinger = it.vurderinger.map {
-                                        VurderingAvForeldreAnsvarDto(
-                                            fraDato = it.fraDato,
-                                            harForeldreAnsvar = it.harForeldreAnsvar,
-                                            begrunnelse = it.begrunnelse,
-                                            erFosterForelder = it.erFosterForelder,
-                                        )
-                                    },
-                                    navn = vurdertBartIdent.navn,
-                                    fødselsdato = vurdertBartIdent.fødselsdato.toLocalDate(),
-                                    oppgittForeldreRelasjon = barn.oppgittForeldreRelasjon,
-
-                                    )
-                            }
-                        },
+                        vurderteBarn = vurderteManuelleBarnDto,
                         vurdertAv =
                             vurderteBarn?.let {
                                 VurdertAvResponse(
@@ -128,7 +136,8 @@ fun NormalOpenAPIRoute.barnetilleggApi(
                                         it,
                                         barnGrunnlag
                                     )
-                                }.toList()
+                                }.toList(),
+                        vurderteFolkeregisterBarn = vurderteFolkeregisterBarnDto,
                     )
                 }
 
