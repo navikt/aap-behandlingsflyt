@@ -161,6 +161,7 @@ object FakeServers : AutoCloseable {
     private val ereg = embeddedServer(Netty, port = 0, module = { eregFake() })
     private val sam = embeddedServer(Netty, port = 0, module = { sam() })
     private val gosys = embeddedServer(Netty, port = 0, module = { gosysFake() })
+    private val leaderElector = embeddedServer(Netty, port = 0, module = { leaderElectorFake() })
 
     internal val statistikkHendelser = mutableListOf<StoppetBehandling>()
     internal val legeerklæringStatuser = mutableListOf<LegeerklæringStatusResponse>()
@@ -363,6 +364,21 @@ object FakeServers : AutoCloseable {
                         OpprettOppgaveResponse(
                             success = true
                         )
+                    )
+                }
+            }
+        }
+    }
+
+    private fun Application.leaderElectorFake() {
+        install(ContentNegotiation) {
+            jackson()
+        }
+        routing {
+            route("/") {
+                get {
+                    call.respond(
+                       mapOf("name" to "localhost")
                     )
                 }
             }
@@ -2018,6 +2034,7 @@ object FakeServers : AutoCloseable {
         kabal.start()
         ereg.start()
         gosys.start()
+        leaderElector.start()
 
         println("AZURE PORT ${azure.port()}")
 
@@ -2158,6 +2175,9 @@ object FakeServers : AutoCloseable {
 
         // Texas
         System.setProperty("nais.token.exchange.endpoint", "http://localhost:${texas.port()}/token")
+
+        // LeaderElector
+        System.setProperty("ELECTOR_GET_URL", "http://localhost:${leaderElector.port()}")
     }
 
     override fun close() {
@@ -2190,6 +2210,7 @@ object FakeServers : AutoCloseable {
         norg.stop(0L, 0L)
         kabal.stop(0L, 0L)
         ereg.stop(0L, 0L)
+        leaderElector.stop(0L, 0L)
     }
 }
 

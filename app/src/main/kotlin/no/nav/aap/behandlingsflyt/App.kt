@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.papsign.ktor.openapigen.model.info.InfoModel
 import com.papsign.ktor.openapigen.route.apiRouting
 import com.zaxxer.hikari.HikariConfig
@@ -88,6 +89,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.behandlingsflyt.utils.withMdc
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbmigrering.Migrering
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -104,11 +106,19 @@ import no.nav.aap.motor.retry.RetryService
 import no.nav.person.pdl.leesah.Personhendelse
 import org.slf4j.LoggerFactory
 import org.slf4j.bridge.SLF4JBridgeHandler
+import java.net.InetAddress
+import java.net.URI
+import java.net.http.HttpClient
+import java.net.http.HttpRequest
+import java.net.http.HttpResponse
 import java.util.*
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Executors
 import java.util.logging.Level
 import java.util.logging.Logger
 import javax.sql.DataSource
 import kotlin.time.Duration.Companion.seconds
+
 
 fun utledSubtypesTilMottattHendelseDTO(): List<Class<*>> {
     return Innsending::class.sealedSubclasses.map { it.java }.toList()
@@ -307,16 +317,34 @@ internal fun Application.server(
 
 }
 
-// Basert på tall fra dev vil denne migreringen ta ca 2-3 sekunder å kjøre - kan derfor trygt kjøres ved oppstart
-// uten egen jobb. Toggles av etter kjøring og fjernes i ny pr.
+// Basert på tall ved lokal kjøring vil denne migreringen ta ca 2-3 sekunder å kjøre med antallet som ligger i prod.
+// Bruker leaderElector for å sikre at kun en pod kjører migreringen og spinner opp en egen tråd for å ikke blokkere.
+// Toggles av etter kjøring og fjernes i ny pr.
 private fun utførMigreringAvLovvalgOgMedlemskapVurderinger(dataSource: HikariDataSource, gatewayProvider: GatewayProvider) {
     val unleashGateway: UnleashGateway = gatewayProvider.provide()
-    if (unleashGateway.isEnabled(BehandlingsflytFeature.LovvalgMedlemskapPeriodisertMigrering)) {
-        dataSource.transaction { connection ->
-            val repository = MedlemskapArbeidInntektRepositoryImpl(connection)
-            repository.migrerManuelleVurderingerPeriodisert()
-        }
+    if (isLeader() && unleashGateway.isEnabled(BehandlingsflytFeature.LovvalgMedlemskapPeriodisertMigrering)) {
+        val executor = Executors.newVirtualThreadPerTaskExecutor()
+        CompletableFuture
+            .supplyAsync(withMdc {
+                dataSource.transaction { connection ->
+                    val repository = MedlemskapArbeidInntektRepositoryImpl(connection)
+                    repository.migrerManuelleVurderingerPeriodisert()
+                }
+            }, executor)
     }
+}
+
+private fun isLeader(): Boolean {
+    val electorUrl = System.getProperty("ELECTOR_GET_URL")
+    val client = HttpClient.newHttpClient()
+    val response = client.send(
+        HttpRequest.newBuilder().uri(URI.create(electorUrl)).GET().build(),
+        HttpResponse.BodyHandlers.ofString()
+    )
+    val json = ObjectMapper().readTree(response.body())
+    val leaderHostname = json.get("name").asText()
+    val hostname = InetAddress.getLocalHost().hostName
+    return hostname == leaderHostname
 }
 
 fun Application.startMotor(
