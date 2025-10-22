@@ -36,7 +36,25 @@ Token må ha rettighet til å lese pakker. Husk å logg inn token med SSO for NA
 
 ## Kjøre lokalt
 
-Kjør`TestAppKt`. Appen vil da kjøre på localhost:8080. Alternativt, for å unngå å starte IntelliJ, gå i rotmappen og kjør:
+Appen har ulike run-konfigurasjoner i IntelliJ for å kjøre mot "fake" data eller mot dev-gcp.
+
+Konfigurasjonsfilene finner du i mappen `.run/`
+
+### TestApp (med fake data)
+
+I IntelliJ skal det være plug-n-play med to ulike run-konfigurasjoner for TestApp.
+
+**Uten TestContainers** (beholder data mellom app restarts)
+
+Kjør `docker-compose up -d`
+
+Deretter velg konfigurasjonen `TestApp (med testcontainers)` i Run/Debug-menyen. \
+
+**Med TestContainers** (databasen resettes ved hver app restart)
+
+Velg konfigurasjonen `TestApp` i Run/Debug-menyen. \
+
+Alternativt, for å unngå å starte IntelliJ, gå i rotmappen og kjør:
 
 ```./gradlew runTestApp ```
 
@@ -51,6 +69,10 @@ Nå kan API-kall gjøres i Swagger UI ved å trykke på "Authorize"-knappen og l
 eller [obo-token](http://azure-token-generator.intern.dev.nav.no/api/obo?aud=dev-gcp:aap:behandlingsflyt) vha. azure-token-generator.
 
 ### Mot dev-gcp
+
+> ️⚠️ **_Må brukes med omhu siden det potensielt kan ødelegge koblinger mellom oppgave og behandling i dev!_** ⚠️ 
+> 
+> Bruk **TestApp** med mindre du har behov for dev-data fra eksterne systemer. 
 
 Prosjektet inneholder en run config som kan kjøres av IntelliJ. Burde være synlig under "Run configurations" med navnet 
 `dev-gcp.run.xml`.

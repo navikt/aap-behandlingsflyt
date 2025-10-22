@@ -1,0 +1,27 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="TestApp (with testcontainers)" type="KtorApplicationConfigurationType" factoryName="Ktor">
+    <envs>
+      <env name="NAIS_CLUSTER_NAME" value="LOCAL" />
+    </envs>
+    <option name="MAIN_CLASS_NAME" value="no.nav.aap.behandlingsflyt.TestAppKt" />
+    <module name="aap-behandlingsflyt.app.test" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="no.nav.aap.behandlingsflyt.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <option name="alternativeJrePath" />
+    <option name="alternativeJrePathEnabled" value="false" />
+    <option name="includeProvidedScope" value="false" />
+    <option name="mainClass" value="no.nav.aap.behandlingsflyt.TestAppKt" />
+    <option name="passParentEnvs" value="true" />
+    <option name="programParameters" value="" />
+    <option name="shortenCommandLine" />
+    <option name="vmParameters" />
+    <option name="workingDirectory" value="$PROJECT_DIR$" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
