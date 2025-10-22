@@ -32,11 +32,12 @@ class BarnetilleggService(
         val barnGrunnlag = barnRepository.hent(behandlingId)
         val folkeregisterBarn =
             barnGrunnlag.registerbarn?.barn.orEmpty()
-        val folkeregisterBarnTidslinje = tilTidslinje(folkeregisterBarn)
         val vurderteBarn = barnGrunnlag.vurderteBarn?.barn.orEmpty()
 
+        val folkeregistrerteBarnUtenVurderingTidslinje = tilTidslinje(folkeregisterBarn.filter { barn -> vurderteBarn.none { it.ident.er(barn.ident) && it.vurderinger.isNotEmpty() } })
+
         resultat =
-            resultat.kombiner(folkeregisterBarnTidslinje, JoinStyle.LEFT_JOIN { periode, venstreSegment, høyreSegment ->
+            resultat.kombiner(folkeregistrerteBarnUtenVurderingTidslinje, JoinStyle.LEFT_JOIN { periode, venstreSegment, høyreSegment ->
                 val venstreVerdi = venstreSegment.verdi.copy()
                 if (høyreSegment?.verdi != null) {
                     venstreVerdi.leggTilFolkeregisterBarn(høyreSegment.verdi)

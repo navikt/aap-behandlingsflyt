@@ -61,10 +61,12 @@ class BarnetilleggSteg(
     }
 
     fun vedtakBehøverVurdering(kontekst: FlytKontekstMedPerioder): Boolean {
+        val barneGrunnlag = barnRepository.hentHvisEksisterer(kontekst.behandlingId)
         return when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING ->
                 tidligereVurderinger.muligMedRettTilAAP(kontekst, type())
                         && kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty()
+                        && (barneGrunnlag?.oppgitteBarn != null || barneGrunnlag?.registerbarn?.barn?.isNotEmpty() == true)
 
             VurderingType.REVURDERING ->
                 !tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())
