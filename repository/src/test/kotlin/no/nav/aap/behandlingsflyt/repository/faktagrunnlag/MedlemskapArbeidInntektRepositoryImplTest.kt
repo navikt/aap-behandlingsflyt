@@ -265,8 +265,8 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
             assertThat(medlemskapArbeidInntektGrunnlag?.manuellVurdering?.fom).isNull()
             assertThat(medlemskapArbeidInntektGrunnlag?.manuellVurdering?.vurdertIBehandling).isNull()
             assertThat(medlemskapArbeidInntektGrunnlag?.vurderinger).isEmpty()
-            assertThat(hentVurderingerId(connection)).isNull()
 
+            // Kjører migrering
             medlemskapArbeidInntektRepository.migrerManuelleVurderingerPeriodisert()
 
             val migrertMedlemskapArbeidInntektGrunnlag = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandling.id)
@@ -279,8 +279,8 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
             assertThat(migrertMedlemskapArbeidInntektGrunnlag?.manuellVurdering).isEqualTo(periodisertVurdering)
 
             // Sjekker at øvrige felter er oppdatert
-            assertThat(periodisertVurdering?.fom).isNotNull
-            assertThat(periodisertVurdering?.vurdertIBehandling).isNotNull
+            assertThat(periodisertVurdering?.fom).isEqualTo(periode.fom)
+            assertThat(periodisertVurdering?.vurdertIBehandling).isEqualTo(behandling.id)
         }
     }
 
