@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.barnetillegg
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
@@ -83,6 +84,37 @@ class BarnetilleggServiceTest {
                     barn = setOf(ungtBarn.identifikator())
                 )
             )
+        })
+    }
+
+    @Test
+    fun `barnetillegg fram til dødsdato`() {
+        val service = BarnetilleggService(inMemoryRepositoryProvider, gatewayProvider)
+
+        val (sak, behandling) = opprettPersonBehandlingOgSak()
+
+        val fødseldatoUngtBarn = LocalDate.now().minusYears(5)
+        val dødsdato = LocalDate.now().plusMonths(6)
+
+        val dødtBarn = Barn(
+            ident = BarnIdentifikator.BarnIdent(genererIdent(fødseldatoUngtBarn)),
+            fødselsdato = Fødselsdato(fødseldatoUngtBarn),
+            dødsdato = Dødsdato(dødsdato)
+        )
+
+        lagreRegisterOpplysninger(
+            behandling,
+            listOf(dødtBarn)
+        )
+
+        val res = service.beregn(behandlingId = behandling.id)
+
+        // Verifiserer at barnetillegg gis _til og med_ dødsdato
+        // Men ikke etter
+        assertTidslinje(res, Periode(sak.rettighetsperiode.fom, dødsdato) to {
+            assertThat(it.barnMedRettTil()).hasSize(1)
+        }, Periode(dødsdato.plusDays(1), sak.rettighetsperiode.tom) to {
+            assertThat(it.barnMedRettTil()).isEmpty()
         })
     }
 

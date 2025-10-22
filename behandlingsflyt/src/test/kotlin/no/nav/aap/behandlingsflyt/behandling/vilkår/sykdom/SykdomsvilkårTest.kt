@@ -30,7 +30,7 @@ class SykdomsvilkårTest {
         val vilkårsresultat = Vilkårsresultat()
         vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SYKDOMSVILKÅRET)
 
-        Sykdomsvilkår(vilkårsresultat, true).vurder(
+        Sykdomsvilkår(vilkårsresultat).vurder(
             SykdomsFaktagrunnlag(
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 kravDato = LocalDate.now(),
@@ -48,7 +48,7 @@ class SykdomsvilkårTest {
 
         assertThat(vilkår.vilkårsperioder()).hasSize(1).allMatch { periode -> periode.utfall == Utfall.OPPFYLT }
 
-        Sykdomsvilkår(vilkårsresultat, true).vurder(
+        Sykdomsvilkår(vilkårsresultat).vurder(
             SykdomsFaktagrunnlag(
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 kravDato = LocalDate.now(),
@@ -72,7 +72,7 @@ class SykdomsvilkårTest {
         vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SYKDOMSVILKÅRET)
         val startDato = 1 januar 2024
         val opprettet = LocalDateTime.now()
-        Sykdomsvilkår(vilkårsresultat, true).vurder(
+        Sykdomsvilkår(vilkårsresultat).vurder(
             SykdomsFaktagrunnlag(
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 kravDato = startDato,
@@ -129,7 +129,7 @@ class SykdomsvilkårTest {
         vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SYKDOMSVILKÅRET)
         val startDato = 1 januar 2024
         val opprettet = LocalDateTime.now()
-        Sykdomsvilkår(vilkårsresultat, true).vurder(
+        Sykdomsvilkår(vilkårsresultat).vurder(
             SykdomsFaktagrunnlag(
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 kravDato = startDato,
@@ -166,7 +166,7 @@ class SykdomsvilkårTest {
         vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SYKDOMSVILKÅRET)
         val startDato = 1 januar 2024
         val opprettet = LocalDateTime.now()
-        Sykdomsvilkår(vilkårsresultat, true).vurder(
+        Sykdomsvilkår(vilkårsresultat).vurder(
             SykdomsFaktagrunnlag(
                 typeBehandling = TypeBehandling.Revurdering,
                 kravDato = startDato,
@@ -207,7 +207,7 @@ class SykdomsvilkårTest {
         val startDato = 1 januar 2024
         val opprettet = LocalDateTime.now()
 
-        Sykdomsvilkår(vilkårsresultat, true).vurder(
+        Sykdomsvilkår(vilkårsresultat).vurder(
             SykdomsFaktagrunnlag(
                 typeBehandling = TypeBehandling.Revurdering,
                 kravDato = startDato,

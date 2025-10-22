@@ -18,8 +18,6 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
@@ -31,7 +29,6 @@ class FastsettSykdomsvilkåretSteg private constructor(
     private val sykepengerErstatningRepository: SykepengerErstatningRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val vilkårService: VilkårService,
-    private val unleashGateway: UnleashGateway,
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         vilkårsresultatRepository = repositoryProvider.provide(),
@@ -40,8 +37,7 @@ class FastsettSykdomsvilkåretSteg private constructor(
         studentRepository = repositoryProvider.provide(),
         sykepengerErstatningRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
-        vilkårService = VilkårService(repositoryProvider),
-        unleashGateway = gatewayProvider.provide()
+        vilkårService = VilkårService(repositoryProvider)
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -91,10 +87,7 @@ class FastsettSykdomsvilkåretSteg private constructor(
             bistandGrunnlag,
             studentGrunnlag?.studentvurdering
         )
-        Sykdomsvilkår(
-            vilkårResultat,
-            unleashGateway.isEnabled(BehandlingsflytFeature.RefaktorereFastsettSykdomsvilkar)
-        ).vurder(faktagrunnlag)
+        Sykdomsvilkår(vilkårResultat).vurder(faktagrunnlag)
 
         vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårResultat)
     }

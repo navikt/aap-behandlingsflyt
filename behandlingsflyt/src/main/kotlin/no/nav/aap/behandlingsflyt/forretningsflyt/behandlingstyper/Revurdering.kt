@@ -335,23 +335,28 @@ object Revurdering : BehandlingType {
                 informasjonskrav = listOf(SamordningYtelseVurderingInformasjonskrav),
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.SAMORDNING_OG_AVREGNING,
-                    Vurderingsbehov.REVURDER_SAMORDNING,
+                    Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER,
                     Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
                     Vurderingsbehov.HELHETLIG_VURDERING,
                     Vurderingsbehov.REVURDER_LOVVALG,
                     Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
                 ),
             )
-            .medSteg(steg = SamordningUføreSteg, informasjonskrav = listOf(UføreInformasjonskrav))
+            .medSteg(
+                steg = SamordningUføreSteg,
+                informasjonskrav = listOf(UføreInformasjonskrav),
+                vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.REVURDER_SAMORDNING_UFØRE)
+            )
             .medSteg(
                 steg = TjenestepensjonRefusjonskravSteg,
-                informasjonskrav = listOf(TjenestePensjonInformasjonskrav)
+                informasjonskrav = listOf(TjenestePensjonInformasjonskrav),
+                vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.REVURDER_SAMORDNING_TJENESTEPENSJON)
             )
             .medSteg(
                 steg = SamordningAndreStatligeYtelserSteg,
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.SAMORDNING_OG_AVREGNING,
-                    Vurderingsbehov.REVURDER_SAMORDNING,
+                    Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER,
                     Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
                     Vurderingsbehov.HELHETLIG_VURDERING,
                     Vurderingsbehov.REVURDER_LOVVALG,
@@ -360,6 +365,7 @@ object Revurdering : BehandlingType {
             )
             .medSteg(
                 steg = SamordningArbeidsgiverSteg,
+                vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.REVURDER_SAMORDNING_ARBEIDSGIVER)
             )
             .medSteg(steg = SamordningAvslagSteg)
             .medSteg(

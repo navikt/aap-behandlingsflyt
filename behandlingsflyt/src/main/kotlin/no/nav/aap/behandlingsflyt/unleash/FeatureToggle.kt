@@ -21,8 +21,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     NyeSykdomVilkar,
     OvergangUfore,
     IverksettUtbetalingSomSelvstendigJobb,
-    RefaktorereFastsettSykdomsvilkar,
-    SykepengerPeriodisert,
     OvergangArbeid,
     ;
 
