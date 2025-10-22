@@ -50,6 +50,7 @@ class BarnetilleggSteg(
         VurderingType.REVURDERING -> {
             if (Vurderingsbehov.DØDSFALL_BARN in kontekst.vurderingsbehovRelevanteForSteg) {
                 FantAvklaringsbehov(Definisjon.AVKLAR_BARNETILLEGG)
+                Fullført
             } else if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
                 log.info("Revurdering gir ingen behandlingsgrunnlag, avbryter steg. BehandlingId: ${kontekst.behandlingId}.")
                 avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
