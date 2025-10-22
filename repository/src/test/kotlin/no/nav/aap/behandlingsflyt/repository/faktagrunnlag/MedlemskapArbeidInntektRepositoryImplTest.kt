@@ -29,6 +29,7 @@ import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.behandlingsflyt.test.oktober
+import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.type.Periode
@@ -244,6 +245,51 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
             assertThat(medlemskapArbeidInntektGrunnlag?.medlemskapGrunnlag).isNotNull
             assertThat(medlemskapArbeidInntektGrunnlag?.vurderinger?.size).isEqualTo(3)
         }
+    }
+
+    @Test
+    fun `verifiserer at migrering legger på kobling mot vurderinger og at uthenting gir periodisert vurdering`() {
+        dataSource.transaction { connection ->
+            val medlemskapArbeidInntektRepository = MedlemskapArbeidInntektRepositoryImpl(connection)
+            val sak = opprettSak(connection, periode)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+
+            medlemskapArbeidInntektRepository.lagreManuellVurdering(
+                behandlingId = behandling.id,
+                manuellVurdering = manuellVurderingIkkePeriodisert("begrunnelse")
+            )
+
+            val medlemskapArbeidInntektGrunnlag = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandling.id)
+
+            assertThat(medlemskapArbeidInntektGrunnlag?.manuellVurdering).isNotNull
+            assertThat(medlemskapArbeidInntektGrunnlag?.manuellVurdering?.fom).isNull()
+            assertThat(medlemskapArbeidInntektGrunnlag?.manuellVurdering?.vurdertIBehandling).isNull()
+            assertThat(medlemskapArbeidInntektGrunnlag?.vurderinger).isEmpty()
+            assertThat(hentVurderingerId(connection)).isNull()
+
+            medlemskapArbeidInntektRepository.migrerManuelleVurderingerPeriodisert()
+
+            val migrertMedlemskapArbeidInntektGrunnlag = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandling.id)
+
+            // Sjekker at innslag i lovvalg_medlemskap_manuell_vurderinger finnes
+            assertThat(hentVurderingerId(connection)).isNotNull
+
+            // Sjekker at listen med periodiserte vurderinger nå returnerer det samme som manuellVurdering
+            val periodisertVurdering = migrertMedlemskapArbeidInntektGrunnlag?.vurderinger?.first()
+            assertThat(migrertMedlemskapArbeidInntektGrunnlag?.manuellVurdering).isEqualTo(periodisertVurdering)
+
+            // Sjekker at øvrige felter er oppdatert
+            assertThat(periodisertVurdering?.fom).isNotNull
+            assertThat(periodisertVurdering?.vurdertIBehandling).isNotNull
+        }
+    }
+
+    private fun hentVurderingerId(connection: DBConnection): Long? {
+        val query = "SELECT id FROM lovvalg_medlemskap_manuell_vurderinger"
+        val id = connection.queryFirstOrNull<Long>(query) {
+            setRowMapper { it.getLong("id") }
+        }
+        return id
     }
 
     private fun lagNyFullVurdering(
