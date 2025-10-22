@@ -259,7 +259,7 @@ internal fun Application.server(
                 behandlingsflytPip(dataSource, repositoryRegistry)
                 auditlogApi(dataSource, repositoryRegistry)
                 refusjonGrunnlagAPI(dataSource, repositoryRegistry, gatewayProvider)
-                manglendeGrunnlagApi(dataSource, repositoryRegistry)
+                manglendeGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 mellomlagretVurderingApi(dataSource, repositoryRegistry)
                 // Klage
                 påklagetBehandlingGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)

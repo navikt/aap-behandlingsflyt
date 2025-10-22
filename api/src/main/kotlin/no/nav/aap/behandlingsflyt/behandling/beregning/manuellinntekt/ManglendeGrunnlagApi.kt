@@ -11,7 +11,10 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
@@ -34,16 +37,81 @@ data class ManuellInntektVurderingGrunnlagResponse(
 data class ManuellInntektGrunnlagResponse(
     val ar: Int,
     val gverdi: BigDecimal,
-    val vurdering: ManuellInntektVurderingGrunnlagResponse?,
+    @Deprecated("Erstattes av vurderinger") val vurdering: ManuellInntektVurderingGrunnlagResponse?,
     val historiskeVurderinger: List<ManuellInntektVurderingGrunnlagResponse>,
     val harTilgangTilÅSaksbehandle: Boolean,
+    val vurderinger: List<ManuellInntektVurderingGrunnlagResponse>? = null,
 )
 
 private val log = LoggerFactory.getLogger("ManuellInntektGrunnlagApi")
 
-fun NormalOpenAPIRoute.manglendeGrunnlagApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
+fun NormalOpenAPIRoute.manglendeGrunnlagApi(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider
+) {
+    val unleashGateway = gatewayProvider.provide<UnleashGateway>()
+
     route("/api/behandling") {
         route("/{referanse}/grunnlag/beregning/manuellinntekt") {
+            // if (unleashGateway.isEnabled(BehandlingsflytFeature.EOSBeregning)) {
+            /* getGrunnlag<BehandlingReferanse, List<ManuellInntektGrunnlagResponse>>(
+                 behandlingPathParam = BehandlingPathParam("referanse"),
+                 avklaringsbehovKode = Definisjon.FASTSETT_MANUELL_INNTEKT.kode.toString()
+             ) { req ->
+                 val (manuellInntekt, år, historiskeVurderinger) = dataSource.transaction {
+                     val provider = repositoryRegistry.provider(it)
+                     val behandlingRepository = provider.provide<BehandlingRepository>()
+                     val beregningService = BeregningService(provider)
+                     val manuellInntektRepository = provider.provide<ManuellInntektGrunnlagRepository>()
+                     val behandling = behandlingRepository.hent(req.referanse.let(::BehandlingReferanse))
+
+                     val relevantPeriode = beregningService.utledRelevanteBeregningsÅr(behandling.id)
+                     val sisteÅr = relevantPeriode.max()
+
+                     val relevanteÅr = (0L..2L).map { år -> sisteÅr.minusYears(år) }.toSet()
+
+                     val grunnlag = manuellInntektRepository.hentHvisEksisterer(behandling.id)
+                     val manuelleInntekter = grunnlag?.manuelleInntekter
+
+                     val historiskeVurderinger =
+                         manuellInntektRepository.hentHistoriskeVurderinger(behandling.sakId, behandling.id)
+
+                     Triple(manuelleInntekter, relevanteÅr, historiskeVurderinger)
+                 }
+
+                 // Gjennomsnittlig G-verdi første januar i året vi er interessert i
+                 val gVerdi = Grunnbeløp.tilTidslinjeGjennomsnitt().segment(
+                     Year.of(år.value).atMonthDay(
+                         MonthDay.of(1, 1)
+                     )
+                 )!!.verdi
+
+                 respond(
+                     ManuellInntektGrunnlagResponse(
+                         ar = år.value,
+                         gverdi = gVerdi.verdi,
+                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
+                         vurdering = manuellInntekt?.let {
+                             ManuellInntektVurderingGrunnlagResponse(
+                                 begrunnelse = it.begrunnelse,
+                                 vurdertAv = VurdertAvResponse(it.vurdertAv, it.opprettet.toLocalDate()),
+                                 ar = it.år.value,
+                                 belop = it.belop.verdi,
+                             )
+                         },
+                         historiskeVurderinger = historiskeVurderinger.map {
+                             ManuellInntektVurderingGrunnlagResponse(
+                                 begrunnelse = it.begrunnelse,
+                                 vurdertAv = VurdertAvResponse(it.vurdertAv, it.opprettet.toLocalDate()),
+                                 ar = it.år.value,
+                                 belop = it.belop.verdi,
+                             )
+                         }
+                     ))
+             }
+         } else {*/
+            // Gammel grunnlagsresponse
             getGrunnlag<BehandlingReferanse, ManuellInntektGrunnlagResponse>(
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = Definisjon.FASTSETT_MANUELL_INNTEKT.kode.toString()
@@ -98,7 +166,8 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(dataSource: DataSource, repositoryRe
                                 belop = it.belop.verdi,
                             )
                         }
-                    ))
+                    )
+                )
             }
         }
     }
