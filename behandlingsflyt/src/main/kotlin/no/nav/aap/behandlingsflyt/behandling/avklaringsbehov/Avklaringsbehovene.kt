@@ -138,12 +138,21 @@ class Avklaringsbehovene(
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
+    @Deprecated("Bruk hjelpemetoder i AvklaringsbehovService for å styre avklaringsbehov")
     fun avbryt(definisjon: Definisjon) {
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
         avklaringsbehov.avbryt()
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
+    /* Kan fjerne internal-prefikset når deprecated `avbryt` er slettet. */
+    internal fun internalAvbryt(definisjon: Definisjon) {
+        val avklaringsbehov = alle().single { it.definisjon == definisjon }
+        avklaringsbehov.avbryt()
+        repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
+    }
+
+    @Deprecated("Styr avklaringsbehov med AvklaringsbehovService")
     fun avbrytForSteg(steg: StegType) {
         for (avklaringsbehov in åpne()) {
             if (avklaringsbehov.skalLøsesISteg(steg)) {
@@ -153,12 +162,21 @@ class Avklaringsbehovene(
         }
     }
 
+    @Deprecated("Styr avklaringsbehov med AvklaringsbehovService")
     fun avslutt(definisjon: Definisjon) {
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
         avklaringsbehov.avslutt()
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
+    /* Kan fjerne internal-prefixet når den deperecated avslutt-metoden er borte. */
+    internal fun internalAvslutt(definisjon: Definisjon) {
+        val avklaringsbehov = alle().single { it.definisjon == definisjon }
+        avklaringsbehov.avslutt()
+        repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
+    }
+
+    @Deprecated("Styr avklaringsbehov med AvklaringsbehovService")
     fun avbrytÅpneAvklaringsbehov() {
         val avklaringsbehovSomSkalAvbrytes =
             alle().filter { it.erÅpent() && !(it.erVentepunkt() || it.erBrevVentebehov()) }
