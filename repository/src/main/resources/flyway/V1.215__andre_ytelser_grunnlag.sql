@@ -1,20 +1,26 @@
-CREATE TABLE YTELSE
+CREATE TABLE ANDRE_YTELSER_SVAR_I_SØKNAD
 (
-    type TEXT PRIMARY KEY
+    id            BIGSERIAL PRIMARY KEY,
+    opprettet_tid TIMESTAMP(3) DEFAULT current_timestamp NOT NULL,
+    lønn          BOOLEAN                                NOT NULL
+);
+
+CREATE TABLE ANDRE_YTELSE_OPPGITT_I_SØKNAD
+(
+    id               BIGSERIAL PRIMARY KEY,
+    andre_ytelser_id BIGINT NOT NULL REFERENCES ANDRE_YTELSER_SVAR_I_SØKNAD (id),
+    ytelse           TEXT   NOT NULL
 );
 
 CREATE TABLE ANDRE_YTELSER_OPPGITT_I_SØKNAD_GRUNNLAG
 (
-    id            BIGSERIAL PRIMARY KEY,
-    behandling_id BIGINT                                 NOT NULL REFERENCES behandling (id),
-    lonn          BOOLEAN                                NOT NULL,
-    aktiv         BOOLEAN      DEFAULT TRUE              NOT NULL,
-    opprettet_tid TIMESTAMP(3) DEFAULT current_timestamp NOT NULL
+    id               BIGSERIAL PRIMARY KEY,
+    behandling_id    BIGINT               NOT NULL REFERENCES behandling (id),
+    andre_ytelser_id BIGINT REFERENCES ANDRE_YTELSER_SVAR_I_SØKNAD (id),
+    aktiv            BOOLEAN DEFAULT TRUE NOT NULL
 );
 
-CREATE TABLE ANDRE_YTELSER_OPPGITT_I_SØKNAD
-(
-    ytelse_grunnlag BIGINT NOT NULL REFERENCES ANDRE_YTELSER_OPPGITT_I_SØKNAD_GRUNNLAG (id),
-    ytelse_type     TEXT   NOT NULL REFERENCES YTELSE (type),
-    PRIMARY KEY (ytelse_grunnlag, ytelse_type)
-);
+
+
+
+

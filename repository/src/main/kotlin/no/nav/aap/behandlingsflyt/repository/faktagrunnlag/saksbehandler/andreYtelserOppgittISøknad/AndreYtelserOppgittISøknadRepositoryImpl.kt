@@ -35,65 +35,69 @@ class AndreYtelserOppgittISøknadRepositoryImpl(private val connection: DBConnec
         andreUtbetalinger: AndreUtbetalinger,
         connection: DBConnection
     ) {
-        val insertYtelseTypeQuery = """
-    INSERT INTO YTELSE (type) VALUES (?) ON CONFLICT DO NOTHING
-""".trimIndent()
-
-        val insertGrunnlagQuery = """
-    INSERT INTO ANDRE_YTELSER_OPPGITT_I_SØKNAD_GRUNNLAG (behandling_id, lonn ) 
-    VALUES (?, ?) RETURNING id
-""".trimIndent()
-
-        val insertYtelserQuery = """
-    INSERT INTO ANDRE_YTELSER_OPPGITT_I_SØKNAD (ytelse_grunnlag, ytelse_type) 
-    VALUES (?, ?) ON CONFLICT DO NOTHING
-""".trimIndent()
 
         val stønadstyper = requireNotNull(andreUtbetalinger.stønad)
 
-        connection.executeBatch(insertYtelseTypeQuery,stønadstyper){
+
+        val insertSvarQuery = """
+        INSERT INTO ANDRE_YTELSER_SVAR_I_SØKNAD (lønn)
+        VALUES (?) RETURNING id
+    """.trimIndent()
+
+        val andreYtelserId = connection.executeReturnKey(insertSvarQuery) {
             setParams {
-                setString(1, it.toString())
+                setBoolean(1, andreUtbetalinger.lønn)
             }
         }
 
-        val grunnlagId = connection.executeReturnKey(insertGrunnlagQuery) {
+            val insertYtelseQuery = """
+        INSERT INTO ANDRE_YTELSE_OPPGITT_I_SØKNAD (ytelse, andre_ytelser_id)
+        VALUES (?,?)
+        RETURNING id
+    """.trimIndent()
+
+            for (ytelse in stønadstyper) {
+                connection.executeReturnKey(insertYtelseQuery) {
+                    setParams {
+                        setString(1, ytelse.toString())
+                        setLong(2, andreYtelserId)
+                    }
+                }
+            }
+
+        val insertGrunnlagQuery = """
+        INSERT INTO ANDRE_YTELSER_OPPGITT_I_SØKNAD_GRUNNLAG (behandling_id, andre_ytelser_id)
+        VALUES (?,?)
+        """.trimIndent()
+
+         connection.executeReturnKey(insertGrunnlagQuery) {
             setParams {
                 setLong(1, behandlingId.id)
-                setBoolean(2, andreUtbetalinger.lønn)
+                setLong(2, andreYtelserId)
             }
         }
 
-        connection.executeBatch(insertYtelserQuery,stønadstyper){
-            setParams {
-                setLong(1, grunnlagId)
-                setString(2, it.toString())
-            }
-        }
     }
 
-    private fun hentAlleGrunnlagIderPÅBehandlingId(behandlingId: BehandlingId) : List<Long> {
-
+    private fun hentYtelseIderPÅBehandlingId(behandlingId: BehandlingId): Long? {
         val query = """
-                    SELECT id
-                    FROM ANDRE_YTELSER_OPPGITT_I_SØKNAD_GRUNNLAG
-                    WHERE behandling_id = ? 
-                 
+                select andre_ytelser_id from ANDRE_YTELSER_OPPGITT_I_SØKNAD_GRUNNLAG where behandling_id = ? and aktiv = true
                 """.trimIndent()
-
-        return connection.queryList(query)
+        return connection.queryFirstOrNull(query)
         {
             setParams { setLong(1, behandlingId.id) }
             setRowMapper { row ->
-                row.getLong("id")
+                row.getLong("andre_ytelser_id")
             }
         }
 
     }
 
 
-    private fun hentAktivYtelserGrunnlagId(behandlingId: BehandlingId) : Long? = connection.queryFirstOrNull(
-    """
+
+
+    private fun hentAktivYtelserGrunnlagId(behandlingId: BehandlingId): Long? = connection.queryFirstOrNull(
+        """
                     SELECT id
                     FROM ANDRE_YTELSER_OPPGITT_I_SØKNAD_GRUNNLAG
                     WHERE behandling_id = ? and aktiv is true
@@ -106,39 +110,76 @@ class AndreYtelserOppgittISøknadRepositoryImpl(private val connection: DBConnec
         }
     }
 
+
+    private fun hentAlleGrunnlagIdPåAndreYtelseId(andreYtelserId: Long): List<Long> {
+
+        val query = """
+            SELECT id FROM ANDRE_YTELSER_OPPGITT_I_SØKNAD_GRUNNLAG WHERE andre_ytelser_id = ?
+        """.trimIndent()
+
+        return connection.queryList(query) {
+            setParams { setLong(1, andreYtelserId) }
+            setRowMapper { row ->
+                row.getLong("id")
+            }
+        }
+    }
+
     override fun slett(behandlingId: BehandlingId) {
 
-        val ytelserGrunnlagId = hentAlleGrunnlagIderPÅBehandlingId(behandlingId)
-        if (ytelserGrunnlagId.isNullOrEmpty()) {
-            log.warn("Prøvde å slette fra ANDRE_YTELSER_OPPGITT_I_SØKNAD_GRUNNLAG med behandling_id $behandlingId men ingen funnet")
-        }
+        //skal slette alle grunnlag på en behandling?
+        val ytelserId = hentYtelseIderPÅBehandlingId(behandlingId)
+        if (ytelserId == null) return
+
+        // er det flere grunnlag på samme ytelse id ?
+
+        val alleGrunnlagPåYtelseId = hentAlleGrunnlagIdPåAndreYtelseId(ytelserId)
+
+        //Skal slette alle??! :*/
+
+        val kunEtGrunnlagPåDetteSvaret = if(alleGrunnlagPåYtelseId.size == 1) true else false
 
 
-        connection.executeBatch("""
-            delete from ANDRE_YTELSER_OPPGITT_I_SØKNAD where ytelse_grunnlag = ?;
-        """.trimIndent(), ytelserGrunnlagId) {
+        //sletter de på behandling id
+        connection.execute(
+            """
+            delete from ANDRE_YTELSER_OPPGITT_I_SØKNAD_GRUNNLAG where behandling_id = ?;
+        """.trimIndent()
+        ) {
             setParams {
-                setLong(1, it)
+                setLong(1, behandlingId.id)
             }
         }
 
-        connection.executeBatch("""
-            delete from ANDRE_YTELSER_OPPGITT_I_SØKNAD_GRUNNLAG where id = ?; 
-        """.trimIndent(), ytelserGrunnlagId) {
-            setParams {
-                setLong(1, it)
+        //La de andre ytelsene bli vis de linker til andre grunnlag
+        if (kunEtGrunnlagPåDetteSvaret) {
+            connection.execute(
+                """
+            delete from ANDRE_YTELSER_OPPGITT_I_SØKNAD_GRUNNLAG where andre_ytelser_id = ?; 
+        """.trimIndent()
+            ) {
+                setParams {
+                    setLong(1, ytelserId)
+                }
+            }
+
+            connection.execute(
+                """
+            delete from ANDRE_YTELSER_SVAR_I_SØKNAD where id = ?;
+        """.trimIndent()
+            ) {
+                setParams {
+                    setLong(1, ytelserId)
+                }
             }
         }
-
-
-
-        log.info("Slettet rader fra ANDRE_YTELSER_OPPGITT_I_SØKNAD_GRUNNLAG")
+        log.info("Slettet ${alleGrunnlagPåYtelseId.size} rader fra ANDRE_YTELSER_OPPGITT_I_SØKNAD_GRUNNLAG")
 
     }
 
 
     private fun deaktiverGrunnlag(behandlingId: BehandlingId) {
-            connection.execute("UPDATE ANDRE_YTELSER_OPPGITT_I_SØKNAD_GRUNNLAG SET aktive = FALSE WHERE aktive AND behandling_id = ?") {
+        connection.execute("UPDATE ANDRE_YTELSER_OPPGITT_I_SØKNAD_GRUNNLAG SET aktive = FALSE WHERE aktive AND behandling_id = ?") {
             setParams {
                 setLong(1, behandlingId.toLong())
             }
@@ -152,63 +193,42 @@ class AndreYtelserOppgittISøknadRepositoryImpl(private val connection: DBConnec
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         require(fraBehandling != tilBehandling)
-        require(hentHvisEksisterer(fraBehandling) != null)
 
-        connection.execute(
-            """
-        WITH inserted_grunnlag AS (
-            INSERT INTO ANDRE_YTELSER_OPPGITT_I_SØKNAD_GRUNNLAG (
-                behandling_id,
-                lonn,
-                aktiv,
-                opprettet_tid
-            )
-            SELECT
-                ?,
-                lonn,
-                aktiv,
-                opprettet_tid
-            FROM ANDRE_YTELSER_OPPGITT_I_SØKNAD_GRUNNLAG
-            WHERE aktiv = true AND behandling_id = ?
-            RETURNING id, behandling_id
-        )
-        INSERT INTO ANDRE_YTELSER_OPPGITT_I_SØKNAD (
-            ytelse_grunnlag,
-            ytelse_type
-        )
-        SELECT
-            inserted_grunnlag.id,
-            ay.ytelse_type
-        FROM ANDRE_YTELSER_OPPGITT_I_SØKNAD ay
-        JOIN ANDRE_YTELSER_OPPGITT_I_SØKNAD_GRUNNLAG ayg
-            ON ay.ytelse_grunnlag = ayg.id
-        JOIN inserted_grunnlag
-            ON ayg.behandling_id = ?
-        WHERE ayg.behandling_id = ?
+        val fraYtelserId = hentYtelseIderPÅBehandlingId(fraBehandling)
+        if (fraYtelserId == null) return
+        val insertGrunnlagQuery = """
+        INSERT INTO ANDRE_YTELSER_OPPGITT_I_SØKNAD_GRUNNLAG (behandling_id, andre_ytelser_id)
+        VALUES (?,?)
         """.trimIndent()
-        ) {
+
+        connection.executeReturnKey(insertGrunnlagQuery) {
             setParams {
-                setLong(1, tilBehandling.toLong())
-                setLong(2, fraBehandling.toLong())
-                setLong(3, fraBehandling.toLong())
-                setLong(4, fraBehandling.toLong())
+                setLong(1, tilBehandling.id)
+                setLong(2, fraYtelserId)
             }
         }
+
+
     }
 
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): AndreUtbetalinger? {
         val query = """
         SELECT 
-            grunnlag.lonn AS lonn,
-            array_agg(ytg.ytelse_type) AS ytelsestyper
+            ytelser.lønn AS lonn,
+            array_agg(ytelse.ytelse) AS ytelsestyper
         FROM 
             ANDRE_YTELSER_OPPGITT_I_SØKNAD_GRUNNLAG grunnlag
-        LEFT JOIN 
-            ANDRE_YTELSER_OPPGITT_I_SØKNAD ytg ON grunnlag.id = ytg.ytelse_grunnlag
+        JOIN 
+            ANDRE_YTELSER_SVAR_I_SØKNAD ytelser ON ytelser.id = grunnlag.andre_ytelser_id
+        JOIN 
+            ANDRE_YTELSE_OPPGITT_I_SØKNAD ytelse ON ytelser.id = ytelse.andre_ytelser_id
         WHERE 
-            grunnlag.behandling_id = ? and grunnlag.aktiv = true
-        GROUP BY grunnlag.id, grunnlag.lonn;
+            grunnlag.behandling_id = ?
+        AND grunnlag.aktiv = TRUE
+        GROUP BY 
+            grunnlag.id, ytelser.lønn;
+
     """.trimIndent()
 
         return connection.queryFirstOrNull(query) {
@@ -216,7 +236,6 @@ class AndreYtelserOppgittISøknadRepositoryImpl(private val connection: DBConnec
                 setLong(1, behandlingId.toLong())
             }
             setRowMapper { row ->
-                if (row == null)  null
                 mapGrunnlag(row)
             }
         }

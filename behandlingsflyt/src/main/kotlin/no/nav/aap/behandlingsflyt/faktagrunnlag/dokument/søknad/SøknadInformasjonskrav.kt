@@ -81,7 +81,7 @@ class SøknadInformasjonskrav private constructor(
                         skalGjenopptaStudieStatus = ubehandletSøknad.studentData.skalGjenopptaStudie
                     )
             )
-            if (!ubehandletSøknad.andreUtbetalinger?.stønad.isNullOrEmpty()){
+            if (!ubehandletSøknad.andreUtbetalinger?.stønad.isNullOrEmpty() && ubehandletSøknad.andreUtbetalinger.lønn != null){
                 andreYtelserRepository.lagre(behandlingId,ubehandletSøknad.andreUtbetalinger)
             }
 
