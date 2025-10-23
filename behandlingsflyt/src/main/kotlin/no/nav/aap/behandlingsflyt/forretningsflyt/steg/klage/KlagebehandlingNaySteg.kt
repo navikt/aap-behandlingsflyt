@@ -32,10 +32,10 @@ class KlagebehandlingNaySteg private constructor(
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val resultat = klageresultatUtleder.utledKlagebehandlingResultat(kontekst.behandlingId)
-        val avslåttResultat = if (resultat is Avslått) true else false
+        val erKlageResultatAvslått = if (resultat is Avslått) true else false
 
         val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-        val vurderingHosNay = klagebehandlingNayRepository.hentHvisEksisterer(kontekst.behandlingId)
+        val vurderingHosNay = klagebehandlingNayRepository.hentHvisEksisterer(kontekst.behandlingId) != null
 
         val klageErTrukket = trekkKlageService.klageErTrukket(kontekst.behandlingId)
 
@@ -50,10 +50,10 @@ class KlagebehandlingNaySteg private constructor(
                 avklaringsbehovene = avklaringsbehov,
                 kontekst = kontekst,
                 vedtakBehøverVurdering =  {
-                    if(klageErTrukket  || avslåttResultat || !skalBehandlesAvNay ) false else true
+                    if(klageErTrukket  || erKlageResultatAvslått || !skalBehandlesAvNay ) false else true
                 }                 ,
                 erTilstrekkeligVurdert =  {
-                     if(vurderingHosNay != null) true else false },
+                     vurderingHosNay},
                 tilbakestillGrunnlag = {}
 
             )
