@@ -42,7 +42,7 @@ class KlagebehandlingNaySteg private constructor(
 
         val behandlendeEnhetVurdering = behandlendeEnhetRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurdering
         //kan være null
-        val skalBehandlesAvNay = if (behandlendeEnhetVurdering?.skalBehandlesAvNay == true) true else false
+        val skalBehandlesAvNay = behandlendeEnhetVurdering?.skalBehandlesAvNay ?: false
 
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
