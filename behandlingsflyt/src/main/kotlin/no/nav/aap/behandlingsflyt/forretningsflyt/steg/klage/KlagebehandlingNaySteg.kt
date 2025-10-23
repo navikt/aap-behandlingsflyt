@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Avslått
@@ -8,6 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtle
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.BehandlendeEnhetRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.KlagebehandlingNayRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
@@ -15,6 +18,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
@@ -23,34 +27,38 @@ class KlagebehandlingNaySteg private constructor(
     private val behandlendeEnhetRepository: BehandlendeEnhetRepository,
     private val klageresultatUtleder: KlageresultatUtleder,
     private val trekkKlageService: TrekkKlageService,
+    private val avklaringsbehovService: AvklaringsbehovService,
+    private val klagebehandlingNayRepository: KlagebehandlingNayRepository,
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val resultat = klageresultatUtleder.utledKlagebehandlingResultat(kontekst.behandlingId)
-        if (resultat is Avslått) {
-            return Fullført
-        }
+        val avslåttResultat = if (resultat is Avslått) true else false
 
         val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+        val klageHosNay = klagebehandlingNayRepository.hentHvisEksisterer(kontekst.behandlingId)
 
-        if(trekkKlageService.klageErTrukket(kontekst.behandlingId)) {
-            avklaringsbehov.avbrytForSteg(type())
-            return Fullført
-        }
+        val klageErTrukket = trekkKlageService.klageErTrukket(kontekst.behandlingId)
+
 
         val behandlendeEnhetVurdering = behandlendeEnhetRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurdering
         requireNotNull(behandlendeEnhetVurdering) {
             "Behandlende enhet skal være satt"
         }
-        return if (behandlendeEnhetVurdering.skalBehandlesAvNay && avklaringsbehov.harIkkeBlittLøst(Definisjon.VURDER_KLAGE_NAY)) {
-            FantAvklaringsbehov(Definisjon.VURDER_KLAGE_NAY)
-        } else {
-            avklaringsbehov.avbrytForSteg(type())
-            /** TODO: Eventuell utnulling av vurdering kan skje i senere steg.
-             *Vil kanskje ta vare på vurderingen "så lenge som mulig" i tilfelle man ombestemmer seg
-             * **/
-            Fullført
+
+            avklaringsbehovService.oppdaterAvklaringsbehov(
+                definisjon = Definisjon.VURDER_KLAGE_NAY,
+                avklaringsbehovene = avklaringsbehov,
+                kontekst = kontekst,
+                vedtakBehøverVurdering =  {
+                    if(klageErTrukket  || avslåttResultat || behandlendeEnhetVurdering.skalBehandlesAvNay ) false else true
+                }                 ,
+                erTilstrekkeligVurdert =  {
+                     if(klageHosNay != null) true else false },
+                tilbakestillGrunnlag = {}
+
+            )
+            return Fullført
         }
-    }
 
     companion object : FlytSteg {
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
@@ -58,7 +66,9 @@ class KlagebehandlingNaySteg private constructor(
                 repositoryProvider.provide(),
                 repositoryProvider.provide(),
                 KlageresultatUtleder(repositoryProvider),
-                TrekkKlageService(repositoryProvider)
+                TrekkKlageService(repositoryProvider),
+                AvklaringsbehovService(repositoryProvider),
+                repositoryProvider.provide(),
             )
         }
 
@@ -67,9 +77,5 @@ class KlagebehandlingNaySteg private constructor(
         }
     }
 
-    private fun Avklaringsbehovene.harIkkeBlittLøst(definisjon: Definisjon): Boolean {
-        return this.alle()
-            .filter { it.definisjon == definisjon }
-            .none { it.status() == Status.AVSLUTTET }
-    }
+
 }
