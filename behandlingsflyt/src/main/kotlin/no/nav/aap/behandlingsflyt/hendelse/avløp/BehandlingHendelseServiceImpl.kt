@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.MottattDokumentDto
@@ -112,26 +111,35 @@ class BehandlingHendelseServiceImpl(
         val oppfølgingsoppgavedokument =
             MottaDokumentService(dokumentRepository).hentOppfølgingsBehandlingDokument(behandlingId)
 
-        val reserverTilBruker = finnReserverTilBrukerVedAvbruttRevurdering(behandlingId)
+        val reserverTilBrukerRevurderingAvbrutt = finnReserverTilBrukerGittVurderingsbehov(behandlingId, no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDERING_AVBRUTT)
+        val reserverTilBrukerSøknadTrukket = finnReserverTilBrukerGittVurderingsbehov(behandlingId, no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SØKNAD_TRUKKET)
 
-        return oppfølgingsoppgavedokument?.reserverTilBruker ?: reserverTilBruker
+        if (listOfNotNull(
+                oppfølgingsoppgavedokument?.reserverTilBruker,
+                reserverTilBrukerRevurderingAvbrutt,
+                reserverTilBrukerSøknadTrukket
+            ).size > 1) {
+            log.warn("Fant mer enn én reserverTil-verdi i hendelse til oppgave")
+        }
+
+        return oppfølgingsoppgavedokument?.reserverTilBruker ?: reserverTilBrukerRevurderingAvbrutt ?: reserverTilBrukerSøknadTrukket
     }
 
-    private fun finnReserverTilBrukerVedAvbruttRevurdering(behandlingId: BehandlingId): String? {
+    private fun finnReserverTilBrukerGittVurderingsbehov(behandlingId: BehandlingId, vurderingsbehov: no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov): String? {
         val nyÅrsakTilBehandlingDokumenter = MottaDokumentService(dokumentRepository).hentMottattDokumenterAvType(
             behandlingId,
             InnsendingType.NY_ÅRSAK_TIL_BEHANDLING
         )
 
-        val revurderingAvbruttDokument = nyÅrsakTilBehandlingDokumenter.find { dokument ->
+        val dokument = nyÅrsakTilBehandlingDokumenter.find { dokument ->
             val melding = dokument.ustrukturerteData()?.let { DefaultJsonMapper.fromJson<Melding>(it) }
             melding is NyÅrsakTilBehandlingV0 &&
                     melding.årsakerTilBehandling.contains(
-                        no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDERING_AVBRUTT
+                        vurderingsbehov
                     )
         }
 
-        return (revurderingAvbruttDokument
+        return (dokument
             ?.ustrukturerteData()
             ?.let { DefaultJsonMapper.fromJson<Melding>(it) } as? NyÅrsakTilBehandlingV0)
             ?.reserverTilBruker

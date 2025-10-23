@@ -8,6 +8,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 data class ManuellVurderingForLovvalgMedlemskap(
+    val id: Long? = null,
     val lovvalgVedSøknadsTidspunkt: LovvalgVedSøknadsTidspunktDto,
     val medlemskapVedSøknadsTidspunkt: MedlemskapVedSøknadsTidspunktDto?,
     val vurdertAv: String,
