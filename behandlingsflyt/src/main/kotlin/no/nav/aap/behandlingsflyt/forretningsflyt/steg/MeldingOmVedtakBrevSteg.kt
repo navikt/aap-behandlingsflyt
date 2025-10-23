@@ -2,11 +2,13 @@
 
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevUtlederService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
-import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
@@ -25,12 +27,16 @@ class MeldingOmVedtakBrevSteg private constructor(
     private val brevbestillingService: BrevbestillingService,
     private val behandlingRepository: BehandlingRepository,
     private val trekkKlageService: TrekkKlageService,
+    private val avklaringsbehovService: AvklaringsbehovService,
+    private val avklaringsbehovRepository: AvklaringsbehovRepository,
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         brevUtlederService = BrevUtlederService(repositoryProvider, gatewayProvider),
         brevbestillingService = BrevbestillingService(repositoryProvider, gatewayProvider),
         behandlingRepository = repositoryProvider.provide(),
         trekkKlageService = TrekkKlageService(repositoryProvider),
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+        avklaringsbehovRepository = repositoryProvider.provide()
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -52,7 +58,14 @@ class MeldingOmVedtakBrevSteg private constructor(
                     unikReferanse = unikReferanse,
                     ferdigstillAutomatisk = false,
                 )
-                return FantAvklaringsbehov(Definisjon.SKRIV_VEDTAKSBREV)
+                avklaringsbehovService.oppdaterAvklaringsbehov(
+                    avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId),
+                    Definisjon.SKRIV_VEDTAKSBREV,
+                    vedtakBehøverVurdering = { true },
+                    erTilstrekkeligVurdert = { true },
+                    tilbakestillGrunnlag = {},
+                    kontekst
+                )
             }
         }
         return Fullført
