@@ -23,7 +23,7 @@ jobs:
               with:
                   gradle-version: wrapper
             - name: Bygg & test
-              run: ./gradlew test --continue --configuration-cache --stacktrace
+              run: ./gradlew test --continue --stacktrace
             - uses: dorny/test-reporter@v2.1.1
               if: success() || failure()
               with:
