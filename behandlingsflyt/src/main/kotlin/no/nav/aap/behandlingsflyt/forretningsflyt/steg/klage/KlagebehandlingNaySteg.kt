@@ -35,25 +35,25 @@ class KlagebehandlingNaySteg private constructor(
         val avslåttResultat = if (resultat is Avslått) true else false
 
         val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-        val klageHosNay = klagebehandlingNayRepository.hentHvisEksisterer(kontekst.behandlingId)
+        val vurderingHosNay = klagebehandlingNayRepository.hentHvisEksisterer(kontekst.behandlingId)
 
         val klageErTrukket = trekkKlageService.klageErTrukket(kontekst.behandlingId)
 
 
         val behandlendeEnhetVurdering = behandlendeEnhetRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurdering
-        requireNotNull(behandlendeEnhetVurdering) {
-            "Behandlende enhet skal være satt"
-        }
+        //kan være null
+        val skalBehandlesAvNay = if (behandlendeEnhetVurdering?.skalBehandlesAvNay == true) true else false
+
 
             avklaringsbehovService.oppdaterAvklaringsbehov(
                 definisjon = Definisjon.VURDER_KLAGE_NAY,
                 avklaringsbehovene = avklaringsbehov,
                 kontekst = kontekst,
                 vedtakBehøverVurdering =  {
-                    if(klageErTrukket  || avslåttResultat || behandlendeEnhetVurdering.skalBehandlesAvNay ) false else true
+                    if(klageErTrukket  || avslåttResultat || !skalBehandlesAvNay ) false else true
                 }                 ,
                 erTilstrekkeligVurdert =  {
-                     if(klageHosNay != null) true else false },
+                     if(vurderingHosNay != null) true else false },
                 tilbakestillGrunnlag = {}
 
             )

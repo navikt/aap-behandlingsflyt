@@ -3405,6 +3405,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         // KlagebehandlingNaySteg
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
         assertThat(åpneAvklaringsbehov).hasSize(1)
+        println(åpneAvklaringsbehov.toString())
         assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.VURDER_KLAGE_NAY)
 
         løsAvklaringsBehov(
