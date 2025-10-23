@@ -60,9 +60,9 @@ class SamordningUføreSteg(
                 harVurdertAllePerioder(kontekst.behandlingId)
             },
             tilbakestillGrunnlag = {
-                val forrigeGrunnlag =
-                    kontekst.forrigeBehandlingId?.let { samordningUføreRepository.hentHvisEksisterer(it) }?.vurdering
-                forrigeGrunnlag?.let { samordningUføreRepository.lagre(kontekst.behandlingId, it) }
+                kontekst.forrigeBehandlingId
+                    ?.let { samordningUføreRepository.hentHvisEksisterer(it)?.vurdering }
+                    ?.also { samordningUføreRepository.lagre(kontekst.behandlingId, it) }
             },
             kontekst = kontekst
 
