@@ -1941,12 +1941,12 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         // Sender inn en søknad
         var (sak, behandling) = sendInnFørsteSøknad(periode = periode)
 
-        var alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
+        val alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
         assertThat(alleAvklaringsbehov).isNotEmpty()
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
 
-        behandling = løsAvklaringsBehov(
-            behandling, AvklarSykdomLøsning(
+        behandling = behandling.løsAvklaringsBehov(
+            AvklarSykdomLøsning(
                 sykdomsvurderinger = listOf(
                     SykdomsvurderingLøsningDto(
                         begrunnelse = "Arbeidsevnen er nedsatt med mer enn halvparten",
@@ -1962,10 +1962,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     )
                 )
             )
-        )
-
-        behandling = løsAvklaringsBehov(
-            behandling,
+        ).løsAvklaringsBehov(
             AvklarBistandsbehovLøsning(
                 bistandsVurdering = BistandVurderingLøsningDto(
                     begrunnelse = "Trenger hjelp fra nav",
@@ -1978,82 +1975,40 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 ),
             ),
         )
-
-        behandling = løsAvklaringsBehov(
-            behandling,
-            RefusjonkravLøsning(
-                listOf(
-                    RefusjonkravVurderingDto(
-                        harKrav = true,
-                        fom = LocalDate.now(),
-                        tom = null,
-                        navKontor = "",
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .kvalitetssikreOk()
+            .løsBeregningstidspunkt()
+            .løsForutgåendeMedlemskap()
+            .løsOppholdskrav(sak.rettighetsperiode.fom)
+            .løsAvklaringsBehov(
+                AvklarSamordningGraderingLøsning(
+                    VurderingerForSamordning(
+                        begrunnelse = "Sykepengervurdering",
+                        maksDatoEndelig = true,
+                        fristNyRevurdering = null,
+                        vurderteSamordningerData = listOf(
+                            SamordningVurderingData(
+                                ytelseType = Ytelse.SYKEPENGER,
+                                periode = Periode(
+                                    fom = LocalDate.now(),
+                                    tom = LocalDate.now().plusDays(5),
+                                ),
+                                gradering = 50,
+                                manuell = true
+                            )
+                        ),
                     )
                 )
             )
-        )
-
-        behandling = løsSykdomsvurderingBrev(behandling)
-
-        behandling = kvalitetssikreOk(behandling)
-
-        behandling = løsAvklaringsBehov(
-            behandling,
-            FastsettBeregningstidspunktLøsning(
-                beregningVurdering = BeregningstidspunktVurderingDto(
-                    begrunnelse = "Trenger hjelp fra Nav",
-                    nedsattArbeidsevneDato = LocalDate.now(),
-                    ytterligereNedsattArbeidsevneDato = null,
-                    ytterligereNedsattBegrunnelse = null
-                ),
-            ),
-        )
-
-        behandling = løsForutgåendeMedlemskap(behandling)
-            .løsOppholdskrav(sak.rettighetsperiode.fom)
-        behandling = løsAvklaringsBehov(
-            behandling, AvklarSamordningGraderingLøsning(
-                VurderingerForSamordning(
-                    begrunnelse = "Sykepengervurdering",
-                    maksDatoEndelig = true,
-                    fristNyRevurdering = null,
-                    vurderteSamordningerData = listOf(
-                        SamordningVurderingData(
-                            ytelseType = Ytelse.SYKEPENGER,
-                            periode = Periode(
-                                fom = LocalDate.now(),
-                                tom = LocalDate.now().plusDays(5),
-                            ),
-                            gradering = 50,
-                            manuell = true
-                        )
-                    ),
-                )
-            )
-        )
-
-        behandling = løsAvklaringsBehov(behandling, ForeslåVedtakLøsning())
-
-        // Beslutter godkjenner ikke samordning gradering
-        alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
-        behandling = løsAvklaringsBehov(
-            behandling, FatteVedtakLøsning(
-                alleAvklaringsbehov
-                    .filter { behov -> behov.erTotrinn() }
-                    .map { behov ->
-                        TotrinnsVurdering(
-                            behov.definisjon.kode,
-                            behov.definisjon != Definisjon.AVKLAR_SAMORDNING_GRADERING,
-                            "begrunnelse",
-                            emptyList()
-                        )
-                    }), Bruker("BESLUTTER")
-        ).medKontekst {
-            assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
-            // Avklar samordning gradering gjenåpnes, behandlingen står i samordning-steget
-            assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SAMORDNING_GRADERING) }
-            assertThat(this.behandling.aktivtSteg()).isEqualTo(StegType.SAMORDNING_GRADERING)
-        }
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtakEllerSendRetur(returVed = Definisjon.AVKLAR_SAMORDNING_GRADERING)
+            .medKontekst {
+                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+                // Avklar samordning gradering gjenåpnes, behandlingen står i samordning-steget
+                assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SAMORDNING_GRADERING) }
+                assertThat(this.behandling.aktivtSteg()).isEqualTo(StegType.SAMORDNING_GRADERING)
+            }
     }
 
     @Test
