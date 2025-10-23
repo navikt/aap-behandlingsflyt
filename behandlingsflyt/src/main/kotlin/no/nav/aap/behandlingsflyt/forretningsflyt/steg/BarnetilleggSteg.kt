@@ -20,6 +20,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
@@ -97,8 +98,12 @@ class BarnetilleggSteg(
         )
     }
 
-    private fun harOppgittBarnEllerFolkeregistrerteBarn(grunnlag: BarnGrunnlag?) =
-        grunnlag?.oppgitteBarn != null || grunnlag?.registerbarn?.barn?.isNotEmpty() == true
+    private fun harOppgittBarnEllerFolkeregistrerteBarn(grunnlag: BarnGrunnlag?): Boolean {
+        if (Miljø.erProd()) {
+            return grunnlag?.oppgitteBarn != null
+        }
+        return grunnlag?.oppgitteBarn != null || grunnlag?.registerbarn?.barn?.isNotEmpty() == true
+    }
 
     private fun harPerioderMedBarnTilAvklaring(kontekst: FlytKontekstMedPerioder): Boolean {
         val barnetillegg = barnetilleggService.beregn(kontekst.behandlingId)
