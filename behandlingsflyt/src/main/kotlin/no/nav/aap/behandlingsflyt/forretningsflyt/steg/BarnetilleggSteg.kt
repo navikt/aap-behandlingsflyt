@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -66,12 +67,13 @@ class BarnetilleggSteg(
             VurderingType.FØRSTEGANGSBEHANDLING ->
                 tidligereVurderinger.muligMedRettTilAAP(kontekst, type())
                         && kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty()
-                        && (barneGrunnlag?.oppgitteBarn != null || barneGrunnlag?.registerbarn?.barn?.isNotEmpty() == true)
+                        && harOppgittBarnEllerFolkeregistrerteBarn(barneGrunnlag)
 
             VurderingType.REVURDERING ->
-                !tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())
+                (!tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())
                         || (Vurderingsbehov.DØDSFALL_BARN in kontekst.vurderingsbehovRelevanteForSteg)
-                        && kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty()
+                        && kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty())
+                        && harOppgittBarnEllerFolkeregistrerteBarn(barneGrunnlag)
 
             VurderingType.MELDEKORT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
@@ -80,6 +82,9 @@ class BarnetilleggSteg(
                 false
         }
     }
+
+    private fun harOppgittBarnEllerFolkeregistrerteBarn(grunnlag: BarnGrunnlag?) =
+        grunnlag?.oppgitteBarn != null || grunnlag?.registerbarn?.barn?.isNotEmpty() == true
 
     private fun harPerioderMedBarnTilAvklaring(kontekst: FlytKontekstMedPerioder): Boolean {
         val barnetillegg = barnetilleggService.beregn(kontekst.behandlingId)

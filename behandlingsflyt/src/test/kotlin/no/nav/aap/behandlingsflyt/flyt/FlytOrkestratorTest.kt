@@ -409,6 +409,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsBeregningstidspunkt()
             .løsForutgåendeMedlemskap()
             .løsOppholdskrav(fom)
+            .løsBarnetillegg()
 
         val barn = dataSource.transaction {
             BarnRepositoryImpl(it).hent(behandling.id)
@@ -490,6 +491,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsBeregningstidspunkt()
             .løsForutgåendeMedlemskap()
             .løsOppholdskrav(fom)
+            .løsBarnetillegg()
 
         val barn = dataSource.transaction {
             BarnRepositoryImpl(it).hent(behandling.id)
@@ -718,6 +720,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsBeregningstidspunkt()
             .løsForutgåendeMedlemskap()
             .løsOppholdskrav(fom)
+            .løsBarnetillegg()
             .løsAvklaringsBehov(
                 AvklarSamordningUføreLøsning(
                     samordningUføreVurdering = SamordningUføreVurderingDto(
