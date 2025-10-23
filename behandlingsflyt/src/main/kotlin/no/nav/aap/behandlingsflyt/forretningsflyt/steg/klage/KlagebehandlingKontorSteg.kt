@@ -2,17 +2,16 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Avslått
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.BehandlendeEnhetRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.kontor.KlagebehandlingKontorRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -24,6 +23,7 @@ class KlagebehandlingKontorSteg private constructor(
     private val klageresultatUtleder: KlageresultatUtleder,
     private val trekkKlageService: TrekkKlageService,
     private val avklaringsbehovService: AvklaringsbehovService,
+    private val kontorRepository: KlagebehandlingKontorRepository
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val resultat = klageresultatUtleder.utledKlagebehandlingResultat(kontekst.behandlingId)
@@ -41,7 +41,7 @@ class KlagebehandlingKontorSteg private constructor(
             vedtakBehøverVurdering = {
                 !klageErTrukket && !klageErAvslått && skalBehandlesAvKontor
             },
-            erTilstrekkeligVurdert = { !avklaringsbehov.harIkkeBlittLøst(Definisjon.VURDER_KLAGE_KONTOR) },
+            erTilstrekkeligVurdert = { kontorRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurdering != null },
             tilbakestillGrunnlag = { /* TODO: Eventuell utnulling av vurdering kan skje i senere steg. Vil kanskje ta vare på vurderingen "så lenge som mulig" i tilfelle man ombestemmer seg */ },
             kontekst = kontekst,
         )
@@ -60,17 +60,12 @@ class KlagebehandlingKontorSteg private constructor(
                 KlageresultatUtleder(repositoryProvider),
                 TrekkKlageService(repositoryProvider),
                 AvklaringsbehovService(repositoryProvider),
+                repositoryProvider.provide(),
             )
         }
 
         override fun type(): StegType {
             return StegType.KLAGEBEHANDLING_KONTOR
         }
-    }
-
-    private fun Avklaringsbehovene.harIkkeBlittLøst(definisjon: Definisjon): Boolean {
-        return this.alle()
-            .filter { it.definisjon == definisjon }
-            .none { it.status() == Status.AVSLUTTET }
     }
 }
