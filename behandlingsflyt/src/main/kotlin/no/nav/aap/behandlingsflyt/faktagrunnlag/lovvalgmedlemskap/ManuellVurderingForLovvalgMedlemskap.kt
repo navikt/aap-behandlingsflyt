@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.LøsningForPeriode
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLand
 import no.nav.aap.behandlingsflyt.historiskevurderinger.HistoriskVurderingDto
 import no.nav.aap.behandlingsflyt.historiskevurderinger.ÅpenPeriodeDto
@@ -25,6 +26,14 @@ data class ManuellVurderingForLovvalgMedlemskapDto(
     val lovvalgVedSøknadsTidspunkt: LovvalgVedSøknadsTidspunktDto,
     val medlemskapVedSøknadsTidspunkt: MedlemskapVedSøknadsTidspunktDto?
 )
+
+data class PeriodisertManuellVurderingForLovvalgMedlemskapDto(
+    override val fom: LocalDate,
+    override val tom: LocalDate?,
+    override val begrunnelse: String,
+    val lovvalg: LovvalgVedSøknadsTidspunktDto,
+    val medlemskap: MedlemskapVedSøknadsTidspunktDto?,
+) : LøsningForPeriode
 
 class HistoriskManuellVurderingForLovvalgMedlemskap(
     vurdertDato: LocalDate,

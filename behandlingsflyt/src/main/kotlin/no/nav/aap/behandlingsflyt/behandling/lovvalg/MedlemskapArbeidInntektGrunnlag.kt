@@ -5,6 +5,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
+import no.nav.aap.behandlingsflyt.utils.Validation
+import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
 
@@ -54,4 +58,39 @@ enum class InntektTyper {
     SYKEPENGERTILFISKER,
     SYKEPENGERTILJORDOGSKOGBRUKERE,
     FERIEPENGERSYKEPENGERTILFISKERSOMBAREHARHYRE,
+}
+
+fun Collection<ManuellVurderingForLovvalgMedlemskap>.tilTidslinje(): Tidslinje<ManuellVurderingForLovvalgMedlemskap> =
+    sortedBy { it.vurdertDato }
+        .groupBy { it.vurdertIBehandling }
+        .map {
+            val vurderingerForBehandling = it.value.sortedBy { vurdering -> vurdering.fom }
+            Tidslinje(
+                vurderingerForBehandling.map { periode ->
+                    Segment(
+                        // TODO etter eksisterende data er migrert, vil ikke lenger fom være nullable
+                        periode = Periode(fom = periode.fom!!, tom = periode.tom ?: LocalDate.MAX),
+                        verdi = periode
+                    )
+                }
+            )
+        }
+        .fold(Tidslinje()) { acc, other -> acc.kombiner(other, StandardSammenslåere.prioriterHøyreSideCrossJoin()) }
+
+fun Tidslinje<ManuellVurderingForLovvalgMedlemskap>.validerGyldigForRettighetsperiode(rettighetsperiode: Periode): Validation<Tidslinje<ManuellVurderingForLovvalgMedlemskap>> {
+    val periodeForVurdering = helePerioden()
+
+    if (!erSammenhengende()) {
+        return Validation.Invalid(this, "Periodene for oppholdskrav er ikke sammenhengende")
+    }
+
+    if(periodeForVurdering.fom > rettighetsperiode.fom) {
+        return Validation.Invalid(this, "Det er ikke tatt stilling til hele rettighetsperioden. Rettisgetsperioden for saken starter ${rettighetsperiode.fom} mens vurderingens første periode starter ${periodeForVurdering.fom}. ")
+    }
+
+    if(periodeForVurdering.tom < rettighetsperiode.tom) {
+        return Validation.Invalid(this, "Det er ikke tatt stilling til hele rettighetsperioden. Rettisgetsperioden for saken slutter ${rettighetsperiode.tom} mens vurderingens siste periode slutter ${periodeForVurdering.tom}. ")
+    }
+
+    return Validation.Valid(this)
 }

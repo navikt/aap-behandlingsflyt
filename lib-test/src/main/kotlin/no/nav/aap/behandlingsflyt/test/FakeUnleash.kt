@@ -27,6 +27,7 @@ object FakeUnleash : FakeUnleashBase(
         BehandlingsflytFeature.OvergangUfore to false,
         BehandlingsflytFeature.IverksettUtbetalingSomSelvstendigJobb to true,
         BehandlingsflytFeature.OvergangArbeid to false,
+        BehandlingsflytFeature.LovvalgMedlemskapPeriodisert to true,
     )
 )
 
@@ -41,5 +42,6 @@ object FakeUnleashFasttrackAktivitetsplikt : FakeUnleashBase(
         BehandlingsflytFeature.OvergangUfore to true,
         BehandlingsflytFeature.IverksettUtbetalingSomSelvstendigJobb to true,
         BehandlingsflytFeature.OvergangArbeid to true,
+        BehandlingsflytFeature.LovvalgMedlemskapPeriodisert to true,
     )
 )

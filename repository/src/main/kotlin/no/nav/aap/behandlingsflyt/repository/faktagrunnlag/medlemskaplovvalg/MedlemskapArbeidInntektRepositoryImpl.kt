@@ -145,7 +145,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 setLong(2, grunnlagOppslag?.arbeiderId)
                 setLong(3, grunnlagOppslag?.inntektINorgeId)
                 setLong(4, grunnlagOppslag?.medlId)
-                setLong(5, manuellVurderingId ?: grunnlagOppslag?.manuellVurderingId)
+                setLong(5, manuellVurderingId)
                 setLong(6, vurderingerId)
             }
             setResultValidator { require(it == 1) }

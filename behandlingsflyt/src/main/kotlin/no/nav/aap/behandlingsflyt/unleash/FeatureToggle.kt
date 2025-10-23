@@ -22,6 +22,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     OvergangUfore,
     IverksettUtbetalingSomSelvstendigJobb,
     OvergangArbeid,
+    LovvalgMedlemskapPeriodisert
     ;
 
     override fun key(): String = name
