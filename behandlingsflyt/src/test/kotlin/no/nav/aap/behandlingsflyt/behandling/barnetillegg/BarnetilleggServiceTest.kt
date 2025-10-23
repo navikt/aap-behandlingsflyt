@@ -25,8 +25,10 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
+import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.util.*
@@ -34,6 +36,11 @@ import java.util.*
 class BarnetilleggServiceTest {
     val gatewayProvider = createGatewayProvider {
         register<FakeUnleash>()
+    }
+
+    @BeforeEach
+    fun setup() {
+        System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
     }
 
     @Test

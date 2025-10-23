@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.barnetillegg.BarnetilleggService
+import no.nav.aap.behandlingsflyt.behandling.barnetillegg.RettTilBarnetillegg
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggPeriode
@@ -20,7 +21,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.miljo.Miljø
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
@@ -45,12 +46,13 @@ class BarnetilleggSteg(
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+        val barnetilgangTidslinje = beregnOgOppdaterBarnetilleggTidslinke(kontekst)
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
             avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.AVKLAR_BARNETILLEGG,
             vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst) },
-            erTilstrekkeligVurdert = { !harPerioderMedBarnTilAvklaring(kontekst) },
+            erTilstrekkeligVurdert = { !harPerioderMedBarnTilAvklaring(barnetilgangTidslinje) },
             tilbakestillGrunnlag = { tilbakestillBarnetillegg(kontekst)},
             kontekst
         )
@@ -99,13 +101,20 @@ class BarnetilleggSteg(
     }
 
     private fun harOppgittBarnEllerFolkeregistrerteBarn(grunnlag: BarnGrunnlag?): Boolean {
-        if (Miljø.erProd()) {
-            return grunnlag?.oppgitteBarn != null
-        }
         return grunnlag?.oppgitteBarn != null || grunnlag?.registerbarn?.barn?.isNotEmpty() == true
     }
 
-    private fun harPerioderMedBarnTilAvklaring(kontekst: FlytKontekstMedPerioder): Boolean {
+    private fun harPerioderMedBarnTilAvklaring(barnetillegg: Tidslinje<RettTilBarnetillegg>): Boolean {
+        val finnesBarnTilAvklaring = barnetillegg.segmenter().any { it.verdi.harBarnTilAvklaring() }
+        if (finnesBarnTilAvklaring) {
+            val perioderTilAvklaring = barnetillegg.segmenter().filter { it.verdi.harBarnTilAvklaring() }
+            log.info("Det finnes perioder med barn som ikke har blitt avklart. Antall: ${perioderTilAvklaring.size}")
+        }
+
+        return finnesBarnTilAvklaring
+    }
+
+    private fun beregnOgOppdaterBarnetilleggTidslinke(kontekst: FlytKontekstMedPerioder): Tidslinje<RettTilBarnetillegg> {
         val barnetillegg = barnetilleggService.beregn(kontekst.behandlingId)
 
         barnetilleggRepository.lagre(
@@ -119,13 +128,7 @@ class BarnetilleggSteg(
                 }
         )
 
-        val finnesBarnTilAvklaring = barnetillegg.segmenter().any { it.verdi.harBarnTilAvklaring() }
-        if (finnesBarnTilAvklaring) {
-            val perioderTilAvklaring = barnetillegg.segmenter().filter { it.verdi.harBarnTilAvklaring() }
-            log.info("Det finnes perioder med barn som ikke har blitt avklart. Antall: ${perioderTilAvklaring.size}")
-        }
-
-        return finnesBarnTilAvklaring
+        return barnetillegg
     }
 
     companion object : FlytSteg {
