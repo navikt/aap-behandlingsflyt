@@ -166,7 +166,7 @@ class FatteVedtakStegTest {
             begrunnelse = "Begrunnelse",
             endretAv = "Ident",
         )
-        
+
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId = BehandlingId(1L))
         assertThat(
             avklaringsbehovene.hentBehovForDefinisjon(Definisjon.FATTE_VEDTAK)?.status()

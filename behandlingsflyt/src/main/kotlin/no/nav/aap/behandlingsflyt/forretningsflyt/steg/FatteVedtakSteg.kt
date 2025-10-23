@@ -26,10 +26,25 @@ class FatteVedtakSteg(
     private val tidligereVurderinger: TidligereVurderinger,
     private val klageresultatUtleder: KlageresultatUtleder,
 
-) : BehandlingSteg {
-    
+    ) : BehandlingSteg {
+
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+
+        if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type()) || trekkKlageService.klageErTrukket(
+                kontekst.behandlingId
+            )
+        ) {
+            avklaringsbehovService.oppdaterAvklaringsbehov(
+                avklaringsbehovene = avklaringsbehovene,
+                definisjon = Definisjon.FATTE_VEDTAK,
+                vedtakBehøverVurdering = { false },
+                erTilstrekkeligVurdert = { true },
+                tilbakestillGrunnlag = {},
+                kontekst
+            )
+            return Fullført
+        }
 
         if (kontekst.behandlingType == TypeBehandling.Klage) {
             val klageresultat = klageresultatUtleder.utledKlagebehandlingResultat(kontekst.behandlingId)
@@ -37,23 +52,24 @@ class FatteVedtakSteg(
                 avklaringsbehovService.oppdaterAvklaringsbehov(
                     avklaringsbehovene = avklaringsbehovene,
                     definisjon = Definisjon.FATTE_VEDTAK,
-                    vedtakBehøverVurdering = { true },
+                    vedtakBehøverVurdering = { false },
                     erTilstrekkeligVurdert = { true },
                     tilbakestillGrunnlag = {},
                     kontekst
                 )
                 return Fullført
             }
+        } else {
+            avklaringsbehovService.oppdaterAvklaringsbehov(
+                avklaringsbehovene = avklaringsbehovene,
+                definisjon = Definisjon.FATTE_VEDTAK,
+                vedtakBehøverVurdering = { false },
+                erTilstrekkeligVurdert = { true },
+                tilbakestillGrunnlag = {},
+                kontekst
+            )
         }
 
-        avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovene,
-            definisjon = Definisjon.FATTE_VEDTAK,
-            vedtakBehøverVurdering = { !trekkKlageService.klageErTrukket(kontekst.behandlingId) || tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())},
-            erTilstrekkeligVurdert = { true },
-            tilbakestillGrunnlag = {},
-            kontekst
-        )
 
         if (avklaringsbehovene.skalTilbakeføresEtterTotrinnsVurdering()) {
             return TilbakeføresFraBeslutter
@@ -78,8 +94,11 @@ class FatteVedtakSteg(
             gatewayProvider: GatewayProvider
         ): BehandlingSteg {
             return FatteVedtakSteg(
-                repositoryProvider.provide(), TrekkKlageService(repositoryProvider),
-                AvklaringsbehovService(repositoryProvider), TidligereVurderingerImpl(repositoryProvider), klageresultatUtleder = KlageresultatUtleder(repositoryProvider)
+                repositoryProvider.provide(),
+                TrekkKlageService(repositoryProvider),
+                AvklaringsbehovService(repositoryProvider),
+                TidligereVurderingerImpl(repositoryProvider),
+                klageresultatUtleder = KlageresultatUtleder(repositoryProvider)
             )
         }
 
