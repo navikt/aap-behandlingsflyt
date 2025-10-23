@@ -69,6 +69,12 @@ class FatteVedtakStegTest {
         )
         every { tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, StegType.FATTE_VEDTAK) } returns false
 
+        every {
+            avklaringsbehovService.oppdaterAvklaringsbehov(
+                any(), any(), any(), any(), any(), any()
+            )
+        } returns Unit
+        
         val resultat = steg().utfør(kontekst)
         assertThat(resultat).isEqualTo(Fullført)
     }
@@ -100,6 +106,12 @@ class FatteVedtakStegTest {
             vilkårSomSkalOmgjøres = listOf(Hjemmel.FOLKETRYGDLOVEN_11_6)
         )
         every { tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, StegType.FATTE_VEDTAK) } returns false
+
+        every {
+            avklaringsbehovService.oppdaterAvklaringsbehov(
+                any(), any(), any(), any(), any(), any()
+            )
+        } returns Unit
 
         val resultat = steg().utfør(kontekst)
         assertThat(resultat).isEqualTo(Fullført)
