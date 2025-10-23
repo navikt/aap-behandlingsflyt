@@ -31,61 +31,43 @@ class FatteVedtakSteg(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
-        if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type()) || trekkKlageService.klageErTrukket(
-                kontekst.behandlingId
-            )
-        ) {
+        fun oppdaterAvklaringsbehov(vedtakBehøverVurdering: Boolean, erTilstrekkeligVurdert: Boolean) {
             avklaringsbehovService.oppdaterAvklaringsbehov(
                 avklaringsbehovene = avklaringsbehovene,
                 definisjon = Definisjon.FATTE_VEDTAK,
-                vedtakBehøverVurdering = { false },
-                erTilstrekkeligVurdert = { true },
+                vedtakBehøverVurdering = { vedtakBehøverVurdering },
+                erTilstrekkeligVurdert = { erTilstrekkeligVurdert },
                 tilbakestillGrunnlag = {},
-                kontekst
+                kontekst = kontekst
             )
+        }
+
+        if (
+            tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type()) ||
+            trekkKlageService.klageErTrukket(kontekst.behandlingId)
+        ) {
+            oppdaterAvklaringsbehov(vedtakBehøverVurdering = false, erTilstrekkeligVurdert = true)
             return Fullført
         }
 
         if (kontekst.behandlingType == TypeBehandling.Klage) {
             val klageresultat = klageresultatUtleder.utledKlagebehandlingResultat(kontekst.behandlingId)
             if (klageresultat is Opprettholdes) {
-                avklaringsbehovService.oppdaterAvklaringsbehov(
-                    avklaringsbehovene = avklaringsbehovene,
-                    definisjon = Definisjon.FATTE_VEDTAK,
-                    vedtakBehøverVurdering = { false },
-                    erTilstrekkeligVurdert = { true },
-                    tilbakestillGrunnlag = {},
-                    kontekst
-                )
+                oppdaterAvklaringsbehov(vedtakBehøverVurdering = false, erTilstrekkeligVurdert = true)
                 return Fullført
             }
         } else {
-            avklaringsbehovService.oppdaterAvklaringsbehov(
-                avklaringsbehovene = avklaringsbehovene,
-                definisjon = Definisjon.FATTE_VEDTAK,
-                vedtakBehøverVurdering = { false },
-                erTilstrekkeligVurdert = { true },
-                tilbakestillGrunnlag = {},
-                kontekst
-            )
+            oppdaterAvklaringsbehov(vedtakBehøverVurdering = false, erTilstrekkeligVurdert = true)
         }
 
-
-        if (avklaringsbehovene.skalTilbakeføresEtterTotrinnsVurdering()) {
-            return TilbakeføresFraBeslutter
-        }
-        if (avklaringsbehovene.harHattAvklaringsbehovSomHarKrevdToTrinn()) {
-            avklaringsbehovService.oppdaterAvklaringsbehov(
-                avklaringsbehovene = avklaringsbehovene,
-                definisjon = Definisjon.FATTE_VEDTAK,
-                vedtakBehøverVurdering = { true },
-                erTilstrekkeligVurdert = { true },
-                tilbakestillGrunnlag = {},
-                kontekst
-            )
+        when {
+            avklaringsbehovene.skalTilbakeføresEtterTotrinnsVurdering() -> return TilbakeføresFraBeslutter
+            avklaringsbehovene.harHattAvklaringsbehovSomHarKrevdToTrinn() ->
+                oppdaterAvklaringsbehov(vedtakBehøverVurdering = true, erTilstrekkeligVurdert = true)
         }
 
         return Fullført
+
     }
 
     companion object : FlytSteg {
