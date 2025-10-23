@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class FastsettPåklagetBehandlingLøser(
@@ -42,12 +43,12 @@ class FastsettPåklagetBehandlingLøser(
 
     private fun Behandling.valider(): Behandling {
         if (!this.typeBehandling().erYtelsesbehandling()) {
-            throw IllegalArgumentException("Kan ikke klage på type ${this.typeBehandling()}")
+            throw UgyldigForespørselException("Kan ikke klage på type ${this.typeBehandling()}")
         }
 
 
         if (!this.status().erAvsluttet()) {
-            throw IllegalArgumentException("Kan ikke klage på åpen behandling ${this.status()}")
+            throw UgyldigForespørselException("Kan ikke klage på åpen behandling ${this.status()}")
         }
         return this
     }

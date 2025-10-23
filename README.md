@@ -48,11 +48,11 @@ I IntelliJ skal det være plug-n-play med to ulike run-konfigurasjoner for TestA
 
 Kjør `docker-compose up -d`
 
-Deretter velg konfigurasjonen `TestApp (med testcontainers)` i Run/Debug-menyen. \
+Deretter velg konfigurasjonen `TestApp` i Run/Debug-menyen.
 
 **Med TestContainers** (databasen resettes ved hver app restart)
 
-Velg konfigurasjonen `TestApp` i Run/Debug-menyen. \
+Velg konfigurasjonen `TestApp (med testcontainers)` i Run/Debug-menyen.
 
 Alternativt, for å unngå å starte IntelliJ, gå i rotmappen og kjør:
 
@@ -70,7 +70,7 @@ eller [obo-token](http://azure-token-generator.intern.dev.nav.no/api/obo?aud=dev
 
 ### Mot dev-gcp
 
-> ️⚠️ **_Må brukes med omhu siden det potensielt kan ødelegge koblinger mellom oppgave og behandling i dev!_** ⚠️ 
+> ️⚠️ **_Bruk med omhu siden det potensielt kan ødelegge koblinger mellom oppgave og behandling i dev!_**
 > 
 > Bruk **TestApp** med mindre du har behov for dev-data fra eksterne systemer. 
 
