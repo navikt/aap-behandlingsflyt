@@ -20,8 +20,31 @@ application {
 tasks {
 
     withType<ShadowJar> {
-        duplicatesStrategy = DuplicatesStrategy.INCLUDE
+        // Duplikate class og ressurs-filer kan skape runtime-feil, fordi JVM-en velger den første på classpath
+        // ved duplikater, og det kan være noe annet enn vår kode (og libs vi bruker) forventer.
+        // Derfor logger vi en advarsel hvis vi oppdager duplikater.
+        duplicatesStrategy = DuplicatesStrategy.WARN
+
         mergeServiceFiles()
+
+        filesMatching(listOf("META-INF/services/**", "META-INF/io.netty.*")) {
+            // For disse filene fra upstream, antar vi at de er identiske hvis de har samme navn.
+            duplicatesStrategy = DuplicatesStrategy.INCLUDE
+        }
+
+        // Helt unødvendige filer som ofte skaper duplikater
+        val fjernDisseDuplikatene = listOf(
+            "*.kotlin_module", // Brukes ikke på runtime
+            "*.SF", "*.DSA", "*.RSA", // Signatur-filer som ikke trengs på runtime
+            "*NOTICE*", "*LICENSE*", "*DEPENDENCIES*", "*README*", "*COPYRIGHT*", // til mennesker bare
+            "maven/**", // Maven metadata som ikke trengs på runtime
+            "proguard/**", // Proguard-konfigurasjoner som ikke trengs på runtime
+            "com.android.tools/**" // Android build-filer som ikke trengs på runtime
+        )
+        fjernDisseDuplikatene.forEach { pattern -> exclude("META-INF/$pattern") }
+
+        // Unntak: Brukes av com.papsign.ktor.openapigen.SwaggerUIVersion
+        include("/META-INF/maven/org.webjars/swagger-ui/pom.properties")
     }
 }
 
@@ -39,11 +62,6 @@ tasks.register<JavaExec>("beregnCSV") {
     classpath = sourceSets.test.get().runtimeClasspath
     standardInput = System.`in`
     mainClass.set("no.nav.aap.behandlingsflyt.BeregnMedCSVKt")
-}
-
-tasks.register<Copy>("copyRuntimeLibs") {
-    from(configurations.runtimeClasspath)
-    into("build/libs/runtime-libs")
 }
 
 dependencies {
