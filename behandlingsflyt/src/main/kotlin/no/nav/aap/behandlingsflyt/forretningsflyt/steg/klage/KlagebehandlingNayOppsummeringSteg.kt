@@ -42,12 +42,14 @@ class KlagebehandlingNayOppsummeringSteg private constructor(
     private fun vedtakBehøverVurdering(
         kontekst: FlytKontekstMedPerioder,
     ): Boolean {
+        if (girAvslag(kontekst) || trekkKlageService.klageErTrukket(kontekst.behandlingId)) {
+            return false
+        }
+
         val vurdering = behandlendeEnhetRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurdering
             ?: throw IllegalStateException("Behandlende enhet skal være satt")
 
         return vurdering.skalBehandlesAvBådeNavKontorOgNay()
-                && !trekkKlageService.klageErTrukket(kontekst.behandlingId)
-                && !girAvslag(kontekst)
     }
 
     private fun girAvslag(kontekst: FlytKontekstMedPerioder): Boolean {
