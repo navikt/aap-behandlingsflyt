@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.KonsekvensAvOppfølging
 import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.OppfølgingsBehandlingRepository
-import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.OppfølgingsoppgaveGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
@@ -38,7 +37,6 @@ class AvklarOppfølgingSteg(
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-        val grunnlag = oppfølgingsBehandlingRepository.hent(kontekst.behandlingId)
         val oppfølgingsoppgavedokument =
             requireNotNull(mottaDokumentService.hentOppfølgingsBehandlingDokument(kontekst.behandlingId)) {
                 "Oppfølgingsoppgavedokument var null i steg ${type()}. BehandlingId: ${kontekst.behandlingId}"
@@ -55,11 +53,12 @@ class AvklarOppfølgingSteg(
             kontekst = kontekst
         )
 
-        håndterVurderingAvOppfølging(grunnlag, kontekst)
+        håndterVurderingAvOppfølging(kontekst)
         return Fullført
     }
 
-    private fun håndterVurderingAvOppfølging(grunnlag: OppfølgingsoppgaveGrunnlag?, kontekst: FlytKontekstMedPerioder) {
+    private fun håndterVurderingAvOppfølging(kontekst: FlytKontekstMedPerioder) {
+        val grunnlag = oppfølgingsBehandlingRepository.hent(kontekst.behandlingId)
         if (grunnlag == null) {
             return
         }
