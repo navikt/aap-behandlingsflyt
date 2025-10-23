@@ -43,7 +43,7 @@ class TjenestepensjonRefusjonskravSteg private constructor(
                 when (kontekst.vurderingType) {
                     VurderingType.FØRSTEGANGSBEHANDLING -> {
                         when {
-                            tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> true
+                            tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
 
                             else -> {
                                 val tpResultat = tjenestePensjonRepository.hent(kontekst.behandlingId)
