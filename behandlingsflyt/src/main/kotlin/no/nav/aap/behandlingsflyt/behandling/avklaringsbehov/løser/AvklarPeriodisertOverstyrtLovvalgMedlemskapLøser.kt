@@ -43,7 +43,7 @@ class AvklarPeriodisertOverstyrtLovvalgMedlemskapLøser(
                 vurdertDato = LocalDateTime.now(),
                 overstyrt = true
             )
-        }.toSet()
+        }
 
         val tidligereVurderinger = kontekst.kontekst.forrigeBehandlingId?.let { medlemskapArbeidInntektRepository.hentHvisEksisterer(it) }?.vurderinger ?: emptyList()
         val komplettTidslinje = tidligereVurderinger.tilTidslinje().kombiner(nyeVurderinger.tilTidslinje(), StandardSammenslåere.prioriterHøyreSideCrossJoin())

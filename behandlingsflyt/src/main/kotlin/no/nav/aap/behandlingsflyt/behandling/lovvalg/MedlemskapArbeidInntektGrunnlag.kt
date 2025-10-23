@@ -81,15 +81,15 @@ fun Tidslinje<ManuellVurderingForLovvalgMedlemskap>.validerGyldigForRettighetspe
     val periodeForVurdering = helePerioden()
 
     if (!erSammenhengende()) {
-        return Validation.Invalid(this, "Periodene for oppholdskrav er ikke sammenhengende")
+        return Validation.Invalid(this, "Periodene for lovvalg og medlemskap er ikke sammenhengende")
     }
 
     if(periodeForVurdering.fom > rettighetsperiode.fom) {
-        return Validation.Invalid(this, "Det er ikke tatt stilling til hele rettighetsperioden. Rettisgetsperioden for saken starter ${rettighetsperiode.fom} mens vurderingens første periode starter ${periodeForVurdering.fom}. ")
+        return Validation.Invalid(this, "Det er ikke tatt stilling til hele rettighetsperioden. Rettighetsperioden for saken starter ${rettighetsperiode.fom} mens vurderingens første periode starter ${periodeForVurdering.fom}. ")
     }
 
     if(periodeForVurdering.tom < rettighetsperiode.tom) {
-        return Validation.Invalid(this, "Det er ikke tatt stilling til hele rettighetsperioden. Rettisgetsperioden for saken slutter ${rettighetsperiode.tom} mens vurderingens siste periode slutter ${periodeForVurdering.tom}. ")
+        return Validation.Invalid(this, "Det er ikke tatt stilling til hele rettighetsperioden. Rettighetsperioden for saken slutter ${rettighetsperiode.tom} mens vurderingens siste periode slutter ${periodeForVurdering.tom}. ")
     }
 
     return Validation.Valid(this)
