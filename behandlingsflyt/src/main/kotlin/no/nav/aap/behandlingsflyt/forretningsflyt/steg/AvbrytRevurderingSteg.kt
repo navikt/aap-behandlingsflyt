@@ -1,15 +1,13 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
-import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -19,42 +17,45 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 class AvbrytRevurderingSteg private constructor(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val avklaringsbehovService: AvklaringsbehovService,
     private val avbrytRevurderingRepository: AvbrytRevurderingRepository
 ) : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (!erRelevant(kontekst)) {
-            return Fullført
-        }
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
-        val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-        val avbrytRevurderingGrunnlag =
-            avbrytRevurderingRepository.hentHvisEksisterer(kontekst.behandlingId)
+        avklaringsbehovService.oppdaterAvklaringsbehov(
+            avklaringsbehovene = avklaringsbehovene,
+            definisjon = Definisjon.AVBRYT_REVURDERING,
+            vedtakBehøverVurdering = {
+                kontekst.behandlingType == TypeBehandling.Revurdering
+                        && REVURDERING_AVBRUTT in kontekst.vurderingsbehovRelevanteForSteg
+            },
+            erTilstrekkeligVurdert = { true },
+            tilbakestillGrunnlag = {
+                val avbrytRevurderingGrunnlag =
+                    checkNotNull(avbrytRevurderingRepository.hentHvisEksisterer(kontekst.behandlingId)) {
+                        "Avbryt revurdering har blitt satt som løst."
+                    }
 
-        if (avklaringsbehov.harIkkeBlittLøst(Definisjon.AVBRYT_REVURDERING)) {
-            return FantAvklaringsbehov(Definisjon.AVBRYT_REVURDERING)
-        }
-
-        checkNotNull(avbrytRevurderingGrunnlag) {
-            "Abryt revurdering har blitt satt som løst."
-        }
-
-        if (avbrytRevurderingGrunnlag.vurdering.årsak != null) {
-            avklaringsbehov.avbrytÅpneAvklaringsbehov()
-        }
+                if (avbrytRevurderingGrunnlag.vurdering.årsak != null) {
+                    avklaringsbehovene.avbrytÅpneAvklaringsbehov()
+                }
+            },
+            kontekst = kontekst
+        )
 
         return Fullført
     }
 
-    private fun erRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
-        return (kontekst.behandlingType == TypeBehandling.Revurdering)
-                && (REVURDERING_AVBRUTT in kontekst.vurderingsbehovRelevanteForSteg)
-    }
-
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): BehandlingSteg {
             return AvbrytRevurderingSteg(
                 avklaringsbehovRepository = repositoryProvider.provide(),
+                avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
                 avbrytRevurderingRepository = repositoryProvider.provide()
             )
         }
@@ -63,11 +64,4 @@ class AvbrytRevurderingSteg private constructor(
             return StegType.AVBRYT_REVURDERING
         }
     }
-
-    private fun Avklaringsbehovene.harIkkeBlittLøst(definisjon: Definisjon): Boolean {
-        return this.alle()
-            .filter { it.definisjon == definisjon }
-            .none{ it.status() == Status.AVSLUTTET }
-    }
-
 }
