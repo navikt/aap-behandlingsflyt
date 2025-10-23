@@ -194,7 +194,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         fun testData(): List<Arguments> {
             return listOf(
                 Arguments.of(FakeUnleash::class),
-//                Arguments.of(FakeUnleashFasttrackAktivitetsplikt::class),
+                Arguments.of(FakeUnleashFasttrackAktivitetsplikt::class),
             )
         }
     }

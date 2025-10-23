@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.barnetillegg.BarnetilleggService
@@ -49,13 +50,7 @@ class BarnetilleggSteg(
             definisjon = Definisjon.AVKLAR_BARNETILLEGG,
             vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst) },
             erTilstrekkeligVurdert = { !harPerioderMedBarnTilAvklaring(kontekst) },
-            tilbakestillGrunnlag = {
-                val vedtatteBarnetillegg = kontekst.forrigeBehandlingId
-                    ?.let { barnetilleggRepository.hentHvisEksisterer(it) }
-                    ?.perioder
-                    ?: emptyList()
-                barnetilleggRepository.lagre(kontekst.behandlingId, vedtatteBarnetillegg)
-            },
+            tilbakestillGrunnlag = { tilbakestillBarnetillegg(kontekst)},
             kontekst
         )
         return Fullført
@@ -81,6 +76,25 @@ class BarnetilleggSteg(
             VurderingType.IKKE_RELEVANT ->
                 false
         }
+    }
+
+    private fun tilbakestillBarnetillegg(kontekst: FlytKontekstMedPerioder) {
+        val vedtatteBarnetillegg = kontekst.forrigeBehandlingId
+            ?.let { barnetilleggRepository.hentHvisEksisterer(it) }
+            ?.perioder
+            ?: emptyList()
+        barnetilleggRepository.lagre(kontekst.behandlingId, vedtatteBarnetillegg)
+
+        val forrigeBarnGrunnlag = kontekst.forrigeBehandlingId
+            ?.let { barnRepository.hentHvisEksisterer(it) }
+
+        val vurderteBarn = forrigeBarnGrunnlag?.vurderteBarn?.barn.orEmpty()
+
+        barnRepository.lagreVurderinger(
+            behandlingId = kontekst.behandlingId,
+            vurdertAv = forrigeBarnGrunnlag?.vurderteBarn?.vurdertAv ?: SYSTEMBRUKER.ident,
+            vurderteBarn = vurderteBarn
+        )
     }
 
     private fun harOppgittBarnEllerFolkeregistrerteBarn(grunnlag: BarnGrunnlag?) =
