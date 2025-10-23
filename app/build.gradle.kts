@@ -10,6 +10,7 @@ repositories {
 plugins {
     id("behandlingsflyt.conventions")
     alias(libs.plugins.ktor)
+    id("com.gradleup.shadow") version "9.2.2"
 }
 
 application {
@@ -17,18 +18,6 @@ application {
 }
 
 tasks {
-    val projectProps by registering(WriteProperties::class) {
-        destinationFile = layout.buildDirectory.file("version.properties")
-        // Define property.
-        property("project.version", getCheckedOutGitCommitHash())
-    }
-
-    processResources {
-        // Depend on output of the task to create properties,
-        // so the properties file will be part of the Java resources.
-
-        from(projectProps)
-    }
 
     withType<ShadowJar> {
         duplicatesStrategy = DuplicatesStrategy.INCLUDE
@@ -46,32 +35,10 @@ tasks.register<JavaExec>("genererOpenApiJson") {
     mainClass.set("no.nav.aap.behandlingsflyt.GenererOpenApiJsonKt")
 }
 
-
 tasks.register<JavaExec>("beregnCSV") {
     classpath = sourceSets.test.get().runtimeClasspath
     standardInput = System.`in`
     mainClass.set("no.nav.aap.behandlingsflyt.BeregnMedCSVKt")
-}
-
-tasks.register<Copy>("copyRuntimeLibs") {
-    from(configurations.runtimeClasspath)
-    into("build/libs/runtime-libs")
-}
-
-fun runCommand(command: String): String {
-    val execResult = providers.exec {
-        this.workingDir = project.projectDir
-        commandLine(command.split("\\s".toRegex()))
-    }.standardOutput.asText
-
-    return execResult.get()
-}
-
-fun getCheckedOutGitCommitHash(): String {
-    if (System.getenv("GITHUB_ACTIONS") == "true") {
-        return System.getenv("GITHUB_SHA")
-    }
-    return runCommand("git rev-parse --verify HEAD")
 }
 
 dependencies {
