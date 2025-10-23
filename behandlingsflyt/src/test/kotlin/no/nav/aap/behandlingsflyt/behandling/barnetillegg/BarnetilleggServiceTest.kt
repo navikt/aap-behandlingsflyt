@@ -113,8 +113,10 @@ class BarnetilleggServiceTest {
         // Men ikke etter
         assertTidslinje(res, Periode(sak.rettighetsperiode.fom, dødsdato) to {
             assertThat(it.barnMedRettTil()).hasSize(1)
+            assertThat(it.barnTilAvklaring()).hasSize(0)
         }, Periode(dødsdato.plusDays(1), sak.rettighetsperiode.tom) to {
             assertThat(it.barnMedRettTil()).isEmpty()
+            assertThat(it.barnTilAvklaring()).hasSize(0)
         })
     }
 
