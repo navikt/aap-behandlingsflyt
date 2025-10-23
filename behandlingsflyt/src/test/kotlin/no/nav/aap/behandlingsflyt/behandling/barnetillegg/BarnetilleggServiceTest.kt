@@ -25,8 +25,10 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
+import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.util.*
@@ -34,6 +36,11 @@ import java.util.*
 class BarnetilleggServiceTest {
     val gatewayProvider = createGatewayProvider {
         register<FakeUnleash>()
+    }
+
+    @BeforeEach
+    fun setup() {
+        System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
     }
 
     @Test
@@ -121,6 +128,61 @@ class BarnetilleggServiceTest {
     }
 
     @Test
+    fun `barnetillegg for folkeregistrerte barn skal gi rett på barnetillegg om man ikke har lagt inn perioder`() {
+        val service = BarnetilleggService(inMemoryRepositoryProvider, gatewayProvider)
+        val (sak, behandling) = opprettPersonBehandlingOgSak()
+        val fødseldatoUngtBarn = LocalDate.now().minusYears(5)
+
+        val barn = Barn(
+            ident = BarnIdentifikator.BarnIdent(genererIdent(fødseldatoUngtBarn)),
+            fødselsdato = Fødselsdato(fødseldatoUngtBarn),
+        )
+
+        lagreRegisterOpplysninger(
+            behandling,
+            listOf(barn)
+        )
+
+        val res = service.beregn(behandlingId = behandling.id)
+
+        assertTidslinje(res, Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.tom) to {
+            assertThat(it.barnMedRettTil()).hasSize(1)
+        })
+    }
+
+    @Test
+    fun `barnetillegg for folkeregistrerte barn skal ikke gi barnetillegg for perioder man sier man ikke har rett`() {
+        val service = BarnetilleggService(inMemoryRepositoryProvider, gatewayProvider)
+        val (sak, behandling) = opprettPersonBehandlingOgSak()
+
+        val barn = Barn(
+            ident = BarnIdentifikator.BarnIdent(genererIdent(LocalDate.now().minusYears(5))),
+            fødselsdato = Fødselsdato(LocalDate.now().minusYears(5)),
+        )
+
+        val periodeUtenRett = Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.fom.plusMonths(1))
+        val periodeMedRett = Periode(periodeUtenRett.tom.plusDays(1), sak.rettighetsperiode.tom)
+
+        lagreRegisterOpplysninger(
+            behandling,
+            listOf(barn)
+        )
+
+        lagreVurdering(behandling, VurdertBarn(ident = barn.ident, vurderinger = listOf(
+            VurderingAvForeldreAnsvar(fraDato = periodeUtenRett.fom, harForeldreAnsvar = false, begrunnelse = "Uten rett"),
+            VurderingAvForeldreAnsvar(fraDato = periodeMedRett.fom, harForeldreAnsvar = true, begrunnelse = "Med rett")
+        )))
+
+        val res = service.beregn(behandlingId = behandling.id)
+
+        assertTidslinje(res,
+            periodeUtenRett to { assertThat(it.barnMedRettTil()).hasSize(0) },
+            periodeMedRett to { assertThat(it.barnMedRettTil()).hasSize(1) }
+        )
+    }
+
+
+    @Test
     fun `avklarer manuelt barn, får barnetillegg fram til 18 år`() {
         val service = BarnetilleggService(inMemoryRepositoryProvider, gatewayProvider)
 
@@ -190,6 +252,16 @@ class BarnetilleggServiceTest {
             ingenBarnUnderAttenÅr to {
                 assertThat(it.barnMedRettTil()).isEmpty()
             }
+        )
+    }
+
+    private fun lagreVurdering(behandling: Behandling, vurdertBarn: VurdertBarn) {
+        InMemoryPersonRepository.finnEllerOpprett(listOf((vurdertBarn.ident as BarnIdentifikator.BarnIdent).ident))
+
+        InMemoryBarnRepository.lagreVurderinger(
+            behandling.id,
+            "test-ident",
+            listOf(vurdertBarn)
         )
     }
 
