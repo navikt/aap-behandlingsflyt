@@ -1,12 +1,14 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg.oppfølgingsbehandling
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.KonsekvensAvOppfølging
 import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.OppfølgingsBehandlingRepository
+import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.OppfølgingsoppgaveGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
-import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
@@ -27,30 +29,43 @@ class AvklarOppfølgingSteg(
     private val sakOgBehandlingService: SakOgBehandlingService,
     private val låsRepository: TaSkriveLåsRepository,
     private val prosesserBehandling: ProsesserBehandlingService,
-    private val mottaDokumentService: MottaDokumentService
+    private val mottaDokumentService: MottaDokumentService,
+    private val avklaringsbehovService: AvklaringsbehovService,
+    private val avklaringsbehovRepository: AvklaringsbehovRepository,
 ) :
     BehandlingSteg {
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val grunnlag = oppfølgingsBehandlingRepository.hent(kontekst.behandlingId)
         val oppfølgingsoppgavedokument =
-            requireNotNull(mottaDokumentService.hentOppfølgingsBehandlingDokument(kontekst.behandlingId))
+            requireNotNull(mottaDokumentService.hentOppfølgingsBehandlingDokument(kontekst.behandlingId)) {
+                "Oppfølgingsoppgavedokument var null i steg ${type()}. BehandlingId: ${kontekst.behandlingId}"
+            }
+        avklaringsbehovService.oppdaterAvklaringsbehov(
+            avklaringsbehovene = avklaringsbehovene,
+            definisjon = when (oppfølgingsoppgavedokument.hvemSkalFølgeOpp) {
+                HvemSkalFølgeOpp.Lokalkontor -> Definisjon.AVKLAR_OPPFØLGINGSBEHOV_LOKALKONTOR
+                HvemSkalFølgeOpp.NasjonalEnhet -> Definisjon.AVKLAR_OPPFØLGINGSBEHOV_NAY
+            },
+            vedtakBehøverVurdering = { true },
+            erTilstrekkeligVurdert = { true },
+            tilbakestillGrunnlag = { /* Flyten i oppfølgingsbehandling skal aldri tilbakeføres eller totrinnskontrolleres */ },
+            kontekst = kontekst
+        )
 
+        håndterVurderingAvOppfølging(grunnlag, kontekst)
+        return Fullført
+    }
+
+    private fun håndterVurderingAvOppfølging(grunnlag: OppfølgingsoppgaveGrunnlag?, kontekst: FlytKontekstMedPerioder) {
         if (grunnlag == null) {
-            return FantAvklaringsbehov(
-                when (oppfølgingsoppgavedokument.hvemSkalFølgeOpp) {
-                    HvemSkalFølgeOpp.Lokalkontor -> Definisjon.AVKLAR_OPPFØLGINGSBEHOV_LOKALKONTOR
-                    HvemSkalFølgeOpp.NasjonalEnhet -> Definisjon.AVKLAR_OPPFØLGINGSBEHOV_NAY
-                }
-            )
+            return
         }
-
         when (grunnlag.konsekvensAvOppfølging) {
             KonsekvensAvOppfølging.INGEN -> {
-                log.info("Ingen konsens av oppfølging. Avslutter oppfølgingsbehandling for sak ${kontekst.sakId}.")
-                return Fullført
+                log.info("Ingen konsekvens av oppfølging. Avslutter oppfølgingsbehandling for sak ${kontekst.sakId}.")
             }
 
             KonsekvensAvOppfølging.OPPRETT_VURDERINGSBEHOV -> {
@@ -72,8 +87,6 @@ class AvklarOppfølgingSteg(
                 låsRepository.verifiserSkrivelås(behandlingSkrivelås)
             }
         }
-
-        return Fullført
     }
 
     companion object : FlytSteg {
@@ -84,6 +97,8 @@ class AvklarOppfølgingSteg(
                 repositoryProvider.provide(),
                 ProsesserBehandlingService(repositoryProvider, gatewayProvider),
                 MottaDokumentService(repositoryProvider.provide()),
+                AvklaringsbehovService(repositoryProvider),
+                repositoryProvider.provide()
             )
         }
 
