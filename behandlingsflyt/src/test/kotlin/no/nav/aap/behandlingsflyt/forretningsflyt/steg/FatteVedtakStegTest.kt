@@ -60,7 +60,7 @@ class FatteVedtakStegTest {
     )
 
     @Test
-    fun `Delvis omgjøring gir nå Fullført siden oppdatering håndteres internt`() {
+    fun `Klagevurderinger fra Nay skal kvalitetssikres hvis delvis omgjøring`() {
         val kontekst = kontekst()
 
         every { klageresultatUtleder.utledKlagebehandlingResultat(kontekst.behandlingId) } returns DelvisOmgjøres(
@@ -74,7 +74,7 @@ class FatteVedtakStegTest {
     }
 
     @Test
-    fun `Opprettholdes gir fortsatt Fullført`() {
+    fun `Klagevurderinger fra kontor skal ikke til beslutter om vedtaket opprettholdes`() {
         val kontekst = kontekst()
 
         every { klageresultatUtleder.utledKlagebehandlingResultat(kontekst.behandlingId) } returns Opprettholdes(
@@ -93,7 +93,7 @@ class FatteVedtakStegTest {
     }
 
     @Test
-    fun `Omgjøres gir nå Fullført siden vurderingsbehov oppdateres internt`() {
+    fun `Klagevurderinger skal kvalitetssikres hvis resultatet er Omgjør`() {
         val kontekst = kontekst()
 
         every { klageresultatUtleder.utledKlagebehandlingResultat(kontekst.behandlingId) } returns Omgjøres(
