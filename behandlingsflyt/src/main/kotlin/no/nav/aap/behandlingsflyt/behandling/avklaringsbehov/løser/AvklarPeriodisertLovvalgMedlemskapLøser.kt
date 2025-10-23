@@ -42,7 +42,7 @@ class AvklarPeriodisertLovvalgMedlemskapLøser(
                 medlemskapVedSøknadsTidspunkt = it.medlemskap,
                 vurdertAv = kontekst.bruker.ident,
                 vurdertDato = LocalDateTime.now(),
-                overstyrt = true
+                overstyrt = false
             )
         }
 
