@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegGruppe
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 class Avklaringsbehov(
     val id: Long,
@@ -157,6 +158,10 @@ class Avklaringsbehov(
     fun harAvsluttetStatusIHistorikken(): Boolean {
         return historikk.any { it.status == Status.AVSLUTTET }
     }
+    
+    fun sistAvsluttet(): LocalDateTime {
+        return historikk.filter { it.status == Status.AVSLUTTET }.maxOf { it.tidsstempel }
+    }
 
     fun status(): Status {
         return historikk.maxOf { it }.status
@@ -222,6 +227,10 @@ class Avklaringsbehov(
 
     fun erBrevVentebehov(): Boolean {
         return definisjon.erBrevVentebehov()
+    }
+    
+    fun sistEndret(): LocalDateTime {
+        return historikk.last().tidsstempel
     }
 
     override fun toString(): String {
