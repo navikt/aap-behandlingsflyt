@@ -57,18 +57,13 @@ class FatteVedtakSteg(
 
         if (kontekst.behandlingType == TypeBehandling.Klage) {
             val klageresultat = klageresultatUtleder.utledKlagebehandlingResultat(kontekst.behandlingId)
-            if (klageresultat is Opprettholdes) {
-                oppdaterAvklaringsbehov(
-                    vedtakBehøverVurdering = { false },
-                    erTilstrekkeligVurdert = { true }
-                )
-                return Fullført
-            }
-        } else {
             oppdaterAvklaringsbehov(
                 vedtakBehøverVurdering = { false },
                 erTilstrekkeligVurdert = { true }
             )
+            if (klageresultat is Opprettholdes) {
+                return Fullført
+            }
         }
 
         when {
