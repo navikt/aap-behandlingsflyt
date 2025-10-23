@@ -58,21 +58,24 @@ class SamordningService(
         grunnlag: SamordningYtelseGrunnlag?,
         tidligereVurderinger: Tidslinje<List<Pair<Ytelse, SamordningVurderingPeriode>>>
     ): Tidslinje<List<Ytelse>> {
-        val hentedeYtelserByManuelleYtelser =
-            grunnlag?.ytelser.orEmpty().filter { it.ytelseType.type == AvklaringsType.MANUELL }
-                .map { ytelse ->
-                    val tidslinjePerPeriode = ytelse.ytelsePerioder.map { Tidslinje(it.periode, ytelse.ytelseType) }
-                    tidslinjePerPeriode.fold(Tidslinje.empty<Ytelse>()) { acc, curr ->
-                        acc.kombiner(curr, StandardSammenslåere.prioriterHøyreSideCrossJoin())
-                    }.komprimer()
-                }.fold(Tidslinje.empty<List<Ytelse>>()) { acc, curr ->
-                    acc.kombiner(curr, slåSammenTilListe())
-                }
+        val hentedeYtelserByManuelleYtelser = tidslinjeMedSamordningYtelser(grunnlag)
 
         val perioderSomIkkeHarBlittVurdert =
             hentedeYtelserByManuelleYtelser.kombiner(tidligereVurderinger, StandardSammenslåere.minus())
 
         return perioderSomIkkeHarBlittVurdert
+    }
+
+    fun tidslinjeMedSamordningYtelser(grunnlag: SamordningYtelseGrunnlag?): Tidslinje<List<Ytelse>> {
+        return grunnlag?.ytelser.orEmpty().filter { it.ytelseType.type == AvklaringsType.MANUELL }
+            .map { ytelse ->
+                val tidslinjePerPeriode = ytelse.ytelsePerioder.map { Tidslinje(it.periode, ytelse.ytelseType) }
+                tidslinjePerPeriode.fold(Tidslinje.empty<Ytelse>()) { acc, curr ->
+                    acc.kombiner(curr, StandardSammenslåere.prioriterHøyreSideCrossJoin())
+                }.komprimer()
+            }.fold(Tidslinje.empty()) { acc, curr ->
+                acc.kombiner(curr, slåSammenTilListe())
+            }
     }
 
     fun vurder(

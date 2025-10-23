@@ -103,7 +103,7 @@ class SamordningRepositoryImpl(private val connection: DBConnection) : Samordnin
         }
     }
 
-    private fun deaktiverGrunnlag(behandlingId: BehandlingId) {
+    override fun deaktiverGrunnlag(behandlingId: BehandlingId) {
         connection.execute("UPDATE SAMORDNING_GRUNNLAG set aktiv = false WHERE behandling_id = ? and aktiv = true") {
             setParams {
                 setLong(1, behandlingId.toLong())
