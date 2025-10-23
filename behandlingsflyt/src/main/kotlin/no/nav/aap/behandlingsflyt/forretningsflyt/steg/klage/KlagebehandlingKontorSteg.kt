@@ -30,23 +30,18 @@ class KlagebehandlingKontorSteg private constructor(
         val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
         val behandlendeEnhetVurdering = behandlendeEnhetRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurdering
-        requireNotNull(behandlendeEnhetVurdering) {
-            "Behandlende kontor skal være satt"
-        }
+        val skalBehandlesAvKontor = behandlendeEnhetVurdering?.skalBehandlesAvKontor == true
 
         val klageErAvslått = resultat is Avslått
         val klageErTrukket = trekkKlageService.klageErTrukket(kontekst.behandlingId)
-        val avklaringsbehovetErIkkeLøst = avklaringsbehov.harIkkeBlittLøst(Definisjon.VURDER_KLAGE_KONTOR)
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
             avklaringsbehovene = avklaringsbehov,
             definisjon = Definisjon.VURDER_KLAGE_KONTOR,
             vedtakBehøverVurdering = {
-                !klageErAvslått
-                        || !klageErTrukket
-                        || (behandlendeEnhetVurdering.skalBehandlesAvKontor && avklaringsbehovetErIkkeLøst)
+                !klageErTrukket && !klageErAvslått && skalBehandlesAvKontor
             },
-            erTilstrekkeligVurdert = { true },
+            erTilstrekkeligVurdert = { !avklaringsbehov.harIkkeBlittLøst(Definisjon.VURDER_KLAGE_KONTOR) },
             tilbakestillGrunnlag = { /* TODO: Eventuell utnulling av vurdering kan skje i senere steg. Vil kanskje ta vare på vurderingen "så lenge som mulig" i tilfelle man ombestemmer seg */ },
             kontekst = kontekst,
         )
