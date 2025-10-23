@@ -48,8 +48,10 @@ class VurderAktivitetsplikt11_7Steg(
         }
 
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-        val vurderingForBehandling = aktivitetsplikt11_7Repository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger?.firstOrNull { it.vurdertIBehandling == kontekst.behandlingId }
-        val venteBehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.VENTE_PÅ_FRIST_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT)
+        val vurderingForBehandling =
+            aktivitetsplikt11_7Repository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger?.firstOrNull { it.vurdertIBehandling == kontekst.behandlingId }
+        val venteBehov =
+            avklaringsbehovene.hentBehovForDefinisjon(Definisjon.VENTE_PÅ_FRIST_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT)
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
             avklaringsbehovene = avklaringsbehovene,
@@ -65,29 +67,36 @@ class VurderAktivitetsplikt11_7Steg(
             definisjon = Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV,
             vedtakBehøverVurdering = { vedtakBehøverForhåndsvarselVurdering(vurderingForBehandling, kontekst) },
             erTilstrekkeligVurdert = { erForhåndsvarselTilstrekkeligVurdert(kontekst) },
-            tilbakestillGrunnlag = { avbrytBrevbestilling(kontekst.behandlingId)},
+            tilbakestillGrunnlag = { avbrytBrevbestilling(kontekst.behandlingId) },
             kontekst = kontekst
         )
 
-        val brevbestilling = hentBrevbestilling(kontekst.behandlingId)
-        if (erForhåndsvarselSendt(brevbestilling)) {
-            val varsel = aktivitetsplikt11_7Repository.hentVarselHvisEksisterer(kontekst.behandlingId)
-
-            if (venteFristIkkepassert(varsel, vurderingForBehandling)) {
-                if (erVentebehovÅpentOgFristIkkePassert(venteBehov, varsel)) {
-                    return FantVentebehov(
-                        Ventebehov(
-                            definisjon = Definisjon.VENTE_PÅ_FRIST_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT,
-                            grunn = ÅrsakTilSettPåVent.VENTER_PÅ_SVAR_FRA_BRUKER,
-                            frist = varsel?.svarfrist ?: error("Mangler svarfrist i varsel"),
-                        )
-                    )
-                }
-            }
+        val varsel = aktivitetsplikt11_7Repository.hentVarselHvisEksisterer(kontekst.behandlingId)
+        if (skalVentePåFristFraForhåndsvarsel(kontekst, varsel, vurderingForBehandling, venteBehov)) {
+            return FantVentebehov(opprettVentebehov(varsel))
 
         }
 
         return Fullført
+    }
+
+    private fun opprettVentebehov(varsel: Aktivitetsplikt11_7Varsel?): Ventebehov = Ventebehov(
+        definisjon = Definisjon.VENTE_PÅ_FRIST_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT,
+        grunn = ÅrsakTilSettPåVent.VENTER_PÅ_SVAR_FRA_BRUKER,
+        frist = varsel?.svarfrist ?: error("Mangler svarfrist i varsel"),
+    )
+
+    private fun skalVentePåFristFraForhåndsvarsel(
+        kontekst: FlytKontekstMedPerioder,
+        varsel: Aktivitetsplikt11_7Varsel?,
+        vurderingForBehandling: Aktivitetsplikt11_7Vurdering?,
+        venteBehov: Avklaringsbehov?
+    ): Boolean {
+        val brevbestilling = hentBrevbestilling(kontekst.behandlingId)
+        return erForhåndsvarselSendt(brevbestilling)
+                && venterPåVarselFrist(varsel, vurderingForBehandling)
+                && harÅpentVentebehov(venteBehov, varsel)
+
     }
 
     private fun erForhåndsvarselTilstrekkeligVurdert(kontekst: FlytKontekstMedPerioder): Boolean {
@@ -110,52 +119,65 @@ class VurderAktivitetsplikt11_7Steg(
         if (vurderingForBehandling == null || vurderingForBehandling.erOppfylt) {
             return false
         } else {
-            /**
-             * Bestill forhåndsvarsel eller reaktiver forhåndsvarsel dersom det er deaktivert
-             */
-            val brevbestilling = hentBrevbestilling(kontekst.behandlingId)
-            if (brevbestilling == null) {
-                val brevReferanse = bestillForhåndsvarselBrev(kontekst.behandlingId)
-                aktivitetsplikt11_7Repository.lagreVarsel(kontekst.behandlingId, brevReferanse)
-            } else if (brevbestilling.status == Status.AVBRUTT) {
-                brevbestillingService.oppdaterStatus(
-                    kontekst.behandlingId,
-                    brevbestilling.referanse,
-                    Status.FORHÅNDSVISNING_KLAR
-                )
-            }
+            bestillEllerGjenopprettBrev(kontekst)
             return true
         }
     }
 
-    private fun er11_7TilstrekkeligVurdert(kontekst: FlytKontekstMedPerioder, vurderingForBehandling: Aktivitetsplikt11_7Vurdering?, venteBehov: Avklaringsbehov?): Boolean {
-        if(vurderingForBehandling == null) {
+    private fun bestillEllerGjenopprettBrev(kontekst: FlytKontekstMedPerioder) {
+        /**
+         * Bestill forhåndsvarsel eller reaktiver forhåndsvarsel dersom det er deaktivert
+         */
+        val brevbestilling = hentBrevbestilling(kontekst.behandlingId)
+        if (brevbestilling == null) {
+            val brevReferanse = bestillForhåndsvarselBrev(kontekst.behandlingId)
+            aktivitetsplikt11_7Repository.lagreVarsel(kontekst.behandlingId, brevReferanse)
+        } else if (brevbestilling.status == Status.AVBRUTT) {
+            brevbestillingService.oppdaterStatus(
+                kontekst.behandlingId,
+                brevbestilling.referanse,
+                Status.FORHÅNDSVISNING_KLAR
+            )
+        }
+    }
+
+    private fun er11_7TilstrekkeligVurdert(
+        kontekst: FlytKontekstMedPerioder,
+        vurderingForBehandling: Aktivitetsplikt11_7Vurdering?,
+        venteBehov: Avklaringsbehov?
+    ): Boolean {
+        if (vurderingForBehandling == null) {
             return false
         } else if (vurderingForBehandling.erOppfylt) {
             return true
-        } else if (venteBehov != null) {
-
-            val varsel = aktivitetsplikt11_7Repository.hentVarselHvisEksisterer(kontekst.behandlingId)
-            if (venteFristIkkepassert(varsel, vurderingForBehandling)) {
-                if (!erVentebehovÅpentOgFristIkkePassert(venteBehov, varsel)) {
-                    return false
-                }
-            }
+        } else if (erTattAvVentFørFristenPåForhåndsvarsel(kontekst, vurderingForBehandling, venteBehov)) {
+            return false
         }
         return true
 
     }
 
-    private fun venteFristIkkepassert(
+    private fun erTattAvVentFørFristenPåForhåndsvarsel(
+        kontekst: FlytKontekstMedPerioder,
+        vurderingForBehandling: Aktivitetsplikt11_7Vurdering,
+        venteBehov: Avklaringsbehov?
+    ): Boolean {
+        val varsel = aktivitetsplikt11_7Repository.hentVarselHvisEksisterer(kontekst.behandlingId)
+        return varsel?.let {
+            venterPåVarselFrist(varsel, vurderingForBehandling) && !harÅpentVentebehov(venteBehov, varsel)
+        } ?: false
+    }
+
+    private fun venterPåVarselFrist(
         varsel: Aktivitetsplikt11_7Varsel?,
         vurderingForBehandling: Aktivitetsplikt11_7Vurdering?
     ): Boolean {
         val frist = varsel?.svarfrist ?: throw IllegalStateException("Fant ikke frist")
-        return  LocalDate.now() <= frist && vurderingForBehandling?.skalIgnorereVarselFrist != true
+        return LocalDate.now() <= frist && vurderingForBehandling?.skalIgnorereVarselFrist != true
     }
 
 
-    private fun erVentebehovÅpentOgFristIkkePassert(venteBehov: Avklaringsbehov?, varsel: Aktivitetsplikt11_7Varsel?): Boolean {
+    private fun harÅpentVentebehov(venteBehov: Avklaringsbehov?, varsel: Aktivitetsplikt11_7Varsel?): Boolean {
         if (venteBehov == null) {
             return true
         }
@@ -205,8 +227,7 @@ class VurderAktivitetsplikt11_7Steg(
                 behandlingRepository = repositoryProvider.provide(),
                 brevbestillingService = BrevbestillingService(repositoryProvider, gatewayProvider),
                 avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
-
-            )
+                )
         }
 
         override fun type(): StegType {
