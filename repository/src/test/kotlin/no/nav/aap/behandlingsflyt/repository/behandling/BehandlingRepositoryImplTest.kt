@@ -55,9 +55,12 @@ import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.dbtest.TestDataSource.Companion.invoke
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -65,14 +68,10 @@ import java.time.LocalDateTime
 internal class BehandlingRepositoryImplTest {
     companion object {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-        private val dataSource = InitTestDatabase.freshDatabase()
-
-        @AfterAll
-        @JvmStatic
-        fun afterAll() {
-            InitTestDatabase.closerFor(dataSource)
-        }
     }
+
+    @AutoClose
+    private val dataSource = TestDataSource()
 
     @Test
     fun `kan lagre og hente ut behandling med uuid`() {
@@ -386,7 +385,8 @@ internal class BehandlingRepositoryImplTest {
 
 // Midlertidig test
 fun main() {
-    InitTestDatabase.freshDatabase().transaction { connection ->
+        val dataSource = TestDataSource()
+        dataSource.transaction { connection ->
         BeregningsgrunnlagRepositoryImpl(connection).slett(
             BehandlingId(1L)
         )
@@ -433,6 +433,8 @@ fun main() {
         PersonRepositoryImpl(connection).slett(BehandlingId(1L))
         SakRepositoryImpl(connection).slett(BehandlingId(1L))
         ManuellInntektGrunnlagRepositoryImpl(connection).slett(BehandlingId(1L))
+
+        dataSource.close()
     }
 
 }

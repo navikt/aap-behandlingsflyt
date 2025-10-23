@@ -13,19 +13,32 @@ import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.dbtest.TestDataSource.Companion.invoke
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.Year
 
 class ManuellInntektGrunnlagRepositoryImplTest {
+    private lateinit var dataSource: TestDataSource
+
+    @BeforeEach
+    fun setUp() {
+        dataSource = TestDataSource()
+    }
+
+    @AfterEach
+    fun tearDown() {
+        dataSource.close()
+    }
 
     @Test
     fun `lagre og hente ut igjen`() {
-        val dataSource = InitTestDatabase.freshDatabase()
-
         val behandling = dataSource.transaction {
             val sak = sak(it, Periode(1 januar 2023, 31 desember 2023))
             finnEllerOpprettBehandling(it, sak)
@@ -83,8 +96,6 @@ class ManuellInntektGrunnlagRepositoryImplTest {
 
     @Test
     fun `lagre for flere år og hente ut igjen`() {
-        val dataSource = InitTestDatabase.freshDatabase()
-
         val behandling = dataSource.transaction {
             val sak = sak(it, Periode(1 januar 2023, 31 desember 2023))
             finnEllerOpprettBehandling(it, sak)
@@ -116,8 +127,6 @@ class ManuellInntektGrunnlagRepositoryImplTest {
 
     @Test
     fun `lagre for flere år og så fjerne et år`() {
-        val dataSource = InitTestDatabase.freshDatabase()
-
         val behandling = dataSource.transaction {
             val sak = sak(it, Periode(1 januar 2023, 31 desember 2023))
             finnEllerOpprettBehandling(it, sak)

@@ -13,25 +13,20 @@ import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 
 internal class MottattDokumentRepositoryImplTest {
 
-    companion object {
-        private val dataSource = InitTestDatabase.freshDatabase()
-
-        @AfterAll
-        @JvmStatic
-        fun afterall() {
-            InitTestDatabase.closerFor(dataSource)
-        }
-    }
+    @AutoClose
+    private val dataSource = TestDataSource()
 
     @Test
     fun `lagre og hent ut igjen`() {
