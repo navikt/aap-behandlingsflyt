@@ -31,44 +31,58 @@ class FatteVedtakSteg(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
-        fun oppdaterAvklaringsbehov(vedtakBehøverVurdering: Boolean, erTilstrekkeligVurdert: Boolean) {
+        fun oppdaterAvklaringsbehov(
+            vedtakBehøverVurdering: () -> Boolean,
+            erTilstrekkeligVurdert: () -> Boolean
+        ) {
             avklaringsbehovService.oppdaterAvklaringsbehov(
                 avklaringsbehovene = avklaringsbehovene,
                 definisjon = Definisjon.FATTE_VEDTAK,
-                vedtakBehøverVurdering = { vedtakBehøverVurdering },
-                erTilstrekkeligVurdert = { erTilstrekkeligVurdert },
+                vedtakBehøverVurdering = vedtakBehøverVurdering,
+                erTilstrekkeligVurdert = erTilstrekkeligVurdert,
                 tilbakestillGrunnlag = {},
                 kontekst = kontekst
             )
         }
 
-        if (
-            tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type()) ||
+        if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type()) ||
             trekkKlageService.klageErTrukket(kontekst.behandlingId)
         ) {
-            oppdaterAvklaringsbehov(vedtakBehøverVurdering = false, erTilstrekkeligVurdert = true)
+            oppdaterAvklaringsbehov(
+                vedtakBehøverVurdering = { false },
+                erTilstrekkeligVurdert = { true }
+            )
             return Fullført
         }
 
         if (kontekst.behandlingType == TypeBehandling.Klage) {
             val klageresultat = klageresultatUtleder.utledKlagebehandlingResultat(kontekst.behandlingId)
             if (klageresultat is Opprettholdes) {
-                oppdaterAvklaringsbehov(vedtakBehøverVurdering = false, erTilstrekkeligVurdert = true)
+                oppdaterAvklaringsbehov(
+                    vedtakBehøverVurdering = { false },
+                    erTilstrekkeligVurdert = { true }
+                )
                 return Fullført
             }
         } else {
-            oppdaterAvklaringsbehov(vedtakBehøverVurdering = false, erTilstrekkeligVurdert = true)
+            oppdaterAvklaringsbehov(
+                vedtakBehøverVurdering = { false },
+                erTilstrekkeligVurdert = { true }
+            )
         }
 
         when {
             avklaringsbehovene.skalTilbakeføresEtterTotrinnsVurdering() -> return TilbakeføresFraBeslutter
             avklaringsbehovene.harHattAvklaringsbehovSomHarKrevdToTrinn() ->
-                oppdaterAvklaringsbehov(vedtakBehøverVurdering = true, erTilstrekkeligVurdert = false)
+                oppdaterAvklaringsbehov(
+                    vedtakBehøverVurdering = { true },
+                    erTilstrekkeligVurdert = { false }
+                )
         }
 
         return Fullført
-
     }
+
 
     companion object : FlytSteg {
         override fun konstruer(
