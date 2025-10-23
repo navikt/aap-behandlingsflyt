@@ -44,11 +44,10 @@ tasks {
         }
     }
 
-    (findByName("distTar") as? Tar)?.apply {
+    (tasks.findByName("distTar") as? Tar)?.apply {
         // Bruk et unikt navn for jar-filen til distTar, for å unngå navnekollisjoner i multi-modul prosjekt,
         // slik at vi ikke bruker samme navn, feks. "kontrakt.jar" "api.jar" i flere moduler.
         // Dette unngår feil av typen "Entry <name>.jar is a duplicate but no duplicate handling strategy has been set"
-        // Alternativet er å unngå å bruke det eksakt samme navnet på moduler i forskjellige prosjekter, som feks "kontrakt".
         archiveBaseName.set("${rootProject.name}-${project.name}")
     }
 }
@@ -62,7 +61,7 @@ kotlin {
     }
 }
 
-// Pass på at når vi kaller JavaExec eller Test tasks så bruker vi samme språk-versjon som vi kompilerer til
+// Pass på at når vi kaller JavaExec eller Test tasks så bruker vi samme JVM som vi kompilerer med
 val toolchainLauncher = javaToolchains.launcherFor {
     languageVersion.set(JavaLanguageVersion.of(21))
 }

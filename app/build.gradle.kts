@@ -10,7 +10,6 @@ repositories {
 plugins {
     id("behandlingsflyt.conventions")
     alias(libs.plugins.ktor)
-    id("com.gradleup.shadow") version "9.2.2"
 }
 
 application {
@@ -19,7 +18,7 @@ application {
 
 tasks {
     val projectProps by registering(WriteProperties::class) {
-        destinationFile = layout.buildDirectory.file("behandlingsflyt-version.properties")
+        destinationFile = layout.buildDirectory.file("version.properties")
         // Define property.
         property("project.version", getCheckedOutGitCommitHash())
     }
@@ -32,28 +31,9 @@ tasks {
     }
 
     withType<ShadowJar> {
-        // Duplikate class og ressurs-filer kan skape runtime-feil, fordi JVM-en velger den første på classpath
-        // ved duplikater, og det kan være noe annet enn vår kode (og libs vi bruker) forventer.
-        // Derfor logger vi en advarsel hvis vi oppdager duplikater.
-        duplicatesStrategy = DuplicatesStrategy.WARN
-
-        filesMatching(listOf("META-INF/services/**", "META-INF/io.netty.*")) {
-            // For disse filene fra upstream, antar vi at de er identiske hvis de har samme navn.
-            duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-        }
-
-        // Helt unødvendige filer som ofte skaper duplikater
-        val fjernDisseDuplikatene = listOf(
-            "*.kotlin_module", // Brukes ikke på runtime
-            "*.SF", "*.DSA", "*.RSA", // Signatur-filer som ikke trengs på runtime
-            "*NOTICE*", "*LICENSE*", "*DEPENDENCIES*", "*README*", "*COPYRIGHT*", // til mennesker bare
-            "maven/**", // Maven metadata som ikke trengs på runtime
-            "proguard/**", // Proguard-konfigurasjoner som ikke trengs på runtime
-            "com.android.tools/**" // Android build-filer som ikke trengs på runtime
-        )
-        fjernDisseDuplikatene.forEach { pattern -> exclude("META-INF/$pattern") }
+        duplicatesStrategy = DuplicatesStrategy.INCLUDE
+        mergeServiceFiles()
     }
-
 }
 
 tasks.register<JavaExec>("runTestApp") {
@@ -66,10 +46,16 @@ tasks.register<JavaExec>("genererOpenApiJson") {
     mainClass.set("no.nav.aap.behandlingsflyt.GenererOpenApiJsonKt")
 }
 
+
 tasks.register<JavaExec>("beregnCSV") {
     classpath = sourceSets.test.get().runtimeClasspath
     standardInput = System.`in`
     mainClass.set("no.nav.aap.behandlingsflyt.BeregnMedCSVKt")
+}
+
+tasks.register<Copy>("copyRuntimeLibs") {
+    from(configurations.runtimeClasspath)
+    into("build/libs/runtime-libs")
 }
 
 fun runCommand(command: String): String {

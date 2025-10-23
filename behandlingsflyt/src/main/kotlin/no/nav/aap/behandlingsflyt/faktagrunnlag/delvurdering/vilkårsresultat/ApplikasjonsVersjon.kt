@@ -7,7 +7,7 @@ object ApplikasjonsVersjon {
     val versjon: String
 
     init {
-        val file = this::class.java.classLoader.getResourceAsStream("behandlingsflyt-version.properties")
+        val file = this::class.java.classLoader.getResourceAsStream("version.properties")
         val properties = Properties()
         properties.load(file)
         versjon = properties.getProperty("project.version")
