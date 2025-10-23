@@ -329,7 +329,7 @@ private fun sendInnOgFullførFørstegangsbehandling(dto: OpprettTestcaseDTO): Sa
                 }
 
                 // Barnetillegg
-                if (dto.barn.isNotEmpty() && !dto.barn.all { it.harRelasjon }) {
+                if (dto.barn.isNotEmpty()) {
                     løsBarnetillegg(this@apply)
                 }
 
