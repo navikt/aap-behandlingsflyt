@@ -63,7 +63,7 @@ class FatteVedtakSteg(
         when {
             avklaringsbehovene.skalTilbakeføresEtterTotrinnsVurdering() -> return TilbakeføresFraBeslutter
             avklaringsbehovene.harHattAvklaringsbehovSomHarKrevdToTrinn() ->
-                oppdaterAvklaringsbehov(vedtakBehøverVurdering = true, erTilstrekkeligVurdert = true)
+                oppdaterAvklaringsbehov(vedtakBehøverVurdering = true, erTilstrekkeligVurdert = false)
         }
 
         return Fullført
