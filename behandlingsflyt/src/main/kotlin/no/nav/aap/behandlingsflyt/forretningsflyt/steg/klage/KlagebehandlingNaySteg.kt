@@ -32,7 +32,7 @@ class KlagebehandlingNaySteg private constructor(
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val resultat = klageresultatUtleder.utledKlagebehandlingResultat(kontekst.behandlingId)
-        val erKlageResultatAvslått = if (resultat is Avslått) true else false
+        val erKlageResultatAvslått = resultat is Avslått
 
         val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val vurderingHosNay = klagebehandlingNayRepository.hentHvisEksisterer(kontekst.behandlingId) != null
@@ -45,23 +45,27 @@ class KlagebehandlingNaySteg private constructor(
         val skalBehandlesAvNay = if (behandlendeEnhetVurdering?.skalBehandlesAvNay == true) true else false
 
 
-            avklaringsbehovService.oppdaterAvklaringsbehov(
-                definisjon = Definisjon.VURDER_KLAGE_NAY,
-                avklaringsbehovene = avklaringsbehov,
-                kontekst = kontekst,
-                vedtakBehøverVurdering =  {
-                    if(klageErTrukket  || erKlageResultatAvslått || !skalBehandlesAvNay ) false else true
-                }                 ,
-                erTilstrekkeligVurdert =  {
-                     vurderingHosNay},
-                tilbakestillGrunnlag = {}
+        avklaringsbehovService.oppdaterAvklaringsbehov(
+            definisjon = Definisjon.VURDER_KLAGE_NAY,
+            avklaringsbehovene = avklaringsbehov,
+            kontekst = kontekst,
+            vedtakBehøverVurdering = {
+                if (klageErTrukket || erKlageResultatAvslått || !skalBehandlesAvNay) false else true
+            },
+            erTilstrekkeligVurdert = {
+                vurderingHosNay
+            },
+            tilbakestillGrunnlag = {}
 
-            )
-            return Fullført
-        }
+        )
+        return Fullført
+    }
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): BehandlingSteg {
             return KlagebehandlingNaySteg(
                 repositoryProvider.provide(),
                 repositoryProvider.provide(),
