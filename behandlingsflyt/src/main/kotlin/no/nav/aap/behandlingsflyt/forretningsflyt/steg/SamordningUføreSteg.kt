@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
@@ -15,7 +14,6 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
@@ -46,8 +44,9 @@ class SamordningUføreSteg(
             vedtakBehøverVurdering = {
                 when (kontekst.vurderingType) {
                     VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
-                        vedtakBehøverVurdering(kontekst) || erManueltTriggetRevurdering(kontekst, avklaringsbehovene)
+                        vedtakBehøverVurdering(kontekst) || erManueltTriggetRevurdering(kontekst)
                     }
+
                     VurderingType.MELDEKORT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
@@ -70,21 +69,23 @@ class SamordningUføreSteg(
         return Fullført
     }
 
-    private fun vedtakBehøverVurdering(kontekst: FlytKontekstMedPerioder):Boolean {
-        if(tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(
-            kontekst,
-            type()
-        )){ return false }
+    private fun vedtakBehøverVurdering(kontekst: FlytKontekstMedPerioder): Boolean {
+        if (tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(
+                kontekst,
+                type()
+            )
+        ) {
+            return false
+        }
 
         val tidligereVurderinger =
             kontekst.forrigeBehandlingId?.let { samordningUføreRepository.hentHvisEksisterer(it) }?.vurdering?.vurderingPerioder.orEmpty()
         val uføreGrunnlag = hentVurderingPerioder(kontekst.behandlingId)?.vurderinger.orEmpty()
         return uføreGrunnlag.any { uføre ->
             tidligereVurderinger.none { vurdering -> vurdering.virkningstidspunkt == uføre.virkningstidspunkt }
-            }
+        }
 
     }
-
 
 
     private fun hentVurderingPerioder(behandlingId: BehandlingId): UføreGrunnlag? {
@@ -103,16 +104,10 @@ class SamordningUføreSteg(
 
     private fun erManueltTriggetRevurdering(
         kontekst: FlytKontekstMedPerioder,
-        avklaringsbehovene: Avklaringsbehovene
     ): Boolean {
         return kontekst.erRevurderingMedVurderingsbehov(Vurderingsbehov.REVURDER_SAMORDNING_UFØRE)
     }
 
-    private fun erIkkeVurdertTidligereIBehandlingen(
-        avklaringsbehovene: Avklaringsbehovene
-    ): Boolean {
-        return !avklaringsbehovene.erVurdertTidligereIBehandlingen(Definisjon.AVKLAR_SAMORDNING_UFØRE)
-    }
 
     companion object : FlytSteg {
         override fun konstruer(
