@@ -45,13 +45,7 @@ class TjenestepensjonRefusjonskravSteg private constructor(
                         when {
                             tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
 
-                            else -> {
-                                val tpResultat = tjenestePensjonRepository.hent(kontekst.behandlingId)
-                                val tidligereTpVurderinger =
-                                    tjenestepensjonRefusjonsKravVurderingRepository.hentHvisEksisterer(kontekst.behandlingId)
-
-                                tidligereTpVurderinger == null && tpResultat.isNotEmpty()
-                            }
+                            else -> tjenestePensjonRepository.hent(kontekst.behandlingId).isNotEmpty()
                         }
                     }
 
@@ -65,7 +59,13 @@ class TjenestepensjonRefusjonskravSteg private constructor(
                 }
             },
             erTilstrekkeligVurdert = { true },
-            tilbakestillGrunnlag = { },
+            tilbakestillGrunnlag = {
+                kontekst.forrigeBehandlingId
+                    ?.let { tjenestepensjonRefusjonsKravVurderingRepository.hentHvisEksisterer(it) }
+                    ?.also {
+                        tjenestepensjonRefusjonsKravVurderingRepository.lagre(kontekst.sakId, kontekst.behandlingId, it)
+                    }
+            },
             kontekst = kontekst,
         )
 
