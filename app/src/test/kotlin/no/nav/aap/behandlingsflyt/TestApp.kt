@@ -408,6 +408,11 @@ private val alderIkkeOppfyltTestCase = OpprettTestcaseDTO(
 internal fun postgreSQLContainer(): PostgreSQLContainer<Nothing> =
     PostgreSQLContainer<Nothing>("postgres:16")
         .apply {
+            val envPort = System.getenv("POSTGRES_PORT")?.toIntOrNull()
+            if (envPort != null) {
+                withExposedPorts(5432)
+                setPortBindings(listOf("$envPort:5432"))
+            }
             waitingFor(HostPortWaitStrategy().withStartupTimeout(Duration.of(60L, ChronoUnit.SECONDS)))
             start()
         }
