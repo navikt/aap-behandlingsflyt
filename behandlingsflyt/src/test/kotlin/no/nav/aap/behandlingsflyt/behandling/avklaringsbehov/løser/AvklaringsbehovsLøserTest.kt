@@ -33,7 +33,7 @@ internal class AvklaringsbehovsLøserTest {
                 ).forBehov()
             }
 
-        }.toSet()
+        }
 
         Assertions.assertThat(løsningSubtypes).hasSize(utledSubtypes.size)
 
