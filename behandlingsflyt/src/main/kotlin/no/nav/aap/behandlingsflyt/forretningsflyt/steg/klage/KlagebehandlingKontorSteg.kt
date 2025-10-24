@@ -42,7 +42,9 @@ class KlagebehandlingKontorSteg private constructor(
                 !klageErTrukket && !klageErAvslått && skalBehandlesAvKontor
             },
             erTilstrekkeligVurdert = { kontorRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurdering != null },
-            tilbakestillGrunnlag = { /* TODO: Eventuell utnulling av vurdering kan skje i senere steg. Vil kanskje ta vare på vurderingen "så lenge som mulig" i tilfelle man ombestemmer seg */ },
+            tilbakestillGrunnlag = {
+                kontorRepository.deaktiverEksisterende(kontekst.behandlingId)
+            },
             kontekst = kontekst,
         )
 
