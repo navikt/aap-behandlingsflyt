@@ -149,6 +149,7 @@ import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.behandlingsflyt.test.modell.defaultInntekt
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.dbtest.TestDatabase
 import no.nav.aap.komponenter.dbtest.TestDatabaseExtension
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
@@ -158,6 +159,7 @@ import no.nav.aap.motor.testutil.ManuellMotorImpl
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
@@ -170,10 +172,9 @@ import kotlin.reflect.KClass
 
 
 @Fakes
-@ExtendWith(TestDatabaseExtension::class)
 open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway>) {
-    @TestDatabase
-    lateinit var dataSource: DataSource
+    @AutoClose
+    private val dataSource = TestDataSource()
 
     protected val motor by lazy {
         ManuellMotorImpl(
