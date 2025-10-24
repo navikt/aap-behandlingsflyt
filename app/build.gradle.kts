@@ -41,11 +41,6 @@ tasks.register<JavaExec>("beregnCSV") {
     mainClass.set("no.nav.aap.behandlingsflyt.BeregnMedCSVKt")
 }
 
-tasks.register<Copy>("copyRuntimeLibs") {
-    from(configurations.runtimeClasspath)
-    into("build/libs/runtime-libs")
-}
-
 dependencies {
     implementation(libs.ktorServerCors)
     implementation(libs.ktorServerStatusPages)
