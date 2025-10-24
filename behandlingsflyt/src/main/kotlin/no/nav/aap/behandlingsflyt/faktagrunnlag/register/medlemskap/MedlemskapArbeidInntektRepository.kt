@@ -25,4 +25,7 @@ interface MedlemskapArbeidInntektRepository : Repository {
 
     fun lagreVurderinger(behandlingId: BehandlingId, vurderinger: List<ManuellVurderingForLovvalgMedlemskap>)
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
+
+    @Deprecated("Fjernes etter migrering")
+    fun migrerManuelleVurderingerPeriodisert()
 }
