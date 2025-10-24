@@ -693,7 +693,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         log.info("Fant ${kandidaterForMigrering.size} kandidater for migrering av manuelle vurderinger for lovvalg medlemskap")
 
         kandidaterForMigrering.forEach { kandidaterSomPerkerPåSammeVurdering ->
-            val opprettetTid = kandidaterSomPerkerPåSammeVurdering.value.first().opprettetTid
+            val opprettetTid = kandidaterSomPerkerPåSammeVurdering.value.minByOrNull { it.opprettetTid }!!.opprettetTid
 
             val vurderingerId = connection.executeReturnKey(
                 """
