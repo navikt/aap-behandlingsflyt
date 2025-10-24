@@ -22,10 +22,10 @@ class Medlemskapvilkåret(
 
         val vurderingsResultat = if (manuellVurderingForLovvalgMedlemskap != null) {
             vurdertManuelt = true
-            val lovvalgsLand = manuellVurderingForLovvalgMedlemskap.lovvalgVedSøknadsTidspunkt.lovvalgsEØSLand
+            val lovvalgsLand = manuellVurderingForLovvalgMedlemskap.lovvalgVedSøknadsTidspunkt.lovvalgsEØSLandEllerLandMedAvtale
             val varMedlemIFolketrygd = manuellVurderingForLovvalgMedlemskap.medlemskapVedSøknadsTidspunkt?.varMedlemIFolketrygd
 
-            val annetLandMedAvtaleIEØS = lovvalgsLand != null && lovvalgsLand != EØSLand.NOR && lovvalgsLand in enumValues<EØSLand>().map { it }
+            val annetLandMedAvtaleIEØS = lovvalgsLand != null && lovvalgsLand != EØSLandEllerLandMedAvtale.NOR && lovvalgsLand in enumValues<EØSLandEllerLandMedAvtale>().map { it }
 
             if (annetLandMedAvtaleIEØS) {
                 VurderingsResultat(Utfall.IKKE_OPPFYLT, Avslagsårsak.NORGE_IKKE_KOMPETENT_STAT, null)

@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag
 
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattNavnOgEnhet
-import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLand
+import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.HistoriskManuellVurderingForLovvalgMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøknadsTidspunktDto
@@ -26,7 +26,7 @@ data class ManuellVurderingForLovvalgMedlemskapResponse(
 
 data class LovvalgVedSøknadsTidspunktResponse(
     val begrunnelse: String,
-    val lovvalgsEØSLand: EØSLand?
+    val lovvalgsEØSLandEllerLandMedAvtale: EØSLandEllerLandMedAvtale?
 )
 
 data class MedlemskapVedSøknadsTidspunktResponse(
@@ -73,7 +73,7 @@ private fun MedlemskapVedSøknadsTidspunktDto.toResponse() =
 private fun LovvalgVedSøknadsTidspunktDto.toResponse() =
     LovvalgVedSøknadsTidspunktResponse(
         begrunnelse = begrunnelse,
-        lovvalgsEØSLand = lovvalgsEØSLand
+        lovvalgsEØSLandEllerLandMedAvtale = lovvalgsEØSLandEllerLandMedAvtale
     )
 
 fun HistoriskManuellVurderingForLovvalgMedlemskap.toResponse() =

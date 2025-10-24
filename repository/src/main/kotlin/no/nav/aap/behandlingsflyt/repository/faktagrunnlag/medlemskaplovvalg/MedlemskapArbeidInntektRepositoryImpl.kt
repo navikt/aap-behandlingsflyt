@@ -88,7 +88,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
             connection.executeReturnKey(manuellVurderingQuery) {
                 setParams {
                     setString(1, manuellVurdering.lovvalgVedSøknadsTidspunkt.begrunnelse)
-                    setEnumName(2, manuellVurdering.lovvalgVedSøknadsTidspunkt.lovvalgsEØSLand)
+                    setEnumName(2, manuellVurdering.lovvalgVedSøknadsTidspunkt.lovvalgsEØSLandEllerLandMedAvtale)
                     setString(3, manuellVurdering.medlemskapVedSøknadsTidspunkt?.begrunnelse)
                     setBoolean(4, manuellVurdering.medlemskapVedSøknadsTidspunkt?.varMedlemIFolketrygd)
                     setBoolean(5, overstyrt)
@@ -172,7 +172,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 setLocalDate(1, manuellVurdering.fom)
                 setLocalDate(2, manuellVurdering.tom)
                 setString(3, manuellVurdering.lovvalgVedSøknadsTidspunkt.begrunnelse)
-                setEnumName(4, manuellVurdering.lovvalgVedSøknadsTidspunkt.lovvalgsEØSLand)
+                setEnumName(4, manuellVurdering.lovvalgVedSøknadsTidspunkt.lovvalgsEØSLandEllerLandMedAvtale)
                 setString(5, manuellVurdering.medlemskapVedSøknadsTidspunkt?.begrunnelse)
                 setBoolean(6, manuellVurdering.medlemskapVedSøknadsTidspunkt?.varMedlemIFolketrygd)
                 setBoolean(7, overstyrt)
@@ -748,7 +748,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         ManuellVurderingForLovvalgMedlemskap(
             lovvalgVedSøknadsTidspunkt = LovvalgVedSøknadsTidspunktDto(
                 begrunnelse = row.getString("tekstvurdering_lovvalg"),
-                lovvalgsEØSLand = row.getEnumOrNull("lovvalgs_land")
+                lovvalgsEØSLandEllerLandMedAvtale = row.getEnumOrNull("lovvalgs_land")
             ),
             medlemskapVedSøknadsTidspunkt = MedlemskapVedSøknadsTidspunktDto(
                 begrunnelse = row.getStringOrNull("tekstvurdering_medlemskap"),

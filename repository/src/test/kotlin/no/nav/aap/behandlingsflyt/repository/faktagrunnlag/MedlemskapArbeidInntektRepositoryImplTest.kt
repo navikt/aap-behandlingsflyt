@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.EnhetGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLand
+import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøknadsTidspunktDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedSøknadsTidspunktDto
@@ -273,7 +273,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
 
     private fun manuellVurderingIkkePeriodisert(begrunnelse: String): ManuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskap(
         id = 1,
-        LovvalgVedSøknadsTidspunktDto(begrunnelse, EØSLand.NOR),
+        LovvalgVedSøknadsTidspunktDto(begrunnelse, EØSLandEllerLandMedAvtale.NOR),
         MedlemskapVedSøknadsTidspunktDto(begrunnelse, true),
         "SAKSBEHANDLER",
         LocalDateTime.now()
@@ -283,7 +283,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
         ManuellVurderingForLovvalgMedlemskap(
             fom = fom,
             tom = tom,
-            lovvalgVedSøknadsTidspunkt = LovvalgVedSøknadsTidspunktDto("begrunnelse", EØSLand.NOR),
+            lovvalgVedSøknadsTidspunkt = LovvalgVedSøknadsTidspunktDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
             medlemskapVedSøknadsTidspunkt = MedlemskapVedSøknadsTidspunktDto("begrunnelse", true),
             vurdertAv = "SAKSBEHANDLER",
             vurdertDato = LocalDateTime.now(),
