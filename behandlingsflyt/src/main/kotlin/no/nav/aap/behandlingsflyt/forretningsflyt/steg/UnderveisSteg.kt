@@ -34,6 +34,7 @@ class UnderveisSteg(
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        underveisService.vurder(kontekst.sakId, kontekst.behandlingId)
         avklaringsbehovService.oppdaterAvklaringsbehov(
             avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId),
             definisjon = Definisjon.FORESLÅ_UTTAK,
@@ -61,20 +62,15 @@ class UnderveisSteg(
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
             VurderingType.REVURDERING -> {
-                underveisService.vurder(kontekst.sakId, kontekst.behandlingId)
-                val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
                 when {
-                    (kontekst.vurderingsbehovRelevanteForSteg.contains(Vurderingsbehov.REVURDER_MELDEPLIKT_RIMELIG_GRUNN)
-                            && avklaringsbehov.harIkkeForeslåttUttak()) -> true
-
+                    (kontekst.vurderingsbehovRelevanteForSteg.contains(Vurderingsbehov.REVURDER_MELDEPLIKT_RIMELIG_GRUNN)) -> true
                     else -> false
                 }
             }
 
-            VurderingType.MELDEKORT, VurderingType.EFFEKTUER_AKTIVITETSPLIKT, VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9 -> {
-                underveisService.vurder(kontekst.sakId, kontekst.behandlingId)
-            }
-
+            VurderingType.MELDEKORT,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
             VurderingType.IKKE_RELEVANT -> false
         }
         return false
