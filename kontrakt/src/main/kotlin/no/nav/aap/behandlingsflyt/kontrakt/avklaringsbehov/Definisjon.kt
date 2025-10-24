@@ -224,7 +224,7 @@ public enum class Definisjon(
     ),
     AVKLAR_BARNETILLEGG(
         kode = AvklaringsbehovKode.`5009`,
-        type = BehovType.OVERSTYR,
+        type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.BARNETILLEGG,
         kreverToTrinn = true,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
