@@ -65,13 +65,13 @@ class BarnetilleggSteg(
             VurderingType.FØRSTEGANGSBEHANDLING ->
                 tidligereVurderinger.muligMedRettTilAAP(kontekst, type())
                         && kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty()
-                        && harOppgittBarn(barneGrunnlag)
+                        && harOppgittBarnEllerFolkeregistrerteBarn(barneGrunnlag)
 
             VurderingType.REVURDERING ->
                 (!tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())
                         || (Vurderingsbehov.DØDSFALL_BARN in kontekst.vurderingsbehovRelevanteForSteg)
                         && kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty())
-                        && harOppgittBarn(barneGrunnlag)
+                        && harOppgittBarnEllerFolkeregistrerteBarn(barneGrunnlag)
 
             VurderingType.MELDEKORT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
@@ -100,8 +100,8 @@ class BarnetilleggSteg(
         )
     }
 
-    private fun harOppgittBarn(grunnlag: BarnGrunnlag?): Boolean {
-        return grunnlag?.oppgitteBarn != null
+    private fun harOppgittBarnEllerFolkeregistrerteBarn(grunnlag: BarnGrunnlag?): Boolean {
+        return grunnlag?.oppgitteBarn != null || grunnlag?.registerbarn?.barn?.isNotEmpty() == true
     }
 
     private fun harPerioderMedBarnTilAvklaring(barnetillegg: Tidslinje<RettTilBarnetillegg>): Boolean {
