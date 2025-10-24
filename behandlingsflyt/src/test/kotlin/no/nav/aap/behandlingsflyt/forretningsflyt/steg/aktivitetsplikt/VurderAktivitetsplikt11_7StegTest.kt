@@ -24,7 +24,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.FakeUnleashFasttrackAktivitetsplikt
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAktivitetsplikt11_7Repository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
@@ -278,7 +278,7 @@ class VurderAktivitetsplikt11_7StegTest {
         VurderAktivitetsplikt11_7Steg.konstruer(
             inMemoryRepositoryProvider,
             createGatewayProvider {
-                register<FakeUnleashFasttrackAktivitetsplikt>()
+                register<FakeUnleash>()
                 register<FakeBrevbestillingGateway>()
             }
         )
