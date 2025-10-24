@@ -1,9 +1,8 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
-import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
-import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -19,36 +18,53 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 class KvalitetssikringsSteg private constructor(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
-    private val tidligereVurderinger: TidligereVurderinger,
+    private val avklaringsbehovService: AvklaringsbehovService,
     private val trekkKlageService: TrekkKlageService,
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider) : this(
         avklaringsbehovRepository = repositoryProvider.provide(),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
         trekkKlageService = TrekkKlageService(repositoryProvider),
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (kontekst.behandlingType !in listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Klage)  ) {
-            return Fullført
-        }
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
-        val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-        if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type()) || trekkKlageService.klageErTrukket(kontekst.behandlingId)) {
-            avklaringsbehov.avbrytForSteg(type())
-            return Fullført
-        }
+        avklaringsbehovService.oppdaterAvklaringsbehov(
+            avklaringsbehovene = avklaringsbehovene,
+            definisjon = Definisjon.KVALITETSSIKRING,
+            vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst) },
+            erTilstrekkeligVurdert = { true },
+            tilbakestillGrunnlag = { tilbakestillGrunnlag(kontekst) },
+            kontekst
+        )
 
-
-
-        if (avklaringsbehov.skalTilbakeføresEtterKvalitetssikring()) {
+        if (avklaringsbehovene.skalTilbakeføresEtterKvalitetssikring()) {
             return TilbakeføresFraKvalitetsikrer
         }
-        if (avklaringsbehov.harHattAvklaringsbehovSomKreverKvalitetssikring()) {
+
+        // TODO Hva gjør man med denne?
+        if (avklaringsbehovene.harHattAvklaringsbehovSomKreverKvalitetssikring()) {
             return FantAvklaringsbehov(Definisjon.KVALITETSSIKRING)
         }
 
         return Fullført
+    }
+
+    private fun vedtakBehøverVurdering(kontekst: FlytKontekstMedPerioder): Boolean {
+        if (trekkKlageService.klageErTrukket(kontekst.behandlingId)) {
+            return false
+        }
+
+        return when (kontekst.behandlingType) {
+            TypeBehandling.Førstegangsbehandling -> true
+            TypeBehandling.Klage -> true
+            else -> false
+        }
+    }
+
+    private fun tilbakestillGrunnlag(kontekst: FlytKontekstMedPerioder) {
+        // TODO Hva trengs å tilbakestilles her?
     }
 
     companion object : FlytSteg {
