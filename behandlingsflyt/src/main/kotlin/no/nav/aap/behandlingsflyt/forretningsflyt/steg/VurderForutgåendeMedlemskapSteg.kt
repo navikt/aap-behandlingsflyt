@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapArbeidInntektGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
@@ -121,12 +120,11 @@ class VurderForutgåendeMedlemskapSteg private constructor(
 
         val manuellVurdering =
             forutgåendeMedlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)?.manuellVurdering
-        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val alleVilkårOppfylt =
             vilkårsresultatRepository.hent(kontekst.behandlingId).finnVilkår(Vilkårtype.MEDLEMSKAP).vilkårsperioder()
                 .all { it.erOppfylt() }
         return ((!alleVilkårOppfylt && manuellVurdering == null)
-                || spesifiktTriggetRevurderMedlemskapUtenManuellVurdering(kontekst, avklaringsbehovene))
+                || spesifiktTriggetRevurderMedlemskapUtenManuellVurdering(kontekst))
     }
 
     private fun vurderVilkår(kontekst: FlytKontekstMedPerioder) {
@@ -155,18 +153,11 @@ class VurderForutgåendeMedlemskapSteg private constructor(
     }
 
     private fun spesifiktTriggetRevurderMedlemskapUtenManuellVurdering(
-        kontekst: FlytKontekstMedPerioder,
-        avklaringsbehovene: Avklaringsbehovene
+        kontekst: FlytKontekstMedPerioder
     ): Boolean {
         val erSpesifiktTriggetRevurderMedlemskap =
             kontekst.vurderingsbehovRelevanteForSteg.any { it == Vurderingsbehov.REVURDER_MEDLEMSKAP || it == Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP }
-        return erSpesifiktTriggetRevurderMedlemskap && erIkkeVurdertTidligereIBehandlingen(avklaringsbehovene)
-    }
-
-    private fun erIkkeVurdertTidligereIBehandlingen(
-        avklaringsbehovene: Avklaringsbehovene
-    ): Boolean {
-        return !avklaringsbehovene.erVurdertTidligereIBehandlingen(Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP)
+        return erSpesifiktTriggetRevurderMedlemskap
     }
 
     companion object : FlytSteg {
