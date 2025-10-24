@@ -21,7 +21,6 @@ object FakeUnleash : FakeUnleashBase(
         BehandlingsflytFeature.SendForvaltningsmelding to true,
         BehandlingsflytFeature.NyBrevtype11_17 to true,
         BehandlingsflytFeature.NyBrevtype11_18 to true,
-        BehandlingsflytFeature.Aktivitetsplikt11_7 to true,
         BehandlingsflytFeature.Aktivitetsplikt11_9 to true,
         BehandlingsflytFeature.OverforingsdatoNullForAvregning to true,
         BehandlingsflytFeature.IverksettUtbetalingSomSelvstendigJobb to true,
