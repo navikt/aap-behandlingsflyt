@@ -59,7 +59,7 @@ class AndreYtelserOppgittISøknadRepositoryImpl(private val connection: DBConnec
             for (ytelse in stønadstyper) {
                 connection.executeReturnKey(insertYtelseQuery) {
                     setParams {
-                        setString(1, ytelse.toString())
+                        setEnumName(1, ytelse)
                         setLong(2, andreYtelserId)
                     }
                 }
