@@ -1,3 +1,5 @@
+import kotlin.math.max
+
 // Felles kode for alle build.gradle.kts filer som laster inn denne conventions pluginen
 
 plugins {
@@ -27,12 +29,14 @@ private fun bestemAntallTestTråder(): Int {
     val processors = Runtime.getRuntime().availableProcessors()
     val antallTråder =
         if (isCiBuild) {
-            processors - 1 // behold en cpu til testcontainer
+            processors * 1.5 // vi har mye io-wait under testene våre
         } else {
             // reduser antall tråder ved lokal kjøring for å unngå at utvikler-maskinen blir for treg
-            processors / 2
+            max(processors / 2, processors - 4)
         }
-    return antallTråder
+
+    logger.lifecycle("Bruker opptil $antallTråder tråder for testkjøring ($processors kjerner tilgjengelig)")
+    return antallTråder.toInt()
 }
 
 tasks {
