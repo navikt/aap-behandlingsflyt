@@ -113,18 +113,17 @@ class EtAnnetStedSteg(
 
     private fun perioderMedVurderingsbehovHelse(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
         val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst,
-            VurderSykepengeErstatningSteg.Companion.type()
-        )
-        val harBehovForAvklaringer = etAnnetStedUtlederService.utled(kontekst.behandlingId)
+            type())
+        val harBehovForAvklaringer = etAnnetStedUtlederService.utled(kontekst.behandlingId). .perioderTilVurdering.flatMap { perioderMedVurderingsbehovSoning(kontekst) }
 
-        return Tidslinje.zip2(tidligereVurderingsutfall, harBehovForAvklaringer.perioderTilVurdering)
+        return Tidslinje.zip2(tidligereVurderingsutfall, harBehovForAvklaringer)
             .mapValue { (behandlingsutfall, denneBehandling) ->
                 when (behandlingsutfall) {
                     null -> false
                     TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
                     TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
                     TidligereVurderinger.Behandlingsutfall.UKJENT -> {
-                          denneBehandling != null && denneBehandling.helse != null
+                          denneBehandling != null && denneBehandling
                     }
                 }
             }
@@ -133,8 +132,8 @@ class EtAnnetStedSteg(
 
     private fun perioderMedVurderingsbehovSoning(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
         val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst,
-            VurderSykepengeErstatningSteg.Companion.type()
-        )
+            type())
+
         val harBehovForAvklaringer = etAnnetStedUtlederService.utled(kontekst.behandlingId)
 
         return Tidslinje.zip2(tidligereVurderingsutfall, harBehovForAvklaringer.perioderTilVurdering)
