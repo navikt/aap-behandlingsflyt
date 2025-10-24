@@ -63,7 +63,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.TestDatabaseExtension
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
@@ -71,14 +70,12 @@ import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.motor.testutil.ManuellMotorImpl
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.extension.ExtendWith
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.util.*
 import javax.sql.DataSource
 
 @Fakes
-@ExtendWith(TestDatabaseExtension::class)
 class TestScenarioOrkestrator(
     private val gatewayProvider: GatewayProvider,
     private val datasource: DataSource,
