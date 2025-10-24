@@ -90,6 +90,7 @@ import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.behandlingsflyt.utils.withMdc
+import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbmigrering.Migrering
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -322,7 +323,7 @@ internal fun Application.server(
 // Toggles av etter kjøring og fjernes i ny pr.
 private fun utførMigreringAvLovvalgOgMedlemskapVurderinger(dataSource: HikariDataSource, gatewayProvider: GatewayProvider) {
     val unleashGateway: UnleashGateway = gatewayProvider.provide()
-    if (isLeader() && unleashGateway.isEnabled(BehandlingsflytFeature.LovvalgMedlemskapPeriodisertMigrering)) {
+    if (unleashGateway.isEnabled(BehandlingsflytFeature.LovvalgMedlemskapPeriodisertMigrering) && isLeader()) {
         val executor = Executors.newVirtualThreadPerTaskExecutor()
         CompletableFuture
             .supplyAsync(withMdc {
@@ -335,7 +336,7 @@ private fun utførMigreringAvLovvalgOgMedlemskapVurderinger(dataSource: HikariDa
 }
 
 private fun isLeader(): Boolean {
-    val electorUrl = System.getProperty("ELECTOR_GET_URL")
+    val electorUrl = requiredConfigForKey("elector.get.url")
     val client = HttpClient.newHttpClient()
     val response = client.send(
         HttpRequest.newBuilder().uri(URI.create(electorUrl)).GET().build(),
