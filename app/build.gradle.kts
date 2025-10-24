@@ -27,7 +27,7 @@ tasks {
 
         mergeServiceFiles()
 
-        filesMatching(listOf("META-INF/io.netty.*", "META-INF/maven/**")) {
+        filesMatching(listOf("META-INF/io.netty.*", "META-INF/services/**", "META-INF/maven/**")) {
             // For disse filene fra upstream, antar vi at de er identiske hvis de har samme navn.
             // Merk at META-INF/maven/org.webjars/swagger-ui/pom.properties
             // brukes av com.papsign.ktor.openapigen.SwaggerUIVersion
