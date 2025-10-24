@@ -67,8 +67,7 @@ lateinit var datasource: DataSource
 
 // Kjøres opp for å få logback i console uten json
 fun main() {
-    System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
-    val postgres = postgreSQLContainer()
+    val dbConfig = initDbConfig()
 
     AzurePortHolder.setPort(8081)
     FakeServers.start() // azurePort = 8081)
@@ -80,18 +79,11 @@ fun main() {
             port = 8080
         }
     }) {
-        val dbConfig = DbConfig(
-            url = postgres.jdbcUrl,
-            username = postgres.username,
-            password = postgres.password
-        )
-
         val gatewayProvider = defaultGatewayProvider()
 
         // Useful for connecting to the test database locally
         // jdbc URL contains the host and port and database name.
-        println("jdbcUrl: ${postgres.jdbcUrl}. Password: ${postgres.password}. Username: ${postgres.username}.")
-        server(dbConfig, postgresRepositoryRegistry, gatewayProvider)
+        server(dbConfig, postgresRepositoryRegistry, defaultGatewayProvider())
 
         datasource = initDatasource(dbConfig)
         motor = lazy {
@@ -130,6 +122,22 @@ fun main() {
         }
 
     }.start(wait = true)
+}
+
+private fun initDbConfig(): DbConfig {
+    return if (System.getenv("NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_JDBC_URL").isNullOrBlank()) {
+        val postgres = postgreSQLContainer()
+
+        DbConfig(
+            url = postgres.jdbcUrl,
+            username = postgres.username,
+            password = postgres.password
+        )
+    } else {
+        DbConfig()
+    }.also {
+        println("----\nDATABASE URL: \n${it.url}?user=${it.username}&password=${it.password}\n----")
+    }
 }
 
 private fun genererFengselsopphold() = InstitusjonsoppholdJSON(
@@ -321,7 +329,7 @@ private fun sendInnOgFullførFørstegangsbehandling(dto: OpprettTestcaseDTO): Sa
                 }
 
                 // Barnetillegg
-                if (dto.barn.isNotEmpty() && !dto.barn.all { it.harRelasjon }) {
+                if (dto.barn.isNotEmpty()) {
                     løsBarnetillegg(this@apply)
                 }
 
@@ -397,14 +405,14 @@ private val alderIkkeOppfyltTestCase = OpprettTestcaseDTO(
     medlemskap = true,
 )
 
-internal fun postgreSQLContainer(): PostgreSQLContainer<Nothing> {
-    val postgres = PostgreSQLContainer<Nothing>("postgres:16")
-    val envPort = System.getenv("POSTGRES_PORT")?.toIntOrNull()
-    if (envPort != null) {
-        postgres.withExposedPorts(5432)
-        postgres.setPortBindings(listOf("$envPort:5432"))
-    }
-    postgres.waitingFor(HostPortWaitStrategy().withStartupTimeout(Duration.of(60L, ChronoUnit.SECONDS)))
-    postgres.start()
-    return postgres
-}
+internal fun postgreSQLContainer(): PostgreSQLContainer<Nothing> =
+    PostgreSQLContainer<Nothing>("postgres:16")
+        .apply {
+            val envPort = System.getenv("POSTGRES_PORT")?.toIntOrNull()
+            if (envPort != null) {
+                withExposedPorts(5432)
+                setPortBindings(listOf("$envPort:5432"))
+            }
+            waitingFor(HostPortWaitStrategy().withStartupTimeout(Duration.of(60L, ChronoUnit.SECONDS)))
+            start()
+        }

@@ -19,8 +19,11 @@ import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.dbtest.TestDataSource.Companion.invoke
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -30,7 +33,8 @@ class MeldepliktRepositoryImplTest {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     }
 
-    private val dataSource = InitTestDatabase.freshDatabase()
+    @AutoClose
+    private val dataSource = TestDataSource()
 
     @Test
     fun `Finner ikke fritaksvurderinger hvis ikke lagret`() {

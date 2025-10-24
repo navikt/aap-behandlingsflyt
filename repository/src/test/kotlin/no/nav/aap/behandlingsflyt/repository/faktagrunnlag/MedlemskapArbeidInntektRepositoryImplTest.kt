@@ -30,15 +30,12 @@ import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.behandlingsflyt.test.oktober
 import no.nav.aap.komponenter.dbconnect.transaction
-<<<<<<< Updated upstream
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
-=======
 import no.nav.aap.komponenter.dbtest.TestDataSource
->>>>>>> Stashed changes
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -46,15 +43,11 @@ import java.time.YearMonth
 
 internal class MedlemskapArbeidInntektRepositoryImplTest {
 
-    companion object {
-        private val dataSource = InitTestDatabase.freshDatabase()
-        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+    @AutoClose
+    private val dataSource = TestDataSource()
 
-        @AfterAll
-        @JvmStatic
-        fun afterAll() {
-            InitTestDatabase.closerFor(dataSource)
-        }
+    companion object {
+        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     }
 
     @Test

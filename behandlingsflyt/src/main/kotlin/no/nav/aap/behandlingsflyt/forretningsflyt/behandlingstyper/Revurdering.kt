@@ -322,8 +322,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.HELHETLIG_VURDERING,
                     Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
                     Vurderingsbehov.REVURDER_LOVVALG,
-                    Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
-
+                    Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP
                     )
             )
             .medSteg(

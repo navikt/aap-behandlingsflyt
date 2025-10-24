@@ -98,6 +98,7 @@ import no.nav.aap.behandlingsflyt.test.modell.MockUnleashFeature
 import no.nav.aap.behandlingsflyt.test.modell.MockUnleashFeatures
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.brev.kontrakt.AvbrytBrevbestillingRequest
 import no.nav.aap.brev.kontrakt.BestillBrevResponse
 import no.nav.aap.brev.kontrakt.BestillBrevV2Request
 import no.nav.aap.brev.kontrakt.Brev
@@ -1947,6 +1948,14 @@ object FakeServers : AutoCloseable {
                             call.respond(HttpStatusCode.NoContent, Unit)
                         }
                     }
+                }
+                post("/avbryt") {
+                    val ref = call.receive<AvbrytBrevbestillingRequest>().referanse
+                    synchronized(mutex) {
+                        val i = brevStore.indexOfFirst { it.referanse == ref }
+                        brevStore[i] = brevStore[i].copy(status = Status.AVBRUTT)
+                    }
+                    call.respond(HttpStatusCode.Accepted, Unit)
                 }
                 post("/ferdigstill") {
                     val ref = call.receive<FerdigstillBrevRequest>().referanse

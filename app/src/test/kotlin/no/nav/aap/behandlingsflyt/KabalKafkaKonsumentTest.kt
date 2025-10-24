@@ -32,6 +32,7 @@ import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.testutil.ManuellMotorImpl
@@ -55,7 +56,7 @@ import kotlin.concurrent.thread
 
 class KabalKafkaKonsumentTest {
     companion object {
-        private val dataSource = InitTestDatabase.freshDatabase()
+        private val dataSource = TestDataSource()
         private val repositoryRegistry = postgresRepositoryRegistry
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
         private val motor =
@@ -82,7 +83,7 @@ class KabalKafkaKonsumentTest {
         internal fun afterAll() {
             motor.stop()
             kafka.stop()
-            InitTestDatabase.closerFor(dataSource)
+            dataSource.close()
         }
     }
 

@@ -38,15 +38,19 @@ import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.dbtest.TestDataSource.Companion.invoke
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.time.LocalDate
 
 class BistandsvilkåretTest {
-    private val dataSource = InitTestDatabase.freshDatabase()
+    @AutoClose
+    private val dataSource = TestDataSource()
 
     private val gatewayProvider = createGatewayProvider {
         register<FakeUnleash>()
