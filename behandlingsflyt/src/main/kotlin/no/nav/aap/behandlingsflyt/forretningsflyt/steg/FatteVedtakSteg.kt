@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
@@ -49,7 +50,7 @@ class FatteVedtakSteg(
             trekkKlageService.klageErTrukket(kontekst.behandlingId)
         ) {
             oppdaterAvklaringsbehov(
-                vedtakBehøverVurdering = { false },
+                vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst, avklaringsbehovene) },
                 erTilstrekkeligVurdert = { true }
             )
             return Fullført
@@ -58,7 +59,7 @@ class FatteVedtakSteg(
         if (kontekst.behandlingType == TypeBehandling.Klage) {
             val klageresultat = klageresultatUtleder.utledKlagebehandlingResultat(kontekst.behandlingId)
             oppdaterAvklaringsbehov(
-                vedtakBehøverVurdering = { false },
+                vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst, avklaringsbehovene) },
                 erTilstrekkeligVurdert = { true }
             )
             if (klageresultat is Opprettholdes) {
@@ -70,12 +71,33 @@ class FatteVedtakSteg(
             avklaringsbehovene.skalTilbakeføresEtterTotrinnsVurdering() -> return TilbakeføresFraBeslutter
             avklaringsbehovene.harHattAvklaringsbehovSomHarKrevdToTrinn() ->
                 oppdaterAvklaringsbehov(
-                    vedtakBehøverVurdering = { true },
+                    vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst, avklaringsbehovene) },
                     erTilstrekkeligVurdert = { false }
                 )
         }
 
         return Fullført
+    }
+
+    private fun vedtakBehøverVurdering(
+        kontekst: FlytKontekstMedPerioder,
+        avklaringsbehovene: Avklaringsbehovene
+    ): Boolean {
+        if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type()) ||
+            trekkKlageService.klageErTrukket(kontekst.behandlingId)
+        ) {
+            return false
+        }
+
+        if (kontekst.behandlingType == TypeBehandling.Klage) {
+            val klageresultat = klageresultatUtleder.utledKlagebehandlingResultat(kontekst.behandlingId)
+            if (klageresultat is Opprettholdes) {
+                return false
+            }
+        }
+
+        return avklaringsbehovene.harHattAvklaringsbehovSomHarKrevdToTrinn() ||
+                avklaringsbehovene.skalTilbakeføresEtterTotrinnsVurdering()
     }
 
 
