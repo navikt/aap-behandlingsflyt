@@ -6,6 +6,12 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
 
 class DefinisjonTest {
+    @Test
+    fun `definisjoner har unik kode, ingen duplikater`() {
+        val kodeMap = Definisjon.entries.associateBy { it.kode }
+        assertThat(kodeMap.keys).doesNotHaveDuplicates()
+        assertThat(kodeMap).hasSize(Definisjon.entries.size)
+    }
 
     @Test
     fun `Skal validere OK for alle definisjoner`() {

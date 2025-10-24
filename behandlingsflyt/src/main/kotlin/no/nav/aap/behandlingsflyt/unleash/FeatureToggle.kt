@@ -19,7 +19,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     TilgangssjekkSettPaaVent,
     OverforingsdatoNullForAvregning,
     NyeSykdomVilkar,
-    OvergangUfore,
     IverksettUtbetalingSomSelvstendigJobb,
     OvergangArbeid,
     LovvalgMedlemskapPeriodisertMigrering

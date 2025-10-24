@@ -8,6 +8,7 @@ data class BarnetilleggDto(
     val søknadstidspunkt: LocalDate,
     val folkeregisterbarn: List<IdentifiserteBarnDto>,
     val vurderteBarn: List<ExtendedVurdertBarnDto>,
+    val vurderteFolkeregisterBarn: List<ExtendedVurdertBarnDto>,
     val vurdertAv: VurdertAvResponse?,
     val barnSomTrengerVurdering: List<IdentifiserteBarnDto>
 )

@@ -17,23 +17,24 @@ import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.dbtest.TestDataSource.Companion.invoke
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.Test
 
 class StudentRepositoryImplTest {
-    private val source = InitTestDatabase.freshDatabase()
+    @AutoClose
+    private val dataSource = TestDataSource()
 
     @Test
     fun `lagre, hente ut, slette`() {
-        val dataSource = source
-
         val sak = dataSource.transaction { sak(it) }
 
         val behandling = dataSource.transaction {
             finnEllerOpprettBehandling(it, sak)
         }
-
 
         val periode = Periode(1 januar 2022, 31.desember(2023))
 

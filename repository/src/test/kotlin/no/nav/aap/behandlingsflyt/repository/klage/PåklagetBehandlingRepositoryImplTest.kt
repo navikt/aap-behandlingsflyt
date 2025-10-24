@@ -14,15 +14,20 @@ import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.dbtest.TestDataSource.Companion.invoke
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
 import java.time.LocalDate
 
 internal class PåklagetBehandlingRepositoryImplTest {
-    private val dataSource = InitTestDatabase.freshDatabase()
-    
+
+    @AutoClose
+    private val dataSource = TestDataSource()
+
     @Test
     fun `Lagrer og henter påklagetbehandling med id`() {
         dataSource.transaction { connection ->

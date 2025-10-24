@@ -86,6 +86,7 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource, repositoryRegis
                                         felter = Felter(
                                             dagsats = it.verdi.dagsats.verdi.toDouble(),
                                             barneTilleggsats = it.verdi.barnetilleggsats.verdi.toDouble(),
+                                            barnetillegg = it.verdi.barnetillegg.verdi().toDouble(),
                                             arbeidGradering = 100.minus(
                                                 it.verdi.gradering.arbeidGradering?.prosentverdi() ?: 0
                                             ),

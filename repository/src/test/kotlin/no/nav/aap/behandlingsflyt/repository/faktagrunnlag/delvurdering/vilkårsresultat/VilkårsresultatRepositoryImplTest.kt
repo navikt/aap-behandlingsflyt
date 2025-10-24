@@ -19,16 +19,21 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.dbtest.TestDataSource.Companion.invoke
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 class VilkårsresultatRepositoryImplTest {
+
+    @AutoClose
+    private val dataSource = TestDataSource()
+
     @Test
     fun `Test oprett vilkårsresultat og hent ut igjen`() {
-        val dataSource = InitTestDatabase.freshDatabase()
-
         val behandling = dataSource.transaction { connection ->
             // Opprett person, sak og behandling
             val personOgSakService = PersonOgSakService(
