@@ -33,7 +33,7 @@ import no.nav.aap.behandlingsflyt.behandling.mellomlagring.MellomlagretVurdering
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.AvklarOppholdkravLøsningForPeriodeDto
 
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
-import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLand
+import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
@@ -1174,7 +1174,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
             this,
             AvklarLovvalgMedlemskapLøsning(
                 ManuellVurderingForLovvalgMedlemskapDto(
-                    lovvalgVedSøknadsTidspunkt = LovvalgVedSøknadsTidspunktDto("", EØSLand.NOR),
+                    lovvalgVedSøknadsTidspunkt = LovvalgVedSøknadsTidspunktDto("", EØSLandEllerLandMedAvtale.NOR),
                     medlemskapVedSøknadsTidspunkt = MedlemskapVedSøknadsTidspunktDto("", true)
                 )
             )
