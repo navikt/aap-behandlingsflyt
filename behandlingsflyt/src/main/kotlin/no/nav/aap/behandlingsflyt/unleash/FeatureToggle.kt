@@ -21,6 +21,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     NyeSykdomVilkar,
     IverksettUtbetalingSomSelvstendigJobb,
     OvergangArbeid,
+    AvklaringsbehovService,
     LovvalgMedlemskapPeriodisertMigrering
     ;
 
