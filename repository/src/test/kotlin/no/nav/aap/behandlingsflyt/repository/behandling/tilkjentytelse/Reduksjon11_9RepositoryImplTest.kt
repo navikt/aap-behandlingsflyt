@@ -10,16 +10,18 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 class Reduksjon11_9RepositoryImplTest {
 
-    val database = InitTestDatabase.freshDatabase()
+    @AutoClose
+    private val dataSource = TestDataSource()
     val periode = Periode(LocalDate.of(2025, 1, 1), LocalDate.of(2027, 12, 31))
     val reduksjon_brudd_1 = Reduksjon11_9(LocalDate.of(2025, 1, 1), Beløp(1000))
     val reduksjon_rimelig_grunn = Reduksjon11_9(LocalDate.of(2025, 1, 2), Beløp(0))
@@ -27,7 +29,7 @@ class Reduksjon11_9RepositoryImplTest {
 
     @Test
     fun `skal lagre ned reduksjoner `() {
-        database.transaction { connection ->
+        dataSource.transaction { connection ->
             val reduksjon11_9repository = Reduksjon11_9RepositoryImpl(connection)
             val behandling = lagSakOgBehandling(connection)
 
@@ -43,7 +45,7 @@ class Reduksjon11_9RepositoryImplTest {
 
     @Test
     fun `skal oppdatere reduksjoner `() {
-        database.transaction { connection ->
+        dataSource.transaction { connection ->
             val reduksjon11_9repository = Reduksjon11_9RepositoryImpl(connection)
             val behandling = lagSakOgBehandling(connection)
 
@@ -63,7 +65,7 @@ class Reduksjon11_9RepositoryImplTest {
 
     @Test
     fun `skal slette reduksjoner `() {
-        database.transaction { connection ->
+        dataSource.transaction { connection ->
             val reduksjon11_9repository = Reduksjon11_9RepositoryImpl(connection)
             val behandling = lagSakOgBehandling(connection)
 
@@ -80,7 +82,7 @@ class Reduksjon11_9RepositoryImplTest {
 
     @Test
     fun `skal ikke lagre ned reduksjoner dersom det ikke finnes noen`() {
-        database.transaction { connection ->
+        dataSource.transaction { connection ->
             val reduksjon11_9repository = Reduksjon11_9RepositoryImpl(connection)
             val behandling = lagSakOgBehandling(connection)
             reduksjon11_9repository.lagre(behandling.id, emptyList())

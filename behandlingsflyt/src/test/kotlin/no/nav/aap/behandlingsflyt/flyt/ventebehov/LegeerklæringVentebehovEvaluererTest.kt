@@ -22,10 +22,13 @@ import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.dbtest.TestDataSource.Companion.invoke
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.Kanal
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.AutoClose
 import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlin.test.Test
@@ -35,9 +38,8 @@ internal class LegeerklæringVentebehovEvaluererTest {
     private val repositoryRegistry = RepositoryRegistry()
         .register<MottattDokumentRepositoryImpl>()
 
-    companion object {
-        private val dataSource = InitTestDatabase.freshDatabase()
-    }
+    @AutoClose
+    private val dataSource = TestDataSource()
 
     @Test
     fun `Løser behov når det finnes avvist dokument` () {

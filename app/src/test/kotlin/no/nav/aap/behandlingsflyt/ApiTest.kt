@@ -36,7 +36,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.FinnEllerOpprettSakDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SaksinfoDTO
@@ -155,9 +154,9 @@ class ApiTest {
 
     @Test
     fun `kalle medlemsskaps-api`() {
-        val ds = initDatasource(dbConfig)
+        val dataSource = initDatasource(dbConfig)
 
-        val opprettetBehandling = ds.transaction { connection ->
+        val opprettetBehandling = dataSource.transaction { connection ->
             val personOgSakService = PersonOgSakService(
                 FakePdlGateway,
                 PersonRepositoryImpl(connection),
