@@ -17,17 +17,18 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions
+import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.util.*
 
 internal class BrevbestillingRepositoryImplTest {
 
-    companion object {
-        private val dataSource = InitTestDatabase.freshDatabase()
-    }
+    @AutoClose
+    private val dataSource = TestDataSource()
 
     @Test
     fun `lagrer, henter og oppdaterer status`() {

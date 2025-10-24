@@ -17,15 +17,18 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 
 class PersonopplysningForutgåendeRepositoryImplTest {
-    val ds = InitTestDatabase.freshDatabase()
+
+    @AutoClose
+    private val dataSource = TestDataSource()
 
     @Test
     fun `lagre, hente ut`() {
@@ -53,12 +56,12 @@ class PersonopplysningForutgåendeRepositoryImplTest {
                 )
             ),
         )
-        val behandling = ds.transaction { finnEllerOpprettBehandling(it, sak(it)) }
-        ds.transaction {
+        val behandling = dataSource.transaction { finnEllerOpprettBehandling(it, sak(it)) }
+        dataSource.transaction {
             PersonopplysningForutgåendeRepositoryImpl(it).lagre(behandling.id, personopplysningMedHistorikk)
         }
 
-        val uthentet = ds.transaction {
+        val uthentet = dataSource.transaction {
             PersonopplysningForutgåendeRepositoryImpl(it).hentHvisEksisterer(behandling.id)
         }
 
@@ -67,7 +70,7 @@ class PersonopplysningForutgåendeRepositoryImplTest {
 
         // SLETT
         assertDoesNotThrow {
-            ds.transaction {
+            dataSource.transaction {
                 PersonopplysningForutgåendeRepositoryImpl(it).slett(behandling.id)
             }
         }

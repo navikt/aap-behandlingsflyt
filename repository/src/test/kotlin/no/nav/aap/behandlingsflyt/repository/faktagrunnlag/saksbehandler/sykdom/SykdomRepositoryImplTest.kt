@@ -23,11 +23,15 @@ import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.dbtest.TestDataSource.Companion.invoke
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
+import org.flywaydb.core.internal.database.base.Database
+import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.Instant
@@ -35,7 +39,9 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 internal class SykdomRepositoryImplTest {
-    private val dataSource = InitTestDatabase.freshDatabase()
+
+    @AutoClose
+    private val dataSource = TestDataSource()
 
     @Test
     fun `kan lagre tom liste`() {
@@ -170,34 +176,35 @@ internal class SykdomRepositoryImplTest {
 
     @Test
     fun `test sletting`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
-            val sak = sak(connection)
-            val behandling = finnEllerOpprettBehandling(connection, sak)
-            val sykdomRepository = SykdomRepositoryImpl(connection)
-            sykdomRepository.lagre(
-                behandling.id, listOf(
-                    Sykdomsvurdering(
-                        begrunnelse = "b1",
-                        vurderingenGjelderFra = null,
-                        dokumenterBruktIVurdering = listOf(JournalpostId("1")),
-                        harSkadeSykdomEllerLyte = true,
-                        erSkadeSykdomEllerLyteVesentligdel = true,
-                        erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-                        erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-                        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
-                        yrkesskadeBegrunnelse = "b",
-                        erArbeidsevnenNedsatt = true,
-                        vurdertAv = Bruker("Z00000"),
-                        opprettet = Instant.now(),
+        TestDataSource().use { dataSource ->
+            dataSource.transaction { connection ->
+                val sak = sak(connection)
+                val behandling = finnEllerOpprettBehandling(connection, sak)
+                val sykdomRepository = SykdomRepositoryImpl(connection)
+                sykdomRepository.lagre(
+                    behandling.id, listOf(
+                        Sykdomsvurdering(
+                            begrunnelse = "b1",
+                            vurderingenGjelderFra = null,
+                            dokumenterBruktIVurdering = listOf(JournalpostId("1")),
+                            harSkadeSykdomEllerLyte = true,
+                            erSkadeSykdomEllerLyteVesentligdel = true,
+                            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
+                            yrkesskadeBegrunnelse = "b",
+                            erArbeidsevnenNedsatt = true,
+                            vurdertAv = Bruker("Z00000"),
+                            opprettet = Instant.now(),
+                        )
                     )
                 )
-            )
-            assertDoesNotThrow {
-                sykdomRepository.slett(behandling.id)
+                assertDoesNotThrow {
+                    sykdomRepository.slett(behandling.id)
+                }
             }
         }
     }
-
 
     private companion object {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))

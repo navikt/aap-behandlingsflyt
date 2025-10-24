@@ -12,6 +12,7 @@ data class VurdertPeriode(
 data class Felter(
     val dagsats: Double,
     val barneTilleggsats: Double,
+    val barnetillegg: Double,
     val arbeidGradering: Int?,
     val samordningGradering: Int?,
     val institusjonGradering: Int?,
