@@ -4,6 +4,7 @@ import com.papsign.ktor.openapigen.route.apiRouting
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import com.zaxxer.hikari.HikariDataSource
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
@@ -63,7 +64,7 @@ import javax.sql.DataSource
 private val log = LoggerFactory.getLogger("TestApp")
 lateinit var testScenarioOrkestrator: TestScenarioOrkestrator
 lateinit var motor: ManuellMotorImpl
-lateinit var datasource: DataSource
+lateinit var datasource: HikariDataSource
 
 // Kjøres opp for å få logback i console uten json
 fun main() {
