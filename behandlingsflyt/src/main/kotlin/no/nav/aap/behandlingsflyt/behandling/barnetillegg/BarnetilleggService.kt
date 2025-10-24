@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.tidslinje.JoinStyle
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -25,6 +26,72 @@ class BarnetilleggService(
     )
 
     fun beregn(behandlingId: BehandlingId): Tidslinje<RettTilBarnetillegg> {
+        if(Miljø.erProd()) {
+            return beregnGammel(behandlingId)
+        }
+        return beregnNy(behandlingId)
+    }
+
+    private fun beregnNy(behandlingId: BehandlingId): Tidslinje<RettTilBarnetillegg> {
+        val sak = sakOgBehandlingService.hentSakFor(behandlingId)
+        var resultat: Tidslinje<RettTilBarnetillegg> =
+            Tidslinje(listOf(Segment(sak.rettighetsperiode, RettTilBarnetillegg())))
+
+        val barnGrunnlag = barnRepository.hent(behandlingId)
+        val folkeregisterBarn =
+            barnGrunnlag.registerbarn?.barn.orEmpty()
+        val vurderteBarn = barnGrunnlag.vurderteBarn?.barn.orEmpty()
+
+        val folkeregistrerteBarnUtenVurderingTidslinje = tilTidslinje(folkeregisterBarn.filter { barn -> vurderteBarn.none { it.ident.er(barn.ident) && it.vurderinger.isNotEmpty() } })
+
+        resultat =
+            resultat.kombiner(folkeregistrerteBarnUtenVurderingTidslinje, JoinStyle.LEFT_JOIN { periode, venstreSegment, høyreSegment ->
+                val venstreVerdi = venstreSegment.verdi.copy()
+                if (høyreSegment?.verdi != null) {
+                    venstreVerdi.leggTilFolkeregisterBarn(høyreSegment.verdi)
+                }
+                Segment(periode, venstreVerdi)
+            })
+
+        val vurderteBarnIdenter = vurderteBarn.map { it.ident }
+        val oppgittBarnSomIkkeErVurdert =
+            barnGrunnlag.oppgitteBarn?.oppgitteBarn
+                ?.filterNot { vurderteBarnIdenter.contains(it.identifikator()) }
+                .orEmpty()
+
+        val oppgittBarnTidslinje = tilTidslinje(oppgittBarnSomIkkeErVurdert)
+        resultat =
+            resultat.kombiner(oppgittBarnTidslinje, JoinStyle.LEFT_JOIN { periode, venstreSegment, høyreSegment ->
+                val venstreVerdi = venstreSegment.verdi.copy()
+                if (høyreSegment?.verdi != null) {
+                    venstreVerdi.leggTilOppgitteBarn(høyreSegment.verdi)
+                }
+                Segment(periode, venstreVerdi)
+            })
+
+        for (barn in vurderteBarn) {
+            resultat = resultat.kombiner(
+                barn.tilTidslinje(),
+                // Outer join siden vurderte barn kan ha prioritet
+                JoinStyle.OUTER_JOIN { periode, venstreSegment, høyreSegment ->
+                    val høyreVerdi = høyreSegment?.verdi
+                    val nyVenstreVerdi = venstreSegment?.verdi?.copy() ?: RettTilBarnetillegg()
+                    if (høyreVerdi != null) {
+                        if (høyreVerdi.harForeldreAnsvar) {
+                            nyVenstreVerdi.godkjenteBarn(setOf(barn.ident))
+                        } else {
+                            nyVenstreVerdi.underkjenteBarn(setOf(barn.ident))
+                        }
+                    }
+
+                    Segment(periode, nyVenstreVerdi)
+                })
+        }
+
+        return resultat.begrensetTil(sak.rettighetsperiode)
+    }
+
+    private fun beregnGammel(behandlingId: BehandlingId): Tidslinje<RettTilBarnetillegg> {
         val sak = sakOgBehandlingService.hentSakFor(behandlingId)
         var resultat: Tidslinje<RettTilBarnetillegg> =
             Tidslinje(listOf(Segment(sak.rettighetsperiode, RettTilBarnetillegg())))
@@ -81,6 +148,7 @@ class BarnetilleggService(
 
         return resultat.begrensetTil(sak.rettighetsperiode)
     }
+
 
     private fun tilTidslinje(barna: List<IBarn>): Tidslinje<Set<BarnIdentifikator>> {
         return barna
