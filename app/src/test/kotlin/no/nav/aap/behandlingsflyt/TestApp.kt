@@ -99,6 +99,7 @@ fun main() {
 
         opprettTestKlage(alderIkkeOppfyltTestCase)
 
+
         apiRouting {
             route("/test") {
                 route("/opprett") {
