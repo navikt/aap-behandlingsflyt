@@ -203,7 +203,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         val inntekterINorgeId = lagreArbeidsInntektGrunnlag(inntektGrunnlag, enhetGrunnlag)
 
         val grunnlagQuery = """
-            INSERT INTO MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG (behandling_id, arbeider_id, inntekter_i_norge_id, medlemskap_unntak_person_id, manuell_vurdering_id) VALUES (?, ?, ?, ?, ?)
+            INSERT INTO MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG (behandling_id, arbeider_id, inntekter_i_norge_id, medlemskap_unntak_person_id, manuell_vurdering_id, vurderinger_id) VALUES (?, ?, ?, ?, ?, ?)
         """.trimIndent()
         connection.execute(grunnlagQuery) {
             setParams {
@@ -212,6 +212,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 setLong(3, inntekterINorgeId)
                 setLong(4, medlId)
                 setLong(5, grunnlagOppslag?.manuellVurderingId)
+                setLong(6, grunnlagOppslag?.vurderingerId)
             }
         }
     }
