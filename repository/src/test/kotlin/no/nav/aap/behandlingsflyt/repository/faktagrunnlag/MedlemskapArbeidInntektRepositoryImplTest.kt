@@ -296,10 +296,29 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
             val medlemskapArbeidInntektRepository = MedlemskapArbeidInntektRepositoryImpl(connection)
             val sak = opprettSak(connection, periode)
             val behandling = finnEllerOpprettBehandling(connection, sak)
+            val medlemskapRepository = MedlemskapRepositoryImpl(connection)
 
             medlemskapArbeidInntektRepository.lagreManuellVurdering(
                 behandlingId = behandling.id,
                 manuellVurdering = manuellVurderingIkkePeriodisert("begrunnelse")
+            )
+
+            val medlId = medlemskapRepository.lagreUnntakMedlemskap(
+                behandlingId = behandling.id,
+                unntak = listOf(medlemskapData())
+            )
+
+            medlemskapArbeidInntektRepository.lagreArbeidsforholdOgInntektINorge(
+                behandlingId = behandling.id,
+                arbeidGrunnlag = arbeidGrunnlag(),
+                inntektGrunnlag = inntektGrunnlag(),
+                medlId = medlId,
+                enhetGrunnlag = enhetGrunnlags()
+            )
+
+            medlemskapArbeidInntektRepository.lagreManuellVurdering(
+                behandlingId = behandling.id,
+                manuellVurdering = manuellVurderingIkkePeriodisert("begrunnelse2")
             )
 
             val medlemskapArbeidInntektGrunnlag = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandling.id)
@@ -314,8 +333,8 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
 
             val migrertMedlemskapArbeidInntektGrunnlag = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandling.id)
 
-            // Sjekker at innslag i lovvalg_medlemskap_manuell_vurderinger finnes
-            assertThat(hentVurderingerId(connection)).isNotNull
+            // Sjekker at innslag i lovvalg_medlemskap_manuell_vurderinger finnes og at det er to stk en for hver vurdering
+            assertThat(hentVurderingerId(connection)).hasSize(2)
 
             // Sjekker at listen med periodiserte vurderinger nå returnerer det samme som manuellVurdering
             val periodisertVurdering = migrertMedlemskapArbeidInntektGrunnlag?.vurderinger?.first()
@@ -327,9 +346,9 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
         }
     }
 
-    private fun hentVurderingerId(connection: DBConnection): Long? {
+    private fun hentVurderingerId(connection: DBConnection): List<Long> {
         val query = "SELECT id FROM lovvalg_medlemskap_manuell_vurderinger"
-        val id = connection.queryFirstOrNull<Long>(query) {
+        val id = connection.queryList<Long>(query) {
             setRowMapper { it.getLong("id") }
         }
         return id

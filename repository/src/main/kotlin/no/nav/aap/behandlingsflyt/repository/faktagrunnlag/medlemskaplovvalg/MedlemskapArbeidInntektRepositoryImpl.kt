@@ -669,7 +669,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                     JOIN behandling b ON g.behandling_id = b.id
                     JOIN sak s ON b.sak_id = s.id
                 WHERE g.manuell_vurdering_id IS NOT NULL 
-                AND g.vurderinger_id IS NULL
+             
             """.trimIndent()
 
             return connection.queryList(kandidaterQuery) {
@@ -688,43 +688,47 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         val start = System.currentTimeMillis()
 
         log.info("Starter migrering av manuelle vurderinger for lovvalg medlemskap til periodisert format")
-        val kandidaterForMigrering = hentKandidater()
+        val kandidaterForMigrering = hentKandidater().groupBy { it.manuellVurderingId }
 
         log.info("Fant ${kandidaterForMigrering.size} kandidater for migrering av manuelle vurderinger for lovvalg medlemskap")
 
-        kandidaterForMigrering.forEach { kandidat ->
-            log.info("Migrerer grunnlag med id=${kandidat.id} for behandlingId=${kandidat.behandlingId.id}")
+        kandidaterForMigrering.forEach { kandidaterSomPerkerPåSammeVurdering ->
+            val opprettetTid = kandidaterSomPerkerPåSammeVurdering.value.first().opprettetTid
 
-            // Oppretter innslag i vurderinger tabellen
             val vurderingerId = connection.executeReturnKey(
                 """
                     INSERT INTO lovvalg_medlemskap_manuell_vurderinger(opprettet_tid) values (?)
                 """.trimIndent()
             ) {
                 setParams {
-                    setLocalDateTime(1, kandidat.opprettetTid)
+                    setLocalDateTime(1, opprettetTid)
                 }
             }
 
-            // Oppdaterer grunnlaget med riktig vurderinger_id
-            connection.execute("UPDATE MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG SET vurderinger_id = ? WHERE id = ?") {
-                setParams {
-                    setLong(1, vurderingerId)
-                    setLong(2, kandidat.id)
+            kandidaterSomPerkerPåSammeVurdering.value.forEach { kandidat ->
+                log.info("Migrerer grunnlag med id=${kandidat.id} for behandlingId=${kandidat.behandlingId}")
+
+                // Oppdaterer grunnlaget med riktig vurderinger_id
+                connection.execute("UPDATE MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG SET vurderinger_id = ? WHERE id = ?") {
+                    setParams {
+                        setLong(1, vurderingerId)
+                        setLong(2, kandidat.id)
+                    }
+                    setResultValidator { require(it == 1) }
                 }
-                setResultValidator { require(it == 1) }
+
+                // Oppdaterer den manuelle vurderingen med riktig vurderinger_id
+                connection.execute("UPDATE LOVVALG_MEDLEMSKAP_MANUELL_VURDERING SET vurderinger_id = ?, fom = ?, vurdert_i_behandling = ? WHERE id = ?") {
+                    setParams {
+                        setLong(1, vurderingerId)
+                        setLocalDate(2, kandidat.rettighetsperiode.fom)
+                        setLong(3, kandidat.behandlingId.id)
+                        setLong(4, kandidat.manuellVurderingId)
+                    }
+                    setResultValidator { require(it == 1) }
+                }
             }
 
-            // Oppdaterer den manuelle vurderingen med riktig vurderinger_id
-            connection.execute("UPDATE LOVVALG_MEDLEMSKAP_MANUELL_VURDERING SET vurderinger_id = ?, fom = ?, vurdert_i_behandling = ? WHERE id = ?") {
-                setParams {
-                    setLong(1, vurderingerId)
-                    setLocalDate(2, kandidat.rettighetsperiode.fom)
-                    setLong(3, kandidat.behandlingId.id)
-                    setLong(4, kandidat.manuellVurderingId)
-                }
-                setResultValidator { require(it == 1) }
-            }
         }
 
         val totalTid = System.currentTimeMillis() - start
