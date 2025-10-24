@@ -75,7 +75,7 @@ internal class BehandlingRepositoryImplTest {
     private val dataSource = TestDataSource()
 
     @Test
-    fun `kan lagre og hente ut behandling med uuid`() {
+    fun `Kan lagre og hente ut behandling med uuid`() {
         val skapt = dataSource.transaction { connection ->
             val sak = PersonOgSakService(
                 FakePdlGateway,
@@ -120,7 +120,7 @@ internal class BehandlingRepositoryImplTest {
     }
 
     @Test
-    fun `oppretet dato lagres på behandling og hentes ut korrekt`() {
+    fun `Opprettet dato lagres på behandling og hentes ut korrekt`() {
         val skapt = dataSource.transaction { connection ->
             val sak = PersonOgSakService(
                 FakePdlGateway,
@@ -155,7 +155,7 @@ internal class BehandlingRepositoryImplTest {
     }
 
     @Test
-    fun `kan hente ut behandlinger for sak filtrert på type`() {
+    fun `Kan hente ut behandlinger for sak filtrert på type`() {
         val (sak, førstegang, klage) = dataSource.transaction { connection ->
             val sak = PersonOgSakService(
                 FakePdlGateway,
