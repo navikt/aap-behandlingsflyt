@@ -26,13 +26,6 @@ class BarnetilleggService(
     )
 
     fun beregn(behandlingId: BehandlingId): Tidslinje<RettTilBarnetillegg> {
-        if(Miljø.erProd()) {
-            return beregnGammel(behandlingId)
-        }
-        return beregnNy(behandlingId)
-    }
-
-    private fun beregnNy(behandlingId: BehandlingId): Tidslinje<RettTilBarnetillegg> {
         val sak = sakOgBehandlingService.hentSakFor(behandlingId)
         var resultat: Tidslinje<RettTilBarnetillegg> =
             Tidslinje(listOf(Segment(sak.rettighetsperiode, RettTilBarnetillegg())))
@@ -90,65 +83,6 @@ class BarnetilleggService(
 
         return resultat.begrensetTil(sak.rettighetsperiode)
     }
-
-    private fun beregnGammel(behandlingId: BehandlingId): Tidslinje<RettTilBarnetillegg> {
-        val sak = sakOgBehandlingService.hentSakFor(behandlingId)
-        var resultat: Tidslinje<RettTilBarnetillegg> =
-            Tidslinje(listOf(Segment(sak.rettighetsperiode, RettTilBarnetillegg())))
-
-        val barnGrunnlag = barnRepository.hent(behandlingId)
-        val folkeregisterBarn =
-            barnGrunnlag.registerbarn?.barn.orEmpty()
-        val folkeregisterBarnTidslinje = tilTidslinje(folkeregisterBarn)
-
-        resultat =
-            resultat.kombiner(folkeregisterBarnTidslinje, JoinStyle.LEFT_JOIN { periode, venstreSegment, høyreSegment ->
-                val venstreVerdi = venstreSegment.verdi.copy()
-                if (høyreSegment?.verdi != null) {
-                    venstreVerdi.leggTilFolkeregisterBarn(høyreSegment.verdi)
-                }
-                Segment(periode, venstreVerdi)
-            })
-
-        val vurderteBarn = barnGrunnlag.vurderteBarn?.barn.orEmpty()
-        val vurderteBarnIdenter = vurderteBarn.map { it.ident }
-        val oppgittBarnSomIkkeErVurdert =
-            barnGrunnlag.oppgitteBarn?.oppgitteBarn
-                ?.filterNot { vurderteBarnIdenter.contains(it.identifikator()) }
-                .orEmpty()
-
-        val oppgittBarnTidslinje = tilTidslinje(oppgittBarnSomIkkeErVurdert)
-        resultat =
-            resultat.kombiner(oppgittBarnTidslinje, JoinStyle.LEFT_JOIN { periode, venstreSegment, høyreSegment ->
-                val venstreVerdi = venstreSegment.verdi.copy()
-                if (høyreSegment?.verdi != null) {
-                    venstreVerdi.leggTilOppgitteBarn(høyreSegment.verdi)
-                }
-                Segment(periode, venstreVerdi)
-            })
-
-        for (barn in vurderteBarn) {
-            resultat = resultat.kombiner(
-                barn.tilTidslinje(),
-                // Outer join siden vurderte barn kan ha prioritet
-                JoinStyle.OUTER_JOIN { periode, venstreSegment, høyreSegment ->
-                    val høyreVerdi = høyreSegment?.verdi
-                    val nyVenstreVerdi = venstreSegment?.verdi?.copy() ?: RettTilBarnetillegg()
-                    if (høyreVerdi != null) {
-                        if (høyreVerdi.harForeldreAnsvar) {
-                            nyVenstreVerdi.godkjenteBarn(setOf(barn.ident))
-                        } else {
-                            nyVenstreVerdi.underkjenteBarn(setOf(barn.ident))
-                        }
-                    }
-
-                    Segment(periode, nyVenstreVerdi)
-                })
-        }
-
-        return resultat.begrensetTil(sak.rettighetsperiode)
-    }
-
 
     private fun tilTidslinje(barna: List<IBarn>): Tidslinje<Set<BarnIdentifikator>> {
         return barna
