@@ -64,6 +64,7 @@ import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 
 internal class BehandlingRepositoryImplTest {
     companion object {
@@ -207,8 +208,8 @@ internal class BehandlingRepositoryImplTest {
     }
 
     @Test
-    fun `kan hente ut behandlinger med vedtak for person`() {
-        val vedtakstidspunkt = LocalDateTime.now()
+    fun `Kan hente ut behandlinger med vedtak for person`() {
+        val vedtakstidspunkt = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS)
         val virkningstidspunkt = LocalDate.now().plusMonths(1)
 
 
@@ -264,7 +265,7 @@ internal class BehandlingRepositoryImplTest {
             assertThat(alleFørstegang).hasSize(1)
             assertThat(alleFørstegang[0].saksnummer).isEqualTo(sak.saksnummer)
             assertThat(alleFørstegang[0].referanse).isEqualTo(førstegang.referanse)
-            assertThat(alleFørstegang[0].vedtakstidspunkt).isEqualToIgnoringNanos(vedtakstidspunkt)
+            assertThat(alleFørstegang[0].vedtakstidspunkt).isEqualTo(vedtakstidspunkt)
             assertThat(alleFørstegang[0].virkningstidspunkt).isEqualTo(virkningstidspunkt)
             assertThat(alleFørstegang[0].vurderingsbehov).isEqualTo(setOf(Vurderingsbehov.MOTTATT_SØKNAD))
             assertThat(alleFørstegang[0].årsakTilOpprettelse).isEqualTo(ÅrsakTilOpprettelse.SØKNAD)
