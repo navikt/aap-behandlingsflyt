@@ -4,7 +4,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.behandlingsflyt.behandling.brev.BrevBehov
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevUtlederService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
@@ -43,32 +43,32 @@ class MeldingOmVedtakBrevSteg private constructor(
         if (trekkKlageService.klageErTrukket(kontekst.behandlingId)) {
             return Fullført
         }
-
         val brevBehov = brevUtlederService.utledBehovForMeldingOmVedtak(kontekst.behandlingId)
-        if (brevBehov != null) {
-            val bestillingFinnes =
-                brevbestillingService.harBestillingOmVedtak(kontekst.behandlingId)
-            if (!bestillingFinnes) {
-                val behandling = behandlingRepository.hent(kontekst.behandlingId)
-                log.info("Bestiller brev for sak ${kontekst.sakId}.")
-                val unikReferanse = "${behandling.referanse}-${brevBehov.typeBrev}"
-                brevbestillingService.bestillV2(
-                    behandlingId = kontekst.behandlingId,
-                    brevBehov = brevBehov,
-                    unikReferanse = unikReferanse,
-                    ferdigstillAutomatisk = false,
-                )
-                avklaringsbehovService.oppdaterAvklaringsbehov(
-                    avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId),
-                    Definisjon.SKRIV_VEDTAKSBREV,
-                    vedtakBehøverVurdering = { true },
-                    erTilstrekkeligVurdert = { true },
-                    tilbakestillGrunnlag = {},
-                    kontekst
-                )
-            }
+        val behøverVedtaksbrev = brevBehov != null && !brevbestillingService.harBestillingOmVedtak(kontekst.behandlingId)
+        avklaringsbehovService.oppdaterAvklaringsbehov(
+            avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId),
+            Definisjon.SKRIV_VEDTAKSBREV,
+            vedtakBehøverVurdering = { behøverVedtaksbrev },
+            erTilstrekkeligVurdert = { true },
+            tilbakestillGrunnlag = {},
+            kontekst
+        )
+        if (behøverVedtaksbrev) {
+            bestillBrev(kontekst, brevBehov)
         }
         return Fullført
+    }
+
+    private fun bestillBrev(kontekst: FlytKontekstMedPerioder, brevBehov: BrevBehov) {
+        val behandling = behandlingRepository.hent(kontekst.behandlingId)
+        log.info("Bestiller brev for sak ${kontekst.sakId}.")
+        val unikReferanse = "${behandling.referanse}-${brevBehov.typeBrev}"
+        brevbestillingService.bestillV2(
+            behandlingId = kontekst.behandlingId,
+            brevBehov = brevBehov,
+            unikReferanse = unikReferanse,
+            ferdigstillAutomatisk = false,
+        )
     }
 
     companion object : FlytSteg {
