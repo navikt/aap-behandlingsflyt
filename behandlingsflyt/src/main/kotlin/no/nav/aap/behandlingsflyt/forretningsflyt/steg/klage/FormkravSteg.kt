@@ -64,7 +64,7 @@ class FormkravSteg (
         )
 
         val varsel = grunnlag?.varsel
-        if(skalVentePåFristFraForhåndsvarsel(kontekst, varsel, grunnlag?.vurdering, venteBehov )) {
+        if(varsel != null && skalVentePåFristFraForhåndsvarsel(kontekst, varsel, grunnlag.vurdering, venteBehov )) {
             return FantVentebehov(
                 Ventebehov(
                     definisjon = Definisjon.VENTE_PÅ_FRIST_FORHÅNDSVARSEL_KLAGE_FORMKRAV,
@@ -124,7 +124,8 @@ class FormkravSteg (
         val frist = varsel?.svarfrist ?: throw IllegalStateException(
         "Fant ikke frist"
         )
-        return LocalDate.now() <= frist && vurdering?.likevelBehandles != true
+        val erFørEllerPåFrist = LocalDate.now() <= frist
+        return  erFørEllerPåFrist && vurdering?.likevelBehandles != true
     }
 
     private fun harÅpentVenteBehov(venteBehov: Avklaringsbehov?, varsel: FormkravVarsel?): Boolean {
