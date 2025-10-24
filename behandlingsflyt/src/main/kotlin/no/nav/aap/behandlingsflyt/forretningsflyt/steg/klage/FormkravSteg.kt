@@ -144,7 +144,7 @@ class FormkravSteg (
         if(trekkKlageService.klageErTrukket(kontekst.behandlingId)) {
             return false
         }
-       if(vurdering == null || vurdering.erOppfylt()) {
+       if(vurdering == null || vurdering.erOppfylt() || vurdering.erFristIkkeOverholdt()) {
            return false
        } else {
            bestillEllerGjenopprettFårhåndsvarselBrev(kontekst.behandlingId)
