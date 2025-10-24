@@ -46,7 +46,7 @@ class BarnetilleggSteg(
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-        val barnetilgangTidslinje = beregnOgOppdaterBarnetilleggTidslinke(kontekst)
+        val barnetilgangTidslinje = beregnOgOppdaterBarnetilleggTidslinje(kontekst)
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
             avklaringsbehovene = avklaringsbehovene,
@@ -82,26 +82,11 @@ class BarnetilleggSteg(
     }
 
     private fun tilbakestillBarnetillegg(kontekst: FlytKontekstMedPerioder) {
-        val vedtatteBarnetillegg = kontekst.forrigeBehandlingId
-            ?.let { barnetilleggRepository.hentHvisEksisterer(it) }
-            ?.perioder
-            ?: emptyList()
-        barnetilleggRepository.lagre(kontekst.behandlingId, vedtatteBarnetillegg)
-
-        val forrigeBarnGrunnlag = kontekst.forrigeBehandlingId
-            ?.let { barnRepository.hentHvisEksisterer(it) }
-
-        val vurderteBarn = forrigeBarnGrunnlag?.vurderteBarn?.barn.orEmpty()
-
-        barnRepository.lagreVurderinger(
-            behandlingId = kontekst.behandlingId,
-            vurdertAv = forrigeBarnGrunnlag?.vurderteBarn?.vurdertAv ?: SYSTEMBRUKER.ident,
-            vurderteBarn = vurderteBarn
-        )
+        // NOOP enn så lenge
     }
 
     private fun harOppgittBarnEllerFolkeregistrerteBarn(grunnlag: BarnGrunnlag?): Boolean {
-        return grunnlag?.oppgitteBarn != null || grunnlag?.registerbarn?.barn?.isNotEmpty() == true
+        return grunnlag?.oppgitteBarn != null
     }
 
     private fun harPerioderMedBarnTilAvklaring(barnetillegg: Tidslinje<RettTilBarnetillegg>): Boolean {
@@ -114,7 +99,7 @@ class BarnetilleggSteg(
         return finnesBarnTilAvklaring
     }
 
-    private fun beregnOgOppdaterBarnetilleggTidslinke(kontekst: FlytKontekstMedPerioder): Tidslinje<RettTilBarnetillegg> {
+    private fun beregnOgOppdaterBarnetilleggTidslinje(kontekst: FlytKontekstMedPerioder): Tidslinje<RettTilBarnetillegg> {
         val barnetillegg = barnetilleggService.beregn(kontekst.behandlingId)
 
         barnetilleggRepository.lagre(
