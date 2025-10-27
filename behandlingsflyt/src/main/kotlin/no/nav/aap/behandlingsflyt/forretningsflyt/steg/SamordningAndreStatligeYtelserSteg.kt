@@ -2,6 +2,9 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -9,6 +12,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -16,18 +20,38 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class SamordningAndreStatligeYtelserSteg(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val avklaringsbehovService: AvklaringsbehovService,
+    private val tidligereVurderinger: TidligereVurderinger,
+    private val andreStatligeYtelserRepository: SamordningAndreStatligeYtelserRepository,
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-            avklaringsbehovService.oppdaterAvklaringsbehov(
-                avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId),
-                definisjon = Definisjon.SAMORDNING_ANDRE_STATLIGE_YTELSER,
-                vedtakBehøverVurdering = {
-                    Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER in kontekst.vurderingsbehovRelevanteForSteg
-                },
-                erTilstrekkeligVurdert = { true },
-                tilbakestillGrunnlag = { },
-                kontekst = kontekst
-            )
+        avklaringsbehovService.oppdaterAvklaringsbehov(
+            avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId),
+            definisjon = Definisjon.SAMORDNING_ANDRE_STATLIGE_YTELSER,
+            vedtakBehøverVurdering = {
+                when (kontekst.vurderingType) {
+                    VurderingType.FØRSTEGANGSBEHANDLING,
+                    VurderingType.REVURDERING -> {
+                        when {
+                            tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
+                            Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER in kontekst.vurderingsbehovRelevanteForSteg -> true
+                            else -> kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty()
+                        }
+                    }
+
+                    VurderingType.MELDEKORT,
+                    VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
+                    VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
+                    VurderingType.IKKE_RELEVANT -> false
+                }
+            },
+            erTilstrekkeligVurdert = { true },
+            tilbakestillGrunnlag = {
+                kontekst.forrigeBehandlingId
+                    ?.let { andreStatligeYtelserRepository.hentHvisEksisterer(it) }
+                    ?.also { andreStatligeYtelserRepository.lagre(kontekst.behandlingId, it.vurdering) }
+            },
+            kontekst = kontekst
+        )
 
         return Fullført
     }
@@ -39,7 +63,9 @@ class SamordningAndreStatligeYtelserSteg(
         ): BehandlingSteg {
             return SamordningAndreStatligeYtelserSteg(
                 avklaringsbehovRepository = repositoryProvider.provide(),
-                avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
+                avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+                andreStatligeYtelserRepository = repositoryProvider.provide(),
             )
         }
 
