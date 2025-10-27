@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.AndreStatligeYtelser
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonForhold
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonOrdning
@@ -106,7 +107,8 @@ data class SamordningUføreVurderingPeriodeDTO(
 
 data class SamordningAndreStatligeYtelserGrunnlagDTO(
     val harTilgangTilÅSaksbehandle: Boolean,
-    val vurdering: SamordningAndreStatligeYtelserVurderingDTO?
+    val vurdering: SamordningAndreStatligeYtelserVurderingDTO?,
+    val historiskeVurderinger: List<SamordningAndreStatligeYtelserVurderingDTO>? = null,
 )
 
 data class SamordningAndreStatligeYtelserVurderingDTO(
@@ -325,7 +327,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
 
                         val historiskeVurderinger =
                             historiskeBehandlinger.mapNotNull { historiskeBehandling ->
-                                samordningAndreStatligeYtelserRepository.hentHvisEksisterer(historiskeBehandling.id)
+                                samordningAndreStatligeYtelserRepository.hentHvisEksisterer(historiskeBehandling.id)?.vurdering
                             }
 
                         Pair(vurdering, historiskeVurderinger)
@@ -336,8 +338,39 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                     ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv)
                 }
 
+                val historiskeVurderinger = samordningAndreStatligeYtelserHistoriskeVurdering.let { historiske ->
+                    historiske.map { denneVurdering ->
+                        SamordningAndreStatligeYtelserVurderingDTO(
+                            begrunnelse = denneVurdering.begrunnelse,
+                            denneVurdering.vurderingPerioder
+                                .map {
+                                    SamordningAndreStatligeYtelserVurderingPeriodeDTO(
+                                        periode = it.periode,
+                                        ytelse = it.ytelse,
+                                    )
+                                },
+                            vurdertAv =
+                                denneVurdering.let {
+                                    VurdertAvResponse(
+                                        ident = it.vurdertAv,
+                                        dato =
+                                            requireNotNull(it.vurdertTidspunkt?.toLocalDate()) {
+                                                "Fant ikke vurdert tidspunkt for samordningAndreStatligeYtelserVurdering"
+                                            },
+                                        ansattnavn = navnOgEnhet?.navn,
+                                        enhetsnavn = navnOgEnhet?.enhet
+                                    )
+                                }
+                        )
+
+                    }
+                }
+
+
                 val vurdering = samordningAndreStatligeYtelserVurdering?.let { vurdering ->
                     SamordningAndreStatligeYtelserVurderingDTO(
+
+
                         begrunnelse = vurdering.begrunnelse,
                         vurderingPerioder =
                             vurdering.vurderingPerioder
@@ -364,7 +397,8 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                 respond(
                     SamordningAndreStatligeYtelserGrunnlagDTO(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
-                        vurdering = vurdering
+                        vurdering = vurdering,
+                        historiskeVurderinger = historiskeVurderinger,
                     )
                 )
             }
