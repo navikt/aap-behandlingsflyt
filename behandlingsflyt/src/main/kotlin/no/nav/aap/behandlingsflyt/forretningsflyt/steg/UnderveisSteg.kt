@@ -59,7 +59,7 @@ class UnderveisSteg(
             return false
         }
 
-        when (kontekst.vurderingType) {
+        return when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
             VurderingType.REVURDERING -> {
                 when {
@@ -73,7 +73,6 @@ class UnderveisSteg(
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
             VurderingType.IKKE_RELEVANT -> false
         }
-        return false
     }
 
     companion object : FlytSteg {
