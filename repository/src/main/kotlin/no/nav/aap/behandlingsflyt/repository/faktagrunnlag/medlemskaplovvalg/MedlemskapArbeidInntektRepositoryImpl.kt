@@ -145,7 +145,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 setLong(2, grunnlagOppslag?.arbeiderId)
                 setLong(3, grunnlagOppslag?.inntektINorgeId)
                 setLong(4, grunnlagOppslag?.medlId)
-                setLong(5, manuellVurderingId ?: grunnlagOppslag?.manuellVurderingId)
+                setLong(5, manuellVurderingId)
                 setLong(6, vurderingerId)
             }
             setResultValidator { require(it == 1) }
@@ -656,14 +656,17 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
             val behandlingId: BehandlingId,
             val rettighetsperiode: Periode,
             val manuellVurderingId: Long,
-            val opprettetTid: LocalDateTime
+            val grunnlagOpprettetTid: LocalDateTime,
+            val vurderingOpprettetTid: LocalDateTime,
         )
 
         // Dette er alle grunnlag som er kandidater for migrering - dvs de som har en manuell vurdering knyttet til seg
         // og ikke har noen kobling til vurderinger enda
         fun hentKandidater(): List<MigreringGrunnlagInternal> {
             val kandidaterQuery = """
-                SELECT g.id, g.manuell_vurdering_id, v.opprettet_tid, g.behandling_id, s.rettighetsperiode 
+                SELECT g.id, g.manuell_vurdering_id, v.opprettet_tid as vurdering_opprettet_tid, 
+                    g.opprettet_tid as grunnlag_opprettet_tid, g.behandling_id, s.rettighetsperiode, 
+                    b.opprettet_tid as behandling_opprettet_tid
                 FROM medlemskap_arbeid_og_inntekt_i_norge_grunnlag g
                     JOIN lovvalg_medlemskap_manuell_vurdering v ON g.manuell_vurdering_id = v.id
                     JOIN behandling b ON g.behandling_id = b.id
@@ -678,22 +681,22 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                         behandlingId = BehandlingId(it.getLong("behandling_id")),
                         rettighetsperiode = it.getPeriode("rettighetsperiode"),
                         manuellVurderingId = it.getLong("manuell_vurdering_id"),
-                        opprettetTid = it.getLocalDateTime("opprettet_tid")
+                        grunnlagOpprettetTid = it.getLocalDateTime("grunnlag_opprettet_tid"),
+                        vurderingOpprettetTid = it.getLocalDateTime("vurdering_opprettet_tid")
                     )
                 }
             }
         }
 
-        val start = System.currentTimeMillis()
-
         log.info("Starter migrering av manuelle vurderinger for lovvalg medlemskap til periodisert format")
+        val start = System.currentTimeMillis()
         val kandidaterForMigrering = hentKandidater()
         val kandidaterForMigreringGruppertPåManuellVurdering = kandidaterForMigrering.groupBy { it.manuellVurderingId }
 
         log.info("Fant ${kandidaterForMigrering.size} kandidater for migrering av manuelle vurderinger for lovvalg medlemskap")
 
         kandidaterForMigreringGruppertPåManuellVurdering.forEach { kandidaterSomPerkerPåSammeVurdering ->
-            val opprettetTid = kandidaterSomPerkerPåSammeVurdering.value.minByOrNull { it.opprettetTid }!!.opprettetTid
+            val opprettetTid = kandidaterSomPerkerPåSammeVurdering.value.minByOrNull { it.vurderingOpprettetTid }!!.grunnlagOpprettetTid
 
             val vurderingerId = connection.executeReturnKey(
                 """
@@ -705,7 +708,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 }
             }
 
-            // Oppdatere alle grunnlag for en behandling til å peke på den nye vurderinger_id
+            // Oppdatere alle grunnlag for en behandling til å peke på den nye vurderinger_id.
             kandidaterSomPerkerPåSammeVurdering.value.forEach { kandidat ->
                 log.info("Migrerer grunnlag med id=${kandidat.id} for behandlingId=${kandidat.behandlingId}")
 
@@ -717,8 +720,11 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                     }
                     setResultValidator { require(it == 1) }
                 }
+            }
 
-                // Oppdaterer den manuelle vurderingen med riktig vurderinger_id
+            // Oppdaterer den manuelle vurderingen med riktig vurderinger_id, fom-dato og vurdertIBehandling.
+            // Henter ut verdier fra det eldste grunnlaget som er knyttet til vurderingen da dette er knyttet til behandlingen vurderingen ble opprettet i
+            kandidaterSomPerkerPåSammeVurdering.value.minByOrNull { it.grunnlagOpprettetTid }?.let { kandidat ->
                 connection.execute("UPDATE LOVVALG_MEDLEMSKAP_MANUELL_VURDERING SET vurderinger_id = ?, fom = ?, vurdert_i_behandling = ? WHERE id = ?") {
                     setParams {
                         setLong(1, vurderingerId)
@@ -728,8 +734,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                     }
                     setResultValidator { require(it == 1) }
                 }
-            }
-
+            } ?: log.warn("Fant ingen kandidat og oppdatere vurdering for")
         }
 
         val totalTid = System.currentTimeMillis() - start
