@@ -14,7 +14,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     SendForvaltningsmelding,
     NyBrevtype11_17,
     NyBrevtype11_18,
-    Aktivitetsplikt11_7,
     Aktivitetsplikt11_9,
     TilgangssjekkSettPaaVent,
     OverforingsdatoNullForAvregning,
@@ -22,6 +21,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     IverksettUtbetalingSomSelvstendigJobb,
     OvergangArbeid,
     AvklaringsbehovService,
+    LovvalgMedlemskapPeriodisertMigrering
     ;
 
     override fun key(): String = name
