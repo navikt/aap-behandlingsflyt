@@ -27,8 +27,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjo
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonskravVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -301,17 +303,34 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                     ),
                 avklaringsbehovKode = Definisjon.SAMORDNING_ANDRE_STATLIGE_YTELSER.kode.toString(),
             ) { behandlingReferanse ->
-                val samordningAndreStatligeYtelserVurdering =
+                val (samordningAndreStatligeYtelserVurdering, samordningAndreStatligeYtelserHistoriskeVurdering) =
                     dataSource.transaction { connection ->
                         val repositoryProvider = repositoryRegistry.provider(connection)
                         val samordningAndreStatligeYtelserRepository =
                             repositoryProvider.provide<SamordningAndreStatligeYtelserRepository>()
+
+                        val sakRepository = repositoryProvider.provide<SakRepository>()
                         val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
 
                         val behandling = behandlingRepository.hent(behandlingReferanse)
+                        val sak = sakRepository.hent(behandling.sakId)
 
-                        samordningAndreStatligeYtelserRepository.hentHvisEksisterer(behandling.id)?.vurdering
+                        val historiskeBehandlinger = behandlingRepository.hentAlleFor(
+                            sak.id,
+                            listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)
+                        ).filter { it.id != behandling.id }
+
+                        val vurdering =
+                            samordningAndreStatligeYtelserRepository.hentHvisEksisterer(behandling.id)?.vurdering
+
+                        val historiskeVurderinger =
+                            historiskeBehandlinger.mapNotNull { historiskeBehandling ->
+                                samordningAndreStatligeYtelserRepository.hentHvisEksisterer(historiskeBehandling.id)
+                            }
+
+                        Pair(vurdering, historiskeVurderinger)
                     }
+
 
                 val navnOgEnhet = samordningAndreStatligeYtelserVurdering?.let {
                     ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv)
