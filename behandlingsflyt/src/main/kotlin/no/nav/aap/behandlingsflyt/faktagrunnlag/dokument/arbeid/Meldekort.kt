@@ -19,6 +19,6 @@ data class Meldekort(
     }
 }
 /**
- * Representerer arbeid i en periode på et meldekort, typisk på ett døgn
+ * Representerer arbeid i en Periode på et Meldekort.
  */
 data class ArbeidIPeriode(val periode: Periode, val timerArbeid: TimerArbeid)
