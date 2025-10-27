@@ -110,9 +110,9 @@ class VurderLovvalgSteg private constructor(
                 ?.manuellVurdering
         }
         if (forrigeManuelleVurdering != grunnlag.medlemskapArbeidInntektGrunnlag?.manuellVurdering) {
-            medlemskapArbeidInntektRepository.lagreManuellVurdering(
+            medlemskapArbeidInntektRepository.lagreVurderinger(
                 kontekst.behandlingId,
-                forrigeManuelleVurdering,
+                forrigeManuelleVurdering?.let { listOf(it) } ?: emptyList(),
             )
         }
     }

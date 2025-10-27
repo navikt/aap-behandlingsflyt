@@ -24,7 +24,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.FakeUnleashFasttrackAktivitetsplikt
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAktivitetsplikt11_7Repository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
@@ -69,16 +69,17 @@ class VurderAktivitetsplikt11_7StegTest {
     @Test
     fun `skal gi avklaringsbehov VURDER_AKTIVITETSPLIKT dersom dette ikke er håndtert aktivitetsplikt`() {
         val steg = opprettVurderAktivitetsplikt11_7Steg()
-        opprettAvklaringsbehovForAktivitetsplikt11_7()
 
-        val resultat = steg.utfør(kontekst)
-        assertThat(resultat).isEqualTo(FantAvklaringsbehov(Definisjon.VURDER_BRUDD_11_7))
+        steg.utfør(kontekst)
+        val avklaringsbehovene = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+        assertThat(avklaringsbehovene.åpne()).hasSize(1)
+        assertThat(avklaringsbehovene.åpne().first().definisjon).isEqualTo(Definisjon.VURDER_BRUDD_11_7)
     }
 
     @Test
     fun `skal gi fullført dersom aktivitetsplikten er oppfylt`() {
         val steg = opprettVurderAktivitetsplikt11_7Steg()
-        opprettAvklaringsbehovForAktivitetsplikt11_7()
+        steg.utfør(kontekst) // Opprette avklaringsbehovene
         InMemoryAktivitetsplikt11_7Repository.lagre(
             kontekst.behandlingId, listOf(
                 Aktivitetsplikt11_7Vurdering(
@@ -100,33 +101,38 @@ class VurderAktivitetsplikt11_7StegTest {
             endretAv = "Ident"
         )
 
-        val resultat = steg.utfør(kontekst)
-        assertThat(resultat).isEqualTo(Fullført)
+        steg.utfør(kontekst)
+        val oppdatertAvklaringsbehov = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+
+        assertThat(oppdatertAvklaringsbehov.åpne()).hasSize(0)
+        assertThat(oppdatertAvklaringsbehov.alle()).hasSize(1)
     }
 
     @Test
     fun `skal vente på forhåndsvarsel dersom aktivitetsplikten ikke er oppfylt`() {
         val steg = opprettVurderAktivitetsplikt11_7Steg()
-        opprettAvklaringsbehovForAktivitetsplikt11_7()
+        steg.utfør(kontekst)
         opprettAktivitetspliktIkkeOppfyltVurdering()
 
-        var resultat = steg.utfør(kontekst)
-        assertThat(resultat).isEqualTo(FantAvklaringsbehov(Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV))
+        steg.utfør(kontekst)
+        val avklaringsbehovene = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+        assertThat(avklaringsbehovene.åpne()).hasSize(1)
+        assertThat(avklaringsbehovene.åpne().first().definisjon).isEqualTo(Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV)
 
         ferdigstillSkrivForhåndsvarsel()
 
-        resultat = steg.utfør(kontekst)
+        val resultat = steg.utfør(kontekst)
         assertThat(resultat).isInstanceOf(FantVentebehov::class.java)
     }
 
     @Test
     fun `skal hoppe over venting på forhåndsvarsel dersom aktivitetsplikten ikke er oppfylt men venting overstyrt av saksbehandler`() {
         val steg = opprettVurderAktivitetsplikt11_7Steg()
-        opprettAvklaringsbehovForAktivitetsplikt11_7()
+        steg.utfør(kontekst)
         opprettAktivitetspliktIkkeOppfyltVurdering()
 
         var resultat = steg.utfør(kontekst)
-        assertThat(resultat).isEqualTo(FantAvklaringsbehov(Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV))
+        assertThat(resultat).isEqualTo(Fullført)
 
         ferdigstillSkrivForhåndsvarsel()
 
@@ -140,20 +146,26 @@ class VurderAktivitetsplikt11_7StegTest {
         InMemoryAktivitetsplikt11_7Repository.lagre(kontekst.behandlingId, listOf(oppdatertVurderingIgnorererFrist))
         resultat = steg.utfør(kontekst)
         assertThat(resultat).isEqualTo(Fullført)
+
+        val avklaringsbehov = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+        assertThat(avklaringsbehov.åpne()).hasSize(0)
+
     }
 
     @Test
     fun `skal hoppe over venting på forhåndsvarsel dersom aktivitetsplikten ikke er oppfylt men fristen er passert`() {
         val steg = opprettVurderAktivitetsplikt11_7Steg()
-        opprettAvklaringsbehovForAktivitetsplikt11_7()
+        steg.utfør(kontekst)
         opprettAktivitetspliktIkkeOppfyltVurdering()
 
-        var resultat = steg.utfør(kontekst)
-        assertThat(resultat).isEqualTo(FantAvklaringsbehov(Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV))
+        steg.utfør(kontekst)
+        val avklaringsbehov = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+        assertThat(avklaringsbehov.åpne()).hasSize(1)
+        assertThat(avklaringsbehov.åpne().first().definisjon).isEqualTo(Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV)
 
         ferdigstillSkrivForhåndsvarsel()
 
-        resultat = steg.utfør(kontekst)
+        var resultat = steg.utfør(kontekst)
         assertThat(resultat).isInstanceOf(FantVentebehov::class.java)
         InMemoryAktivitetsplikt11_7Repository.lagreFrist(
             kontekst.behandlingId,
@@ -167,11 +179,13 @@ class VurderAktivitetsplikt11_7StegTest {
     @Test
     fun `skal slette forhåndsvarslet brev dersom man endrer til oppfylt`() {
         val steg = opprettVurderAktivitetsplikt11_7Steg()
-        opprettAvklaringsbehovForAktivitetsplikt11_7()
+        steg.utfør(kontekst)
         opprettAktivitetspliktIkkeOppfyltVurdering()
 
-        var resultat = steg.utfør(kontekst)
-        assertThat(resultat).isEqualTo(FantAvklaringsbehov(Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV))
+        steg.utfør(kontekst)
+        var avklaringsbehovene = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+        assertThat(avklaringsbehovene.åpne()).hasSize(1)
+        assertThat(avklaringsbehovene.åpne().first().definisjon).isEqualTo(Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV)
         opprettAvklaringsbehovForÅSkriveForhåndsvarsel()
 
         val eksisterendeVurdering =
@@ -180,12 +194,11 @@ class VurderAktivitetsplikt11_7StegTest {
                 ?: error("Mangler vurdering for behandlingen")
         val oppdatertVurderingOppfylt = eksisterendeVurdering.copy(erOppfylt = true, utfall = null)
         InMemoryAktivitetsplikt11_7Repository.lagre(kontekst.behandlingId, listOf(oppdatertVurderingOppfylt))
-        resultat = steg.utfør(kontekst)
-        assertThat(resultat).isEqualTo(Fullført)
+        steg.utfør(kontekst)
+        avklaringsbehovene = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+        assertThat(avklaringsbehovene.åpne()).hasSize(0)
 
-        val avklaringsbehovForhåndsvarselOppdatert =
-            InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-                .hentBehovForDefinisjon(Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV)
+        val avklaringsbehovForhåndsvarselOppdatert = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV)
         assertThat(avklaringsbehovForhåndsvarselOppdatert?.status()?.erAvsluttet()).isTrue
     }
 
@@ -237,16 +250,6 @@ class VurderAktivitetsplikt11_7StegTest {
         )
     }
 
-    private fun opprettAvklaringsbehovForAktivitetsplikt11_7() {
-        InMemoryAvklaringsbehovRepository.opprett(
-            kontekst.behandlingId,
-            definisjon = Definisjon.VURDER_BRUDD_11_7,
-            funnetISteg = StegType.VURDER_AKTIVITETSPLIKT_11_7,
-            frist = null,
-            begrunnelse = "Begrunnelse",
-            endretAv = "Ident",
-        )
-    }
 
     private fun opprettAvklaringsbehovForÅSkriveForhåndsvarsel() {
         InMemoryAvklaringsbehovRepository.opprett(
@@ -271,11 +274,12 @@ class VurderAktivitetsplikt11_7StegTest {
             vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.AKTIVITETSPLIKT_11_7)
         )
 
-    private fun opprettVurderAktivitetsplikt11_7Steg(): VurderAktivitetsplikt11_7Steg = VurderAktivitetsplikt11_7Steg.konstruer(
-        inMemoryRepositoryProvider,
-        createGatewayProvider {
-            register<FakeUnleashFasttrackAktivitetsplikt>()
-            register<FakeBrevbestillingGateway>()
-        }
-    )
+    private fun opprettVurderAktivitetsplikt11_7Steg(): VurderAktivitetsplikt11_7Steg =
+        VurderAktivitetsplikt11_7Steg.konstruer(
+            inMemoryRepositoryProvider,
+            createGatewayProvider {
+                register<FakeUnleash>()
+                register<FakeBrevbestillingGateway>()
+            }
+        )
 }

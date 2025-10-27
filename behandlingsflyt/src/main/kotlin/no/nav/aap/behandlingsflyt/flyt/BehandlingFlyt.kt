@@ -54,7 +54,7 @@ class BehandlingFlyt private constructor(
     /**
      * Henter alle faktagrunnlag strengt før (altså, ikke inklusivt) gjeldende steg.
      *
-     * @return Alle faktagrunnlag, i form av en liste av [Informasjonskravkonstruktør].
+     * @return Alle faktagrunnlag, i form av en liste av par av  [Informasjonskravkonstruktør] og [StegType].
      */
     fun alleFaktagrunnlagFørGjeldendeSteg(): List<Pair<StegType, Informasjonskravkonstruktør>> {
         if (aktivtSteg?.oppdaterFaktagrunnlag != true) {
@@ -179,13 +179,13 @@ class BehandlingFlyt private constructor(
         val tidligsteStegForVurderingsbehov =
             nyeVurderingsbehov?.flatMap { vurderingsbehov[it].orEmpty() }
                 // Skal ikke kunne flyttes tilbake til steg med status OPPRETTET
-                ?.minus(StegType.entries.filter { it.status == Status.OPPRETTET })
+                ?.minus(StegType.entries.filter { it.status == Status.OPPRETTET }.toSet())
                 ?.minWithOrNull(stegComparator)
 
         val skalTilSteg =
             flyt.filter { it.kravliste.any { at -> oppdaterteGrunnlagstype.contains(at) } }
                 .map { it.steg.type() }
-                .minus(StegType.entries.filter { it.status == Status.OPPRETTET })
+                .minus(StegType.entries.filter { it.status == Status.OPPRETTET }.toSet())
                 .minWithOrNull(stegComparator)
 
         val tidligsteSteg = listOfNotNull(tidligsteStegForVurderingsbehov, skalTilSteg).minWithOrNull(stegComparator)

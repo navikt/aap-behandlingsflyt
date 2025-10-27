@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.hendelse.kafka.SchemaRegistryConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PdlHendelseKafkaKonsument
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.person.pdl.leesah.Endringstype
 import no.nav.person.pdl.leesah.Personhendelse
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -27,7 +28,8 @@ import java.util.Properties
 import kotlin.concurrent.thread
 import kotlin.test.Test
 
-class PdlHendelseKafkaKonsumentTest {
+class
+PdlHendelseKafkaKonsumentTest {
 
     companion object {
         val kafka: KafkaContainer = KafkaContainer(DockerImageName.parse("apache/kafka-native:4.1.0"))
@@ -36,7 +38,7 @@ class PdlHendelseKafkaKonsumentTest {
             .withStartupTimeout(Duration.ofSeconds(60))
 
 
-        val dataSource = InitTestDatabase.freshDatabase()
+        val dataSource = TestDataSource()
         val repositoryRegistry = postgresRepositoryRegistry
 
         @BeforeAll
@@ -49,7 +51,7 @@ class PdlHendelseKafkaKonsumentTest {
         @JvmStatic
         internal fun afterAll() {
             kafka.stop()
-            InitTestDatabase.closerFor(dataSource)
+            dataSource.close()
         }
     }
 

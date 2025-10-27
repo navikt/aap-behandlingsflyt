@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.EnhetGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLand
+import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøknadsTidspunktDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedSøknadsTidspunktDto
@@ -29,13 +29,14 @@ import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.behandlingsflyt.test.oktober
+import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -43,15 +44,11 @@ import java.time.YearMonth
 
 internal class MedlemskapArbeidInntektRepositoryImplTest {
 
-    companion object {
-        private val dataSource = InitTestDatabase.freshDatabase()
-        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+    @AutoClose
+    private val dataSource = TestDataSource()
 
-        @AfterAll
-        @JvmStatic
-        fun afterAll() {
-            InitTestDatabase.closerFor(dataSource)
-        }
+    companion object {
+        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     }
 
     @Test
@@ -161,6 +158,53 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
     }
 
     @Test
+    fun `skal ta med manuelle vurderinger i grunnlag når arbeid og inntekt oppdateres`() {
+        dataSource.transaction { connection ->
+            val medlemskapArbeidInntektRepository = MedlemskapArbeidInntektRepositoryImpl(connection)
+            val sak = opprettSak(connection, periode)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            val medlemskapRepository = MedlemskapRepositoryImpl(connection)
+
+            medlemskapArbeidInntektRepository.lagreVurderinger(
+                behandling.id,
+                listOf(
+                    manuellVurdering(
+                        fom = 1 mai 2025,
+                        tom = 31 oktober 2025,
+                        vurdertIBehandling = behandling.id
+                    ),
+                    manuellVurdering(
+                        fom = 1 november 2025,
+                        tom = null,
+                        vurdertIBehandling = behandling.id
+                    ),
+                )
+            )
+
+            val medlemskapArbeidInntektGrunnlag = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandling.id)
+
+            assertThat(medlemskapArbeidInntektGrunnlag?.vurderinger?.size).isEqualTo(2)
+
+            val medlId = medlemskapRepository.lagreUnntakMedlemskap(
+                behandlingId = behandling.id,
+                unntak = listOf(medlemskapData())
+            )
+
+            medlemskapArbeidInntektRepository.lagreArbeidsforholdOgInntektINorge(
+                behandlingId = behandling.id,
+                arbeidGrunnlag = arbeidGrunnlag(),
+                inntektGrunnlag = inntektGrunnlag(),
+                medlId = medlId,
+                enhetGrunnlag = enhetGrunnlags()
+            )
+
+            val medlemskapArbeidInntektGrunnlagOppdatert = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandling.id)
+
+            assertThat(medlemskapArbeidInntektGrunnlagOppdatert?.vurderinger?.size).isEqualTo(2)
+        }
+    }
+
+    @Test
     fun `skal kopiere grunnlag fra forrige behandling ved revurdering og ta med tidligere vurderinger når nye opprettes`() {
         val behandling = dataSource.transaction { connection ->
             val medlemskapArbeidInntektRepository = MedlemskapArbeidInntektRepositoryImpl(connection)
@@ -246,6 +290,51 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
         }
     }
 
+    @Test
+    fun `verifiserer at migrering legger på kobling mot vurderinger og at uthenting gir periodisert vurdering`() {
+        dataSource.transaction { connection ->
+            val medlemskapArbeidInntektRepository = MedlemskapArbeidInntektRepositoryImpl(connection)
+            val sak = opprettSak(connection, periode)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+
+            medlemskapArbeidInntektRepository.lagreManuellVurdering(
+                behandlingId = behandling.id,
+                manuellVurdering = manuellVurderingIkkePeriodisert("begrunnelse")
+            )
+
+            val medlemskapArbeidInntektGrunnlag = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandling.id)
+
+            assertThat(medlemskapArbeidInntektGrunnlag?.manuellVurdering).isNotNull
+            assertThat(medlemskapArbeidInntektGrunnlag?.manuellVurdering?.fom).isNull()
+            assertThat(medlemskapArbeidInntektGrunnlag?.manuellVurdering?.vurdertIBehandling).isNull()
+            assertThat(medlemskapArbeidInntektGrunnlag?.vurderinger).isEmpty()
+
+            // Kjører migrering
+            medlemskapArbeidInntektRepository.migrerManuelleVurderingerPeriodisert()
+
+            val migrertMedlemskapArbeidInntektGrunnlag = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandling.id)
+
+            // Sjekker at innslag i lovvalg_medlemskap_manuell_vurderinger finnes
+            assertThat(hentVurderingerId(connection)).isNotNull
+
+            // Sjekker at listen med periodiserte vurderinger nå returnerer det samme som manuellVurdering
+            val periodisertVurdering = migrertMedlemskapArbeidInntektGrunnlag?.vurderinger?.first()
+            assertThat(migrertMedlemskapArbeidInntektGrunnlag?.manuellVurdering).isEqualTo(periodisertVurdering)
+
+            // Sjekker at øvrige felter er oppdatert
+            assertThat(periodisertVurdering?.fom).isEqualTo(periode.fom)
+            assertThat(periodisertVurdering?.vurdertIBehandling).isEqualTo(behandling.id)
+        }
+    }
+
+    private fun hentVurderingerId(connection: DBConnection): Long? {
+        val query = "SELECT id FROM lovvalg_medlemskap_manuell_vurderinger"
+        val id = connection.queryFirstOrNull<Long>(query) {
+            setRowMapper { it.getLong("id") }
+        }
+        return id
+    }
+
     private fun lagNyFullVurdering(
         behandlingId: BehandlingId,
         repo: MedlemskapArbeidInntektRepositoryImpl,
@@ -272,7 +361,8 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
     }
 
     private fun manuellVurderingIkkePeriodisert(begrunnelse: String): ManuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskap(
-        LovvalgVedSøknadsTidspunktDto(begrunnelse, EØSLand.NOR),
+        id = 1,
+        LovvalgVedSøknadsTidspunktDto(begrunnelse, EØSLandEllerLandMedAvtale.NOR),
         MedlemskapVedSøknadsTidspunktDto(begrunnelse, true),
         "SAKSBEHANDLER",
         LocalDateTime.now()
@@ -282,7 +372,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
         ManuellVurderingForLovvalgMedlemskap(
             fom = fom,
             tom = tom,
-            lovvalgVedSøknadsTidspunkt = LovvalgVedSøknadsTidspunktDto("begrunnelse", EØSLand.NOR),
+            lovvalgVedSøknadsTidspunkt = LovvalgVedSøknadsTidspunktDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
             medlemskapVedSøknadsTidspunkt = MedlemskapVedSøknadsTidspunktDto("begrunnelse", true),
             vurdertAv = "SAKSBEHANDLER",
             vurdertDato = LocalDateTime.now(),

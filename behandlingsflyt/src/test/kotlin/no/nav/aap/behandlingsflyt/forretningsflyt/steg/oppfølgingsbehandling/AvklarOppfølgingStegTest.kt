@@ -3,7 +3,12 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg.oppfølgingsbehandling
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
+import io.mockk.mockk
 import io.mockk.verify
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.KonsekvensAvOppfølging
 import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.OppfølgingsBehandlingRepository
 import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.OppfølgingsoppgaveGrunnlag
@@ -11,7 +16,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.BehandletOppfølgingsOppgave
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
-import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -29,6 +33,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.februar
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
@@ -36,7 +41,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.util.*
 
 @ExtendWith(MockKExtension::class)
@@ -56,6 +60,16 @@ class AvklarOppfølgingStegTest {
 
     @MockK
     lateinit var mottaDokumentService: MottaDokumentService
+
+
+    @MockK
+    private lateinit var avklaringsbehovRepository: AvklaringsbehovRepository
+
+    @MockK
+    private lateinit var avbrytRevurderingService: AvbrytRevurderingService
+
+    @MockK
+    private lateinit var avklaringsbehovService: AvklaringsbehovService
 
     val behandling = Behandling(
         id = BehandlingId(1),
@@ -78,6 +92,20 @@ class AvklarOppfølgingStegTest {
             hvemSkalFølgeOpp = HvemSkalFølgeOpp.NasjonalEnhet,
             hvaSkalFølgesOpp = "...",
             reserverTilBruker = null
+        )
+
+        every { avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id) } returns Avklaringsbehovene(
+            InMemoryAvklaringsbehovRepository,
+            behandling.id
+        )
+
+        avbrytRevurderingService = mockk {
+            every { revurderingErAvbrutt(any()) } returns false
+        }
+
+        avklaringsbehovService = AvklaringsbehovService(
+            avklaringsbehovRepository = avklaringsbehovRepository,
+            avbrytRevurderingService = avbrytRevurderingService
         )
     }
 
@@ -137,9 +165,9 @@ class AvklarOppfølgingStegTest {
     fun `om informasjon mangler, lag avklaringsbehov`() {
         val (steg, kontekst) = settOppTilstand(null)
 
-        val res = steg.utfør(kontekst)
-
-        assertThat(res).isEqualTo(FantAvklaringsbehov(Definisjon.AVKLAR_OPPFØLGINGSBEHOV_NAY))
+        steg.utfør(kontekst)
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId = behandling.id)
+        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_OPPFØLGINGSBEHOV_NAY)?.status()).isEqualTo(no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.OPPRETTET)
 
         verify(exactly = 0) {
             prosesserBehandling.triggProsesserBehandling(behandling.sakId, behandling.id)
@@ -164,6 +192,8 @@ class AvklarOppfølgingStegTest {
             låsRepository = låsRepository,
             prosesserBehandling = prosesserBehandling,
             mottaDokumentService = mottaDokumentService,
+            avklaringsbehovService = avklaringsbehovService,
+            avklaringsbehovRepository = avklaringsbehovRepository,
         )
 
         val kontekst = FlytKontekstMedPerioder(

@@ -11,17 +11,16 @@ enum class BehandlingsflytFeature : FeatureToggle {
     FritakMeldeplikt,
     IngenValidering,
     InnhentEnhetsregisterData,
-    SendForvaltningsmelding,
     NyBrevtype11_17,
     NyBrevtype11_18,
-    Aktivitetsplikt11_7,
     Aktivitetsplikt11_9,
     TilgangssjekkSettPaaVent,
     OverforingsdatoNullForAvregning,
     NyeSykdomVilkar,
-    OvergangUfore,
     IverksettUtbetalingSomSelvstendigJobb,
     OvergangArbeid,
+    AvklaringsbehovService,
+    LovvalgMedlemskapPeriodisertMigrering
     EOSBeregning,
     ;
 

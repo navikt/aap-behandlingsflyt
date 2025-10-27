@@ -55,27 +55,27 @@ import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.dbtest.TestDataSource.Companion.invoke
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 
 internal class BehandlingRepositoryImplTest {
     companion object {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-        private val dataSource = InitTestDatabase.freshDatabase()
-
-        @AfterAll
-        @JvmStatic
-        fun afterAll() {
-            InitTestDatabase.closerFor(dataSource)
-        }
     }
 
+    @AutoClose
+    private val dataSource = TestDataSource()
+
     @Test
-    fun `kan lagre og hente ut behandling med uuid`() {
+    fun `Kan lagre og hente ut behandling med uuid`() {
         val skapt = dataSource.transaction { connection ->
             val sak = PersonOgSakService(
                 FakePdlGateway,
@@ -120,7 +120,7 @@ internal class BehandlingRepositoryImplTest {
     }
 
     @Test
-    fun `oppretet dato lagres på behandling og hentes ut korrekt`() {
+    fun `Opprettet dato lagres på behandling og hentes ut korrekt`() {
         val skapt = dataSource.transaction { connection ->
             val sak = PersonOgSakService(
                 FakePdlGateway,
@@ -155,7 +155,7 @@ internal class BehandlingRepositoryImplTest {
     }
 
     @Test
-    fun `kan hente ut behandlinger for sak filtrert på type`() {
+    fun `Kan hente ut behandlinger for sak filtrert på type`() {
         val (sak, førstegang, klage) = dataSource.transaction { connection ->
             val sak = PersonOgSakService(
                 FakePdlGateway,
@@ -208,8 +208,8 @@ internal class BehandlingRepositoryImplTest {
     }
 
     @Test
-    fun `kan hente ut behandlinger med vedtak for person`() {
-        val vedtakstidspunkt = LocalDateTime.now()
+    fun `Kan hente ut behandlinger med vedtak for person`() {
+        val vedtakstidspunkt = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS)
         val virkningstidspunkt = LocalDate.now().plusMonths(1)
 
 
@@ -265,7 +265,7 @@ internal class BehandlingRepositoryImplTest {
             assertThat(alleFørstegang).hasSize(1)
             assertThat(alleFørstegang[0].saksnummer).isEqualTo(sak.saksnummer)
             assertThat(alleFørstegang[0].referanse).isEqualTo(førstegang.referanse)
-            assertThat(alleFørstegang[0].vedtakstidspunkt).isEqualToIgnoringNanos(vedtakstidspunkt)
+            assertThat(alleFørstegang[0].vedtakstidspunkt).isEqualTo(vedtakstidspunkt)
             assertThat(alleFørstegang[0].virkningstidspunkt).isEqualTo(virkningstidspunkt)
             assertThat(alleFørstegang[0].vurderingsbehov).isEqualTo(setOf(Vurderingsbehov.MOTTATT_SØKNAD))
             assertThat(alleFørstegang[0].årsakTilOpprettelse).isEqualTo(ÅrsakTilOpprettelse.SØKNAD)
@@ -386,7 +386,8 @@ internal class BehandlingRepositoryImplTest {
 
 // Midlertidig test
 fun main() {
-    InitTestDatabase.freshDatabase().transaction { connection ->
+        val dataSource = TestDataSource()
+        dataSource.transaction { connection ->
         BeregningsgrunnlagRepositoryImpl(connection).slett(
             BehandlingId(1L)
         )
@@ -433,6 +434,8 @@ fun main() {
         PersonRepositoryImpl(connection).slett(BehandlingId(1L))
         SakRepositoryImpl(connection).slett(BehandlingId(1L))
         ManuellInntektGrunnlagRepositoryImpl(connection).slett(BehandlingId(1L))
+
+        dataSource.close()
     }
 
 }

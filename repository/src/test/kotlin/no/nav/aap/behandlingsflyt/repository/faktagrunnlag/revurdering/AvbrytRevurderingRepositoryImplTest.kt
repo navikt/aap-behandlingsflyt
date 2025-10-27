@@ -20,14 +20,20 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.dbtest.TestDataSource.Companion.invoke
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions
+import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 class AvbrytRevurderingRepositoryImplTest {
-    private val dataSource = InitTestDatabase.freshDatabase()
+
+    @AutoClose
+    private val dataSource = TestDataSource()
+
     private val vurderingsbehovOgÅrsakSøknad = VurderingsbehovOgÅrsak(
         vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTTATT_SØKNAD)),
         årsak = ÅrsakTilOpprettelse.SØKNAD,

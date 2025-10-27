@@ -23,9 +23,8 @@ class AvklarBarnetilleggLøser(
     )
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarBarnetilleggLøsning): LøsningsResultat {
-        val vurderteBarn = barnRepository.hentVurderteBarnHvisEksisterer(kontekst.kontekst.behandlingId)?.barn.orEmpty()
         val oppdatertTilstand =
-            oppdaterTilstandBasertPåNyeVurderinger(vurderteBarn, løsning.vurderingerForBarnetillegg.vurderteBarn)
+            oppdaterTilstandBasertPåNyeVurderinger(emptyList(), løsning.vurderingerForBarnetillegg.vurderteBarn)
 
         barnRepository.lagreVurderinger(kontekst.kontekst.behandlingId, kontekst.bruker.ident, oppdatertTilstand)
 

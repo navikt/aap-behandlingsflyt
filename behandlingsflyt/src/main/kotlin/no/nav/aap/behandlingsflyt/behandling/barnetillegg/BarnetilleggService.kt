@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.tidslinje.JoinStyle
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -32,10 +33,12 @@ class BarnetilleggService(
         val barnGrunnlag = barnRepository.hent(behandlingId)
         val folkeregisterBarn =
             barnGrunnlag.registerbarn?.barn.orEmpty()
-        val folkeregisterBarnTidslinje = tilTidslinje(folkeregisterBarn)
+        val vurderteBarn = barnGrunnlag.vurderteBarn?.barn.orEmpty()
+
+        val folkeregistrerteBarnUtenVurderingTidslinje = tilTidslinje(folkeregisterBarn.filter { barn -> vurderteBarn.none { it.ident.er(barn.ident) && it.vurderinger.isNotEmpty() } })
 
         resultat =
-            resultat.kombiner(folkeregisterBarnTidslinje, JoinStyle.LEFT_JOIN { periode, venstreSegment, høyreSegment ->
+            resultat.kombiner(folkeregistrerteBarnUtenVurderingTidslinje, JoinStyle.LEFT_JOIN { periode, venstreSegment, høyreSegment ->
                 val venstreVerdi = venstreSegment.verdi.copy()
                 if (høyreSegment?.verdi != null) {
                     venstreVerdi.leggTilFolkeregisterBarn(høyreSegment.verdi)
@@ -43,7 +46,6 @@ class BarnetilleggService(
                 Segment(periode, venstreVerdi)
             })
 
-        val vurderteBarn = barnGrunnlag.vurderteBarn?.barn.orEmpty()
         val vurderteBarnIdenter = vurderteBarn.map { it.ident }
         val oppgittBarnSomIkkeErVurdert =
             barnGrunnlag.oppgitteBarn?.oppgitteBarn
