@@ -61,13 +61,19 @@ class BarnetilleggSteg(
 
     fun vedtakBehøverVurdering(kontekst: FlytKontekstMedPerioder): Boolean {
         val barneGrunnlag = barnRepository.hentHvisEksisterer(kontekst.behandlingId)
+        val vurderingsbehovSomTvingerStopp = listOf(
+            Vurderingsbehov.DØDSFALL_BARN,
+            Vurderingsbehov.BARNETILLEGG
+        )
+
         return when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
             VurderingType.REVURDERING ->
                 (!tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())
-                        || (Vurderingsbehov.DØDSFALL_BARN in kontekst.vurderingsbehovRelevanteForSteg)
-                        && kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty())
-                        && (harOppgittBarn(barneGrunnlag) || harGjortManuellVurderingIBehandlingen(kontekst))
+                        && (vurderingsbehovSomTvingerStopp.any { kontekst.vurderingsbehovRelevanteForSteg.contains(it) }
+                            || (kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty() && (harOppgittBarn(barneGrunnlag) || harGjortManuellVurderingIBehandlingen(kontekst)))
+                        )
+                )
 
             VurderingType.MELDEKORT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
