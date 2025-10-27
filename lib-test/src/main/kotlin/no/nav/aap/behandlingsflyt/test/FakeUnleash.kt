@@ -18,7 +18,6 @@ open class FakeUnleashBase(
 object FakeUnleash : FakeUnleashBase(
     mapOf(
         BehandlingsflytFeature.IngenValidering to false,
-        BehandlingsflytFeature.SendForvaltningsmelding to true,
         BehandlingsflytFeature.NyBrevtype11_17 to true,
         BehandlingsflytFeature.NyBrevtype11_18 to true,
         BehandlingsflytFeature.Aktivitetsplikt11_9 to true,
