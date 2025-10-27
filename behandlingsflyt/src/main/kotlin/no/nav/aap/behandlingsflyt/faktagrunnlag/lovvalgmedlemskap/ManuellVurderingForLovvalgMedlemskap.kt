@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap
 
-import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLand
+import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
 import no.nav.aap.behandlingsflyt.historiskevurderinger.HistoriskVurderingDto
 import no.nav.aap.behandlingsflyt.historiskevurderinger.ÅpenPeriodeDto
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -38,7 +38,7 @@ class HistoriskManuellVurderingForLovvalgMedlemskap(
 
 data class LovvalgVedSøknadsTidspunktDto(
     val begrunnelse: String,
-    val lovvalgsEØSLand: EØSLand?,
+    val lovvalgsEØSLandEllerLandMedAvtale: EØSLandEllerLandMedAvtale?,
 )
 
 data class MedlemskapVedSøknadsTidspunktDto(
