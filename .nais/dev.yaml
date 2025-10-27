@@ -26,6 +26,7 @@ spec:
         - id: loki
   kafka:
     pool: nav-dev
+  leaderElection: true
   gcp:
     sqlInstances:
       - type: POSTGRES_16

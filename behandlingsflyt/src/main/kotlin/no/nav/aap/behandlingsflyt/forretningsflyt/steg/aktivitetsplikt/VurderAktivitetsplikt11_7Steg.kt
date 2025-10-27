@@ -25,7 +25,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -41,12 +40,6 @@ class VurderAktivitetsplikt11_7Steg(
 ) : BehandlingSteg {
     private val brevBehov = ForhåndsvarselBruddAktivitetsplikt
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (unleashGateway.isDisabled(BehandlingsflytFeature.Aktivitetsplikt11_7)) {
-            throw IllegalStateException(
-                "Steg ${StegType.VURDER_AKTIVITETSPLIKT_11_7} er deaktivert i unleash, kan ikke utføre steg."
-            )
-        }
-
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val vurderingForBehandling =
             aktivitetsplikt11_7Repository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger?.firstOrNull { it.vurdertIBehandling == kontekst.behandlingId }

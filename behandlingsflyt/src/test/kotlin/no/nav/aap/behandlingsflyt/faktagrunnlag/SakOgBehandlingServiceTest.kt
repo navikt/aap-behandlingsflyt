@@ -12,15 +12,16 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.TestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
-import javax.sql.DataSource
+import org.junit.jupiter.api.AutoClose
 import kotlin.test.Test
 
 class SakOgBehandlingServiceTest {
-    @TestDatabase
-    lateinit var dataSource: DataSource
+
+    @AutoClose
+    private val dataSource = TestDataSource()
 
     private val gatewayProvider = createGatewayProvider { register<FakeUnleash>() }
 
