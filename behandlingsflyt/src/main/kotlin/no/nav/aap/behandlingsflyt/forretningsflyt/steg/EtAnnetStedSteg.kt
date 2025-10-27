@@ -44,12 +44,8 @@ class EtAnnetStedSteg(
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+    fun gammelUtfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-
-
-        val avslagEllerIngenBehandlingsgrunnlag = (kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING ||
-            kontekst.vurderingType == VurderingType.REVURDERING) && tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())
 
         if (kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING &&
             tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())
@@ -74,36 +70,59 @@ class EtAnnetStedSteg(
             avklaringsbehov += harBehovForAvklaringerLenger.avklaringsbehov()
         }
 
-        if (!avklaringsbehov.contains(Definisjon.AVKLAR_HELSEINSTITUSJON) && harBehovForAvklaringer.avklaringsbehov()
+        if (!avklaringsbehov.contains(Definisjon.AVKLAR_HELSEINSTITUSJON) && !harBehovForAvklaringer.avklaringsbehov()
                 .contains(Definisjon.AVKLAR_HELSEINSTITUSJON)
         ) {
-
-            avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
-                avklaringsbehovene = avklaringsbehovene,
-                behandlingRepository = behandlingRepository,
-                vilkårsresultatRepository = vilkårsresultatRepository,
-                erTilstrekkeligVurdert = {true},
-                kontekst = kontekst,
-                tilbakestillGrunnlag = {},
-                definisjon = Definisjon.AVKLAR_HELSEINSTITUSJON,
-                tvingerAvklaringsbehov =  setOf<Vurderingsbehov>( Vurderingsbehov.INSTITUSJONSOPPHOLD),
-                nårVurderingErRelevant = ::perioderMedVurderingsbehovHelse)
+            avbrytHvisFinnesOgIkkeTrengs(avklaringsbehovene, Definisjon.AVKLAR_HELSEINSTITUSJON)
         }
 
-        if (!avklaringsbehov.contains(Definisjon.AVKLAR_SONINGSFORRHOLD) && harBehovForAvklaringer.avklaringsbehov()
+        if (!avklaringsbehov.contains(Definisjon.AVKLAR_SONINGSFORRHOLD) && !harBehovForAvklaringer.avklaringsbehov()
                 .contains(Definisjon.AVKLAR_SONINGSFORRHOLD)
         ) {
-            avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
-                avklaringsbehovene = avklaringsbehovene,
-                behandlingRepository = behandlingRepository,
-                vilkårsresultatRepository = vilkårsresultatRepository,
-                erTilstrekkeligVurdert = {true},
-                kontekst = kontekst,
-                tilbakestillGrunnlag = {},
-                definisjon = Definisjon.AVKLAR_HELSEINSTITUSJON,
-                tvingerAvklaringsbehov = setOf<Vurderingsbehov>( Vurderingsbehov.INSTITUSJONSOPPHOLD),
-                nårVurderingErRelevant = ::perioderMedVurderingsbehovSoning)
+            avbrytHvisFinnesOgIkkeTrengs(avklaringsbehovene, Definisjon.AVKLAR_SONINGSFORRHOLD)
         }
+        if (avklaringsbehov.isNotEmpty()) {
+            return FantAvklaringsbehov(avklaringsbehov)
+        }
+
+        return Fullført
+    }
+
+
+    override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+
+        // TODO: Trenger vi å forholde oss til forrige behandling???
+        // val harBehovForAvklaringer = etAnnetStedUtlederService.utled(kontekst.behandlingId, true)
+
+
+        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
+            avklaringsbehovene = avklaringsbehovene,
+            behandlingRepository = behandlingRepository,
+            vilkårsresultatRepository = vilkårsresultatRepository,
+            erTilstrekkeligVurdert = { true },
+            kontekst = kontekst,
+            tilbakestillGrunnlag = {
+                // TODO: Implementer
+            },
+            definisjon = Definisjon.AVKLAR_HELSEINSTITUSJON,
+            tvingerAvklaringsbehov = setOf<Vurderingsbehov>(Vurderingsbehov.INSTITUSJONSOPPHOLD),
+            nårVurderingErRelevant = ::perioderMedVurderingsbehovHelse
+        )
+
+        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
+            avklaringsbehovene = avklaringsbehovene,
+            behandlingRepository = behandlingRepository,
+            vilkårsresultatRepository = vilkårsresultatRepository,
+            erTilstrekkeligVurdert = { true},
+            kontekst = kontekst,
+            tilbakestillGrunnlag = {
+                // TODO: Implementer
+            },
+            definisjon = Definisjon.AVKLAR_SONINGSFORRHOLD,
+            tvingerAvklaringsbehov = setOf<Vurderingsbehov>(Vurderingsbehov.INSTITUSJONSOPPHOLD),
+            nårVurderingErRelevant = ::perioderMedVurderingsbehovSoning
+        )
 
 
 
@@ -112,28 +131,27 @@ class EtAnnetStedSteg(
 
 
     private fun perioderMedVurderingsbehovHelse(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
-        val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst,
-            type())
-        val harBehovForAvklaringer = etAnnetStedUtlederService.utled(kontekst.behandlingId). .perioderTilVurdering.flatMap { perioderMedVurderingsbehovSoning(kontekst) }
+        val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
+        val harBehovForAvklaringer = etAnnetStedUtlederService.utled(kontekst.behandlingId)
 
-        return Tidslinje.zip2(tidligereVurderingsutfall, harBehovForAvklaringer)
+
+        println(harBehovForAvklaringer.avklaringsbehov())
+
+        return Tidslinje.zip2(tidligereVurderingsutfall, harBehovForAvklaringer.perioderTilVurdering)
             .mapValue { (behandlingsutfall, denneBehandling) ->
                 when (behandlingsutfall) {
                     null -> false
                     TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
                     TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
-                    TidligereVurderinger.Behandlingsutfall.UKJENT -> {
-                          denneBehandling != null && denneBehandling
-                    }
+                    TidligereVurderinger.Behandlingsutfall.UKJENT -> denneBehandling?.helse != null // Enten er helse vurdert, eller så skal det vurderes
                 }
             }
     }
 
 
-    private fun perioderMedVurderingsbehovSoning(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
-        val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst,
-            type())
 
+    private fun perioderMedVurderingsbehovSoning(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
+        val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
         val harBehovForAvklaringer = etAnnetStedUtlederService.utled(kontekst.behandlingId)
 
         return Tidslinje.zip2(tidligereVurderingsutfall, harBehovForAvklaringer.perioderTilVurdering)
@@ -142,16 +160,25 @@ class EtAnnetStedSteg(
                     null -> false
                     TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
                     TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
-                    TidligereVurderinger.Behandlingsutfall.UKJENT -> {
-                        denneBehandling != null && denneBehandling.soning != null
-                    }
+                    TidligereVurderinger.Behandlingsutfall.UKJENT -> denneBehandling?.soning != null // Enten er soning vurdert, eller så skal det vurderes
                 }
             }
     }
 
 
+    private fun avbrytHvisFinnesOgIkkeTrengs(avklaringsbehovene: Avklaringsbehovene, definisjon: Definisjon) {
+        val eksisterendeBehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
+
+        if (eksisterendeBehov?.erÅpent() == true) {
+            avklaringsbehovene.avbryt(definisjon)
+        }
+    }
+
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): BehandlingSteg {
             return EtAnnetStedSteg(repositoryProvider)
         }
 
