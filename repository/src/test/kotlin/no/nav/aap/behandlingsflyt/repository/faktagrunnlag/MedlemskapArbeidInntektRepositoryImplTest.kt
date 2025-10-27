@@ -298,6 +298,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val medlemskapRepository = MedlemskapRepositoryImpl(connection)
 
+            // Legger inn to manuelle vurderinger men også en oppdatering som ikke endrer på vurderingene underveis
             medlemskapArbeidInntektRepository.lagreManuellVurdering(
                 behandlingId = behandling.id,
                 manuellVurdering = manuellVurderingIkkePeriodisert("begrunnelse")
@@ -335,6 +336,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
 
             // Sjekker at innslag i lovvalg_medlemskap_manuell_vurderinger finnes og at det er to stk en for hver vurdering
             assertThat(hentVurderingerId(connection)).hasSize(2)
+            assertThat(hentGrunnlag(connection, behandling.id)).hasSize(3) // 3 grunnlag - 2 inaktive og et aktivt
 
             // Sjekker at listen med periodiserte vurderinger nå returnerer det samme som manuellVurdering
             val periodisertVurdering = migrertMedlemskapArbeidInntektGrunnlag?.vurderinger?.first()
@@ -350,6 +352,17 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
         val query = "SELECT id FROM lovvalg_medlemskap_manuell_vurderinger"
         val id = connection.queryList<Long>(query) {
             setRowMapper { it.getLong("id") }
+        }
+        return id
+    }
+
+    private fun hentGrunnlag(connection: DBConnection, behandlingId: BehandlingId): List<Long> {
+        val query = "SELECT * FROM MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG WHERE behandling_id = ?"
+        val id = connection.queryList<Long>(query) {
+            setRowMapper { it.getLong("id") }
+            setParams {
+                setLong(1, behandlingId.toLong())
+            }
         }
         return id
     }

@@ -669,7 +669,6 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                     JOIN behandling b ON g.behandling_id = b.id
                     JOIN sak s ON b.sak_id = s.id
                 WHERE g.manuell_vurdering_id IS NOT NULL 
-             
             """.trimIndent()
 
             return connection.queryList(kandidaterQuery) {
@@ -688,11 +687,12 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         val start = System.currentTimeMillis()
 
         log.info("Starter migrering av manuelle vurderinger for lovvalg medlemskap til periodisert format")
-        val kandidaterForMigrering = hentKandidater().groupBy { it.manuellVurderingId }
+        val kandidaterForMigrering = hentKandidater()
+        val kandidaterForMigreringGruppertPåManuellVurdering = kandidaterForMigrering.groupBy { it.manuellVurderingId }
 
         log.info("Fant ${kandidaterForMigrering.size} kandidater for migrering av manuelle vurderinger for lovvalg medlemskap")
 
-        kandidaterForMigrering.forEach { kandidaterSomPerkerPåSammeVurdering ->
+        kandidaterForMigreringGruppertPåManuellVurdering.forEach { kandidaterSomPerkerPåSammeVurdering ->
             val opprettetTid = kandidaterSomPerkerPåSammeVurdering.value.minByOrNull { it.opprettetTid }!!.opprettetTid
 
             val vurderingerId = connection.executeReturnKey(
@@ -705,6 +705,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 }
             }
 
+            // Oppdatere alle grunnlag for en behandling til å peke på den nye vurderinger_id
             kandidaterSomPerkerPåSammeVurdering.value.forEach { kandidat ->
                 log.info("Migrerer grunnlag med id=${kandidat.id} for behandlingId=${kandidat.behandlingId}")
 
@@ -733,12 +734,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
 
         val totalTid = System.currentTimeMillis() - start
 
-        log.info("Fullført migrering av manuelle vurderinger for lovvalg medlemskap. Migrerte ${kandidaterForMigrering.size} manuelle vurderinger på $totalTid ms.")
-
-        // Validerer at vi ikke lenger har noen grunnlag uten kobling til vurderinger
-        val oppdatertResultat = hentKandidater()
-
-        log.info("Fant ${oppdatertResultat.size} grunnlag som manglet koblinger mot vurderinger etter migrering")
+        log.info("Fullført migrering av manuelle vurderinger for lovvalg medlemskap. Migrerte ${kandidaterForMigrering.size} grunnlag med tilhørende manuelle vurderinger på $totalTid ms.")
     }
 
     private fun getLovvalgMedlemsskapManuellVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
