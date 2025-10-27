@@ -60,7 +60,7 @@ class KvalitetssikringsSteg private constructor(
     }
 
     private fun erTilstrekkeligVurdert(avklaringsbehovene: Avklaringsbehovene): Boolean {
-        return avklaringsbehovene.alle().all { it.status() == Status.KVALITETSSIKRET }
+        return !avklaringsbehovene.alle().any { it.status() == Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER }
     }
 
     companion object : FlytSteg {
