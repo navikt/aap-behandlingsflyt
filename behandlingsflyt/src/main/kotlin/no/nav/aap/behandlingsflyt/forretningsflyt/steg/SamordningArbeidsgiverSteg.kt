@@ -31,8 +31,8 @@ class SamordningArbeidsgiverSteg(
                     VurderingType.REVURDERING -> {
                         when {
                             tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
-                            Vurderingsbehov.REVURDER_SAMORDNING_ARBEIDSGIVER in kontekst.vurderingsbehovRelevanteForSteg -> true
-                            else -> kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty()
+                            kontekst.vurderingsbehovRelevanteForSteg.isEmpty() -> false
+                            else -> Vurderingsbehov.REVURDER_SAMORDNING_ARBEIDSGIVER in kontekst.vurderingsbehovRelevanteForSteg
                         }
                     }
 

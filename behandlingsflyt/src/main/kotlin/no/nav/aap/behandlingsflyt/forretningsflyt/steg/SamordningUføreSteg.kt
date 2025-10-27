@@ -43,8 +43,13 @@ class SamordningUføreSteg(
             definisjon = Definisjon.AVKLAR_SAMORDNING_UFØRE,
             vedtakBehøverVurdering = {
                 when (kontekst.vurderingType) {
-                    VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
-                        vedtakBehøverVurdering(kontekst) || erManueltTriggetRevurdering(kontekst)
+                    VurderingType.FØRSTEGANGSBEHANDLING,
+                    VurderingType.REVURDERING -> {
+                        when {
+                            tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
+                            vedtakBehøverVurdering(kontekst) -> true
+                            else -> erManueltTriggetRevurdering(kontekst)
+                        }
                     }
 
                     VurderingType.MELDEKORT,
@@ -72,14 +77,6 @@ class SamordningUføreSteg(
     }
 
     private fun vedtakBehøverVurdering(kontekst: FlytKontekstMedPerioder): Boolean {
-        if (tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(
-                kontekst,
-                type()
-            )
-        ) {
-            return false
-        }
-
         val tidligereVurderinger =
             kontekst.forrigeBehandlingId?.let { samordningUføreRepository.hentHvisEksisterer(it) }?.vurdering?.vurderingPerioder.orEmpty()
         val uføreGrunnlag = hentVurderingPerioder(kontekst.behandlingId)?.vurderinger.orEmpty()

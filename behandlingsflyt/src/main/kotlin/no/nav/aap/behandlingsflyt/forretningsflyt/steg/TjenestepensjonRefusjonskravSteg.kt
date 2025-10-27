@@ -45,6 +45,7 @@ class TjenestepensjonRefusjonskravSteg private constructor(
                     VurderingType.REVURDERING -> {
                         when {
                             tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
+                            kontekst.vurderingsbehovRelevanteForSteg.isEmpty() -> false
                             Vurderingsbehov.REVURDER_SAMORDNING_TJENESTEPENSJON in kontekst.vurderingsbehovRelevanteForSteg -> true
                             else -> tjenestePensjonRepository.hent(kontekst.behandlingId).isNotEmpty()
                         }
