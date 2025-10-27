@@ -20,6 +20,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravVarsel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravVurdering
 import no.nav.aap.behandlingsflyt.flyt.steg.FantVentebehov
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
+import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -31,6 +32,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
@@ -52,6 +54,9 @@ class FormkravStegTest {
     val brevbestillingServiceMock = mockk<BrevbestillingService>()
     val avklaringsbehovServiceMock = mockk<AvklaringsbehovService>()
     val avbrytRevurderingServiceMock = mockk<AvbrytRevurderingService>()
+    val gatewayProvider = createGatewayProvider {
+        register<FakeUnleash>()
+    }
 
     @BeforeEach
     fun setup() {
@@ -113,6 +118,7 @@ class FormkravStegTest {
                 avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
                 avbrytRevurderingService = avbrytRevurderingServiceMock,
             ),
+            unleashGateway = gatewayProvider.provide()
         )
 
         steg.utfør(kontekst)
@@ -170,6 +176,7 @@ class FormkravStegTest {
                 avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
                 avbrytRevurderingService = avbrytRevurderingServiceMock,
             ),
+            unleashGateway = gatewayProvider.provide()
         )
 
 
@@ -232,6 +239,7 @@ class FormkravStegTest {
                 avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
                 avbrytRevurderingService = avbrytRevurderingServiceMock,
             ),
+            unleashGateway = gatewayProvider.provide()
         )
 
         every { formkravRepositoryMock.hentHvisEksisterer(any()) } returns FormkravGrunnlag(
@@ -297,6 +305,7 @@ class FormkravStegTest {
                 avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
                 avbrytRevurderingService = avbrytRevurderingServiceMock,
             ),
+            unleashGateway = gatewayProvider.provide()
         )
 
         every { formkravRepositoryMock.hentHvisEksisterer(any()) } returns FormkravGrunnlag(
@@ -402,6 +411,7 @@ class FormkravStegTest {
                 avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
                 avbrytRevurderingService = avbrytRevurderingServiceMock,
             ),
+            unleashGateway = gatewayProvider.provide()
         )
 
         val resultat = steg.utfør(kontekst)
@@ -448,6 +458,7 @@ class FormkravStegTest {
                 avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
                 avbrytRevurderingService = avbrytRevurderingServiceMock,
             ),
+            unleashGateway = gatewayProvider.provide()
         )
 
         every { formkravRepositoryMock.hentHvisEksisterer(any()) } returns FormkravGrunnlag(
@@ -519,6 +530,7 @@ class FormkravStegTest {
                 avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
                 avbrytRevurderingService = avbrytRevurderingServiceMock,
             ),
+            unleashGateway = gatewayProvider.provide()
         )
 
         every { formkravRepositoryMock.hentHvisEksisterer(any()) } returns FormkravGrunnlag(
