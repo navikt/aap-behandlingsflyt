@@ -104,7 +104,6 @@ spec:
         - host: pensjon-pen.prod-fss-pub.nais.io
         - host: tp-api.prod-fss-pub.nais.io
         - host: aap-unleash-api.nav.cloud.nais.io
-        - host: medlemskap-medl-api-gcp.intern.nav.no
       rules:
         - application: brev
         - application: tilgang
@@ -170,7 +169,7 @@ spec:
     - name: INTEGRASJON_TILGANG_SCOPE
       value: api://prod-gcp.aap.tilgang/.default
     - name: INTEGRASJON_MEDL_URL
-      value: https://medlemskap-medl-api-gcp.intern.nav.no/rest/v1/periode/soek
+      value: http://medlemskap-medl-api.team-rocket/rest/v1/periode/soek
     - name: INTEGRASJON_MEDL_SCOPE
       value: api://prod-gcp.team-rocket.medlemskap-medl-api/.default
     - name: INTEGRASJON_FORELDREPENGER_URL
