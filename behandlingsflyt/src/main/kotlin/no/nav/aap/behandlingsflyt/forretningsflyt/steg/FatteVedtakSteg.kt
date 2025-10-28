@@ -32,48 +32,35 @@ class FatteVedtakSteg(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
-        fun oppdaterAvklaringsbehov(
-            vedtakBehøverVurdering: () -> Boolean,
-            erTilstrekkeligVurdert: () -> Boolean
-        ) {
-            avklaringsbehovService.oppdaterAvklaringsbehov(
-                avklaringsbehovene = avklaringsbehovene,
-                definisjon = Definisjon.FATTE_VEDTAK,
-                vedtakBehøverVurdering = vedtakBehøverVurdering,
-                erTilstrekkeligVurdert = erTilstrekkeligVurdert,
-                tilbakestillGrunnlag = {},
-                kontekst = kontekst
-            )
+        val skalTilbakeføres = avklaringsbehovene.skalTilbakeføresEtterTotrinnsVurdering()
+        val harHattAvklaringsbehovSomHarKrevdTotrinn = avklaringsbehovene.harHattAvklaringsbehovSomHarKrevdToTrinn()
+        val erKlage = kontekst.behandlingType == TypeBehandling.Klage
+        val erTrukketEllerIngenGrunnlag =
+            tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type()) ||
+                    trekkKlageService.klageErTrukket(kontekst.behandlingId)
+
+        val vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst, avklaringsbehovene) }
+
+        val erTilstrekkeligVurdert = when {
+            erTrukketEllerIngenGrunnlag -> true
+            erKlage -> true
+            harHattAvklaringsbehovSomHarKrevdTotrinn -> false
+            else -> true
         }
 
-        if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type()) ||
-            trekkKlageService.klageErTrukket(kontekst.behandlingId)
-        ) {
-            oppdaterAvklaringsbehov(
-                vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst, avklaringsbehovene) },
-                erTilstrekkeligVurdert = { true }
-            )
-            return Fullført
-        }
+        avklaringsbehovService.oppdaterAvklaringsbehov(
+            avklaringsbehovene = avklaringsbehovene,
+            definisjon = Definisjon.FATTE_VEDTAK,
+            vedtakBehøverVurdering = vedtakBehøverVurdering,
+            erTilstrekkeligVurdert = { erTilstrekkeligVurdert },
+            tilbakestillGrunnlag = {},
+            kontekst = kontekst
+        )
 
-        if (kontekst.behandlingType == TypeBehandling.Klage) {
+        if (skalTilbakeføres) return TilbakeføresFraBeslutter
+        if (erKlage) {
             val klageresultat = klageresultatUtleder.utledKlagebehandlingResultat(kontekst.behandlingId)
-            oppdaterAvklaringsbehov(
-                vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst, avklaringsbehovene) },
-                erTilstrekkeligVurdert = { true }
-            )
-            if (klageresultat is Opprettholdes) {
-                return Fullført
-            }
-        }
-
-        when {
-            avklaringsbehovene.skalTilbakeføresEtterTotrinnsVurdering() -> return TilbakeføresFraBeslutter
-            avklaringsbehovene.harHattAvklaringsbehovSomHarKrevdToTrinn() ->
-                oppdaterAvklaringsbehov(
-                    vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst, avklaringsbehovene) },
-                    erTilstrekkeligVurdert = { false }
-                )
+            if (klageresultat is Opprettholdes) return Fullført
         }
 
         return Fullført
