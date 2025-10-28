@@ -68,7 +68,7 @@ internal class SamordningServiceTest {
                 SamordningYtelseRepositoryImpl(connection), behandlingId, ytelser = listOf(
                     SamordningYtelse(
                         ytelseType = Ytelse.SYKEPENGER,
-                        ytelsePerioder = listOf(
+                        ytelsePerioder = setOf(
                             SamordningYtelsePeriode(
                                 periode = Periode(1 januar 2024, 10 januar 2024),
                                 gradering = Prosent.`70_PROSENT`,
@@ -182,7 +182,7 @@ internal class SamordningServiceTest {
         ytelser: List<SamordningYtelse> = listOf(
             SamordningYtelse(
                 Ytelse.SYKEPENGER,
-                listOf(
+                setOf(
                     SamordningYtelsePeriode(
                         Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
                         Prosent(50),

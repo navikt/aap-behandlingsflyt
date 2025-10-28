@@ -87,7 +87,7 @@ class SamordningYtelseVurderingServiceTest {
             1, listOf(
                 SamordningYtelse(
                     Ytelse.SYKEPENGER,
-                    listOf(
+                    setOf(
                         SamordningYtelsePeriode(
                             Periode(nå.plusDays(5), nå.plusDays(10)),
                             Prosent(50),
@@ -104,7 +104,7 @@ class SamordningYtelseVurderingServiceTest {
                 ),
                 SamordningYtelse(
                     Ytelse.SYKEPENGER,
-                    listOf(
+                    setOf(
                         SamordningYtelsePeriode(
                             Periode(nå.plusDays(5), nå.plusDays(10)),
                             Prosent(50),
@@ -120,7 +120,7 @@ class SamordningYtelseVurderingServiceTest {
         val ny = listOf(
             SamordningYtelse(
                 Ytelse.SYKEPENGER,
-                listOf(
+                setOf(
                     SamordningYtelsePeriode(
                         Periode(nå.plusDays(5), nå.plusDays(10)),
                         Prosent(50),
@@ -132,7 +132,7 @@ class SamordningYtelseVurderingServiceTest {
             ),
             SamordningYtelse(
                 Ytelse.SYKEPENGER,
-                listOf(
+                setOf(
                     SamordningYtelsePeriode(
                         Periode(nå.plusDays(5), nå.plusDays(10)),
                         Prosent(40),
@@ -188,7 +188,7 @@ class SamordningYtelseVurderingServiceTest {
             listOf(
                 SamordningYtelse(
                     Ytelse.SYKEPENGER,
-                    listOf(
+                    setOf(
                         SamordningYtelsePeriode(
                             Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
                             Prosent(50),
