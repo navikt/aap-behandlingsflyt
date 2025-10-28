@@ -110,6 +110,7 @@ spec:
         - host: pensjon-pen-q2.dev-fss-pub.nais.io
         - host: tp-api.dev-fss-pub.nais.io
         - host: aap-unleash-api.nav.cloud.nais.io
+        - host: medlemskap-medl-api-gcp.intern.nav.no
       rules:
         - application: brev
         - application: tilgang
@@ -132,6 +133,8 @@ spec:
           namespace: org
         - application: kabal-api
           namespace: klage
+        - application: medlemskap-medl-api
+          namespace: team-rocket
 
   env:
     - name: INTEGRASJON_PDL_URL
@@ -173,9 +176,9 @@ spec:
     - name: INTEGRASJON_TILGANG_SCOPE
       value: api://dev-gcp.aap.tilgang/.default
     - name: INTEGRASJON_MEDL_URL
-      value: https://medlemskap-medl-api.dev-fss-pub.nais.io/rest/v1/periode/soek
+      value: https://medlemskap-medl-api.intern.dev.nav.no/rest/v1/periode/soek
     - name: INTEGRASJON_MEDL_SCOPE
-      value: api://dev-fss.team-rocket.medlemskap-medl-api/.default
+      value: api://dev-gcp.team-rocket.medlemskap-medl-api/.default
     - name: INTEGRASJON_FORELDREPENGER_URL
       value: https://fpabakus.dev-fss-pub.nais.io/fpabakus/ekstern/api/ytelse/v1
     - name: INTEGRASJON_FORELDREPENGER_SCOPE
