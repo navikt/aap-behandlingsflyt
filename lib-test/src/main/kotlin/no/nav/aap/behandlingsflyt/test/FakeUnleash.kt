@@ -18,30 +18,12 @@ open class FakeUnleashBase(
 object FakeUnleash : FakeUnleashBase(
     mapOf(
         BehandlingsflytFeature.IngenValidering to false,
-        BehandlingsflytFeature.SendForvaltningsmelding to true,
         BehandlingsflytFeature.NyBrevtype11_17 to true,
         BehandlingsflytFeature.NyBrevtype11_18 to true,
-        BehandlingsflytFeature.Aktivitetsplikt11_7 to false,
-        BehandlingsflytFeature.Aktivitetsplikt11_9 to false,
+        BehandlingsflytFeature.Aktivitetsplikt11_9 to true,
         BehandlingsflytFeature.OverforingsdatoNullForAvregning to true,
-        BehandlingsflytFeature.OvergangUfore to false,
         BehandlingsflytFeature.IverksettUtbetalingSomSelvstendigJobb to true,
         BehandlingsflytFeature.OvergangArbeid to false,
-        BehandlingsflytFeature.LovvalgMedlemskapPeriodisert to true,
-    )
-)
-
-object FakeUnleashFasttrackAktivitetsplikt : FakeUnleashBase(
-    mapOf(
-        BehandlingsflytFeature.IngenValidering to false,
-        BehandlingsflytFeature.SendForvaltningsmelding to true,
-        BehandlingsflytFeature.Aktivitetsplikt11_7 to true,
-        BehandlingsflytFeature.Aktivitetsplikt11_9 to true,
-        BehandlingsflytFeature.NyBrevtype11_17 to true,
-        BehandlingsflytFeature.NyBrevtype11_18 to true,
-        BehandlingsflytFeature.OvergangUfore to true,
-        BehandlingsflytFeature.IverksettUtbetalingSomSelvstendigJobb to true,
-        BehandlingsflytFeature.OvergangArbeid to true,
         BehandlingsflytFeature.LovvalgMedlemskapPeriodisert to true,
     )
 )

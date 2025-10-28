@@ -256,9 +256,8 @@ fun NormalOpenAPIRoute.flytApi(
                             repositoryProvider.provide<AvklaringsbehovRepository>()
                         val behandlingId = behandling(behandlingRepository, request).id
                         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
-                        if (unleashGateway.isEnabled(BehandlingsflytFeature.TilgangssjekkSettPaaVent)) {
-                            sjekkTilgangTilSettPåVent(avklaringsbehovene, tilgangGateway, request.referanse, token())
-                        }
+                        sjekkTilgangTilSettPåVent(avklaringsbehovene, tilgangGateway, request.referanse, token())
+
 
                         val taSkriveLåsRepository =
                             repositoryProvider.provide<TaSkriveLåsRepository>()

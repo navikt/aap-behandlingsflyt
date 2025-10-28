@@ -77,7 +77,6 @@ class MeldekortInformasjonskrav private constructor(
                 timerArbeidPerPeriode = ubehandletMeldekort.timerArbeidPerPeriode,
                 mottattTidspunkt = ubehandletMeldekort.mottattTidspunkt
             )
-            // TODO en og en er ineffektivt, kan være 100 kall, oppdater i pulje heller
             mottaDokumentService.markerSomBehandlet(
                 sakId = kontekst.sakId,
                 behandlingId = kontekst.behandlingId,
@@ -93,26 +92,26 @@ class MeldekortInformasjonskrav private constructor(
 
     override fun flettOpplysningerFraAtomærBehandling(kontekst: FlytKontekst): Informasjonskrav.Endret {
         val forrigeBehandlingId = kontekst.forrigeBehandlingId ?: return IKKE_ENDRET
-        val forrigeBehandlingGrunnlag =
+        val forrigeMeldekortGrunnlag =
             meldekortRepository.hentHvisEksisterer(forrigeBehandlingId) ?: return IKKE_ENDRET
 
-        val meldekortIBehandling = meldekortRepository.hentHvisEksisterer(kontekst.behandlingId)
+        val nyeMeldekort = meldekortRepository.hentHvisEksisterer(kontekst.behandlingId)
             ?.meldekortene
             .orEmpty()
 
-        val journalpostIderIBehandling = meldekortIBehandling.map { it.journalpostId }
-
-        val nyeMeldekort = mutableListOf<Meldekort>()
-        for (meldekort in forrigeBehandlingGrunnlag.meldekortene) {
-            if (meldekort.journalpostId !in journalpostIderIBehandling) {
-                nyeMeldekort.add(meldekort)
+        val journalpostIderFraNyeMeldekort = nyeMeldekort.map { it.journalpostId }
+        val meldekortBareIForrigeGrunnlag = mutableSetOf<Meldekort>()
+        for (meldekort in forrigeMeldekortGrunnlag.meldekortene) {
+            if (meldekort.journalpostId !in journalpostIderFraNyeMeldekort) {
+                meldekortBareIForrigeGrunnlag.add(meldekort)
             }
         }
 
-        if (nyeMeldekort.isEmpty()) {
+        if (meldekortBareIForrigeGrunnlag.isEmpty()) {
             return IKKE_ENDRET
         } else {
-            meldekortRepository.lagre(kontekst.behandlingId, meldekortIBehandling + nyeMeldekort)
+            // Lagrer et nytt grunnlag med alle meldekortene på ny behandlingId
+            meldekortRepository.lagre(kontekst.behandlingId, nyeMeldekort + meldekortBareIForrigeGrunnlag)
             return ENDRET
         }
     }

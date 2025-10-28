@@ -11,28 +11,28 @@ import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.dbtest.TestDataSource.Companion.invoke
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.time.LocalDate
 import java.util.*
 
 internal class Aktivitetsplikt11_7RepositoryImplTest {
-    companion object {
-        private val dataSource = InitTestDatabase.freshDatabase()
-        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
-        @AfterAll
-        @JvmStatic
-        fun afterall() {
-            InitTestDatabase.closerFor(dataSource)
-        }
+    companion object {
+        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     }
+
+    @AutoClose
+    private val dataSource = TestDataSource()
 
     @Test
     fun `Lagrer ned og henter vurdering av aktivitetsplikt § 11-7`() {

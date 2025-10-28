@@ -61,37 +61,23 @@ import no.nav.aap.behandlingsflyt.repository.behandling.mellomlagring.Mellomlagr
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.TestDatabaseExtension
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.motor.testutil.ManuellMotorImpl
 import no.nav.aap.verdityper.dokument.JournalpostId
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.extension.ExtendWith
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.util.*
 import javax.sql.DataSource
 
-@Fakes
-@ExtendWith(TestDatabaseExtension::class)
 class TestScenarioOrkestrator(
     private val gatewayProvider: GatewayProvider,
     private val datasource: DataSource,
     private val motor: ManuellMotorImpl
 ) {
-    companion object {
-        @BeforeAll
-        @JvmStatic
-        internal fun beforeAll() {
-            System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
-        }
-    }
-
     fun løsStudent(behandling: Behandling): Behandling {
         return løsAvklaringsBehov(
             behandling,
@@ -201,7 +187,7 @@ class TestScenarioOrkestrator(
         behandling: Behandling,
         bruker: Bruker = Bruker("KVALITETSSIKRER")
     ): Behandling {
-        val alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling, datasource)
+        val alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling.id, datasource)
         return løsAvklaringsBehov(
             behandling,
             KvalitetssikringLøsning(alleAvklaringsbehov.filter { behov -> behov.erTotrinn() || behov.kreverKvalitetssikring() }
@@ -421,7 +407,7 @@ class TestScenarioOrkestrator(
         løsAvklaringsBehov(
             behandling,
             FatteVedtakLøsning(
-                hentAlleAvklaringsbehov(behandling, datasource)
+                hentAlleAvklaringsbehov(behandling.id, datasource)
                     .filter { behov -> behov.erTotrinn() }
                     .map { behov ->
                         TotrinnsVurdering(
@@ -437,7 +423,7 @@ class TestScenarioOrkestrator(
         return this.løsAvklaringsBehov(behandling, vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
     }
 
-    protected fun hentFørsteYrkesskadeMedSkadeDato(behandlingId: BehandlingId): Yrkesskade? {
+    private fun hentFørsteYrkesskadeMedSkadeDato(behandlingId: BehandlingId): Yrkesskade? {
         var yrkesskadeUtenSkadedato: Yrkesskade? = null
         datasource.transaction { connection ->
             val repositoryProvider = repositoryRegistry.provider(connection)
@@ -456,24 +442,19 @@ class TestScenarioOrkestrator(
     }
 
     private fun hentBrevAvType(behandling: Behandling, typeBrev: TypeBrev) =
-        no.nav.aap.behandlingsflyt.datasource.transaction(readOnly = true) {
-            val brev = BrevbestillingRepositoryImpl(it).hent(behandling.id)
+        datasource.transaction(readOnly = true) { connection ->
+            val brev = BrevbestillingRepositoryImpl(connection).hent(behandling.id)
             brev.firstOrNull { it.typeBrev == typeBrev }
                 ?: error("Ingen brev av type $typeBrev. Følgende finnes: ${brev.joinToString { it.typeBrev.toString() }}")
         }
 
-    protected fun hentBehandling(behandlingReferanse: BehandlingReferanse, datasource: DataSource): Behandling {
+    private fun hentBehandling(behandlingReferanse: BehandlingReferanse, datasource: DataSource): Behandling {
         return datasource.transaction(readOnly = true) { connection ->
-            val behandling = BehandlingRepositoryImpl(connection).hent(behandlingReferanse)
-            requireNotNull(behandling)
+            BehandlingRepositoryImpl(connection).hent(behandlingReferanse)
         }
     }
 
-    protected fun hentAlleAvklaringsbehov(behandling: Behandling, datasource: DataSource): List<Avklaringsbehov> {
-        return hentAlleAvklaringsbehov(behandling.id, datasource)
-    }
-
-    protected fun hentAlleAvklaringsbehov(behandlingId: BehandlingId, datasource: DataSource): List<Avklaringsbehov> {
+    private fun hentAlleAvklaringsbehov(behandlingId: BehandlingId, datasource: DataSource): List<Avklaringsbehov> {
         return datasource.transaction(readOnly = true) {
             AvklaringsbehovRepositoryImpl(it).hentAvklaringsbehovene(
                 behandlingId

@@ -35,7 +35,7 @@ class MedlemskapLovvalgVurderingServiceTest {
                                 "grunnlag",
                                 "lovvalg",
                                 false,
-                                EØSLand.NOR.toString(),
+                                EØSLandEllerLandMedAvtale.NOR.toString(),
                                 null
                             )
                         )
@@ -80,7 +80,7 @@ class MedlemskapLovvalgVurderingServiceTest {
                                 "grunnlag",
                                 "lovvalg",
                                 false,
-                                EØSLand.NOR.toString(),
+                                EØSLandEllerLandMedAvtale.NOR.toString(),
                                 null
                             )
                         )
@@ -125,7 +125,7 @@ class MedlemskapLovvalgVurderingServiceTest {
                                 "grunnlag",
                                 "lovvalg",
                                 false,
-                                EØSLand.SWE.toString(),
+                                EØSLandEllerLandMedAvtale.SWE.toString(),
                                 KildesystemMedl(KildesystemKode.MEDL, "MEDL")
                             )
                         )

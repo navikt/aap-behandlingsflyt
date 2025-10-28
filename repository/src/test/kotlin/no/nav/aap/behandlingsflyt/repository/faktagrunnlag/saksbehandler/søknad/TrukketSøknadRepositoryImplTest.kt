@@ -13,15 +13,20 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.dbtest.TestDataSource.Companion.invoke
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.Test
 import java.time.Instant
 
 class TrukketSøknadRepositoryImplTest {
-    private val dataSource = InitTestDatabase.freshDatabase()
+
+    @AutoClose
+    private val dataSource = TestDataSource()
 
     @Test
     fun `read and write vurdering`() {

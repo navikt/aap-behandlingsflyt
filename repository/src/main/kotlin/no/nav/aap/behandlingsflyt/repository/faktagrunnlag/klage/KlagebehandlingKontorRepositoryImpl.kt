@@ -143,7 +143,7 @@ class KlagebehandlingKontorRepositoryImpl(private val connection: DBConnection) 
     }
 
 
-    private fun deaktiverEksisterende(behandlingId: BehandlingId) {
+    override fun deaktiverEksisterende(behandlingId: BehandlingId) {
         connection.execute("UPDATE KLAGE_KONTOR_GRUNNLAG SET AKTIV = FALSE WHERE AKTIV AND BEHANDLING_ID = ?") {
             setParams {
                 setLong(1, behandlingId.toLong())

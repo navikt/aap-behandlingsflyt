@@ -22,8 +22,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
@@ -38,7 +36,6 @@ class OvergangUføreSteg private constructor(
     private val bistandRepository: BistandRepository,
     private val behandlingRepository: BehandlingRepository,
     private val avklaringsbehovService: AvklaringsbehovService,
-    private val unleashGateway: UnleashGateway,
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         vilkårsresultatRepository = repositoryProvider.provide(),
@@ -49,15 +46,9 @@ class OvergangUføreSteg private constructor(
         bistandRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
-        unleashGateway = gatewayProvider.provide(),
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (unleashGateway.isDisabled(BehandlingsflytFeature.OvergangUfore)) {
-            avklaringsbehovService.avbrytForSteg(kontekst.behandlingId, type())
-            return Fullført
-        }
-
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         avklaringsbehovService.oppdaterAvklaringsbehov(
             kontekst = kontekst,

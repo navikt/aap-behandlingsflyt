@@ -34,7 +34,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
@@ -71,7 +70,6 @@ class EnklereFlytOrkestratorTest {
             avklaringsbehovRepository = avklaringsbehovRepository,
             stegKonstruktør = DummyStegKonstruktør(),
         ),
-        unleashGateway = FakeUnleash,
     )
 
     private val stopperTidligereFlytOrkestrator = FlytOrkestrator(
@@ -93,7 +91,6 @@ class EnklereFlytOrkestratorTest {
             stegKonstruktør = DummyStegKonstruktør(),
         ),
         stoppNårStatus = setOf(Status.IVERKSETTES),
-        unleashGateway = FakeUnleash,
     )
 
     @Test
@@ -243,7 +240,6 @@ class EnklereFlytOrkestratorTest {
                 avklaringsbehovRepository = avklaringsbehovRepository,
                 stegKonstruktør = DummyStegKonstruktør(),
             ),
-            unleashGateway = FakeUnleash,
         )
 
         val flytKontekst = flytOrkestrator.opprettKontekst(behandling.sakId, behandling.id)

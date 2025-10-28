@@ -116,7 +116,8 @@ class StatistikkMetoder(
             hendelsesTidspunkt = hendelse.hendelsesTidspunkt,
             avsluttetBehandling = if (hendelse.status == AVSLUTTET) hentAvsluttetBehandlingDTO(hendelse) else null,
             identerForSak = hentIdenterPåSak(sak.saksnummer),
-            vurderingsbehov = vurderingsbehovForBehandling
+            vurderingsbehov = vurderingsbehovForBehandling,
+            opprettetAv = hendelse.opprettetAv
         )
         return statistikkHendelse
     }
@@ -144,7 +145,7 @@ class StatistikkMetoder(
                 Vurderingsbehov.BARNETILLEGG -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.BARNETILLEGG
                 Vurderingsbehov.INSTITUSJONSOPPHOLD -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.INSTITUSJONSOPPHOLD
                 Vurderingsbehov.SAMORDNING_OG_AVREGNING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SAMORDNING_OG_AVREGNING
-                Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOKETRYGDYTELSER
+                Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER
                 Vurderingsbehov.REVURDER_SAMORDNING_UFØRE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_SAMORDNING_UFØRE
                 Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER
                 Vurderingsbehov.REVURDER_SAMORDNING_ARBEIDSGIVER -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_SAMORDNING_ARBEIDSGIVER

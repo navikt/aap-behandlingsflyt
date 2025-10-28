@@ -31,10 +31,10 @@ class Medlemskapvilkåret(
         if (brukManuellVurderingForLovvalgMedlemskap) {
             // Ved manuell vurdering så må hele perioden være vurdert manuelt
             grunnlag.medlemskapArbeidInntektGrunnlag.vurderinger.map { vurdering ->
-                val lovvalgsLand = vurdering.lovvalgVedSøknadsTidspunkt.lovvalgsEØSLand
+                val lovvalgsLand = vurdering.lovvalgVedSøknadsTidspunkt.lovvalgsEØSLandEllerLandMedAvtale
                 val varMedlemIFolketrygd = vurdering.medlemskapVedSøknadsTidspunkt?.varMedlemIFolketrygd
 
-                val annetLandMedAvtaleIEØS = lovvalgsLand != null && lovvalgsLand != EØSLand.NOR && lovvalgsLand in enumValues<EØSLand>().map { it }
+                val annetLandMedAvtaleIEØS = lovvalgsLand != null && lovvalgsLand != EØSLandEllerLandMedAvtale.NOR && lovvalgsLand in enumValues<EØSLandEllerLandMedAvtale>().map { it }
 
                 val vurderingsResultat = if (annetLandMedAvtaleIEØS) {
                     VurderingsResultat(Utfall.IKKE_OPPFYLT, Avslagsårsak.NORGE_IKKE_KOMPETENT_STAT, null)
@@ -64,10 +64,10 @@ class Medlemskapvilkåret(
 
         val vurderingsResultat = if (manuellVurderingForLovvalgMedlemskap != null) {
             vurdertManuelt = true
-            val lovvalgsLand = manuellVurderingForLovvalgMedlemskap.lovvalgVedSøknadsTidspunkt.lovvalgsEØSLand
+            val lovvalgsLand = manuellVurderingForLovvalgMedlemskap.lovvalgVedSøknadsTidspunkt.lovvalgsEØSLandEllerLandMedAvtale
             val varMedlemIFolketrygd = manuellVurderingForLovvalgMedlemskap.medlemskapVedSøknadsTidspunkt?.varMedlemIFolketrygd
 
-            val annetLandMedAvtaleIEØS = lovvalgsLand != null && lovvalgsLand != EØSLand.NOR && lovvalgsLand in enumValues<EØSLand>().map { it }
+            val annetLandMedAvtaleIEØS = lovvalgsLand != null && lovvalgsLand != EØSLandEllerLandMedAvtale.NOR && lovvalgsLand in enumValues<EØSLandEllerLandMedAvtale>().map { it }
 
             if (annetLandMedAvtaleIEØS) {
                 VurderingsResultat(Utfall.IKKE_OPPFYLT, Avslagsårsak.NORGE_IKKE_KOMPETENT_STAT, null)

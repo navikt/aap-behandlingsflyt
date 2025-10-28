@@ -52,15 +52,15 @@ import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.TestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbType
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import javax.sql.DataSource
 
 class OppdagEndretInformasjonskravJobbUtførerTest {
     init {
@@ -132,8 +132,8 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
         register<FakeUnleash>()
     }
 
-    @TestDatabase
-    lateinit var dataSource: DataSource
+    @AutoClose
+    private val dataSource = TestDataSource()
 
 
     @Test
