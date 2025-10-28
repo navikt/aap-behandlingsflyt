@@ -137,7 +137,7 @@ class SamordningYtelseVurderingInformasjonskrav(
                             gradering = Prosent(it.utbetalingsgrad.verdi.toInt()),
                             kronesum = it.beløp,
                         )
-                    }, kilde = ytelse.kildesystem, saksRef = ytelse.saksnummer
+                    }.toSet(), kilde = ytelse.kildesystem, saksRef = ytelse.saksnummer
                 )
             }
 
@@ -150,7 +150,7 @@ class SamordningYtelseVurderingInformasjonskrav(
                 SamordningYtelsePeriode(
                     Periode(it.fom, it.tom), Prosent(it.grad.toInt()), null
                 )
-            }, kilde = sykepengerKilde)
+            }.toSet(), kilde = sykepengerKilde)
         }
 
         return foreldrepengerKildeMapped.plus(listOfNotNull(sykepengerYtelse))

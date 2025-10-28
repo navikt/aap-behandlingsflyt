@@ -443,7 +443,7 @@ class SamordningStegTest {
             behandlingId, listOf(
                 SamordningYtelse(
                     ytelseType = ytelse,
-                    ytelsePerioder = listOf(
+                    ytelsePerioder = setOf(
                         SamordningYtelsePeriode(
                             periode = periode,
                             gradering = Prosent(50),

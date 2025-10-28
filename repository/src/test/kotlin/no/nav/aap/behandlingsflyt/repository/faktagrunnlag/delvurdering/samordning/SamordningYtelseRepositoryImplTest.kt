@@ -35,7 +35,7 @@ class SamordningYtelseRepositoryImplTest {
         val samordningYtelser = listOf(
             SamordningYtelse(
                 ytelseType = Ytelse.SYKEPENGER,
-                ytelsePerioder = listOf(
+                ytelsePerioder = setOf(
                     SamordningYtelsePeriode(
                         periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3)),
                         gradering = Prosent.`70_PROSENT`,
@@ -50,7 +50,7 @@ class SamordningYtelseRepositoryImplTest {
             ),
             SamordningYtelse(
                 ytelseType = Ytelse.OMSORGSPENGER,
-                ytelsePerioder = listOf(
+                ytelsePerioder = setOf(
                     SamordningYtelsePeriode(
                         periode = Periode(LocalDate.now(), LocalDate.now().plusYears(6)),
                         gradering = Prosent.`50_PROSENT`,
@@ -82,7 +82,7 @@ class SamordningYtelseRepositoryImplTest {
         val samordningYtelser2 = listOf(
             SamordningYtelse(
                 ytelseType = Ytelse.SYKEPENGER,
-                ytelsePerioder = listOf(
+                ytelsePerioder = setOf(
                     SamordningYtelsePeriode(
                         periode = Periode(LocalDate.now().plusDays(1), LocalDate.now().plusYears(3)),
                         gradering = Prosent(66),
@@ -97,7 +97,7 @@ class SamordningYtelseRepositoryImplTest {
             ),
             SamordningYtelse(
                 ytelseType = Ytelse.OMSORGSPENGER,
-                ytelsePerioder = listOf(
+                ytelsePerioder = setOf(
                     SamordningYtelsePeriode(
                         periode = Periode(LocalDate.now().plusDays(1), LocalDate.now().plusYears(2)),
                         gradering = Prosent(51),
@@ -142,7 +142,7 @@ class SamordningYtelseRepositoryImplTest {
         val samordningYtelserEldste = listOf(
             SamordningYtelse(
                 ytelseType = Ytelse.SYKEPENGER,
-                ytelsePerioder = listOf(
+                ytelsePerioder = setOf(
                     SamordningYtelsePeriode(
                         periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3)),
                         gradering = Prosent.`70_PROSENT`,
@@ -163,7 +163,7 @@ class SamordningYtelseRepositoryImplTest {
         val samordningYtelserNyeste = listOf(
             SamordningYtelse(
                 ytelseType = Ytelse.OMSORGSPENGER,
-                ytelsePerioder = listOf(
+                ytelsePerioder = setOf(
                     SamordningYtelsePeriode(
                         periode = Periode(LocalDate.now().plusDays(1), LocalDate.now().plusYears(2)),
                         gradering = Prosent(51),
@@ -212,7 +212,7 @@ class SamordningYtelseRepositoryImplTest {
         val samordningYtelser1 = listOf(
             SamordningYtelse(
                 ytelseType = Ytelse.SYKEPENGER,
-                ytelsePerioder = listOf(
+                ytelsePerioder = setOf(
                     SamordningYtelsePeriode(
                         periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3)),
                         gradering = Prosent.`70_PROSENT`,
@@ -229,7 +229,7 @@ class SamordningYtelseRepositoryImplTest {
         val samordningYtelser2 = listOf(
             SamordningYtelse(
                 ytelseType = Ytelse.SYKEPENGER,
-                ytelsePerioder = listOf(
+                ytelsePerioder = setOf(
                     SamordningYtelsePeriode(
                         periode = Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(3)),
                         gradering = Prosent.`70_PROSENT`,
@@ -281,7 +281,7 @@ class SamordningYtelseRepositoryImplTest {
                 behandling.id, listOf(
                     SamordningYtelse(
                         ytelseType = Ytelse.SYKEPENGER,
-                        ytelsePerioder = listOf(
+                        ytelsePerioder = setOf(
                             SamordningYtelsePeriode(
                                 periode = Periode(
                                     fom = LocalDate.of(2023, 1, 1),
@@ -300,7 +300,7 @@ class SamordningYtelseRepositoryImplTest {
                 behandling.id, listOf(
                     SamordningYtelse(
                         ytelseType = Ytelse.SYKEPENGER,
-                        ytelsePerioder = listOf(
+                        ytelsePerioder = setOf(
                             SamordningYtelsePeriode(
                                 periode = Periode(
                                     fom = LocalDate.of(2024, 1, 1),
