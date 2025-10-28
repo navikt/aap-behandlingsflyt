@@ -33,7 +33,8 @@ class FatteVedtakSteg(
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
         val skalTilbakeføres = avklaringsbehovene.skalTilbakeføresEtterTotrinnsVurdering()
-        val harHattAvklaringsbehovSomHarKrevdTotrinn = avklaringsbehovene.harHattAvklaringsbehovSomHarKrevdToTrinn()
+        val harHattAvklaringsbehovSomHarKrevdTotrinnOgSomIkkeErVurdert = avklaringsbehovene.harAvklaringsbehovSomKreverToTrinnMenIkkeErVurdert()
+
         val erKlage = kontekst.behandlingType == TypeBehandling.Klage
         val erTrukketEllerIngenGrunnlag =
             tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type()) ||
@@ -44,7 +45,7 @@ class FatteVedtakSteg(
         val erTilstrekkeligVurdert = when {
             erTrukketEllerIngenGrunnlag -> true
             erKlage -> true
-            harHattAvklaringsbehovSomHarKrevdTotrinn -> false
+            harHattAvklaringsbehovSomHarKrevdTotrinnOgSomIkkeErVurdert -> false
             else -> true
         }
 
@@ -58,10 +59,6 @@ class FatteVedtakSteg(
         )
 
         if (skalTilbakeføres) return TilbakeføresFraBeslutter
-        if (erKlage) {
-            val klageresultat = klageresultatUtleder.utledKlagebehandlingResultat(kontekst.behandlingId)
-            if (klageresultat is Opprettholdes) return Fullført
-        }
 
         return Fullført
     }
@@ -83,8 +80,7 @@ class FatteVedtakSteg(
             }
         }
 
-        return avklaringsbehovene.harHattAvklaringsbehovSomHarKrevdToTrinn() ||
-                avklaringsbehovene.skalTilbakeføresEtterTotrinnsVurdering()
+        return  avklaringsbehovene.harAvklaringsbehovSomKreverToTrinnMenIkkeErVurdert()
     }
 
 

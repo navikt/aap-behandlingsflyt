@@ -241,10 +241,8 @@ class Avklaringsbehovene(
             .filterNot { it.erForeslåttVedtak() }
     }
 
-    fun harHattAvklaringsbehovSomHarKrevdToTrinn(): Boolean {
-        return alle()
-            .filter { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
-            .any { avklaringsbehov -> avklaringsbehov.erTotrinn() && !avklaringsbehov.erTotrinnsVurdert() }
+    fun harAvklaringsbehovSomKreverToTrinnMenIkkeErVurdert(): Boolean {
+        return alle().any { it.erIkkeAvbrutt() && it.erTotrinn() && !it.erTotrinnsVurdert() }
     }
 
     fun harHattAvklaringsbehovSomKreverKvalitetssikring(): Boolean {

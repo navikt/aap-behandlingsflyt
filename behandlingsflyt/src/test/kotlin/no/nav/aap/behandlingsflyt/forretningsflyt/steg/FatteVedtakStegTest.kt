@@ -65,10 +65,6 @@ class FatteVedtakStegTest {
     fun `Klagevurderinger fra Nay skal kvalitetssikres hvis delvis omgjøring`() {
         val kontekst = kontekst()
 
-        every { klageresultatUtleder.utledKlagebehandlingResultat(kontekst.behandlingId) } returns DelvisOmgjøres(
-            vilkårSomSkalOpprettholdes = listOf(Hjemmel.FOLKETRYGDLOVEN_11_6),
-            vilkårSomSkalOmgjøres = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5)
-        )
         every { tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, StegType.FATTE_VEDTAK) } returns false
 
         val resultat = steg().utfør(kontekst)
@@ -79,9 +75,6 @@ class FatteVedtakStegTest {
     fun `Klagevurderinger fra kontor skal ikke til beslutter om vedtaket opprettholdes`() {
         val kontekst = kontekst()
 
-        every { klageresultatUtleder.utledKlagebehandlingResultat(kontekst.behandlingId) } returns Opprettholdes(
-            vilkårSomSkalOpprettholdes = listOf(Hjemmel.FOLKETRYGDLOVEN_11_6)
-        )
         every { tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, StegType.FATTE_VEDTAK) } returns false
 
         val resultat = steg().utfør(kontekst)
@@ -91,10 +84,7 @@ class FatteVedtakStegTest {
     @Test
     fun `Klagevurderinger skal kvalitetssikres hvis resultatet er Omgjør`() {
         val kontekst = kontekst()
-
-        every { klageresultatUtleder.utledKlagebehandlingResultat(kontekst.behandlingId) } returns Omgjøres(
-            vilkårSomSkalOmgjøres = listOf(Hjemmel.FOLKETRYGDLOVEN_11_6)
-        )
+        
         every { tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, StegType.FATTE_VEDTAK) } returns false
 
         val resultat = steg().utfør(kontekst)
