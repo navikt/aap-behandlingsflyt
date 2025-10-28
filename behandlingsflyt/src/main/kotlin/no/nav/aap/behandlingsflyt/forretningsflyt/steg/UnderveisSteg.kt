@@ -51,21 +51,14 @@ class UnderveisSteg(
     }
 
     fun vedtakBehøverVurdering(kontekst: FlytKontekstMedPerioder): Boolean {
-        if (tidligereVurderinger.girIngenBehandlingsgrunnlag(
-                kontekst,
-                type()
-            ) && kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING
-        ) {
+        if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
             return false
         }
 
         return when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
             VurderingType.REVURDERING -> {
-                when {
-                    (kontekst.vurderingsbehovRelevanteForSteg.contains(Vurderingsbehov.REVURDER_MELDEPLIKT_RIMELIG_GRUNN)) -> true
-                    else -> false
-                }
+                Vurderingsbehov.REVURDER_MELDEPLIKT_RIMELIG_GRUNN in kontekst.vurderingsbehovRelevanteForSteg
             }
 
             VurderingType.MELDEKORT,
