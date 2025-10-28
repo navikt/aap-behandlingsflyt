@@ -87,7 +87,7 @@ dependencies {
     implementation(project(":behandlingsflyt"))
     implementation(project(":repository"))
     implementation("com.zaxxer:HikariCP:7.0.2")
-    implementation("org.flywaydb:flyway-database-postgresql:11.14.1")
+    implementation("org.flywaydb:flyway-database-postgresql:11.15.0")
 
     runtimeOnly("org.postgresql:postgresql") // låst versjon i root build.gradle.kts
 
