@@ -45,7 +45,8 @@ class VurderStudentSteg private constructor(
                                 studentGrunnlag.søkerOppgirStudentstatus()
 
                     VurderingType.REVURDERING ->
-                        Vurderingsbehov.REVURDER_STUDENT in kontekst.vurderingsbehovRelevanteForSteg
+                        tidligereVurderinger.muligMedRettTilAAP(kontekst, type()) &&
+                                Vurderingsbehov.REVURDER_STUDENT in kontekst.vurderingsbehovRelevanteForSteg
 
                     VurderingType.MELDEKORT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
