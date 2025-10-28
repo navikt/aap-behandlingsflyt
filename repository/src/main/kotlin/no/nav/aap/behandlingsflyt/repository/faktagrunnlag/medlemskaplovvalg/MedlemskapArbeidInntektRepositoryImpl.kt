@@ -739,7 +739,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
 
         val totalTid = System.currentTimeMillis() - start
 
-        log.info("Fullført migrering av manuelle vurderinger for lovvalg medlemskap. Migrerte ${kandidaterForMigrering.size} grunnlag med tilhørende manuelle vurderinger på $totalTid ms.")
+        log.info("Fullført migrering av manuelle vurderinger for lovvalg medlemskap. Migrerte ${kandidaterForMigrering.size} grunnlag med ${kandidaterForMigreringGruppertPåManuellVurdering.size} tilhørende manuelle vurderinger på $totalTid ms.")
     }
 
     private fun getLovvalgMedlemsskapManuellVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
