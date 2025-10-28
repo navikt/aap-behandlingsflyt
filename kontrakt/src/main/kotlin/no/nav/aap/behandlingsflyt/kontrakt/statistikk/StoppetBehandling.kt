@@ -34,6 +34,7 @@ public data class StoppetBehandling(
     val hendelsesTidspunkt: LocalDateTime,
     val avsluttetBehandling: AvsluttetBehandlingDTO? = null,
     val identerForSak: List<String> = emptyList(),
+    val opprettetAv: String? = null,
 ) {
     init {
         require(ident.isNotEmpty())

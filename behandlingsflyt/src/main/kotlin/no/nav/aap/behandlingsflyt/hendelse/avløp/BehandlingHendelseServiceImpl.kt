@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReposito
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.MottattDokumentDto
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
 import no.nav.aap.behandlingsflyt.pip.PipRepository
@@ -89,7 +90,8 @@ class BehandlingHendelseServiceImpl(
                     avklaringsbehov = hendelse.avklaringsbehov,
                     opprettetTidspunkt = hendelse.opprettetTidspunkt,
                     hendelsesTidspunkt = hendelse.hendelsesTidspunkt,
-                    versjon = hendelse.versjon
+                    versjon = hendelse.versjon,
+                    opprettetAv = hentBehandlingOpprettetAv(behandling.id),
                 )
             )
                 .forBehandling(sak.id.id, behandling.id.id)
@@ -123,6 +125,16 @@ class BehandlingHendelseServiceImpl(
         }
 
         return oppfølgingsoppgavedokument?.reserverTilBruker ?: reserverTilBrukerRevurderingAvbrutt ?: reserverTilBrukerSøknadTrukket
+    }
+
+    private fun hentBehandlingOpprettetAv(behandlingId: BehandlingId): String? {
+        val eldsteManuellVurderingDokument = MottaDokumentService(dokumentRepository).hentMottattDokumenterAvType(
+            behandlingId,
+            InnsendingType.MANUELL_REVURDERING
+        ).minByOrNull { it.mottattTidspunkt }
+
+        val manuellVurdering = eldsteManuellVurderingDokument?.strukturerteData<ManuellRevurderingV0>()?.data
+        return manuellVurdering?.opprettetAv
     }
 
     private fun finnReserverTilBrukerGittVurderingsbehov(behandlingId: BehandlingId, vurderingsbehov: no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov): String? {
