@@ -115,18 +115,12 @@ class VurderForutgåendeMedlemskapSteg private constructor(
     private fun vedtakBehøverVurdering(
         kontekst: FlytKontekstMedPerioder
     ): Boolean {
-        val alleVilkårOppfylt =
-            vilkårsresultatRepository.hent(kontekst.behandlingId).optionalVilkår(Vilkårtype.MEDLEMSKAP)
-                ?.vilkårsperioder()
-                ?.all { it.erOppfylt() } ?: true
-
         return when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
                 when {
                     tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
                     harYrkesskadeSammenheng(kontekst) -> false
                     spesifiktTriggetRevurderMedlemskap(kontekst) -> true
-                    !alleVilkårOppfylt -> true
                     !kanBehandlesAutomatisk(kontekst) -> true
                     else -> false
                 }
