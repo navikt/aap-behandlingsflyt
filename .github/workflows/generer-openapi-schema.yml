@@ -35,7 +35,7 @@ jobs:
                     repository: navikt/aap-backend-typescript-types
                     path: ./aap-backend-typescript-types
                     token: ${{ secrets.github_token }}
-            -   uses: actions/upload-artifact@v4
+            -   uses: actions/upload-artifact@v5
                 id: artifact-upload-step
                 with:
                     name: openapi
