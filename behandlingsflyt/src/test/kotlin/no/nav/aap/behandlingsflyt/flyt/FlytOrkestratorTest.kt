@@ -3804,7 +3804,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
 
         // Sjekk at avklaringsbehov er blitt gjenåpnet
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
-        assertThat(åpneAvklaringsbehov).hasSize(4)
+        assertThat(åpneAvklaringsbehov).hasSize(3)
         assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.VURDER_FORMKRAV)
         assertThat(åpneAvklaringsbehov.first().status()).isEqualTo(AvklaringsbehovStatus.SENDT_TILBAKE_FRA_BESLUTTER)
     }
