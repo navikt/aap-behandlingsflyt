@@ -8,6 +8,7 @@ on:
     paths-ignore:
         - '.github/pr.yml'
         - '*.md'
+        - 'docker-compose.yaml'
   workflow_dispatch:
 
 jobs:
