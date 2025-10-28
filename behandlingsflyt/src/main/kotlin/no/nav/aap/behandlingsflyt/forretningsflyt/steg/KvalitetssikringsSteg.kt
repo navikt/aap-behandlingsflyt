@@ -38,7 +38,7 @@ class KvalitetssikringsSteg private constructor(
         avklaringsbehovService.oppdaterAvklaringsbehov(
             avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.KVALITETSSIKRING,
-            vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst) },
+            vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst, avklaringsbehovene) },
             erTilstrekkeligVurdert = { erTilstrekkeligVurdert(avklaringsbehovene) },
             tilbakestillGrunnlag = {},
             kontekst
@@ -51,14 +51,24 @@ class KvalitetssikringsSteg private constructor(
         return Fullført
     }
 
-    private fun vedtakBehøverVurdering(kontekst: FlytKontekstMedPerioder): Boolean {
-        if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type()) || trekkKlageService.klageErTrukket(kontekst.behandlingId)) {
+    private fun vedtakBehøverVurdering(
+        kontekst: FlytKontekstMedPerioder, avklaringsbehovene: Avklaringsbehovene
+    ): Boolean {
+        if (tidligereVurderinger.girIngenBehandlingsgrunnlag(
+                kontekst, type()
+            ) || trekkKlageService.klageErTrukket(
+                kontekst.behandlingId
+            )
+        ) {
             return false
         }
 
         return when (kontekst.behandlingType) {
-            TypeBehandling.Førstegangsbehandling -> true
-            TypeBehandling.Klage -> true
+            TypeBehandling.Førstegangsbehandling,
+            TypeBehandling.Klage -> {
+                return avklaringsbehovene.harAvklaringsbehovSomKreverKvalitetssikring()
+            }
+
             else -> false
         }
     }
@@ -67,13 +77,14 @@ class KvalitetssikringsSteg private constructor(
         if (avklaringsbehovene.alle().any { it.status() == Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER }) {
             return false
         }
-        return avklaringsbehovene.alle()
-            .filter { it.kreverKvalitetssikring() }
+        return avklaringsbehovene.alle().filter { it.kreverKvalitetssikring() }
             .all { it.status() == Status.KVALITETSSIKRET }
     }
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider
+        ): BehandlingSteg {
             return KvalitetssikringsSteg(repositoryProvider)
         }
 
