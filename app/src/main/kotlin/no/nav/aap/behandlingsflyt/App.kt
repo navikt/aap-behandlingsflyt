@@ -340,7 +340,7 @@ private fun utførMigreringAvLovvalgOgMedlemskapVurderinger(
                 repository.migrerManuelleVurderingerPeriodisert()
             }
         }
-    }, 3, TimeUnit.MINUTES)
+    }, 8, TimeUnit.MINUTES)
 }
 
 private fun isLeader(log: io.ktor.util.logging.Logger): Boolean {
