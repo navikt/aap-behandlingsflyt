@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedUtlederServi
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -20,12 +21,16 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.filterNotNull
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
+import kotlin.collections.orEmpty
+import kotlin.collections.toSet
 
 class EtAnnetStedSteg(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val etAnnetStedUtlederService: EtAnnetStedUtlederService,
+    private val institusjonsoppholdRepository: InstitusjonsoppholdRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
@@ -35,6 +40,7 @@ class EtAnnetStedSteg(
     ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider) : this(
         avklaringsbehovRepository = repositoryProvider.provide(),
+        institusjonsoppholdRepository = repositoryProvider.provide(),
         etAnnetStedUtlederService = EtAnnetStedUtlederService(repositoryProvider),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
@@ -92,32 +98,47 @@ class EtAnnetStedSteg(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
-        // TODO: Trenger vi å forholde oss til forrige behandling???
-        // val harBehovForAvklaringer = etAnnetStedUtlederService.utled(kontekst.behandlingId, true)
-
-
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             avklaringsbehovene = avklaringsbehovene,
             behandlingRepository = behandlingRepository,
             vilkårsresultatRepository = vilkårsresultatRepository,
-            erTilstrekkeligVurdert = { true },
+            erTilstrekkeligVurdert = { erHelseoppholdTilstrekkeligVurdert(kontekst) },
             kontekst = kontekst,
             tilbakestillGrunnlag = {
-                // TODO: Implementer
+                val vedtatteVurderinger = kontekst.forrigeBehandlingId
+                    ?.let { institusjonsoppholdRepository.hentHvisEksisterer(it) }?.helseoppholdvurderinger
+                val aktiveVurderinger = institusjonsoppholdRepository.hentHvisEksisterer(kontekst.behandlingId)?.helseoppholdvurderinger?.vurderinger.orEmpty()
+                if (vedtatteVurderinger == null){
+                    institusjonsoppholdRepository.lagreHelseVurdering(kontekst.behandlingId,"Kelvin", listOf() )
+
+                }else if (vedtatteVurderinger.vurderinger.toSet() != aktiveVurderinger.toSet()) {
+                    institusjonsoppholdRepository.lagreHelseVurdering(kontekst.behandlingId, vedtatteVurderinger.vurdertAv , vedtatteVurderinger.vurderinger)
+                }
             },
             definisjon = Definisjon.AVKLAR_HELSEINSTITUSJON,
             tvingerAvklaringsbehov = setOf<Vurderingsbehov>(Vurderingsbehov.INSTITUSJONSOPPHOLD),
             nårVurderingErRelevant = ::perioderMedVurderingsbehovHelse
         )
 
+
+
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             avklaringsbehovene = avklaringsbehovene,
             behandlingRepository = behandlingRepository,
             vilkårsresultatRepository = vilkårsresultatRepository,
-            erTilstrekkeligVurdert = { true},
+            erTilstrekkeligVurdert = { erSoningsoppholdTilstrekkeligVurdert(kontekst = kontekst) },
             kontekst = kontekst,
             tilbakestillGrunnlag = {
-                // TODO: Implementer
+
+                val vedtatteVurderinger = kontekst.forrigeBehandlingId
+                    ?.let { institusjonsoppholdRepository.hentHvisEksisterer(it) }?.soningsVurderinger
+                val aktiveVurderinger = institusjonsoppholdRepository.hentHvisEksisterer(kontekst.behandlingId)?.soningsVurderinger?.vurderinger.orEmpty()
+                if (vedtatteVurderinger == null){
+                    institusjonsoppholdRepository.lagreSoningsVurdering(kontekst.behandlingId,"Kelvin", listOf() )
+
+                }else if (vedtatteVurderinger.vurderinger.toSet() != aktiveVurderinger.toSet()) {
+                  institusjonsoppholdRepository.lagreSoningsVurdering(kontekst.behandlingId, vedtatteVurderinger.vurdertAv , vedtatteVurderinger.vurderinger )
+                }
             },
             definisjon = Definisjon.AVKLAR_SONINGSFORRHOLD,
             tvingerAvklaringsbehov = setOf<Vurderingsbehov>(Vurderingsbehov.INSTITUSJONSOPPHOLD),
@@ -129,13 +150,43 @@ class EtAnnetStedSteg(
         return Fullført
     }
 
+    private fun erSoningsoppholdTilstrekkeligVurdert(kontekst: FlytKontekstMedPerioder): Boolean {
+        val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
+        val harBehovForAvklaringer = etAnnetStedUtlederService.utled(kontekst.behandlingId)
+
+        val uavklartePerioder = Tidslinje.zip2(tidligereVurderingsutfall, harBehovForAvklaringer.perioderTilVurdering)
+            .mapValue { (behandlingsutfall, denneBehandling) ->
+                when (behandlingsutfall) {
+                    null -> false
+                    TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
+                    TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
+                    TidligereVurderinger.Behandlingsutfall.UKJENT -> denneBehandling?.harUavklartSoningsopphold() == true
+                }
+            }
+            .filter { it.verdi }
+        return uavklartePerioder.isEmpty()
+    }
+
+    private fun erHelseoppholdTilstrekkeligVurdert(kontekst: FlytKontekstMedPerioder): Boolean {
+        val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
+        val harBehovForAvklaringer = etAnnetStedUtlederService.utled(kontekst.behandlingId)
+
+        val uavklartePerioder = Tidslinje.zip2(tidligereVurderingsutfall, harBehovForAvklaringer.perioderTilVurdering)
+            .mapValue { (behandlingsutfall, denneBehandling) ->
+                when (behandlingsutfall) {
+                    null -> false
+                    TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
+                    TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
+                    TidligereVurderinger.Behandlingsutfall.UKJENT -> denneBehandling?.harUavklartHelseopphold() == true
+                }
+            }
+            .filter { it.verdi }
+        return uavklartePerioder.isEmpty()
+    }
 
     private fun perioderMedVurderingsbehovHelse(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
         val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
         val harBehovForAvklaringer = etAnnetStedUtlederService.utled(kontekst.behandlingId)
-
-
-        println(harBehovForAvklaringer.avklaringsbehov())
 
         return Tidslinje.zip2(tidligereVurderingsutfall, harBehovForAvklaringer.perioderTilVurdering)
             .mapValue { (behandlingsutfall, denneBehandling) ->

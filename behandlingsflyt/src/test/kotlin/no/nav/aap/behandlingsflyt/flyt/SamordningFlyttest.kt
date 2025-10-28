@@ -333,6 +333,10 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
 
         // prosesser på nytt
         nullstillInformasjonskravOppdatert(InformasjonskravNavn.INSTITUSJONSOPPHOLD, revurdering.sakId)
+
+        // TODO: SLett linja under når vurderingsbehov i FlytKontekstMedPerioderService ikke filtrerer Vurderingstype basert på steg
+        sak.opprettManuellRevurdering(listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.INSTITUSJONSOPPHOLD))
+
         revurdering = prosesserBehandling(revurdering)
         val åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
 
