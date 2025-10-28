@@ -209,7 +209,7 @@ internal fun Application.server(
     val dataSource = initDatasource(dbConfig)
     Migrering.migrate(dataSource)
 
-    utførMigreringAvLovvalgOgMedlemskapVurderinger(dataSource, gatewayProvider)
+    utførMigreringAvLovvalgOgMedlemskapVurderinger(dataSource, gatewayProvider, environment.log)
 
     val motor = startMotor(dataSource, repositoryRegistry, gatewayProvider)
 
@@ -321,8 +321,17 @@ internal fun Application.server(
 // Basert på tall ved lokal kjøring vil denne migreringen ta ca 2-3 sekunder å kjøre med antallet som ligger i prod.
 // Bruker leaderElector for å sikre at kun en pod kjører migreringen og spinner opp en egen tråd for å ikke blokkere.
 // Toggles av etter kjøring og fjernes i ny pr.
-private fun utførMigreringAvLovvalgOgMedlemskapVurderinger(dataSource: HikariDataSource, gatewayProvider: GatewayProvider) {
+private fun utførMigreringAvLovvalgOgMedlemskapVurderinger(
+    dataSource: HikariDataSource,
+    gatewayProvider: GatewayProvider,
+    log: io.ktor.util.logging.Logger
+) {
     val unleashGateway: UnleashGateway = gatewayProvider.provide()
+    val enabled = unleashGateway.isEnabled(BehandlingsflytFeature.LovvalgMedlemskapPeriodisertMigrering)
+    val isLeader = isLeader()
+    log.info("LovvalgMedlemskapPeriodisertMigrering = $enabled")
+    log.info("isLeader = $isLeader")
+
     if (unleashGateway.isEnabled(BehandlingsflytFeature.LovvalgMedlemskapPeriodisertMigrering) && isLeader()) {
         val executor = Executors.newVirtualThreadPerTaskExecutor()
         CompletableFuture
