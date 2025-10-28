@@ -99,7 +99,7 @@ class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : S
         }
     }
 
-    private fun hentYtelsePerioder(ytelseId: Long): List<SamordningYtelsePeriode> {
+    private fun hentYtelsePerioder(ytelseId: Long): Set<SamordningYtelsePeriode> {
         val sql = """
             SELECT * from samordning_ytelse_periode where ytelse_id = ? order by periode
         """.trimIndent()
@@ -114,7 +114,7 @@ class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : S
                     kronesum = it.getIntOrNull("kronesum"),
                 )
             }
-        }
+        }.toSet()
     }
 
     override fun lagre(behandlingId: BehandlingId, samordningYtelser: List<SamordningYtelse>) {

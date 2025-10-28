@@ -41,16 +41,15 @@ class TjenestepensjonRefusjonskravSteg private constructor(
             definisjon = Definisjon.SAMORDNING_REFUSJONS_KRAV,
             vedtakBehøverVurdering = {
                 when (kontekst.vurderingType) {
-                    VurderingType.FØRSTEGANGSBEHANDLING -> {
+                    VurderingType.FØRSTEGANGSBEHANDLING,
+                    VurderingType.REVURDERING -> {
                         when {
                             tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
-
+                            kontekst.vurderingsbehovRelevanteForSteg.isEmpty() -> false
+                            Vurderingsbehov.REVURDER_SAMORDNING_TJENESTEPENSJON in kontekst.vurderingsbehovRelevanteForSteg -> true
                             else -> tjenestePensjonRepository.hent(kontekst.behandlingId).isNotEmpty()
                         }
                     }
-
-                    VurderingType.REVURDERING ->
-                        Vurderingsbehov.REVURDER_SAMORDNING_TJENESTEPENSJON in kontekst.vurderingsbehovRelevanteForSteg
 
                     VurderingType.MELDEKORT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,

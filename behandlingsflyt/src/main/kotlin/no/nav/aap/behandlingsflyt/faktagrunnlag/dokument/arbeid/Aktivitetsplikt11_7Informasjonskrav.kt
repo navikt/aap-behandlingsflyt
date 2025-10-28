@@ -17,7 +17,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -51,8 +50,7 @@ class Aktivitetsplikt11_7Informasjonskrav(
         steg: StegType,
         oppdatert: InformasjonskravOppdatert?
     ): Boolean {
-        return unleashGateway.isEnabled(BehandlingsflytFeature.Aktivitetsplikt11_7)
-                && kontekst.vurderingType in listOf(VurderingType.REVURDERING, VurderingType.EFFEKTUER_AKTIVITETSPLIKT)
+        return kontekst.vurderingType in listOf(VurderingType.REVURDERING, VurderingType.EFFEKTUER_AKTIVITETSPLIKT)
                 && !tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, steg)
     }
 

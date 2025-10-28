@@ -63,6 +63,13 @@ kotlin {
         jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
         apiVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_2)
         languageVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_2)
+
+        // Bruk et unikt navn for <project>.kotlin_module for hvert sub-prosjekt,
+        // slik at vi unngår navnekollisjoner når vi inkluderer flere av våre kotlin-moduler i samme jar-fil, feks. ved bruk av shadowJar.
+        // Kroneksempelet er "kontrakt.kotlin_module" fra både behandlingsflyt, brev, meldekort og andre steder.
+        // Dette gjør at vi kan beholde informasjonen for hver modul, og kotlin-reflect og andre verktøy fungerer som forventet.
+        // Alternativet er å unngå å bruke det eksakt samme navnet på moduler i forskjellige prosjekter, som feks "kontrakt".
+        freeCompilerArgs.add("-module-name=${rootProject.name}-${project.name}")
     }
 }
 

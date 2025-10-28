@@ -61,17 +61,19 @@ class BarnetilleggSteg(
 
     fun vedtakBehøverVurdering(kontekst: FlytKontekstMedPerioder): Boolean {
         val barneGrunnlag = barnRepository.hentHvisEksisterer(kontekst.behandlingId)
-        return when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING ->
-                tidligereVurderinger.muligMedRettTilAAP(kontekst, type())
-                        && kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty()
-                        && harOppgittBarnEllerFolkeregistrerteBarn(barneGrunnlag)
+        val vurderingsbehovSomTvingerStopp = listOf(
+            Vurderingsbehov.DØDSFALL_BARN,
+            Vurderingsbehov.BARNETILLEGG
+        )
 
+        return when (kontekst.vurderingType) {
+            VurderingType.FØRSTEGANGSBEHANDLING,
             VurderingType.REVURDERING ->
                 (!tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())
-                        || (Vurderingsbehov.DØDSFALL_BARN in kontekst.vurderingsbehovRelevanteForSteg)
-                        && kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty())
-                        && harOppgittBarnEllerFolkeregistrerteBarn(barneGrunnlag)
+                        && (vurderingsbehovSomTvingerStopp.any { kontekst.vurderingsbehovRelevanteForSteg.contains(it) }
+                            || (kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty() && (harOppgittBarn(barneGrunnlag) || harGjortManuellVurderingIBehandlingen(kontekst)))
+                        )
+                )
 
             VurderingType.MELDEKORT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
@@ -82,10 +84,50 @@ class BarnetilleggSteg(
     }
 
     private fun tilbakestillBarnetillegg(kontekst: FlytKontekstMedPerioder) {
-        // NOOP enn så lenge
+        val vedtatteBarnetillegg = kontekst.forrigeBehandlingId
+            ?.let { barnetilleggRepository.hentHvisEksisterer(it) }
+            ?.perioder
+            ?: emptyList()
+        barnetilleggRepository.lagre(kontekst.behandlingId, vedtatteBarnetillegg)
+
+        val forrigeBarnGrunnlag = kontekst.forrigeBehandlingId
+            ?.let { barnRepository.hentHvisEksisterer(it) }
+
+        val vurderteBarn = forrigeBarnGrunnlag?.vurderteBarn?.barn.orEmpty()
+
+        barnRepository.lagreVurderinger(
+            behandlingId = kontekst.behandlingId,
+            vurdertAv = forrigeBarnGrunnlag?.vurderteBarn?.vurdertAv ?: SYSTEMBRUKER.ident,
+            vurderteBarn = vurderteBarn
+        )
+
+        // Ting er nå helt tilbakestillt, vi må derfor beregne tidslinjen på nytt
+        beregnOgOppdaterBarnetilleggTidslinje(kontekst)
     }
 
-    private fun harOppgittBarnEllerFolkeregistrerteBarn(grunnlag: BarnGrunnlag?): Boolean {
+    private fun harGjortManuellVurderingIBehandlingen(kontekst: FlytKontekstMedPerioder): Boolean {
+        val forrigeBarnGrunnlag = kontekst.forrigeBehandlingId
+            ?.let { barnRepository.hentHvisEksisterer(it) }
+
+        val nyttBarnGrunnlag = barnRepository.hentHvisEksisterer(kontekst.behandlingId)
+
+        if (forrigeBarnGrunnlag == null) {
+            return nyttBarnGrunnlag?.vurderteBarn != null
+        }
+
+        val forrigeVurderteBarn = forrigeBarnGrunnlag.vurderteBarn?.barn.orEmpty()
+        val nyeVurderteBarn = nyttBarnGrunnlag?.vurderteBarn?.barn.orEmpty()
+
+        val vurderteBarnTuples = nyeVurderteBarn.map { barn ->
+            Pair(barn, forrigeVurderteBarn.firstOrNull { it.ident.er(barn.ident) })
+        }
+
+        return vurderteBarnTuples.any { (nyttBarn, forrigeBarn) ->
+            forrigeBarn == null || nyttBarn.vurderinger.toSet() != forrigeBarn.vurderinger.toSet()
+        }
+    }
+
+    private fun harOppgittBarn(grunnlag: BarnGrunnlag?): Boolean {
         return grunnlag?.oppgitteBarn != null
     }
 

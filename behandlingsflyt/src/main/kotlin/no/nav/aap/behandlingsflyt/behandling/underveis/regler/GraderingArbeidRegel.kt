@@ -180,7 +180,7 @@ class GraderingArbeidRegel : UnderveisRegel {
 
         for (meldekort in input.meldekort.sortedBy { it.mottattTidspunkt }) {
             tidslinje = tidslinje.outerJoin(meldekort.somTidslinje()) { tidligereOpplysninger, meldekortopplysninger ->
-                /* Opplysninger fra nyeste meldekort, opplysningerMottatt fra eldste meldekort */
+                /* Opplysninger fra nyeste meldekort, opplysningerFørstMottatt fra eldste meldekort */
                 val timerArbeidetOpplysninger = OpplysningerOmArbeid(
                     timerArbeid = meldekortopplysninger?.let { (timerArbeidet, antallDager) ->
                         TimerArbeid(

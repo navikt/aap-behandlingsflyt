@@ -38,7 +38,7 @@ class SamordningApiKtTest : BaseApiTest() {
             listOf(
                 SamordningYtelse(
                     ytelseType = Ytelse.PLEIEPENGER,
-                    ytelsePerioder = listOf(
+                    ytelsePerioder = setOf(
                         SamordningYtelsePeriode(
                             periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1).minusDays(1)),
                             gradering = Prosent(50),

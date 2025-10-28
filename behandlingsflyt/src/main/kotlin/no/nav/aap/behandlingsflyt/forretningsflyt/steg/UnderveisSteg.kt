@@ -1,11 +1,12 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.underveis.UnderveisService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
-import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
@@ -20,40 +21,58 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class UnderveisSteg(
     private val underveisService: UnderveisService,
     private val tidligereVurderinger: TidligereVurderinger,
-    private val avklaringsbehovRepository: AvklaringsbehovRepository
+    private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val avklaringsbehovService: AvklaringsbehovService,
+    private val underveisRepository: UnderveisRepository,
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         underveisService = UnderveisService(repositoryProvider, gatewayProvider),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
-        avklaringsbehovRepository = repositoryProvider.provide()
+        avklaringsbehovRepository = repositoryProvider.provide(),
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+        underveisRepository = repositoryProvider.provide(),
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING) {
-            if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
-                return Fullført
-            }
+        underveisService.vurder(kontekst.sakId, kontekst.behandlingId)
+        avklaringsbehovService.oppdaterAvklaringsbehov(
+            avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId),
+            definisjon = Definisjon.FORESLÅ_UTTAK,
+            vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst) },
+            erTilstrekkeligVurdert = {
+                val grunnlag = underveisRepository.hentHvisEksisterer(kontekst.behandlingId)
+                grunnlag != null
+            },
+            tilbakestillGrunnlag = {},
+            kontekst = kontekst
+        )
+
+        return Fullført
+    }
+
+    fun vedtakBehøverVurdering(kontekst: FlytKontekstMedPerioder): Boolean {
+        if (tidligereVurderinger.girIngenBehandlingsgrunnlag(
+                kontekst,
+                type()
+            ) && kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING
+        ) {
+            return false
         }
 
-        when (kontekst.vurderingType) {
+        return when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
             VurderingType.REVURDERING -> {
-                underveisService.vurder(kontekst.sakId, kontekst.behandlingId)
-
-                val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-                if (kontekst.vurderingsbehovRelevanteForSteg.contains(Vurderingsbehov.REVURDER_MELDEPLIKT_RIMELIG_GRUNN) && avklaringsbehov.harIkkeForeslåttUttak()) {
-                    return FantAvklaringsbehov(Definisjon.FORESLÅ_UTTAK)
+                when {
+                    (kontekst.vurderingsbehovRelevanteForSteg.contains(Vurderingsbehov.REVURDER_MELDEPLIKT_RIMELIG_GRUNN)) -> true
+                    else -> false
                 }
             }
 
-            VurderingType.MELDEKORT, VurderingType.EFFEKTUER_AKTIVITETSPLIKT, VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9 -> {
-                underveisService.vurder(kontekst.sakId, kontekst.behandlingId)
-            }
-
-            VurderingType.IKKE_RELEVANT -> {
-            }
+            VurderingType.MELDEKORT,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
+            VurderingType.IKKE_RELEVANT -> false
         }
-        return Fullført
     }
 
     companion object : FlytSteg {

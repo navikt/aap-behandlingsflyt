@@ -28,7 +28,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.FakeUnleashFasttrackAktivitetsplikt
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -112,7 +112,7 @@ class AktivitetspliktInformasjonskravTest {
 
             val aktivitetsplikt11_7Informasjonskrav = Aktivitetsplikt11_7Informasjonskrav.konstruer(
                 postgresRepositoryRegistry.provider(connection),
-                createGatewayProvider { register<FakeUnleashFasttrackAktivitetsplikt>() },
+                createGatewayProvider { register<FakeUnleash>() },
             )
             val flytKontekstMedPerioder = flytKontekstMedPerioder(effektueringsbehandling, sak)
 

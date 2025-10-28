@@ -33,7 +33,7 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
             setRowMapper {
                 // At denne kunne være nullable er egentlig rester fra tidligere. Vurder å slette
                 // grunnlag uten vurderinger?
-                hentSamordningVurderinger(it.getLongOrNull("vurderinger_id"))
+                it.getLongOrNull("vurderinger_id")?.let(::hentSamordningVurderinger)
             }
         }
     }
@@ -56,16 +56,12 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
                 setLong(2, behandlingId.id)
             }
             setRowMapper {
-                hentSamordningVurderinger(it.getLong("vurderinger_id"))!!
+                hentSamordningVurderinger(it.getLong("vurderinger_id"))
             }
         }
     }
 
-    private fun hentSamordningVurderinger(vurderingerId: Long?): SamordningVurderingGrunnlag? {
-        if (vurderingerId == null) {
-            return null
-        }
-
+    private fun hentSamordningVurderinger(vurderingerId: Long): SamordningVurderingGrunnlag {
         val vurderingerQuery = """
             SELECT sv.id as sv_id, sv.ytelse_type as sv_ytelse_type
             FROM SAMORDNING_VURDERING sv

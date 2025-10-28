@@ -1,7 +1,7 @@
 [versions]
 ktor = "3.3.1"
-komponenter = "1.0.411"
-tilgang = "1.0.140"
+komponenter = "1.0.414"
+tilgang = "1.0.141"
 utbetaling = "0.0.65"
 junit = "6.0.0"
 
