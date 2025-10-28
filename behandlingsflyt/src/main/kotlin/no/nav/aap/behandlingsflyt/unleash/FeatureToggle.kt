@@ -14,7 +14,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     NyBrevtype11_17,
     NyBrevtype11_18,
     Aktivitetsplikt11_9,
-    TilgangssjekkSettPaaVent,
     OverforingsdatoNullForAvregning,
     NyeSykdomVilkar,
     IverksettUtbetalingSomSelvstendigJobb,
