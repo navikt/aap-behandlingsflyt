@@ -210,9 +210,9 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                 ER_SYKDOM_SKADE_LYTE_VESETLING_DEL, ER_NEDSETTELSE_MER_ENN_HALVPARTEN,
                 ER_NEDSETTELSE_MER_ENN_YRKESSKADE_GRENSE, ER_NEDSETTELSE_AV_EN_VISS_VARIGHET,
                 YRKESSKADE_BEGRUNNELSE, KODEVERK,
-                DIAGNOSE, OPPRETTET_TID, VURDERT_AV_IDENT)
+                DIAGNOSE, OPPRETTET_TID, VURDERT_AV_IDENT, VURDERT_I_BEHANDLING, TOM)
             VALUES
-            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """.trimIndent()
 
         for (vurdering in vurderinger) {
@@ -232,6 +232,8 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                     setString(12, vurdering.hoveddiagnose)
                     setInstant(13, vurdering.opprettet)
                     setString(14, vurdering.vurdertAv.ident)
+                    setLong(15, vurdering.vurdertIBehandling?.id)
+                    setLocalDate(16, vurdering.vurderingenGjelderTil)
                 }
             }
 
@@ -325,7 +327,9 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                    KODEVERK,
                    DIAGNOSE,
                    OPPRETTET_TID,
-                   VURDERT_AV_IDENT
+                   VURDERT_AV_IDENT,
+                   VURDERT_I_BEHANDLING,
+                   TOM
             FROM SYKDOM_VURDERING
             WHERE SYKDOM_VURDERINGER_ID = ?
             """.trimIndent()
@@ -357,6 +361,8 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
             bidiagnoser = hentBidiagnoser(vurderingId = sykdomsvurderingId),
             opprettet = row.getInstant("OPPRETTET_TID"),
             vurdertAv = Bruker(row.getString("VURDERT_AV_IDENT")),
+            vurdertIBehandling = row.getLongOrNull("VURDERT_I_BEHANDLING")?.let { BehandlingId(it) },
+            vurderingenGjelderTil = row.getLocalDateOrNull("TOM")
         )
     }
 

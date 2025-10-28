@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.avbrytr
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
@@ -61,7 +62,7 @@ internal class SykdomRepositoryImplTest {
             val sykdomRepo = SykdomRepositoryImpl(connection)
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
-
+            val sykdomsvurdering1 = sykdomsvurdering1(behandling.id)
             sykdomRepo.lagre(behandling.id, listOf(sykdomsvurdering1))
             assertThat(sykdomRepo.hent(behandling.id).sykdomsvurderinger).usingRecursiveComparison()
                 .ignoringFields("id", "opprettet").isEqualTo(listOf(sykdomsvurdering1))
@@ -74,6 +75,9 @@ internal class SykdomRepositoryImplTest {
             val sykdomRepo = SykdomRepositoryImpl(connection)
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
+
+            val sykdomsvurdering1 = sykdomsvurdering1(behandling.id)
+            val sykdomsvurdering2 = sykdomsvurdering2(behandling.id)
 
             sykdomRepo.lagre(behandling.id, listOf(sykdomsvurdering1, sykdomsvurdering2))
             assertThat(sykdomRepo.hent(behandling.id).sykdomsvurderinger).usingRecursiveComparison()
@@ -112,18 +116,22 @@ internal class SykdomRepositoryImplTest {
 
     @Test
     fun `historikk viser kun vurderinger fra tidligere behandlinger`() {
-        val førstegangsbehandling = dataSource.transaction { connection ->
+        val (førstegangsbehandling, sykdomsvurdering1) = dataSource.transaction { connection ->
             val sykdomRepo = SykdomRepositoryImpl(connection)
             val sak = sak(connection)
             val førstegangsbehandling = finnEllerOpprettBehandling(connection, sak)
 
+            val sykdomsvurdering1 = sykdomsvurdering1(førstegangsbehandling.id)
+
             sykdomRepo.lagre(førstegangsbehandling.id, listOf(sykdomsvurdering1))
-            førstegangsbehandling
+            Pair(førstegangsbehandling, sykdomsvurdering1)
         }
 
         dataSource.transaction { connection ->
             val sykdomRepo = SykdomRepositoryImpl(connection)
             val revurdering = revurdering(connection, førstegangsbehandling)
+
+            val sykdomsvurdering2 = sykdomsvurdering2(revurdering.id)
 
             sykdomRepo.lagre(revurdering.id, listOf(sykdomsvurdering2))
 
@@ -137,13 +145,15 @@ internal class SykdomRepositoryImplTest {
 
     @Test
     fun `historikk viser kun vurderinger fra tidligere behandlinger og ikke inkluderer vurdering fra avbrutt revurdering`() {
-        val førstegangsbehandling = dataSource.transaction { connection ->
+        val (førstegangsbehandling, sykdomsvurdering1) = dataSource.transaction { connection ->
             val sykdomRepo = SykdomRepositoryImpl(connection)
             val sak = sak(connection)
             val førstegangsbehandling = finnEllerOpprettBehandling(connection, sak)
 
+            val sykdomsvurdering1 = sykdomsvurdering1(førstegangsbehandling.id)
+
             sykdomRepo.lagre(førstegangsbehandling.id, listOf(sykdomsvurdering1))
-            førstegangsbehandling
+            Pair(førstegangsbehandling, sykdomsvurdering1)
         }
 
         dataSource.transaction { connection ->
@@ -159,12 +169,16 @@ internal class SykdomRepositoryImplTest {
                     Bruker("Z00000")
                 )
             )
+
+            val sykdomsvurdering2 = sykdomsvurdering2(revurderingAvbrutt.id)
             sykdomRepo.lagre(revurderingAvbrutt.id, listOf(sykdomsvurdering2))
         }
 
         dataSource.transaction { connection ->
             val sykdomRepo = SykdomRepositoryImpl(connection)
             val revurdering = revurdering(connection, førstegangsbehandling)
+
+            val sykdomsvurdering3 = sykdomsvurdering3(revurdering.id)
 
             sykdomRepo.lagre(revurdering.id, listOf(sykdomsvurdering3))
 
@@ -186,6 +200,7 @@ internal class SykdomRepositoryImplTest {
                         Sykdomsvurdering(
                             begrunnelse = "b1",
                             vurderingenGjelderFra = null,
+                            vurderingenGjelderTil = null,
                             dokumenterBruktIVurdering = listOf(JournalpostId("1")),
                             harSkadeSykdomEllerLyte = true,
                             erSkadeSykdomEllerLyteVesentligdel = true,
@@ -195,6 +210,7 @@ internal class SykdomRepositoryImplTest {
                             yrkesskadeBegrunnelse = "b",
                             erArbeidsevnenNedsatt = true,
                             vurdertAv = Bruker("Z00000"),
+                            vurdertIBehandling = behandling.id,
                             opprettet = Instant.now(),
                         )
                     )
@@ -208,9 +224,10 @@ internal class SykdomRepositoryImplTest {
 
     private companion object {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-        private val sykdomsvurdering1 = Sykdomsvurdering(
+        private fun sykdomsvurdering1(behandlingId: BehandlingId) = Sykdomsvurdering(
             begrunnelse = "b1",
             vurderingenGjelderFra = null,
+            vurderingenGjelderTil = null,
             dokumenterBruktIVurdering = listOf(JournalpostId("1")),
             harSkadeSykdomEllerLyte = true,
             erSkadeSykdomEllerLyteVesentligdel = true,
@@ -221,11 +238,13 @@ internal class SykdomRepositoryImplTest {
             erArbeidsevnenNedsatt = true,
             vurdertAv = Bruker("Z00000"),
             opprettet = Instant.now(),
+            vurdertIBehandling = behandlingId,
         )
 
-        private val sykdomsvurdering2 = Sykdomsvurdering(
+        private fun sykdomsvurdering2(behandlingId: BehandlingId) = Sykdomsvurdering(
             begrunnelse = "b2",
             vurderingenGjelderFra = LocalDate.of(2020, 1, 1),
+            vurderingenGjelderTil = null,
             dokumenterBruktIVurdering = listOf(JournalpostId("2")),
             harSkadeSykdomEllerLyte = true,
             erSkadeSykdomEllerLyteVesentligdel = true,
@@ -236,11 +255,13 @@ internal class SykdomRepositoryImplTest {
             erArbeidsevnenNedsatt = true,
             vurdertAv = Bruker("Z00000"),
             opprettet = Instant.now(),
+            vurdertIBehandling = behandlingId,
         )
 
-        private val sykdomsvurdering3 = Sykdomsvurdering(
+        private fun sykdomsvurdering3(behandlingId: BehandlingId) = Sykdomsvurdering(
             begrunnelse = "b3",
             vurderingenGjelderFra = LocalDate.of(2020, 2, 2),
+            vurderingenGjelderTil = null,
             dokumenterBruktIVurdering = listOf(JournalpostId("3")),
             harSkadeSykdomEllerLyte = true,
             erSkadeSykdomEllerLyteVesentligdel = true,
@@ -251,8 +272,8 @@ internal class SykdomRepositoryImplTest {
             erArbeidsevnenNedsatt = true,
             vurdertAv = Bruker("Z00000"),
             opprettet = Instant.now(),
+            vurdertIBehandling = behandlingId,
         )
-
     }
 
     private fun sak(connection: DBConnection): Sak {

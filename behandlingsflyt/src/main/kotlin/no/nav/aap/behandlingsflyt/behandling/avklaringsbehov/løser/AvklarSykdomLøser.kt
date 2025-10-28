@@ -36,7 +36,7 @@ class AvklarSykdomLøser(
         val yrkesskadeGrunnlag = yrkersskadeRepository.hentHvisEksisterer(behandling.id)
 
         val nyeSykdomsvurderinger = løsning.sykdomsvurderinger
-            .map { it.toSykdomsvurdering(kontekst.bruker) }
+            .map { it.toSykdomsvurdering(kontekst.bruker, kontekst.behandlingId()) }
             .let {
                 SykdomGrunnlag(
                     sykdomsvurderinger = it,
