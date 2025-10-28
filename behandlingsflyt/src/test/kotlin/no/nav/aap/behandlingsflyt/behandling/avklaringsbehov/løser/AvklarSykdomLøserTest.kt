@@ -47,10 +47,14 @@ class AvklarSykdomLøserTest {
         every { sykdomMock.hentHvisEksisterer(any()) } returns
                 SykdomGrunnlag(
                     yrkesskadevurdering = null, sykdomsvurderinger = listOf(
-                        sykdomsvurdering(vurderingenGjelderFra = 1 januar 2025),
+                        sykdomsvurdering(
+                            vurderingenGjelderFra = 1 januar 2025,
+                            vurdertIBehandling = BehandlingId(2L)
+                        ),
                         sykdomsvurdering(
                             erNedsettelseIArbeidsevneMerEnnHalvparten = false,
-                            vurderingenGjelderFra = 1 februar 2025
+                            vurderingenGjelderFra = 1 februar 2025,
+                            vurdertIBehandling = BehandlingId(2L),
                         )
                     )
                 )
@@ -91,7 +95,9 @@ private fun sykdomsvurdering(
     erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean = true,
     erArbeidsevnenNedsatt: Boolean = true,
     vurderingenGjelderFra: LocalDate? = null,
-    opprettet: LocalDateTime = LocalDateTime.now()
+    vurderingenGjelderTil: LocalDate? = null,
+    opprettet: LocalDateTime = LocalDateTime.now(),
+    vurdertIBehandling: BehandlingId
 ) = Sykdomsvurdering(
     begrunnelse = "",
     dokumenterBruktIVurdering = emptyList(),
@@ -103,8 +109,10 @@ private fun sykdomsvurdering(
     erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
     yrkesskadeBegrunnelse = null,
     vurderingenGjelderFra = vurderingenGjelderFra,
+    vurderingenGjelderTil = vurderingenGjelderTil,
     vurdertAv = Bruker("Z00000"),
-    opprettet = opprettet.toInstant(ZoneOffset.UTC)
+    opprettet = opprettet.toInstant(ZoneOffset.UTC),
+    vurdertIBehandling = vurdertIBehandling
 )
 
 private fun lagAvklaringsbehovKontekst(): AvklaringsbehovKontekst =
