@@ -216,7 +216,7 @@ class FormkravSteg (
         val brevbestilling = hentBrevbestilling(kontekst.behandlingId)
         return erForhåndsvarselSendt(brevbestilling)
                 && venterPåVarselFrist(varsel, vurderingForBehandling)
-                && harÅpentVenteBehov(venteBehov, varsel)
+                && harIkkeLøstVenteBehov(venteBehov, varsel)
 
     }
 
@@ -245,7 +245,7 @@ class FormkravSteg (
     private fun erTattAvVentFørFristenPåForhåndsvarsel(grunnlag: FormkravGrunnlag, ventebehov: Avklaringsbehov?): Boolean {
        val varsel = grunnlag.varsel
         return varsel?.let {
-            venterPåVarselFrist(varsel, grunnlag.vurdering) && !harÅpentVenteBehov(ventebehov, varsel)
+            venterPåVarselFrist(varsel, grunnlag.vurdering) && !harIkkeLøstVenteBehov(ventebehov, varsel)
         } ?: false
     }
 
@@ -257,9 +257,9 @@ class FormkravSteg (
         return  erFørEllerPåFrist && vurdering?.likevelBehandles != true
     }
 
-    private fun harÅpentVenteBehov(venteBehov: Avklaringsbehov?, varsel: FormkravVarsel?): Boolean {
+    private fun harIkkeLøstVenteBehov(venteBehov: Avklaringsbehov?, varsel: FormkravVarsel?): Boolean {
         if (venteBehov == null) {
-            return true // TODO: ?
+            return true
         }
         val varselDato = varsel?.sendtDato ?: throw IllegalStateException("Fant ikke varslingstidspunkt")
 
