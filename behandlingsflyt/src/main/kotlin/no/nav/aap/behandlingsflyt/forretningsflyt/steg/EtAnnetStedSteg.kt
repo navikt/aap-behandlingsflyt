@@ -50,51 +50,6 @@ class EtAnnetStedSteg(
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    fun gammelUtfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-
-        if (kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING &&
-            tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())
-        ) {
-            avklaringsbehovene.avbrytForSteg(type())
-            return Fullført
-        }
-
-        if (kontekst.vurderingType == VurderingType.REVURDERING &&
-            tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())
-        ) {
-            avklaringsbehovene.avbrytForSteg(type())
-            return Fullført
-        }
-
-        val avklaringsbehov = mutableListOf<Definisjon>()
-
-        val harBehovForAvklaringer = etAnnetStedUtlederService.utled(kontekst.behandlingId, true)
-        val harBehovForAvklaringerLenger = etAnnetStedUtlederService.utled(kontekst.behandlingId)
-        log.info("Perioder til vurdering: {}", harBehovForAvklaringerLenger.perioderTilVurdering)
-        if (harBehovForAvklaringerLenger.harBehovForAvklaring()) {
-            avklaringsbehov += harBehovForAvklaringerLenger.avklaringsbehov()
-        }
-
-        if (!avklaringsbehov.contains(Definisjon.AVKLAR_HELSEINSTITUSJON) && !harBehovForAvklaringer.avklaringsbehov()
-                .contains(Definisjon.AVKLAR_HELSEINSTITUSJON)
-        ) {
-            avbrytHvisFinnesOgIkkeTrengs(avklaringsbehovene, Definisjon.AVKLAR_HELSEINSTITUSJON)
-        }
-
-        if (!avklaringsbehov.contains(Definisjon.AVKLAR_SONINGSFORRHOLD) && !harBehovForAvklaringer.avklaringsbehov()
-                .contains(Definisjon.AVKLAR_SONINGSFORRHOLD)
-        ) {
-            avbrytHvisFinnesOgIkkeTrengs(avklaringsbehovene, Definisjon.AVKLAR_SONINGSFORRHOLD)
-        }
-        if (avklaringsbehov.isNotEmpty()) {
-            return FantAvklaringsbehov(avklaringsbehov)
-        }
-
-        return Fullført
-    }
-
-
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
@@ -107,12 +62,17 @@ class EtAnnetStedSteg(
             tilbakestillGrunnlag = {
                 val vedtatteVurderinger = kontekst.forrigeBehandlingId
                     ?.let { institusjonsoppholdRepository.hentHvisEksisterer(it) }?.helseoppholdvurderinger
-                val aktiveVurderinger = institusjonsoppholdRepository.hentHvisEksisterer(kontekst.behandlingId)?.helseoppholdvurderinger?.vurderinger.orEmpty()
-                if (vedtatteVurderinger == null){
-                    institusjonsoppholdRepository.lagreHelseVurdering(kontekst.behandlingId,"Kelvin", listOf() )
+                val aktiveVurderinger =
+                    institusjonsoppholdRepository.hentHvisEksisterer(kontekst.behandlingId)?.helseoppholdvurderinger?.vurderinger.orEmpty()
+                if (vedtatteVurderinger == null) {
+                    institusjonsoppholdRepository.lagreHelseVurdering(kontekst.behandlingId, "Kelvin", listOf())
 
-                }else if (vedtatteVurderinger.vurderinger.toSet() != aktiveVurderinger.toSet()) {
-                    institusjonsoppholdRepository.lagreHelseVurdering(kontekst.behandlingId, vedtatteVurderinger.vurdertAv , vedtatteVurderinger.vurderinger)
+                } else if (vedtatteVurderinger.vurderinger.toSet() != aktiveVurderinger.toSet()) {
+                    institusjonsoppholdRepository.lagreHelseVurdering(
+                        kontekst.behandlingId,
+                        vedtatteVurderinger.vurdertAv,
+                        vedtatteVurderinger.vurderinger
+                    )
                 }
             },
             definisjon = Definisjon.AVKLAR_HELSEINSTITUSJON,
@@ -126,18 +86,23 @@ class EtAnnetStedSteg(
             avklaringsbehovene = avklaringsbehovene,
             behandlingRepository = behandlingRepository,
             vilkårsresultatRepository = vilkårsresultatRepository,
-            erTilstrekkeligVurdert = { erSoningsoppholdTilstrekkeligVurdert(kontekst = kontekst) },
+            erTilstrekkeligVurdert = { erSoningOppholdTilstrekkeligVurdert(kontekst = kontekst) },
             kontekst = kontekst,
             tilbakestillGrunnlag = {
 
                 val vedtatteVurderinger = kontekst.forrigeBehandlingId
                     ?.let { institusjonsoppholdRepository.hentHvisEksisterer(it) }?.soningsVurderinger
-                val aktiveVurderinger = institusjonsoppholdRepository.hentHvisEksisterer(kontekst.behandlingId)?.soningsVurderinger?.vurderinger.orEmpty()
-                if (vedtatteVurderinger == null){
-                    institusjonsoppholdRepository.lagreSoningsVurdering(kontekst.behandlingId,"Kelvin", listOf() )
+                val aktiveVurderinger =
+                    institusjonsoppholdRepository.hentHvisEksisterer(kontekst.behandlingId)?.soningsVurderinger?.vurderinger.orEmpty()
+                if (vedtatteVurderinger == null) {
+                    institusjonsoppholdRepository.lagreSoningsVurdering(kontekst.behandlingId, "Kelvin", listOf())
 
-                }else if (vedtatteVurderinger.vurderinger.toSet() != aktiveVurderinger.toSet()) {
-                  institusjonsoppholdRepository.lagreSoningsVurdering(kontekst.behandlingId, vedtatteVurderinger.vurdertAv , vedtatteVurderinger.vurderinger )
+                } else if (vedtatteVurderinger.vurderinger.toSet() != aktiveVurderinger.toSet()) {
+                    institusjonsoppholdRepository.lagreSoningsVurdering(
+                        kontekst.behandlingId,
+                        vedtatteVurderinger.vurdertAv,
+                        vedtatteVurderinger.vurderinger
+                    )
                 }
             },
             definisjon = Definisjon.AVKLAR_SONINGSFORRHOLD,
@@ -150,38 +115,17 @@ class EtAnnetStedSteg(
         return Fullført
     }
 
-    private fun erSoningsoppholdTilstrekkeligVurdert(kontekst: FlytKontekstMedPerioder): Boolean {
-        val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
-        val harBehovForAvklaringer = etAnnetStedUtlederService.utled(kontekst.behandlingId)
-
-        val uavklartePerioder = Tidslinje.zip2(tidligereVurderingsutfall, harBehovForAvklaringer.perioderTilVurdering)
-            .mapValue { (behandlingsutfall, denneBehandling) ->
-                when (behandlingsutfall) {
-                    null -> false
-                    TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
-                    TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
-                    TidligereVurderinger.Behandlingsutfall.UKJENT -> denneBehandling?.harUavklartSoningsopphold() == true
-                }
-            }
-            .filter { it.verdi }
-        return uavklartePerioder.isEmpty()
-    }
 
     private fun erHelseoppholdTilstrekkeligVurdert(kontekst: FlytKontekstMedPerioder): Boolean {
-        val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
         val harBehovForAvklaringer = etAnnetStedUtlederService.utled(kontekst.behandlingId)
+        return harBehovForAvklaringer.perioderTilVurdering.map { it.harUavklartHelseopphold() }.filter { it.verdi }
+            .isEmpty()
+    }
 
-        val uavklartePerioder = Tidslinje.zip2(tidligereVurderingsutfall, harBehovForAvklaringer.perioderTilVurdering)
-            .mapValue { (behandlingsutfall, denneBehandling) ->
-                when (behandlingsutfall) {
-                    null -> false
-                    TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
-                    TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
-                    TidligereVurderinger.Behandlingsutfall.UKJENT -> denneBehandling?.harUavklartHelseopphold() == true
-                }
-            }
-            .filter { it.verdi }
-        return uavklartePerioder.isEmpty()
+    private fun erSoningOppholdTilstrekkeligVurdert(kontekst: FlytKontekstMedPerioder): Boolean {
+        val harBehovForAvklaringer = etAnnetStedUtlederService.utled(kontekst.behandlingId)
+        return harBehovForAvklaringer.perioderTilVurdering.map { it.harUavklartSoningsopphold() }.filter { it.verdi }
+            .isEmpty()
     }
 
     private fun perioderMedVurderingsbehovHelse(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
@@ -198,7 +142,6 @@ class EtAnnetStedSteg(
                 }
             }
     }
-
 
 
     private fun perioderMedVurderingsbehovSoning(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
