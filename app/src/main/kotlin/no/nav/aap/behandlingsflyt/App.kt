@@ -115,6 +115,7 @@ import java.net.http.HttpResponse
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import java.util.logging.Level
 import java.util.logging.Logger
 import javax.sql.DataSource
@@ -326,25 +327,23 @@ private fun utførMigreringAvLovvalgOgMedlemskapVurderinger(
     gatewayProvider: GatewayProvider,
     log: io.ktor.util.logging.Logger
 ) {
-    val unleashGateway: UnleashGateway = gatewayProvider.provide()
-    val enabled = unleashGateway.isEnabled(BehandlingsflytFeature.LovvalgMedlemskapPeriodisertMigrering)
-    val isLeader = isLeader()
-    log.info("LovvalgMedlemskapPeriodisertMigrering = $enabled")
-    log.info("isLeader = $isLeader")
+    val scheduler = Executors.newScheduledThreadPool(1)
 
-    if (unleashGateway.isEnabled(BehandlingsflytFeature.LovvalgMedlemskapPeriodisertMigrering) && isLeader()) {
-        val executor = Executors.newVirtualThreadPerTaskExecutor()
-        CompletableFuture
-            .supplyAsync(withMdc {
-                dataSource.transaction { connection ->
-                    val repository = MedlemskapArbeidInntektRepositoryImpl(connection)
-                    repository.migrerManuelleVurderingerPeriodisert()
-                }
-            }, executor)
-    }
+    scheduler.schedule(Runnable {
+        val unleashGateway: UnleashGateway = gatewayProvider.provide()
+        val enabled = unleashGateway.isEnabled(BehandlingsflytFeature.LovvalgMedlemskapPeriodisertMigrering)
+        val isLeader = isLeader(log)
+        log.info("isLeader = $isLeader, LovvalgMedlemskapPeriodisertMigrering = $enabled")
+        if (enabled && isLeader) {
+            dataSource.transaction { connection ->
+                val repository = MedlemskapArbeidInntektRepositoryImpl(connection)
+                repository.migrerManuelleVurderingerPeriodisert()
+            }
+        }
+    }, 3, TimeUnit.MINUTES)
 }
 
-private fun isLeader(): Boolean {
+private fun isLeader(log: io.ktor.util.logging.Logger): Boolean {
     val electorUrl = requiredConfigForKey("elector.get.url")
     val client = HttpClient.newHttpClient()
     val response = client.send(
@@ -354,6 +353,7 @@ private fun isLeader(): Boolean {
     val json = ObjectMapper().readTree(response.body())
     val leaderHostname = json.get("name").asText()
     val hostname = InetAddress.getLocalHost().hostName
+    log.info("electorUrl=${electorUrl}, leaderHostname=$leaderHostname, hostname=$hostname")
     return hostname == leaderHostname
 }
 
