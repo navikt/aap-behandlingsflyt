@@ -1,14 +1,13 @@
 name: Bygg og deploy behandlingsflyt
 
 on:
-  schedule:
-    - cron: '0 12 * * SUN'
   push:
     branches: [ main ]
     paths-ignore:
-        - '.github/pr.yml'
-        - '*.md'
-        - 'docker-compose.yaml'
+      - '.github/pr.yml'
+      - '*.md'
+      - '.run/*'
+      - 'docker-compose.yaml'
   workflow_dispatch:
 
 jobs:
