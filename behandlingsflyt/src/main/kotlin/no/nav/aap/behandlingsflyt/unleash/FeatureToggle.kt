@@ -16,11 +16,12 @@ enum class BehandlingsflytFeature : FeatureToggle {
     Aktivitetsplikt11_9,
     OverforingsdatoNullForAvregning,
     NyeSykdomVilkar,
-    IverksettUtbetalingSomSelvstendigJobb,
     OvergangArbeid,
     AvklaringsbehovService,
+    AvklaringsbehovServiceFormkrav,
     LovvalgMedlemskapPeriodisertMigrering,
-    LovvalgMedlemskapPeriodisert
+    LovvalgMedlemskapPeriodisert,
+    KvalitetssikringsSteg
     ;
 
     override fun key(): String = name

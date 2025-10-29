@@ -89,7 +89,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
-import no.nav.aap.behandlingsflyt.utils.withMdc
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbmigrering.Migrering
@@ -113,8 +112,8 @@ import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.util.*
-import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 import java.util.logging.Level
 import java.util.logging.Logger
@@ -210,7 +209,7 @@ internal fun Application.server(
     val dataSource = initDatasource(dbConfig)
     Migrering.migrate(dataSource)
 
-    utførMigreringAvLovvalgOgMedlemskapVurderinger(dataSource, gatewayProvider, environment.log)
+    val scheduler = utførMigreringAvLovvalgOgMedlemskapVurderinger(dataSource, gatewayProvider, environment.log)
 
     val motor = startMotor(dataSource, repositoryRegistry, gatewayProvider)
 
@@ -230,8 +229,8 @@ internal fun Application.server(
     }
     monitor.subscribe(ApplicationStopped) { environment ->
         environment.log.info("ktor har fullført nedstoppingen sin. Eventuelle requester og annet arbeid som ikke ble fullført innen timeout ble avbrutt.")
-
         try {
+            scheduler.shutdownNow()
             // Helt til slutt, nå som vi har stanset Motor, etc. Lukk database-koblingen.
             dataSource.close()
         } catch (_: Exception) {
@@ -326,7 +325,7 @@ private fun utførMigreringAvLovvalgOgMedlemskapVurderinger(
     dataSource: HikariDataSource,
     gatewayProvider: GatewayProvider,
     log: io.ktor.util.logging.Logger
-) {
+): ScheduledExecutorService {
     val scheduler = Executors.newScheduledThreadPool(1)
 
     scheduler.schedule(Runnable {
@@ -340,7 +339,8 @@ private fun utførMigreringAvLovvalgOgMedlemskapVurderinger(
                 repository.migrerManuelleVurderingerPeriodisert()
             }
         }
-    }, 8, TimeUnit.MINUTES)
+    }, 9, TimeUnit.MINUTES)
+    return scheduler
 }
 
 private fun isLeader(log: io.ktor.util.logging.Logger): Boolean {
