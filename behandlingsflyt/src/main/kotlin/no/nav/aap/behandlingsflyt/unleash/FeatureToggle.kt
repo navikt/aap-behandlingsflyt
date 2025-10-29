@@ -20,7 +20,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     IverksettUtbetalingSomSelvstendigJobb,
     OvergangArbeid,
     AvklaringsbehovService,
-    LovvalgMedlemskapPeriodisertMigrering
+    LovvalgMedlemskapPeriodisertMigrering,
     EOSBeregning,
     ;
 

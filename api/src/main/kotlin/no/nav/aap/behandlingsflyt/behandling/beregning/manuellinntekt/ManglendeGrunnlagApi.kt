@@ -28,19 +28,20 @@ data class ManuellInntektVurderingGrunnlagResponse(
     val begrunnelse: String,
     val vurdertAv: VurdertAvResponse,
     val ar: Int,
-    val belop: BigDecimal,
+    val belop: BigDecimal? = null,
+    val gverdi: BigDecimal? = null,
 )
 
 /**
  * @param [ar] Året som det skal gjøres vurdering for. Er med i begge objektene fordi de teoretisk kan være forskjellige.
  */
 data class ManuellInntektGrunnlagResponse(
-    val ar: Int,
-    val gverdi: BigDecimal,
+    @Deprecated("Erstattes av vurderinger") val ar: Int,
+    @Deprecated("Erstattes av vurderinger") val gverdi: BigDecimal,
     @Deprecated("Erstattes av vurderinger") val vurdering: ManuellInntektVurderingGrunnlagResponse?,
     val historiskeVurderinger: List<ManuellInntektVurderingGrunnlagResponse>,
     val harTilgangTilÅSaksbehandle: Boolean,
-    val vurderinger: List<ManuellInntektVurderingGrunnlagResponse>? = null,
+    val vurderinger: List<ManuellInntektVurderingGrunnlagResponse> = emptyList()
 )
 
 private val log = LoggerFactory.getLogger("ManuellInntektGrunnlagApi")
@@ -54,120 +55,148 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(
 
     route("/api/behandling") {
         route("/{referanse}/grunnlag/beregning/manuellinntekt") {
-            // if (unleashGateway.isEnabled(BehandlingsflytFeature.EOSBeregning)) {
-            /* getGrunnlag<BehandlingReferanse, List<ManuellInntektGrunnlagResponse>>(
-                 behandlingPathParam = BehandlingPathParam("referanse"),
-                 avklaringsbehovKode = Definisjon.FASTSETT_MANUELL_INNTEKT.kode.toString()
-             ) { req ->
-                 val (manuellInntekt, år, historiskeVurderinger) = dataSource.transaction {
-                     val provider = repositoryRegistry.provider(it)
-                     val behandlingRepository = provider.provide<BehandlingRepository>()
-                     val beregningService = BeregningService(provider)
-                     val manuellInntektRepository = provider.provide<ManuellInntektGrunnlagRepository>()
-                     val behandling = behandlingRepository.hent(req.referanse.let(::BehandlingReferanse))
+            if (unleashGateway.isEnabled(BehandlingsflytFeature.EOSBeregning)) {
+                getGrunnlag<BehandlingReferanse, ManuellInntektGrunnlagResponse>(
+                    behandlingPathParam = BehandlingPathParam("referanse"),
+                    avklaringsbehovKode = Definisjon.FASTSETT_MANUELL_INNTEKT.kode.toString()
+                ) { req ->
+                    val (manuelleInntekter, år, historiskeVurderinger) = dataSource.transaction {
+                        val provider = repositoryRegistry.provider(it)
+                        val behandlingRepository = provider.provide<BehandlingRepository>()
+                        val beregningService = BeregningService(provider)
+                        val manuellInntektRepository = provider.provide<ManuellInntektGrunnlagRepository>()
+                        val behandling = behandlingRepository.hent(req.referanse.let(::BehandlingReferanse))
 
-                     val relevantPeriode = beregningService.utledRelevanteBeregningsÅr(behandling.id)
-                     val sisteÅr = relevantPeriode.max()
+                        val relevantPeriode = beregningService.utledRelevanteBeregningsÅr(behandling.id)
+                        val sisteÅr = relevantPeriode.max()
 
-                     val relevanteÅr = (0L..2L).map { år -> sisteÅr.minusYears(år) }.toSet()
+                        val relevanteÅr = (0L..2L).map { år -> sisteÅr.minusYears(år) }.toSet()
 
-                     val grunnlag = manuellInntektRepository.hentHvisEksisterer(behandling.id)
-                     val manuelleInntekter = grunnlag?.manuelleInntekter
+                        val grunnlag = manuellInntektRepository.hentHvisEksisterer(behandling.id)
+                        val manuelleInntekter = grunnlag?.manuelleInntekter
 
-                     val historiskeVurderinger =
-                         manuellInntektRepository.hentHistoriskeVurderinger(behandling.sakId, behandling.id)
+                        val historiskeVurderinger =
+                            manuellInntektRepository.hentHistoriskeVurderinger(behandling.sakId, behandling.id)
 
-                     Triple(manuelleInntekter, relevanteÅr, historiskeVurderinger)
-                 }
+                        val mappedManuelleInntekter = manuelleInntekter?.map { manuellInntekt ->
+                            // Gjennomsnittlig G-verdi første januar i året vi er interessert i
+                            val gVerdi = Grunnbeløp.tilTidslinjeGjennomsnitt().segment(
+                                Year.of(manuellInntekt.år.value).atMonthDay(
+                                    MonthDay.of(1, 1)
+                                )
+                            )!!.verdi
 
-                 // Gjennomsnittlig G-verdi første januar i året vi er interessert i
-                 val gVerdi = Grunnbeløp.tilTidslinjeGjennomsnitt().segment(
-                     Year.of(år.value).atMonthDay(
-                         MonthDay.of(1, 1)
-                     )
-                 )!!.verdi
-
-                 respond(
-                     ManuellInntektGrunnlagResponse(
-                         ar = år.value,
-                         gverdi = gVerdi.verdi,
-                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
-                         vurdering = manuellInntekt?.let {
-                             ManuellInntektVurderingGrunnlagResponse(
-                                 begrunnelse = it.begrunnelse,
-                                 vurdertAv = VurdertAvResponse(it.vurdertAv, it.opprettet.toLocalDate()),
-                                 ar = it.år.value,
-                                 belop = it.belop.verdi,
-                             )
-                         },
-                         historiskeVurderinger = historiskeVurderinger.map {
-                             ManuellInntektVurderingGrunnlagResponse(
-                                 begrunnelse = it.begrunnelse,
-                                 vurdertAv = VurdertAvResponse(it.vurdertAv, it.opprettet.toLocalDate()),
-                                 ar = it.år.value,
-                                 belop = it.belop.verdi,
-                             )
-                         }
-                     ))
-             }
-         } else {*/
-            // Gammel grunnlagsresponse
-            getGrunnlag<BehandlingReferanse, ManuellInntektGrunnlagResponse>(
-                behandlingPathParam = BehandlingPathParam("referanse"),
-                avklaringsbehovKode = Definisjon.FASTSETT_MANUELL_INNTEKT.kode.toString()
-            ) { req ->
-                val (manuellInntekt, år, historiskeVurderinger) = dataSource.transaction {
-                    val provider = repositoryRegistry.provider(it)
-                    val behandlingRepository = provider.provide<BehandlingRepository>()
-                    val beregningService = BeregningService(provider)
-                    val manuellInntektRepository = provider.provide<ManuellInntektGrunnlagRepository>()
-
-                    val behandling = behandlingRepository.hent(req.referanse.let(::BehandlingReferanse))
-                    val relevanteÅr = beregningService.utledRelevanteBeregningsÅr(behandling.id)
-
-                    val grunnlag = manuellInntektRepository.hentHvisEksisterer(behandling.id)
-                    val manuellInntekter = grunnlag?.manuelleInntekter
-
-                    if (manuellInntekter != null && manuellInntekter.size > 1) {
-                        log.warn("Fant flere manuelle inntekter for behandling ${behandling.id}. Per nå gjør vi antakelse om kun én.")
-                    }
-
-                    val historiskeVurderinger =
-                        manuellInntektRepository.hentHistoriskeVurderinger(behandling.sakId, behandling.id)
-
-                    Triple(manuellInntekter?.firstOrNull(), relevanteÅr.max(), historiskeVurderinger)
-                }
-
-                // Gjennomsnittlig G-verdi første januar i året vi er interessert i
-                val gVerdi = Grunnbeløp.tilTidslinjeGjennomsnitt().segment(
-                    Year.of(år.value).atMonthDay(
-                        MonthDay.of(1, 1)
-                    )
-                )!!.verdi
-
-                respond(
-                    ManuellInntektGrunnlagResponse(
-                        ar = år.value,
-                        gverdi = gVerdi.verdi,
-                        harTilgangTilÅSaksbehandle = kanSaksbehandle(),
-                        vurdering = manuellInntekt?.let {
                             ManuellInntektVurderingGrunnlagResponse(
-                                begrunnelse = it.begrunnelse,
-                                vurdertAv = VurdertAvResponse(it.vurdertAv, it.opprettet.toLocalDate()),
-                                ar = it.år.value,
-                                belop = it.belop.verdi,
-                            )
-                        },
-                        historiskeVurderinger = historiskeVurderinger.map {
-                            ManuellInntektVurderingGrunnlagResponse(
-                                begrunnelse = it.begrunnelse,
-                                vurdertAv = VurdertAvResponse(it.vurdertAv, it.opprettet.toLocalDate()),
-                                ar = it.år.value,
-                                belop = it.belop.verdi,
+                                begrunnelse = manuellInntekt.begrunnelse,
+                                vurdertAv = VurdertAvResponse(
+                                    manuellInntekt.vurdertAv,
+                                    manuellInntekt.opprettet.toLocalDate()
+                                ),
+                                ar = manuellInntekt.år.value,
+                                belop = manuellInntekt.belop.verdi,
+                                gverdi = gVerdi.verdi,
                             )
                         }
+
+                        val mappedHistoriskeVurderinger = historiskeVurderinger.map { historiskManuellInntekt ->
+                            // Gjennomsnittlig G-verdi første januar i året vi er interessert i
+                            val gVerdi = Grunnbeløp.tilTidslinjeGjennomsnitt().segment(
+                                Year.of(historiskManuellInntekt.år.value).atMonthDay(
+                                    MonthDay.of(1, 1)
+                                )
+                            )!!.verdi
+
+                            ManuellInntektVurderingGrunnlagResponse(
+                                begrunnelse = historiskManuellInntekt.begrunnelse,
+                                vurdertAv = VurdertAvResponse(
+                                    historiskManuellInntekt.vurdertAv,
+                                    historiskManuellInntekt.opprettet.toLocalDate()
+                                ),
+                                ar = historiskManuellInntekt.år.value,
+                                belop = historiskManuellInntekt.belop.verdi,
+                                gverdi = gVerdi.verdi,
+                            )
+                        }
+
+                        Triple(mappedManuelleInntekter, relevanteÅr, mappedHistoriskeVurderinger)
+                    }
+
+                    val gammelGVerdi = Grunnbeløp.tilTidslinjeGjennomsnitt().segment(
+                        Year.of(år.max().value).atMonthDay(
+                            MonthDay.of(1, 1)
+                        )
+                    )!!.verdi
+
+                    respond(
+                        ManuellInntektGrunnlagResponse(
+                            ar = år.max().value, // deprecates
+                            gverdi = gammelGVerdi.verdi, // deprecates
+                            harTilgangTilÅSaksbehandle = kanSaksbehandle(),
+                            vurdering = manuelleInntekter?.first(), // deprecates
+                            vurderinger = manuelleInntekter ?: emptyList(),
+                            historiskeVurderinger = historiskeVurderinger
+                        )
                     )
-                )
+                }
+            } else {
+                // Gammel grunnlagsresponse
+                getGrunnlag<BehandlingReferanse, ManuellInntektGrunnlagResponse>(
+                    behandlingPathParam = BehandlingPathParam("referanse"),
+                    avklaringsbehovKode = Definisjon.FASTSETT_MANUELL_INNTEKT.kode.toString()
+                ) { req ->
+                    val (manuellInntekt, år, historiskeVurderinger) = dataSource.transaction {
+                        val provider = repositoryRegistry.provider(it)
+                        val behandlingRepository = provider.provide<BehandlingRepository>()
+                        val beregningService = BeregningService(provider)
+                        val manuellInntektRepository = provider.provide<ManuellInntektGrunnlagRepository>()
+
+                        val behandling = behandlingRepository.hent(req.referanse.let(::BehandlingReferanse))
+                        val relevanteÅr = beregningService.utledRelevanteBeregningsÅr(behandling.id)
+
+                        val grunnlag = manuellInntektRepository.hentHvisEksisterer(behandling.id)
+                        val manuellInntekter = grunnlag?.manuelleInntekter
+
+                        if (manuellInntekter != null && manuellInntekter.size > 1) {
+                            log.warn("Fant flere manuelle inntekter for behandling ${behandling.id}. Per nå gjør vi antakelse om kun én.")
+                        }
+
+                        val historiskeVurderinger =
+                            manuellInntektRepository.hentHistoriskeVurderinger(behandling.sakId, behandling.id)
+
+                        Triple(manuellInntekter?.firstOrNull(), relevanteÅr.max(), historiskeVurderinger)
+                    }
+
+                    // Gjennomsnittlig G-verdi første januar i året vi er interessert i
+                    val gVerdi = Grunnbeløp.tilTidslinjeGjennomsnitt().segment(
+                        Year.of(år.value).atMonthDay(
+                            MonthDay.of(1, 1)
+                        )
+                    )!!.verdi
+
+                    respond(
+                        ManuellInntektGrunnlagResponse(
+                            ar = år.value,
+                            gverdi = gVerdi.verdi,
+                            harTilgangTilÅSaksbehandle = kanSaksbehandle(),
+                            vurdering = manuellInntekt?.let {
+                                ManuellInntektVurderingGrunnlagResponse(
+                                    begrunnelse = it.begrunnelse,
+                                    vurdertAv = VurdertAvResponse(it.vurdertAv, it.opprettet.toLocalDate()),
+                                    ar = it.år.value,
+                                    belop = it.belop.verdi,
+                                )
+                            },
+                            historiskeVurderinger = historiskeVurderinger.map {
+                                ManuellInntektVurderingGrunnlagResponse(
+                                    begrunnelse = it.begrunnelse,
+                                    vurdertAv = VurdertAvResponse(it.vurdertAv, it.opprettet.toLocalDate()),
+                                    ar = it.år.value,
+                                    belop = it.belop.verdi,
+                                )
+                            }
+                        )
+                    )
+                }
             }
         }
     }

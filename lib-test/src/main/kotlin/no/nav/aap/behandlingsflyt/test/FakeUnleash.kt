@@ -14,7 +14,6 @@ open class FakeUnleashBase(
     override fun isEnabled(featureToggle: FeatureToggle, ident: String) = isEnabled(featureToggle)
 }
 
-
 object FakeUnleash : FakeUnleashBase(
     mapOf(
         BehandlingsflytFeature.IngenValidering to false,
@@ -24,5 +23,6 @@ object FakeUnleash : FakeUnleashBase(
         BehandlingsflytFeature.OverforingsdatoNullForAvregning to true,
         BehandlingsflytFeature.IverksettUtbetalingSomSelvstendigJobb to true,
         BehandlingsflytFeature.OvergangArbeid to false,
+        BehandlingsflytFeature.EOSBeregning to true
     )
 )

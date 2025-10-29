@@ -32,20 +32,20 @@ class AvklarManuellInntektVurderingLøser(
         val relevantePeriode = beregningService.utledRelevanteBeregningsÅr(kontekst.behandlingId())
         val sisteRelevanteÅr = relevantePeriode.max()
 
-        if (løsning.manuellVurderingForManglendeInntekt.vurderinger?.any { it.belop < BigDecimal.ZERO } == true) {
+        if (løsning.manuellVurderingForManglendeInntekt.vurderinger.any { it.belop < BigDecimal.ZERO }) {
             throw UgyldigForespørselException("Inntekt kan ikke være negativ")
         }
 
         val vurderinger = if (unleashGateway.isEnabled(BehandlingsflytFeature.EOSBeregning)) {
             val begrunnelse = løsning.manuellVurderingForManglendeInntekt.begrunnelse
-            løsning.manuellVurderingForManglendeInntekt.vurderinger?.map { vurdering ->
+            løsning.manuellVurderingForManglendeInntekt.vurderinger.map { vurdering ->
                 ManuellInntektVurdering(
                     begrunnelse = begrunnelse,
                     belop = vurdering.belop.let(::Beløp),
                     vurdertAv = kontekst.bruker.ident,
-                    år = vurdering.år
+                    år = vurdering.ar
                 )
-            }?.toSet()!!
+            }.toSet()
         } else {
             setOf(
                 ManuellInntektVurdering(

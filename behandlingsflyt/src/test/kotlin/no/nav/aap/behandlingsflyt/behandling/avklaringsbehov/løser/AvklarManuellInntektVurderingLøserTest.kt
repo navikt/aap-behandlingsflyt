@@ -11,13 +11,13 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.math.BigDecimal
 import java.time.Year
-
 
 class AvklarManuellInntektVurderingLøserTest {
     @Test
@@ -29,7 +29,8 @@ class AvklarManuellInntektVurderingLøserTest {
 
         val løser = AvklarManuellInntektVurderingLøser(
             manuellInntektGrunnlagRepository = manuellInntektGrunnlagRepository,
-            beregningService = beregningService
+            beregningService = beregningService,
+            unleashGateway = FakeUnleash
         )
 
 
@@ -48,10 +49,15 @@ class AvklarManuellInntektVurderingLøserTest {
                 AvklarManuellInntektVurderingLøsning(
                     manuellVurderingForManglendeInntekt = ManuellInntektVurderingDto(
                         begrunnelse = "Mangler ligning",
-                        belop = BigDecimal(-1),
+                        belop = BigDecimal(-1)
                     )
                 )
             )
         }
+    }
+
+    @Test
+    fun `kan sende inn flere vurderinger samtidig`() {
+
     }
 }
