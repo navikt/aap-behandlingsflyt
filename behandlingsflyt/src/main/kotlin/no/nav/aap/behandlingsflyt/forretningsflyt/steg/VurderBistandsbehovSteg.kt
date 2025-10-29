@@ -63,12 +63,28 @@ class VurderBistandsbehovSteg private constructor(
                     ?.let { bistandRepository.hentHvisEksisterer(it) }
                     ?.vurderinger
                     .orEmpty()
+
                 val nåværendeVurderinger = bistandRepository.hentHvisEksisterer(kontekst.behandlingId)
                     ?.vurderinger
                     .orEmpty()
 
                 if (forrigeVurderinger.toSet() != nåværendeVurderinger.toSet()) {
                     bistandRepository.lagre(kontekst.behandlingId, forrigeVurderinger)
+                }
+
+                val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
+                val nyttVilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
+
+                val forrigeVilkårTidslinje = kontekst.forrigeBehandlingId?.let { vilkårsresultatRepository.hent(it) }
+                    ?.optionalVilkår(Vilkårtype.BISTANDSVILKÅRET)
+                    ?.tidslinje()
+                    ?: Tidslinje.empty()
+
+                if (nyttVilkår.tidslinje() != forrigeVilkårTidslinje) {
+                    nyttVilkår.nullstillTidslinje()
+                        .leggTilVurderinger(forrigeVilkårTidslinje)
+
+                    vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
                 }
             },
             kontekst
