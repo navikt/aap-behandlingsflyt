@@ -43,17 +43,17 @@ class MeldingOmVedtakBrevSteg private constructor(
         if (trekkKlageService.klageErTrukket(kontekst.behandlingId)) {
             return Fullført
         }
-        val brevBehov = brevUtlederService.utledBehovForMeldingOmVedtak(kontekst.behandlingId)
-        val behøverVedtaksbrev = brevBehov != null && !brevbestillingService.harBestillingOmVedtak(kontekst.behandlingId)
         avklaringsbehovService.oppdaterAvklaringsbehov(
             avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId),
             Definisjon.SKRIV_VEDTAKSBREV,
-            vedtakBehøverVurdering = { behøverVedtaksbrev },
-            erTilstrekkeligVurdert = { true },
+            vedtakBehøverVurdering = { true },
+            erTilstrekkeligVurdert = { brevbestillingService.harBestillingOmVedtak(kontekst.behandlingId) },
             tilbakestillGrunnlag = {},
             kontekst
         )
-        if (behøverVedtaksbrev) {
+        // TODO: Lag unittest for utfør, sjekk hva oppdaterAvklaringbehov gjør hvis brevBehov = false ++ alle andre varianter av funksjonen
+        val brevBehov = brevUtlederService.utledBehovForMeldingOmVedtak(kontekst.behandlingId)
+        if (brevBehov != null && !brevbestillingService.harBestillingOmVedtak(kontekst.behandlingId)) {
             bestillBrev(kontekst, brevBehov)
         }
         return Fullført
