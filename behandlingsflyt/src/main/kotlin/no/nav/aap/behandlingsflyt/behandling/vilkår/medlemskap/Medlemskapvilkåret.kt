@@ -34,33 +34,29 @@ class Medlemskapvilkåret(
 
             val vilkårsvurderinger = gjeldendeVurderinger
                 .map { vurdering ->
-                    when {
-                        vurdering.annetLandMedAvtaleIEØS() -> {
-                            Vilkårsvurdering(
-                                utfall = Utfall.IKKE_OPPFYLT,
-                                avslagsårsak = Avslagsårsak.NORGE_IKKE_KOMPETENT_STAT,
-                                begrunnelse = null,
-                                faktagrunnlag = grunnlag,
-                                manuellVurdering = true
-                            )
-                        }
-                        !vurdering.medlemIFolketrygd() -> {
-                            Vilkårsvurdering(
-                                utfall = Utfall.IKKE_OPPFYLT,
-                                avslagsårsak = Avslagsårsak.IKKE_MEDLEM,
-                                begrunnelse = null,
-                                faktagrunnlag = grunnlag,
-                                manuellVurdering = true
-                            )
-                        }
-                        else -> {
-                            Vilkårsvurdering(
-                                utfall = Utfall.OPPFYLT,
-                                begrunnelse = null,
-                                faktagrunnlag = grunnlag,
-                                manuellVurdering = true
-                            )
-                        }
+                    if (vurdering.lovvalgsLandErAnnetLandMedAvtaleIEØS()) {
+                        Vilkårsvurdering(
+                            utfall = Utfall.IKKE_OPPFYLT,
+                            avslagsårsak = Avslagsårsak.NORGE_IKKE_KOMPETENT_STAT,
+                            begrunnelse = null,
+                            faktagrunnlag = grunnlag,
+                            manuellVurdering = true
+                        )
+                    } else if (!vurdering.medlemIFolketrygd()) {
+                        Vilkårsvurdering(
+                            utfall = Utfall.IKKE_OPPFYLT,
+                            avslagsårsak = Avslagsårsak.IKKE_MEDLEM,
+                            begrunnelse = null,
+                            faktagrunnlag = grunnlag,
+                            manuellVurdering = true
+                        )
+                    } else {
+                        Vilkårsvurdering(
+                            utfall = Utfall.OPPFYLT,
+                            begrunnelse = null,
+                            faktagrunnlag = grunnlag,
+                            manuellVurdering = true
+                        )
                     }
                 }
                 .komprimer()
