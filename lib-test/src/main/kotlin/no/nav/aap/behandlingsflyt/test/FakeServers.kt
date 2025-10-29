@@ -1745,13 +1745,18 @@ object FakeServers : AutoCloseable {
                 val trekkRespons = TrekkResponsDto(
                     listOf(
                         TrekkDto(
-                            saksnummer, UUID.randomUUID(), LocalDate.now(), 1234, listOf(
+                            saksnummer = saksnummer,
+                            behandlingsreferanse = UUID.randomUUID(),
+                            dato = LocalDate.now(),
+                            beløp = 1234,
+                            aktiv = true,
+                            posteringer = listOf(
                                 TrekkPosteringDto(LocalDate.now(), 400),
                                 TrekkPosteringDto(LocalDate.now().plusDays(1), 834)
-                            )
+                            ),
                         ),
                         TrekkDto(
-                            saksnummer, UUID.randomUUID(), LocalDate.now().minusDays(1), 200, emptyList()
+                            saksnummer, UUID.randomUUID(), LocalDate.now().minusDays(1), 200, false, emptyList()
                         )
                     )
                 )
@@ -1807,13 +1812,13 @@ object FakeServers : AutoCloseable {
             post("/graphql") {
 
                 val requestBody = call.receiveText()
-                val data = if(requestBody.contains("ressurser")){
-                   NomRessurserVisningsnavn(
-                           ressurser = listOf(
-                               NomRessursResponse(NomRessursVisningsnavn("ABC1245", "Sak Behandlersen")),
-                               NomRessursResponse(NomRessursVisningsnavn("DEFG123", "Annen Testesen")),
-                           )
-                       )
+                val data = if (requestBody.contains("ressurser")) {
+                    NomRessurserVisningsnavn(
+                        ressurser = listOf(
+                            NomRessursResponse(NomRessursVisningsnavn("ABC1245", "Sak Behandlersen")),
+                            NomRessursResponse(NomRessursVisningsnavn("DEFG123", "Annen Testesen")),
+                        )
+                    )
                 } else {
                     NomData(
                         NomDataRessurs(
