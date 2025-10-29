@@ -22,7 +22,7 @@ object FakeUnleash : FakeUnleashBase(
         BehandlingsflytFeature.NyBrevtype11_18 to true,
         BehandlingsflytFeature.Aktivitetsplikt11_9 to true,
         BehandlingsflytFeature.OverforingsdatoNullForAvregning to true,
-        BehandlingsflytFeature.IverksettUtbetalingSomSelvstendigJobb to true,
         BehandlingsflytFeature.OvergangArbeid to false,
+        BehandlingsflytFeature.AvklaringsbehovServiceFormkrav to true,
     )
 )

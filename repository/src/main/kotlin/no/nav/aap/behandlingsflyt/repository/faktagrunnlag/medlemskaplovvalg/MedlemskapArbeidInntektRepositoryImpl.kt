@@ -672,6 +672,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                     JOIN behandling b ON g.behandling_id = b.id
                     JOIN sak s ON b.sak_id = s.id
                 WHERE g.manuell_vurdering_id IS NOT NULL 
+                AND g.vurderinger_id IS NULL
             """.trimIndent()
 
             return connection.queryList(kandidaterQuery) {

@@ -30,8 +30,8 @@
       <env name="INTEGRASJON_TILGANG_URL" value="https://aap-tilgang.intern.dev.nav.no" />
       <env name="INTEGRASJON_TILGANG_SCOPE" value="api://dev-gcp.aap.tilgang/.default" />
       <env name="INTEGRASJON_TILGANG_AZP" value="0612f13d-08fb-44ff-a5ac-1233e2fec0fc" />
-      <env name="INTEGRASJON_MEDL_URL" value="https://medlemskap-medl-api.dev-fss-pub.nais.io/api/v1/medlemskapsunntak" />
-      <env name="INTEGRASJON_MEDL_SCOPE" value="api://dev-fss.team-rocket.medlemskap-medl-api/.default" />
+      <env name="INTEGRASJON_MEDL_URL" value="https://medlemskap-medl-api.intern.dev.nav.no/rest/v1/periode/soek" />
+      <env name="INTEGRASJON_MEDL_SCOPE" value="api://dev-gcp.team-rocket.medlemskap-medl-api/.default" />
       <env name="INTEGRASJON_POSTMOTTAK_AZP" value="68642ce3-a231-4c82-b106-7a2f4ed899bc" />
       <env name="INTEGRASJON_FORELDREPENGER_URL" value="https://fpabakus.dev-fss-pub.nais.io/fpabakus/ekstern/api/ytelse/v1" />
       <env name="INTEGRASJON_FORELDREPENGER_SCOPE" value="api://dev-fss.teamforeldrepenger.fpabakus/.default" />

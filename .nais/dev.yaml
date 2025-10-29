@@ -40,7 +40,9 @@ spec:
           - name: cloudsql.enable_pgaudit
             value: "true"
           - name: pgaudit.log
-            value: "all"
+            value: "write,ddl,role"
+          - name: "pgaudit.log_parameter"
+            value: "on"
   terminationGracePeriodSeconds: 30
   liveness:
     path: /actuator/live
