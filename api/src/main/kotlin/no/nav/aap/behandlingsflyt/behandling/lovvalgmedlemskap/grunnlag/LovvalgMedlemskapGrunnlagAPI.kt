@@ -83,13 +83,18 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagAPI(
                         val nyeVurderinger = grunnlag?.vurderinger?.filter { it.vurdertIBehandling == behandling.id }
                         val gjeldendeVedtatteVurderinger = grunnlag?.vurderinger?.filter { it.vurdertIBehandling != behandling.id }?.tilTidslinje() ?: Tidslinje()
 
-                        val kanVurderes = if (gjeldendeVedtatteVurderinger.isEmpty()) sak.rettighetsperiode else gjeldendeVedtatteVurderinger.helePerioden()
-                        val perioderSomTrengerVurdering = if (gjeldendeVedtatteVurderinger.isEmpty()) listOf(sak.rettighetsperiode) else sak.rettighetsperiode.minus(gjeldendeVedtatteVurderinger.helePerioden())
+                        val kanVurderes =
+                            if (gjeldendeVedtatteVurderinger.isEmpty()) sak.rettighetsperiode
+                            else gjeldendeVedtatteVurderinger.helePerioden()
+
+                        val behøverVurderinger =
+                            if (gjeldendeVedtatteVurderinger.isEmpty()) listOf(sak.rettighetsperiode)
+                            else sak.rettighetsperiode.minus(gjeldendeVedtatteVurderinger.helePerioden())
 
                         PeriodisertLovvalgMedlemskapGrunnlagResponse(
                             harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                             overstyrt = (nyeVurderinger)?.any { it.overstyrt } ?: false,
-                            behøverVurderinger = perioderSomTrengerVurdering.toList(),
+                            behøverVurderinger = behøverVurderinger.toList(),
                             kanVurderes = listOf(kanVurderes),
                             nyeVurderinger = nyeVurderinger?.map { it.toResponse(vurdertAvService) } ?: emptyList(),
                             sisteVedtatteVurderinger = gjeldendeVedtatteVurderinger

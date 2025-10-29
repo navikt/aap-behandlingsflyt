@@ -30,10 +30,9 @@ class Medlemskapvilkåret(
         val brukManuellVurderingForLovvalgMedlemskap = grunnlag.medlemskapArbeidInntektGrunnlag?.vurderinger?.isNotEmpty() ?: false
 
         if (brukManuellVurderingForLovvalgMedlemskap) {
-            // Ved manuell vurdering så må hele perioden være vurdert manuelt
             val gjeldendeVurderinger = grunnlag.medlemskapArbeidInntektGrunnlag.gjeldendeVurderinger(maksDato = rettighetsPeriode.tom)
+
             val vilkårsvurderinger = gjeldendeVurderinger
-                // TODO må man ta inn rettighetsperiode-tidslinjen her?
                 .map { vurdering ->
                     when {
                         vurdering.annetLandMedAvtaleIEØS() -> {

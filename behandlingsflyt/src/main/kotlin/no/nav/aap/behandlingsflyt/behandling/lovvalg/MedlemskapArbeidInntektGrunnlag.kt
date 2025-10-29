@@ -5,10 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidVurdering
 import no.nav.aap.behandlingsflyt.utils.Validation
-import no.nav.aap.komponenter.tidslinje.Segment
-import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -32,12 +29,7 @@ data class MedlemskapArbeidInntektGrunnlag(
     val vurderinger: List<ManuellVurderingForLovvalgMedlemskap> = emptyList()
 ) {
     fun gjeldendeVurderinger(maksDato: LocalDate = Tid.MAKS): Tidslinje<ManuellVurderingForLovvalgMedlemskap> {
-        return vurderinger
-            .groupBy { it.vurdertIBehandling }
-            .values
-            .sortedBy { it[0].vurdertDato }
-            .flatMap { it.sortedBy { it.fom } }
-            .somTidslinje { Periode(it.fom!!, it.tom ?: maksDato) }
+        return vurderinger.tilTidslinje(maksDato)
     }
 }
 
@@ -72,22 +64,12 @@ enum class InntektTyper {
     FERIEPENGERSYKEPENGERTILFISKERSOMBAREHARHYRE,
 }
 
-fun Collection<ManuellVurderingForLovvalgMedlemskap>.tilTidslinje(): Tidslinje<ManuellVurderingForLovvalgMedlemskap> =
-    sortedBy { it.vurdertDato }
-        .groupBy { it.vurdertIBehandling }
-        .map {
-            val vurderingerForBehandling = it.value.sortedBy { vurdering -> vurdering.fom }
-            Tidslinje(
-                vurderingerForBehandling.map { periode ->
-                    Segment(
-                        // TODO etter eksisterende data er migrert, vil ikke lenger fom være nullable
-                        periode = Periode(fom = periode.fom!!, tom = periode.tom ?: LocalDate.MAX),
-                        verdi = periode
-                    )
-                }
-            )
-        }
-        .fold(Tidslinje()) { acc, other -> acc.kombiner(other, StandardSammenslåere.prioriterHøyreSideCrossJoin()) }
+fun List<ManuellVurderingForLovvalgMedlemskap>.tilTidslinje(maksDato: LocalDate = Tid.MAKS): Tidslinje<ManuellVurderingForLovvalgMedlemskap> =
+    groupBy { it.vurdertIBehandling }
+        .values
+        .sortedBy { it[0].vurdertDato }
+        .flatMap { it.sortedBy { it.fom } }
+        .somTidslinje { Periode(it.fom!!, it.tom ?: maksDato) }
 
 fun Tidslinje<ManuellVurderingForLovvalgMedlemskap>.validerGyldigForRettighetsperiode(rettighetsperiode: Periode): Validation<Tidslinje<ManuellVurderingForLovvalgMedlemskap>> {
     val periodeForVurdering = helePerioden()

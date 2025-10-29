@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.LøsningForPeriode
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
 import no.nav.aap.behandlingsflyt.behandling.vilkår.overganguføre.OvergangUføreVilkår.UføreSøknadVedtak
@@ -43,7 +44,21 @@ data class PeriodisertManuellVurderingForLovvalgMedlemskapDto(
     override val begrunnelse: String,
     val lovvalg: LovvalgVedSøknadsTidspunktDto,
     val medlemskap: MedlemskapVedSøknadsTidspunktDto?,
-) : LøsningForPeriode
+) : LøsningForPeriode {
+    fun toManuellVurderingForLovvalgMedlemskap(
+        kontekst: AvklaringsbehovKontekst,
+        overstyrt : Boolean,
+    ): ManuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskap(
+        fom = fom,
+        tom = tom,
+        vurdertIBehandling = kontekst.behandlingId(),
+        lovvalgVedSøknadsTidspunkt = lovvalg,
+        medlemskapVedSøknadsTidspunkt = medlemskap,
+        vurdertAv = kontekst.bruker.ident,
+        vurdertDato = LocalDateTime.now(),
+        overstyrt = overstyrt
+    )
+}
 
 class HistoriskManuellVurderingForLovvalgMedlemskap(
     vurdertDato: LocalDate,

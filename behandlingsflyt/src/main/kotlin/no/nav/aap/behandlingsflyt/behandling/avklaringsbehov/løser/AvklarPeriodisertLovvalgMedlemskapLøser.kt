@@ -2,21 +2,15 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeriodisertLovvalgMedlemskapLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.PeriodisertAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.tilTidslinje
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.validerGyldigForRettighetsperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForLovvalgMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.lookup.repository.RepositoryProvider
-import java.time.LocalDateTime
 
 class AvklarPeriodisertLovvalgMedlemskapLøser(
     private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
@@ -33,27 +27,13 @@ class AvklarPeriodisertLovvalgMedlemskapLøser(
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarPeriodisertLovvalgMedlemskapLøsning): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
         val sak = sakRepository.hent(behandling.sakId)
-        val nyeVurderinger = løsning.løsningerForPerioder.map {
-            ManuellVurderingForLovvalgMedlemskap(
-                fom = it.fom,
-                tom = it.tom,
-                vurdertIBehandling = behandling.id,
-                lovvalgVedSøknadsTidspunkt = it.lovvalg,
-                medlemskapVedSøknadsTidspunkt = it.medlemskap,
-                vurdertAv = kontekst.bruker.ident,
-                vurdertDato = LocalDateTime.now(),
-                overstyrt = false
-            )
-        }
 
-        val tidligereVurderinger =
-            kontekst.kontekst.forrigeBehandlingId?.let { medlemskapArbeidInntektRepository.hentHvisEksisterer(it) }?.vurderinger
-                ?: emptyList()
-        val komplettTidslinje = tidligereVurderinger.tilTidslinje()
-            .kombiner(nyeVurderinger.tilTidslinje(), StandardSammenslåere.prioriterHøyreSideCrossJoin())
+        val nyeVurderinger = løsning.løsningerForPerioder.map { it.toManuellVurderingForLovvalgMedlemskap(kontekst, overstyrt = false) }
+        val tidligereVurderinger = kontekst.kontekst.forrigeBehandlingId?.let { medlemskapArbeidInntektRepository.hentHvisEksisterer(it) }?.vurderinger ?: emptyList()
         val vurderinger = tidligereVurderinger + nyeVurderinger
 
-        // Krever manuelle vurderinger for hele perioden
+        val komplettTidslinje = tidligereVurderinger.tilTidslinje().kombiner(nyeVurderinger.tilTidslinje(), StandardSammenslåere.prioriterHøyreSideCrossJoin())
+
         komplettTidslinje.validerGyldigForRettighetsperiode(sak.rettighetsperiode)
             .throwOnInvalid { UgyldigForespørselException("Løsningen for vurdert lovvalg og medlemskap er ikke gyldig: ${it.errorMessage}") }
             .onValid {
