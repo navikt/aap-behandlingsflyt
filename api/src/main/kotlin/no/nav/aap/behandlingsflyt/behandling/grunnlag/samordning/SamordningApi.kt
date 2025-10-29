@@ -333,7 +333,6 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                         Pair(vurdering, historiskeVurderinger)
                     }
 
-
                 val navnOgEnhet = samordningAndreStatligeYtelserVurdering?.let {
                     ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv)
                 }
@@ -362,7 +361,6 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                                     )
                                 }
                         )
-
                     }
                 }
 
