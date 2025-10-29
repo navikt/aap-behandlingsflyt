@@ -80,7 +80,7 @@ class FatteVedtakSteg(
             }
         }
 
-        return  avklaringsbehovene.harAvklaringsbehovSomKreverToTrinnMenIkkeErVurdert()
+        return  avklaringsbehovene.harAvklaringsbehovSomKreverToTrinn()
     }
 
 
