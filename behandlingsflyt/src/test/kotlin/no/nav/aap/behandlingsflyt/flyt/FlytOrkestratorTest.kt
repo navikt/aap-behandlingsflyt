@@ -1789,14 +1789,14 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                         fom = sak.rettighetsperiode.fom,
                         tom = sak.rettighetsperiode.fom.plusMonths(2),
                         begrunnelse = "",
-                        lovvalg = LovvalgVedSøknadsTidspunktDto("", EØSLand.NOR),
+                        lovvalg = LovvalgVedSøknadsTidspunktDto("", EØSLandEllerLandMedAvtale.NOR),
                         medlemskap = MedlemskapVedSøknadsTidspunktDto("", false)
                     ),
                     PeriodisertManuellVurderingForLovvalgMedlemskapDto(
                         fom = sak.rettighetsperiode.fom.plusMonths(2).plusDays(1),
                         tom = null,
                         begrunnelse = "",
-                        lovvalg = LovvalgVedSøknadsTidspunktDto("", EØSLand.NOR),
+                        lovvalg = LovvalgVedSøknadsTidspunktDto("", EØSLandEllerLandMedAvtale.NOR),
                         medlemskap = MedlemskapVedSøknadsTidspunktDto("", true)
                     )
                 )
@@ -1831,14 +1831,14 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                         fom = sak.rettighetsperiode.fom,
                         tom = sak.rettighetsperiode.fom.plusMonths(2),
                         begrunnelse = "",
-                        lovvalg = LovvalgVedSøknadsTidspunktDto("", EØSLand.NOR),
+                        lovvalg = LovvalgVedSøknadsTidspunktDto("", EØSLandEllerLandMedAvtale.NOR),
                         medlemskap = MedlemskapVedSøknadsTidspunktDto("", false)
                     ),
                     PeriodisertManuellVurderingForLovvalgMedlemskapDto(
                         fom = sak.rettighetsperiode.fom.plusMonths(2).plusDays(1),
                         tom = null,
                         begrunnelse = "",
-                        lovvalg = LovvalgVedSøknadsTidspunktDto("", EØSLand.NOR),
+                        lovvalg = LovvalgVedSøknadsTidspunktDto("", EØSLandEllerLandMedAvtale.NOR),
                         medlemskap = MedlemskapVedSøknadsTidspunktDto("", true)
                     )
                 )
@@ -1867,7 +1867,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                         fom = sak.rettighetsperiode.fom.plusMonths(1).plusDays(1),
                         tom = null,
                         begrunnelse = "",
-                        lovvalg = LovvalgVedSøknadsTidspunktDto("", EØSLand.NOR),
+                        lovvalg = LovvalgVedSøknadsTidspunktDto("", EØSLandEllerLandMedAvtale.NOR),
                         medlemskap = MedlemskapVedSøknadsTidspunktDto("", true)
                     )
                 )

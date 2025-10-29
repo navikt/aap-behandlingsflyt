@@ -1192,7 +1192,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                         fom = gjelderFra,
                         tom = null,
                         begrunnelse = "",
-                        lovvalg = LovvalgVedSøknadsTidspunktDto("", EØSLand.NOR),
+                        lovvalg = LovvalgVedSøknadsTidspunktDto("", EØSLandEllerLandMedAvtale.NOR),
                         medlemskap = MedlemskapVedSøknadsTidspunktDto("", true)
                     )
                 )
