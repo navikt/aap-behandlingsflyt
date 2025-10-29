@@ -1889,6 +1889,68 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
     }
 
     @Test
+    fun `skal kunne gjennomføre førstegangsbehandling og revurdering hvor rettighetsperiode endres og fører til avklaringsbehov for lovvalg og medlemskap`() {
+        var (sak, førstegangsbehandling) = sendInnFørsteSøknad(søknad = TestSøknader.SØKNAD_INGEN_MEDLEMSKAP)
+
+        førstegangsbehandling = førstegangsbehandling
+            .løsAvklaringsBehov(AvklarPeriodisertLovvalgMedlemskapLøsning(
+                løsningerForPerioder = listOf(
+                    PeriodisertManuellVurderingForLovvalgMedlemskapDto(
+                        fom = sak.rettighetsperiode.fom,
+                        tom = null,
+                        begrunnelse = "",
+                        lovvalg = LovvalgVedSøknadsTidspunktDto("", EØSLandEllerLandMedAvtale.NOR),
+                        medlemskap = MedlemskapVedSøknadsTidspunktDto("", true)
+                    )
+                )
+            ))
+            .løsSykdom()
+            .løsBistand()
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .kvalitetssikreOk()
+            .løsBeregningstidspunkt()
+            .løsForutgåendeMedlemskap()
+            .løsOppholdskrav(sak.rettighetsperiode.fom)
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtakEllerSendRetur()
+            .løsVedtaksbrev()
+
+        assertThat(førstegangsbehandling.status()).isEqualTo(Status.AVSLUTTET)
+
+        val nyStartDato = sak.rettighetsperiode.fom.minusMonths(1)
+        val revurdering = sak.opprettManuellRevurdering(
+            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.VURDER_RETTIGHETSPERIODE),
+        )
+            .løsRettighetsperiode(nyStartDato)
+            .medKontekst {
+                // Vi har ikke vurdert lovvalg og medlemskap for den utvidede perioden enda, så vi forventer et avklaringsbehov her
+                assertThat(åpneAvklaringsbehov).anySatisfy { behov -> assertThat(behov.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP).isTrue() }
+            }
+            .løsAvklaringsBehov(AvklarPeriodisertLovvalgMedlemskapLøsning(
+                løsningerForPerioder = listOf(
+                    PeriodisertManuellVurderingForLovvalgMedlemskapDto(
+                        fom = nyStartDato,
+                        tom = null,
+                        begrunnelse = "",
+                        lovvalg = LovvalgVedSøknadsTidspunktDto("", EØSLandEllerLandMedAvtale.NOR),
+                        medlemskap = MedlemskapVedSøknadsTidspunktDto("", true)
+                    )
+                )
+            ))
+            .løsSykdom()
+            .løsBistand()
+            .løsSykdomsvurderingBrev()
+            .løsBeregningstidspunkt()
+            .løsUtenSamordning()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtakEllerSendRetur()
+            .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_ENDRING)
+
+        assertThat(revurdering.status()).isEqualTo(Status.AVSLUTTET)
+    }
+
+    @Test
     fun `to-trinn og ingen endring i gruppe etter sendt tilbake fra beslutter`() {
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 

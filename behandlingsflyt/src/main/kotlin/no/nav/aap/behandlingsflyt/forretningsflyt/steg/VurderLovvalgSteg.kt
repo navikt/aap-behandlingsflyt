@@ -78,7 +78,7 @@ class VurderLovvalgSteg private constructor(
             kontekst = kontekst,
             definisjon = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP,
             tvingerAvklaringsbehov = vurderingsbehovSomTvingerAvklaringsbehov(),
-            nårVurderingErRelevant = { perioderVurderingErRelevant(kontekst, grunnlag.value) },
+            nårVurderingErRelevant = { nyKontekst -> perioderVurderingErRelevant(nyKontekst, grunnlag.value) },
             erTilstrekkeligVurdert = { erTilstrekkeligVurdert(kontekst, grunnlag.value) },
             tilbakestillGrunnlag = { tilbakestillVurderinger(kontekst, grunnlag.value) },
         )
