@@ -24,5 +24,6 @@ object FakeUnleash : FakeUnleashBase(
         BehandlingsflytFeature.OverforingsdatoNullForAvregning to true,
         BehandlingsflytFeature.OvergangArbeid to false,
         BehandlingsflytFeature.AvklaringsbehovServiceFormkrav to true,
+        BehandlingsflytFeature.KvalitetssikringsSteg to true,
     )
 )
