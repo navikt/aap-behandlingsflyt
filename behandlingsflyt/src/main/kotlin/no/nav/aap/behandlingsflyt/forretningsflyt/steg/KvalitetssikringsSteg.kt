@@ -77,8 +77,10 @@ class KvalitetssikringsSteg private constructor(
         if (avklaringsbehovene.alle().any { it.status() == Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER }) {
             return false
         }
-        return avklaringsbehovene.alle().filter { it.kreverKvalitetssikring() }
-            .all { it.status() == Status.KVALITETSSIKRET }
+        return avklaringsbehovene.alle()
+            .filter { it.kreverKvalitetssikring() }
+            .filter { it.status() != Status.AVBRUTT }
+            .all { it.status() == Status.KVALITETSSIKRET || it.historikk.any { it.status == Status.KVALITETSSIKRET } }
     }
 
     companion object : FlytSteg {
