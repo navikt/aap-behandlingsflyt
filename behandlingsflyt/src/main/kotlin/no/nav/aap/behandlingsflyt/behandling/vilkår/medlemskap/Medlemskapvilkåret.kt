@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.tilTidslinje
 import no.nav.aap.behandlingsflyt.behandling.vilkår.Vilkårsvurderer
 import no.nav.aap.behandlingsflyt.behandling.vilkår.VurderingsResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
@@ -30,7 +31,8 @@ class Medlemskapvilkåret(
 
         if (brukManuellVurderingForLovvalgMedlemskap) {
             // Ved manuell vurdering så må hele perioden være vurdert manuelt
-            grunnlag.medlemskapArbeidInntektGrunnlag.vurderinger.map { vurdering ->
+            val vurderinger = grunnlag.medlemskapArbeidInntektGrunnlag.vurderinger.tilTidslinje()
+            vurderinger.map { periode, vurdering ->
                 val lovvalgsLand = vurdering.lovvalgVedSøknadsTidspunkt.lovvalgsEØSLandEllerLandMedAvtale
                 val varMedlemIFolketrygd = vurdering.medlemskapVedSøknadsTidspunkt?.varMedlemIFolketrygd
 
@@ -45,7 +47,7 @@ class Medlemskapvilkåret(
                     VurderingsResultat(Utfall.OPPFYLT, null, null)
                 }
                 // TODO fom skal ikke være null når vi har migrert
-                leggTilVurdering(Periode(vurdering.fom!!, vurdering.tom ?: rettighetsPeriode.tom), grunnlag, vurderingsResultat, true)
+                leggTilVurdering(periode, grunnlag, vurderingsResultat, true)
             }
         } else if (grunnlag.nyeSoknadGrunnlag == null)  {
             val vurderingsResultat = VurderingsResultat(Utfall.IKKE_RELEVANT, null, null)
