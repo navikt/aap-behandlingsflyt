@@ -29,7 +29,7 @@ class SamordningAndreStatligeYtelserSteg(
             definisjon = Definisjon.SAMORDNING_ANDRE_STATLIGE_YTELSER,
             vedtakBehøverVurdering = {
                 when (kontekst.vurderingType) {
-                    VurderingType.FØRSTEGANGSBEHANDLING,
+                    VurderingType.FØRSTEGANGSBEHANDLING -> true
                     VurderingType.REVURDERING -> {
                         when {
                             tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
@@ -37,7 +37,6 @@ class SamordningAndreStatligeYtelserSteg(
                             else -> Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER in kontekst.vurderingsbehovRelevanteForSteg
                         }
                     }
-
                     VurderingType.MELDEKORT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
