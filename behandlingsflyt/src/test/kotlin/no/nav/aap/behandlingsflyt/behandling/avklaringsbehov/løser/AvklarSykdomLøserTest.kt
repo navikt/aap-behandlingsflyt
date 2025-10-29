@@ -16,8 +16,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -33,6 +35,7 @@ class AvklarSykdomLøserTest {
     private val behandlingMock = mockk<BehandlingRepository>()
     private val sykdomMock = mockk<SykdomRepository>(relaxed = true)
     private val yrkesskadeMock = mockk<YrkesskadeRepository>()
+    private val sakMock = mockk<SakRepository>()
 
     @Test
     fun `Vurdering som overskriver flere segmenter skal kun lage ett nytt segment`() {
@@ -40,6 +43,7 @@ class AvklarSykdomLøserTest {
             every { id } returns BehandlingId(2L)
             every { forrigeBehandlingId } returns BehandlingId(1L)
             every { typeBehandling() } returns TypeBehandling.Revurdering
+            every { sakId } returns SakId(1L)
         }
 
         every { yrkesskadeMock.hentHvisEksisterer(any()) } returns null
@@ -59,7 +63,9 @@ class AvklarSykdomLøserTest {
                     )
                 )
 
-        val sykdomLøser = AvklarSykdomLøser(behandlingMock, sykdomMock, yrkesskadeMock)
+        every { sakMock.hent(SakId(1L)).rettighetsperiode } returns Periode(1 januar 2020, 1 januar 2021)
+
+        val sykdomLøser = AvklarSykdomLøser(behandlingMock, sykdomMock, yrkesskadeMock, sakMock)
         sykdomLøser.løs(
             lagAvklaringsbehovKontekst(), løsning = AvklarSykdomLøsning(
                 sykdomsvurderinger = listOf(

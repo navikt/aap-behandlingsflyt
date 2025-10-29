@@ -8,7 +8,6 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.Instant
 import java.time.LocalDate
 
-
 data class InnhentetSykdomsOpplysninger(
     val oppgittYrkesskadeISøknad: Boolean,
     val innhentedeYrkesskader: List<RegistrertYrkesskade>,
@@ -20,7 +19,12 @@ data class RegistrertYrkesskade(
     val skadedato: LocalDate?,
     val kilde: String,
 ) {
-    constructor(yrkesskade: Yrkesskade) : this(yrkesskade.ref, yrkesskade.saksnummer, yrkesskade.skadedato, yrkesskade.kildesystem)
+    constructor(yrkesskade: Yrkesskade) : this(
+        yrkesskade.ref,
+        yrkesskade.saksnummer,
+        yrkesskade.skadedato,
+        yrkesskade.kildesystem
+    )
 }
 
 data class SykdomsvurderingLøsningDto(
@@ -40,11 +44,14 @@ data class SykdomsvurderingLøsningDto(
     val hoveddiagnose: String? = null,
     val bidiagnoser: List<String>? = emptyList(),
 ) {
-
-    fun toSykdomsvurdering(bruker: Bruker, vurdertIBehandling: BehandlingId): Sykdomsvurdering {
+    fun toSykdomsvurdering(
+        bruker: Bruker,
+        vurdertIBehandling: BehandlingId,
+        defaultGjelderFra: LocalDate
+    ): Sykdomsvurdering {
         return Sykdomsvurdering(
             begrunnelse = begrunnelse,
-            vurderingenGjelderFra = vurderingenGjelderFra,
+            vurderingenGjelderFra = vurderingenGjelderFra ?: defaultGjelderFra,
             vurderingenGjelderTil = null, // TODO: Støtt ny periodisert løsning
             dokumenterBruktIVurdering = dokumenterBruktIVurdering,
             erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
