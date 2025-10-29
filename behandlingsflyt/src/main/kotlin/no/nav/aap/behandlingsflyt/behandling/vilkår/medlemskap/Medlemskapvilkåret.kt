@@ -1,13 +1,13 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.tilTidslinje
 import no.nav.aap.behandlingsflyt.behandling.vilkår.Vilkårsvurderer
 import no.nav.aap.behandlingsflyt.behandling.vilkår.VurderingsResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.komponenter.type.Periode
 
@@ -31,24 +31,43 @@ class Medlemskapvilkåret(
 
         if (brukManuellVurderingForLovvalgMedlemskap) {
             // Ved manuell vurdering så må hele perioden være vurdert manuelt
-            val vurderinger = grunnlag.medlemskapArbeidInntektGrunnlag.vurderinger.tilTidslinje()
-            vurderinger.map { periode, vurdering ->
-                val lovvalgsLand = vurdering.lovvalgVedSøknadsTidspunkt.lovvalgsEØSLandEllerLandMedAvtale
-                val varMedlemIFolketrygd = vurdering.medlemskapVedSøknadsTidspunkt?.varMedlemIFolketrygd
-
-                val annetLandMedAvtaleIEØS = lovvalgsLand != null && lovvalgsLand != EØSLandEllerLandMedAvtale.NOR && lovvalgsLand in enumValues<EØSLandEllerLandMedAvtale>().map { it }
-
-                val vurderingsResultat = if (annetLandMedAvtaleIEØS) {
-                    VurderingsResultat(Utfall.IKKE_OPPFYLT, Avslagsårsak.NORGE_IKKE_KOMPETENT_STAT, null)
+            val gjeldendeVurderinger = grunnlag.medlemskapArbeidInntektGrunnlag.gjeldendeVurderinger(maksDato = rettighetsPeriode.tom)
+            val vilkårsvurderinger = gjeldendeVurderinger
+                // TODO må man ta inn rettighetsperiode-tidslinjen her?
+                .map { vurdering ->
+                    when {
+                        vurdering.annetLandMedAvtaleIEØS() -> {
+                            Vilkårsvurdering(
+                                utfall = Utfall.IKKE_OPPFYLT,
+                                avslagsårsak = Avslagsårsak.NORGE_IKKE_KOMPETENT_STAT,
+                                begrunnelse = null,
+                                faktagrunnlag = grunnlag,
+                                manuellVurdering = true
+                            )
+                        }
+                        !vurdering.medlemIFolketrygd() -> {
+                            Vilkårsvurdering(
+                                utfall = Utfall.IKKE_OPPFYLT,
+                                avslagsårsak = Avslagsårsak.IKKE_MEDLEM,
+                                begrunnelse = null,
+                                faktagrunnlag = grunnlag,
+                                manuellVurdering = true
+                            )
+                        }
+                        else -> {
+                            Vilkårsvurdering(
+                                utfall = Utfall.OPPFYLT,
+                                begrunnelse = null,
+                                faktagrunnlag = grunnlag,
+                                manuellVurdering = true
+                            )
+                        }
+                    }
                 }
-                else if (varMedlemIFolketrygd != true) {
-                    VurderingsResultat(Utfall.IKKE_OPPFYLT, Avslagsårsak.IKKE_MEDLEM, null)
-                } else {
-                    VurderingsResultat(Utfall.OPPFYLT, null, null)
-                }
-                // TODO fom skal ikke være null når vi har migrert
-                leggTilVurdering(periode, grunnlag, vurderingsResultat, true)
-            }
+                .komprimer()
+
+            vilkår.leggTilVurderinger(vilkårsvurderinger)
+
         } else if (grunnlag.nyeSoknadGrunnlag == null)  {
             val vurderingsResultat = VurderingsResultat(Utfall.IKKE_RELEVANT, null, null)
             leggTilVurdering(rettighetsPeriode, grunnlag, vurderingsResultat, false)

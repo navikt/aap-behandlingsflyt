@@ -123,8 +123,8 @@ class VurderLovvalgSteg private constructor(
     ): Boolean {
         val harManuelleVurderinger = grunnlag.medlemskapArbeidInntektGrunnlag?.vurderinger?.isNotEmpty() == true
         if (harManuelleVurderinger) {
-            return grunnlag.medlemskapArbeidInntektGrunnlag.vurderinger
-                .tilTidslinje()
+            return grunnlag.medlemskapArbeidInntektGrunnlag
+                .gjeldendeVurderinger()
                 .validerGyldigForRettighetsperiode(kontekst.rettighetsperiode)
                 .isValid
         } else {

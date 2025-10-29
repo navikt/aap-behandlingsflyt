@@ -5,11 +5,14 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidVurdering
 import no.nav.aap.behandlingsflyt.utils.Validation
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import java.time.LocalDate
 
 data class MedlemskapLovvalgGrunnlag(
@@ -27,7 +30,16 @@ data class MedlemskapArbeidInntektGrunnlag(
     val manuellVurdering: ManuellVurderingForLovvalgMedlemskap?,
 
     val vurderinger: List<ManuellVurderingForLovvalgMedlemskap> = emptyList()
-)
+) {
+    fun gjeldendeVurderinger(maksDato: LocalDate = Tid.MAKS): Tidslinje<ManuellVurderingForLovvalgMedlemskap> {
+        return vurderinger
+            .groupBy { it.vurdertIBehandling }
+            .values
+            .sortedBy { it[0].vurdertDato }
+            .flatMap { it.sortedBy { it.fom } }
+            .somTidslinje { Periode(it.fom!!, it.tom ?: maksDato) }
+    }
+}
 
 data class InntektINorgeGrunnlag(
     val identifikator: String,
