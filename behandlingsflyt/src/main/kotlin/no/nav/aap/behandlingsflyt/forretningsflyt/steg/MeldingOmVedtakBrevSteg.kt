@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory
 
 private val log = LoggerFactory.getLogger("BrevSteg")
 
-class MeldingOmVedtakBrevSteg private constructor(
+class MeldingOmVedtakBrevSteg(
     private val brevUtlederService: BrevUtlederService,
     private val brevbestillingService: BrevbestillingService,
     private val behandlingRepository: BehandlingRepository,
@@ -43,6 +43,10 @@ class MeldingOmVedtakBrevSteg private constructor(
         if (trekkKlageService.klageErTrukket(kontekst.behandlingId)) {
             return Fullført
         }
+        val brevBehov = brevUtlederService.utledBehovForMeldingOmVedtak(kontekst.behandlingId)
+        if (brevBehov == null) {
+            return Fullført
+        }
         avklaringsbehovService.oppdaterAvklaringsbehov(
             avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId),
             Definisjon.SKRIV_VEDTAKSBREV,
@@ -51,9 +55,7 @@ class MeldingOmVedtakBrevSteg private constructor(
             tilbakestillGrunnlag = {},
             kontekst
         )
-        // TODO: Lag unittest for utfør, sjekk hva oppdaterAvklaringbehov gjør hvis brevBehov = false ++ alle andre varianter av funksjonen
-        val brevBehov = brevUtlederService.utledBehovForMeldingOmVedtak(kontekst.behandlingId)
-        if (brevBehov != null && !brevbestillingService.harBestillingOmVedtak(kontekst.behandlingId)) {
+        if (!brevbestillingService.harBestillingOmVedtak(kontekst.behandlingId)) {
             bestillBrev(kontekst, brevBehov)
         }
         return Fullført
