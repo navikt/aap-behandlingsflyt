@@ -24,6 +24,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -78,7 +79,7 @@ class VurderBistandsbehovSteg private constructor(
                 val forrigeVilkårTidslinje = kontekst.forrigeBehandlingId?.let { vilkårsresultatRepository.hent(it) }
                     ?.optionalVilkår(Vilkårtype.BISTANDSVILKÅRET)
                     ?.tidslinje()
-                    ?: Tidslinje.empty()
+                    .orEmpty()
 
                 if (nyttVilkår.tidslinje() != forrigeVilkårTidslinje) {
                     nyttVilkår.nullstillTidslinje()
