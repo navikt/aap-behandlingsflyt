@@ -370,8 +370,6 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
 
         val alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
 
-        println(alleAvklaringsbehov)
-
         assertThat(alleAvklaringsbehov).isNotEmpty()
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
 
