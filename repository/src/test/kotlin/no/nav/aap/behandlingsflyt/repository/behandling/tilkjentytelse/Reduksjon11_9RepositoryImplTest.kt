@@ -16,8 +16,10 @@ import no.nav.aap.komponenter.verdityper.Beløp
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import java.time.LocalDate
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class Reduksjon11_9RepositoryImplTest {
 
     @AutoClose
@@ -33,7 +35,10 @@ class Reduksjon11_9RepositoryImplTest {
             val reduksjon11_9repository = Reduksjon11_9RepositoryImpl(connection)
             val behandling = lagSakOgBehandling(connection)
 
-            reduksjon11_9repository.lagre(behandling.id, listOf(reduksjon_brudd_1, reduksjon_rimelig_grunn, reduksjon_brudd_2))
+            reduksjon11_9repository.lagre(
+                behandling.id,
+                listOf(reduksjon_brudd_1, reduksjon_rimelig_grunn, reduksjon_brudd_2)
+            )
             val reduksjoner = reduksjon11_9repository.hent(behandling.id)
 
             assertThat(reduksjoner).hasSize(3)

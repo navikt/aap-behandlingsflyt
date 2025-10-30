@@ -13,16 +13,16 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.dbtest.TestDataSource.Companion.invoke
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.assertNotNull
 import java.time.LocalDate
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class PåklagetBehandlingRepositoryImplTest {
 
     @AutoClose
@@ -34,14 +34,14 @@ internal class PåklagetBehandlingRepositoryImplTest {
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val klageBehandling = finnEllerOpprettBehandling(connection, sak, Vurderingsbehov.MOTATT_KLAGE)
-            
+
             val påklagetBehandlingRepository = PåklagetBehandlingRepositoryImpl(connection)
             val vurdering = PåklagetBehandlingVurdering(
                 påklagetVedtakType = PåklagetVedtakType.KELVIN_BEHANDLING,
                 påklagetBehandling = behandling.id,
                 vurdertAv = "ident"
             )
-            
+
             påklagetBehandlingRepository.lagre(klageBehandling.id, vurdering)
             val grunnlag = påklagetBehandlingRepository.hentHvisEksisterer(klageBehandling.id)!!
             assertThat(grunnlag.vurdering.påklagetVedtakType).isEqualTo(PåklagetVedtakType.KELVIN_BEHANDLING)
@@ -66,7 +66,8 @@ internal class PåklagetBehandlingRepositoryImplTest {
             )
 
             påklagetBehandlingRepository.lagre(klageBehandling.id, vurdering)
-            val vurderingMedReferanse = påklagetBehandlingRepository.hentGjeldendeVurderingMedReferanse(klageBehandling.referanse)!!
+            val vurderingMedReferanse =
+                påklagetBehandlingRepository.hentGjeldendeVurderingMedReferanse(klageBehandling.referanse)!!
             assertThat(vurderingMedReferanse.påklagetVedtakType).isEqualTo(PåklagetVedtakType.KELVIN_BEHANDLING)
             assertThat(vurderingMedReferanse.påklagetBehandling).isEqualTo(behandling.id)
             assertThat(vurderingMedReferanse.referanse?.referanse).isEqualTo(behandling.referanse.referanse)

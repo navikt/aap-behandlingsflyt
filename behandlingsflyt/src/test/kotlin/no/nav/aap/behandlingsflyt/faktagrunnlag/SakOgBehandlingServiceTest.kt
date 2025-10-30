@@ -16,8 +16,10 @@ import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AutoClose
+import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SakOgBehandlingServiceTest {
 
     @AutoClose

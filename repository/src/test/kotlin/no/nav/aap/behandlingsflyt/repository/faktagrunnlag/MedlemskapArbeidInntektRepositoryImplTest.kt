@@ -39,11 +39,12 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.Test
-import java.sql.Connection
+import org.junit.jupiter.api.TestInstance
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class MedlemskapArbeidInntektRepositoryImplTest {
 
     @AutoClose
@@ -275,7 +276,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
             val eksisterendeVurderinger = medlemskapArbeidInntektRepository.hentHvisEksisterer(revurdering.id)
             val vurderinger = listOf(
                 manuellVurdering(
-                    fom = 15 desember  2025,
+                    fom = 15 desember 2025,
                     tom = null,
                     vurdertIBehandling = revurdering.id
                 )

@@ -19,9 +19,11 @@ import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class BarnetilleggRepositoryImplTest {
 
     @AutoClose
@@ -90,7 +92,6 @@ internal class BarnetilleggRepositoryImplTest {
                 Periode(LocalDate.of(2024, 1, 2), LocalDate.of(2024, 1, 2)),
                 setOf(BarnIdentifikator.BarnIdent("12345678910"))
             )
-
 
             barnetilleggRepository.lagre(behandling.id, listOf(barnetilleggPeriode1))
             barnetilleggRepository.lagre(behandling.id, listOf(barnetilleggPeriode2))

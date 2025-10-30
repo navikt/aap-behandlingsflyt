@@ -37,17 +37,16 @@ import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.dbtest.TestDataSource.Companion.invoke
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import java.time.LocalDate
 
 @Fakes
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class InformasjonskravGrunnlagTest {
 
     @AutoClose
@@ -56,7 +55,7 @@ class InformasjonskravGrunnlagTest {
     companion object {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     }
-    
+
     private val gatewayProvider = createGatewayProvider {
         register<MedlemskapGateway>()
         register<AARegisterGateway>()
