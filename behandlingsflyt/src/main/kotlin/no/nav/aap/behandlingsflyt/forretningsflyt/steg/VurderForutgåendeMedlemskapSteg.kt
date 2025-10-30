@@ -115,13 +115,18 @@ class VurderForutgåendeMedlemskapSteg private constructor(
     private fun vedtakBehøverVurdering(
         kontekst: FlytKontekstMedPerioder
     ): Boolean {
+        val vurderingFraForrigeBehandling = kontekst.forrigeBehandlingId?.let { forrigeBehandlingId ->
+            forutgåendeMedlemskapArbeidInntektRepository.hentHvisEksisterer(forrigeBehandlingId)
+                ?.manuellVurdering
+        }
+
         return when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
                 when {
                     tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
                     harYrkesskadeSammenheng(kontekst) -> false
                     spesifiktTriggetRevurderMedlemskap(kontekst) -> true
-                    !kanBehandlesAutomatisk(kontekst) -> true
+                    !kanBehandlesAutomatisk(kontekst) && vurderingFraForrigeBehandling == null -> true
                     else -> false
                 }
             }
