@@ -10,4 +10,5 @@ data class UtbetaltePerioder(
     val fom: LocalDate,
     val tom: LocalDate,
     val grad: Number,
+    val organisasjonsnummer: String?
 )
