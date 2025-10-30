@@ -21,19 +21,19 @@ import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.dbtest.TestDataSource.Companion.invoke
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.Kanal
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.AutoClose
+import org.junit.jupiter.api.TestInstance
 import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlin.test.Test
 
 @Fakes
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class LegeerklæringVentebehovEvaluererTest {
     private val repositoryRegistry = RepositoryRegistry()
         .register<MottattDokumentRepositoryImpl>()
@@ -42,7 +42,7 @@ internal class LegeerklæringVentebehovEvaluererTest {
     private val dataSource = TestDataSource()
 
     @Test
-    fun `Løser behov når det finnes avvist dokument` () {
+    fun `Løser behov når det finnes avvist dokument`() {
         val behandling = dataSource.transaction { connection ->
             val sak = opprettSak(connection)
             finnEllerOpprettBehandling(connection, sak, Vurderingsbehov.MOTTATT_AVVIST_LEGEERKLÆRING)
@@ -51,7 +51,8 @@ internal class LegeerklæringVentebehovEvaluererTest {
         dataSource.transaction { connection ->
             val repositoryProvider = repositoryRegistry.provider(connection)
             val evaluerer = LegeerklæringVentebehovEvaluerer(repositoryProvider)
-            val avklaringsbehov = Avklaringsbehov(1L, Definisjon.BESTILL_LEGEERKLÆRING, mutableListOf(), StegType.AVKLAR_SYKDOM, false)
+            val avklaringsbehov =
+                Avklaringsbehov(1L, Definisjon.BESTILL_LEGEERKLÆRING, mutableListOf(), StegType.AVKLAR_SYKDOM, false)
 
             genererDokument(
                 behandling.sakId,
@@ -68,7 +69,7 @@ internal class LegeerklæringVentebehovEvaluererTest {
     }
 
     @Test
-    fun `løser behov når det finnes mottatt legeerklæring` () {
+    fun `løser behov når det finnes mottatt legeerklæring`() {
         val behandling = dataSource.transaction { connection ->
             val sak = opprettSak(connection)
             finnEllerOpprettBehandling(connection, sak, Vurderingsbehov.MOTTATT_LEGEERKLÆRING)
@@ -77,7 +78,8 @@ internal class LegeerklæringVentebehovEvaluererTest {
         dataSource.transaction { connection ->
             val repositoryProvider = repositoryRegistry.provider(connection)
             val evaluerer = LegeerklæringVentebehovEvaluerer(repositoryProvider)
-            val avklaringsbehov = Avklaringsbehov(1L, Definisjon.BESTILL_LEGEERKLÆRING, mutableListOf(), StegType.AVKLAR_SYKDOM, false)
+            val avklaringsbehov =
+                Avklaringsbehov(1L, Definisjon.BESTILL_LEGEERKLÆRING, mutableListOf(), StegType.AVKLAR_SYKDOM, false)
 
             genererDokument(
                 behandling.sakId,
@@ -103,7 +105,8 @@ internal class LegeerklæringVentebehovEvaluererTest {
         dataSource.transaction { connection ->
             val repositoryProvider = repositoryRegistry.provider(connection)
             val evaluerer = LegeerklæringVentebehovEvaluerer(repositoryProvider)
-            val avklaringsbehov = Avklaringsbehov(1L, Definisjon.BESTILL_LEGEERKLÆRING, mutableListOf(), StegType.AVKLAR_SYKDOM, false)
+            val avklaringsbehov =
+                Avklaringsbehov(1L, Definisjon.BESTILL_LEGEERKLÆRING, mutableListOf(), StegType.AVKLAR_SYKDOM, false)
 
             genererDokument(
                 behandling.sakId,
@@ -138,14 +141,15 @@ internal class LegeerklæringVentebehovEvaluererTest {
                 LocalDateTime.now().minusDays(1)
             )
 
-            val avklaringsbehov = Avklaringsbehov(1L, Definisjon.BESTILL_LEGEERKLÆRING, mutableListOf(), StegType.AVKLAR_SYKDOM, false)
+            val avklaringsbehov =
+                Avklaringsbehov(1L, Definisjon.BESTILL_LEGEERKLÆRING, mutableListOf(), StegType.AVKLAR_SYKDOM, false)
             val erLøst = evaluerer.ansesSomLøst(behandling.id, avklaringsbehov, behandling.sakId)
             assertEquals(false, erLøst)
         }
     }
 
     @Test
-    fun `løser ikke behov når ikke det finnes avvist dokument` () {
+    fun `løser ikke behov når ikke det finnes avvist dokument`() {
         val behandling = dataSource.transaction { connection ->
             val sak = opprettSak(connection)
             finnEllerOpprettBehandling(connection, sak, Vurderingsbehov.MOTTATT_SØKNAD)
@@ -154,7 +158,8 @@ internal class LegeerklæringVentebehovEvaluererTest {
         dataSource.transaction { connection ->
             val repositoryProvider = repositoryRegistry.provider(connection)
             val evaluerer = LegeerklæringVentebehovEvaluerer(repositoryProvider)
-            val avklaringsbehov = Avklaringsbehov(1L, Definisjon.BESTILL_LEGEERKLÆRING, mutableListOf(), StegType.AVKLAR_SYKDOM, false)
+            val avklaringsbehov =
+                Avklaringsbehov(1L, Definisjon.BESTILL_LEGEERKLÆRING, mutableListOf(), StegType.AVKLAR_SYKDOM, false)
 
             genererDokument(
                 behandling.sakId,

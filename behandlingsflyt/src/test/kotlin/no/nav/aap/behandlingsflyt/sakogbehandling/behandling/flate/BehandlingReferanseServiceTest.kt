@@ -3,15 +3,15 @@ package no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.dbtest.TestDataSource.Companion.invoke
 import no.nav.aap.komponenter.httpklient.exception.VerdiIkkeFunnetException
 import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.assertThrows
 import java.util.*
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class BehandlingReferanseServiceTest {
     @AutoClose
     private val dataSource = TestDataSource()

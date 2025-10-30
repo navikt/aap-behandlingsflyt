@@ -98,7 +98,7 @@ import java.util.*
 
 @Fakes
 class StatistikkJobbUtførerTest {
-    @AutoClose
+    @AutoClose // FIXME
     private val dataSource = TestDataSource()
 
     @Test

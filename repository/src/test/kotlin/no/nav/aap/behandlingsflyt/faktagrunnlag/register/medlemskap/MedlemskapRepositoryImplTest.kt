@@ -17,10 +17,12 @@ import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class MedlemskapRepositoryTest {
 
     companion object {
