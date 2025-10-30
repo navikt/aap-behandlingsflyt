@@ -837,7 +837,8 @@ object FakeServers : AutoCloseable {
                                 UtbetaltePerioder(
                                     fom = it.periode.fom,
                                     tom = it.periode.tom,
-                                    grad = it.grad
+                                    grad = it.grad,
+                                    organisasjonsnummer = null
                                 )
                             }
                         ))
