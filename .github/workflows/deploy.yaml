@@ -1,13 +1,13 @@
 name: Bygg og deploy behandlingsflyt
 
 on:
-  schedule:
-    - cron: '0 12 * * SUN'
   push:
     branches: [ main ]
     paths-ignore:
-        - '.github/pr.yml'
-        - '*.md'
+      - '.github/pr.yml'
+      - '*.md'
+      - '.run/*'
+      - 'docker-compose.yaml'
   workflow_dispatch:
 
 jobs:
@@ -47,7 +47,7 @@ jobs:
 
       - name: Store reports
         if: failure()
-        uses: actions/upload-artifact@v4.4.0
+        uses: actions/upload-artifact@v5
         with:
             name: reports
             path: |

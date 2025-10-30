@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurd
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -21,12 +22,14 @@ class AvklarSykdomLøser(
     private val behandlingRepository: BehandlingRepository,
     private val sykdomRepository: SykdomRepository,
     private val yrkersskadeRepository: YrkesskadeRepository,
+    private val sakRepository: SakRepository
 ) : AvklaringsbehovsLøser<AvklarSykdomLøsning> {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
         yrkersskadeRepository = repositoryProvider.provide(),
+        sakRepository = repositoryProvider.provide()
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -35,8 +38,10 @@ class AvklarSykdomLøser(
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
         val yrkesskadeGrunnlag = yrkersskadeRepository.hentHvisEksisterer(behandling.id)
 
+        val rettighetsperiode = sakRepository.hent(behandling.sakId).rettighetsperiode
+
         val nyeSykdomsvurderinger = løsning.sykdomsvurderinger
-            .map { it.toSykdomsvurdering(kontekst.bruker) }
+            .map { it.toSykdomsvurdering(kontekst.bruker, kontekst.behandlingId(), rettighetsperiode.fom) }
             .let {
                 SykdomGrunnlag(
                     sykdomsvurderinger = it,

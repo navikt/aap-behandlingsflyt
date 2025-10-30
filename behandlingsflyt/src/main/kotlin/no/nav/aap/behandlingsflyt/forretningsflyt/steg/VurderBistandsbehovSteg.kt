@@ -16,7 +16,6 @@ import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -77,9 +76,7 @@ class VurderBistandsbehovSteg private constructor(
         /* Dette skal på sikt ut av denne metoden, og samles i et eget fastsett-steg. */
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
         vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.BISTANDSVILKÅRET)
-        if (avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_BISTANDSBEHOV)
-                ?.status() in setOf(Status.AVSLUTTET, Status.AVBRUTT)
-        ) {
+        if (avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_BISTANDSBEHOV)?.status()?.erAvsluttet() == true) {
             val grunnlag = BistandFaktagrunnlag(
                 kontekst.rettighetsperiode.fom,
                 kontekst.rettighetsperiode.tom,

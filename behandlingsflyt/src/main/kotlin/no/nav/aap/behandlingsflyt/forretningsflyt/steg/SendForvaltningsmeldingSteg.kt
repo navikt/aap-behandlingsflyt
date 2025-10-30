@@ -13,21 +13,15 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class SendForvaltningsmeldingSteg(
     private val brevbestillingService: BrevbestillingService,
     private val behandlingRepository: BehandlingRepository,
-    private val unleashGateway: UnleashGateway,
 ) : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (unleashGateway.isDisabled(BehandlingsflytFeature.SendForvaltningsmelding)) {
-            return Fullført
-        }
         when (kontekst.behandlingType) {
             TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering -> {
                 val behandlingId = kontekst.behandlingId
@@ -61,11 +55,13 @@ class SendForvaltningsmeldingSteg(
     }
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): BehandlingSteg {
             return SendForvaltningsmeldingSteg(
                 brevbestillingService = BrevbestillingService(repositoryProvider, gatewayProvider),
                 behandlingRepository = repositoryProvider.provide(),
-                unleashGateway = gatewayProvider.provide(),
             )
         }
 

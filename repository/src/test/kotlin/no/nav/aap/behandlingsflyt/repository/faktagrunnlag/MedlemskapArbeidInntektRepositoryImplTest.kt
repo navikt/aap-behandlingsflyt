@@ -20,6 +20,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.medlemsskap.MedlemskapRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
@@ -38,6 +39,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.Test
+import java.sql.Connection
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
@@ -292,45 +294,122 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
 
     @Test
     fun `verifiserer at migrering legger på kobling mot vurderinger og at uthenting gir periodisert vurdering`() {
-        dataSource.transaction { connection ->
+        // Oppretter en førstegangsbehandling med to manuelle vurderinger - gjør også en oppdatering av grunnlaget underveis
+        val behandling = dataSource.transaction { connection ->
             val medlemskapArbeidInntektRepository = MedlemskapArbeidInntektRepositoryImpl(connection)
             val sak = opprettSak(connection, periode)
             val behandling = finnEllerOpprettBehandling(connection, sak)
+            val medlemskapRepository = MedlemskapRepositoryImpl(connection)
 
             medlemskapArbeidInntektRepository.lagreManuellVurdering(
                 behandlingId = behandling.id,
                 manuellVurdering = manuellVurderingIkkePeriodisert("begrunnelse")
             )
 
-            val medlemskapArbeidInntektGrunnlag = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandling.id)
+            val medlId = medlemskapRepository.lagreUnntakMedlemskap(
+                behandlingId = behandling.id,
+                unntak = listOf(medlemskapData())
+            )
 
-            assertThat(medlemskapArbeidInntektGrunnlag?.manuellVurdering).isNotNull
-            assertThat(medlemskapArbeidInntektGrunnlag?.manuellVurdering?.fom).isNull()
-            assertThat(medlemskapArbeidInntektGrunnlag?.manuellVurdering?.vurdertIBehandling).isNull()
-            assertThat(medlemskapArbeidInntektGrunnlag?.vurderinger).isEmpty()
+            medlemskapArbeidInntektRepository.lagreArbeidsforholdOgInntektINorge(
+                behandlingId = behandling.id,
+                arbeidGrunnlag = arbeidGrunnlag(),
+                inntektGrunnlag = inntektGrunnlag(),
+                medlId = medlId,
+                enhetGrunnlag = enhetGrunnlags()
+            )
+
+            medlemskapArbeidInntektRepository.lagreManuellVurdering(
+                behandlingId = behandling.id,
+                manuellVurdering = manuellVurderingIkkePeriodisert("begrunnelse2")
+            )
+
+            behandling
+        }
+
+        // Oppretter en revurdering og kopierer grunnlaget for å sjekke at dette blir riktig etter migrering av revurdering
+        val revurdering = dataSource.transaction { connection ->
+            val medlemskapArbeidInntektRepository = MedlemskapArbeidInntektRepositoryImpl(connection)
+            val behandlingRepo = BehandlingRepositoryImpl(connection)
+            val revurdering =
+                behandlingRepo.opprettBehandling(
+                    behandling.sakId,
+                    TypeBehandling.Revurdering,
+                    behandling.id,
+                    VurderingsbehovOgÅrsak(
+                        listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
+                        ÅrsakTilOpprettelse.SØKNAD
+                    )
+                )
+
+            medlemskapArbeidInntektRepository.kopier(behandling.id, revurdering.id)
+
+            revurdering
+        }
+
+        dataSource.transaction { connection ->
+            val medlemskapArbeidInntektRepository = MedlemskapArbeidInntektRepositoryImpl(connection)
+
+            sjekkBehandlingFørMigrering(medlemskapArbeidInntektRepository, behandling)
+            sjekkBehandlingFørMigrering(medlemskapArbeidInntektRepository, revurdering)
 
             // Kjører migrering
             medlemskapArbeidInntektRepository.migrerManuelleVurderingerPeriodisert()
 
-            val migrertMedlemskapArbeidInntektGrunnlag = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandling.id)
+            sjekkBehandlingEtterMigrering(medlemskapArbeidInntektRepository, behandling)
+            sjekkBehandlingEtterMigrering(medlemskapArbeidInntektRepository, revurdering, behandling)
 
-            // Sjekker at innslag i lovvalg_medlemskap_manuell_vurderinger finnes
-            assertThat(hentVurderingerId(connection)).isNotNull
+            // Sjekker at det finnes riktig antall grunnlag
+            assertThat(hentGrunnlag(connection, behandling.id)).hasSize(3) // 2 inaktive + 1 aktiv
+            assertThat(hentGrunnlag(connection, revurdering.id)).hasSize(1) // 1 aktiv
 
-            // Sjekker at listen med periodiserte vurderinger nå returnerer det samme som manuellVurdering
-            val periodisertVurdering = migrertMedlemskapArbeidInntektGrunnlag?.vurderinger?.first()
-            assertThat(migrertMedlemskapArbeidInntektGrunnlag?.manuellVurdering).isEqualTo(periodisertVurdering)
-
-            // Sjekker at øvrige felter er oppdatert
-            assertThat(periodisertVurdering?.fom).isEqualTo(periode.fom)
-            assertThat(periodisertVurdering?.vurdertIBehandling).isEqualTo(behandling.id)
+            // Sjekker at innslag i lovvalg_medlemskap_manuell_vurderinger finnes og at det er to stk en for hver vurdering
+            assertThat(hentVurderingerId(connection)).hasSize(2)
         }
     }
 
-    private fun hentVurderingerId(connection: DBConnection): Long? {
+    private fun sjekkBehandlingFørMigrering(
+        medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepositoryImpl,
+        behandling: Behandling,
+    ) {
+        val grunnlag = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandling.id)
+
+        // Sjekker at verdier før migrering er som forventet
+        assertThat(grunnlag?.manuellVurdering).isNotNull
+        assertThat(grunnlag?.manuellVurdering?.fom).isNull()
+        assertThat(grunnlag?.manuellVurdering?.vurdertIBehandling).isNull()
+        assertThat(grunnlag?.vurderinger).isEmpty()
+    }
+
+    private fun sjekkBehandlingEtterMigrering(
+        medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepositoryImpl,
+        behandling: Behandling,
+        forrigeBehandling: Behandling? = null
+    ) {
+        val grunnlag = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandling.id)
+
+        // Sjekker at fom-dato og vurdertIBehandling er satt korrekt etter migrering og at vurderinger returnerer vurdering
+        val periodisertVurdering = grunnlag?.vurderinger?.first()
+        assertThat(periodisertVurdering?.fom).isEqualTo(periode.fom)
+        assertThat(periodisertVurdering?.vurdertIBehandling).isEqualTo(forrigeBehandling?.id ?: behandling.id)
+        assertThat(grunnlag?.manuellVurdering).isEqualTo(periodisertVurdering)
+    }
+
+    private fun hentVurderingerId(connection: DBConnection): List<Long> {
         val query = "SELECT id FROM lovvalg_medlemskap_manuell_vurderinger"
-        val id = connection.queryFirstOrNull<Long>(query) {
+        val id = connection.queryList<Long>(query) {
             setRowMapper { it.getLong("id") }
+        }
+        return id
+    }
+
+    private fun hentGrunnlag(connection: DBConnection, behandlingId: BehandlingId): List<Long> {
+        val query = "SELECT * FROM MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG WHERE behandling_id = ?"
+        val id = connection.queryList<Long>(query) {
+            setRowMapper { it.getLong("id") }
+            setParams {
+                setLong(1, behandlingId.toLong())
+            }
         }
         return id
     }

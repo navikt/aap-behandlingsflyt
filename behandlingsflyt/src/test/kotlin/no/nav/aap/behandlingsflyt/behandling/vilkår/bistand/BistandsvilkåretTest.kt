@@ -27,6 +27,7 @@ import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
@@ -37,9 +38,7 @@ import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.dbtest.TestDataSource.Companion.invoke
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
@@ -190,6 +189,7 @@ class BistandsvilkåretTest {
             // Må lagre ned sykdomsvurdering for behandlingen da vurderingenGjelderFra for 11-6 skal være lik den for 11-5 i samme behandling
             val sykdomsvurdering = sykdomsvurdering(
                 vurderingenGjelderFra = now.plusDays(10),
+                behandlingId = revurdering.id
             )
             postgresRepositoryRegistry.provider(connection).provide<SykdomRepository>()
                 .lagre(revurdering.id, listOf(sykdomsvurdering))
@@ -309,7 +309,9 @@ class BistandsvilkåretTest {
         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean = true,
         erArbeidsevnenNedsatt: Boolean = true,
         vurderingenGjelderFra: LocalDate? = null,
+        vurderingenGjelderTil: LocalDate? = null,
         opprettet: Instant = Instant.now(),
+        behandlingId: BehandlingId
     ) = Sykdomsvurdering(
         begrunnelse = "",
         dokumenterBruktIVurdering = emptyList(),
@@ -321,7 +323,9 @@ class BistandsvilkåretTest {
         erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
         yrkesskadeBegrunnelse = null,
         vurderingenGjelderFra = vurderingenGjelderFra,
+        vurderingenGjelderTil = vurderingenGjelderTil,
         vurdertAv = Bruker("Z00000"),
         opprettet = opprettet,
+        vurdertIBehandling = behandlingId
     )
 }

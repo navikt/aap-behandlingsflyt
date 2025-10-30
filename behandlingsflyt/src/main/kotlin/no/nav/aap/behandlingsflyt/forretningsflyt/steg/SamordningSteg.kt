@@ -44,7 +44,7 @@ class SamordningSteg(
         // 3.  hvis har all tilgjengelig data:
         // 3.1 lag tidslinje av prosentgradering og lagre i SamordningRepository
 
-        return when (kontekst.vurderingType) {
+        return when (kontekst.vurderingTypeRelevantForSteg) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
                 if (tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())) {
                     avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)

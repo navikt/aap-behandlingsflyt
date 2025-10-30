@@ -116,7 +116,8 @@ class StatistikkMetoder(
             hendelsesTidspunkt = hendelse.hendelsesTidspunkt,
             avsluttetBehandling = if (hendelse.status == AVSLUTTET) hentAvsluttetBehandlingDTO(hendelse) else null,
             identerForSak = hentIdenterPåSak(sak.saksnummer),
-            vurderingsbehov = vurderingsbehovForBehandling
+            vurderingsbehov = vurderingsbehovForBehandling,
+            opprettetAv = hendelse.opprettetAv
         )
         return statistikkHendelse
     }

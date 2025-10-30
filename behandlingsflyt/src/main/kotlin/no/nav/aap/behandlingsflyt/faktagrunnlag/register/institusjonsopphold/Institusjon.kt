@@ -28,5 +28,6 @@ enum class Oppholdstype(val beskrivelse: String) {
     P("Fødsel"),
     R("Opptreningsinstitusjon"),
     S("Soningsfange"),
-    V("Varetektsfange")
+    V("Varetektsfange"),
+    UKJENT("Ukjent"),
 }

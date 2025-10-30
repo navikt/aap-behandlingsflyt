@@ -24,7 +24,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -118,19 +117,15 @@ class IverksettVedtakSteg private constructor(
         kontekst: FlytKontekstMedPerioder,
         tilkjentYtelseDto: TilkjentYtelseDto
     ) {
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.IverksettUtbetalingSomSelvstendigJobb)) {
-            /**
-             * Må opprette jobb med sakId, men uten behandlingId for at disse skal bli kjørt sekvensielt i riktig rekkefølge.
-             * Viktig at eldste jobb kjøres først slik at utbetaling blir konsistent med Kelvin
-             */
-            flytJobbRepository.leggTil(
-                jobbInput = JobbInput(jobb = IverksettUtbetalingJobbUtfører)
-                    .medPayload(kontekst.behandlingId)
-                    .forSak(sakId = kontekst.sakId.toLong())
-            )
-        } else {
-            utbetalingGateway.utbetal(tilkjentYtelseDto)
-        }
+        /**
+         * Må opprette jobb med sakId, men uten behandlingId for at disse skal bli kjørt sekvensielt i riktig rekkefølge.
+         * Viktig at eldste jobb kjøres først slik at utbetaling blir konsistent med Kelvin
+         */
+        flytJobbRepository.leggTil(
+            jobbInput = JobbInput(jobb = IverksettUtbetalingJobbUtfører)
+                .medPayload(kontekst.behandlingId)
+                .forSak(sakId = kontekst.sakId.toLong())
+        )
     }
 
     private fun opprettGosysOppgaverForSosialrefusjon(

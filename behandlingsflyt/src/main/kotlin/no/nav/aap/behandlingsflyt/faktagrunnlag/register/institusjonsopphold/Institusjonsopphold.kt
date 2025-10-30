@@ -34,7 +34,7 @@ class Institusjonsopphold(
     companion object {
         fun nyttOpphold(
             institusjonstype: String,
-            kategori: String,
+            kategori: String?,
             startdato: LocalDate,
             sluttdato: LocalDate?,
             orgnr: String?,
@@ -42,7 +42,7 @@ class Institusjonsopphold(
         ): Institusjonsopphold {
             return Institusjonsopphold(
                 Institusjonstype.valueOf(institusjonstype),
-                Oppholdstype.valueOf(kategori),
+                kategori?.let(Oppholdstype::valueOf) ?: Oppholdstype.UKJENT,
                 startdato,
                 sluttdato,
                 orgnr,

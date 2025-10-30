@@ -46,7 +46,7 @@ class InMemorySamordningYtelseRepositoryTest {
         // Create a test ytelse
         val ytelse = SamordningYtelse(
             ytelseType = Ytelse.SYKEPENGER,
-            ytelsePerioder = listOf(
+            ytelsePerioder = setOf(
                 SamordningYtelsePeriode(
                     periode = Periode(
                         fom = LocalDate.of(2023, 1, 1),
@@ -76,7 +76,7 @@ class InMemorySamordningYtelseRepositoryTest {
         assertThat(tilYtelse?.ytelser?.get(0)?.kilde).isEqualTo("TEST")
         assertThat(tilYtelse?.ytelser?.get(0)?.saksRef).isEqualTo("REF123")
         assertThat(tilYtelse?.ytelser?.get(0)?.ytelsePerioder).hasSize(1)
-        assertThat(tilYtelse?.ytelser?.get(0)?.ytelsePerioder?.get(0)?.kronesum).isEqualTo(1000)
+        assertThat(tilYtelse?.ytelser?.get(0)?.ytelsePerioder?.first()?.kronesum).isEqualTo(1000)
 
         // Verify that the grunnlagId is the same (reference to the same data)
         assertThat(tilYtelse?.grunnlagId).isEqualTo(fraYtelse?.grunnlagId)
@@ -110,7 +110,7 @@ class InMemorySamordningYtelseRepositoryTest {
         // Create test ytelser with different attributes to identify them
         val ytelse1 = SamordningYtelse(
             ytelseType = Ytelse.SYKEPENGER,
-            ytelsePerioder = listOf(
+            ytelsePerioder = setOf(
                 SamordningYtelsePeriode(
                     periode = Periode(
                         fom = LocalDate.of(2023, 1, 1),
@@ -126,7 +126,7 @@ class InMemorySamordningYtelseRepositoryTest {
 
         val ytelse2 = SamordningYtelse(
             ytelseType = Ytelse.FORELDREPENGER,
-            ytelsePerioder = listOf(
+            ytelsePerioder = setOf(
                 SamordningYtelsePeriode(
                     periode = Periode(
                         fom = LocalDate.of(2023, 2, 1),
@@ -142,7 +142,7 @@ class InMemorySamordningYtelseRepositoryTest {
 
         val ytelse3 = SamordningYtelse(
             ytelseType = Ytelse.PLEIEPENGER,
-            ytelsePerioder = listOf(
+            ytelsePerioder = setOf(
                 SamordningYtelsePeriode(
                     periode = Periode(
                         fom = LocalDate.of(2023, 3, 1),
@@ -170,7 +170,7 @@ class InMemorySamordningYtelseRepositoryTest {
         assertThat(eldsteGrunnlag?.ytelser?.get(0)?.kilde).isEqualTo("TEST1")
         assertThat(eldsteGrunnlag?.ytelser?.get(0)?.saksRef).isEqualTo("REF1")
         assertThat(eldsteGrunnlag?.ytelser?.get(0)?.ytelsePerioder).hasSize(1)
-        assertThat(eldsteGrunnlag?.ytelser?.get(0)?.ytelsePerioder?.get(0)?.kronesum).isEqualTo(1000)
+        assertThat(eldsteGrunnlag?.ytelser?.get(0)?.ytelsePerioder?.first()?.kronesum).isEqualTo(1000)
 
         // Also verify that hentHvisEksisterer returns the newest one (ytelse3)
         val nyesteGrunnlag = samordningYtelseRepo.hentHvisEksisterer(behandlingId)
@@ -190,7 +190,7 @@ class InMemorySamordningYtelseRepositoryTest {
         // Create multiple ytelser
         val ytelse1 = SamordningYtelse(
             ytelseType = Ytelse.SYKEPENGER,
-            ytelsePerioder = listOf(
+            ytelsePerioder = setOf(
                 SamordningYtelsePeriode(
                     periode = Periode(
                         fom = LocalDate.of(2023, 1, 1),
@@ -206,7 +206,7 @@ class InMemorySamordningYtelseRepositoryTest {
 
         val ytelse2 = SamordningYtelse(
             ytelseType = Ytelse.FORELDREPENGER,
-            ytelsePerioder = listOf(
+            ytelsePerioder = setOf(
                 SamordningYtelsePeriode(
                     periode = Periode(
                         fom = LocalDate.of(2023, 2, 1),
@@ -234,7 +234,7 @@ class InMemorySamordningYtelseRepositoryTest {
         assertThat(savedYtelse1?.ytelseType).isEqualTo(Ytelse.SYKEPENGER)
         assertThat(savedYtelse1?.saksRef).isEqualTo("REF1")
         assertThat(savedYtelse1?.ytelsePerioder).hasSize(1)
-        assertThat(savedYtelse1?.ytelsePerioder?.get(0)?.kronesum).isEqualTo(1000)
+        assertThat(savedYtelse1?.ytelsePerioder?.first()?.kronesum).isEqualTo(1000)
 
         // Verify second ytelse
         val savedYtelse2 = grunnlag?.ytelser?.find { it.kilde == "TEST2" }
@@ -242,7 +242,7 @@ class InMemorySamordningYtelseRepositoryTest {
         assertThat(savedYtelse2?.ytelseType).isEqualTo(Ytelse.FORELDREPENGER)
         assertThat(savedYtelse2?.saksRef).isEqualTo("REF2")
         assertThat(savedYtelse2?.ytelsePerioder).hasSize(1)
-        assertThat(savedYtelse2?.ytelsePerioder?.get(0)?.kronesum).isEqualTo(2000)
+        assertThat(savedYtelse2?.ytelsePerioder?.first()?.kronesum).isEqualTo(2000)
     }
 
     @Test
@@ -255,7 +255,7 @@ class InMemorySamordningYtelseRepositoryTest {
         // Create different ytelser for each call
         val ytelse1 = SamordningYtelse(
             ytelseType = Ytelse.SYKEPENGER,
-            ytelsePerioder = listOf(
+            ytelsePerioder = setOf(
                 SamordningYtelsePeriode(
                     periode = Periode(
                         fom = LocalDate.of(2023, 1, 1),
@@ -271,7 +271,7 @@ class InMemorySamordningYtelseRepositoryTest {
 
         val ytelse2 = SamordningYtelse(
             ytelseType = Ytelse.FORELDREPENGER,
-            ytelsePerioder = listOf(
+            ytelsePerioder = setOf(
                 SamordningYtelsePeriode(
                     periode = Periode(
                         fom = LocalDate.of(2023, 2, 1),
@@ -340,7 +340,7 @@ class InMemorySamordningYtelseRepositoryTest {
         // Create ytelser for source and target
         val ytelseSource = SamordningYtelse(
             ytelseType = Ytelse.SYKEPENGER,
-            ytelsePerioder = listOf(
+            ytelsePerioder = setOf(
                 SamordningYtelsePeriode(
                     periode = Periode(
                         fom = LocalDate.of(2023, 1, 1),
@@ -356,7 +356,7 @@ class InMemorySamordningYtelseRepositoryTest {
 
         val ytelseTarget = SamordningYtelse(
             ytelseType = Ytelse.FORELDREPENGER,
-            ytelsePerioder = listOf(
+            ytelsePerioder = setOf(
                 SamordningYtelsePeriode(
                     periode = Periode(
                         fom = LocalDate.of(2023, 2, 1),

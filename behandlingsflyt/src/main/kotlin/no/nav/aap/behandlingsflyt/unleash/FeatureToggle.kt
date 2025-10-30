@@ -11,17 +11,16 @@ enum class BehandlingsflytFeature : FeatureToggle {
     FritakMeldeplikt,
     IngenValidering,
     InnhentEnhetsregisterData,
-    SendForvaltningsmelding,
     NyBrevtype11_17,
     NyBrevtype11_18,
     Aktivitetsplikt11_9,
-    TilgangssjekkSettPaaVent,
     OverforingsdatoNullForAvregning,
     NyeSykdomVilkar,
-    IverksettUtbetalingSomSelvstendigJobb,
     OvergangArbeid,
     AvklaringsbehovService,
-    LovvalgMedlemskapPeriodisertMigrering
+    AvklaringsbehovServiceFormkrav,
+    LovvalgMedlemskapPeriodisertMigrering,
+    KvalitetssikringsSteg
     ;
 
     override fun key(): String = name
