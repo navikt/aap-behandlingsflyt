@@ -44,7 +44,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+// FIXME eksponerer en feil? @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class MedlemskapArbeidInntektRepositoryImplTest {
 
     @AutoClose
@@ -201,7 +201,8 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
                 enhetGrunnlag = enhetGrunnlags()
             )
 
-            val medlemskapArbeidInntektGrunnlagOppdatert = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandling.id)
+            val medlemskapArbeidInntektGrunnlagOppdatert =
+                medlemskapArbeidInntektRepository.hentHvisEksisterer(behandling.id)
 
             assertThat(medlemskapArbeidInntektGrunnlagOppdatert?.vurderinger?.size).isEqualTo(2)
         }
@@ -440,15 +441,20 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
         )
     }
 
-    private fun manuellVurderingIkkePeriodisert(begrunnelse: String): ManuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskap(
-        id = 1,
-        LovvalgVedSøknadsTidspunktDto(begrunnelse, EØSLandEllerLandMedAvtale.NOR),
-        MedlemskapVedSøknadsTidspunktDto(begrunnelse, true),
-        "SAKSBEHANDLER",
-        LocalDateTime.now()
-    )
+    private fun manuellVurderingIkkePeriodisert(begrunnelse: String): ManuellVurderingForLovvalgMedlemskap =
+        ManuellVurderingForLovvalgMedlemskap(
+            id = 1,
+            LovvalgVedSøknadsTidspunktDto(begrunnelse, EØSLandEllerLandMedAvtale.NOR),
+            MedlemskapVedSøknadsTidspunktDto(begrunnelse, true),
+            "SAKSBEHANDLER",
+            LocalDateTime.now()
+        )
 
-    private fun manuellVurdering(fom: LocalDate, tom: LocalDate?, vurdertIBehandling: BehandlingId? = null): ManuellVurderingForLovvalgMedlemskap =
+    private fun manuellVurdering(
+        fom: LocalDate,
+        tom: LocalDate?,
+        vurdertIBehandling: BehandlingId? = null
+    ): ManuellVurderingForLovvalgMedlemskap =
         ManuellVurderingForLovvalgMedlemskap(
             fom = fom,
             tom = tom,
