@@ -145,6 +145,7 @@ private fun utledEndringerSidenSist(
 
 private fun kvalitetssikringsVurdering(avklaringsbehovene: Avklaringsbehovene): List<TotrinnsVurdering> {
     return avklaringsbehovene.alle()
+        .filter { it.erIkkeAvbrutt() }
         .filter { it.definisjon.kvalitetssikres }
         .map { tilKvalitetssikring(it) }
 }
