@@ -157,6 +157,7 @@ import no.nav.aap.motor.testutil.ManuellMotorImpl
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
@@ -169,9 +170,23 @@ import kotlin.reflect.KClass
 
 @Fakes
 open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway>) {
+    companion object {
+        lateinit var dataSource: TestDataSource
 
-    @AutoClose
-    val dataSource = TestDataSource()
+        @BeforeAll
+        @JvmStatic
+        fun beforeAll() {
+            System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
+            dataSource = TestDataSource()
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun tearDown() {
+            dataSource.close()
+        }
+    }
+
 
     protected val motor by lazy {
         ManuellMotorImpl(
@@ -212,14 +227,6 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         register<KabalGateway>()
         register<NorgGateway>()
         register<GosysGateway>()
-    }
-
-    companion object {
-        @BeforeAll
-        @JvmStatic
-        internal fun beforeAll() {
-            System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
-        }
     }
 
     private var nesteJournalpostId = (300..1000000)
