@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.samordning
 
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.leggTilVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
@@ -57,12 +58,15 @@ class SamordningService(
     fun perioderSomIkkeHarBlittVurdert(
         grunnlag: SamordningYtelseGrunnlag?,
         tidligereVurderinger: Tidslinje<List<Pair<Ytelse, SamordningVurderingPeriode>>>
-    ): Tidslinje<List<Pair<Ytelse, SamordningYtelsePeriode>>> {
+    ): Tidslinje<List<Ytelse>> {
         val hentedeYtelserByManuelleYtelser =
             grunnlag?.ytelser.orEmpty().filter { it.ytelseType.type == AvklaringsType.MANUELL }
                 .map { ytelse ->
-                    Tidslinje(ytelse.ytelsePerioder.map { Segment(it.periode, Pair(ytelse.ytelseType, it)) })
-                }.fold(Tidslinje.empty<List<Pair<Ytelse, SamordningYtelsePeriode>>>()) { acc, curr ->
+                    val tidslinjePerPeriode = ytelse.ytelsePerioder.map { Tidslinje(it.periode, ytelse.ytelseType) }
+                    tidslinjePerPeriode.fold(Tidslinje.empty<Ytelse>()) { acc, curr ->
+                        acc.kombiner(curr, StandardSammenslåere.prioriterHøyreSideCrossJoin())
+                    }.komprimer()
+                }.fold(Tidslinje.empty<List<Ytelse>>()) { acc, curr ->
                     acc.kombiner(curr, slåSammenTilListe())
                 }
 
@@ -78,7 +82,10 @@ class SamordningService(
     ): Tidslinje<SamordningGradering> {
         val hentedeYtelserFraRegister =
             grunnlag?.ytelser.orEmpty().map { ytelse ->
-                Tidslinje(ytelse.ytelsePerioder.map { Segment(it.periode, Pair(ytelse.ytelseType, it)) })
+                val tidslinjePerPeriode = ytelse.ytelsePerioder.map { Tidslinje(it.periode, Pair(ytelse.ytelseType, it)) }
+                tidslinjePerPeriode.fold(Tidslinje.empty<Pair<Ytelse, SamordningYtelsePeriode>>()) { acc, curr ->
+                    acc.kombiner(curr, StandardSammenslåere.prioriterHøyreSideCrossJoin())
+                }.komprimer()
             }.fold(Tidslinje.empty<List<Pair<Ytelse, SamordningYtelsePeriode>>>()) { acc, curr ->
                 acc.kombiner(curr, slåSammenTilListe())
             }
