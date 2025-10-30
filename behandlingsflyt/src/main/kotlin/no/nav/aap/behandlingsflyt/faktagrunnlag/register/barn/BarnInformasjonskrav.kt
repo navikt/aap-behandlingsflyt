@@ -8,9 +8,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_END
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravInput
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.KanTriggeRevurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.BarnInnhentingRespons
@@ -28,6 +28,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
+import java.util.stream.Collectors.toSet
 
 class BarnInformasjonskrav private constructor(
     private val barnRepository: BarnRepository,
@@ -144,18 +145,7 @@ class BarnInformasjonskrav private constructor(
     }
 
     private fun harEndringer(barnGrunnlag: BarnGrunnlag?, registerBarn: List<Barn>): Boolean {
-        return manglerBarnGrunnlagEllerFantNyeBarnFraRegister(
-            registerBarn,
-            barnGrunnlag?.registerbarn?.barn
-        )
-    }
-
-
-    private fun manglerBarnGrunnlagEllerFantNyeBarnFraRegister(
-        barnIdenter: List<Barn>,
-        eksisterendeRegisterBarn: List<Barn>?
-    ): Boolean {
-        return barnIdenter.map { it.ident }.toSet() != eksisterendeRegisterBarn?.map { it.ident }?.toSet()
+        return registerBarn.toSet() != barnGrunnlag?.registerbarn?.barn?.toSet()
     }
 
     override fun behovForRevurdering(behandlingId: BehandlingId): List<VurderingsbehovMedPeriode> {
