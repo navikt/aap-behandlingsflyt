@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Hjemmel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.*
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
+import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -16,6 +17,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
@@ -32,6 +34,9 @@ class FatteVedtakStegTest {
     val tidligereVurderinger = mockk<TidligereVurderinger>()
     val trekkKlageService = mockk<TrekkKlageService>()
     val avklaringsbehovService = mockk<AvklaringsbehovService>()
+    val gatewayProvider = createGatewayProvider {
+        register<FakeUnleash>()
+    }
 
     @BeforeEach
     fun setup() {
@@ -58,7 +63,8 @@ class FatteVedtakStegTest {
         tidligereVurderinger = tidligereVurderinger,
         klageresultatUtleder = klageresultatUtleder,
         trekkKlageService = trekkKlageService,
-        avklaringsbehovService = avklaringsbehovService
+        avklaringsbehovService = avklaringsbehovService,
+        unleashGateway = gatewayProvider.provide()
     )
 
     @Test
