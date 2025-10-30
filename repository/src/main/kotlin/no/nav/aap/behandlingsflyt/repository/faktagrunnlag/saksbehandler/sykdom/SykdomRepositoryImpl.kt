@@ -15,6 +15,7 @@ import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.Factory
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.slf4j.LoggerFactory
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -467,7 +468,6 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
         val rettighetsperiode: Periode,
         val vurderingerId: Long,
         val grunnlagOpprettetTid: LocalDateTime,
-        val vurderingOpprettetTid: LocalDateTime
     )
 
     override fun migrerSykdomsvurderinger() {
@@ -490,7 +490,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
             // Dette dekker en eksisterende vurdering som er lagret som en del av et nytt grunnlag; 
             // disse har ikke samme id som den originale.
             // Antar at like vurderinger innenfor samme sak er samme vurdering
-            val nyeVerdierForVurdering = mutableMapOf<Sykdomsvurdering, Pair<BehandlingId, LocalDate>>()
+            val nyeVerdierForVurdering = mutableMapOf<SammenlignbarSykdomsvurdering, Pair<BehandlingId, LocalDate>>()
 
             grunnlagEldsteFørst.forEach { grunnlag ->
                 if (grunnlag.vurderingerId in migrerteVurderingerId) {
@@ -498,19 +498,20 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                     return@forEach
                 }
                 val vurderingerForGrunnlag =
-                    vurderingerMedVurderingerId.filter { it.vurderingerId == grunnlag.vurderingerId }
+                    vurderingerMedVurderingerId.filter { it.vurderingerId == grunnlag.vurderingerId }.map{it.sykdomsvurdering}
                 if (vurderingerForGrunnlag.isEmpty()) {
                     // Skal ikke skje ettersom kandidat-joinen er på grunnlag-vurdering
                     throw IllegalStateException("Fant ingen sykdomsvurderinger for sykdomsvurderingerId ${grunnlag.vurderingerId} i grunnlag ${grunnlag.grunnlagId}")
                 }
 
                 vurderingerForGrunnlag.forEach { vurdering ->
-                    val nyeVerdier = if (nyeVerdierForVurdering.containsKey(vurdering.sykdomsvurdering)) {
+                    val sammenlignbarVurdering = vurdering.tilSammenlignbar()
+                    val nyeVerdier = if (nyeVerdierForVurdering.containsKey(sammenlignbarVurdering)) {
                         // Bruk den migrerte versjonen
-                        nyeVerdierForVurdering[vurdering.sykdomsvurdering]!!
+                        nyeVerdierForVurdering[sammenlignbarVurdering]!!
                     } else {
                         val nyeVerdier = Pair(grunnlag.behandlingId, grunnlag.rettighetsperiode.fom)
-                        nyeVerdierForVurdering.put(vurdering.sykdomsvurdering, nyeVerdier)
+                        nyeVerdierForVurdering.put(sammenlignbarVurdering, nyeVerdier)
                         nyeVerdier
                     }
 
@@ -525,7 +526,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                         setParams {
                             setLong(1, nyeVerdier.first.id)
                             setLocalDate(2, nyeVerdier.second)
-                            setLong(3, vurdering.sykdomsvurdering.id!!)
+                            setLong(3, vurdering.id!!)
                         }
                     }
                     
@@ -537,6 +538,45 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
         val totalTid = System.currentTimeMillis() - start
 
         log.info("Fullført migrering av manuelle vurderinger for sykdom. Migrerte ${kandidater.size} grunnlag på $totalTid ms.")
+    }
+
+
+    // Vurdering minus opprettet, id, vurdertIBehandling
+    data class SammenlignbarSykdomsvurdering(
+        val begrunnelse: String,
+        val vurderingenGjelderFra: LocalDate?, // TODO: Gjør påkrevd etter migrering
+        val vurderingenGjelderTil: LocalDate?,
+        val dokumenterBruktIVurdering: List<JournalpostId>,
+        val harSkadeSykdomEllerLyte: Boolean,
+        val erSkadeSykdomEllerLyteVesentligdel: Boolean?,
+        val erNedsettelseIArbeidsevneAvEnVissVarighet: Boolean?,
+        val erNedsettelseIArbeidsevneMerEnnHalvparten: Boolean?,
+        val erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean?,
+        val yrkesskadeBegrunnelse: String?,
+        val erArbeidsevnenNedsatt: Boolean?,
+        val kodeverk: String? = null,
+        val hoveddiagnose: String? = null,
+        val bidiagnoser: List<String>? = emptyList(),
+        val vurdertAv: Bruker,
+    )
+    private fun Sykdomsvurdering.tilSammenlignbar(): SammenlignbarSykdomsvurdering {
+        return SammenlignbarSykdomsvurdering(
+            begrunnelse = this.begrunnelse,
+            vurderingenGjelderFra = this.vurderingenGjelderFra,
+            vurderingenGjelderTil = this.vurderingenGjelderTil,
+            dokumenterBruktIVurdering = this.dokumenterBruktIVurdering,
+            harSkadeSykdomEllerLyte = this.harSkadeSykdomEllerLyte,
+            erSkadeSykdomEllerLyteVesentligdel = this.erSkadeSykdomEllerLyteVesentligdel,
+            erNedsettelseIArbeidsevneAvEnVissVarighet = this.erNedsettelseIArbeidsevneAvEnVissVarighet,
+            erNedsettelseIArbeidsevneMerEnnHalvparten = this.erNedsettelseIArbeidsevneMerEnnHalvparten,
+            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = this.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
+            yrkesskadeBegrunnelse = this.yrkesskadeBegrunnelse,
+            erArbeidsevnenNedsatt = this.erArbeidsevnenNedsatt,
+            kodeverk = this.kodeverk,
+            hoveddiagnose = this.hoveddiagnose,
+            bidiagnoser = this.bidiagnoser,
+            vurdertAv = this.vurdertAv,
+        )
     }
 
     private data class VurderingMedVurderingerId(
@@ -585,9 +625,6 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                     rettighetsperiode = it.getPeriode("rettighetsperiode"), // Denne er teknisk sett feil, men kanskje godt nok. Hvis ikke: join på rettighetsperiode_grunnlag
                     vurderingerId = it.getLong("sykdom_vurderinger_id"),
                     grunnlagOpprettetTid = it.getLocalDateTime("grunnlag_opprettet_tid"),
-                    vurderingOpprettetTid = it.getLocalDateTime(
-                        "vurdering_opprettet_tid"
-                    )
                 )
             }
         }
