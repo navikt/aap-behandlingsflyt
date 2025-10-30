@@ -35,13 +35,18 @@ private fun bestemAntallTestTråder(): Int {
             max(processors / 2, processors - 4)
         }
 
-    logger.quiet("Bruker opptil ${antallTråder} tråder for testkjøring ($processors kjerner tilgjengelig)")
     return antallTråder
 }
 
 tasks {
     test {
         useJUnitPlatform()
+
+        // Equivalent to putting settings in junit-platform.properties:
+        systemProperty("junit.jupiter.execution.parallel.enabled", "true")
+        systemProperty("junit.jupiter.execution.parallel.mode.default", "concurrent")
+        systemProperty("junit.jupiter.testinstance.lifecycle.default", "per_class")
+
         maxParallelForks = bestemAntallTestTråder()
         testLogging {
             events("passed", "skipped", "failed")
