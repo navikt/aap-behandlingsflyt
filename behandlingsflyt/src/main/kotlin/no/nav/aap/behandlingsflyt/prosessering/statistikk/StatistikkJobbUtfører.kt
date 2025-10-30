@@ -55,6 +55,7 @@ class StatistikkJobbUtfører(
  * @param status Status på behandlingen.
  * @param opprettetTidspunkt Når behandlingen ble opprettet.
  * @param hendelsesTidspunkt Når denne hendelsen ble opprettet i Behandlingsflyt.
+ * @param opprettetAv Hvem som opprettet behandlingen, dersom behandlingen er en manuell revurdering.
  */
 data class BehandlingFlytStoppetHendelseTilStatistikk(
     val personIdent: String,
@@ -65,5 +66,6 @@ data class BehandlingFlytStoppetHendelseTilStatistikk(
     val avklaringsbehov: List<AvklaringsbehovHendelseDto>,
     val opprettetTidspunkt: LocalDateTime,
     val hendelsesTidspunkt: LocalDateTime,
-    val versjon: String
+    val versjon: String,
+    val opprettetAv: String? = null,
 )

@@ -3671,7 +3671,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     begrunnelse = "Begrunnelse",
                     erBrukerPart = false,
                     erFristOverholdt = true,
-                    likevelBehandles = true,
+                    likevelBehandles = false,
                     erKonkret = true,
                     erSignert = true
                 )
@@ -3804,7 +3804,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
 
         // Sjekk at avklaringsbehov er blitt gjenåpnet
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
-        assertThat(åpneAvklaringsbehov).hasSize(4)
+        assertThat(åpneAvklaringsbehov).hasSize(3)
         assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.VURDER_FORMKRAV)
         assertThat(åpneAvklaringsbehov.first().status()).isEqualTo(AvklaringsbehovStatus.SENDT_TILBAKE_FRA_BESLUTTER)
     }
@@ -4198,6 +4198,57 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
 
         assertThat(sak.rettighetsperiode).isNotEqualTo(periode)
         assertThat(sak.rettighetsperiode).isEqualTo(
+            Periode(
+                nyStartDato,
+                nyStartDato.plusYears(1).minusDays(1)
+            )
+        )
+    }
+
+    @Test
+    fun `Skal kunne overstyre rettighetsperioden hos NAY`() {
+        val (sak, behandling) = sendInnFørsteSøknad()
+
+        val ident = sak.person.aktivIdent()
+        val nyStartDato = sak.rettighetsperiode.fom.minusDays(7)
+        behandling
+            .løsSykdom()
+            .løsBistand()
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .kvalitetssikreOk()
+
+        var oppdatertBehandling = sak.opprettManuellRevurdering(
+            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.VURDER_RETTIGHETSPERIODE),
+        ).medKontekst {
+            assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
+            assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+        }
+
+        oppdatertBehandling = oppdatertBehandling
+            .løsRettighetsperiode(nyStartDato)
+            .medKontekst {
+                val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(oppdatertBehandling.id)
+                assertThat(åpneAvklaringsbehov).hasSize(2)
+                assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.AVKLAR_SYKDOM)
+
+            }
+            .løsSykdom()
+//            .løsBistand() // TODO: Her burde vi stoppe opp på bistand og kreve at man får et avklaringsbehov, men det fungerer ikke før vi har periodisert _erTilstrekkeligVurdert_
+            .løsBeregningstidspunkt(nyStartDato)
+            .løsForutgåendeMedlemskap()
+            .løsOppholdskrav(nyStartDato)
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtakEllerSendRetur()
+            .løsVedtaksbrev(TypeBrev.VEDTAK_INNVILGELSE)
+
+        val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(oppdatertBehandling.id)
+        assertThat(åpneAvklaringsbehov).isEmpty()
+
+        val oppdatertSak = hentSak(ident, sak.rettighetsperiode)
+
+        assertThat(oppdatertSak.rettighetsperiode).isNotEqualTo(sak.rettighetsperiode)
+        assertThat(oppdatertSak.rettighetsperiode).isEqualTo(
             Periode(
                 nyStartDato,
                 nyStartDato.plusYears(1).minusDays(1)

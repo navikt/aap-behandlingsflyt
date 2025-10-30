@@ -254,6 +254,12 @@ class Avklaringsbehovene(
             .any { avklaringsbehov -> !avklaringsbehov.erKvalitetssikretTidligere() }
     }
 
+    fun harAvklaringsbehovSomKreverKvalitetssikring(): Boolean {
+        return alle()
+            .filter { avklaringsbehov -> avklaringsbehov.kreverKvalitetssikring() }
+            .any { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
+    }
+
     fun harIkkeForeslåttUttak(): Boolean {
         return alle()
             .filter { avklaringsbehov -> avklaringsbehov.erForeslåttUttak() }

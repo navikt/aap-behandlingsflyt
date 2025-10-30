@@ -21,7 +21,6 @@ import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.Institusjonsop
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Ident
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlageV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManueltOppgittBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppgitteBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
@@ -97,9 +96,6 @@ fun main() {
 
         testScenarioOrkestrator = TestScenarioOrkestrator(gatewayProvider, datasource, motor)
 
-        opprettTestKlage(alderIkkeOppfyltTestCase)
-
-
         apiRouting {
             route("/test") {
                 route("/opprett") {
@@ -108,11 +104,7 @@ fun main() {
                         respond(dto)
                     }
                 }
-            }
-        }
 
-        apiRouting {
-            route("/test") {
                 route("/opprett-og-fullfoer") {
                     post<Unit, OpprettTestcaseDTO, OpprettTestcaseDTO> { _, dto ->
                         sendInnOgFullførFørstegangsbehandling(dto)
@@ -168,7 +160,7 @@ private fun genererBarn(dto: TestBarn): TestPerson {
     )
 }
 
-fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPerson>): SøknadV0 {
+private fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPerson>): SøknadV0 {
     val erStudent = if (dto.student) "JA" else "NEI"
     val harYrkesskade = if (dto.yrkesskade) "JA" else "NEI"
 
@@ -287,75 +279,73 @@ private fun sendInnOgFullførFørstegangsbehandling(dto: OpprettTestcaseDTO): Sa
     log.info("Fullfører førstegangsbehandling for sak ${sak.id}")
     val behandling = hentSisteBehandlingForSak(sak.id)
 
-   behandling.apply {
-            with(testScenarioOrkestrator) {
-                // Student eller sykdom
-                if (dto.student) {
-                    løsStudent(this@apply)
-                } else {
-                    løsSykdom(this@apply)
-                    løsBistand(this@apply)
-                }
-
-                // Vurderinger i sykdom
-                løsRefusjonskrav(this@apply)
-                løsSykdomsvurderingBrev(this@apply)
-                kvalitetssikreOk(this@apply)
-
-                // Yrkesskade
-                if (dto.yrkesskade) {
-                    løsYrkesSkade(this@apply)
-                }
-
-                // Inntekt
-                løsBeregningstidspunkt(this@apply)
-
-                if (dto.inntekterPerAr == null || dto.inntekterPerAr.isEmpty()) {
-                    løsManuellInntektVurdering(this@apply)
-                }
-
-                // Forutgående medlemskap
-                if (dto.yrkesskade) {
-                    løsFastsettYrkesskadeInntekt(this@apply)
-                } else {
-                    løsForutgåendeMedlemskap(this@apply)
-                }
-
-                // Oppholdskrav
-                løsOppholdskrav(this@apply)
-
-                // Institusjonsopphold
-                if (dto.institusjoner.fengsel == true) {
-                    løsSoningsforhold(this@apply)
-                }
-
-                // Barnetillegg
-                if (dto.barn.isNotEmpty()) {
-                    løsBarnetillegg(this@apply)
-                }
-
-                // Samordning
-                if (dto.sykepenger.isEmpty()) {
-                    løsUtenSamordning(this@apply)
-                } else {
-                    løsSamordning(this@apply, dto.sykepenger.first().periode)
-                }
-
-                if (dto.tjenestePensjon == true) {
-                    løsTjenestepensjonRefusjonskravVurdering(this@apply)
-                }
-
-                // Vedtak
-                løsForeslåVedtakLøsning(this@apply)
-                fattVedtakEllerSendRetur(this@apply)
-                løsVedtaksbrev(this@apply)
-            }
+    with(testScenarioOrkestrator) {
+        // Student eller sykdom
+        if (dto.student) {
+            løsStudent(behandling)
+        } else {
+            løsSykdom(behandling)
+            løsBistand(behandling)
         }
+
+        // Vurderinger i sykdom
+        løsRefusjonskrav(behandling)
+        løsSykdomsvurderingBrev(behandling)
+        kvalitetssikreOk(behandling)
+
+        // Yrkesskade
+        if (dto.yrkesskade) {
+            løsYrkesSkade(behandling)
+        }
+
+        // Inntekt
+        løsBeregningstidspunkt(behandling)
+
+        if (dto.inntekterPerAr == null || dto.inntekterPerAr.isEmpty()) {
+            løsManuellInntektVurdering(behandling)
+        }
+
+        // Forutgående medlemskap
+        if (dto.yrkesskade) {
+            løsFastsettYrkesskadeInntekt(behandling)
+        } else {
+            løsForutgåendeMedlemskap(behandling)
+        }
+
+        // Oppholdskrav
+        løsOppholdskrav(behandling)
+
+        // Institusjonsopphold
+        if (dto.institusjoner.fengsel == true) {
+            løsSoningsforhold(behandling)
+        }
+
+        // Barnetillegg
+        if (dto.barn.isNotEmpty()) {
+            løsBarnetillegg(behandling)
+        }
+
+        // Samordning
+        if (dto.sykepenger.isEmpty()) {
+            løsUtenSamordning(behandling)
+        } else {
+            løsSamordning(behandling, dto.sykepenger.first().periode)
+        }
+
+        if (dto.tjenestePensjon == true) {
+            løsTjenestepensjonRefusjonskravVurdering(behandling)
+        }
+
+        // Vedtak
+        løsForeslåVedtakLøsning(behandling)
+        fattVedtakEllerSendRetur(behandling)
+        løsVedtaksbrev(behandling)
+    }
 
     return sak
 }
 
-fun hentSisteBehandlingForSak(sakId: SakId): Behandling {
+private fun hentSisteBehandlingForSak(sakId: SakId): Behandling {
     return datasource.transaction { connection ->
         val repositoryProvider = postgresRepositoryRegistry.provider(connection)
         val sbService = SakOgBehandlingService(
@@ -368,43 +358,6 @@ fun hentSisteBehandlingForSak(sakId: SakId): Behandling {
         behandling
     }
 }
-
-private fun sendInnKlage(sak: Sak) {
-    datasource.transaction { connection ->
-        val flytJobbRepository = FlytJobbRepository(connection)
-
-        flytJobbRepository.leggTil(
-            HendelseMottattHåndteringJobbUtfører.nyJobb(
-                sakId = sak.id,
-                dokumentReferanse = InnsendingReferanse(JournalpostId("" + System.currentTimeMillis())),
-                brevkategori = InnsendingType.KLAGE,
-                kanal = Kanal.DIGITAL,
-                melding = KlageV0(
-                    kravMottatt = LocalDate.now().minusWeeks(1),
-                    skalOppretteNyBehandling = true
-                ),
-                mottattTidspunkt = LocalDateTime.now(),
-            )
-        )
-    }
-}
-
-private fun opprettTestKlage(testcaseDTO: OpprettTestcaseDTO) {
-    val sak = sendInnSøknad(testcaseDTO)
-    sendInnKlage(sak)
-}
-
-private val alderIkkeOppfyltTestCase = OpprettTestcaseDTO(
-    fødselsdato = LocalDate.now().minusYears(17),
-    barn = emptyList(),
-    yrkesskade = false,
-    uføre = null,
-    institusjoner = Institusjoner(fengsel = false, sykehus = false),
-    inntekterPerAr = null,
-    søknadsdato = LocalDate.now(),
-    student = false,
-    medlemskap = true,
-)
 
 internal fun postgreSQLContainer(): PostgreSQLContainer<Nothing> =
     PostgreSQLContainer<Nothing>("postgres:16")

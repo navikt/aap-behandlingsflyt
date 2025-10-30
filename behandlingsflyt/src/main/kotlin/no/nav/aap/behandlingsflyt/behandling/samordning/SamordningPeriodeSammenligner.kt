@@ -90,7 +90,7 @@ class SamordningPeriodeSammenligner(private val samordningYtelseRepository: Samo
         return nyeSammenlignetMedEldre + uendrede + slettede
     }
 
-    private fun Map<Ytelse, Pair<SamordningYtelse, List<SamordningYtelsePeriode>>>.tilSamordningYtelseMedEndring(
+    private fun Map<Ytelse, Pair<SamordningYtelse, Collection<SamordningYtelsePeriode>>>.tilSamordningYtelseMedEndring(
         endringStatus: EndringStatus
     ): List<SamordningYtelseMedEndring> {
         return this.flatMap { par -> par.value.second.map { Pair(par.value.first, it) } }

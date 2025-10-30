@@ -2,11 +2,11 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.Instant
 import java.time.LocalDate
-
 
 data class InnhentetSykdomsOpplysninger(
     val oppgittYrkesskadeISøknad: Boolean,
@@ -19,7 +19,12 @@ data class RegistrertYrkesskade(
     val skadedato: LocalDate?,
     val kilde: String,
 ) {
-    constructor(yrkesskade: Yrkesskade) : this(yrkesskade.ref, yrkesskade.saksnummer, yrkesskade.skadedato, yrkesskade.kildesystem)
+    constructor(yrkesskade: Yrkesskade) : this(
+        yrkesskade.ref,
+        yrkesskade.saksnummer,
+        yrkesskade.skadedato,
+        yrkesskade.kildesystem
+    )
 }
 
 data class SykdomsvurderingLøsningDto(
@@ -39,11 +44,15 @@ data class SykdomsvurderingLøsningDto(
     val hoveddiagnose: String? = null,
     val bidiagnoser: List<String>? = emptyList(),
 ) {
-
-    fun toSykdomsvurdering(bruker: Bruker): Sykdomsvurdering {
+    fun toSykdomsvurdering(
+        bruker: Bruker,
+        vurdertIBehandling: BehandlingId,
+        defaultGjelderFra: LocalDate
+    ): Sykdomsvurdering {
         return Sykdomsvurdering(
             begrunnelse = begrunnelse,
-            vurderingenGjelderFra = vurderingenGjelderFra,
+            vurderingenGjelderFra = vurderingenGjelderFra ?: defaultGjelderFra,
+            vurderingenGjelderTil = null, // TODO: Støtt ny periodisert løsning
             dokumenterBruktIVurdering = dokumenterBruktIVurdering,
             erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
             harSkadeSykdomEllerLyte = harSkadeSykdomEllerLyte,
@@ -57,6 +66,7 @@ data class SykdomsvurderingLøsningDto(
             bidiagnoser = bidiagnoser,
             vurdertAv = bruker,
             opprettet = Instant.now(),
+            vurdertIBehandling = vurdertIBehandling
         )
     }
 }

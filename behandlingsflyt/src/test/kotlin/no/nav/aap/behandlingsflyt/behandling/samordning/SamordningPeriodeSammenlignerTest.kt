@@ -36,7 +36,7 @@ class SamordningPeriodeSammenlignerTest {
             behandling.id, listOf(
                 SamordningYtelse(
                     ytelseType = Ytelse.SYKEPENGER,
-                    ytelsePerioder = listOf(
+                    ytelsePerioder = setOf(
                         SamordningYtelsePeriode(
                             periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1)),
                             gradering = Prosent.`66_PROSENT`,
@@ -70,7 +70,7 @@ class SamordningPeriodeSammenlignerTest {
             behandling.id, listOf(
                 SamordningYtelse(
                     ytelseType = Ytelse.SYKEPENGER,
-                    ytelsePerioder = listOf(
+                    ytelsePerioder = setOf(
                         SamordningYtelsePeriode(
                             periode = førstePeriode,
                             gradering = Prosent.`66_PROSENT`,
@@ -90,7 +90,7 @@ class SamordningPeriodeSammenlignerTest {
             behandling.id, listOf(
                 SamordningYtelse(
                     ytelseType = Ytelse.SYKEPENGER,
-                    ytelsePerioder = listOf(
+                    ytelsePerioder = setOf(
                         SamordningYtelsePeriode(
                             periode = førstePeriode,
                             gradering = Prosent.`66_PROSENT`,
@@ -143,7 +143,7 @@ class SamordningPeriodeSammenlignerTest {
             behandling.id, listOf(
                 SamordningYtelse(
                     ytelseType = Ytelse.SYKEPENGER,
-                    ytelsePerioder = listOf(
+                    ytelsePerioder = setOf(
                         SamordningYtelsePeriode(
                             periode = førstePeriode,
                             gradering = Prosent.`66_PROSENT`,
@@ -159,7 +159,7 @@ class SamordningPeriodeSammenlignerTest {
             behandling.id, listOf(
                 SamordningYtelse(
                     ytelseType = Ytelse.SYKEPENGER,
-                    ytelsePerioder = listOf(
+                    ytelsePerioder = setOf(
                         SamordningYtelsePeriode(
                             periode = førstePeriode.utvid(Periode(førstePeriode.fom, førstePeriode.tom.plusDays(10))),
                             gradering = Prosent.`66_PROSENT`,
@@ -208,7 +208,7 @@ class SamordningPeriodeSammenlignerTest {
             behandling.id, listOf(
                 SamordningYtelse(
                     ytelseType = Ytelse.SYKEPENGER,
-                    ytelsePerioder = listOf(
+                    ytelsePerioder = setOf(
                         SamordningYtelsePeriode(
                             periode = førstePeriode,
                             gradering = Prosent.`66_PROSENT`,
@@ -224,7 +224,7 @@ class SamordningPeriodeSammenlignerTest {
             behandling.id, listOf(
                 SamordningYtelse(
                     ytelseType = Ytelse.SYKEPENGER,
-                    ytelsePerioder = listOf(
+                    ytelsePerioder = setOf(
                         SamordningYtelsePeriode(
                             periode = førstePeriode,
                             gradering = Prosent.`66_PROSENT`,
@@ -235,7 +235,7 @@ class SamordningPeriodeSammenlignerTest {
                 ),
                 SamordningYtelse(
                     ytelseType = Ytelse.OMSORGSPENGER,
-                    ytelsePerioder = listOf(
+                    ytelsePerioder = setOf(
                         SamordningYtelsePeriode(
                             periode = førstePeriode,
                             gradering = Prosent.`30_PROSENT`
