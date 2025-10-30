@@ -15,7 +15,6 @@ import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.Factory
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.slf4j.LoggerFactory
-import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -480,28 +479,28 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
 
         kandidaterGruppertPåSak.forEach { (sakId, kandidaterForSak) ->
             log.info("Migrerer sykdomsvurderinger for sak ${sakId.id} med ${kandidaterForSak.size} kandidater")
-            val grunnlagEldsteFørst = kandidaterForSak.sortedBy { it.grunnlagOpprettetTid }
+            val sorterteKandidater = kandidaterForSak.sortedBy { it.grunnlagOpprettetTid }
             val vurderingerMedVurderingerId =
                 hentVurderinger(kandidaterForSak.map { it.vurderingerId }.toSet().toList())
 
             // Kan skippe grunnlag som peker på vurderinger som allerede er migrert
-            val migrerteVurderingerId = mutableListOf<Long>()
+            val migrerteVurderingerId = mutableSetOf<Long>()
 
             // Dette dekker en eksisterende vurdering som er lagret som en del av et nytt grunnlag; 
             // disse har ikke samme id som den originale.
             // Antar at like vurderinger innenfor samme sak er samme vurdering
             val nyeVerdierForVurdering = mutableMapOf<SammenlignbarSykdomsvurdering, Pair<BehandlingId, LocalDate>>()
 
-            grunnlagEldsteFørst.forEach { grunnlag ->
-                if (grunnlag.vurderingerId in migrerteVurderingerId) {
+            sorterteKandidater.forEach { kandidat ->
+                if (kandidat.vurderingerId in migrerteVurderingerId) {
                     // Dette er et kopiert grunnlag som allerede er migrert
                     return@forEach
                 }
                 val vurderingerForGrunnlag =
-                    vurderingerMedVurderingerId.filter { it.vurderingerId == grunnlag.vurderingerId }.map{it.sykdomsvurdering}
+                    vurderingerMedVurderingerId.filter { it.vurderingerId == kandidat.vurderingerId }.map{it.sykdomsvurdering}
                 if (vurderingerForGrunnlag.isEmpty()) {
                     // Skal ikke skje ettersom kandidat-joinen er på grunnlag-vurdering
-                    throw IllegalStateException("Fant ingen sykdomsvurderinger for sykdomsvurderingerId ${grunnlag.vurderingerId} i grunnlag ${grunnlag.grunnlagId}")
+                    throw IllegalStateException("Fant ingen sykdomsvurderinger for sykdomsvurderingerId ${kandidat.vurderingerId} i grunnlag ${kandidat.grunnlagId}")
                 }
 
                 vurderingerForGrunnlag.forEach { vurdering ->
@@ -510,7 +509,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                         // Bruk den migrerte versjonen
                         nyeVerdierForVurdering[sammenlignbarVurdering]!!
                     } else {
-                        val nyeVerdier = Pair(grunnlag.behandlingId, grunnlag.rettighetsperiode.fom)
+                        val nyeVerdier = Pair(kandidat.behandlingId, kandidat.rettighetsperiode.fom)
                         nyeVerdierForVurdering.put(sammenlignbarVurdering, nyeVerdier)
                         nyeVerdier
                     }
@@ -530,7 +529,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                         }
                     }
                     
-                    migrerteVurderingerId.add(grunnlag.vurderingerId)
+                    migrerteVurderingerId.add(kandidat.vurderingerId)
                 }
             }
         }
