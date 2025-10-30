@@ -85,7 +85,7 @@ public class Innsending(
 
             InnsendingType.KABAL_HENDELSE -> {
                 require(referanse.type == InnsendingReferanse.Type.KABAL_HENDELSE_ID)
-                requireNotNull(melding)
+                requireNotNull(melding) {"Melding fra Kabal kan ikke være null"}
                 require(melding is KabalHendelse)
             }
 
@@ -95,7 +95,7 @@ public class Innsending(
 
             InnsendingType.PDL_HENDELSE_DODSFALL_BRUKER, InnsendingType.PDL_HENDELSE_DODSFALL_BARN -> {
                 require(referanse.type == InnsendingReferanse.Type.PDL_HENDELSE_ID)
-                requireNotNull(melding)
+                requireNotNull(melding) {"Melding for dødsfall kan ikke være null"}
                 require(melding is PdlHendelse)
             }
 
