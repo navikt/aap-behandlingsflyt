@@ -309,19 +309,36 @@ internal class SykdomRepositoryImplTest {
             sykdomRepo.lagre(behandling2.id, listOf(sykdomsvurderingUtenVurdertIBehandling, nyVurdering))
 
             sykdomRepo.migrerSykdomsvurderinger()
+            
+            // DRY-RUN: Ingen endring
             assertThat(sykdomRepo.hent(behandling.id).sykdomsvurderinger).usingRecursiveComparison()
                 .ignoringFields("id", "opprettet").isEqualTo(
                     listOf(
-                        sykdomsvurderingUtenVurdertIBehandling.copy(vurdertIBehandling = behandling.id, vurderingenGjelderFra = periode.fom)
+                        sykdomsvurderingUtenVurdertIBehandling
                     )
                 )
             assertThat(sykdomRepo.hent(behandling2.id).sykdomsvurderinger).usingRecursiveComparison()
                 .ignoringFields("id", "opprettet").isEqualTo(
                     listOf(
-                        sykdomsvurderingUtenVurdertIBehandling.copy(vurdertIBehandling = behandling.id, vurderingenGjelderFra = periode.fom),
-                        nyVurdering.copy(vurdertIBehandling = behandling2.id, vurderingenGjelderFra = periode.fom)
+                        sykdomsvurderingUtenVurdertIBehandling,
+                        nyVurdering
                     )
                 )
+            
+            
+//            assertThat(sykdomRepo.hent(behandling.id).sykdomsvurderinger).usingRecursiveComparison()
+//                .ignoringFields("id", "opprettet").isEqualTo(
+//                    listOf(
+//                        sykdomsvurderingUtenVurdertIBehandling.copy(vurdertIBehandling = behandling.id, vurderingenGjelderFra = periode.fom)
+//                    )
+//                )
+//            assertThat(sykdomRepo.hent(behandling2.id).sykdomsvurderinger).usingRecursiveComparison()
+//                .ignoringFields("id", "opprettet").isEqualTo(
+//                    listOf(
+//                        sykdomsvurderingUtenVurdertIBehandling.copy(vurdertIBehandling = behandling.id, vurderingenGjelderFra = periode.fom),
+//                        nyVurdering.copy(vurdertIBehandling = behandling2.id, vurderingenGjelderFra = periode.fom)
+//                    )
+//                )
         }
     }
 }

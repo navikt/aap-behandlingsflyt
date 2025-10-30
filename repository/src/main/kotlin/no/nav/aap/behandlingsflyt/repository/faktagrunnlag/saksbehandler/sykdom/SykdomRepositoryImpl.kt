@@ -476,6 +476,8 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
         // Hent alle koblingstabeller
         val kandidater = hentKandidater()
         val kandidaterGruppertPåSak = kandidater.groupBy { it.sakId }
+        
+        var migrerteVurderingerCount = 0
 
         kandidaterGruppertPåSak.forEach { (sakId, kandidaterForSak) ->
             log.info("Migrerer sykdomsvurderinger for sak ${sakId.id} med ${kandidaterForSak.size} kandidater")
@@ -515,19 +517,20 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                     }
 
                     // Oppdater
-                    connection.execute(
-                        """
-                        UPDATE SYKDOM_VURDERING
-                        SET VURDERT_I_BEHANDLING = ?, VURDERINGEN_GJELDER_FRA = ?
-                        WHERE ID = ?
-                        """.trimIndent()
-                    ) {
-                        setParams {
-                            setLong(1, nyeVerdier.first.id)
-                            setLocalDate(2, nyeVerdier.second)
-                            setLong(3, vurdering.id!!)
-                        }
-                    }
+//                    connection.execute(
+//                        """
+//                        UPDATE SYKDOM_VURDERING
+//                        SET VURDERT_I_BEHANDLING = ?, VURDERINGEN_GJELDER_FRA = ?
+//                        WHERE ID = ?
+//                        """.trimIndent()
+//                    ) {
+//                        setParams {
+//                            setLong(1, nyeVerdier.first.id)
+//                            setLocalDate(2, nyeVerdier.second)
+//                            setLong(3, vurdering.id!!)
+//                        }
+//                    }
+                    migrerteVurderingerCount = migrerteVurderingerCount + 1
                     
                     migrerteVurderingerId.add(kandidat.vurderingerId)
                 }
@@ -536,7 +539,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
 
         val totalTid = System.currentTimeMillis() - start
 
-        log.info("Fullført migrering av manuelle vurderinger for sykdom. Migrerte ${kandidater.size} grunnlag på $totalTid ms.")
+        log.info("DRY-RUN: Fullført migrering av manuelle vurderinger for sykdom. Migrerte ${kandidater.size} grunnlag og ${migrerteVurderingerCount} vurderinger på $totalTid ms.")
     }
 
 
