@@ -29,12 +29,11 @@ class SamordningAndreStatligeYtelserSteg(
             definisjon = Definisjon.SAMORDNING_ANDRE_STATLIGE_YTELSER,
             vedtakBehøverVurdering = {
                 when (kontekst.vurderingType) {
-                    VurderingType.FØRSTEGANGSBEHANDLING -> true
+                    VurderingType.FØRSTEGANGSBEHANDLING,
                     VurderingType.REVURDERING -> {
                         when {
                             tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
-                            kontekst.vurderingsbehovRelevanteForSteg.isEmpty() -> false
-                            else -> Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER in kontekst.vurderingsbehovRelevanteForSteg
+                            else -> kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty()
                         }
                     }
                     VurderingType.MELDEKORT,
