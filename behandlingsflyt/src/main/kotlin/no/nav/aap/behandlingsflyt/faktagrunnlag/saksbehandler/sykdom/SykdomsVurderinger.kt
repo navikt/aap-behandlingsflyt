@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom
 
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -11,7 +12,8 @@ import java.time.LocalDateTime
 data class Sykdomsvurdering(
     val id: Long? = null,
     val begrunnelse: String,
-    val vurderingenGjelderFra: LocalDate?,
+    val vurderingenGjelderFra: LocalDate?, // TODO: Gjør påkrevd etter migrering
+    val vurderingenGjelderTil: LocalDate?,
     val dokumenterBruktIVurdering: List<JournalpostId>,
     val harSkadeSykdomEllerLyte: Boolean,
     val erSkadeSykdomEllerLyteVesentligdel: Boolean?,
@@ -23,6 +25,7 @@ data class Sykdomsvurdering(
     val kodeverk: String? = null,
     val hoveddiagnose: String? = null,
     val bidiagnoser: List<String>? = emptyList(),
+    val vurdertIBehandling: BehandlingId?, // TODO: Gjør påkrevd etter migrering
     val opprettet: Instant,
     val vurdertAv: Bruker,
 ) {

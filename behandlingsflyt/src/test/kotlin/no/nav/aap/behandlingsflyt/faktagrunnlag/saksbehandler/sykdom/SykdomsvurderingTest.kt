@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom
 
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -22,8 +23,10 @@ class SykdomsvurderingTest {
             yrkesskadeBegrunnelse = null,
             erNedsettelseIArbeidsevneAvEnVissVarighet = false,
             vurderingenGjelderFra = null,
+            vurderingenGjelderTil = null,
             vurdertAv = Bruker("Z00000"),
             opprettet = Instant.now(),
+            vurdertIBehandling = BehandlingId(1L)
         )
 
         assertThat(vurdering.erOppfylt(LocalDate.now())).isFalse
@@ -47,8 +50,10 @@ class SykdomsvurderingTest {
             yrkesskadeBegrunnelse = null,
             erNedsettelseIArbeidsevneAvEnVissVarighet = erNedsettelseIArbeidsevneAvEnVissVarighet,
             vurderingenGjelderFra = gjelderFra.plusDays(1),
+            vurderingenGjelderTil = null,
             vurdertAv = Bruker("Z00000"),
             opprettet = Instant.now(),
+            vurdertIBehandling = BehandlingId(1L)
         )
 
         assertThat(vurdering.erOppfylt(gjelderFra.plusMonths(1))).isTrue
@@ -68,8 +73,10 @@ class SykdomsvurderingTest {
             yrkesskadeBegrunnelse = null,
             erNedsettelseIArbeidsevneAvEnVissVarighet = false,
             vurderingenGjelderFra = gjelderFra,
+            vurderingenGjelderTil = null,
             vurdertAv = Bruker("Z00000"),
             opprettet = Instant.now(),
+            vurdertIBehandling = BehandlingId(1L)
         )
 
         assertThat(vurdering.erOppfylt(gjelderFra)).isFalse

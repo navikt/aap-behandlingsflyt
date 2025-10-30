@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerG
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerVurdering
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
@@ -259,7 +260,9 @@ class SykdomsvilkårTest {
         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean = true,
         erArbeidsevnenNedsatt: Boolean = true,
         vurderingenGjelderFra: LocalDate? = null,
-        opprettet: LocalDateTime = LocalDateTime.now()
+        vurderingenGjelderTil: LocalDate? = null,
+        opprettet: LocalDateTime = LocalDateTime.now(),
+        behandlingId: BehandlingId = BehandlingId(1L)
     ) = Sykdomsvurdering(
         begrunnelse = "",
         dokumenterBruktIVurdering = emptyList(),
@@ -271,7 +274,9 @@ class SykdomsvilkårTest {
         erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
         yrkesskadeBegrunnelse = null,
         vurderingenGjelderFra = vurderingenGjelderFra,
+        vurderingenGjelderTil = vurderingenGjelderTil,
         vurdertAv = Bruker("Z00000"),
-        opprettet = opprettet.toInstant(ZoneOffset.UTC)
+        opprettet = opprettet.toInstant(ZoneOffset.UTC),
+        vurdertIBehandling = behandlingId
     )
 }
