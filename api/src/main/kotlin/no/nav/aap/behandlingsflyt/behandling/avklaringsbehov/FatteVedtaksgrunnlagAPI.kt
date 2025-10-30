@@ -159,6 +159,7 @@ private fun utledEndringerSidenSist(
 
 private fun beslutterVurdering(avklaringsbehovene: Avklaringsbehovene, flyt: BehandlingFlyt): List<TotrinnsVurdering> {
     return avklaringsbehovene.alle()
+        .filter { it.erIkkeAvbrutt() }
         .filter { it.erTotrinn() }
         .sortedWith(compareBy(flyt.stegComparator) { it.løsesISteg() })
         .map { tilKvalitetssikring(it) }
