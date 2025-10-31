@@ -217,7 +217,7 @@ private fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPers
     }
     val harMedlemskap = if (dto.medlemskap) "JA" else "NEI"
     return SøknadV0(
-        andreUtbetalinger = AndreUtbetalingerDto(lønn = dto.andreUtbetalinger?.lønn, stønad = dto.andreUtbetalinger?.stønad),
+        andreUtbetalinger = AndreUtbetalingerDto(lønn = dto.andreUtbetalinger?.lønn, stønad = dto.andreUtbetalinger?.stønad, afp = dto.andreUtbetalinger?.afp),
         student = SøknadStudentDto(erStudent),
         yrkesskade =   harYrkesskade,
         oppgitteBarn =  oppgitteBarn,

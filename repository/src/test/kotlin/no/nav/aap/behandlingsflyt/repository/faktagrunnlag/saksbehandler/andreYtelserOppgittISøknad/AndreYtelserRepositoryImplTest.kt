@@ -4,6 +4,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.AndreUtbetaling
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.AndreYtelserSøknad
 import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
@@ -35,11 +38,13 @@ class AndreYtelserRepositoryImplTest {
         }
         val stønad = listOf<AndreUtbetalingerYtelser>(
             AndreUtbetalingerYtelser.ØKONOMISK_SOSIALHJELP,
-            AndreUtbetalingerYtelser.OMSORGSSTØNAD
+            AndreUtbetalingerYtelser.OMSORGSSTØNAD,
+            AndreUtbetalingerYtelser.AFP
         )
         val andreUtbetalinger = AndreYtelserSøknad(
             ekstraLønn = true,
-            stønad = stønad
+            stønad = stønad,
+            afpKilder = "Arbeidsgiver"
         )
         val sak2 = dataSource.transaction { sak(it) }
         val behandling2 = dataSource.transaction {
