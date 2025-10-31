@@ -88,7 +88,8 @@ data class PdlPersoninfo(
     val folkeregisterpersonstatus: Set<PdlFolkeregisterPersonStatus>? = null,
     val bostedsadresse: List<BostedsAdresse>? = null,
     val oppholdsadresse: List<OppholdsAdresse>? = null,
-    val kontaktadresse: List<KontaktAdresse>? = null
+    val kontaktadresse: List<KontaktAdresse>? = null,
+    val navn: List<PdlNavn>? = null
 )
 
 data class PdlFolkeregisterPersonStatus(
