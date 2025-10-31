@@ -65,11 +65,7 @@ enum class InntektTyper {
 }
 
 fun List<ManuellVurderingForLovvalgMedlemskap>.tilTidslinje(maksDato: LocalDate = Tid.MAKS): Tidslinje<ManuellVurderingForLovvalgMedlemskap> =
-    groupBy { it.vurdertIBehandling }
-        .values
-        .sortedBy { it[0].vurdertDato }
-        .flatMap { it.sortedBy { it.fom } }
-        .somTidslinje { Periode(it.fom!!, it.tom ?: maksDato) }
+    sortedBy { it.vurdertDato }.somTidslinje { Periode(it.fom!!, it.tom ?: maksDato) }
 
 fun Tidslinje<ManuellVurderingForLovvalgMedlemskap>.validerGyldigForRettighetsperiode(rettighetsperiode: Periode): Validation<Tidslinje<ManuellVurderingForLovvalgMedlemskap>> {
     val periodeForVurdering = helePerioden()
