@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.hendelse.kafka.person
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
@@ -42,7 +41,7 @@ class PdlHendelseKafkaKonsument(
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
     private val secureLogger = LoggerFactory.getLogger("secureLog")
-    private val avslagUtils = AvslagUtils()
+    private val utfallOppfyltUtils = UtfallOppfyltUtils()
     override fun håndter(meldinger: ConsumerRecords<String, Personhendelse>) {
         meldinger.forEach { record ->
             val personHendelse = record.value().tilDomain()
@@ -94,7 +93,7 @@ class PdlHendelseKafkaKonsument(
                         if (behandling != null) {
                             val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling.id)
                             if (underveisGrunnlag != null) {
-                                val personHarBareAvslagFremover = avslagUtils.allePerioderEtterOpprettetTidspunktHarAvslagsårsak(
+                                val personHarBareAvslagFremover = utfallOppfyltUtils.allePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(
                                     opprettetTidspunkt = personHendelse.opprettet,
                                     underveisGrunnlag = underveisGrunnlag
                                 )

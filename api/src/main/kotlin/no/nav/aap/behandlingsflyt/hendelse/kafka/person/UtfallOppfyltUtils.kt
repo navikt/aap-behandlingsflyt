@@ -1,12 +1,13 @@
 package no.nav.aap.behandlingsflyt.hendelse.kafka.person
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import java.time.Instant
 import java.time.ZoneId
 
-class AvslagUtils {
+class UtfallOppfyltUtils {
 
-    fun allePerioderEtterOpprettetTidspunktHarAvslagsårsak(
+    fun allePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(
         opprettetTidspunkt: Instant,
         underveisGrunnlag: UnderveisGrunnlag
     ): Boolean {
@@ -14,6 +15,6 @@ class AvslagUtils {
 
         return underveisGrunnlag.perioder
             .filter { it.periode.fom.isAfter(opprettetDato) }
-            .all { it.avslagsårsak != null }
+            .all { it.utfall == Utfall.IKKE_OPPFYLT }
     }
 }

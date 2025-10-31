@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
-import no.nav.aap.behandlingsflyt.hendelse.kafka.person.AvslagUtils
+import no.nav.aap.behandlingsflyt.hendelse.kafka.person.UtfallOppfyltUtils
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
@@ -20,7 +20,7 @@ import kotlin.test.assertTrue
 
 class AvslagUtilsTest {
 
-    val avslagUtils = AvslagUtils()
+    val utfallOppfyltUtils = UtfallOppfyltUtils()
 
     @Test
     fun `sjekker om alle periodene etter at bruker er død gir avslag`() {
@@ -30,17 +30,17 @@ class AvslagUtilsTest {
                 periode = Periode(1 januar 2026, 15 januar 2026),
                 rettighetsType = RettighetsType.BISTANDSBEHOV,
                 avslagsÅrsak = UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT,
-                utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.OPPFYLT,
+                utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.IKKE_OPPFYLT,
             ), underveisperiode(
                 periode = Periode(16 januar 2026, 31 januar 2026),
                 rettighetsType = RettighetsType.BISTANDSBEHOV,
                 avslagsÅrsak = UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT,
-                utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.OPPFYLT,
+                utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.IKKE_OPPFYLT,
             )
         )
 
         val result =
-            avslagUtils.allePerioderEtterOpprettetTidspunktHarAvslagsårsak(opprettetTidspunkt, underveisGrunnlag)
+            utfallOppfyltUtils.allePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(opprettetTidspunkt, underveisGrunnlag)
         assertTrue(result)
     }
 
@@ -53,7 +53,7 @@ class AvslagUtilsTest {
                 periode = Periode(1 januar 2026, 15 januar 2026),
                 rettighetsType = RettighetsType.BISTANDSBEHOV,
                 avslagsÅrsak = UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT,
-                utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.OPPFYLT,
+                utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.IKKE_OPPFYLT,
             ),
             underveisperiode(
                 periode = Periode(16 januar 2026, 31 januar 2026),
@@ -64,7 +64,7 @@ class AvslagUtilsTest {
         )
 
         val result =
-            avslagUtils.allePerioderEtterOpprettetTidspunktHarAvslagsårsak(opprettetTidspunkt, underveisGrunnlag)
+            utfallOppfyltUtils.allePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(opprettetTidspunkt, underveisGrunnlag)
         assertFalse(result)
     }
 
@@ -77,7 +77,7 @@ class AvslagUtilsTest {
                 periode = Periode(1 januar 2024, 15 januar 2024),
                 rettighetsType = RettighetsType.BISTANDSBEHOV,
                 avslagsÅrsak = UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT,
-                utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.OPPFYLT,
+                utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.IKKE_OPPFYLT,
             ),
             underveisperiode(
                 periode = Periode(15 januar 2024, 29 januar 2024),
@@ -89,7 +89,7 @@ class AvslagUtilsTest {
                 periode = Periode(1 januar 2026, 15 januar 2026),
                 rettighetsType = RettighetsType.BISTANDSBEHOV,
                 avslagsÅrsak = UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT,
-                utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.OPPFYLT,
+                utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.IKKE_OPPFYLT,
             ),
             underveisperiode(
                 periode = Periode(16 januar 2026, 31 januar 2026),
@@ -100,7 +100,7 @@ class AvslagUtilsTest {
         )
 
         val result =
-            avslagUtils.allePerioderEtterOpprettetTidspunktHarAvslagsårsak(opprettetTidspunkt, underveisGrunnlag)
+            utfallOppfyltUtils.allePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(opprettetTidspunkt, underveisGrunnlag)
         assertFalse(result)
     }
 
@@ -119,12 +119,12 @@ class AvslagUtilsTest {
                 periode = Periode(16 januar 2026, 31 januar 2026),
                 rettighetsType = RettighetsType.BISTANDSBEHOV,
                 avslagsÅrsak = UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT,
-                utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.OPPFYLT,
+                utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.IKKE_OPPFYLT,
             )
         )
 
         val result =
-            avslagUtils.allePerioderEtterOpprettetTidspunktHarAvslagsårsak(opprettetTidspunkt, underveisGrunnlag)
+            utfallOppfyltUtils.allePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(opprettetTidspunkt, underveisGrunnlag)
         assertTrue(result)
     }
 
