@@ -397,7 +397,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
             .løsForutgåendeMedlemskap()
             .løsOppholdskrav(sak.rettighetsperiode.fom)
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
-            .fattVedtakEllerSendRetur()
+            .fattVedtak()
 
         val vedtak = hentVedtak(behandling.id)
         assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
@@ -1223,7 +1223,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         return kvalitetssikreOk(this, bruker)
     }
 
-    protected fun fattVedtakEllerSendRetur(behandling: Behandling, returVed: Definisjon? = null): Behandling =
+    protected fun løsFatteVedtak(behandling: Behandling, returVed: Definisjon? = null): Behandling =
         løsAvklaringsBehov(
             behandling,
             FatteVedtakLøsning(
@@ -1254,8 +1254,13 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
     }
 
     @JvmName("fattVedtakExt")
-    protected fun Behandling.fattVedtakEllerSendRetur(returVed: Definisjon? = null): Behandling {
-        return fattVedtakEllerSendRetur(this, returVed)
+    protected fun Behandling.fattVedtak(): Behandling {
+        return løsFatteVedtak(this, null)
+    }
+
+    @JvmName("sendReturExt")
+    protected fun Behandling.beslutterGodkjennerIkke(returVed: Definisjon?): Behandling {
+        return løsFatteVedtak(this, returVed)
     }
 
     class BehandlingInfo(
