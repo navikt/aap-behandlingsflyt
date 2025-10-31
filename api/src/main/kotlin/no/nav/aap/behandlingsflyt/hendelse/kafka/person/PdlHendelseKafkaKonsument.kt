@@ -105,10 +105,8 @@ class PdlHendelseKafkaKonsument(
                                     hendelseService.registrerMottattHendelse(
                                         personHendelse.tilInnsendingDødsfallBruker(sak.saksnummer)
                                     )
-                                }
-                                else
-                                {
-                                    log.info("Ignorerer dødsfallhendelse fordi bruker har fått avslag ${sak.saksnummer}")
+                                } else {
+                                    log.info("Ignorerer dødsfallhendelse fordi bruker har fått avslag på aller perioder fremover ${sak.saksnummer}")
                                 }
                             }
                         }
@@ -155,18 +153,11 @@ class PdlHendelseKafkaKonsument(
         opprettetTidspunkt: Instant,
         underveisGrunnlag: UnderveisGrunnlag
     ): Boolean {
+        val opprettetDato = opprettetTidspunkt.atZone(ZoneId.systemDefault()).toLocalDate()
 
-        val opprettetTidspunkt = opprettetTidspunkt.atZone(ZoneId.systemDefault())
-            .toLocalDate()
-
-        val perioder = underveisGrunnlag.perioder
-
-        return perioder.isNotEmpty() &&
-                perioder.all { periode ->
-                    periode.avslagsårsak != null &&
-                            periode.periode.tom
-                                .isAfter(opprettetTidspunkt)
-                }
+        return underveisGrunnlag.perioder
+            .filter { it.periode.fom.isAfter(opprettetDato) }
+            .all { it.avslagsårsak != null }
     }
 
     fun Personhendelse.tilDomain(): PdlPersonHendelse =

@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt
 
 import io.confluent.kafka.serializers.KafkaAvroDeserializer
 import io.confluent.kafka.serializers.KafkaAvroSerializer
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
@@ -12,7 +11,6 @@ import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.SchemaRegistryConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PdlHendelseKafkaKonsument
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
-import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
@@ -121,10 +119,8 @@ PdlHendelseKafkaKonsumentTest {
     }
 
     @Test
-    fun `returns true when all periods have avslagsårsak and are after opprettetTidspunkt`() {
+    fun `sjekker om alle periodene etter at bruker er død gir avslag`() {
         val opprettetTidspunkt = Instant.parse("2025-10-31T10:15:30.00Z")
-
-
         val underveisGrunnlag = underveisGrunnlag(
             underveisperiode(
                 periode = Periode(1 januar 2026, 15 januar 2026),
@@ -144,7 +140,7 @@ PdlHendelseKafkaKonsumentTest {
     }
 
     @Test
-    fun `returns false if any period has null avslagsårsak`() {
+    fun `sjekker om minst en periode etter at bruker er død og ikke har avslagårsak ikke gir avslag`() {
         val opprettetTidspunkt = Instant.parse("2025-10-31T10:15:30.00Z")
 
         val underveisGrunnlag = underveisGrunnlag(
@@ -167,13 +163,14 @@ PdlHendelseKafkaKonsumentTest {
     }
 
     @Test
-    fun `returns false if any period is on or before opprettetTidspunkt`() {
+    fun `sjekker på om bruker har perioder både før og etter med avslagårsak`() {
         val opprettetTidspunkt = Instant.parse("2025-10-31T10:15:30.00Z")
 
         val underveisGrunnlag = underveisGrunnlag(
             underveisperiode(
                 periode = Periode(1 januar 2024, 15 januar 2024),
-                rettighetsType = RettighetsType.VURDERES_FOR_UFØRETRYGD,
+                rettighetsType = RettighetsType.BISTANDSBEHOV,
+                avslagsÅrsak = UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT,
                 utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.OPPFYLT,
             ),
             underveisperiode(
@@ -186,6 +183,29 @@ PdlHendelseKafkaKonsumentTest {
 
         val result = konsument.allePerioderEtterOpprettetMedAvslagsårsak(opprettetTidspunkt, underveisGrunnlag)
         assertFalse(result)
+    }
+
+    @Test
+    fun `sjekker på om bruker har perioder både før og etter uten avslagårsak`() {
+        val opprettetTidspunkt = Instant.parse("2025-10-31T10:15:30.00Z")
+
+        val underveisGrunnlag = underveisGrunnlag(
+            underveisperiode(
+                periode = Periode(1 januar 2024, 15 januar 2024),
+                rettighetsType = RettighetsType.BISTANDSBEHOV,
+                avslagsÅrsak = null,
+                utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.OPPFYLT,
+            ),
+            underveisperiode(
+                periode = Periode(16 januar 2026, 31 januar 2026),
+                rettighetsType = RettighetsType.BISTANDSBEHOV,
+                avslagsÅrsak = UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT,
+                utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.OPPFYLT,
+            )
+        )
+
+        val result = konsument.allePerioderEtterOpprettetMedAvslagsårsak(opprettetTidspunkt, underveisGrunnlag)
+        assertTrue(result)
     }
 
 }
