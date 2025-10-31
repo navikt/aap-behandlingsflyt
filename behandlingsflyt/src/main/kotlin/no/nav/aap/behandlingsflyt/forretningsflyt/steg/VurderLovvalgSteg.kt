@@ -181,32 +181,16 @@ class VurderLovvalgSteg private constructor(
         kontekst: FlytKontekstMedPerioder,
         grunnlag: MedlemskapLovvalgGrunnlag
     ) {
-        // Tilbakestill vurderinger i grunnlag
         val forrigeVurderinger = kontekst.forrigeBehandlingId?.let { forrigeBehandlingId ->
             medlemskapArbeidInntektRepository.hentHvisEksisterer(forrigeBehandlingId)
                 ?.vurderinger
         } ?: emptyList()
 
-        if (forrigeVurderinger != grunnlag.medlemskapArbeidInntektGrunnlag?.vurderinger) {
+        if (forrigeVurderinger.toSet() != grunnlag.medlemskapArbeidInntektGrunnlag?.vurderinger?.toSet()) {
             medlemskapArbeidInntektRepository.lagreVurderinger(
                 kontekst.behandlingId,
                 forrigeVurderinger,
             )
-        }
-
-        // Tilbakestill vilkårsvurderinger
-        val forrigeVilkårsvurderinger =
-            kontekst.forrigeBehandlingId
-                ?.let { vilkårsresultatRepository.hent(it).optionalVilkår(Vilkårtype.LOVVALG) }
-                ?.tidslinje()
-                ?: Tidslinje()
-
-        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-        val vilkår = vilkårsresultat.optionalVilkår(Vilkårtype.LOVVALG)
-        if (vilkår != null) {
-            vilkår.nullstillTidslinje()
-            vilkår.leggTilVurderinger(forrigeVilkårsvurderinger)
-            vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
         }
     }
 
