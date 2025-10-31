@@ -14,13 +14,11 @@ data class ManuellVurderingForLovvalgMedlemskap(
     val lovvalgVedSøknadsTidspunkt: LovvalgVedSøknadsTidspunktDto,
     val medlemskapVedSøknadsTidspunkt: MedlemskapVedSøknadsTidspunktDto?,
     val vurdertAv: String,
-    val vurdertDato: LocalDateTime? = null,
+    val vurdertDato: LocalDateTime,
     val overstyrt: Boolean = false,
-
-    // Nye felter for å støtte periodisering - skal gjøres obligatoriske etter migrering
-    val fom: LocalDate? = null,
+    val fom: LocalDate,
     val tom: LocalDate? = null,
-    val vurdertIBehandling: BehandlingId? = null,
+    val vurdertIBehandling: BehandlingId,
 ) {
     fun lovvalgslandErAnnetLandIEØSEllerLandMedAvtale(): Boolean {
         val lovvalgsLand = lovvalgVedSøknadsTidspunkt.lovvalgsEØSLandEllerLandMedAvtale

@@ -166,7 +166,6 @@ class VurderLovvalgSteg private constructor(
         val vilkårsresultat = Vilkårsresultat()
         val grunnlagUtenManuellVurdering = grunnlag.copy(
             medlemskapArbeidInntektGrunnlag = grunnlag.medlemskapArbeidInntektGrunnlag?.copy(
-                manuellVurdering = null,
                 vurderinger = emptyList()
             )
         )
@@ -211,7 +210,7 @@ class VurderLovvalgSteg private constructor(
             avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP,
             vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst, grunnlag, avklaringsbehovene) },
-            erTilstrekkeligVurdert = { grunnlag.value.medlemskapArbeidInntektGrunnlag?.manuellVurdering != null },
+            erTilstrekkeligVurdert = { grunnlag.value.medlemskapArbeidInntektGrunnlag?.vurderinger?.isNotEmpty() ?: false },
             tilbakestillGrunnlag = { tilbakestillGrunnlag(kontekst, grunnlag.value) },
             kontekst
         )
@@ -258,9 +257,9 @@ class VurderLovvalgSteg private constructor(
     ) {
         val forrigeManuelleVurdering = kontekst.forrigeBehandlingId?.let { forrigeBehandlingId ->
             medlemskapArbeidInntektRepository.hentHvisEksisterer(forrigeBehandlingId)
-                ?.manuellVurdering
+                ?.vurderinger?.firstOrNull()
         }
-        if (forrigeManuelleVurdering != grunnlag.medlemskapArbeidInntektGrunnlag?.manuellVurdering) {
+        if (forrigeManuelleVurdering != grunnlag.medlemskapArbeidInntektGrunnlag?.vurderinger?.firstOrNull()) {
             medlemskapArbeidInntektRepository.lagreVurderinger(
                 kontekst.behandlingId,
                 forrigeManuelleVurdering?.let { listOf(it) } ?: emptyList(),
@@ -301,7 +300,6 @@ class VurderLovvalgSteg private constructor(
                 val vilkårsresultat = Vilkårsresultat()
                 val grunnlagUtenManuellVurdering = grunnlag.value.copy(
                     medlemskapArbeidInntektGrunnlag = grunnlag.value.medlemskapArbeidInntektGrunnlag?.copy(
-                        manuellVurdering = null,
                         vurderinger = emptyList()
                     )
                 )
@@ -352,7 +350,7 @@ class VurderLovvalgSteg private constructor(
             vilkårsresultatRepository.hent(kontekst.behandlingId).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
                 .all { it.erOppfylt() }
         if (alleVilkårOppfylt
-            && grunnlag.medlemskapArbeidInntektGrunnlag?.manuellVurdering == null
+            && grunnlag.medlemskapArbeidInntektGrunnlag?.vurderinger?.firstOrNull() == null
             && !manueltTriggetVurderingsbehov(kontekst)
         ) {
             avklaringsbehovService.avbrytForSteg(kontekst.behandlingId, type())
