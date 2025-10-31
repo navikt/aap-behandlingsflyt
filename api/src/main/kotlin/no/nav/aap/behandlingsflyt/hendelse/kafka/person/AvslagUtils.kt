@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import java.time.Instant
 import java.time.ZoneId
 
-class PdlHendelseKonsumentUtils {
+class AvslagUtils {
 
     fun allePerioderEtterOpprettetTidspunktHarAvslagsårsak(
         opprettetTidspunkt: Instant,

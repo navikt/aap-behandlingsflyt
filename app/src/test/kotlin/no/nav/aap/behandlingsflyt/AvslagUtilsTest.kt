@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
-import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PdlHendelseKonsumentUtils
+import no.nav.aap.behandlingsflyt.hendelse.kafka.person.AvslagUtils
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
@@ -20,7 +20,7 @@ import kotlin.test.assertTrue
 
 class PdlHendelseKonsumentUtilsTest {
 
-    val pdlHendelseKonsumentUtils = PdlHendelseKonsumentUtils()
+    val pdlHendelseKonsumentUtils = AvslagUtils()
 
     @Test
     fun `sjekker om alle periodene etter at bruker er død gir avslag`() {
