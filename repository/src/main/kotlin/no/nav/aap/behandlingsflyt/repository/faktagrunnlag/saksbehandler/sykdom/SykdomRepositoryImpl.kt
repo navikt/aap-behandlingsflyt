@@ -500,10 +500,6 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                 }
                 val vurderingerForGrunnlag =
                     vurderingerMedVurderingerId.filter { it.vurderingerId == kandidat.vurderingerId }.map{it.sykdomsvurdering}
-                if (vurderingerForGrunnlag.isEmpty()) {
-                    // Skal ikke skje ettersom kandidat-joinen er på grunnlag-vurdering
-                    throw IllegalStateException("Fant ingen sykdomsvurderinger for sykdomsvurderingerId ${kandidat.vurderingerId} i grunnlag ${kandidat.grunnlagId}")
-                }
 
                 vurderingerForGrunnlag.forEach { vurdering ->
                     val sammenlignbarVurdering = vurdering.tilSammenlignbar()
