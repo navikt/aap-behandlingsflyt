@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarManu
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOppholdskravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangArbeidLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeriodisertLovvalgMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrkesskadeLøsning
@@ -46,6 +47,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedSøknadsTidspunktDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForLovvalgMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingerForBarnetillegg
@@ -1177,6 +1179,23 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                 ManuellVurderingForLovvalgMedlemskapDto(
                     lovvalgVedSøknadsTidspunkt = LovvalgVedSøknadsTidspunktDto("", EØSLandEllerLandMedAvtale.NOR),
                     medlemskapVedSøknadsTidspunkt = MedlemskapVedSøknadsTidspunktDto("", true)
+                )
+            )
+        )
+    }
+
+    protected fun Behandling.løsLovvalgPeriodisert(gjelderFra: LocalDate): Behandling {
+        return løsAvklaringsBehov(
+            this,
+            AvklarPeriodisertLovvalgMedlemskapLøsning(
+                løsningerForPerioder = listOf(
+                    PeriodisertManuellVurderingForLovvalgMedlemskapDto(
+                        fom = gjelderFra,
+                        tom = null,
+                        begrunnelse = "",
+                        lovvalg = LovvalgVedSøknadsTidspunktDto("", EØSLandEllerLandMedAvtale.NOR),
+                        medlemskap = MedlemskapVedSøknadsTidspunktDto("", true)
+                    )
                 )
             )
         )

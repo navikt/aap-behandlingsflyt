@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarManu
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOverstyrtForutgåendeMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOverstyrtLovvalgMedlemskapLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeriodisertLovvalgMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningUføreLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentLøsning
@@ -82,6 +83,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedSøknadsTidspunktDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForLovvalgMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.RegisterBarn
@@ -1774,6 +1776,178 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_ENDRING)
 
         assertThat(oppdatertBehandling.status()).isEqualTo(Status.AVSLUTTET)
+    }
+
+    @Test
+    fun `skal kunne gjennomføre førstegangsbehandling med periodisert lovvalg og medlemskap`() {
+        var (sak, førstegangsbehandling) = sendInnFørsteSøknad(søknad = TestSøknader.SØKNAD_INGEN_MEDLEMSKAP)
+
+        førstegangsbehandling = førstegangsbehandling
+            .løsAvklaringsBehov(AvklarPeriodisertLovvalgMedlemskapLøsning(
+                løsningerForPerioder = listOf(
+                    PeriodisertManuellVurderingForLovvalgMedlemskapDto(
+                        fom = sak.rettighetsperiode.fom,
+                        tom = sak.rettighetsperiode.fom.plusMonths(2),
+                        begrunnelse = "",
+                        lovvalg = LovvalgVedSøknadsTidspunktDto("", EØSLandEllerLandMedAvtale.NOR),
+                        medlemskap = MedlemskapVedSøknadsTidspunktDto("", false)
+                    ),
+                    PeriodisertManuellVurderingForLovvalgMedlemskapDto(
+                        fom = sak.rettighetsperiode.fom.plusMonths(2).plusDays(1),
+                        tom = null,
+                        begrunnelse = "",
+                        lovvalg = LovvalgVedSøknadsTidspunktDto("", EØSLandEllerLandMedAvtale.NOR),
+                        medlemskap = MedlemskapVedSøknadsTidspunktDto("", true)
+                    )
+                )
+            ))
+            .løsSykdom()
+            .løsBistand()
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .kvalitetssikreOk()
+            .løsBeregningstidspunkt()
+            .løsForutgåendeMedlemskap()
+            .løsOppholdskrav(sak.rettighetsperiode.fom)
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtakEllerSendRetur()
+            .løsVedtaksbrev()
+
+        // Virkningstidspunktet skal settes til datoen hvor medlemskap er oppfylt
+        val vedtak = hentVedtak(førstegangsbehandling.id)
+        assertThat(vedtak.virkningstidspunkt).isEqualTo(sak.rettighetsperiode.fom.plusMonths(2).plusDays(1))
+
+        assertThat(førstegangsbehandling.status()).isEqualTo(Status.AVSLUTTET)
+    }
+
+    @Test
+    fun `skal kunne gjennomføre førstegangsbehandling og revurdering hvor oppfylt lovvalg og medlemskap flyttes en mnd`() {
+        var (sak, førstegangsbehandling) = sendInnFørsteSøknad(søknad = TestSøknader.SØKNAD_INGEN_MEDLEMSKAP)
+
+        førstegangsbehandling = førstegangsbehandling
+            .løsAvklaringsBehov(AvklarPeriodisertLovvalgMedlemskapLøsning(
+                løsningerForPerioder = listOf(
+                    PeriodisertManuellVurderingForLovvalgMedlemskapDto(
+                        fom = sak.rettighetsperiode.fom,
+                        tom = sak.rettighetsperiode.fom.plusMonths(2),
+                        begrunnelse = "",
+                        lovvalg = LovvalgVedSøknadsTidspunktDto("", EØSLandEllerLandMedAvtale.NOR),
+                        medlemskap = MedlemskapVedSøknadsTidspunktDto("", false)
+                    ),
+                    PeriodisertManuellVurderingForLovvalgMedlemskapDto(
+                        fom = sak.rettighetsperiode.fom.plusMonths(2).plusDays(1),
+                        tom = null,
+                        begrunnelse = "",
+                        lovvalg = LovvalgVedSøknadsTidspunktDto("", EØSLandEllerLandMedAvtale.NOR),
+                        medlemskap = MedlemskapVedSøknadsTidspunktDto("", true)
+                    )
+                )
+            ))
+            .løsSykdom()
+            .løsBistand()
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .kvalitetssikreOk()
+            .løsBeregningstidspunkt()
+            .løsForutgåendeMedlemskap()
+            .løsOppholdskrav(sak.rettighetsperiode.fom)
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtakEllerSendRetur()
+            .løsVedtaksbrev()
+
+        assertThat(førstegangsbehandling.status()).isEqualTo(Status.AVSLUTTET)
+
+        val revurdering = sak.opprettManuellRevurdering(
+            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP),
+        )
+            .løsAvklaringsBehov(AvklarPeriodisertLovvalgMedlemskapLøsning(
+                løsningerForPerioder = listOf(
+                    // Skulle oppfylles en mnd tidligere
+                    PeriodisertManuellVurderingForLovvalgMedlemskapDto(
+                        fom = sak.rettighetsperiode.fom.plusMonths(1).plusDays(1),
+                        tom = null,
+                        begrunnelse = "",
+                        lovvalg = LovvalgVedSøknadsTidspunktDto("", EØSLandEllerLandMedAvtale.NOR),
+                        medlemskap = MedlemskapVedSøknadsTidspunktDto("", true)
+                    )
+                )
+            ))
+            .løsSykdom()
+            .løsBistand()
+            .løsSykdomsvurderingBrev()
+            .løsBeregningstidspunkt()
+            .løsUtenSamordning()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtakEllerSendRetur()
+            .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_ENDRING)
+
+        // Virkningstidspunktet skal settes til datoen hvor medlemskap er oppfylt
+        val vedtak = hentVedtak(revurdering.id)
+        assertThat(vedtak.virkningstidspunkt).isEqualTo(sak.rettighetsperiode.fom.plusMonths(1).plusDays(1))
+
+        assertThat(revurdering.status()).isEqualTo(Status.AVSLUTTET)
+    }
+
+    @Test
+    fun `skal kunne gjennomføre førstegangsbehandling og revurdering hvor rettighetsperiode endres og fører til avklaringsbehov for lovvalg og medlemskap`() {
+        var (sak, førstegangsbehandling) = sendInnFørsteSøknad(søknad = TestSøknader.SØKNAD_INGEN_MEDLEMSKAP)
+
+        førstegangsbehandling = førstegangsbehandling
+            .løsAvklaringsBehov(AvklarPeriodisertLovvalgMedlemskapLøsning(
+                løsningerForPerioder = listOf(
+                    PeriodisertManuellVurderingForLovvalgMedlemskapDto(
+                        fom = sak.rettighetsperiode.fom,
+                        tom = null,
+                        begrunnelse = "",
+                        lovvalg = LovvalgVedSøknadsTidspunktDto("", EØSLandEllerLandMedAvtale.NOR),
+                        medlemskap = MedlemskapVedSøknadsTidspunktDto("", true)
+                    )
+                )
+            ))
+            .løsSykdom()
+            .løsBistand()
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .kvalitetssikreOk()
+            .løsBeregningstidspunkt()
+            .løsForutgåendeMedlemskap()
+            .løsOppholdskrav(sak.rettighetsperiode.fom)
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtakEllerSendRetur()
+            .løsVedtaksbrev()
+
+        assertThat(førstegangsbehandling.status()).isEqualTo(Status.AVSLUTTET)
+
+        val nyStartDato = sak.rettighetsperiode.fom.minusMonths(1)
+        val revurdering = sak.opprettManuellRevurdering(
+            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.VURDER_RETTIGHETSPERIODE),
+        )
+            .løsRettighetsperiode(nyStartDato)
+            .medKontekst {
+                // Vi har ikke vurdert lovvalg og medlemskap for den utvidede perioden enda, så vi forventer et avklaringsbehov her
+                assertThat(åpneAvklaringsbehov).anySatisfy { behov -> assertThat(behov.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP).isTrue() }
+            }
+            .løsAvklaringsBehov(AvklarPeriodisertLovvalgMedlemskapLøsning(
+                løsningerForPerioder = listOf(
+                    PeriodisertManuellVurderingForLovvalgMedlemskapDto(
+                        fom = nyStartDato,
+                        tom = null,
+                        begrunnelse = "",
+                        lovvalg = LovvalgVedSøknadsTidspunktDto("", EØSLandEllerLandMedAvtale.NOR),
+                        medlemskap = MedlemskapVedSøknadsTidspunktDto("", true)
+                    )
+                )
+            ))
+            .løsSykdom()
+            .løsBistand()
+            .løsSykdomsvurderingBrev()
+            .løsBeregningstidspunkt()
+            .løsUtenSamordning()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtakEllerSendRetur()
+            .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_ENDRING)
+
+        assertThat(revurdering.status()).isEqualTo(Status.AVSLUTTET)
     }
 
     @Test
