@@ -84,7 +84,8 @@ class PdlBarnGateway : BarnGateway {
                     Barn(
                         ident = BarnIdentifikator.BarnIdent(res.ident),
                         fødselsdato = requireNotNull(fødselsdato) { "Barn i PDL manglet fødselsdato. " },
-                        dødsdato = person.doedsfall?.firstOrNull()?.doedsdato?.let { Dødsdato.parse(it) })
+                        dødsdato = person.doedsfall?.firstOrNull()?.doedsdato?.let { Dødsdato.parse(it) },
+                        navn = person.navn?.firstOrNull()?.let { "${it.fornavn} ${it.etternavn}" })
                 }
             }
         }
@@ -123,6 +124,11 @@ val PERSON_BOLK_QUERY = $$"""
                 },
                 foedselsdato {
                     foedselsdato
+                },
+                navn {
+                    fornavn
+                    mellomnavn
+                    etternavn
                 }
             }
             code
