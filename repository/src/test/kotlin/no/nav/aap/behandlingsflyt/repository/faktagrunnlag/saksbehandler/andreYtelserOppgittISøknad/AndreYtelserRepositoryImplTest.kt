@@ -1,9 +1,10 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.andreYtelserOppgittISøknad
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.AndreUtbetalingerYtelser
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.AndreYtelserSøknad
 import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AndreUtbetalinger
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AndreUtbetalingerYtelser
+
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
@@ -36,8 +37,8 @@ class AndreYtelserRepositoryImplTest {
             AndreUtbetalingerYtelser.ØKONOMISK_SOSIALHJELP,
             AndreUtbetalingerYtelser.OMSORGSSTØNAD
         )
-        val andreUtbetalinger = AndreUtbetalinger(
-            lønn = true,
+        val andreUtbetalinger = AndreYtelserSøknad(
+            ekstraLønn = true,
             stønad = stønad
         )
         val sak2 = dataSource.transaction { sak(it) }
@@ -57,7 +58,8 @@ class AndreYtelserRepositoryImplTest {
         }
 
         val ytelser = dataSource.transaction {
-            AndreYtelserOppgittISøknadRepositoryImpl(it).hent(behandling2.id
+            AndreYtelserOppgittISøknadRepositoryImpl(it).hent(
+                behandling2.id
             )
         }
 
@@ -71,20 +73,21 @@ class AndreYtelserRepositoryImplTest {
 
         assertThrows<IllegalArgumentException> {
             dataSource.transaction {
-                AndreYtelserOppgittISøknadRepositoryImpl(it).hent(behandling1.id
+                AndreYtelserOppgittISøknadRepositoryImpl(it).hent(
+                    behandling1.id
                 )
             }
         }
 
         val ytelser2 = dataSource.transaction {
-            AndreYtelserOppgittISøknadRepositoryImpl(it).hent(behandling2.id
+            AndreYtelserOppgittISøknadRepositoryImpl(it).hent(
+                behandling2.id
             )
         }
 
         assertThat(ytelser2).isEqualTo(andreUtbetalinger)
 
     }
-
 
 
     @Test
@@ -100,8 +103,8 @@ class AndreYtelserRepositoryImplTest {
             AndreUtbetalingerYtelser.ØKONOMISK_SOSIALHJELP,
             AndreUtbetalingerYtelser.OMSORGSSTØNAD
         )
-        val andreUtbetalinger1 = AndreUtbetalinger(
-            lønn = true,
+        val andreUtbetalinger1 = AndreYtelserSøknad(
+            ekstraLønn = true,
             stønad = stønad1
         )
         val sak2 = dataSource.transaction { sak(it) }
@@ -113,8 +116,8 @@ class AndreYtelserRepositoryImplTest {
             AndreUtbetalingerYtelser.INTRODUKSJONSSTØNAD,
         )
 
-        val andreUtbetalinger2= AndreUtbetalinger(
-            lønn = true,
+        val andreUtbetalinger2 = AndreYtelserSøknad(
+            ekstraLønn = true,
             stønad = stønad2
         )
         dataSource.transaction {
@@ -128,11 +131,13 @@ class AndreYtelserRepositoryImplTest {
             )
         }
         val ytelser1 = dataSource.transaction {
-            AndreYtelserOppgittISøknadRepositoryImpl(it).hent(behandling1.id
+            AndreYtelserOppgittISøknadRepositoryImpl(it).hent(
+                behandling1.id
             )
         }
         val ytelser2 = dataSource.transaction {
-            AndreYtelserOppgittISøknadRepositoryImpl(it).hent(behandling2.id
+            AndreYtelserOppgittISøknadRepositoryImpl(it).hent(
+                behandling2.id
             )
         }
 

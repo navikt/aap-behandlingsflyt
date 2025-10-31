@@ -1,8 +1,9 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.andreYtelserOppgittISøknad
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.AndreUtbetalingerYtelser
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.AndreYtelserSøknad
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.andreYtelserOppgittISøknad.AndreYtelserOppgittISøknadRepository
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AndreUtbetalinger
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AndreUtbetalingerYtelser
+
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
@@ -20,7 +21,7 @@ class AndreYtelserOppgittISøknadRepositoryImpl(private val connection: DBConnec
         }
     }
 
-    override fun lagre(behandlingId: BehandlingId, andreUtbetalinger: AndreUtbetalinger) {
+    override fun lagre(behandlingId: BehandlingId, andreUtbetalinger: AndreYtelserSøknad) {
 
         val eksistererFraFør = hentHvisEksisterer(behandlingId)
         if (eksistererFraFør != null) {
@@ -32,7 +33,7 @@ class AndreYtelserOppgittISøknadRepositoryImpl(private val connection: DBConnec
 
     private fun lagreYtelser(
         behandlingId: BehandlingId,
-        andreUtbetalinger: AndreUtbetalinger,
+        andreUtbetalinger: AndreYtelserSøknad,
         connection: DBConnection
     ) {
 
@@ -40,13 +41,13 @@ class AndreYtelserOppgittISøknadRepositoryImpl(private val connection: DBConnec
 
 
         val insertSvarQuery = """
-        INSERT INTO ANDRE_YTELSER_SVAR_I_SØKNAD (lønn)
+        INSERT INTO ANDRE_YTELSER_SVAR_I_SØKNAD (ekstraLønn)
         VALUES (?) RETURNING id
     """.trimIndent()
 
         val andreYtelserId = connection.executeReturnKey(insertSvarQuery) {
             setParams {
-                setBoolean(1, andreUtbetalinger.lønn)
+                setBoolean(1, andreUtbetalinger.ekstraLønn)
             }
         }
 
@@ -212,10 +213,10 @@ class AndreYtelserOppgittISøknadRepositoryImpl(private val connection: DBConnec
     }
 
 
-    override fun hentHvisEksisterer(behandlingId: BehandlingId): AndreUtbetalinger? {
+    override fun hentHvisEksisterer(behandlingId: BehandlingId): AndreYtelserSøknad? {
         val query = """
         SELECT 
-            ytelser.lønn AS lonn,
+            ytelser.ekstraLønn AS ekstraLønn,
             array_agg(ytelse.ytelse) AS ytelsestyper
         FROM 
             ANDRE_YTELSER_OPPGITT_I_SØKNAD_GRUNNLAG grunnlag
@@ -227,7 +228,7 @@ class AndreYtelserOppgittISøknadRepositoryImpl(private val connection: DBConnec
             grunnlag.behandling_id = ?
         AND grunnlag.aktiv = TRUE
         GROUP BY 
-            grunnlag.id, ytelser.lønn;
+            grunnlag.id, ytelser.ekstraLønn;
 
     """.trimIndent()
 
@@ -241,19 +242,19 @@ class AndreYtelserOppgittISøknadRepositoryImpl(private val connection: DBConnec
         }
     }
 
-    private fun mapGrunnlag(row: Row): AndreUtbetalinger {
-        val lønn = row.getBoolean("lonn")
+    private fun mapGrunnlag(row: Row): AndreYtelserSøknad {
+        val ekstraLønn = row.getBoolean("ekstraLønn")
         val sqlArray = row.getArray("ytelsestyper", String::class)
         val ytelser = sqlArray.map { AndreUtbetalingerYtelser.fromDb(it) }
 
-        return AndreUtbetalinger(
-            lønn = lønn,
+        return AndreYtelserSøknad(
+            ekstraLønn = ekstraLønn,
             stønad = ytelser
         )
     }
 
 
-    override fun hent(behandlingId: BehandlingId): AndreUtbetalinger {
+    override fun hent(behandlingId: BehandlingId): AndreYtelserSøknad {
         return requireNotNull(hentHvisEksisterer(behandlingId))
     }
 
