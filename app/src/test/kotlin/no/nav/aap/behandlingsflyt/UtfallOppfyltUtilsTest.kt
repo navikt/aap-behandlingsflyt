@@ -23,7 +23,7 @@ class UtfallOppfyltUtilsTest {
     val utfallOppfyltUtils = UtfallOppfyltUtils()
 
     @Test
-    fun `sjekker om alle periodene etter at bruker er død gir avslag`() {
+    fun `sjekker om alle periodene etter at bruker er død ikke har oppfylt utfall`() {
         val opprettetTidspunkt = Instant.parse("2025-10-31T10:15:30.00Z")
         val underveisGrunnlag = underveisGrunnlag(
             underveisperiode(
@@ -45,7 +45,7 @@ class UtfallOppfyltUtilsTest {
     }
 
     @Test
-    fun `sjekker om minst en periode etter at bruker er død og ikke har avslagårsak ikke gir avslag`() {
+    fun `sjekker om minst en periode etter at bruker er død ikke har oppfylt utfall`() {
         val opprettetTidspunkt = Instant.parse("2025-10-31T10:15:30.00Z")
 
         val underveisGrunnlag = underveisGrunnlag(
@@ -69,7 +69,7 @@ class UtfallOppfyltUtilsTest {
     }
 
     @Test
-    fun `sjekker på om bruker har perioder både før og etter med og uten avslagårsak`() {
+    fun `sjekker på om bruker har perioder både før og etter ikke har oppfylt utfall`() {
         val opprettetTidspunkt = Instant.parse("2025-10-31T10:15:30.00Z")
 
         val underveisGrunnlag = underveisGrunnlag(
@@ -105,7 +105,7 @@ class UtfallOppfyltUtilsTest {
     }
 
     @Test
-    fun `sjekker på om bruker har perioder både før og etter, der en etter har avslagårsak`() {
+    fun `sjekker på om bruker har perioder både før og etter, ikke har oppfylt utfall`() {
         val opprettetTidspunkt = Instant.parse("2025-10-31T10:15:30.00Z")
 
         val underveisGrunnlag = underveisGrunnlag(
