@@ -41,13 +41,14 @@ class AndreYtelserOppgittISøknadRepositoryImpl(private val connection: DBConnec
 
 
         val insertSvarQuery = """
-        INSERT INTO ANDRE_YTELSER_SVAR_I_SØKNAD (ekstraLønn)
-        VALUES (?) RETURNING id
+        INSERT INTO ANDRE_YTELSER_SVAR_I_SØKNAD (ekstraLønn , afpKilder)
+        VALUES (?,?) RETURNING id
     """.trimIndent()
 
         val andreYtelserId = connection.executeReturnKey(insertSvarQuery) {
             setParams {
                 setBoolean(1, andreUtbetalinger.ekstraLønn)
+                setString(2,andreUtbetalinger.afpKilder)
             }
         }
 
@@ -217,6 +218,7 @@ class AndreYtelserOppgittISøknadRepositoryImpl(private val connection: DBConnec
         val query = """
         SELECT 
             ytelser.ekstraLønn AS ekstraLønn,
+            ytelser.afpKilder as afpKilder,
             array_agg(ytelse.ytelse) AS ytelsestyper
         FROM 
             ANDRE_YTELSER_OPPGITT_I_SØKNAD_GRUNNLAG grunnlag
@@ -228,7 +230,7 @@ class AndreYtelserOppgittISøknadRepositoryImpl(private val connection: DBConnec
             grunnlag.behandling_id = ?
         AND grunnlag.aktiv = TRUE
         GROUP BY 
-            grunnlag.id, ytelser.ekstraLønn;
+            grunnlag.id, ytelser.ekstraLønn, ytelser.afpKilder;
 
     """.trimIndent()
 
@@ -244,10 +246,12 @@ class AndreYtelserOppgittISøknadRepositoryImpl(private val connection: DBConnec
 
     private fun mapGrunnlag(row: Row): AndreYtelserSøknad {
         val ekstraLønn = row.getBoolean("ekstraLønn")
+        val afpKilder = row.getStringOrNull("afpKilder")
         val sqlArray = row.getArray("ytelsestyper", String::class)
         val ytelser = sqlArray.map { AndreUtbetalingerYtelser.fromDb(it) }
 
         return AndreYtelserSøknad(
+            afpKilder = afpKilder,
             ekstraLønn = ekstraLønn,
             stønad = ytelser
         )

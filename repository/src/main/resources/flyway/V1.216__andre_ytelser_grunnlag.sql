@@ -2,7 +2,8 @@ CREATE TABLE ANDRE_YTELSER_SVAR_I_SØKNAD
 (
     id            BIGSERIAL PRIMARY KEY,
     opprettet_tid TIMESTAMP(3) DEFAULT current_timestamp NOT NULL,
-    ekstraLønn    BOOLEAN                                NOT NULL
+    ekstraLønn    BOOLEAN                                NOT NULL,
+    afpKilder     TEXT
 );
 
 CREATE TABLE ANDRE_YTELSE_OPPGITT_I_SØKNAD

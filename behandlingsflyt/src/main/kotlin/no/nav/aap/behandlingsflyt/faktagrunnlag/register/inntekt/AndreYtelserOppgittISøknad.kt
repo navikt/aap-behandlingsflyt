@@ -81,6 +81,7 @@ private fun mapYtelseEnum(eksternType : AndreUtbetalingerYtelserDto): AndreUtbet
 
 fun mapOppgitteYtelser(ytelser: AndreUtbetalingerDto): AndreYtelserSøknad {
     return AndreYtelserSøknad(
+        afpKilder = ytelser.afp,
         ekstraLønn = ytelser.lønn,
         stønad = ytelser.stønad?.map { mapYtelseEnum(it) }
 
