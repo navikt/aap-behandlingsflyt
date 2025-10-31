@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling.samordning
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.leggTilVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
@@ -78,14 +77,15 @@ class SamordningService(
 
     fun vurder(
         grunnlag: SamordningYtelseGrunnlag?,
-        vurderinger: Tidslinje<List<Pair<Ytelse, SamordningVurderingPeriode>>>
+        manuelleVurderinger: Tidslinje<List<Pair<Ytelse, SamordningVurderingPeriode>>>
     ): Tidslinje<SamordningGradering> {
-        val hentedeYtelserFraRegister =
-            grunnlag?.ytelser.orEmpty().map { ytelse ->
-                val tidslinjePerPeriode = ytelse.ytelsePerioder.map { Tidslinje(it.periode, Pair(ytelse.ytelseType, it)) }
-                tidslinjePerPeriode.fold(Tidslinje.empty<Pair<Ytelse, SamordningYtelsePeriode>>()) { acc, curr ->
-                    acc.kombiner(curr, StandardSammenslåere.prioriterHøyreSideCrossJoin())
-                }.komprimer()
+        /**
+         * Henter kun automatiske ytelser fra register - disse skal ikke ha overlappende perioder
+         * Pr nå har vi ingen typer som er satt opp til å vurderes automatisk
+         */
+        val hentedeYtelserFraRegisterForAutomatiskVurdering =
+            grunnlag?.ytelser.orEmpty().filter { it.ytelseType.type == AvklaringsType.AUTOMATISK }.map { ytelse ->
+                Tidslinje(ytelse.ytelsePerioder.map { Segment(it.periode, Pair(ytelse.ytelseType, it)) })
             }.fold(Tidslinje.empty<List<Pair<Ytelse, SamordningYtelsePeriode>>>()) { acc, curr ->
                 acc.kombiner(curr, slåSammenTilListe())
             }
@@ -93,11 +93,8 @@ class SamordningService(
         // Slå sammen med vurderinger og regn ut graderinger
 
         val samordningTidslinje =
-            hentedeYtelserFraRegister.kombiner(vurderinger, JoinStyle.OUTER_JOIN { periode, venstre, høyre ->
-                if (venstre != null && venstre.verdi.any { it.first.type == AvklaringsType.MANUELL }) {
-                    requireNotNull(høyre) { "Mangler manuell vurdering for periode ${venstre.periode}" }
-                }
-
+            hentedeYtelserFraRegisterForAutomatiskVurdering.kombiner(manuelleVurderinger, JoinStyle.OUTER_JOIN { periode, venstre, høyre ->
+                // Manuelt vurderte perioder er allerede validert
                 val manueltVurderteGraderinger =
                     høyre?.verdi.orEmpty().associate { it.first to it.second }
                         .mapValues { it.value.gradering!! }

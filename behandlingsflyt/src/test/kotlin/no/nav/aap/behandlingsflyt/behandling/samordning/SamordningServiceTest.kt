@@ -236,26 +236,6 @@ internal class SamordningServiceTest {
         }
     }
 
-    @Test
-    fun `krever vurdering om det finnes samordningdata`() {
-        val behandlingId = dataSource.transaction { opprettSakdata(it) }
-        dataSource.transaction { connection ->
-            opprettYtelseData(SamordningYtelseRepositoryImpl(connection), behandlingId)
-
-            val service = SamordningService(
-                SamordningVurderingRepositoryImpl(connection),
-                SamordningYtelseRepositoryImpl(connection)
-            )
-            val vurderinger = service.hentVurderinger(behandlingId)
-            val ytelser = service.hentYtelser(behandlingId)
-
-            val tidligereVurderinger = service.vurderingTidslinje(vurderinger)
-
-
-            assertThrows<IllegalArgumentException> { service.vurder(ytelser, tidligereVurderinger) }
-        }
-    }
-
     private fun opprettVurderingData(
         samordningVurderingRepo: SamordningVurderingRepositoryImpl,
         behandlingId: BehandlingId,
