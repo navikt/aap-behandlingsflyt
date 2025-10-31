@@ -517,19 +517,19 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                     }
 
                     // Oppdater
-                    connection.execute(
-                        """
-                        UPDATE SYKDOM_VURDERING
-                        SET VURDERT_I_BEHANDLING = ?, VURDERINGEN_GJELDER_FRA = ?
-                        WHERE ID = ?
-                        """.trimIndent()
-                    ) {
-                        setParams {
-                            setLong(1, nyeVerdier.first.id)
-                            setLocalDate(2, nyeVerdier.second)
-                            setLong(3, vurdering.id!!)
-                        }
-                    }
+//                    connection.execute(
+//                        """
+//                        UPDATE SYKDOM_VURDERING
+//                        SET VURDERT_I_BEHANDLING = ?, VURDERINGEN_GJELDER_FRA = ?
+//                        WHERE ID = ?
+//                        """.trimIndent()
+//                    ) {
+//                        setParams {
+//                            setLong(1, nyeVerdier.first.id)
+//                            setLocalDate(2, nyeVerdier.second)
+//                            setLong(3, vurdering.id!!)
+//                        }
+//                    }
                     migrerteVurderingerCount = migrerteVurderingerCount + 1
                     
                     migrerteVurderingerId.add(kandidat.vurderingerId)
