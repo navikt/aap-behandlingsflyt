@@ -148,7 +148,7 @@ class BarnInformasjonskrav private constructor(
 
     private fun harEndringer(barnGrunnlag: BarnGrunnlag?, registerBarn: List<Barn>): Boolean {
         if (unleashGateway.isEnabled(BehandlingsflytFeature.HarEndringerIBarn)) {
-            return registerBarn.toSet() != barnGrunnlag?.registerbarn?.barn?.toSet().also {
+            return (registerBarn.toSet() != barnGrunnlag?.registerbarn?.barn?.toSet()).also {
                 log.info("Sammenligner barn fra register mot register som ligger i barn grunnlag: harEndringer=${it}")
             }
         }

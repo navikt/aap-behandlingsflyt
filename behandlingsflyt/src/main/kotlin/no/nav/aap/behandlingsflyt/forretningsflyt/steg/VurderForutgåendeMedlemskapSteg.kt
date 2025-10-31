@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class VurderForutgåendeMedlemskapSteg private constructor(
@@ -101,7 +102,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
             kontekst.forrigeBehandlingId
                 ?.let { vilkårsresultatRepository.hent(it).optionalVilkår(Vilkårtype.MEDLEMSKAP) }
                 ?.tidslinje()
-                ?: Tidslinje()
+                .orEmpty()
 
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
         val vilkår = vilkårsresultat.optionalVilkår(Vilkårtype.MEDLEMSKAP)
