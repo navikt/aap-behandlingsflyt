@@ -164,9 +164,7 @@ class OvergangArbeidSteg private constructor(
                         return@map6 false
                     }
 
-                    sykdomsvurdering?.harSkadeSykdomEllerLyte == false ||
-                            sykdomsvurdering?.erArbeidsevnenNedsatt == false ||
-                            sykdomsvurdering?.erSkadeSykdomEllerLyteVesentligdel == false ||
+                    sykdomsvurdering?.erOppfylt(kontekst.rettighetsperiode.fom) != true ||
                             bistandsvurdering?.erBehovForBistand() != true
                 }
             }
