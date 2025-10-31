@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovServ
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.tilTidslinje
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.validerGyldigForRettighetsperiode
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
@@ -138,23 +137,23 @@ class VurderLovvalgSteg private constructor(
 
     private fun perioderVurderingErRelevant(kontekst: FlytKontekstMedPerioder, grunnlag: MedlemskapLovvalgGrunnlag): Tidslinje<Boolean> {
         val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
-        val vilkårsvurderingLovvalg = vilkårsvurderingLovvalgUtenManuelleVurderinger(kontekst, grunnlag)
+        val automatiskVilkårsvurderingLovvalg = vilkårsvurderingLovvalgUtenManuelleVurderinger(kontekst, grunnlag)
 
-        return Tidslinje.zip2(tidligereVurderingsutfall, vilkårsvurderingLovvalg)
-            .mapValue { (behandlingsutfall, vilkårsvurdering) ->
+        return Tidslinje.zip2(tidligereVurderingsutfall, automatiskVilkårsvurderingLovvalg)
+            .mapValue { (behandlingsutfall, automatiskVilkårsvurderingLovvalg) ->
                 when (behandlingsutfall) {
                     null -> false
                     TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
                     TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
                     TidligereVurderinger.Behandlingsutfall.UKJENT -> {
-                        val lovvalgIkkeOppfylt = vilkårsvurdering?.erOppfylt() == false
+                        val automatiskVilkårsvurderinglovvalgIkkeOppfylt = automatiskVilkårsvurderingLovvalg?.erOppfylt() == false
 
                         // Må gjøres slik for å trigge overstyrt avklaringsbehov hvis allerede automatisk oppfylt
                         val tvingerAvklaringsbehov = kontekst.vurderingsbehovRelevanteForSteg.any {
                             it in vurderingsbehovSomTvingerAvklaringsbehov()
                         }
 
-                        lovvalgIkkeOppfylt || tvingerAvklaringsbehov
+                        automatiskVilkårsvurderinglovvalgIkkeOppfylt || tvingerAvklaringsbehov
                     }
                 }
             }
