@@ -106,10 +106,6 @@ public enum class AndreUtbetalingerYtelserDto{
     NEI;
 }
 
-
-
-
-
 public data class ManueltOppgittBarn(
     public val navn: String,
     public val fødselsdato: LocalDate,
