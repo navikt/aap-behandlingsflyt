@@ -108,7 +108,7 @@ data class SamordningUføreVurderingPeriodeDTO(
 data class SamordningAndreStatligeYtelserGrunnlagDTO(
     val harTilgangTilÅSaksbehandle: Boolean,
     val vurdering: SamordningAndreStatligeYtelserVurderingDTO?,
-    val historiskeVurderinger: List<SamordningAndreStatligeYtelserVurderingDTO>? = null,
+    val historiskeVurderinger: List<SamordningAndreStatligeYtelserVurderingDTO> = emptyList(),
 )
 
 data class SamordningAndreStatligeYtelserVurderingDTO(
@@ -319,7 +319,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
 
                         val historiskeBehandlinger = behandlingRepository.hentAlleFor(
                             sak.id,
-                            listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)
+                            TypeBehandling.ytelseBehandlingstyper()
                         ).filter { it.id != behandling.id }
 
                         val vurdering =
@@ -337,8 +337,8 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                     ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv)
                 }
 
-                val historiskeVurderinger = samordningAndreStatligeYtelserHistoriskeVurdering.let { historiske ->
-                    historiske.map { denneVurdering ->
+                val historiskeVurderinger = samordningAndreStatligeYtelserHistoriskeVurdering
+                    .map { denneVurdering ->
                         SamordningAndreStatligeYtelserVurderingDTO(
                             begrunnelse = denneVurdering.begrunnelse,
                             denneVurdering.vurderingPerioder
@@ -361,14 +361,11 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                                     )
                                 }
                         )
-                    }
-                }
 
+                    }
 
                 val vurdering = samordningAndreStatligeYtelserVurdering?.let { vurdering ->
                     SamordningAndreStatligeYtelserVurderingDTO(
-
-
                         begrunnelse = vurdering.begrunnelse,
                         vurderingPerioder =
                             vurdering.vurderingPerioder
