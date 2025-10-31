@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat
 
 import no.nav.aap.behandlingsflyt.behandling.rettighetstype.vurderRettighetsType
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 
 class Vilkårsresultat(
     internal var id: Long? = null,
@@ -39,7 +40,7 @@ class Vilkårsresultat(
     }
 
     fun tidslinjeFor(vilkårstype: Vilkårtype): Tidslinje<Vilkårsvurdering> {
-        return optionalVilkår(vilkårstype)?.tidslinje() ?: Tidslinje()
+        return optionalVilkår(vilkårstype)?.tidslinje().orEmpty()
     }
 
     override fun equals(other: Any?): Boolean {

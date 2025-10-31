@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
@@ -53,7 +54,7 @@ class AvklarSykdomLøser(
         val eksisterendeSykdomsvurderinger = behandling.forrigeBehandlingId
             ?.let { sykdomRepository.hentHvisEksisterer(it) }
             ?.somSykdomsvurderingstidslinje(LocalDate.MIN)
-            ?: Tidslinje()
+            .orEmpty()
 
         val gjeldendeVurderinger = eksisterendeSykdomsvurderinger
             .kombiner(nyeSykdomsvurderinger, StandardSammenslåere.prioriterHøyreSideCrossJoin())

@@ -139,7 +139,7 @@ class VurderBistandsbehovSteg private constructor(
                             )
                         )
                     }
-                    ?: tidslinjeOf()
+                    .orEmpty()
 
                 perioderBistandsvilkåretErRelevant.leftJoin(perioderBistandsvilkåretErVurdert) { erRelevant, erVurdert ->
                     erRelevant && erVurdert != true
@@ -171,11 +171,11 @@ class VurderBistandsbehovSteg private constructor(
         val sykdomsvurderinger = sykdomsRepository.hentHvisEksisterer(kontekst.behandlingId)
             ?.somSykdomsvurderingstidslinje(kontekst.rettighetsperiode.fom)
             ?.begrensetTil(kontekst.rettighetsperiode)
-            ?: tidslinjeOf()
+            .orEmpty()
 
         val studentvurderinger = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
             ?.somTidslinje(kontekst.rettighetsperiode)
-            ?: tidslinjeOf()
+            .orEmpty()
 
         return Tidslinje.zip3(tidligereVurderingsutfall, sykdomsvurderinger, studentvurderinger)
             .mapValue { (behandlingsutfall, sykdomsvurdering, studentvurdering) ->

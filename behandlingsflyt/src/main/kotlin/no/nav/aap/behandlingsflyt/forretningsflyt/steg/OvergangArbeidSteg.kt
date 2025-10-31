@@ -27,6 +27,7 @@ import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
@@ -103,19 +104,19 @@ class OvergangArbeidSteg private constructor(
 
         val sykdomsvurderinger = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)
             ?.somSykdomsvurderingstidslinje(kontekst.rettighetsperiode.fom)
-            ?: tidslinjeOf()
+            .orEmpty()
 
         val bistandsvurderinger = bistandRepository.hentHvisEksisterer(kontekst.behandlingId)
             ?.somBistandsvurderingstidslinje(kontekst.rettighetsperiode.fom)
-            ?: tidslinjeOf()
+            .orEmpty()
 
         val studentVurderinger = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
             ?.somTidslinje(kontekst.rettighetsperiode)
-            ?: tidslinjeOf()
+            .orEmpty()
 
         val overgangUføreVurderinger = overgangUføreRepository.hentHvisEksisterer(kontekst.behandlingId)
             ?.somOvergangUforevurderingstidslinje(kontekst.rettighetsperiode.fom)
-            ?: tidslinjeOf()
+            .orEmpty()
 
         val forutgåendeOrdinærAap =
             Tidslinje.map2(sykdomsvurderinger, bistandsvurderinger) { sykdomsvurdering, bistandsvurdering ->
@@ -188,7 +189,7 @@ class OvergangArbeidSteg private constructor(
             kontekst.forrigeBehandlingId
                 ?.let { vilkårsresultatRepository.hent(it).optionalVilkår(Vilkårtype.OVERGANGARBEIDVILKÅRET) }
                 ?.tidslinje()
-                ?: Tidslinje()
+                .orEmpty()
 
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
         val vilkår = vilkårsresultat.optionalVilkår(Vilkårtype.OVERGANGARBEIDVILKÅRET)
