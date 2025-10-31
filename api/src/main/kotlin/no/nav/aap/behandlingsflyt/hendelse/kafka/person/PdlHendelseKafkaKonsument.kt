@@ -26,8 +26,6 @@ import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.slf4j.LoggerFactory
 import java.time.Duration
-import java.time.Instant
-import java.time.ZoneId
 import javax.sql.DataSource
 
 const val PDL_HENDELSE_TOPIC = "pdl.leesah-v1"
@@ -44,7 +42,7 @@ class PdlHendelseKafkaKonsument(
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
     private val secureLogger = LoggerFactory.getLogger("secureLog")
-
+    private val avslagUtils = AvslagUtils()
     override fun håndter(meldinger: ConsumerRecords<String, Personhendelse>) {
         meldinger.forEach { record ->
             val personHendelse = record.value().tilDomain()
@@ -96,7 +94,7 @@ class PdlHendelseKafkaKonsument(
                         if (behandling != null) {
                             val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling.id)
                             if (underveisGrunnlag != null) {
-                                val personHarBareAvslagFremover = allePerioderEtterOpprettetMedAvslagsårsak(
+                                val personHarBareAvslagFremover = avslagUtils.allePerioderEtterOpprettetTidspunktHarAvslagsårsak(
                                     opprettetTidspunkt = personHendelse.opprettet,
                                     underveisGrunnlag = underveisGrunnlag
                                 )
@@ -107,21 +105,6 @@ class PdlHendelseKafkaKonsument(
                                     )
                                 } else {
                                     log.info("Ignorerer dødsfallhendelse fordi bruker har fått avslag på aller perioder fremover ${sak.saksnummer}")
-                                }
-                            }
-                        }
-
-                        if (behandling != null) {
-                            val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling.id)
-                            if (underveisGrunnlag != null) {
-                                val personHarBareAvslagFremover = allePerioderEtterOpprettetMedAvslagsårsak(
-                                    opprettetTidspunkt = personHendelse.opprettet,
-                                    underveisGrunnlag = underveisGrunnlag
-                                )
-                                if (!personHarBareAvslagFremover) {
-                                    hendelseService.registrerMottattHendelse(
-                                        personHendelse.tilInnsendingDødsfallBruker(sak.saksnummer)
-                                    )
                                 }
                             }
                         }
@@ -147,17 +130,6 @@ class PdlHendelseKafkaKonsument(
                 log.info("Ignorerer hendelse med ${personHendelse.opplysningstype} og ${personHendelse.endringstype}")
             }
         }
-    }
-
-    fun allePerioderEtterOpprettetMedAvslagsårsak(
-        opprettetTidspunkt: Instant,
-        underveisGrunnlag: UnderveisGrunnlag
-    ): Boolean {
-        val opprettetDato = opprettetTidspunkt.atZone(ZoneId.systemDefault()).toLocalDate()
-
-        return underveisGrunnlag.perioder
-            .filter { it.periode.fom.isAfter(opprettetDato) }
-            .all { it.avslagsårsak != null }
     }
 
     fun Personhendelse.tilDomain(): PdlPersonHendelse =

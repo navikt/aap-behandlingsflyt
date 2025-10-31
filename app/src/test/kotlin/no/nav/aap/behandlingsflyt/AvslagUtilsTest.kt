@@ -18,9 +18,9 @@ import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-class PdlHendelseKonsumentUtilsTest {
+class AvslagUtilsTest {
 
-    val pdlHendelseKonsumentUtils = AvslagUtils()
+    val avslagUtils = AvslagUtils()
 
     @Test
     fun `sjekker om alle periodene etter at bruker er død gir avslag`() {
@@ -40,7 +40,7 @@ class PdlHendelseKonsumentUtilsTest {
         )
 
         val result =
-            pdlHendelseKonsumentUtils.allePerioderEtterOpprettetTidspunktHarAvslagsårsak(opprettetTidspunkt, underveisGrunnlag)
+            avslagUtils.allePerioderEtterOpprettetTidspunktHarAvslagsårsak(opprettetTidspunkt, underveisGrunnlag)
         assertTrue(result)
     }
 
@@ -64,7 +64,7 @@ class PdlHendelseKonsumentUtilsTest {
         )
 
         val result =
-            pdlHendelseKonsumentUtils.allePerioderEtterOpprettetTidspunktHarAvslagsårsak(opprettetTidspunkt, underveisGrunnlag)
+            avslagUtils.allePerioderEtterOpprettetTidspunktHarAvslagsårsak(opprettetTidspunkt, underveisGrunnlag)
         assertFalse(result)
     }
 
@@ -100,7 +100,7 @@ class PdlHendelseKonsumentUtilsTest {
         )
 
         val result =
-            pdlHendelseKonsumentUtils.allePerioderEtterOpprettetTidspunktHarAvslagsårsak(opprettetTidspunkt, underveisGrunnlag)
+            avslagUtils.allePerioderEtterOpprettetTidspunktHarAvslagsårsak(opprettetTidspunkt, underveisGrunnlag)
         assertFalse(result)
     }
 
@@ -124,7 +124,7 @@ class PdlHendelseKonsumentUtilsTest {
         )
 
         val result =
-            pdlHendelseKonsumentUtils.allePerioderEtterOpprettetTidspunktHarAvslagsårsak(opprettetTidspunkt, underveisGrunnlag)
+            avslagUtils.allePerioderEtterOpprettetTidspunktHarAvslagsårsak(opprettetTidspunkt, underveisGrunnlag)
         assertTrue(result)
     }
 

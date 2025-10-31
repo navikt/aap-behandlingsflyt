@@ -10,7 +10,7 @@ class AvslagUtils {
         opprettetTidspunkt: Instant,
         underveisGrunnlag: UnderveisGrunnlag
     ): Boolean {
-        val opprettetDato = opprettetTidspunkt.atZone(ZoneId.systemDefault()).toLocalDate()
+        val opprettetDato = opprettetTidspunkt.atZone(ZoneId.of("Europe/Oslo"))?.toLocalDate()
 
         return underveisGrunnlag.perioder
             .filter { it.periode.fom.isAfter(opprettetDato) }
