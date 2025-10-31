@@ -43,34 +43,38 @@ class MeldingOmVedtakBrevStegTest {
     @BeforeEach
     fun setup() {
         every { trekkKlageService.klageErTrukket(any()) } returns false
-        every { brevUtlederService.utledBehovForMeldingOmVedtak(any())} returns VedtakAktivitetsplikt11_7
-        every { brevbestillingService.bestillV2(any(), any(), any(), any())} returns UUID.randomUUID()
+        every { brevUtlederService.utledBehovForMeldingOmVedtak(any()) } returns VedtakAktivitetsplikt11_7
+        every { brevbestillingService.bestillV2(any(), any(), any(), any()) } returns UUID.randomUUID()
     }
 
 
     /**
      * Vurderinger rundt MeldingOmVedtakBrevSteg.utfør() og AvklaringsbehovService
-     *   BrevSteg har ingen periodiseringsbehov
-     *   BrevSteg krever by-design manuelt avklaringsbehov, dvs. vedtakBehøverVurdering = true
+     *   BrevSteg har per idag ingen periodiseringsbehov
+     *   BrevSteg krever by-design manuelt avklaringsbehov ved brevbehov, dvs. vedtakBehøverVurdering = true
      *   BrevSteg kan ikke tilbakestilles da behandlingsflyten har nådd stegstatus IVERKSETTES, tilbakestillGrunnlag = {}
      *   Forventa runder i BrevSteg og oppdateringer av avklaringsbehov for førstegangsbehandling:
      *     Runde-1:
-     *       - oppdaterAvklaringsbehov() legger til nytt SKRIV_VEDTAKSBREV avklaringsbehov med status OPPRETTET, ikkeTilstrekkeligVurdert
-     *       - bestillBrev()
+     *       - oppdaterAvklaringsbehov() i BrevSteg legger til nytt SKRIV_VEDTAKSBREV avklaringsbehov med status OPPRETTET, da erTilstrekkeligVurdert er false
+     *       - BrevSteg utfører bestillBrev()
      *     Runde-2:
-     *       - oppdaterAvklaringsbehov() etter manuell avklaring (avklaringsbehov.status=AVSLUTTET) beholder status AVSLUTTET, erTilstrekkeligVurdert
-     *       - ikke bestillBrev()
+     *       - manuell avklaring resulterer i ny status=AVSLUTTET for avklaringsbehov SKRIV_VEDTAKSBRE
+     *       - oppdaterAvklaringsbehov() i BrevSteg etter manuell avklaring ivaretar status AVSLUTTET, da erTilstrekkeligVurdert er true
+     *       - BrevSteg utfører ikke bestillBrev()
      */
     @Test
-    fun `Runder i BrevSteg ved førstegangsbehandling resulterer i opprettet og avluttet avklaringsbehov samt brevbestilling`() {
+    fun `Runder i BrevSteg ved førstegangsbehandling resulterer i opprettet og avsluttet avklaringsbehov samt brevbestilling`() {
         val behandling = InMemoryBehandlingRepository.opprettBehandling(
             sakId = SakId(1L),
             typeBehandling = TypeBehandling.Førstegangsbehandling,
             forrigeBehandlingId = null,
             vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
-                vurderingsbehov = listOf(VurderingsbehovMedPeriode(
-                    Vurderingsbehov.MOTTATT_SØKNAD,
-                    Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1)))),
+                vurderingsbehov = listOf(
+                    VurderingsbehovMedPeriode(
+                        Vurderingsbehov.MOTTATT_SØKNAD,
+                        Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1))
+                    )
+                ),
                 årsak = ÅrsakTilOpprettelse.SØKNAD,
                 opprettet = LocalDateTime.now(),
                 beskrivelse = "unit-test"
@@ -91,12 +95,12 @@ class MeldingOmVedtakBrevStegTest {
             behandlingRepository = InMemoryBehandlingRepository,
             trekkKlageService = trekkKlageService,
             avklaringsbehovService = avklaringsbehovService,
-            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
+            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
         )
 
         // Runde-1
 
-        every { brevbestillingService.harBestillingOmVedtak(any())} returns false
+        every { brevbestillingService.harBestillingOmVedtak(any()) } returns false
 
         val resultat1 = steg.utfør(kontekst)
 
@@ -106,7 +110,7 @@ class MeldingOmVedtakBrevStegTest {
         assertThat(avklaringsbehov!!.historikk).hasSize(1)
         assertThat(avklaringsbehov.historikk.get(0).status).isEqualTo(Status.OPPRETTET)
 
-        verify(exactly = 1) { brevbestillingService.bestillV2(allAny(), allAny(), allAny(), allAny())}
+        verify(exactly = 1) { brevbestillingService.bestillV2(allAny(), allAny(), allAny(), allAny()) }
 
         // Runde-2
 
@@ -120,7 +124,7 @@ class MeldingOmVedtakBrevStegTest {
             )
         )
         // vedtak løst av saksbehandler - da skal harBestillingOmVedtak() returnere true i BrevSteg utfør()
-        every { brevbestillingService.harBestillingOmVedtak(any())} returns true
+        every { brevbestillingService.harBestillingOmVedtak(any()) } returns true
 
         val resultat2 = steg.utfør(kontekst)
 
@@ -130,7 +134,7 @@ class MeldingOmVedtakBrevStegTest {
         assertThat(avklaringsbehov2!!.historikk).hasSize(2)
         assertThat(avklaringsbehov2.historikk.last().status).isEqualTo(Status.AVSLUTTET)
         // brevBestilling har ikke kjørt i runde-2 da det allerede er bestilt
-        verify(exactly = 1) { brevbestillingService.bestillV2(allAny(), allAny(), allAny(), allAny())}
+        verify(exactly = 1) { brevbestillingService.bestillV2(allAny(), allAny(), allAny(), allAny()) }
     }
 
     @Test
@@ -140,9 +144,12 @@ class MeldingOmVedtakBrevStegTest {
             typeBehandling = TypeBehandling.Førstegangsbehandling,
             forrigeBehandlingId = null,
             vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
-                vurderingsbehov = listOf(VurderingsbehovMedPeriode(
-                    Vurderingsbehov.MOTTATT_SØKNAD,
-                    Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1)))),
+                vurderingsbehov = listOf(
+                    VurderingsbehovMedPeriode(
+                        Vurderingsbehov.MOTTATT_SØKNAD,
+                        Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1))
+                    )
+                ),
                 årsak = ÅrsakTilOpprettelse.SØKNAD,
                 opprettet = LocalDateTime.now(),
                 beskrivelse = "unit-test"
@@ -163,15 +170,61 @@ class MeldingOmVedtakBrevStegTest {
             behandlingRepository = InMemoryBehandlingRepository,
             trekkKlageService = trekkKlageService,
             avklaringsbehovService = avklaringsbehovService,
-            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
+            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
         )
-        every { brevUtlederService.utledBehovForMeldingOmVedtak(any())} returns null
+        every { brevUtlederService.utledBehovForMeldingOmVedtak(any()) } returns null
 
         val resultat1 = steg.utfør(kontekst)
 
         assertThat(resultat1).isEqualTo(Fullført)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         assertThat(avklaringsbehovene.alle()).isEmpty()
-        verify(exactly = 0) { brevbestillingService.bestillV2(allAny(), allAny(), allAny(), allAny())}
+        verify(exactly = 0) { brevbestillingService.bestillV2(allAny(), allAny(), allAny(), allAny()) }
     }
+
+    @Test
+    fun `BrevSteg hvor klage er trukket skal kun fullføre uten endring i avklaringsbehov og brevbestilling`() {
+        val behandling = InMemoryBehandlingRepository.opprettBehandling(
+            sakId = SakId(1L),
+            typeBehandling = TypeBehandling.Førstegangsbehandling,
+            forrigeBehandlingId = null,
+            vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                vurderingsbehov = listOf(
+                    VurderingsbehovMedPeriode(
+                        Vurderingsbehov.MOTTATT_SØKNAD,
+                        Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1))
+                    )
+                ),
+                årsak = ÅrsakTilOpprettelse.SØKNAD,
+                opprettet = LocalDateTime.now(),
+                beskrivelse = "unit-test"
+            )
+        )
+        val kontekst = FlytKontekstMedPerioder(
+            sakId = behandling.sakId,
+            behandlingId = behandling.id,
+            behandlingType = behandling.typeBehandling(),
+            forrigeBehandlingId = behandling.forrigeBehandlingId,
+            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
+            rettighetsperiode = Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1)),
+            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD)
+        )
+        val steg = MeldingOmVedtakBrevSteg(
+            brevUtlederService = brevUtlederService,
+            brevbestillingService = brevbestillingService,
+            behandlingRepository = InMemoryBehandlingRepository,
+            trekkKlageService = trekkKlageService,
+            avklaringsbehovService = avklaringsbehovService,
+            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
+        )
+        every { trekkKlageService.klageErTrukket(any()) } returns true
+
+        val resultat1 = steg.utfør(kontekst)
+
+        assertThat(resultat1).isEqualTo(Fullført)
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+        assertThat(avklaringsbehovene.alle()).isEmpty()
+        verify(exactly = 0) { brevbestillingService.bestillV2(allAny(), allAny(), allAny(), allAny()) }
+    }
+
 }
