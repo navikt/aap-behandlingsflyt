@@ -22,16 +22,13 @@ import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.dbtest.TestDataSource.Companion.invoke
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
 
 internal class SamordningServiceTest {
@@ -194,7 +191,19 @@ internal class SamordningServiceTest {
             )
 
             val tidligereVurderinger = service.vurderingTidslinje(vurderinger)
-            assertThat(service.vurder(grunnlag, tidligereVurderinger).segmenter()).isNotEmpty
+            val samordningGradering = service.vurder(grunnlag, tidligereVurderinger).segmenter().toList()
+
+            assertThat(samordningGradering).hasSize(2)
+
+            with(samordningGradering[0]) {
+                assertThat(periode).isEqualTo(Periode(13 mars 2025, 15 mars 2025))
+                assertThat(verdi.gradering).isEqualTo(Prosent(50))
+            }
+
+            with(samordningGradering[1]) {
+                assertThat(periode).isEqualTo(Periode(16 mars 2025, 31 mars 2025))
+                assertThat(verdi.gradering).isEqualTo(Prosent(70))
+            }
         }
     }
 
