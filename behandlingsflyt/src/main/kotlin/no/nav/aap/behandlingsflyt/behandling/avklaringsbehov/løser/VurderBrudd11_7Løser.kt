@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
@@ -40,8 +41,9 @@ class VurderBrudd11_7Løser(
         val forrigeBehandlingId = behandlingRepository.hent(kontekst.kontekst.behandlingId).forrigeBehandlingId
 
         val gjeldendeVedtatte =
-            forrigeBehandlingId?.let { aktivitetsplikt11_7Repository.hentHvisEksisterer(it) }?.tidslinje()
-                ?: Tidslinje()
+            forrigeBehandlingId?.let { aktivitetsplikt11_7Repository.hentHvisEksisterer(it) }
+                ?.tidslinje()
+                .orEmpty()
 
         val ny = Tidslinje(
             Periode(vurdering.gjelderFra, LocalDate.MAX), vurdering

@@ -315,8 +315,10 @@ class StatistikkJobbUtførerTest {
                         hoveddiagnose = "PEST",
                         bidiagnoser = listOf("KOLERA"),
                         vurderingenGjelderFra = null,
+                        vurderingenGjelderTil = null,
                         vurdertAv = Bruker("Z0000"),
                         opprettet = Instant.now(),
+                        vurdertIBehandling = opprettetBehandling.id
                     )
                 )
             )
@@ -529,6 +531,10 @@ class StatistikkJobbUtførerTest {
                 sakId: SakId,
                 behandlingId: BehandlingId
             ): List<Sykdomsvurdering> {
+                TODO("Not yet implemented")
+            }
+
+            override fun migrerSykdomsvurderinger() {
                 TODO("Not yet implemented")
             }
         }

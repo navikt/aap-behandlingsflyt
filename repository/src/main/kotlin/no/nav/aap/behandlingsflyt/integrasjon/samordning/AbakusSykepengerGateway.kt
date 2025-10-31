@@ -12,14 +12,15 @@ import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
-import no.nav.aap.komponenter.miljo.Miljø
-import no.nav.aap.komponenter.miljo.MiljøKode
+import org.slf4j.LoggerFactory
 import java.net.URI
 import java.time.LocalDate
 
 class AbakusSykepengerGateway : SykepengerGateway {
     private val url = URI.create(requiredConfigForKey("integrasjon.sykepenger.url") + "/utbetalte-perioder-aap")
     private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.sykepenger.scope"))
+
+    private val secureLogger = LoggerFactory.getLogger("secureLog")
 
     companion object : Factory<SykepengerGateway> {
         override fun konstruer(): SykepengerGateway {
@@ -32,21 +33,15 @@ class AbakusSykepengerGateway : SykepengerGateway {
     )
 
     private fun query(request: SykepengerRequest): SykepengerResponse {
-        if ("10437709470" in request.personidentifikatorer && Miljø.er() != MiljøKode.PROD) {
-            return SykepengerResponse(
-                listOf(
-                    UtbetaltePerioder(
-                        LocalDate.now().minusMonths(3), LocalDate.now().minusWeeks(1), 100
-                    )
-                )
-            )
-        }
         val httpRequest = PostRequest(
             body = request, additionalHeaders = listOf(
                 Header("Accept", "application/json")
             )
         )
-        return requireNotNull(client.post(uri = url, request = httpRequest))
+
+        val response: SykepengerResponse? = client.post(uri = url, request = httpRequest)
+        secureLogger.info("Sykepenger request: ${request}, response: $response")
+        return requireNotNull(response)
     }
 
     override fun hentYtelseSykepenger(

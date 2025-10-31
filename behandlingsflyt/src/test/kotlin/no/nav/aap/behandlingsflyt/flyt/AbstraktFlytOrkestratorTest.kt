@@ -152,6 +152,7 @@ import no.nav.aap.behandlingsflyt.test.modell.defaultInntekt
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -1387,7 +1388,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         val vilkårsutfall = dataSource.transaction(readOnly = true) { VilkårsresultatRepositoryImpl(it).hent(this.id) }
             .optionalVilkår(vilkårtype)
             ?.tidslinje()
-            ?: tidslinjeOf()
+            .orEmpty()
         val assertions = tidslinjeOf(*expectedVilkårsutfall)
             .map<(Vilkårsvurdering) -> Unit> { forventetUtfall ->
                 { vilkårsvurdering ->

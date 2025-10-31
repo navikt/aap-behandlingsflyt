@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fød
 import no.nav.aap.komponenter.tidslinje.JoinStyle
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
@@ -143,7 +144,7 @@ class BeregnTilkjentYtelseService(
 
         val gradertÅrligYtelseTidslinjeMedArbeidgiver =
             gradertÅrligYtelseTidslinjeMedSamordning.kombiner(
-                samordningArbeidsgiverTidslinje ?: Tidslinje(),
+                samordningArbeidsgiverTidslinje.orEmpty(),
                 JoinStyle.LEFT_JOIN { periode, venstre, høyre ->
                     if (høyre == null) {
                         venstre

@@ -149,6 +149,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
                         fom = 10 januar 2020,
                         tom = 20 januar 2020,
                         grad = 100,
+                        organisasjonsnummer = null
                     )
                 )
             )
