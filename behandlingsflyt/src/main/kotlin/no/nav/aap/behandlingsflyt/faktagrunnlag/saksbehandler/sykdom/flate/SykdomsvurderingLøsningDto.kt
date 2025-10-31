@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.Instant
@@ -68,6 +69,41 @@ data class SykdomsvurderingLøsningDto(
             opprettet = Instant.now(),
             vurdertIBehandling = vurdertIBehandling
         )
+    }
+
+    fun valider() {
+        val errors = mutableListOf<String>()
+        if (!harSkadeSykdomEllerLyte) {
+            if (!kodeverk.isNullOrBlank()) {
+                errors.add("Kodeverk kan ikke være satt med mindre det er skade, sykdom eller lyte.")
+            }
+            if (!hoveddiagnose.isNullOrBlank()) {
+                errors.add("Hoveddiagnose kan ikke være satt med mindre det er skade, sykdom eller lyte.")
+            }
+            if (!bidiagnoser.isNullOrEmpty()) {
+                errors.add("Bidiagnoser kan ikke være satt med mindre det er skade, sykdom eller lyte.")
+            }
+            if (erArbeidsevnenNedsatt != null) {
+                errors.add("Nedsatt arbeidsevne kan ikke være satt med mindre det er skade, sykdom eller lyte.")
+            }
+        }
+        if (erArbeidsevnenNedsatt != null && !erArbeidsevnenNedsatt) {
+            if (erSkadeSykdomEllerLyteVesentligdel != null) {
+                errors.add("Skade, sykdom eller lyte vesentlig del kan ikke være satt hvis arbeidsevnen ikke er nedsatt.")
+            }
+            if (erNedsettelseIArbeidsevneAvEnVissVarighet != null) {
+                errors.add("Nedsettelse i arbeidsevne av en viss varighet kan ikke være satt hvis arbeidsevnen ikke er nedsatt.")
+            }
+            if (erNedsettelseIArbeidsevneMerEnnHalvparten != null) {
+                errors.add("Nedsettelse i arbeidsevne mer enn halvparten kan ikke være satt hvis arbeidsevnen ikke er nedsatt.")
+            }
+            if (erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense != null) {
+                errors.add("Nedsettelse i arbeidsevne mer enn yrkesskadegrense kan ikke være satt hvis arbeidsevnen ikke er nedsatt.")
+            }
+        }
+        if (errors.isNotEmpty()) {
+            throw UgyldigForespørselException("Ugyldig sykdomsvurdering: \n${errors.joinToString("\n - ", " - ")}")
+        }
     }
 }
 

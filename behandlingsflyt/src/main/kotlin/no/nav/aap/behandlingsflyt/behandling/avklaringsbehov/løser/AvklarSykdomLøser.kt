@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRe
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -36,6 +37,9 @@ class AvklarSykdomLøser(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarSykdomLøsning): LøsningsResultat {
+        // TODO: Inkluderer dette historiske vurderinger...? Hva vil potensielt skje med validering da?
+        løsning.sykdomsvurderinger.forEach(SykdomsvurderingLøsningDto::valider)
+
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
         val yrkesskadeGrunnlag = yrkersskadeRepository.hentHvisEksisterer(behandling.id)
 
