@@ -34,7 +34,7 @@ class Medlemskapvilkåret(
 
             val vilkårsvurderinger = gjeldendeVurderinger
                 .map { vurdering ->
-                    if (vurdering.lovvalgsLandErAnnetLandMedAvtaleIEØS()) {
+                    if (vurdering.lovvalgslandErAnnetLandIEØSEllerLandMedAvtale()) {
                         Vilkårsvurdering(
                             utfall = Utfall.IKKE_OPPFYLT,
                             avslagsårsak = Avslagsårsak.NORGE_IKKE_KOMPETENT_STAT,

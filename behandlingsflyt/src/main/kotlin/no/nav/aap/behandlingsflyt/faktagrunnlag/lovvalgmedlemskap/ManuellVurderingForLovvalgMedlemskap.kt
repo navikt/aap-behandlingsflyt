@@ -22,7 +22,7 @@ data class ManuellVurderingForLovvalgMedlemskap(
     val tom: LocalDate? = null,
     val vurdertIBehandling: BehandlingId? = null,
 ) {
-    fun lovvalgsLandErAnnetLandMedAvtaleIEØS(): Boolean {
+    fun lovvalgslandErAnnetLandIEØSEllerLandMedAvtale(): Boolean {
         val lovvalgsLand = lovvalgVedSøknadsTidspunkt.lovvalgsEØSLandEllerLandMedAvtale
         return lovvalgsLand != null && lovvalgsLand != EØSLandEllerLandMedAvtale.NOR && lovvalgsLand in enumValues<EØSLandEllerLandMedAvtale>().map { it }
     }
