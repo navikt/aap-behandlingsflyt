@@ -88,7 +88,6 @@ class PdlHendelseKafkaKonsument(
                 person?.let { personIKelvin ->
                     sakRepository.finnSakerFor(personIKelvin).forEach { sak ->
                         log.info("Registrerer mottatt hendelse på ${sak.saksnummer}")
-                        //TODO: Hente ut perioder og se om alle fremtidige perioder er avslag
                         val behandling = behandlingRepository.finnSisteOpprettedeBehandlingFor(
                             sak.id,
                             listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)
@@ -102,13 +101,17 @@ class PdlHendelseKafkaKonsument(
                                     underveisGrunnlag = underveisGrunnlag
                                 )
                                 if (!personHarBareAvslagFremover) {
+                                    log.info("Registrerer mottatt hendelse fordi dødsfall på bruker ${sak.saksnummer}")
                                     hendelseService.registrerMottattHendelse(
                                         personHendelse.tilInnsendingDødsfallBruker(sak.saksnummer)
                                     )
                                 }
+                                else
+                                {
+                                    log.info("Ignorerer dødsfallhendelse fordi bruker har fått avslag ${sak.saksnummer}")
+                                }
                             }
                         }
-                        // END TODO
 
                         if (behandling != null) {
                             val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling.id)
@@ -124,8 +127,8 @@ class PdlHendelseKafkaKonsument(
                                 }
                             }
                         }
-                        // END TODO
                     }
+
                     val behandlingIds = barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForBarn(funnetIdent!!)
                     log.info("Sjekker mottatt hendelse for barn $behandlingIds")
                     behandlingIds
