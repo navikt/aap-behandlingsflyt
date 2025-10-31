@@ -511,25 +511,25 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
                         // Bruk den migrerte versjonen
                         nyeVerdierForVurdering[sammenlignbarVurdering]!!
                     } else {
-                        val nyeVerdier = Pair(kandidat.behandlingId, kandidat.rettighetsperiode.fom)
+                        val nyeVerdier = Pair(kandidat.behandlingId, vurdering.vurderingenGjelderFra ?: kandidat.rettighetsperiode.fom)
                         nyeVerdierForVurdering.put(sammenlignbarVurdering, nyeVerdier)
                         nyeVerdier
                     }
 
                     // Oppdater
-//                    connection.execute(
-//                        """
-//                        UPDATE SYKDOM_VURDERING
-//                        SET VURDERT_I_BEHANDLING = ?, VURDERINGEN_GJELDER_FRA = ?
-//                        WHERE ID = ?
-//                        """.trimIndent()
-//                    ) {
-//                        setParams {
-//                            setLong(1, nyeVerdier.first.id)
-//                            setLocalDate(2, nyeVerdier.second)
-//                            setLong(3, vurdering.id!!)
-//                        }
-//                    }
+                    connection.execute(
+                        """
+                        UPDATE SYKDOM_VURDERING
+                        SET VURDERT_I_BEHANDLING = ?, VURDERINGEN_GJELDER_FRA = ?
+                        WHERE ID = ?
+                        """.trimIndent()
+                    ) {
+                        setParams {
+                            setLong(1, nyeVerdier.first.id)
+                            setLocalDate(2, nyeVerdier.second)
+                            setLong(3, vurdering.id!!)
+                        }
+                    }
                     migrerteVurderingerCount = migrerteVurderingerCount + 1
                     
                     migrerteVurderingerId.add(kandidat.vurderingerId)

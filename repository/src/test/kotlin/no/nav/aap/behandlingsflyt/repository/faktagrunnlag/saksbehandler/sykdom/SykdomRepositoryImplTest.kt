@@ -240,9 +240,12 @@ internal class SykdomRepositoryImplTest {
             vurdertIBehandling = behandlingId,
         )
 
-        private fun sykdomsvurdering2(behandlingId: BehandlingId?) = Sykdomsvurdering(
+        private fun sykdomsvurdering2(
+            behandlingId: BehandlingId?,
+            vurderingenGjelderFra: LocalDate = LocalDate.of(2020, 1, 1)
+        ) = Sykdomsvurdering(
             begrunnelse = "b2",
-            vurderingenGjelderFra = LocalDate.of(2020, 1, 1),
+            vurderingenGjelderFra = vurderingenGjelderFra,
             vurderingenGjelderTil = null,
             dokumenterBruktIVurdering = listOf(JournalpostId("2")),
             harSkadeSykdomEllerLyte = true,
@@ -292,53 +295,60 @@ internal class SykdomRepositoryImplTest {
             )
         )
     }
-    
+
     @Test
     fun `migrer sykdomsvurderinger`() {
         dataSource.transaction { connection ->
             val sykdomRepo = SykdomRepositoryImpl(connection)
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
-            
+
             val sykdomsvurderingUtenVurdertIBehandling = sykdomsvurdering1(null)
             sykdomRepo.lagre(behandling.id, listOf(sykdomsvurderingUtenVurdertIBehandling))
             BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
 
             val behandling2 = finnEllerOpprettBehandling(connection, sak)
-            val nyVurdering = sykdomsvurdering2(null)
+            val vurdering2fom = sak.rettighetsperiode.fom.plusMonths(2)
+            val nyVurdering = sykdomsvurdering2(null, vurdering2fom)
             sykdomRepo.lagre(behandling2.id, listOf(sykdomsvurderingUtenVurdertIBehandling, nyVurdering))
 
             sykdomRepo.migrerSykdomsvurderinger()
-            
+
             // DRY-RUN: Ingen endring
-            assertThat(sykdomRepo.hent(behandling.id).sykdomsvurderinger).usingRecursiveComparison()
-                .ignoringFields("id", "opprettet").isEqualTo(
-                    listOf(
-                        sykdomsvurderingUtenVurdertIBehandling
-                    )
-                )
-            assertThat(sykdomRepo.hent(behandling2.id).sykdomsvurderinger).usingRecursiveComparison()
-                .ignoringFields("id", "opprettet").isEqualTo(
-                    listOf(
-                        sykdomsvurderingUtenVurdertIBehandling,
-                        nyVurdering
-                    )
-                )
-            
-            
 //            assertThat(sykdomRepo.hent(behandling.id).sykdomsvurderinger).usingRecursiveComparison()
 //                .ignoringFields("id", "opprettet").isEqualTo(
 //                    listOf(
-//                        sykdomsvurderingUtenVurdertIBehandling.copy(vurdertIBehandling = behandling.id, vurderingenGjelderFra = periode.fom)
+//                        sykdomsvurderingUtenVurdertIBehandling
 //                    )
 //                )
 //            assertThat(sykdomRepo.hent(behandling2.id).sykdomsvurderinger).usingRecursiveComparison()
 //                .ignoringFields("id", "opprettet").isEqualTo(
 //                    listOf(
-//                        sykdomsvurderingUtenVurdertIBehandling.copy(vurdertIBehandling = behandling.id, vurderingenGjelderFra = periode.fom),
-//                        nyVurdering.copy(vurdertIBehandling = behandling2.id, vurderingenGjelderFra = periode.fom)
+//                        sykdomsvurderingUtenVurdertIBehandling,
+//                        nyVurdering
 //                    )
 //                )
+
+
+            assertThat(sykdomRepo.hent(behandling.id).sykdomsvurderinger).usingRecursiveComparison()
+                .ignoringFields("id", "opprettet").isEqualTo(
+                    listOf(
+                        sykdomsvurderingUtenVurdertIBehandling.copy(
+                            vurdertIBehandling = behandling.id,
+                            vurderingenGjelderFra = periode.fom
+                        )
+                    )
+                )
+            assertThat(sykdomRepo.hent(behandling2.id).sykdomsvurderinger).usingRecursiveComparison()
+                .ignoringFields("id", "opprettet").isEqualTo(
+                    listOf(
+                        sykdomsvurderingUtenVurdertIBehandling.copy(
+                            vurdertIBehandling = behandling.id,
+                            vurderingenGjelderFra = periode.fom
+                        ),
+                        nyVurdering.copy(vurdertIBehandling = behandling2.id)
+                    )
+                )
         }
     }
 }
