@@ -1,9 +1,12 @@
 package no.nav.aap.behandlingsflyt.hendelse.kafka.person
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Endringstype
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Navn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Opplysningstype
@@ -23,6 +26,8 @@ import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.slf4j.LoggerFactory
 import java.time.Duration
+import java.time.Instant
+import java.time.ZoneId
 import javax.sql.DataSource
 
 const val PDL_HENDELSE_TOPIC = "pdl.leesah-v1"
@@ -61,6 +66,7 @@ class PdlHendelseKafkaKonsument(
             val behandlingRepository: BehandlingRepository = repositoryProvider.provide()
             val personRepository: PersonRepository = repositoryProvider.provide()
             val barnRepository: BarnRepository = repositoryProvider.provide()
+            val underveisRepository: UnderveisRepository = repositoryProvider.provide()
             val hendelseService = MottattHendelseService(repositoryProvider)
             if (personHendelse.opplysningstype == Opplysningstype.DOEDSFALL_V1 && personHendelse.endringstype == Endringstype.OPPRETTET) {
                 log.info("Håndterer hendelse med ${personHendelse.opplysningstype} og ${personHendelse.endringstype}")
@@ -82,9 +88,43 @@ class PdlHendelseKafkaKonsument(
                 person?.let { personIKelvin ->
                     sakRepository.finnSakerFor(personIKelvin).forEach { sak ->
                         log.info("Registrerer mottatt hendelse på ${sak.saksnummer}")
-                        hendelseService.registrerMottattHendelse(
-                            personHendelse.tilInnsendingDødsfallBruker(sak.saksnummer)
+                        //TODO: Hente ut perioder og se om alle fremtidige perioder er avslag
+                        val behandling = behandlingRepository.finnSisteOpprettedeBehandlingFor(
+                            sak.id,
+                            listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)
                         )
+
+                        if (behandling != null) {
+                            val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling.id)
+                            if (underveisGrunnlag != null) {
+                                val personHarBareAvslagFremover = allePerioderEtterOpprettetMedAvslagsårsak(
+                                    opprettetTidspunkt = personHendelse.opprettet,
+                                    underveisGrunnlag = underveisGrunnlag
+                                )
+                                if (!personHarBareAvslagFremover) {
+                                    hendelseService.registrerMottattHendelse(
+                                        personHendelse.tilInnsendingDødsfallBruker(sak.saksnummer)
+                                    )
+                                }
+                            }
+                        }
+                        // END TODO
+
+                        if (behandling != null) {
+                            val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling.id)
+                            if (underveisGrunnlag != null) {
+                                val personHarBareAvslagFremover = allePerioderEtterOpprettetMedAvslagsårsak(
+                                    opprettetTidspunkt = personHendelse.opprettet,
+                                    underveisGrunnlag = underveisGrunnlag
+                                )
+                                if (!personHarBareAvslagFremover) {
+                                    hendelseService.registrerMottattHendelse(
+                                        personHendelse.tilInnsendingDødsfallBruker(sak.saksnummer)
+                                    )
+                                }
+                            }
+                        }
+                        // END TODO
                     }
                     val behandlingIds = barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForBarn(funnetIdent!!)
                     log.info("Sjekker mottatt hendelse for barn $behandlingIds")
@@ -106,6 +146,24 @@ class PdlHendelseKafkaKonsument(
                 log.info("Ignorerer hendelse med ${personHendelse.opplysningstype} og ${personHendelse.endringstype}")
             }
         }
+    }
+
+    fun allePerioderEtterOpprettetMedAvslagsårsak(
+        opprettetTidspunkt: Instant,
+        underveisGrunnlag: UnderveisGrunnlag
+    ): Boolean {
+
+        val opprettetTidspunkt = opprettetTidspunkt.atZone(ZoneId.systemDefault())
+            .toLocalDate()
+
+        val perioder = underveisGrunnlag.perioder
+
+        return perioder.isNotEmpty() &&
+                perioder.all { periode ->
+                    periode.avslagsårsak != null &&
+                            periode.periode.tom
+                                .isAfter(opprettetTidspunkt)
+                }
     }
 
     fun Personhendelse.tilDomain(): PdlPersonHendelse =
