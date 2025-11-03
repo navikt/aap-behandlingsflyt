@@ -45,7 +45,7 @@ fun NormalOpenAPIRoute.kvalitetssikringApi(
             getGrunnlag<BehandlingReferanse, KvalitetssikringGrunnlagDto>(
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = KVALITETSSIKRING_KODE,
-                TagModule(listOf(Tags.Grunnlag))
+                modules = arrayOf(TagModule(listOf(Tags.Grunnlag)))
             ) { req ->
 
                 val dto = dataSource.transaction(readOnly = true) { connection ->

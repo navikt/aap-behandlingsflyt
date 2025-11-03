@@ -85,7 +85,7 @@ fun NormalOpenAPIRoute.aktivitetsplikt11_9GrunnlagApi(
                 sakPathParam = SakPathParam("saksnummer")
             ),
             null,
-            TagModule(listOf(Tags.Sak)),
+            modules = arrayOf(TagModule(listOf(Tags.Sak))),
         ) { req ->
             val aktivitetspliktVurderingerMedTrekk = dataSource.transaction(readOnly = true) { connection ->
                 val utbetalingGateway = gatewayProvider.provide<UtbetalingGateway>()
