@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.MottattDokumentDto
@@ -35,12 +36,14 @@ class BehandlingHendelseServiceImpl(
     private val sakService: SakService,
     private val dokumentRepository: MottattDokumentRepository,
     private val pipRepository: PipRepository,
+    private val meldekortRepository: MeldekortRepository
 ) : BehandlingHendelseService {
     constructor(repositoryProvider: RepositoryProvider) : this(
         flytJobbRepository = repositoryProvider.provide(),
         sakService = SakService(repositoryProvider),
         dokumentRepository = repositoryProvider.provide(),
         pipRepository = repositoryProvider.provide(),
+        meldekortRepository = repositoryProvider.provide()
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -53,6 +56,11 @@ class BehandlingHendelseServiceImpl(
         val erPåVent = avklaringsbehovene.hentÅpneVentebehov().isNotEmpty()
         val vurderingsbehov = behandling.vurderingsbehov()
         val mottattDokumenter = hentMottattDokumenter(vurderingsbehov, behandling)
+
+        val meldekort = meldekortRepository.hentHvisEksisterer(behandling.id)
+        val forrigeBehandlingMeldekort = behandling.forrigeBehandlingId?.let { meldekortRepository.hentHvisEksisterer(it) }
+
+        val nyeMeldekort = meldekort?.meldekort()?.filter { forrigeBehandlingMeldekort?.meldekort()?.contains(it) == true  }
 
         val hendelse = BehandlingFlytStoppetHendelse(
             personIdent = sak.person.aktivIdent().identifikator,
@@ -92,6 +100,7 @@ class BehandlingHendelseServiceImpl(
                     hendelsesTidspunkt = hendelse.hendelsesTidspunkt,
                     versjon = hendelse.versjon,
                     opprettetAv = hentBehandlingOpprettetAv(behandling.id),
+                    nyeMeldekort = nyeMeldekort
                 )
             )
                 .forBehandling(sak.id.id, behandling.id.id)
