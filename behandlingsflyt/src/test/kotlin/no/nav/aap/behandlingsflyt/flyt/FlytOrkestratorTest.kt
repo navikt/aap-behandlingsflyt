@@ -665,6 +665,86 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
     }
 
     @Test
+    fun `innvilge v yrkesskadegrunnlag`() {
+        val fom = LocalDate.now().minusMonths(3)
+        val periode = Periode(fom, fom.plusYears(3))
+
+        // Simulerer et svar fra YS-løsning om at det finnes en yrkesskade
+        val person = TestPersoner.PERSON_MED_YRKESSKADE().medBarn(
+            listOf(
+                TestPerson(
+                    identer = setOf(Ident("1234123")),
+                    fødselsdato = Fødselsdato(LocalDate.now().minusYears(3)),
+                )
+            )
+        )
+
+        var (sak, behandling) = sendInnFørsteSøknad(
+            person = person,
+            mottattTidspunkt = fom.atStartOfDay(),
+            periode = periode,
+        )
+
+        // Sender inn en søknad
+        behandling
+            .løsSykdom() // erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true) // erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true)
+            .løsBistand()
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+
+        sak.sendInnMeldekort(
+            journalpostId = JournalpostId("220"),
+            mottattTidspunkt = LocalDateTime.now(),
+            timerArbeidet = Periode(LocalDate.now().minusMonths(3), LocalDate.now().plusMonths(3))
+                .dager()
+                .associateWith { 0.0 }
+        )
+
+        behandling = behandling.kvalitetssikreOk()
+            .løsAvklaringsBehov(
+                AvklarYrkesskadeLøsning(
+                    yrkesskadesvurdering = YrkesskadevurderingDto(
+                        begrunnelse = "Ikke årsakssammenheng",
+                        relevanteSaker = emptyList(),
+                        relevanteYrkesskadeSaker = emptyList(),
+                        andelAvNedsettelsen = null,
+                        erÅrsakssammenheng = true
+                    )
+                ),
+            )
+            .løsBeregningstidspunkt()
+            // Skal ikke løse forutgående medlemsskap
+            .løsOppholdskrav(fom)
+            .løsBarnetillegg()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .medKontekst {
+                // Saken står til To-trinnskontroll hos beslutter
+                assertThat(åpneAvklaringsbehov).anySatisfy { assertTrue(it.definisjon == Definisjon.FATTE_VEDTAK) }
+                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+            }
+            .fattVedtak()
+            .medKontekst {
+                assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
+                // Venter på at brevet skal fullføres
+                assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.SKRIV_VEDTAKSBREV) }
+            }
+            .løsVedtaksbrev()
+            .medKontekst {
+                val brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
+                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
+            }
+
+        val vilkårsresultat = hentVilkårsresultat(behandlingId = behandling.id)
+
+        val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
+
+        assertThat(sykdomsvilkåret.vilkårsperioder())
+            .hasSize(1)
+            .allMatch { vilkårsperiode -> vilkårsperiode.erOppfylt() }
+            .allMatch { vilkårsperiode -> vilkårsperiode.innvilgelsesårsak == Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG }
+    }
+
+    @Test
     fun `skal avklare yrkesskade hvis det finnes spor av yrkesskade`() {
         val fom = LocalDate.now().minusMonths(3)
         val periode = Periode(fom, fom.plusYears(3))
@@ -1783,24 +1863,26 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         var (sak, førstegangsbehandling) = sendInnFørsteSøknad(søknad = TestSøknader.SØKNAD_INGEN_MEDLEMSKAP)
 
         førstegangsbehandling = førstegangsbehandling
-            .løsAvklaringsBehov(AvklarPeriodisertLovvalgMedlemskapLøsning(
-                løsningerForPerioder = listOf(
-                    PeriodisertManuellVurderingForLovvalgMedlemskapDto(
-                        fom = sak.rettighetsperiode.fom,
-                        tom = sak.rettighetsperiode.fom.plusMonths(2),
-                        begrunnelse = "",
-                        lovvalg = LovvalgVedSøknadsTidspunktDto("", EØSLandEllerLandMedAvtale.NOR),
-                        medlemskap = MedlemskapVedSøknadsTidspunktDto("", false)
-                    ),
-                    PeriodisertManuellVurderingForLovvalgMedlemskapDto(
-                        fom = sak.rettighetsperiode.fom.plusMonths(2).plusDays(1),
-                        tom = null,
-                        begrunnelse = "",
-                        lovvalg = LovvalgVedSøknadsTidspunktDto("", EØSLandEllerLandMedAvtale.NOR),
-                        medlemskap = MedlemskapVedSøknadsTidspunktDto("", true)
+            .løsAvklaringsBehov(
+                AvklarPeriodisertLovvalgMedlemskapLøsning(
+                    løsningerForPerioder = listOf(
+                        PeriodisertManuellVurderingForLovvalgMedlemskapDto(
+                            fom = sak.rettighetsperiode.fom,
+                            tom = sak.rettighetsperiode.fom.plusMonths(2),
+                            begrunnelse = "",
+                            lovvalg = LovvalgVedSøknadsTidspunktDto("", EØSLandEllerLandMedAvtale.NOR),
+                            medlemskap = MedlemskapVedSøknadsTidspunktDto("", false)
+                        ),
+                        PeriodisertManuellVurderingForLovvalgMedlemskapDto(
+                            fom = sak.rettighetsperiode.fom.plusMonths(2).plusDays(1),
+                            tom = null,
+                            begrunnelse = "",
+                            lovvalg = LovvalgVedSøknadsTidspunktDto("", EØSLandEllerLandMedAvtale.NOR),
+                            medlemskap = MedlemskapVedSøknadsTidspunktDto("", true)
+                        )
                     )
                 )
-            ))
+            )
             .løsSykdom()
             .løsBistand()
             .løsRefusjonskrav()
@@ -1860,18 +1942,20 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         val revurdering = sak.opprettManuellRevurdering(
             listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP),
         )
-            .løsAvklaringsBehov(AvklarPeriodisertLovvalgMedlemskapLøsning(
-                løsningerForPerioder = listOf(
-                    // Skulle oppfylles en mnd tidligere
-                    PeriodisertManuellVurderingForLovvalgMedlemskapDto(
-                        fom = sak.rettighetsperiode.fom.plusMonths(1).plusDays(1),
-                        tom = null,
-                        begrunnelse = "",
-                        lovvalg = LovvalgVedSøknadsTidspunktDto("", EØSLandEllerLandMedAvtale.NOR),
-                        medlemskap = MedlemskapVedSøknadsTidspunktDto("", true)
+            .løsAvklaringsBehov(
+                AvklarPeriodisertLovvalgMedlemskapLøsning(
+                    løsningerForPerioder = listOf(
+                        // Skulle oppfylles en mnd tidligere
+                        PeriodisertManuellVurderingForLovvalgMedlemskapDto(
+                            fom = sak.rettighetsperiode.fom.plusMonths(1).plusDays(1),
+                            tom = null,
+                            begrunnelse = "",
+                            lovvalg = LovvalgVedSøknadsTidspunktDto("", EØSLandEllerLandMedAvtale.NOR),
+                            medlemskap = MedlemskapVedSøknadsTidspunktDto("", true)
+                        )
                     )
                 )
-            ))
+            )
             .løsSykdom()
             .løsBistand()
             .løsSykdomsvurderingBrev()
@@ -1893,17 +1977,19 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         var (sak, førstegangsbehandling) = sendInnFørsteSøknad(søknad = TestSøknader.SØKNAD_INGEN_MEDLEMSKAP)
 
         førstegangsbehandling = førstegangsbehandling
-            .løsAvklaringsBehov(AvklarPeriodisertLovvalgMedlemskapLøsning(
-                løsningerForPerioder = listOf(
-                    PeriodisertManuellVurderingForLovvalgMedlemskapDto(
-                        fom = sak.rettighetsperiode.fom,
-                        tom = null,
-                        begrunnelse = "",
-                        lovvalg = LovvalgVedSøknadsTidspunktDto("", EØSLandEllerLandMedAvtale.NOR),
-                        medlemskap = MedlemskapVedSøknadsTidspunktDto("", true)
+            .løsAvklaringsBehov(
+                AvklarPeriodisertLovvalgMedlemskapLøsning(
+                    løsningerForPerioder = listOf(
+                        PeriodisertManuellVurderingForLovvalgMedlemskapDto(
+                            fom = sak.rettighetsperiode.fom,
+                            tom = null,
+                            begrunnelse = "",
+                            lovvalg = LovvalgVedSøknadsTidspunktDto("", EØSLandEllerLandMedAvtale.NOR),
+                            medlemskap = MedlemskapVedSøknadsTidspunktDto("", true)
+                        )
                     )
                 )
-            ))
+            )
             .løsSykdom()
             .løsBistand()
             .løsRefusjonskrav()
@@ -1927,17 +2013,19 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 // Vi har ikke vurdert lovvalg og medlemskap for den utvidede perioden enda, så vi forventer et avklaringsbehov her
                 assertThat(åpneAvklaringsbehov).anySatisfy { behov -> assertThat(behov.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP).isTrue() }
             }
-            .løsAvklaringsBehov(AvklarPeriodisertLovvalgMedlemskapLøsning(
-                løsningerForPerioder = listOf(
-                    PeriodisertManuellVurderingForLovvalgMedlemskapDto(
-                        fom = nyStartDato,
-                        tom = null,
-                        begrunnelse = "",
-                        lovvalg = LovvalgVedSøknadsTidspunktDto("", EØSLandEllerLandMedAvtale.NOR),
-                        medlemskap = MedlemskapVedSøknadsTidspunktDto("", true)
+            .løsAvklaringsBehov(
+                AvklarPeriodisertLovvalgMedlemskapLøsning(
+                    løsningerForPerioder = listOf(
+                        PeriodisertManuellVurderingForLovvalgMedlemskapDto(
+                            fom = nyStartDato,
+                            tom = null,
+                            begrunnelse = "",
+                            lovvalg = LovvalgVedSøknadsTidspunktDto("", EØSLandEllerLandMedAvtale.NOR),
+                            medlemskap = MedlemskapVedSøknadsTidspunktDto("", true)
+                        )
                     )
                 )
-            ))
+            )
             .løsSykdom()
             .løsBistand()
             .løsSykdomsvurderingBrev()

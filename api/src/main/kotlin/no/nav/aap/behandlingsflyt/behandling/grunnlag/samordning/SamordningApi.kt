@@ -30,6 +30,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -152,7 +153,8 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
     route("/api/behandling") {
         route("/{referanse}/grunnlag/samordning-ufore") {
             getGrunnlag<BehandlingReferanse, SamordningUføreVurderingGrunnlagDTO>(
-                BehandlingPathParam(
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                behandlingPathParam = BehandlingPathParam(
                     "referanse"
                 ),
                 avklaringsbehovKode = Definisjon.AVKLAR_SAMORDNING_UFØRE.kode.toString()
@@ -185,6 +187,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
         }
         route("/{referanse}/grunnlag/samordning/tjenestepensjon") {
             getGrunnlag<BehandlingReferanse, TjenestepensjonGrunnlagDTO>(
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam =
                     BehandlingPathParam(
                         "referanse"
@@ -230,6 +233,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
 
         route("/{referanse}/grunnlag/samordning") {
             getGrunnlag<BehandlingReferanse, SamordningYtelseVurderingGrunnlagDTO>(
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = Definisjon.AVKLAR_SAMORDNING_GRADERING.kode.toString()
             ) { req ->
@@ -290,6 +294,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
 
         route("/{referanse}/grunnlag/samordning-andre-statlige-ytelser") {
             getGrunnlag<BehandlingReferanse, SamordningAndreStatligeYtelserGrunnlagDTO>(
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam =
                     BehandlingPathParam(
                         "referanse"
@@ -349,6 +354,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
 
         route("/{referanse}/grunnlag/samordning-arbeidsgiver") {
             getGrunnlag<BehandlingReferanse, SamordningArbeidsgiverGrunnlagDTO>(
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam =
                     BehandlingPathParam(
                         "referanse"

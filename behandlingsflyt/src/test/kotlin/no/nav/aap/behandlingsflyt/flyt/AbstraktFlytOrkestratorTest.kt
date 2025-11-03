@@ -266,7 +266,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
             FakePersoner.leggTil(
                 TestPerson(
                     fødselsdato = Fødselsdato(LocalDate.now().minusYears(25)),
-                    yrkesskade = listOf(TestYrkesskade()),
+                    yrkesskade = listOf(TestYrkesskade(skadedato = LocalDate.now().minusYears(1))),
                 )
             )
         }

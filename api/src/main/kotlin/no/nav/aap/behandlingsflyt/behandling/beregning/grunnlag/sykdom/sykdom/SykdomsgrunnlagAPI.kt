@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -37,6 +38,7 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
     route("/api/behandling") {
         route("/{referanse}/grunnlag/sykdom/sykdom") {
             getGrunnlag<BehandlingReferanse, SykdomGrunnlagResponse>(
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = Definisjon.AVKLAR_SYKDOM.kode.toString()
             ) { req ->
@@ -96,6 +98,7 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
         }
         route("/{referanse}/grunnlag/sykdom/yrkesskade") {
             getGrunnlag<BehandlingReferanse, YrkesskadeVurderingGrunnlagResponse>(
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = Definisjon.AVKLAR_YRKESSKADE.kode.toString()
             ) { req ->

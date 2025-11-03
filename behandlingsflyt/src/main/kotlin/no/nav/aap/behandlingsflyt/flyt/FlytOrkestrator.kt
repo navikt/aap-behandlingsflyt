@@ -362,15 +362,16 @@ class FlytOrkestrator(
         avklaringsbehovene: Avklaringsbehovene,
         harHeltStoppet: Boolean = true
     ) {
+        if (behandlingFlyt.erTom()) {
+            return
+        }
+
         log.info(
             "Tilbakefører {} for behandling {} med flyt {}",
             behandling.aktivtSteg(),
             behandling.referanse,
             behandlingFlyt
         )
-        if (behandlingFlyt.erTom()) {
-            return
-        }
 
         var neste: FlytSteg? = behandlingFlyt.aktivtSteg()
         while (true) {

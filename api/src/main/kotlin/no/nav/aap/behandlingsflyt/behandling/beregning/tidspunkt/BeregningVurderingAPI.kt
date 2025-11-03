@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -36,7 +37,7 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(
     route("/api/behandling") {
         route("/{referanse}/grunnlag/beregning/tidspunkt") {
             getGrunnlag<BehandlingReferanse, BeregningTidspunktAvklaringResponse>(
-
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT.kode.toString()
             ) { req ->
@@ -71,6 +72,7 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(
         }
         route("/{referanse}/grunnlag/beregning/yrkesskade") {
             getGrunnlag<BehandlingReferanse, BeregningYrkesskadeAvklaringResponse>(
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = Definisjon.FASTSETT_YRKESSKADEINNTEKT.kode.toString()
             ) { req ->
