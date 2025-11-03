@@ -146,7 +146,7 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
         if (studentVurdering?.erOppfylt() == true) {
             utfall = Utfall.OPPFYLT
             innvilgelsesårsak = Innvilgelsesårsak.STUDENT
-        } else if (sykdomVurdering?.erOppfyltForYrkesskade() == true && sykdomVurdering.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true && yrkesskadeVurdering != null && yrkesskadeVurdering.erÅrsakssammenheng) {
+        } else if (sykdomVurdering?.erOppfyltForYrkesskade() == true && yrkesskadeVurdering != null && yrkesskadeVurdering.erÅrsakssammenheng) {
             utfall = Utfall.OPPFYLT
             innvilgelsesårsak = Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG
         } else if (sykdomVurdering?.erOppfylt(grunnlag.kravDato) == true && bistandVurdering?.erBehovForBistand() == true) {
