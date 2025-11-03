@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.samordning
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningYtelseVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
@@ -31,6 +32,23 @@ class SamordningService(
 
     fun hentYtelser(behandlingId: BehandlingId): SamordningYtelseGrunnlag? {
         return samordningYtelseRepository.hentHvisEksisterer(behandlingId)
+    }
+
+    fun tilbakestillVurderinger(behandlingId: BehandlingId, forrigeBehandlingId: BehandlingId?) {
+        val vurderinger = samordningVurderingRepository.hentHvisEksisterer(behandlingId)
+        val forrigeVurderinger =
+            forrigeBehandlingId?.let { samordningVurderingRepository.hentHvisEksisterer(it) }
+
+        if (forrigeVurderinger != vurderinger) {
+            if (forrigeBehandlingId == null || forrigeVurderinger == null) {
+                // Er ingen forrige behandlingId, så vi deaktiverer det eksisterende grunnlaget.
+                samordningVurderingRepository.deaktiverGrunnlag(behandlingId)
+            } else {
+                samordningVurderingRepository.lagreVurderinger(
+                    behandlingId, forrigeVurderinger
+                )
+            }
+        }
     }
 
     fun vurderingTidslinje(grunnlag: SamordningVurderingGrunnlag?): Tidslinje<List<Pair<Ytelse, SamordningVurderingPeriode>>> {

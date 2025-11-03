@@ -23,10 +23,6 @@ object InMemorySamordningRepository : SamordningRepository {
         )
     }
 
-    override fun deaktiverGrunnlag(behandlingId: BehandlingId) {
-        TODO("Not yet implemented")
-    }
-
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         TODO("Not yet implemented")
     }

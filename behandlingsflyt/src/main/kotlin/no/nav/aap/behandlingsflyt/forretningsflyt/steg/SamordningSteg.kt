@@ -58,33 +58,15 @@ class SamordningSteg(
             behandlingRepository = behandlingRepository,
             vilkårsresultatRepository = vilkårsresultatRepository,
             definisjon = Definisjon.AVKLAR_SAMORDNING_GRADERING,
-            tvingerAvklaringsbehov = setOf(Vurderingsbehov.SAMORDNING_OG_AVREGNING), // <- burde REVURDER_SAMORDNING inn her?
+            tvingerAvklaringsbehov = setOf(
+                Vurderingsbehov.SAMORDNING_OG_AVREGNING,
+                Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER
+            ),
             nårVurderingErRelevant = ::perioderMedVurderingsbehov,
             kontekst = kontekst,
             erTilstrekkeligVurdert = { perioderSomIkkeHarBlittVurdert.isEmpty() },
             tilbakestillGrunnlag = {
-                val vedtatteVurderinger =
-                    kontekst.forrigeBehandlingId?.let { samordningRepository.hentHvisEksisterer(it) }
-                        ?.samordningPerioder.orEmpty()
-
-                val aktiveVurderinger =
-                    samordningRepository.hentHvisEksisterer(kontekst.behandlingId)
-                        ?.samordningPerioder.orEmpty()
-
-                if (vedtatteVurderinger.toSet() != aktiveVurderinger.toSet()) {
-                    if (kontekst.forrigeBehandlingId == null) {
-                        // Er ingen forrige behandlingId, så vi deaktiverer det eksisterende grunnlaget.
-                        samordningRepository.deaktiverGrunnlag(kontekst.behandlingId)
-                    } else {
-                        samordningRepository.lagre(
-                            kontekst.behandlingId, vedtatteVurderinger, SamordningYtelseVurderingGrunnlag(
-                                ytelseGrunnlag = samordningService.hentYtelser(kontekst.forrigeBehandlingId),
-                                vurderingGrunnlag = samordningService.hentVurderinger(kontekst.forrigeBehandlingId)
-                            )
-                        )
-                    }
-                }
-
+                samordningService.tilbakestillVurderinger(kontekst.behandlingId, kontekst.forrigeBehandlingId)
             }
         )
 
@@ -103,8 +85,8 @@ class SamordningSteg(
                     }.toSet(),
                 SamordningYtelseVurderingGrunnlag(ytelser, vurderinger)
             )
-
-            log.info("Samordning tidslinje $samordningTidslinje")
+        } else {
+            log.info("Mangler vurdering på perioder, lagrer ingenting i SamordningRepository.")
         }
 
         return Fullført
@@ -134,7 +116,7 @@ class SamordningSteg(
 
                 null -> false
             }
-        }.also { log.info("Perioder med vurderingsbehov: ${it}") }
+        }
     }
 
     companion object : FlytSteg {
