@@ -44,7 +44,7 @@ fun NormalOpenAPIRoute.rettighetsperiodeGrunnlagAPI(
     val ansattInfoService = AnsattInfoService(gatewayProvider)
     route("/api/behandling/{referanse}/grunnlag/rettighetsperiode")
         .getGrunnlag<BehandlingReferanse, RettighetsperiodeGrunnlagResponse>(
-            relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+            relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
             avklaringsbehovKode = Definisjon.VURDER_RETTIGHETSPERIODE.kode.toString()
 

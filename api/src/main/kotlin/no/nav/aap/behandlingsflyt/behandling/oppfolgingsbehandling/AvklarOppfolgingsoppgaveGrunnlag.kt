@@ -50,7 +50,7 @@ fun NormalOpenAPIRoute.avklarOppfolgingsoppgaveGrunnlag(
     dataSource: DataSource, repositoryRegistry: RepositoryRegistry
 ) {
     route("/api/behandling/{referanse}/grunnlag/oppfolgingsoppgave").getGrunnlag<BehandlingReferanse, AvklarOppfolgingsoppgaveGrunnlagResponse>(
-        relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+        relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
         behandlingPathParam = BehandlingPathParam("referanse"),
         avklaringsbehovKode = Definisjon.AVKLAR_OPPFØLGINGSBEHOV_NAY.kode.toString()
     ) { req ->

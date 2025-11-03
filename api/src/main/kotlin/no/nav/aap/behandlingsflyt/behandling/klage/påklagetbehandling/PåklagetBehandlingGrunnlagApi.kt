@@ -30,7 +30,7 @@ fun NormalOpenAPIRoute.påklagetBehandlingGrunnlagApi(
     val ansattInfoService = AnsattInfoService(gatewayProvider)
     route("api/klage/{referanse}/grunnlag/påklaget-behandling") {
         getGrunnlag<BehandlingReferanse, PåklagetBehandlingGrunnlagDto>(
-            relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+            relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
             avklaringsbehovKode = Definisjon.FASTSETT_PÅKLAGET_BEHANDLING.kode.toString()
         ) { behandlingReferanse ->

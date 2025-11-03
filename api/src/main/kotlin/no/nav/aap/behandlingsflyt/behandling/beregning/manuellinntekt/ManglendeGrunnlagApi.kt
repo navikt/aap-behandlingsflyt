@@ -46,7 +46,7 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(dataSource: DataSource, repositoryRe
     route("/api/behandling") {
         route("/{referanse}/grunnlag/beregning/manuellinntekt") {
             getGrunnlag<BehandlingReferanse, ManuellInntektGrunnlagResponse>(
-                relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = Definisjon.FASTSETT_MANUELL_INNTEKT.kode.toString()
             ) { req ->

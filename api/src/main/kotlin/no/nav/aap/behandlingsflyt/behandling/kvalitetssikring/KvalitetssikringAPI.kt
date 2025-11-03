@@ -44,7 +44,7 @@ fun NormalOpenAPIRoute.kvalitetssikringApi(
     route("/api/behandling") {
         route("/{referanse}/grunnlag/kvalitetssikring") {
             getGrunnlag<BehandlingReferanse, KvalitetssikringGrunnlagDto>(
-                relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = KVALITETSSIKRING_KODE,
                 modules = arrayOf(TagModule(listOf(Tags.Grunnlag)))

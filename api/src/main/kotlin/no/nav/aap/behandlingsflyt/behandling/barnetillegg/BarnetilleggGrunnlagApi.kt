@@ -38,7 +38,7 @@ fun NormalOpenAPIRoute.barnetilleggApi(
     route("/api/barnetillegg") {
         route("/grunnlag/{referanse}") {
             getGrunnlag<BehandlingReferanse, BarnetilleggDto>(
-                relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = Definisjon.AVKLAR_BARNETILLEGG.kode.toString()
             ) { req ->

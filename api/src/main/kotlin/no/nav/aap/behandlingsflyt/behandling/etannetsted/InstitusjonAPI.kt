@@ -36,7 +36,7 @@ fun NormalOpenAPIRoute.institusjonAPI(
     route("/api/behandling") {
         route("/{referanse}/grunnlag/institusjon/soning") {
             getGrunnlag<BehandlingReferanse, SoningsGrunnlagDto>(
-                relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = Definisjon.AVKLAR_SONINGSFORRHOLD.kode.toString()
             ) { req ->
@@ -109,7 +109,7 @@ fun NormalOpenAPIRoute.institusjonAPI(
     route("/api/behandling") {
         route("/{referanse}/grunnlag/institusjon/helse") {
             getGrunnlag<BehandlingReferanse, HelseinstitusjonGrunnlagDto>(
-                relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = Definisjon.AVKLAR_HELSEINSTITUSJON.kode.toString()
             ) { req ->

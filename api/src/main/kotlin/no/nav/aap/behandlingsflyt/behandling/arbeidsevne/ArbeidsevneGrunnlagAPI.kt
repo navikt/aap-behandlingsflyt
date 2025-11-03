@@ -33,7 +33,7 @@ fun NormalOpenAPIRoute.arbeidsevneGrunnlagApi(
 ) {
     route("/api/behandling/{referanse}/grunnlag/arbeidsevne") {
         getGrunnlag<BehandlingReferanse, ArbeidsevneGrunnlagDto>(
-            relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+            relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
             avklaringsbehovKode = Definisjon.FASTSETT_ARBEIDSEVNE.kode.toString()
 

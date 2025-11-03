@@ -27,7 +27,7 @@ fun NormalOpenAPIRoute.forutgåendeMedlemskapAPI(
     route("/api/behandling") {
         route("/{referanse}/grunnlag/forutgaaendemedlemskap") {
             getGrunnlag<BehandlingReferanse, ForutgåendeMedlemskapGrunnlagResponse>(
-                relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode =  Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP.kode.toString()
             ) { req ->

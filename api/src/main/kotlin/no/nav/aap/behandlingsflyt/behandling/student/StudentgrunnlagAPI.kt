@@ -30,7 +30,7 @@ fun NormalOpenAPIRoute.studentgrunnlagApi(
     route("/api/behandling") {
         route("/{referanse}/grunnlag/student") {
             getGrunnlag<BehandlingReferanse, StudentGrunnlagResponse>(
-                relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = Definisjon.AVKLAR_STUDENT.kode.toString()
             ) { req ->

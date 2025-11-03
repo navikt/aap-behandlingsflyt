@@ -37,7 +37,7 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(
     route("/api/behandling") {
         route("/{referanse}/grunnlag/beregning/tidspunkt") {
             getGrunnlag<BehandlingReferanse, BeregningTidspunktAvklaringResponse>(
-                relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT.kode.toString()
             ) { req ->
@@ -72,7 +72,7 @@ fun NormalOpenAPIRoute.beregningVurderingAPI(
         }
         route("/{referanse}/grunnlag/beregning/yrkesskade") {
             getGrunnlag<BehandlingReferanse, BeregningYrkesskadeAvklaringResponse>(
-                relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = Definisjon.FASTSETT_YRKESSKADEINNTEKT.kode.toString()
             ) { req ->
