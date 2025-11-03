@@ -73,6 +73,7 @@ fun NormalOpenAPIRoute.refusjonGrunnlagAPI(
         route("/{referanse}/finn") {
             authorizedPost<BehandlingReferanse, List<NavEnheterResponse>, NavEnheterRequest>(
                 AuthorizationParamPathConfig(
+                    relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                     behandlingPathParam = BehandlingPathParam("referanse")
                 )
             ) { req, body ->
