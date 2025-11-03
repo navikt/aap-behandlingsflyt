@@ -302,7 +302,7 @@ fun NormalOpenAPIRoute.saksApi(
                     sakPathParam = SakPathParam("saksnummer")
                 ),
                 null,
-                TagModule(listOf(Tags.Sak)),
+                modules = arrayOf(TagModule(listOf(Tags.Sak))),
             ) { req ->
                 val saksnummer = req.saksnummer
                 var søknadErTrukket: Boolean? = null
@@ -434,7 +434,7 @@ fun NormalOpenAPIRoute.saksApi(
                 sakPathParam = SakPathParam("saksnummer")
             ),
             null,
-            TagModule(listOf(Tags.Sak)),
+            modules = arrayOf(TagModule(listOf(Tags.Sak))),
         ) { req ->
             val saksnummer = req.saksnummer
 

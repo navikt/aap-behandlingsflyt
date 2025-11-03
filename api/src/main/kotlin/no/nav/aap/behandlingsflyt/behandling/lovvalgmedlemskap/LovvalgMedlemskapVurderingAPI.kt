@@ -29,7 +29,7 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapAPI(dataSource: DataSource, repositoryRe
         route("/vurdering/{referanse}") {
             authorizedGet<BehandlingReferanse, KanBehandlesAutomatiskVurdering>(
                 AuthorizationParamPathConfig(behandlingPathParam = BehandlingPathParam("referanse")),
-                null, TagModule(listOf(Tags.Behandling))
+                null, modules = arrayOf(TagModule(listOf(Tags.Behandling)))
             ) { req ->
                 val vurdering = dataSource.transaction { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
@@ -75,7 +75,7 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapAPI(dataSource: DataSource, repositoryRe
         route("/forutgaaendevurdering/{referanse}") {
             authorizedGet<BehandlingReferanse, KanBehandlesAutomatiskVurdering>(
                 AuthorizationParamPathConfig(behandlingPathParam = BehandlingPathParam("referanse")),
-                null, TagModule(listOf(Tags.Behandling))
+                null, modules = arrayOf(TagModule(listOf(Tags.Behandling)))
             ) { req ->
                 val vurdering = dataSource.transaction { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
