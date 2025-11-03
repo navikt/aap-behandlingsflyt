@@ -64,10 +64,9 @@ class EtAnnetStedSteg(
                     ?.let { institusjonsoppholdRepository.hentHvisEksisterer(it) }?.helseoppholdvurderinger
                 val aktiveVurderinger =
                     institusjonsoppholdRepository.hentHvisEksisterer(kontekst.behandlingId)?.helseoppholdvurderinger?.vurderinger.orEmpty()
-                if (vedtatteVurderinger == null) {
+                if (vedtatteVurderinger == null && aktiveVurderinger.isNotEmpty()) {
                     institusjonsoppholdRepository.lagreHelseVurdering(kontekst.behandlingId, "Kelvin", listOf())
-
-                } else if (vedtatteVurderinger.vurderinger.toSet() != aktiveVurderinger.toSet()) {
+                } else if (vedtatteVurderinger != null && vedtatteVurderinger.vurderinger.toSet() != aktiveVurderinger.toSet()) {
                     institusjonsoppholdRepository.lagreHelseVurdering(
                         kontekst.behandlingId,
                         vedtatteVurderinger.vurdertAv,
@@ -89,15 +88,13 @@ class EtAnnetStedSteg(
             erTilstrekkeligVurdert = { erSoningOppholdTilstrekkeligVurdert(kontekst = kontekst) },
             kontekst = kontekst,
             tilbakestillGrunnlag = {
-
                 val vedtatteVurderinger = kontekst.forrigeBehandlingId
                     ?.let { institusjonsoppholdRepository.hentHvisEksisterer(it) }?.soningsVurderinger
                 val aktiveVurderinger =
                     institusjonsoppholdRepository.hentHvisEksisterer(kontekst.behandlingId)?.soningsVurderinger?.vurderinger.orEmpty()
-                if (vedtatteVurderinger == null) {
+                if (vedtatteVurderinger == null && aktiveVurderinger.isNotEmpty()) {
                     institusjonsoppholdRepository.lagreSoningsVurdering(kontekst.behandlingId, "Kelvin", listOf())
-
-                } else if (vedtatteVurderinger.vurderinger.toSet() != aktiveVurderinger.toSet()) {
+                } else if (vedtatteVurderinger != null && vedtatteVurderinger.vurderinger.toSet() != aktiveVurderinger.toSet()) {
                     institusjonsoppholdRepository.lagreSoningsVurdering(
                         kontekst.behandlingId,
                         vedtatteVurderinger.vurdertAv,
