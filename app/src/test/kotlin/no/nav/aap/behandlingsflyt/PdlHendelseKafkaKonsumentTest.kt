@@ -20,11 +20,12 @@ import org.junit.jupiter.api.BeforeAll
 import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.kafka.KafkaContainer
 import org.apache.kafka.common.serialization.StringSerializer
+import org.slf4j.LoggerFactory
+import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.utility.DockerImageName
 import java.time.Duration
 import java.time.Instant
 import java.util.Properties
-import javax.sql.DataSource
 import kotlin.concurrent.thread
 import kotlin.test.Test
 
@@ -32,12 +33,14 @@ class
 PdlHendelseKafkaKonsumentTest {
 
     companion object {
+        private val logger = LoggerFactory.getLogger(PdlHendelseKafkaKonsumentTest::class.java)
         val kafka: KafkaContainer = KafkaContainer(DockerImageName.parse("apache/kafka-native:4.1.0"))
             .withReuse(true)
             .waitingFor(Wait.forListeningPort())
             .withStartupTimeout(Duration.ofSeconds(60))
+            .withLogConsumer { Slf4jLogConsumer(logger) }
 
-        lateinit var dataSource: TestDataSource
+        private lateinit var dataSource: TestDataSource
         val repositoryRegistry = postgresRepositoryRegistry
 
         @BeforeAll
