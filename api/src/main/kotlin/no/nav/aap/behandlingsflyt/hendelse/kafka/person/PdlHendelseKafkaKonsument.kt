@@ -1,9 +1,11 @@
 package no.nav.aap.behandlingsflyt.hendelse.kafka.person
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Endringstype
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Navn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Opplysningstype
@@ -15,6 +17,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
+import no.nav.aap.behandlingsflyt.utils.UtfallOppfyltUtils
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.person.pdl.leesah.Personhendelse
@@ -39,7 +42,7 @@ class PdlHendelseKafkaKonsument(
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
     private val secureLogger = LoggerFactory.getLogger("secureLog")
-
+    private val utfallOppfyltUtils = UtfallOppfyltUtils()
     override fun håndter(meldinger: ConsumerRecords<String, Personhendelse>) {
         meldinger.forEach { record ->
             val personHendelse = record.value().tilDomain()
@@ -61,6 +64,7 @@ class PdlHendelseKafkaKonsument(
             val behandlingRepository: BehandlingRepository = repositoryProvider.provide()
             val personRepository: PersonRepository = repositoryProvider.provide()
             val barnRepository: BarnRepository = repositoryProvider.provide()
+            val underveisRepository: UnderveisRepository = repositoryProvider.provide()
             val hendelseService = MottattHendelseService(repositoryProvider)
             if (personHendelse.opplysningstype == Opplysningstype.DOEDSFALL_V1 && personHendelse.endringstype == Endringstype.OPPRETTET) {
                 log.info("Håndterer hendelse med ${personHendelse.opplysningstype} og ${personHendelse.endringstype}")
@@ -82,10 +86,30 @@ class PdlHendelseKafkaKonsument(
                 person?.let { personIKelvin ->
                     sakRepository.finnSakerFor(personIKelvin).forEach { sak ->
                         log.info("Registrerer mottatt hendelse på ${sak.saksnummer}")
-                        hendelseService.registrerMottattHendelse(
-                            personHendelse.tilInnsendingDødsfallBruker(sak.saksnummer)
+                        val behandling = behandlingRepository.finnSisteOpprettedeBehandlingFor(
+                            sak.id,
+                            listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)
                         )
+
+                        if (behandling != null) {
+                            val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling.id)
+                            if (underveisGrunnlag != null) {
+                                val personHarBareAvslagFremover = utfallOppfyltUtils.allePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(
+                                    opprettetTidspunkt = personHendelse.opprettet,
+                                    underveisGrunnlag = underveisGrunnlag
+                                )
+                                if (!personHarBareAvslagFremover) {
+                                    log.info("Registrerer mottatt hendelse fordi dødsfall på bruker ${sak.saksnummer}")
+                                    hendelseService.registrerMottattHendelse(
+                                        personHendelse.tilInnsendingDødsfallBruker(sak.saksnummer)
+                                    )
+                                } else {
+                                    log.info("Ignorerer dødsfallhendelse fordi bruker har fått avslag på aller perioder fremover ${sak.saksnummer}")
+                                }
+                            }
+                        }
                     }
+
                     val behandlingIds = barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForBarn(funnetIdent!!)
                     log.info("Sjekker mottatt hendelse for barn $behandlingIds")
                     behandlingIds
