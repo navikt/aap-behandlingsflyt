@@ -13,8 +13,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.dbtest.TestDataSource.Companion.invoke
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -22,17 +25,11 @@ import javax.sql.DataSource
 
 class OppholdskravGrunnlagRepositoryImplTest {
 
-
-
-    lateinit var dataSource: DataSource
-    @BeforeEach
-    fun beforeEach() {
-        dataSource = InitTestDatabase.freshDatabase()
-    }
+    @AutoClose
+    private val dataSource = TestDataSource()
 
     @Test
     fun `lagre og hent oppholdskravene i db`() {
-
         val behandlingId = opprettBehandling(dataSource)
         val oppholdskravVurdering = OppholdskravVurdering(
             vurdertAv = "Meg",
@@ -73,7 +70,6 @@ class OppholdskravGrunnlagRepositoryImplTest {
 
     @Test
     fun `slett grunnlag`() {
-
         val behandlingId = opprettBehandling(dataSource)
         val oppholdskravVurdering = OppholdskravVurdering(
             vurdertAv = "Meg",

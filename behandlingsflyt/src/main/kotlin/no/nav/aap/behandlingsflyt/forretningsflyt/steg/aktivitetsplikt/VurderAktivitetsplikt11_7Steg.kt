@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg.aktivitetsplikt
 
-import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.brev.ForhåndsvarselBruddAktivitetsplikt
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Brevbestilling
@@ -10,8 +10,9 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRefer
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Varsel
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Vurdering
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
-import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FantVentebehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -23,7 +24,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -35,108 +36,155 @@ class VurderAktivitetsplikt11_7Steg(
     private val aktivitetsplikt11_7Repository: Aktivitetsplikt11_7Repository,
     private val behandlingRepository: BehandlingRepository,
     private val brevbestillingService: BrevbestillingService,
+    private val avklaringsbehovService: AvklaringsbehovService,
 ) : BehandlingSteg {
     private val brevBehov = ForhåndsvarselBruddAktivitetsplikt
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (unleashGateway.isDisabled(BehandlingsflytFeature.Aktivitetsplikt11_7)) {
-            throw IllegalStateException(
-                "Steg ${StegType.VURDER_AKTIVITETSPLIKT_11_7} er deaktivert i unleash, kan ikke utføre steg."
-            )
-        }
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-        val grunnlag = aktivitetsplikt11_7Repository.hentHvisEksisterer(kontekst.behandlingId)
-        val vurderingForBehandling = grunnlag?.vurderinger?.firstOrNull { it.vurdertIBehandling == kontekst.behandlingId }
-        if (!avklaringsbehovene.erVurdertTidligereIBehandlingen(Definisjon.VURDER_BRUDD_11_7) || vurderingForBehandling == null) {
-            return FantAvklaringsbehov(Definisjon.VURDER_BRUDD_11_7)
+        val vurderingForBehandling =
+            aktivitetsplikt11_7Repository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger?.firstOrNull { it.vurdertIBehandling == kontekst.behandlingId }
+        val venteBehov =
+            avklaringsbehovene.hentBehovForDefinisjon(Definisjon.VENTE_PÅ_FRIST_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT)
+
+        avklaringsbehovService.oppdaterAvklaringsbehov(
+            avklaringsbehovene = avklaringsbehovene,
+            definisjon = Definisjon.VURDER_BRUDD_11_7,
+            vedtakBehøverVurdering = { vedtakBehøver11_7Vurdering(kontekst) },
+            erTilstrekkeligVurdert = { er11_7TilstrekkeligVurdert(kontekst, vurderingForBehandling, venteBehov) },
+            tilbakestillGrunnlag = { },
+            kontekst = kontekst
+        )
+
+        avklaringsbehovService.oppdaterAvklaringsbehov(
+            avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId),
+            definisjon = Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV,
+            vedtakBehøverVurdering = { vedtakBehøverForhåndsvarselVurdering(vurderingForBehandling, kontekst) },
+            erTilstrekkeligVurdert = { erForhåndsvarselTilstrekkeligVurdert(kontekst) },
+            tilbakestillGrunnlag = { avbrytBrevbestilling(kontekst.behandlingId) },
+            kontekst = kontekst
+        )
+
+        val varsel = aktivitetsplikt11_7Repository.hentVarselHvisEksisterer(kontekst.behandlingId)
+        if (skalVentePåFristFraForhåndsvarsel(kontekst, varsel, vurderingForBehandling, venteBehov)) {
+            return FantVentebehov(opprettVentebehov(varsel))
+
         }
 
-        // Hvis aktivitetsplikten er oppfyllt skal vi bare gå videre til neste steg
-        if (vurderingForBehandling.erOppfylt) {
-            slettForhåndsvarselbrevSomIkkeErSendt(kontekst.behandlingId)
-            return Fullført
-        }
+        return Fullført
+    }
 
-        // Hvis grunnlaget ikke er oppfyllt så skal det sendes forhåndsvarsel om det ikke allerede er sendt
+    private fun opprettVentebehov(varsel: Aktivitetsplikt11_7Varsel?): Ventebehov = Ventebehov(
+        definisjon = Definisjon.VENTE_PÅ_FRIST_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT,
+        grunn = ÅrsakTilSettPåVent.VENTER_PÅ_SVAR_FRA_BRUKER,
+        frist = varsel?.svarfrist ?: error("Mangler svarfrist i varsel"),
+    )
+
+    private fun skalVentePåFristFraForhåndsvarsel(
+        kontekst: FlytKontekstMedPerioder,
+        varsel: Aktivitetsplikt11_7Varsel?,
+        vurderingForBehandling: Aktivitetsplikt11_7Vurdering?,
+        venteBehov: Avklaringsbehov?
+    ): Boolean {
+        val brevbestilling = hentBrevbestilling(kontekst.behandlingId)
+        return erForhåndsvarselSendt(brevbestilling)
+                && venterPåVarselFrist(varsel, vurderingForBehandling)
+                && harÅpentVentebehov(venteBehov, varsel)
+
+    }
+
+    private fun erForhåndsvarselTilstrekkeligVurdert(kontekst: FlytKontekstMedPerioder): Boolean {
+        val brevbestilling = hentBrevbestilling(kontekst.behandlingId)
+        return erForhåndsvarselSendt(brevbestilling)
+
+    }
+
+    private fun erForhåndsvarselSendt(brevbestilling: Brevbestilling?): Boolean =
+        brevbestilling?.let { it.status in listOf(Status.SENDT, Status.FULLFØRT) } ?: false
+
+    private fun vedtakBehøver11_7Vurdering(kontekst: FlytKontekstMedPerioder): Boolean {
+        return Vurderingsbehov.AKTIVITETSPLIKT_11_7 in kontekst.vurderingsbehovRelevanteForSteg
+    }
+
+    private fun vedtakBehøverForhåndsvarselVurdering(
+        vurderingForBehandling: Aktivitetsplikt11_7Vurdering?,
+        kontekst: FlytKontekstMedPerioder
+    ): Boolean {
+        if (vurderingForBehandling == null || vurderingForBehandling.erOppfylt) {
+            return false
+        } else {
+            bestillEllerGjenopprettBrev(kontekst)
+            return true
+        }
+    }
+
+    private fun bestillEllerGjenopprettBrev(kontekst: FlytKontekstMedPerioder) {
+        /**
+         * Bestill forhåndsvarsel eller reaktiver forhåndsvarsel dersom det er deaktivert
+         */
         val brevbestilling = hentBrevbestilling(kontekst.behandlingId)
         if (brevbestilling == null) {
             val brevReferanse = bestillForhåndsvarselBrev(kontekst.behandlingId)
             aktivitetsplikt11_7Repository.lagreVarsel(kontekst.behandlingId, brevReferanse)
-            return FantAvklaringsbehov(Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV)
-        }
-
-        // Vi har bestilt et brev, men det er ikke sendt. Dette kan oppstå om man lagrer grunnlaget på nytt og det fortsatt
-        // ikke er gyldig, eller man har endret i et tidligere steg
-        if (brevbestilling.status == Status.FORHÅNDSVISNING_KLAR) {
-            return FantAvklaringsbehov(Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV)
-        }
-
-        // Brevet avbrutt, dette skjer om det er besillt et brev og så endrer man avklaringsbehovene så det ikke trengs
-        // før det ble sendt. Vi må da bare gjenåpne brevet.
-        if (brevbestilling.status == Status.AVBRUTT) {
+        } else if (brevbestilling.status == Status.AVBRUTT) {
             brevbestillingService.oppdaterStatus(
                 kontekst.behandlingId,
                 brevbestilling.referanse,
                 Status.FORHÅNDSVISNING_KLAR
             )
-            return FantAvklaringsbehov(Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV)
         }
-
-        // Er vi innenfor fristen på forhåndsvarselet og aktivitetsplikten ikke er oppfylt har bruker rett til
-        // å uttale seg fram til fristen. Saken settes derfor på vent. Om man er etter fristen går vi videre til neste steg
-        val venteBehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.VENTE_PÅ_FRIST_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT)
-        val varsel = aktivitetsplikt11_7Repository.hentVarselHvisEksisterer(kontekst.behandlingId)
-        val varslingstidpunkt = varsel?.sendtDato ?: throw IllegalStateException("Fant ikke varslingstidspunkt")
-        val frist = varsel.svarfrist ?: throw IllegalStateException("Fant ikke frist")
-
-        if (LocalDate.now() <= frist && !vurderingForBehandling.skalIgnorereVarselFrist) {
-            if (skalVentePåSvar(venteBehov, varslingstidpunkt)) {
-                return FantVentebehov(
-                    Ventebehov(
-                        definisjon = Definisjon.VENTE_PÅ_FRIST_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT,
-                        grunn = ÅrsakTilSettPåVent.VENTER_PÅ_SVAR_FRA_BRUKER,
-                        frist = frist,
-                    )
-                )
-            }
-            return FantAvklaringsbehov(Definisjon.VURDER_BRUDD_11_7)
-        }
-        // Har sendt forhåndsvarselbrev, men har åpent avklaringsbehov - lukk denne
-        val avklaringsbehovForForhåndsvarselBrev =
-            avklaringsbehovene.hentBehovForDefinisjon(Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV)
-        if (brevbestilling.status == Status.FULLFØRT && avklaringsbehovForForhåndsvarselBrev?.status()?.erÅpent() == true) {
-            avklaringsbehovene.avslutt(Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV)
-        }
-
-
-        return Fullført
     }
 
-    private fun skalVentePåSvar(venteBehov: Avklaringsbehov?, varselDato: LocalDate): Boolean {
+    private fun er11_7TilstrekkeligVurdert(
+        kontekst: FlytKontekstMedPerioder,
+        vurderingForBehandling: Aktivitetsplikt11_7Vurdering?,
+        venteBehov: Avklaringsbehov?
+    ): Boolean {
+        if (vurderingForBehandling == null) {
+            return false
+        } else if (vurderingForBehandling.erOppfylt) {
+            return true
+        } else if (erTattAvVentFørFristenPåForhåndsvarsel(kontekst, vurderingForBehandling, venteBehov)) {
+            return false
+        }
+        return true
+
+    }
+
+    private fun erTattAvVentFørFristenPåForhåndsvarsel(
+        kontekst: FlytKontekstMedPerioder,
+        vurderingForBehandling: Aktivitetsplikt11_7Vurdering,
+        venteBehov: Avklaringsbehov?
+    ): Boolean {
+        val varsel = aktivitetsplikt11_7Repository.hentVarselHvisEksisterer(kontekst.behandlingId)
+        return varsel?.let {
+            venterPåVarselFrist(varsel, vurderingForBehandling) && !harÅpentVentebehov(venteBehov, varsel)
+        } ?: false
+    }
+
+    private fun venterPåVarselFrist(
+        varsel: Aktivitetsplikt11_7Varsel?,
+        vurderingForBehandling: Aktivitetsplikt11_7Vurdering?
+    ): Boolean {
+        val frist = varsel?.svarfrist ?: throw IllegalStateException("Fant ikke frist")
+        return LocalDate.now() <= frist && vurderingForBehandling?.skalIgnorereVarselFrist != true
+    }
+
+
+    private fun harÅpentVentebehov(venteBehov: Avklaringsbehov?, varsel: Aktivitetsplikt11_7Varsel?): Boolean {
         if (venteBehov == null) {
             return true
         }
+        val varselDato = varsel?.sendtDato ?: throw IllegalStateException("Fant ikke varslingstidspunkt")
 
         val erSisteVarselTattAvVent =
             venteBehov.historikk.any { it.status == AVSLUTTET && it.tidsstempel > varselDato.atStartOfDay() }
         return !erSisteVarselTattAvVent
     }
 
-    private fun slettForhåndsvarselbrevSomIkkeErSendt(behandlingId: BehandlingId) {
+    private fun avbrytBrevbestilling(behandlingId: BehandlingId) {
         brevbestillingService.hentBestillinger(behandlingId, brevBehov.typeBrev)
             .filter { it.status == Status.FORHÅNDSVISNING_KLAR }
-            .map { brevbestillingService.avbryt(behandlingId, it.referanse) }
-
-        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
-        val avklaringForhåndsvarsel =
-            avklaringsbehovene.hentBehovForDefinisjon(Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV)
-
-        if (avklaringForhåndsvarsel != null && avklaringForhåndsvarsel.status().erÅpent()) {
-            avklaringsbehovene.løsAvklaringsbehov(
-                Definisjon.SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV,
-                "",
-                SYSTEMBRUKER.ident
-            )
-        }
+            .forEach { brevbestillingService.avbryt(behandlingId, it.referanse) }
     }
 
     private fun hentBrevbestilling(behandlingId: BehandlingId): Brevbestilling? {
@@ -170,9 +218,9 @@ class VurderAktivitetsplikt11_7Steg(
                 avklaringsbehovRepository = repositoryProvider.provide(),
                 aktivitetsplikt11_7Repository = repositoryProvider.provide(),
                 behandlingRepository = repositoryProvider.provide(),
-                brevbestillingService = BrevbestillingService(repositoryProvider, gatewayProvider)
-
-            )
+                brevbestillingService = BrevbestillingService(repositoryProvider, gatewayProvider),
+                avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+                )
         }
 
         override fun type(): StegType {

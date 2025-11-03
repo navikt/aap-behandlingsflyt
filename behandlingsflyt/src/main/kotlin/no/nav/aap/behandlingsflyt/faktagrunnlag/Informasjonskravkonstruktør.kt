@@ -5,5 +5,8 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 interface Informasjonskravkonstruktør {
     val navn: InformasjonskravNavn
-    fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): Informasjonskrav
+    fun konstruer(
+        repositoryProvider: RepositoryProvider,
+        gatewayProvider: GatewayProvider
+    ): Informasjonskrav<*, *>
 }

@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.papsign.ktor.openapigen.model.info.InfoModel
 import com.papsign.ktor.openapigen.route.apiRouting
 import com.zaxxer.hikari.HikariConfig
@@ -12,6 +13,8 @@ import io.ktor.server.netty.*
 import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.routing.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import no.nav.aap.behandlingsflyt.api.actuator.actuator
 import no.nav.aap.behandlingsflyt.api.config.definisjoner.configApi
 import no.nav.aap.behandlingsflyt.auditlog.auditlogApi
@@ -80,9 +83,14 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
 import no.nav.aap.behandlingsflyt.pip.behandlingsflytPip
 import no.nav.aap.behandlingsflyt.prosessering.BehandlingsflytLogInfoProvider
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbmigrering.Migrering
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -99,11 +107,20 @@ import no.nav.aap.motor.retry.RetryService
 import no.nav.person.pdl.leesah.Personhendelse
 import org.slf4j.LoggerFactory
 import org.slf4j.bridge.SLF4JBridgeHandler
+import java.net.InetAddress
+import java.net.URI
+import java.net.http.HttpClient
+import java.net.http.HttpRequest
+import java.net.http.HttpResponse
 import java.util.*
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.TimeUnit
 import java.util.logging.Level
 import java.util.logging.Logger
 import javax.sql.DataSource
 import kotlin.time.Duration.Companion.seconds
+
 
 fun utledSubtypesTilMottattHendelseDTO(): List<Class<*>> {
     return Innsending::class.sealedSubclasses.map { it.java }.toList()
@@ -112,19 +129,28 @@ fun utledSubtypesTilMottattHendelseDTO(): List<Class<*>> {
 class App
 
 internal object AppConfig {
-    // Matcher terminationGracePeriodSeconds for podden i Kubernetes-manifestet.
-    val kubernetesTimeout = 30.seconds
+    // Matcher terminationGracePeriodSeconds for podden i Kubernetes-manifestet ("nais.yaml")
+    private val kubernetesTimeout = 30.seconds
 
     // Tid før ktor avslutter uansett. Må være litt mindre enn `kubernetesTimeout`.
-    val endeligShutdownTimeout = kubernetesTimeout - 3.seconds
+    val shutdownTimeout = kubernetesTimeout - 2.seconds
 
     // Tid appen får til å fullføre påbegynte requests, jobber etc. Må være mindre enn `endeligShutdownTimeout`.
-    val pågåendeRequesterTimeout = endeligShutdownTimeout - 7.seconds
+    val shutdownGracePeriod = shutdownTimeout - 3.seconds
 
     // Tid appen får til å avslutte Motor, Kafka, etc
-    val stansArbeidTimeout = pågåendeRequesterTimeout
+    val stansArbeidTimeout = shutdownGracePeriod - 1.seconds
 
-    const val ANTALL_WORKERS = 4
+    // Vi skrur opp ktor sin default-verdi, som er "antall CPUer", fordi vi har en del venting på IO (db, kafka, http):
+    private val ktorParallellitet = 8
+    // Vi følger ktor sin metodikk for å regne ut tuning parametre som funksjon av parallellitet
+    // https://github.com/ktorio/ktor/blob/3.3.1/ktor-server/ktor-server-core/common/src/io/ktor/server/engine/ApplicationEngine.kt#L30
+    val connectionGroupSize = ktorParallellitet / 2 + 1
+    val workerGroupSize = ktorParallellitet / 2 + 1
+    val callGroupSize = ktorParallellitet
+
+    const val ANTALL_WORKERS_FOR_MOTOR = 4
+    val hikariMaxPoolSize = ktorParallellitet + 2 * ANTALL_WORKERS_FOR_MOTOR
 }
 
 fun main() {
@@ -136,11 +162,12 @@ fun main() {
     aktiverPostgresLogging()
 
     embeddedServer(Netty, configure = {
-        connectionGroupSize = 8
-        workerGroupSize = 8
-        callGroupSize = 16
-        shutdownGracePeriod = AppConfig.pågåendeRequesterTimeout.inWholeMilliseconds
-        shutdownTimeout = AppConfig.endeligShutdownTimeout.inWholeMilliseconds
+        connectionGroupSize = AppConfig.connectionGroupSize
+        workerGroupSize = AppConfig.workerGroupSize
+        callGroupSize = AppConfig.callGroupSize
+
+        shutdownGracePeriod = AppConfig.shutdownGracePeriod.inWholeMilliseconds
+        shutdownTimeout = AppConfig.shutdownTimeout.inWholeMilliseconds
         connector {
             port = 8080
         }
@@ -182,6 +209,9 @@ internal fun Application.server(
 
     val dataSource = initDatasource(dbConfig)
     Migrering.migrate(dataSource)
+
+    val scheduler = utførMigreringer(dataSource, gatewayProvider, environment.log)
+
     val motor = startMotor(dataSource, repositoryRegistry, gatewayProvider)
 
     if (!Miljø.erLokal()) {
@@ -196,10 +226,17 @@ internal fun Application.server(
         environment.log.info("ktor forbereder seg på å stoppe.")
     }
     monitor.subscribe(ApplicationStopping) { environment ->
-        environment.log.info("ktor stopper nå å ta imot nye requester, og lar pågående requester kjøre frem til timeout.")
+        environment.log.info("ktor stopper nå å ta imot nye requester, og lar mottatte requester kjøre frem til timeout.")
     }
     monitor.subscribe(ApplicationStopped) { environment ->
-        environment.log.info("ktor har fullført nedstoppingen sin. Eventuelle requester som ikke fullførtes innen timeout ble avbrutt.")
+        environment.log.info("ktor har fullført nedstoppingen sin. Eventuelle requester og annet arbeid som ikke ble fullført innen timeout ble avbrutt.")
+        try {
+            scheduler.shutdownNow()
+            // Helt til slutt, nå som vi har stanset Motor, etc. Lukk database-koblingen.
+            dataSource.close()
+        } catch (_: Exception) {
+            // Ignorert
+        }
     }
 
     routing {
@@ -282,6 +319,52 @@ internal fun Application.server(
 
 }
 
+// Basert på tall ved lokal kjøring vil denne migreringen ta ca 2-3 sekunder å kjøre med antallet som ligger i prod.
+// Bruker leaderElector for å sikre at kun en pod kjører migreringen og spinner opp en egen tråd for å ikke blokkere.
+// Toggles av etter kjøring og fjernes i ny pr.
+private fun utførMigreringer(
+    dataSource: HikariDataSource,
+    gatewayProvider: GatewayProvider,
+    log: io.ktor.util.logging.Logger
+): ScheduledExecutorService {
+    val scheduler = Executors.newScheduledThreadPool(1)
+
+    scheduler.schedule(Runnable {
+        val unleashGateway: UnleashGateway = gatewayProvider.provide()
+        val enabled = unleashGateway.isEnabled(BehandlingsflytFeature.LovvalgMedlemskapPeriodisertMigrering)
+        val sykdomEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.SykdomPeriodisertMigrering)
+        val isLeader = isLeader(log)
+        log.info("isLeader = $isLeader, LovvalgMedlemskapPeriodisertMigrering = $enabled, SykdomPeriodisertMigrering = $sykdomEnabled")
+        if (enabled && isLeader) {
+            dataSource.transaction { connection ->
+                val repository = MedlemskapArbeidInntektRepositoryImpl(connection)
+                repository.migrerManuelleVurderingerPeriodisert()
+            }
+        }
+        if (sykdomEnabled && isLeader) {
+            dataSource.transaction { connection ->
+                val repository = SykdomRepositoryImpl(connection)
+                repository.migrerSykdomsvurderinger()
+            }
+        }
+    }, 9, TimeUnit.MINUTES)
+    return scheduler
+}
+
+private fun isLeader(log: io.ktor.util.logging.Logger): Boolean {
+    val electorUrl = requiredConfigForKey("elector.get.url")
+    val client = HttpClient.newHttpClient()
+    val response = client.send(
+        HttpRequest.newBuilder().uri(URI.create(electorUrl)).GET().build(),
+        HttpResponse.BodyHandlers.ofString()
+    )
+    val json = ObjectMapper().readTree(response.body())
+    val leaderHostname = json.get("name").asText()
+    val hostname = InetAddress.getLocalHost().hostName
+    log.info("electorUrl=${electorUrl}, leaderHostname=$leaderHostname, hostname=$hostname")
+    return hostname == leaderHostname
+}
+
 fun Application.startMotor(
     dataSource: HikariDataSource,
     repositoryRegistry: RepositoryRegistry,
@@ -289,7 +372,7 @@ fun Application.startMotor(
 ): Motor {
     val motor = Motor(
         dataSource = dataSource,
-        antallKammer = AppConfig.ANTALL_WORKERS,
+        antallKammer = AppConfig.ANTALL_WORKERS_FOR_MOTOR,
         logInfoProvider = BehandlingsflytLogInfoProvider,
         jobber = ProsesseringsJobber.alle(),
         prometheus = prometheus,
@@ -304,16 +387,10 @@ fun Application.startMotor(
     monitor.subscribe(ApplicationStarted) {
         motor.start()
     }
-    monitor.subscribe(ApplicationStopPreparing) { environment ->
-        // Denne vil vanligvis kjøres i to ulike tråder, både main og KtorShutdownHook
-        // Det som kjøres her må derfor støtte at det blir kjørt flere ganger på samme tid
-        motor.stop(/* TODO AppConfig.stansArbeidTimeout */)
-    }
-    monitor.subscribe(ApplicationStopped) { environment ->
-        try {
-            dataSource.close()
-        } catch (e: Exception) {
-            environment.log.warn("Feil ved lukking av datasource", e)
+    monitor.subscribe(ApplicationStopping) { env ->
+        // ktor sine eventer kjøres synkront, så vi må kjøre dette asynkront for ikke å blokkere nedstengings-sekvensen
+        env.launch(Dispatchers.IO) {
+            motor.stop(AppConfig.stansArbeidTimeout)
         }
     }
 
@@ -335,10 +412,11 @@ fun Application.startKabalKonsument(
         }
         t.start()
     }
-    monitor.subscribe(ApplicationStopPreparing) { environment ->
-        environment.log.info("Lukker KabalKafkaKonsument fordi ktor forbereder å stoppe.")
-
-        konsument.lukk()
+    monitor.subscribe(ApplicationStopping) { env ->
+        // ktor sine eventer kjøres synkront, så vi må kjøre dette asynkront for ikke å blokkere nedstengings-sekvensen
+        env.launch(Dispatchers.IO) {
+            konsument.lukk()
+        }
     }
 
     return konsument
@@ -399,7 +477,7 @@ fun initDatasource(dbConfig: DbConfig): HikariDataSource = HikariDataSource(Hika
     username = dbConfig.username
     password = dbConfig.password
     dataSourceProperties = postgresConfig
-    maximumPoolSize = 10 + (AppConfig.ANTALL_WORKERS * 2)
+    maximumPoolSize = AppConfig.hikariMaxPoolSize
     minimumIdle = 1
     connectionTestQuery = "SELECT 1"
     metricRegistry = prometheus

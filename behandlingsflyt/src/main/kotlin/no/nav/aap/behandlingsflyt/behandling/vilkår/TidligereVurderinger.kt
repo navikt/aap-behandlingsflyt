@@ -37,6 +37,10 @@ interface TidligereVurderinger {
 
     fun girIngenBehandlingsgrunnlag(kontekst: FlytKontekstMedPerioder, førSteg: StegType): Boolean
 
+    fun harBehandlingsgrunnlag(kontekst: FlytKontekstMedPerioder, førSteg: StegType): Boolean {
+        return !girIngenBehandlingsgrunnlag(kontekst, førSteg)
+    }
+    
     fun muligMedRettTilAAP(kontekst: FlytKontekstMedPerioder, førSteg: StegType): Boolean {
         return !girAvslagEllerIngenBehandlingsgrunnlag(kontekst, førSteg)
     }

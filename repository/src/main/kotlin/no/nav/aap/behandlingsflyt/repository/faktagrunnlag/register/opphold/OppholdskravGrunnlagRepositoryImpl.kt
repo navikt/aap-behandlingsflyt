@@ -7,13 +7,10 @@ import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
-import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
 
 class OppholdskravGrunnlagRepositoryImpl(private val connection: DBConnection) : OppholdskravGrunnlagRepository {
-
-    private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<OppholdskravGrunnlagRepository> {
         override fun konstruer(connection: DBConnection): OppholdskravGrunnlagRepository {
@@ -299,7 +296,6 @@ class OppholdskravGrunnlagRepositoryImpl(private val connection: DBConnection) :
 
 
     private fun slettPeriodeOgVurderingPåVurderingID(vurderinger: List<Long>) {
-
             connection.execute("""
                     DELETE FROM OPPHOLDSKRAV_VURDERING_PERIODE
                     WHERE OPPHOLDSKRAV_VURDERING_ID = ANY (?)
@@ -355,7 +351,7 @@ class OppholdskravGrunnlagRepositoryImpl(private val connection: DBConnection) :
 
 
     private fun deaktiverGrunnlag(behandlingId: BehandlingId) {
-        connection.execute("UPDATE OPPHOLDSKRAV_GRUNNLAG SET aktiv = false WHERE behandling_id = ?") {
+        connection.execute("UPDATE OPPHOLDSKRAV_GRUNNLAG SET aktiv = false WHERE behandling_id = ? AND aktiv=true") {
             setParams {
                 setLong(1, behandlingId.toLong())
             }

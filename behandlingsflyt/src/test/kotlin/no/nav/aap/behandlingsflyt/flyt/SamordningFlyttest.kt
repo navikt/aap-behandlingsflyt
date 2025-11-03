@@ -104,7 +104,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             .kvalitetssikreOk()
             .løsBeregningstidspunkt()
             .løsForutgåendeMedlemskap()
-            //.løsOppholdskrav()
+            .løsOppholdskrav(fom)
             .medKontekst {
                 assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
             }
@@ -157,40 +157,40 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                     ),
                 ),
             )
+            .medKontekst {
+                // Vilkår skal være ikke vurdert når samordningen har mindre enn 100% gradering
+                val vilkårOppdatert = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.SAMORDNING)
+                assertThat(vilkårOppdatert.vilkårsperioder()).hasSize(1)
+                assertThat(vilkårOppdatert.vilkårsperioder().first().utfall).isEqualTo(Utfall.IKKE_VURDERT)
 
-        // Vilkår skal være ikke vurdert når samordningen har mindre enn 100% gradering
-        var vilkårOppdatert = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.SAMORDNING)
-        assertThat(vilkårOppdatert.vilkårsperioder()).hasSize(1)
-        assertThat(vilkårOppdatert.vilkårsperioder().first().utfall).isEqualTo(Utfall.IKKE_VURDERT)
-
-        // Setter samordningen til 100 sykepenger og ikke oppfylt for å verifisere opprettelse av revurdering
-        behandling = løsAvklaringsBehov(
-            behandling,
-            AvklarSamordningGraderingLøsning(
-                vurderingerForSamordning = VurderingerForSamordning(
-                    vurderteSamordningerData = listOf(
-                        SamordningVurderingData(
-                            ytelseType = Ytelse.SYKEPENGER,
-                            periode = sykePengerPeriode,
-                            gradering = 100,
-                            kronesum = null,
-                        )
+            }
+            // Setter samordningen til 100 sykepenger og ikke oppfylt for å verifisere opprettelse av revurdering
+            .løsAvklaringsBehov(
+                AvklarSamordningGraderingLøsning(
+                    vurderingerForSamordning = VurderingerForSamordning(
+                        vurderteSamordningerData = listOf(
+                            SamordningVurderingData(
+                                ytelseType = Ytelse.SYKEPENGER,
+                                periode = sykePengerPeriode,
+                                gradering = 100,
+                                kronesum = null,
+                            )
+                        ),
+                        begrunnelse = "En god begrunnelse",
+                        maksDatoEndelig = false,
+                        fristNyRevurdering = LocalDate.now().plusMonths(1),
                     ),
-                    begrunnelse = "En god begrunnelse",
-                    maksDatoEndelig = false,
-                    fristNyRevurdering = LocalDate.now().plusMonths(1),
                 ),
-            ),
-        )
-
-        // Vilkår skal være ikke oppfylt når samordningen har 100% gradering
-        vilkårOppdatert = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.SAMORDNING)
-        assertThat(vilkårOppdatert.vilkårsperioder()).hasSize(1)
-            .extracting(Vilkårsperiode::utfall)
-            .containsExactly(tuple(Utfall.IKKE_OPPFYLT))
-
-        behandling = løsAvklaringsBehov(behandling, ForeslåVedtakLøsning())
-            .fattVedtakEllerSendRetur()
+            )
+            .medKontekst {
+                // Vilkår skal være ikke oppfylt når samordningen har 100% gradering
+                val vilkårOppdatert = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.SAMORDNING)
+                assertThat(vilkårOppdatert.vilkårsperioder()).hasSize(1)
+                    .extracting(Vilkårsperiode::utfall)
+                    .containsExactly(tuple(Utfall.IKKE_OPPFYLT))
+            }
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
 
         val uthentetTilkjentYtelse =
             requireNotNull(dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(behandling.id) })
@@ -212,29 +212,31 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         val sisteBehandling = hentSisteOpprettedeBehandlingForSak(behandling.sakId)
         assertThat(sisteBehandling.referanse).isEqualTo(behandlingReferanse)
 
-        motor.kjørJobber()
         val sak = hentSak(behandling)
-        var revurdering = sak.opprettManuellRevurdering(listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SAMORDNING_OG_AVREGNING))
-
-        // Avklar samordning i revurdering
-        revurdering = løsAvklaringsBehov(
-            revurdering,
-            AvklarSamordningGraderingLøsning(
-                vurderingerForSamordning = VurderingerForSamordning(
-                    vurderteSamordningerData = listOf(
-                        SamordningVurderingData(
-                            ytelseType = Ytelse.SYKEPENGER,
-                            periode = sykePengerPeriode,
-                            gradering = 100,
-                            kronesum = null,
-                        )
+        var revurdering =
+            sak.opprettManuellRevurdering(listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SAMORDNING_OG_AVREGNING))
+                .medKontekst {
+                    assertThat(this.behandling.id).isNotEqualTo(sisteBehandling.id)
+                    assertThat(this.behandling.id).isNotEqualTo(behandling.id)
+                }
+                // Avklar samordning i revurdering
+                .løsAvklaringsBehov(
+                    AvklarSamordningGraderingLøsning(
+                        vurderingerForSamordning = VurderingerForSamordning(
+                            vurderteSamordningerData = listOf(
+                                SamordningVurderingData(
+                                    ytelseType = Ytelse.SYKEPENGER,
+                                    periode = sykePengerPeriode,
+                                    gradering = 100,
+                                    kronesum = null,
+                                )
+                            ),
+                            begrunnelse = "En god begrunnelse",
+                            maksDatoEndelig = true,
+                            fristNyRevurdering = null,
+                        ),
                     ),
-                    begrunnelse = "En god begrunnelse",
-                    maksDatoEndelig = true,
-                    fristNyRevurdering = null,
-                ),
-            ),
-        )
+                )
 
         val tilkjentYtelse =
             requireNotNull(dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(revurdering.id) }) { "Tilkjent ytelse skal være beregnet her." }
@@ -407,7 +409,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                     ),
                 ),
             ).løsForutgåendeMedlemskap()
-            //.løsOppholdskrav()
+            .løsOppholdskrav(periode.fom)
 
         assertThat(hentÅpneAvklaringsbehov(behandling.id).map { it.definisjon }).containsExactly(Definisjon.AVKLAR_SAMORDNING_GRADERING)
 
@@ -432,7 +434,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         assertThat(hentÅpneAvklaringsbehov(behandling.id).map { it.definisjon }).isEqualTo(listOf(Definisjon.FORESLÅ_VEDTAK))
 
         behandling = løsAvklaringsBehov(behandling, ForeslåVedtakLøsning())
-        behandling = fattVedtakEllerSendRetur(behandling)
+        behandling = løsFatteVedtak(behandling)
 
         val uthentetTilkjentYtelse =
             requireNotNull(dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(behandling.id) }) { "Tilkjent ytelse skal være beregnet her." }

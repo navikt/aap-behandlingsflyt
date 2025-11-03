@@ -3,11 +3,14 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenest
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravInput
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.KanTriggeRevurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonInformasjonskrav.TjenestePensjonRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TjenestePensjonGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -25,7 +28,8 @@ class TjenestePensjonInformasjonskrav(
     private val tidligereVurderinger: TidligereVurderinger,
     private val tpGateway: TjenestePensjonGateway,
     private val sakOgBehandlingService: SakOgBehandlingService,
-) : Informasjonskrav, KanTriggeRevurdering {
+) : Informasjonskrav<TjenestePensjonInformasjonskrav.TjenestePensjonInput, TjenestePensjonRegisterdata>,
+    KanTriggeRevurdering {
     private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Informasjonskravkonstruktør {
@@ -35,13 +39,11 @@ class TjenestePensjonInformasjonskrav(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
         ): TjenestePensjonInformasjonskrav {
-            val tjenestePensjonRepository = repositoryProvider.provide<TjenestePensjonRepository>()
-
             return TjenestePensjonInformasjonskrav(
-                tjenestePensjonRepository = tjenestePensjonRepository,
+                tjenestePensjonRepository = repositoryProvider.provide(),
                 tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
-                gatewayProvider.provide(),
-                SakOgBehandlingService(repositoryProvider, gatewayProvider),
+                tpGateway = gatewayProvider.provide(),
+                sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
             )
         }
 
@@ -65,11 +67,46 @@ class TjenestePensjonInformasjonskrav(
                 && (oppdatert.ikkeKjørtSisteKalenderdag() || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode)
     }
 
-    override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
-        val tjenestePensjon = hentTjenestePensjon(kontekst.behandlingId)
-        val eksisterendeData = tjenestePensjonRepository.hentHvisEksisterer(kontekst.behandlingId)
+    data class TjenestePensjonInput(
+        val personIdent: String,
+        val rettighetsperiode: Periode,
+        val eksisterendeData: List<TjenestePensjonForhold>?
+    ) : InformasjonskravInput
 
-        if (harEndringerITjenestePensjon(eksisterendeData, tjenestePensjon)) {
+    data class TjenestePensjonRegisterdata(
+        val tjenestePensjon: List<TjenestePensjonForhold>
+    ) : InformasjonskravRegisterdata
+
+    override fun klargjør(kontekst: FlytKontekstMedPerioder): TjenestePensjonInput {
+        val eksisterendeData = tjenestePensjonRepository.hentHvisEksisterer(kontekst.behandlingId)
+        val sak = sakOgBehandlingService.hentSakFor(kontekst.behandlingId)
+        val personIdent = sak.person.aktivIdent().identifikator
+        return TjenestePensjonInput(
+            personIdent = personIdent,
+            rettighetsperiode = sak.rettighetsperiode,
+            eksisterendeData = eksisterendeData
+        )
+    }
+
+    override fun hentData(input: TjenestePensjonInput): TjenestePensjonRegisterdata {
+        val (personIdent, rettigetsperiode) = input
+        return TjenestePensjonRegisterdata(
+            tpGateway.hentTjenestePensjon(
+                personIdent,
+                rettigetsperiode
+            )
+        )
+    }
+
+
+    override fun oppdater(
+        input: TjenestePensjonInput,
+        registerdata: TjenestePensjonRegisterdata,
+        kontekst: FlytKontekstMedPerioder
+    ): Informasjonskrav.Endret {
+        val (tjenestePensjon) = registerdata
+
+        if (harEndringerITjenestePensjon(input.eksisterendeData, tjenestePensjon)) {
             log.info("Oppdaterer tjeneste pensjon for behandling ${kontekst.behandlingId}. Tjeneste pensjon funnet: ${tjenestePensjon.size}")
             tjenestePensjonRepository.lagre(kontekst.behandlingId, tjenestePensjon)
             return Informasjonskrav.Endret.ENDRET
@@ -82,22 +119,12 @@ class TjenestePensjonInformasjonskrav(
         val sak = sakOgBehandlingService.hentSakFor(behandlingId)
         val personIdent = sak.person.aktivIdent().identifikator
 
-        return hentTjenestePensjon(
+        return tpGateway.hentTjenestePensjon(
             personIdent,
             sak.rettighetsperiode
         ).also {
-            log.info("hentet tjeneste pensjon for person i sak ${sak.saksnummer}. Antall: ${it.size}")
+            log.info("Hentet tjenestepensjon for person i sak ${sak.saksnummer}. Antall: ${it.size}")
         }
-    }
-
-    private fun hentTjenestePensjon(
-        personIdent: String,
-        rettigetsperiode: Periode
-    ): List<TjenestePensjonForhold> {
-        return tpGateway.hentTjenestePensjon(
-            personIdent,
-            rettigetsperiode
-        )
     }
 
     override fun behovForRevurdering(behandlingId: BehandlingId): List<VurderingsbehovMedPeriode> {
@@ -108,7 +135,7 @@ class TjenestePensjonInformasjonskrav(
         val gikkFraNullTilTomtGrunnlag = tjenestePensjon.isEmpty() && eksisterendeData == null
 
         return if (!gikkFraNullTilTomtGrunnlag && harEndringerITjenestePensjon(eksisterendeData, tjenestePensjon)) {
-            listOf(VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING))
+            listOf(VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING_TJENESTEPENSJON))
         } else {
             emptyList()
         }

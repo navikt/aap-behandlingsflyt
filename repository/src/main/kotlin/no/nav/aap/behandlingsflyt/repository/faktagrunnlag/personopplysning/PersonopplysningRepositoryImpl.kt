@@ -25,7 +25,7 @@ class PersonopplysningRepositoryImpl(
         }
     }
 
-    override fun hentHvisEksisterer(behandlingId: BehandlingId): PersonopplysningGrunnlag? {
+    fun hentHvisEksisterer(behandlingId: BehandlingId): PersonopplysningGrunnlag? {
         return connection.queryFirstOrNull(
             """
             SELECT g.bruker_personopplysning_id, g.personopplysninger_id

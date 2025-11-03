@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class AvklarBarnetilleggLøser(
@@ -23,9 +24,8 @@ class AvklarBarnetilleggLøser(
     )
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarBarnetilleggLøsning): LøsningsResultat {
-        val vurderteBarn = barnRepository.hentVurderteBarnHvisEksisterer(kontekst.kontekst.behandlingId)?.barn.orEmpty()
         val oppdatertTilstand =
-            oppdaterTilstandBasertPåNyeVurderinger(vurderteBarn, løsning.vurderingerForBarnetillegg.vurderteBarn)
+            oppdaterTilstandBasertPåNyeVurderinger(emptyList(), løsning.vurderingerForBarnetillegg.vurderteBarn)
 
         barnRepository.lagreVurderinger(kontekst.kontekst.behandlingId, kontekst.bruker.ident, oppdatertTilstand)
 
@@ -45,7 +45,7 @@ internal fun oppdaterTilstandBasertPåNyeVurderinger(
     vurderteBarn.forEach { barn -> tidslinjePerBarn[barn.ident] = barn.tilTidslinje() }
 
     nyeVurderinger.map { it.toVurdertBarn() }.forEach { nyVurdering ->
-        val eksisterendeTidslinje = tidslinjePerBarn[nyVurdering.ident] ?: Tidslinje()
+        val eksisterendeTidslinje = tidslinjePerBarn[nyVurdering.ident].orEmpty()
         val oppdatertTidslinje = eksisterendeTidslinje.kombiner(
             nyVurdering.tilTidslinje(),
             StandardSammenslåere.prioriterHøyreSideCrossJoin()

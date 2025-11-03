@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonForhold
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonInformasjonskrav
@@ -51,15 +52,15 @@ import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.TestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbType
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import javax.sql.DataSource
 
 class OppdagEndretInformasjonskravJobbUtførerTest {
     init {
@@ -131,8 +132,8 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
         register<FakeUnleash>()
     }
 
-    @TestDatabase
-    lateinit var dataSource: DataSource
+    @AutoClose
+    private val dataSource = TestDataSource()
 
 
     @Test
@@ -148,6 +149,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
                         fom = 10 januar 2020,
                         tom = 20 januar 2020,
                         grad = 100,
+                        organisasjonsnummer = null
                     )
                 )
             )
@@ -177,11 +179,12 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
                 .finnSisteYtelsesbehandlingFor(førstegangsbehandlingen.sakId)!!
             assertThat(sisteYtelsesbehandling.id)
                 .isNotEqualTo(førstegangsbehandlingen.id)
-            assertThat(sisteYtelsesbehandling.vurderingsbehov()).hasSize(2)
+            assertThat(sisteYtelsesbehandling.vurderingsbehov()).hasSize(3)
             assertThat(sisteYtelsesbehandling.vurderingsbehov().toSet())
                 .isEqualTo(
                     setOf(
-                        VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING),
+                        VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER),
+                        VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING_UFØRE),
                         VurderingsbehovMedPeriode(Vurderingsbehov.INSTITUSJONSOPPHOLD),
                     )
                 )
@@ -231,12 +234,25 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
                 rettighetsperiode = sak.rettighetsperiode,
                 vurderingsbehovRelevanteForSteg = emptySet()
             )
-            BarnInformasjonskrav.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
-            SamordningYtelseVurderingInformasjonskrav.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
-            TjenestePensjonInformasjonskrav.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
-            UføreInformasjonskrav.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
-            InstitusjonsoppholdInformasjonskrav.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
-            PersonopplysningInformasjonskrav.konstruer(repositoryProvider, gatewayProvider).oppdater(kontekst)
+
+            fun klargjørInformasjonskrav(informasjonskrav: List<Informasjonskravkonstruktør>) {
+                informasjonskrav.forEach {
+                    val krav = it.konstruer(repositoryProvider, gatewayProvider)
+                    val input = krav.klargjør(kontekst)
+                    val data = krav.hentData(input)
+                    krav.oppdater(input, data, kontekst)
+                }
+            }
+
+            listOf(
+                BarnInformasjonskrav,
+                SamordningYtelseVurderingInformasjonskrav,
+                TjenestePensjonInformasjonskrav,
+                UføreInformasjonskrav,
+                InstitusjonsoppholdInformasjonskrav,
+                PersonopplysningInformasjonskrav
+            ).let(::klargjørInformasjonskrav)
+
 
             repositoryProvider.provide<BehandlingRepository>()
                 .oppdaterBehandlingStatus(førstegangsbehandlingen.id, Status.AVSLUTTET)

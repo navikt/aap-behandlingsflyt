@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
-import java.math.BigDecimal
 
 data class VurdertPeriode(
     val periode: Periode,
@@ -13,6 +12,7 @@ data class VurdertPeriode(
 data class Felter(
     val dagsats: Double,
     val barneTilleggsats: Double,
+    val barnetillegg: Double,
     val arbeidGradering: Int?,
     val samordningGradering: Int?,
     val institusjonGradering: Int?,

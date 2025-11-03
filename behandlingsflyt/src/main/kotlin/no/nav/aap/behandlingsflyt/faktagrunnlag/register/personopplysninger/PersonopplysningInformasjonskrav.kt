@@ -5,8 +5,10 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravInput
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.KanTriggeRevurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
@@ -16,6 +18,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
@@ -24,7 +27,8 @@ class PersonopplysningInformasjonskrav private constructor(
     private val personopplysningRepository: PersonopplysningRepository,
     private val personopplysningGateway: PersonopplysningGateway,
     private val tidligereVurderinger: TidligereVurderinger,
-) : Informasjonskrav, KanTriggeRevurdering {
+) : Informasjonskrav<PersonopplysningInformasjonskrav.Input, PersonopplysningInformasjonskrav.PersonopplysningRegisterdata>,
+    KanTriggeRevurdering {
     override val navn = Companion.navn
 
     override fun erRelevant(
@@ -37,8 +41,27 @@ class PersonopplysningInformasjonskrav private constructor(
                 && !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
     }
 
-    override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
-        val personopplysninger = hentPersonopplysninger(kontekst.behandlingId)
+    data class Input(val sak: Sak) : InformasjonskravInput
+
+    data class PersonopplysningRegisterdata(val personopplysninger: Personopplysning) : InformasjonskravRegisterdata
+
+    override fun klargjør(kontekst: FlytKontekstMedPerioder): Input {
+        return Input(sakOgBehandlingService.hentSakFor(kontekst.behandlingId))
+    }
+
+    override fun hentData(input: Input): PersonopplysningRegisterdata {
+        val sak = input.sak
+
+        return PersonopplysningRegisterdata(personopplysningGateway.innhent(sak.person))
+    }
+
+    override fun oppdater(
+        input: Input,
+        registerdata: PersonopplysningRegisterdata,
+        kontekst: FlytKontekstMedPerioder
+    ): Informasjonskrav.Endret {
+        val personopplysninger = registerdata.personopplysninger
+
         val eksisterendeData =
             personopplysningRepository.hentBrukerPersonOpplysningHvisEksisterer(kontekst.behandlingId)
 

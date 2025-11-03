@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.IngenInput
+import no.nav.aap.behandlingsflyt.faktagrunnlag.IngenRegisterData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Vurdering
@@ -26,24 +28,23 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.FakeUnleashFasttrackAktivitetsplikt
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.TestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.ZoneOffset
-import javax.sql.DataSource
 
 class AktivitetspliktInformasjonskravTest {
 
-
-    @TestDatabase
-    lateinit var dataSource: DataSource
+    @AutoClose
+    private val dataSource = TestDataSource()
 
     @Test
     fun `Revurdering med vurderingstype 'EFFEKTUER_AKTIVITETSPLIKT' skal kopiere grunnlag fra nyeste iverksatte aktvitetspliktbehandling`() {
@@ -109,22 +110,22 @@ class AktivitetspliktInformasjonskravTest {
                 )
             )
 
-            val aktivitetspliktInformasjonskrav = AktivitetspliktInformasjonskrav.konstruer(
+            val aktivitetsplikt11_7Informasjonskrav = Aktivitetsplikt11_7Informasjonskrav.konstruer(
                 postgresRepositoryRegistry.provider(connection),
-                createGatewayProvider { register<FakeUnleashFasttrackAktivitetsplikt>() },
+                createGatewayProvider { register<FakeUnleash>() },
             )
             val flytKontekstMedPerioder = flytKontekstMedPerioder(effektueringsbehandling, sak)
 
 
             assertThat(
-                aktivitetspliktInformasjonskrav.erRelevant(
+                aktivitetsplikt11_7Informasjonskrav.erRelevant(
                     flytKontekstMedPerioder,
                     StegType.AVKLAR_SYKDOM,
                     null
                 )
             ).isTrue
 
-            aktivitetspliktInformasjonskrav.oppdater(flytKontekstMedPerioder)
+            aktivitetsplikt11_7Informasjonskrav.oppdater(IngenInput, IngenRegisterData, flytKontekstMedPerioder)
                 .let {
                     assertThat(it)
                         .describedAs { "Skal ikke returnere endret ved oppdatering i effektueringsbehandling" }

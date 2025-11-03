@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -75,7 +76,8 @@ class AvklarSoningsforholdLøser(
             return Tidslinje()
         }
         return grunnlag.soningsVurderinger?.tilTidslinje()
-            ?.mapValue { SoningsvurderingData(it.skalOpphøre, it.begrunnelse) } ?: Tidslinje()
+            ?.mapValue { SoningsvurderingData(it.skalOpphøre, it.begrunnelse) }
+            .orEmpty()
     }
 
     override fun forBehov(): Definisjon {

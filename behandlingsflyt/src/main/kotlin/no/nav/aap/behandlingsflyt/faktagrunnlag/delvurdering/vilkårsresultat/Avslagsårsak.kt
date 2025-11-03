@@ -18,5 +18,6 @@ enum class Avslagsårsak(val kode: String, val hjemmel: String) {
     ANNEN_FULL_YTELSE(kode = "11-27", hjemmel = "§ 11-27"),
     IKKE_RETT_PA_AAP_UNDER_BEHANDLING_AV_UFORE(kode = "11-18", hjemmel = "§ 11-18"),
     VARIGHET_OVERSKREDET_OVERGANG_UFORE(kode = "11-18", hjemmel = "§ 11-18 1. ledd"),
+    VARIGHET_OVERSKREDET_ARBEIDSSØKER(kode = "11-17", hjemmel = "§ 11-17"),
     IKKE_RETT_PA_AAP_I_PERIODE_SOM_ARBEIDSSOKER(kode = "11-17", hjemmel = "§ 11-17")
 }

@@ -14,7 +14,6 @@ import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
-import no.nav.aap.komponenter.miljo.Miljø
 import java.net.URI
 import java.time.LocalDate
 
@@ -39,7 +38,7 @@ class NomInfoGateway : AnsattInfoGateway {
     override fun hentAnsattInfo(navIdent: String): AnsattInfo {
         val request = GraphqlRequest(ressursQuery, NomRessursVariables(navIdent))
         val response = checkNotNull(query(request).data) {
-            "Fant ikke ansatt i NOM"
+            "Fant ikke ansatt ($navIdent) i NOM"
         }
 
         return mapResponse(navIdent, checkNotNull(response.ressurs))
@@ -88,7 +87,7 @@ class NomInfoGateway : AnsattInfoGateway {
     }
 }
 
-private const val navIdent = "\$navIdent"
+private const val navIdent = $$"$navIdent"
 val ressursQuery = """
     query($navIdent: String!) {
       ressurs(where: {navident: $navIdent}) {
@@ -105,10 +104,10 @@ val ressursQuery = """
     }
 """.trimIndent()
 
-private const val navIdenter = "\$navIdenter"
+private const val navIdenter = $$"$navIdenter"
 val flereNavnQuery = """
     query($navIdenter: [String!]) {
-        ressurser(where: {navidenter: [$navIdenter]}) {
+        ressurser(where: {navidenter: $navIdenter}) {
             ressurs {
                 navident
                 visningsnavn

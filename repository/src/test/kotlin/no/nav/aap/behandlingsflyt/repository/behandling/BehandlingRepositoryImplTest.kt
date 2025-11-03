@@ -55,27 +55,27 @@ import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.dbtest.TestDataSource.Companion.invoke
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 
 internal class BehandlingRepositoryImplTest {
     companion object {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-        private val dataSource = InitTestDatabase.freshDatabase()
-
-        @AfterAll
-        @JvmStatic
-        fun afterAll() {
-            InitTestDatabase.closerFor(dataSource)
-        }
     }
 
+    @AutoClose
+    private val dataSource = TestDataSource()
+
     @Test
-    fun `kan lagre og hente ut behandling med uuid`() {
+    fun `Kan lagre og hente ut behandling med uuid`() {
         val skapt = dataSource.transaction { connection ->
             val sak = PersonOgSakService(
                 FakePdlGateway,
@@ -85,10 +85,10 @@ internal class BehandlingRepositoryImplTest {
                 ident(),
                 Periode(LocalDate.now(), LocalDate.now().plusYears(3))
             )
-            val repo = BehandlingRepositoryImpl(connection)
+            val behandlingRepo = BehandlingRepositoryImpl(connection)
 
             // Opprett
-            repo.opprettBehandling(
+            behandlingRepo.opprettBehandling(
                 sakId = sak.id,
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null,
@@ -100,10 +100,10 @@ internal class BehandlingRepositoryImplTest {
         }
 
         dataSource.transaction { connection ->
-            val repo = BehandlingRepositoryImpl(connection)
+            val behandlingRepo = BehandlingRepositoryImpl(connection)
 
             // Hent ut igjen
-            val hententMedReferanse = repo.hent(skapt.referanse)
+            val hententMedReferanse = behandlingRepo.hent(skapt.referanse)
 
             assertThat(hententMedReferanse.referanse).isEqualTo(skapt.referanse)
             assertThat(hententMedReferanse.vurderingsbehov()).containsExactlyElementsOf(skapt.vurderingsbehov())
@@ -120,7 +120,7 @@ internal class BehandlingRepositoryImplTest {
     }
 
     @Test
-    fun `oppretet dato lagres på behandling og hentes ut korrekt`() {
+    fun `Opprettet dato lagres på behandling og hentes ut korrekt`() {
         val skapt = dataSource.transaction { connection ->
             val sak = PersonOgSakService(
                 FakePdlGateway,
@@ -130,10 +130,10 @@ internal class BehandlingRepositoryImplTest {
                 ident(),
                 Periode(LocalDate.now(), LocalDate.now().plusYears(3))
             )
-            val repo = BehandlingRepositoryImpl(connection)
+            val behandlingRepo = BehandlingRepositoryImpl(connection)
 
             // Opprett
-            repo.opprettBehandling(
+            behandlingRepo.opprettBehandling(
                 sakId = sak.id,
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null,
@@ -145,17 +145,17 @@ internal class BehandlingRepositoryImplTest {
         }
 
         dataSource.transaction { connection ->
-            val repo = BehandlingRepositoryImpl(connection)
+            val behandlingRepo = BehandlingRepositoryImpl(connection)
 
             // Hent ut igjen
-            val hententMedReferanse = repo.hent(skapt.referanse)
+            val hententMedReferanse = behandlingRepo.hent(skapt.referanse)
 
             assertThat(hententMedReferanse.opprettetTidspunkt).isEqualTo(skapt.opprettetTidspunkt)
         }
     }
 
     @Test
-    fun `kan hente ut behandlinger for sak filtrert på type`() {
+    fun `Kan hente ut behandlinger for sak filtrert på type`() {
         val (sak, førstegang, klage) = dataSource.transaction { connection ->
             val sak = PersonOgSakService(
                 FakePdlGateway,
@@ -165,10 +165,10 @@ internal class BehandlingRepositoryImplTest {
                 ident(),
                 Periode(LocalDate.now(), LocalDate.now().plusYears(3))
             )
-            val repo = BehandlingRepositoryImpl(connection)
+            val behandlingRepo = BehandlingRepositoryImpl(connection)
 
             // Opprett
-            val førstegang = repo.opprettBehandling(
+            val førstegang = behandlingRepo.opprettBehandling(
                 sakId = sak.id,
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null,
@@ -178,7 +178,7 @@ internal class BehandlingRepositoryImplTest {
                 ),
             )
 
-            val klage = repo.opprettBehandling(
+            val klage = behandlingRepo.opprettBehandling(
                 sakId = sak.id,
                 typeBehandling = TypeBehandling.Klage,
                 forrigeBehandlingId = null,
@@ -191,25 +191,25 @@ internal class BehandlingRepositoryImplTest {
         }
 
         dataSource.transaction { connection ->
-            val repo = BehandlingRepositoryImpl(connection)
+            val behandlingRepo = BehandlingRepositoryImpl(connection)
 
             // Hent ut igjen
-            val alleDefault = repo.hentAlleFor(sak.id)
+            val alleDefault = behandlingRepo.hentAlleFor(sak.id)
             assertThat(alleDefault).hasSize(2)
 
-            val alleFørstegang = repo.hentAlleFor(sak.id, listOf(TypeBehandling.Førstegangsbehandling))
+            val alleFørstegang = behandlingRepo.hentAlleFor(sak.id, listOf(TypeBehandling.Førstegangsbehandling))
             assertThat(alleFørstegang).hasSize(1)
             assertThat(alleFørstegang[0].referanse).isEqualTo(førstegang.referanse)
 
-            val alleKlage = repo.hentAlleFor(sak.id, listOf(TypeBehandling.Klage))
+            val alleKlage = behandlingRepo.hentAlleFor(sak.id, listOf(TypeBehandling.Klage))
             assertThat(alleKlage).hasSize(1)
             assertThat(alleKlage[0].referanse).isEqualTo(klage.referanse)
         }
     }
 
     @Test
-    fun `kan hente ut behandlinger med vedtak for person`() {
-        val vedtakstidspunkt = LocalDateTime.now()
+    fun `Kan hente ut behandlinger med vedtak for person`() {
+        val vedtakstidspunkt = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS)
         val virkningstidspunkt = LocalDate.now().plusMonths(1)
 
 
@@ -222,11 +222,11 @@ internal class BehandlingRepositoryImplTest {
                 ident(),
                 Periode(LocalDate.now(), LocalDate.now().plusYears(3))
             )
-            val repo = BehandlingRepositoryImpl(connection)
+            val behandlingRepo = BehandlingRepositoryImpl(connection)
             val vedtakRepo = VedtakRepositoryImpl(connection)
 
             // Opprett
-            val førstegang = repo.opprettBehandling(
+            val førstegang = behandlingRepo.opprettBehandling(
                 sakId = sak.id,
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null,
@@ -242,7 +242,7 @@ internal class BehandlingRepositoryImplTest {
                 virkningstidspunkt = virkningstidspunkt,
             )
 
-            val klage = repo.opprettBehandling(
+            val klage = behandlingRepo.opprettBehandling(
                 sakId = sak.id,
                 typeBehandling = TypeBehandling.Klage,
                 forrigeBehandlingId = null,
@@ -255,17 +255,17 @@ internal class BehandlingRepositoryImplTest {
         }
 
         dataSource.transaction { connection ->
-            val repo = BehandlingRepositoryImpl(connection)
+            val behandlingRepo = BehandlingRepositoryImpl(connection)
 
             // Hent ut igjen
-            val alleDefault = repo.hentAlleMedVedtakFor(sak.person)
+            val alleDefault = behandlingRepo.hentAlleMedVedtakFor(sak.person)
             assertThat(alleDefault).hasSize(1)
 
-            val alleFørstegang = repo.hentAlleMedVedtakFor(sak.person, listOf(TypeBehandling.Førstegangsbehandling))
+            val alleFørstegang = behandlingRepo.hentAlleMedVedtakFor(sak.person, listOf(TypeBehandling.Førstegangsbehandling))
             assertThat(alleFørstegang).hasSize(1)
             assertThat(alleFørstegang[0].saksnummer).isEqualTo(sak.saksnummer)
             assertThat(alleFørstegang[0].referanse).isEqualTo(førstegang.referanse)
-            assertThat(alleFørstegang[0].vedtakstidspunkt).isEqualToIgnoringNanos(vedtakstidspunkt)
+            assertThat(alleFørstegang[0].vedtakstidspunkt).isEqualTo(vedtakstidspunkt)
             assertThat(alleFørstegang[0].virkningstidspunkt).isEqualTo(virkningstidspunkt)
             assertThat(alleFørstegang[0].vurderingsbehov).isEqualTo(setOf(Vurderingsbehov.MOTTATT_SØKNAD))
             assertThat(alleFørstegang[0].årsakTilOpprettelse).isEqualTo(ÅrsakTilOpprettelse.SØKNAD)
@@ -386,7 +386,8 @@ internal class BehandlingRepositoryImplTest {
 
 // Midlertidig test
 fun main() {
-    InitTestDatabase.freshDatabase().transaction { connection ->
+        val dataSource = TestDataSource()
+        dataSource.transaction { connection ->
         BeregningsgrunnlagRepositoryImpl(connection).slett(
             BehandlingId(1L)
         )
@@ -433,6 +434,8 @@ fun main() {
         PersonRepositoryImpl(connection).slett(BehandlingId(1L))
         SakRepositoryImpl(connection).slett(BehandlingId(1L))
         ManuellInntektGrunnlagRepositoryImpl(connection).slett(BehandlingId(1L))
+
+        dataSource.close()
     }
 
 }

@@ -11,6 +11,7 @@ enum class Ytelse(val type: AvklaringsType) {
     OMSORGSPENGER(AvklaringsType.MANUELL),
     OPPLÆRINGSPENGER(AvklaringsType.MANUELL),
     UKJENT_SLUTTDATO_PÅ_YTELSE(AvklaringsType.MANUELL),
+    FERIE_I_SYKEPENGEPERIODE(AvklaringsType.MANUELL)
 }
 
 enum class AvklaringsType {

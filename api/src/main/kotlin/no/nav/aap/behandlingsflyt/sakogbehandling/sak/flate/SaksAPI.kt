@@ -30,7 +30,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.httpklient.exception.VerdiIkkeFunnetException
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.miljo.MiljøKode
@@ -453,7 +452,7 @@ fun NormalOpenAPIRoute.saksApi(
             val visningsnavnMap = visningsnavn.associateBy( { it.navident }, {it.visningsnavn })
             val historikkMedVisningsnavn = historikk.map{
                 val nyeHendelser = it.hendelser.map{
-                    val navn = if (it.utførtAv != null) visningsnavnMap[it.utførtAv] else it.utførtAv
+                    val navn = visningsnavnMap[it.utførtAv] ?: it.utførtAv
                     it.copy(utførtAv = navn)
                 }
                 it.copy(hendelser = nyeHendelser)

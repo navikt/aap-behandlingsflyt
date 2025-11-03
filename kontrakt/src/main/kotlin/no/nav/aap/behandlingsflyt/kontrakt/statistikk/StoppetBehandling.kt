@@ -34,6 +34,7 @@ public data class StoppetBehandling(
     val hendelsesTidspunkt: LocalDateTime,
     val avsluttetBehandling: AvsluttetBehandlingDTO? = null,
     val identerForSak: List<String> = emptyList(),
+    val opprettetAv: String? = null,
 ) {
     init {
         require(ident.isNotEmpty())
@@ -69,6 +70,11 @@ public enum class Vurderingsbehov {
     BARNETILLEGG,               // Barnetillegg
     INSTITUSJONSOPPHOLD,        // Institusjonsopphold
     SAMORDNING_OG_AVREGNING,    // Samordning og avregning
+    REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER,
+    REVURDER_SAMORDNING_UFØRE,
+    REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER,
+    REVURDER_SAMORDNING_ARBEIDSGIVER,
+    REVURDER_SAMORDNING_TJENESTEPENSJON,
     REFUSJONSKRAV,              // Refusjonskrav
     UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT, // Utenlandsopphold før søknadstidspunkt
     VURDER_RETTIGHETSPERIODE, // Må ta stilling til rettighetsperioden

@@ -17,39 +17,16 @@ open class FakeUnleashBase(
 
 object FakeUnleash : FakeUnleashBase(
     mapOf(
-        BehandlingsflytFeature.OverstyrStarttidspunkt to true,
-        BehandlingsflytFeature.Samvarsling to true,
         BehandlingsflytFeature.IngenValidering to false,
-        BehandlingsflytFeature.SendForvaltningsmelding to true,
-        BehandlingsflytFeature.SosialHjelpFlereKontorer to false,
+        BehandlingsflytFeature.NyBrevtype11_17 to true,
         BehandlingsflytFeature.NyBrevtype11_18 to true,
-        BehandlingsflytFeature.BrevBeregningsgrunnlag to true,
-        BehandlingsflytFeature.Aktivitetsplikt11_7 to false,
-        BehandlingsflytFeature.Aktivitetsplikt11_9 to false,
-        BehandlingsflytFeature.OverforingsdatoNullForAvregning to true,
-        BehandlingsflytFeature.OvergangUfore to false,
-        BehandlingsflytFeature.AutomatiskTilbakeforUlostAvklaringsbehov to false,
-        BehandlingsflytFeature.IverksettUtbetalingSomSelvstendigJobb to true,
-        BehandlingsflytFeature.RefaktorereFastsettSykdomsvilkar to true,
-        BehandlingsflytFeature.SykepengerPeriodisert to false
-    )
-)
-
-object FakeUnleashFasttrackAktivitetsplikt : FakeUnleashBase(
-    mapOf(
-        BehandlingsflytFeature.OverstyrStarttidspunkt to true,
-        BehandlingsflytFeature.Samvarsling to true,
-        BehandlingsflytFeature.IngenValidering to false,
-        BehandlingsflytFeature.SendForvaltningsmelding to true,
-        BehandlingsflytFeature.SosialHjelpFlereKontorer to false,
-        BehandlingsflytFeature.BrevBeregningsgrunnlag to true,
-        BehandlingsflytFeature.Aktivitetsplikt11_7 to true,
         BehandlingsflytFeature.Aktivitetsplikt11_9 to true,
-        BehandlingsflytFeature.NyBrevtype11_18 to true,
-        BehandlingsflytFeature.OvergangUfore to true,
-        BehandlingsflytFeature.AutomatiskTilbakeforUlostAvklaringsbehov to true,
-        BehandlingsflytFeature.IverksettUtbetalingSomSelvstendigJobb to true,
-        BehandlingsflytFeature.RefaktorereFastsettSykdomsvilkar to true,
-        BehandlingsflytFeature.SykepengerPeriodisert to true
+        BehandlingsflytFeature.OverforingsdatoNullForAvregning to true,
+        BehandlingsflytFeature.OvergangArbeid to false,
+        BehandlingsflytFeature.AvklaringsbehovServiceFormkrav to true,
+        BehandlingsflytFeature.KvalitetssikringsSteg to true,
+        BehandlingsflytFeature.LovvalgMedlemskapPeriodisert to true,
+        BehandlingsflytFeature.FatteVedtakAvklaringsbehovService to true,
+        BehandlingsflytFeature.HarEndringerIBarn to true
     )
 )

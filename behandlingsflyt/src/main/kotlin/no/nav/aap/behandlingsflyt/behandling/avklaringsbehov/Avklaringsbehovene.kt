@@ -138,12 +138,21 @@ class Avklaringsbehovene(
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
+    @Deprecated("Bruk hjelpemetoder i AvklaringsbehovService for å styre avklaringsbehov")
     fun avbryt(definisjon: Definisjon) {
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
         avklaringsbehov.avbryt()
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
+    /* Kan fjerne internal-prefikset når deprecated `avbryt` er slettet. */
+    internal fun internalAvbryt(definisjon: Definisjon) {
+        val avklaringsbehov = alle().single { it.definisjon == definisjon }
+        avklaringsbehov.avbryt()
+        repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
+    }
+
+    @Deprecated("Styr avklaringsbehov med AvklaringsbehovService")
     fun avbrytForSteg(steg: StegType) {
         for (avklaringsbehov in åpne()) {
             if (avklaringsbehov.skalLøsesISteg(steg)) {
@@ -153,12 +162,21 @@ class Avklaringsbehovene(
         }
     }
 
+    @Deprecated("Styr avklaringsbehov med AvklaringsbehovService")
     fun avslutt(definisjon: Definisjon) {
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
         avklaringsbehov.avslutt()
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
+    /* Kan fjerne internal-prefixet når den deperecated avslutt-metoden er borte. */
+    internal fun internalAvslutt(definisjon: Definisjon) {
+        val avklaringsbehov = alle().single { it.definisjon == definisjon }
+        avklaringsbehov.avslutt()
+        repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
+    }
+
+    @Deprecated("Styr avklaringsbehov med AvklaringsbehovService")
     fun avbrytÅpneAvklaringsbehov() {
         val avklaringsbehovSomSkalAvbrytes =
             alle().filter { it.erÅpent() && !(it.erVentepunkt() || it.erBrevVentebehov()) }
@@ -217,15 +235,24 @@ class Avklaringsbehovene(
         return alle().any { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
     }
 
-    fun harHattAvklaringsbehovLøstAvNay(): Boolean {
+    fun avklaringsbehovLøstAvNay(): List<Avklaringsbehov> {
         return alle().filter { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
-            .any { it.definisjon.løsesAv == listOf(Rolle.SAKSBEHANDLER_NASJONAL) }
+            .filter { it.definisjon.løsesAv == listOf(Rolle.SAKSBEHANDLER_NASJONAL) }
+            .filterNot { it.erForeslåttVedtak() }
+    }
+
+    fun harAvklaringsbehovSomKreverToTrinn(): Boolean {
+        return alle().any { it.erIkkeAvbrutt() && it.erTotrinn() }
     }
 
     fun harHattAvklaringsbehovSomHarKrevdToTrinn(): Boolean {
         return alle()
             .filter { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
             .any { avklaringsbehov -> avklaringsbehov.erTotrinn() && !avklaringsbehov.erTotrinnsVurdert() }
+    }
+
+    fun harAvklaringsbehovSomKreverToTrinnMenIkkeErVurdert(): Boolean {
+        return alle().any { it.erIkkeAvbrutt() && it.erTotrinn() && !it.erTotrinnsVurdert() }
     }
 
     fun harHattAvklaringsbehovSomKreverKvalitetssikring(): Boolean {
@@ -235,10 +262,10 @@ class Avklaringsbehovene(
             .any { avklaringsbehov -> !avklaringsbehov.erKvalitetssikretTidligere() }
     }
 
-    fun harIkkeForeslåttVedtak(): Boolean {
+    fun harAvklaringsbehovSomKreverKvalitetssikring(): Boolean {
         return alle()
-            .filter { avklaringsbehov -> avklaringsbehov.erForeslåttVedtak() }
-            .none { it.status() == Status.AVSLUTTET }
+            .filter { avklaringsbehov -> avklaringsbehov.kreverKvalitetssikring() }
+            .any { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
     }
 
     fun harIkkeForeslåttUttak(): Boolean {
@@ -252,7 +279,13 @@ class Avklaringsbehovene(
     }
 
     fun hentNyesteKvalitetssikringGittDefinisjon(definisjon: Definisjon): Endring? {
-        return hentBehovForDefinisjon(definisjon)?.historikk?.filter { it.status == Status.KVALITETSSIKRET }?.maxOrNull()
+        return hentBehovForDefinisjon(definisjon)?.historikk?.filter { it.status == Status.KVALITETSSIKRET }
+            ?.maxOrNull()
+    }
+
+    fun beslutningFor(definisjon: Definisjon): Endring? {
+        return hentBehovForDefinisjon(definisjon)?.historikk?.filter { it.status == Status.TOTRINNS_VURDERT }
+            ?.maxOrNull()
     }
 
     fun validateTilstand(behandling: Behandling, avklaringsbehov: Definisjon? = null) {

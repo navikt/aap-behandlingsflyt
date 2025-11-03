@@ -85,7 +85,7 @@ public class Innsending(
 
             InnsendingType.KABAL_HENDELSE -> {
                 require(referanse.type == InnsendingReferanse.Type.KABAL_HENDELSE_ID)
-                requireNotNull(melding)
+                requireNotNull(melding) {"Melding fra Kabal kan ikke være null"}
                 require(melding is KabalHendelse)
             }
 
@@ -95,7 +95,7 @@ public class Innsending(
 
             InnsendingType.PDL_HENDELSE_DODSFALL_BRUKER, InnsendingType.PDL_HENDELSE_DODSFALL_BARN -> {
                 require(referanse.type == InnsendingReferanse.Type.PDL_HENDELSE_ID)
-                requireNotNull(melding)
+                requireNotNull(melding) {"Melding for dødsfall kan ikke være null"}
                 require(melding is PdlHendelse)
             }
 
@@ -113,53 +113,3 @@ public class Innsending(
 )
 public sealed interface Melding
 
-public fun Melding.innsendingType(): InnsendingType = when (this) {
-    is Aktivitetskort -> InnsendingType.AKTIVITETSKORT
-    is Meldekort -> InnsendingType.MELDEKORT
-    is Søknad -> InnsendingType.SØKNAD
-    is AnnetRelevantDokument -> InnsendingType.ANNET_RELEVANT_DOKUMENT
-    is ManuellRevurdering -> InnsendingType.MANUELL_REVURDERING
-    is Klage -> InnsendingType.KLAGE
-    is NyÅrsakTilBehandling -> InnsendingType.NY_ÅRSAK_TIL_BEHANDLING
-    is KabalHendelse -> InnsendingType.KABAL_HENDELSE
-    is PdlHendelse -> InnsendingType.PDL_HENDELSE_DODSFALL_BRUKER
-    is Oppfølgingsoppgave -> InnsendingType.OPPFØLGINGSOPPGAVE
-    is OmgjøringKlageRevurdering -> InnsendingType.OMGJØRING_KLAGE_REVURDERING
-
-}
-
-/**
- * Eksempel på hvordan håndtere meldingtyper.
- */
-@Suppress("unused")
-private fun example(innsending: Innsending) {
-    when (innsending.melding) {
-        is Søknad -> when (innsending.melding) {
-            is SøknadV0 -> TODO()
-        }
-
-        is Meldekort -> when (innsending.melding) {
-            is MeldekortV0 -> TODO()
-        }
-
-        is Aktivitetskort -> TODO()
-
-        is AnnetRelevantDokument -> when (innsending.melding) {
-            is AnnetRelevantDokumentV0 -> TODO()
-        }
-
-        is ManuellRevurdering,
-
-        is KlageV0 -> TODO()
-
-        is NyÅrsakTilBehandlingV0 -> TODO()
-
-        is KabalHendelse -> TODO()
-
-        is OppfølgingsoppgaveV0 -> TODO()
-        is OmgjøringKlageRevurdering -> TODO()
-        is PdlHendelse -> TODO()
-
-        null -> TODO()
-    }
-}

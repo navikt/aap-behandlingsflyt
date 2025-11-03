@@ -39,18 +39,12 @@ class DatadelingMeldekortJobbUtfører(
 
         try {
             if (kontraktObjekter.isEmpty()) {
-                log.debug(
-                    "Ingen meldekort-detaljer å sende, tom liste mottatt for sakId={}, behandlingId={}.",
-                    sakId,
-                    behandlingId
-                )
+                log.info("Ingen meldekort-detaljer å sende, tom liste mottatt for sakId=${sakId}, behandlingId=${behandlingId}")
                 return
             }
             apiInternGateway.sendDetaljertMeldekortListe(kontraktObjekter, sakId, behandlingId)
         } catch (e: Exception) {
-            log.error(
-                "Feil ved sending av meldekort til API-intern for sak=${sakId}, behandling=${behandlingId}", e
-            )
+            log.error("Feil ved sending av meldekort til API-intern for sak=${sakId}, behandling=${behandlingId}", e)
             throw e
         }
     }
@@ -83,17 +77,20 @@ class DatadelingMeldekortJobbUtfører(
     }
 
     /*
-    For å sette inn jobber for de meldekortene som er opprettet før vi begynte
+    For å sette inn jobber for alle meldekort, inkludert de som er opprettet før vi begynte
     å lytte på hendelser, kan vi bruke denne koden i databasen:
 
-    SELECT 'INSERT INTO jobb (type, behandling_id, sak_id) VALUES ('''
-               || 'flyt.Datadeling.Meldekortdetaljer' || ''', ' || behandling.id || ', ' || behandling.sak_id || ');'
+    SELECT 'INSERT INTO jobb (type, behandling_id, sak_id, neste_kjoring) VALUES ('''
+           || 'flyt.Datadeling.Meldekortdetaljer' || ''', ' || behandling.id || ', ' || behandling.sak_id ||
+       ', NOW()' || ');'
     FROM MELDEKORT_GRUNNLAG
              LEFT JOIN behandling
                        ON meldekort_grunnlag.behandling_id = behandling.id
     WHERE aktiv = true
-      AND behandling_id < FØRSTE_JOBBEN_VI_HAR_BEHANDLET
-    ORDER BY sak_id DESC;
+      AND behandling.id IN (SELECT MAX(b2.id)
+                            FROM behandling b2
+                            GROUP BY b2.sak_id)
+    ORDER BY sak_id asc, behandling_id asc;
      */
 
 }

@@ -41,7 +41,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.FakePersoner
-import no.nav.aap.behandlingsflyt.test.FakeUnleashFasttrackAktivitetsplikt
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -55,7 +55,7 @@ import org.junit.jupiter.api.Test
 import java.time.ZoneOffset
 
 class AktivitetspliktFlytTest :
-    AbstraktFlytOrkestratorTest(FakeUnleashFasttrackAktivitetsplikt::class) {
+    AbstraktFlytOrkestratorTest(FakeUnleash::class) {
 
     @Test
     fun `Happy-case flyt for aktivitetsplikt 11_7`() {
@@ -152,7 +152,7 @@ class AktivitetspliktFlytTest :
             assertThat(grunnlagIÅpenBehandling).isNull()
         }
 
-        aktivitetspliktBehandling.fattVedtakEllerSendRetur().medKontekst {
+        aktivitetspliktBehandling.fattVedtak().medKontekst {
             assertThat(this.behandling).extracting { it.aktivtSteg() }
                 .isEqualTo(StegType.BREV)
 
@@ -404,12 +404,38 @@ class AktivitetspliktFlytTest :
             fom = 1 januar 2023,
             person = person,
         )
-        var åpenBehandling = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom)
+        var åpenBehandlingForbiTilkjentYtelse = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom, vissVarighet = true)
+            .løsAvklaringsBehov(
+                AvklarBistandsbehovLøsning(
+                    bistandsVurdering = BistandVurderingLøsningDto(
+                        begrunnelse = "Trenger hjelp fra nav",
+                        erBehovForAktivBehandling = true,
+                        erBehovForArbeidsrettetTiltak = false,
+                        erBehovForAnnenOppfølging = null,
+                        skalVurdereAapIOvergangTilUføre = null,
+                        skalVurdereAapIOvergangTilArbeid = null,
+                        overgangBegrunnelse = null
+                    ),
+                )
+            )
+            .medKontekst {
+                assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                    .containsExactlyInAnyOrder(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
+            }
+            .løsAvklaringsBehov(
+                SykdomsvurderingForBrevLøsning(
+                    vurdering = "Begrunnelse"
+                ),
+            )
+            .medKontekst {
+                assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                    .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)
+            }
 
         var aktivitetspliktBehandling = dataSource.transaction { connection ->
             assertThat(
                 Aktivitetsplikt11_9RepositoryImpl(connection)
-                    .hentHvisEksisterer(åpenBehandling.id)
+                    .hentHvisEksisterer(åpenBehandlingForbiTilkjentYtelse.id)
             ).isNull()
 
             opprettAktivitetspliktBehandling(
@@ -423,7 +449,7 @@ class AktivitetspliktFlytTest :
 
         prosesserBehandling(aktivitetspliktBehandling)
 
-        hentBehandling(aktivitetspliktBehandling.referanse)
+        aktivitetspliktBehandling = hentBehandling(aktivitetspliktBehandling.referanse)
             .medKontekst {
                 assertThat(this.behandling).extracting { it.aktivtSteg() }
                     .isEqualTo(StegType.VURDER_AKTIVITETSPLIKT_11_9)
@@ -446,7 +472,18 @@ class AktivitetspliktFlytTest :
                     .isEqualTo(StegType.FATTE_VEDTAK)
 
             }
-            .fattVedtakEllerSendRetur()
+
+        dataSource.transaction { connection ->
+            val grunnlagIAktivitetspliktBehandling = Aktivitetsplikt11_9RepositoryImpl(connection)
+                .hentHvisEksisterer(aktivitetspliktBehandling.id)
+            val grunnlagIÅpenBehandling = Aktivitetsplikt11_9RepositoryImpl(connection)
+                .hentHvisEksisterer(åpenBehandlingForbiTilkjentYtelse.id)
+
+            assertThat(grunnlagIAktivitetspliktBehandling).isNotNull
+            assertThat(grunnlagIÅpenBehandling).isNull()
+        }
+
+        aktivitetspliktBehandling.fattVedtak()
             .medKontekst {
                 assertThat(this.behandling).extracting { it.aktivtSteg() }
                     .isEqualTo(StegType.BREV)
@@ -466,8 +503,23 @@ class AktivitetspliktFlytTest :
         assertThat(
             effektueringsbehandling.vurderingsbehov()
                 .map { it.type }).containsExactlyInAnyOrder(Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9)
-        assertThat(effektueringsbehandling.forrigeBehandlingId).isEqualTo(åpenBehandling.forrigeBehandlingId)
+        assertThat(effektueringsbehandling.forrigeBehandlingId).isEqualTo(åpenBehandlingForbiTilkjentYtelse.forrigeBehandlingId)
         assertThat(effektueringsbehandling.status()).isEqualTo(Status.AVSLUTTET)
+
+        motor.kjørJobber()
+        
+        dataSource.transaction { connection ->
+            val grunnlagIAktivitetspliktBehandling = Aktivitetsplikt11_9RepositoryImpl(connection)
+                .hentHvisEksisterer(aktivitetspliktBehandling.id)
+            val grunnlagIEffektueringsbehandling = Aktivitetsplikt11_9RepositoryImpl(connection)
+                .hentHvisEksisterer(effektueringsbehandling.id)
+            val grunnlagIÅpenBehandling = Aktivitetsplikt11_9RepositoryImpl(connection)
+                .hentHvisEksisterer(åpenBehandlingForbiTilkjentYtelse.id)
+
+            assertThat(grunnlagIAktivitetspliktBehandling).isNotNull
+            assertThat(grunnlagIEffektueringsbehandling).isEqualTo(grunnlagIAktivitetspliktBehandling)
+            assertThat(grunnlagIÅpenBehandling).isEqualTo(grunnlagIEffektueringsbehandling)
+        }
 
     }
 

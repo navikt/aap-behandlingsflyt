@@ -13,19 +13,32 @@ import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.dbtest.TestDataSource.Companion.invoke
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.Year
 
 class ManuellInntektGrunnlagRepositoryImplTest {
+    private lateinit var dataSource: TestDataSource
+
+    @BeforeEach
+    fun setUp() {
+        dataSource = TestDataSource()
+    }
+
+    @AfterEach
+    fun tearDown() {
+        dataSource.close()
+    }
 
     @Test
     fun `lagre og hente ut igjen`() {
-        val dataSource = InitTestDatabase.freshDatabase()
-
         val behandling = dataSource.transaction {
             val sak = sak(it, Periode(1 januar 2023, 31 desember 2023))
             finnEllerOpprettBehandling(it, sak)
@@ -38,15 +51,15 @@ class ManuellInntektGrunnlagRepositoryImplTest {
             vurdertAv = "Kungen"
         )
         dataSource.transaction {
-            val repo = ManuellInntektGrunnlagRepositoryImpl(it)
+            val manuellInntektGrunnlagRepo = ManuellInntektGrunnlagRepositoryImpl(it)
 
-            repo.lagre(behandling.id, manuellVurdering)
+            manuellInntektGrunnlagRepo.lagre(behandling.id, manuellVurdering)
         }
 
         dataSource.transaction {
-            val repo = ManuellInntektGrunnlagRepositoryImpl(it)
+            val manuellInntektGrunnlagRepo = ManuellInntektGrunnlagRepositoryImpl(it)
 
-            val uthentet = repo.hentHvisEksisterer(behandling.id)
+            val uthentet = manuellInntektGrunnlagRepo.hentHvisEksisterer(behandling.id)
 
             assertThat(uthentet).isNotNull.extracting { it!!.manuelleInntekter }
                 .usingRecursiveComparison().withEqualsForType(
@@ -59,10 +72,10 @@ class ManuellInntektGrunnlagRepositoryImplTest {
 
         // Sett inn på samme år, nytt beløp
         dataSource.transaction {
-            val repo = ManuellInntektGrunnlagRepositoryImpl(it)
+            val manuellInntektGrunnlagRepo = ManuellInntektGrunnlagRepositoryImpl(it)
 
-            repo.lagre(behandling.id, manuellVurdering.copy(belop = BigDecimal(123.41).let(::Beløp)))
-            val uthentet = repo.hentHvisEksisterer(behandling.id)
+            manuellInntektGrunnlagRepo.lagre(behandling.id, manuellVurdering.copy(belop = BigDecimal(123.41).let(::Beløp)))
+            val uthentet = manuellInntektGrunnlagRepo.hentHvisEksisterer(behandling.id)
             assertThat(uthentet).isNotNull.extracting { it!!.manuelleInntekter }
                 .usingRecursiveComparison().withEqualsForType(
                     { a, b -> a.minus(b).abs().toDouble() < 0.0001 },
@@ -74,17 +87,15 @@ class ManuellInntektGrunnlagRepositoryImplTest {
 
         // Test sletting
         dataSource.transaction {
-            val repo = ManuellInntektGrunnlagRepositoryImpl(it)
-            repo.slett(behandling.id)
-            val uthentet = repo.hentHvisEksisterer(behandling.id)
+            val manuellInntektGrunnlagRepo = ManuellInntektGrunnlagRepositoryImpl(it)
+            manuellInntektGrunnlagRepo.slett(behandling.id)
+            val uthentet = manuellInntektGrunnlagRepo.hentHvisEksisterer(behandling.id)
             assertThat(uthentet).isNull()
         }
     }
 
     @Test
     fun `lagre for flere år og hente ut igjen`() {
-        val dataSource = InitTestDatabase.freshDatabase()
-
         val behandling = dataSource.transaction {
             val sak = sak(it, Periode(1 januar 2023, 31 desember 2023))
             finnEllerOpprettBehandling(it, sak)
@@ -105,10 +116,10 @@ class ManuellInntektGrunnlagRepositoryImplTest {
         )
 
         dataSource.transaction {
-            val repo = ManuellInntektGrunnlagRepositoryImpl(it)
+            val manuellInntektGrunnlagRepo = ManuellInntektGrunnlagRepositoryImpl(it)
 
-            repo.lagre(behandling.id, setOf(manuellVurdering2024, manuellVurdering2025))
-            val uthentet = repo.hentHvisEksisterer(behandling.id)
+            manuellInntektGrunnlagRepo.lagre(behandling.id, setOf(manuellVurdering2024, manuellVurdering2025))
+            val uthentet = manuellInntektGrunnlagRepo.hentHvisEksisterer(behandling.id)
 
             assertThat(uthentet?.manuelleInntekter).hasSize(2)
         }
@@ -116,8 +127,6 @@ class ManuellInntektGrunnlagRepositoryImplTest {
 
     @Test
     fun `lagre for flere år og så fjerne et år`() {
-        val dataSource = InitTestDatabase.freshDatabase()
-
         val behandling = dataSource.transaction {
             val sak = sak(it, Periode(1 januar 2023, 31 desember 2023))
             finnEllerOpprettBehandling(it, sak)
@@ -138,15 +147,15 @@ class ManuellInntektGrunnlagRepositoryImplTest {
         )
 
         dataSource.transaction {
-            val repo = ManuellInntektGrunnlagRepositoryImpl(it)
+            val manuellInntektGrunnlagRepo = ManuellInntektGrunnlagRepositoryImpl(it)
 
-            repo.lagre(behandling.id, setOf(manuellVurdering2024, manuellVurdering2025))
-            val uthentet = repo.hentHvisEksisterer(behandling.id)
+            manuellInntektGrunnlagRepo.lagre(behandling.id, setOf(manuellVurdering2024, manuellVurdering2025))
+            val uthentet = manuellInntektGrunnlagRepo.hentHvisEksisterer(behandling.id)
 
             assertThat(uthentet?.manuelleInntekter).hasSize(2)
 
-            repo.lagre(behandling.id, setOf(manuellVurdering2024))
-            val uthentetEtterSletting = repo.hentHvisEksisterer(behandling.id)
+            manuellInntektGrunnlagRepo.lagre(behandling.id, setOf(manuellVurdering2024))
+            val uthentetEtterSletting = manuellInntektGrunnlagRepo.hentHvisEksisterer(behandling.id)
 
             assertThat(uthentetEtterSletting?.manuelleInntekter).hasSize(1)
         }

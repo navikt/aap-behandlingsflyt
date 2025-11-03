@@ -22,16 +22,19 @@ import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.dbtest.TestDataSource.Companion.invoke
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 
 internal class OvergangUføreRepositoryImplTest {
-    private val dataSource = InitTestDatabase.freshDatabase()
+    @AutoClose
+    private val dataSource = TestDataSource()
 
     @Test
     fun `Finner ikke overgang til uføre grunnlag hvis ikke lagret`() {
@@ -75,37 +78,39 @@ internal class OvergangUføreRepositoryImplTest {
 
     @Test
     fun `test sletting`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
-            val sak = sak(connection)
-            val behandling = finnEllerOpprettBehandling(connection, sak)
-            val overgangUføreRepository = OvergangUføreRepositoryImpl(connection)
-            overgangUføreRepository.lagre(
-                behandling.id,
-                listOf(
-                    OvergangUføreVurdering(
-                        begrunnelse = "test",
-                        brukerHarSøktOmUføretrygd = true,
-                        brukerHarFåttVedtakOmUføretrygd = "NEI",
-                        brukerRettPåAAP = true,
-                        virkningsdato = LocalDate.now(),
-                        vurdertAv = "Saks behandler",
+        TestDataSource().use { dataSource ->
+            dataSource.transaction { connection ->
+                val sak = sak(connection)
+                val behandling = finnEllerOpprettBehandling(connection, sak)
+                val overgangUføreRepository = OvergangUføreRepositoryImpl(connection)
+                overgangUføreRepository.lagre(
+                    behandling.id,
+                    listOf(
+                        OvergangUføreVurdering(
+                            begrunnelse = "test",
+                            brukerHarSøktOmUføretrygd = true,
+                            brukerHarFåttVedtakOmUføretrygd = "NEI",
+                            brukerRettPåAAP = true,
+                            virkningsdato = LocalDate.now(),
+                            vurdertAv = "Saks behandler",
+                        )
                     )
                 )
-            )
-            overgangUføreRepository.lagre(
-                behandling.id,
-                listOf(
-                    OvergangUføreVurdering(
-                        begrunnelse = "test",
-                        brukerHarSøktOmUføretrygd = true,
-                        brukerHarFåttVedtakOmUføretrygd = "NEI",
-                        brukerRettPåAAP = true,
-                        virkningsdato = LocalDate.now(),
-                        vurdertAv = "Saks behandler",
+                overgangUføreRepository.lagre(
+                    behandling.id,
+                    listOf(
+                        OvergangUføreVurdering(
+                            begrunnelse = "test",
+                            brukerHarSøktOmUføretrygd = true,
+                            brukerHarFåttVedtakOmUføretrygd = "NEI",
+                            brukerRettPåAAP = true,
+                            virkningsdato = LocalDate.now(),
+                            vurdertAv = "Saks behandler",
+                        )
                     )
                 )
-            )
-            assertDoesNotThrow { overgangUføreRepository.slett(behandling.id) }
+                assertDoesNotThrow { overgangUføreRepository.slett(behandling.id) }
+            }
         }
     }
 
@@ -167,38 +172,15 @@ internal class OvergangUføreRepositoryImplTest {
             overgangUføreRepo.lagre(revurdering.id, listOf(overgangUføreVurdering3))
 
             val historikk = overgangUføreRepo.hentHistoriskeOvergangUforeVurderinger(revurdering.sakId, revurdering.id)
-            assertEquals(listOf(overgangUføreVurdering1), historikk)
+            assertThat(historikk)
+                .usingRecursiveComparison()
+                .ignoringFields("opprettet")
+                .isEqualTo(listOf(overgangUføreVurdering1))
         }
     }
 
     private companion object {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-
-        fun assertEquals(expected: List<OvergangUføreVurdering>, actual: List<OvergangUføreVurdering>) {
-            assertEquals(expected.size, actual.size)
-            for ((expected, actual) in expected.zip(actual)) {
-                assertEquals(expected, actual)
-            }
-        }
-
-        fun assertEquals(expected: OvergangUføreVurdering, actual: OvergangUføreVurdering) {
-            assertEquals(expected.begrunnelse, actual.begrunnelse)
-            assertEquals(expected.brukerHarSøktOmUføretrygd, actual.brukerHarSøktOmUføretrygd)
-
-            if (expected.brukerHarFåttVedtakOmUføretrygd != null && actual.brukerHarFåttVedtakOmUføretrygd != null) {
-                assertEquals(expected.brukerHarFåttVedtakOmUføretrygd, actual.brukerHarFåttVedtakOmUføretrygd)
-            }
-
-            if (expected.brukerRettPåAAP != null && actual.brukerRettPåAAP != null) {
-                assertEquals(expected.brukerRettPåAAP, actual.brukerRettPåAAP)
-            }
-
-            if (expected.virkningsdato != null && actual.virkningsdato != null) {
-                assertEquals(expected.virkningsdato, actual.virkningsdato)
-            }
-
-            assertEquals(expected.vurdertAv, actual.vurdertAv)
-        }
     }
 
     private fun sak(connection: DBConnection): Sak {

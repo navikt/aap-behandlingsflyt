@@ -212,7 +212,7 @@ class ForutgåendeMedlemskapVurderingService {
         forutgåendePeriode: Periode
     ): TilhørighetVurdering {
         val fantStatsborgerskapUtenforEØSiPerioden =
-            grunnlag?.brukerPersonopplysning?.statsborgerskap?.any { it.land !in enumValues<EØSLand>().map { eøsLand -> eøsLand.name } }
+            grunnlag?.brukerPersonopplysning?.statsborgerskap?.any { it.land !in enumValues<EØSLandEllerLandMedAvtale>().map { eøsLand -> eøsLand.name } }
 
         val manglerStatsborgerskapGrunnlag = grunnlag?.brukerPersonopplysning?.statsborgerskap?.map {
             ManglerStatsborgerskapGrunnlag(

@@ -2,10 +2,9 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsev
 
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
-import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusForeldrepengerGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
+import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusForeldrepengerGateway
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusSykepengerGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
@@ -17,6 +16,7 @@ import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
@@ -25,26 +25,26 @@ import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.TestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import javax.sql.DataSource
 
 @Fakes
 class SamordningYtelseVurderingServiceTest {
-    @TestDatabase
-    lateinit var dataSource: DataSource
+
+    @AutoClose
+    private val dataSource = TestDataSource()
 
     @Test
     fun `krever avklaring når endringer kommer`() {
         dataSource.transaction { connection ->
             val ytelseRepo = SamordningYtelseRepositoryImpl(connection)
             val repo = SamordningVurderingRepositoryImpl(connection)
-            val service = SamordningYtelseVurderingInformasjonskrav(
+            val samordningYtelseVurderingInformasjonskrav = SamordningYtelseVurderingInformasjonskrav(
                 SamordningYtelseRepositoryImpl(connection),
                 FakeTidligereVurderinger(),
                 AbakusForeldrepengerGateway(),
@@ -54,19 +54,29 @@ class SamordningYtelseVurderingServiceTest {
             val kontekst = opprettSakdata(connection)
 
             // Når vi for første gang får opplysninger er det en endring
-            val ingenData = service.oppdater(kontekst)
-            assertEquals(Informasjonskrav.Endret.ENDRET, ingenData)
+            val ingenData = klargjørOgOppdater(samordningYtelseVurderingInformasjonskrav, kontekst)
+            assertThat(ingenData).isEqualTo(Informasjonskrav.Endret.ENDRET)
 
             // Data er uforandret
-            val sammeData = service.oppdater(kontekst)
-            assertEquals(Informasjonskrav.Endret.IKKE_ENDRET, sammeData)
+            val sammeData = klargjørOgOppdater(samordningYtelseVurderingInformasjonskrav, kontekst)
+            assertThat(sammeData).isEqualTo(Informasjonskrav.Endret.IKKE_ENDRET)
 
             // Ny data har kommet inn
             opprettYtelseData(ytelseRepo, kontekst.behandlingId)
             opprettVurderingData(repo, kontekst.behandlingId)
-            val nyData = service.oppdater(kontekst)
-            assertEquals(Informasjonskrav.Endret.ENDRET, nyData)
+            val nyData = klargjørOgOppdater(samordningYtelseVurderingInformasjonskrav, kontekst)
+            assertThat(nyData).isEqualTo(Informasjonskrav.Endret.ENDRET)
         }
+    }
+
+    private fun klargjørOgOppdater(
+        samordningYtelseVurderingInformasjonskrav: SamordningYtelseVurderingInformasjonskrav,
+        kontekst: FlytKontekstMedPerioder
+    ): Informasjonskrav.Endret {
+        val input = samordningYtelseVurderingInformasjonskrav.klargjør(kontekst)
+        val data = samordningYtelseVurderingInformasjonskrav.hentData(input)
+        val ingenData = samordningYtelseVurderingInformasjonskrav.oppdater(input, data, kontekst)
+        return ingenData
     }
 
     @Test
@@ -77,7 +87,7 @@ class SamordningYtelseVurderingServiceTest {
             1, listOf(
                 SamordningYtelse(
                     Ytelse.SYKEPENGER,
-                    listOf(
+                    setOf(
                         SamordningYtelsePeriode(
                             Periode(nå.plusDays(5), nå.plusDays(10)),
                             Prosent(50),
@@ -94,7 +104,7 @@ class SamordningYtelseVurderingServiceTest {
                 ),
                 SamordningYtelse(
                     Ytelse.SYKEPENGER,
-                    listOf(
+                    setOf(
                         SamordningYtelsePeriode(
                             Periode(nå.plusDays(5), nå.plusDays(10)),
                             Prosent(50),
@@ -110,7 +120,7 @@ class SamordningYtelseVurderingServiceTest {
         val ny = listOf(
             SamordningYtelse(
                 Ytelse.SYKEPENGER,
-                listOf(
+                setOf(
                     SamordningYtelsePeriode(
                         Periode(nå.plusDays(5), nå.plusDays(10)),
                         Prosent(50),
@@ -122,7 +132,7 @@ class SamordningYtelseVurderingServiceTest {
             ),
             SamordningYtelse(
                 Ytelse.SYKEPENGER,
-                listOf(
+                setOf(
                     SamordningYtelsePeriode(
                         Periode(nå.plusDays(5), nå.plusDays(10)),
                         Prosent(40),
@@ -146,8 +156,8 @@ class SamordningYtelseVurderingServiceTest {
         ).isFalse()
     }
 
-    private fun opprettVurderingData(repo: SamordningVurderingRepositoryImpl, behandlingId: BehandlingId) {
-        repo.lagreVurderinger(
+    private fun opprettVurderingData(samordningVurderingRepo: SamordningVurderingRepositoryImpl, behandlingId: BehandlingId) {
+        samordningVurderingRepo.lagreVurderinger(
             behandlingId,
             SamordningVurderingGrunnlag(
                 begrunnelse = "En god begrunnelse",
@@ -172,13 +182,13 @@ class SamordningYtelseVurderingServiceTest {
         )
     }
 
-    private fun opprettYtelseData(repo: SamordningYtelseRepositoryImpl, behandlingId: BehandlingId) {
-        repo.lagre(
+    private fun opprettYtelseData(samordningYtelseRepo: SamordningYtelseRepositoryImpl, behandlingId: BehandlingId) {
+        samordningYtelseRepo.lagre(
             behandlingId,
             listOf(
                 SamordningYtelse(
                     Ytelse.SYKEPENGER,
-                    listOf(
+                    setOf(
                         SamordningYtelsePeriode(
                             Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
                             Prosent(50),

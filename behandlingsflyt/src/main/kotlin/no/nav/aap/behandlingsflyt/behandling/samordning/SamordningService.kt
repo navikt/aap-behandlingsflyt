@@ -57,12 +57,15 @@ class SamordningService(
     fun perioderSomIkkeHarBlittVurdert(
         grunnlag: SamordningYtelseGrunnlag?,
         tidligereVurderinger: Tidslinje<List<Pair<Ytelse, SamordningVurderingPeriode>>>
-    ): Tidslinje<List<Pair<Ytelse, SamordningYtelsePeriode>>> {
+    ): Tidslinje<List<Ytelse>> {
         val hentedeYtelserByManuelleYtelser =
             grunnlag?.ytelser.orEmpty().filter { it.ytelseType.type == AvklaringsType.MANUELL }
                 .map { ytelse ->
-                    Tidslinje(ytelse.ytelsePerioder.map { Segment(it.periode, Pair(ytelse.ytelseType, it)) })
-                }.fold(Tidslinje.empty<List<Pair<Ytelse, SamordningYtelsePeriode>>>()) { acc, curr ->
+                    val tidslinjePerPeriode = ytelse.ytelsePerioder.map { Tidslinje(it.periode, ytelse.ytelseType) }
+                    tidslinjePerPeriode.fold(Tidslinje.empty<Ytelse>()) { acc, curr ->
+                        acc.kombiner(curr, StandardSammenslåere.prioriterHøyreSideCrossJoin())
+                    }.komprimer()
+                }.fold(Tidslinje.empty<List<Ytelse>>()) { acc, curr ->
                     acc.kombiner(curr, slåSammenTilListe())
                 }
 
@@ -74,10 +77,14 @@ class SamordningService(
 
     fun vurder(
         grunnlag: SamordningYtelseGrunnlag?,
-        vurderinger: Tidslinje<List<Pair<Ytelse, SamordningVurderingPeriode>>>
+        manuelleVurderinger: Tidslinje<List<Pair<Ytelse, SamordningVurderingPeriode>>>
     ): Tidslinje<SamordningGradering> {
-        val hentedeYtelserFraRegister =
-            grunnlag?.ytelser.orEmpty().map { ytelse ->
+        /**
+         * Henter kun automatiske ytelser fra register - disse skal ikke ha overlappende perioder
+         * Pr nå har vi ingen typer som er satt opp til å vurderes automatisk
+         */
+        val hentedeYtelserFraRegisterForAutomatiskVurdering =
+            grunnlag?.ytelser.orEmpty().filter { it.ytelseType.type == AvklaringsType.AUTOMATISK }.map { ytelse ->
                 Tidslinje(ytelse.ytelsePerioder.map { Segment(it.periode, Pair(ytelse.ytelseType, it)) })
             }.fold(Tidslinje.empty<List<Pair<Ytelse, SamordningYtelsePeriode>>>()) { acc, curr ->
                 acc.kombiner(curr, slåSammenTilListe())
@@ -86,11 +93,8 @@ class SamordningService(
         // Slå sammen med vurderinger og regn ut graderinger
 
         val samordningTidslinje =
-            hentedeYtelserFraRegister.kombiner(vurderinger, JoinStyle.OUTER_JOIN { periode, venstre, høyre ->
-                if (venstre != null && venstre.verdi.any { it.first.type == AvklaringsType.MANUELL }) {
-                    requireNotNull(høyre) { "Mangler manuell vurdering for periode ${venstre.periode}" }
-                }
-
+            hentedeYtelserFraRegisterForAutomatiskVurdering.kombiner(manuelleVurderinger, JoinStyle.OUTER_JOIN { periode, venstre, høyre ->
+                // Manuelt vurderte perioder er allerede validert
                 val manueltVurderteGraderinger =
                     høyre?.verdi.orEmpty().associate { it.first to it.second }
                         .mapValues { it.value.gradering!! }

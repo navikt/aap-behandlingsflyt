@@ -160,7 +160,7 @@ class StegOrkestrator(
             StegStatus.OPPDATER_FAKTAGRUNNLAG -> oppdaterFaktagrunnlag(kontekst, faktagrunnlagForGjeldendeSteg)
             StegStatus.AVKLARINGSPUNKT -> harAvklaringspunkt(aktivtSteg, kontekst.behandlingId)
             StegStatus.AVSLUTTER -> Fortsett
-            StegStatus.TILBAKEFØRT -> behandleStegBakover(behandlingSteg, kontekst)
+            StegStatus.TILBAKEFØRT -> Fortsett
         }
 
         val nyStegTilstand = StegTilstand(stegType = aktivtSteg.type(), stegStatus = gjeldendeStegStatus, aktiv = true)
@@ -240,11 +240,6 @@ class StegOrkestrator(
             return Stopp
         }
 
-        return Fortsett
-    }
-
-    private fun behandleStegBakover(behandlingSteg: BehandlingSteg, kontekst: FlytKontekstMedPerioder): Transisjon {
-        behandlingSteg.vedTilbakeføring(kontekst)
         return Fortsett
     }
 

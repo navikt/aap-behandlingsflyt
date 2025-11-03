@@ -25,10 +25,15 @@ data class Barn(
         /**
          * Returnerer perioden hvor barnet er mindre enn 18 år.
          */
-        fun periodeMedRettTil(fødselsdato: Fødselsdato): Periode {
+        fun periodeMedRettTil(fødselsdato: Fødselsdato, dødsdato: Dødsdato?): Periode {
             val fom = fødselsdato.toLocalDate()
-            // TODO: ta hensyn til dødsdato hvis den er satt (Fredrik)
-            return Periode(fom, fom.plusYears(18).minusDays(1))
+            val attenÅr = fom.plusYears(18).minusDays(1)
+            val sluttDato = if (dødsdato != null) {
+                minOf(attenÅr, dødsdato.toLocalDate())
+            } else {
+                attenÅr
+            }
+            return Periode(fom, sluttDato)
         }
     }
 }

@@ -6,7 +6,6 @@ import no.nav.aap.lookup.repository.Repository
 
 interface RefusjonkravRepository: Repository {
     fun hentHvisEksisterer(behandlingId: BehandlingId): List<RefusjonkravVurdering>?
-    fun hentAlleVurderingerPåSak(sakId: SakId): List<RefusjonkravVurdering>
     fun hentHistoriskeVurderinger(sakId: SakId, behandlingId: BehandlingId): List<RefusjonkravVurdering>
     fun lagre(sakId: SakId, behandlingId: BehandlingId, refusjonkravVurderinger: List<RefusjonkravVurdering>)
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)

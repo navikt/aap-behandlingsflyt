@@ -8,6 +8,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_END
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.IngenInput
+import no.nav.aap.behandlingsflyt.faktagrunnlag.IngenRegisterData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -15,25 +17,24 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
-class AktivitetspliktInformasjonskrav(
+class Aktivitetsplikt11_7Informasjonskrav(
     private val tidligereVurderinger: TidligereVurderinger,
     private val behandlingRepository: BehandlingRepository,
     private val aktivitetsplikt11_7Repository: Aktivitetsplikt11_7Repository,
     private val unleashGateway: UnleashGateway
-) : Informasjonskrav {
+) : Informasjonskrav<IngenInput, IngenRegisterData> {
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.AKTIVITETSPLIKT
 
         override fun konstruer(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
-        ): AktivitetspliktInformasjonskrav {
-            return AktivitetspliktInformasjonskrav(
+        ): Aktivitetsplikt11_7Informasjonskrav {
+            return Aktivitetsplikt11_7Informasjonskrav(
                 TidligereVurderingerImpl(repositoryProvider),
                 repositoryProvider.provide(),
                 repositoryProvider.provide(),
@@ -49,13 +50,20 @@ class AktivitetspliktInformasjonskrav(
         steg: StegType,
         oppdatert: InformasjonskravOppdatert?
     ): Boolean {
-        return unleashGateway.isEnabled(BehandlingsflytFeature.Aktivitetsplikt11_7)
-                && kontekst.vurderingType in listOf(VurderingType.REVURDERING, VurderingType.EFFEKTUER_AKTIVITETSPLIKT)
+        return kontekst.vurderingType in listOf(VurderingType.REVURDERING, VurderingType.EFFEKTUER_AKTIVITETSPLIKT)
                 && !tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, steg)
     }
 
-    override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
-        if (kontekst.vurderingType == VurderingType.EFFEKTUER_AKTIVITETSPLIKT) {
+    override fun klargjør(kontekst: FlytKontekstMedPerioder) = IngenInput
+
+    override fun hentData(input: IngenInput) = IngenRegisterData
+
+    override fun oppdater(
+        input: IngenInput,
+        registerdata: IngenRegisterData,
+        kontekst: FlytKontekstMedPerioder
+    ): Informasjonskrav.Endret {
+        if (kontekst.vurderingType == VurderingType.EFFEKTUER_AKTIVITETSPLIKT) { /// vurdere å fjerne denne?
             val nyesteIverksatteAktivitetspliktBehandling =
                 behandlingRepository
                     .hentAlleFor(kontekst.sakId, listOf(TypeBehandling.Aktivitetsplikt))

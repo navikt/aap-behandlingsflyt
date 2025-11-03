@@ -6,4 +6,5 @@ import no.nav.aap.lookup.repository.Repository
 interface KlagebehandlingKontorRepository: Repository {
     fun hentHvisEksisterer(behandlingId: BehandlingId): KlagebehandlingKontorGrunnlag?
     fun lagre(behandlingId: BehandlingId, klagevurderingKontor: KlagevurderingKontor)
+    fun deaktiverEksisterende(behandlingId: BehandlingId)
 }

@@ -3,17 +3,48 @@ plugins {
     id("behandlingsflyt.conventions")
 }
 
+tasks{
+    val projectProps by registering(WriteProperties::class) {
+        destinationFile = layout.buildDirectory.file("behandlingsflyt-version.properties")
+        // Define property.
+        property("project.version", getCheckedOutGitCommitHash())
+    }
+
+    processResources {
+        // Depend on output of the task to create properties,
+        // so the properties file will be part of the Java resources.
+
+        from(projectProps)
+    }
+}
+
+fun getCheckedOutGitCommitHash(): String {
+    if (System.getenv("GITHUB_ACTIONS") == "true") {
+        return System.getenv("GITHUB_SHA")
+    }
+    return runCommand("git rev-parse --verify HEAD")
+}
+
+fun runCommand(command: String): String {
+    val execResult = providers.exec {
+        this.workingDir = project.projectDir
+        commandLine(command.split("\\s".toRegex()))
+    }.standardOutput.asText
+
+    return execResult.get()
+}
+
 dependencies {
     api(project(":kontrakt"))
-    implementation("io.micrometer:micrometer-registry-prometheus:1.15.4")
-    implementation("ch.qos.logback:logback-classic:1.5.19")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.15.5")
+    implementation("ch.qos.logback:logback-classic:1.5.20")
     implementation("net.logstash.logback:logstash-logback-encoder:8.1")
-    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.20.1")
+    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.21.0")
 
     api(libs.tilgangPlugin)
     api(libs.tilgangKontrakt)
-    api("no.nav.aap.brev:kontrakt:0.0.157")
-    api("no.nav.aap.meldekort:kontrakt:0.0.129")
+    api("no.nav.aap.brev:kontrakt:0.0.169")
+    api("no.nav.aap.meldekort:kontrakt:0.0.141")
     api(libs.motor)
     api(libs.gateway)
     api(libs.utbetalKontrakt)
@@ -25,7 +56,7 @@ dependencies {
     implementation(libs.verdityper)
     implementation(libs.tidslinje)
     implementation(kotlin("reflect"))
-    implementation("org.flywaydb:flyway-database-postgresql:11.13.3")
+    implementation("org.flywaydb:flyway-database-postgresql:11.15.0")
     runtimeOnly("org.postgresql:postgresql") // låst versjon i root build.gradle.kts
 
 

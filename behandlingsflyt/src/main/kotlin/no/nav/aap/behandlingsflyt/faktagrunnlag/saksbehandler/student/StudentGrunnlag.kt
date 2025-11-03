@@ -12,7 +12,7 @@ class StudentGrunnlag(
     fun somTidslinje(rettighetsperiode: Periode): Tidslinje<StudentVurdering> {
         /* TODO: periodisering av studentvilkåret */
         return if (studentvurdering == null) {
-            tidslinjeOf()
+            Tidslinje.empty()
         } else {
             tidslinjeOf(rettighetsperiode to studentvurdering)
         }

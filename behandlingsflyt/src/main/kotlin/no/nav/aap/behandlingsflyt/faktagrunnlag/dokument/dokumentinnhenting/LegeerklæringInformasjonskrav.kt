@@ -2,12 +2,14 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting
 
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.IngenRegisterData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
+import no.nav.aap.behandlingsflyt.faktagrunnlag.IngenInput
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -18,7 +20,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class LegeerklæringInformasjonskrav private constructor(
     private val mottaDokumentService: MottaDokumentService,
     private val tidligereVurderinger: TidligereVurderinger,
-) : Informasjonskrav {
+) : Informasjonskrav<IngenInput, IngenRegisterData> {
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.LEGEERKLÆRING
 
@@ -44,7 +46,15 @@ class LegeerklæringInformasjonskrav private constructor(
                 !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
     }
 
-    override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
+    override fun klargjør(kontekst: FlytKontekstMedPerioder) = IngenInput
+
+    override fun hentData(input: IngenInput) = IngenRegisterData
+
+    override fun oppdater(
+        input: IngenInput,
+        registerdata: IngenRegisterData,
+        kontekst: FlytKontekstMedPerioder
+    ): Informasjonskrav.Endret {
         val ubehandledeLegeerklæringer = mottaDokumentService.legeerklæringerSomIkkeHarBlittBehandlet(kontekst.sakId)
         val ubehandledeDialogmeldinger = mottaDokumentService.dialogmeldingerSomIkkeHarBlittBehandlet(kontekst.sakId)
 

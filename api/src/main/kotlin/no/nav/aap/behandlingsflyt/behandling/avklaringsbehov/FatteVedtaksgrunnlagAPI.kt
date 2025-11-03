@@ -135,6 +135,7 @@ fun utledHistorikk(avklaringsbehovene: Avklaringsbehovene): List<Historikk> {
                     Aksjon.FATTET_VEDTAK
                 }
             }
+            // Ikke ubrukt, brukes i neste entry
             tidsstempelForrigeBehov = behov.endring.tidsstempel
             Historikk(aksjon, behov.endring.tidsstempel, behov.endring.endretAv)
         }.sorted()
@@ -158,6 +159,7 @@ private fun utledEndringerSidenSist(
 
 private fun beslutterVurdering(avklaringsbehovene: Avklaringsbehovene, flyt: BehandlingFlyt): List<TotrinnsVurdering> {
     return avklaringsbehovene.alle()
+        .filter { it.erIkkeAvbrutt() }
         .filter { it.erTotrinn() }
         .sortedWith(compareBy(flyt.stegComparator) { it.løsesISteg() })
         .map { tilKvalitetssikring(it) }

@@ -1,8 +1,8 @@
 [versions]
-ktor = "3.3.0"
-komponenter = "1.0.387"
-tilgang = "1.0.132"
-utbetaling = "0.0.62"
+ktor = "3.3.1"
+komponenter = "1.0.417"
+tilgang = "1.0.144"
+utbetaling = "0.0.66"
 junit = "6.0.0"
 
 [libraries]

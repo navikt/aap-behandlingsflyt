@@ -52,7 +52,7 @@ fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(
                         ?.let { overgangUforeRepository.hentHvisEksisterer(it) }
                         ?.vurderinger.orEmpty()
                     val vurdering = nåTilstand
-                        .filterNot { it in vedtatteOvergangUførevurderinger }
+                        .filterNot { gjeldendeVurdering -> gjeldendeVurdering.copy(opprettet = null) in vedtatteOvergangUførevurderinger.map { it.copy(opprettet = null) } }
                         .singleOrNull()
 
                     val gjeldendeSykdomsvurderinger =

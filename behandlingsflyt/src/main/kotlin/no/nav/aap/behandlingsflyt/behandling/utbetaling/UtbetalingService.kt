@@ -1,8 +1,11 @@
 package no.nav.aap.behandlingsflyt.behandling.utbetaling
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Reduksjon11_9
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Reduksjon11_9Repository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverRepository
@@ -20,9 +23,14 @@ import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.utbetal.tilkjentytelse.MeldeperiodeDto
+import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseAvventDto
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseDetaljerDto
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseDto
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelsePeriodeDto
+import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseTrekkDto
+import org.slf4j.LoggerFactory
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -32,13 +40,13 @@ class UtbetalingService(
     private val tilkjentYtelseRepository: TilkjentYtelseRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val vedtakRepository: VedtakRepository,
-    private val refusjonskravRepository: RefusjonkravRepository,
-    private val tjenestepensjonRefusjonsKravVurderingRepository: TjenestepensjonRefusjonsKravVurderingRepository,
-    private val samordningAndreStatligeYtelserRepository: SamordningAndreStatligeYtelserRepository,
-    private val samordningArbeidsgiverRepository: SamordningArbeidsgiverRepository,
     private val underveisRepository: UnderveisRepository,
-    private val unleashGateway: UnleashGateway,
+    private val reduksjon11_9Repository: Reduksjon11_9Repository,
+    private val avventUtbetalingService: AvventUtbetalingService,
 ) {
+
+    private val log = LoggerFactory.getLogger(javaClass)
+
     constructor(
         repositoryProvider: RepositoryProvider,
         gatewayProvider: GatewayProvider,
@@ -48,16 +56,23 @@ class UtbetalingService(
         tilkjentYtelseRepository = repositoryProvider.provide<TilkjentYtelseRepository>(),
         avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>(),
         vedtakRepository = repositoryProvider.provide<VedtakRepository>(),
-        refusjonskravRepository = repositoryProvider.provide<RefusjonkravRepository>(),
-        tjenestepensjonRefusjonsKravVurderingRepository = repositoryProvider.provide<TjenestepensjonRefusjonsKravVurderingRepository>(),
-        samordningAndreStatligeYtelserRepository = repositoryProvider.provide<SamordningAndreStatligeYtelserRepository>(),
-        samordningArbeidsgiverRepository = repositoryProvider.provide<SamordningArbeidsgiverRepository>(),
         underveisRepository = repositoryProvider.provide<UnderveisRepository>(),
-        unleashGateway = gatewayProvider.provide<UnleashGateway>()
+        reduksjon11_9Repository = repositoryProvider.provide<Reduksjon11_9Repository>(),
+        avventUtbetalingService = AvventUtbetalingService(
+            refusjonskravRepository = repositoryProvider.provide<RefusjonkravRepository>(),
+            tjenestepensjonRefusjonsKravVurderingRepository = repositoryProvider.provide<TjenestepensjonRefusjonsKravVurderingRepository>(),
+            samordningAndreStatligeYtelserRepository = repositoryProvider.provide<SamordningAndreStatligeYtelserRepository>(),
+            samordningArbeidsgiverYtelserRepository = repositoryProvider.provide<SamordningArbeidsgiverRepository>(),
+            unleashGateway = gatewayProvider.provide<UnleashGateway>(),
+        ),
     )
 
 
-    fun lagTilkjentYtelseForUtbetaling(sakId: SakId, behandlingId: BehandlingId, simulering: Boolean = false): TilkjentYtelseDto? {
+    fun lagTilkjentYtelseForUtbetaling(
+        sakId: SakId,
+        behandlingId: BehandlingId,
+        simulering: Boolean = false
+    ): TilkjentYtelseDto? {
         val sak = sakRepository.hent(sakId)
         val behandling = behandlingRepository.hent(behandlingId)
 
@@ -68,6 +83,8 @@ class UtbetalingService(
 
         val forrigeBehandling = behandling.forrigeBehandlingId?.let { behandlingRepository.hent(it) }
         val tilkjentYtelse = tilkjentYtelseRepository.hentHvisEksisterer(behandlingId)
+        val forrigeTilkjentYtelse =
+            forrigeBehandling?.id?.let { tilkjentYtelseRepository.hentHvisEksisterer(forrigeBehandling.id) }
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
 
         return if (tilkjentYtelse != null) {
@@ -84,29 +101,32 @@ class UtbetalingService(
             } else {
                 vedtakRepository.hent(behandlingId)?.vedtakstidspunkt ?: error("Fant ikke vedtak")
             }
-            val avventUtbetaling = if (tilkjentYtelse.isNotEmpty()) {
-                val førsteVedtaksdato = finnFørsteVedtaksdato(sakId) ?: LocalDate.now()
-                val avventUtbetalingService = AvventUtbetalingService(
-                    refusjonskravRepository = refusjonskravRepository,
-                    tjenestepensjonRefusjonsKravVurderingRepository = tjenestepensjonRefusjonsKravVurderingRepository,
-                    samordningAndreStatligeYtelserRepository = samordningAndreStatligeYtelserRepository,
-                    samordningArbeidsgiverYtelserRepository = samordningArbeidsgiverRepository,
-                    unleashGateway = unleashGateway,
-                )
-                avventUtbetalingService.finnEventuellAvventUtbetaling(behandlingId, førsteVedtaksdato, tilkjentYtelse.finnHelePerioden())
-            } else {
-                null
-            }
+            val vedtakstidspunktFraForrigeBehandling =
+                forrigeBehandling?.id?.let { vedtakRepository.hent(it)?.vedtakstidspunkt }
+            val avventUtbetaling = utledAvventUtbetaling(tilkjentYtelse, sakId, behandlingId)
+            val reduksjoner = reduksjon11_9Repository.hent(behandlingId)
+
+            val nyMeldeperiode = utledNyMeldeperiode(
+                tilkjentYtelse = tilkjentYtelse,
+                forrigeTilkjentYtelse = forrigeTilkjentYtelse,
+                vedtaksdatoGjeldendeBehandling = vedtakstidspunkt.toLocalDate(),
+                vedtaksdatoForrigeBehandling = vedtakstidspunktFraForrigeBehandling?.toLocalDate()
+            )
+
+            log.info("Ny meldeperiode for tilkjent ytelse: $nyMeldeperiode")
+
             TilkjentYtelseDto(
                 saksnummer = saksnummer,
                 behandlingsreferanse = behandlingsreferanse,
-                forrigeBehandlingsreferanse  = forrigeBehandlingRef,
+                forrigeBehandlingsreferanse = forrigeBehandlingRef,
                 personIdent = personIdent,
                 vedtakstidspunkt = vedtakstidspunkt,
                 beslutterId = beslutterIdent,
                 saksbehandlerId = saksbehandlerIdent,
                 perioder = tilkjentYtelse.tilTilkjentYtelsePeriodeDtoer(),
                 avvent = avventUtbetaling,
+                trekk = reduksjoner.tilTilkjentYtelseTrekkDtoer(),
+                nyMeldeperiode = nyMeldeperiode
             )
 
         } else {
@@ -114,11 +134,71 @@ class UtbetalingService(
         }
     }
 
+    /**
+     *  aap-utbetal utleder nye perioder som skal sendes basert på vedtakstidspunkt >= utbetalingsdato og periode.tom <= vedtaksdato
+     */
+    private fun utledNyMeldeperiode(
+        tilkjentYtelse: List<TilkjentYtelsePeriode>,
+        forrigeTilkjentYtelse: List<TilkjentYtelsePeriode>?,
+        vedtaksdatoGjeldendeBehandling: LocalDate,
+        vedtaksdatoForrigeBehandling: LocalDate?,
+    ): MeldeperiodeDto? {
+
+        log.info("Utleder ny meldeperiode for tilkjent ytelse med vedtaksdato: $vedtaksdatoGjeldendeBehandling")
+        val alleredeUtbetaltPeriode = forrigeTilkjentYtelse?.filter {
+            it.tilkjent.utbetalingsdato <= vedtaksdatoForrigeBehandling && it.periode.tom <= vedtaksdatoForrigeBehandling && it.tilkjent.redusertDagsats().verdi() > BigDecimal.ZERO
+        }?.let {
+            if (it.isNotEmpty()) {
+                it.tilTidslinje().helePerioden()
+            } else {
+                null
+            }
+        }
+
+        log.info("Allerede utbetalt periode: $alleredeUtbetaltPeriode")
+
+        val perioderSomKanUtbetales =
+            tilkjentYtelse.filter { it.tilkjent.utbetalingsdato <= vedtaksdatoGjeldendeBehandling && it.periode.tom <= vedtaksdatoGjeldendeBehandling && it.tilkjent.redusertDagsats().verdi() > BigDecimal.ZERO }
+
+        log.info("Antall perioder som kan utbetales: ${perioderSomKanUtbetales.size}")
+
+        val nyePerioderSomKanUtbetales =
+            alleredeUtbetaltPeriode?.let { periode -> perioderSomKanUtbetales.filterNot { periode.inneholder(it.periode) } }
+                ?: perioderSomKanUtbetales
+
+        return if (nyePerioderSomKanUtbetales.isNotEmpty()) {
+            MeldeperiodeDto(
+                fom = nyePerioderSomKanUtbetales.minOf { it.periode.fom },
+                tom = nyePerioderSomKanUtbetales.maxOf { it.periode.tom }
+            )
+        } else {
+            null
+        }
+    }
+
+    private fun utledAvventUtbetaling(
+        tilkjentYtelse: List<TilkjentYtelsePeriode>,
+        sakId: SakId,
+        behandlingId: BehandlingId
+    ): TilkjentYtelseAvventDto? {
+        val avventUtbetaling = if (tilkjentYtelse.isNotEmpty()) {
+            val førsteVedtaksdato = finnFørsteVedtaksdato(sakId) ?: LocalDate.now()
+            avventUtbetalingService.finnEventuellAvventUtbetaling(
+                behandlingId,
+                førsteVedtaksdato,
+                tilkjentYtelse.finnHelePerioden()
+            )
+        } else {
+            null
+        }
+        return avventUtbetaling
+    }
+
     private fun finnFørsteVedtaksdato(sakId: SakId): LocalDate? {
         val behandlinger = behandlingRepository.hentAlleFor(sakId)
             .sortedBy { it.opprettetTidspunkt }
 
-        val avsluttedeBehandlinger = behandlinger.filter {it.status().erAvsluttet()}
+        val avsluttedeBehandlinger = behandlinger.filter { it.status().erAvsluttet() }
 
         for (avsluttedeBehandling in avsluttedeBehandlinger) {
             val harOppfyltPeriode = underveisRepository.hentHvisEksisterer(avsluttedeBehandling.id)
@@ -163,4 +243,13 @@ class UtbetalingService(
                 )
             )
         }
+
+    private fun List<Reduksjon11_9>.tilTilkjentYtelseTrekkDtoer(): List<TilkjentYtelseTrekkDto> =
+        map {
+            TilkjentYtelseTrekkDto(
+                it.dato,
+                it.dagsats.verdi().intValueExact()
+            )
+        }
+
 }

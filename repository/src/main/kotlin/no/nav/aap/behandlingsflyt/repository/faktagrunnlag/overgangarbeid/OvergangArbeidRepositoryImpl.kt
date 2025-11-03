@@ -1,10 +1,9 @@
-package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.overganguføre
+package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.overgangarbeid
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidGrunnlag
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
@@ -33,7 +32,6 @@ class OvergangArbeidRepositoryImpl(private val connection: DBConnection) : Overg
             }
             setRowMapper { row ->
                 OvergangArbeidGrunnlag(
-                    id = row.getLong("ID"),
                     vurderinger = mapOvergangArbeidvurderinger(row.getLongOrNull("VURDERINGER_ID"))
                 )
             }
@@ -56,43 +54,20 @@ class OvergangArbeidRepositoryImpl(private val connection: DBConnection) : Overg
     private fun overgangArbeidvurderingRowMapper(row: Row): OvergangArbeidVurdering {
         return OvergangArbeidVurdering(
             begrunnelse = row.getString("BEGRUNNELSE"),
-            brukerRettPåAAP = row.getBooleanOrNull("BRUKER_RETT_PAA_AAP"),
-            vurderingenGjelderFra = row.getLocalDateOrNull("VURDERINGEN_GJELDER_FRA"),
-            virkningsdato = row.getLocalDateOrNull("VIRKNINGSDATO"),
+            brukerRettPåAAP = row.getBoolean("BRUKER_RETT_PAA_AAP"),
+            vurderingenGjelderFra = row.getLocalDate("VURDERINGEN_GJELDER_FRA"),
+            vurderingenGjelderTil = row.getLocalDateOrNull("VURDERINGEN_GJELDER_TIL"),
             vurdertAv = row.getString("VURDERT_AV"),
-            opprettet = row.getInstant("OPPRETTET_TID")
+            opprettet = row.getInstant("OPPRETTET_TID"),
+            vurdertIBehandling = BehandlingId(row.getLong("VURDERT_I_BEHANDLING")),
         )
     }
 
-    override fun hentHistoriskeOvergangArbeidVurderinger(sakId: SakId, behandlingId: BehandlingId): List<OvergangArbeidVurdering> {
-        val query = """
-            SELECT DISTINCT overgang_arbeid_vurdering.*
-            FROM overgang_arbeid_grunnlag grunnlag
-            INNER JOIN overgang_arbeid_vurderinger ON grunnlag.vurderinger_id = overgang_arbeid_vurderinger.id
-            INNER JOIN overgang_arbeid_vurdering ON overgang_arbeid_vurdering.vurderinger_id = overgang_arbeid_vurderinger.id
-            INNER JOIN behandling ON grunnlag.behandling_id = behandling.id
-            LEFT JOIN avbryt_revurdering_grunnlag ON avbryt_revurdering_grunnlag.behandling_id = behandling.id
-            WHERE grunnlag.aktiv AND behandling.sak_id = ?
-                AND behandling.opprettet_tid < (select a.opprettet_tid from behandling a where a.id = ?)
-                AND avbryt_revurdering_grunnlag.behandling_id IS NULL
-            ORDER BY overgang_arbeid_vurdering.opprettet_tid
-        """.trimIndent()
-
-        return connection.queryList(query) {
-            setParams {
-                setLong(1, sakId.id)
-                setLong(2, behandlingId.id)
-            }
-            setRowMapper(::overgangArbeidvurderingRowMapper)
-        }
-    }
-
-    override fun lagre(behandlingId: BehandlingId, overgangarbeidvurderinger: List<OvergangArbeidVurdering>) {
+    override fun lagre(behandlingId: BehandlingId, overgangArbeidVurderinger: List<OvergangArbeidVurdering>) {
         val overgangArbeidGrunnlag = hentHvisEksisterer(behandlingId)
 
         val nyttGrunnlag = OvergangArbeidGrunnlag(
-            id = null,
-            vurderinger = overgangarbeidvurderinger
+            vurderinger = overgangArbeidVurderinger
         )
 
         if (overgangArbeidGrunnlag != nyttGrunnlag) {
@@ -151,16 +126,18 @@ class OvergangArbeidRepositoryImpl(private val connection: DBConnection) : Overg
         val overgangarbeidvurderingerId = connection.executeReturnKey("""INSERT INTO OVERGANG_ARBEID_VURDERINGER DEFAULT VALUES""")
 
         connection.executeBatch(
-            "INSERT INTO OVERGANG_ARBEID_VURDERING (BEGRUNNELSE, BRUKER_RETT_PAA_AAP, VIRKNINGSDATO, VURDERT_AV, VURDERINGER_ID, VURDERINGEN_GJELDER_FRA) VALUES (?, ?, ?, ?, ?, ?)",
+            "INSERT INTO OVERGANG_ARBEID_VURDERING (BEGRUNNELSE, BRUKER_RETT_PAA_AAP, VURDERT_AV, VURDERINGER_ID, VURDERINGEN_GJELDER_FRA, VURDERINGEN_GJELDER_TIL, VURDERT_I_BEHANDLING, OPPRETTET_TID) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             vurderinger
         ) {
             setParams { vurdering ->
                 setString(1, vurdering.begrunnelse)
                 setBoolean(2, vurdering.brukerRettPåAAP)
-                setLocalDate(3, vurdering.virkningsdato)
-                setString(4, vurdering.vurdertAv)
-                setLong(5, overgangarbeidvurderingerId)
-                setLocalDate(6, vurdering.vurderingenGjelderFra)
+                setString(3, vurdering.vurdertAv)
+                setLong(4, overgangarbeidvurderingerId)
+                setLocalDate(5, vurdering.vurderingenGjelderFra)
+                setLocalDate(6, vurdering.vurderingenGjelderTil)
+                setLong(7, vurdering.vurdertIBehandling.id)
+                setInstant(8, vurdering.opprettet)
             }
         }
 
