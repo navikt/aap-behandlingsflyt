@@ -45,7 +45,7 @@ fun NormalOpenAPIRoute.aktivitetsplikt11_9GrunnlagApi(
 
     route("api/aktivitetsplikt/{referanse}/grunnlag/brudd-11-9") {
         getGrunnlag<BehandlingReferanse, Aktivitetsplikt11_9GrunnlagDto>(
-            relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+            relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
             avklaringsbehovKode = VURDER_BRUDD_11_9_KODE
         ) { behandlingsreferanse ->

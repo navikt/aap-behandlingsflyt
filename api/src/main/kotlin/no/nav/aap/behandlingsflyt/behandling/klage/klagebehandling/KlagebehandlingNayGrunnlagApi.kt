@@ -27,7 +27,7 @@ fun NormalOpenAPIRoute.klagebehandlingNayGrunnlagApi(
     val ansattInfoService = AnsattInfoService(gatewayProvider)
     route("api/klage/{referanse}/grunnlag/klagebehandling-nay") {
         getGrunnlag<BehandlingReferanse, KlagebehandlingNayGrunnlagDto>(
-            relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+            relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
             avklaringsbehovKode = VURDER_KLAGE_NAY_KODE
         ) { req ->

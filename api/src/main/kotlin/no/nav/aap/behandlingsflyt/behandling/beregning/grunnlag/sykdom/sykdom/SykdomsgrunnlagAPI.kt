@@ -38,7 +38,7 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
     route("/api/behandling") {
         route("/{referanse}/grunnlag/sykdom/sykdom") {
             getGrunnlag<BehandlingReferanse, SykdomGrunnlagResponse>(
-                relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = Definisjon.AVKLAR_SYKDOM.kode.toString()
             ) { req ->
@@ -98,7 +98,7 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
         }
         route("/{referanse}/grunnlag/sykdom/yrkesskade") {
             getGrunnlag<BehandlingReferanse, YrkesskadeVurderingGrunnlagResponse>(
-                relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = Definisjon.AVKLAR_YRKESSKADE.kode.toString()
             ) { req ->

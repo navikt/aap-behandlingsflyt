@@ -34,7 +34,7 @@ fun NormalOpenAPIRoute.refusjonGrunnlagAPI(
     route("/api/behandling") {
         route("/{referanse}/grunnlag/refusjon") {
             getGrunnlag<BehandlingReferanse, RefusjonkravGrunnlagResponse>(
-                relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = Definisjon.REFUSJON_KRAV.kode.toString()
             ) { req ->

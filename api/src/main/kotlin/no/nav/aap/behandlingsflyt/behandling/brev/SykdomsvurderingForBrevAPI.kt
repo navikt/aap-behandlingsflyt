@@ -27,7 +27,7 @@ fun NormalOpenAPIRoute.sykdomsvurderingForBrevApi(
     val ansattInfoService = AnsattInfoService(gatewayProvider)
     route("/api/behandling/{referanse}/grunnlag/sykdomsvurdering-for-brev") {
         getGrunnlag<BehandlingReferanse, SykdomsvurderingForBrevDto>(
-            relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+            relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
             avklaringsbehovKode = Definisjon.SKRIV_SYKDOMSVURDERING_BREV.kode.toString()
 

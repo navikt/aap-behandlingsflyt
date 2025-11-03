@@ -28,7 +28,7 @@ fun NormalOpenAPIRoute.behandlendeEnhetGrunnlagApi(
 
     route("api/klage/{referanse}/grunnlag/behandlende-enhet") {
         getGrunnlag<BehandlingReferanse, BehandlendeEnhetGrunnlagDto>(
-            relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+            relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
             avklaringsbehovKode = FASTSETT_BEHANDLENDE_ENHET_KODE
         ) { req ->

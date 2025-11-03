@@ -43,7 +43,7 @@ fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(
     route("/api/behandling").tag(Tags.Behandling) {
         route("/{referanse}/grunnlag/fatte-vedtak") {
             getGrunnlag<BehandlingReferanse, FatteVedtakGrunnlagDto>(
-                relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = FATTE_VEDTAK_KODE
             ) { req ->

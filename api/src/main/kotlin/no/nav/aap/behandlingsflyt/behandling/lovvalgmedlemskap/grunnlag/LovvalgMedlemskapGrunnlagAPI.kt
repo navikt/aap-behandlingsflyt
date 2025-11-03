@@ -35,7 +35,7 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagAPI(
     route("/api/behandling") {
         route("/{referanse}/grunnlag/lovvalgmedlemskap") {
             getGrunnlag<BehandlingReferanse, LovvalgMedlemskapGrunnlagResponse>(
-                relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP.kode.toString()
             ) { req ->
@@ -66,7 +66,7 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagAPI(
 
         route("/{referanse}/grunnlag/lovvalgmedlemskap-v2") {
             getGrunnlag<BehandlingReferanse, PeriodisertLovvalgMedlemskapGrunnlagResponse>(
-                relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP.kode.toString()
             ) { req ->

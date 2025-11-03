@@ -28,7 +28,7 @@ fun NormalOpenAPIRoute.foreslaaVedtakAPI(
 ) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/foreslaa-vedtak").getGrunnlag<BehandlingReferanse, ForeslåVedtakResponse>(
-            relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+            relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
             avklaringsbehovKode = FORESLÅ_VEDTAK_KODE
         ) { behandlingReferanse ->

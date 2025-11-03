@@ -24,7 +24,7 @@ fun NormalOpenAPIRoute.svarFraAndreinstansGrunnlagApi(
 ) {
     route("api/svar-fra-andreinstans/{referanse}/grunnlag/svar-fra-andreinstans") {
         getGrunnlag<BehandlingReferanse, SvarFraAndreinstansGrunnlagDto>(
-            relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+            relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = HÅNDTER_SVAR_FRA_ANDREINSTANS_KODE
         ) { req ->

@@ -153,7 +153,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
     route("/api/behandling") {
         route("/{referanse}/grunnlag/samordning-ufore") {
             getGrunnlag<BehandlingReferanse, SamordningUføreVurderingGrunnlagDTO>(
-                relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam(
                     "referanse"
                 ),
@@ -187,7 +187,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
         }
         route("/{referanse}/grunnlag/samordning/tjenestepensjon") {
             getGrunnlag<BehandlingReferanse, TjenestepensjonGrunnlagDTO>(
-                relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam =
                     BehandlingPathParam(
                         "referanse"
@@ -233,7 +233,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
 
         route("/{referanse}/grunnlag/samordning") {
             getGrunnlag<BehandlingReferanse, SamordningYtelseVurderingGrunnlagDTO>(
-                relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = Definisjon.AVKLAR_SAMORDNING_GRADERING.kode.toString()
             ) { req ->
@@ -294,7 +294,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
 
         route("/{referanse}/grunnlag/samordning-andre-statlige-ytelser") {
             getGrunnlag<BehandlingReferanse, SamordningAndreStatligeYtelserGrunnlagDTO>(
-                relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam =
                     BehandlingPathParam(
                         "referanse"
@@ -354,7 +354,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
 
         route("/{referanse}/grunnlag/samordning-arbeidsgiver") {
             getGrunnlag<BehandlingReferanse, SamordningArbeidsgiverGrunnlagDTO>(
-                relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam =
                     BehandlingPathParam(
                         "referanse"

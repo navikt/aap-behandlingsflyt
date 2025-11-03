@@ -25,7 +25,7 @@ fun NormalOpenAPIRoute.fullmektigGrunnlagApi(
     val ansattInfoService = AnsattInfoService(gatewayProvider)
     route("api/klage/{referanse}/grunnlag/fullmektig") {
         getGrunnlag<BehandlingReferanse, FullmektigGrunnlagDto>(
-            relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+            relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
             avklaringsbehovKode = FASTSETT_FULLMEKTIG_KODE
         ) { req ->

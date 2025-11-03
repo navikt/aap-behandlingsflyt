@@ -33,7 +33,7 @@ fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(
     route("/api/behandling") {
         route("/{referanse}/grunnlag/overgangufore") {
             getGrunnlag<BehandlingReferanse, OvergangUføreGrunnlagResponse>(
-                relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = Definisjon.AVKLAR_OVERGANG_UFORE.kode.toString()
             ) { req ->

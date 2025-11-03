@@ -34,7 +34,7 @@ fun NormalOpenAPIRoute.oppholdskravGrunnlagApi(
 
     route("/api/behandling/{referanse}/grunnlag/oppholdskrav") {
         getGrunnlag<BehandlingReferanse, OppholdskravGrunnlagResponse>(
-            relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+            relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
             avklaringsbehovKode = Definisjon.AVKLAR_OPPHOLDSKRAV.kode.toString(),
         ) { req ->
