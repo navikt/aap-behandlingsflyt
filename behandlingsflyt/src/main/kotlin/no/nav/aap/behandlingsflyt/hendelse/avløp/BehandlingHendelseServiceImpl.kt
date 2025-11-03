@@ -60,7 +60,7 @@ class BehandlingHendelseServiceImpl(
         val meldekort = meldekortRepository.hentHvisEksisterer(behandling.id)
         val forrigeBehandlingMeldekort = behandling.forrigeBehandlingId?.let { meldekortRepository.hentHvisEksisterer(it) }
 
-        val nyeMeldekort = meldekort?.meldekort()?.filter { forrigeBehandlingMeldekort?.meldekort()?.contains(it) == true  }
+        val nyeMeldekort = meldekort?.meldekort()?.filter { forrigeBehandlingMeldekort?.meldekort()?.contains(it) == false  }
 
         val hendelse = BehandlingFlytStoppetHendelse(
             personIdent = sak.person.aktivIdent().identifikator,
