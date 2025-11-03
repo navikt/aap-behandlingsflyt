@@ -31,11 +31,9 @@ import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.motor.Motor
 import no.nav.aap.motor.testutil.ManuellMotorImpl
 import no.nav.aap.verdityper.dokument.Kanal
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -46,6 +44,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.slf4j.LoggerFactory
+import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.kafka.KafkaContainer
 import org.testcontainers.utility.DockerImageName
@@ -57,6 +57,7 @@ import kotlin.concurrent.thread
 
 class KabalKafkaKonsumentTest {
     companion object {
+        private val logger = LoggerFactory.getLogger(KabalKafkaKonsumentTest::class.java)
         private val repositoryRegistry = postgresRepositoryRegistry
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
@@ -67,6 +68,7 @@ class KabalKafkaKonsumentTest {
             .withReuse(true)
             .waitingFor(Wait.forListeningPort())
             .withStartupTimeout(Duration.ofSeconds(60))
+            .withLogConsumer { Slf4jLogConsumer(logger) }
 
         @BeforeAll
         @JvmStatic

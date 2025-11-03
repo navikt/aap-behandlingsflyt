@@ -15,14 +15,26 @@ import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AutoClose
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 internal class SykepengerErstatningRepositoryImplTest {
+    companion object {
+        private lateinit var dataSource: TestDataSource
 
-    @AutoClose
-    private val dataSource = TestDataSource()
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            dataSource = TestDataSource()
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun tearDown() = dataSource.close()
+    }
+
 
     @Test
     fun `lagre og hente ut igjen`() {
