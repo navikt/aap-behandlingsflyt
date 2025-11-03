@@ -22,10 +22,6 @@ data class MedlemskapArbeidInntektGrunnlag(
     val medlemskapGrunnlag: MedlemskapUnntakGrunnlag?,
     val inntekterINorgeGrunnlag: List<InntektINorgeGrunnlag>,
     val arbeiderINorgeGrunnlag: List<ArbeidINorgeGrunnlag>,
-
-    @Deprecated("Ikke periodisert - skal fases ut")
-    val manuellVurdering: ManuellVurderingForLovvalgMedlemskap?,
-
     val vurderinger: List<ManuellVurderingForLovvalgMedlemskap> = emptyList()
 ) {
     fun gjeldendeVurderinger(maksDato: LocalDate = Tid.MAKS): Tidslinje<ManuellVurderingForLovvalgMedlemskap> {
@@ -65,7 +61,7 @@ enum class InntektTyper {
 }
 
 fun List<ManuellVurderingForLovvalgMedlemskap>.tilTidslinje(maksDato: LocalDate = Tid.MAKS): Tidslinje<ManuellVurderingForLovvalgMedlemskap> =
-    sortedBy { it.vurdertDato }.somTidslinje { Periode(it.fom!!, it.tom ?: maksDato) }
+    sortedBy { it.vurdertDato }.somTidslinje { Periode(it.fom, it.tom ?: maksDato) }
 
 fun Tidslinje<ManuellVurderingForLovvalgMedlemskap>.validerGyldigForRettighetsperiode(rettighetsperiode: Periode): Validation<Tidslinje<ManuellVurderingForLovvalgMedlemskap>> {
     val periodeForVurdering = helePerioden()

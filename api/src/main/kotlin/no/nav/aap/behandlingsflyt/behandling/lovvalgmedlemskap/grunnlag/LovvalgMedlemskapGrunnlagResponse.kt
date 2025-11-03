@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag
 
 import no.nav.aap.behandlingsflyt.PeriodiserteVurderingerDto
 import no.nav.aap.behandlingsflyt.VurderingDto
-import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattNavnOgEnhet
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
@@ -76,16 +75,16 @@ class HistoriskManuellVurderingForLovvalgMedlemskapResponse(
 
 fun ManuellVurderingForLovvalgMedlemskap.toResponse(
     vurdertAvService: VurdertAvService,
-    fom: LocalDate = this.fom!!,
+    fom: LocalDate = this.fom,
     tom: LocalDate? = this.tom,
 ) =
     PeriodisertManuellVurderingForLovvalgMedlemskapResponse(
         fom = fom,
         tom = tom,
-        vurdertAv = vurdertAvService.medNavnOgEnhet(vurdertAv, vurdertDato!!.toLocalDate()),
+        vurdertAv = vurdertAvService.medNavnOgEnhet(vurdertAv, vurdertDato.toLocalDate()),
         besluttetAv = vurdertAvService.besluttetAv(
             definisjon = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP,
-            behandlingId = vurdertIBehandling!!
+            behandlingId = vurdertIBehandling
         ),
         lovvalg = lovvalgVedSøknadsTidspunkt.toResponse(),
         medlemskap = medlemskapVedSøknadsTidspunkt?.toResponse(),
@@ -99,9 +98,7 @@ fun ManuellVurderingForLovvalgMedlemskap.toResponse(ansattNavnOgEnhet: AnsattNav
         vurdertAv =
             VurdertAvResponse(
                 ident = vurdertAv,
-                dato =
-                    vurdertDato?.toLocalDate()
-                        ?: error("Mangler vurdertDato på ManuellVurderingForLovvalgMedlemskap"),
+                dato = vurdertDato.toLocalDate(),
                 ansattnavn = ansattNavnOgEnhet?.navn,
                 enhetsnavn = ansattNavnOgEnhet?.enhet
             ),

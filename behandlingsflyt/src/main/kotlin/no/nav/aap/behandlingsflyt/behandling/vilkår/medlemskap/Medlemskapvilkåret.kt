@@ -76,7 +76,7 @@ class Medlemskapvilkåret(
 
     private fun vurderGammel(grunnlag: MedlemskapLovvalgGrunnlag) {
         var vurdertManuelt = false
-        val manuellVurderingForLovvalgMedlemskap = grunnlag.medlemskapArbeidInntektGrunnlag?.manuellVurdering
+        val manuellVurderingForLovvalgMedlemskap = grunnlag.medlemskapArbeidInntektGrunnlag?.vurderinger?.firstOrNull()
 
         val vurderingsResultat = if (manuellVurderingForLovvalgMedlemskap != null) {
             vurdertManuelt = true

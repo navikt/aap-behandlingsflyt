@@ -2860,7 +2860,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         // Validér riktig resultat
         val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
         val overstyrtManuellVurdering = dataSource.transaction {
-            MedlemskapArbeidInntektRepositoryImpl(it).hentHvisEksisterer(behandling.id)?.manuellVurdering?.overstyrt
+            MedlemskapArbeidInntektRepositoryImpl(it).hentHvisEksisterer(behandling.id)?.vurderinger?.firstOrNull()?.overstyrt
         }
         assertTrue(vilkårsResultat.all { it.erOppfylt() })
         assertTrue(overstyrtManuellVurdering == true)

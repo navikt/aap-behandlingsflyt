@@ -20,7 +20,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.medlemsskap.MedlemskapRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
@@ -30,7 +29,6 @@ import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.behandlingsflyt.test.oktober
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
@@ -39,7 +37,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.Test
-import java.sql.Connection
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
@@ -60,7 +57,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
             val sak = opprettSak(connection, periode)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
-            lagNyFullVurdering(behandling.id, medlemskapArbeidInntektRepository, "Første begrunnelse")
+            lagNyFullVurdering(behandling.id, periode, medlemskapArbeidInntektRepository, "Første begrunnelse")
 
             val lagretInntekt = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandling.id)!!
 
@@ -82,7 +79,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
             val sak = opprettSak(connection, periode)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
-            lagNyFullVurdering(behandling.id, repo, "Første begrunnelse")
+            lagNyFullVurdering(behandling.id, periode, repo, "Første begrunnelse")
 
             val historikk = repo.hentHistoriskeVurderinger(sak.id, behandling.id)
             assertEquals(0, historikk.size)
@@ -107,26 +104,8 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
                 )
 
             val historikk = repo.hentHistoriskeVurderinger(revurdering.sakId, revurdering.id)
-            lagNyFullVurdering(revurdering.id, repo, "Andre begrunnelse")
+            lagNyFullVurdering(revurdering.id, periode, repo, "Andre begrunnelse")
             assertThat(historikk).hasSize(1)
-        }
-    }
-
-    @Test
-    fun `skal kunne lagre og hente manuell vurdering (gammel variant, ikke periodisert)`() {
-        dataSource.transaction { connection ->
-            val medlemskapArbeidInntektRepository = MedlemskapArbeidInntektRepositoryImpl(connection)
-            val sak = opprettSak(connection, periode)
-            val behandling = finnEllerOpprettBehandling(connection, sak)
-
-            medlemskapArbeidInntektRepository.lagreManuellVurdering(
-                behandlingId = behandling.id,
-                manuellVurdering = manuellVurderingIkkePeriodisert("begrunnelse")
-            )
-
-            val medlemskapArbeidInntektGrunnlag = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandling.id)
-
-            assertThat(medlemskapArbeidInntektGrunnlag?.manuellVurdering).isNotNull
         }
     }
 
@@ -292,130 +271,9 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
         }
     }
 
-    @Test
-    fun `verifiserer at migrering legger på kobling mot vurderinger og at uthenting gir periodisert vurdering`() {
-        // Oppretter en førstegangsbehandling med to manuelle vurderinger - gjør også en oppdatering av grunnlaget underveis
-        val behandling = dataSource.transaction { connection ->
-            val medlemskapArbeidInntektRepository = MedlemskapArbeidInntektRepositoryImpl(connection)
-            val sak = opprettSak(connection, periode)
-            val behandling = finnEllerOpprettBehandling(connection, sak)
-            val medlemskapRepository = MedlemskapRepositoryImpl(connection)
-
-            medlemskapArbeidInntektRepository.lagreManuellVurdering(
-                behandlingId = behandling.id,
-                manuellVurdering = manuellVurderingIkkePeriodisert("begrunnelse")
-            )
-
-            val medlId = medlemskapRepository.lagreUnntakMedlemskap(
-                behandlingId = behandling.id,
-                unntak = listOf(medlemskapData())
-            )
-
-            medlemskapArbeidInntektRepository.lagreArbeidsforholdOgInntektINorge(
-                behandlingId = behandling.id,
-                arbeidGrunnlag = arbeidGrunnlag(),
-                inntektGrunnlag = inntektGrunnlag(),
-                medlId = medlId,
-                enhetGrunnlag = enhetGrunnlags()
-            )
-
-            medlemskapArbeidInntektRepository.lagreManuellVurdering(
-                behandlingId = behandling.id,
-                manuellVurdering = manuellVurderingIkkePeriodisert("begrunnelse2")
-            )
-
-            behandling
-        }
-
-        // Oppretter en revurdering og kopierer grunnlaget for å sjekke at dette blir riktig etter migrering av revurdering
-        val revurdering = dataSource.transaction { connection ->
-            val medlemskapArbeidInntektRepository = MedlemskapArbeidInntektRepositoryImpl(connection)
-            val behandlingRepo = BehandlingRepositoryImpl(connection)
-            val revurdering =
-                behandlingRepo.opprettBehandling(
-                    behandling.sakId,
-                    TypeBehandling.Revurdering,
-                    behandling.id,
-                    VurderingsbehovOgÅrsak(
-                        listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
-                        ÅrsakTilOpprettelse.SØKNAD
-                    )
-                )
-
-            medlemskapArbeidInntektRepository.kopier(behandling.id, revurdering.id)
-
-            revurdering
-        }
-
-        dataSource.transaction { connection ->
-            val medlemskapArbeidInntektRepository = MedlemskapArbeidInntektRepositoryImpl(connection)
-
-            sjekkBehandlingFørMigrering(medlemskapArbeidInntektRepository, behandling)
-            sjekkBehandlingFørMigrering(medlemskapArbeidInntektRepository, revurdering)
-
-            // Kjører migrering
-            medlemskapArbeidInntektRepository.migrerManuelleVurderingerPeriodisert()
-
-            sjekkBehandlingEtterMigrering(medlemskapArbeidInntektRepository, behandling)
-            sjekkBehandlingEtterMigrering(medlemskapArbeidInntektRepository, revurdering, behandling)
-
-            // Sjekker at det finnes riktig antall grunnlag
-            assertThat(hentGrunnlag(connection, behandling.id)).hasSize(3) // 2 inaktive + 1 aktiv
-            assertThat(hentGrunnlag(connection, revurdering.id)).hasSize(1) // 1 aktiv
-
-            // Sjekker at innslag i lovvalg_medlemskap_manuell_vurderinger finnes og at det er to stk en for hver vurdering
-            assertThat(hentVurderingerId(connection)).hasSize(2)
-        }
-    }
-
-    private fun sjekkBehandlingFørMigrering(
-        medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepositoryImpl,
-        behandling: Behandling,
-    ) {
-        val grunnlag = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandling.id)
-
-        // Sjekker at verdier før migrering er som forventet
-        assertThat(grunnlag?.manuellVurdering).isNotNull
-        assertThat(grunnlag?.manuellVurdering?.fom).isNull()
-        assertThat(grunnlag?.manuellVurdering?.vurdertIBehandling).isNull()
-        assertThat(grunnlag?.vurderinger).isEmpty()
-    }
-
-    private fun sjekkBehandlingEtterMigrering(
-        medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepositoryImpl,
-        behandling: Behandling,
-        forrigeBehandling: Behandling? = null
-    ) {
-        val grunnlag = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandling.id)
-
-        // Sjekker at fom-dato og vurdertIBehandling er satt korrekt etter migrering og at vurderinger returnerer vurdering
-        val periodisertVurdering = grunnlag?.vurderinger?.first()
-        assertThat(periodisertVurdering?.fom).isEqualTo(periode.fom)
-        assertThat(periodisertVurdering?.vurdertIBehandling).isEqualTo(forrigeBehandling?.id ?: behandling.id)
-        assertThat(grunnlag?.manuellVurdering).isEqualTo(periodisertVurdering)
-    }
-
-    private fun hentVurderingerId(connection: DBConnection): List<Long> {
-        val query = "SELECT id FROM lovvalg_medlemskap_manuell_vurderinger"
-        val id = connection.queryList<Long>(query) {
-            setRowMapper { it.getLong("id") }
-        }
-        return id
-    }
-
-    private fun hentGrunnlag(connection: DBConnection, behandlingId: BehandlingId): List<Long> {
-        val query = "SELECT * FROM MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG WHERE behandling_id = ?"
-        val id = connection.queryList<Long>(query) {
-            setRowMapper { it.getLong("id") }
-            setParams {
-                setLong(1, behandlingId.toLong())
-            }
-        }
-        return id
-    }
-
     private fun lagNyFullVurdering(
         behandlingId: BehandlingId,
+        periode: Periode,
         repo: MedlemskapArbeidInntektRepositoryImpl,
         begrunnelse: String
     ) {
@@ -427,9 +285,14 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
             enhetGrunnlag = enhetGrunnlags()
         )
 
-        repo.lagreManuellVurdering(
+        repo.lagreVurderinger(
             behandlingId,
-            manuellVurderingIkkePeriodisert(begrunnelse)
+            listOf(manuellVurdering(
+                fom = periode.fom,
+                tom = null,
+                vurdertIBehandling = behandlingId,
+                begrunnelse = begrunnelse
+            )),
         )
 
         repo.lagreOppgittUtenlandsOppplysninger(
@@ -439,20 +302,12 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
         )
     }
 
-    private fun manuellVurderingIkkePeriodisert(begrunnelse: String): ManuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskap(
-        id = 1,
-        LovvalgVedSøknadsTidspunktDto(begrunnelse, EØSLandEllerLandMedAvtale.NOR),
-        MedlemskapVedSøknadsTidspunktDto(begrunnelse, true),
-        "SAKSBEHANDLER",
-        LocalDateTime.now()
-    )
-
-    private fun manuellVurdering(fom: LocalDate, tom: LocalDate?, vurdertIBehandling: BehandlingId? = null): ManuellVurderingForLovvalgMedlemskap =
+    private fun manuellVurdering(fom: LocalDate, tom: LocalDate?, vurdertIBehandling: BehandlingId, begrunnelse: String = "begrunnelse"): ManuellVurderingForLovvalgMedlemskap =
         ManuellVurderingForLovvalgMedlemskap(
             fom = fom,
             tom = tom,
-            lovvalgVedSøknadsTidspunkt = LovvalgVedSøknadsTidspunktDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
-            medlemskapVedSøknadsTidspunkt = MedlemskapVedSøknadsTidspunktDto("begrunnelse", true),
+            lovvalgVedSøknadsTidspunkt = LovvalgVedSøknadsTidspunktDto(begrunnelse, EØSLandEllerLandMedAvtale.NOR),
+            medlemskapVedSøknadsTidspunkt = MedlemskapVedSøknadsTidspunktDto(begrunnelse, true),
             vurdertAv = "SAKSBEHANDLER",
             vurdertDato = LocalDateTime.now(),
             vurdertIBehandling = vurdertIBehandling
