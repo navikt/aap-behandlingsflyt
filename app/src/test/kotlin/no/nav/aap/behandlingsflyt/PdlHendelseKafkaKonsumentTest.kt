@@ -25,6 +25,7 @@ import org.testcontainers.utility.DockerImageName
 import java.time.Duration
 import java.time.Instant
 import java.util.Properties
+import javax.sql.DataSource
 import kotlin.concurrent.thread
 import kotlin.test.Test
 
@@ -37,13 +38,13 @@ PdlHendelseKafkaKonsumentTest {
             .waitingFor(Wait.forListeningPort())
             .withStartupTimeout(Duration.ofSeconds(60))
 
-
-        val dataSource = TestDataSource()
+        lateinit var dataSource: TestDataSource
         val repositoryRegistry = postgresRepositoryRegistry
 
         @BeforeAll
         @JvmStatic
         internal fun beforeAll() {
+            dataSource = TestDataSource()
             kafka.start()
         }
 
