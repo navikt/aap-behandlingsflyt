@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -29,6 +30,7 @@ fun NormalOpenAPIRoute.studentgrunnlagApi(
     route("/api/behandling") {
         route("/{referanse}/grunnlag/student") {
             getGrunnlag<BehandlingReferanse, StudentGrunnlagResponse>(
+                relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = Definisjon.AVKLAR_STUDENT.kode.toString()
             ) { req ->

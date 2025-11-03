@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -32,6 +33,7 @@ fun NormalOpenAPIRoute.arbeidsevneGrunnlagApi(
 ) {
     route("/api/behandling/{referanse}/grunnlag/arbeidsevne") {
         getGrunnlag<BehandlingReferanse, ArbeidsevneGrunnlagDto>(
+            relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
             avklaringsbehovKode = Definisjon.FASTSETT_ARBEIDSEVNE.kode.toString()
 

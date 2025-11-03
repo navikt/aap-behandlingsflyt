@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.FORESLÅ_VEDTAK_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.tidslinje.Segment
@@ -27,6 +28,7 @@ fun NormalOpenAPIRoute.foreslaaVedtakAPI(
 ) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/foreslaa-vedtak").getGrunnlag<BehandlingReferanse, ForeslåVedtakResponse>(
+            relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
             avklaringsbehovKode = FORESLÅ_VEDTAK_KODE
         ) { behandlingReferanse ->

@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -36,6 +37,7 @@ fun NormalOpenAPIRoute.aktivitetsplikt11_7GrunnlagApi(
 
     route("api/aktivitetsplikt/{referanse}/grunnlag/brudd-11-7") {
         getGrunnlag<BehandlingReferanse, Aktivitetsplikt11_7GrunnlagDto>(
+            relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
             avklaringsbehovKode = VURDER_BRUDD_11_7_KODE
         ) { req ->
