@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KabalHendelseV0
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.BehandlingPathParam
@@ -23,7 +24,8 @@ fun NormalOpenAPIRoute.svarFraAndreinstansGrunnlagApi(
 ) {
     route("api/svar-fra-andreinstans/{referanse}/grunnlag/svar-fra-andreinstans") {
         getGrunnlag<BehandlingReferanse, SvarFraAndreinstansGrunnlagDto>(
-                behandlingPathParam = BehandlingPathParam("referanse"),
+            relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+            behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = HÅNDTER_SVAR_FRA_ANDREINSTANS_KODE
         ) { req ->
             val respons = dataSource.transaction(readOnly = true) {

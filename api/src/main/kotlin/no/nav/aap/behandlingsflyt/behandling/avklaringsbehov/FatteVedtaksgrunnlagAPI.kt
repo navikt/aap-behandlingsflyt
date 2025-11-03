@@ -19,6 +19,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -42,6 +43,7 @@ fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(
     route("/api/behandling").tag(Tags.Behandling) {
         route("/{referanse}/grunnlag/fatte-vedtak") {
             getGrunnlag<BehandlingReferanse, FatteVedtakGrunnlagDto>(
+                relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = FATTE_VEDTAK_KODE
             ) { req ->

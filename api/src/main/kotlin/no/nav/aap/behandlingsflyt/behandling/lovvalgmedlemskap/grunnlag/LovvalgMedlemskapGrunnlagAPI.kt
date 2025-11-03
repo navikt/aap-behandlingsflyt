@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -20,7 +21,6 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
-import java.time.LocalDate
 import javax.sql.DataSource
 import kotlin.collections.map
 
@@ -35,6 +35,7 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagAPI(
     route("/api/behandling") {
         route("/{referanse}/grunnlag/lovvalgmedlemskap") {
             getGrunnlag<BehandlingReferanse, LovvalgMedlemskapGrunnlagResponse>(
+                relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP.kode.toString()
             ) { req ->
@@ -65,6 +66,7 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagAPI(
 
         route("/{referanse}/grunnlag/lovvalgmedlemskap-v2") {
             getGrunnlag<BehandlingReferanse, PeriodisertLovvalgMedlemskapGrunnlagResponse>(
+                relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP.kode.toString()
             ) { req ->

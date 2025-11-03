@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -26,6 +27,7 @@ fun NormalOpenAPIRoute.klagebehandlingKontorGrunnlagApi(
     val ansattInfoService = AnsattInfoService(gatewayProvider)
     route("api/klage/{referanse}/grunnlag/klagebehandling-kontor") {
         getGrunnlag<BehandlingReferanse, KlagebehandlingKontorGrunnlagDto>(
+            relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
             avklaringsbehovKode = VURDER_KLAGE_KONTOR_KODE
         ) { req ->

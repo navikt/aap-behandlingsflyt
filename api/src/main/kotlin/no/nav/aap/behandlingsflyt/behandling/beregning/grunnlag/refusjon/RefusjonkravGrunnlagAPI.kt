@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -33,6 +34,7 @@ fun NormalOpenAPIRoute.refusjonGrunnlagAPI(
     route("/api/behandling") {
         route("/{referanse}/grunnlag/refusjon") {
             getGrunnlag<BehandlingReferanse, RefusjonkravGrunnlagResponse>(
+                relevanteIdenterResolver =  relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = Definisjon.REFUSJON_KRAV.kode.toString()
             ) { req ->
