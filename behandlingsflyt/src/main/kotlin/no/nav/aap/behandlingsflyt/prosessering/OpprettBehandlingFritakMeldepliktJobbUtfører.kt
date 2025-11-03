@@ -2,7 +2,11 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
@@ -19,7 +23,9 @@ import java.time.LocalDate
 
 class OpprettBehandlingFritakMeldepliktJobbUtfører(
     private val sakService: SakService,
-    private val underveisRepository: UnderveisRepository,
+    private val behandlingRepository: BehandlingRepository,
+    private val meldeperiodeRepository: MeldeperiodeRepository,
+    private val meldepliktRepository: MeldepliktRepository,
     private val sakOgBehandlingService: SakOgBehandlingService,
     private val prosesserBehandlingService: ProsesserBehandlingService,
 ) : JobbUtfører {
@@ -42,28 +48,18 @@ class OpprettBehandlingFritakMeldepliktJobbUtfører(
 
     private fun skalHaFritakForPassertMeldeperiode(sak: Sak):Boolean {
         val nå = LocalDate.now()
-        if (!sak.rettighetsperiode.inneholder(nå)) {
+
+        val sisteBehandling = behandlingRepository.finnSisteOpprettedeBehandlingFor(sak.id, listOf(TypeBehandling.Førstegangsbehandling,
+            TypeBehandling.Revurdering)) ?: return false
+        if (sisteBehandling.status().erÅpen() && Vurderingsbehov.FRITAK_MELDEPLIKT in sisteBehandling.vurderingsbehov().map { it.type }) {
             return false
         }
+        val sisteIverksatteBehandling = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sak.id) ?: return false
+        //NB Sjekket 7 dager tilbake for å få med siste utbetaling som har fritak.
+        val sistePasserteMeldeperiode = meldeperiodeRepository.hent(sisteIverksatteBehandling.id).firstOrNull { it.inneholder(nå.minusDays(7)) } ?: return false
+        val meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(sisteIverksatteBehandling.id) ?: return false
 
-        val behandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id) ?: return false
-
-        if (behandling.status().erÅpen() && Vurderingsbehov.FRITAK_MELDEPLIKT in behandling.vurderingsbehov().map { it.type }) {
-            return false
-        }
-
-        val underveisperioder = underveisRepository.hentHvisEksisterer(behandling.id)
-            ?.perioder
-            ?: return false
-
-        val førsteAntatteMeldeperiode = underveisperioder
-            .filter { it.meldepliktStatus == MeldepliktStatus.FRITAK }
-            .minByOrNull { it.meldePeriode }
-            ?: return false
-
-        val startNesteMeldeperiode = førsteAntatteMeldeperiode.meldePeriode.fom
-
-        return nå >= startNesteMeldeperiode
+        return meldepliktGrunnlag.tilTidslinje().begrensetTil(sistePasserteMeldeperiode).segmenter().any { it.verdi.harFritak }
     }
 
 
@@ -71,7 +67,9 @@ class OpprettBehandlingFritakMeldepliktJobbUtfører(
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
             return OpprettBehandlingFritakMeldepliktJobbUtfører(
                 sakService = SakService(repositoryProvider),
-                underveisRepository = repositoryProvider.provide(),
+                behandlingRepository = repositoryProvider.provide(),
+                meldeperiodeRepository = repositoryProvider.provide(),
+                meldepliktRepository = repositoryProvider.provide(),
                 sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
                 prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
             )
