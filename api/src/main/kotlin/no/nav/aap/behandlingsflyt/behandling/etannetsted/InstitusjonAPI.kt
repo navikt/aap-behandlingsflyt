@@ -20,6 +20,7 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
@@ -131,7 +132,7 @@ fun NormalOpenAPIRoute.institusjonAPI(
                         byggTidslinjeAvType(grunnlag, Institusjonstype.HS)
 
                     val perioderMedHelseopphold = behov.perioderTilVurdering.mapValue { it.helse }.komprimer()
-                    val vurderinger = grunnlag?.helseoppholdvurderinger?.tilTidslinje() ?: Tidslinje()
+                    val vurderinger = grunnlag?.helseoppholdvurderinger?.tilTidslinje().orEmpty()
 
                     val manglendePerioder = perioderMedHelseopphold.segmenter()
                         .filterNot { it.verdi == null }

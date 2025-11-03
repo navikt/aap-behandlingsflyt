@@ -20,7 +20,11 @@ enum class BehandlingsflytFeature : FeatureToggle {
     AvklaringsbehovService,
     AvklaringsbehovServiceFormkrav,
     LovvalgMedlemskapPeriodisertMigrering,
+    LovvalgMedlemskapPeriodisert,
     KvalitetssikringsSteg,
+    FatteVedtakAvklaringsbehovService,
+    SykdomPeriodisertMigrering,
+    HarEndringerIBarn,
     EOSBeregning,
     ;
 

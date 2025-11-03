@@ -20,4 +20,6 @@ interface SykdomRepository : Repository {
     fun hent(behandlingId: BehandlingId): SykdomGrunnlag
 
     fun hentHistoriskeSykdomsvurderinger(sakId: SakId, behandlingId: BehandlingId): List<Sykdomsvurdering>
+    
+    fun migrerSykdomsvurderinger()
 }

@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -18,17 +19,16 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.dbtest.TestDataSource.Companion.invoke
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
 
 internal class SamordningServiceTest {
@@ -130,22 +130,118 @@ internal class SamordningServiceTest {
     }
 
     @Test
-    fun `krever vurdering om det finnes samordningdata`() {
+    fun `gjør vurderinger med overlappende perioder`() {
         val behandlingId = dataSource.transaction { opprettSakdata(it) }
         dataSource.transaction { connection ->
-            opprettYtelseData(SamordningYtelseRepositoryImpl(connection), behandlingId)
+            val ytelseVurderingRepo = SamordningVurderingRepositoryImpl(connection)
+            opprettVurderingData(ytelseVurderingRepo, behandlingId)
+        }
 
+        dataSource.transaction { connection ->
+            val ytelseVurderingRepo = SamordningVurderingRepositoryImpl(connection)
+            val samordningYtelseRepository = SamordningYtelseRepositoryImpl(connection)
+            val service = SamordningService(ytelseVurderingRepo, samordningYtelseRepository)
+
+            val grunnlag = SamordningYtelseGrunnlag(
+                1L,
+                listOf(
+                    SamordningYtelse(
+                        Ytelse.SYKEPENGER,
+                        setOf(
+                            SamordningYtelsePeriode(
+                                Periode(13 mars  2025, 31 mars  2025),
+                                Prosent.`70_PROSENT`,
+                                kronesum = null
+                            ),
+                            SamordningYtelsePeriode(
+                                Periode(13 mars  2025, 15 mars  2025),
+                                Prosent.`50_PROSENT`,
+                                kronesum = null
+                            )
+                        ),
+                        kilde = "kilde"
+                    )
+                ),
+            )
+
+            val vurderinger = SamordningVurderingGrunnlag(
+                begrunnelse = "En god begrunnelse",
+                maksDatoEndelig = false,
+                fristNyRevurdering = LocalDate.now().plusYears(1),
+                vurdertAv = "ident",
+                vurderinger = listOf(
+                    SamordningVurdering(
+                        Ytelse.SYKEPENGER,
+                        listOf(
+                            SamordningVurderingPeriode(
+                                Periode(13 mars  2025, 15 mars  2025),
+                                Prosent(50),
+                                null,
+                                true
+                            ),
+                            SamordningVurderingPeriode(
+                                Periode(16 mars  2025, 31 mars  2025),
+                                Prosent(70),
+                                null,
+                                true
+                            )
+                        )
+                    )
+                )
+            )
+
+            val tidligereVurderinger = service.vurderingTidslinje(vurderinger)
+            val samordningGradering = service.vurder(grunnlag, tidligereVurderinger).segmenter().toList()
+
+            assertThat(samordningGradering).hasSize(2)
+
+            with(samordningGradering[0]) {
+                assertThat(periode).isEqualTo(Periode(13 mars 2025, 15 mars 2025))
+                assertThat(verdi.gradering).isEqualTo(Prosent(50))
+            }
+
+            with(samordningGradering[1]) {
+                assertThat(periode).isEqualTo(Periode(16 mars 2025, 31 mars 2025))
+                assertThat(verdi.gradering).isEqualTo(Prosent(70))
+            }
+        }
+    }
+
+    @Test
+    fun `ytelser fra register med overlappende segmenter slås sammen ved sjekk av manglende vurderinger`() {
+        dataSource.transaction { connection ->
             val service = SamordningService(
                 SamordningVurderingRepositoryImpl(connection),
                 SamordningYtelseRepositoryImpl(connection)
             )
-            val vurderinger = service.hentVurderinger(behandlingId)
-            val ytelser = service.hentYtelser(behandlingId)
 
-            val tidligereVurderinger = service.vurderingTidslinje(vurderinger)
+            val grunnlag = SamordningYtelseGrunnlag(
+                1L,
+                listOf(
+                    SamordningYtelse(
+                        Ytelse.SYKEPENGER,
+                        setOf(
+                            SamordningYtelsePeriode(
+                                Periode(1 januar 2024, 10 januar 2024),
+                                Prosent.`70_PROSENT`,
+                                kronesum = null
+                            ),
+                            SamordningYtelsePeriode(
+                                Periode(9 januar 2024, 13 januar 2024),
+                                Prosent.`50_PROSENT`,
+                                kronesum = null
+                            )
+                        ),
+                        kilde = "kilde"
+                    )
+                ),
+            )
 
+            val ikkeVurdertePerioder = service.perioderSomIkkeHarBlittVurdert(grunnlag, Tidslinje.empty())
 
-            assertThrows<IllegalArgumentException> { service.vurder(ytelser, tidligereVurderinger) }
+            assertThat(ikkeVurdertePerioder.segmenter().first().periode).isEqualTo(
+                Periode(1 januar 2024, 13 januar 2024)
+            )
         }
     }
 

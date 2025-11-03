@@ -23,6 +23,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -62,12 +63,28 @@ class VurderBistandsbehovSteg private constructor(
                     ?.let { bistandRepository.hentHvisEksisterer(it) }
                     ?.vurderinger
                     .orEmpty()
+
                 val nåværendeVurderinger = bistandRepository.hentHvisEksisterer(kontekst.behandlingId)
                     ?.vurderinger
                     .orEmpty()
 
                 if (forrigeVurderinger.toSet() != nåværendeVurderinger.toSet()) {
                     bistandRepository.lagre(kontekst.behandlingId, forrigeVurderinger)
+                }
+
+                val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
+                val nyttVilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
+
+                val forrigeVilkårTidslinje = kontekst.forrigeBehandlingId?.let { vilkårsresultatRepository.hent(it) }
+                    ?.optionalVilkår(Vilkårtype.BISTANDSVILKÅRET)
+                    ?.tidslinje()
+                    .orEmpty()
+
+                if (nyttVilkår.tidslinje() != forrigeVilkårTidslinje) {
+                    nyttVilkår.nullstillTidslinje()
+                        .leggTilVurderinger(forrigeVilkårTidslinje)
+
+                    vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
                 }
             },
             kontekst
@@ -122,7 +139,7 @@ class VurderBistandsbehovSteg private constructor(
                             )
                         )
                     }
-                    ?: tidslinjeOf()
+                    .orEmpty()
 
                 perioderBistandsvilkåretErRelevant.leftJoin(perioderBistandsvilkåretErVurdert) { erRelevant, erVurdert ->
                     erRelevant && erVurdert != true
@@ -154,11 +171,11 @@ class VurderBistandsbehovSteg private constructor(
         val sykdomsvurderinger = sykdomsRepository.hentHvisEksisterer(kontekst.behandlingId)
             ?.somSykdomsvurderingstidslinje(kontekst.rettighetsperiode.fom)
             ?.begrensetTil(kontekst.rettighetsperiode)
-            ?: tidslinjeOf()
+            .orEmpty()
 
         val studentvurderinger = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
             ?.somTidslinje(kontekst.rettighetsperiode)
-            ?: tidslinjeOf()
+            .orEmpty()
 
         return Tidslinje.zip3(tidligereVurderingsutfall, sykdomsvurderinger, studentvurderinger)
             .mapValue { (behandlingsutfall, sykdomsvurdering, studentvurdering) ->

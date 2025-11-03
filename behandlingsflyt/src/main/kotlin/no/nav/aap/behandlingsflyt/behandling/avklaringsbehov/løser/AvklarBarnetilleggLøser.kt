@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class AvklarBarnetilleggLøser(
@@ -44,7 +45,7 @@ internal fun oppdaterTilstandBasertPåNyeVurderinger(
     vurderteBarn.forEach { barn -> tidslinjePerBarn[barn.ident] = barn.tilTidslinje() }
 
     nyeVurderinger.map { it.toVurdertBarn() }.forEach { nyVurdering ->
-        val eksisterendeTidslinje = tidslinjePerBarn[nyVurdering.ident] ?: Tidslinje()
+        val eksisterendeTidslinje = tidslinjePerBarn[nyVurdering.ident].orEmpty()
         val oppdatertTidslinje = eksisterendeTidslinje.kombiner(
             nyVurdering.tilTidslinje(),
             StandardSammenslåere.prioriterHøyreSideCrossJoin()

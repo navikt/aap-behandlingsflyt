@@ -18,6 +18,7 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import java.time.LocalDate
@@ -50,7 +51,7 @@ fun NormalOpenAPIRoute.oppholdskravGrunnlagApi(
                     val grunnlag = oppholdskravRepository.hentHvisEksisterer(behandling.id)
 
                     val vurdering = grunnlag?.vurderinger?.firstOrNull { it.vurdertIBehandling == behandling.id }
-                    val gjeldendeVedtatteVurderinger = grunnlag?.vurderinger?.filter { it.vurdertIBehandling != behandling.id }?.tilTidslinje() ?: Tidslinje()
+                    val gjeldendeVedtatteVurderinger = grunnlag?.vurderinger?.filter { it.vurdertIBehandling != behandling.id }?.tilTidslinje().orEmpty()
 
                     val perioderSomTrengerVurdering = if (gjeldendeVedtatteVurderinger.isEmpty()) listOf(sak.rettighetsperiode) else sak.rettighetsperiode.minus(gjeldendeVedtatteVurderinger.helePerioden())
 

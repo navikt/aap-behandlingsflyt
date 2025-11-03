@@ -19,10 +19,6 @@ interface MedlemskapArbeidInntektRepository : Repository {
     fun hentSistRelevanteOppgitteUtenlandsOppholdHvisEksisterer(sakId: SakId): UtenlandsOppholdData?
     fun lagreArbeidsforholdOgInntektINorge(behandlingId: BehandlingId, arbeidGrunnlag: List<ArbeidINorgeGrunnlag>, inntektGrunnlag: List<ArbeidsInntektMaaned>, medlId: Long?, enhetGrunnlag: List<EnhetGrunnlag>)
     fun lagreOppgittUtenlandsOppplysninger(behandlingId: BehandlingId, journalpostId: JournalpostId, utenlandsOppholdData: UtenlandsOppholdData)
-
-    @Deprecated("Ikke periodisert - skal fases ut")
-    fun lagreManuellVurdering(behandlingId: BehandlingId, manuellVurdering: ManuellVurderingForLovvalgMedlemskap?)
-
     fun lagreVurderinger(behandlingId: BehandlingId, vurderinger: List<ManuellVurderingForLovvalgMedlemskap>)
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
 

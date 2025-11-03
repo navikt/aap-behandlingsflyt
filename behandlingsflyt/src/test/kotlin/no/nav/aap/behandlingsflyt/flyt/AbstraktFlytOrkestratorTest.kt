@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarManu
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOppholdskravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangArbeidLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeriodisertLovvalgMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrkesskadeLøsning
@@ -46,6 +47,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedSøknadsTidspunktDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForLovvalgMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingerForBarnetillegg
@@ -150,6 +152,7 @@ import no.nav.aap.behandlingsflyt.test.modell.defaultInntekt
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -394,7 +397,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
             .løsForutgåendeMedlemskap()
             .løsOppholdskrav(sak.rettighetsperiode.fom)
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
-            .fattVedtakEllerSendRetur()
+            .fattVedtak()
 
         val vedtak = hentVedtak(behandling.id)
         assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
@@ -1181,6 +1184,23 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         )
     }
 
+    protected fun Behandling.løsLovvalgPeriodisert(gjelderFra: LocalDate): Behandling {
+        return løsAvklaringsBehov(
+            this,
+            AvklarPeriodisertLovvalgMedlemskapLøsning(
+                løsningerForPerioder = listOf(
+                    PeriodisertManuellVurderingForLovvalgMedlemskapDto(
+                        fom = gjelderFra,
+                        tom = null,
+                        begrunnelse = "",
+                        lovvalg = LovvalgVedSøknadsTidspunktDto("", EØSLandEllerLandMedAvtale.NOR),
+                        medlemskap = MedlemskapVedSøknadsTidspunktDto("", true)
+                    )
+                )
+            )
+        )
+    }
+
     protected fun kvalitetssikreOk(
         behandling: Behandling,
         bruker: Bruker = Bruker("KVALITETSSIKRER")
@@ -1203,7 +1223,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         return kvalitetssikreOk(this, bruker)
     }
 
-    protected fun fattVedtakEllerSendRetur(behandling: Behandling, returVed: Definisjon? = null): Behandling =
+    protected fun løsFatteVedtak(behandling: Behandling, returVed: Definisjon? = null): Behandling =
         løsAvklaringsBehov(
             behandling,
             FatteVedtakLøsning(
@@ -1234,8 +1254,13 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
     }
 
     @JvmName("fattVedtakExt")
-    protected fun Behandling.fattVedtakEllerSendRetur(returVed: Definisjon? = null): Behandling {
-        return fattVedtakEllerSendRetur(this, returVed)
+    protected fun Behandling.fattVedtak(): Behandling {
+        return løsFatteVedtak(this, null)
+    }
+
+    @JvmName("sendReturExt")
+    protected fun Behandling.beslutterGodkjennerIkke(returVed: Definisjon?): Behandling {
+        return løsFatteVedtak(this, returVed)
     }
 
     class BehandlingInfo(
@@ -1368,7 +1393,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         val vilkårsutfall = dataSource.transaction(readOnly = true) { VilkårsresultatRepositoryImpl(it).hent(this.id) }
             .optionalVilkår(vilkårtype)
             ?.tidslinje()
-            ?: tidslinjeOf()
+            .orEmpty()
         val assertions = tidslinjeOf(*expectedVilkårsutfall)
             .map<(Vilkårsvurdering) -> Unit> { forventetUtfall ->
                 { vilkårsvurdering ->
