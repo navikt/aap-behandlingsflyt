@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.ArbeidIPeriodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvklaringsbehovHendelseDto
+import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import java.time.LocalDateTime
 import java.util.*
@@ -38,6 +39,7 @@ public data class StoppetBehandling(
     val identerForSak: List<String> = emptyList(),
     val opprettetAv: String? = null,
     val nyeMeldekort: List<MeldekortDTO> = emptyList(),
+    val søknadIder: List<JournalpostId> = emptyList(),
 ) {
     init {
         require(ident.isNotEmpty())
@@ -115,6 +117,6 @@ public enum class RettighetsType(public val hjemmel: String) {
 }
 
 public class MeldekortDTO(
-    val journalpostId: String,
-    val arbeidIPeriodeDTO: List<ArbeidIPeriodeDTO>,
+    public val journalpostId: String,
+    public val arbeidIPeriodeDTO: List<ArbeidIPeriodeDTO>,
 )
