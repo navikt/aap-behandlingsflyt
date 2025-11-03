@@ -160,13 +160,6 @@ class EtAnnetStedSteg(
     }
 
 
-    private fun avbrytHvisFinnesOgIkkeTrengs(avklaringsbehovene: Avklaringsbehovene, definisjon: Definisjon) {
-        val eksisterendeBehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
-
-        if (eksisterendeBehov?.erÅpent() == true) {
-            avklaringsbehovene.avbryt(definisjon)
-        }
-    }
 
     companion object : FlytSteg {
         override fun konstruer(

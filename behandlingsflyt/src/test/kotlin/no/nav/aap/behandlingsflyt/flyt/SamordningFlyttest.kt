@@ -333,8 +333,6 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
 
         // prosesser på nytt
         nullstillInformasjonskravOppdatert(InformasjonskravNavn.INSTITUSJONSOPPHOLD, revurdering.sakId)
-
-
         revurdering = prosesserBehandling(revurdering)
         val åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
 
