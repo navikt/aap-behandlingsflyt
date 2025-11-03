@@ -70,6 +70,7 @@ fun NormalOpenAPIRoute.meldepliktOverstyringGrunnlagApi(
                         perioderIkkeMeldt = underveisGrunnlag?.perioder
                             ?.filter { it.meldepliktStatus == MeldepliktStatus.IKKE_MELDT_SEG }
                             ?.map { it.meldePeriode }
+                            ?.distinctBy { it.fom }
                             ?: emptyList(),
                         gjeldendeVedtatteOversyringsvurderinger = gjeldendeVedtatteVurdertePerioder,
                         overstyringsvurderinger = overstyringerFraDenneBehandlingen
