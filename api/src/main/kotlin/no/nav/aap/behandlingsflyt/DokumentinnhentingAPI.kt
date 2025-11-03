@@ -49,6 +49,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(
         route("/bestill") {
             authorizedPost<Unit, String, BestillLegeerklæringDto>(
                 AuthorizationBodyPathConfig(
+                    relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                     operasjon = Operasjon.SAKSBEHANDLE,
                     applicationsOnly = false
                 )
@@ -114,7 +115,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(
             authorizedPost<Unit, BrevResponse, ForhåndsvisBrevRequest>(
                 AuthorizationBodyPathConfig(
                     operasjon = Operasjon.SE,
-                    relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                    relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
                     applicationsOnly = false
                 )
             ) { _, req ->
