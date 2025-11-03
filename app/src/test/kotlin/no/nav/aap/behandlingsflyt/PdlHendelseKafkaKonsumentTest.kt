@@ -122,5 +122,6 @@ private fun testConfig(brokers: String) = KafkaConsumerConfig<String, Personhend
     valueDeserializer = KafkaAvroDeserializer::class.java as Class<out Deserializer<Personhendelse>>,
     additionalProperties = Properties().apply {
         put("specific.avro.reader", true)
-    })
+    },
+)
 

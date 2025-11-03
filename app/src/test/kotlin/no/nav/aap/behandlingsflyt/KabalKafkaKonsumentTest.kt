@@ -230,7 +230,7 @@ class KabalKafkaKonsumentTest {
             url = "mock://kafka",
             user = "",
             password = "",
-        )
+        ),
     )
 
     private fun sak(connection: DBConnection): Sak {
