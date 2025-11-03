@@ -37,7 +37,7 @@ public data class StoppetBehandling(
     val avsluttetBehandling: AvsluttetBehandlingDTO? = null,
     val identerForSak: List<String> = emptyList(),
     val opprettetAv: String? = null,
-    val nyeMeldekort: List<MeldekortDTO>? = emptyList(),
+    val nyeMeldekort: List<MeldekortDTO> = emptyList(),
 ) {
     init {
         require(ident.isNotEmpty())
