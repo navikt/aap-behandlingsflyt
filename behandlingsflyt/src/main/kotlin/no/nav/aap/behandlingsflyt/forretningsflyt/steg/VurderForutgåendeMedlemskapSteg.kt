@@ -142,42 +142,43 @@ class VurderForutgåendeMedlemskapSteg private constructor(
     }
 
     private fun harYrkesskadeSammenheng(kontekst: FlytKontekstMedPerioder): Boolean {
-        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-        val sykdomGrunnlag = sykdomRepository.hent(kontekst.behandlingId)
-        val harYrkesskadeSammenheng = sykdomGrunnlag.yrkesskadevurdering?.erÅrsakssammenheng
-        if (harYrkesskadeSammenheng == true) {
-            ForutgåendeMedlemskapvilkåret(
-                vilkårsresultat,
-                kontekst.rettighetsperiode
-            ).leggTilYrkesskadeVurdering()
-            vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
-            return true
-        }
-        return false
+        val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)
+        val harYrkesskadeSammenheng = sykdomGrunnlag?.yrkesskadevurdering?.erÅrsakssammenheng
+        return harYrkesskadeSammenheng == true
     }
 
     private fun vurderVilkår(kontekst: FlytKontekstMedPerioder) {
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
+
         if (kontekst.harNoeTilBehandling()) {
-            val personopplysningForutgåendeGrunnlag =
-                personopplysningForutgåendeRepository.hentHvisEksisterer(kontekst.behandlingId)
+            if (harYrkesskadeSammenheng(kontekst)) {
+                ForutgåendeMedlemskapvilkåret(
+                    vilkårsresultat,
+                    kontekst.rettighetsperiode
+                ).leggTilYrkesskadeVurdering()
+                vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
 
-            val forutgåendeMedlemskapArbeidInntektGrunnlag =
-                forutgåendeMedlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)
-            val oppgittUtenlandsOppholdGrunnlag =
-                medlemskapArbeidInntektRepository.hentOppgittUtenlandsOppholdHvisEksisterer(kontekst.behandlingId)
-                    ?: medlemskapArbeidInntektRepository.hentSistRelevanteOppgitteUtenlandsOppholdHvisEksisterer(
-                        kontekst.sakId
+            } else {
+                val personopplysningForutgåendeGrunnlag =
+                    personopplysningForutgåendeRepository.hentHvisEksisterer(kontekst.behandlingId)
+
+                val forutgåendeMedlemskapArbeidInntektGrunnlag =
+                    forutgåendeMedlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)
+                val oppgittUtenlandsOppholdGrunnlag =
+                    medlemskapArbeidInntektRepository.hentOppgittUtenlandsOppholdHvisEksisterer(kontekst.behandlingId)
+                        ?: medlemskapArbeidInntektRepository.hentSistRelevanteOppgitteUtenlandsOppholdHvisEksisterer(
+                            kontekst.sakId
+                        )
+
+                ForutgåendeMedlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode).vurder(
+                    ForutgåendeMedlemskapGrunnlag(
+                        forutgåendeMedlemskapArbeidInntektGrunnlag,
+                        personopplysningForutgåendeGrunnlag,
+                        oppgittUtenlandsOppholdGrunnlag
                     )
-
-            ForutgåendeMedlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode).vurder(
-                ForutgåendeMedlemskapGrunnlag(
-                    forutgåendeMedlemskapArbeidInntektGrunnlag,
-                    personopplysningForutgåendeGrunnlag,
-                    oppgittUtenlandsOppholdGrunnlag
                 )
-            )
-            vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+                vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+            }
         }
     }
 
