@@ -429,7 +429,7 @@ fun Application.startPDLHendelseKonsument(
     val konsument = PdlHendelseKafkaKonsument(
         config = KafkaConsumerConfig(
             keyDeserializer = org.apache.kafka.common.serialization.StringDeserializer::class.java,
-            valueDeserializer = io.confluent.kafka.serializers.KafkaAvroDeserializer::class.java,
+            valueDeserializer = io.confluent.kafka.serializers.KafkaAvroDeserializer::class.java
         ),
         dataSource = dataSource,
         repositoryRegistry = repositoryRegistry
