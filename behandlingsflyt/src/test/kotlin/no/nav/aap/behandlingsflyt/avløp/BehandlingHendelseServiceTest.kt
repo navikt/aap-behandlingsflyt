@@ -6,6 +6,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -41,8 +42,12 @@ class BehandlingHendelseServiceTest {
         val flytJobbRepository = mockk<FlytJobbRepository>()
         val mottattDokumentRepository = mockk<MottattDokumentRepository>()
         val pipRepository = mockk<PipRepository>()
+        val meldekortRepository = mockk<MeldekortRepository>()
 
         every { flytJobbRepository.leggTil(any()) } returns Unit
+
+        every { meldekortRepository.hentHvisEksisterer(BehandlingId(0)) } returns null
+
         every {
             mottattDokumentRepository.hentDokumenterAvType(
                 any<BehandlingId>(),
@@ -73,6 +78,7 @@ class BehandlingHendelseServiceTest {
                 sakService,
                 mottattDokumentRepository,
                 pipRepository,
+                meldekortRepository
             )
 
         val behandling = Behandling(
