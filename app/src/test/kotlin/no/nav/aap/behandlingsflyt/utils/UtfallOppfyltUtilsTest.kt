@@ -1,11 +1,11 @@
-package no.nav.aap.behandlingsflyt
+package no.nav.aap.behandlingsflyt.utils
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
-import no.nav.aap.behandlingsflyt.hendelse.kafka.person.UtfallOppfyltUtils
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
@@ -30,12 +30,12 @@ class UtfallOppfyltUtilsTest {
                 periode = Periode(1 januar 2026, 15 januar 2026),
                 rettighetsType = RettighetsType.BISTANDSBEHOV,
                 avslagsÅrsak = UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT,
-                utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.IKKE_OPPFYLT,
+                utfall = Utfall.IKKE_OPPFYLT,
             ), underveisperiode(
                 periode = Periode(16 januar 2026, 31 januar 2026),
                 rettighetsType = RettighetsType.BISTANDSBEHOV,
                 avslagsÅrsak = UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT,
-                utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.IKKE_OPPFYLT,
+                utfall = Utfall.IKKE_OPPFYLT,
             )
         )
 
@@ -53,13 +53,13 @@ class UtfallOppfyltUtilsTest {
                 periode = Periode(1 januar 2026, 15 januar 2026),
                 rettighetsType = RettighetsType.BISTANDSBEHOV,
                 avslagsÅrsak = UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT,
-                utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.IKKE_OPPFYLT,
+                utfall = Utfall.IKKE_OPPFYLT,
             ),
             underveisperiode(
                 periode = Periode(16 januar 2026, 31 januar 2026),
                 rettighetsType = RettighetsType.BISTANDSBEHOV,
                 avslagsÅrsak = null,
-                utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.OPPFYLT,
+                utfall = Utfall.OPPFYLT,
             )
         )
 
@@ -77,25 +77,25 @@ class UtfallOppfyltUtilsTest {
                 periode = Periode(1 januar 2024, 15 januar 2024),
                 rettighetsType = RettighetsType.BISTANDSBEHOV,
                 avslagsÅrsak = UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT,
-                utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.IKKE_OPPFYLT,
+                utfall = Utfall.IKKE_OPPFYLT,
             ),
             underveisperiode(
-                periode = Periode(15 januar 2024, 29 januar 2024),
+                periode = Periode(16 januar 2024, 30 januar 2024),
                 rettighetsType = RettighetsType.BISTANDSBEHOV,
                 avslagsÅrsak = null,
-                utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.OPPFYLT,
+                utfall = Utfall.OPPFYLT,
             ),
             underveisperiode(
                 periode = Periode(1 januar 2026, 15 januar 2026),
                 rettighetsType = RettighetsType.BISTANDSBEHOV,
                 avslagsÅrsak = UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT,
-                utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.IKKE_OPPFYLT,
+                utfall = Utfall.IKKE_OPPFYLT,
             ),
             underveisperiode(
                 periode = Periode(16 januar 2026, 31 januar 2026),
                 rettighetsType = RettighetsType.BISTANDSBEHOV,
                 avslagsÅrsak = null,
-                utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.OPPFYLT,
+                utfall = Utfall.OPPFYLT,
             )
         )
 
@@ -113,13 +113,13 @@ class UtfallOppfyltUtilsTest {
                 periode = Periode(1 januar 2024, 15 januar 2024),
                 rettighetsType = RettighetsType.BISTANDSBEHOV,
                 avslagsÅrsak = null,
-                utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.OPPFYLT,
+                utfall = Utfall.OPPFYLT,
             ),
             underveisperiode(
                 periode = Periode(16 januar 2026, 31 januar 2026),
                 rettighetsType = RettighetsType.BISTANDSBEHOV,
                 avslagsÅrsak = UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT,
-                utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.IKKE_OPPFYLT,
+                utfall = Utfall.IKKE_OPPFYLT,
             )
         )
 
@@ -141,7 +141,7 @@ private fun underveisperiode(
     periode: Periode,
     rettighetsType: RettighetsType,
     avslagsÅrsak: UnderveisÅrsak? = null,
-    utfall: no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+    utfall: Utfall
 ): Underveisperiode {
     return Underveisperiode(
         periode = periode,

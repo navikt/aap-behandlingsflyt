@@ -3,8 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.foreslåvedtak
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import no.nav.aap.behandlingsflyt.behandling.foreslåvedtak.UnderveisPeriodeInfo.Companion.tilForeslåVedtakData
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
+import no.nav.aap.behandlingsflyt.utils.tilForeslåVedtakDataTidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
@@ -83,19 +82,3 @@ private fun utledAvslagstidslinjer(vilkårsresultat: Vilkårsresultat): List<Tid
     }
 }
 
-private fun UnderveisGrunnlag.tilForeslåVedtakDataTidslinje(): Tidslinje<ForeslåVedtakData> {
-    val underveisPerioder =
-        this.perioder.map {
-            UnderveisPeriodeInfo(
-                periode = it.periode,
-                utfall = it.utfall,
-                rettighetsType = it.rettighetsType,
-                underveisÅrsak = it.avslagsårsak
-            )
-        }
-    return underveisPerioder
-        .map {
-            Segment(it.periode, it.tilForeslåVedtakData())
-        }.let(::Tidslinje)
-        .komprimer()
-}
