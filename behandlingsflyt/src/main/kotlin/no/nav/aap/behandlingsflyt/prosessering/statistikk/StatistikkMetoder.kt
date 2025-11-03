@@ -21,7 +21,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtle
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.AVSLUTTET
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.ArbeidIPeriodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ArbeidIPeriodeV0
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvsluttetBehandlingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.BeregningsgrunnlagDTO
@@ -29,6 +31,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Diagnoser
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Grunnlag11_19DTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.GrunnlagUføreDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.GrunnlagYrkesskadeDTO
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.MeldekortDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ResultatKode
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetstypePeriode
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
@@ -117,7 +120,19 @@ class StatistikkMetoder(
             avsluttetBehandling = if (hendelse.status == AVSLUTTET) hentAvsluttetBehandlingDTO(hendelse) else null,
             identerForSak = hentIdenterPåSak(sak.saksnummer),
             vurderingsbehov = vurderingsbehovForBehandling,
-            opprettetAv = hendelse.opprettetAv
+            opprettetAv = hendelse.opprettetAv,
+            nyeMeldekort = hendelse.nyeMeldekort?.map { meldekort ->
+                MeldekortDTO(
+                    meldekort.journalpostId.toString(),
+                    meldekort.timerArbeidPerPeriode.map {
+                        ArbeidIPeriodeDTO(
+                            it.periode.fom,
+                            it.periode.tom,
+                            it.timerArbeid.antallTimer
+                        )
+                    }
+                )
+            }.orEmpty()
         )
         return statistikkHendelse
     }
