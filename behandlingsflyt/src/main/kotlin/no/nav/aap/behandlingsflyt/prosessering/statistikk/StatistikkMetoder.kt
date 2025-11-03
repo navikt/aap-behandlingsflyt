@@ -132,7 +132,7 @@ class StatistikkMetoder(
                         )
                     }
                 )
-            }
+            }.orEmpty()
         )
         return statistikkHendelse
     }
