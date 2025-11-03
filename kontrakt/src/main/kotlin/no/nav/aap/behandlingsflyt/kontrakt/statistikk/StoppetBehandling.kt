@@ -115,6 +115,6 @@ public enum class RettighetsType(public val hjemmel: String) {
 }
 
 public class MeldekortDTO(
-    val meldekortId: String,
+    val journalpostId: String,
     val arbeidIPeriodeDTO: List<ArbeidIPeriodeDTO>,
 )
