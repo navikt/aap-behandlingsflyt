@@ -35,6 +35,7 @@ import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.motor.Motor
 import no.nav.aap.motor.testutil.ManuellMotorImpl
 import no.nav.aap.verdityper.dokument.Kanal
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -56,16 +57,12 @@ import kotlin.concurrent.thread
 
 class KabalKafkaKonsumentTest {
     companion object {
-        private val dataSource = TestDataSource()
         private val repositoryRegistry = postgresRepositoryRegistry
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-        private val motor =
-            ManuellMotorImpl(
-                dataSource,
-                jobber = listOf(HendelseMottattHåndteringJobbUtfører, KafkaFeilJobbUtfører),
-                repositoryRegistry = repositoryRegistry,
-                gatewayProvider = createGatewayProvider { register<FakeUnleash>() }
-            )
+
+        private lateinit var dataSource: TestDataSource
+        private lateinit var motor: ManuellMotorImpl
+
         val kafka: KafkaContainer = KafkaContainer(DockerImageName.parse("apache/kafka-native:4.1.0"))
             .withReuse(true)
             .waitingFor(Wait.forListeningPort())
@@ -74,7 +71,17 @@ class KabalKafkaKonsumentTest {
         @BeforeAll
         @JvmStatic
         internal fun beforeAll() {
+            // Avoid starting testcontainers and motor during class initialization, as it takes a while, and
+            // can lead to exceptions with root cause InitializationError.
+            dataSource = TestDataSource()
+            motor = ManuellMotorImpl(
+                    dataSource,
+                    jobber = listOf(HendelseMottattHåndteringJobbUtfører, KafkaFeilJobbUtfører),
+                    repositoryRegistry = repositoryRegistry,
+                    gatewayProvider = createGatewayProvider { register<FakeUnleash>() }
+                )
             motor.start()
+
             kafka.start()
         }
 
