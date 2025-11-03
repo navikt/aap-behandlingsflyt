@@ -7,10 +7,15 @@ data class ManuellInntektVurderingDto(
     val begrunnelse: String,
     @Deprecated("Ikke bruk, skal over til flere vurderinger") val belop: BigDecimal,
     val vurderinger: List<ManuellInntekterVurderingDto> = emptyList(),
+    val aarsak: ÅrsakTilManuellInntektVurdering? = null,
 )
 
 data class ManuellInntekterVurderingDto(
     val belop: BigDecimal,
-    val ar: Year,
-    val begrunnelse: String,
+    val ar: Year
 )
+
+enum class ÅrsakTilManuellInntektVurdering {
+    EOS_BEREGNING,
+    IKKE_FERDIG_LIGNET
+}

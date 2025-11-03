@@ -9,5 +9,6 @@ data class ManuellInntektVurdering(
     val begrunnelse: String,
     val belop: Beløp,
     val vurdertAv: String,
-    val opprettet: LocalDateTime = LocalDateTime.now()
+    val opprettet: LocalDateTime = LocalDateTime.now(),
+    val aarsak: ÅrsakTilManuellInntektVurdering? = null,
 )

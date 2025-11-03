@@ -43,7 +43,8 @@ class AvklarManuellInntektVurderingLøser(
                     begrunnelse = begrunnelse,
                     belop = vurdering.belop.let(::Beløp),
                     vurdertAv = kontekst.bruker.ident,
-                    år = vurdering.ar
+                    år = vurdering.ar,
+                    aarsak = løsning.manuellVurderingForManglendeInntekt.aarsak
                 )
             }.toSet()
         } else {

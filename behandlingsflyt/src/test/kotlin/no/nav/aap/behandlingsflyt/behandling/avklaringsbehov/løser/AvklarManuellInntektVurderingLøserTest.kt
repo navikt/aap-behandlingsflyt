@@ -33,7 +33,6 @@ class AvklarManuellInntektVurderingLøserTest {
             unleashGateway = FakeUnleash
         )
 
-
         val kontekst = AvklaringsbehovKontekst(
             bruker = Bruker("bruker"), kontekst = FlytKontekst(
                 sakId = SakId(1L),
