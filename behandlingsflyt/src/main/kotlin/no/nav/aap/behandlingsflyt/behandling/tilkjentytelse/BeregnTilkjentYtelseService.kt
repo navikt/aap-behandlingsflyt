@@ -77,13 +77,15 @@ class BeregnTilkjentYtelseService(
                 val meldeperiode = venstre.verdi.meldePeriode
                 val opplysningerMottatt = venstre.verdi.arbeidsgradering.opplysningerMottatt
 
+                val sisteMeldedagForMeldeperiode = meldeperiode.tom.plusDays(9)
+                val førsteMeldedagForMeldeperiode = meldeperiode.tom.plusDays(1)
                 val muligUtbetalingsdato = when {
                     opplysningerMottatt != null -> opplysningerMottatt
-                    venstre.verdi.meldepliktStatus == MeldepliktStatus.FRITAK -> meldeperiode.tom.plusDays(1)
-                    else -> meldeperiode.tom.plusDays(9)
+                    venstre.verdi.meldepliktStatus == MeldepliktStatus.FRITAK -> førsteMeldedagForMeldeperiode
+                    else -> sisteMeldedagForMeldeperiode
                 }
                 val utbetalingsdato = muligUtbetalingsdato
-                        .coerceIn(meldeperiode.tom.plusDays(1)..meldeperiode.tom.plusDays(9))
+                        .coerceIn(førsteMeldedagForMeldeperiode..sisteMeldedagForMeldeperiode)
 
                 Segment(
                     periode,

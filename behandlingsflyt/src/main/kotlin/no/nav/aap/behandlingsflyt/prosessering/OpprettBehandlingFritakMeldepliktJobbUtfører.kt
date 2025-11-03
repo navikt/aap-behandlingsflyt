@@ -55,7 +55,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtfører(
             return false
         }
         val sisteIverksatteBehandling = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sak.id) ?: return false
-        //NB Sjekket 7 dager tilbake for å få med siste utbetaling som har fritak.
+        // NB Sjekker 7 dager tilbake for å få med siste utbetaling som har fritak.
         val sistePasserteMeldeperiode = meldeperiodeRepository.hent(sisteIverksatteBehandling.id).firstOrNull { it.inneholder(nå.minusDays(7)) } ?: return false
         val meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(sisteIverksatteBehandling.id) ?: return false
 
