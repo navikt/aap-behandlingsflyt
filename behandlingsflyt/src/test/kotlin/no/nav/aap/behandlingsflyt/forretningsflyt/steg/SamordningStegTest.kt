@@ -9,7 +9,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.help.FakePdlGateway
@@ -17,6 +16,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
@@ -34,7 +34,6 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningYtelseRepo
 import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemorySakOgBehandlingService
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
-import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -83,10 +82,10 @@ class SamordningStegTest {
                 begrunnelse = "En god begrunnelse",
                 maksDatoEndelig = false,
                 fristNyRevurdering = LocalDate.now().plusYears(1),
-                vurderinger = listOf(
+                vurderinger = setOf(
                     SamordningVurdering(
                         ytelseType = ytelse,
-                        vurderingPerioder = listOf(
+                        vurderingPerioder = setOf(
                             SamordningVurderingPeriode(
                                 periode = Periode(LocalDate.now().minusYears(1), LocalDate.now()),
                                 gradering = Prosent(50),
@@ -147,10 +146,10 @@ class SamordningStegTest {
                 begrunnelse = "En god begrunnelse",
                 maksDatoEndelig = true,
                 fristNyRevurdering = null,
-                vurderinger = listOf(
+                vurderinger = setOf(
                     SamordningVurdering(
                         ytelseType = Ytelse.PLEIEPENGER,
-                        vurderingPerioder = listOf(
+                        vurderingPerioder = setOf(
                             SamordningVurderingPeriode(
                                 periode = pleiepengerPeriode,
                                 gradering = Prosent(50),
@@ -160,7 +159,7 @@ class SamordningStegTest {
                     ),
                     SamordningVurdering(
                         ytelseType = Ytelse.SYKEPENGER,
-                        vurderingPerioder = listOf(
+                        vurderingPerioder = setOf(
                             SamordningVurderingPeriode(
                                 periode = periodeMedSykepenger,
                                 gradering = Prosent(90),
@@ -211,10 +210,10 @@ class SamordningStegTest {
                 begrunnelse = "",
                 maksDatoEndelig = true,
                 fristNyRevurdering = null,
-                vurderinger = listOf(
+                vurderinger = setOf(
                     SamordningVurdering(
                         ytelseType = Ytelse.SYKEPENGER,
-                        vurderingPerioder = listOf(
+                        vurderingPerioder = setOf(
                             SamordningVurderingPeriode(
                                 periode = Periode(LocalDate.now().minusYears(1), LocalDate.now()),
                                 gradering = Prosent(50),
@@ -275,11 +274,11 @@ class SamordningStegTest {
                 begrunnelse = "",
                 maksDatoEndelig = true,
                 fristNyRevurdering = null,
-                vurderinger = listOf(
+                vurderinger = setOf(
                     SamordningVurdering(
                         ytelseType = Ytelse.SYKEPENGER,
 
-                        vurderingPerioder = listOf(
+                        vurderingPerioder = setOf(
                             SamordningVurderingPeriode(
                                 periode = Periode(LocalDate.now().minusYears(1), LocalDate.now()),
                                 gradering = Prosent(50),
@@ -322,9 +321,9 @@ class SamordningStegTest {
                 begrunnelse = "",
                 maksDatoEndelig = true,
                 fristNyRevurdering = null,
-                vurderinger = listOf(
+                vurderinger = setOf(
                     SamordningVurdering(
-                        Ytelse.SYKEPENGER, listOf(
+                        Ytelse.SYKEPENGER, setOf(
                             SamordningVurderingPeriode(
                                 periode = Periode(LocalDate.now().minusWeeks(2), LocalDate.now().plusWeeks(2)),
                                 gradering = Prosent.`100_PROSENT`,
@@ -378,9 +377,9 @@ class SamordningStegTest {
                 begrunnelse = "bla bla",
                 maksDatoEndelig = false,
                 fristNyRevurdering = LocalDate.now().plusWeeks(1),
-                vurderinger = listOf(
+                vurderinger = setOf(
                     SamordningVurdering(
-                        Ytelse.SYKEPENGER, listOf(
+                        Ytelse.SYKEPENGER, setOf(
                             SamordningVurderingPeriode(
                                 periode = sykepengePeriode,
                                 gradering = Prosent.`100_PROSENT`,
@@ -440,7 +439,7 @@ class SamordningStegTest {
         periode: Periode
     ) {
         InMemorySamordningYtelseRepository.lagre(
-            behandlingId, listOf(
+            behandlingId, setOf(
                 SamordningYtelse(
                     ytelseType = ytelse,
                     ytelsePerioder = setOf(

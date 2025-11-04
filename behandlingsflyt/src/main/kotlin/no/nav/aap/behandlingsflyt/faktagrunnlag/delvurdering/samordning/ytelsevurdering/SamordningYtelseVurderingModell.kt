@@ -5,7 +5,6 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.Objects
 
 data class SamordningYtelse(
     val ytelseType: Ytelse,
@@ -22,7 +21,7 @@ data class SamordningYtelsePeriode(
 
 data class SamordningVurdering(
     val ytelseType: Ytelse,
-    val vurderingPerioder: List<SamordningVurderingPeriode>,
+    val vurderingPerioder: Set<SamordningVurderingPeriode>,
 )
 
 data class SamordningVurderingPeriode(
@@ -34,7 +33,7 @@ data class SamordningVurderingPeriode(
 
 data class SamordningYtelseGrunnlag(
     val grunnlagId: Long,
-    val ytelser: List<SamordningYtelse>,
+    val ytelser: Set<SamordningYtelse>,
 )
 
 data class SamordningVurderingGrunnlag(
@@ -44,7 +43,7 @@ data class SamordningVurderingGrunnlag(
     val maksDatoEndelig: Boolean? = null,
     @Deprecated("Ikke lenger i bruk - erstattet av Oppfølgingsoppgave")
     val fristNyRevurdering: LocalDate? = null,
-    val vurderinger: List<SamordningVurdering>,
+    val vurderinger: Set<SamordningVurdering>,
     val vurdertAv: String,
     val vurdertTidspunkt: LocalDateTime? = null
 )

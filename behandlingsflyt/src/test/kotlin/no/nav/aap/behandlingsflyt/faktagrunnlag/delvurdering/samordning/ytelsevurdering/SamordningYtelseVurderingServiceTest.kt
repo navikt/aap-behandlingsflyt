@@ -84,7 +84,7 @@ class SamordningYtelseVurderingServiceTest {
         val nå = LocalDate.now()
 
         val eksisterendeGrunnlag = SamordningYtelseGrunnlag(
-            1, listOf(
+            1, setOf(
                 SamordningYtelse(
                     Ytelse.SYKEPENGER,
                     setOf(
@@ -117,7 +117,7 @@ class SamordningYtelseVurderingServiceTest {
             )
         )
 
-        val ny = listOf(
+        val ny = setOf(
             SamordningYtelse(
                 Ytelse.SYKEPENGER,
                 setOf(
@@ -163,11 +163,10 @@ class SamordningYtelseVurderingServiceTest {
                 begrunnelse = "En god begrunnelse",
                 maksDatoEndelig = false,
                 fristNyRevurdering = LocalDate.now().plusYears(1),
-                vurderinger = listOf(
+                vurderinger = setOf(
                     SamordningVurdering(
                         Ytelse.SYKEPENGER,
-
-                        listOf(
+                        setOf(
                             SamordningVurderingPeriode(
                                 Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
                                 Prosent(50),
@@ -185,7 +184,7 @@ class SamordningYtelseVurderingServiceTest {
     private fun opprettYtelseData(samordningYtelseRepo: SamordningYtelseRepositoryImpl, behandlingId: BehandlingId) {
         samordningYtelseRepo.lagre(
             behandlingId,
-            listOf(
+            setOf(
                 SamordningYtelse(
                     Ytelse.SYKEPENGER,
                     setOf(
