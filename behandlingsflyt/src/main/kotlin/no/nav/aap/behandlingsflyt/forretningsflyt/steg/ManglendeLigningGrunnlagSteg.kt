@@ -65,14 +65,14 @@ class ManglendeLigningGrunnlagSteg internal constructor(
                                 val sisteRelevanteÅr = hentSisteRelevanteÅr(kontekst)
                                 if (unleashGateway.isEnabled(BehandlingsflytFeature.EOSBeregning)) {
                                     val sisteRelevanteÅr = hentSisteRelevanteÅr(kontekst)
-                                    val manglerInntektPåMinimumEttRelevantÅr =
+                                    val harInntektIAlleRelevantÅrFraRegister =
                                         sisteRelevanteÅr.all { relevantÅr ->
                                             inntektGrunnlag?.inntekter?.map { it.år }
                                                 ?.contains(relevantÅr) == true
                                         }
 
                                     // Behøver vurdering dersom en inntekt for siste tre år mangler fra register
-                                    manglerInntektPåMinimumEttRelevantÅr
+                                    !harInntektIAlleRelevantÅrFraRegister
                                 } else {
                                     val sisteÅrInntektGrunnlag =
                                         hentInntektGrunnlag(inntektGrunnlag, sisteRelevanteÅr.first())
@@ -98,8 +98,8 @@ class ManglendeLigningGrunnlagSteg internal constructor(
                     val manuelleInntekterRelevanteÅr =
                         hentManuellInntekterVurdering(manuellInntektGrunnlag, sisteRelevanteÅr)
                     val kombinerteÅr =
-                        (inntektGrunnlagSisteRelevanteÅr.map { it.år } + manuelleInntekterRelevanteÅr?.map { it.år }
-                            ?.toSet())
+                        (inntektGrunnlagSisteRelevanteÅr.map { it.år } + manuelleInntekterRelevanteÅr.orEmpty()
+                            .map { it.år }).toSet()
 
                     // Har enten inntekt fra register eller manuelt satt inntekt for tre siste relevante år
                     sisteRelevanteÅr.all { it in kombinerteÅr }

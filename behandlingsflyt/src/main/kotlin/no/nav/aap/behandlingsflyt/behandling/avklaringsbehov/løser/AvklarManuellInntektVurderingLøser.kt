@@ -32,7 +32,7 @@ class AvklarManuellInntektVurderingLøser(
         val relevantePeriode = beregningService.utledRelevanteBeregningsÅr(kontekst.behandlingId())
         val sisteRelevanteÅr = relevantePeriode.max()
 
-        if (løsning.manuellVurderingForManglendeInntekt.vurderinger.any { it.belop < BigDecimal.ZERO }) {
+        if (løsning.manuellVurderingForManglendeInntekt.belop < BigDecimal.ZERO || løsning.manuellVurderingForManglendeInntekt.vurderinger.any { it.belop < BigDecimal.ZERO }) {
             throw UgyldigForespørselException("Inntekt kan ikke være negativ")
         }
 

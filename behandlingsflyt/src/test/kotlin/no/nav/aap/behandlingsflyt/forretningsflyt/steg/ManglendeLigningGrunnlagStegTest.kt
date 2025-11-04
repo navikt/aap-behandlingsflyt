@@ -74,10 +74,12 @@ class ManglendeLigningGrunnlagStegTest {
             )
         }
         inntektGrunnlagRepository = mockk {
-            every { hentHvisEksisterer(any()) } returns InntektGrunnlag(setOf(
-                InntektPerÅr(sisteÅr.minusYears(2), Beløp(250_000)),
-                InntektPerÅr(sisteÅr.minusYears(1), Beløp(275_000)),
-                InntektPerÅr(sisteÅr, Beløp(300_000)))
+            every { hentHvisEksisterer(any()) } returns InntektGrunnlag(
+                setOf(
+                    InntektPerÅr(sisteÅr.minusYears(2), Beløp(250_000)),
+                    InntektPerÅr(sisteÅr.minusYears(1), Beløp(275_000)),
+                    InntektPerÅr(sisteÅr, Beløp(300_000))
+                )
             )
         }
         manuellInntektGrunnlagRepository = mockk(relaxed = true) {
@@ -132,10 +134,12 @@ class ManglendeLigningGrunnlagStegTest {
         val avklaringsbehovene = Avklaringsbehovene(InMemoryAvklaringsbehovRepository, behandling.id)
 
         every { avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id) } returns avklaringsbehovene
-        every { inntektGrunnlagRepository.hentHvisEksisterer(behandling.id) } returns InntektGrunnlag(setOf(
-            InntektPerÅr(sisteÅr.minusYears(2), Beløp(250_000)),
-            InntektPerÅr(sisteÅr.minusYears(1), Beløp(275_000)),
-        ))
+        every { inntektGrunnlagRepository.hentHvisEksisterer(behandling.id) } returns InntektGrunnlag(
+            setOf(
+                InntektPerÅr(sisteÅr.minusYears(2), Beløp(250_000)),
+                InntektPerÅr(sisteÅr.minusYears(1), Beløp(275_000)),
+            )
+        )
 
         val resultat = steg.utfør(flytKontekst)
 
@@ -147,17 +151,20 @@ class ManglendeLigningGrunnlagStegTest {
     }
 
     @Test
-    fun `oppretter ikke avklaringsbehov når det mangler inntekt men dette ikke er siste relevante år og tidligere vurdering tilsier mulig rett til AAP`() {
+    fun `oppretter ikke avklaringsbehov når det mangler inntekt men dette ikke er 3 siste relevante år og tidligere vurdering tilsier mulig rett til AAP`() {
         val behandling = behandling(typeBehandling = TypeBehandling.Førstegangsbehandling)
         val flytKontekst = flytKontekstMedPerioder(behandling)
         val avklaringsbehovene = Avklaringsbehovene(InMemoryAvklaringsbehovRepository, behandling.id)
 
         every { avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id) } returns avklaringsbehovene
-        // Antar at dette på sikt skal støttes, men pr nå er det kun siste relevante år som trigger avklaringsbehov
-        every { inntektGrunnlagRepository.hentHvisEksisterer(behandling.id) } returns InntektGrunnlag(setOf(
-            InntektPerÅr(sisteÅr.minusYears(2), Beløp(250_000)),
-            InntektPerÅr(sisteÅr, Beløp(300_000)),
-        ))
+        every { inntektGrunnlagRepository.hentHvisEksisterer(behandling.id) } returns InntektGrunnlag(
+            setOf(
+                InntektPerÅr(sisteÅr.minusYears(1), Beløp(250_000)),
+                InntektPerÅr(sisteÅr.minusYears(2), Beløp(250_000)),
+                InntektPerÅr(sisteÅr.minusYears(5), Beløp(250_000)),
+                InntektPerÅr(sisteÅr, Beløp(300_000)),
+            )
+        )
 
         val resultat = steg.utfør(flytKontekst)
 
@@ -169,18 +176,19 @@ class ManglendeLigningGrunnlagStegTest {
     }
 
     @Test
-    fun `oppretter ikke avklaringsbehov når det finnes manuell inntekt for siste relevante år`() {
+    fun `oppretter ikke avklaringsbehov når det finnes manuell inntekt for 3 siste relevante år`() {
         val behandling = behandling(typeBehandling = TypeBehandling.Førstegangsbehandling)
         val flytKontekst = flytKontekstMedPerioder(behandling)
         val avklaringsbehovene = Avklaringsbehovene(InMemoryAvklaringsbehovRepository, behandling.id)
-        val manuellVurdering = manuellVurdering()
 
         // Legger til tidligere avklaringsbehov som er løst og avsluttet for å sjekke at det ikke opprettes nytt behov
         leggTilLøstOgAvsluttetAvklaringsbehov(avklaringsbehovene)
 
         every { avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id) } returns avklaringsbehovene
         every { inntektGrunnlagRepository.hentHvisEksisterer(behandling.id) } returns InntektGrunnlag(emptySet())
-        every { manuellInntektGrunnlagRepository.hentHvisEksisterer(behandling.id) } returns ManuellInntektGrunnlag(setOf(manuellVurdering))
+        every { manuellInntektGrunnlagRepository.hentHvisEksisterer(behandling.id) } returns ManuellInntektGrunnlag(
+            manuelleVurderinger()
+        )
 
         val resultat = steg.utfør(flytKontekst)
 
@@ -196,12 +204,13 @@ class ManglendeLigningGrunnlagStegTest {
         val behandling = behandling(typeBehandling = TypeBehandling.Førstegangsbehandling)
         val flytKontekst = flytKontekstMedPerioder(behandling)
         val avklaringsbehovene = Avklaringsbehovene(InMemoryAvklaringsbehovRepository, behandling.id)
-        val manuellVurdering = manuellVurdering()
 
         leggTilLøstOgAvsluttetAvklaringsbehov(avklaringsbehovene)
 
         every { avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id) } returns avklaringsbehovene
-        every { manuellInntektGrunnlagRepository.hentHvisEksisterer(behandling.id) } returns ManuellInntektGrunnlag(setOf(manuellVurdering))
+        every { manuellInntektGrunnlagRepository.hentHvisEksisterer(behandling.id) } returns ManuellInntektGrunnlag(
+            manuelleVurderinger()
+        )
 
         val resultat = steg.utfør(flytKontekst)
 
@@ -223,7 +232,12 @@ class ManglendeLigningGrunnlagStegTest {
 
         // Vil i utgangspunktet opprette avklaringsbehov dersom ingen inntekter finnes
         every { inntektGrunnlagRepository.hentHvisEksisterer(behandling.id) } returns InntektGrunnlag(emptySet())
-        every { tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(any(), StegType.MANGLENDE_LIGNING) } returns true
+        every {
+            tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(
+                any(),
+                StegType.MANGLENDE_LIGNING
+            )
+        } returns true
         every { avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id) } returns avklaringsbehovene
 
         val resultat = steg.utfør(flytKontekst)
@@ -269,10 +283,12 @@ class ManglendeLigningGrunnlagStegTest {
         val avklaringsbehovene = Avklaringsbehovene(InMemoryAvklaringsbehovRepository, behandling.id)
 
         every { avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id) } returns avklaringsbehovene
-        every { inntektGrunnlagRepository.hentHvisEksisterer(behandling.id) } returns InntektGrunnlag(setOf(
-            InntektPerÅr(sisteÅr.minusYears(2), Beløp(250_000)),
-            InntektPerÅr(sisteÅr.minusYears(1), Beløp(275_000)),
-        ))
+        every { inntektGrunnlagRepository.hentHvisEksisterer(behandling.id) } returns InntektGrunnlag(
+            setOf(
+                InntektPerÅr(sisteÅr.minusYears(2), Beløp(250_000)),
+                InntektPerÅr(sisteÅr.minusYears(1), Beløp(275_000)),
+            )
+        )
 
         val resultat = steg.utfør(flytKontekst)
 
@@ -289,15 +305,34 @@ class ManglendeLigningGrunnlagStegTest {
         avklaringsbehovene.avslutt(Definisjon.FASTSETT_MANUELL_INNTEKT)
     }
 
-    private fun manuellVurdering(): ManuellInntektVurdering = ManuellInntektVurdering(
-        år = sisteÅr,
-        begrunnelse = "begrunnelse",
-        belop = Beløp(350_000),
-        vurdertAv = "saksbehandler",
-        opprettet = LocalDateTime.now()
+    private fun manuelleVurderinger(): Set<ManuellInntektVurdering> = setOf(
+        ManuellInntektVurdering(
+            år = sisteÅr,
+            begrunnelse = "begrunnelse",
+            belop = Beløp(350_000),
+            vurdertAv = "saksbehandler",
+            opprettet = LocalDateTime.now()
+        ),
+        ManuellInntektVurdering(
+            år = sisteÅr.minusYears(1),
+            begrunnelse = "begrunnelse",
+            belop = Beløp(350_000),
+            vurdertAv = "saksbehandler",
+            opprettet = LocalDateTime.now()
+        ),
+        ManuellInntektVurdering(
+            år = sisteÅr.minusYears(2),
+            begrunnelse = "begrunnelse",
+            belop = Beløp(350_000),
+            vurdertAv = "saksbehandler",
+            opprettet = LocalDateTime.now()
+        )
     )
 
-    private fun flytKontekstMedPerioder(behandling: Behandling, vurderingType: VurderingType? = null): FlytKontekstMedPerioder = FlytKontekstMedPerioder(
+    private fun flytKontekstMedPerioder(
+        behandling: Behandling,
+        vurderingType: VurderingType? = null
+    ): FlytKontekstMedPerioder = FlytKontekstMedPerioder(
         behandling.sakId, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling(),
         vurderingType = vurderingType
             ?: when (behandling.typeBehandling()) {
@@ -332,7 +367,9 @@ class ManglendeLigningGrunnlagStegTest {
         sakRepository.finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
 
     private fun person(): Person =
-        Person(PersonId(Random(1235123).nextLong()), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
-
-
+        Person(
+            PersonId(Random(1235123).nextLong()),
+            UUID.randomUUID(),
+            listOf(genererIdent(LocalDate.now().minusYears(23)))
+        )
 }

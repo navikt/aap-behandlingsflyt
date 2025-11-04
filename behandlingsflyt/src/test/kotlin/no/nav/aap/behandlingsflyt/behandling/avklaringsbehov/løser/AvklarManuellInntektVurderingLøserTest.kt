@@ -54,9 +54,4 @@ class AvklarManuellInntektVurderingLøserTest {
             )
         }
     }
-
-    @Test
-    fun `kan sende inn flere vurderinger samtidig`() {
-
-    }
 }

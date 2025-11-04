@@ -143,6 +143,7 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(
             } else {
                 // Gammel grunnlagsresponse
                 getGrunnlag<BehandlingReferanse, ManuellInntektGrunnlagResponse>(
+                    relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                     behandlingPathParam = BehandlingPathParam("referanse"),
                     avklaringsbehovKode = Definisjon.FASTSETT_MANUELL_INNTEKT.kode.toString()
                 ) { req ->
