@@ -19,7 +19,7 @@ data class SamordningYtelseVurderingGrunnlag(
  */
 data class SamordningGrunnlag(
     val id: Long,
-    val samordningPerioder: List<SamordningPeriode>,
+    val samordningPerioder: Set<SamordningPeriode>,
 )
 
 /**

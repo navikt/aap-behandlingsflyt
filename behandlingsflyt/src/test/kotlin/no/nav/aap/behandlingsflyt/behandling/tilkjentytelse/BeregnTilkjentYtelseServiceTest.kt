@@ -38,7 +38,6 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import java.math.BigDecimal
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 class BeregnTilkjentYtelseServiceTest {
 
@@ -57,7 +56,7 @@ class BeregnTilkjentYtelseServiceTest {
 
         val barnetilleggGrunnlag = BarnetilleggGrunnlag(1L, emptyList())
 
-        val samordningsgrunnlag = SamordningGrunnlag(0L, emptyList())
+        val samordningsgrunnlag = SamordningGrunnlag(0L, emptySet())
 
         val samordningUføre = SamordningUføreGrunnlag(vurdering = SamordningUføreVurdering("", emptyList(), "ident"))
 
@@ -141,7 +140,7 @@ class BeregnTilkjentYtelseServiceTest {
             )
         )
 
-        val samordningsgrunnlag = SamordningGrunnlag(0L, emptyList())
+        val samordningsgrunnlag = SamordningGrunnlag(0L, emptySet())
         val samordningUføre = SamordningUføreGrunnlag(SamordningUføreVurdering("", emptyList(), "ident"))
 
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
@@ -208,7 +207,7 @@ class BeregnTilkjentYtelseServiceTest {
             )
         )
 
-        val samordningsgrunnlag = SamordningGrunnlag(0L, emptyList())
+        val samordningsgrunnlag = SamordningGrunnlag(0L, emptySet())
         val samordningUføre = SamordningUføreGrunnlag(vurdering = SamordningUføreVurdering("", emptyList(), "ident"))
 
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
@@ -282,7 +281,7 @@ class BeregnTilkjentYtelseServiceTest {
         val periode = Periode(LocalDate.of(2024, 6, 30), LocalDate.of(2024, 7, 1))
         val underveisgrunnlag = underveisgrunnlag(periode)
 
-        val samordningsgrunnlag = SamordningGrunnlag(0L, emptyList())
+        val samordningsgrunnlag = SamordningGrunnlag(0L, emptySet())
 
         val barnetilleggGrunnlag = BarnetilleggGrunnlag(1L, emptyList())
         val samordningUføre = SamordningUføreGrunnlag(vurdering = SamordningUføreVurdering("", emptyList(), "ident"))
@@ -361,7 +360,7 @@ class BeregnTilkjentYtelseServiceTest {
             1L, emptyList()
         )
 
-        val samordningsgrunnlag = SamordningGrunnlag(0L, emptyList())
+        val samordningsgrunnlag = SamordningGrunnlag(0L, emptySet())
         val samordningUføre = SamordningUføreGrunnlag(vurdering = SamordningUføreVurdering("", emptyList(), "ident"))
 
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
@@ -436,7 +435,7 @@ class BeregnTilkjentYtelseServiceTest {
         val underveisgrunnlag = underveisgrunnlag(periode, institusjonsOppholdReduksjon = Prosent.`50_PROSENT`)
 
         val barnetilleggGrunnlag = BarnetilleggGrunnlag(1L, emptyList())
-        val samordningsgrunnlag = SamordningGrunnlag(0L, emptyList())
+        val samordningsgrunnlag = SamordningGrunnlag(0L, emptySet())
         val samordningUføre = SamordningUføreGrunnlag(vurdering = SamordningUføreVurdering("", emptyList(), "ident"))
 
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
@@ -495,7 +494,7 @@ class BeregnTilkjentYtelseServiceTest {
 
         // Samordning-perioden overlapper delvis med perioden det beregnes for
         val samordningsgrunnlag = SamordningGrunnlag(
-            0L, listOf(
+            0L, setOf(
                 SamordningPeriode(
                     periode = Periode(1 mars 2023, 1 august 2023), gradering = Prosent.`70_PROSENT`
                 )
@@ -612,7 +611,7 @@ class BeregnTilkjentYtelseServiceTest {
 
         // Samordning-perioden overlapper delvis med perioden det beregnes for
         val samordningsgrunnlag = SamordningGrunnlag(
-            0L, emptyList(),
+            0L, setOf(),
         )
 
         val samordningUføre = SamordningUføreGrunnlag(
@@ -703,7 +702,7 @@ class BeregnTilkjentYtelseServiceTest {
 
         val underveisgrunnlag = underveisgrunnlag(periode, gradering = Prosent.`70_PROSENT`)
         val barnetilleggGrunnlag = BarnetilleggGrunnlag(1L, emptyList())
-        val samordningsgrunnlag = SamordningGrunnlag(0L, emptyList())
+        val samordningsgrunnlag = SamordningGrunnlag(0L, emptySet())
         val samordningUføre = SamordningUføreGrunnlag(vurdering = SamordningUføreVurdering("", emptyList(), "ident"))
 
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
@@ -761,7 +760,7 @@ class BeregnTilkjentYtelseServiceTest {
         val barnetilleggGrunnlag = BarnetilleggGrunnlag(1L, emptyList())
         val samordningsgrunnlag = SamordningGrunnlag(
             0L,
-            listOf(
+            setOf(
                 SamordningPeriode(
                     periode = Periode(1 juni 2023, 1 august 2023),
                     gradering = Prosent.`50_PROSENT`
@@ -862,7 +861,7 @@ class BeregnTilkjentYtelseServiceTest {
 
         val underveisgrunnlag = underveisgrunnlag(periode, gradering = Prosent.`70_PROSENT`)
         val barnetilleggGrunnlag = BarnetilleggGrunnlag(1L, emptyList())
-        val samordningsgrunnlag = SamordningGrunnlag(0L, emptyList())
+        val samordningsgrunnlag = SamordningGrunnlag(0L, emptySet())
         val samordningUføre = SamordningUføreGrunnlag(vurdering = SamordningUføreVurdering("", emptyList(), "ident"))
 
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
@@ -920,7 +919,7 @@ class BeregnTilkjentYtelseServiceTest {
 
         val barnetilleggGrunnlag = BarnetilleggGrunnlag(1L, emptyList())
         val samordningsgrunnlag = SamordningGrunnlag(
-            0L, listOf(
+            0L, setOf(
                 SamordningPeriode(
                     periode = periode, gradering = Prosent(10)
                 )
@@ -1016,7 +1015,7 @@ class BeregnTilkjentYtelseServiceTest {
 
         val barnetilleggGrunnlag = BarnetilleggGrunnlag(1L, emptyList())
         val samordningsgrunnlag = SamordningGrunnlag(
-            0L, listOf(
+            0L, setOf(
                 SamordningPeriode(
                     periode = periode, gradering = Prosent(sykepengegrad)
                 )
@@ -1095,7 +1094,7 @@ class BeregnTilkjentYtelseServiceTest {
         )
 
         val barnetilleggGrunnlag = BarnetilleggGrunnlag(1L, emptyList())
-        val samordningsgrunnlag = SamordningGrunnlag(0L, emptyList())
+        val samordningsgrunnlag = SamordningGrunnlag(0L, emptySet())
         val samordningUføre = SamordningUføreGrunnlag(vurdering = SamordningUføreVurdering("", emptyList(), "ident"))
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(

@@ -105,7 +105,7 @@ class SamordningSteg(
                         it.periode,
                         it.verdi.gradering
                     )
-                },
+                }.toSet(),
             SamordningYtelseVurderingGrunnlag(ytelser, vurderinger)
         )
 
