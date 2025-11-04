@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.tilTidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag
@@ -75,9 +76,17 @@ class BeregnTilkjentYtelseService(
                 }
 
                 val meldeperiode = venstre.verdi.meldePeriode
-                val utbetalingsdato =
-                    (venstre.verdi.arbeidsgradering.opplysningerMottatt ?: meldeperiode.tom.plusDays(9))
-                        .coerceIn(meldeperiode.tom.plusDays(1)..meldeperiode.tom.plusDays(9))
+                val opplysningerMottatt = venstre.verdi.arbeidsgradering.opplysningerMottatt
+
+                val sisteMeldedagForMeldeperiode = meldeperiode.tom.plusDays(9)
+                val førsteMeldedagForMeldeperiode = meldeperiode.tom.plusDays(1)
+                val muligUtbetalingsdato = when {
+                    opplysningerMottatt != null -> opplysningerMottatt
+                    venstre.verdi.meldepliktStatus == MeldepliktStatus.FRITAK -> førsteMeldedagForMeldeperiode
+                    else -> sisteMeldedagForMeldeperiode
+                }
+                val utbetalingsdato = muligUtbetalingsdato
+                        .coerceIn(førsteMeldedagForMeldeperiode..sisteMeldedagForMeldeperiode)
 
                 Segment(
                     periode,
