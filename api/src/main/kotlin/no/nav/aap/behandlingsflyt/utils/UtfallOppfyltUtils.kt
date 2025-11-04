@@ -39,7 +39,7 @@ class UtfallOppfyltUtils {
             .toLocalDate()
         val tidslinje = underveisGrunnlag.tilForeslåVedtakDataTidslinje()
         val segmenterIFremtiden = tidslinje.segmenter()
-            .filter { it.periode.fom.isAfter(opprettetDato)}
+            .filter { it.periode.tom.isAfter(opprettetDato)}
         log.info("Tidslinje for død person med segmenter " + segmenterIFremtiden.count() + " " + segmenterIFremtiden)
         return segmenterIFremtiden.count() > 0 && segmenterIFremtiden.all {it.verdi.utfall == Utfall.IKKE_OPPFYLT } }
 

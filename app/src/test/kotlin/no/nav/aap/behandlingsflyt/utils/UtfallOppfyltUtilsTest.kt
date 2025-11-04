@@ -57,13 +57,13 @@ class UtfallOppfyltUtilsTest {
                 avslagsÅrsak = UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT,
                 utfall = Utfall.IKKE_OPPFYLT,
             ), underveisperiode(
-                periode = Periode(16 november 2026, 1 desember 2026),
+                periode = Periode(16 november 2025, 1 desember 2025),
                 rettighetsType = RettighetsType.BISTANDSBEHOV,
                 avslagsÅrsak = UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT,
                 utfall = Utfall.IKKE_OPPFYLT,
             )
             , underveisperiode(
-                periode = Periode(2 desember 2026, 16 desember 2026),
+                periode = Periode(2 desember 2025, 16 desember 2025),
                 rettighetsType = RettighetsType.BISTANDSBEHOV,
                 avslagsÅrsak = UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT,
                 utfall = Utfall.IKKE_OPPFYLT,
