@@ -456,6 +456,4 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
             setRowMapper(::sykdomsvurderingRowmapper)
         }
     }
-
 }
-

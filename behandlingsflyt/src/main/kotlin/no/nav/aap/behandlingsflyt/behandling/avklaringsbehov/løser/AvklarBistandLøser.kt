@@ -36,7 +36,6 @@ class AvklarBistandLøser(
 
         val nyesteSykdomsvurdering = sykdomRepository.hentHvisEksisterer(behandling.id)
             ?.sykdomsvurderinger?.maxByOrNull { it.opprettet }
-        
         val bistandsVurdering = løsning.bistandsVurdering.tilBistandVurdering(
             kontekst.bruker,
             nyesteSykdomsvurdering?.vurderingenGjelderFra,  // TODO: Gjør uavhengig fra sykdom
