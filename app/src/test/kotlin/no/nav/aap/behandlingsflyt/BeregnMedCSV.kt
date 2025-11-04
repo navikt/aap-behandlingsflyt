@@ -146,7 +146,7 @@ fun beregnForInput(input: Input, fødselsdato: Fødselsdato): Triple<Year, GUnit
             id = 0,
             perioder = emptyList()
         ),
-        samordningGrunnlag = SamordningGrunnlag(0L, emptyList()),
+        samordningGrunnlag = SamordningGrunnlag(0L, emptySet()),
         samordningUføre = null,
         samordningArbeidsgiver = null
     )
