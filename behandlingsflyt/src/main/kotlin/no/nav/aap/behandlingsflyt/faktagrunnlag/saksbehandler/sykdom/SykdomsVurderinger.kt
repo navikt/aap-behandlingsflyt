@@ -12,7 +12,7 @@ import java.time.LocalDateTime
 data class Sykdomsvurdering(
     val id: Long? = null,
     val begrunnelse: String,
-    val vurderingenGjelderFra: LocalDate, // TODO: Gjør påkrevd etter migrering
+    val vurderingenGjelderFra: LocalDate,
     val vurderingenGjelderTil: LocalDate?,
     val dokumenterBruktIVurdering: List<JournalpostId>,
     val harSkadeSykdomEllerLyte: Boolean,
@@ -25,7 +25,7 @@ data class Sykdomsvurdering(
     val kodeverk: String? = null,
     val hoveddiagnose: String? = null,
     val bidiagnoser: List<String>? = emptyList(),
-    val vurdertIBehandling: BehandlingId, // TODO: Gjør påkrevd etter migrering
+    val vurdertIBehandling: BehandlingId,
     val opprettet: Instant,
     val vurdertAv: Bruker,
 ) {
