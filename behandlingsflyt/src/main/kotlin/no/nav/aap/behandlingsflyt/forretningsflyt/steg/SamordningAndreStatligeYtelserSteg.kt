@@ -33,11 +33,9 @@ class SamordningAndreStatligeYtelserSteg(
                     VurderingType.REVURDERING -> {
                         when {
                             tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
-                            kontekst.vurderingsbehovRelevanteForSteg.isEmpty() -> false
-                            else -> Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER in kontekst.vurderingsbehovRelevanteForSteg
+                            else -> kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty()
                         }
                     }
-
                     VurderingType.MELDEKORT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
