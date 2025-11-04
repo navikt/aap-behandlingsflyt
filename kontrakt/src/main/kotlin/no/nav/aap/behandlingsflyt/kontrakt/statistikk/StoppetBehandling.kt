@@ -66,6 +66,7 @@ public enum class Vurderingsbehov {
     REVURDER_YRKESSKADE,        // Yrkesskade
     REVURDER_BEREGNING,         // Beregningstidspunkt
     REVURDER_LOVVALG,
+    // Ikke i bruk
     REVURDER_SAMORDNING,
     REVURDER_STUDENT,
     KLAGE,

@@ -11,6 +11,7 @@ interface SamordningVurderingRepository : Repository {
         behandlingId: BehandlingId,
         samordningVurderinger: SamordningVurderingGrunnlag
     )
+    fun deaktiverGrunnlag(behandlingId: BehandlingId)
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
 }
