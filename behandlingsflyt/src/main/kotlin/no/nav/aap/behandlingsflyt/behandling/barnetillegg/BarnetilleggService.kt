@@ -7,8 +7,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.IBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.tidslinje.JoinStyle
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -17,12 +18,14 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 class BarnetilleggService(
     private val sakOgBehandlingService: SakOgBehandlingService,
-    private val barnRepository: BarnRepository
+    private val barnRepository: BarnRepository,
+    private val unleashGateway: UnleashGateway
 ) {
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
         barnRepository = repositoryProvider.provide(),
+        unleashGateway = gatewayProvider.provide<UnleashGateway>()
     )
 
     fun beregn(behandlingId: BehandlingId): Tidslinje<RettTilBarnetillegg> {
@@ -35,16 +38,19 @@ class BarnetilleggService(
             barnGrunnlag.registerbarn?.barn.orEmpty()
         val vurderteBarn = barnGrunnlag.vurderteBarn?.barn.orEmpty()
 
-        val folkeregistrerteBarnUtenVurderingTidslinje = tilTidslinje(folkeregisterBarn.filter { barn -> vurderteBarn.none { it.ident.er(barn.ident) && it.vurderinger.isNotEmpty() } })
+        val folkeregistrerteBarnUtenVurderingTidslinje =
+            tilTidslinje(folkeregisterBarn.filter { barn -> vurderteBarn.none { it.ident.er(barn.ident) && it.vurderinger.isNotEmpty() } })
 
         resultat =
-            resultat.kombiner(folkeregistrerteBarnUtenVurderingTidslinje, JoinStyle.LEFT_JOIN { periode, venstreSegment, høyreSegment ->
-                val venstreVerdi = venstreSegment.verdi.copy()
-                if (høyreSegment?.verdi != null) {
-                    venstreVerdi.leggTilFolkeregisterBarn(høyreSegment.verdi)
-                }
-                Segment(periode, venstreVerdi)
-            })
+            resultat.kombiner(
+                folkeregistrerteBarnUtenVurderingTidslinje,
+                JoinStyle.LEFT_JOIN { periode, venstreSegment, høyreSegment ->
+                    val venstreVerdi = venstreSegment.verdi.copy()
+                    if (høyreSegment?.verdi != null) {
+                        venstreVerdi.leggTilFolkeregisterBarn(høyreSegment.verdi)
+                    }
+                    Segment(periode, venstreVerdi)
+                })
 
         val vurderteBarnIdenter = vurderteBarn.map { it.ident }
         val oppgittBarnSomIkkeErVurdert =
@@ -52,7 +58,20 @@ class BarnetilleggService(
                 ?.filterNot { vurderteBarnIdenter.contains(it.identifikator()) }
                 .orEmpty()
 
-        val oppgittBarnTidslinje = tilTidslinje(oppgittBarnSomIkkeErVurdert)
+        val oppgittBarnSomIkkeErVurdertNy =
+            barnGrunnlag.oppgitteBarn?.oppgitteBarn
+                ?.filterNot { oppgittBarn ->
+                    vurderteBarnIdenter.contains(oppgittBarn.identifikator()) ||
+                            folkeregisterBarn.any { it.ident.er(oppgittBarn.identifikator()) }
+                }
+                .orEmpty()
+
+        val oppgittBarnTidslinje = if (unleashGateway.isEnabled(BehandlingsflytFeature.HarEndringerIBarn)) {
+            tilTidslinje(oppgittBarnSomIkkeErVurdertNy)
+        } else {
+            tilTidslinje(oppgittBarnSomIkkeErVurdert)
+        }
+
         resultat =
             resultat.kombiner(oppgittBarnTidslinje, JoinStyle.LEFT_JOIN { periode, venstreSegment, høyreSegment ->
                 val venstreVerdi = venstreSegment.verdi.copy()
