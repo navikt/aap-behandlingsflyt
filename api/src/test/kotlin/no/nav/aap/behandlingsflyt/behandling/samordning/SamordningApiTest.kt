@@ -35,7 +35,7 @@ class SamordningApiKtTest : BaseApiTest() {
 
         InMemorySamordningYtelseRepository.lagre(
             behandling.id,
-            listOf(
+            setOf(
                 SamordningYtelse(
                     ytelseType = Ytelse.PLEIEPENGER,
                     ytelsePerioder = setOf(

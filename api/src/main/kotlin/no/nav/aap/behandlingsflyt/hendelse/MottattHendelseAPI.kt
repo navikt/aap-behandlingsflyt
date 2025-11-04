@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SaksnummerParameter
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForSakResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -52,6 +53,7 @@ fun NormalOpenAPIRoute.mottattHendelseApi(
             authorizedPost<SaksnummerParameter, String, Innsending>(
                 modules = arrayOf(TagModule(listOf(Tags.Sak))),
                 routeConfig = AuthorizationParamPathConfig(
+                    relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
                     sakPathParam = SakPathParam("saksnummer"),
                 )
             ) { _, dto ->

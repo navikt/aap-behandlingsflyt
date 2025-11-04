@@ -19,6 +19,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
@@ -36,6 +37,7 @@ fun NormalOpenAPIRoute.beregningsGrunnlagApi(dataSource: DataSource, repositoryR
         route("/grunnlag/{referanse}").tag(Tags.Grunnlag) {
             authorizedGet<BehandlingReferanse, BeregningDTO>(
                 AuthorizationParamPathConfig(
+                    relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                     behandlingPathParam = BehandlingPathParam(
                         "referanse"
                     )

@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.trekkklage.flate.TrekkKlageVurderin
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.tilDto
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
@@ -23,6 +24,7 @@ class TrekkKlageGrunnlagDto(
 fun NormalOpenAPIRoute.trekkKlageGrunnlagAPI(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/klage/{referanse}/grunnlag/trekk-klage").authorizedGet<BehandlingReferanse, TrekkKlageGrunnlagDto>(
         AuthorizationParamPathConfig(
+            relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             operasjon = Operasjon.SE,
             behandlingPathParam = BehandlingPathParam("referanse")
         )

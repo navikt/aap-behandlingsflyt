@@ -24,7 +24,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     KvalitetssikringsSteg,
     FatteVedtakAvklaringsbehovService,
     SykdomPeriodisertMigrering,
-    HarEndringerIBarn,
     EOSBeregning,
     ;
 

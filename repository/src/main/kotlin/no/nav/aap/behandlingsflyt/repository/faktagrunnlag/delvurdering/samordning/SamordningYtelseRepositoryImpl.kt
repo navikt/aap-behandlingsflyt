@@ -35,7 +35,7 @@ class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : S
 
         return SamordningYtelseGrunnlag(
             grunnlagId = par.first().first,
-            ytelser = par.first().second,
+            ytelser = par.first().second.toSet(),
         )
     }
 
@@ -56,7 +56,7 @@ class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : S
 
         return SamordningYtelseGrunnlag(
             grunnlagId = par.first().first,
-            ytelser = par.first().second,
+            ytelser = par.first().second.toSet(),
         )
     }
 
@@ -117,7 +117,7 @@ class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : S
         }.toSet()
     }
 
-    override fun lagre(behandlingId: BehandlingId, samordningYtelser: List<SamordningYtelse>) {
+    override fun lagre(behandlingId: BehandlingId, samordningYtelser: Set<SamordningYtelse>) {
         val eksiterende = hentHvisEksisterer(behandlingId)
         if (eksiterende != null) {
             deaktiverGrunnlag(behandlingId)
@@ -198,12 +198,14 @@ class SamordningYtelseRepositoryImpl(private val dbConnection: DBConnection) : S
         val samordningYtelserIds = getSamordningYtelserIds(behandlingId)
         val samordningYtelseIds = getSamordningYtelseIds(samordningYtelserIds)
 
-        val deletedRows = dbConnection.executeReturnUpdated("""
+        val deletedRows = dbConnection.executeReturnUpdated(
+            """
             delete from samordning_ytelse_grunnlag where behandling_id = ?; 
             delete from samordning_ytelse_periode where ytelse_id = ANY(?::bigint[]);
             delete from samordning_ytelse where ytelser_id = ANY(?::bigint[]);
             delete from samordning_ytelser where id = ANY(?::bigint[]);
-        """.trimIndent()) {
+        """.trimIndent()
+        ) {
             setParams {
                 setLong(1, behandlingId.id)
                 setLongArray(2, samordningYtelseIds)

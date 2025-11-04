@@ -63,7 +63,7 @@ class SamordningYtelseVurderingInformasjonskrav(
 
 
     data class SamordningRegisterdata(
-        val samordningYtelser: List<SamordningYtelse>
+        val samordningYtelser: Set<SamordningYtelse>
     ) : InformasjonskravRegisterdata
 
     override fun klargjør(kontekst: FlytKontekstMedPerioder): SamordningInput {
@@ -127,7 +127,7 @@ class SamordningYtelseVurderingInformasjonskrav(
 
     private fun mapTilSamordningYtelse(
         foreldrepenger: List<ForeldrePengerYtelse>, sykepenger: List<UtbetaltePerioder>
-    ): List<SamordningYtelse> {
+    ): Set<SamordningYtelse> {
         val foreldrepengerKildeMapped =
             foreldrepenger.filter { konverterFraForeldrePengerDomene(it) != null }.map { ytelse ->
                 SamordningYtelse(
@@ -153,7 +153,7 @@ class SamordningYtelseVurderingInformasjonskrav(
             }.toSet(), kilde = sykepengerKilde)
         }
 
-        return foreldrepengerKildeMapped.plus(listOfNotNull(sykepengerYtelse))
+        return foreldrepengerKildeMapped.plus(listOfNotNull(sykepengerYtelse)).toSet()
     }
 
     private fun konverterFraForeldrePengerDomene(ytelse: ForeldrePengerYtelse): Ytelse? {
@@ -199,9 +199,9 @@ class SamordningYtelseVurderingInformasjonskrav(
         }
 
         fun harEndringerIYtelser(
-            eksisterende: SamordningYtelseGrunnlag?, samordningYtelser: List<SamordningYtelse>
+            eksisterende: SamordningYtelseGrunnlag?, samordningYtelser: Set<SamordningYtelse>
         ): Boolean {
-            return eksisterende == null || samordningYtelser.toSet() != eksisterende.ytelser.toSet()
+            return eksisterende == null || samordningYtelser != eksisterende.ytelser
         }
     }
 }

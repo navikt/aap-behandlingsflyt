@@ -2,12 +2,15 @@ package no.nav.aap.behandlingsflyt.kontrakt.statistikk
 
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.ArbeidIPeriodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvklaringsbehovHendelseDto
+import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import java.time.LocalDateTime
 import java.util.*
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status as BehandlingsFlytBehandlingStatus
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status as SakStatus
+
 
 /**
  * @param saksnummer Saksnummer.
@@ -35,6 +38,8 @@ public data class StoppetBehandling(
     val avsluttetBehandling: AvsluttetBehandlingDTO? = null,
     val identerForSak: List<String> = emptyList(),
     val opprettetAv: String? = null,
+    val nyeMeldekort: List<MeldekortDTO> = emptyList(),
+    val søknadIder: List<JournalpostId> = emptyList(),
 ) {
     init {
         require(ident.isNotEmpty())
@@ -110,3 +115,8 @@ public enum class RettighetsType(public val hjemmel: String) {
     ARBEIDSSØKER(hjemmel = "§ 11-17"),
     VURDERES_FOR_UFØRETRYGD(hjemmel = "§ 11-18"),
 }
+
+public class MeldekortDTO(
+    public val journalpostId: String,
+    public val arbeidIPeriodeDTO: List<ArbeidIPeriodeDTO>,
+)

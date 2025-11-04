@@ -75,9 +75,10 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
                             innhentedeYrkesskader = innhentedeYrkesskader,
                         ),
                         skalVurdereYrkesskade = innhentedeYrkesskader.isNotEmpty(),
-                        erÅrsakssammenhengYrkesskade = vedtatteSykdomGrunnlag?.yrkesskadevurdering?.erÅrsakssammenheng ?: false,
+                        erÅrsakssammenhengYrkesskade = vedtatteSykdomGrunnlag?.yrkesskadevurdering?.erÅrsakssammenheng
+                            ?: false,
                         sykdomsvurderinger = sykdomsvurderinger
-                            .sortedBy { it.vurderingenGjelderFra ?: LocalDate.MIN }
+                            .sortedWith(compareBy({ it.vurderingenGjelderFra ?: LocalDate.MIN }, { it.opprettet }))
                             .map { it.toDto(ansattInfoService) },
                         historikkSykdomsvurderinger = historikkSykdomsvurderinger
                             .sortedBy { it.opprettet }

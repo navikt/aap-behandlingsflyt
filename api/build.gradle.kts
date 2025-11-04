@@ -9,7 +9,7 @@ repositories {
     maven { url = uri("https://packages.confluent.io/maven/") }
 }
 
-val mockOAuth2ServerVersion = "3.0.0"
+val mockOAuth2ServerVersion = "3.0.1"
 val kafkaVersion = "4.1.0"
 
 dependencies {

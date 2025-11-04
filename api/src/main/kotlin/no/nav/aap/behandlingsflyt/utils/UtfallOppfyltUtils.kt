@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.time.ZoneId
 
@@ -28,7 +29,7 @@ fun UnderveisGrunnlag.tilForeslåVedtakDataTidslinje(): Tidslinje<ForeslåVedtak
 }
 
 class UtfallOppfyltUtils {
-
+    private val log = LoggerFactory.getLogger(javaClass)
 
     fun allePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(
         opprettetTidspunkt: Instant,
@@ -38,11 +39,11 @@ class UtfallOppfyltUtils {
             .atZone(ZoneId.of("Europe/Oslo"))
             .toLocalDate()
         val tidslinje = underveisGrunnlag.tilForeslåVedtakDataTidslinje()
+        val segmenterIFremtiden = tidslinje.segmenter()
+            .filter { it.periode.fom.isAfter(opprettetDato)}
 
-        return tidslinje
-            .segmenter()
-            .filter { it.periode.fom.isAfter(opprettetDato) }
-            .all { it.verdi.utfall == Utfall.IKKE_OPPFYLT }
-    }
+        return segmenterIFremtiden.count() > 0 && segmenterIFremtiden.all {it.verdi.utfall == Utfall.IKKE_OPPFYLT } }
+
+
 
 }
