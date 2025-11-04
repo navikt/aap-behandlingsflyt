@@ -15,12 +15,14 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.IKlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageResultatType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.AVSLUTTET
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.ArbeidIPeriodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvsluttetBehandlingDTO
@@ -29,6 +31,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Diagnoser
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Grunnlag11_19DTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.GrunnlagUføreDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.GrunnlagYrkesskadeDTO
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.MeldekortDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ResultatKode
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetstypePeriode
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
@@ -51,6 +54,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.verdityper.dokument.Kanal
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
+import java.util.*
 
 class StatistikkMetoder(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
@@ -62,6 +66,7 @@ class StatistikkMetoder(
     private val dokumentRepository: MottattDokumentRepository,
     private val sykdomRepository: SykdomRepository,
     private val underveisRepository: UnderveisRepository,
+    private val påklagetBehandlingRepository: PåklagetBehandlingRepository,
     trukketSøknadService: TrukketSøknadService,
     private val klageresultatUtleder: IKlageresultatUtleder,
     avbrytRevurderingService: AvbrytRevurderingService
@@ -77,6 +82,7 @@ class StatistikkMetoder(
         dokumentRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
         underveisRepository = repositoryProvider.provide(),
+        påklagetBehandlingRepository = repositoryProvider.provide(),
         trukketSøknadService = TrukketSøknadService(repositoryProvider.provide()),
         klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider)
@@ -90,12 +96,14 @@ class StatistikkMetoder(
     fun oversettHendelseTilKontrakt(hendelse: BehandlingFlytStoppetHendelseTilStatistikk): StoppetBehandling {
         log.info("Oversetter hendelse for behandling ${hendelse.referanse} og saksnr ${hendelse.saksnummer}")
         val behandling = behandlingRepository.hent(hendelse.referanse)
-        val søknaderForSak = hentSøknanderForSak(behandling)
+        val søknaderForSak = hentSøknaderForSak(behandling)
         val mottattTidspunkt = utledMottattTidspunkt(behandling, søknaderForSak)
-        val kanal = hentSøknadsKanal(behandling, søknaderForSak)
+        val søknadIder = søknaderForSak
+            .filter { it.type == InnsendingType.SØKNAD }
+            .map { it.referanse.asJournalpostId }
 
-        val forrigeBehandling =
-            if (behandling.forrigeBehandlingId != null) behandlingRepository.hent(behandling.forrigeBehandlingId) else null
+
+        val kanal = hentSøknadsKanal(behandling, søknaderForSak)
 
         val sak = sakService.hent(hendelse.saksnummer)
 
@@ -107,7 +115,7 @@ class StatistikkMetoder(
             ident = hendelse.personIdent,
             avklaringsbehov = hendelse.avklaringsbehov,
             behandlingReferanse = hendelse.referanse.referanse,
-            relatertBehandling = forrigeBehandling?.referanse?.referanse,
+            relatertBehandling = relatertBehandling(behandling),
             behandlingOpprettetTidspunkt = hendelse.opprettetTidspunkt,
             soknadsFormat = kanal,
             versjon = hendelse.versjon,
@@ -117,9 +125,40 @@ class StatistikkMetoder(
             avsluttetBehandling = if (hendelse.status == AVSLUTTET) hentAvsluttetBehandlingDTO(hendelse) else null,
             identerForSak = hentIdenterPåSak(sak.saksnummer),
             vurderingsbehov = vurderingsbehovForBehandling,
-            opprettetAv = hendelse.opprettetAv
+            opprettetAv = hendelse.opprettetAv,
+            nyeMeldekort = hendelse.nyeMeldekort?.map { meldekort ->
+                MeldekortDTO(
+                    meldekort.journalpostId.toString(),
+                    meldekort.timerArbeidPerPeriode.map {
+                        ArbeidIPeriodeDTO(
+                            it.periode.fom,
+                            it.periode.tom,
+                            it.timerArbeid.antallTimer
+                        )
+                    }
+                )
+            }.orEmpty(),
+            søknadIder = søknadIder
         )
         return statistikkHendelse
+    }
+
+    private fun relatertBehandling(behandling: Behandling): UUID? {
+        val påklagetBehandlingReferanse = if (behandling.typeBehandling() == TypeBehandling.Klage) {
+            val påklagetBehandling =
+                påklagetBehandlingRepository.hentGjeldendeVurderingMedReferanse(behandling.referanse)
+            påklagetBehandling?.referanse
+        } else null
+
+        val forrigeBehandling =
+            if (behandling.forrigeBehandlingId != null) behandlingRepository.hent(behandling.forrigeBehandlingId) else null
+
+        if (forrigeBehandling != null && påklagetBehandlingReferanse != null) {
+            log.error("Fant både forrigeBehandling og påklagetBehandlingReferanse for behandling ${behandling.referanse}. Returnerer forrigeBehandling.")
+        }
+
+        return forrigeBehandling?.referanse?.referanse
+            ?: påklagetBehandlingReferanse?.referanse
     }
 
     private fun utledVurderingsbehovForBehandling(behandling: Behandling): List<no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov> =
@@ -204,7 +243,7 @@ class StatistikkMetoder(
         return mottattTidspunkt
     }
 
-    private fun hentSøknanderForSak(behandling: Behandling): Set<MottattDokument> {
+    private fun hentSøknaderForSak(behandling: Behandling): Set<MottattDokument> {
         val hentDokumenterAvType = dokumentRepository.hentDokumenterAvType(
             behandling.sakId, InnsendingType.SØKNAD
         )

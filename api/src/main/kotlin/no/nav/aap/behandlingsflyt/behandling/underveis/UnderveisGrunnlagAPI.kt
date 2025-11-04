@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
@@ -17,7 +18,10 @@ import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.underveisVurderingerAPI(datasource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/behandling/underveis/{referanse}").authorizedGet<BehandlingReferanse, List<UnderveisperiodeDto>>(
-        AuthorizationParamPathConfig(behandlingPathParam = BehandlingPathParam("referanse")),
+        AuthorizationParamPathConfig(
+            behandlingPathParam = BehandlingPathParam("referanse"),
+            relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, datasource),
+        ),
         null,
         info(
             summary = "Hente alle underveis-vurderinger på en behandling",

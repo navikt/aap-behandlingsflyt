@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.BehandlingPathParam
@@ -45,6 +46,7 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(dataSource: DataSource, repositoryRe
     route("/api/behandling") {
         route("/{referanse}/grunnlag/beregning/manuellinntekt") {
             getGrunnlag<BehandlingReferanse, ManuellInntektGrunnlagResponse>(
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = Definisjon.FASTSETT_MANUELL_INNTEKT.kode.toString()
             ) { req ->

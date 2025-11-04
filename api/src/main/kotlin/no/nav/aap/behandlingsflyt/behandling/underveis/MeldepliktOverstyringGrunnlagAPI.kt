@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -33,6 +34,7 @@ fun NormalOpenAPIRoute.meldepliktOverstyringGrunnlagApi(
 
     route("/api/behandling/{referanse}/grunnlag/meldeplikt-overstyring") {
         getGrunnlag<BehandlingReferanse, MeldepliktOverstyringGrunnlagResponse>(
+            relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
             avklaringsbehovKode = Definisjon.OVERSTYR_IKKE_OPPFYLT_MELDEPLIKT.kode.toString(),
         ) { req ->
@@ -70,6 +72,7 @@ fun NormalOpenAPIRoute.meldepliktOverstyringGrunnlagApi(
                         perioderIkkeMeldt = underveisGrunnlag?.perioder
                             ?.filter { it.meldepliktStatus == MeldepliktStatus.IKKE_MELDT_SEG }
                             ?.map { it.meldePeriode }
+                            ?.distinctBy { it.fom }
                             ?: emptyList(),
                         gjeldendeVedtatteOversyringsvurderinger = gjeldendeVedtatteVurdertePerioder,
                         overstyringsvurderinger = overstyringerFraDenneBehandlingen

@@ -12,7 +12,7 @@ class SamordningVurderingTest {
                 begrunnelse = "....",
                 maksDatoEndelig = null,
                 fristNyRevurdering = null,
-                vurderinger = emptyList(),
+                vurderinger = emptySet(),
                 vurdertAv = "ident"
             )
         }

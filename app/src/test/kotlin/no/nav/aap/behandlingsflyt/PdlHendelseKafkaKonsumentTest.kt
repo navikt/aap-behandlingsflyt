@@ -6,7 +6,6 @@ import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.SchemaRegistryConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PdlHendelseKafkaKonsument
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.person.pdl.leesah.Endringstype
 import no.nav.person.pdl.leesah.Personhendelse
@@ -56,15 +55,15 @@ PdlHendelseKafkaKonsumentTest {
         }
     }
 
+    val konsument = PdlHendelseKafkaKonsument(
+        testConfig(kafka.bootstrapServers),
+        dataSource = dataSource,
+        repositoryRegistry = repositoryRegistry,
+        pollTimeout = Duration.ofMillis(50),
+    )
+
     @Test
     fun `PdlHendelseKafkaKonsument konsumerer Avro Personhendelse`() {
-
-        val konsument = PdlHendelseKafkaKonsument(
-            testConfig(kafka.bootstrapServers),
-            dataSource = dataSource,
-            repositoryRegistry = repositoryRegistry,
-            pollTimeout = Duration.ofMillis(50),
-        )
 
         val topic = "pdl.leesah-v1"
 
@@ -105,21 +104,24 @@ PdlHendelseKafkaKonsumentTest {
         pollThread.join()
     }
 
-    private fun testConfig(brokers: String) = KafkaConsumerConfig<String, Personhendelse>(
-        applicationId = "behandlingsflyt-test",
-        brokers = brokers,
-        ssl = null,
-        schemaRegistry = SchemaRegistryConfig(
-            url = "mock://schema-registry",
-            user = "",
-            password = "",
-        ),
-        keyDeserializer =
-            StringDeserializer::class.java as Class<out Deserializer<String>>,
-        valueDeserializer = KafkaAvroDeserializer::class.java as Class<out Deserializer<Personhendelse>>,
-        additionalProperties = Properties().apply {
-            put("specific.avro.reader", true)
-        })
-
 
 }
+
+
+private fun testConfig(brokers: String) = KafkaConsumerConfig<String, Personhendelse>(
+    applicationId = "behandlingsflyt-test",
+    brokers = brokers,
+    ssl = null,
+    schemaRegistry = SchemaRegistryConfig(
+        url = "mock://schema-registry",
+        user = "",
+        password = "",
+    ),
+    keyDeserializer =
+        StringDeserializer::class.java as Class<out Deserializer<String>>,
+    valueDeserializer = KafkaAvroDeserializer::class.java as Class<out Deserializer<Personhendelse>>,
+    additionalProperties = Properties().apply {
+        put("specific.avro.reader", true)
+    }
+)
+

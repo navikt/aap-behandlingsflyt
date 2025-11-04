@@ -32,6 +32,7 @@ tasks {
             // Merk at META-INF/maven/org.webjars/swagger-ui/pom.properties
             // brukes av com.papsign.ktor.openapigen.SwaggerUIVersion
             duplicatesStrategy = DuplicatesStrategy.INCLUDE
+            // Vi beholder alle pom.properties fra Maven for å støtte generering av SBOM i Nais
         }
 
         // Helt unødvendige filer som ofte skaper duplikater

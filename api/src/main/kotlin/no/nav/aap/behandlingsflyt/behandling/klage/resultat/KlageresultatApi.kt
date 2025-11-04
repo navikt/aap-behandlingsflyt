@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtle
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
@@ -25,6 +26,7 @@ fun NormalOpenAPIRoute.klageresultatApi(
     route("api/klage/{referanse}/resultat") {
         authorizedGet<BehandlingReferanse, KlageResultat>(
             AuthorizationParamPathConfig(
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam(
                     "referanse"
                 )
@@ -43,6 +45,7 @@ fun NormalOpenAPIRoute.klageresultatApi(
     route("api/klage/{referanse}/kabal-resultat") {
         authorizedGet<BehandlingReferanse, KabalKlageResultat>(
             AuthorizationParamPathConfig(
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam(
                     "referanse"
                 )
