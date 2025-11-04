@@ -36,6 +36,7 @@ class PdlHendelseKafkaKonsument(
     private val dataSource: DataSource,
     private val repositoryRegistry: RepositoryRegistry
 ) : KafkaKonsument<String, Personhendelse>(
+    consumerName = "PdlHendelse",
     topic = PDL_HENDELSE_TOPIC,
     config = config,
     pollTimeout = pollTimeout,
@@ -52,12 +53,6 @@ class PdlHendelseKafkaKonsument(
     }
 
     fun håndter(melding: ConsumerRecord<String, Personhendelse>, personHendelse: PdlPersonHendelse) {
-        log.info(
-            "Behandler hendelse fra PDL med id: {}, partition {}, offset: {}",
-            melding.key(),
-            melding.partition(),
-            melding.offset(),
-        )
         dataSource.transaction {
             val repositoryProvider = repositoryRegistry.provider(it)
             val sakRepository: SakRepository = repositoryProvider.provide()

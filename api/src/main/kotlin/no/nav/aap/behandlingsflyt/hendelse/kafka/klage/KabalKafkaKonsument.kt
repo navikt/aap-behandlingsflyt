@@ -31,6 +31,7 @@ class KabalKafkaKonsument(
     topic = KABAL_EVENT_TOPIC,
     config = config,
     pollTimeout = pollTimeout,
+    consumerName = "KabalHendelse",
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
