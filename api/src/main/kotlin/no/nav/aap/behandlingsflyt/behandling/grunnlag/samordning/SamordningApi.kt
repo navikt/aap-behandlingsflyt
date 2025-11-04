@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.AndreStatligeYtelser
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonForhold
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonOrdning
@@ -27,8 +28,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjo
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonskravVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -104,7 +107,8 @@ data class SamordningUføreVurderingPeriodeDTO(
 
 data class SamordningAndreStatligeYtelserGrunnlagDTO(
     val harTilgangTilÅSaksbehandle: Boolean,
-    val vurdering: SamordningAndreStatligeYtelserVurderingDTO?
+    val vurdering: SamordningAndreStatligeYtelserVurderingDTO?,
+    val historiskeVurderinger: List<SamordningAndreStatligeYtelserVurderingDTO> = emptyList(),
 )
 
 data class SamordningAndreStatligeYtelserVurderingDTO(
@@ -301,21 +305,64 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                     ),
                 avklaringsbehovKode = Definisjon.SAMORDNING_ANDRE_STATLIGE_YTELSER.kode.toString(),
             ) { behandlingReferanse ->
-                val samordningAndreStatligeYtelserVurdering =
+                val (samordningAndreStatligeYtelserVurdering, samordningAndreStatligeYtelserHistoriskeVurdering) =
                     dataSource.transaction { connection ->
                         val repositoryProvider = repositoryRegistry.provider(connection)
                         val samordningAndreStatligeYtelserRepository =
                             repositoryProvider.provide<SamordningAndreStatligeYtelserRepository>()
+
+                        val sakRepository = repositoryProvider.provide<SakRepository>()
                         val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
 
                         val behandling = behandlingRepository.hent(behandlingReferanse)
+                        val sak = sakRepository.hent(behandling.sakId)
 
-                        samordningAndreStatligeYtelserRepository.hentHvisEksisterer(behandling.id)?.vurdering
+                        val historiskeBehandlinger = behandlingRepository.hentAlleFor(
+                            sak.id,
+                            TypeBehandling.ytelseBehandlingstyper()
+                        ).filter { it.id != behandling.id }
+
+                        val vurdering =
+                            samordningAndreStatligeYtelserRepository.hentHvisEksisterer(behandling.id)?.vurdering
+
+                        val historiskeVurderinger =
+                            historiskeBehandlinger.mapNotNull { historiskeBehandling ->
+                                samordningAndreStatligeYtelserRepository.hentHvisEksisterer(historiskeBehandling.id)?.vurdering
+                            }
+
+                        Pair(vurdering, historiskeVurderinger)
                     }
 
                 val navnOgEnhet = samordningAndreStatligeYtelserVurdering?.let {
                     ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv)
                 }
+
+                val historiskeVurderinger = samordningAndreStatligeYtelserHistoriskeVurdering
+                    .map { denneVurdering ->
+                        SamordningAndreStatligeYtelserVurderingDTO(
+                            begrunnelse = denneVurdering.begrunnelse,
+                            denneVurdering.vurderingPerioder
+                                .map {
+                                    SamordningAndreStatligeYtelserVurderingPeriodeDTO(
+                                        periode = it.periode,
+                                        ytelse = it.ytelse,
+                                    )
+                                },
+                            vurdertAv =
+                                denneVurdering.let {
+                                    VurdertAvResponse(
+                                        ident = it.vurdertAv,
+                                        dato =
+                                            requireNotNull(it.vurdertTidspunkt?.toLocalDate()) {
+                                                "Fant ikke vurdert tidspunkt for samordningAndreStatligeYtelserVurdering"
+                                            },
+                                        ansattnavn = navnOgEnhet?.navn,
+                                        enhetsnavn = navnOgEnhet?.enhet
+                                    )
+                                }
+                        )
+
+                    }
 
                 val vurdering = samordningAndreStatligeYtelserVurdering?.let { vurdering ->
                     SamordningAndreStatligeYtelserVurderingDTO(
@@ -345,7 +392,8 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                 respond(
                     SamordningAndreStatligeYtelserGrunnlagDTO(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
-                        vurdering = vurdering
+                        vurdering = vurdering,
+                        historiskeVurderinger = historiskeVurderinger,
                     )
                 )
             }
