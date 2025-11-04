@@ -37,6 +37,7 @@ class FlytKontekstMedPeriodeService(
                 forrigeBehandlingId = kontekst.forrigeBehandlingId,
                 behandlingType = kontekst.behandlingType,
                 vurderingType = FØRSTEGANGSBEHANDLING,
+                vurderingTypeRelevantForSteg = FØRSTEGANGSBEHANDLING,
                 rettighetsperiode = sak.rettighetsperiode,
                 vurderingsbehovRelevanteForSteg = behandling.vurderingsbehov().map { it.type }.toSet()
             )
@@ -54,7 +55,8 @@ class FlytKontekstMedPeriodeService(
             behandlingId = kontekst.behandlingId,
             forrigeBehandlingId = kontekst.forrigeBehandlingId,
             behandlingType = kontekst.behandlingType,
-            vurderingType = prioritertType(relevanteVurderingsbehov.map { vurderingsbehovTilType(it) }.toSet()),
+            vurderingType = prioritertType(behandling.vurderingsbehov().map { vurderingsbehovTilType(it.type) }.toSet()),
+            vurderingTypeRelevantForSteg = prioritertType(relevanteVurderingsbehov.map { vurderingsbehovTilType(it) }.toSet()),
             rettighetsperiode = sak.rettighetsperiode,
             vurderingsbehovRelevanteForSteg = relevanteVurderingsbehov
         )
@@ -94,6 +96,11 @@ class FlytKontekstMedPeriodeService(
             Vurderingsbehov.BARNETILLEGG,
             Vurderingsbehov.INSTITUSJONSOPPHOLD,
             Vurderingsbehov.SAMORDNING_OG_AVREGNING,
+            Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER,
+            Vurderingsbehov.REVURDER_SAMORDNING_UFØRE,
+            Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER,
+            Vurderingsbehov.REVURDER_SAMORDNING_ARBEIDSGIVER,
+            Vurderingsbehov.REVURDER_SAMORDNING_TJENESTEPENSJON,
             Vurderingsbehov.REFUSJONSKRAV,
             Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
             Vurderingsbehov.SØKNAD_TRUKKET,

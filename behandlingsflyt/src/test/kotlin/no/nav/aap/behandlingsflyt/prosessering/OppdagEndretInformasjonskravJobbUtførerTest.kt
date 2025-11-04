@@ -13,7 +13,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.UtbetaltePerioder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.BarnInnhentingRespons
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonsopphold
@@ -53,15 +52,15 @@ import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.TestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbType
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import javax.sql.DataSource
 
 class OppdagEndretInformasjonskravJobbUtførerTest {
     init {
@@ -133,8 +132,8 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
         register<FakeUnleash>()
     }
 
-    @TestDatabase
-    lateinit var dataSource: DataSource
+    @AutoClose
+    private val dataSource = TestDataSource()
 
 
     @Test
@@ -150,6 +149,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
                         fom = 10 januar 2020,
                         tom = 20 januar 2020,
                         grad = 100,
+                        organisasjonsnummer = null
                     )
                 )
             )
@@ -179,11 +179,12 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
                 .finnSisteYtelsesbehandlingFor(førstegangsbehandlingen.sakId)!!
             assertThat(sisteYtelsesbehandling.id)
                 .isNotEqualTo(førstegangsbehandlingen.id)
-            assertThat(sisteYtelsesbehandling.vurderingsbehov()).hasSize(2)
+            assertThat(sisteYtelsesbehandling.vurderingsbehov()).hasSize(3)
             assertThat(sisteYtelsesbehandling.vurderingsbehov().toSet())
                 .isEqualTo(
                     setOf(
-                        VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING),
+                        VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER),
+                        VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING_UFØRE),
                         VurderingsbehovMedPeriode(Vurderingsbehov.INSTITUSJONSOPPHOLD),
                     )
                 )

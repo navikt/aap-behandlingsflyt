@@ -10,11 +10,12 @@ import java.util.concurrent.atomic.AtomicBoolean
 abstract class KafkaKonsument<K, V>(
     val topic: String,
     config: KafkaConsumerConfig<K, V>,
+    consumerName: String,
     private val pollTimeout: Duration = Duration.ofSeconds(10L),
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
     private val lukket: AtomicBoolean = AtomicBoolean(false)
-    private val konsument = KafkaConsumer<K, V>(config.consumerProperties())
+    private val konsument = KafkaConsumer<K, V>(config.consumerProperties(consumerName = consumerName))
 
     var antallMeldinger = 0
         private set

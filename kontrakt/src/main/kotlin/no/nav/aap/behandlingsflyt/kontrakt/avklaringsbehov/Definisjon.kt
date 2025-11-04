@@ -224,7 +224,7 @@ public enum class Definisjon(
     ),
     AVKLAR_BARNETILLEGG(
         kode = AvklaringsbehovKode.`5009`,
-        type = BehovType.MANUELT_PÅKREVD,
+        type = BehovType.OVERSTYR,
         løsesISteg = StegType.BARNETILLEGG,
         kreverToTrinn = true,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
@@ -268,7 +268,7 @@ public enum class Definisjon(
     ),
     SAMORDNING_ANDRE_STATLIGE_YTELSER(
         kode = AvklaringsbehovKode.`5027`,
-        type = BehovType.MANUELT_FRIVILLIG,
+        type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.SAMORDNING_ANDRE_STATLIGE_YTELSER,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
         kreverToTrinn = true

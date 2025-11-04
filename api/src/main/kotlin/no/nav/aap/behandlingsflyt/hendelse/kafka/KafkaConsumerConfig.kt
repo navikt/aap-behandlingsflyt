@@ -21,9 +21,9 @@ data class KafkaConsumerConfig<K, V>(
     val keyDeserializer: Class<out Deserializer<*>> = StringDeserializer::class.java,
     val valueDeserializer: Class<out Deserializer<*>> = StringDeserializer::class.java
 ) {
-    fun consumerProperties(): Properties = Properties().apply {
+    fun consumerProperties(consumerName: String): Properties = Properties().apply {
         this[CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG] = brokers
-        this[CommonClientConfigs.CLIENT_ID_CONFIG] = applicationId
+        this[CommonClientConfigs.CLIENT_ID_CONFIG] = "$applicationId-$consumerName"
 
         ssl?.let { putAll(it.properties()) }
         schemaRegistry?.let { putAll(it.properties()) }

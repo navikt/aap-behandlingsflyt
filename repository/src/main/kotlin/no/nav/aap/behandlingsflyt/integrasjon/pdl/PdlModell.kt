@@ -88,7 +88,8 @@ data class PdlPersoninfo(
     val folkeregisterpersonstatus: Set<PdlFolkeregisterPersonStatus>? = null,
     val bostedsadresse: List<BostedsAdresse>? = null,
     val oppholdsadresse: List<OppholdsAdresse>? = null,
-    val kontaktadresse: List<KontaktAdresse>? = null
+    val kontaktadresse: List<KontaktAdresse>? = null,
+    val navn: List<PdlNavn>? = null
 )
 
 data class PdlFolkeregisterPersonStatus(
@@ -154,8 +155,16 @@ data class PdlFoedsel(
 
 data class ForelderBarnRelasjon(
     val relatertPersonsIdent: String?,
+    val relatertPersonsRolle: ForelderBarnRelasjonRolle,
     val relatertPersonUtenFolkeregisteridentifikator: RelatertBiPerson? = null
 )
+
+enum class ForelderBarnRelasjonRolle {
+    BARN,
+    FAR,
+    MEDMOR,
+    MOR,
+}
 
 data class RelatertBiPerson(
     val foedselsdato: LocalDate?,

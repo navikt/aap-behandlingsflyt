@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.prosessering.statistikk
 
+import io.mockk.every
+import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
@@ -18,6 +20,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.IKlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
@@ -76,7 +79,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -85,8 +88,10 @@ import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.motor.JobbInput
+import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.Instant
@@ -97,12 +102,12 @@ import java.util.*
 
 @Fakes
 class StatistikkJobbUtførerTest {
-    private val dataSource1 = InitTestDatabase.freshDatabase()
+    @AutoClose
+    private val dataSource = TestDataSource()
 
     @Test
     fun `mottatt tidspunkt er korrekt når revurdering`(hendelser: List<StoppetBehandling>) {
         var opprettetTidspunkt: LocalDateTime? = null
-        val dataSource = dataSource1
         val (behandling, sak, ident) = dataSource.transaction { connection ->
             val behandlingRepository = BehandlingRepositoryImpl(connection)
 
@@ -217,7 +222,6 @@ class StatistikkJobbUtførerTest {
             fom = LocalDate.now().minusDays(1),
             tom = LocalDate.now().plusDays(1)
         )
-        val dataSource = dataSource1
         val (behandling, sak, ident) = dataSource.transaction { connection ->
             val vilkårsResultatRepository = VilkårsresultatRepositoryImpl(connection = connection)
             val behandlingRepository = BehandlingRepositoryImpl(connection)
@@ -315,8 +319,10 @@ class StatistikkJobbUtførerTest {
                         hoveddiagnose = "PEST",
                         bidiagnoser = listOf("KOLERA"),
                         vurderingenGjelderFra = null,
+                        vurderingenGjelderTil = null,
                         vurdertAv = Bruker("Z0000"),
                         opprettet = Instant.now(),
+                        vurdertIBehandling = opprettetBehandling.id
                     )
                 )
             )
@@ -514,7 +520,7 @@ class StatistikkJobbUtførerTest {
                 TODO("Not yet implemented")
             }
 
-            override fun hentHvisEksisterer(behandlingId: BehandlingId): SykdomGrunnlag? {
+            override fun hentHvisEksisterer(behandlingId: BehandlingId): SykdomGrunnlag {
                 TODO("Not yet implemented")
             }
 
@@ -531,8 +537,14 @@ class StatistikkJobbUtførerTest {
             ): List<Sykdomsvurdering> {
                 TODO("Not yet implemented")
             }
+
+            override fun migrerSykdomsvurderinger() {
+                TODO("Not yet implemented")
+            }
         }
 
+        val påklagetBehandlingRepository = mockk<PåklagetBehandlingRepository>()
+        every { påklagetBehandlingRepository.hentGjeldendeVurderingMedReferanse(any()) } returns null
         val utfører =
             StatistikkJobbUtfører(
                 statistikkGateway = StatistikkGatewayImpl(),
@@ -549,6 +561,7 @@ class StatistikkJobbUtførerTest {
                     trukketSøknadService = TrukketSøknadService(
                         trukketSøknadRepository = InMemoryTrukketSøknadRepository
                     ),
+                    påklagetBehandlingRepository = påklagetBehandlingRepository,
                     klageresultatUtleder = DummyKlageresultatUtleder(),
                     avbrytRevurderingService = AvbrytRevurderingService(inMemoryRepositoryProvider),
                 )
@@ -602,23 +615,24 @@ class StatistikkJobbUtførerTest {
         assertThat(hendelser.first())
             .usingRecursiveComparison()
             .isEqualTo(
-            StoppetBehandling(
-                saksnummer = Saksnummer.valueOf(sakId.id).toString(),
-                behandlingReferanse = referanse.referanse,
-                behandlingStatus = Status.UTREDES,
-                behandlingType = TypeBehandling.Klage,
-                ident = fødselsNummer,
-                avklaringsbehov = avklaringsbehov,
-                behandlingOpprettetTidspunkt = payload.opprettetTidspunkt,
-                versjon = ApplikasjonsVersjon.versjon,
-                soknadsFormat = Kanal.PAPIR,
-                mottattTid = tidligsteMottattTid,
-                sakStatus = UTREDES,
-                hendelsesTidspunkt = hendelsesTidspunkt,
-                identerForSak = listOf("1234"),
-                vurderingsbehov = listOf(Vurderingsbehov.SØKNAD)
+                StoppetBehandling(
+                    saksnummer = Saksnummer.valueOf(sakId.id).toString(),
+                    behandlingReferanse = referanse.referanse,
+                    behandlingStatus = Status.UTREDES,
+                    behandlingType = TypeBehandling.Klage,
+                    ident = fødselsNummer,
+                    avklaringsbehov = avklaringsbehov,
+                    behandlingOpprettetTidspunkt = payload.opprettetTidspunkt,
+                    versjon = ApplikasjonsVersjon.versjon,
+                    soknadsFormat = Kanal.PAPIR,
+                    mottattTid = tidligsteMottattTid,
+                    sakStatus = UTREDES,
+                    hendelsesTidspunkt = hendelsesTidspunkt,
+                    identerForSak = listOf("1234"),
+                    vurderingsbehov = listOf(Vurderingsbehov.SØKNAD),
+                    søknadIder = listOf(JournalpostId("xxx"), JournalpostId("xxx2"))
+                )
             )
-        )
     }
 }
 

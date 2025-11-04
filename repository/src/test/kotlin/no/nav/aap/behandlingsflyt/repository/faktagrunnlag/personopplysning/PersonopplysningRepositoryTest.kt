@@ -19,25 +19,23 @@ import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.dbtest.TestDataSource.Companion.invoke
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 
 class PersonopplysningRepositoryImplTest {
     private companion object {
-        private val dataSource = InitTestDatabase.freshDatabase()
-
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-
-        @JvmStatic
-        @AfterAll
-        fun afterAll() {
-            InitTestDatabase.closerFor(dataSource)
-        }
     }
+
+    @AutoClose
+    private val dataSource = TestDataSource()
 
     @Test
     fun `Finner ikke personopplysninger hvis ikke lagret`() {

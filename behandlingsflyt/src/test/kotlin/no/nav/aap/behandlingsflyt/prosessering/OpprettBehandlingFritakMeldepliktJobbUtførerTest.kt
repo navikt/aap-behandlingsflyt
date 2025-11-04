@@ -4,15 +4,11 @@ import io.mockk.every
 import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
 import io.mockk.verify
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisperiodeId
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -20,6 +16,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
@@ -31,12 +29,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.komponenter.verdityper.Dagsatser
-import no.nav.aap.komponenter.verdityper.Prosent
-import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.motor.JobbInput
 import org.junit.jupiter.api.extension.ExtendWith
-import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -87,7 +81,9 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
         årsakerPåTidligereBehandling: List<VurderingsbehovMedPeriode> = emptyList(),
     ): OpprettBehandlingFritakMeldepliktJobbUtfører {
         val sakServiceMock = mockk<SakService>()
-        val underveisRepositoryMock = mockk<UnderveisRepository>()
+        val behandlingRepositoryMock = mockk<BehandlingRepository>()
+        val meldeperiodeRepositoryMock = mockk<MeldeperiodeRepository>()
+        val meldepliktRepositoryMock = mockk<MeldepliktRepository>()
 
         every { sakServiceMock.hent(any<SakId>()) } returns Sak(
             id = sakId,
@@ -102,6 +98,23 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
             opprettetTidspunkt = LocalDateTime.now(),
         )
 
+        every { behandlingRepositoryMock.finnSisteOpprettedeBehandlingFor(any(), any())} returns Behandling(
+            id = BehandlingId(457L),
+            forrigeBehandlingId = BehandlingId(456L),
+            referanse = BehandlingReferanse(UUID.randomUUID()),
+            sakId = sakId,
+            typeBehandling = TypeBehandling.Revurdering,
+            status = Status.AVSLUTTET,
+            vurderingsbehov = årsakerPåTidligereBehandling,
+            stegTilstand = StegTilstand(
+                stegStatus = StegStatus.AVSLUTTER,
+                stegType = StegType.IVERKSETT_VEDTAK,
+                aktiv = true),
+            årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
+            opprettetTidspunkt = LocalDateTime.now(),
+            versjon = 0L,
+        ) 
+        
         val fakeBehandling = Behandling(
             id = BehandlingId(456L),
             forrigeBehandlingId = BehandlingId(454L),
@@ -128,37 +141,43 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
             )
         } returns SakOgBehandlingService.Ordinær(fakeBehandling)
 
-        every { underveisRepositoryMock.hentHvisEksisterer(any()) } returns UnderveisGrunnlag(
-            id = 1L,
-            perioder = listOf(
-                Underveisperiode(
-                    periode = Periode(fom = LocalDate.now().minusDays(10), tom = LocalDate.now().minusDays(10)),
-                    meldePeriode = Periode(fom = LocalDate.now().minusDays(10), tom = LocalDate.now().minusDays(10)),
-                    utfall = Utfall.OPPFYLT,
-                    rettighetsType = RettighetsType.VURDERES_FOR_UFØRETRYGD,
-                    avslagsårsak = null,
-                    grenseverdi = Prosent(50),
-                    institusjonsoppholdReduksjon = Prosent(0),
-                    arbeidsgradering = ArbeidsGradering(
-                        TimerArbeid(BigDecimal.ZERO),
-                        Prosent(0),
-                        Prosent(0),
-                        Prosent(0),
-                        null
-                    ),
-                    trekk = Dagsatser(0),
-                    brukerAvKvoter = emptySet(),
-                    meldepliktStatus = if (fritak) MeldepliktStatus.FRITAK else MeldepliktStatus.IKKE_MELDT_SEG,
-                    id = UnderveisperiodeId(3)
-                )
-            )
+        every { sakOgBehandlingServiceMock.finnEllerOpprettOrdinærBehandling(any<SakId>(), any()) } returns fakeBehandling
+
+
+        every { sakOgBehandlingServiceMock.finnBehandlingMedSisteFattedeVedtak(any()) } returns BehandlingMedVedtak(
+            saksnummer = Saksnummer("123"),
+            id = BehandlingId(456L),
+            referanse = BehandlingReferanse(UUID.randomUUID()),
+            typeBehandling = TypeBehandling.Revurdering,
+            status = Status.AVSLUTTET,
+            opprettetTidspunkt = LocalDateTime.now(),
+            vedtakstidspunkt = LocalDateTime.now(),
+            virkningstidspunkt = LocalDate.now(),
+            vurderingsbehov = setOf(),
+            årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD
         )
 
-        every { sakOgBehandlingServiceMock.finnEllerOpprettOrdinærBehandling(any<SakId>(), any()) } returns fakeBehandling
+
+        every { meldeperiodeRepositoryMock.hent(any())} returns listOf(
+            Periode(fom = LocalDate.now().minusDays(10), tom = LocalDate.now()),
+        )
+
+        every { meldepliktRepositoryMock.hentHvisEksisterer(any()) } returns MeldepliktGrunnlag(
+            vurderinger = listOf(Fritaksvurdering(
+                harFritak = fritak,
+                fraDato = LocalDate.now(),
+                begrunnelse = "bla bla",
+                vurdertAv = "saksbehandler1",
+                opprettetTid = LocalDateTime.now(),
+            ))
+        )
+
 
         return OpprettBehandlingFritakMeldepliktJobbUtfører(
             sakService = sakServiceMock,
-            underveisRepository = underveisRepositoryMock,
+            behandlingRepository = behandlingRepositoryMock,
+            meldeperiodeRepository = meldeperiodeRepositoryMock,
+            meldepliktRepository = meldepliktRepositoryMock,
             sakOgBehandlingService = sakOgBehandlingServiceMock,
             prosesserBehandlingService = mockk<ProsesserBehandlingService>(relaxed = true)
         )

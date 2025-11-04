@@ -25,18 +25,19 @@ import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.TestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AutoClose
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import javax.sql.DataSource
 
 @Fakes
 class SamordningYtelseVurderingServiceTest {
-    @TestDatabase
-    lateinit var dataSource: DataSource
+
+    @AutoClose
+    private val dataSource = TestDataSource()
 
     @Test
     fun `krever avklaring når endringer kommer`() {
@@ -83,10 +84,10 @@ class SamordningYtelseVurderingServiceTest {
         val nå = LocalDate.now()
 
         val eksisterendeGrunnlag = SamordningYtelseGrunnlag(
-            1, listOf(
+            1, setOf(
                 SamordningYtelse(
                     Ytelse.SYKEPENGER,
-                    listOf(
+                    setOf(
                         SamordningYtelsePeriode(
                             Periode(nå.plusDays(5), nå.plusDays(10)),
                             Prosent(50),
@@ -103,7 +104,7 @@ class SamordningYtelseVurderingServiceTest {
                 ),
                 SamordningYtelse(
                     Ytelse.SYKEPENGER,
-                    listOf(
+                    setOf(
                         SamordningYtelsePeriode(
                             Periode(nå.plusDays(5), nå.plusDays(10)),
                             Prosent(50),
@@ -116,10 +117,10 @@ class SamordningYtelseVurderingServiceTest {
             )
         )
 
-        val ny = listOf(
+        val ny = setOf(
             SamordningYtelse(
                 Ytelse.SYKEPENGER,
-                listOf(
+                setOf(
                     SamordningYtelsePeriode(
                         Periode(nå.plusDays(5), nå.plusDays(10)),
                         Prosent(50),
@@ -131,7 +132,7 @@ class SamordningYtelseVurderingServiceTest {
             ),
             SamordningYtelse(
                 Ytelse.SYKEPENGER,
-                listOf(
+                setOf(
                     SamordningYtelsePeriode(
                         Periode(nå.plusDays(5), nå.plusDays(10)),
                         Prosent(40),
@@ -162,11 +163,10 @@ class SamordningYtelseVurderingServiceTest {
                 begrunnelse = "En god begrunnelse",
                 maksDatoEndelig = false,
                 fristNyRevurdering = LocalDate.now().plusYears(1),
-                vurderinger = listOf(
+                vurderinger = setOf(
                     SamordningVurdering(
                         Ytelse.SYKEPENGER,
-
-                        listOf(
+                        setOf(
                             SamordningVurderingPeriode(
                                 Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
                                 Prosent(50),
@@ -184,10 +184,10 @@ class SamordningYtelseVurderingServiceTest {
     private fun opprettYtelseData(samordningYtelseRepo: SamordningYtelseRepositoryImpl, behandlingId: BehandlingId) {
         samordningYtelseRepo.lagre(
             behandlingId,
-            listOf(
+            setOf(
                 SamordningYtelse(
                     Ytelse.SYKEPENGER,
-                    listOf(
+                    setOf(
                         SamordningYtelsePeriode(
                             Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
                             Prosent(50),

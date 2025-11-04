@@ -28,6 +28,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.DokumentResponsDTO
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.brev.kontrakt.Brev
@@ -56,6 +57,7 @@ fun NormalOpenAPIRoute.brevApi(
     gatewayProvider: GatewayProvider,
 ) {
     val authorizationParamPathConfig = AuthorizationParamPathConfig(
+        relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
         operasjon = Operasjon.SAKSBEHANDLE,
         avklaringsbehovKode = SKRIV_BREV_KODE,
         behandlingPathParam = BehandlingPathParam(
@@ -81,6 +83,7 @@ fun NormalOpenAPIRoute.brevApi(
             route("/{referanse}/grunnlag/brev") {
                 authorizedGet<BehandlingReferanse, BrevGrunnlag>(
                     AuthorizationParamPathConfig(
+                        relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                         behandlingPathParam = BehandlingPathParam(
                             "referanse"
                         )

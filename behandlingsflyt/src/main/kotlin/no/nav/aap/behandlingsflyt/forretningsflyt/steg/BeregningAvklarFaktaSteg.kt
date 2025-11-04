@@ -52,7 +52,7 @@ class BeregningAvklarFaktaSteg private constructor(
             return Fullført
         }
 
-        when (kontekst.vurderingType) {
+        when (kontekst.vurderingTypeRelevantForSteg) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
                 if (skalAvbryteForStegPgaIngenBehandlingsgrunnlag(kontekst)) {
                     return Fullført

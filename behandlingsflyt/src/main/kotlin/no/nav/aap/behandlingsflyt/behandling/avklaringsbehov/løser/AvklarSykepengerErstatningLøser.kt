@@ -7,21 +7,17 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerV
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykepengerVurderingDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class AvklarSykepengerErstatningLøser(
     private val behandlingRepository: BehandlingRepository,
-    private val sykepengerErstatningRepository: SykepengerErstatningRepository,
-    private val unleashGateway: UnleashGateway
+    private val sykepengerErstatningRepository: SykepengerErstatningRepository
 ) : AvklaringsbehovsLøser<AvklarSykepengerErstatningLøsning> {
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
-        sykepengerErstatningRepository = repositoryProvider.provide(),
-        unleashGateway = gatewayProvider.provide()
+        sykepengerErstatningRepository = repositoryProvider.provide()
     )
 
     override fun løs(
@@ -30,26 +26,19 @@ class AvklarSykepengerErstatningLøser(
     ): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
 
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.SykepengerPeriodisert)) {
-            val nyVurdering = tilVurdering(løsning.sykepengeerstatningVurdering, kontekst.bruker.ident)
+        val nyVurdering = tilVurdering(løsning.sykepengeerstatningVurdering, kontekst.bruker.ident)
 
-            val eksisterendeVurderinger =
-                behandling.forrigeBehandlingId
-                    ?.let { sykepengerErstatningRepository.hentHvisEksisterer(it) }
-                    ?.vurderinger.orEmpty()
+        val eksisterendeVurderinger =
+            behandling.forrigeBehandlingId
+                ?.let { sykepengerErstatningRepository.hentHvisEksisterer(it) }
+                ?.vurderinger.orEmpty()
 
-            val nyeVurderinger = eksisterendeVurderinger + nyVurdering
+        val nyeVurderinger = eksisterendeVurderinger + nyVurdering
 
-            sykepengerErstatningRepository.lagre(
-                behandlingId = behandling.id,
-                vurderinger = nyeVurderinger
-            )
-        } else {
-            sykepengerErstatningRepository.lagre(
-                behandlingId = behandling.id,
-                vurderinger = listOf(tilVurdering(løsning.sykepengeerstatningVurdering, kontekst.bruker.ident))
-            )
-        }
+        sykepengerErstatningRepository.lagre(
+            behandlingId = behandling.id,
+            vurderinger = nyeVurderinger
+        )
 
         return LøsningsResultat(
             begrunnelse = løsning.sykepengeerstatningVurdering.begrunnelse

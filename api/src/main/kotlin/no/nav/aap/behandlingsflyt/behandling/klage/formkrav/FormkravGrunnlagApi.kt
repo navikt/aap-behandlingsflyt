@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -27,6 +28,7 @@ fun NormalOpenAPIRoute.formkravGrunnlagApi(
     route("api/klage/{referanse}/grunnlag/formkrav") {
         getGrunnlag<BehandlingReferanse, FormkravGrunnlagDto>(
             behandlingPathParam = BehandlingPathParam("referanse"),
+            relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             avklaringsbehovKode = VURDER_FORMKRAV_KODE
         ) { req ->
             val respons = dataSource.transaction(readOnly = true) { connection ->

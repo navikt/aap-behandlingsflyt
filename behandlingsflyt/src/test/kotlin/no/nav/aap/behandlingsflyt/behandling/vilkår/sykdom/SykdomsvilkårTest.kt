@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerG
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerVurdering
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
@@ -30,7 +31,7 @@ class SykdomsvilkårTest {
         val vilkårsresultat = Vilkårsresultat()
         vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SYKDOMSVILKÅRET)
 
-        Sykdomsvilkår(vilkårsresultat, true).vurder(
+        Sykdomsvilkår(vilkårsresultat).vurder(
             SykdomsFaktagrunnlag(
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 kravDato = LocalDate.now(),
@@ -48,7 +49,7 @@ class SykdomsvilkårTest {
 
         assertThat(vilkår.vilkårsperioder()).hasSize(1).allMatch { periode -> periode.utfall == Utfall.OPPFYLT }
 
-        Sykdomsvilkår(vilkårsresultat, true).vurder(
+        Sykdomsvilkår(vilkårsresultat).vurder(
             SykdomsFaktagrunnlag(
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 kravDato = LocalDate.now(),
@@ -72,7 +73,7 @@ class SykdomsvilkårTest {
         vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SYKDOMSVILKÅRET)
         val startDato = 1 januar 2024
         val opprettet = LocalDateTime.now()
-        Sykdomsvilkår(vilkårsresultat, true).vurder(
+        Sykdomsvilkår(vilkårsresultat).vurder(
             SykdomsFaktagrunnlag(
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 kravDato = startDato,
@@ -129,7 +130,7 @@ class SykdomsvilkårTest {
         vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SYKDOMSVILKÅRET)
         val startDato = 1 januar 2024
         val opprettet = LocalDateTime.now()
-        Sykdomsvilkår(vilkårsresultat, true).vurder(
+        Sykdomsvilkår(vilkårsresultat).vurder(
             SykdomsFaktagrunnlag(
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 kravDato = startDato,
@@ -166,7 +167,7 @@ class SykdomsvilkårTest {
         vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SYKDOMSVILKÅRET)
         val startDato = 1 januar 2024
         val opprettet = LocalDateTime.now()
-        Sykdomsvilkår(vilkårsresultat, true).vurder(
+        Sykdomsvilkår(vilkårsresultat).vurder(
             SykdomsFaktagrunnlag(
                 typeBehandling = TypeBehandling.Revurdering,
                 kravDato = startDato,
@@ -207,7 +208,7 @@ class SykdomsvilkårTest {
         val startDato = 1 januar 2024
         val opprettet = LocalDateTime.now()
 
-        Sykdomsvilkår(vilkårsresultat, true).vurder(
+        Sykdomsvilkår(vilkårsresultat).vurder(
             SykdomsFaktagrunnlag(
                 typeBehandling = TypeBehandling.Revurdering,
                 kravDato = startDato,
@@ -259,7 +260,9 @@ class SykdomsvilkårTest {
         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean = true,
         erArbeidsevnenNedsatt: Boolean = true,
         vurderingenGjelderFra: LocalDate? = null,
-        opprettet: LocalDateTime = LocalDateTime.now()
+        vurderingenGjelderTil: LocalDate? = null,
+        opprettet: LocalDateTime = LocalDateTime.now(),
+        behandlingId: BehandlingId = BehandlingId(1L)
     ) = Sykdomsvurdering(
         begrunnelse = "",
         dokumenterBruktIVurdering = emptyList(),
@@ -271,7 +274,9 @@ class SykdomsvilkårTest {
         erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
         yrkesskadeBegrunnelse = null,
         vurderingenGjelderFra = vurderingenGjelderFra,
+        vurderingenGjelderTil = vurderingenGjelderTil,
         vurdertAv = Bruker("Z00000"),
-        opprettet = opprettet.toInstant(ZoneOffset.UTC)
+        opprettet = opprettet.toInstant(ZoneOffset.UTC),
+        vurdertIBehandling = behandlingId
     )
 }

@@ -15,6 +15,7 @@ data class Vurdering(
     internal val fårAapEtter: RettighetsType? = null,
     internal val meldepliktVurdering: MeldepliktVurdering? = null,
     internal val aktivitetspliktVurdering: AktivitetspliktVurdering? = null,
+    internal val oppholdskravVurdering: OppholdskravUnderveisVurdering? = null,
     private val gradering: ArbeidsGradering? = null,
     private val samordningProsent: Prosent? = null,
     private val grenseverdi: Prosent? = null,
@@ -59,6 +60,10 @@ data class Vurdering(
         return copy(varighetVurdering = varighetVurdering)
     }
 
+    fun leggTilOppholdskravVurdering(oppholdskravVurdering: OppholdskravUnderveisVurdering): Vurdering {
+        return copy(oppholdskravVurdering = oppholdskravVurdering)
+    }
+
     private fun bryterAktivitetsplikt11_7(): Boolean {
         return stansEtterBruddPåAktivitetsplikt11_7() || opphørEtterBruddPåAktivitetsplikt11_7()
     }
@@ -71,12 +76,25 @@ data class Vurdering(
         return aktivitetspliktVurdering?.vilkårsvurdering == AktivitetspliktVurdering.Vilkårsvurdering.BRUDD_AKTIVITETSPLIKT_11_7_OPPHØR
     }
 
+    private fun bryterOppholdskrav(): Boolean {
+        return opphørEtterOppholdskrav() || stansEtterOppholdskrav();
+    }
+
+    private fun opphørEtterOppholdskrav(): Boolean {
+        return oppholdskravVurdering?.vilkårsvurdering == OppholdskravUnderveisVurdering.Vilkårsvurdering.BRUDD_OPPHOLDSKRAV_11_3_OPPHØR
+    }
+
+    private fun stansEtterOppholdskrav(): Boolean {
+        return oppholdskravVurdering?.vilkårsvurdering == OppholdskravUnderveisVurdering.Vilkårsvurdering.BRUDD_OPPHOLDSKRAV_11_3_STANS
+    }
+
     fun harRett(): Boolean {
         return fårAapEtter != null &&
                 arbeiderMindreEnnGrenseverdi() &&
                 harOverholdtMeldeplikten() &&
                 sonerIkke() &&
                 !bryterAktivitetsplikt11_7() &&
+                !bryterOppholdskrav() &&
                 varighetsvurderingOppfylt()
     }
 
@@ -134,6 +152,10 @@ data class Vurdering(
 
         if (fårAapEtter == null) {
             return UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT
+        } else if (stansEtterOppholdskrav()) {
+            return UnderveisÅrsak.BRUDD_PÅ_OPPHOLDSKRAV_11_3_STANS
+        } else if (opphørEtterOppholdskrav()) {
+            return UnderveisÅrsak.BRUDD_PÅ_OPPHOLDSKRAV_11_3_OPPHØR
         } else if (!sonerIkke()) {
             return UnderveisÅrsak.SONER_STRAFF
         } else if (opphørEtterBruddPåAktivitetsplikt11_7()) {
@@ -164,8 +186,9 @@ data class Vurdering(
             harRett=${harRett()},
             meldeplikt=${meldepliktVurdering},
             gradering=${gradering?.gradering ?: Prosent(0)},
-            aktivitetsplikt11_7=${aktivitetspliktVurdering}
-            institusjonVurdering=${institusjonVurdering}
+            aktivitetsplikt11_7=${aktivitetspliktVurdering},
+            institusjonVurdering=${institusjonVurdering},
+            oppholdskravVurdering=${oppholdskravVurdering},
             grenseverdi=${grenseverdi}
             )""".trimIndent().replace("\n", "")
     }

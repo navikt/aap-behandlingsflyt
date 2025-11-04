@@ -20,6 +20,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.meldekort.kontrakt.Periode
 import no.nav.aap.meldekort.kontrakt.sak.MeldeperioderV0
@@ -132,7 +133,7 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
             val fritaksvurderinger: Tidslinje<Fritaksvurdering.FritaksvurderingData> =
                 meldepliktGrunnlag
                     ?.tilTidslinje()
-                    ?: Tidslinje()
+                    .orEmpty()
 
             return MeldeperioderV0(
                 sakStatus = when (sak.status()) {

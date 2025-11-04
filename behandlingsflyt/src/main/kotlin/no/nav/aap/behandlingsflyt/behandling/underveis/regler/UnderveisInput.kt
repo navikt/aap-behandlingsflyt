@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetSted
+import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.underveis.Kvoter
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Grunnlag
@@ -22,6 +23,7 @@ data class UnderveisInput(
     val dødsdato: LocalDate? = null,
     val kvoter: Kvoter,
     val aktivitetsplikt11_7Grunnlag: Aktivitetsplikt11_7Grunnlag,
+    val oppholdskravGrunnlag: OppholdskravGrunnlag,
     val etAnnetSted: List<EtAnnetSted>,
     val arbeidsevneGrunnlag: ArbeidsevneGrunnlag,
     val meldepliktGrunnlag: MeldepliktGrunnlag,

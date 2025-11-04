@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Pers
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
@@ -21,6 +22,7 @@ fun NormalOpenAPIRoute.aldersGrunnlagApi(dataSource: DataSource, repositoryRegis
         route("/{referanse}/grunnlag/alder") {
             authorizedGet<BehandlingReferanse, AlderDTO>(
                 AuthorizationParamPathConfig(
+                    relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                     behandlingPathParam = BehandlingPathParam(
                         "referanse"
                     )
@@ -40,9 +42,7 @@ fun NormalOpenAPIRoute.aldersGrunnlagApi(dataSource: DataSource, repositoryRegis
                             .finnVilkår(Vilkårtype.ALDERSVILKÅRET)
 
                     val fødselsdato =
-                        requireNotNull(
-                            personopplysningRepository.hentBrukerPersonOpplysningHvisEksisterer(behandling.id)?.fødselsdato?.toLocalDate()
-                        ) { "Fant ikke fødseldato i personopplysningsrepository." }
+                        personopplysningRepository.hentBrukerPersonOpplysningHvisEksisterer(behandling.id)?.fødselsdato?.toLocalDate()
 
                     AlderDTO(
                         fødselsdato = fødselsdato,
@@ -50,7 +50,6 @@ fun NormalOpenAPIRoute.aldersGrunnlagApi(dataSource: DataSource, repositoryRegis
                         vurdertDato = aldersvilkår.vurdertTidspunkt?.toLocalDate()
                     )
                 }
-
                 respond(alderDTO)
             }
         }

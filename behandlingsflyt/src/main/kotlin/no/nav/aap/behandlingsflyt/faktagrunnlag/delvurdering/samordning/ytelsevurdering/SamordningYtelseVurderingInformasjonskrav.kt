@@ -63,7 +63,7 @@ class SamordningYtelseVurderingInformasjonskrav(
 
 
     data class SamordningRegisterdata(
-        val samordningYtelser: List<SamordningYtelse>
+        val samordningYtelser: Set<SamordningYtelse>
     ) : InformasjonskravRegisterdata
 
     override fun klargjør(kontekst: FlytKontekstMedPerioder): SamordningInput {
@@ -127,7 +127,7 @@ class SamordningYtelseVurderingInformasjonskrav(
 
     private fun mapTilSamordningYtelse(
         foreldrepenger: List<ForeldrePengerYtelse>, sykepenger: List<UtbetaltePerioder>
-    ): List<SamordningYtelse> {
+    ): Set<SamordningYtelse> {
         val foreldrepengerKildeMapped =
             foreldrepenger.filter { konverterFraForeldrePengerDomene(it) != null }.map { ytelse ->
                 SamordningYtelse(
@@ -137,7 +137,7 @@ class SamordningYtelseVurderingInformasjonskrav(
                             gradering = Prosent(it.utbetalingsgrad.verdi.toInt()),
                             kronesum = it.beløp,
                         )
-                    }, kilde = ytelse.kildesystem, saksRef = ytelse.saksnummer
+                    }.toSet(), kilde = ytelse.kildesystem, saksRef = ytelse.saksnummer
                 )
             }
 
@@ -150,10 +150,10 @@ class SamordningYtelseVurderingInformasjonskrav(
                 SamordningYtelsePeriode(
                     Periode(it.fom, it.tom), Prosent(it.grad.toInt()), null
                 )
-            }, kilde = sykepengerKilde)
+            }.toSet(), kilde = sykepengerKilde)
         }
 
-        return foreldrepengerKildeMapped.plus(listOfNotNull(sykepengerYtelse))
+        return foreldrepengerKildeMapped.plus(listOfNotNull(sykepengerYtelse)).toSet()
     }
 
     private fun konverterFraForeldrePengerDomene(ytelse: ForeldrePengerYtelse): Ytelse? {
@@ -177,7 +177,7 @@ class SamordningYtelseVurderingInformasjonskrav(
         val gikkFraNullTilTomtGrunnlag = samordningYtelser.isEmpty() && eksisterendeData == null
 
         return if (!gikkFraNullTilTomtGrunnlag && harEndringerIYtelser(eksisterendeData, samordningYtelser)) listOf(
-            VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING)
+            VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER)
         )
         else emptyList()
     }
@@ -199,9 +199,9 @@ class SamordningYtelseVurderingInformasjonskrav(
         }
 
         fun harEndringerIYtelser(
-            eksisterende: SamordningYtelseGrunnlag?, samordningYtelser: List<SamordningYtelse>
+            eksisterende: SamordningYtelseGrunnlag?, samordningYtelser: Set<SamordningYtelse>
         ): Boolean {
-            return eksisterende == null || samordningYtelser.toSet() != eksisterende.ytelser.toSet()
+            return eksisterende == null || samordningYtelser != eksisterende.ytelser
         }
     }
 }

@@ -41,10 +41,11 @@ class AvklarSamordningGraderingLøser(
                             kronesum = vurdering.kronesum,
                             manuell = vurdering.manuell
                         )
-                    }
+                    }.toSet()
                 )
-            },
-            vurdertAv = kontekst.bruker.ident)
+            }.toSet(),
+            vurdertAv = kontekst.bruker.ident
+        )
 
         val perioderSomIkkeHarBlittVurdert = samordningService.perioderSomIkkeHarBlittVurdert(
             samordningYtelseGrunnlag, samordningService.vurderingTidslinje(samordningsvurderinger)

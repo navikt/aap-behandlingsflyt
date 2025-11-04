@@ -127,7 +127,7 @@ val ressursQuery = """
 private const val navIdenter = $$"$navIdenter"
 val flereNavnQuery = """
     query($navIdenter: [String!]) {
-        ressurser(where: {navidenter: [$navIdenter]}) {
+        ressurser(where: {navidenter: $navIdenter}) {
             ressurs {
                 navident
                 visningsnavn

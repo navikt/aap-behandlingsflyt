@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.OppgaveGateway
 import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.OpprettOppgaveRequest
 import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.Prioritet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.NavKontorPeriodeDto
+import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.config.requiredConfigForKey
@@ -21,7 +22,7 @@ import java.time.LocalDateTime
 import java.time.LocalDateTime.now
 import java.time.ZoneId.systemDefault
 import java.time.format.DateTimeFormatter
-import java.util.Date
+import java.util.*
 
 class GosysGateway : OppgaveGateway {
 
@@ -39,6 +40,7 @@ class GosysGateway : OppgaveGateway {
     private val client = RestClient.withDefaultResponseHandler(
         config = config,
         tokenProvider = ClientCredentialsTokenProvider,
+        prometheus = prometheus
     )
 
     override fun opprettOppgave(

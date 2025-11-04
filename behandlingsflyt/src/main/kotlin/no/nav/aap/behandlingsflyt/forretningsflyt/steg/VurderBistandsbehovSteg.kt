@@ -16,7 +16,6 @@ import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -24,6 +23,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -63,12 +63,28 @@ class VurderBistandsbehovSteg private constructor(
                     ?.let { bistandRepository.hentHvisEksisterer(it) }
                     ?.vurderinger
                     .orEmpty()
+
                 val nåværendeVurderinger = bistandRepository.hentHvisEksisterer(kontekst.behandlingId)
                     ?.vurderinger
                     .orEmpty()
 
                 if (forrigeVurderinger.toSet() != nåværendeVurderinger.toSet()) {
                     bistandRepository.lagre(kontekst.behandlingId, forrigeVurderinger)
+                }
+
+                val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
+                val nyttVilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
+
+                val forrigeVilkårTidslinje = kontekst.forrigeBehandlingId?.let { vilkårsresultatRepository.hent(it) }
+                    ?.optionalVilkår(Vilkårtype.BISTANDSVILKÅRET)
+                    ?.tidslinje()
+                    .orEmpty()
+
+                if (nyttVilkår.tidslinje() != forrigeVilkårTidslinje) {
+                    nyttVilkår.nullstillTidslinje()
+                        .leggTilVurderinger(forrigeVilkårTidslinje)
+
+                    vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
                 }
             },
             kontekst
@@ -77,9 +93,7 @@ class VurderBistandsbehovSteg private constructor(
         /* Dette skal på sikt ut av denne metoden, og samles i et eget fastsett-steg. */
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
         vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.BISTANDSVILKÅRET)
-        if (avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_BISTANDSBEHOV)
-                ?.status() in setOf(Status.AVSLUTTET, Status.AVBRUTT)
-        ) {
+        if (avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_BISTANDSBEHOV)?.status()?.erAvsluttet() == true) {
             val grunnlag = BistandFaktagrunnlag(
                 kontekst.rettighetsperiode.fom,
                 kontekst.rettighetsperiode.tom,
@@ -125,7 +139,7 @@ class VurderBistandsbehovSteg private constructor(
                             )
                         )
                     }
-                    ?: tidslinjeOf()
+                    .orEmpty()
 
                 perioderBistandsvilkåretErRelevant.leftJoin(perioderBistandsvilkåretErVurdert) { erRelevant, erVurdert ->
                     erRelevant && erVurdert != true
@@ -157,11 +171,11 @@ class VurderBistandsbehovSteg private constructor(
         val sykdomsvurderinger = sykdomsRepository.hentHvisEksisterer(kontekst.behandlingId)
             ?.somSykdomsvurderingstidslinje(kontekst.rettighetsperiode.fom)
             ?.begrensetTil(kontekst.rettighetsperiode)
-            ?: tidslinjeOf()
+            .orEmpty()
 
         val studentvurderinger = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
             ?.somTidslinje(kontekst.rettighetsperiode)
-            ?: tidslinjeOf()
+            .orEmpty()
 
         return Tidslinje.zip3(tidligereVurderingsutfall, sykdomsvurderinger, studentvurderinger)
             .mapValue { (behandlingsutfall, sykdomsvurdering, studentvurdering) ->

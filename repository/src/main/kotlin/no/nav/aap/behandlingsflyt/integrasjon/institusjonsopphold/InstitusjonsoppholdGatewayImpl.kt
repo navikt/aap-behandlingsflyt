@@ -93,9 +93,9 @@ object InstitusjonsoppholdGatewayImpl : InstitusjonsoppholdGateway {
 
         val institusjonsopphold = oppholdRes.map { opphold ->
             Institusjonsopphold.nyttOpphold(
-                requireNotNull(opphold.institusjonstype),
-                requireNotNull(opphold.kategori),
-                requireNotNull(opphold.startdato),
+                requireNotNull(opphold.institusjonstype) { "Institusjonstype på institusjonsopphold må være satt." },
+                opphold.kategori,
+                requireNotNull(opphold.startdato) { "Startdato på institusjonsopphold må være satt." },
                 opphold.faktiskSluttdato ?: opphold.forventetSluttdato,
                 opphold.organisasjonsnummer,
                 opphold.institusjonsnavn ?: "Ukjent institusjon"

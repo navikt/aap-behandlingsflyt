@@ -73,7 +73,7 @@ class ForutgåendeMedlemskapVurderingServiceTest {
                             "grunnlag",
                             "lovvalg",
                             false,
-                            EØSLand.NOR.toString(),
+                            EØSLandEllerLandMedAvtale.NOR.toString(),
                             null
                         )
                     )

@@ -27,6 +27,12 @@ object InMemorySamordningVurderingRepository : SamordningVurderingRepository {
         synchronized(lock) { vurderinger[behandlingId] = samordningVurderinger }
     }
 
+    override fun deaktiverGrunnlag(behandlingId: BehandlingId) {
+        synchronized(lock) {
+            vurderinger.remove(behandlingId)
+        }
+    }
+
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         TODO("Not yet implemented")
     }

@@ -1,17 +1,17 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelseService
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Reduksjon11_9
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Reduksjon11_9Repository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
-import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_9Grunnlag
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Reduksjon11_9
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Reduksjon11_9Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_9Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_9Vurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Grunn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningGrunnlag
@@ -82,10 +82,10 @@ class BeregnTilkjentYtelseSteg private constructor(
         val underveisgrunnlag = underveisRepository.hent(kontekst.behandlingId)
         val fødselsdato =
             requireNotNull(personopplysningRepository.hentBrukerPersonOpplysningHvisEksisterer(kontekst.behandlingId)?.fødselsdato) { "Finner ikke fødselsdato. BehandlingId: ${kontekst.behandlingId}" }
-        val barnetilleggGrunnlag = requireNotNull(barnetilleggRepository.hentHvisEksisterer(kontekst.behandlingId)) { "Finner ikke barnetillegggrunnlag. BehandlingId: ${kontekst.behandlingId}" }
+        val barnetilleggGrunnlag = barnetilleggRepository.hentHvisEksisterer(kontekst.behandlingId) ?: BarnetilleggGrunnlag(id = 0L, perioder = emptyList())
         val samordningGrunnlag = samordningRepository.hentHvisEksisterer(kontekst.behandlingId) ?: SamordningGrunnlag(
             id = 0L,
-            samordningPerioder = emptyList()
+            samordningPerioder = emptySet()
         )
         val samordningUføre = samordningUføreRepository.hentHvisEksisterer(kontekst.behandlingId)
         val samordningArbeidsgiver = samordningArbeidsgiverRepository.hentHvisEksisterer(kontekst.behandlingId)
