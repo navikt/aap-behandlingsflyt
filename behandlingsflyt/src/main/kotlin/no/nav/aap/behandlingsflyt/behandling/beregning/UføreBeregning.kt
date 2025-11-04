@@ -19,7 +19,7 @@ import java.time.Year
 class UføreBeregning(
     private val grunnlag: Grunnlag11_19,
     private val uføregrader: List<Uføre>,
-    private val inntekterForegåendeÅr: Set<InntektPerÅr>,
+    private val inntekterForegåendeÅr: Set<InntektPerÅr>, // TODO: trenger ikke inntekt per år, men trenger de relevante årene for å utlede tidslinje
     private val inntektsPerioder: List<InntektsPeriode>,
 ) {
 
@@ -28,6 +28,8 @@ class UføreBeregning(
     }
 
     fun beregnUføre(ytterligereNedsattÅr: Year): GrunnlagUføre {
+        // tidslinjelogikken er basert på antagelsen om at uføre alltid har virkningstidspunkt på den første i måneden
+        // og at vi får inntekt fra inntektskomponenten per måned
         val tidslinjeInntektOgUføre = uføreOgInntektTidslinje(inntektsPerioder, uføregrader)
         val oppjusterteInntekter = oppjusterMhpUføregrad(inntekterForegåendeÅr, tidslinjeInntektOgUføre)
 
@@ -40,7 +42,7 @@ class UføreBeregning(
                 type = GrunnlagUføre.Type.STANDARD,
                 grunnlag = grunnlag,
                 grunnlagYtterligereNedsatt = ytterligereNedsattGrunnlag,
-                uføregrad = uføregrader.maxBy { it.virkningstidspunkt }.uføregrad, // er det riktig å ta den siste
+                uføregrad = uføregrader.maxBy { it.virkningstidspunkt }.uføregrad,
                 uføreInntekterFraForegåendeÅr = oppjusterteInntekter,
                 uføreYtterligereNedsattArbeidsevneÅr = ytterligereNedsattÅr
             )
@@ -59,7 +61,6 @@ class UføreBeregning(
 
     private fun oppjusterMhpUføregrad(ikkeOppjusterteInntekter: Set<InntektPerÅr>, tidslinjeInntektOgUføre: Tidslinje<Pair<InntektData?, Prosent?>>): List<UføreInntekt> {
         val tidslinjerPerRelevantÅr = ikkeOppjusterteInntekter.map { it.år }.map { tidslinjeInntektOgUføre.begrensetTil(Periode(it.atDay(1), it.atDay(it.length()))) }
-        print(tidslinjerPerRelevantÅr)
 
         val oppjustertePerioderPerÅr = tidslinjerPerRelevantÅr.map { årsTidslinje ->
             årsTidslinje.segmenter().map { segment ->
