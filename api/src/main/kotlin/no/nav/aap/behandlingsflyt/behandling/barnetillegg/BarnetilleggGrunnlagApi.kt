@@ -19,6 +19,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -53,7 +54,7 @@ fun NormalOpenAPIRoute.barnetilleggApi(
                     val sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider)
                     val barnetilleggService = BarnetilleggService(
                         sakOgBehandlingService,
-                        barnRepository,
+                        barnRepository,gatewayProvider.provide<UnleashGateway>()
                     )
                     val barnetilleggTidslinje = barnetilleggService.beregn(behandling.id)
                     val barnGrunnlag = barnRepository.hentHvisEksisterer(behandling.id)
