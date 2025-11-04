@@ -787,7 +787,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                         begrunnelse = "Samordnet med uføre",
                         vurderingPerioder = listOf(
                             SamordningUføreVurderingPeriodeDto(
-                                virkningstidspunkt = sak.rettighetsperiode.fom, uføregradTilSamordning = 45
+                                virkningstidspunkt = LocalDate.of(2022, 1, 1), uføregradTilSamordning = 50
                             )
                         )
                     )
@@ -825,7 +825,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                         begrunnelse = "Samordnet med uføre",
                         vurderingPerioder = listOf(
                             SamordningUføreVurderingPeriodeDto(
-                                virkningstidspunkt = sak.rettighetsperiode.fom, uføregradTilSamordning = 45
+                                virkningstidspunkt = LocalDate.of(2022, 1, 1), uføregradTilSamordning = 50
                             )
                         )
                     )
