@@ -43,26 +43,22 @@ class AvklarSykdomLøser(
 
         val nyeSykdomsvurderinger = løsning.sykdomsvurderinger
             .map { it.toSykdomsvurdering(kontekst.bruker, kontekst.behandlingId(), rettighetsperiode.fom) }
-            .let {
-                SykdomGrunnlag(
-                    sykdomsvurderinger = it,
-                    yrkesskadevurdering = null,
-                ).somSykdomsvurderingstidslinje(LocalDate.MIN)
-            }
-
 
         val eksisterendeSykdomsvurderinger = behandling.forrigeBehandlingId
             ?.let { sykdomRepository.hentHvisEksisterer(it) }
-            ?.somSykdomsvurderingstidslinje(LocalDate.MIN)
+            ?.sykdomsvurderinger
             .orEmpty()
+        
+        val gjeldendeVurderinger = eksisterendeSykdomsvurderinger + nyeSykdomsvurderinger
 
-        val gjeldendeVurderinger = eksisterendeSykdomsvurderinger
-            .kombiner(nyeSykdomsvurderinger, StandardSammenslåere.prioriterHøyreSideCrossJoin())
-            .komprimer()
-            .segmenter()
-            .map { it.verdi }
-
-        validerSykdomOgYrkesskadeKonsistens(nyeSykdomsvurderinger, yrkesskadeGrunnlag, behandling.typeBehandling())
+        validerSykdomOgYrkesskadeKonsistens(
+            SykdomGrunnlag(
+                sykdomsvurderinger = gjeldendeVurderinger,
+                yrkesskadevurdering = null
+            ).somSykdomsvurderingstidslinje(),
+            yrkesskadeGrunnlag,
+            behandling.typeBehandling()
+        )
 
         sykdomRepository.lagre(
             behandlingId = behandling.id,

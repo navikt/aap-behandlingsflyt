@@ -296,7 +296,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
             assertThat(åpneAvklaringsbehov).isNotEmpty()
             assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         }
-            .løsSykdom()
+            .løsSykdom(sak.rettighetsperiode.fom)
             .løsBistand()
             .løsAvklaringsBehov(
                 RefusjonkravLøsning(
@@ -422,13 +422,13 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
     }
 
     @JvmName("løsFramTilGrunnlagExt")
-    protected fun Behandling.løsFramTilGrunnlag(): Behandling {
-        return løsFramTilGrunnlag(this)
+    protected fun Behandling.løsFramTilGrunnlag(rettighetsPeriodeFrom: LocalDate): Behandling {
+        return løsFramTilGrunnlag(rettighetsPeriodeFrom,this)
     }
 
-    protected fun løsFramTilGrunnlag(behandling: Behandling): Behandling {
+    protected fun løsFramTilGrunnlag(rettighetsPeriodeFrom: LocalDate, behandling: Behandling): Behandling {
         return behandling
-            .løsSykdom()
+            .løsSykdom(rettighetsPeriodeFrom)
             .løsAvklaringsBehov(
                 AvklarBistandsbehovLøsning(
                     bistandsVurdering = BistandVurderingLøsningDto(
@@ -658,7 +658,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
 
     @JvmName("løsSykdomExt")
     protected fun Behandling.løsSykdom(
-        vurderingGjelderFra: LocalDate? = null,
+        vurderingGjelderFra: LocalDate,
         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean? = null,
         vissVarighet: Boolean? = true,
         erOppfylt: Boolean = true,
