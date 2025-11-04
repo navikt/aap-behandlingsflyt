@@ -7,6 +7,7 @@ import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
+import java.math.BigDecimal
 import java.time.Year
 
 class BeregningsgrunnlagRepositoryImpl(private val connection: DBConnection) : BeregningsgrunnlagRepository {
@@ -33,8 +34,11 @@ class BeregningsgrunnlagRepositoryImpl(private val connection: DBConnection) : B
 
         val beregningUforeIds = getBeregningUforeIds(beregningIds)
 
+        val beregningInntektIds = getBeregningInntektIds(beregningUforeIds)
+
         val deletedRows = connection.executeReturnUpdated(
             """
+            delete from beregning_ufore_tidsperiode where BEREGNING_UFORE_INNTEKT_ID = ANY(?::BIGINT[]);
             delete from beregning_inntekt where beregning_hoved_id = ANY(?::BIGINT[]);
             delete from beregning_ufore_inntekt where beregning_ufore_id = ANY(?::BIGINT[]);
             delete from beregning_ufore where beregning_id = ANY(?::BIGINT[]);
@@ -45,13 +49,14 @@ class BeregningsgrunnlagRepositoryImpl(private val connection: DBConnection) : B
         """.trimIndent()
         ) {
             setParams {
-                setLongArray(1, beregningHovedIds)
-                setLongArray(2, beregningUforeIds)
-                setLongArray(3, beregningIds)
+                setLongArray(1, beregningInntektIds)
+                setLongArray(2, beregningHovedIds)
+                setLongArray(3, beregningUforeIds)
                 setLongArray(4, beregningIds)
                 setLongArray(5, beregningIds)
-                setLong(6, behandlingId.id)
-                setLongArray(7, beregningIds)
+                setLongArray(6, beregningIds)
+                setLong(7, behandlingId.id)
+                setLongArray(8, beregningIds)
             }
         }
         log.info("Slettet $deletedRows rader fra beregning_hoved")
@@ -98,6 +103,18 @@ class BeregningsgrunnlagRepositoryImpl(private val connection: DBConnection) : B
             row.getLong("beregning_id")
         }
     }
+
+    private fun getBeregningInntektIds(beregningIds: List<Long>): List<Long> =
+        connection.queryList(
+            """
+                SELECT id from beregning_ufore_inntekt where beregning_ufore_id = ANY(?::BIGINT[])
+            """.trimIndent()
+        ) {
+            setParams { setLongArray(1, beregningIds) }
+            setRowMapper { row ->
+                row.getLong("id")
+            }
+        }
 
     private fun hentInntekt(beregningsId: Long): List<GrunnlagInntekt> {
         return connection.queryList(
@@ -196,7 +213,7 @@ class BeregningsgrunnlagRepositoryImpl(private val connection: DBConnection) : B
     private fun hentUføreInntekt(beregningsId: Long): List<UføreInntekt> {
         return connection.queryList(
             """
-                SELECT ARSTALL, INNTEKT_I_KRONER, UFOREGRAD, ARBEIDSGRAD, INNTEKT_JUSTERT_FOR_UFOREGRAD, INNTEKT_I_G, GRUNNBELOP, inntekt_justert_ufore_g
+                SELECT ID, ARSTALL, INNTEKT_I_KRONER, UFOREGRAD, ARBEIDSGRAD, INNTEKT_JUSTERT_FOR_UFOREGRAD, INNTEKT_I_G, GRUNNBELOP, inntekt_justert_ufore_g
                 FROM BEREGNING_UFORE_INNTEKT
                 WHERE BEREGNING_UFORE_ID = ?
                 ORDER BY ARSTALL ASC
@@ -207,11 +224,34 @@ class BeregningsgrunnlagRepositoryImpl(private val connection: DBConnection) : B
                 UføreInntekt(
                     år = Year.of(row.getInt("ARSTALL")),
                     inntektIKroner = Beløp(verdi = row.getBigDecimal("INNTEKT_I_KRONER")),
+                    inntektsPerioder = hentInntektsPerioderUføre(row.getBigDecimal("ID")),
+                    inntektJustertForUføregrad = Beløp(row.getInt("INNTEKT_JUSTERT_FOR_UFOREGRAD")),
+                    inntektIGJustertForUføregrad = GUnit(row.getInt("inntekt_justert_ufore_g")),
+                    inntektIG = GUnit(row.getInt("INNTEKT_I_G")),
+                    grunnbeløp = Beløp(row.getInt("grunnbelop")),
+                )
+            }
+        }
+    }
+
+    private fun hentInntektsPerioderUføre(id: BigDecimal): List<UføreInntektPeriodisert> {
+        return connection.queryList(
+            """
+                SELECT PERIODE, INNTEKT_I_KRONER, UFOREGRAD, ARBEIDSGRAD, INNTEKT_JUSTERT_FOR_UFOREGRAD, INNTEKT_I_G, GRUNNBELOP, inntekt_justert_ufore_g
+                FROM BEREGNING_UFORE_TIDSPERIODE
+                WHERE BEREGNING_UFORE_INNTEKT_ID = ?
+            """.trimIndent()
+        ) {
+            setParams { setBigDecimal(1, id) }
+            setRowMapper { row ->
+                UføreInntektPeriodisert(
+                    periode = row.getPeriode("PERIODE"),
+                    inntektIKroner = Beløp(row.getInt("INNTEKT_I_KRONER")),
                     inntektIG = GUnit(row.getBigDecimal("INNTEKT_I_G")),
                     uføregrad = Prosent(row.getInt("UFOREGRAD")),
                     arbeidsgrad = Prosent(row.getInt("ARBEIDSGRAD")),
-                    inntektJustertForUføregrad = Beløp(row.getBigDecimal("INNTEKT_JUSTERT_FOR_UFOREGRAD")),
-                    inntektIGJustertForUføregrad = GUnit(row.getBigDecimal("inntekt_justert_ufore_g")),
+                    inntektJustertForUføregrad = Beløp(row.getInt("INNTEKT_JUSTERT_FOR_UFOREGRAD")),
+                    inntektIGJustertForUføregrad = GUnit(row.getInt("inntekt_justert_ufore_g")),
                     grunnbeløp = Beløp(row.getBigDecimal("GRUNNBELOP"))
                 )
             }
@@ -410,28 +450,58 @@ VALUES (?, ?, ?, ?, ?, ?, ?)"""
     }
 
     private fun lagreUføreInntekt(uføreId: Long, inntekter: List<UføreInntekt>) {
+        val nyesteUføre = inntekter.flatMap { it.inntektsPerioder }.maxBy { it.periode.fom }
+        val ids = inntekter.map {
+            connection.executeReturnKey(
+                """INSERT INTO BEREGNING_UFORE_INNTEKT
+            (BEREGNING_UFORE_ID, ARSTALL, INNTEKT_I_KRONER, UFOREGRAD, ARBEIDSGRAD,
+             INNTEKT_JUSTERT_FOR_UFOREGRAD, INNTEKT_I_G, GRUNNBELOP, inntekt_justert_ufore_g)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """
+            ) {
+                // drop not null constraint på uføregrad og arbeidsgrad
+                setParams {
+                    setLong(1, uføreId)
+                    setInt(2, it.år.value)
+                    setBigDecimal(3, it.inntektIKroner.verdi())
+                    setInt(4, nyesteUføre.uføregrad.prosentverdi())
+                    setInt(5, nyesteUføre.uføregrad.komplement().prosentverdi())
+                    setBigDecimal(6, it.inntektJustertForUføregrad.verdi())
+                    setBigDecimal(7, it.inntektIG.verdi())
+                    setBigDecimal(8, it.grunnbeløp.verdi())
+                    setBigDecimal(9, it.inntektIGJustertForUføregrad.verdi())
+                }
+            }
+        }
+
+        inntekter.mapIndexed { i, inntekt ->
+            lagreUføreInnteksperioder(inntekt.inntektsPerioder, ids[i])
+        }
+
+    }
+
+    private fun lagreUføreInnteksperioder(perioder: List<UføreInntektPeriodisert>, beregningUføreInntektID: Long) {
         connection.executeBatch(
-            """INSERT INTO BEREGNING_UFORE_INNTEKT
-(BEREGNING_UFORE_ID, ARSTALL, INNTEKT_I_KRONER, UFOREGRAD, ARBEIDSGRAD,
- INNTEKT_JUSTERT_FOR_UFOREGRAD, INNTEKT_I_G, GRUNNBELOP, inntekt_justert_ufore_g)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """,
-            inntekter
+            """INSERT INTO BEREGNING_UFORE_TIDSPERIODE(
+            BEREGNING_UFORE_INNTEKT_ID, PERIODE, INNTEKT_I_KRONER, INNTEKT_I_G, INNTEKT_JUSTERT_FOR_UFOREGRAD,
+            INNTEKT_JUSTERT_UFORE_G, GRUNNBELOP, UFOREGRAD, ARBEIDSGRAD
+            ) VALUES (?, ?::daterange, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            perioder
         ) {
             setParams {
-                setLong(1, uføreId)
-                setInt(2, it.år.value)
+                setLong(1, beregningUføreInntektID)
+                setPeriode(2, it.periode)
                 setBigDecimal(3, it.inntektIKroner.verdi())
-                setInt(4, it.uføregrad.prosentverdi())
-                setInt(5, it.arbeidsgrad.prosentverdi())
-                setBigDecimal(6, it.inntektJustertForUføregrad.verdi())
-                setBigDecimal(7, it.inntektIG.verdi())
-                setBigDecimal(8, it.grunnbeløp.verdi())
-                setBigDecimal(9, it.inntektIGJustertForUføregrad.verdi())
+                setBigDecimal(4, it.inntektIG.verdi())
+                setBigDecimal(5, it.inntektJustertForUføregrad.verdi())
+                setBigDecimal(6, it.inntektIGJustertForUføregrad.verdi())
+                setBigDecimal(7, it.grunnbeløp.verdi())
+                setInt(8, it.uføregrad.prosentverdi())
+                setInt(9, it.arbeidsgrad.prosentverdi())
             }
         }
     }
-
 
     private fun lagre(behandlingId: BehandlingId, beregningsgrunnlag: GrunnlagYrkesskade) {
         val beregningstype = Beregningstype.YRKESSKADE

@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadeSak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
@@ -26,7 +27,7 @@ class BeregningsGrunnlagApiTest {
         val input = Inntektsbehov(
             Input(
                 nedsettelsesDato = LocalDate.of(2023, 1, 1),
-                inntekter = setOf(
+                årsInntekter = setOf(
                     InntektPerÅr(2022, Beløp(500000)),
                     InntektPerÅr(2021, Beløp(400000)),
                     InntektPerÅr(2020, Beløp(300000))
@@ -67,8 +68,24 @@ class BeregningsGrunnlagApiTest {
                             skadedato = LocalDate.of(2021, 1, 1)
                         )
                     )
+                ),
+                inntektsPerioder = listOf(
+                    InntektsPeriode(
+                        Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
+                        beløp = 500000.toDouble(),
+                        inntektType = "lønn",
+                    ),
+                    InntektsPeriode(
+                        Periode(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 12, 31)),
+                        beløp = 400000.toDouble(),
+                        inntektType = "lønn",
+                    ),
+                    InntektsPeriode(
+                        Periode(LocalDate.of(2020, 1, 1), LocalDate.of(2020, 12, 31)),
+                        beløp = 300000.toDouble(),
+                        inntektType = "lønn",
+                    )
                 )
-
             )
         )
 
@@ -95,12 +112,12 @@ class BeregningsGrunnlagApiTest {
         val input = Inntektsbehov(
             Input(
                 nedsettelsesDato = LocalDate.of(2023, 1, 1),
-                inntekter = setOf(
+                årsInntekter = setOf(
                     InntektPerÅr(2022, Beløp(500000)),
                     InntektPerÅr(2021, Beløp(400000)),
                     InntektPerÅr(2020, Beløp(300000))
                 ),
-                uføregrad = setOf(Uføre(LocalDate.now(), Prosent(30))),
+                uføregrad = setOf(Uføre(LocalDate.now(), Prosent(30))), // yrkesskade tilbake i tid, ikke bare fra dagens dato
                 yrkesskadevurdering = Yrkesskadevurdering(
                     begrunnelse = "en begrunnelse",
                     andelAvNedsettelsen = Prosent(30),
@@ -135,6 +152,23 @@ class BeregningsGrunnlagApiTest {
                             kildesystem = "INFOTRYGD",
                             skadedato = LocalDate.of(2021, 1, 1)
                         )
+                    )
+                ),
+                inntektsPerioder = listOf(
+                    InntektsPeriode(
+                        Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
+                        beløp = 500000.toDouble(),
+                        inntektType = "lønn",
+                    ),
+                    InntektsPeriode(
+                        Periode(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 12, 31)),
+                        beløp = 400000.toDouble(),
+                        inntektType = "lønn",
+                    ),
+                    InntektsPeriode(
+                        Periode(LocalDate.of(2020, 1, 1), LocalDate.of(2020, 12, 31)),
+                        beløp = 300000.toDouble(),
+                        inntektType = "lønn",
                     )
                 )
 

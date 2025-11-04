@@ -78,6 +78,5 @@ object UføreGateway : UføreRegisterGateway {
                 uføregrad = Prosent(it.uforegrad)
             )
         }.toSet()
-
     }
 }

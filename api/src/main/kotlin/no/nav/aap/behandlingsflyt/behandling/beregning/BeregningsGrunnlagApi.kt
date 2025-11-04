@@ -173,7 +173,8 @@ private fun inntekterTilUføreDTO(uføreInntekt: UføreInntekt, grunnlagInntekt:
         justertTilMaks6G = grunnlagInntekt.inntekt6GBegrenset.verdi(),
         justertForUføreGrad = grunnlagInntekt.inntektIKroner.verdi(),
         justertForUføreGradiG = grunnlagInntekt.inntektIG.verdi(),
-        uføreGrad = uføreInntekt.uføregrad.prosentverdi(),
+        // TODO midlertidig fiks
+        uføreGrad = uføreInntekt.inntektsPerioder.maxBy { it.periode.fom }.uføregrad.prosentverdi(),
     )
 }
 

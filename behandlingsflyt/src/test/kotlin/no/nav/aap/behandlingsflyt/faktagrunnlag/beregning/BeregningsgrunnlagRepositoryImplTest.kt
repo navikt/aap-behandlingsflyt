@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag1
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagInntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.UføreInntekt
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.UføreInntektPeriodisert
 import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
@@ -75,32 +76,68 @@ internal class BeregningsgrunnlagRepositoryImplTest {
         )
 
         val inntektPerÅrUføre = listOf(
-            uføreInntekt(
+            uføreInntektPerÅr(
                 år = 2020,
                 uføregrad = Prosent.`50_PROSENT`,
                 inntektIKroner = Beløp(300000),
                 grunnbeløp = Beløp(100000),
                 inntektIG = GUnit(4),
                 inntekt6GBegrenset = GUnit(4),
-                er6GBegrenset = false
+                er6GBegrenset = false,
+                inntektsPerioder = listOf(
+                    UføreInntektPeriodisert(
+                        periode = Periode(LocalDate.parse("2020-01-01"), LocalDate.parse("2020-12-31")),
+                        inntektIKroner = Beløp(300000),
+                        inntektIG = GUnit(4),
+                        uføregrad = Prosent.`50_PROSENT`,
+                        arbeidsgrad = Prosent.`50_PROSENT`,
+                        inntektJustertForUføregrad = Beløp(300000).dividert(Prosent.`50_PROSENT`),
+                        inntektIGJustertForUføregrad = GUnit(4).dividert(Prosent.`50_PROSENT`),
+                        grunnbeløp = Beløp(100000)
+                    )
+                )
             ),
-            uføreInntekt(
+            uføreInntektPerÅr(
                 år = 2021,
                 uføregrad = Prosent.`50_PROSENT`,
                 inntektIKroner = Beløp(350000),
                 grunnbeløp = Beløp(100000),
                 inntektIG = GUnit(4),
                 inntekt6GBegrenset = GUnit(4),
-                er6GBegrenset = false
+                er6GBegrenset = false,
+                inntektsPerioder = listOf(
+                    UføreInntektPeriodisert(
+                        periode = Periode(LocalDate.parse("2021-01-01"), LocalDate.parse("2021-12-31")),
+                        inntektIKroner = Beløp(350000),
+                        inntektIG = GUnit(4),
+                        uføregrad = Prosent.`50_PROSENT`,
+                        arbeidsgrad = Prosent.`50_PROSENT`,
+                        inntektJustertForUføregrad = Beløp(350000).dividert(Prosent.`50_PROSENT`),
+                        inntektIGJustertForUføregrad = GUnit(4).dividert(Prosent.`50_PROSENT`),
+                        grunnbeløp = Beløp(100000)
+                    )
+                )
             ),
-            uføreInntekt(
+            uføreInntektPerÅr(
                 år = 2022,
                 uføregrad = Prosent.`50_PROSENT`,
                 inntektIKroner = Beløp(350000),
                 grunnbeløp = Beløp(100000),
                 inntektIG = GUnit(4),
                 inntekt6GBegrenset = GUnit(4),
-                er6GBegrenset = false
+                er6GBegrenset = false,
+                inntektsPerioder = listOf(
+                    UføreInntektPeriodisert(
+                        periode = Periode(LocalDate.parse("2022-01-01"), LocalDate.parse("2022-12-31")),
+                        inntektIKroner = Beløp(350000),
+                        inntektIG = GUnit(4),
+                        uføregrad = Prosent.`50_PROSENT`,
+                        arbeidsgrad = Prosent.`50_PROSENT`,
+                        inntektJustertForUføregrad = Beløp(350000).dividert(Prosent.`50_PROSENT`),
+                        inntektIGJustertForUføregrad = GUnit(4).dividert(Prosent.`50_PROSENT`),
+                        grunnbeløp = Beløp(100000)
+                    )
+                )
             )
         )
 
@@ -193,32 +230,68 @@ internal class BeregningsgrunnlagRepositoryImplTest {
         )
 
         val inntektPerÅrUføre = listOf(
-            uføreInntekt(
+            uføreInntektPerÅr(
                 år = 2020,
                 uføregrad = Prosent.`50_PROSENT`,
                 inntektIKroner = Beløp(300000),
                 grunnbeløp = Beløp(100000),
                 inntektIG = GUnit(4),
                 inntekt6GBegrenset = GUnit(4),
-                er6GBegrenset = false
+                er6GBegrenset = false,
+                inntektsPerioder = listOf(
+                    UføreInntektPeriodisert(
+                        periode = Periode(LocalDate.parse("2020-01-01"), LocalDate.parse("2020-12-31")),
+                        inntektIKroner = Beløp(300000),
+                        inntektIG = GUnit(4),
+                        uføregrad = Prosent.`50_PROSENT`,
+                        arbeidsgrad = Prosent.`50_PROSENT`,
+                        inntektJustertForUføregrad = Beløp(300000).dividert(Prosent.`50_PROSENT`),
+                        inntektIGJustertForUføregrad = GUnit(4).dividert(Prosent.`50_PROSENT`),
+                        grunnbeløp = Beløp(100000)
+                    )
+                )
             ),
-            uføreInntekt(
+            uføreInntektPerÅr(
                 år = 2021,
                 uføregrad = Prosent.`50_PROSENT`,
                 inntektIKroner = Beløp(350000),
                 grunnbeløp = Beløp(100000),
                 inntektIG = GUnit(4),
                 inntekt6GBegrenset = GUnit(4),
-                er6GBegrenset = false
+                er6GBegrenset = false,
+                inntektsPerioder = listOf(
+                    UføreInntektPeriodisert(
+                        periode = Periode(LocalDate.parse("2021-01-01"), LocalDate.parse("2021-12-31")),
+                        inntektIKroner = Beløp(350000),
+                        inntektIG = GUnit(4),
+                        uføregrad = Prosent.`50_PROSENT`,
+                        arbeidsgrad = Prosent.`50_PROSENT`,
+                        inntektJustertForUføregrad = Beløp(350000).dividert(Prosent.`50_PROSENT`),
+                        inntektIGJustertForUføregrad = GUnit(4).dividert(Prosent.`50_PROSENT`),
+                        grunnbeløp = Beløp(100000)
+                    )
+                )
             ),
-            uføreInntekt(
+            uføreInntektPerÅr(
                 år = 2022,
                 uføregrad = Prosent.`50_PROSENT`,
                 inntektIKroner = Beløp(350000),
                 grunnbeløp = Beløp(100000),
                 inntektIG = GUnit(4),
                 inntekt6GBegrenset = GUnit(4),
-                er6GBegrenset = false
+                er6GBegrenset = false,
+                inntektsPerioder = listOf(
+                    UføreInntektPeriodisert(
+                        periode = Periode(LocalDate.parse("2022-01-01"), LocalDate.parse("2022-12-31")),
+                        inntektIKroner = Beløp(350000),
+                        inntektIG = GUnit(4),
+                        uføregrad = Prosent.`50_PROSENT`,
+                        arbeidsgrad = Prosent.`50_PROSENT`,
+                        inntektJustertForUføregrad = Beløp(350000).dividert(Prosent.`50_PROSENT`),
+                        inntektIGJustertForUføregrad = GUnit(4).dividert(Prosent.`50_PROSENT`),
+                        grunnbeløp = Beløp(100000)
+                    )
+                )
             )
         )
 
@@ -324,32 +397,68 @@ internal class BeregningsgrunnlagRepositoryImplTest {
         )
 
         val inntektPerÅrUføre = listOf(
-            uføreInntekt(
+            uføreInntektPerÅr(
                 år = 2020,
                 uføregrad = Prosent.`50_PROSENT`,
                 inntektIKroner = Beløp(300000),
                 grunnbeløp = Beløp(100000),
                 inntektIG = GUnit(4),
                 inntekt6GBegrenset = GUnit(4),
-                er6GBegrenset = false
+                er6GBegrenset = false,
+                inntektsPerioder = listOf(
+                    UføreInntektPeriodisert(
+                        periode = Periode(LocalDate.parse("2020-01-01"), LocalDate.parse("2020-12-31")),
+                        inntektIKroner = Beløp(300000),
+                        inntektIG = GUnit(4),
+                        uføregrad = Prosent.`50_PROSENT`,
+                        arbeidsgrad = Prosent.`50_PROSENT`,
+                        inntektJustertForUføregrad = Beløp(300000).dividert(Prosent.`50_PROSENT`),
+                        inntektIGJustertForUføregrad = GUnit(4).dividert(Prosent.`50_PROSENT`),
+                        grunnbeløp = Beløp(100000)
+                    )
+                )
             ),
-            uføreInntekt(
+            uføreInntektPerÅr(
                 år = 2021,
                 uføregrad = Prosent.`50_PROSENT`,
                 inntektIKroner = Beløp(350000),
                 grunnbeløp = Beløp(100000),
                 inntektIG = GUnit(4),
                 inntekt6GBegrenset = GUnit(4),
-                er6GBegrenset = false
+                er6GBegrenset = false,
+                inntektsPerioder = listOf(
+                    UføreInntektPeriodisert(
+                        periode = Periode(LocalDate.parse("2021-01-01"), LocalDate.parse("2021-12-31")),
+                        inntektIKroner = Beløp(350000),
+                        inntektIG = GUnit(4),
+                        uføregrad = Prosent.`50_PROSENT`,
+                        arbeidsgrad = Prosent.`50_PROSENT`,
+                        inntektJustertForUføregrad = Beløp(350000).dividert(Prosent.`50_PROSENT`),
+                        inntektIGJustertForUføregrad = GUnit(4).dividert(Prosent.`50_PROSENT`),
+                        grunnbeløp = Beløp(100000)
+                    )
+                )
             ),
-            uføreInntekt(
+            uføreInntektPerÅr(
                 år = 2022,
                 uføregrad = Prosent.`50_PROSENT`,
                 inntektIKroner = Beløp(350000),
                 grunnbeløp = Beløp(100000),
                 inntektIG = GUnit(4),
                 inntekt6GBegrenset = GUnit(4),
-                er6GBegrenset = false
+                er6GBegrenset = false,
+                inntektsPerioder = listOf(
+                    UføreInntektPeriodisert(
+                        periode = Periode(LocalDate.parse("2022-01-01"), LocalDate.parse("2022-12-31")),
+                        inntektIKroner = Beløp(350000),
+                        inntektIG = GUnit(4),
+                        uføregrad = Prosent.`50_PROSENT`,
+                        arbeidsgrad = Prosent.`50_PROSENT`,
+                        inntektJustertForUføregrad = Beløp(350000).dividert(Prosent.`50_PROSENT`),
+                        inntektIGJustertForUføregrad = GUnit(4).dividert(Prosent.`50_PROSENT`),
+                        grunnbeløp = Beløp(100000)
+                    )
+                )
             )
         )
 
@@ -407,25 +516,25 @@ internal class BeregningsgrunnlagRepositoryImplTest {
         val grunnlagInntekt: GrunnlagInntekt
     )
 
-    private fun uføreInntekt(
+    private fun uføreInntektPerÅr(
         år: Int,
         uføregrad: Prosent,
         inntektIKroner: Beløp,
         grunnbeløp: Beløp,
         inntektIG: GUnit,
         inntekt6GBegrenset: GUnit,
-        er6GBegrenset: Boolean
+        er6GBegrenset: Boolean,
+        inntektsPerioder: List<UføreInntektPeriodisert>
     ): InntekterForUføre {
         return InntekterForUføre(
             UføreInntekt(
                 år = Year.of(år),
                 inntektIKroner = inntektIKroner.multiplisert(uføregrad.komplement()),
-                uføregrad = uføregrad,
-                arbeidsgrad = uføregrad.komplement(),
+                inntektsPerioder = inntektsPerioder,
                 inntektJustertForUføregrad = inntektIKroner,
-                inntektIG = inntektIG,
                 inntektIGJustertForUføregrad = inntektIG.multiplisert(uføregrad.komplement()),
-                grunnbeløp = grunnbeløp
+                inntektIG = inntektIG,
+                grunnbeløp = grunnbeløp,
             ),
             GrunnlagInntekt(
                 år = Year.of(år),

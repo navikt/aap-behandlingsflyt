@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Input
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
@@ -30,7 +31,9 @@ class BeregningService(
     private val beregningsgrunnlagRepository: BeregningsgrunnlagRepository,
     private val beregningVurderingRepository: BeregningVurderingRepository,
     private val yrkesskadeRepository: YrkesskadeRepository,
-    private val manuellInntektGrunnlagRepository: ManuellInntektGrunnlagRepository
+    private val manuellInntektGrunnlagRepository: ManuellInntektGrunnlagRepository,
+    // TODO: Kan det skje at denne ikke har data langt nok tilbake i tid?
+    private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository
 ) {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
@@ -41,7 +44,8 @@ class BeregningService(
         beregningsgrunnlagRepository = repositoryProvider.provide(),
         beregningVurderingRepository = repositoryProvider.provide(),
         yrkesskadeRepository = repositoryProvider.provide(),
-        manuellInntektGrunnlagRepository = repositoryProvider.provide()
+        manuellInntektGrunnlagRepository = repositoryProvider.provide(),
+        medlemskapArbeidInntektRepository = repositoryProvider.provide(),
     )
 
     fun beregnGrunnlag(behandlingId: BehandlingId): Beregningsgrunnlag {
@@ -52,6 +56,14 @@ class BeregningService(
         val student = studentRepository.hentHvisEksisterer(behandlingId)
         val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
         val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
+        val inntektsPerioder = requireNotNull(medlemskapArbeidInntektRepository.hentHvisEksisterer(behandlingId)?.inntekterINorgeGrunnlag) {
+            "Må ha hentet inntekt i lovvalgssteget før grunnlagsberegningen"
+        }.map { InntektsPeriode(
+            periode = it.periode,
+            beløp = it.beloep,
+            inntektType = it.inntektType
+        ) }
+
 
         val kombinertInntekt =
             kombinerInntektOgManuellInntekt(
@@ -63,9 +75,11 @@ class BeregningService(
             studentVurdering = student?.studentvurdering,
             yrkesskadevurdering = sykdomGrunnlag?.yrkesskadevurdering,
             vurdering = beregningVurdering,
-            inntekter = kombinertInntekt,
+            årsInntekter = kombinertInntekt,
+            // TODO: Hvor langt tilbake i tid skal man hente uføregrader?
             uføregrad = uføre?.vurderinger.orEmpty(),
-            registrerteYrkesskader = yrkesskadeGrunnlag?.yrkesskader
+            registrerteYrkesskader = yrkesskadeGrunnlag?.yrkesskader,
+            inntektsPerioder = inntektsPerioder
         )
 
         val beregning = Beregning(input)
@@ -106,7 +120,6 @@ class BeregningService(
 
         // Hvis begge deler finnes for samme år, foretrekkes verdien fra register
         val kombinerteInntekter = (manuelleByÅr + inntekterByÅr).values.toSet()
-
         return kombinerteInntekter
     }
 
@@ -114,18 +127,20 @@ class BeregningService(
         studentVurdering: StudentVurdering?,
         yrkesskadevurdering: Yrkesskadevurdering?,
         vurdering: BeregningGrunnlag?,
-        inntekter: Set<InntektPerÅr>,
+        årsInntekter: Set<InntektPerÅr>,
+        inntektsPerioder: List<InntektsPeriode>,
         uføregrad: Set<Uføre>,
         registrerteYrkesskader: Yrkesskader?
     ): Inntektsbehov {
         return Inntektsbehov(
             Input(
                 nedsettelsesDato = Inntektsbehov.utledNedsettelsesdato(vurdering?.tidspunktVurdering, studentVurdering),
-                inntekter = inntekter,
+                årsInntekter = årsInntekter,
                 uføregrad = uføregrad,
                 yrkesskadevurdering = yrkesskadevurdering,
                 beregningGrunnlag = vurdering,
-                registrerteYrkesskader = registrerteYrkesskader
+                registrerteYrkesskader = registrerteYrkesskader,
+                inntektsPerioder = inntektsPerioder,
             )
         )
     }

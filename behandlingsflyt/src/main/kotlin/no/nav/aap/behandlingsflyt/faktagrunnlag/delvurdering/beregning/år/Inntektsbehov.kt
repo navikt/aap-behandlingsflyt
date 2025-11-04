@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år
 
+import no.nav.aap.behandlingsflyt.behandling.beregning.InntektsPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
@@ -31,13 +32,17 @@ class Inntektsbehov(private val input: Input) {
     }
 
     fun utledForOrdinær(): Set<InntektPerÅr> {
-        return filtrerInntekter(input.nedsettelsesDato, input.inntekter)
+        return filtrerInntekter(input.nedsettelsesDato, input.årsInntekter)
+    }
+
+    fun inntektsPerioder(): List<InntektsPeriode> {
+        return input.inntektsPerioder
     }
 
     fun utledForYtterligereNedsatt(): Set<InntektPerÅr> {
         val ytterligereNedsettelsesDato = input.beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
         requireNotNull(ytterligereNedsettelsesDato)
-        return filtrerInntekter(ytterligereNedsettelsesDato, input.inntekter)
+        return filtrerInntekter(ytterligereNedsettelsesDato, input.årsInntekter)
     }
 
     /**

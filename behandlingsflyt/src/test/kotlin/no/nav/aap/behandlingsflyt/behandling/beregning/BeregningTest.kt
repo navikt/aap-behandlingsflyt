@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadeSak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -32,7 +33,7 @@ class BeregningTest {
         val input = Inntektsbehov(
             input = Input(
                 nedsettelsesDato = LocalDate.of(2023, 1, 1),
-                inntekter = setOf(
+                årsInntekter = setOf(
                     InntektPerÅr(2022, Beløp(500000)),
                     InntektPerÅr(2021, Beløp(400000)),
                     InntektPerÅr(2020, Beløp(300000))
@@ -40,7 +41,24 @@ class BeregningTest {
                 uføregrad = emptySet(),
                 yrkesskadevurdering = null,
                 beregningGrunnlag = null,
-                registrerteYrkesskader = null
+                registrerteYrkesskader = null,
+                inntektsPerioder = listOf(
+                    InntektsPeriode(
+                        periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
+                        beløp = 500000.toDouble(),
+                        inntektType = "lønn"
+                    ),
+                    InntektsPeriode(
+                        periode = Periode(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 12, 31)),
+                        beløp = 400000.toDouble(),
+                        inntektType = "lønn"
+                    ),
+                    InntektsPeriode(
+                        periode = Periode(LocalDate.of(2020, 1, 1), LocalDate.of(2020, 12, 31)),
+                        beløp = 300000.toDouble(),
+                        inntektType = "lønn"
+                    ),
+                )
             )
         )
 
@@ -54,12 +72,12 @@ class BeregningTest {
         val input = Inntektsbehov(
             Input(
                 nedsettelsesDato = LocalDate.of(2015, 1, 1),
-                inntekter = setOf(
+                årsInntekter = setOf(
                     InntektPerÅr(2022, Beløp(500000)),
                     InntektPerÅr(2021, Beløp(400000)),
                     InntektPerÅr(2020, Beløp(300000))
                 ),
-                uføregrad = setOf(Uføre(LocalDate.now(), Prosent(30))),
+                uføregrad = setOf(Uføre(LocalDate.now().minusYears(5), Prosent(30))),
                 yrkesskadevurdering = null,
                 beregningGrunnlag = BeregningGrunnlag(
                     tidspunktVurdering = BeregningstidspunktVurdering(
@@ -70,12 +88,28 @@ class BeregningTest {
                         vurdertAv = "saksbehandler"
                     ), yrkesskadeBeløpVurdering = null
                 ),
-                registrerteYrkesskader = null
+                registrerteYrkesskader = null,
+                inntektsPerioder = listOf(
+                    InntektsPeriode(
+                        periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
+                        beløp = 500000.toDouble(),
+                        inntektType = "lønn"
+                    ),
+                    InntektsPeriode(
+                        periode = Periode(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 12, 31)),
+                        beløp = 400000.toDouble(),
+                        inntektType = "lønn"
+                    ),
+                    InntektsPeriode(
+                        periode = Periode(LocalDate.of(2020, 1, 1), LocalDate.of(2020, 12, 31)),
+                        beløp = 300000.toDouble(),
+                        inntektType = "lønn"
+                    ),
+                )
             )
         )
 
         val beregning = Beregning(input).beregneMedInput()
-
         assertThat(beregning.grunnlaget()).isEqualTo(GUnit("6"))
     }
 
@@ -89,7 +123,7 @@ class BeregningTest {
         val input = Inntektsbehov(
             Input(
                 nedsettelsesDato = LocalDate.of(2023, 1, 1),
-                inntekter = inntekterPerÅr,
+                årsInntekter = inntekterPerÅr,
                 uføregrad = emptySet(),
                 yrkesskadevurdering = Yrkesskadevurdering(
                     begrunnelse = "en begrunnelse",
@@ -126,7 +160,25 @@ class BeregningTest {
                             skadedato = LocalDate.of(2019, 1, 1)
                         )
                     )
-                )
+                ),
+                inntektsPerioder = listOf(
+                    InntektsPeriode(
+                        periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
+                        beløp = 500000.toDouble(),
+                        inntektType = "lønn"
+                    ),
+                    InntektsPeriode(
+                        periode = Periode(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 12, 31)),
+                        beløp = 400000.toDouble(),
+                        inntektType = "lønn"
+                    ),
+                    InntektsPeriode(
+                        periode = Periode(LocalDate.of(2020, 1, 1), LocalDate.of(2020, 12, 31)),
+                        beløp = 300000.toDouble(),
+                        inntektType = "lønn"
+                    ),
+
+                    )
             )
         )
 
@@ -142,7 +194,7 @@ class BeregningTest {
         val input = Inntektsbehov(
             Input(
                 nedsettelsesDato = LocalDate.of(2023, 1, 1),
-                inntekter = setOf(
+                årsInntekter = setOf(
                     InntektPerÅr(2022, Beløp(500000)),
                     InntektPerÅr(2021, Beløp(400000)),
                     InntektPerÅr(2020, Beløp(300000))
@@ -160,7 +212,7 @@ class BeregningTest {
                         begrunnelse = "test",
                         nedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
                         ytterligereNedsattBegrunnelse = "test2",
-                        ytterligereNedsattArbeidsevneDato = LocalDate.of(2020, 1, 1),
+                        ytterligereNedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
                         vurdertAv = "saksbehandler"
                     ),
                     yrkesskadeBeløpVurdering = BeregningYrkeskaderBeløpVurdering(
@@ -183,7 +235,25 @@ class BeregningTest {
                             skadedato = LocalDate.of(2021, 1, 1)
                         )
                     )
-                )
+                ),
+                inntektsPerioder = listOf(
+                    InntektsPeriode(
+                        periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
+                        beløp = 500000.toDouble(),
+                        inntektType = "lønn"
+                    ),
+                    InntektsPeriode(
+                        periode = Periode(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 12, 31)),
+                        beløp = 400000.toDouble(),
+                        inntektType = "lønn"
+                    ),
+                    InntektsPeriode(
+                        periode = Periode(LocalDate.of(2020, 1, 1), LocalDate.of(2020, 12, 31)),
+                        beløp = 300000.toDouble(),
+                        inntektType = "lønn"
+                    ),
+
+                    )
             )
         )
 
@@ -199,7 +269,7 @@ class BeregningTest {
         val inputMedNullUføregrad = Inntektsbehov(
             Input(
                 nedsettelsesDato = LocalDate.of(2023, 1, 1),
-                inntekter = setOf(
+                årsInntekter = setOf(
                     InntektPerÅr(2022, Beløp(500000)),
                     InntektPerÅr(2021, Beløp(400000)),
                     InntektPerÅr(2020, Beløp(300000))
@@ -216,14 +286,32 @@ class BeregningTest {
                     ),
                     yrkesskadeBeløpVurdering = null
                 ),
-                registrerteYrkesskader = null
+                registrerteYrkesskader = null,
+                inntektsPerioder = listOf(
+                    InntektsPeriode(
+                        periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
+                        beløp = 500000.toDouble(),
+                        inntektType = "lønn"
+                    ),
+                    InntektsPeriode(
+                        periode = Periode(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 12, 31)),
+                        beløp = 400000.toDouble(),
+                        inntektType = "lønn"
+                    ),
+                    InntektsPeriode(
+                        periode = Periode(LocalDate.of(2020, 1, 1), LocalDate.of(2020, 12, 31)),
+                        beløp = 300000.toDouble(),
+                        inntektType = "lønn"
+                    ),
+
+                    )
             )
         )
 
         val inputMedUføreGradIkkeOppgitt = Inntektsbehov(
             Input(
                 nedsettelsesDato = LocalDate.of(2023, 1, 1),
-                inntekter = setOf(
+                årsInntekter = setOf(
                     InntektPerÅr(2022, Beløp(500000)),
                     InntektPerÅr(2021, Beløp(400000)),
                     InntektPerÅr(2020, Beløp(300000))
@@ -239,7 +327,25 @@ class BeregningTest {
                         vurdertAv = "saksbehandler"
                     ), yrkesskadeBeløpVurdering = null
                 ),
-                registrerteYrkesskader = null
+                registrerteYrkesskader = null,
+                inntektsPerioder = listOf(
+                    InntektsPeriode(
+                        periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
+                        beløp = 500000.toDouble(),
+                        inntektType = "lønn"
+                    ),
+                    InntektsPeriode(
+                        periode = Periode(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 12, 31)),
+                        beløp = 400000.toDouble(),
+                        inntektType = "lønn"
+                    ),
+                    InntektsPeriode(
+                        periode = Periode(LocalDate.of(2020, 1, 1), LocalDate.of(2020, 12, 31)),
+                        beløp = 300000.toDouble(),
+                        inntektType = "lønn "
+                    ),
+
+                    )
             )
         )
 
@@ -264,11 +370,12 @@ class BeregningTest {
         val input = Inntektsbehov(
             input = Input(
                 nedsettelsesDato = nedsettelsesDato,
-                inntekter = inntektPerÅr,
                 uføregrad = emptySet(),
                 yrkesskadevurdering = null,
                 beregningGrunnlag = null,
-                registrerteYrkesskader = null
+                registrerteYrkesskader = null,
+                årsInntekter = TODO(),
+                inntektsPerioder = TODO()
             )
         )
         val beregning = Beregning(input).beregneMedInput()
@@ -282,8 +389,10 @@ class BeregningTest {
         @JvmStatic
         fun parseInntektPerÅr(map: Map<String, Double>): Set<InntektPerÅr> {
             return map.entries.map { (år, gVerdi) ->
-                val g = Grunnbeløp.tilTidslinjeGjennomsnitt().segment(Year.of(år.toInt()).atDay(250))?.verdi!!.multiplisert(
-                    GUnit(gVerdi.toString()))
+                val g =
+                    Grunnbeløp.tilTidslinjeGjennomsnitt().segment(Year.of(år.toInt()).atDay(250))?.verdi!!.multiplisert(
+                        GUnit(gVerdi.toString())
+                    )
                 InntektPerÅr(år.toInt(), g)
             }.toSet()
         }
