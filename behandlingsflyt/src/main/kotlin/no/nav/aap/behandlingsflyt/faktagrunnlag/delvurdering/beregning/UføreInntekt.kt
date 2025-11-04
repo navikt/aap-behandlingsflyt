@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning
 
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -14,6 +15,20 @@ import java.time.Year
  */
 data class UføreInntekt(
     val år: Year,
+    val inntektIKroner: Beløp,
+    val inntektIG: GUnit,
+    @Deprecated("Bruk uføregrad i inntektsPerioder")
+    val uføregrad: Prosent? = null,
+    @Deprecated("Bruk arbeidsgrad i inntektsPerioder")
+    val arbeidsgrad: Prosent? = null,
+    val inntektJustertForUføregrad: Beløp,
+    val inntektIGJustertForUføregrad: GUnit,
+    val grunnbeløp: Beløp,
+    val inntektsPerioder: List<UføreInntektPeriodisert> = emptyList()
+)
+
+data class UføreInntektPeriodisert(
+    val periode: Periode,
     val inntektIKroner: Beløp,
     val inntektIG: GUnit,
     val uføregrad: Prosent,

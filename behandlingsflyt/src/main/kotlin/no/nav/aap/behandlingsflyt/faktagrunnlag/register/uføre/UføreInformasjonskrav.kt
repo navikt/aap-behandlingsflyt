@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.KanTriggeRevurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreInformasjonskrav.UføreRegisterdata
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
@@ -23,16 +24,20 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
+import java.time.Year
 
 class UføreInformasjonskrav(
     private val sakService: SakService,
     private val uføreRepository: UføreRepository,
+    private val beregningVurderingRepository: BeregningVurderingRepository,
     private val uføreRegisterGateway: UføreRegisterGateway,
     private val tidligereVurderinger: TidligereVurderinger,
 ) : Informasjonskrav<UføreInformasjonskrav.UføreInput, UføreRegisterdata>, KanTriggeRevurdering {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         sakService = SakService(repositoryProvider),
         uføreRepository = repositoryProvider.provide(),
+        beregningVurderingRepository = repositoryProvider.provide(),
         uføreRegisterGateway = gatewayProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
     )
@@ -48,20 +53,19 @@ class UføreInformasjonskrav(
         return kontekst.erFørstegangsbehandlingEllerRevurdering()
                 && !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
                 && (oppdatert.ikkeKjørtSisteKalenderdag() || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode)
+        // TODO: endring i ytterligereNedsettelsesDato bør trigge ny innhenting?
     }
 
-    data class UføreInput(val sak: Sak) : InformasjonskravInput
+    data class UføreInput(val sak: Sak, val behandlingId: BehandlingId) : InformasjonskravInput
 
     data class UføreRegisterdata(val innhentMedHistorikk: List<Uføre>) : InformasjonskravRegisterdata
 
     override fun klargjør(kontekst: FlytKontekstMedPerioder): UføreInput {
-        return UføreInput(sakService.hentSakFor(kontekst.behandlingId))
+        return UføreInput(sakOgBehandlingService.hentSakFor(kontekst.behandlingId), kontekst.behandlingId)
     }
 
     override fun hentData(input: UføreInput): UføreRegisterdata {
-        val sak = input.sak
-
-        return UføreRegisterdata(uføreRegisterGateway.innhentMedHistorikk(sak.person, sak.rettighetsperiode.fom))
+        return UføreRegisterdata(hentUføregrader(input.behandlingId))
     }
 
     override fun oppdater(
@@ -85,8 +89,17 @@ class UføreInformasjonskrav(
     }
 
     private fun hentUføregrader(behandlingId: BehandlingId): List<Uføre> {
-        val sak = sakService.hentSakFor(behandlingId)
-        return uføreRegisterGateway.innhentMedHistorikk(sak.person, sak.rettighetsperiode.fom)
+        val sak = sakOgBehandlingService.hentSakFor(behandlingId)
+        val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
+        // prøver å sette fraDato riktig hvis den finnes
+        val fraDato = beregningVurdering?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
+            ?: beregningVurdering?.tidspunktVurdering?.nedsattArbeidsevneDato
+            ?: sak.rettighetsperiode.fom
+        return uføreRegisterGateway.innhentMedHistorikk(sak.person, treÅrFør(fraDato))
+    }
+
+    private fun treÅrFør(fraOgMed: LocalDate): LocalDate {
+        return Year.from(fraOgMed).minusYears(3).atDay(1)
     }
 
     override fun behovForRevurdering(behandlingId: BehandlingId): List<VurderingsbehovMedPeriode> {
