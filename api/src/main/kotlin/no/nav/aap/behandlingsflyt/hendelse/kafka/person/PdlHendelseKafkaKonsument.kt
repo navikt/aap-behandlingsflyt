@@ -89,17 +89,18 @@ class PdlHendelseKafkaKonsument(
                         if (behandling != null) {
                             val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling.id)
                             if (underveisGrunnlag != null) {
-                                val personHarBareAvslagFremover = utfallOppfyltUtils.allePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(
-                                    opprettetTidspunkt = personHendelse.opprettet,
-                                    underveisGrunnlag = underveisGrunnlag
-                                )
-                                if (!personHarBareAvslagFremover) {
+                                val personHarBareAvslagFremover =
+                                    utfallOppfyltUtils.allePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(
+                                        opprettetTidspunkt = personHendelse.opprettet,
+                                        underveisGrunnlag = underveisGrunnlag
+                                    )
+                                if (personHarBareAvslagFremover) {
+                                    log.info("Ignorerer dødsfallhendelse fordi bruker har fått avslag på alle perioder fremover ${sak.saksnummer}")
+                                } else {
                                     log.info("Registrerer mottatt hendelse fordi dødsfall på bruker ${sak.saksnummer}")
                                     hendelseService.registrerMottattHendelse(
                                         personHendelse.tilInnsendingDødsfallBruker(sak.saksnummer)
                                     )
-                                } else {
-                                    log.info("Ignorerer dødsfallhendelse fordi bruker har fått avslag på aller perioder fremover ${sak.saksnummer}")
                                 }
                             }
                         }

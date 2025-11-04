@@ -30,7 +30,6 @@ fun UnderveisGrunnlag.tilForeslåVedtakDataTidslinje(): Tidslinje<ForeslåVedtak
 
 class UtfallOppfyltUtils {
     private val log = LoggerFactory.getLogger(javaClass)
-
     fun allePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(
         opprettetTidspunkt: Instant,
         underveisGrunnlag: UnderveisGrunnlag
@@ -41,7 +40,7 @@ class UtfallOppfyltUtils {
         val tidslinje = underveisGrunnlag.tilForeslåVedtakDataTidslinje()
         val segmenterIFremtiden = tidslinje.segmenter()
             .filter { it.periode.fom.isAfter(opprettetDato)}
-
+        log.info("Tidslinje for død person med segmenter " + segmenterIFremtiden.count() + " " + segmenterIFremtiden)
         return segmenterIFremtiden.count() > 0 && segmenterIFremtiden.all {it.verdi.utfall == Utfall.IKKE_OPPFYLT } }
 
 

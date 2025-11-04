@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.utils
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
@@ -37,6 +36,34 @@ class UtfallOppfyltUtilsTest {
                 utfall = Utfall.IKKE_OPPFYLT,
             ), underveisperiode(
                 periode = Periode(16 januar 2026, 31 januar 2026),
+                rettighetsType = RettighetsType.BISTANDSBEHOV,
+                avslagsÅrsak = UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT,
+                utfall = Utfall.IKKE_OPPFYLT,
+            )
+        )
+
+        val result =
+            utfallOppfyltUtils.allePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(opprettetTidspunkt, underveisGrunnlag)
+        assertTrue(result)
+    }
+
+    @Test
+    fun `sjekker om alle periodene etter at bruker er død ikke har oppfylt utfall, der bruker dør midt i periodene`() {
+        val opprettetTidspunkt = Instant.parse("2025-11-03T10:15:30.00Z")
+        val underveisGrunnlag = underveisGrunnlag(
+            underveisperiode(
+                periode = Periode(1 november 2025, 15 november 2025),
+                rettighetsType = RettighetsType.BISTANDSBEHOV,
+                avslagsÅrsak = UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT,
+                utfall = Utfall.IKKE_OPPFYLT,
+            ), underveisperiode(
+                periode = Periode(16 november 2026, 1 desember 2026),
+                rettighetsType = RettighetsType.BISTANDSBEHOV,
+                avslagsÅrsak = UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT,
+                utfall = Utfall.IKKE_OPPFYLT,
+            )
+            , underveisperiode(
+                periode = Periode(2 desember 2026, 16 desember 2026),
                 rettighetsType = RettighetsType.BISTANDSBEHOV,
                 avslagsÅrsak = UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT,
                 utfall = Utfall.IKKE_OPPFYLT,
@@ -170,8 +197,8 @@ class UtfallOppfyltUtilsTest {
             underveisperiode(
                 periode = Periode(1 januar 2024, 15 januar 2024),
                 rettighetsType = RettighetsType.BISTANDSBEHOV,
-                avslagsÅrsak = null,
-                utfall = Utfall.OPPFYLT,
+                avslagsÅrsak = UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT,
+                utfall = Utfall.IKKE_OPPFYLT
             ),
             underveisperiode(
                 periode = Periode(16 januar 2026, 31 januar 2026),
