@@ -30,6 +30,7 @@ motorTestUtils = { module = "no.nav.aap.kelvin:motor-test-utils", version.ref = 
 tilgangKontrakt = { module = "no.nav.aap.tilgang:api-kontrakt", version.ref = "tilgang" }
 tilgangPlugin = { module = "no.nav.aap.tilgang:plugin", version.ref = "tilgang" }
 utbetalKontrakt = { module = "no.nav.aap.utbetal:api-kontrakt", version.ref = "utbetaling" }
+caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version = "3.2.2" }
 
 junitApi = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
 junitJupiterEngine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
