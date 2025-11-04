@@ -39,12 +39,11 @@ class UtfallOppfyltUtils {
             .atZone(ZoneId.of("Europe/Oslo"))
             .toLocalDate()
         val tidslinje = underveisGrunnlag.tilForeslåVedtakDataTidslinje()
-        log.info("Tidslinje for død person med segmenter " + tidslinje.segmenter().count())
-        tidslinje.segmenter().forEach { segment -> log.info("Tidslinje for død person " + segment.periode.fom.toString() + segment.periode.tom.toString() + segment.verdi.utfall) }
-        return tidslinje
-            .segmenter()
-            .filter { it.periode.fom.isAfter(opprettetDato) }
-            .all { it.verdi.utfall == Utfall.IKKE_OPPFYLT }
-    }
+        val segmenterIFremtiden = tidslinje.segmenter()
+            .filter { it.periode.fom.isAfter(opprettetDato)}
+
+        return segmenterIFremtiden.count() > 0 && segmenterIFremtiden.all {it.verdi.utfall == Utfall.IKKE_OPPFYLT } }
+
+
 
 }
