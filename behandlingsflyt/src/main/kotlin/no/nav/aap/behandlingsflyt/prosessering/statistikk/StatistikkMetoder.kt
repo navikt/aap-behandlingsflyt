@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.IKlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageResultatType
@@ -25,6 +26,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.ArbeidIPeriodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvsluttetBehandlingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.BeregningsgrunnlagDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Diagnoser
@@ -66,6 +68,7 @@ class StatistikkMetoder(
     private val dokumentRepository: MottattDokumentRepository,
     private val sykdomRepository: SykdomRepository,
     private val underveisRepository: UnderveisRepository,
+    private val meldekortRepository: MeldekortRepository,
     private val påklagetBehandlingRepository: PåklagetBehandlingRepository,
     trukketSøknadService: TrukketSøknadService,
     private val klageresultatUtleder: IKlageresultatUtleder,
@@ -82,6 +85,7 @@ class StatistikkMetoder(
         dokumentRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
         underveisRepository = repositoryProvider.provide(),
+        meldekortRepository = repositoryProvider.provide(),
         påklagetBehandlingRepository = repositoryProvider.provide(),
         trukketSøknadService = TrukketSøknadService(repositoryProvider.provide()),
         klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
@@ -102,10 +106,17 @@ class StatistikkMetoder(
             .filter { it.type == InnsendingType.SØKNAD }
             .map { it.referanse.asJournalpostId }
 
-
         val kanal = hentSøknadsKanal(behandling, søknaderForSak)
 
         val sak = sakService.hent(hendelse.saksnummer)
+
+        val meldekort = meldekortRepository.hentHvisEksisterer(behandling.id)
+        val forrigeBehandlingMeldekort =
+            behandling.forrigeBehandlingId?.let { meldekortRepository.hentHvisEksisterer(it) }
+
+        val nyeMeldekort =
+            meldekort?.meldekort().orEmpty().toSet().minus(forrigeBehandlingMeldekort?.meldekort().orEmpty().toSet())
+                .toList()
 
         val vurderingsbehovForBehandling = utledVurderingsbehovForBehandling(behandling)
         val statistikkHendelse = StoppetBehandling(
@@ -126,18 +137,21 @@ class StatistikkMetoder(
             identerForSak = hentIdenterPåSak(sak.saksnummer),
             vurderingsbehov = vurderingsbehovForBehandling,
             opprettetAv = hendelse.opprettetAv,
-            nyeMeldekort = hendelse.nyeMeldekort?.map { meldekort ->
+            nyeMeldekort = nyeMeldekort.map { meldekort ->
                 MeldekortDTO(
-                    meldekort.journalpostId.toString(),
+                    meldekort.journalpostId.identifikator,
                     meldekort.timerArbeidPerPeriode.map {
                         ArbeidIPeriodeDTO(
                             it.periode.fom,
                             it.periode.tom,
                             it.timerArbeid.antallTimer
                         )
+                    },
+                    meldekort.timerArbeidPerPeriode.map {
+                        ArbeidIPeriode(it.periode.fom, it.periode.tom, it.timerArbeid.antallTimer)
                     }
                 )
-            }.orEmpty(),
+            },
             søknadIder = søknadIder
         )
         return statistikkHendelse
