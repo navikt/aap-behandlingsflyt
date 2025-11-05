@@ -231,10 +231,6 @@ class Avklaringsbehovene(
         return alle().filter { it.definisjon in definisjoner }.toList()
     }
 
-    fun harHattAvklaringsbehov(): Boolean {
-        return alle().any { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
-    }
-
     fun avklaringsbehovLøstAvNay(): List<Avklaringsbehov> {
         return alle().filter { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
             .filter { it.definisjon.løsesAv == listOf(Rolle.SAKSBEHANDLER_NASJONAL) }
@@ -266,12 +262,6 @@ class Avklaringsbehovene(
         return alle()
             .filter { avklaringsbehov -> avklaringsbehov.kreverKvalitetssikring() }
             .any { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
-    }
-
-    fun harIkkeForeslåttUttak(): Boolean {
-        return alle()
-            .filter { avklaringsbehov -> avklaringsbehov.erForeslåttUttak() }
-            .none { it.status() == Status.AVSLUTTET }
     }
 
     fun harVærtSendtTilbakeFraBeslutterTidligere(): Boolean {

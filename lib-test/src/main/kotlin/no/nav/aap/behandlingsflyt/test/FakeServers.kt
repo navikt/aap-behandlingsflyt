@@ -216,7 +216,7 @@ object FakeServers : AutoCloseable {
             }
         }
         routing() {
-            get("/pen/api/uforetrygd/uforegrad") {
+            get("/api/uforetrygd/uforegrad") {
                 val ident = requireNotNull(call.request.header("fnr"))
                 val hentPerson = FakePersoner.hentPerson(ident)
                 if (hentPerson == null) {
@@ -230,7 +230,7 @@ object FakeServers : AutoCloseable {
                     call.respond(HttpStatusCode.OK, UføreRespons(uforegrad = uføregrad))
                 }
             }
-            post("/pen/api/uforetrygd/uforehistorikk/perioder") {
+            post("/api/uforetrygd/uforehistorikk/perioder") {
                 val body = call.receive<UføreRequest>()
                 val hentPerson = FakePersoner.hentPerson(body.fnr)
                 if (hentPerson == null) {
