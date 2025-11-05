@@ -29,7 +29,7 @@ jobs:
                 with:
                     gradle-version: wrapper
             -   name: Bygg & test
-                run: gradle genererOpenApiJson
+                run: ./gradlew genererOpenApiJson
             -   uses: actions/checkout@v5
                 with:
                     repository: navikt/aap-backend-typescript-types

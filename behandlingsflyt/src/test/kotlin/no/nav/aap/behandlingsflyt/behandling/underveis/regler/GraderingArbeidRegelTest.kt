@@ -6,6 +6,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
+import no.nav.aap.behandlingsflyt.help.assertTidslinje
+import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -13,6 +17,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.verdityper.dokument.JournalpostId
+import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -260,14 +265,50 @@ class GraderingArbeidRegelTest {
         assertEquals(Prosent.`70_PROSENT`, vurdering.segment(meldeperiode2.fom)?.verdi?.arbeidsgradering()?.gradering)
     }
 
+    @Test
+    fun `Fritak for meldeperiode som er passert skal gi null timer med opplysningstidspunkt satt, fritak som kommer senere skal ikke ha satt opplysninger mottatt tidspunkt`() {
+        val rettighetsperiode = Periode(LocalDate.now().minusMonths(1), LocalDate.now().plusMonths(11).minusDays(1))
+        val input = underveisInput(
+            rettighetsperiode = rettighetsperiode,
+            fastsattArbeidsevne = Prosent.`0_PROSENT`,
+            meldekort = emptyList(),
+            fritaksvurderinger =
+                listOf(
+                    Fritaksvurdering(
+                        harFritak = true,
+                        fraDato = rettighetsperiode.fom,
+                        begrunnelse = "kan ikke",
+                        vurdertAv = "saksbehandler",
+                        opprettetTid = rettighetsperiode.fom.atStartOfDay(),
+                    )
+                )
+        )
+        val vurdering = vurder(input)
+
+        vurdering.segmenter().forEach {
+            if (LocalDate.now() >= it.tom().plusDays(1)) {
+                Assertions.assertThat(it.verdi.arbeidsgradering().opplysningerMottatt).isNotNull
+            } else {
+                Assertions.assertThat(it.verdi.arbeidsgradering().opplysningerMottatt).isNull()
+            }
+        }
+        assertEquals(
+            Prosent.`100_PROSENT`,
+            vurdering.segment(rettighetsperiode.fom)?.verdi?.arbeidsgradering()?.gradering
+        )
+    }
+
+
     private fun underveisInput(
         rettighetsperiode: Periode,
         fastsattArbeidsevne: Prosent?,
-        meldekort: List<Meldekort>
+        meldekort: List<Meldekort>,
+        fritaksvurderinger: List<Fritaksvurdering> = emptyList(),
     ) = tomUnderveisInput(
         innsendingsTidspunkt = meldekort.associate { it.mottattTidspunkt.toLocalDate() to it.journalpostId },
         rettighetsperiode = rettighetsperiode,
         meldekort = meldekort,
+        meldepliktGrunnlag = MeldepliktGrunnlag(vurderinger = fritaksvurderinger),
         arbeidsevneGrunnlag = ArbeidsevneGrunnlag(
             listOfNotNull(fastsattArbeidsevne?.let {
                 ArbeidsevneVurdering(
