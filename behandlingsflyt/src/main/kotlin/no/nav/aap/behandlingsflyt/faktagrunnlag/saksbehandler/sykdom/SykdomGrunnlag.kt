@@ -10,7 +10,8 @@ import java.time.LocalDate
 data class SykdomGrunnlag(
     val yrkesskadevurdering: Yrkesskadevurdering?,
     /**
-     * Alle, inkludert historiske, sykdomsvurderinger. Skal sjeldent brukes direkte
+     * Alle tidligere vedtatte sykdomsvurderinger + nye sykdomsvurderinger for inneværende behandling. 
+     * Skal sjeldent brukes direkte
      */
     val sykdomsvurderinger: List<Sykdomsvurdering>,
 ) {
