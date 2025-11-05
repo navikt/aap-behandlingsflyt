@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.*
 import no.nav.aap.komponenter.type.Periode
 import java.util.concurrent.atomic.AtomicLong
+import java.util.stream.Collectors.toList
 
 object InMemorySakRepository : SakRepository {
 
@@ -46,6 +47,10 @@ object InMemorySakRepository : SakRepository {
 
     override fun finnAlle(): List<Sak> {
         return memory.values.toList()
+    }
+
+    override fun finnSiste(antall: Int): List<Sak> {
+        return memory.values.take(antall).toList()
     }
 
     override fun hent(sakId: SakId): Sak {

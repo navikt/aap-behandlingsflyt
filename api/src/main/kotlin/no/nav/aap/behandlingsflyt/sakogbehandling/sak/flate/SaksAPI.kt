@@ -296,6 +296,27 @@ fun NormalOpenAPIRoute.saksApi(
                     throw VerdiIkkeFunnetException("Fant ingen saker")
                 }
             }
+
+            route("/siste/{antall}").get<HentAntallSakerDTO, List<SaksinfoDTO>>(TagModule(listOf(Tags.Sak))) { req ->
+                if (Miljø.er() == MiljøKode.DEV || Miljø.er() == MiljøKode.LOKALT) {
+                    val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
+                        val repositoryProvider = repositoryRegistry.provider(connection)
+                        repositoryProvider.provide<SakRepository>()
+                            .finnSiste(req.antall)
+                            .map { sak ->
+                                SaksinfoDTO(
+                                    saksnummer = sak.saksnummer.toString(),
+                                    opprettetTidspunkt = sak.opprettetTidspunkt,
+                                    periode = sak.rettighetsperiode,
+                                    ident = sak.person.aktivIdent().identifikator
+                                )
+                            }
+                    }
+                    respond(saker)
+                } else {
+                    throw VerdiIkkeFunnetException("Fant ingen saker")
+                }
+            }
         }
 
         route("/{saksnummer}") {
