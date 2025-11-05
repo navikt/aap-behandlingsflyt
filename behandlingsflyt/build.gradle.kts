@@ -38,7 +38,7 @@ dependencies {
     api(project(":kontrakt"))
     implementation("io.micrometer:micrometer-registry-prometheus:1.15.5")
     implementation("ch.qos.logback:logback-classic:1.5.20")
-    implementation("net.logstash.logback:logstash-logback-encoder:8.1")
+    implementation("net.logstash.logback:logstash-logback-encoder:9.0")
     implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.21.0")
 
     api(libs.tilgangPlugin)
