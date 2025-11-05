@@ -5,12 +5,22 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.søknad.SøknadInformasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.AndreUtbetalingerYtelser
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.navenheter.NavKontorService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.andreYtelserOppgittISøknad.AndreYtelserOppgittISøknadRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AndreUtbetalingerYtelserDto
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KabalHendelseV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Søknad
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
@@ -35,6 +45,7 @@ fun NormalOpenAPIRoute.refusjonGrunnlagApi(
     route("/api/behandling") {
         route("/{referanse}/grunnlag/refusjon") {
             getGrunnlag<BehandlingReferanse, RefusjonkravGrunnlagResponse>(
+
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = Definisjon.REFUSJON_KRAV.kode.toString()
@@ -46,6 +57,8 @@ fun NormalOpenAPIRoute.refusjonGrunnlagApi(
 
                         val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                         val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
+
+
 
                         //TODO: Skal fikses etter prodsetting slik at det bare er gjeldendeVurderinger man skal forholde seg til
                         val gjeldendeVurderinger = refusjonkravRepository.hentHvisEksisterer(behandling.id)?.map {
@@ -62,12 +75,30 @@ fun NormalOpenAPIRoute.refusjonGrunnlagApi(
                                 .hentHistoriskeVurderinger(behandling.sakId, behandling.id)
                                 .map { it.tilResponse(ansattInfoService) }
 
+                        // Skal nå kun finne ut om har krysset av for økonomisk sosialhjelp
+
+                        //mildertidig
+                        val søknadHarData = repositoryProvider.provide<MottattDokumentRepository>()
+                            .hentDokumenterAvType(behandling.id, InnsendingType.SØKNAD).maxBy { it.mottattTidspunkt }
+                            .strukturerteData<SøknadV0>()?.data?.andreUtbetalinger?.stønad?.contains(
+                                AndreUtbetalingerYtelserDto.ØKONOMISK_SOSIALHJELP)
+
+
+                        val økonomiskSosialHjelp: Boolean? = if (andreUtbetalinger?.stønad == null && søknadHarData == null ) {
+                            null
+                        } else if (andreUtbetalinger?.stønad?.contains(AndreUtbetalingerYtelser.ØKONOMISK_SOSIALHJELP) == true || søknadHarData == true) {
+                            true
+                        } else {
+                            false
+                        }
+
+
                         RefusjonkravGrunnlagResponse(
                             harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                             gjeldendeVurdering = gjeldendeVurdering,
                             gjeldendeVurderinger = gjeldendeVurderinger,
                             historiskeVurderinger = historiskeVurderinger,
-                            andreUtbetalingerYtelser = andreUtbetalinger?.stønad
+                            økonomiskSosialHjelp = økonomiskSosialHjelp
                         )
                     }
                 respond(response)

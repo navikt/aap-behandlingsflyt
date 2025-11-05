@@ -11,7 +11,7 @@ data class RefusjonkravGrunnlagResponse(
     val gjeldendeVurdering: RefusjonkravVurderingResponse?,
     val gjeldendeVurderinger: List<RefusjonkravVurderingResponse>?,
     val historiskeVurderinger: List<RefusjonkravVurderingResponse>?,
-    val andreUtbetalingerYtelser: List<AndreUtbetalingerYtelser>?,
+    val økonomiskSosialHjelp: Boolean?,
 )
 
 data class RefusjonkravVurderingResponse(
