@@ -330,8 +330,10 @@ private fun sendInnOgFullførFørstegangsbehandling(dto: OpprettTestcaseDTO): Sa
         if (dto.sykepenger.isEmpty()) {
             løsUtenSamordning(behandling)
         } else {
-            løsSamordning(behandling, dto.sykepenger.first().periode)
+            løsSamordning(behandling, dto.sykepenger)
         }
+
+        løsSamordningAndreStatligeYtelser(behandling)
 
         if (dto.tjenestePensjon == true) {
             løsTjenestepensjonRefusjonskravVurdering(behandling)
