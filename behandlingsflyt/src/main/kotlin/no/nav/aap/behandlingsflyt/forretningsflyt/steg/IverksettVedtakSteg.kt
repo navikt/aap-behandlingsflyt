@@ -5,10 +5,12 @@ import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.GosysService
 import no.nav.aap.behandlingsflyt.behandling.mellomlagring.MellomlagretVurderingRepository
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
-import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingGateway
 import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingService
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.NavKontorPeriodeDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -24,7 +26,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
@@ -39,17 +40,16 @@ class IverksettVedtakSteg private constructor(
     private val utbetalingService: UtbetalingService,
     private val vedtakService: VedtakService,
     private val virkningstidspunktUtleder: VirkningstidspunktUtleder,
-    private val utbetalingGateway: UtbetalingGateway,
     private val trukketSøknadService: TrukketSøknadService,
     private val avbrytRevurderingService: AvbrytRevurderingService,
     private val gosysService: GosysService,
     private val flytJobbRepository: FlytJobbRepository,
-    private val unleashGateway: UnleashGateway,
-    private val mellomlagretVurderingRepository: MellomlagretVurderingRepository
+    private val mellomlagretVurderingRepository: MellomlagretVurderingRepository,
+    private val underveisRepository: UnderveisRepository,
+    private val sakOgBehandlingService: SakOgBehandlingService
 ) : BehandlingSteg {
 
     private val log = LoggerFactory.getLogger(javaClass)
-
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         if (kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING && trukketSøknadService.søknadErTrukket(
                 kontekst.behandlingId
@@ -83,7 +83,24 @@ class IverksettVedtakSteg private constructor(
 
         mellomlagretVurderingRepository.slett(kontekst.behandlingId)
 
-        opprettOppfølgingsoppgaveForNavkontorVedSosialRefusjon(kontekst)
+        val sisteBehandlingMedVedtak = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(kontekst.sakId)
+        if (sisteBehandlingMedVedtak != null)
+        {
+            val underveisGrunnlag = underveisRepository.hentHvisEksisterer(sisteBehandlingMedVedtak.id)
+            if (underveisGrunnlag != null )
+            {
+                if (underveisGrunnlag.perioder.any {it.utfall == Utfall.OPPFYLT })
+                {
+                    opprettOppfølgingsoppgaveForNavkontorVedSosialRefusjon(kontekst)
+                }
+                else
+                {
+                    log.info("Oppretter ikke gosysoppgave for sak ${kontekst.sakId} og behandling ${sisteBehandlingMedVedtak.id} , da det ikke finnes oppfylte perioder ")
+                }
+            }
+
+        }
+
 
         return Fullført
     }
@@ -157,13 +174,14 @@ class IverksettVedtakSteg private constructor(
             val sakRepository = repositoryProvider.provide<SakRepository>()
             val refusjonkravRepository = repositoryProvider.provide<RefusjonkravRepository>()
             val vedtakRepository = repositoryProvider.provide<VedtakRepository>()
-            val utbetalingGateway = gatewayProvider.provide<UtbetalingGateway>()
             val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
             val gosysService = GosysService(gatewayProvider)
             val virkningstidspunktUtlederService = VirkningstidspunktUtleder(
                 vilkårsresultatRepository = repositoryProvider.provide(),
             )
             val mellomlagretVurderingRepository = repositoryProvider.provide<MellomlagretVurderingRepository>()
+            val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
+            val sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider)
             return IverksettVedtakSteg(
                 sakRepository = sakRepository,
                 refusjonkravRepository = refusjonkravRepository,
@@ -173,13 +191,13 @@ class IverksettVedtakSteg private constructor(
                     gatewayProvider = gatewayProvider
                 ),
                 vedtakService = VedtakService(vedtakRepository, behandlingRepository),
-                utbetalingGateway = utbetalingGateway,
                 virkningstidspunktUtleder = virkningstidspunktUtlederService,
                 trukketSøknadService = TrukketSøknadService(repositoryProvider),
                 avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
                 flytJobbRepository = flytJobbRepository,
-                unleashGateway = gatewayProvider.provide(),
                 mellomlagretVurderingRepository = mellomlagretVurderingRepository,
+                sakOgBehandlingService = sakOgBehandlingService,
+                underveisRepository = underveisRepository,
                 gosysService = gosysService
             )
         }
