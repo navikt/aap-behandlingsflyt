@@ -21,9 +21,7 @@ class Sykdomsvilkår(vilkårsresultat: Vilkårsresultat) :
 
     override fun vurder(grunnlag: SykdomsFaktagrunnlag) {
         val segment = regelTidslinje.segment(grunnlag.kravDato)
-        if (segment == null) {
-            throw IllegalArgumentException("Fant ikke regler for vurderingsdato ${grunnlag.kravDato}")
-        }
+            ?: error("Fant ikke regler for vurderingsdato ${grunnlag.kravDato}")
         val regel = segment.verdi
 
         regel.vurder(grunnlag)
