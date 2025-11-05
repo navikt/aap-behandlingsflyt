@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.mdc.LoggingKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
@@ -36,6 +37,7 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(
         route("/løs-behov") {
             authorizedPost<Unit, Unit, LøsAvklaringsbehovPåBehandling>(
                 AuthorizationBodyPathConfig(
+                    relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                     operasjon = Operasjon.SAKSBEHANDLE,
                 )
             ) { _, request ->
@@ -56,6 +58,7 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(
         route("/løs-periodisert-behov") {
             authorizedPost<Unit, Unit, LøsPeriodisertAvklaringsbehovPåBehandling>(
                 AuthorizationBodyPathConfig(
+                    relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                     operasjon = Operasjon.SAKSBEHANDLE,
                 )
             ) { _, request ->

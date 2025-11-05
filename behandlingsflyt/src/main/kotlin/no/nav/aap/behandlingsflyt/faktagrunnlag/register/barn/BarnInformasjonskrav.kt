@@ -25,8 +25,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -38,7 +36,6 @@ class BarnInformasjonskrav private constructor(
     private val identGateway: IdentGateway,
     private val tidligereVurderinger: TidligereVurderinger,
     private val sakOgBehandlingService: SakOgBehandlingService,
-    private val unleashGateway: UnleashGateway
 ) : Informasjonskrav<BarnInformasjonskrav.BarnInput, BarnInformasjonskrav.Registerdata>, KanTriggeRevurdering {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -147,12 +144,7 @@ class BarnInformasjonskrav private constructor(
     }
 
     private fun harEndringer(barnGrunnlag: BarnGrunnlag?, registerBarn: List<Barn>): Boolean {
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.HarEndringerIBarn)) {
-            return (registerBarn.toSet() != barnGrunnlag?.registerbarn?.barn?.toSet()).also {
-                log.info("Sammenligner barn fra register mot register som ligger i barn grunnlag: harEndringer=${it}")
-            }
-        }
-        return registerBarn.map { it.ident }.toSet() != barnGrunnlag?.registerbarn?.barn?.map { it.ident }?.toSet()
+        return registerBarn.toSet() != barnGrunnlag?.registerbarn?.barn?.toSet()
     }
 
     override fun behovForRevurdering(behandlingId: BehandlingId): List<VurderingsbehovMedPeriode> {
@@ -180,7 +172,6 @@ class BarnInformasjonskrav private constructor(
                 gatewayProvider.provide(),
                 TidligereVurderingerImpl(repositoryProvider),
                 SakOgBehandlingService(repositoryProvider, gatewayProvider),
-                gatewayProvider.provide<UnleashGateway>()
             )
         }
     }

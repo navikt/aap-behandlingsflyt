@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.prosessering.statistikk
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -68,4 +69,5 @@ data class BehandlingFlytStoppetHendelseTilStatistikk(
     val hendelsesTidspunkt: LocalDateTime,
     val versjon: String,
     val opprettetAv: String? = null,
+    val nyeMeldekort: List<Meldekort>? = emptyList(),
 )

@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.samordning
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningYtelseVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
@@ -33,6 +34,23 @@ class SamordningService(
         return samordningYtelseRepository.hentHvisEksisterer(behandlingId)
     }
 
+    fun tilbakestillVurderinger(behandlingId: BehandlingId, forrigeBehandlingId: BehandlingId?) {
+        val vurderinger = samordningVurderingRepository.hentHvisEksisterer(behandlingId)
+        val forrigeVurderinger =
+            forrigeBehandlingId?.let { samordningVurderingRepository.hentHvisEksisterer(it) }
+
+        if (forrigeVurderinger != vurderinger) {
+            if (forrigeBehandlingId == null || forrigeVurderinger == null) {
+                // Er ingen forrige behandlingId, så vi deaktiverer det eksisterende grunnlaget.
+                samordningVurderingRepository.deaktiverGrunnlag(behandlingId)
+            } else {
+                samordningVurderingRepository.lagreVurderinger(
+                    behandlingId, forrigeVurderinger
+                )
+            }
+        }
+    }
+
     fun vurderingTidslinje(grunnlag: SamordningVurderingGrunnlag?): Tidslinje<List<Pair<Ytelse, SamordningVurderingPeriode>>> {
         val vurderinger =
             grunnlag?.vurderinger.orEmpty().filter { it.ytelseType.type == AvklaringsType.MANUELL }
@@ -58,21 +76,24 @@ class SamordningService(
         grunnlag: SamordningYtelseGrunnlag?,
         tidligereVurderinger: Tidslinje<List<Pair<Ytelse, SamordningVurderingPeriode>>>
     ): Tidslinje<List<Ytelse>> {
-        val hentedeYtelserByManuelleYtelser =
-            grunnlag?.ytelser.orEmpty().filter { it.ytelseType.type == AvklaringsType.MANUELL }
-                .map { ytelse ->
-                    val tidslinjePerPeriode = ytelse.ytelsePerioder.map { Tidslinje(it.periode, ytelse.ytelseType) }
-                    tidslinjePerPeriode.fold(Tidslinje.empty<Ytelse>()) { acc, curr ->
-                        acc.kombiner(curr, StandardSammenslåere.prioriterHøyreSideCrossJoin())
-                    }.komprimer()
-                }.fold(Tidslinje.empty<List<Ytelse>>()) { acc, curr ->
-                    acc.kombiner(curr, slåSammenTilListe())
-                }
+        val hentedeYtelserByManuelleYtelser = tidslinjeMedSamordningYtelser(grunnlag)
 
         val perioderSomIkkeHarBlittVurdert =
             hentedeYtelserByManuelleYtelser.kombiner(tidligereVurderinger, StandardSammenslåere.minus())
 
         return perioderSomIkkeHarBlittVurdert
+    }
+
+    fun tidslinjeMedSamordningYtelser(grunnlag: SamordningYtelseGrunnlag?): Tidslinje<List<Ytelse>> {
+        return grunnlag?.ytelser.orEmpty().filter { it.ytelseType.type == AvklaringsType.MANUELL }
+            .map { ytelse ->
+                val tidslinjePerPeriode = ytelse.ytelsePerioder.map { Tidslinje(it.periode, ytelse.ytelseType) }
+                tidslinjePerPeriode.fold(Tidslinje.empty<Ytelse>()) { acc, curr ->
+                    acc.kombiner(curr, StandardSammenslåere.prioriterHøyreSideCrossJoin())
+                }.komprimer()
+            }.fold(Tidslinje.empty()) { acc, curr ->
+                acc.kombiner(curr, slåSammenTilListe())
+            }
     }
 
     fun vurder(

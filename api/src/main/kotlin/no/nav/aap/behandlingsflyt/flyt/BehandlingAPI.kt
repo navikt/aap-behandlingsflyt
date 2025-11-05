@@ -28,6 +28,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅ
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoBulkGateway
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -50,6 +51,7 @@ fun NormalOpenAPIRoute.behandlingApi(
         route("/{referanse}") {
             authorizedGet<BehandlingReferanse, DetaljertBehandlingDTO>(
                 AuthorizationParamPathConfig(
+                    relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                     behandlingPathParam = BehandlingPathParam(
                         "referanse"
                     )
@@ -145,6 +147,7 @@ fun NormalOpenAPIRoute.behandlingApi(
         route("/{referanse}/forbered") {
             authorizedGet<BehandlingReferanse, DetaljertBehandlingDTO>(
                 AuthorizationParamPathConfig(
+                    relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                     behandlingPathParam = BehandlingPathParam(
                         "referanse"
                     )
@@ -174,9 +177,10 @@ fun NormalOpenAPIRoute.behandlingApi(
         route("/{referanse}/personinformasjon") {
             authorizedGet<BehandlingReferanse, BehandlingPersoninfo>(
                 AuthorizationParamPathConfig(
+                    relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                     behandlingPathParam = BehandlingPathParam("referanse")
                 ),
-                null, TagModule(listOf(Tags.Behandling))
+                null, modules = arrayOf(TagModule(listOf(Tags.Behandling)))
             ) { req ->
 
                 val referanse = req.referanse

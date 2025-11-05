@@ -51,6 +51,7 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import org.slf4j.LoggerFactory
 import org.testcontainers.containers.PostgreSQLContainer
+import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
 import java.time.Duration
 import java.time.LocalDate
@@ -329,8 +330,10 @@ private fun sendInnOgFullførFørstegangsbehandling(dto: OpprettTestcaseDTO): Sa
         if (dto.sykepenger.isEmpty()) {
             løsUtenSamordning(behandling)
         } else {
-            løsSamordning(behandling, dto.sykepenger.first().periode)
+            løsSamordning(behandling, dto.sykepenger)
         }
+
+        løsSamordningAndreStatligeYtelser(behandling)
 
         if (dto.tjenestePensjon == true) {
             løsTjenestepensjonRefusjonskravVurdering(behandling)
@@ -359,14 +362,17 @@ private fun hentSisteBehandlingForSak(sakId: SakId): Behandling {
     }
 }
 
-internal fun postgreSQLContainer(): PostgreSQLContainer<Nothing> =
-    PostgreSQLContainer<Nothing>("postgres:16")
+internal fun postgreSQLContainer(): PostgreSQLContainer<Nothing> {
+    val postgres = PostgreSQLContainer<Nothing>("postgres:16")
         .apply {
             val envPort = System.getenv("POSTGRES_PORT")?.toIntOrNull()
             if (envPort != null) {
                 withExposedPorts(5432)
                 setPortBindings(listOf("$envPort:5432"))
             }
+            withLogConsumer(Slf4jLogConsumer(log))
             waitingFor(HostPortWaitStrategy().withStartupTimeout(Duration.of(60L, ChronoUnit.SECONDS)))
-            start()
         }
+    postgres.start() // venter til container er klar
+    return postgres
+}

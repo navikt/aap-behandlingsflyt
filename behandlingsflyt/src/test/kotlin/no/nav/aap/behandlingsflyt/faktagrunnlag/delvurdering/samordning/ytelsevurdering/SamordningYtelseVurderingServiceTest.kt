@@ -29,15 +29,27 @@ import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AutoClose
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 @Fakes
 class SamordningYtelseVurderingServiceTest {
+    companion object {
+        private lateinit var dataSource: TestDataSource
 
-    @AutoClose
-    private val dataSource = TestDataSource()
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            dataSource = TestDataSource()
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun tearDown() = dataSource.close()
+    }
+
 
     @Test
     fun `krever avklaring når endringer kommer`() {
@@ -84,7 +96,7 @@ class SamordningYtelseVurderingServiceTest {
         val nå = LocalDate.now()
 
         val eksisterendeGrunnlag = SamordningYtelseGrunnlag(
-            1, listOf(
+            1, setOf(
                 SamordningYtelse(
                     Ytelse.SYKEPENGER,
                     setOf(
@@ -117,7 +129,7 @@ class SamordningYtelseVurderingServiceTest {
             )
         )
 
-        val ny = listOf(
+        val ny = setOf(
             SamordningYtelse(
                 Ytelse.SYKEPENGER,
                 setOf(
@@ -163,11 +175,10 @@ class SamordningYtelseVurderingServiceTest {
                 begrunnelse = "En god begrunnelse",
                 maksDatoEndelig = false,
                 fristNyRevurdering = LocalDate.now().plusYears(1),
-                vurderinger = listOf(
+                vurderinger = setOf(
                     SamordningVurdering(
                         Ytelse.SYKEPENGER,
-
-                        listOf(
+                        setOf(
                             SamordningVurderingPeriode(
                                 Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
                                 Prosent(50),
@@ -185,7 +196,7 @@ class SamordningYtelseVurderingServiceTest {
     private fun opprettYtelseData(samordningYtelseRepo: SamordningYtelseRepositoryImpl, behandlingId: BehandlingId) {
         samordningYtelseRepo.lagre(
             behandlingId,
-            listOf(
+            setOf(
                 SamordningYtelse(
                     Ytelse.SYKEPENGER,
                     setOf(

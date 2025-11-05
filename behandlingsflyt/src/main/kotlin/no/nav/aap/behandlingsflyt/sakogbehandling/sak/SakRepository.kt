@@ -13,6 +13,8 @@ interface SakRepository : Repository {
 
     fun finnAlle(): List<Sak>
 
+    fun finnSiste(antall: Int): List<Sak>
+
     fun hent(sakId: SakId): Sak
 
     fun hent(saksnummer: Saksnummer): Sak

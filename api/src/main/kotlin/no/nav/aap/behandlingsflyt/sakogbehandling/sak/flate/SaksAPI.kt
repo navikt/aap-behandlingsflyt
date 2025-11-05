@@ -28,6 +28,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForSakResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.VerdiIkkeFunnetException
@@ -106,6 +107,7 @@ fun NormalOpenAPIRoute.saksApi(
         route("/{saksnummer}/opprettAktivitetspliktBehandling")
             .authorizedPost<SaksnummerParameter, BehandlingAvTypeDTO, OpprettAktivitetspliktBehandlingDto>(
                 routeConfig = AuthorizationParamPathConfig(
+                    relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
                     sakPathParam = SakPathParam("saksnummer"),
                     operasjon = Operasjon.SE, // TODO: Skriveoperasjon krever behandlingsreferanse - bruker 'SE' enn så lenge
                 )
@@ -294,15 +296,37 @@ fun NormalOpenAPIRoute.saksApi(
                     throw VerdiIkkeFunnetException("Fant ingen saker")
                 }
             }
+
+            route("/siste/{antall}").get<HentAntallSakerDTO, List<SaksinfoDTO>>(TagModule(listOf(Tags.Sak))) { req ->
+                if (Miljø.er() == MiljøKode.DEV || Miljø.er() == MiljøKode.LOKALT) {
+                    val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
+                        val repositoryProvider = repositoryRegistry.provider(connection)
+                        repositoryProvider.provide<SakRepository>()
+                            .finnSiste(req.antall)
+                            .map { sak ->
+                                SaksinfoDTO(
+                                    saksnummer = sak.saksnummer.toString(),
+                                    opprettetTidspunkt = sak.opprettetTidspunkt,
+                                    periode = sak.rettighetsperiode,
+                                    ident = sak.person.aktivIdent().identifikator
+                                )
+                            }
+                    }
+                    respond(saker)
+                } else {
+                    throw VerdiIkkeFunnetException("Fant ingen saker")
+                }
+            }
         }
 
         route("/{saksnummer}") {
             authorizedGet<HentSakDTO, UtvidetSaksinfoDTO>(
                 AuthorizationParamPathConfig(
+                    relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
                     sakPathParam = SakPathParam("saksnummer")
                 ),
                 null,
-                TagModule(listOf(Tags.Sak)),
+                modules = arrayOf(TagModule(listOf(Tags.Sak))),
             ) { req ->
                 val saksnummer = req.saksnummer
                 var søknadErTrukket: Boolean? = null
@@ -404,6 +428,7 @@ fun NormalOpenAPIRoute.saksApi(
         route("/{saksnummer}/personinformasjon") {
             authorizedGet<HentSakDTO, SakPersoninfoDTO>(
                 AuthorizationParamPathConfig(
+                    relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
                     sakPathParam = SakPathParam("saksnummer"), applicationRole = "hent-personinfo"
                 )
             ) { req ->
@@ -431,10 +456,11 @@ fun NormalOpenAPIRoute.saksApi(
 
         route("{saksnummer}/historikk").authorizedGet<HentSakDTO, List<BehandlingHistorikkDTO>>(
             AuthorizationParamPathConfig(
+                relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
                 sakPathParam = SakPathParam("saksnummer")
             ),
             null,
-            TagModule(listOf(Tags.Sak)),
+            modules = arrayOf(TagModule(listOf(Tags.Sak))),
         ) { req ->
             val saksnummer = req.saksnummer
 

@@ -34,13 +34,13 @@ class BehandlingHendelseServiceImpl(
     private val flytJobbRepository: FlytJobbRepository,
     private val sakService: SakService,
     private val dokumentRepository: MottattDokumentRepository,
-    private val pipRepository: PipRepository,
+    private val pipRepository: PipRepository
 ) : BehandlingHendelseService {
     constructor(repositoryProvider: RepositoryProvider) : this(
         flytJobbRepository = repositoryProvider.provide(),
         sakService = SakService(repositoryProvider),
         dokumentRepository = repositoryProvider.provide(),
-        pipRepository = repositoryProvider.provide(),
+        pipRepository = repositoryProvider.provide()
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -113,18 +113,26 @@ class BehandlingHendelseServiceImpl(
         val oppfølgingsoppgavedokument =
             MottaDokumentService(dokumentRepository).hentOppfølgingsBehandlingDokument(behandlingId)
 
-        val reserverTilBrukerRevurderingAvbrutt = finnReserverTilBrukerGittVurderingsbehov(behandlingId, no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDERING_AVBRUTT)
-        val reserverTilBrukerSøknadTrukket = finnReserverTilBrukerGittVurderingsbehov(behandlingId, no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SØKNAD_TRUKKET)
+        val reserverTilBrukerRevurderingAvbrutt = finnReserverTilBrukerGittVurderingsbehov(
+            behandlingId,
+            no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDERING_AVBRUTT
+        )
+        val reserverTilBrukerSøknadTrukket = finnReserverTilBrukerGittVurderingsbehov(
+            behandlingId,
+            no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SØKNAD_TRUKKET
+        )
 
         if (listOfNotNull(
                 oppfølgingsoppgavedokument?.reserverTilBruker,
                 reserverTilBrukerRevurderingAvbrutt,
                 reserverTilBrukerSøknadTrukket
-            ).size > 1) {
+            ).size > 1
+        ) {
             log.warn("Fant mer enn én reserverTil-verdi i hendelse til oppgave")
         }
 
-        return oppfølgingsoppgavedokument?.reserverTilBruker ?: reserverTilBrukerRevurderingAvbrutt ?: reserverTilBrukerSøknadTrukket
+        return oppfølgingsoppgavedokument?.reserverTilBruker ?: reserverTilBrukerRevurderingAvbrutt
+        ?: reserverTilBrukerSøknadTrukket
     }
 
     private fun hentBehandlingOpprettetAv(behandlingId: BehandlingId): String? {
@@ -137,7 +145,10 @@ class BehandlingHendelseServiceImpl(
         return manuellVurdering?.opprettetAv
     }
 
-    private fun finnReserverTilBrukerGittVurderingsbehov(behandlingId: BehandlingId, vurderingsbehov: no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov): String? {
+    private fun finnReserverTilBrukerGittVurderingsbehov(
+        behandlingId: BehandlingId,
+        vurderingsbehov: no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
+    ): String? {
         val nyÅrsakTilBehandlingDokumenter = MottaDokumentService(dokumentRepository).hentMottattDokumenterAvType(
             behandlingId,
             InnsendingType.NY_ÅRSAK_TIL_BEHANDLING

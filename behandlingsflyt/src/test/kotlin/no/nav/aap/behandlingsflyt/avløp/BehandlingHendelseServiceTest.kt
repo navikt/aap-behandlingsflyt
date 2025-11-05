@@ -43,6 +43,7 @@ class BehandlingHendelseServiceTest {
         val pipRepository = mockk<PipRepository>()
 
         every { flytJobbRepository.leggTil(any()) } returns Unit
+
         every {
             mottattDokumentRepository.hentDokumenterAvType(
                 any<BehandlingId>(),
@@ -72,7 +73,7 @@ class BehandlingHendelseServiceTest {
                 flytJobbRepository,
                 sakService,
                 mottattDokumentRepository,
-                pipRepository,
+                pipRepository
             )
 
         val behandling = Behandling(

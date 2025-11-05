@@ -109,6 +109,15 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
         }
     }
 
+    override fun finnSiste(antall: Int): List<Sak> {
+        return connection.queryList("SELECT * FROM SAK ORDER BY id DESC LIMIT ?") {
+            setParams {
+                setInt(1, antall)
+            }
+            setRowMapper { row -> mapSak(row) }
+        }
+    }
+
     override fun finnSakerFor(person: Person): List<Sak> {
         return connection.queryList(
             "SELECT * " +

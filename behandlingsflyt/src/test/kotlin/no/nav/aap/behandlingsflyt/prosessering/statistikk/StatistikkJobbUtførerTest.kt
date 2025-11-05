@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.prosessering.statistikk
 
+import io.mockk.every
+import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
@@ -18,6 +20,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.IKlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
@@ -33,6 +39,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendels
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.EndringDTO
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ArbeidIPeriodeV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status.UTREDES
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvsluttetBehandlingDTO
@@ -50,11 +58,13 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.dokument.arbeid.MeldekortRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
@@ -62,11 +72,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBeregningsgrunnlagRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMeldekortRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMottattDokumentRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPipRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
@@ -75,6 +87,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadReposi
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
+import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.json.DefaultJsonMapper
@@ -85,9 +98,11 @@ import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.motor.JobbInput
+import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AutoClose
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.Instant
@@ -98,8 +113,19 @@ import java.util.*
 
 @Fakes
 class StatistikkJobbUtførerTest {
-    @AutoClose
-    private val dataSource = TestDataSource()
+    companion object {
+        private lateinit var dataSource: TestDataSource
+
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            dataSource = TestDataSource()
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun tearDown() = dataSource.close()
+    }
 
     @Test
     fun `mottatt tidspunkt er korrekt når revurdering`(hendelser: List<StoppetBehandling>) {
@@ -138,6 +164,8 @@ class StatistikkJobbUtførerTest {
                 )
             )
 
+            sendInnMeldekort(connection, sak, opprettetBehandling, "123")
+
             val revurdering = behandlingRepository.opprettBehandling(
                 sak.id,
                 typeBehandling = TypeBehandling.Revurdering,
@@ -165,6 +193,7 @@ class StatistikkJobbUtførerTest {
                     strukturertDokument = null
                 )
             )
+            sendInnMeldekort(connection, sak, revurdering, "456")
 
             Triple(revurdering, sak, ident)
         }
@@ -208,6 +237,61 @@ class StatistikkJobbUtførerTest {
         assertThat(hendelser.first().mottattTid.truncatedTo(ChronoUnit.SECONDS)).isEqualTo(
             opprettetTidspunkt.truncatedTo(
                 ChronoUnit.SECONDS
+            )
+        )
+        assertThat(hendelser.first().nyeMeldekort.map { it.journalpostId }).containsExactly("456")
+    }
+
+    private fun sendInnMeldekort(
+        connection: DBConnection,
+        sak: Sak,
+        opprettetBehandling: Behandling,
+        journalpostId: String
+    ) {
+        MottattDokumentRepositoryImpl(connection).lagre(
+            MottattDokument(
+                referanse = InnsendingReferanse(InnsendingReferanse.Type.JOURNALPOST, journalpostId),
+                sakId = sak.id,
+                behandlingId = opprettetBehandling.id,
+                mottattTidspunkt = LocalDateTime.now().minusDays(23),
+                type = InnsendingType.MELDEKORT,
+                kanal = Kanal.DIGITAL,
+                strukturertDokument = StrukturertDokument(
+                    MeldekortV0(
+                        harDuArbeidet = true,
+                        timerArbeidPerPeriode = listOf(
+                            ArbeidIPeriodeV0(
+                                fraOgMedDato = LocalDate.now().minusDays(10),
+                                tilOgMedDato = LocalDate.now().plusDays(1),
+                                timerArbeid = 1.0,
+                            )
+                        )
+                    )
+                )
+            )
+        )
+        MottattDokumentRepositoryImpl(connection).oppdaterStatus(
+            InnsendingReferanse(
+                InnsendingReferanse.Type.JOURNALPOST,
+                journalpostId
+            ),
+            opprettetBehandling.id,
+            opprettetBehandling.sakId,
+            no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status.BEHANDLET
+        )
+
+        MeldekortRepositoryImpl(connection).lagre(
+            opprettetBehandling.id, setOf(
+                Meldekort(
+                    journalpostId = JournalpostId(journalpostId),
+                    timerArbeidPerPeriode = setOf(
+                        ArbeidIPeriode(
+                            periode = Periode(LocalDate.now().minusDays(10), LocalDate.now().plusDays(1)),
+                            timerArbeid = TimerArbeid(BigDecimal.ONE)
+                        )
+                    ),
+                    mottattTidspunkt = LocalDateTime.now(),
+                )
             )
         )
     }
@@ -516,7 +600,7 @@ class StatistikkJobbUtførerTest {
                 TODO("Not yet implemented")
             }
 
-            override fun hentHvisEksisterer(behandlingId: BehandlingId): SykdomGrunnlag? {
+            override fun hentHvisEksisterer(behandlingId: BehandlingId): SykdomGrunnlag {
                 TODO("Not yet implemented")
             }
 
@@ -539,6 +623,8 @@ class StatistikkJobbUtførerTest {
             }
         }
 
+        val påklagetBehandlingRepository = mockk<PåklagetBehandlingRepository>()
+        every { påklagetBehandlingRepository.hentGjeldendeVurderingMedReferanse(any()) } returns null
         val utfører =
             StatistikkJobbUtfører(
                 statistikkGateway = StatistikkGatewayImpl(),
@@ -555,8 +641,10 @@ class StatistikkJobbUtførerTest {
                     trukketSøknadService = TrukketSøknadService(
                         trukketSøknadRepository = InMemoryTrukketSøknadRepository
                     ),
+                    påklagetBehandlingRepository = påklagetBehandlingRepository,
                     klageresultatUtleder = DummyKlageresultatUtleder(),
                     avbrytRevurderingService = AvbrytRevurderingService(inMemoryRepositoryProvider),
+                    meldekortRepository = InMemoryMeldekortRepository,
                 )
             )
 
@@ -608,23 +696,24 @@ class StatistikkJobbUtførerTest {
         assertThat(hendelser.first())
             .usingRecursiveComparison()
             .isEqualTo(
-            StoppetBehandling(
-                saksnummer = Saksnummer.valueOf(sakId.id).toString(),
-                behandlingReferanse = referanse.referanse,
-                behandlingStatus = Status.UTREDES,
-                behandlingType = TypeBehandling.Klage,
-                ident = fødselsNummer,
-                avklaringsbehov = avklaringsbehov,
-                behandlingOpprettetTidspunkt = payload.opprettetTidspunkt,
-                versjon = ApplikasjonsVersjon.versjon,
-                soknadsFormat = Kanal.PAPIR,
-                mottattTid = tidligsteMottattTid,
-                sakStatus = UTREDES,
-                hendelsesTidspunkt = hendelsesTidspunkt,
-                identerForSak = listOf("1234"),
-                vurderingsbehov = listOf(Vurderingsbehov.SØKNAD)
+                StoppetBehandling(
+                    saksnummer = Saksnummer.valueOf(sakId.id).toString(),
+                    behandlingReferanse = referanse.referanse,
+                    behandlingStatus = Status.UTREDES,
+                    behandlingType = TypeBehandling.Klage,
+                    ident = fødselsNummer,
+                    avklaringsbehov = avklaringsbehov,
+                    behandlingOpprettetTidspunkt = payload.opprettetTidspunkt,
+                    versjon = ApplikasjonsVersjon.versjon,
+                    soknadsFormat = Kanal.PAPIR,
+                    mottattTid = tidligsteMottattTid,
+                    sakStatus = UTREDES,
+                    hendelsesTidspunkt = hendelsesTidspunkt,
+                    identerForSak = listOf("1234"),
+                    vurderingsbehov = listOf(Vurderingsbehov.SØKNAD),
+                    søknadIder = listOf(JournalpostId("xxx"), JournalpostId("xxx2"))
+                )
             )
-        )
     }
 }
 

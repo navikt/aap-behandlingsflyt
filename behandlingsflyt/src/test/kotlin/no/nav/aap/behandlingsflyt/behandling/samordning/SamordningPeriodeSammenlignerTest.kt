@@ -33,7 +33,7 @@ class SamordningPeriodeSammenlignerTest {
         val samordningPeriodeSammenligner = SamordningPeriodeSammenligner(InMemorySamordningYtelseRepository)
 
         InMemorySamordningYtelseRepository.lagre(
-            behandling.id, listOf(
+            behandling.id, setOf(
                 SamordningYtelse(
                     ytelseType = Ytelse.SYKEPENGER,
                     ytelsePerioder = setOf(
@@ -67,7 +67,7 @@ class SamordningPeriodeSammenlignerTest {
         val kilde = "xxx"
         val saksRef = "yyy"
         InMemorySamordningYtelseRepository.lagre(
-            behandling.id, listOf(
+            behandling.id, setOf(
                 SamordningYtelse(
                     ytelseType = Ytelse.SYKEPENGER,
                     ytelsePerioder = setOf(
@@ -87,7 +87,7 @@ class SamordningPeriodeSammenlignerTest {
             LocalDate.now(fixedClock).plusYears(2)
         )
         InMemorySamordningYtelseRepository.lagre(
-            behandling.id, listOf(
+            behandling.id, setOf(
                 SamordningYtelse(
                     ytelseType = Ytelse.SYKEPENGER,
                     ytelsePerioder = setOf(
@@ -140,7 +140,7 @@ class SamordningPeriodeSammenlignerTest {
         val kilde = "xxx"
         val saksRef = "yyy"
         InMemorySamordningYtelseRepository.lagre(
-            behandling.id, listOf(
+            behandling.id, setOf(
                 SamordningYtelse(
                     ytelseType = Ytelse.SYKEPENGER,
                     ytelsePerioder = setOf(
@@ -156,7 +156,7 @@ class SamordningPeriodeSammenlignerTest {
         )
 
         InMemorySamordningYtelseRepository.lagre(
-            behandling.id, listOf(
+            behandling.id, setOf(
                 SamordningYtelse(
                     ytelseType = Ytelse.SYKEPENGER,
                     ytelsePerioder = setOf(
@@ -205,7 +205,7 @@ class SamordningPeriodeSammenlignerTest {
         val kilde = "xxx"
         val saksRef = "yyy"
         InMemorySamordningYtelseRepository.lagre(
-            behandling.id, listOf(
+            behandling.id, setOf(
                 SamordningYtelse(
                     ytelseType = Ytelse.SYKEPENGER,
                     ytelsePerioder = setOf(
@@ -221,7 +221,7 @@ class SamordningPeriodeSammenlignerTest {
         )
 
         InMemorySamordningYtelseRepository.lagre(
-            behandling.id, listOf(
+            behandling.id, setOf(
                 SamordningYtelse(
                     ytelseType = Ytelse.SYKEPENGER,
                     ytelsePerioder = setOf(
