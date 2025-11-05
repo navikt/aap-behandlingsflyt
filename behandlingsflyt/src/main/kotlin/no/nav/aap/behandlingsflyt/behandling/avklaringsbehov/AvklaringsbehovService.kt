@@ -107,7 +107,7 @@ class AvklaringsbehovService(
                     KVALITETSSIKRET,
                     SENDT_TILBAKE_FRA_KVALITETSSIKRER,
                     AVSLUTTET ->
-                        error("ikke mulig")
+                        error("Ikke mulig: fikk ${avklaringsbehov.status()}")
                 }
             } else if (erTilstrekkeligVurdert()) {
                 /* ønsket tilstand: ... */

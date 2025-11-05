@@ -164,7 +164,7 @@ import no.nav.aap.motor.testutil.ManuellMotorImpl
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AutoClose
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import java.math.BigDecimal
@@ -177,8 +177,20 @@ import kotlin.reflect.KClass
 @Fakes
 open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway>) {
 
-    @AutoClose
-    val dataSource = TestDataSource()
+    companion object {
+        lateinit var dataSource: TestDataSource
+
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            dataSource = TestDataSource()
+            System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun tearDown() = dataSource.close()
+    }
 
     protected val motor by lazy {
         ManuellMotorImpl(
@@ -219,14 +231,6 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         register<KabalGateway>()
         register<NorgGateway>()
         register<GosysGateway>()
-    }
-
-    companion object {
-        @BeforeAll
-        @JvmStatic
-        internal fun beforeAll() {
-            System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
-        }
     }
 
     private var nesteJournalpostId = (300..1000000)
@@ -354,19 +358,8 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
             assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         }
             .løsSykdom()
+            .løsBistand()
             .løsAvklaringsBehov(
-                AvklarBistandsbehovLøsning(
-                    bistandsVurdering = BistandVurderingLøsningDto(
-                        begrunnelse = "Trenger hjelp fra nav",
-                        erBehovForAktivBehandling = true,
-                        erBehovForArbeidsrettetTiltak = false,
-                        erBehovForAnnenOppfølging = null,
-                        skalVurdereAapIOvergangTilArbeid = null,
-                        overgangBegrunnelse = null,
-                        skalVurdereAapIOvergangTilUføre = null,
-                    ),
-                )
-            ).løsAvklaringsBehov(
                 RefusjonkravLøsning(
                     listOf(
                         RefusjonkravVurderingDto(
@@ -1118,19 +1111,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
     ): Behandling {
         var behandling = behandling
         behandling = løsSykdom(behandling)
-            .løsAvklaringsBehov(
-                AvklarBistandsbehovLøsning(
-                    bistandsVurdering = BistandVurderingLøsningDto(
-                        begrunnelse = "Trenger hjelp fra nav",
-                        erBehovForAktivBehandling = true,
-                        erBehovForArbeidsrettetTiltak = false,
-                        erBehovForAnnenOppfølging = null,
-                        skalVurdereAapIOvergangTilUføre = null,
-                        skalVurdereAapIOvergangTilArbeid = null,
-                        overgangBegrunnelse = null
-                    ),
-                ),
-            )
+            .løsBistand()
             .løsAvklaringsBehov(
                 RefusjonkravLøsning(
                     listOf(

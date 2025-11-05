@@ -14,14 +14,27 @@ import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AutoClose
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 class Reduksjon11_9RepositoryImplTest {
+    companion object {
+        private lateinit var dataSource: TestDataSource
 
-    @AutoClose
-    private val dataSource = TestDataSource()
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            dataSource = TestDataSource()
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun tearDown() = dataSource.close()
+    }
+
+
     val periode = Periode(LocalDate.of(2025, 1, 1), LocalDate.of(2027, 12, 31))
     val reduksjon_brudd_1 = Reduksjon11_9(LocalDate.of(2025, 1, 1), Beløp(1000))
     val reduksjon_rimelig_grunn = Reduksjon11_9(LocalDate.of(2025, 1, 2), Beløp(0))

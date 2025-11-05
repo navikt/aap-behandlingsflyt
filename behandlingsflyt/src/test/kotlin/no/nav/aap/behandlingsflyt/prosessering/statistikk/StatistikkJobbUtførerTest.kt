@@ -91,7 +91,8 @@ import no.nav.aap.motor.JobbInput
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AutoClose
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.Instant
@@ -102,8 +103,19 @@ import java.util.*
 
 @Fakes
 class StatistikkJobbUtførerTest {
-    @AutoClose
-    private val dataSource = TestDataSource()
+    companion object {
+        private lateinit var dataSource: TestDataSource
+
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            dataSource = TestDataSource()
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun tearDown() = dataSource.close()
+    }
 
     @Test
     fun `mottatt tidspunkt er korrekt når revurdering`(hendelser: List<StoppetBehandling>) {

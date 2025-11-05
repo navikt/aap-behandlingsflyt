@@ -70,6 +70,8 @@ import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 import org.slf4j.LoggerFactory
 import java.io.InputStream
 import java.net.URI
@@ -79,6 +81,8 @@ import java.time.Year
 import java.util.*
 
 @Fakes
+// FIXME testene i klassen bruker samme database og er timing-sensitive. Derfor SAME_THREAD.
+@Execution(ExecutionMode.SAME_THREAD)
 class ApiTest {
 
     private val log = LoggerFactory.getLogger(javaClass)
