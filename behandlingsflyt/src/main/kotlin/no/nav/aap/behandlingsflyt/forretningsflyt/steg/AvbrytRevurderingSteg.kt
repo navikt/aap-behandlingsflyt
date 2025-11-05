@@ -11,7 +11,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.REVURDERING_AVBRUTT
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
@@ -39,7 +38,7 @@ class AvbrytRevurderingSteg private constructor(
         // Her gir det faktisk mening å sjekke på behandlingstype, siden man ikke kan avbryte revurdering
         // i en førstegangsbehandling.
         return (kontekst.behandlingType == TypeBehandling.Revurdering)
-                && (REVURDERING_AVBRUTT in kontekst.vurderingsbehovRelevanteForSteg)
+                && kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty()
     }
 
     companion object : FlytSteg {
