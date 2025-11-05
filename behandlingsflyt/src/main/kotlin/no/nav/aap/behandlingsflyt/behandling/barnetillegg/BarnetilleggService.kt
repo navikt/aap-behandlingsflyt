@@ -7,8 +7,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.IBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.JoinStyle
 import no.nav.aap.komponenter.tidslinje.Segment
@@ -18,14 +16,12 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 class BarnetilleggService(
     private val sakOgBehandlingService: SakOgBehandlingService,
-    private val barnRepository: BarnRepository,
-    private val unleashGateway: UnleashGateway
+    private val barnRepository: BarnRepository
 ) {
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
-        barnRepository = repositoryProvider.provide(),
-        unleashGateway = gatewayProvider.provide<UnleashGateway>()
+        barnRepository = repositoryProvider.provide()
     )
 
     fun beregn(behandlingId: BehandlingId): Tidslinje<RettTilBarnetillegg> {
@@ -53,12 +49,8 @@ class BarnetilleggService(
                 })
 
         val vurderteBarnIdenter = vurderteBarn.map { it.ident }
-        val oppgittBarnSomIkkeErVurdert =
-            barnGrunnlag.oppgitteBarn?.oppgitteBarn
-                ?.filterNot { vurderteBarnIdenter.contains(it.identifikator()) }
-                .orEmpty()
 
-        val oppgittBarnSomIkkeErVurdertNy =
+        val oppgittBarnSomIkkeErVurdert =
             barnGrunnlag.oppgitteBarn?.oppgitteBarn
                 ?.filterNot { oppgittBarn ->
                     vurderteBarnIdenter.contains(oppgittBarn.identifikator()) ||
@@ -66,11 +58,7 @@ class BarnetilleggService(
                 }
                 .orEmpty()
 
-        val oppgittBarnTidslinje = if (unleashGateway.isEnabled(BehandlingsflytFeature.HarEndringerIBarn)) {
-            tilTidslinje(oppgittBarnSomIkkeErVurdertNy)
-        } else {
-            tilTidslinje(oppgittBarnSomIkkeErVurdert)
-        }
+        val oppgittBarnTidslinje = tilTidslinje(oppgittBarnSomIkkeErVurdert)
 
         resultat =
             resultat.kombiner(oppgittBarnTidslinje, JoinStyle.LEFT_JOIN { periode, venstreSegment, høyreSegment ->
