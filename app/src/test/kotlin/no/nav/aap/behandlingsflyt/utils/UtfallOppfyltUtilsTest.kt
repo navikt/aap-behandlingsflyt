@@ -43,7 +43,7 @@ class UtfallOppfyltUtilsTest {
         )
 
         val result =
-            utfallOppfyltUtils.allePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(opprettetTidspunkt, underveisGrunnlag)
+            utfallOppfyltUtils.alleEventuellePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(opprettetTidspunkt, underveisGrunnlag)
         assertTrue(result)
     }
 
@@ -71,7 +71,7 @@ class UtfallOppfyltUtilsTest {
         )
 
         val result =
-            utfallOppfyltUtils.allePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(opprettetTidspunkt, underveisGrunnlag)
+            utfallOppfyltUtils.alleEventuellePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(opprettetTidspunkt, underveisGrunnlag)
         assertTrue(result)
     }
 
@@ -98,7 +98,7 @@ class UtfallOppfyltUtilsTest {
         )
 
         val result =
-            utfallOppfyltUtils.allePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(opprettetTidspunkt, underveisGrunnlag)
+            utfallOppfyltUtils.alleEventuellePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(opprettetTidspunkt, underveisGrunnlag)
         assertFalse(result)
     }
 
@@ -125,7 +125,7 @@ class UtfallOppfyltUtilsTest {
         )
 
         val result =
-            utfallOppfyltUtils.allePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(opprettetTidspunkt, underveisGrunnlag)
+            utfallOppfyltUtils.alleEventuellePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(opprettetTidspunkt, underveisGrunnlag)
         assertTrue(result)
     }
 
@@ -149,7 +149,7 @@ class UtfallOppfyltUtilsTest {
         )
 
         val result =
-            utfallOppfyltUtils.allePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(opprettetTidspunkt, underveisGrunnlag)
+            utfallOppfyltUtils.alleEventuellePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(opprettetTidspunkt, underveisGrunnlag)
         assertFalse(result)
     }
 
@@ -185,7 +185,7 @@ class UtfallOppfyltUtilsTest {
         )
 
         val result =
-            utfallOppfyltUtils.allePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(opprettetTidspunkt, underveisGrunnlag)
+            utfallOppfyltUtils.alleEventuellePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(opprettetTidspunkt, underveisGrunnlag)
         assertFalse(result)
     }
 
@@ -209,7 +209,7 @@ class UtfallOppfyltUtilsTest {
         )
 
         val result =
-            utfallOppfyltUtils.allePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(opprettetTidspunkt, underveisGrunnlag)
+            utfallOppfyltUtils.alleEventuellePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(opprettetTidspunkt, underveisGrunnlag)
         assertTrue(result)
     }
 

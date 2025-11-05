@@ -90,7 +90,7 @@ class PdlHendelseKafkaKonsument(
                             val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling.id)
                             if (underveisGrunnlag != null) {
                                 val personHarBareAvslagFremover =
-                                    utfallOppfyltUtils.allePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(
+                                    utfallOppfyltUtils.alleEventuellePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(
                                         opprettetTidspunkt = personHendelse.opprettet,
                                         underveisGrunnlag = underveisGrunnlag
                                     )
