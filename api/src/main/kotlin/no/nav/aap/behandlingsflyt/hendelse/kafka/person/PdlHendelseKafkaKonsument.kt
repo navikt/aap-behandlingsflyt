@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.hendelse.kafka.person
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
@@ -19,6 +20,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.behandlingsflyt.utils.UtfallOppfyltUtils
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.person.pdl.leesah.Personhendelse
 
@@ -34,7 +36,8 @@ class PdlHendelseKafkaKonsument(
     config: KafkaConsumerConfig<String, Personhendelse>,
     pollTimeout: Duration = Duration.ofSeconds(10L),
     private val dataSource: DataSource,
-    private val repositoryRegistry: RepositoryRegistry
+    private val repositoryRegistry: RepositoryRegistry,
+    private val gatewayProvider: GatewayProvider,
 ) : KafkaKonsument<String, Personhendelse>(
     consumerName = "PdlHendelse",
     topic = PDL_HENDELSE_TOPIC,
@@ -61,6 +64,7 @@ class PdlHendelseKafkaKonsument(
             val barnRepository: BarnRepository = repositoryProvider.provide()
             val underveisRepository: UnderveisRepository = repositoryProvider.provide()
             val hendelseService = MottattHendelseService(repositoryProvider)
+            val sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider)
             if (personHendelse.opplysningstype == Opplysningstype.DOEDSFALL_V1 && personHendelse.endringstype == Endringstype.OPPRETTET) {
                 log.info("Håndterer hendelse med ${personHendelse.opplysningstype} og ${personHendelse.endringstype}")
 
@@ -81,13 +85,17 @@ class PdlHendelseKafkaKonsument(
                 person?.let { personIKelvin ->
                     sakRepository.finnSakerFor(personIKelvin).forEach { sak ->
                         log.info("Registrerer mottatt hendelse på ${sak.saksnummer}")
-                        val behandling = behandlingRepository.finnSisteOpprettedeBehandlingFor(
+                        val sisteOpprettedeBehandling = behandlingRepository.finnSisteOpprettedeBehandlingFor(
                             sak.id,
                             listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)
                         )
 
-                        if (behandling != null) {
-                            val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling.id)
+                        val behandlingMedSistFattedeVedtak =
+                            sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId = sak.id)
+
+                        if (behandlingMedSistFattedeVedtak != null) {
+                            val underveisGrunnlag =
+                                underveisRepository.hentHvisEksisterer(behandlingMedSistFattedeVedtak.id)
                             if (underveisGrunnlag != null) {
                                 val personHarBareAvslagFremover =
                                     utfallOppfyltUtils.alleEventuellePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(
@@ -97,12 +105,17 @@ class PdlHendelseKafkaKonsument(
                                 if (personHarBareAvslagFremover) {
                                     log.info("Ignorerer dødsfallhendelse fordi bruker har fått avslag på alle perioder fremover ${sak.saksnummer}")
                                 } else {
-                                    log.info("Registrerer mottatt hendelse fordi dødsfall på bruker ${sak.saksnummer}")
+                                    log.info("Registrerer mottatt hendelse fordi dødsfall på bruker. Bruker har iverksatte vedtak der alle fremtidige perioder ikke er oppfylt ${sak.saksnummer}")
                                     hendelseService.registrerMottattHendelse(
                                         personHendelse.tilInnsendingDødsfallBruker(sak.saksnummer)
                                     )
                                 }
                             }
+                        } else if (sisteOpprettedeBehandling != null) {
+                            log.info("Registrerer mottatt hendelse fordi dødsfall på bruker. Bruker har ingen iverksatte vedtak ${sak.saksnummer}")
+                            hendelseService.registrerMottattHendelse(
+                                personHendelse.tilInnsendingDødsfallBruker(sak.saksnummer)
+                            )
                         }
                     }
 
