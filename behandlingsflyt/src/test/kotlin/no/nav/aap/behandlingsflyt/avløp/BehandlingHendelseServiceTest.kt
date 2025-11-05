@@ -78,8 +78,7 @@ class BehandlingHendelseServiceTest {
                 flytJobbRepository,
                 sakService,
                 mottattDokumentRepository,
-                pipRepository,
-                meldekortRepository
+                pipRepository
             )
 
         val behandling = Behandling(

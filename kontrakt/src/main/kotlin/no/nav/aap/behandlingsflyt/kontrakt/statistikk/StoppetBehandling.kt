@@ -6,6 +6,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.datadeling.ArbeidIPeriodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvklaringsbehovHendelseDto
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
+import java.math.BigDecimal
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status as BehandlingsFlytBehandlingStatus
@@ -117,7 +119,15 @@ public enum class RettighetsType(public val hjemmel: String) {
     VURDERES_FOR_UFØRETRYGD(hjemmel = "§ 11-18"),
 }
 
-public class MeldekortDTO(
+public data class MeldekortDTO(
     public val journalpostId: String,
+    @Deprecated("Bruk arbeidIPeriode. For ikke å sende samme objekt til api-intern og statistikk.")
     public val arbeidIPeriodeDTO: List<ArbeidIPeriodeDTO>,
+    public val arbeidIPeriode: List<ArbeidIPeriode>,
+)
+
+public data class ArbeidIPeriode(
+    val periodeFom: LocalDate,
+    val periodeTom: LocalDate,
+    val timerArbeidet: BigDecimal
 )
