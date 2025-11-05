@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.historiskevurderinger.ÅpenPeriodeDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
+import java.util.UUID
 
 data class LovvalgMedlemskapGrunnlagResponse(
     val harTilgangTilÅSaksbehandle: Boolean,
@@ -39,6 +40,7 @@ data class PeriodisertLovvalgMedlemskapGrunnlagResponse(
 ): PeriodiserteVurderingerDto<PeriodisertManuellVurderingForLovvalgMedlemskapResponse>
 
 data class PeriodisertManuellVurderingForLovvalgMedlemskapResponse(
+    override val id: UUID = UUID.randomUUID(),
     override val fom: LocalDate,
     override val tom: LocalDate?,
     override val vurdertAv: VurdertAvResponse?,

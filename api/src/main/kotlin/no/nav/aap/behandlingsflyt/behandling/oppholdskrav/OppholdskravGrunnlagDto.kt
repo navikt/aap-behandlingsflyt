@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
+import java.util.UUID
 
 data class OppholdskravGrunnlagResponse(
     override val harTilgangTilÅSaksbehandle: Boolean,
@@ -19,6 +20,7 @@ data class OppholdskravVurderingDto(
     val oppfylt: Boolean,
     val begrunnelse: String,
     val land: String?,
+    override val id: UUID = UUID.randomUUID(),
     override val fom: LocalDate,
     override val tom: LocalDate?,
     override val vurdertAv: VurdertAvResponse?,

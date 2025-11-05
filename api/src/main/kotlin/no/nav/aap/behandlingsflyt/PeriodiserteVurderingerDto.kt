@@ -3,8 +3,12 @@ package no.nav.aap.behandlingsflyt
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
+import java.util.UUID
 
 interface VurderingDto {
+    /** id som brukes frontend. */
+    val id: UUID
+
     /** Fra og med. */
     val fom: LocalDate
 

@@ -7,8 +7,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.Ove
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import java.time.LocalDate
+import java.util.UUID
 
 data class OvergangArbeidVurderingResponse(
+    override val id: UUID = UUID.randomUUID(),
     override val fom: LocalDate,
     override val tom: LocalDate?,
     override val vurdertAv: VurdertAvResponse,
