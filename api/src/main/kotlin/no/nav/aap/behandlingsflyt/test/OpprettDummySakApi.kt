@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.ApiException
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import javax.sql.DataSource
@@ -37,7 +38,7 @@ fun NormalOpenAPIRoute.opprettDummySakApi(
                 }
                 respondWithStatus(HttpStatusCode.Accepted)
             } catch (e: OpprettTestSakException) {
-                throw ApiException(status = HttpStatusCode.BadRequest, message = e.message ?: "Ukjent feil")
+                throw UgyldigForespørselException(message = e.message ?: "Ukjent feil")
             }
         }
     }
