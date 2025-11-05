@@ -51,7 +51,10 @@ fun NormalOpenAPIRoute.barnetilleggApi(
                     val barnRepository = repositoryProvider.provide<BarnRepository>()
 
                     val sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider)
-                    val barnetilleggService = BarnetilleggService(sakOgBehandlingService, barnRepository)
+                    val barnetilleggService = BarnetilleggService(
+                        sakOgBehandlingService,
+                        barnRepository,
+                    )
                     val barnetilleggTidslinje = barnetilleggService.beregn(behandling.id)
                     val barnGrunnlag = barnRepository.hentHvisEksisterer(behandling.id)
 
