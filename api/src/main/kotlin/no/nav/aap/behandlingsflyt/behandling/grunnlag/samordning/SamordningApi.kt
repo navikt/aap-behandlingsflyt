@@ -121,7 +121,8 @@ data class SamordningAndreStatligeYtelserVurderingPeriodeDTO(
 
 data class SamordningArbeidsgiverGrunnlagDTO(
     val harTilgangTilÅSaksbehandle: Boolean,
-    val vurdering: SamordningArbeidsgiverVurderingDTO?
+    val vurdering: SamordningArbeidsgiverVurderingDTO?,
+    val historiskeVurderinger: List<SamordningArbeidsgiverVurderingDTO>? = emptyList(),
 )
 
 data class SamordningArbeidsgiverVurderingDTO(
@@ -406,20 +407,54 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                     ),
                 avklaringsbehovKode = Definisjon.SAMORDNING_ARBEIDSGIVER.kode.toString(),
             ) { behandlingReferanse ->
-                val samordningArbeidsgiverVurdering =
+                val (samordningArbeidsgiverVurdering,historskeSamordningArbeidsgiverVurdering) =
                     dataSource.transaction { connection ->
                         val repositoryProvider = repositoryRegistry.provider(connection)
                         val samordningArbeidsgiverRepository =
                             repositoryProvider.provide<SamordningArbeidsgiverRepository>()
                         val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-
                         val behandling = behandlingRepository.hent(behandlingReferanse)
 
-                        samordningArbeidsgiverRepository.hentHvisEksisterer(behandling.id)?.vurdering
+                        val vurdering = samordningArbeidsgiverRepository.hentHvisEksisterer(behandling.id)?.vurdering
+
+                        val historiskeBehandlinger = behandlingRepository.hentAlleFor(
+                            behandling.sakId,
+                            TypeBehandling.ytelseBehandlingstyper()
+                        ).filter { it.id != behandling.id }
+
+
+                        val historskeSamordningArbeidsgiverVurdering =
+                            historiskeBehandlinger.mapNotNull { historiskeBehandling ->
+                                samordningArbeidsgiverRepository.hentHvisEksisterer(historiskeBehandling.id)?.vurdering
+                            }
+
+                        Pair(vurdering, historskeSamordningArbeidsgiverVurdering)
+
                     }
 
                 val navnOgEnhet = samordningArbeidsgiverVurdering?.let {
                     ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv)
+                }
+
+
+                val historiskeVurderinger = historskeSamordningArbeidsgiverVurdering.mapNotNull { vurdering ->
+                    val navnOgEnhet = vurdering.let {
+                        ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv)
+                    }
+                    SamordningArbeidsgiverVurderingDTO(
+                        begrunnelse = vurdering.begrunnelse,
+                        fom = vurdering.fom,
+                        tom = vurdering.tom,
+                        vurdertAv = VurdertAvResponse(
+                            ident = vurdering.vurdertAv,
+                            dato = requireNotNull(vurdering.vurdertTidspunkt?.toLocalDate()) {
+                                "Fant ikke vurdert tidspunkt for samordningArbeidsgiverVurdering"
+                            },
+                            ansattnavn = navnOgEnhet?.navn,
+                            enhetsnavn = navnOgEnhet?.enhet
+                        ),
+                    )
+
                 }
 
                 val vurdering = samordningArbeidsgiverVurdering?.let { vurdering ->
@@ -441,7 +476,8 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                 respond(
                     SamordningArbeidsgiverGrunnlagDTO(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
-                        vurdering = vurdering
+                        vurdering = vurdering,
+                        historiskeVurderinger = historiskeVurderinger,
                     )
                 )
             }
