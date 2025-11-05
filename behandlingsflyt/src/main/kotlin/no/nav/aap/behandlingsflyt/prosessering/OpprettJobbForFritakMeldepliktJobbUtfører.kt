@@ -23,10 +23,11 @@ class OpprettJobbForFritakMeldepliktJobbUtfører(
     override fun utfør(input: JobbInput) {
         if (unleashGateway.isEnabled(BehandlingsflytFeature.FritakMeldeplikt)) {
             log.info("FritakMeldeplikt er slått på")
-            /* TODO: optimaliser */
-            for (sak in sakRepository.finnAlle()) {
-                flytJobbRepository.leggTil(JobbInput(OpprettBehandlingFritakMeldepliktJobbUtfører).forSak(sak.id.toLong()))
-            }
+            sakRepository
+                .finnAlleSakIder()
+                .forEach {
+                    flytJobbRepository.leggTil(JobbInput(OpprettBehandlingFritakMeldepliktJobbUtfører).forSak(it.toLong()))
+                }
         } else {
             log.info("FritakMeldeplikt er slått av")
         }

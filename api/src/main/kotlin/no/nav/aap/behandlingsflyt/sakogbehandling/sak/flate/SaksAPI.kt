@@ -276,13 +276,13 @@ fun NormalOpenAPIRoute.saksApi(
             }
         }
 
-        route("") {
-            @Suppress("UnauthorizedGet") // saksoversikt er bare tilgjengelig i DEV og lokalt
-            route("/alle").get<Unit, List<SaksinfoDTO>>(TagModule(listOf(Tags.Sak))) {
-                if (Miljø.er() == MiljøKode.DEV || Miljø.er() == MiljøKode.LOKALT) {
-                    val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
-                        val repositoryProvider = repositoryRegistry.provider(connection)
-                        repositoryProvider.provide<SakRepository>().finnAlle().map { sak ->
+        route("/siste/{antall}").get<HentAntallSakerDTO, List<SaksinfoDTO>>(TagModule(listOf(Tags.Sak))) { req ->
+            if (Miljø.er() == MiljøKode.DEV || Miljø.er() == MiljøKode.LOKALT) {
+                val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    repositoryProvider.provide<SakRepository>()
+                        .finnSiste(req.antall)
+                        .map { sak ->
                             SaksinfoDTO(
                                 saksnummer = sak.saksnummer.toString(),
                                 opprettetTidspunkt = sak.opprettetTidspunkt,
@@ -290,32 +290,10 @@ fun NormalOpenAPIRoute.saksApi(
                                 ident = sak.person.aktivIdent().identifikator
                             )
                         }
-                    }
-                    respond(saker)
-                } else {
-                    throw VerdiIkkeFunnetException("Fant ingen saker")
                 }
-            }
-
-            route("/siste/{antall}").get<HentAntallSakerDTO, List<SaksinfoDTO>>(TagModule(listOf(Tags.Sak))) { req ->
-                if (Miljø.er() == MiljøKode.DEV || Miljø.er() == MiljøKode.LOKALT) {
-                    val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
-                        val repositoryProvider = repositoryRegistry.provider(connection)
-                        repositoryProvider.provide<SakRepository>()
-                            .finnSiste(req.antall)
-                            .map { sak ->
-                                SaksinfoDTO(
-                                    saksnummer = sak.saksnummer.toString(),
-                                    opprettetTidspunkt = sak.opprettetTidspunkt,
-                                    periode = sak.rettighetsperiode,
-                                    ident = sak.person.aktivIdent().identifikator
-                                )
-                            }
-                    }
-                    respond(saker)
-                } else {
-                    throw VerdiIkkeFunnetException("Fant ingen saker")
-                }
+                respond(saker)
+            } else {
+                throw VerdiIkkeFunnetException("Fant ingen saker")
             }
         }
 
