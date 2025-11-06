@@ -32,7 +32,7 @@ data class Sykdomsvurdering(
 
     /* Denne metoden må sannsynligvis generaliseres når vi skal implementere gjeninntreden etter opphør. */
     fun erFørsteVurdering(kravdato: LocalDate): Boolean {
-        return vurderingenGjelderFra == null || vurderingenGjelderFra <= kravdato
+        return vurderingenGjelderFra == null || vurderingenGjelderFra == kravdato
     }
 
     fun erOppfylt(kravdato: LocalDate): Boolean {
