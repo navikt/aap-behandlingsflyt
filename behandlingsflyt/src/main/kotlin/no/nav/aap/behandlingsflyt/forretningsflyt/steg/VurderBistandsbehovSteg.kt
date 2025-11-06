@@ -196,9 +196,10 @@ class VurderBistandsbehovSteg(
         val gjeldendeBistandstidslinje = bistandRepository.hentHvisEksisterer(kontekst.behandlingId)
             ?.somBistandsvurderingstidslinje(kontekst.rettighetsperiode.fom)
             .orEmpty()
-        val inneholderRettighetsperioden =
-            gjeldendeBistandstidslinje.helePerioden().inneholder(kontekst.rettighetsperiode)
-        return inneholderRettighetsperioden && gjeldendeBistandstidslinje.erSammenhengende()
+        val perioderBistandsvilkåretErRelevant = perioderHvorBistandsvilkåretErRelevant(kontekst)
+        return perioderBistandsvilkåretErRelevant.leftJoin(gjeldendeBistandstidslinje) { erRelevant, bistandsvurdering ->
+            !erRelevant || bistandsvurdering != null
+        }.segmenter().all { it.verdi }
     }
 
     companion object : FlytSteg {
