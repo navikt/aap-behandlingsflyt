@@ -514,7 +514,7 @@ class SamordningStegTest {
     private fun opprettBehandling(sak: Sak): Behandling {
         return InMemorySakOgBehandlingService
             .finnEllerOpprettOrdinærBehandling(
-                sak.saksnummer,
+                sak.id,
                 VurderingsbehovOgÅrsak(
                     listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
                     ÅrsakTilOpprettelse.SØKNAD

@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.drift
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryProvider
@@ -12,11 +12,11 @@ import no.nav.aap.komponenter.repository.RepositoryProvider
  * */
 class Driftfunksjoner(
     private val prosesserBehandlingService: ProsesserBehandlingService,
-    private val sakOgBehandlingService: SakOgBehandlingService,
+    private val sakService: SakService,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
-        sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
+        sakService = SakService(repositoryProvider)
     )
 
     fun flyttBehandlingTilStart(behandlingId: BehandlingId, connection: DBConnection) {
@@ -38,7 +38,7 @@ class Driftfunksjoner(
               AND status IN ('UTREDES', 'IVERKSETTES');
         """.trimIndent()
 
-        val sak = sakOgBehandlingService.hentSakFor(behandlingId)
+        val sak = sakService.hentSakFor(behandlingId)
 
         prosesserBehandlingService.triggProsesserBehandling(
             sakId = sak.id,

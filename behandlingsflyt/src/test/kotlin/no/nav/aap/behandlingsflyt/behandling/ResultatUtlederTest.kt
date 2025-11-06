@@ -83,7 +83,7 @@ class ResultatUtlederTest {
         InMemoryBehandlingRepository.oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
 
         val klage = InMemorySakOgBehandlingService.finnEllerOpprettOrdinærBehandling(
-            sak.saksnummer,
+            sak.id,
             vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
                 vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTATT_KLAGE)),
                 årsak = ÅrsakTilOpprettelse.KLAGE
@@ -140,7 +140,7 @@ class ResultatUtlederTest {
 
     private fun opprettBehandling(sak: Sak): Behandling {
         return InMemorySakOgBehandlingService.finnEllerOpprettOrdinærBehandling(
-            sak.saksnummer,
+            sak.id,
             VurderingsbehovOgÅrsak(
                 listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
                 ÅrsakTilOpprettelse.SØKNAD

@@ -11,7 +11,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.KanTriggeRevurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -19,11 +18,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class PersonopplysningInformasjonskrav private constructor(
-    private val sakOgBehandlingService: SakOgBehandlingService,
+    private val sakService: SakService,
     private val personopplysningRepository: PersonopplysningRepository,
     private val personopplysningGateway: PersonopplysningGateway,
     private val tidligereVurderinger: TidligereVurderinger,
@@ -46,7 +46,7 @@ class PersonopplysningInformasjonskrav private constructor(
     data class PersonopplysningRegisterdata(val personopplysninger: Personopplysning) : InformasjonskravRegisterdata
 
     override fun klargjør(kontekst: FlytKontekstMedPerioder): Input {
-        return Input(sakOgBehandlingService.hentSakFor(kontekst.behandlingId))
+        return Input(sakService.hentSakFor(kontekst.behandlingId))
     }
 
     override fun hentData(input: Input): PersonopplysningRegisterdata {
@@ -86,7 +86,7 @@ class PersonopplysningInformasjonskrav private constructor(
     }
 
     private fun hentPersonopplysninger(behandlingId: BehandlingId): Personopplysning {
-        val sak = sakOgBehandlingService.hentSakFor(behandlingId)
+        val sak = sakService.hentSakFor(behandlingId)
         return personopplysningGateway.innhent(sak.person)
     }
 
@@ -100,7 +100,7 @@ class PersonopplysningInformasjonskrav private constructor(
             val personopplysningRepository =
                 repositoryProvider.provide<PersonopplysningRepository>()
             return PersonopplysningInformasjonskrav(
-                SakOgBehandlingService(repositoryProvider, gatewayProvider),
+                SakService(repositoryProvider),
                 personopplysningRepository,
                 gatewayProvider.provide(),
                 TidligereVurderingerImpl(repositoryProvider),

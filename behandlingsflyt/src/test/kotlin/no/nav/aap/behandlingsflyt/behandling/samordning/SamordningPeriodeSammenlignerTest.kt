@@ -276,8 +276,15 @@ class SamordningPeriodeSammenlignerTest {
             InMemorySakRepository
         ).finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
     }
+
     private fun opprettBehandling(sak: Sak): Behandling {
         return InMemorySakOgBehandlingService
-            .finnEllerOpprettOrdinærBehandling(sak.saksnummer, VurderingsbehovOgÅrsak(listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)), ÅrsakTilOpprettelse.SØKNAD))
+            .finnEllerOpprettOrdinærBehandling(
+                sak.id,
+                VurderingsbehovOgÅrsak(
+                    listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
+                    ÅrsakTilOpprettelse.SØKNAD
+                )
+            )
     }
 }

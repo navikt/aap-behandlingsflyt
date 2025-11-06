@@ -42,7 +42,7 @@ internal class StegOrkestratorTest {
     }
 
 
-    private val gatewayProvider = createGatewayProvider {  }
+    private val gatewayProvider = createGatewayProvider { }
 
     @Test
     fun `ved avklaringsbehov skal vi gå gjennom statusene START-UTFØRER-AVKARLINGSPUNKT`() {
@@ -72,9 +72,9 @@ internal class StegOrkestratorTest {
             ).utfør(
                 TestFlytSteg,
                 FlytKontekstMedPeriodeService(
-                    SakService(SakRepositoryImpl(connection)),
+                    SakService(SakRepositoryImpl(connection), BehandlingRepositoryImpl(connection)),
                     BehandlingRepositoryImpl(connection),
-               ).utled(kontekst, TestFlytSteg.type()),
+                ).utled(kontekst, TestFlytSteg.type()),
                 behandling,
                 emptyList()
             )
