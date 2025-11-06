@@ -12,27 +12,33 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅ
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import javax.sql.DataSource
 
 class OppholdskravGrunnlagRepositoryImplTest {
+    companion object {
+        private lateinit var dataSource: TestDataSource
 
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            dataSource = TestDataSource()
+        }
 
-
-    lateinit var dataSource: DataSource
-    @BeforeEach
-    fun beforeEach() {
-        dataSource = InitTestDatabase.freshDatabase()
+        @AfterAll
+        @JvmStatic
+        fun tearDown() = dataSource.close()
     }
+
 
     @Test
     fun `lagre og hent oppholdskravene i db`() {
-
         val behandlingId = opprettBehandling(dataSource)
         val oppholdskravVurdering = OppholdskravVurdering(
             vurdertAv = "Meg",
@@ -73,7 +79,6 @@ class OppholdskravGrunnlagRepositoryImplTest {
 
     @Test
     fun `slett grunnlag`() {
-
         val behandlingId = opprettBehandling(dataSource)
         val oppholdskravVurdering = OppholdskravVurdering(
             vurdertAv = "Meg",

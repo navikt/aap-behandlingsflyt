@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Pers
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
@@ -28,8 +29,11 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapAPI(dataSource: DataSource, repositoryRe
     route("/api/lovvalgmedlemskap/") {
         route("/vurdering/{referanse}") {
             authorizedGet<BehandlingReferanse, KanBehandlesAutomatiskVurdering>(
-                AuthorizationParamPathConfig(behandlingPathParam = BehandlingPathParam("referanse")),
-                null, TagModule(listOf(Tags.Behandling))
+                AuthorizationParamPathConfig(
+                    behandlingPathParam = BehandlingPathParam("referanse"),
+                    relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                ),
+                null, modules = arrayOf(TagModule(listOf(Tags.Behandling)))
             ) { req ->
                 val vurdering = dataSource.transaction { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
@@ -74,8 +78,11 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapAPI(dataSource: DataSource, repositoryRe
         }
         route("/forutgaaendevurdering/{referanse}") {
             authorizedGet<BehandlingReferanse, KanBehandlesAutomatiskVurdering>(
-                AuthorizationParamPathConfig(behandlingPathParam = BehandlingPathParam("referanse")),
-                null, TagModule(listOf(Tags.Behandling))
+                AuthorizationParamPathConfig(
+                    behandlingPathParam = BehandlingPathParam("referanse"),
+                    relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                ),
+                null, modules = arrayOf(TagModule(listOf(Tags.Behandling)))
             ) { req ->
                 val vurdering = dataSource.transaction { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)

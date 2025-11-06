@@ -13,19 +13,34 @@ import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Condition
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 class AvklaringsbehovOrkestratorTest {
+    companion object {
+        private lateinit var dataSource: TestDataSource
+
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            dataSource = TestDataSource()
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun tearDown() = dataSource.close()
+    }
 
     @Test
     fun `behandlingHendelseService dot stoppet blir kalt når en behandling er satt på vent`() {
-        val uthentedeJobber = InitTestDatabase.freshDatabase().transaction { connection ->
+        val uthentedeJobber = dataSource.transaction { connection ->
             val avklaringsbehovOrkestrator = AvklaringsbehovOrkestrator(
                 postgresRepositoryRegistry.provider(connection),
                 createGatewayProvider { register<FakeUnleash>() },

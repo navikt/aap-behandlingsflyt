@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.utils.withMdc
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
@@ -24,6 +25,7 @@ class InformasjonskravGrunnlagImpl(
         gatewayProvider
     )
 
+    private val log = LoggerFactory.getLogger(javaClass)
     private val tracer = GlobalOpenTelemetry.getTracer("informasjonskrav")
 
     override fun oppdaterFaktagrunnlagForKravliste(
@@ -53,34 +55,48 @@ class InformasjonskravGrunnlagImpl(
         // TODO: Finn en bedre måde å forhindre race conditions når async informasjonskrav avghenger av hverandre
         // Når SøknadService er relevant, må denne kjøre før de andre for å forhindre race conditions
         val søknadInformasjonskrav = informasjonskravene.find { it.second.navn == SøknadInformasjonskrav.navn }
-        val søknadInformasjonRelevantOgEndret = if (SøknadInformasjonskrav.navn in relevanteInformasjonskrav.map { it.second.navn }) {
-            val span = tracer.spanBuilder("informasjonskrav ${SøknadInformasjonskrav.navn}")
-                .setSpanKind(SpanKind.INTERNAL)
-                .setAttribute("informasjonskrav", SøknadInformasjonskrav.navn.toString())
-                .startSpan()
-            try {
-                span.makeCurrent().use {
-                    søknadInformasjonskrav?.second?.oppdater(kontekst) == Informasjonskrav.Endret.ENDRET
+        val søknadInformasjonRelevantOgEndret =
+            if (SøknadInformasjonskrav.navn in relevanteInformasjonskrav.map { it.second.navn } && søknadInformasjonskrav != null) {
+                log.info("Sjekker søknadsinformasjonskrav for endringer")
+                val span = tracer.spanBuilder("informasjonskrav ${SøknadInformasjonskrav.navn}")
+                    .setSpanKind(SpanKind.INTERNAL)
+                    .setAttribute("informasjonskrav", SøknadInformasjonskrav.navn.toString())
+                    .startSpan()
+                try {
+                    span.makeCurrent().use {
+                        val søknadInformasjonskrav =
+                            SøknadInformasjonskrav.konstruer(repositoryProvider, gatewayProvider)
+                        val registerdata = søknadInformasjonskrav.hentData(IngenInput)
+                        val input = søknadInformasjonskrav.klargjør(kontekst)
+                        søknadInformasjonskrav.oppdater(input, registerdata, kontekst) == Informasjonskrav.Endret.ENDRET
+                    }
+                } finally {
+                    span.end()
                 }
-            } finally {
-                span.end()
+            } else {
+                false
             }
-        } else {
-            false
-        }
 
-        val informasjonskravFutures = relevanteInformasjonskrav
+        log.info("Sjekker andre informasjonskrav for endringer")
+
+        val sekvensiellKlargjøring = relevanteInformasjonskrav
             .filter { !it.second.equals(SøknadInformasjonskrav) } // ikke kjør SøknadService dobbelt
-            .map { triple ->
-                CompletableFuture.supplyAsync(withMdc{
-                    val krav = triple.second
-                    val span = tracer.spanBuilder("informasjonskrav ${krav.navn}")
+            .map { (konstruktør, krav) ->
+                Triple(konstruktør, krav, krav.klargjør(kontekst))
+            }
+
+        val parallellFaktaInnhenting = sekvensiellKlargjøring
+            .filter { (_, krav) -> !krav.equals(SøknadInformasjonskrav) } // ikke kjør SøknadService dobbelt
+            .map { (konstruktør, informasjonskrav, input) ->
+                CompletableFuture.supplyAsync(withMdc {
+                    val span = tracer.spanBuilder("informasjonskravinnhenting ${informasjonskrav.navn}")
                         .setSpanKind(SpanKind.INTERNAL)
-                        .setAttribute("informasjonskrav", krav.navn.toString())
+                        .setAttribute("informasjonskrav", informasjonskrav.navn.toString())
                         .startSpan()
                     try {
                         span.makeCurrent().use {
-                            Pair(triple, krav.oppdater(kontekst))
+                            val registerdata = informasjonskrav.hentData(input)
+                            Triple(konstruktør, informasjonskrav, registerdata)
                         }
                     } finally {
                         span.end()
@@ -88,17 +104,26 @@ class InformasjonskravGrunnlagImpl(
                 }, executor)
             }
 
-        val endredeAsyncInformasjonskrav = informasjonskravFutures.map { it.join() }
+        val sekvensiellLagringAvFakta = parallellFaktaInnhenting
+            .map { it.join() }
+            .map { (konstruktør, krav, registerdata) ->
+                val input = krav.klargjør(kontekst)
+                Pair(konstruktør, krav.oppdater(input, registerdata, kontekst))
+            }
+
+
+        val endredeAsyncInformasjonskrav = sekvensiellLagringAvFakta
             .filter { (_, endret) -> endret == Informasjonskrav.Endret.ENDRET }
             .map { it.first }
 
         val endredeInformasjonskrav =
             if (søknadInformasjonRelevantOgEndret && søknadInformasjonskrav != null) {
-                endredeAsyncInformasjonskrav + søknadInformasjonskrav
+                endredeAsyncInformasjonskrav + søknadInformasjonskrav.first
             } else {
                 endredeAsyncInformasjonskrav
             }
 
+        log.info("Registrerer oppdateringer fra informasjonskrav")
         informasjonskravRepository.registrerOppdateringer(
             kontekst.sakId,
             kontekst.behandlingId,
@@ -106,7 +131,7 @@ class InformasjonskravGrunnlagImpl(
             Instant.now(),
             kontekst.rettighetsperiode,
         )
-        return endredeInformasjonskrav.map { (konstruktør, _, _) -> konstruktør }
+        return endredeInformasjonskrav
     }
 
     override fun flettOpplysningerFraAtomærBehandling(

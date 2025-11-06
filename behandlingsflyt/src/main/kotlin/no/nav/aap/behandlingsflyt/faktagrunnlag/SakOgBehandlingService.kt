@@ -16,7 +16,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅ
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
@@ -59,7 +58,7 @@ class SakOgBehandlingService(
          * Behandlingene er i praksis en singly-linked list. Pekerne går "feil vei",
          * så vi regner ut bakover-pekerne.
         **/
-        val ytelsesbehandlinger = behandlingRepository.hentAlleFor(sakId,TypeBehandling.ytelseBehandlingstyper())
+        val ytelsesbehandlinger = behandlingRepository.hentAlleFor(sakId, TypeBehandling.ytelseBehandlingstyper())
         val nesteId = mutableMapOf<BehandlingId, BehandlingId>()
         for (behandling in ytelsesbehandlinger) {
             // Hopp over hvis behandlingen er avbrutt
@@ -84,7 +83,8 @@ class SakOgBehandlingService(
 
     fun finnBehandlingMedSisteFattedeVedtak(sakId: SakId): BehandlingMedVedtak? {
         val sak = sakRepository.hent(sakId)
-        val alleBehandlingerMedVedtak = behandlingRepository.hentAlleMedVedtakFor(sak.person, TypeBehandling.ytelseBehandlingstyper())
+        val alleBehandlingerMedVedtak =
+            behandlingRepository.hentAlleMedVedtakFor(sak.person, TypeBehandling.ytelseBehandlingstyper())
         return alleBehandlingerMedVedtak.maxByOrNull { it.vedtakstidspunkt }
     }
 
@@ -120,7 +120,8 @@ class SakOgBehandlingService(
         Vurderingsbehov.FRITAK_MELDEPLIKT,
         Vurderingsbehov.MOTTATT_MELDEKORT,
         Vurderingsbehov.FASTSATT_PERIODE_PASSERT,
-        Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT
+        Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT,
+        Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9
     )
 
     fun finnEllerOpprettBehandling(sakId: SakId, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak): OpprettetBehandling {
@@ -128,9 +129,6 @@ class SakOgBehandlingService(
         val vurderingsbehov = vurderingsbehovOgÅrsak.vurderingsbehov
         val fasttrackkandidat = vurderingsbehov.isNotEmpty()
                 && vurderingsbehov.all { it.type in fasttrackKandidater }
-                && (vurderingsbehov.none { it.type == Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT } || unleashGateway.isEnabled(
-            BehandlingsflytFeature.Aktivitetsplikt11_7
-        ))
 
         val mottokKabalHendelse = vurderingsbehov.any { it.type == Vurderingsbehov.MOTTATT_KABAL_HENDELSE }
         val mottokKlage = vurderingsbehov.any { it.type == Vurderingsbehov.MOTATT_KLAGE }
@@ -202,10 +200,11 @@ class SakOgBehandlingService(
             else -> throw UgyldigForespørselException("Kan kun opprette behandling for aktivitetsplikt")
         }
 
-        val sisteYtelseBehandling = finnSisteYtelsesbehandlingFor(sakId)
+        val førstegangsbehandling = behandlingRepository.finnFørstegangsbehandling(sakId)
+            ?: throw UgyldigForespørselException("Kan ikke opprette aktiviterspliktbehandling uten en førstegangsbehandling")
 
-        if (sisteYtelseBehandling == null) {
-            throw UgyldigForespørselException("Kan ikke opprette aktiviterspliktbehandling uten en ytelsebehandling")
+        if (!førstegangsbehandling.status().erAvsluttet()) {
+            throw UgyldigForespørselException("Førstegangsbehandling må være avsluttet før man kan opprette en aktivitetspliktbehandling")
         }
 
         val aktivitetspliktBehandlinger = behandlingRepository.hentAlleFor(
@@ -254,10 +253,6 @@ class SakOgBehandlingService(
         sisteYtelsesbehandling: Behandling,
         vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak
     ): Behandling {
-        requireNotNull(sisteYtelsesbehandling) {
-            "Mottok oppfølgingsbehandling, men det finnes ingen eksisterende behandling. Behandling-ID: ${sisteYtelsesbehandling.id}"
-        }
-
         return behandlingRepository.opprettBehandling(
             sisteYtelsesbehandling.sakId,
             typeBehandling = TypeBehandling.OppfølgingsBehandling,
@@ -310,25 +305,25 @@ class SakOgBehandlingService(
     }
 
     private fun opprettRevurderingForranÅpenBehandling(
-        apenRevurdering: Behandling,
+        åpenRevurdering: Behandling,
         vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak,
     ): Behandling {
-        check(apenRevurdering.status().erÅpen())
-        check(apenRevurdering.typeBehandling() == TypeBehandling.Revurdering)
-        check(!trukketSøknadService.søknadErTrukket(apenRevurdering.id)) {
-            "ikke lov å opprette ny behandling for trukket søknad ${apenRevurdering.sakId}"
+        check(åpenRevurdering.status().erÅpen())
+        check(åpenRevurdering.typeBehandling() == TypeBehandling.Revurdering)
+        check(!trukketSøknadService.søknadErTrukket(åpenRevurdering.id)) {
+            "ikke lov å opprette ny behandling for trukket søknad ${åpenRevurdering.sakId}"
         }
 
-        val sisteAvsluttedeYtelsesvurdering = behandlingRepository.hent(apenRevurdering.forrigeBehandlingId!!)
+        val sisteAvsluttedeYtelsesvurdering = behandlingRepository.hent(åpenRevurdering.forrigeBehandlingId!!)
 
         return behandlingRepository.opprettBehandling(
-            sakId = apenRevurdering.sakId,
+            sakId = åpenRevurdering.sakId,
             typeBehandling = TypeBehandling.Revurdering,
             vurderingsbehovOgÅrsak = vurderingsbehovOgÅrsak,
             forrigeBehandlingId = sisteAvsluttedeYtelsesvurdering.id,
         ).also { behandling ->
             grunnlagKopierer.overfør(sisteAvsluttedeYtelsesvurdering.id, behandling.id)
-            behandlingRepository.flyttForrigeBehandlingId(apenRevurdering.id, behandling.id)
+            behandlingRepository.flyttForrigeBehandlingId(åpenRevurdering.id, behandling.id)
         }
     }
 
@@ -343,15 +338,6 @@ class SakOgBehandlingService(
         validerStegStatus(sisteYtelsesbehandling)
         behandlingRepository.oppdaterVurderingsbehovOgÅrsak(sisteYtelsesbehandling, vurderingsbehovOgÅrsak)
         return sisteYtelsesbehandling
-    }
-
-    fun finnEllerOpprettOrdinærBehandling(
-        saksnummer: Saksnummer,
-        vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak
-    ): Behandling {
-        val sak = sakRepository.hent(saksnummer)
-
-        return finnEllerOpprettOrdinærBehandling(sak.id, vurderingsbehovOgÅrsak)
     }
 
     fun finnEllerOpprettBehandling(
@@ -377,11 +363,6 @@ class SakOgBehandlingService(
         val oppdatertBehandling = behandlingRepository.hent(behandlingId)
         val sisteSteg = oppdatertBehandling.aktivtStegTilstand()
         require(sisteSteg.status() == StegStatus.AVSLUTTER)
-    }
-
-    fun hentSakFor(behandlingId: BehandlingId): Sak {
-        val behandling = behandlingRepository.hent(behandlingId)
-        return sakRepository.hent(behandling.sakId)
     }
 
     fun oppdaterRettighetsperioden(sakId: SakId, brevkategori: InnsendingType, mottattDato: LocalDate) {

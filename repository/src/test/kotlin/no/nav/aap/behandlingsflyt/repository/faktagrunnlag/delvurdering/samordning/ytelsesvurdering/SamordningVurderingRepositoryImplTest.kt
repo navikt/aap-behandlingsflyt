@@ -1,24 +1,36 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering
 
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingVurdering
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingÅrsak
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.avbrytrevurdering.AvbrytRevurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
@@ -26,16 +38,20 @@ import java.time.LocalDate
 
 internal class SamordningVurderingRepositoryImplTest {
     companion object {
-        private val dataSource = InitTestDatabase.freshDatabase()
+        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+
+        private lateinit var dataSource: TestDataSource
+
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            dataSource = TestDataSource()
+        }
 
         @AfterAll
         @JvmStatic
-        fun afterAll() {
-            InitTestDatabase.closerFor(dataSource)
-        }
+        fun tearDown() = dataSource.close()
     }
-
-    private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
     @Test
     fun `lagre og hente ut igjen`() {
@@ -44,7 +60,7 @@ internal class SamordningVurderingRepositoryImplTest {
         // Lagre vurdering
         val vurdering = SamordningVurdering(
             ytelseType = Ytelse.SYKEPENGER,
-            vurderingPerioder = listOf(
+            vurderingPerioder = setOf(
                 SamordningVurderingPeriode(
                     periode = Periode(LocalDate.now().minusYears(3), LocalDate.now().minusDays(1)),
                     gradering = Prosent(40),
@@ -59,10 +75,11 @@ internal class SamordningVurderingRepositoryImplTest {
                 )
             )
         )
+
         // Lagre vurdering
         val vurdering2 = SamordningVurdering(
             ytelseType = Ytelse.OPPLÆRINGSPENGER,
-            vurderingPerioder = listOf(
+            vurderingPerioder = setOf(
                 SamordningVurderingPeriode(
                     periode = Periode(LocalDate.now().minusYears(3), LocalDate.now().minusDays(1)),
                     gradering = Prosent(40),
@@ -84,7 +101,7 @@ internal class SamordningVurderingRepositoryImplTest {
                     begrunnelse = "En god begrunnelse",
                     maksDatoEndelig = false,
                     fristNyRevurdering = LocalDate.now().plusYears(1),
-                    vurderinger = listOf(vurdering, vurdering2),
+                    vurderinger = setOf(vurdering, vurdering2),
                     vurdertAv = "ident"
                 )
             )
@@ -107,7 +124,7 @@ internal class SamordningVurderingRepositoryImplTest {
                     begrunnelse = "xxxx",
                     maksDatoEndelig = true,
                     fristNyRevurdering = LocalDate.now().plusYears(1),
-                    vurderinger = emptyList(),
+                    vurderinger = emptySet(),
                     vurdertAv = "ident"
                 )
             )
@@ -132,7 +149,7 @@ internal class SamordningVurderingRepositoryImplTest {
         val vurdering = SamordningVurdering(
             ytelseType = Ytelse.SYKEPENGER,
 
-            vurderingPerioder = listOf(
+            vurderingPerioder = setOf(
                 SamordningVurderingPeriode(
                     periode = Periode(LocalDate.now().minusYears(3), LocalDate.now().minusDays(1)),
                     gradering = Prosent(40),
@@ -149,7 +166,7 @@ internal class SamordningVurderingRepositoryImplTest {
                         begrunnelse = "En god begrunnelse",
                         maksDatoEndelig = false,
                         fristNyRevurdering = LocalDate.now().plusYears(1),
-                        vurderinger = listOf(vurdering),
+                        vurderinger = setOf(vurdering),
                         vurdertAv = "ident"
                     )
                 )
@@ -170,7 +187,7 @@ internal class SamordningVurderingRepositoryImplTest {
         // Create the first vurdering
         val førsteVurdering = SamordningVurdering(
             ytelseType = Ytelse.SYKEPENGER,
-            vurderingPerioder = listOf(
+            vurderingPerioder = setOf(
                 SamordningVurderingPeriode(
                     periode = Periode(førstePeriodeStart, førstePeriodeEnd),
                     gradering = Prosent(40),
@@ -188,7 +205,7 @@ internal class SamordningVurderingRepositoryImplTest {
                     begrunnelse = "Første begrunnelse",
                     maksDatoEndelig = false,
                     fristNyRevurdering = LocalDate.of(2025, 1, 1),
-                    vurderinger = listOf(førsteVurdering),
+                    vurderinger = setOf(førsteVurdering),
                     vurdertAv = "ident"
                 )
             )
@@ -197,7 +214,7 @@ internal class SamordningVurderingRepositoryImplTest {
         // Create the second vurdering
         val andreVurdering1 = SamordningVurdering(
             ytelseType = Ytelse.FORELDREPENGER,
-            vurderingPerioder = listOf(
+            vurderingPerioder = setOf(
                 SamordningVurderingPeriode(
                     periode = Periode(andrePeriodeStart, andrePeriodeEnd),
                     gradering = Prosent(50),
@@ -207,7 +224,7 @@ internal class SamordningVurderingRepositoryImplTest {
         )
         val andreVurdering2 = SamordningVurdering(
             ytelseType = Ytelse.OPPLÆRINGSPENGER,
-            vurderingPerioder = listOf(
+            vurderingPerioder = setOf(
                 SamordningVurderingPeriode(
                     periode = Periode(andrePeriodeStart.plusDays(1), andrePeriodeStart.plusMonths(6)),
                     gradering = Prosent(30),
@@ -232,7 +249,7 @@ internal class SamordningVurderingRepositoryImplTest {
                     begrunnelse = andreBegrunnelse,
                     maksDatoEndelig = true,
                     fristNyRevurdering = andreMaksDato,
-                    vurderinger = listOf(andreVurdering1, andreVurdering2),
+                    vurderinger = setOf(andreVurdering1, andreVurdering2),
                     vurdertAv = "ident"
                 )
             )
@@ -245,9 +262,6 @@ internal class SamordningVurderingRepositoryImplTest {
 
         // Verify that the retrieved vurdering has the expected properties
         assertThat(uthentet.begrunnelse).isEqualTo(andreBegrunnelse)
-        assertThat(uthentet.maksDatoEndelig).isTrue()
-        assertThat(uthentet.fristNyRevurdering).isEqualTo(andreMaksDato)
-
         // Verify that the retrieved vurdering has the expected number of vurderinger
         assertThat(uthentet.vurderinger).hasSize(2)
 
@@ -278,73 +292,156 @@ internal class SamordningVurderingRepositoryImplTest {
         assertThat(opplæringspengerVurdering?.ytelseType).isEqualTo(Ytelse.OPPLÆRINGSPENGER)
         assertThat(opplæringspengerVurdering?.vurderingPerioder).hasSize(2)
 
-        // Verify the properties of the second vurdering's first periode
-        val opplæringspengerPeriode1 = opplæringspengerVurdering?.vurderingPerioder?.get(0)!!
-        assertThat(opplæringspengerPeriode1.periode.fom).isEqualTo(andrePeriodeStart.plusDays(1))
-        assertThat(opplæringspengerPeriode1.periode.tom).isEqualTo(andrePeriodeStart.plusMonths(6))
-        assertThat(opplæringspengerPeriode1.gradering?.prosentverdi()).isEqualTo(30)
-        assertThat(opplæringspengerPeriode1.kronesum).isNull()
-        assertThat(opplæringspengerPeriode1.manuell).isFalse()
+        assertThat(opplæringspengerVurdering?.vurderingPerioder).anySatisfy {
+            assertThat(it.periode.fom).isEqualTo(andrePeriodeStart.plusDays(1))
+            assertThat(it.periode.tom).isEqualTo(andrePeriodeStart.plusMonths(6))
+            assertThat(it.gradering?.prosentverdi()).isEqualTo(30)
+            assertThat(it.kronesum).isNull()
+            assertThat(it.manuell).isFalse()
+        }
 
-        // Verify the properties of the second vurdering's second periode
-        val opplæringspengerPeriode2 = opplæringspengerVurdering.vurderingPerioder[1]
-        assertThat(opplæringspengerPeriode2.periode.fom).isEqualTo(andrePeriodeStart.plusMonths(7))
-        assertThat(opplæringspengerPeriode2.periode.tom).isEqualTo(andrePeriodeEnd.plusDays(6))
-        assertThat(opplæringspengerPeriode2.gradering?.prosentverdi()).isEqualTo(33)
-        assertThat(opplæringspengerPeriode2.kronesum).isNull()
-        assertThat(opplæringspengerPeriode2.manuell).isFalse()
+        assertThat(opplæringspengerVurdering?.vurderingPerioder).anySatisfy {
+            assertThat(it.periode.fom).isEqualTo(andrePeriodeStart.plusMonths(7))
+            assertThat(it.periode.tom).isEqualTo(andrePeriodeEnd.plusDays(6))
+            assertThat(it.gradering?.prosentverdi()).isEqualTo(33)
+            assertThat(it.kronesum).isNull()
+            assertThat(it.manuell).isFalse()
+        }
     }
 
     @Test
     fun `test sletting`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
-            val sak = sak(connection)
-            val behandling = finnEllerOpprettBehandling(connection, sak)
-            val samordningVurderingRepository = SamordningVurderingRepositoryImpl(connection)
-            samordningVurderingRepository.lagreVurderinger(
-                behandling.id, SamordningVurderingGrunnlag(
-                    begrunnelse = "begrunnelse1",
-                    maksDatoEndelig = false,
-                    fristNyRevurdering = null,
-                    vurdertAv = "ident",
-                    vurderinger = listOf(
-                        SamordningVurdering(
-                            ytelseType = Ytelse.SYKEPENGER,
-                            vurderingPerioder = listOf(
-                                SamordningVurderingPeriode(
-                                    periode = Periode(5 januar 2024, 10 januar 2024),
-                                    gradering = Prosent.`50_PROSENT`,
-                                    manuell = false,
+        TestDataSource().use { dataSource ->
+            dataSource.transaction { connection ->
+                val sak = sak(connection)
+                val behandling = finnEllerOpprettBehandling(connection, sak)
+                val samordningVurderingRepository = SamordningVurderingRepositoryImpl(connection)
+                samordningVurderingRepository.lagreVurderinger(
+                    behandling.id, SamordningVurderingGrunnlag(
+                        begrunnelse = "begrunnelse1",
+                        maksDatoEndelig = false,
+                        fristNyRevurdering = null,
+                        vurdertAv = "ident",
+                        vurderinger = setOf(
+                            SamordningVurdering(
+                                ytelseType = Ytelse.SYKEPENGER,
+                                vurderingPerioder = setOf(
+                                    SamordningVurderingPeriode(
+                                        periode = Periode(5 januar 2024, 10 januar 2024),
+                                        gradering = Prosent.`50_PROSENT`,
+                                        manuell = false,
+                                    )
                                 )
                             )
                         )
                     )
                 )
-            )
-            samordningVurderingRepository.lagreVurderinger(
-                behandling.id, SamordningVurderingGrunnlag(
-                    begrunnelse = "begrunnelse2",
-                    maksDatoEndelig = false,
-                    fristNyRevurdering = null,
-                    vurdertAv = "ident",
-                    vurderinger = listOf(
-                        SamordningVurdering(
-                            ytelseType = Ytelse.SYKEPENGER,
-                            vurderingPerioder = listOf(
-                                SamordningVurderingPeriode(
-                                    periode = Periode(11 januar 2024, 15 januar 2024),
-                                    gradering = Prosent.`50_PROSENT`,
-                                    manuell = false,
+                samordningVurderingRepository.lagreVurderinger(
+                    behandling.id, SamordningVurderingGrunnlag(
+                        begrunnelse = "begrunnelse2",
+                        maksDatoEndelig = false,
+                        fristNyRevurdering = null,
+                        vurdertAv = "ident",
+                        vurderinger = setOf(
+                            SamordningVurdering(
+                                ytelseType = Ytelse.SYKEPENGER,
+                                vurderingPerioder = setOf(
+                                    SamordningVurderingPeriode(
+                                        periode = Periode(11 januar 2024, 15 januar 2024),
+                                        gradering = Prosent.`50_PROSENT`,
+                                        manuell = false,
+                                    )
                                 )
                             )
                         )
                     )
                 )
-            )
-            assertDoesNotThrow {
-                samordningVurderingRepository.slett(behandling.id)
+                assertDoesNotThrow {
+                    samordningVurderingRepository.slett(behandling.id)
+                }
             }
         }
+    }
+
+    @Test
+    fun `historikk viser kun vurderinger fra tidligere behandlinger og ikke inkluderer vurdering fra avbrutt revurdering`() {
+        val samordningGrunnlag1 = lagSamordningGrunnlag("B1", "Z00001", Ytelse.SYKEPENGER)
+        val samordningGrunnlag2 = lagSamordningGrunnlag("B2", "Z00002", Ytelse.FORELDREPENGER)
+        val samordningGrunnlag3 = lagSamordningGrunnlag("B3", "Z00003", Ytelse.OMSORGSPENGER)
+
+        val førstegangsbehandling = dataSource.transaction { connection ->
+            val samordningRepo = SamordningVurderingRepositoryImpl(connection)
+            val sak = sak(connection)
+            val førstegangsbehandling = finnEllerOpprettBehandling(connection, sak)
+
+            samordningRepo.lagreVurderinger(førstegangsbehandling.id, samordningGrunnlag1)
+            førstegangsbehandling
+        }
+
+        dataSource.transaction { connection ->
+            val samordningRepo = SamordningVurderingRepositoryImpl(connection)
+            val avbrytRevurderingRepo = AvbrytRevurderingRepositoryImpl(connection)
+            val revurderingAvbrutt = revurderingSamordning(connection, førstegangsbehandling)
+
+            // Marker revurderingen som avbrutt
+            avbrytRevurderingRepo.lagre(
+                revurderingAvbrutt.id, AvbrytRevurderingVurdering(
+                    AvbrytRevurderingÅrsak.REVURDERINGEN_BLE_OPPRETTET_VED_EN_FEIL, "avbryte pga. feil",
+                    Bruker("Z00001")
+                )
+            )
+            samordningRepo.lagreVurderinger(revurderingAvbrutt.id, samordningGrunnlag2)
+        }
+
+        dataSource.transaction { connection ->
+            val samordningRepo = SamordningVurderingRepositoryImpl(connection)
+            val revurdering = revurderingSamordning(connection, førstegangsbehandling)
+
+            samordningRepo.lagreVurderinger(revurdering.id, samordningGrunnlag3)
+
+            val historikk = samordningRepo.hentHistoriskeVurderinger(revurdering.sakId, revurdering.id)
+            assertThat(historikk)
+                .usingRecursiveComparison()
+                .ignoringFields("vurderingerId", "vurdertTidspunkt")
+                .isEqualTo(listOf(samordningGrunnlag1))
+        }
+    }
+
+    private fun lagSamordningGrunnlag(
+        begrunnelse: String,
+        vurdertAv: String,
+        ytelse: Ytelse
+    ): SamordningVurderingGrunnlag {
+        return SamordningVurderingGrunnlag(
+            begrunnelse = begrunnelse,
+            maksDatoEndelig = false,
+            fristNyRevurdering = null,
+            vurdertAv = vurdertAv,
+            vurderinger = setOf(
+                SamordningVurdering(
+                    ytelseType = ytelse,
+                    vurderingPerioder = setOf(
+                        SamordningVurderingPeriode(
+                            periode = Periode(11 januar 2024, 15 januar 2024),
+                            gradering = Prosent.`50_PROSENT`,
+                            manuell = false,
+                        )
+                    )
+                )
+            )
+        )
+    }
+
+    private fun revurderingSamordning(connection: DBConnection, behandling: Behandling): Behandling {
+        return BehandlingRepositoryImpl(connection).opprettBehandling(
+            behandling.sakId,
+            typeBehandling = TypeBehandling.Revurdering,
+            forrigeBehandlingId = behandling.id,
+            vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SAMORDNING_OG_AVREGNING)),
+                årsak = ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
+            )
+        )
     }
 
     private fun sak(connection: DBConnection): Sak {

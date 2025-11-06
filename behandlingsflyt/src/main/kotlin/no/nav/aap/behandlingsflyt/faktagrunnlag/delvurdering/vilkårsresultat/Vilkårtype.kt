@@ -49,7 +49,6 @@ enum class Vilkårtype(
         kode = "AAP-6",
         spesielleInnvilgelsesÅrsaker = listOf(
             Innvilgelsesårsak.STUDENT,
-            Innvilgelsesårsak.ARBEIDSSØKER,
             Innvilgelsesårsak.VURDERES_FOR_UFØRETRYGD,
         ),
         avslagsårsaker = listOf(
@@ -60,12 +59,11 @@ enum class Vilkårtype(
     ),
     OVERGANGARBEIDVILKÅRET(
         kode = "AAP-17",
-        spesielleInnvilgelsesÅrsaker = listOf(
-            Innvilgelsesårsak.ARBEIDSSØKER,
-        ),
+        spesielleInnvilgelsesÅrsaker = emptyList(),
         avslagsårsaker = listOf(
             Avslagsårsak.MANGLENDE_DOKUMENTASJON,
-            Avslagsårsak.IKKE_RETT_PA_AAP_I_PERIODE_SOM_ARBEIDSSOKER
+            Avslagsårsak.IKKE_RETT_PA_AAP_I_PERIODE_SOM_ARBEIDSSOKER,
+            Avslagsårsak.VARIGHET_OVERSKREDET_ARBEIDSSØKER,
         ),
         hjemmel = "§ 11-17"
     ),

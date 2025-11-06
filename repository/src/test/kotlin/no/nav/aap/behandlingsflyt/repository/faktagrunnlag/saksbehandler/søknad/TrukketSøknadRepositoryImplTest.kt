@@ -12,16 +12,31 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅ
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
-import no.nav.aap.komponenter.verdityper.Bruker
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.verdityper.dokument.JournalpostId
-import org.junit.jupiter.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.Instant
 
 class TrukketSøknadRepositoryImplTest {
-    private val dataSource = InitTestDatabase.freshDatabase()
+    companion object {
+        private lateinit var dataSource: TestDataSource
+
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            dataSource = TestDataSource()
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun tearDown() = dataSource.close()
+    }
+
 
     @Test
     fun `read and write vurdering`() {
@@ -42,40 +57,28 @@ class TrukketSøknadRepositoryImplTest {
         )
 
         dataSource.transaction { connection ->
-            val repo = TrukketSøknadRepositoryImpl(connection)
-            Assertions.assertEquals(
-                emptyList<TrukketSøknadVurdering>(),
-                repo.hentTrukketSøknadVurderinger(behandling1)
-            )
+            val trukketSøknadRepo = TrukketSøknadRepositoryImpl(connection)
+            assertThat(trukketSøknadRepo.hentTrukketSøknadVurderinger(behandling1)).isEqualTo(emptyList<TrukketSøknadVurdering>())
         }
 
         dataSource.transaction { connection ->
-            val repo = TrukketSøknadRepositoryImpl(connection)
-            repo.lagreTrukketSøknadVurdering(
+            val trukketSøknadRepo = TrukketSøknadRepositoryImpl(connection)
+            trukketSøknadRepo.lagreTrukketSøknadVurdering(
                 behandling1,
                 vurdering1
             )
-            Assertions.assertEquals(
-                listOf(vurdering1),
-                repo.hentTrukketSøknadVurderinger(behandling1)
-            )
+            assertThat(trukketSøknadRepo.hentTrukketSøknadVurderinger(behandling1)).isEqualTo(listOf(vurdering1))
         }
 
 
         dataSource.transaction { connection ->
-            val repo = TrukketSøknadRepositoryImpl(connection)
+            val trukketSøknadRepo = TrukketSøknadRepositoryImpl(connection)
 
-            repo.kopier(behandling1, behandling2)
-            repo.lagreTrukketSøknadVurdering(behandling2, vurdering2)
+            trukketSøknadRepo.kopier(behandling1, behandling2)
+            trukketSøknadRepo.lagreTrukketSøknadVurdering(behandling2, vurdering2)
 
-            Assertions.assertEquals(
-                listOf(vurdering1),
-                repo.hentTrukketSøknadVurderinger(behandling1)
-            )
-            Assertions.assertEquals(
-                listOf(vurdering1, vurdering2),
-                repo.hentTrukketSøknadVurderinger(behandling2)
-            )
+            assertThat(trukketSøknadRepo.hentTrukketSøknadVurderinger(behandling1)).isEqualTo(listOf(vurdering1))
+            assertThat(trukketSøknadRepo.hentTrukketSøknadVurderinger(behandling2)).isEqualTo(listOf(vurdering1, vurdering2))
         }
     }
 

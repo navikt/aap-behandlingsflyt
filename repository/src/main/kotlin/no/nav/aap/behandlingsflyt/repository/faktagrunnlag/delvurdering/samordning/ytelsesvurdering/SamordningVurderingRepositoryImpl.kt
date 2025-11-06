@@ -33,19 +33,24 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
             setRowMapper {
                 // At denne kunne være nullable er egentlig rester fra tidligere. Vurder å slette
                 // grunnlag uten vurderinger?
-                hentSamordningVurderinger(it.getLongOrNull("vurderinger_id"))
+                it.getLongOrNull("vurderinger_id")?.let(::hentSamordningVurderinger)
             }
         }
     }
 
-    override fun hentHistoriskeVurderinger(sakId: SakId, behandlingId: BehandlingId): List<SamordningVurderingGrunnlag> {
+    override fun hentHistoriskeVurderinger(
+        sakId: SakId,
+        behandlingId: BehandlingId
+    ): List<SamordningVurderingGrunnlag> {
         val query = """
             SELECT VURDERINGER_ID
             FROM SAMORDNING_YTELSEVURDERING_GRUNNLAG GRUNNLAG 
                 JOIN BEHANDLING B1 ON B1.ID = GRUNNLAG.BEHANDLING_ID
+                LEFT JOIN AVBRYT_REVURDERING_GRUNNLAG AR ON AR.BEHANDLING_ID = B1.ID
             WHERE GRUNNLAG.AKTIV
             AND B1.SAK_ID = ?
-            AND B1.OPPRETTET_TID < (SELECT B2.OPPRETTET_TID FROM BEHANDLING B2 WHERE ID = ?)
+            AND B1.OPPRETTET_TID < (SELECT B2.OPPRETTET_TID FROM BEHANDLING B2 WHERE B2.ID = ?)
+            AND AR.BEHANDLING_ID IS NULL
         """.trimIndent()
 
         return connection.queryList(query) {
@@ -54,16 +59,12 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
                 setLong(2, behandlingId.id)
             }
             setRowMapper {
-                hentSamordningVurderinger(it.getLong("vurderinger_id"))!!
+                hentSamordningVurderinger(it.getLong("vurderinger_id"))
             }
         }
     }
 
-    private fun hentSamordningVurderinger(vurderingerId: Long?): SamordningVurderingGrunnlag? {
-        if (vurderingerId == null) {
-            return null
-        }
-
+    private fun hentSamordningVurderinger(vurderingerId: Long): SamordningVurderingGrunnlag {
         val vurderingerQuery = """
             SELECT sv.id as sv_id, sv.ytelse_type as sv_ytelse_type
             FROM SAMORDNING_VURDERING sv
@@ -80,7 +81,7 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
                     vurderingPerioder = hentSamordningVurderingPerioder(it.getLong("sv_id")),
                 )
             }
-        }
+        }.toSet()
 
         val fellesFelterSpørring = """
             SELECT begrunnelse, maksdato_endelig, frist_ny_revurdering, vurdert_av, opprettet_tid
@@ -109,7 +110,7 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
         return vurderingGrunnlag
     }
 
-    private fun hentSamordningVurderingPerioder(vurderingId: Long): List<SamordningVurderingPeriode> {
+    private fun hentSamordningVurderingPerioder(vurderingId: Long): Set<SamordningVurderingPeriode> {
         val query = """
             SELECT * FROM SAMORDNING_VURDERING_PERIODE WHERE vurdering_id = ?
         """.trimIndent()
@@ -125,7 +126,7 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
                     manuell = it.getBooleanOrNull("manuell"),
                 )
             }
-        }
+        }.toSet()
     }
 
 
@@ -188,7 +189,7 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
         }
     }
 
-    private fun deaktiverGrunnlag(behandlingId: BehandlingId) {
+    override fun deaktiverGrunnlag(behandlingId: BehandlingId) {
         connection.execute("UPDATE SAMORDNING_YTELSEVURDERING_GRUNNLAG set aktiv = false WHERE behandling_id = ? and aktiv = true") {
             setParams {
                 setLong(1, behandlingId.id)
@@ -221,13 +222,15 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
         val samordningVurderingYtelseIds = getSamordningYtelseVurderingIds(behandlingId)
         val samordningVurderingIds = getSamordningVurderingIds(samordningVurderingYtelseIds)
 
-        val deletedRows = connection.executeReturnUpdated("""
+        val deletedRows = connection.executeReturnUpdated(
+            """
             delete from samordning_ytelsevurdering_grunnlag where behandling_id = ?; 
             delete from samordning_vurdering_periode where vurdering_id = ANY(?::bigint[]);
             delete from samordning_vurdering where vurderinger_id = ANY(?::bigint[]);
             delete from samordning_vurderinger where id = ANY(?::bigint[]);
            
-        """.trimIndent()) {
+        """.trimIndent()
+        ) {
             setParams {
                 setLong(1, behandlingId.id)
                 setLongArray(2, samordningVurderingIds)

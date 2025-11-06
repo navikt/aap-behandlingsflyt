@@ -5,21 +5,25 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravInput
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeInformasjonskrav.YrkesskadeRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.adapter.YrkesskadeRegisterGateway
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Søknad
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.miljo.Miljø
@@ -34,7 +38,7 @@ class YrkesskadeInformasjonskrav private constructor(
     private val yrkesskadeRegisterGateway: YrkesskadeRegisterGateway,
     private val mottattDokumentRepository: MottattDokumentRepository,
     private val tidligereVurderinger: TidligereVurderinger,
-) : Informasjonskrav {
+) : Informasjonskrav<YrkesskadeInformasjonskrav.YrkesskadeInput, YrkesskadeRegisterdata> {
     override val navn = Companion.navn
 
     override fun erRelevant(
@@ -47,12 +51,33 @@ class YrkesskadeInformasjonskrav private constructor(
                 && (oppdatert.ikkeKjørtSisteKalenderdag() || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode)
     }
 
+    data class YrkesskadeInput(val person: Person, val fødselsdato: Fødselsdato) : InformasjonskravInput
 
-    override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
+    data class YrkesskadeRegisterdata(val yrkesskader: List<Yrkesskade>) : InformasjonskravRegisterdata
+
+    override fun klargjør(kontekst: FlytKontekstMedPerioder): YrkesskadeInput {
         val sak = sakService.hent(kontekst.sakId)
         val fødselsdato =
             requireNotNull(personopplysningRepository.hentBrukerPersonOpplysningHvisEksisterer(kontekst.behandlingId)?.fødselsdato)
-        val registerYrkesskade: List<Yrkesskade> = yrkesskadeRegisterGateway.innhent(sak.person, fødselsdato)
+
+        return YrkesskadeInput(person = sak.person, fødselsdato = fødselsdato)
+    }
+
+    override fun hentData(input: YrkesskadeInput): YrkesskadeRegisterdata {
+        val (person, fødselsdato) = input
+        val registerYrkesskade: List<Yrkesskade> = yrkesskadeRegisterGateway.innhent(person, fødselsdato)
+
+        return YrkesskadeRegisterdata(yrkesskader = registerYrkesskade)
+    }
+
+    override fun oppdater(
+        input: YrkesskadeInput,
+        registerdata: YrkesskadeRegisterdata,
+        kontekst: FlytKontekstMedPerioder
+    ): Informasjonskrav.Endret {
+        val sak = sakService.hent(kontekst.sakId)
+
+        val registerYrkesskade: List<Yrkesskade> = registerdata.yrkesskader
         val oppgittYrkesskade = oppgittYrkesskade(kontekst.sakId, sak.rettighetsperiode)
         val oppgittYrkesskadeUtenSkadedato = oppgittYrkesskade(kontekst.sakId, null)
         val yrkesskader = registerYrkesskade + listOfNotNull(oppgittYrkesskade, oppgittYrkesskadeUtenSkadedato)
@@ -126,13 +151,12 @@ class YrkesskadeInformasjonskrav private constructor(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
         ): YrkesskadeInformasjonskrav {
-            val sakRepository = repositoryProvider.provide<SakRepository>()
             val personopplysningRepository =
                 repositoryProvider.provide<PersonopplysningRepository>()
             val mottattDokumentRepository =
                 repositoryProvider.provide<MottattDokumentRepository>()
             return YrkesskadeInformasjonskrav(
-                SakService(sakRepository),
+                SakService(repositoryProvider),
                 repositoryProvider.provide(),
                 personopplysningRepository,
                 gatewayProvider.provide(),

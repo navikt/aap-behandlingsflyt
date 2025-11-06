@@ -22,7 +22,7 @@ class VurderKlageNayLøsning(
         required = true,
         defaultValue = VURDER_KLAGE_NAY_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`6003`
-) : AvklaringsbehovLøsning {
+) : EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return VurderKlageNayLøser(repositoryProvider).løs(kontekst, this)
     }

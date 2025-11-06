@@ -13,20 +13,35 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 
 
 class TjenestePensjonRepositoryImplTest {
-    private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
+    companion object {
+        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
+        private lateinit var dataSource: TestDataSource
+
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            dataSource = TestDataSource()
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun tearDown() = dataSource.close()
+    }
 
     @Test
     fun `kan lagre og hente tp ytelser`() {
-        val dataSource = InitTestDatabase.freshDatabase()
+        // FIXME db for hver test
         dataSource.transaction { dbConnect ->
             val sak = sak(dbConnect)
             val behandling = finnEllerOpprettBehandling(dbConnect, sak)
@@ -65,48 +80,59 @@ class TjenestePensjonRepositoryImplTest {
 
     @Test
     fun `test sletting`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
-            val sak = sak(connection)
-            val behandling = finnEllerOpprettBehandling(connection, sak)
-            val tjenestePensjonRepository = TjenestePensjonRepositoryImpl(connection)
-            tjenestePensjonRepository.lagre(
-                behandling.id,
-                listOf(TjenestePensjonForhold(
-                    ordning = TjenestePensjonOrdning(
-                        navn = "navn",
-                        tpNr = "tpNr",
-                        orgNr = "orgNr",
-                    ),
-                    ytelser = listOf( TjenestePensjonYtelse(
-                        innmeldtYtelseFom = null,
-                        ytelseType = YtelseTypeCode.BETINGET_TP,
-                        ytelseIverksattFom = LocalDate.of(2021, 1, 1),
-                        ytelseIverksattTom = LocalDate.of(2021, 12, 31),
-                        ytelseId = 1235L
-                    )),
+        TestDataSource().use { dataSource ->
+            dataSource.transaction { connection ->
+                val sak = sak(connection)
+                val behandling = finnEllerOpprettBehandling(connection, sak)
+                val tjenestePensjonRepository = TjenestePensjonRepositoryImpl(connection)
+                tjenestePensjonRepository.lagre(
+                    behandling.id,
+                    listOf(
+                        TjenestePensjonForhold(
+                            ordning = TjenestePensjonOrdning(
+                                navn = "navn",
+                                tpNr = "tpNr",
+                                orgNr = "orgNr",
+                            ),
+                            ytelser = listOf(
+                                TjenestePensjonYtelse(
+                                    innmeldtYtelseFom = null,
+                                    ytelseType = YtelseTypeCode.BETINGET_TP,
+                                    ytelseIverksattFom = LocalDate.of(2021, 1, 1),
+                                    ytelseIverksattTom = LocalDate.of(2021, 12, 31),
+                                    ytelseId = 1235L
+                                )
+                            ),
+                        )
+                    )
                 )
-            ))
-            tjenestePensjonRepository.lagre(
-                behandling.id,
-                listOf(TjenestePensjonForhold(
-                    ordning = TjenestePensjonOrdning(
-                        navn = "navn",
-                        tpNr = "tpNr",
-                        orgNr = "orgNr",
-                    ),
-                    ytelser = listOf( TjenestePensjonYtelse(
-                        innmeldtYtelseFom = null,
-                        ytelseType = YtelseTypeCode.BETINGET_TP,
-                        ytelseIverksattFom = LocalDate.of(2020, 1, 1),
-                        ytelseIverksattTom = LocalDate.of(2020, 12, 31),
-                        ytelseId = 1235L
-                    )),
+                tjenestePensjonRepository.lagre(
+                    behandling.id,
+                    listOf(
+                        TjenestePensjonForhold(
+                            ordning = TjenestePensjonOrdning(
+                                navn = "navn",
+                                tpNr = "tpNr",
+                                orgNr = "orgNr",
+                            ),
+                            ytelser = listOf(
+                                TjenestePensjonYtelse(
+                                    innmeldtYtelseFom = null,
+                                    ytelseType = YtelseTypeCode.BETINGET_TP,
+                                    ytelseIverksattFom = LocalDate.of(2020, 1, 1),
+                                    ytelseIverksattTom = LocalDate.of(2020, 12, 31),
+                                    ytelseId = 1235L
+                                )
+                            ),
+                        )
+                    )
                 )
-                ))
-            assertDoesNotThrow {
-                tjenestePensjonRepository.slett(behandling.id)
+                assertDoesNotThrow {
+                    tjenestePensjonRepository.slett(behandling.id)
+                }
             }
-        }}
+        }
+    }
 
     private fun sak(connection: DBConnection): Sak {
         return PersonOgSakService(

@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.mdc.LogKontekst
 import no.nav.aap.behandlingsflyt.mdc.LoggingKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -69,6 +70,7 @@ fun NormalOpenAPIRoute.mellomlagretVurderingApi(dataSource: DataSource, reposito
         route("/mellomlagret-vurdering/{referanse}/{avklaringsbehovkode}") {
             authorizedGet<BehandlingReferanseMedAvklaringsbehov, MellomlagretVurderingResponse>(
                 AuthorizationParamPathConfig(
+                    relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                     behandlingPathParam = BehandlingPathParam("referanse")
                 )
             ) { params ->
@@ -99,6 +101,7 @@ fun NormalOpenAPIRoute.mellomlagretVurderingApi(dataSource: DataSource, reposito
         route("/mellomlagret-vurdering/{referanse}/{avklaringsbehovkode}/slett") {
             authorizedPost<BehandlingReferanseMedAvklaringsbehov, Unit, Unit>(
                 AuthorizationParamPathConfig(
+                    relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                     behandlingPathParam = BehandlingPathParam("referanse")
                 )
             ) { params, _ ->

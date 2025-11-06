@@ -52,7 +52,7 @@ object UføreGateway : UføreRegisterGateway {
             body = uføreRequest
         )
 
-        val uri = url.resolve("pen/api/uforetrygd/uforehistorikk/perioder")
+        val uri = url.resolve("/api/uforetrygd/uforehistorikk/perioder")
         try {
             log.info("Henter uføregrad fra dato: ${uføreRequest.dato}")
             return client.post(

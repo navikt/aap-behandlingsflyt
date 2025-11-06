@@ -44,7 +44,7 @@ class AvklarOppfølgingNAYLøser(private val repositoryProvider: RepositoryProvi
 
 private fun resultat(
     kontekst: AvklaringsbehovKontekst,
-    repo: OppfølgingsBehandlingRepository,
+    oppfølgingsBehandlingsRepo: OppfølgingsBehandlingRepository,
     løsning: OppfølgingsoppgaveGrunnlagDto
 ): LøsningsResultat {
     val behandlingId = kontekst.behandlingId()
@@ -56,7 +56,7 @@ private fun resultat(
         }
     }
 
-    repo.lagre(behandlingId, løsning.tilOppfølgingsoppgaveGrunnlag(vurdertAv))
+    oppfølgingsBehandlingsRepo.lagre(behandlingId, løsning.tilOppfølgingsoppgaveGrunnlag(vurdertAv))
 
     return LøsningsResultat("Lagret oppfølgingsbehov for $behandlingId med vurdert av $vurdertAv")
 }

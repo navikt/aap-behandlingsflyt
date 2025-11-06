@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom
 
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -11,7 +12,8 @@ import java.time.LocalDateTime
 data class Sykdomsvurdering(
     val id: Long? = null,
     val begrunnelse: String,
-    val vurderingenGjelderFra: LocalDate?,
+    val vurderingenGjelderFra: LocalDate?, // TODO: Gjør påkrevd etter migrering
+    val vurderingenGjelderTil: LocalDate?,
     val dokumenterBruktIVurdering: List<JournalpostId>,
     val harSkadeSykdomEllerLyte: Boolean,
     val erSkadeSykdomEllerLyteVesentligdel: Boolean?,
@@ -23,31 +25,10 @@ data class Sykdomsvurdering(
     val kodeverk: String? = null,
     val hoveddiagnose: String? = null,
     val bidiagnoser: List<String>? = emptyList(),
+    val vurdertIBehandling: BehandlingId?, // TODO: Gjør påkrevd etter migrering
     val opprettet: Instant,
     val vurdertAv: Bruker,
 ) {
-    private fun erAndelNedsattNok(): Boolean {
-        return erNedsettelseIArbeidsevneMerEnnHalvparten == true || erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true
-    }
-
-    fun erOppfylt(behandlingType: TypeBehandling, kravDato: LocalDate): Boolean {
-        /* Det stemmer vel ikke å se på behandlingstypen her? For poenget er vel at vurderingen som gjelder
-         * fra kravdatoen (som som oftest stammer fra en førstegangsbehandling) har en viss varighet.
-         * Se `erOppfylt(LocalDate)` nedenfor.
-         */
-        return when (behandlingType) {
-            TypeBehandling.Førstegangsbehandling -> erOppfyltSettBortIfraVissVarighet() && erNedsettelseIArbeidsevneAvEnVissVarighet == true
-            TypeBehandling.Revurdering -> {
-                if (erFørsteVurdering(kravDato)) {
-                    erOppfyltSettBortIfraVissVarighet() && erNedsettelseIArbeidsevneAvEnVissVarighet == true
-                } else {
-                    erOppfyltSettBortIfraVissVarighet()
-                }
-            }
-
-            else -> error("Ugyldig behandlingsType: $behandlingType for vurdering av sykdom.")
-        }
-    }
 
     /* Denne metoden må sannsynligvis generaliseres når vi skal implementere gjeninntreden etter opphør. */
     fun erFørsteVurdering(kravdato: LocalDate): Boolean {
@@ -60,8 +41,19 @@ data class Sykdomsvurdering(
                 else true
     }
 
+    fun erOppfyltForYrkesskade(): Boolean {
+        return harSkadeSykdomEllerLyte
+                && erArbeidsevnenNedsatt == true
+                && erSkadeSykdomEllerLyteVesentligdel == true
+                && (erNedsettelseIArbeidsevneMerEnnHalvparten == true
+                || erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true) // trengs viss varighet for yrkesskade?
+    }
+
     fun erOppfyltSettBortIfraVissVarighet(): Boolean {
-        return harSkadeSykdomEllerLyte && erArbeidsevnenNedsatt == true && erSkadeSykdomEllerLyteVesentligdel == true && erAndelNedsattNok()
+        return harSkadeSykdomEllerLyte
+                && erArbeidsevnenNedsatt == true
+                && erSkadeSykdomEllerLyteVesentligdel == true
+                && erNedsettelseIArbeidsevneMerEnnHalvparten == true
     }
 
     fun erKonsistentForSykdom(harYrkesskadeRegistrert: Boolean, typeBehandling: TypeBehandling): Boolean {

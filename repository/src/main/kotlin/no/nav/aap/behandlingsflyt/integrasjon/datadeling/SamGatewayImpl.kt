@@ -51,11 +51,10 @@ class SamGatewayImpl : SamGateway {
                 additionalHeaders = listOf(Header("pid", ident.identifikator))
             ),
             mapper = { body, _ ->
-                logger.info("respons fra SAM ved henting av samId: $body")
                 val respons = DefaultJsonMapper.fromJson<List<SamordningsvedtakApi>>(body).first()
+                logger.info("respons fra SAM ved henting av samId: $respons")
                 require(respons.samordningsmeldinger.size<2 && respons.samordningsmeldinger.isNotEmpty()) {"for mangen eller for få samordningsmeldinger i responsen fra SAM ved henting av samId. Antall samordningsmeldinger: ${respons.samordningsmeldinger.size}"}
-                val res = respons.samordningsmeldinger.first().samId
-                return@get res
+                respons.samordningsmeldinger.first().samId
             }
         ))
     }

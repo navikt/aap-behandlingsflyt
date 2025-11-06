@@ -1,18 +1,15 @@
 package no.nav.aap.behandlingsflyt.behandling.oppholdskrav
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.LøsningForPeriode
 import java.time.LocalDate
 
-data class AvklarOppholdskravLøsningDto(
-    val perioder: List<AvklarOppholdkravLøsningPeriodeDto>,
-)
-
-data class AvklarOppholdkravLøsningPeriodeDto(
+data class AvklarOppholdkravLøsningForPeriodeDto(
+    override val begrunnelse: String,
+    override val fom: LocalDate,
+    override val tom: LocalDate? = null,
     val oppfylt: Boolean,
-    val begrunnelse: String,
     val land: String?,
-    val fom: LocalDate,
-    val tom: LocalDate? = null,
-){
+): LøsningForPeriode {
     fun tilOppholdskravPeriode() = OppholdskravPeriode(
         fom = fom,
         tom = tom,

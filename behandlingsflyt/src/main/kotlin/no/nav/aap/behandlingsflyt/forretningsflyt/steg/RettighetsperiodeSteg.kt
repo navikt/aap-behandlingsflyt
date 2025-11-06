@@ -51,6 +51,7 @@ class RettighetsperiodeSteg(
 
                     VurderingType.MELDEKORT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
+                    VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
                     VurderingType.IKKE_RELEVANT ->
                         false
                 }
@@ -68,14 +69,19 @@ class RettighetsperiodeSteg(
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
             VurderingType.REVURDERING -> {
-                if (tidligereVurderinger.muligMedRettTilAAP(kontekst, type()) && manueltTriggetVurderingsbehov(kontekst)) {
+                if (tidligereVurderinger.muligMedRettTilAAP(
+                        kontekst,
+                        type()
+                    ) && manueltTriggetVurderingsbehov(kontekst)
+                ) {
                     oppdaterVilkårsresultatForNyPeriode(kontekst)
                 }
             }
 
             VurderingType.IKKE_RELEVANT,
             VurderingType.MELDEKORT,
-            VurderingType.EFFEKTUER_AKTIVITETSPLIKT -> {
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT, 
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9 -> {
                 // Ikke relevant
             }
         }
@@ -90,7 +96,8 @@ class RettighetsperiodeSteg(
         // HELHETLIG_VURDERING skal kun trigge avklaringsbehov dersom det tidligere er lagt inn overstyring av
         // rettighetsperiode. Hvis ikke må alle behandlinger vurdere denne ved helhetlig vurdering.
         if (kontekst.vurderingsbehovRelevanteForSteg.contains(Vurderingsbehov.HELHETLIG_VURDERING)
-            && rettighetsperiodeRepository.hentVurdering(kontekst.behandlingId) != null) {
+            && rettighetsperiodeRepository.hentVurdering(kontekst.behandlingId) != null
+        ) {
             return true
         }
         return false
@@ -116,7 +123,10 @@ class RettighetsperiodeSteg(
     }
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): BehandlingSteg {
             return RettighetsperiodeSteg(
                 vilkårsresultatRepository = repositoryProvider.provide(),
                 sakService = SakService(repositoryProvider),

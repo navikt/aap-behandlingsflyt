@@ -52,12 +52,12 @@ class SamordningRepositoryImpl(private val connection: DBConnection) : Samordnin
                     Prosent(it.getInt("gradering"))
                 )
             }
-        }.toList()
+        }.toSet()
 
         return SamordningGrunnlag(row.getLong("id"), samordningPerioder)
     }
 
-    override fun lagre(behandlingId: BehandlingId, samordningPerioder: List<SamordningPeriode>, input: Faktagrunnlag) {
+    override fun lagre(behandlingId: BehandlingId, samordningPerioder: Set<SamordningPeriode>, input: Faktagrunnlag) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         val eksisterendePerioder = eksisterendeGrunnlag?.samordningPerioder.orEmpty()
 
@@ -72,7 +72,7 @@ class SamordningRepositoryImpl(private val connection: DBConnection) : Samordnin
 
     private fun lagreNyttGrunnlag(
         behandlingId: BehandlingId,
-        samordningPerioder: List<SamordningPeriode>,
+        samordningPerioder: Set<SamordningPeriode>,
         input: Faktagrunnlag
     ) {
         val samordningeneQuery = """
@@ -103,7 +103,7 @@ class SamordningRepositoryImpl(private val connection: DBConnection) : Samordnin
         }
     }
 
-    private fun deaktiverGrunnlag(behandlingId: BehandlingId) {
+    fun deaktiverGrunnlag(behandlingId: BehandlingId) {
         connection.execute("UPDATE SAMORDNING_GRUNNLAG set aktiv = false WHERE behandling_id = ? and aktiv = true") {
             setParams {
                 setLong(1, behandlingId.toLong())
@@ -116,12 +116,14 @@ class SamordningRepositoryImpl(private val connection: DBConnection) : Samordnin
 
         val smaordningPerioderIds = getSamordningPerioderIds(behandlingId)
 
-        val deletedRows = connection.executeReturnUpdated("""
+        val deletedRows = connection.executeReturnUpdated(
+            """
             delete from samordning_grunnlag where behandling_id = ?; 
             delete from samordning_periode where perioder_id = ANY(?::bigint[]);
             delete from samordning_perioder where id = ANY(?::bigint[]);
           
-        """.trimIndent()) {
+        """.trimIndent()
+        ) {
             setParams {
                 setLong(1, behandlingId.id)
                 setLongArray(2, smaordningPerioderIds)

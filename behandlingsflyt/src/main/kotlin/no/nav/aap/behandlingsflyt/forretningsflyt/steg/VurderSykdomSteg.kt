@@ -67,12 +67,15 @@ class VurderSykdomSteg private constructor(
             VurderingType.MELDEKORT -> false
             VurderingType.IKKE_RELEVANT -> false
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT -> false
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9 -> false
         }
     }
 
     fun tilstrekkeligVurdert(kontekst: FlytKontekstMedPerioder): Boolean {
         val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)
-        return sykdomGrunnlag != null && sykdomGrunnlag.sykdomsvurderinger.isNotEmpty()
+        return sykdomGrunnlag != null
+                && sykdomGrunnlag.sykdomsvurderinger.isNotEmpty()
+                && sykdomGrunnlag.somSykdomsvurderingstidslinje(kontekst.rettighetsperiode.fom).helePerioden().inneholder(kontekst.rettighetsperiode)
     }
 
     companion object : FlytSteg {

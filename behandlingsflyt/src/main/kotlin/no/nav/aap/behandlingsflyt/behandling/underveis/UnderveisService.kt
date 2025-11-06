@@ -1,11 +1,14 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis
 
 import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedUtlederService
+import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlagRepository
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.AapEtterRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.GraderingArbeidRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.InstitusjonRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MapInstitusjonoppholdTilRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktRegel
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.OppholdskravRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.SammenstiltAktivitetspliktRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.SoningRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UnderveisInput
@@ -13,7 +16,6 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UtledMeldeperiodeR
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Vurdering
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
@@ -29,6 +31,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Oversty
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.verdityper.Dagsatser
@@ -37,7 +40,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import kotlin.reflect.KClass
 
 class UnderveisService(
-    private val behandlingService: SakOgBehandlingService,
+    private val sakService: SakService,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val meldekortRepository: MeldekortRepository,
     private val underveisRepository: UnderveisRepository,
@@ -47,10 +50,11 @@ class UnderveisService(
     private val meldepliktRepository: MeldepliktRepository,
     private val overstyringMeldepliktRepository: OverstyringMeldepliktRepository,
     private val meldeperiodeRepository: MeldeperiodeRepository,
+    private val oppholdskravRepository: OppholdskravGrunnlagRepository,
     private val vedtakService: VedtakService,
 ) {
-    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): this(
-        behandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
+        sakService = SakService(repositoryProvider),
         vilkårsresultatRepository = repositoryProvider.provide(),
         meldekortRepository = repositoryProvider.provide(),
         underveisRepository = repositoryProvider.provide(),
@@ -60,6 +64,7 @@ class UnderveisService(
         meldepliktRepository = repositoryProvider.provide(),
         meldeperiodeRepository = repositoryProvider.provide(),
         overstyringMeldepliktRepository = repositoryProvider.provide(),
+        oppholdskravRepository = repositoryProvider.provide(),
         vedtakService = VedtakService(repositoryProvider),
     )
 
@@ -70,6 +75,7 @@ class UnderveisService(
             AapEtterRegel(),
             UtledMeldeperiodeRegel(),
             InstitusjonRegel(),
+            OppholdskravRegel(),
             SoningRegel(),
             MeldepliktRegel(),
             SammenstiltAktivitetspliktRegel(),
@@ -131,7 +137,7 @@ class UnderveisService(
     }
 
     private fun genererInput(sakId: SakId, behandlingId: BehandlingId): UnderveisInput {
-        val sak = behandlingService.hentSakFor(behandlingId)
+        val sak = sakService.hentSakFor(behandlingId)
         val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
 
         val meldekortGrunnlag = meldekortRepository.hentHvisEksisterer(behandlingId)
@@ -156,6 +162,9 @@ class UnderveisService(
 
         val meldeperioder = meldeperiodeRepository.hent(behandlingId)
 
+        val oppholdskravGrunnlag = oppholdskravRepository.hentHvisEksisterer(behandlingId)
+            ?: OppholdskravGrunnlag(vurderinger = emptyList())
+
         val vedtaksdatoFørstegangsbehandling = vedtakService.vedtakstidspunktFørstegangsbehandling(sakId)
 
         return UnderveisInput(
@@ -170,6 +179,7 @@ class UnderveisService(
             arbeidsevneGrunnlag = arbeidsevneGrunnlag,
             meldepliktGrunnlag = meldepliktGrunnlag,
             overstyringMeldepliktGrunnlag = overstyringMeldepliktGrunnlag,
+            oppholdskravGrunnlag = oppholdskravGrunnlag,
             meldeperioder = meldeperioder,
             vedtaksdatoFørstegangsbehandling = vedtaksdatoFørstegangsbehandling?.toLocalDate(),
         )

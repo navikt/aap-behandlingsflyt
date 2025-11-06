@@ -12,10 +12,27 @@ updates:
       directory: /
       schedule:
           interval: daily
+
     - package-ecosystem: gradle
       directory: /
       schedule:
           interval: daily
+      cooldown:
+        default-days: 3
+        exclude:
+          - "no.nav.aap*"
+      groups:
+        minor:
+          applies-to: version-updates
+          exclude-patterns:
+            - "no.nav.aap*"
+          update-types:
+            - "minor"
+            - "patch"
+        aap:
+          patterns:
+            - "no.nav.aap*"
+
       registries:
           - maven-github
     - package-ecosystem: docker

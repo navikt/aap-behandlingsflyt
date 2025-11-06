@@ -6,7 +6,8 @@ import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.VurderRettighetsp
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingInformasjonskrav
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.AktivitetspliktInformasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Aktivitetsplikt11_7Informasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Aktivitetsplikt11_9Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.søknad.SøknadInformasjonskrav
@@ -61,6 +62,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderAlderSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderBistandsbehovSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderForutgåendeMedlemskapSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderLovvalgSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderOppholdskravSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderStudentSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykdomSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykepengeErstatningSteg
@@ -116,7 +118,11 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = VurderSykdomSteg,
                 // UføreService trengs her for å trigge ytterligere nedsatt arbeidsevne-vurdering
-                informasjonskrav = listOf(YrkesskadeInformasjonskrav, LegeerklæringInformasjonskrav, UføreInformasjonskrav),
+                informasjonskrav = listOf(
+                    YrkesskadeInformasjonskrav,
+                    LegeerklæringInformasjonskrav,
+                    UføreInformasjonskrav
+                ),
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
                     Vurderingsbehov.MOTTATT_DIALOGMELDING,
@@ -125,6 +131,8 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
                     Vurderingsbehov.HELHETLIG_VURDERING,
                     Vurderingsbehov.DØDSFALL_BRUKER,
+                    Vurderingsbehov.REVURDER_LOVVALG,
+                    Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
                 )
             )
             .medSteg(
@@ -136,6 +144,8 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
                     Vurderingsbehov.HELHETLIG_VURDERING,
                     Vurderingsbehov.DØDSFALL_BRUKER,
+                    Vurderingsbehov.REVURDER_LOVVALG,
+                    Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
                 )
             )
             .medSteg(
@@ -146,6 +156,8 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
                     Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
                     Vurderingsbehov.HELHETLIG_VURDERING,
+                    Vurderingsbehov.REVURDER_LOVVALG,
+                    Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
                 )
             )
             .medSteg(
@@ -156,6 +168,8 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
                     Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
                     Vurderingsbehov.HELHETLIG_VURDERING,
+                    Vurderingsbehov.REVURDER_LOVVALG,
+                    Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
                 )
             )
             .medSteg(
@@ -167,29 +181,30 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
                     Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
                     Vurderingsbehov.HELHETLIG_VURDERING,
+                    Vurderingsbehov.REVURDER_LOVVALG,
+                    Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
                 )
             )
-            .apply {
-                // TODO legge ut 11-17 når det er klart
-                if (Miljø.erLokal()) {
-                    medSteg(
-                        steg = OvergangArbeidSteg,
-                        vurderingsbehovRelevanteForSteg = listOf(
-                            Vurderingsbehov.MOTTATT_SØKNAD,
-                            Vurderingsbehov.MOTTATT_DIALOGMELDING,
-                            Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
-                            Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
-                            Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
-                            Vurderingsbehov.HELHETLIG_VURDERING,
-                        )
-                    )
-                }
-            }
+            .medSteg(
+                steg = OvergangArbeidSteg,
+                vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.MOTTATT_DIALOGMELDING,
+                    Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
+                    Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
+                    Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
+                    Vurderingsbehov.HELHETLIG_VURDERING,
+                    Vurderingsbehov.REVURDER_LOVVALG,
+                    Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
+                )
+            )
             .medSteg(
                 steg = RefusjonkravSteg, vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
                     Vurderingsbehov.MOTTATT_DIALOGMELDING,
                     Vurderingsbehov.HELHETLIG_VURDERING,
+                    Vurderingsbehov.REVURDER_LOVVALG,
+                    Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
                 )
             )
             .medSteg(
@@ -200,6 +215,8 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
                     Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
                     Vurderingsbehov.HELHETLIG_VURDERING,
+                    Vurderingsbehov.REVURDER_LOVVALG,
+                    Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
                 )
             )
             .medSteg(steg = KvalitetssikringsSteg)
@@ -212,6 +229,8 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
                     Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
                     Vurderingsbehov.HELHETLIG_VURDERING,
+                    Vurderingsbehov.REVURDER_LOVVALG,
+                    Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
                 )
             )
             .medSteg(
@@ -222,6 +241,8 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
                     Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
                     Vurderingsbehov.HELHETLIG_VURDERING,
+                    Vurderingsbehov.REVURDER_LOVVALG,
+                    Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
                 )
             )
             .medSteg(steg = FastsettSykdomsvilkåretSteg)
@@ -231,6 +252,8 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.REVURDER_BEREGNING,
                     Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
                     Vurderingsbehov.HELHETLIG_VURDERING,
+                    Vurderingsbehov.REVURDER_LOVVALG,
+                    Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
                 )
             )
             .medSteg(steg = VisGrunnlagSteg)
@@ -243,6 +266,8 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.REVURDER_YRKESSKADE,
                     Vurderingsbehov.REVURDER_MANUELL_INNTEKT,
                     Vurderingsbehov.HELHETLIG_VURDERING,
+                    Vurderingsbehov.REVURDER_LOVVALG,
+                    Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
                 )
             )
             .medSteg(
@@ -253,11 +278,16 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.REVURDER_MANUELL_INNTEKT,
                     Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
                     Vurderingsbehov.HELHETLIG_VURDERING,
+                    Vurderingsbehov.REVURDER_LOVVALG,
+                    Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
                 )
             )
             .medSteg(
                 steg = VurderForutgåendeMedlemskapSteg,
-                informasjonskrav = listOf(PersonopplysningForutgåendeInformasjonskrav, ForutgåendeMedlemskapInformasjonskrav),
+                informasjonskrav = listOf(
+                    PersonopplysningForutgåendeInformasjonskrav,
+                    ForutgåendeMedlemskapInformasjonskrav
+                ),
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
                     Vurderingsbehov.REVURDER_MEDLEMSKAP,
@@ -265,8 +295,22 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT,
                     Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
                     Vurderingsbehov.HELHETLIG_VURDERING,
+                    Vurderingsbehov.REVURDER_LOVVALG,
+                    Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
                 )
             )
+            .apply {
+                if(!Miljø.erProd()) {
+                    medSteg(
+                        steg = VurderOppholdskravSteg,
+                        vurderingsbehovRelevanteForSteg = listOf(
+                            Vurderingsbehov.MOTTATT_SØKNAD,
+                            Vurderingsbehov.OPPHOLDSKRAV,
+                            Vurderingsbehov.HELHETLIG_VURDERING,
+                        )
+                    )
+                }
+            }
             .medSteg(
                 // TODO: Midlertidig duplikat av BarnService, skal på sikt kun være i StartBehandlingSteg
                 informasjonskrav = listOf(BarnInformasjonskrav),
@@ -276,8 +320,10 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.BARNETILLEGG,
                     Vurderingsbehov.DØDSFALL_BARN,
                     Vurderingsbehov.HELHETLIG_VURDERING,
-                    Vurderingsbehov.VURDER_RETTIGHETSPERIODE
-                )
+                    Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
+                    Vurderingsbehov.REVURDER_LOVVALG,
+                    Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP
+                    )
             )
             .medSteg(
                 steg = EtAnnetStedSteg,
@@ -289,36 +335,51 @@ object Revurdering : BehandlingType {
                 informasjonskrav = listOf(SamordningYtelseVurderingInformasjonskrav),
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.SAMORDNING_OG_AVREGNING,
-                    Vurderingsbehov.REVURDER_SAMORDNING,
+                    Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER,
                     Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
                     Vurderingsbehov.HELHETLIG_VURDERING,
+                    Vurderingsbehov.REVURDER_LOVVALG,
+                    Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
                 ),
             )
-            .medSteg(steg = SamordningUføreSteg, informasjonskrav = listOf(UføreInformasjonskrav))
-            .medSteg(steg = TjenestepensjonRefusjonskravSteg, informasjonskrav = listOf(TjenestePensjonInformasjonskrav))
+            .medSteg(
+                steg = SamordningUføreSteg,
+                informasjonskrav = listOf(UføreInformasjonskrav),
+                vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.REVURDER_SAMORDNING_UFØRE)
+            )
+            .medSteg(
+                steg = TjenestepensjonRefusjonskravSteg,
+                informasjonskrav = listOf(TjenestePensjonInformasjonskrav),
+                vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.REVURDER_SAMORDNING_TJENESTEPENSJON)
+            )
             .medSteg(
                 steg = SamordningAndreStatligeYtelserSteg,
                 vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.MOTTATT_SØKNAD,
                     Vurderingsbehov.SAMORDNING_OG_AVREGNING,
-                    Vurderingsbehov.REVURDER_SAMORDNING,
+                    Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER,
                     Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
                     Vurderingsbehov.HELHETLIG_VURDERING,
+                    Vurderingsbehov.REVURDER_LOVVALG,
+                    Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
                 )
             )
             .medSteg(
                 steg = SamordningArbeidsgiverSteg,
+                vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.REVURDER_SAMORDNING_ARBEIDSGIVER)
             )
             .medSteg(steg = SamordningAvslagSteg)
             .medSteg(
                 steg = IkkeOppfyltMeldepliktSteg,
                 vurderingsbehovRelevanteForSteg = Vurderingsbehov.alleInklusivGRegulering(),
-                informasjonskrav = listOf(MeldekortInformasjonskrav, AktivitetspliktInformasjonskrav)
+                informasjonskrav = listOf(MeldekortInformasjonskrav, Aktivitetsplikt11_7Informasjonskrav)
             )
             .medSteg(steg = UnderveisSteg)
             .medSteg(steg = Effektuer11_7Steg)
             .medSteg(
                 steg = BeregnTilkjentYtelseSteg,
-                vurderingsbehovRelevanteForSteg = Vurderingsbehov.alleInklusivGRegulering()
+                vurderingsbehovRelevanteForSteg = Vurderingsbehov.alleInklusivGRegulering(),
+                informasjonskrav = listOf(Aktivitetsplikt11_9Informasjonskrav)
             )
             .medSteg(
                 steg = SimulerUtbetalingSteg,

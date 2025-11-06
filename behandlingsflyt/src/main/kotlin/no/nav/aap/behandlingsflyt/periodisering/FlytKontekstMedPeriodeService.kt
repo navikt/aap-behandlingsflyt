@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.IKKE_RELEVA
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.MELDEKORT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.REVURDERING
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.EFFEKTUER_AKTIVITETSPLIKT
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -36,6 +37,7 @@ class FlytKontekstMedPeriodeService(
                 forrigeBehandlingId = kontekst.forrigeBehandlingId,
                 behandlingType = kontekst.behandlingType,
                 vurderingType = FØRSTEGANGSBEHANDLING,
+                vurderingTypeRelevantForSteg = FØRSTEGANGSBEHANDLING,
                 rettighetsperiode = sak.rettighetsperiode,
                 vurderingsbehovRelevanteForSteg = behandling.vurderingsbehov().map { it.type }.toSet()
             )
@@ -53,7 +55,8 @@ class FlytKontekstMedPeriodeService(
             behandlingId = kontekst.behandlingId,
             forrigeBehandlingId = kontekst.forrigeBehandlingId,
             behandlingType = kontekst.behandlingType,
-            vurderingType = prioritertType(relevanteVurderingsbehov.map { vurderingsbehovTilType(it) }.toSet()),
+            vurderingType = prioritertType(behandling.vurderingsbehov().map { vurderingsbehovTilType(it.type) }.toSet()),
+            vurderingTypeRelevantForSteg = prioritertType(relevanteVurderingsbehov.map { vurderingsbehovTilType(it) }.toSet()),
             rettighetsperiode = sak.rettighetsperiode,
             vurderingsbehovRelevanteForSteg = relevanteVurderingsbehov
         )
@@ -65,6 +68,7 @@ class FlytKontekstMedPeriodeService(
             REVURDERING in vurderingTyper -> REVURDERING
             MELDEKORT in vurderingTyper -> MELDEKORT
             EFFEKTUER_AKTIVITETSPLIKT in vurderingTyper -> EFFEKTUER_AKTIVITETSPLIKT
+            EFFEKTUER_AKTIVITETSPLIKT_11_9 in vurderingTyper -> EFFEKTUER_AKTIVITETSPLIKT_11_9
             else -> IKKE_RELEVANT
         }
     }
@@ -85,12 +89,18 @@ class FlytKontekstMedPeriodeService(
             Vurderingsbehov.REVURDER_YRKESSKADE,
             Vurderingsbehov.REVURDER_LOVVALG,
             Vurderingsbehov.REVURDER_SAMORDNING,
+            Vurderingsbehov.REVURDER_STUDENT,
             Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
             Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP,
             Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
             Vurderingsbehov.BARNETILLEGG,
             Vurderingsbehov.INSTITUSJONSOPPHOLD,
             Vurderingsbehov.SAMORDNING_OG_AVREGNING,
+            Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER,
+            Vurderingsbehov.REVURDER_SAMORDNING_UFØRE,
+            Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER,
+            Vurderingsbehov.REVURDER_SAMORDNING_ARBEIDSGIVER,
+            Vurderingsbehov.REVURDER_SAMORDNING_TJENESTEPENSJON,
             Vurderingsbehov.REFUSJONSKRAV,
             Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
             Vurderingsbehov.SØKNAD_TRUKKET,
@@ -112,11 +122,12 @@ class FlytKontekstMedPeriodeService(
             Vurderingsbehov.FRITAK_MELDEPLIKT -> MELDEKORT
 
             Vurderingsbehov.MOTATT_KLAGE,
-            Vurderingsbehov.KLAGE_TRUKKET, Vurderingsbehov.MOTTATT_KABAL_HENDELSE ->
+            Vurderingsbehov.KLAGE_TRUKKET, Vurderingsbehov.MOTTATT_KABAL_HENDELSE,  ->
                 IKKE_RELEVANT // TODO: Verifiser at dette er korrekt.
             Vurderingsbehov.OPPFØLGINGSOPPGAVE -> IKKE_RELEVANT
             Vurderingsbehov.AKTIVITETSPLIKT_11_7, Vurderingsbehov.AKTIVITETSPLIKT_11_9 -> IKKE_RELEVANT
             Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT -> EFFEKTUER_AKTIVITETSPLIKT
+            Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9 -> EFFEKTUER_AKTIVITETSPLIKT_11_9
         }
     }
 }

@@ -8,7 +8,8 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import java.time.LocalDate
 
-class Sykdomsvilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<SykdomsFaktagrunnlag> {
+class Sykdomsvilkår(vilkårsresultat: Vilkårsresultat) :
+    Vilkårsvurderer<SykdomsFaktagrunnlag> {
     private val regelTidslinje = Tidslinje(
         listOf(
             Segment(
@@ -20,9 +21,7 @@ class Sykdomsvilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<Sykd
 
     override fun vurder(grunnlag: SykdomsFaktagrunnlag) {
         val segment = regelTidslinje.segment(grunnlag.kravDato)
-        if (segment == null) {
-            throw IllegalArgumentException("Fant ikke regler for vurderingsdato ${grunnlag.kravDato}")
-        }
+            ?: error("Fant ikke regler for vurderingsdato ${grunnlag.kravDato}")
         val regel = segment.verdi
 
         regel.vurder(grunnlag)

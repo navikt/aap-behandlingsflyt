@@ -19,7 +19,7 @@ class SkrivBrevLøsning(
     @param:JsonProperty("mottakere") val mottakere: List<MottakerDto> = emptyList(),
     @param:JsonProperty("behovstype", required = true, defaultValue = SKRIV_BREV_KODE)
     val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5050`
-) : AvklaringsbehovLøsning {
+) : EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return SkrivBrevLøser(repositoryProvider, gatewayProvider).løs(kontekst, this)
     }

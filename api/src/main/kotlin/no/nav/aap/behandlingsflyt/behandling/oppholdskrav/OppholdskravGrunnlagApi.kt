@@ -12,10 +12,14 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import java.time.LocalDate
@@ -30,6 +34,7 @@ fun NormalOpenAPIRoute.oppholdskravGrunnlagApi(
 
     route("/api/behandling/{referanse}/grunnlag/oppholdskrav") {
         getGrunnlag<BehandlingReferanse, OppholdskravGrunnlagResponse>(
+            relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
             avklaringsbehovKode = Definisjon.AVKLAR_OPPHOLDSKRAV.kode.toString(),
         ) { req ->
@@ -38,23 +43,30 @@ fun NormalOpenAPIRoute.oppholdskravGrunnlagApi(
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val oppholdskravRepository = repositoryProvider.provide<OppholdskravGrunnlagRepository>()
+                    val sakRepository = repositoryProvider.provide<SakRepository>()
 
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
 
-                    val grunnlag = oppholdskravRepository.hentHvisEksisterer(behandling.id) ?: return@transaction null
+                    val sak = sakRepository.hent(behandling.sakId)
 
-                    val vurdering = grunnlag.vurderinger.firstOrNull { it.vurdertIBehandling == behandling.id }
-                    val gjeldendeVedtatteVurderinger = grunnlag.vurderinger.filter { it.vurdertIBehandling != behandling.id }
+                    val grunnlag = oppholdskravRepository.hentHvisEksisterer(behandling.id)
+
+                    val vurdering = grunnlag?.vurderinger?.firstOrNull { it.vurdertIBehandling == behandling.id }
+                    val gjeldendeVedtatteVurderinger = grunnlag?.vurderinger?.filter { it.vurdertIBehandling != behandling.id }?.tilTidslinje().orEmpty()
+
+                    val perioderSomTrengerVurdering = if (gjeldendeVedtatteVurderinger.isEmpty()) listOf(sak.rettighetsperiode) else sak.rettighetsperiode.minus(gjeldendeVedtatteVurderinger.helePerioden())
 
                     OppholdskravGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
-                        oppholdskravVurdering = vurdering?.tilDto(ansattInfoService),
-                        gjeldendeVedtatteVurderinger = gjeldendeVedtatteVurderinger
-                            .tilTidslinje()
+                        behøverVurderinger = perioderSomTrengerVurdering.toList(),
+                        kanVurderes = listOf(sak.rettighetsperiode),
+                        nyeVurderinger = vurdering?.tilDto(ansattInfoService) ?: emptyList(),
+                        sisteVedtatteVurderinger = gjeldendeVedtatteVurderinger
+                            .komprimer()
                             .segmenter()
                             .map { segment ->
-                                TidligereOppholdskravVurderingDto(
+                                OppholdskravVurderingDto(
                                     vurdertAv = VurdertAvResponse.fraIdent(segment.verdi.vurdertAv, segment.verdi.opprettet.toLocalDate(), ansattInfoService),
                                     fom = segment.fom(),
                                     tom = if (segment.tom().isEqual( LocalDate.MAX)) null else segment.tom(),
@@ -65,12 +77,7 @@ fun NormalOpenAPIRoute.oppholdskravGrunnlagApi(
                             }
                     )
                 }
-
-            if(oppholdskravGrunnlag == null) {
-                respondWithStatus(HttpStatusCode.NoContent)
-            } else {
-                respond(oppholdskravGrunnlag)
-            }
+            respond(oppholdskravGrunnlag)
         }
     }
 }

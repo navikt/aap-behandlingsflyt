@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarBistandLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
@@ -16,8 +15,11 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderBistandsbehovSteg
 import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.AVKLAR_SYKDOM
+import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.bistand.BistandRepositoryImpl
@@ -25,6 +27,7 @@ import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
@@ -35,16 +38,33 @@ import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.time.LocalDate
 
 class BistandsvilkåretTest {
-    private val dataSource = InitTestDatabase.freshDatabase()
+    companion object {
+        private val now = LocalDate.now()
+        private val periode = Periode(now, LocalDate.now().plusYears(3))
+
+        private lateinit var dataSource: TestDataSource
+
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            dataSource = TestDataSource()
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun tearDown() = dataSource.close()
+    }
 
     private val gatewayProvider = createGatewayProvider {
         register<FakeUnleash>()
@@ -116,37 +136,6 @@ class BistandsvilkåretTest {
         assertThat(vilkår.vilkårsperioder().last().periode.fom).isEqualTo(iDag.plusDays(10))
     }
 
-    @Test
-    fun `Skal kunne innvilge 11-18`() {
-        val vilkårsresultat = Vilkårsresultat()
-        vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.BISTANDSVILKÅRET)
-
-        val iDag = LocalDate.now()
-        Bistandsvilkåret(vilkårsresultat).vurder(
-            BistandFaktagrunnlag(
-                vurderingsdato = iDag,
-                sisteDagMedMuligYtelse = LocalDate.now().plusYears(3),
-                vurderinger = listOf(
-                    bistandvurdering(),
-                    bistandvurdering(
-                        vurderingenGjelderFra = iDag.plusDays(10),
-                        erBehovForAktivBehandling = false,
-                        erBehovForAnnenOppfølging = false,
-                        erBehovForArbeidsrettetTiltak = false,
-                        skalVurdereAapIOvergangTilArbeid = true,
-                        skalVurdereAapIOvergangTilUføre = false
-                    )
-                ),
-                studentvurdering = null
-            )
-        )
-
-        val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
-
-        assertThat(vilkår.vilkårsperioder()).hasSize(2)
-        assertThat(vilkår.vilkårsperioder()).allMatch { it.utfall == Utfall.OPPFYLT }
-        assertThat(vilkår.vilkårsperioder().last().innvilgelsesårsak).isEqualTo(Innvilgelsesårsak.ARBEIDSSØKER)
-    }
 
     @Test
     fun `Skal bygge tidslinje på tvers av behandlinger`() {
@@ -163,11 +152,11 @@ class BistandsvilkåretTest {
         )
 
         val (førstegangsbehandling, sak) = dataSource.transaction { connection ->
-            val repo = BistandRepositoryImpl(connection)
+            val bistandRepo = BistandRepositoryImpl(connection)
             val sak = sak(connection)
             val førstegangsbehandling = finnEllerOpprettBehandling(connection, sak)
 
-            repo.lagre(førstegangsbehandling.id, listOf(bistandsvurdering1))
+            bistandRepo.lagre(førstegangsbehandling.id, listOf(bistandsvurdering1))
             Pair(førstegangsbehandling, sak)
         }
 
@@ -215,12 +204,13 @@ class BistandsvilkåretTest {
             // Må lagre ned sykdomsvurdering for behandlingen da vurderingenGjelderFra for 11-6 skal være lik den for 11-5 i samme behandling
             val sykdomsvurdering = sykdomsvurdering(
                 vurderingenGjelderFra = now.plusDays(10),
+                behandlingId = revurdering.id
             )
             postgresRepositoryRegistry.provider(connection).provide<SykdomRepository>()
                 .lagre(revurdering.id, listOf(sykdomsvurdering))
 
             val bistandsvurdering2 = BistandVurderingLøsningDto(
-                begrunnelse = "Begrunnelse",
+                begrunnelse = "Begrunnelse 2",
                 erBehovForAktivBehandling = false,
                 erBehovForArbeidsrettetTiltak = false,
                 erBehovForAnnenOppfølging = false,
@@ -244,6 +234,12 @@ class BistandsvilkåretTest {
 
 
         dataSource.transaction { connection ->
+            val avklaringsbehovene = AvklaringsbehovRepositoryImpl(connection).hentAvklaringsbehovene(revurdering.id)
+            avklaringsbehovene.leggTil(
+                definisjoner = listOf(Definisjon.AVKLAR_BISTANDSBEHOV), funnetISteg = AVKLAR_SYKDOM
+            )
+            avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_BISTANDSBEHOV, "", "", false)
+
             VurderBistandsbehovSteg.konstruer(postgresRepositoryRegistry.provider(connection), gatewayProvider).utfør(
                 FlytKontekstMedPerioder(
                     sakId = sak.id,
@@ -257,23 +253,24 @@ class BistandsvilkåretTest {
             )
         }
 
-        dataSource.transaction { connection ->
-            val vilkåret =
-                VilkårsresultatRepositoryImpl(connection).hent(revurdering.id).finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
-            assertThat(vilkåret.vilkårsperioder()).hasSize(2)
-
-            val segment1 = vilkåret.vilkårsperioder().first()
-            val segment2 = vilkåret.vilkårsperioder().last()
-            assertThat(segment1.periode).isEqualTo(Periode(now, now.plusDays(9)))
-            assertThat(segment1.utfall).isEqualTo(Utfall.OPPFYLT)
-            assertThat(segment2.periode).isEqualTo(
-                Periode(
-                    now.plusDays(10),
-                    sak.rettighetsperiode.tom
-                )
-            )
-            assertThat(segment2.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
+        val vilkåret = dataSource.transaction { connection ->
+            VilkårsresultatRepositoryImpl(connection).hent(revurdering.id).finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
         }
+
+        assertThat(vilkåret.vilkårsperioder()).hasSize(2)
+
+        val segment1 = vilkåret.vilkårsperioder().first()
+        val segment2 = vilkåret.vilkårsperioder().last()
+        assertThat(segment1.periode).isEqualTo(Periode(now, now.plusDays(9)))
+        assertThat(segment1.utfall).isEqualTo(Utfall.OPPFYLT)
+        assertThat(segment2.periode).isEqualTo(
+            Periode(
+                now.plusDays(10),
+                sak.rettighetsperiode.tom
+            )
+        )
+        assertThat(segment2.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
+
     }
 
 
@@ -300,11 +297,6 @@ class BistandsvilkåretTest {
         vurderingenGjelderFra = vurderingenGjelderFra
     )
 
-    companion object {
-        private val now = LocalDate.now()
-        private val periode = Periode(now, LocalDate.now().plusYears(3))
-    }
-
     private fun sak(connection: DBConnection): Sak {
         return PersonOgSakService(
             FakePdlGateway,
@@ -327,7 +319,9 @@ class BistandsvilkåretTest {
         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean = true,
         erArbeidsevnenNedsatt: Boolean = true,
         vurderingenGjelderFra: LocalDate? = null,
+        vurderingenGjelderTil: LocalDate? = null,
         opprettet: Instant = Instant.now(),
+        behandlingId: BehandlingId
     ) = Sykdomsvurdering(
         begrunnelse = "",
         dokumenterBruktIVurdering = emptyList(),
@@ -339,7 +333,9 @@ class BistandsvilkåretTest {
         erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
         yrkesskadeBegrunnelse = null,
         vurderingenGjelderFra = vurderingenGjelderFra,
+        vurderingenGjelderTil = vurderingenGjelderTil,
         vurdertAv = Bruker("Z00000"),
         opprettet = opprettet,
+        vurdertIBehandling = behandlingId
     )
 }

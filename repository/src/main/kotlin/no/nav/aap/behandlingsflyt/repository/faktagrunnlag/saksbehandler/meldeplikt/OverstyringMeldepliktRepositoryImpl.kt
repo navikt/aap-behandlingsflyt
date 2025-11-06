@@ -10,9 +10,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
-import org.intellij.lang.annotations.Language
 import java.time.LocalDateTime
-import java.util.UUID
+import java.util.*
 
 class OverstyringMeldepliktRepositoryImpl(private val connection: DBConnection) : OverstyringMeldepliktRepository {
     companion object : Factory<OverstyringMeldepliktRepositoryImpl> {
@@ -22,10 +21,10 @@ class OverstyringMeldepliktRepositoryImpl(private val connection: DBConnection) 
     }
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): OverstyringMeldepliktGrunnlag? {
-        return hentGrunnlagInternalHvisEksisterer(behandlingId)?.grupperOgMapTilGrunnlag()
+        return hentGrunnlagInternalHvisEksisterer(behandlingId).grupperOgMapTilGrunnlag()
     }
 
-    private fun hentGrunnlagInternalHvisEksisterer(behandlingId: BehandlingId): List<MeldepliktOverstyringInternal>? {
+    private fun hentGrunnlagInternalHvisEksisterer(behandlingId: BehandlingId): List<MeldepliktOverstyringInternal> {
         val query = """
             SELECT g.ID AS GRUNNLAG_ID, v.ID AS VURDERING_ID, v.OPPRETTET_TID, v.VURDERT_AV, p.PERIODE, p.MELDEPLIKT_OVERSTYRING_STATUS, p.BEGRUNNELSE, b.referanse AS VURDERT_I_BEHANDLING
             FROM MELDEPLIKT_OVERSTYRING_GRUNNLAG g

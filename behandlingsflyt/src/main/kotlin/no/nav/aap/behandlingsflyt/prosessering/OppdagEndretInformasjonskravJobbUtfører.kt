@@ -40,7 +40,7 @@ class OppdagEndretInformasjonskravJobbUtfører(
             UføreInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
             InstitusjonsoppholdInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
             PersonopplysningInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
-        )
+        ) // TODO: her kan man bruke noe refleksjon for å slippe å liste dem manuelt
 
 
         val vurderingsbehov = relevanteInformasjonskrav

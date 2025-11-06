@@ -4,14 +4,12 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykdom.SykdomsvurderingResponse
+import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.utils.tilResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
-import no.nav.aap.behandlingsflyt.behandling.vurdering.utledNyesteKvalitetssikring
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -19,6 +17,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -26,7 +25,6 @@ import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import java.time.ZoneId
 import javax.sql.DataSource
-import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.utils.tilResponse
 
 fun NormalOpenAPIRoute.bistandsgrunnlagApi(
     dataSource: DataSource,
@@ -37,16 +35,17 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(
     route("/api/behandling") {
         route("/{referanse}/grunnlag/bistand") {
             getGrunnlag<BehandlingReferanse, BistandGrunnlagResponse>(
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = Definisjon.AVKLAR_BISTANDSBEHOV.kode.toString()
             ) { req ->
                 val respons = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
+                    val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val sakRepository = repositoryProvider.provide<SakRepository>()
                     val bistandRepository = repositoryProvider.provide<BistandRepository>()
                     val sykdomRepository = repositoryProvider.provide<SykdomRepository>()
-                    val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
 
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
@@ -59,7 +58,7 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(
                         ?.let { bistandRepository.hentHvisEksisterer(it) }
                         ?.vurderinger.orEmpty()
                     val vurdering = nåTilstand
-                        .filterNot { it in vedtatteBistandsvurderinger }
+                        .filterNot { gjeldendeVurdering -> gjeldendeVurdering.copy(opprettet = null) in vedtatteBistandsvurderinger.map { it.copy(opprettet = null) } }
                         .singleOrNull()
 
                     val gjeldendeSykdomsvurderinger =
@@ -67,9 +66,8 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(
 
                     val sisteSykdomsvurdering = gjeldendeSykdomsvurderinger.maxByOrNull { it.opprettet }
 
-                    val behandlingsType = behandling.typeBehandling()
                     val sak = sakRepository.hent(behandling.sakId)
-                    val erOppfylt11_5 = sisteSykdomsvurdering?.erOppfylt(behandlingsType, sak.rettighetsperiode.fom)
+                    val erOppfylt11_5 = sisteSykdomsvurdering?.erOppfylt(sak.rettighetsperiode.fom)
 
                     BistandGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
@@ -82,11 +80,9 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(
                             it.tilResponse(ansattInfoService)
                         },
                         harOppfylt11_5 = erOppfylt11_5,
-                        kvalitetssikretAv = utledNyesteKvalitetssikring(
+                        kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
                             definisjon = Definisjon.AVKLAR_BISTANDSBEHOV,
                             behandlingId = behandling.id,
-                            avklaringsbehovRepository = avklaringsbehovRepository,
-                            ansattInfoService = ansattInfoService,
                         )
                     )
                 }

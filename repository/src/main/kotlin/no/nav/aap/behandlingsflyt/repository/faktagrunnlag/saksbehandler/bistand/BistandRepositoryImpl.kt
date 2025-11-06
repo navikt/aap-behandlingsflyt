@@ -33,7 +33,6 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
             }
             setRowMapper { row ->
                 BistandGrunnlag(
-                    id = row.getLong("ID"),
                     vurderinger = mapBistandsvurderinger(row.getLongOrNull("BISTAND_VURDERINGER_ID"))
                 )
             }
@@ -86,6 +85,7 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
                      JOIN bistand_vurderinger v ON g.bistand_vurderinger_id = v.id
                      JOIN bistand b ON b.bistand_vurderinger_id = v.id
                      JOIN behandling beh ON g.behandling_id = beh.id
+                     LEFT JOIN avbryt_revurdering_grunnlag ar ON ar.behandling_id = beh.id
             WHERE g.aktiv
               AND beh.sak_id = ?
               AND beh.opprettet_tid < (
@@ -93,6 +93,7 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
                 FROM behandling
                 WHERE id = ?
             )
+                AND ar.behandling_id IS NULL
         )
         SELECT * FROM vurderinger_historikk;
         """.trimIndent()
@@ -110,11 +111,14 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
         val eksisterendeBistandGrunnlag = hentHvisEksisterer(behandlingId)
 
         val nyttGrunnlag = BistandGrunnlag(
-            id = null,
             vurderinger = bistandsvurderinger
         )
 
-        if (eksisterendeBistandGrunnlag != nyttGrunnlag) {
+        val eksisterendeVurderinger =
+            eksisterendeBistandGrunnlag?.vurderinger?.let { it.map { it.copy(opprettet = null) } }.orEmpty().toSet()
+        val nyeVurderinger = bistandsvurderinger.map { it.copy(opprettet = null) }.toSet()
+
+        if (eksisterendeVurderinger != nyeVurderinger) {
             eksisterendeBistandGrunnlag?.let {
                 deaktiverEksisterende(behandlingId)
             }
@@ -126,12 +130,14 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
 
         val bistandVurderingerIds = getBistandVurderingerIds(behandlingId)
 
-        val deletedRows = connection.executeReturnUpdated("""
+        val deletedRows = connection.executeReturnUpdated(
+            """
             delete from bistand_grunnlag where behandling_id = ?; 
             delete from bistand where bistand_vurderinger_id = ANY(?::bigint[]);
             delete from bistand_vurderinger where id = ANY(?::bigint[]);
            
-        """.trimIndent()) {
+        """.trimIndent()
+        ) {
             setParams {
                 setLong(1, behandlingId.id)
                 setLongArray(2, bistandVurderingerIds)

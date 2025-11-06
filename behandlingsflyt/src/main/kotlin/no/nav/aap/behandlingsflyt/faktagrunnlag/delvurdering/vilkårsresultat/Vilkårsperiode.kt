@@ -46,7 +46,7 @@ class Vilkårsperiode(
     }
 
     override fun toString(): String {
-        return "Vilkårsperiode(periode=$periode, utfall=$utfall)"
+        return "Vilkårsperiode(periode=$periode, utfall=$utfall, innvilgelsesårsak=$innvilgelsesårsak)"
     }
 
     override fun equals(other: Any?): Boolean {

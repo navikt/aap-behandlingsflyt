@@ -4,16 +4,23 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOppholdskravLøsning
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlagRepository
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravVurdering
+import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.tilTidslinje
+import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.validerGyldigForRettighetsperiode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
+import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class AvklarOppholdskravLøser(
     private val behandlingRepository: BehandlingRepository,
+    private val sakRepository: SakRepository,
     private val oppholdskravGrunnlagRepository: OppholdskravGrunnlagRepository
 ) : AvklaringsbehovsLøser<AvklarOppholdskravLøsning> {
     constructor(repositoryProvider: RepositoryProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
+        sakRepository = repositoryProvider.provide(),
         oppholdskravGrunnlagRepository = repositoryProvider.provide()
 
     )
@@ -23,15 +30,26 @@ class AvklarOppholdskravLøser(
         løsning: AvklarOppholdskravLøsning
     ): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
+        val sak = sakRepository.hent(behandling.sakId)
 
-        oppholdskravGrunnlagRepository.lagre(
-            behandlingId = behandling.id,
-            oppholdskravVurdering = OppholdskravVurdering(
-                vurdertAv = kontekst.bruker.ident,
-                perioder = løsning.vurdering.perioder.map { it.tilOppholdskravPeriode() },
-                vurdertIBehandling = behandling.id
-            )
+        val vurdering = OppholdskravVurdering(
+            vurdertAv = kontekst.bruker.ident,
+            perioder = løsning.løsningerForPerioder.map { it.tilOppholdskravPeriode() },
+            vurdertIBehandling = behandling.id
         )
+
+        val tidligereVurderinger = kontekst.kontekst.forrigeBehandlingId?.let { oppholdskravGrunnlagRepository.hentHvisEksisterer(it) }?.vurderinger ?: emptyList()
+        val komplettTidslinje = tidligereVurderinger.tilTidslinje().kombiner(vurdering.tilTidslinje(), StandardSammenslåere.prioriterHøyreSideCrossJoin())
+
+        komplettTidslinje.validerGyldigForRettighetsperiode(rettighetsperiode = sak.rettighetsperiode)
+            .throwOnInvalid { UgyldigForespørselException("Løsningen for oppholdskrav er ikke gyldig: ${it.errorMessage}") }
+            .onValid {
+                oppholdskravGrunnlagRepository.lagre(
+                    behandlingId = behandling.id,
+                    oppholdskravVurdering = vurdering
+                )
+            }
+
         return LøsningsResultat("Vurdert oppholdskrav")
     }
 

@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.lookup.repository.RepositoryProvider
 
@@ -27,9 +28,10 @@ class AvklaringsbehovService(
 ) {
     constructor(repositoryProvider: RepositoryProvider): this(
         avklaringsbehovRepository = repositoryProvider.provide(),
-        avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider.provide())
+        avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider)
     )
 
+    @Deprecated("Oppdater avklaringsbehov med de andre metodene i AvklaringsbehovService")
     fun avbrytForSteg(behandlingId: BehandlingId, steg: StegType) {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
         avklaringsbehovene.avbrytForSteg(steg)
@@ -105,13 +107,13 @@ class AvklaringsbehovService(
                     KVALITETSSIKRET,
                     SENDT_TILBAKE_FRA_KVALITETSSIKRER,
                     AVSLUTTET ->
-                        error("ikke mulig")
+                        error("Ikke mulig: fikk ${avklaringsbehov.status()}")
                 }
             } else if (erTilstrekkeligVurdert()) {
                 /* ønsket tilstand: ... */
                 when (avklaringsbehov.status()) {
                     OPPRETTET, AVBRUTT ->
-                        avklaringsbehovene.avslutt(definisjon)
+                        avklaringsbehovene.internalAvslutt(definisjon)
 
                     AVSLUTTET,
                     SENDT_TILBAKE_FRA_BESLUTTER,
@@ -152,7 +154,7 @@ class AvklaringsbehovService(
                 SENDT_TILBAKE_FRA_BESLUTTER,
                 KVALITETSSIKRET,
                 SENDT_TILBAKE_FRA_KVALITETSSIKRER -> {
-                    avklaringsbehovene.avbryt(definisjon)
+                    avklaringsbehovene.internalAvbryt(definisjon)
                     if (!avbrytRevurderingService.revurderingErAvbrutt(kontekst.behandlingId)) {
                         tilbakestillGrunnlag()
                     }
@@ -217,7 +219,7 @@ class AvklaringsbehovService(
                                     )
                                 )
                             }
-                            ?: tidslinjeOf()
+                            .orEmpty()
 
                         perioderVilkåretErRelevant.leftJoin(perioderVilkåretErVurdert) { erRelevant, erVurdert ->
                             erRelevant && erVurdert != true
@@ -226,6 +228,7 @@ class AvklaringsbehovService(
 
                     VurderingType.MELDEKORT -> false
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT -> false
+                    VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9 -> false
                     VurderingType.IKKE_RELEVANT -> false
                 }
             },

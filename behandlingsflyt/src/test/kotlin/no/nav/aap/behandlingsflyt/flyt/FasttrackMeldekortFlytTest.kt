@@ -1,12 +1,10 @@
 package no.nav.aap.behandlingsflyt.flyt
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SykdomsvurderingForBrevLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -22,7 +20,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.test.FakeUnleashFasttrackAktivitetsplikt
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.august
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -36,7 +34,7 @@ import java.time.LocalDate
 import kotlin.test.Test
 
 class FasttrackMeldekortFlytTest :
-    AbstraktFlytOrkestratorTest(FakeUnleashFasttrackAktivitetsplikt::class) {
+    AbstraktFlytOrkestratorTest(FakeUnleash::class) {
 
     @Test
     fun `Meldekortgrunnlag skal flettes inn i åpen behandling før UnderveisSteg`() {
@@ -44,8 +42,6 @@ class FasttrackMeldekortFlytTest :
         val sak = happyCaseFørstegangsbehandling(søknadsdato)
         val åpenBehandling = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom)
 
-        assertThat(åpenBehandling.vurderingsbehov().map { it.type })
-            .hasSameElementsAs(listOf(Vurderingsbehov.MOTTATT_SØKNAD))
         val aktivtStegFørMeldekort = åpenBehandling.aktivtSteg()
 
         sak.sendInnMeldekort(
@@ -86,19 +82,7 @@ class FasttrackMeldekortFlytTest :
         val revurderingGjelderFra = sak.rettighetsperiode.fom.plusWeeks(2)
         var åpenBehandling = revurdereFramTilOgMedSykdom(sak, revurderingGjelderFra)
 
-        åpenBehandling = åpenBehandling.løsAvklaringsBehov(
-            AvklarBistandsbehovLøsning(
-                bistandsVurdering = BistandVurderingLøsningDto(
-                    begrunnelse = "Trenger hjelp fra nav",
-                    erBehovForAktivBehandling = true,
-                    erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = null,
-                    skalVurdereAapIOvergangTilUføre = null,
-                    skalVurdereAapIOvergangTilArbeid = null,
-                    overgangBegrunnelse = null
-                ),
-            )
-        )
+        åpenBehandling = åpenBehandling.løsBistand()
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
@@ -112,9 +96,6 @@ class FasttrackMeldekortFlytTest :
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)
             }
-
-        assertThat(åpenBehandling.vurderingsbehov().map { it.type })
-            .hasSameElementsAs(listOf(Vurderingsbehov.MOTTATT_SØKNAD))
 
         val aktivtStegFørMeldekort = åpenBehandling.aktivtSteg()
         assertThat(aktivtStegFørMeldekort).isEqualTo(StegType.FATTE_VEDTAK)
@@ -216,8 +197,6 @@ class FasttrackMeldekortFlytTest :
             assertThat(behandlinger).hasSize(4)
             val (førstegangsbehandling, førsteMeldekort, andreMeldekort, åpenBehandling) = behandlinger
 
-            assertThat(førstegangsbehandling.årsakTilOpprettelse)
-                .isEqualTo(ÅrsakTilOpprettelse.SØKNAD)
             assertTidslinje(
                 andelArbeidetTidslinje(connection, førstegangsbehandling),
                 sak.rettighetsperiode to {
@@ -252,8 +231,6 @@ class FasttrackMeldekortFlytTest :
                 },
             )
 
-            assertThat(åpenBehandling.årsakTilOpprettelse)
-                .isEqualTo(ÅrsakTilOpprettelse.SØKNAD)
             assertTidslinje(
                 andelArbeidetTidslinje(connection, åpenBehandling),
                 førsteMeldeperiode to {

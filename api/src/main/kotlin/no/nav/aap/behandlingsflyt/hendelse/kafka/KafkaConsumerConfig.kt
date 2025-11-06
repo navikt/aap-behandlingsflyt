@@ -4,10 +4,11 @@ import no.nav.aap.komponenter.config.requiredConfigForKey
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.config.SslConfigs
+import org.apache.kafka.common.serialization.Deserializer
 import org.apache.kafka.common.serialization.StringDeserializer
 import java.util.Properties
 
-data class KafkaConsumerConfig(
+data class KafkaConsumerConfig<K, V>(
     val applicationId: String = requiredConfigForKey("NAIS_APP_NAME"),
     val maxPollRecords: Int = 1,
     val autoOffsetReset: String = "earliest",
@@ -17,10 +18,12 @@ data class KafkaConsumerConfig(
     val schemaRegistry: SchemaRegistryConfig? = SchemaRegistryConfig(),
     val compressionType: String = "snappy",
     val additionalProperties: Properties = Properties(),
+    val keyDeserializer: Class<out Deserializer<*>> = StringDeserializer::class.java,
+    val valueDeserializer: Class<out Deserializer<*>> = StringDeserializer::class.java
 ) {
-    fun consumerProperties(): Properties = Properties().apply {
+    fun consumerProperties(consumerName: String): Properties = Properties().apply {
         this[CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG] = brokers
-        this[CommonClientConfigs.CLIENT_ID_CONFIG] = applicationId
+        this[CommonClientConfigs.CLIENT_ID_CONFIG] = "$applicationId-$consumerName"
 
         ssl?.let { putAll(it.properties()) }
         schemaRegistry?.let { putAll(it.properties()) }
@@ -30,16 +33,16 @@ data class KafkaConsumerConfig(
         this[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = maxPollRecords
         this[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = autoOffsetReset
         this[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = enableAutoCommit
-        this[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java
-        this[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java
-
+        this[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = keyDeserializer
+        this[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = valueDeserializer
+        put("specific.avro.reader", true)
     }
 }
 
 data class SslConfig(
     private val truststorePath: String = requiredConfigForKey("KAFKA_TRUSTSTORE_PATH"),
     private val keystorePath: String = requiredConfigForKey("KAFKA_KEYSTORE_PATH"),
-    private val credstorePsw: String = requiredConfigForKey("KAFKA_CREDSTORE_PASSWORD"),
+    private val credstorePsw: String = requiredConfigForKey("KAFKA_CREDSTORE_PASSWORD")
 ) {
     fun properties() = Properties().apply {
         this[CommonClientConfigs.SECURITY_PROTOCOL_CONFIG] = "SSL"
@@ -55,9 +58,9 @@ data class SslConfig(
 }
 
 data class SchemaRegistryConfig(
-    private val url: String = requiredConfigForKey("KAFKA_SCHEMA_REGISTRY"),
-    private val user: String = requiredConfigForKey("KAFKA_SCHEMA_REGISTRY_USER"),
-    private val password: String = requiredConfigForKey("KAFKA_SCHEMA_REGISTRY_PASSWORD"),
+    val url: String = requiredConfigForKey("KAFKA_SCHEMA_REGISTRY"),
+    val user: String = requiredConfigForKey("KAFKA_SCHEMA_REGISTRY_USER"),
+    val password: String = requiredConfigForKey("KAFKA_SCHEMA_REGISTRY_PASSWORD")
 ) {
     fun properties() = Properties().apply {
         this["schema.registry.url"] = url

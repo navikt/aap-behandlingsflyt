@@ -11,47 +11,44 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.TestDatabase
-import no.nav.aap.komponenter.dbtest.TestDatabaseExtension
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDate
-import javax.sql.DataSource
 
-@ExtendWith(TestDatabaseExtension::class)
 internal class SykepengerErstatningRepositoryImplTest {
-    @TestDatabase
-    lateinit var dataSource: DataSource
+    companion object {
+        private lateinit var dataSource: TestDataSource
+
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            dataSource = TestDataSource()
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun tearDown() = dataSource.close()
+    }
+
 
     @Test
     fun `lagre og hente ut igjen`() {
         val behandling = dataSource.transaction { connection ->
             finnEllerOpprettBehandling(connection, sak(connection))
         }
-        val vurdering = SykepengerVurdering(
+        val vurdering1 = SykepengerVurdering(
             begrunnelse = "yolo",
-            dokumenterBruktIVurdering = listOf(JournalpostId("123")),
+            dokumenterBruktIVurdering = listOf(JournalpostId("123"), JournalpostId("321")),
             harRettPå = true,
             grunn = null,
-            vurdertAv = "saksbehandler"
+            vurdertAv = "saksbehandler",
+            gjelderFra = null,
         )
-        dataSource.transaction { connection ->
-            SykepengerErstatningRepositoryImpl(connection).lagre(behandling.id, vurdering)
-        }
-
-        val res = dataSource.transaction {
-            SykepengerErstatningRepositoryImpl(it).hent(behandling.id)
-        }
-
-        assertThat(res.vurdering).usingRecursiveComparison()
-            .ignoringFields("vurdertTidspunkt")
-            .isEqualTo(vurdering)
-        assertThat(res.vurdering?.vurdertTidspunkt).isNotNull()
-
-        // Lagre nytt, hent ut nyeste
 
         val vurdering2 = SykepengerVurdering(
             begrunnelse = "yolo x2",
@@ -62,19 +59,35 @@ internal class SykepengerErstatningRepositoryImplTest {
         )
 
         dataSource.transaction { connection ->
-            SykepengerErstatningRepositoryImpl(connection).lagre(behandling.id, vurdering)
+            SykepengerErstatningRepositoryImpl(connection).lagre(behandling.id, listOf(vurdering1, vurdering2))
+        }
+
+        val res = dataSource.transaction {
+            SykepengerErstatningRepositoryImpl(it).hentHvisEksisterer(behandling.id)
+        }!!
+
+        assertThat(res.vurderinger)
+            .usingRecursiveComparison()
+            .ignoringFields("vurdertTidspunkt")
+            .isEqualTo(listOf(vurdering1, vurdering2))
+        assertThat(res.vurderinger).allSatisfy { vurdering ->
+            assertThat(vurdering.vurdertTidspunkt).isNotNull
+        }
+
+        // Lagre nytt, hent ut nyeste
+        dataSource.transaction { connection ->
+            SykepengerErstatningRepositoryImpl(connection).lagre(behandling.id, listOf(vurdering2))
         }
 
         val res2 = dataSource.transaction {
-            SykepengerErstatningRepositoryImpl(it).hent(behandling.id)
+            SykepengerErstatningRepositoryImpl(it).hentHvisEksisterer(behandling.id)!!
         }
-        assertThat(res2.vurdering).usingRecursiveComparison()
+        assertThat(res2.vurderinger).usingRecursiveComparison()
             .ignoringFields("vurdertTidspunkt")
-            .isEqualTo(vurdering)
-        assertThat(res2.vurdering?.vurdertTidspunkt).isNotNull()
+            .isEqualTo(listOf(vurdering2))
+        assertThat(res2.vurderinger.first().vurdertTidspunkt).isNotNull()
 
         // Test sletting
-
         dataSource.transaction { connection ->
             SykepengerErstatningRepositoryImpl(connection).slett(behandling.id)
         }
@@ -83,7 +96,6 @@ internal class SykepengerErstatningRepositoryImplTest {
             SykepengerErstatningRepositoryImpl(it).hentHvisEksisterer(behandling.id)
         }
         assertThat(res3).isNull()
-
     }
 
     private fun sak(connection: DBConnection): Sak {

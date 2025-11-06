@@ -2,12 +2,17 @@ package no.nav.aap.behandlingsflyt.kontrakt.statistikk
 
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.ArbeidIPeriodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvklaringsbehovHendelseDto
+import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
+import java.math.BigDecimal
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status as BehandlingsFlytBehandlingStatus
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status as SakStatus
+
 
 /**
  * @param saksnummer Saksnummer.
@@ -34,6 +39,9 @@ public data class StoppetBehandling(
     val hendelsesTidspunkt: LocalDateTime,
     val avsluttetBehandling: AvsluttetBehandlingDTO? = null,
     val identerForSak: List<String> = emptyList(),
+    val opprettetAv: String? = null,
+    val nyeMeldekort: List<MeldekortDTO> = emptyList(),
+    val søknadIder: List<JournalpostId> = emptyList(),
 ) {
     init {
         require(ident.isNotEmpty())
@@ -60,7 +68,9 @@ public enum class Vurderingsbehov {
     REVURDER_YRKESSKADE,        // Yrkesskade
     REVURDER_BEREGNING,         // Beregningstidspunkt
     REVURDER_LOVVALG,
+    // Ikke i bruk
     REVURDER_SAMORDNING,
+    REVURDER_STUDENT,
     KLAGE,
     LOVVALG_OG_MEDLEMSKAP,      // Lovvalg og medlemskap
     FORUTGAENDE_MEDLEMSKAP,     // Forutgående medlemskap
@@ -68,6 +78,11 @@ public enum class Vurderingsbehov {
     BARNETILLEGG,               // Barnetillegg
     INSTITUSJONSOPPHOLD,        // Institusjonsopphold
     SAMORDNING_OG_AVREGNING,    // Samordning og avregning
+    REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER,
+    REVURDER_SAMORDNING_UFØRE,
+    REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER,
+    REVURDER_SAMORDNING_ARBEIDSGIVER,
+    REVURDER_SAMORDNING_TJENESTEPENSJON,
     REFUSJONSKRAV,              // Refusjonskrav
     UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT, // Utenlandsopphold før søknadstidspunkt
     VURDER_RETTIGHETSPERIODE, // Må ta stilling til rettighetsperioden
@@ -87,8 +102,8 @@ public enum class Vurderingsbehov {
     DØDSFALL_BRUKER,
     DØDSFALL_BARN,
     OPPHOLDSKRAV,
-    EFFEKTUER_AKTIVITETSPLIKT
-    ;
+    EFFEKTUER_AKTIVITETSPLIKT,
+    EFFEKTUER_AKTIVITETSPLIKT_11_9;
 }
 
 /**
@@ -103,3 +118,16 @@ public enum class RettighetsType(public val hjemmel: String) {
     ARBEIDSSØKER(hjemmel = "§ 11-17"),
     VURDERES_FOR_UFØRETRYGD(hjemmel = "§ 11-18"),
 }
+
+public data class MeldekortDTO(
+    public val journalpostId: String,
+    @Deprecated("Bruk arbeidIPeriode. For ikke å sende samme objekt til api-intern og statistikk.")
+    public val arbeidIPeriodeDTO: List<ArbeidIPeriodeDTO>,
+    public val arbeidIPeriode: List<ArbeidIPeriode>,
+)
+
+public data class ArbeidIPeriode(
+    val periodeFom: LocalDate,
+    val periodeTom: LocalDate,
+    val timerArbeidet: BigDecimal
+)

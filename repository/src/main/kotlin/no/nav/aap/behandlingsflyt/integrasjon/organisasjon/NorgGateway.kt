@@ -43,7 +43,10 @@ class NorgGateway : EnhetGateway {
                 client.get(uri = uriWithParams, request = httpRequest, mapper = { body, _ ->
                     DefaultJsonMapper.fromJson(body)
                 })
-            )
+            ) {
+                "Fant ikke enhet $enhetsnummer i Norg"
+            }
+
 
         return response.tilEnhet()
     }

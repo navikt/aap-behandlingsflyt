@@ -24,7 +24,7 @@ class AvklarOverstyrtLovvalgMedlemskapLøsning(
         required = true,
         defaultValue = MANUELL_OVERSTYRING_LOVVALG
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5021`
-) : AvklaringsbehovLøsning {
+) : EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return AvklarOverstyrtLovvalgMedlemskapLøser(repositoryProvider).løs(kontekst, this)
     }

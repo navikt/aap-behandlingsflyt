@@ -3,6 +3,8 @@ package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
+import no.nav.aap.komponenter.verdityper.Prosent.Companion.`100_PROSENT`
 import java.math.RoundingMode
 import java.time.LocalDate
 
@@ -31,6 +33,13 @@ data class Tilkjent(
                 .pluss(barnetillegg.multiplisert(gradering.endeligGradering)).verdi().setScale(0, RoundingMode.HALF_UP)
         )
     }
+
+    fun dagsatsFor11_9Reduksjon(): Beløp {
+        return Beløp(
+            dagsats.multiplisert(gradering.graderingForDagsats11_9Reduksjon())
+                .pluss(barnetillegg.multiplisert(gradering.graderingForDagsats11_9Reduksjon())).verdi().setScale(0, RoundingMode.HALF_UP)
+        )
+    }
 }
 
 data class TilkjentGradering(
@@ -40,7 +49,13 @@ data class TilkjentGradering(
     val arbeidGradering: Prosent?,
     val samordningUføregradering: Prosent?,
     val samordningArbeidsgiverGradering: Prosent?
-)
+) {
+    fun graderingForDagsats11_9Reduksjon() = `100_PROSENT`
+        .minus(samordningGradering ?: `0_PROSENT`)
+        .minus(samordningArbeidsgiverGradering ?: `0_PROSENT`)
+        .minus(institusjonGradering ?: `0_PROSENT`)
+        .minus(samordningUføregradering ?: `0_PROSENT`)
+}
 
 data class TilkjentGUnit(val dagsats: GUnit, val gradering: TilkjentGradering, val utbetalingsdato: LocalDate) {
     private fun redusertDagsats(): GUnit {

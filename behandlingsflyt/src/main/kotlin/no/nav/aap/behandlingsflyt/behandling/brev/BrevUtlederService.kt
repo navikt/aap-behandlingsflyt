@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.behandling.brev
 
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
-import no.nav.aap.behandlingsflyt.behandling.brev.Innvilgelse.GrunnlagBeregning.InntektPerÅr
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
@@ -16,6 +15,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagY
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.UføreInntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Avslått
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.DelvisOmgjøres
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
@@ -27,7 +27,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.FRITAK_MELDEPLIKT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.FASTSATT_PERIODE_PASSERT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_MELDEKORT
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
@@ -75,14 +77,10 @@ class BrevUtlederService(
 
                 return when (resultat) {
                     Resultat.INNVILGELSE -> {
-                        val vurderesForUføretrygd = underveisRepository.hentHvisEksisterer(behandling.id)
-                            ?.perioder
-                            .orEmpty()
-                            .any { it.rettighetsType == RettighetsType.VURDERES_FOR_UFØRETRYGD }
-                        if (vurderesForUføretrygd &&
-                            unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_18)
+                        if (unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_18) &&
+                            harRettighetsType(behandling.id, RettighetsType.VURDERES_FOR_UFØRETRYGD)
                         ) {
-                            VurderesForUføretrygd
+                            brevBehovVurderesForUføretrygd(behandling)
                         } else {
                             brevBehovInnvilgelse(behandling)
                         }
@@ -97,7 +95,13 @@ class BrevUtlederService(
             TypeBehandling.Revurdering -> {
                 val resultat = resultatUtleder.utledRevurderingResultat(behandlingId)
                 val vurderingsbehov = behandling.vurderingsbehov().map { it.type }.toSet()
-                if (setOf(MOTTATT_MELDEKORT, FASTSATT_PERIODE_PASSERT, EFFEKTUER_AKTIVITETSPLIKT).containsAll(
+                if (setOf(
+                        FRITAK_MELDEPLIKT,
+                        MOTTATT_MELDEKORT,
+                        FASTSATT_PERIODE_PASSERT,
+                        EFFEKTUER_AKTIVITETSPLIKT,
+                        EFFEKTUER_AKTIVITETSPLIKT_11_9
+                    ).containsAll(
                         vurderingsbehov
                     )
                 ) {
@@ -105,6 +109,20 @@ class BrevUtlederService(
                 }
                 if (resultat == Resultat.AVBRUTT) {
                     return null
+                }
+                if (unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_18) &&
+                    harRettighetsType(behandling.id, RettighetsType.VURDERES_FOR_UFØRETRYGD) &&
+                    behandling.forrigeBehandlingId != null &&
+                    !harRettighetsType(behandling.forrigeBehandlingId, RettighetsType.VURDERES_FOR_UFØRETRYGD)
+                ) {
+                    return brevBehovVurderesForUføretrygd(behandling)
+                }
+                if (unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) &&
+                    harRettighetsType(behandling.id, RettighetsType.ARBEIDSSØKER) &&
+                    behandling.forrigeBehandlingId != null &&
+                    !harRettighetsType(behandling.forrigeBehandlingId, RettighetsType.ARBEIDSSØKER)
+                ) {
+                    return Arbeidssøker
                 }
                 return VedtakEndring
             }
@@ -120,15 +138,16 @@ class BrevUtlederService(
 
             TypeBehandling.Aktivitetsplikt -> {
                 val grunnlag = aktivitetsplikt11_7Repository.hentHvisEksisterer(behandlingId)
-                val vurderingForBehandling = grunnlag?.vurderinger?.firstOrNull { it.vurdertIBehandling == behandlingId }
-                    ?: error("Finner ingen vurdering av aktivitetsplikt 11-7 for denne behandlingen - kan ikke utlede brevtype")
+                val vurderingForBehandling =
+                    grunnlag?.vurderinger?.firstOrNull { it.vurdertIBehandling == behandlingId }
+                        ?: error("Finner ingen vurdering av aktivitetsplikt 11-7 for denne behandlingen - kan ikke utlede brevtype")
                 return if (vurderingForBehandling.erOppfylt) {
                     VedtakEndring
                 } else {
                     VedtakAktivitetsplikt11_7
                 }
             }
-            
+
             TypeBehandling.Aktivitetsplikt11_9 -> {
                 return VedtakAktivitetsplikt11_9
             }
@@ -145,17 +164,9 @@ class BrevUtlederService(
         checkNotNull(vedtak.virkningstidspunkt) {
             "Vedtak for behandling med innvilgelse mangler virkningstidspunkt"
         }
-        val grunnlagBeregning = if (unleashGateway.isEnabled(BehandlingsflytFeature.BrevBeregningsgrunnlag)) {
-            hentGrunnlagBeregning(behandling.id, vedtak.virkningstidspunkt)
-        } else {
-            null
-        }
+        val grunnlagBeregning = hentGrunnlagBeregning(behandling.id, vedtak.virkningstidspunkt)
 
-        val tilkjentYtelse = if (unleashGateway.isEnabled(BehandlingsflytFeature.BrevBeregningsgrunnlag)) {
-            utledDagsats(behandling.id, vedtak.virkningstidspunkt)
-        } else {
-            null
-        }
+        val tilkjentYtelse = utledTilkjentYtelse(behandling.id, vedtak.virkningstidspunkt)
 
         return Innvilgelse(
             virkningstidspunkt = vedtak.virkningstidspunkt,
@@ -164,12 +175,21 @@ class BrevUtlederService(
         )
     }
 
+    private fun brevBehovVurderesForUføretrygd(behandling: Behandling): VurderesForUføretrygd {
+        // Sender per nå ikke med dato som betyr at beregningsgrunnlag (beløp) blir null
+        val grunnlagBeregning = hentGrunnlagBeregning(behandling.id, null)
+
+        return VurderesForUføretrygd(
+            grunnlagBeregning = grunnlagBeregning
+        )
+    }
+
     private fun hentGrunnlagBeregning(
         behandlingId: BehandlingId,
-        virkningstidspunkt: LocalDate
-    ): Innvilgelse.GrunnlagBeregning {
+        dato: LocalDate?
+    ): GrunnlagBeregning {
         val grunnlag = beregningsgrunnlagRepository.hentHvisEksisterer(behandlingId)
-        val beregningsgrunnlag = beregnBeregningsgrunnlagBeløp(grunnlag, virkningstidspunkt)
+        val beregningsgrunnlag = beregnBeregningsgrunnlagBeløp(grunnlag, dato)
         val beregningstidspunktVurdering =
             beregningVurderingRepository.hentHvisEksisterer(behandlingId)?.tidspunktVurdering
 
@@ -196,7 +216,7 @@ class BrevUtlederService(
                 }
             }
 
-            null -> Innvilgelse.GrunnlagBeregning(null, emptyList(), beregningsgrunnlag)
+            null -> GrunnlagBeregning(null, emptyList(), beregningsgrunnlag)
         }
     }
 
@@ -204,10 +224,10 @@ class BrevUtlederService(
         grunnlag: Grunnlag11_19,
         beregningstidspunktVurdering: BeregningstidspunktVurdering?,
         beregningsgrunnlag: Beløp?,
-    ): Innvilgelse.GrunnlagBeregning {
+    ): GrunnlagBeregning {
         val beregningstidspunkt = beregningstidspunktVurdering?.nedsattArbeidsevneDato
         val inntekter = grunnlag.inntekter().grunnlagInntektTilInntektPerÅr()
-        return Innvilgelse.GrunnlagBeregning(
+        return GrunnlagBeregning(
             beregningstidspunkt = beregningstidspunkt,
             inntekterPerÅr = inntekter,
             beregningsgrunnlag = beregningsgrunnlag,
@@ -218,17 +238,17 @@ class BrevUtlederService(
         grunnlag: GrunnlagUføre,
         beregningstidspunktVurdering: BeregningstidspunktVurdering?,
         beregningsgrunnlag: Beløp?,
-    ): Innvilgelse.GrunnlagBeregning {
+    ): GrunnlagBeregning {
         val beregningstidspunkt = utledBeregningstidspunktUføre(grunnlag, beregningstidspunktVurdering)
         val inntekter = utledInntekterPerÅrUføre(grunnlag)
-        return Innvilgelse.GrunnlagBeregning(
+        return GrunnlagBeregning(
             beregningstidspunkt = beregningstidspunkt,
             inntekterPerÅr = inntekter,
             beregningsgrunnlag = beregningsgrunnlag,
         )
     }
 
-    private fun utledDagsats(behandlingId: BehandlingId, virkningstidspunkt: LocalDate): Innvilgelse.TilkjentYtelse? {
+    private fun utledTilkjentYtelse(behandlingId: BehandlingId, virkningstidspunkt: LocalDate): TilkjentYtelse? {
         /**
          * Henter data basert på virkningstidspunkt.
          */
@@ -267,7 +287,7 @@ class BrevUtlederService(
                         .setScale(0, RoundingMode.HALF_UP)
                 )
 
-            Innvilgelse.TilkjentYtelse(
+            TilkjentYtelse(
                 dagsats = tilkjent.dagsats,
                 gradertDagsats = gradertDagsats,
                 barnetillegg = tilkjent.barnetillegg,
@@ -305,9 +325,22 @@ class BrevUtlederService(
         return this.map { InntektPerÅr(it.år, it.inntektIKroner.verdi()) }
     }
 
-    private fun beregnBeregningsgrunnlagBeløp(grunnlag: Beregningsgrunnlag?, virkningstidspunkt: LocalDate): Beløp? {
+    private fun beregnBeregningsgrunnlagBeløp(grunnlag: Beregningsgrunnlag?, dato: LocalDate?): Beløp? {
+        if (dato == null) {
+            return null
+        }
         val grunnlaget = grunnlag?.grunnlaget() ?: return null
-        val grunnlagetBeløp = grunnlaget.multiplisert(Grunnbeløp.finnGrunnbeløp(virkningstidspunkt))
+        val grunnlagetBeløp = grunnlaget.multiplisert(Grunnbeløp.finnGrunnbeløp(dato))
         return Beløp(grunnlagetBeløp.verdi.setScale(0, RoundingMode.HALF_UP))
+    }
+
+    private fun harRettighetsType(behandlingId: BehandlingId, rettighetsType: RettighetsType): Boolean {
+        return underveisRepository.hentHvisEksisterer(behandlingId)
+            ?.perioder
+            .orEmpty()
+            .any {
+                it.utfall == Utfall.OPPFYLT &&
+                        it.rettighetsType == rettighetsType
+            }
     }
 }

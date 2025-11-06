@@ -46,7 +46,7 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
     }
 
     private fun mapGrunnlag(row: Row): UnderveisGrunnlag {
-        val meldekorteneId = row.getLong("perioder_id")
+        val periodeneId = row.getLong("perioder_id")
 
         val query = """
             SELECT * FROM UNDERVEIS_PERIODE WHERE perioder_id = ? ORDER BY periode
@@ -54,7 +54,7 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
 
         val underveisperioder = connection.queryList(query) {
             setParams {
-                setLong(1, meldekorteneId)
+                setLong(1, periodeneId)
             }
             setRowMapper {
                 mapPeriode(it)
@@ -63,16 +63,6 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
 
         return UnderveisGrunnlag(row.getLong("id"), underveisperioder)
     }
-
-    fun hentPerioder(ider: List<UnderveisperiodeId>): List<Underveisperiode> {
-        return connection.queryList("""select * from underveis_periode where id = any(?::bigint[])""") {
-            setParams {
-                setLongArray(1, ider.map { it.asLong })
-            }
-            setRowMapper { row -> mapPeriode(row) }
-        }
-    }
-
 
     private fun mapPeriode(it: Row): Underveisperiode {
 

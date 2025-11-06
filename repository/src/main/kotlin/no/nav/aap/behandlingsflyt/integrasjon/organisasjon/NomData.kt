@@ -19,3 +19,16 @@ data class OrgTilknytning(
 )
 
 data class OrgEnhet(val remedyEnhetId: String?)
+
+data class NomRessurserVisningsnavn(
+    val ressurser: List<NomRessursResponse>,
+)
+
+data class NomRessursResponse(
+    val ressurs: NomRessursVisningsnavn?
+)
+
+data class NomRessursVisningsnavn(
+    val navident: String,
+    val visningsnavn: String,
+)

@@ -24,7 +24,7 @@ class FastsettArbeidsevneLøsning(
         required = true,
         defaultValue = FASTSETT_ARBEIDSEVNE_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5004`
-) : AvklaringsbehovLøsning {
+) : EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return FastsettArbeidsevneLøser(repositoryProvider).løs(kontekst, this)
     }

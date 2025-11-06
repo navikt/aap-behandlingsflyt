@@ -10,22 +10,36 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 class VurderRettighetsperiodeRepositoryImplTest {
 
+    private lateinit var dataSource: TestDataSource
+
+    @BeforeEach
+    fun setUp() {
+        dataSource = TestDataSource()
+    }
+
+    @AfterEach
+    fun tearDown() {
+        dataSource.close()
+    }
+
     @Test
     fun `skal lagre vurdering av rettighetsperiode`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
-            val repo = VurderRettighetsperiodeRepositoryImpl(connection)
+        dataSource.transaction { connection ->
+            val vurderRettighetsPeriodeRepo= VurderRettighetsperiodeRepositoryImpl(connection)
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
-            val vurderingerFørLagring = repo.hentVurdering(behandling.id)
+            val vurderingerFørLagring = vurderRettighetsPeriodeRepo.hentVurdering(behandling.id)
 
             val vurdering = RettighetsperiodeVurdering(
                 startDato = LocalDate.now().minusDays(10),
@@ -34,9 +48,9 @@ class VurderRettighetsperiodeRepositoryImplTest {
                 harKravPåRenter = true,
                 vurdertAv = "NAVident"
             )
-            repo.lagreVurdering(behandling.id, vurdering)
+            vurderRettighetsPeriodeRepo.lagreVurdering(behandling.id, vurdering)
 
-            val vurderingerEtterLagring = repo.hentVurdering(behandling.id)
+            val vurderingerEtterLagring = vurderRettighetsPeriodeRepo.hentVurdering(behandling.id)
             assertThat(vurderingerFørLagring).isNull()
             assertThat(vurderingerEtterLagring).isNotNull()
             assertThat(vurderingerEtterLagring)
@@ -48,12 +62,12 @@ class VurderRettighetsperiodeRepositoryImplTest {
 
     @Test
     fun `skal lagre vurdering av rettighetsperiode uten ny startdato`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
-            val repo = VurderRettighetsperiodeRepositoryImpl(connection)
+        dataSource.transaction { connection ->
+            val vurderRettighetsPeriodeRepo = VurderRettighetsperiodeRepositoryImpl(connection)
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
-            val vurderingerFørLagring = repo.hentVurdering(behandling.id)
+            val vurderingerFørLagring = vurderRettighetsPeriodeRepo.hentVurdering(behandling.id)
 
             val vurdering = RettighetsperiodeVurdering(
                 startDato = null,
@@ -62,9 +76,9 @@ class VurderRettighetsperiodeRepositoryImplTest {
                 harKravPåRenter = null,
                 vurdertAv = "NAVident"
             )
-            repo.lagreVurdering(behandling.id, vurdering)
+            vurderRettighetsPeriodeRepo.lagreVurdering(behandling.id, vurdering)
 
-            val vurderingerEtterLagring = repo.hentVurdering(behandling.id)
+            val vurderingerEtterLagring = vurderRettighetsPeriodeRepo.hentVurdering(behandling.id)
             assertThat(vurderingerFørLagring).isNull()
             assertThat(vurderingerEtterLagring).isNotNull()
             assertThat(vurderingerEtterLagring)
@@ -76,8 +90,8 @@ class VurderRettighetsperiodeRepositoryImplTest {
 
     @Test
     fun `skal deaktivere vurdering av rettighetsperiode`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
-            val repo = VurderRettighetsperiodeRepositoryImpl(connection)
+        dataSource.transaction { connection ->
+            val vurderRettighetsPeriodeRepo = VurderRettighetsperiodeRepositoryImpl(connection)
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
@@ -89,14 +103,14 @@ class VurderRettighetsperiodeRepositoryImplTest {
                 vurdertAv = "NAVident"
             )
 
-            repo.lagreVurdering(behandling.id, vurdering)
+            vurderRettighetsPeriodeRepo.lagreVurdering(behandling.id, vurdering)
 
-            val lagretVurdering = repo.hentVurdering(behandling.id)
+            val lagretVurdering = vurderRettighetsPeriodeRepo.hentVurdering(behandling.id)
             assertThat(lagretVurdering).isNotNull()
 
-            repo.lagreVurdering(behandling.id, null)
+            vurderRettighetsPeriodeRepo.lagreVurdering(behandling.id, null)
 
-            val lagretVurderingEtterDeaktivering = repo.hentVurdering(behandling.id)
+            val lagretVurderingEtterDeaktivering = vurderRettighetsPeriodeRepo.hentVurdering(behandling.id)
             assertThat(lagretVurderingEtterDeaktivering).isNull()
         }
     }

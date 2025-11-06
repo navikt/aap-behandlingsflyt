@@ -6,6 +6,7 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.YtelseTypeCode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.SamhandlerForholdDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.SamhandlerYtelseDto
@@ -13,41 +14,46 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjeneste
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TpOrdning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
-import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.InstitusjonsoppholdJSON
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
+import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.InstitusjonsoppholdJSON
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Ident
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlageV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManueltOppgittBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppgitteBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
+import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.AzurePortHolder
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.FakeServers
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.behandlingsflyt.test.modell.defaultInntekt
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
+import no.nav.aap.behandlingsflyt.test.testGatewayProvider
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.motor.FlytJobbRepository
+import no.nav.aap.motor.testutil.ManuellMotorImpl
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import org.slf4j.LoggerFactory
 import org.testcontainers.containers.PostgreSQLContainer
+import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
 import java.time.Duration
 import java.time.LocalDate
@@ -57,11 +63,13 @@ import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
 
 private val log = LoggerFactory.getLogger("TestApp")
+lateinit var testScenarioOrkestrator: TestScenarioOrkestrator
+lateinit var motor: ManuellMotorImpl
+lateinit var datasource: DataSource
 
 // Kjøres opp for å få logback i console uten json
 fun main() {
-    System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
-    val postgres = postgreSQLContainer()
+    val dbConfig = initDbConfig()
 
     AzurePortHolder.setPort(8081)
     FakeServers.start() // azurePort = 8081)
@@ -73,24 +81,36 @@ fun main() {
             port = 8080
         }
     }) {
-        val dbConfig = DbConfig(
-            url = postgres.jdbcUrl,
-            username = postgres.username,
-            password = postgres.password
-        )
+        val gatewayProvider = testGatewayProvider(FakeUnleash::class)
+
         // Useful for connecting to the test database locally
         // jdbc URL contains the host and port and database name.
-        println("jdbcUrl: ${postgres.jdbcUrl}. Password: ${postgres.password}. Username: ${postgres.username}.")
-        server(dbConfig, postgresRepositoryRegistry, defaultGatewayProvider())
+        server(dbConfig, postgresRepositoryRegistry, gatewayProvider)
 
-        val datasource = initDatasource(dbConfig)
-        opprettTestKlage(datasource, alderIkkeOppfyltTestCase)
+        datasource = initDatasource(dbConfig)
+        motor = lazy {
+            ManuellMotorImpl(
+                datasource,
+                jobber = ProsesseringsJobber.alle(),
+                repositoryRegistry = postgresRepositoryRegistry,
+                gatewayProvider
+            )
+        }.value
+
+        testScenarioOrkestrator = TestScenarioOrkestrator(gatewayProvider, datasource, motor)
 
         apiRouting {
             route("/test") {
                 route("/opprett") {
                     post<Unit, OpprettTestcaseDTO, OpprettTestcaseDTO> { _, dto ->
-                        sendInnSøknad(datasource, dto)
+                        sendInnSøknad(dto)
+                        respond(dto)
+                    }
+                }
+
+                route("/opprett-og-fullfoer") {
+                    post<Unit, OpprettTestcaseDTO, OpprettTestcaseDTO> { _, dto ->
+                        sendInnOgFullførFørstegangsbehandling(dto)
                         respond(dto)
                     }
                 }
@@ -98,6 +118,22 @@ fun main() {
         }
 
     }.start(wait = true)
+}
+
+private fun initDbConfig(): DbConfig {
+    return if (System.getenv("NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_JDBC_URL").isNullOrBlank()) {
+        val postgres = postgreSQLContainer()
+
+        DbConfig(
+            url = postgres.jdbcUrl,
+            username = postgres.username,
+            password = postgres.password
+        )
+    } else {
+        DbConfig()
+    }.also {
+        println("----\nDATABASE URL: \n${it.url}?user=${it.username}&password=${it.password}\n----")
+    }
 }
 
 private fun genererFengselsopphold() = InstitusjonsoppholdJSON(
@@ -127,7 +163,7 @@ private fun genererBarn(dto: TestBarn): TestPerson {
     )
 }
 
-fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPerson>): SøknadV0 {
+private fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPerson>): SøknadV0 {
     val erStudent = if (dto.student) "JA" else "NEI"
     val harYrkesskade = if (dto.yrkesskade) "JA" else "NEI"
 
@@ -155,7 +191,7 @@ fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPerson>): S�
     )
 }
 
-private fun sendInnSøknad(datasource: DataSource, dto: OpprettTestcaseDTO): Sak {
+private fun sendInnSøknad(dto: OpprettTestcaseDTO): Sak {
     val ident = genererIdent(dto.fødselsdato)
     val barn = dto.barn.filter { it.harRelasjon }.map { genererBarn(it) }
     val urelaterteBarnIPDL = dto.barn.filter { !it.harRelasjon && it.skalFinnesIPDL }.map { genererBarn(it) }
@@ -238,51 +274,107 @@ private fun sendInnSøknad(datasource: DataSource, dto: OpprettTestcaseDTO): Sak
     return sak
 }
 
-private fun sendInnKlage(datasource: DataSource, sak: Sak) {
-    datasource.transaction { connection ->
-        val flytJobbRepository = FlytJobbRepository(connection)
+private fun sendInnOgFullførFørstegangsbehandling(dto: OpprettTestcaseDTO): Sak {
+    val sak = sendInnSøknad(dto)
+    motor.kjørJobber()
 
-        flytJobbRepository.leggTil(
-            HendelseMottattHåndteringJobbUtfører.nyJobb(
-                sakId = sak.id,
-                dokumentReferanse = InnsendingReferanse(JournalpostId("" + System.currentTimeMillis())),
-                brevkategori = InnsendingType.KLAGE,
-                kanal = Kanal.DIGITAL,
-                melding = KlageV0(
-                    kravMottatt = LocalDate.now().minusWeeks(1),
-                    skalOppretteNyBehandling = true
-                ),
-                mottattTidspunkt = LocalDateTime.now(),
-            )
+    // fullfør førstegangsbehandling
+    log.info("Fullfører førstegangsbehandling for sak ${sak.id}")
+    val behandling = hentSisteBehandlingForSak(sak.id)
+
+    with(testScenarioOrkestrator) {
+        // Student eller sykdom
+        if (dto.student) {
+            løsStudent(behandling)
+        } else {
+            løsSykdom(behandling)
+            løsBistand(behandling)
+        }
+
+        // Vurderinger i sykdom
+        løsRefusjonskrav(behandling)
+        løsSykdomsvurderingBrev(behandling)
+        kvalitetssikreOk(behandling)
+
+        // Yrkesskade
+        if (dto.yrkesskade) {
+            løsYrkesSkade(behandling)
+        }
+
+        // Inntekt
+        løsBeregningstidspunkt(behandling)
+
+        if (dto.inntekterPerAr == null || dto.inntekterPerAr.isEmpty()) {
+            løsManuellInntektVurdering(behandling)
+        }
+
+        // Forutgående medlemskap
+        if (dto.yrkesskade) {
+            løsFastsettYrkesskadeInntekt(behandling)
+        } else {
+            løsForutgåendeMedlemskap(behandling)
+        }
+
+        // Oppholdskrav
+        løsOppholdskrav(behandling)
+
+        // Institusjonsopphold
+        if (dto.institusjoner.fengsel == true) {
+            løsSoningsforhold(behandling)
+        }
+
+        // Barnetillegg
+        if (dto.barn.isNotEmpty()) {
+            løsBarnetillegg(behandling)
+        }
+
+        // Samordning
+        if (dto.sykepenger.isEmpty()) {
+            løsUtenSamordning(behandling)
+        } else {
+            løsSamordning(behandling, dto.sykepenger)
+        }
+
+        løsSamordningAndreStatligeYtelser(behandling)
+
+        if (dto.tjenestePensjon == true) {
+            løsTjenestepensjonRefusjonskravVurdering(behandling)
+        }
+
+        // Vedtak
+        løsForeslåVedtakLøsning(behandling)
+        fattVedtakEllerSendRetur(behandling)
+        løsVedtaksbrev(behandling)
+    }
+
+    return sak
+}
+
+private fun hentSisteBehandlingForSak(sakId: SakId): Behandling {
+    return datasource.transaction { connection ->
+        val repositoryProvider = postgresRepositoryRegistry.provider(connection)
+        val sbService = SakOgBehandlingService(
+            repositoryProvider,
+            defaultGatewayProvider()
         )
+
+        val behandling = sbService.finnSisteYtelsesbehandlingFor(sakId)
+        requireNotNull(behandling) { "Finner ikke behandling for sakId: $sakId" }
+        behandling
     }
 }
-
-private fun opprettTestKlage(datasource: DataSource, testcaseDTO: OpprettTestcaseDTO) {
-    val sak = sendInnSøknad(datasource, testcaseDTO)
-    sendInnKlage(datasource, sak)
-}
-
-private val alderIkkeOppfyltTestCase = OpprettTestcaseDTO(
-    fødselsdato = LocalDate.now().minusYears(17),
-    barn = emptyList(),
-    yrkesskade = false,
-    uføre = null,
-    institusjoner = Institusjoner(fengsel = false, sykehus = false),
-    inntekterPerAr = null,
-    søknadsdato = LocalDate.now(),
-    student = false,
-    medlemskap = true,
-)
 
 internal fun postgreSQLContainer(): PostgreSQLContainer<Nothing> {
     val postgres = PostgreSQLContainer<Nothing>("postgres:16")
-    val envPort = System.getenv("POSTGRES_PORT")?.toIntOrNull()
-    if (envPort != null) {
-        postgres.withExposedPorts(5432)
-        postgres.setPortBindings(listOf("$envPort:5432"))
-    }
-    postgres.waitingFor(HostPortWaitStrategy().withStartupTimeout(Duration.of(60L, ChronoUnit.SECONDS)))
-    postgres.start()
+        .apply {
+            val envPort = System.getenv("POSTGRES_PORT")?.toIntOrNull()
+            if (envPort != null) {
+                withExposedPorts(5432)
+                setPortBindings(listOf("$envPort:5432"))
+            }
+            withLogConsumer(Slf4jLogConsumer(log))
+            waitingFor(HostPortWaitStrategy().withStartupTimeout(Duration.of(60L, ChronoUnit.SECONDS)))
+        }
+    postgres.start() // venter til container er klar
     return postgres
 }

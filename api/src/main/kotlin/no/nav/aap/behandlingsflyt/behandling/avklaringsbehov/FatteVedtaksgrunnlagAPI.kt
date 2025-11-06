@@ -19,6 +19,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -42,6 +43,7 @@ fun NormalOpenAPIRoute.fatteVedtakGrunnlagApi(
     route("/api/behandling").tag(Tags.Behandling) {
         route("/{referanse}/grunnlag/fatte-vedtak") {
             getGrunnlag<BehandlingReferanse, FatteVedtakGrunnlagDto>(
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = FATTE_VEDTAK_KODE
             ) { req ->
@@ -135,6 +137,7 @@ fun utledHistorikk(avklaringsbehovene: Avklaringsbehovene): List<Historikk> {
                     Aksjon.FATTET_VEDTAK
                 }
             }
+            // Ikke ubrukt, brukes i neste entry
             tidsstempelForrigeBehov = behov.endring.tidsstempel
             Historikk(aksjon, behov.endring.tidsstempel, behov.endring.endretAv)
         }.sorted()
@@ -158,7 +161,7 @@ private fun utledEndringerSidenSist(
 
 private fun beslutterVurdering(avklaringsbehovene: Avklaringsbehovene, flyt: BehandlingFlyt): List<TotrinnsVurdering> {
     return avklaringsbehovene.alle()
-        .filter { it.status() != Status.AVBRUTT }
+        .filter { it.erIkkeAvbrutt() }
         .filter { it.erTotrinn() }
         .sortedWith(compareBy(flyt.stegComparator) { it.løsesISteg() })
         .map { tilKvalitetssikring(it) }

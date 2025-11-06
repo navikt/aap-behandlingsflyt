@@ -52,7 +52,7 @@ class BeregningAvklarFaktaSteg private constructor(
             return Fullført
         }
 
-        when (kontekst.vurderingType) {
+        when (kontekst.vurderingTypeRelevantForSteg) {
             VurderingType.FØRSTEGANGSBEHANDLING -> {
                 if (skalAvbryteForStegPgaIngenBehandlingsgrunnlag(kontekst)) {
                     return Fullført
@@ -99,6 +99,7 @@ class BeregningAvklarFaktaSteg private constructor(
 
             VurderingType.MELDEKORT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
             VurderingType.IKKE_RELEVANT -> {
                 // Always do nothing
             }

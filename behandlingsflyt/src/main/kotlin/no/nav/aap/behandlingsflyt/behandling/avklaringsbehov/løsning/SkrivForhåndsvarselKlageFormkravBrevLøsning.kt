@@ -19,7 +19,7 @@ class SkrivForhåndsvarselKlageFormkravBrevLøsning(
     @param:JsonProperty("mottakere") val mottakere: List<MottakerDto> = emptyList(),
     @param:JsonProperty("behovstype", required = true, defaultValue = SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV_KODE)
     val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`6005`
-) : AvklaringsbehovLøsning {
+) : EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return SkrivForhåndsvarselKlageFormkravBrevLøser(repositoryProvider, gatewayProvider).løs(kontekst, this)
     }

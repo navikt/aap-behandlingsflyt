@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.IngenInput
+import no.nav.aap.behandlingsflyt.faktagrunnlag.IngenRegisterData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Vurdering
@@ -10,12 +12,9 @@ import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7RepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.avbrytrevurdering.AvbrytRevurderingRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.søknad.TrukketSøknadRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -29,31 +28,34 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.FakeUnleashFasttrackAktivitetsplikt
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.TestDatabase
-import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.ZoneOffset
-import javax.sql.DataSource
 
 class AktivitetspliktInformasjonskravTest {
-    private val repositoryRegistry = RepositoryRegistry()
-        .register<TrukketSøknadRepositoryImpl>()
-        .register<AvklaringsbehovRepositoryImpl>()
-        .register<Aktivitetsplikt11_7RepositoryImpl>()
-        .register<VilkårsresultatRepositoryImpl>()
-        .register<BehandlingRepositoryImpl>()
-        .register<AvbrytRevurderingRepositoryImpl>()
+        companion object {
+        private lateinit var dataSource: TestDataSource
 
-    @TestDatabase
-    lateinit var dataSource: DataSource
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            dataSource = TestDataSource()
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun tearDown() = dataSource.close()
+    }
 
     @Test
     fun `Revurdering med vurderingstype 'EFFEKTUER_AKTIVITETSPLIKT' skal kopiere grunnlag fra nyeste iverksatte aktvitetspliktbehandling`() {
@@ -119,22 +121,22 @@ class AktivitetspliktInformasjonskravTest {
                 )
             )
 
-            val aktivitetspliktInformasjonskrav = AktivitetspliktInformasjonskrav.konstruer(
-                repositoryRegistry.provider(connection),
-                createGatewayProvider { register<FakeUnleashFasttrackAktivitetsplikt>() },
+            val aktivitetsplikt11_7Informasjonskrav = Aktivitetsplikt11_7Informasjonskrav.konstruer(
+                postgresRepositoryRegistry.provider(connection),
+                createGatewayProvider { register<FakeUnleash>() },
             )
             val flytKontekstMedPerioder = flytKontekstMedPerioder(effektueringsbehandling, sak)
 
 
             assertThat(
-                aktivitetspliktInformasjonskrav.erRelevant(
+                aktivitetsplikt11_7Informasjonskrav.erRelevant(
                     flytKontekstMedPerioder,
                     StegType.AVKLAR_SYKDOM,
                     null
                 )
             ).isTrue
 
-            aktivitetspliktInformasjonskrav.oppdater(flytKontekstMedPerioder)
+            aktivitetsplikt11_7Informasjonskrav.oppdater(IngenInput, IngenRegisterData, flytKontekstMedPerioder)
                 .let {
                     assertThat(it)
                         .describedAs { "Skal ikke returnere endret ved oppdatering i effektueringsbehandling" }
@@ -183,7 +185,7 @@ class AktivitetspliktInformasjonskravTest {
         vurdering: (behandlingId: BehandlingId) -> Aktivitetsplikt11_7Vurdering,
     ): Behandling {
         return dataSource.transaction { connection ->
-            val repositoryProvider = repositoryRegistry.provider(connection)
+            val repositoryProvider = postgresRepositoryRegistry.provider(connection)
             val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
             val Aktivitetsplikt11_7Repository = repositoryProvider.provide<Aktivitetsplikt11_7Repository>()
 
@@ -218,9 +220,9 @@ class AktivitetspliktInformasjonskravTest {
             PersonRepositoryImpl(connection),
             SakRepositoryImpl(connection)
         ).finnEllerOpprett(
-                ident(),
-                Periode(fom = LocalDate.of(2020, 1, 1), tom = LocalDate.of(2020, 2, 2))
-            )
+            ident(),
+            Periode(fom = LocalDate.of(2020, 1, 1), tom = LocalDate.of(2020, 2, 2))
+        )
     }
 
 }

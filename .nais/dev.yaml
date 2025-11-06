@@ -26,6 +26,7 @@ spec:
         - id: loki
   kafka:
     pool: nav-dev
+  leaderElection: true
   gcp:
     sqlInstances:
       - type: POSTGRES_16
@@ -39,7 +40,10 @@ spec:
           - name: cloudsql.enable_pgaudit
             value: "true"
           - name: pgaudit.log
-            value: "all"
+            value: "write,ddl,role"
+          - name: "pgaudit.log_parameter"
+            value: "on"
+  terminationGracePeriodSeconds: 30
   liveness:
     path: /actuator/live
     initialDelay: 3
@@ -130,6 +134,8 @@ spec:
           namespace: org
         - application: kabal-api
           namespace: klage
+        - application: medlemskap-medl-api
+          namespace: team-rocket
 
   env:
     - name: INTEGRASJON_PDL_URL
@@ -171,9 +177,9 @@ spec:
     - name: INTEGRASJON_TILGANG_SCOPE
       value: api://dev-gcp.aap.tilgang/.default
     - name: INTEGRASJON_MEDL_URL
-      value: https://medlemskap-medl-api.dev-fss-pub.nais.io/rest/v1/periode/soek
+      value: http://medlemskap-medl-api.team-rocket/rest/v1/periode/soek
     - name: INTEGRASJON_MEDL_SCOPE
-      value: api://dev-fss.team-rocket.medlemskap-medl-api/.default
+      value: api://dev-gcp.team-rocket.medlemskap-medl-api/.default
     - name: INTEGRASJON_FORELDREPENGER_URL
       value: https://fpabakus.dev-fss-pub.nais.io/fpabakus/ekstern/api/ytelse/v1
     - name: INTEGRASJON_FORELDREPENGER_SCOPE

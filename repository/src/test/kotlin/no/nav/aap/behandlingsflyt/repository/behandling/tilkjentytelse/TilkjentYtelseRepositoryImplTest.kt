@@ -12,24 +12,37 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.math.BigDecimal
 import java.time.LocalDate
 
 class TilkjentYtelseRepositoryImplTest {
+    private lateinit var dataSource: TestDataSource
+
+    @BeforeEach
+    fun setUp() {
+        dataSource = TestDataSource()
+    }
+
+    @AfterEach
+    fun tearDown() {
+        dataSource.close()
+    }
+
     @Test
     fun `kan lagre og hente tilkjentYtelse`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
@@ -87,7 +100,7 @@ class TilkjentYtelseRepositoryImplTest {
             tilkjentYtelseRepository.lagre(behandling.id, tilkjentYtelse)
             val tilkjentYtelseHentet = tilkjentYtelseRepository.hentHvisEksisterer(behandling.id)
             assertNotNull(tilkjentYtelseHentet)
-            assertEquals(tilkjentYtelse, tilkjentYtelseHentet)
+            assertThat(tilkjentYtelseHentet).isEqualTo(tilkjentYtelse)
             // Dobbeltsjekke at vi avrunder redusert dagsats til nærmeste heltall
             assertThat(tilkjentYtelse.first().tilkjent.redusertDagsats()).isEqualTo(Beløp(BigDecimal("1319")))
         }
@@ -96,7 +109,7 @@ class TilkjentYtelseRepositoryImplTest {
 
     @Test
     fun `finner ingen tilkjentYtelse hvis den ikke eksisterer`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
@@ -108,7 +121,7 @@ class TilkjentYtelseRepositoryImplTest {
 
     @Test
     fun `test sletting`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val tilkjentYtelseRepository = TilkjentYtelseRepositoryImpl(connection)

@@ -15,15 +15,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
 
 class VurderRettighetsperiodeLøser(
-    private val unleashGateway: UnleashGateway,
     private val behandlingRepository: BehandlingRepository,
     private val sakRepository: SakRepository,
     private val rettighetsperiodeRepository: VurderRettighetsperiodeRepository,
@@ -32,7 +29,6 @@ class VurderRettighetsperiodeLøser(
 ) : AvklaringsbehovsLøser<VurderRettighetsperiodeLøsning> {
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
-        unleashGateway = gatewayProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         sakRepository = repositoryProvider.provide(),
         rettighetsperiodeRepository = repositoryProvider.provide(),
@@ -42,9 +38,6 @@ class VurderRettighetsperiodeLøser(
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: VurderRettighetsperiodeLøsning): LøsningsResultat {
 
-        if (!unleashGateway.isEnabled(BehandlingsflytFeature.OverstyrStarttidspunkt, kontekst.bruker.ident)) {
-            throw UgyldigForespørselException("Funksjonsbryter for overstyr starttidspunkt er skrudd av")
-        }
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
         val sak = sakRepository.hent(kontekst.kontekst.sakId)
 
@@ -54,7 +47,7 @@ class VurderRettighetsperiodeLøser(
         if (sak.status() == Status.AVSLUTTET) {
             throw UgyldigForespørselException("Kan ikke oppdatere rettighetsperioden etter at saken er avsluttet")
         }
-        if(innskrenkerTilEtterSøknadstidspunkt(løsning.rettighetsperiodeVurdering.startDato, sak.id)) {
+        if (innskrenkerTilEtterSøknadstidspunkt(løsning.rettighetsperiodeVurdering.startDato, sak.id)) {
             throw UgyldigForespørselException("Kan ikke endre starttidspunkt til å gjelde ETTER søknadstidspunkt")
         }
 

@@ -7,8 +7,10 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.ENDRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_ENDRET
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravInput
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdGateway
@@ -20,9 +22,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.ereg.Organisasjonsnumme
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.utils.withMdc
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -41,7 +41,7 @@ class ForutgåendeMedlemskapInformasjonskrav private constructor(
     private val arbeidsforholdGateway: ArbeidsforholdGateway,
     private val inntektkomponentenGateway: InntektkomponentenGateway,
     private val enhetsregisteretGateway: EnhetsregisteretGateway
-) : Informasjonskrav {
+) : Informasjonskrav<ForutgåendeMedlemskapInformasjonskrav.MedlemsskapInput, ForutgåendeMedlemskapInformasjonskrav.MedlemsskapReggisterdata> {
 
     override val navn = Companion.navn
 
@@ -55,23 +55,51 @@ class ForutgåendeMedlemskapInformasjonskrav private constructor(
                 && (oppdatert.ikkeKjørtSisteKalenderdag() || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode)
     }
 
+    data class MedlemsskapInput(val sak: Sak) : InformasjonskravInput
 
-    override fun oppdater(kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
-        val sak = sakService.hent(kontekst.sakId)
+    data class MedlemsskapReggisterdata(
+        val medlemskapPerioder: List<MedlemskapDataIntern>,
+        val arbeidGrunnlag: List<ArbeidINorgeGrunnlag>,
+        val inntektGrunnlag: List<ArbeidsInntektMaaned>,
+        val enhetGrunnlag: List<EnhetGrunnlag>
+    ) : InformasjonskravRegisterdata
 
-        val medlemskapPerioderFuture = CompletableFuture.supplyAsync(withMdc{ medlemskapGateway.innhent(
-            sak.person,
-            Periode(sak.rettighetsperiode.fom.minusYears(5), sak.rettighetsperiode.fom)
-        ) }, executor)
-        val arbeidGrunnlagFuture = CompletableFuture.supplyAsync(withMdc{ innhentAARegisterGrunnlag5år(sak) }, executor)
-        val inntektGrunnlagFuture = CompletableFuture.supplyAsync(withMdc{ innhentAInntektGrunnlag5år(sak) }, executor)
+    override fun klargjør(kontekst: FlytKontekstMedPerioder): MedlemsskapInput {
+        return MedlemsskapInput(sakService.hent(kontekst.sakId))
+    }
+
+    override fun hentData(input: MedlemsskapInput): MedlemsskapReggisterdata {
+        val sak = input.sak
+        val medlemskapPerioderFuture = CompletableFuture.supplyAsync(withMdc {
+            medlemskapGateway.innhent(
+                sak.person,
+                Periode(sak.rettighetsperiode.fom.minusYears(5), sak.rettighetsperiode.fom)
+            )
+        }, executor)
+        val arbeidGrunnlagFuture =
+            CompletableFuture.supplyAsync(withMdc { innhentAARegisterGrunnlag5år(sak) }, executor)
+        val inntektGrunnlagFuture = CompletableFuture.supplyAsync(withMdc { innhentAInntektGrunnlag5år(sak) }, executor)
 
         val medlemskapPerioder = medlemskapPerioderFuture.get()
         val arbeidGrunnlag = arbeidGrunnlagFuture.get()
         val inntektGrunnlag = inntektGrunnlagFuture.get()
         val enhetGrunnlag = innhentEREGGrunnlag(inntektGrunnlag)
 
+        return MedlemsskapReggisterdata(
+            medlemskapPerioder, arbeidGrunnlag, inntektGrunnlag, enhetGrunnlag
+        )
+    }
+
+    override fun oppdater(
+        input: MedlemsskapInput,
+        registerdata: MedlemsskapReggisterdata,
+        kontekst: FlytKontekstMedPerioder
+    ): Informasjonskrav.Endret {
+        val (medlemskapPerioder, arbeidGrunnlag, inntektGrunnlag, enhetGrunnlag) = registerdata
+
         val eksisterendeData = grunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
+
+        // TODO: kun lagre hvis forskjell!!
         lagre(kontekst.behandlingId, medlemskapPerioder, arbeidGrunnlag, inntektGrunnlag, enhetGrunnlag)
 
         val nyeData = grunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
@@ -106,7 +134,7 @@ class ForutgåendeMedlemskapInformasjonskrav private constructor(
         // EREG har ikke batch-oppslag
         val executor = Executors.newVirtualThreadPerTaskExecutor()
         val futures = orgnumre.map { orgnummer ->
-            CompletableFuture.supplyAsync(withMdc{
+            CompletableFuture.supplyAsync(withMdc {
                 val response = enhetsregisteretGateway.hentEREGData(Organisasjonsnummer(orgnummer))
                 response?.let {
                     EnhetGrunnlag(
@@ -148,10 +176,9 @@ class ForutgåendeMedlemskapInformasjonskrav private constructor(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
         ): ForutgåendeMedlemskapInformasjonskrav {
-            val sakRepository = repositoryProvider.provide<SakRepository>()
             val grunnlagRepository = repositoryProvider.provide<MedlemskapArbeidInntektForutgåendeRepository>()
             return ForutgåendeMedlemskapInformasjonskrav(
-                SakService(sakRepository),
+                SakService(repositoryProvider),
                 repositoryProvider.provide(),
                 grunnlagRepository,
                 TidligereVurderingerImpl(repositoryProvider),

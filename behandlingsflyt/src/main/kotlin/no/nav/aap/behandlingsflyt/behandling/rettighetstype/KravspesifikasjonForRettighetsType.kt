@@ -1,9 +1,11 @@
 package no.nav.aap.behandlingsflyt.behandling.rettighetstype
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 
 interface KravspesifikasjonForRettighetsType {
     val kravBistand: Krav
@@ -12,6 +14,9 @@ interface KravspesifikasjonForRettighetsType {
     val kravOvergangUfør: Krav
     val kravOvergangArbeid: Krav
 
+    val forutgåendeAap: ForutgåendeKrav
+
+    /** Krav som gjelder for perioden som vurderes. */
     sealed interface Krav {
         fun oppfyllesAv(vilkårsvurdering: Vilkårsvurdering?): Boolean
     }
@@ -37,7 +42,33 @@ interface KravspesifikasjonForRettighetsType {
         override fun oppfyllesAv(vilkårsvurdering: Vilkårsvurdering?) = true
     }
 
-    fun oppfyllesAv(vilkårsresultat: Map<Vilkårtype, Vilkårsvurdering>): Boolean {
+    interface ForutgåendeKrav {
+        fun oppfyllesAv(forutgåendeRettighetstyper: Tidslinje<RettighetsType>): Boolean
+    }
+
+    data object IngenKravOmForutgåendeAAP : ForutgåendeKrav {
+        override fun oppfyllesAv(forutgåendeRettighetstyper: Tidslinje<RettighetsType>) = true
+    }
+
+    /** For at dette kravet skal være oppfylt for en gitt periode, så må medlemmet i
+     * perioden fra forutgående opphør (eller rettighetsperiode.fom hvis ingen forutgående opphør)
+     * og før perioden vi vurderer, hatt minst en periode med rett til AAP etter en av de oppgitte
+     * rettighetstypene.
+     *
+     * NB. Vi har ikke støtte for opphør, så situasjonen for opphør kan ikke skje enda.
+     */
+    data class KravOmForutgåendeAAP(val rettighetsTyper: Set<RettighetsType>) : ForutgåendeKrav {
+        constructor(vararg rettighetsTyper: RettighetsType) : this(rettighetsTyper.toSet())
+
+        init {
+            check(rettighetsTyper.isNotEmpty()) { "Krav kan aldri være oppfylt." }
+        }
+
+        override fun oppfyllesAv(forutgåendeRettighetstyper: Tidslinje<RettighetsType>) =
+            forutgåendeRettighetstyper.segmenter().any { it.verdi in rettighetsTyper }
+    }
+
+    fun oppfyllesAv(forutgåendeRettighetstyper: Tidslinje<RettighetsType>, vilkårsresultat: Map<Vilkårtype, Vilkårsvurdering>): Boolean {
         return MåVæreOppfylt().oppfyllesAv(vilkårsresultat[Vilkårtype.ALDERSVILKÅRET])
                 && kravBistand.oppfyllesAv(vilkårsresultat[Vilkårtype.BISTANDSVILKÅRET])
                 && MåVæreOppfylt().oppfyllesAv(vilkårsresultat[Vilkårtype.GRUNNLAGET])
@@ -47,5 +78,6 @@ interface KravspesifikasjonForRettighetsType {
                 && kravSykdom.oppfyllesAv(vilkårsresultat[Vilkårtype.SYKDOMSVILKÅRET])
                 && kravOvergangArbeid.oppfyllesAv(vilkårsresultat[Vilkårtype.OVERGANGARBEIDVILKÅRET])
                 && kravOvergangUfør.oppfyllesAv(vilkårsresultat[Vilkårtype.OVERGANGUFØREVILKÅRET])
+                && forutgåendeAap.oppfyllesAv(forutgåendeRettighetstyper)
     }
 }

@@ -54,9 +54,11 @@ class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection)
             SELECT MANUELL_INNTEKT_VURDERINGER_ID
             FROM MANUELL_INNTEKT_VURDERING_GRUNNLAG GRUNNLAG
                 JOIN BEHANDLING B1 ON B1.ID = GRUNNLAG.BEHANDLING_ID
+                LEFT JOIN AVBRYT_REVURDERING_GRUNNLAG AR ON AR.BEHANDLING_ID = B1.ID
             WHERE GRUNNLAG.AKTIV
             AND B1.SAK_ID = ?
-            AND B1.OPPRETTET_TID < (SELECT B2.OPPRETTET_TID FROM BEHANDLING B2 WHERE ID = ?)
+            AND B1.OPPRETTET_TID < (SELECT B2.OPPRETTET_TID FROM BEHANDLING B2 WHERE B2.ID = ?)
+            AND AR.BEHANDLING_ID IS NULL
         """.trimIndent()
 
         return connection.querySet(query) {

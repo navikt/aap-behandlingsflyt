@@ -4,17 +4,22 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.In
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerGrunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerVurdering
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.januar
-import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneOffset
@@ -36,7 +41,8 @@ class SykdomsvilkårTest {
                     sykdomsvurdering()
                 ),
                 studentvurdering = null,
-                sykepengerErstatningFaktagrunnlag = null
+                sykepengerErstatningFaktagrunnlag = null,
+                bistandvurderingFaktagrunnlag = bistandGrunnlag(LocalDate.now()),
             )
         )
         val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
@@ -53,7 +59,8 @@ class SykdomsvilkårTest {
                     sykdomsvurdering(erNedsettelseIArbeidsevneMerEnnHalvparten = false)
                 ),
                 studentvurdering = null,
-                sykepengerErstatningFaktagrunnlag = null
+                sykepengerErstatningFaktagrunnlag = null,
+                bistandvurderingFaktagrunnlag = null,
             )
         )
 
@@ -81,7 +88,8 @@ class SykdomsvilkårTest {
                     )
                 ),
                 studentvurdering = null,
-                sykepengerErstatningFaktagrunnlag = null
+                sykepengerErstatningFaktagrunnlag = null,
+                bistandvurderingFaktagrunnlag = bistandGrunnlag(startDato),
             )
         )
 
@@ -99,6 +107,23 @@ class SykdomsvilkårTest {
         )
     }
 
+    private fun bistandGrunnlag(startDato: LocalDate): BistandGrunnlag = BistandGrunnlag(
+        vurderinger = listOf(
+            BistandVurdering(
+                begrunnelse = "bistand",
+                erBehovForAktivBehandling = true,
+                erBehovForArbeidsrettetTiltak = true,
+                erBehovForAnnenOppfølging = true,
+                overgangBegrunnelse = "...",
+                skalVurdereAapIOvergangTilArbeid = null,
+                skalVurdereAapIOvergangTilUføre = null,
+                vurdertAv = "Foffer",
+                vurderingenGjelderFra = startDato,
+                opprettet = Instant.now()
+            )
+        )
+    )
+
     @Test
     fun `nei på viss varighet ved førstegangsbehandling`() {
         val vilkårsresultat = Vilkårsresultat()
@@ -115,24 +140,22 @@ class SykdomsvilkårTest {
                     sykdomsvurdering(opprettet = opprettet),
                     sykdomsvurdering(
                         erNedsettelseIArbeidsevneAvEnVissVarighet = false,
-                        vurderingenGjelderFra = startDato.plusWeeks(1),
+                        vurderingenGjelderFra = startDato,
                         opprettet = opprettet.plusSeconds(50)
                     )
                 ),
                 studentvurdering = null,
-                sykepengerErstatningFaktagrunnlag = null
+                sykepengerErstatningFaktagrunnlag = null,
+                bistandvurderingFaktagrunnlag = bistandGrunnlag(startDato),
             )
         )
 
         val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
 
-        assertThat(vilkår.vilkårsperioder()).hasSize(2)
+        assertThat(vilkår.vilkårsperioder()).hasSize(1)
 
         vilkår.tidslinje().assertTidslinje(
-            Segment(Periode(1 januar 2024, 7 januar 2024)) { vurdering ->
-                assertThat(vurdering.utfall).isEqualTo(Utfall.OPPFYLT)
-            },
-            Segment(Periode(8 januar 2024, 1 januar 2027)) { vurdering ->
+            Segment(Periode(1 januar 2024, 1 januar 2027)) { vurdering ->
                 assertThat(vurdering.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
             },
         )
@@ -159,7 +182,8 @@ class SykdomsvilkårTest {
                     )
                 ),
                 studentvurdering = null,
-                sykepengerErstatningFaktagrunnlag = null
+                sykepengerErstatningFaktagrunnlag = null,
+                bistandvurderingFaktagrunnlag = bistandGrunnlag(startDato)
             )
         )
 
@@ -199,16 +223,20 @@ class SykdomsvilkårTest {
                     )
                 ),
                 studentvurdering = null,
+                bistandvurderingFaktagrunnlag = null,
                 sykepengerErstatningFaktagrunnlag =
-                    SykepengerVurdering(
-                        begrunnelse = "",
-                        dokumenterBruktIVurdering = emptyList(),
-                        harRettPå = true,
-                        grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
-                        vurdertAv = "abc123",
-                        vurdertTidspunkt = LocalDateTime.now(),
+                    SykepengerErstatningGrunnlag(
+                        vurderinger = listOf(
+                            SykepengerVurdering(
+                                begrunnelse = "",
+                                dokumenterBruktIVurdering = emptyList(),
+                                harRettPå = true,
+                                grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
+                                vurdertAv = "abc123",
+                                vurdertTidspunkt = LocalDateTime.now(),
+                            )
+                        )
                     ),
-
             )
         )
 
@@ -217,7 +245,7 @@ class SykdomsvilkårTest {
         assertThat(vilkår.vilkårsperioder()).hasSize(1)
 
         vilkår.tidslinje().assertTidslinje(
-            Segment(Periode(1 januar 2024,  1 januar 2027)) { vurdering ->
+            Segment(Periode(1 januar 2024, 1 januar 2027)) { vurdering ->
                 assertThat(vurdering.utfall).isEqualTo(Utfall.OPPFYLT)
                 assertThat(vurdering.innvilgelsesårsak).isEqualTo(Innvilgelsesårsak.SYKEPENGEERSTATNING)
             },
@@ -232,7 +260,9 @@ class SykdomsvilkårTest {
         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean = true,
         erArbeidsevnenNedsatt: Boolean = true,
         vurderingenGjelderFra: LocalDate? = null,
-        opprettet: LocalDateTime = LocalDateTime.now()
+        vurderingenGjelderTil: LocalDate? = null,
+        opprettet: LocalDateTime = LocalDateTime.now(),
+        behandlingId: BehandlingId = BehandlingId(1L)
     ) = Sykdomsvurdering(
         begrunnelse = "",
         dokumenterBruktIVurdering = emptyList(),
@@ -244,7 +274,9 @@ class SykdomsvilkårTest {
         erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
         yrkesskadeBegrunnelse = null,
         vurderingenGjelderFra = vurderingenGjelderFra,
+        vurderingenGjelderTil = vurderingenGjelderTil,
         vurdertAv = Bruker("Z00000"),
-        opprettet = opprettet.toInstant(ZoneOffset.UTC)
+        opprettet = opprettet.toInstant(ZoneOffset.UTC),
+        vurdertIBehandling = behandlingId
     )
 }

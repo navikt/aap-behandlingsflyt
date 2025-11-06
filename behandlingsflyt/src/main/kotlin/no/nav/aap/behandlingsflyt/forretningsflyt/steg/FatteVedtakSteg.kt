@@ -1,15 +1,13 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.GosysService
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Omgjøres
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Opprettholdes
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.NavKontorPeriodeDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -19,36 +17,66 @@ import no.nav.aap.behandlingsflyt.flyt.steg.TilbakeføresFraBeslutter
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
-import org.slf4j.LoggerFactory
 
 class FatteVedtakSteg(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
-    private val sakRepository: SakRepository,
-    private val refusjonkravRepository: RefusjonkravRepository,
+    private val trekkKlageService: TrekkKlageService,
+    private val avklaringsbehovService: AvklaringsbehovService,
     private val tidligereVurderinger: TidligereVurderinger,
     private val klageresultatUtleder: KlageresultatUtleder,
-    private val trekkKlageService: TrekkKlageService,
-    private val gosysService: GosysService,
-) : BehandlingSteg {
+    private val unleashGateway: UnleashGateway,
 
-    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
-        avklaringsbehovRepository = repositoryProvider.provide(),
-        refusjonkravRepository = repositoryProvider.provide(),
-        sakRepository = repositoryProvider.provide(),
-        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
-        klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
-        trekkKlageService = TrekkKlageService(repositoryProvider),
-        gosysService = GosysService(gatewayProvider)
-    )
-
-    private val log = LoggerFactory.getLogger(javaClass)
+    ) : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.FatteVedtakAvklaringsbehovService)) {
+            return utførNy(kontekst)
+        }
+        return utførGammel(kontekst)
+    }
+
+    fun utførNy(kontekst: FlytKontekstMedPerioder): StegResultat {
+
+
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+
+        val skalTilbakeføres = avklaringsbehovene.skalTilbakeføresEtterTotrinnsVurdering()
+        val harHattAvklaringsbehovSomHarKrevdTotrinnOgSomIkkeErVurdert = avklaringsbehovene.harAvklaringsbehovSomKreverToTrinnMenIkkeErVurdert()
+
+        val erKlage = kontekst.behandlingType == TypeBehandling.Klage
+        val erTrukketEllerIngenGrunnlag =
+            tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type()) ||
+                    trekkKlageService.klageErTrukket(kontekst.behandlingId)
+
+        val vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst, avklaringsbehovene) }
+
+        val erTilstrekkeligVurdert = when {
+            erTrukketEllerIngenGrunnlag -> true
+            erKlage -> true
+            harHattAvklaringsbehovSomHarKrevdTotrinnOgSomIkkeErVurdert -> false
+            else -> true
+        }
+
+        avklaringsbehovService.oppdaterAvklaringsbehov(
+            avklaringsbehovene = avklaringsbehovene,
+            definisjon = Definisjon.FATTE_VEDTAK,
+            vedtakBehøverVurdering = vedtakBehøverVurdering,
+            erTilstrekkeligVurdert = { erTilstrekkeligVurdert },
+            tilbakestillGrunnlag = {},
+            kontekst = kontekst
+        )
+
+        if (skalTilbakeføres) return TilbakeføresFraBeslutter
+
+        return Fullført
+    }
+
+    fun utførGammel(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
         if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type()) || trekkKlageService.klageErTrukket(
@@ -74,55 +102,44 @@ class FatteVedtakSteg(
             return FantAvklaringsbehov(Definisjon.FATTE_VEDTAK)
         }
 
-        val navkontorSosialRefusjon = refusjonkravRepository.hentHvisEksisterer(kontekst.behandlingId)
-        if (navkontorSosialRefusjon == null) return Fullført
-
-        val navKontorList = navkontorSosialRefusjon
-            .filter { it.harKrav && it.navKontor != null }
-            .map {
-                NavKontorPeriodeDto(
-                    enhetsNummer = navKontorEnhetsNummer(it.navKontor)!!,
-                    fom = it.fom,
-                    tom = it.tom
-                )
-            }
-
-        if (navKontorList.isNotEmpty()) {
-            val aktivIdent = sakRepository.hent(kontekst.sakId).person.aktivIdent()
-
-            opprettOppgave(navKontorList, aktivIdent, kontekst)
-        }
         return Fullført
     }
 
 
-    fun navKontorEnhetsNummer(input: String?): String? {
-        return input?.substringAfterLast(" - ")
-    }
+    private fun vedtakBehøverVurdering(
+        kontekst: FlytKontekstMedPerioder,
+        avklaringsbehovene: Avklaringsbehovene
+    ): Boolean {
+        if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type()) ||
+            trekkKlageService.klageErTrukket(kontekst.behandlingId)
+        ) {
+            return false
+        }
 
-    private fun opprettOppgave(
-        navKontorList: List<NavKontorPeriodeDto>,
-        aktivIdent: Ident,
-        kontekst: FlytKontekstMedPerioder
-    ) {
-        navKontorList.forEach { navKontor ->
-            log.info("Oppretter Gosysoppgave for $navKontor")
-            // Dersom det er oppgitt et enhetsnummer en oppgave skal opprettes til
-            if (navKontor.enhetsNummer.isNotEmpty()) {
-                gosysService.opprettOppgave(
-                    aktivIdent,
-                    kontekst.behandlingId.toString(),
-                    kontekst.behandlingId,
-                    navKontor
-                )
+        if (kontekst.behandlingType == TypeBehandling.Klage) {
+            val klageresultat = klageresultatUtleder.utledKlagebehandlingResultat(kontekst.behandlingId)
+            if (klageresultat is Opprettholdes) {
+                return false
             }
         }
+
+        return  avklaringsbehovene.harAvklaringsbehovSomKreverToTrinn()
     }
 
 
     companion object : FlytSteg {
-        override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
-            return FatteVedtakSteg(repositoryProvider, gatewayProvider)
+        override fun konstruer(
+            repositoryProvider: RepositoryProvider,
+            gatewayProvider: GatewayProvider
+        ): BehandlingSteg {
+            return FatteVedtakSteg(
+                repositoryProvider.provide(),
+                TrekkKlageService(repositoryProvider),
+                AvklaringsbehovService(repositoryProvider),
+                TidligereVurderingerImpl(repositoryProvider),
+                klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
+                unleashGateway = gatewayProvider.provide(),
+            )
         }
 
         override fun type(): StegType {

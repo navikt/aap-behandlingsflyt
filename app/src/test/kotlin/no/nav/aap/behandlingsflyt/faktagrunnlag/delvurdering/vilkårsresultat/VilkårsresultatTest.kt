@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype.BISTANDSVILKÅRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype.SYKDOMSVILKÅRET
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
+import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
@@ -249,36 +250,58 @@ class VilkårsresultatTest {
         fun `om 11-5 ikke er oppfylt, kan man likevel få innvilgelse etter 11-17`() {
             val v = tomVurdering()
             val nå = LocalDate.now()
+            val ordinærPeriode = Periode(nå, nå.plusMonths(1).minusDays(1))
+            val arbeidssøkerPeriode = Periode(ordinærPeriode.tom.plusDays(1), nå.plusYears(1).minusDays(1))
 
-            val sykepengerPeriode = nå.plusDays(30)
-            v.leggTilHvisIkkeEksisterer(SYKDOMSVILKÅRET).leggTilVurdering(
-                Vilkårsperiode(
-                    Periode(nå, sykepengerPeriode),
-                    utfall = Utfall.IKKE_RELEVANT,
-                    begrunnelse = null
-                )
-            )
-            v.leggTilHvisIkkeEksisterer(BISTANDSVILKÅRET).leggTilVurdering(
-                Vilkårsperiode(
-                    Periode(nå, sykepengerPeriode),
-                    utfall = Utfall.IKKE_RELEVANT,
-                    begrunnelse = null,
-                )
-            )
-            v.leggTilHvisIkkeEksisterer(Vilkårtype.OVERGANGARBEIDVILKÅRET).leggTilVurdering(
-                Vilkårsperiode(
-                    Periode(nå, sykepengerPeriode),
+            v.leggTilHvisIkkeEksisterer(SYKDOMSVILKÅRET). leggTilVurderinger(tidslinjeOf(
+                ordinærPeriode to Vilkårsvurdering(
                     utfall = Utfall.OPPFYLT,
-                    innvilgelsesårsak = Innvilgelsesårsak.ARBEIDSSØKER,
-                    begrunnelse = null,
+                    manuellVurdering = true,
+                    begrunnelse = "",
+                    faktagrunnlag = null,
+                ),
+                arbeidssøkerPeriode to Vilkårsvurdering(
+                    utfall = Utfall.IKKE_OPPFYLT,
+                    avslagsårsak = Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL,
+                    manuellVurdering = true,
+                    begrunnelse = "",
+                    faktagrunnlag = null,
                 )
-            )
-            v.leggTilFellesVilkår(Periode(nå, sykepengerPeriode))
+            ))
+
+            v.leggTilHvisIkkeEksisterer(BISTANDSVILKÅRET).leggTilVurderinger(tidslinjeOf(
+                ordinærPeriode to Vilkårsvurdering(
+                    utfall = Utfall.OPPFYLT,
+                    manuellVurdering = true,
+                    begrunnelse = "",
+                    faktagrunnlag = null,
+                ),
+                arbeidssøkerPeriode to Vilkårsvurdering(
+                    utfall = Utfall.IKKE_OPPFYLT,
+                    avslagsårsak = Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING,
+                    manuellVurdering = true,
+                    begrunnelse = "",
+                    faktagrunnlag = null,
+                )
+            ))
+            v.leggTilHvisIkkeEksisterer(Vilkårtype.OVERGANGARBEIDVILKÅRET).leggTilVurderinger(tidslinjeOf(
+                arbeidssøkerPeriode to Vilkårsvurdering(
+                    utfall = Utfall.OPPFYLT,
+                    manuellVurdering = true,
+                    begrunnelse = "",
+                    faktagrunnlag = null,
+                ),
+            ))
+            v.leggTilFellesVilkår(ordinærPeriode)
+            v.leggTilFellesVilkår(arbeidssøkerPeriode)
 
             val res = v.rettighetstypeTidslinje().komprimer()
             assertTidslinje(
                 res,
-                Periode(nå, sykepengerPeriode) to {
+                ordinærPeriode to {
+                    assertThat(it).isEqualTo(RettighetsType.BISTANDSBEHOV)
+                },
+                arbeidssøkerPeriode to {
                     assertThat(it).isEqualTo(RettighetsType.ARBEIDSSØKER)
                 },
             )
@@ -323,5 +346,48 @@ class VilkårsresultatTest {
                 },
             )
         }
+
+
+        @Test
+        fun `om 11-5 ikke er oppfylt, men både 11-18 og 11-13 er oppfylt skal vi innvilge basert på 11-18 (inntil videre)`() {
+            val v = tomVurdering()
+            val nå = LocalDate.now()
+
+            val sykepengerPeriode = nå.plusDays(30)
+            v.leggTilHvisIkkeEksisterer(Vilkårtype.OVERGANGUFØREVILKÅRET).leggTilVurdering(
+                Vilkårsperiode(
+                    Periode(nå, sykepengerPeriode),
+                    utfall = Utfall.OPPFYLT,
+                    begrunnelse = null,
+                    innvilgelsesårsak = null,
+                )
+            )
+
+            v.leggTilHvisIkkeEksisterer(BISTANDSVILKÅRET).leggTilVurdering(
+                Vilkårsperiode(
+                    Periode(nå, sykepengerPeriode),
+                    utfall = Utfall.IKKE_RELEVANT,
+                    begrunnelse = null,
+                )
+            )
+            v.leggTilHvisIkkeEksisterer(SYKDOMSVILKÅRET).leggTilVurdering(
+                Vilkårsperiode(
+                    Periode(nå, sykepengerPeriode),
+                    innvilgelsesårsak = Innvilgelsesårsak.SYKEPENGEERSTATNING,
+                    utfall = Utfall.OPPFYLT,
+                    begrunnelse = null,
+                )
+            )
+            v.leggTilFellesVilkår(Periode(nå, sykepengerPeriode))
+
+            val res = v.rettighetstypeTidslinje().komprimer()
+            assertTidslinje(
+                res,
+                Periode(nå, sykepengerPeriode) to {
+                    assertThat(it).isEqualTo(RettighetsType.VURDERES_FOR_UFØRETRYGD)
+                },
+            )
+        }
     }
+
 }

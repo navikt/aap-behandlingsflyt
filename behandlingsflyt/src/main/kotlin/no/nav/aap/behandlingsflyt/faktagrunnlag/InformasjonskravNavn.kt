@@ -5,6 +5,7 @@ enum class InformasjonskravNavn {
     BARN,
     YRKESSKADE,
     AKTIVITETSPLIKT,
+    AKTIVITETSPLIKT_11_9,
     FORUTGÅENDE_MEDLEMSKAP,
     INNTEKT,
     LOVVALG,

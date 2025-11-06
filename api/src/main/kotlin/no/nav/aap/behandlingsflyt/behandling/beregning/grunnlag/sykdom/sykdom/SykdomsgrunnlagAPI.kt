@@ -4,9 +4,8 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
-import no.nav.aap.behandlingsflyt.behandling.vurdering.utledNyesteKvalitetssikring
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -19,6 +18,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -38,15 +38,16 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
     route("/api/behandling") {
         route("/{referanse}/grunnlag/sykdom/sykdom") {
             getGrunnlag<BehandlingReferanse, SykdomGrunnlagResponse>(
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = Definisjon.AVKLAR_SYKDOM.kode.toString()
             ) { req ->
                 val response = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
+                    val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val sykdomRepository = repositoryProvider.provide<SykdomRepository>()
                     val yrkesskadeRepository = repositoryProvider.provide<YrkesskadeRepository>()
-                    val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
 
                     val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandlingId = behandling.id)
@@ -60,9 +61,10 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
                     val historikkSykdomsvurderinger =
                         sykdomRepository.hentHistoriskeSykdomsvurderinger(behandling.sakId, behandling.id)
 
-                    val vedtatteSykdomsvurderinger = behandling.forrigeBehandlingId
+                    val vedtatteSykdomGrunnlag = behandling.forrigeBehandlingId
                         ?.let { sykdomRepository.hentHvisEksisterer(it) }
-                        ?.sykdomsvurderinger.orEmpty()
+
+                    val vedtatteSykdomsvurderinger = vedtatteSykdomGrunnlag?.sykdomsvurderinger.orEmpty()
 
                     val vedtatteSykdomsvurderingerIder = vedtatteSykdomsvurderinger.map { it.id }
                     val sykdomsvurderinger = nåTilstand.filterNot { it.id in vedtatteSykdomsvurderingerIder }
@@ -73,8 +75,10 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
                             innhentedeYrkesskader = innhentedeYrkesskader,
                         ),
                         skalVurdereYrkesskade = innhentedeYrkesskader.isNotEmpty(),
+                        erÅrsakssammenhengYrkesskade = vedtatteSykdomGrunnlag?.yrkesskadevurdering?.erÅrsakssammenheng
+                            ?: false,
                         sykdomsvurderinger = sykdomsvurderinger
-                            .sortedBy { it.vurderingenGjelderFra ?: LocalDate.MIN }
+                            .sortedWith(compareBy({ it.vurderingenGjelderFra ?: LocalDate.MIN }, { it.opprettet }))
                             .map { it.toDto(ansattInfoService) },
                         historikkSykdomsvurderinger = historikkSykdomsvurderinger
                             .sortedBy { it.opprettet }
@@ -83,11 +87,9 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
                             .sortedBy { it.vurderingenGjelderFra ?: LocalDate.MIN }
                             .map { it.toDto(ansattInfoService) },
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
-                        kvalitetssikretAv = utledNyesteKvalitetssikring(
+                        kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
                             definisjon = Definisjon.AVKLAR_SYKDOM,
                             behandlingId = behandling.id,
-                            avklaringsbehovRepository = avklaringsbehovRepository,
-                            ansattInfoService = ansattInfoService,
                         )
                     )
                 }
@@ -97,6 +99,7 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
         }
         route("/{referanse}/grunnlag/sykdom/yrkesskade") {
             getGrunnlag<BehandlingReferanse, YrkesskadeVurderingGrunnlagResponse>(
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = Definisjon.AVKLAR_YRKESSKADE.kode.toString()
             ) { req ->

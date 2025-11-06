@@ -11,10 +11,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -24,8 +26,29 @@ import java.time.LocalDate
 import java.util.stream.Stream
 
 class BeregningVurderingRepositoryImplTest {
-    private val dataSource = InitTestDatabase.freshDatabase()
+    companion object {
+        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        @JvmStatic
+        fun testDataAvrunding(): Stream<Arguments> {
+            return Stream.of(
+                Arguments.of(500001, 501000),
+                Arguments.of(499999, 500000),
+                Arguments.of(367000, 367000),
+            )
+        }
 
+        private lateinit var dataSource: TestDataSource
+
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            dataSource = TestDataSource()
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun tearDown() = dataSource.close()
+    }
 
     @Test
     fun `lagre, hent ut igjen, og slett`() {
@@ -144,20 +167,6 @@ class BeregningVurderingRepositoryImplTest {
         }
     }
 
-
-    private companion object {
-        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-
-        @JvmStatic
-        fun testDataAvrunding(): Stream<Arguments> {
-            return Stream.of(
-                Arguments.of(500001, 501000),
-                Arguments.of(499999, 500000),
-                Arguments.of(367000, 367000),
-            )
-        }
-
-    }
 
     private fun sak(connection: DBConnection): Sak {
         return PersonOgSakService(

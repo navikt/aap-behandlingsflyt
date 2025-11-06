@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.barn
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
@@ -18,10 +19,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
@@ -29,13 +31,17 @@ internal class BarnRepositoryImplTest {
 
     private companion object {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-        private val dataSource = InitTestDatabase.freshDatabase()
+        private lateinit var dataSource: TestDataSource
 
+        @BeforeAll
         @JvmStatic
-        @AfterAll
-        fun afterAll() {
-            InitTestDatabase.closerFor(dataSource)
+        fun setup() {
+            dataSource = TestDataSource()
         }
+
+        @AfterAll
+        @JvmStatic
+        fun tearDown() = dataSource.close()
     }
 
 
@@ -73,7 +79,7 @@ internal class BarnRepositoryImplTest {
             BarnIdentifikator.BarnIdent("12345678910"), BarnIdentifikator.BarnIdent("12345"),
         ).map {
             Barn(
-                it, Fødselsdato(LocalDate.now().minusYears(10))
+                it, Fødselsdato(LocalDate.now().minusYears(10)), Dødsdato(LocalDate.now().minusYears(5))
             )
         } + listOf(
             Barn(

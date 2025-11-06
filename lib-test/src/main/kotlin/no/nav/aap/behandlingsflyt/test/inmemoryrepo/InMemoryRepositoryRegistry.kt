@@ -30,6 +30,7 @@ val inMemoryRepositoryRegistry = RepositoryRegistry().apply {
     register<InMemoryTjenestePensjonRepository>()
     register<InMemoryTrukketSøknadRepository>()
     register<InMemoryUnderveisRepository>()
+    register<InMemoryAktivitetsplikt11_9Repository>()
     register<InMemoryVilkårsresultatRepository>()
 }
 

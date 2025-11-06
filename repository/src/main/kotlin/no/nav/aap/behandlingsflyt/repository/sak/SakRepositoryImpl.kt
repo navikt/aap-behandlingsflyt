@@ -11,7 +11,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
-import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
@@ -75,37 +74,18 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
         }
     }
 
-    override fun finnAlle(): List<Sak> {
-        return connection.queryList(
-            """
-                SELECT
-                 SAK.*,
-                 PERSON.REFERANSE AS PERSON_REFERANSE,
-                 IDENTER
-               FROM SAK
-               JOIN PERSON on SAK.person_id = PERSON.id
-               JOIN (SELECT 
-                    PERSON_IDENT.person_id as person_id,
-                    json_agg(json_build_object('identifikator', person_ident.ident, 'aktivIdent', person_ident.primaer)) as IDENTER
-                    from PERSON_IDENT
-                    GROUP BY PERSON_IDENT.person_id
-                ) IDENTER ON PERSON.id = IDENTER.person_id
-            """.trimMargin()
-        ) {
-            setRowMapper { row ->
-                Sak(
-                    id = SakId(row.getLong("id")),
-                    person = Person(
-                        id = row.getLong("person_id").let(::PersonId),
-                        identifikator = row.getUUID("person_referanse"),
-                        identer = DefaultJsonMapper.fromJson(row.getString("identer"))
-                    ),
-                    rettighetsperiode = row.getPeriode("rettighetsperiode"),
-                    saksnummer = Saksnummer(row.getString("saksnummer")),
-                    status = row.getEnum<Status>("status"),
-                    opprettetTidspunkt = row.getLocalDateTime("opprettet_tid")
-                )
+    override fun finnAlleSakIder(): List<SakId> {
+        return connection.queryList("SELECT id FROM SAK") {
+            setRowMapper { row -> SakId(row.getLong("id")) }
+        }
+    }
+
+    override fun finnSiste(antall: Int): List<Sak> {
+        return connection.queryList("SELECT * FROM SAK ORDER BY id DESC LIMIT ?") {
+            setParams {
+                setInt(1, antall)
             }
+            setRowMapper { row -> mapSak(row) }
         }
     }
 

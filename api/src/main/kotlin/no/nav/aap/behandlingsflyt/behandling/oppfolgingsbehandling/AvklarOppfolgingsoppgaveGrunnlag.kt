@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.BehandlingPathParam
@@ -49,6 +50,7 @@ fun NormalOpenAPIRoute.avklarOppfolgingsoppgaveGrunnlag(
     dataSource: DataSource, repositoryRegistry: RepositoryRegistry
 ) {
     route("/api/behandling/{referanse}/grunnlag/oppfolgingsoppgave").getGrunnlag<BehandlingReferanse, AvklarOppfolgingsoppgaveGrunnlagResponse>(
+        relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
         behandlingPathParam = BehandlingPathParam("referanse"),
         avklaringsbehovKode = Definisjon.AVKLAR_OPPFØLGINGSBEHOV_NAY.kode.toString()
     ) { req ->

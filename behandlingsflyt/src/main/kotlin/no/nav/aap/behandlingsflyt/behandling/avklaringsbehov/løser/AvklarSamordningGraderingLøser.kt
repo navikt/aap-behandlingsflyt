@@ -31,7 +31,7 @@ class AvklarSamordningGraderingLøser(
             begrunnelse = vurderingerForSamordning.begrunnelse,
             maksDatoEndelig = vurderingerForSamordning.maksDatoEndelig,
             fristNyRevurdering = vurderingerForSamordning.fristNyRevurdering,
-            vurderinger = vurderingerForSamordning.vurderteSamordningerData.groupBy { it.ytelseType }.map { it ->
+            vurderinger = vurderingerForSamordning.vurderteSamordningerData.groupBy { it.ytelseType }.map {
                 SamordningVurdering(
                     ytelseType = it.key,
                     vurderingPerioder = it.value.map { vurdering ->
@@ -41,10 +41,11 @@ class AvklarSamordningGraderingLøser(
                             kronesum = vurdering.kronesum,
                             manuell = vurdering.manuell
                         )
-                    }
+                    }.toSet()
                 )
-            },
-            vurdertAv = kontekst.bruker.ident)
+            }.toSet(),
+            vurdertAv = kontekst.bruker.ident
+        )
 
         val perioderSomIkkeHarBlittVurdert = samordningService.perioderSomIkkeHarBlittVurdert(
             samordningYtelseGrunnlag, samordningService.vurderingTidslinje(samordningsvurderinger)

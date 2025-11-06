@@ -15,9 +15,33 @@ data class FlytKontekstMedPerioder(
     val forrigeBehandlingId: BehandlingId?,
     val behandlingType: TypeBehandling,
     val vurderingType: VurderingType,
+    @Deprecated("Slutt å bruk denne - vurderingtype og vurderingsbehovRelevantForSteg bør være dekkende for stegene")
+    val vurderingTypeRelevantForSteg: VurderingType,
     val rettighetsperiode: Periode,
     val vurderingsbehovRelevanteForSteg: Set<Vurderingsbehov>
 ) {
+    /**
+     * Midlertidig løsning inntil vi blir kvitt vurderingTypeRelevantForSteg
+     */
+    constructor(
+        sakId: SakId,
+        behandlingId: BehandlingId,
+        forrigeBehandlingId: BehandlingId?,
+        behandlingType: TypeBehandling,
+        vurderingType: VurderingType,
+        rettighetsperiode: Periode,
+        vurderingsbehovRelevanteForSteg: Set<Vurderingsbehov>
+    ) : this(
+        sakId,
+        behandlingId,
+        forrigeBehandlingId,
+        behandlingType,
+        vurderingType,
+        vurderingType,
+        rettighetsperiode,
+        vurderingsbehovRelevanteForSteg
+    )
+
     fun harNoeTilBehandling(): Boolean {
         return vurderingType != VurderingType.IKKE_RELEVANT
     }

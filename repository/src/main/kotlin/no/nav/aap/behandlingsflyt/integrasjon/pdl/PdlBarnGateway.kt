@@ -43,7 +43,8 @@ class PdlBarnGateway : BarnGateway {
         val request = PdlRequest(BARN_RELASJON_QUERY, IdentVariables(person.aktivIdent().identifikator))
         val response = PdlGateway.query<PdlRelasjonDataResponse>(request)
 
-        val relasjoner = response.data?.hentPerson?.forelderBarnRelasjon ?: return emptyList()
+        val relasjoner = response.data?.hentPerson?.forelderBarnRelasjon.orEmpty()
+            .filter { it.relatertPersonsRolle == ForelderBarnRelasjonRolle.BARN }
 
         return relasjoner.map { relasjon ->
             if (relasjon.relatertPersonsIdent == null) {
@@ -83,7 +84,9 @@ class PdlBarnGateway : BarnGateway {
                     Barn(
                         ident = BarnIdentifikator.BarnIdent(res.ident),
                         fødselsdato = requireNotNull(fødselsdato) { "Barn i PDL manglet fødselsdato. " },
-                        dødsdato = person.doedsfall?.firstOrNull()?.doedsdato?.let { Dødsdato.parse(it) })
+                        dødsdato = person.doedsfall?.firstOrNull()?.doedsdato?.let { Dødsdato.parse(it) },
+                        navn = person.navn?.firstOrNull()
+                            ?.let { listOfNotNull(it.fornavn, it.mellomnavn, it.etternavn).joinToString(" ") })
                 }
             }
         }
@@ -95,13 +98,14 @@ val BARN_RELASJON_QUERY = $$"""
     query($ident: ID!) {
         hentPerson(ident: $ident) {
             forelderBarnRelasjon {
+                relatertPersonsRolle
                 relatertPersonsIdent
                 relatertPersonUtenFolkeregisteridentifikator {
                   foedselsdato
-                  navn {
-                    etternavn
+                  navn {    
                     fornavn
                     mellomnavn
+                    etternavn
                   }
                  statsborgerskap
                }
@@ -121,6 +125,11 @@ val PERSON_BOLK_QUERY = $$"""
                 },
                 foedselsdato {
                     foedselsdato
+                },
+                navn {
+                    fornavn
+                    mellomnavn
+                    etternavn
                 }
             }
             code

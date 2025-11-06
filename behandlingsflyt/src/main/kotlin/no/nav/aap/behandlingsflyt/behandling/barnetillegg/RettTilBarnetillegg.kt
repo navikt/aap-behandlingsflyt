@@ -44,7 +44,8 @@ class RettTilBarnetillegg(barn: Set<BarnIdentifikator> = emptySet()) {
     }
 
     private fun uavklarteBarnIdenter(): List<BarnIdentifikator> {
-        return uavklarteBarn.filterNot { ident -> godkjenteUavklarteBarn.any { it.er(ident) } }
+        return uavklarteBarn
+            .filterNot { ident -> godkjenteUavklarteBarn.any { it.er(ident) } }
             .filterNot { ident -> underkjenteUavklarteBarn.any { it.er(ident) } }
     }
 

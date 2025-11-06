@@ -36,7 +36,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.FinnEllerOpprettSakDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SaksinfoDTO
@@ -71,6 +70,8 @@ import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 import org.slf4j.LoggerFactory
 import java.io.InputStream
 import java.net.URI
@@ -80,6 +81,8 @@ import java.time.Year
 import java.util.*
 
 @Fakes
+// FIXME testene i klassen bruker samme database og er timing-sensitive. Derfor SAME_THREAD.
+@Execution(ExecutionMode.SAME_THREAD)
 class ApiTest {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -155,9 +158,9 @@ class ApiTest {
 
     @Test
     fun `kalle medlemsskaps-api`() {
-        val ds = initDatasource(dbConfig)
+        val dataSource = initDatasource(dbConfig)
 
-        val opprettetBehandling = ds.transaction { connection ->
+        val opprettetBehandling = dataSource.transaction { connection ->
             val personOgSakService = PersonOgSakService(
                 FakePdlGateway,
                 PersonRepositoryImpl(connection),

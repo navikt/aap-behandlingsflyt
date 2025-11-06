@@ -36,7 +36,7 @@ data class VurdertBarn(val ident: BarnIdentifikator, val vurderinger: List<Vurde
     fun tilTidslinje(): Tidslinje<ForeldreansvarVurdering> {
         val til = when (ident) {
             is BarnIdentifikator.BarnIdent -> Tid.MAKS
-            is BarnIdentifikator.NavnOgFødselsdato -> Barn.periodeMedRettTil(ident.fødselsdato).tom
+            is BarnIdentifikator.NavnOgFødselsdato -> Barn.periodeMedRettTil(ident.fødselsdato, null).tom
         }
         return vurderinger.sortedBy { it.fraDato }.map {
             Tidslinje(

@@ -52,8 +52,6 @@ class TilkjentYtelseAPITest : BaseApiTest() {
                 perioder
             )
 
-            println("PERIODER $perioder")
-
             val tilkjentYtelseVerdi = Tilkjent(
                 dagsats = Beløp(500),
                 gradering = TilkjentGradering(
@@ -149,6 +147,7 @@ class TilkjentYtelseAPITest : BaseApiTest() {
                                     felter = Felter(
                                         dagsats = 400.0,
                                         barneTilleggsats = 36.00,
+                                        barnetillegg = 72.00,
                                         arbeidGradering = 50,
                                         samordningGradering = 80,
                                         institusjonGradering = 50,
@@ -179,6 +178,7 @@ class TilkjentYtelseAPITest : BaseApiTest() {
                                     felter = Felter(
                                         dagsats = 500.0,
                                         barneTilleggsats = 36.00,
+                                        barnetillegg = 72.00,
                                         arbeidGradering = 50,
                                         samordningGradering = 80,
                                         institusjonGradering = 50,
@@ -206,6 +206,7 @@ class TilkjentYtelseAPITest : BaseApiTest() {
                                     felter = Felter(
                                         dagsats = 600.0,
                                         barneTilleggsats = 36.00,
+                                        barnetillegg = 72.00,
                                         arbeidGradering = 50,
                                         samordningGradering = 80,
                                         institusjonGradering = 50,

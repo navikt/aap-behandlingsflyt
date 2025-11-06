@@ -23,7 +23,7 @@ class AvklarOvergangUføreLøsning(
         required = true,
         defaultValue = AVKLAR_OVERGANG_UFORE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5031`
-) : AvklaringsbehovLøsning {
+) : EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return AvklarOvergangUføreLøser(repositoryProvider).løs(kontekst, this)
     }
