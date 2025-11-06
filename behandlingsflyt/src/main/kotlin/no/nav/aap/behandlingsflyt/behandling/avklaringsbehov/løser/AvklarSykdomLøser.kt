@@ -9,8 +9,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepos
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.utils.Validation
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -37,7 +40,6 @@ class AvklarSykdomLøser(
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarSykdomLøsning): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
-        val yrkesskadeGrunnlag = yrkersskadeRepository.hentHvisEksisterer(behandling.id)
 
         val rettighetsperiode = sakRepository.hent(behandling.sakId).rettighetsperiode
 
@@ -48,36 +50,52 @@ class AvklarSykdomLøser(
             ?.let { sykdomRepository.hentHvisEksisterer(it) }
             ?.sykdomsvurderinger
             .orEmpty()
-        
+
         val gjeldendeVurderinger = eksisterendeSykdomsvurderinger + nyeSykdomsvurderinger
 
         validerSykdomOgYrkesskadeKonsistens(
-            SykdomGrunnlag(
-                sykdomsvurderinger = gjeldendeVurderinger,
-                yrkesskadevurdering = null
-            ).somSykdomsvurderingstidslinje(),
-            yrkesskadeGrunnlag,
-            behandling.typeBehandling()
+            behandling,
+            gjeldendeVurderinger
         )
 
-        sykdomRepository.lagre(
-            behandlingId = behandling.id,
-            sykdomsvurderinger = gjeldendeVurderinger,
-        )
+        return when (val validertLøsning = løsning.valider()) {
+            is Validation.Invalid -> throw UgyldigForespørselException(validertLøsning.errorMessage)
+            is Validation.Valid -> {
+                sykdomRepository.lagre(
+                    behandlingId = behandling.id,
+                    sykdomsvurderinger = gjeldendeVurderinger,
+                )
+                LøsningsResultat(
+                    begrunnelse = "Vurdering av § 11-5"
+                )
+            }
+        }
+    }
 
-        return LøsningsResultat(
-            begrunnelse = "Vurdering av § 11-5"
-        )
+    private fun AvklarSykdomLøsning.valider(): Validation<AvklarSykdomLøsning> {
+        if (sykdomsvurderinger.isEmpty()) {
+            return Validation.Invalid(this, "Må sende inn minst én sykdomsvurdering")
+        }
+        if (sykdomsvurderinger.map { it.vurderingenGjelderFra }.distinct().size != sykdomsvurderinger.size) {
+            return Validation.Invalid(this, "Vurderingene må ha unik 'vurderingenGjelderFra'-dato")
+        }
+        // TODO: Bør ha validering på konsistente verdier
+        return Validation.Valid(this)
     }
 
     private fun validerSykdomOgYrkesskadeKonsistens(
-        sykdomLøsning: Tidslinje<Sykdomsvurdering>,
-        yrkesskadeGrunnlag: YrkesskadeGrunnlag?,
-        typeBehandling: TypeBehandling
+        behandling: Behandling,
+        gjeldendeSykdomsvurderinger: List<Sykdomsvurdering>,
     ) {
+        val sykdomLøsning = SykdomGrunnlag(
+            sykdomsvurderinger = gjeldendeSykdomsvurderinger,
+            yrkesskadevurdering = null
+        ).somSykdomsvurderingstidslinje()
+        val yrkesskadeGrunnlag = yrkersskadeRepository.hentHvisEksisterer(behandling.id)
+
         val harYrkesskade = yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() == true
         sykdomLøsning.segmenter().forEach {
-            if (!it.verdi.erKonsistentForSykdom(harYrkesskade, typeBehandling)) {
+            if (!it.verdi.erKonsistentForSykdom(harYrkesskade, behandling.typeBehandling())) {
                 log.info(
                     "Sykdomsvurderingen er ikke konsistent med yrkesskade sykdomsvurdering=[{}] harYrkesskade=[{}]",
                     it.verdi,
