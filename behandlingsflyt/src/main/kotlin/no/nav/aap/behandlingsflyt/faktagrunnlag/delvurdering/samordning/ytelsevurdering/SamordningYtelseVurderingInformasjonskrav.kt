@@ -10,7 +10,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.KanTriggeRevurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingInformasjonskrav.SamordningInput
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingInformasjonskrav.SamordningRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Aktør
@@ -26,6 +25,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -39,7 +39,7 @@ class SamordningYtelseVurderingInformasjonskrav(
     private val tidligereVurderinger: TidligereVurderinger,
     private val fpGateway: ForeldrepengerGateway,
     private val spGateway: SykepengerGateway,
-    private val sakOgBehandlingService: SakOgBehandlingService,
+    private val sakService: SakService
 ) : Informasjonskrav<SamordningInput, SamordningRegisterdata>, KanTriggeRevurdering {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -66,7 +66,7 @@ class SamordningYtelseVurderingInformasjonskrav(
     ) : InformasjonskravRegisterdata
 
     override fun klargjør(kontekst: FlytKontekstMedPerioder): SamordningInput {
-        val sak = sakOgBehandlingService.hentSakFor(kontekst.behandlingId)
+        val sak = sakService.hentSakFor(kontekst.behandlingId)
         return SamordningInput(sak.person, sak.rettighetsperiode)
     }
 
@@ -181,7 +181,7 @@ class SamordningYtelseVurderingInformasjonskrav(
 
     override fun behovForRevurdering(behandlingId: BehandlingId): List<VurderingsbehovMedPeriode> {
         val eksisterendeData = samordningYtelseRepository.hentHvisEksisterer(behandlingId)
-        val sak = sakOgBehandlingService.hentSakFor(behandlingId)
+        val sak = sakService.hentSakFor(behandlingId)
         val samordningYtelser = hentData(SamordningInput(sak.person, sak.rettighetsperiode)).samordningYtelser
 
         // Ønsker ikke trigge revurdering automatisk i dette tilfellet enn så lenge
@@ -205,7 +205,7 @@ class SamordningYtelseVurderingInformasjonskrav(
                 TidligereVurderingerImpl(repositoryProvider),
                 gatewayProvider.provide(),
                 gatewayProvider.provide(),
-                SakOgBehandlingService(repositoryProvider, gatewayProvider)
+                SakService(repositoryProvider)
             )
         }
 

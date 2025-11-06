@@ -6,10 +6,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravInput
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.KanTriggeRevurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonInformasjonskrav.TjenestePensjonRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TjenestePensjonGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
@@ -18,6 +17,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -27,7 +27,7 @@ class TjenestePensjonInformasjonskrav(
     private val tjenestePensjonRepository: TjenestePensjonRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val tpGateway: TjenestePensjonGateway,
-    private val sakOgBehandlingService: SakOgBehandlingService,
+    private val sakService: SakService,
 ) : Informasjonskrav<TjenestePensjonInformasjonskrav.TjenestePensjonInput, TjenestePensjonRegisterdata>,
     KanTriggeRevurdering {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -43,7 +43,7 @@ class TjenestePensjonInformasjonskrav(
                 tjenestePensjonRepository = repositoryProvider.provide(),
                 tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
                 tpGateway = gatewayProvider.provide(),
-                sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
+                sakService = SakService(repositoryProvider),
             )
         }
 
@@ -79,7 +79,7 @@ class TjenestePensjonInformasjonskrav(
 
     override fun klargjør(kontekst: FlytKontekstMedPerioder): TjenestePensjonInput {
         val eksisterendeData = tjenestePensjonRepository.hentHvisEksisterer(kontekst.behandlingId)
-        val sak = sakOgBehandlingService.hentSakFor(kontekst.behandlingId)
+        val sak = sakService.hentSakFor(kontekst.behandlingId)
         val personIdent = sak.person.aktivIdent().identifikator
         return TjenestePensjonInput(
             personIdent = personIdent,
@@ -116,7 +116,7 @@ class TjenestePensjonInformasjonskrav(
     }
 
     private fun hentTjenestePensjon(behandlingId: BehandlingId): List<TjenestePensjonForhold> {
-        val sak = sakOgBehandlingService.hentSakFor(behandlingId)
+        val sak = sakService.hentSakFor(behandlingId)
         val personIdent = sak.person.aktivIdent().identifikator
 
         return tpGateway.hentTjenestePensjon(

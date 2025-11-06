@@ -77,13 +77,32 @@ class ResultatUtlederTest {
     }
 
     @Test
+    fun `ingen oppfylte periode gir rent avslag`() {
+        val sak = nySak(Periode(1 januar 2023, 31 desember 2023))
+        val behandling = opprettBehandling(sak)
+
+        InMemoryUnderveisRepository.lagre(
+            behandlingId = behandling.id,
+            underveisperioder = listOf(
+                underveisperiode(Utfall.IKKE_OPPFYLT, Periode(1 januar 2023, 31 desember 2023)),
+                underveisperiode(Utfall.IKKE_OPPFYLT, Periode(1 januar 2024, 31 desember 2024)),
+            ),
+            input = object : Faktagrunnlag {}
+        )
+
+        val resultat = resultatUtleder.erRentAvslag(behandling)
+
+        assertThat(resultat).isEqualTo(true)
+    }
+
+    @Test
     fun `per nå, støtter kun å utlede resultat for førstegangsbehandling og revurdering`() {
         val sak = nySak(Periode(1 januar 2023, 31 desember 2023))
         val behandling = opprettBehandling(sak)
         InMemoryBehandlingRepository.oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
 
         val klage = InMemorySakOgBehandlingService.finnEllerOpprettOrdinærBehandling(
-            sak.saksnummer,
+            sak.id,
             vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
                 vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTATT_KLAGE)),
                 årsak = ÅrsakTilOpprettelse.KLAGE
@@ -140,7 +159,7 @@ class ResultatUtlederTest {
 
     private fun opprettBehandling(sak: Sak): Behandling {
         return InMemorySakOgBehandlingService.finnEllerOpprettOrdinærBehandling(
-            sak.saksnummer,
+            sak.id,
             VurderingsbehovOgÅrsak(
                 listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
                 ÅrsakTilOpprettelse.SØKNAD

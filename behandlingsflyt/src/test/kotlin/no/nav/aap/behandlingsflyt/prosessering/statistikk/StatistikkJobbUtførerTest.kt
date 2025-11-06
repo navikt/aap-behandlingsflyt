@@ -558,7 +558,7 @@ class StatistikkJobbUtførerTest {
         val tilkjentYtelseRepository = InMemoryTilkjentYtelseRepository
 
         val beregningsgrunnlagRepository = InMemoryBeregningsgrunnlagRepository
-        val sakService = SakService(InMemorySakRepository)
+        val sakService = SakService(InMemorySakRepository, InMemoryBehandlingRepository)
 
         val nå = LocalDateTime.now()
         val tidligsteMottattTid = nå.minusDays(3)

@@ -78,7 +78,7 @@ class StatistikkMetoder(
     constructor(repositoryProvider: RepositoryProvider) : this(
         vilkårsresultatRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
-        sakService = SakService(repositoryProvider.provide()),
+        sakService = SakService(repositoryProvider.provide(), repositoryProvider.provide()),
         tilkjentYtelseRepository = repositoryProvider.provide(),
         beregningsgrunnlagRepository = repositoryProvider.provide(),
         pipRepository = repositoryProvider.provide(),
