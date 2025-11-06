@@ -11,7 +11,7 @@ interface SakRepository : Repository {
 
     fun finnSakerFor(person: Person): List<Sak>
 
-    fun finnAlle(): List<Sak>
+    fun finnAlleSakIder(): List<SakId>
 
     fun finnSiste(antall: Int): List<Sak>
 

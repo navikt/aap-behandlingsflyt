@@ -45,8 +45,8 @@ object InMemorySakRepository : SakRepository {
         }
     }
 
-    override fun finnAlle(): List<Sak> {
-        return memory.values.toList()
+    override fun finnAlleSakIder(): List<SakId> {
+        return memory.keys.toList()
     }
 
     override fun finnSiste(antall: Int): List<Sak> {

@@ -1,8 +1,6 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
@@ -21,11 +19,14 @@ class OpprettJobbForFritakMeldepliktJobbUtfører(
 
     override fun utfør(input: JobbInput) {
         /* TODO: optimaliser slik at bare saker med fritak sjekkes. */
-        val alleSaker = sakRepository.finnAlle()
-        log.info("Oppretter jobber for alle saker som skal undersøkes for fritak meldeplikt. Antall = ${alleSaker.size}")
-        for (sak in alleSaker) {
-            flytJobbRepository.leggTil(JobbInput(OpprettBehandlingFritakMeldepliktJobbUtfører).forSak(sak.id.toLong()))
-        }
+        sakRepository
+            .finnAlleSakIder()
+            .also {
+                log.info("Oppretter jobber for alle saker som skal undersøkes for fritak meldeplikt. Antall = ${it.size}")
+            }
+            .forEach {
+                flytJobbRepository.leggTil(JobbInput(OpprettBehandlingFritakMeldepliktJobbUtfører).forSak(it.toLong()))
+            }
     }
 
     companion object : ProvidersJobbSpesifikasjon {
