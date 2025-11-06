@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.behandling.Resultat
+import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.GosysService
 import no.nav.aap.behandlingsflyt.behandling.mellomlagring.MellomlagretVurderingRepository
@@ -17,6 +19,8 @@ import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ResultatKode
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.IverksettUtbetalingJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.VarsleVedtakJobbUtfører
@@ -45,10 +49,8 @@ class IverksettVedtakSteg private constructor(
     private val gosysService: GosysService,
     private val flytJobbRepository: FlytJobbRepository,
     private val mellomlagretVurderingRepository: MellomlagretVurderingRepository,
-    private val underveisRepository: UnderveisRepository,
-    private val sakOgBehandlingService: SakOgBehandlingService
+    private val resultatUtleder: ResultatUtleder
 ) : BehandlingSteg {
-
     private val log = LoggerFactory.getLogger(javaClass)
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         if (kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING && trukketSøknadService.søknadErTrukket(
@@ -83,25 +85,15 @@ class IverksettVedtakSteg private constructor(
 
         mellomlagretVurderingRepository.slett(kontekst.behandlingId)
 
-        val sisteBehandlingMedVedtak = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(kontekst.sakId)
-        if (sisteBehandlingMedVedtak != null)
-        {
-            val underveisGrunnlag = underveisRepository.hentHvisEksisterer(sisteBehandlingMedVedtak.id)
-            if (underveisGrunnlag != null )
-            {
-                if (underveisGrunnlag.perioder.any {it.utfall == Utfall.OPPFYLT })
-                {
-                    opprettOppfølgingsoppgaveForNavkontorVedSosialRefusjon(kontekst)
-                }
-                else
-                {
-                    log.info("Oppretter ikke gosysoppgave for sak ${kontekst.sakId} og behandling ${sisteBehandlingMedVedtak.id} , da det ikke finnes oppfylte perioder ")
-                }
+        val behandling = behandlingRepository.hent(behandlingId = kontekst.behandlingId)
+        if (behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling) {
+            val resultat = resultatUtleder.utledResultatFørstegangsBehandling(behandling)
+            if (resultat == Resultat.INNVILGELSE) {
+                opprettOppfølgingsoppgaveForNavkontorVedSosialRefusjon(kontekst)
+            } else {
+                log.info("Oppretter ikke gosysoppgave for sak ${kontekst.sakId} og behandling ${kontekst.behandlingId} , da AAP ikke er innvliget ")
             }
-
         }
-
-
         return Fullført
     }
 
@@ -180,8 +172,7 @@ class IverksettVedtakSteg private constructor(
                 vilkårsresultatRepository = repositoryProvider.provide(),
             )
             val mellomlagretVurderingRepository = repositoryProvider.provide<MellomlagretVurderingRepository>()
-            val underveisRepository = repositoryProvider.provide<UnderveisRepository>()
-            val sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider)
+            val resultatUtleder = ResultatUtleder(repositoryProvider)
             return IverksettVedtakSteg(
                 sakRepository = sakRepository,
                 refusjonkravRepository = refusjonkravRepository,
@@ -196,9 +187,8 @@ class IverksettVedtakSteg private constructor(
                 avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
                 flytJobbRepository = flytJobbRepository,
                 mellomlagretVurderingRepository = mellomlagretVurderingRepository,
-                sakOgBehandlingService = sakOgBehandlingService,
-                underveisRepository = underveisRepository,
-                gosysService = gosysService
+                gosysService = gosysService,
+                resultatUtleder = resultatUtleder
             )
         }
 
