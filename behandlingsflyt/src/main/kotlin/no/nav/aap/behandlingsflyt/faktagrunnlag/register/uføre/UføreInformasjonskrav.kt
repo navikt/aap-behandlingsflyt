@@ -11,7 +11,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.KanTriggeRevurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreInformasjonskrav.UføreRegisterdata
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -20,18 +19,19 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
 class UføreInformasjonskrav(
-    private val sakOgBehandlingService: SakOgBehandlingService,
+    private val sakService: SakService,
     private val uføreRepository: UføreRepository,
     private val uføreRegisterGateway: UføreRegisterGateway,
     private val tidligereVurderinger: TidligereVurderinger,
 ) : Informasjonskrav<UføreInformasjonskrav.UføreInput, UføreRegisterdata>, KanTriggeRevurdering {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
-        sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
+        sakService = SakService(repositoryProvider),
         uføreRepository = repositoryProvider.provide(),
         uføreRegisterGateway = gatewayProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
@@ -55,7 +55,7 @@ class UføreInformasjonskrav(
     data class UføreRegisterdata(val innhentMedHistorikk: List<Uføre>) : InformasjonskravRegisterdata
 
     override fun klargjør(kontekst: FlytKontekstMedPerioder): UføreInput {
-        return UføreInput(sakOgBehandlingService.hentSakFor(kontekst.behandlingId))
+        return UføreInput(sakService.hentSakFor(kontekst.behandlingId))
     }
 
     override fun hentData(input: UføreInput): UføreRegisterdata {
@@ -85,7 +85,7 @@ class UføreInformasjonskrav(
     }
 
     private fun hentUføregrader(behandlingId: BehandlingId): List<Uføre> {
-        val sak = sakOgBehandlingService.hentSakFor(behandlingId)
+        val sak = sakService.hentSakFor(behandlingId)
         return uføreRegisterGateway.innhentMedHistorikk(sak.person, sak.rettighetsperiode.fom)
     }
 

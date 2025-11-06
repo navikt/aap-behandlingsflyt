@@ -83,7 +83,10 @@ fun NormalOpenAPIRoute.brevApi(
             route("/{referanse}/grunnlag/brev") {
                 authorizedGet<BehandlingReferanse, BrevGrunnlag>(
                     AuthorizationParamPathConfig(
-                        relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                        relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(
+                            repositoryRegistry,
+                            dataSource
+                        ),
                         behandlingPathParam = BehandlingPathParam(
                             "referanse"
                         )
@@ -107,7 +110,7 @@ fun NormalOpenAPIRoute.brevApi(
 
                         val behandling = behandlingRepository.hent(behandlingReferanse)
                         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-                        val sak = SakService(sakRepository).hent(behandling.sakId)
+                        val sak = SakService(repositoryProvider).hent(behandling.sakId)
                         val personIdent = sak.person.aktivIdent()
                         val personinfo = personinfoGateway.hentPersoninfoForIdent(personIdent, token())
 

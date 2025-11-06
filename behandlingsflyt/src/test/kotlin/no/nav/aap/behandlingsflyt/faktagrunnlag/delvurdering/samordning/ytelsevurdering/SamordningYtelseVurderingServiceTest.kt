@@ -2,8 +2,6 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsev
 
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusForeldrepengerGateway
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusSykepengerGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -21,6 +19,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -61,7 +60,7 @@ class SamordningYtelseVurderingServiceTest {
                 FakeTidligereVurderinger(),
                 AbakusForeldrepengerGateway(),
                 AbakusSykepengerGateway(),
-                SakOgBehandlingService(postgresRepositoryRegistry.provider(connection), defaultGatewayProvider()),
+                SakService(postgresRepositoryRegistry.provider(connection))
             )
             val kontekst = opprettSakdata(connection)
 
@@ -168,7 +167,10 @@ class SamordningYtelseVurderingServiceTest {
         ).isFalse()
     }
 
-    private fun opprettVurderingData(samordningVurderingRepo: SamordningVurderingRepositoryImpl, behandlingId: BehandlingId) {
+    private fun opprettVurderingData(
+        samordningVurderingRepo: SamordningVurderingRepositoryImpl,
+        behandlingId: BehandlingId
+    ) {
         samordningVurderingRepo.lagreVurderinger(
             behandlingId,
             SamordningVurderingGrunnlag(
