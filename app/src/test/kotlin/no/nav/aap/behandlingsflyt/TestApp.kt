@@ -38,6 +38,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.AzurePortHolder
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.FakeServers
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.behandlingsflyt.test.modell.defaultInntekt
@@ -79,11 +80,13 @@ fun main() {
             port = 8080
         }
     }) {
-        val gatewayProvider = defaultGatewayProvider()
+        val gatewayProvider = defaultGatewayProvider {
+            register<FakeUnleash>()
+        }
 
         // Useful for connecting to the test database locally
         // jdbc URL contains the host and port and database name.
-        server(dbConfig, postgresRepositoryRegistry, defaultGatewayProvider())
+        server(dbConfig, postgresRepositoryRegistry, gatewayProvider)
 
         datasource = initDatasource(dbConfig)
         motor = lazy {
