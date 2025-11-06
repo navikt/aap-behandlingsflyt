@@ -32,6 +32,8 @@ import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.brev.kontrakt.Brev
+import no.nav.aap.brev.kontrakt.KanDistribuereBrevReponse
+import no.nav.aap.brev.kontrakt.KanDistribuereBrevRequest
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
@@ -261,6 +263,15 @@ fun NormalOpenAPIRoute.brevApi(
                     respond(DokumentResponsDTO(pdf))
                 }
             }
+        }
+        route("distribusjon/kan-distribuere-brev") {
+            authorizedPost<Unit, KanDistribuereBrevReponse, KanDistribuereBrevRequest>(
+                routeConfig = authorizationParamPathConfig
+            ) { _, request ->
+                val response = KanDistribuereBrevReponse(
+                    mottakereDistStatus = brevbestillingGateway.kanDistribuereBrev(request.brukerIdent, request.mottakerIdentListe)
+                )
+                respond(response, HttpStatusCode.Accepted)
         }
     }
 }

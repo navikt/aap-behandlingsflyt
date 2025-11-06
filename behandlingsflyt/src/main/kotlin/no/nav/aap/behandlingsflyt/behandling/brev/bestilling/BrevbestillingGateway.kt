@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.brev.kontrakt.Brev
 import no.nav.aap.brev.kontrakt.BrevbestillingResponse
+import no.nav.aap.brev.kontrakt.MottakerDistStatus
 import no.nav.aap.brev.kontrakt.MottakerDto
 import no.nav.aap.brev.kontrakt.Signatur
 import no.nav.aap.brev.kontrakt.SignaturGrunnlag
@@ -32,6 +33,8 @@ interface BrevbestillingGateway : Gateway {
     fun oppdater(bestillingReferanse: BrevbestillingReferanse, brev: Brev)
 
     fun avbryt(bestillingReferanse: BrevbestillingReferanse)
+
+    fun kanDistribuereBrev(brukerIdent: String, mottakerIdentListe: List<String>): List<MottakerDistStatus>
 
     fun hentSignaturForhåndsvisning(
         signaturer: List<SignaturGrunnlag>,
