@@ -43,6 +43,7 @@ import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.behandlingsflyt.test.modell.defaultInntekt
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
+import no.nav.aap.behandlingsflyt.test.testGatewayProvider
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -80,9 +81,7 @@ fun main() {
             port = 8080
         }
     }) {
-        val gatewayProvider = defaultGatewayProvider {
-            register<FakeUnleash>()
-        }
+        val gatewayProvider = testGatewayProvider(FakeUnleash::class)
 
         // Useful for connecting to the test database locally
         // jdbc URL contains the host and port and database name.
