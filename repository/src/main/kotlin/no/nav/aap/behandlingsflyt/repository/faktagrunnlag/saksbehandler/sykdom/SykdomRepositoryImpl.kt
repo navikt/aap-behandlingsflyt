@@ -469,76 +469,6 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
         val grunnlagOpprettetTid: LocalDateTime,
     )
 
-    override fun migrerSykdomsvurderinger() {
-        log.info("Starter migrering av sykdomsvurderinger")
-        val start = System.currentTimeMillis()
-
-        // Hent alle koblingstabeller
-        val kandidater = hentKandidater()
-        val kandidaterGruppertPåSak = kandidater.groupBy { it.sakId }
-        
-        var migrerteVurderingerCount = 0
-
-        kandidaterGruppertPåSak.forEach { (sakId, kandidaterForSak) ->
-            log.info("Migrerer sykdomsvurderinger for sak ${sakId.id} med ${kandidaterForSak.size} kandidater")
-            val sorterteKandidater = kandidaterForSak.sortedBy { it.grunnlagOpprettetTid }
-            val vurderingerMedVurderingerId =
-                hentVurderinger(kandidaterForSak.map { it.vurderingerId }.toSet().toList())
-
-            // Kan skippe grunnlag som peker på vurderinger som allerede er migrert
-            val migrerteVurderingerId = mutableSetOf<Long>()
-
-            // Dette dekker en eksisterende vurdering som er lagret som en del av et nytt grunnlag; 
-            // disse har ikke samme id som den originale.
-            // Antar at like vurderinger innenfor samme sak er samme vurdering
-            val nyeVerdierForVurdering = mutableMapOf<SammenlignbarSykdomsvurdering, Pair<BehandlingId, LocalDate>>()
-
-            sorterteKandidater.forEach { kandidat ->
-                if (kandidat.vurderingerId in migrerteVurderingerId) {
-                    // Dette er et kopiert grunnlag som allerede er migrert
-                    return@forEach
-                }
-                val vurderingerForGrunnlag =
-                    vurderingerMedVurderingerId.filter { it.vurderingerId == kandidat.vurderingerId }.map{it.sykdomsvurdering}
-         
-                vurderingerForGrunnlag.forEach { vurdering ->
-                    val sammenlignbarVurdering = vurdering.tilSammenlignbar()
-                    val nyeVerdier = if (nyeVerdierForVurdering.containsKey(sammenlignbarVurdering)) {
-                        // Bruk den migrerte versjonen
-                        nyeVerdierForVurdering[sammenlignbarVurdering]!!
-                    } else {
-                        val nyeVerdier = Pair(kandidat.behandlingId, vurdering.vurderingenGjelderFra ?: kandidat.rettighetsperiode.fom)
-                        nyeVerdierForVurdering.put(sammenlignbarVurdering, nyeVerdier)
-                        nyeVerdier
-                    }
-
-                    // Oppdater
-                    connection.execute(
-                        """
-                        UPDATE SYKDOM_VURDERING
-                        SET VURDERT_I_BEHANDLING = ?, VURDERINGEN_GJELDER_FRA = ?
-                        WHERE ID = ?
-                        """.trimIndent()
-                    ) {
-                        setParams {
-                            setLong(1, nyeVerdier.first.id)
-                            setLocalDate(2, nyeVerdier.second)
-                            setLong(3, vurdering.id!!)
-                        }
-                    }
-                    migrerteVurderingerCount = migrerteVurderingerCount + 1
-                    
-                    migrerteVurderingerId.add(kandidat.vurderingerId)
-                }
-            }
-        }
-
-        val totalTid = System.currentTimeMillis() - start
-
-        log.info("Fullført migrering av manuelle vurderinger for sykdom. Migrerte ${kandidater.size} grunnlag og ${migrerteVurderingerCount} vurderinger på $totalTid ms.")
-    }
-
-
     // Vurdering minus opprettet, id, vurdertIBehandling
     data class SammenlignbarSykdomsvurdering(
         val begrunnelse: String,
@@ -557,6 +487,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
         val bidiagnoser: List<String>? = emptyList(),
         val vurdertAv: Bruker,
     )
+
     private fun Sykdomsvurdering.tilSammenlignbar(): SammenlignbarSykdomsvurdering {
         return SammenlignbarSykdomsvurdering(
             begrunnelse = this.begrunnelse,

@@ -617,10 +617,6 @@ class StatistikkJobbUtførerTest {
             ): List<Sykdomsvurdering> {
                 TODO("Not yet implemented")
             }
-
-            override fun migrerSykdomsvurderinger() {
-                TODO("Not yet implemented")
-            }
         }
 
         val påklagetBehandlingRepository = mockk<PåklagetBehandlingRepository>()
