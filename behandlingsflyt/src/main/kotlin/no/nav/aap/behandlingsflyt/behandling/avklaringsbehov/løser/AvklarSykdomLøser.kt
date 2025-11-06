@@ -43,7 +43,7 @@ class AvklarSykdomLøser(
             ?.let { sykdomRepository.hentHvisEksisterer(it) }
             ?.sykdomsvurderinger
             .orEmpty()
-        
+
         val gjeldendeVurderinger = eksisterendeSykdomsvurderinger + nyeSykdomsvurderinger
 
         validerSykdomOgYrkesskadeKonsistens(
