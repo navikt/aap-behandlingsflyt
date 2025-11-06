@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBist
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarForutgåendeMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarManuellInntektVurderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOppholdskravLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningAndreStatligeYtelserLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSoningsforholdLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentLøsning
@@ -32,6 +33,9 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.Yrkesskade
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.AvklarOppholdkravLøsningForPeriodeDto
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.AndreStatligeYtelser
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurderingPeriodeDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
@@ -61,6 +65,7 @@ import no.nav.aap.behandlingsflyt.repository.behandling.mellomlagring.Mellomlagr
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
@@ -295,7 +300,30 @@ class TestScenarioOrkestrator(
         )
     }
 
-    fun løsSamordning(behandling: Behandling, periode: Periode): Behandling {
+    fun løsSamordningAndreStatligeYtelser(behandling: Behandling): Behandling {
+        return this.løsAvklaringsBehov(
+            behandling,
+            AvklarSamordningAndreStatligeYtelserLøsning(
+                SamordningAndreStatligeYtelserVurderingDto(
+                    "Samordning statlige ytelser ok",
+                    listOf(SamordningAndreStatligeYtelserVurderingPeriodeDto(
+                        AndreStatligeYtelser.BARNEPENSJON,
+                        Periode(LocalDate.now().minusMonths(3), LocalDate.now().minusMonths(2))
+                    ))
+                )
+            )
+        )
+    }
+
+    fun løsSamordning(behandling: Behandling, sykepengerList: List<TestPerson.Sykepenger>): Behandling {
+        val samordningVurderinger = sykepengerList.map { sykepenger ->
+            SamordningVurderingData(
+                Ytelse.entries.random(), // tilfeldig ytelse
+                Periode(sykepenger.periode.fom, sykepenger.periode.tom),
+                gradering = (10..100).random() // tilfeldig verdi mellom 10 og 100
+            )
+        }
+
         return this.løsAvklaringsBehov(
             behandling,
             AvklarSamordningGraderingLøsning(
@@ -303,7 +331,7 @@ class TestScenarioOrkestrator(
                     "samordning ok",
                     true,
                     null,
-                    listOf(SamordningVurderingData(Ytelse.OMSORGSPENGER, periode, gradering = 70))
+                    samordningVurderinger
                 )
             )
         )
