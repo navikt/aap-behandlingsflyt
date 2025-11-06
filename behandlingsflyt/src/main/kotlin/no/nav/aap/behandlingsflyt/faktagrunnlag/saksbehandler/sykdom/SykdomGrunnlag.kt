@@ -54,8 +54,11 @@ data class SykdomGrunnlag(
     ): Tidslinje<Sykdomsvurdering> {
         return sykdomsvurderinger
             .filter(filter)
-            .sortedBy { it.opprettet }
-            .somTidslinje { Periode(it.vurderingenGjelderFra, maksDato) }
+            .groupBy { it.vurdertIBehandling }
+            .values
+            .sortedBy { it[0].opprettet }
+            .flatMap { it.sortedBy { it.vurderingenGjelderFra } }
+            .somTidslinje { Periode(it.vurderingenGjelderFra, it.vurderingenGjelderTil ?: maksDato) }
             .komprimer()
     }
 }
