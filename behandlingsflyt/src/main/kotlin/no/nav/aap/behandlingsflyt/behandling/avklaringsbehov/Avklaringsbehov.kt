@@ -42,11 +42,11 @@ class Avklaringsbehov(
     }
 
     fun erTotrinnsVurdert(): Boolean {
-        return Status.TOTRINNS_VURDERT == historikk.maxOf { it }.status
+        return Status.TOTRINNS_VURDERT == aktivHistorikk.maxOf { it }.status
     }
 
     fun erKvalitetssikretTidligere(): Boolean {
-        return Status.KVALITETSSIKRET == historikk.filter {
+        return Status.KVALITETSSIKRET == aktivHistorikk.filter {
             it.status in setOf(
                 Status.KVALITETSSIKRET, Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER
             )
