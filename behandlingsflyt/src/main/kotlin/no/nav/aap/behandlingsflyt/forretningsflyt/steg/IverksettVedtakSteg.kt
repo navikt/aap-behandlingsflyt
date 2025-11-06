@@ -85,16 +85,18 @@ class IverksettVedtakSteg private constructor(
 
         mellomlagretVurderingRepository.slett(kontekst.behandlingId)
 
-        val behandling = behandlingRepository.hent(behandlingId = kontekst.behandlingId)
-        if (behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling) {
-            val resultat = resultatUtleder.utledResultatFørstegangsBehandling(behandling)
-            if (resultat == Resultat.INNVILGELSE) {
-                opprettOppfølgingsoppgaveForNavkontorVedSosialRefusjon(kontekst)
-            } else {
-                log.info("Oppretter ikke gosysoppgave for sak ${kontekst.sakId} og behandling ${kontekst.behandlingId} , da AAP ikke er innvliget ")
-            }
-        }
+        lagGysOppgaveHvisRelevant(kontekst)
+
         return Fullført
+    }
+
+    private fun lagGysOppgaveHvisRelevant(kontekst: FlytKontekstMedPerioder) {
+        val behandling = behandlingRepository.hent(behandlingId = kontekst.behandlingId)
+        if (!resultatUtleder.erRentAvslag(behandling)) {
+            opprettOppfølgingsoppgaveForNavkontorVedSosialRefusjon(kontekst)
+        } else {
+            log.info("Oppretter ikke gosysoppgave for sak ${kontekst.sakId} og behandling ${kontekst.behandlingId} , da AAP ikke er innvliget ")
+        }
     }
 
     private fun opprettOppfølgingsoppgaveForNavkontorVedSosialRefusjon(kontekst: FlytKontekstMedPerioder) {

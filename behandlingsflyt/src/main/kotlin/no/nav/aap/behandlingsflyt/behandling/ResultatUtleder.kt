@@ -72,4 +72,19 @@ class ResultatUtleder(
 
         return if (harOppfyltPeriode) Resultat.INNVILGELSE else Resultat.AVSLAG
     }
+
+    @WithSpan
+    fun erRentAvslag(behandling: Behandling): Boolean {
+
+        if (trukketSøknadService.søknadErTrukket(behandling.id)) {
+            return false
+        }
+
+        val harOppfyltPeriode = underveisRepository.hentHvisEksisterer(behandling.id)
+            ?.perioder
+            .orEmpty()
+            .any { it.utfall == Utfall.OPPFYLT }
+
+        return if (harOppfyltPeriode) false else true
+    }
 }
