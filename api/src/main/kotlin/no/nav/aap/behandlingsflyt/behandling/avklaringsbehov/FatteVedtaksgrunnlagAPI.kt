@@ -170,14 +170,12 @@ private fun beslutterVurdering(avklaringsbehovene: Avklaringsbehovene, flyt: Beh
 private fun tilKvalitetssikring(it: Avklaringsbehov): TotrinnsVurdering {
     return if (it.erTotrinnsVurdert() || it.harVærtSendtTilbakeFraBeslutterTidligere()) {
         val sisteVurdering =
-            it.historikk
-                .filter { it.status in setOf(Status.SENDT_TILBAKE_FRA_BESLUTTER, Status.TOTRINNS_VURDERT) }
-                .lastOrNull { vurdering ->
-                    // Sjekker at siste vurdering ikke senere har blitt avbrutt
-                    it.historikk
-                        .filter { it.tidsstempel > vurdering.tidsstempel }
-                        .none { it.status == Status.AVBRUTT }
-                }
+            it.aktivHistorikk.lastOrNull {
+                it.status in setOf(
+                    Status.SENDT_TILBAKE_FRA_BESLUTTER,
+                    Status.TOTRINNS_VURDERT
+                )
+            }
 
         val godkjent = it.status() == Status.TOTRINNS_VURDERT
 
