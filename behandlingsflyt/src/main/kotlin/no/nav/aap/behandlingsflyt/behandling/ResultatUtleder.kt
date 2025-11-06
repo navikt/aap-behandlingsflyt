@@ -73,7 +73,6 @@ class ResultatUtleder(
         return if (harOppfyltPeriode) Resultat.INNVILGELSE else Resultat.AVSLAG
     }
 
-    @WithSpan
     fun erRentAvslag(behandling: Behandling): Boolean {
 
         if (trukketSøknadService.søknadErTrukket(behandling.id)) {
