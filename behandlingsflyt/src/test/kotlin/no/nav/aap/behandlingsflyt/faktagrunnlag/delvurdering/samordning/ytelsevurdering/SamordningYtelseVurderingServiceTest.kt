@@ -86,7 +86,7 @@ class SamordningYtelseVurderingServiceTest {
                 FakeTidligereVurderinger(),
                 AbakusForeldrepengerGateway(),
                 AbakusSykepengerGateway(),
-                SakOgBehandlingService(postgresRepositoryRegistry.provider(connection), defaultGatewayProvider()),
+                SakService(postgresRepositoryRegistry.provider(connection))
             )
             val foreldrePerson = PersonRepositoryImpl(connection).finnEllerOpprett(
                 listOf(
@@ -133,7 +133,7 @@ class SamordningYtelseVurderingServiceTest {
                 FakeTidligereVurderinger(),
                 AbakusForeldrepengerGateway(),
                 AbakusSykepengerGateway(),
-                SakOgBehandlingService(postgresRepositoryRegistry.provider(connection), defaultGatewayProvider()),
+                SakService(postgresRepositoryRegistry.provider(connection))
             )
             val sykepengerPerson = PersonRepositoryImpl(connection).finnEllerOpprett(
                 listOf(
