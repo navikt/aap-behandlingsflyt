@@ -75,7 +75,7 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
                             .sortedBy { it.opprettet }
                             .map { it.toDto(ansattInfoService) },
                         gjeldendeVedtatteSykdomsvurderinger = sykdomGrunnlag
-                            ?.vedtatteSykdomsvurderinger(behandling.id).orEmpty()
+                            ?.gjeldendeVedtatteSykdomsvurderinger(behandling.id).orEmpty()
                             .map { it.toDto(ansattInfoService) },
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(

@@ -41,7 +41,7 @@ data class SykdomGrunnlag(
         return filtrertSykdomstidslinje(maksDato) { it.vurdertIBehandling != behandlingId }
     }
 
-    fun vedtatteSykdomsvurderinger(
+    fun gjeldendeVedtatteSykdomsvurderinger(
         behandlingId: BehandlingId,
         maksDato: LocalDate = Tid.MAKS
     ): List<Sykdomsvurdering> {
