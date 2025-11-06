@@ -332,7 +332,7 @@ private fun utførMigreringer(
         val unleashGateway: UnleashGateway = gatewayProvider.provide()
         val enabled = unleashGateway.isEnabled(BehandlingsflytFeature.LovvalgMedlemskapPeriodisertMigrering)
         val isLeader = isLeader(log)
-        log.info("isLeader = $isLeader, LovvalgMedlemskapPeriodisertMigrering = $enabled, SykdomPeriodisertMigrering = $sykdomEnabled")
+        log.info("isLeader = $isLeader, LovvalgMedlemskapPeriodisertMigrering = $enabled")
         if (enabled && isLeader) {
             dataSource.transaction { connection ->
                 val repository = MedlemskapArbeidInntektRepositoryImpl(connection)
