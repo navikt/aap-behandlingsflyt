@@ -24,8 +24,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
-import no.nav.aap.komponenter.tidslinje.somTidslinje
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
@@ -142,10 +140,11 @@ class VurderBistandsbehovSteg(
                     }
                     .orEmpty()
 
-                val tidslinje = perioderBistandsvilkåretErRelevant.leftJoin(perioderBistandsvilkåretErVurdert) { erRelevant, erVurdert ->
-                    erRelevant && erVurdert != true
-                }
-                tidslinje.segmenter().any { it.verdi }
+                val relevantePerioderSomManglerVedtattVurdering =
+                    perioderBistandsvilkåretErRelevant.leftJoin(perioderBistandsvilkåretErVurdert) { erRelevant, erVurdert ->
+                        erRelevant && erVurdert != true
+                    }.segmenter().any { it.verdi }
+                relevantePerioderSomManglerVedtattVurdering
             }
 
             VurderingType.MELDEKORT -> false
@@ -194,13 +193,12 @@ class VurderBistandsbehovSteg(
     }
 
     private fun erTilstrekkeligVurdert(kontekst: FlytKontekstMedPerioder): Boolean {
-        val nåværendeVurderinger = bistandRepository.hentHvisEksisterer(kontekst.behandlingId)
-            ?.vurderinger.orEmpty().somTidslinje {
-                Periode(it.vurderingenGjelderFra ?: kontekst.rettighetsperiode.fom, kontekst.rettighetsperiode.tom)
-            }
-        val inneholderRettighetsperioden = nåværendeVurderinger.helePerioden().inneholder(kontekst.rettighetsperiode)
-        val erSammenhengende = nåværendeVurderinger.erSammenhengende()
-        return inneholderRettighetsperioden && erSammenhengende
+        val gjeldendeBistandstidslinje = bistandRepository.hentHvisEksisterer(kontekst.behandlingId)
+            ?.somBistandsvurderingstidslinje(kontekst.rettighetsperiode.fom)
+            .orEmpty()
+        val inneholderRettighetsperioden =
+            gjeldendeBistandstidslinje.helePerioden().inneholder(kontekst.rettighetsperiode)
+        return inneholderRettighetsperioden && gjeldendeBistandstidslinje.erSammenhengende()
     }
 
     companion object : FlytSteg {
