@@ -74,9 +74,11 @@ class SamordningYtelseVurderingInformasjonskrav(
     override fun hentData(input: SamordningInput): SamordningRegisterdata {
         val (person, rettighetsperiode) = input
         val personIdent = person.aktivIdent().identifikator
+        val oppslagsPeriode = Periode(rettighetsperiode.fom.minusWeeks(4), rettighetsperiode.tom)
+
         val (foreldrepenger, foreldrepengerDuration) = measureTimedValue {
             hentYtelseForeldrepenger(
-                personIdent, rettighetsperiode.fom.minusWeeks(4), rettighetsperiode.tom
+                personIdent, oppslagsPeriode
             )
         }
 
@@ -84,7 +86,7 @@ class SamordningYtelseVurderingInformasjonskrav(
 
         val (sykepenger, sykepengerDuration) = measureTimedValue {
             hentYtelseSykepenger(
-                personIdent, rettighetsperiode.fom.minusWeeks(4), rettighetsperiode.tom
+                personIdent, oppslagsPeriode
             )
         }
 
@@ -110,19 +112,29 @@ class SamordningYtelseVurderingInformasjonskrav(
     }
 
     private fun hentYtelseForeldrepenger(
-        personIdent: String, fom: LocalDate, tom: LocalDate
+        personIdent: String, oppslagsPeriode: Periode
     ): List<ForeldrePengerYtelse> {
         return fpGateway.hentVedtakYtelseForPerson(
             ForeldrepengerRequest(
-                Aktør(personIdent), Periode(fom, tom)
+                Aktør(personIdent),
+                oppslagsPeriode
             )
-        ).ytelser
+        ).ytelser.mapNotNull { ytelse ->
+            val anvistInnenforPeriode = ytelse.anvist.filter {
+                oppslagsPeriode.inneholder(it.periode)
+            }
+            if (anvistInnenforPeriode.isNotEmpty()) {
+                ytelse.copy(anvist = anvistInnenforPeriode)
+            } else {
+                null
+            }
+        }
     }
 
-    private fun hentYtelseSykepenger(personIdent: String, fom: LocalDate, tom: LocalDate): List<UtbetaltePerioder> {
+    private fun hentYtelseSykepenger(personIdent: String, oppslagsPeriode: Periode): List<UtbetaltePerioder> {
         return spGateway.hentYtelseSykepenger(
-            setOf(personIdent), fom, tom
-        )
+            setOf(personIdent), oppslagsPeriode.fom, oppslagsPeriode.tom
+        ).filter { oppslagsPeriode.inneholder((Periode(it.fom, it.tom))) }
     }
 
     private fun mapTilSamordningYtelse(
