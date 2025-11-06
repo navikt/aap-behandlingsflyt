@@ -15,30 +15,24 @@ import org.slf4j.LoggerFactory
 class OpprettJobbForFritakMeldepliktJobbUtfører(
     private val flytJobbRepository: FlytJobbRepository,
     private val sakRepository: SakRepository,
-    private val unleashGateway: UnleashGateway,
 ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.FritakMeldeplikt)) {
-            log.info("FritakMeldeplikt er slått på")
-            /* TODO: optimaliser */
-            for (sak in sakRepository.finnAlle()) {
-                flytJobbRepository.leggTil(JobbInput(OpprettBehandlingFritakMeldepliktJobbUtfører).forSak(sak.id.toLong()))
-            }
-        } else {
-            log.info("FritakMeldeplikt er slått av")
+        /* TODO: optimaliser slik at bare saker med fritak sjekkes. */
+        val alleSaker = sakRepository.finnAlle()
+        log.info("Oppretter jobber for alle saker som skal undersøkes for fritak meldeplikt. Antall = ${alleSaker.size}")
+        for (sak in alleSaker) {
+            flytJobbRepository.leggTil(JobbInput(OpprettBehandlingFritakMeldepliktJobbUtfører).forSak(sak.id.toLong()))
         }
     }
-
 
     companion object : ProvidersJobbSpesifikasjon {
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
             return OpprettJobbForFritakMeldepliktJobbUtfører(
                 flytJobbRepository = repositoryProvider.provide(),
-                sakRepository = repositoryProvider.provide(),
-                unleashGateway = gatewayProvider.provide(),
+                sakRepository = repositoryProvider.provide()
             )
         }
 
