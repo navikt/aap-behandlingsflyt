@@ -23,6 +23,9 @@ import no.nav.aap.brev.kontrakt.FerdigstillBrevRequest
 import no.nav.aap.brev.kontrakt.ForhandsvisBrevRequest
 import no.nav.aap.brev.kontrakt.HentSignaturerRequest
 import no.nav.aap.brev.kontrakt.HentSignaturerResponse
+import no.nav.aap.brev.kontrakt.KanDistribuereBrevReponse
+import no.nav.aap.brev.kontrakt.KanDistribuereBrevRequest
+import no.nav.aap.brev.kontrakt.MottakerDistStatus
 import no.nav.aap.brev.kontrakt.MottakerDto
 import no.nav.aap.brev.kontrakt.Signatur
 import no.nav.aap.brev.kontrakt.SignaturGrunnlag
@@ -204,7 +207,6 @@ class BrevGateway : BrevbestillingGateway {
         brukerIdent: String,
         typeBrev: TypeBrev
     ): List<Signatur> {
-
         val httpRequest = PostRequest(
             body = HentSignaturerRequest(brukerIdent, mapTypeBrev(typeBrev), signaturer),
             additionalHeaders = listOf(
@@ -221,6 +223,23 @@ class BrevGateway : BrevbestillingGateway {
                 })
         )
         return response.signaturer
+    }
+
+    override fun kanDistribuereBrev(
+        saksnummer: String,
+        brukerIdent: String,
+        mottakerIdentListe: List<String>
+    ): List<MottakerDistStatus> {
+        val httpRequest = PostRequest(
+            body = KanDistribuereBrevRequest(saksnummer, brukerIdent, mottakerIdentListe)
+        )
+        val response: KanDistribuereBrevReponse = requireNotNull(
+            client.post(
+                uri = baseUri.resolve("/api/distribusjon/kan-distribuere-brev"),
+                request = httpRequest
+            )
+        )
+        return response.mottakereDistStatus
     }
 
     private fun mapTypeBrev(typeBrev: TypeBrev): Brevtype = when (typeBrev) {

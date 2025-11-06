@@ -30,7 +30,6 @@ fun NormalOpenAPIRoute.sykdomsvurderingForBrevApi(
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
             avklaringsbehovKode = Definisjon.SKRIV_SYKDOMSVURDERING_BREV.kode.toString()
-
         ) { behandlingReferanse ->
             val grunnlag = dataSource.transaction { connection ->
                 val repositoryProvider = repositoryRegistry.provider(connection)
@@ -45,7 +44,6 @@ fun NormalOpenAPIRoute.sykdomsvurderingForBrevApi(
                     historiskeVurderinger = historiskeSykdomsvurderingerForBrev.map { it.toDto(ansattInfoService) },
                     kanSaksbehandle = kanSaksbehandle()
                 )
-
             }
             respond(grunnlag)
         }
