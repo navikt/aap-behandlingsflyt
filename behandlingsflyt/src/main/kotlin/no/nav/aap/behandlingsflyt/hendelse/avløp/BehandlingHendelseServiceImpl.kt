@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.MottattDokumentDto
@@ -35,15 +34,13 @@ class BehandlingHendelseServiceImpl(
     private val flytJobbRepository: FlytJobbRepository,
     private val sakService: SakService,
     private val dokumentRepository: MottattDokumentRepository,
-    private val pipRepository: PipRepository,
-    private val meldekortRepository: MeldekortRepository
+    private val pipRepository: PipRepository
 ) : BehandlingHendelseService {
     constructor(repositoryProvider: RepositoryProvider) : this(
         flytJobbRepository = repositoryProvider.provide(),
         sakService = SakService(repositoryProvider),
         dokumentRepository = repositoryProvider.provide(),
-        pipRepository = repositoryProvider.provide(),
-        meldekortRepository = repositoryProvider.provide()
+        pipRepository = repositoryProvider.provide()
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -56,11 +53,6 @@ class BehandlingHendelseServiceImpl(
         val erPåVent = avklaringsbehovene.hentÅpneVentebehov().isNotEmpty()
         val vurderingsbehov = behandling.vurderingsbehov()
         val mottattDokumenter = hentMottattDokumenter(vurderingsbehov, behandling)
-
-        val meldekort = meldekortRepository.hentHvisEksisterer(behandling.id)
-        val forrigeBehandlingMeldekort = behandling.forrigeBehandlingId?.let { meldekortRepository.hentHvisEksisterer(it) }
-
-        val nyeMeldekort = meldekort?.meldekort()?.filter { forrigeBehandlingMeldekort?.meldekort()?.contains(it) == false  }
 
         val hendelse = BehandlingFlytStoppetHendelse(
             personIdent = sak.person.aktivIdent().identifikator,
@@ -100,7 +92,6 @@ class BehandlingHendelseServiceImpl(
                     hendelsesTidspunkt = hendelse.hendelsesTidspunkt,
                     versjon = hendelse.versjon,
                     opprettetAv = hentBehandlingOpprettetAv(behandling.id),
-                    nyeMeldekort = nyeMeldekort
                 )
             )
                 .forBehandling(sak.id.id, behandling.id.id)
@@ -122,18 +113,26 @@ class BehandlingHendelseServiceImpl(
         val oppfølgingsoppgavedokument =
             MottaDokumentService(dokumentRepository).hentOppfølgingsBehandlingDokument(behandlingId)
 
-        val reserverTilBrukerRevurderingAvbrutt = finnReserverTilBrukerGittVurderingsbehov(behandlingId, no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDERING_AVBRUTT)
-        val reserverTilBrukerSøknadTrukket = finnReserverTilBrukerGittVurderingsbehov(behandlingId, no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SØKNAD_TRUKKET)
+        val reserverTilBrukerRevurderingAvbrutt = finnReserverTilBrukerGittVurderingsbehov(
+            behandlingId,
+            no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDERING_AVBRUTT
+        )
+        val reserverTilBrukerSøknadTrukket = finnReserverTilBrukerGittVurderingsbehov(
+            behandlingId,
+            no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SØKNAD_TRUKKET
+        )
 
         if (listOfNotNull(
                 oppfølgingsoppgavedokument?.reserverTilBruker,
                 reserverTilBrukerRevurderingAvbrutt,
                 reserverTilBrukerSøknadTrukket
-            ).size > 1) {
+            ).size > 1
+        ) {
             log.warn("Fant mer enn én reserverTil-verdi i hendelse til oppgave")
         }
 
-        return oppfølgingsoppgavedokument?.reserverTilBruker ?: reserverTilBrukerRevurderingAvbrutt ?: reserverTilBrukerSøknadTrukket
+        return oppfølgingsoppgavedokument?.reserverTilBruker ?: reserverTilBrukerRevurderingAvbrutt
+        ?: reserverTilBrukerSøknadTrukket
     }
 
     private fun hentBehandlingOpprettetAv(behandlingId: BehandlingId): String? {
@@ -146,7 +145,10 @@ class BehandlingHendelseServiceImpl(
         return manuellVurdering?.opprettetAv
     }
 
-    private fun finnReserverTilBrukerGittVurderingsbehov(behandlingId: BehandlingId, vurderingsbehov: no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov): String? {
+    private fun finnReserverTilBrukerGittVurderingsbehov(
+        behandlingId: BehandlingId,
+        vurderingsbehov: no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
+    ): String? {
         val nyÅrsakTilBehandlingDokumenter = MottaDokumentService(dokumentRepository).hentMottattDokumenterAvType(
             behandlingId,
             InnsendingType.NY_ÅRSAK_TIL_BEHANDLING

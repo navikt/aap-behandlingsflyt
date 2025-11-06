@@ -28,7 +28,7 @@ fun UnderveisGrunnlag.tilForeslåVedtakDataTidslinje(): Tidslinje<ForeslåVedtak
 }
 
 class UtfallOppfyltUtils {
-    fun allePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(
+    fun alleEventuellePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(
         opprettetTidspunkt: Instant,
         underveisGrunnlag: UnderveisGrunnlag
     ): Boolean {
@@ -36,10 +36,7 @@ class UtfallOppfyltUtils {
             .atZone(ZoneId.of("Europe/Oslo"))
             .toLocalDate()
         val tidslinje = underveisGrunnlag.tilForeslåVedtakDataTidslinje()
-        val segmenterIFremtiden = tidslinje.segmenter()
+        return tidslinje.segmenter()
             .filter { it.periode.tom.isAfter(opprettetDato)}
-        return segmenterIFremtiden.count() > 0 && segmenterIFremtiden.all {it.verdi.utfall == Utfall.IKKE_OPPFYLT } }
-
-
-
+            .all {it.verdi.utfall == Utfall.IKKE_OPPFYLT } }
 }

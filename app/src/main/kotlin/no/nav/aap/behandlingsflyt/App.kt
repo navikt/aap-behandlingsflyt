@@ -219,7 +219,7 @@ internal fun Application.server(
 
     }
     if (Miljø.erDev()) {
-        startPDLHendelseKonsument(dataSource, repositoryRegistry)
+        startPDLHendelseKonsument(dataSource, repositoryRegistry, gatewayProvider)
     }
 
     monitor.subscribe(ApplicationStopPreparing) { environment ->
@@ -424,7 +424,8 @@ fun Application.startKabalKonsument(
 
 fun Application.startPDLHendelseKonsument(
     dataSource: DataSource,
-    repositoryRegistry: RepositoryRegistry
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
 ): KafkaKonsument<String, Personhendelse> {
     val konsument = PdlHendelseKafkaKonsument(
         config = KafkaConsumerConfig(
@@ -432,7 +433,8 @@ fun Application.startPDLHendelseKonsument(
             valueDeserializer = io.confluent.kafka.serializers.KafkaAvroDeserializer::class.java
         ),
         dataSource = dataSource,
-        repositoryRegistry = repositoryRegistry
+        repositoryRegistry = repositoryRegistry,
+        gatewayProvider = gatewayProvider
     )
     monitor.subscribe(ApplicationStarted) {
         val t = Thread() {

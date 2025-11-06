@@ -12,15 +12,12 @@ import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
-import org.slf4j.LoggerFactory
 import java.net.URI
 import java.time.LocalDate
 
 class AbakusSykepengerGateway : SykepengerGateway {
     private val url = URI.create(requiredConfigForKey("integrasjon.sykepenger.url") + "/utbetalte-perioder-aap")
     private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.sykepenger.scope"))
-
-    private val secureLogger = LoggerFactory.getLogger("secureLog")
 
     companion object : Factory<SykepengerGateway> {
         override fun konstruer(): SykepengerGateway {
@@ -40,7 +37,6 @@ class AbakusSykepengerGateway : SykepengerGateway {
         )
 
         val response: SykepengerResponse? = client.post(uri = url, request = httpRequest)
-        secureLogger.info("Sykepenger request: ${request}, response: $response")
         return requireNotNull(response)
     }
 

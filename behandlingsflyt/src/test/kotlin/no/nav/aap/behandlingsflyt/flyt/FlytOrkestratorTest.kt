@@ -1302,6 +1302,9 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         )
             .løsSykdom(vurderingGjelderFra = LocalDate.now().plusMonths(1))
             .løsBistand()
+            .medKontekst {
+                assertThat(this.åpneAvklaringsbehov.map { it.definisjon }).containsOnly(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
+            }
             .løsSykdomsvurderingBrev()
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
@@ -4452,7 +4455,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
 
             }
             .løsSykdom()
-//            .løsBistand() // TODO: Her burde vi stoppe opp på bistand og kreve at man får et avklaringsbehov, men det fungerer ikke før vi har periodisert _erTilstrekkeligVurdert_
+            .løsBistand()
             .løsBeregningstidspunkt(nyStartDato)
             .løsForutgåendeMedlemskap()
             .løsOppholdskrav(nyStartDato)

@@ -16,7 +16,6 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UtledMeldeperiodeR
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Vurdering
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
@@ -32,6 +31,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Oversty
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.verdityper.Dagsatser
@@ -40,7 +40,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import kotlin.reflect.KClass
 
 class UnderveisService(
-    private val behandlingService: SakOgBehandlingService,
+    private val sakService: SakService,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val meldekortRepository: MeldekortRepository,
     private val underveisRepository: UnderveisRepository,
@@ -53,8 +53,8 @@ class UnderveisService(
     private val oppholdskravRepository: OppholdskravGrunnlagRepository,
     private val vedtakService: VedtakService,
 ) {
-    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): this(
-        behandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
+        sakService = SakService(repositoryProvider),
         vilkårsresultatRepository = repositoryProvider.provide(),
         meldekortRepository = repositoryProvider.provide(),
         underveisRepository = repositoryProvider.provide(),
@@ -137,7 +137,7 @@ class UnderveisService(
     }
 
     private fun genererInput(sakId: SakId, behandlingId: BehandlingId): UnderveisInput {
-        val sak = behandlingService.hentSakFor(behandlingId)
+        val sak = sakService.hentSakFor(behandlingId)
         val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
 
         val meldekortGrunnlag = meldekortRepository.hentHvisEksisterer(behandlingId)

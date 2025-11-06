@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.integrasjon.pdl
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PdlQueryException
 import no.nav.aap.behandlingsflyt.integrasjon.util.GraphQLError
 import no.nav.aap.komponenter.httpklient.httpclient.error.DefaultResponseHandler
 import no.nav.aap.komponenter.httpklient.httpclient.error.RestResponseHandler
@@ -37,5 +38,3 @@ class PdlResponseHandler() : RestResponseHandler<InputStream> {
         return defaultErrorHandler.bodyHandler()
     }
 }
-
-class PdlQueryException(msg: String) : RuntimeException(msg)
