@@ -179,7 +179,7 @@ class VurderBistandsbehovSteg(
         val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
 
         val sykdomsvurderinger = sykdomsRepository.hentHvisEksisterer(kontekst.behandlingId)
-            ?.somSykdomsvurderingstidslinje()
+            ?.somSykdomsvurderingstidslinje(kontekst.rettighetsperiode.fom)
             ?.begrensetTil(kontekst.rettighetsperiode)
             .orEmpty()
 

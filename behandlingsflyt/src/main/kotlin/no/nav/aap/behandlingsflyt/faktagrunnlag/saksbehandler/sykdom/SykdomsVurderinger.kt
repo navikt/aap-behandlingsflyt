@@ -12,7 +12,7 @@ import java.time.LocalDateTime
 data class Sykdomsvurdering(
     val id: Long? = null,
     val begrunnelse: String,
-    val vurderingenGjelderFra: LocalDate,
+    val vurderingenGjelderFra: LocalDate?, // TODO: Gjør påkrevd etter migrering
     val vurderingenGjelderTil: LocalDate?,
     val dokumenterBruktIVurdering: List<JournalpostId>,
     val harSkadeSykdomEllerLyte: Boolean,
@@ -25,16 +25,14 @@ data class Sykdomsvurdering(
     val kodeverk: String? = null,
     val hoveddiagnose: String? = null,
     val bidiagnoser: List<String>? = emptyList(),
-    val vurdertIBehandling: BehandlingId,
+    val vurdertIBehandling: BehandlingId?, // TODO: Gjør påkrevd etter migrering
     val opprettet: Instant,
     val vurdertAv: Bruker,
 ) {
 
     /* Denne metoden må sannsynligvis generaliseres når vi skal implementere gjeninntreden etter opphør. */
     fun erFørsteVurdering(kravdato: LocalDate): Boolean {
-        return vurderingenGjelderTil?.let {
-            vurderingenGjelderFra <= kravdato && kravdato <= vurderingenGjelderTil
-        } ?: (vurderingenGjelderFra <= kravdato)
+        return vurderingenGjelderFra == null || vurderingenGjelderFra == kravdato
     }
 
     fun erOppfylt(kravdato: LocalDate): Boolean {

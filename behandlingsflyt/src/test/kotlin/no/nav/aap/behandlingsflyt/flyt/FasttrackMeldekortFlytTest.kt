@@ -173,7 +173,7 @@ class FasttrackMeldekortFlytTest :
     fun `sender inn to meldekort, resultat reflektert i åpen behandling`() {
         val sak = happyCaseFørstegangsbehandling(fom = 25 august 2025)
         val åpenBehandling = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom.plusWeeks(2))
-        åpenBehandling.løsSykdom(sak.rettighetsperiode.fom).løsBistand().løsSykdomsvurderingBrev()
+        åpenBehandling.løsSykdom().løsBistand().løsSykdomsvurderingBrev()
 
         val (førsteMeldeperiode, andreMeldeperiode) = dataSource.transaction { connection ->
             MeldeperiodeRepositoryImpl(connection).hent(åpenBehandling.id)

@@ -77,7 +77,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 assertThat(åpneAvklaringsbehov).isNotEmpty()
                 assertThat(behandling.status()).isEqualTo(Status.UTREDES)
             }
-            .løsSykdom(periode.fom)
+            .løsSykdom()
             .løsBistand()
             .løsRefusjonskrav()
             .løsAvklaringsBehov(
@@ -285,7 +285,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             .extracting(Avklaringsbehov::definisjon).contains(tuple(Definisjon.AVKLAR_SYKDOM))
 
         // Prøve å løse sykdomsvilkåret på nytt
-        revurdering = revurdering.løsSykdom(sak.rettighetsperiode.fom)
+        revurdering = revurdering.løsSykdom()
         åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
         assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).doesNotContain(Definisjon.AVKLAR_SYKDOM)
         assertThat(
@@ -361,7 +361,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         assertThat(alleAvklaringsbehov).isNotEmpty()
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
 
-        behandling = behandling.løsSykdom(periode.fom).løsBistand().løsAvklaringsBehov(
+        behandling = behandling.løsSykdom().løsBistand().løsAvklaringsBehov(
             RefusjonkravLøsning(
                 listOf(
                     RefusjonkravVurderingDto(

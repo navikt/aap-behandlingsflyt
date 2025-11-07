@@ -40,7 +40,7 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
             .map { vurdering ->
                 Tidslinje(
                     Periode(
-                        fom = vurdering.vurderingenGjelderFra,
+                        fom = vurdering.vurderingenGjelderFra ?: grunnlag.kravDato,
                         tom = grunnlag.sisteDagMedMuligYtelse
                     ),
                     vurdering

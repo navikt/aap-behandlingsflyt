@@ -58,23 +58,15 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(
                         ?.let { bistandRepository.hentHvisEksisterer(it) }
                         ?.vurderinger.orEmpty()
                     val vurdering = nåTilstand
-                        .filterNot { gjeldendeVurdering ->
-                            gjeldendeVurdering.copy(opprettet = null) in vedtatteBistandsvurderinger.map {
-                                it.copy(
-                                    opprettet = null
-                                )
-                            }
-                        }
+                        .filterNot { gjeldendeVurdering -> gjeldendeVurdering.copy(opprettet = null) in vedtatteBistandsvurderinger.map { it.copy(opprettet = null) } }
                         .singleOrNull()
 
                     val gjeldendeSykdomsvurderinger =
-                        sykdomRepository.hentHvisEksisterer(behandling.id)?.gjeldendeSykdomsvurderinger().orEmpty()
+                        sykdomRepository.hentHvisEksisterer(behandling.id)?.sykdomsvurderinger.orEmpty()
 
                     val sisteSykdomsvurdering = gjeldendeSykdomsvurderinger.maxByOrNull { it.opprettet }
 
                     val sak = sakRepository.hent(behandling.sakId)
-                    
-                    // TODO: Denne må være smartere
                     val erOppfylt11_5 = sisteSykdomsvurdering?.erOppfylt(sak.rettighetsperiode.fom)
 
                     BistandGrunnlagResponse(
