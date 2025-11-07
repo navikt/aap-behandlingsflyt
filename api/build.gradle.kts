@@ -37,4 +37,5 @@ dependencies {
     testImplementation("no.nav.security:mock-oauth2-server:$mockOAuth2ServerVersion")
     testImplementation(project(":lib-test"))
     testImplementation(project(":repository"))
+    testImplementation("io.mockk:mockk:1.14.6")
 }

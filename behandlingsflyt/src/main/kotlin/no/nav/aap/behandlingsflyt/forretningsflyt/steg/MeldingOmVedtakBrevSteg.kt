@@ -40,25 +40,30 @@ class MeldingOmVedtakBrevSteg(
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (trekkKlageService.klageErTrukket(kontekst.behandlingId)) {
-            return Fullført
-        }
+        val klageErTrukket = trekkKlageService.klageErTrukket(kontekst.behandlingId)
         val brevBehov = brevUtlederService.utledBehovForMeldingOmVedtak(kontekst.behandlingId)
-        if (brevBehov == null) {
-            return Fullført
-        }
+        val harBestillingOmVedtakBrev = brevbestillingService.harBestillingOmVedtak(kontekst.behandlingId)
         avklaringsbehovService.oppdaterAvklaringsbehov(
             avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId),
             Definisjon.SKRIV_VEDTAKSBREV,
-            vedtakBehøverVurdering = { true },
-            erTilstrekkeligVurdert = { brevbestillingService.harBestillingOmVedtak(kontekst.behandlingId) },
-            tilbakestillGrunnlag = {},
+            vedtakBehøverVurdering = { vedtakBehøverVurdering(klageErTrukket, brevBehov) },
+            erTilstrekkeligVurdert = { brevbestillingService.erAlleBestillingerOmVedtakIEndeTilstand(kontekst.behandlingId) },
+            tilbakestillGrunnlag = { tilbakestillGrunnlag() },
             kontekst
         )
-        if (!brevbestillingService.harBestillingOmVedtak(kontekst.behandlingId)) {
+        if (brevBehov != null && !klageErTrukket && !harBestillingOmVedtakBrev) {
             bestillBrev(kontekst, brevBehov)
         }
         return Fullført
+    }
+
+    private fun tilbakestillGrunnlag() {
+        // Ikke mulig per i dag. Brevbestilling i endeTilstand kan det ikke tilbakestilles i aap-behandlingsflyt.
+        // Hvis dette endres i fremtiden må også denne logikken tilpasses.
+    }
+
+    private fun vedtakBehøverVurdering(klageErTrukket: Boolean, brevBehov: BrevBehov?): Boolean {
+        return !klageErTrukket && brevBehov != null
     }
 
     private fun bestillBrev(kontekst: FlytKontekstMedPerioder, brevBehov: BrevBehov) {

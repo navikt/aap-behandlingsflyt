@@ -34,6 +34,11 @@ class BrevbestillingService(
         return brevbestillingRepository.hent(behandlingId).any { it.typeBrev.erVedtak() }
     }
 
+    fun erAlleBestillingerOmVedtakIEndeTilstand(behandlingId: BehandlingId): Boolean {
+        val vedtakBestillinger = brevbestillingRepository.hent(behandlingId).filter { it.typeBrev.erVedtak() }
+        return vedtakBestillinger.all { it.status.erEndeTilstand() }
+    }
+
     fun hentBestillinger(behandlingId: BehandlingId, typeBrev: TypeBrev): List<Brevbestilling> {
         val bestillinger = brevbestillingRepository.hent(behandlingId).filter { it.typeBrev == typeBrev }
         return bestillinger

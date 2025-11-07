@@ -45,13 +45,15 @@ class MeldingOmVedtakBrevStegTest {
         every { trekkKlageService.klageErTrukket(any()) } returns false
         every { brevUtlederService.utledBehovForMeldingOmVedtak(any()) } returns VedtakAktivitetsplikt11_7
         every { brevbestillingService.bestillV2(any(), any(), any(), any()) } returns UUID.randomUUID()
+        every { brevbestillingService.erAlleBestillingerOmVedtakIEndeTilstand(any()) } returns true
+        every { brevbestillingService.harBestillingOmVedtak(any()) } returns false
     }
 
 
     /**
      * Vurderinger rundt MeldingOmVedtakBrevSteg.utfør() og AvklaringsbehovService
      *   BrevSteg har per idag ingen periodiseringsbehov
-     *   BrevSteg krever by-design manuelt avklaringsbehov ved brevbehov, dvs. vedtakBehøverVurdering = true
+     *   BrevSteg krever by-design manuelt avklaringsbehov ved brevbehov, dvs. vedtakBehøverVurdering gitt brevBehov og ingen klage trukket
      *   BrevSteg kan ikke tilbakestilles da behandlingsflyten har nådd stegstatus IVERKSETTES, tilbakestillGrunnlag = {}
      *   Forventa runder i BrevSteg og oppdateringer av avklaringsbehov for førstegangsbehandling:
      *     Runde-1:
@@ -125,6 +127,7 @@ class MeldingOmVedtakBrevStegTest {
         )
         // vedtak løst av saksbehandler - da skal harBestillingOmVedtak() returnere true i BrevSteg utfør()
         every { brevbestillingService.harBestillingOmVedtak(any()) } returns true
+        every { brevbestillingService.erAlleBestillingerOmVedtakIEndeTilstand(any()) } returns true
 
         val resultat2 = steg.utfør(kontekst)
 
