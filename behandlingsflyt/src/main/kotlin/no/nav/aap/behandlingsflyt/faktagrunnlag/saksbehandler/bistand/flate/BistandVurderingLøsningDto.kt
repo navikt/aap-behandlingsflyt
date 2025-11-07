@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandVurdering
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import java.time.LocalDate
@@ -14,7 +15,7 @@ data class BistandVurderingLøsningDto(
     val skalVurdereAapIOvergangTilUføre: Boolean?,
     val skalVurdereAapIOvergangTilArbeid: Boolean?,
 ) {
-    fun tilBistandVurdering(bruker: Bruker, vurderingenGjelderFra: LocalDate?) = BistandVurdering(
+    fun tilBistandVurdering(bruker: Bruker, vurderingenGjelderFra: LocalDate?, vurdertIBehandling: BehandlingId) = BistandVurdering(
         begrunnelse = begrunnelse,
         erBehovForAktivBehandling = erBehovForAktivBehandling,
         erBehovForArbeidsrettetTiltak = erBehovForArbeidsrettetTiltak,
@@ -23,7 +24,8 @@ data class BistandVurderingLøsningDto(
         skalVurdereAapIOvergangTilUføre = skalVurdereAapIOvergangTilUføre,
         overgangBegrunnelse = overgangBegrunnelse,
         skalVurdereAapIOvergangTilArbeid = skalVurdereAapIOvergangTilArbeid,
-        vurdertAv = bruker.ident
+        vurdertAv = bruker.ident,
+        vurdertIBehandling = vurdertIBehandling,
     )
 
     fun valider() {

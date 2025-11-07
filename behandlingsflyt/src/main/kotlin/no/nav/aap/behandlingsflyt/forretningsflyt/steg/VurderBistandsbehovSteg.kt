@@ -72,18 +72,23 @@ class VurderBistandsbehovSteg(
                 }
 
                 val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-                val nyttVilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
+                val nyttVilkår = vilkårsresultat.optionalVilkår(Vilkårtype.BISTANDSVILKÅRET)
 
-                val forrigeVilkårTidslinje = kontekst.forrigeBehandlingId?.let { vilkårsresultatRepository.hent(it) }
-                    ?.optionalVilkår(Vilkårtype.BISTANDSVILKÅRET)
-                    ?.tidslinje()
-                    .orEmpty()
+                if (nyttVilkår != null) {
+                    val forrigeVilkårTidslinje =
+                        kontekst.forrigeBehandlingId?.let { vilkårsresultatRepository.hent(it) }
+                            ?.optionalVilkår(Vilkårtype.BISTANDSVILKÅRET)
+                            ?.tidslinje()
+                            .orEmpty()
 
-                if (nyttVilkår.tidslinje() != forrigeVilkårTidslinje) {
-                    nyttVilkår.nullstillTidslinje()
-                        .leggTilVurderinger(forrigeVilkårTidslinje)
+                    if (nyttVilkår.tidslinje() != forrigeVilkårTidslinje) {
+                        nyttVilkår.nullstillTidslinje()
+                            .leggTilVurderinger(forrigeVilkårTidslinje)
 
-                    vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+                        vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+                    }
+                } else {
+                    log.info("Vilkår for bistandsbehov finnes ikke i vilkårsresultat for behandling ${kontekst.behandlingId}, ingen tilbakestilling utført.")
                 }
             },
             kontekst
@@ -112,6 +117,10 @@ class VurderBistandsbehovSteg(
         return when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
             VurderingType.REVURDERING -> {
+                if (tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())) {
+                    return false
+                }
+
                 val perioderBistandsvilkåretErRelevant = perioderHvorBistandsvilkåretErRelevant(kontekst)
                 if (perioderBistandsvilkåretErRelevant.segmenter().any { it.verdi } && vurderingsbehovTvingerVurdering(
                         kontekst

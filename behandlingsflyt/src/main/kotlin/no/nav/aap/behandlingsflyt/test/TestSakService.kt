@@ -46,7 +46,7 @@ class TestSakService(
         val identer = try {
             identGateway.hentAlleIdenterForPerson(ident)
         } catch (e: PdlQueryException) {
-            if (e.stackTrace.toString().contains("Fant ikke person")) {
+            if (e.message?.contains("Fant ikke person") == true) {
                 throw OpprettTestSakException("Fant ikke person i PDL")
             } else {
                 throw e
