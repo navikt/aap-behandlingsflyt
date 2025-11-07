@@ -200,7 +200,7 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
             select s.id from sak s, behandling b where s.id = b.sak_id and  b.id in (
                 select g.behandling_id
                 from meldeplikt_fritak_grunnlag g, public.meldeplikt_fritak_vurdering v
-                where g.meldeplikt_id = v.meldeplikt_id and g.id in (
+                where g.meldeplikt_id = v.meldeplikt_id and g.aktiv = true and g.id in (
                     select id
                     from meldeplikt_fritak_grunnlag
                     where aktiv = true and behandling_id in (
