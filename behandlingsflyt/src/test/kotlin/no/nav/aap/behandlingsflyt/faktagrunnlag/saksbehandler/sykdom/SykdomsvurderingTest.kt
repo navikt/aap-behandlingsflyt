@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -23,7 +22,7 @@ class SykdomsvurderingTest {
             erArbeidsevnenNedsatt = true,
             yrkesskadeBegrunnelse = null,
             erNedsettelseIArbeidsevneAvEnVissVarighet = false,
-            vurderingenGjelderFra = 1 januar 2020,
+            vurderingenGjelderFra = null,
             vurderingenGjelderTil = null,
             vurdertAv = Bruker("Z00000"),
             opprettet = Instant.now(),
@@ -36,12 +35,10 @@ class SykdomsvurderingTest {
 
     @ParameterizedTest
     @MethodSource("trueFalseNullSource")
-    fun `skal ikke ta hensyn til viss varighet for vurderinger hvor kravdato er før gjelderFra`(erNedsettelseIArbeidsevneAvEnVissVarighet: Boolean?) {
+    fun `skal ikke ta hensyn til viss varighet for vurderinger hvor kravdato != gjelderFra`(erNedsettelseIArbeidsevneAvEnVissVarighet: Boolean?) {
         // Parameterisert test. Skal ignorere verdien av erNedsettelseIArbeidsevneAvEnVissVarighet
 
         val gjelderFra = LocalDate.now()
-        val kravdato = gjelderFra.plusMonths(1)
-        
         val vurdering = Sykdomsvurdering(
             begrunnelse = "",
             dokumenterBruktIVurdering = emptyList(),
@@ -52,14 +49,14 @@ class SykdomsvurderingTest {
             erArbeidsevnenNedsatt = true,
             yrkesskadeBegrunnelse = null,
             erNedsettelseIArbeidsevneAvEnVissVarighet = erNedsettelseIArbeidsevneAvEnVissVarighet,
-            vurderingenGjelderFra = kravdato.plusDays(1),
+            vurderingenGjelderFra = gjelderFra.plusDays(1),
             vurderingenGjelderTil = null,
             vurdertAv = Bruker("Z00000"),
             opprettet = Instant.now(),
             vurdertIBehandling = BehandlingId(1L)
         )
 
-        assertThat(vurdering.erOppfylt(kravdato)).isTrue
+        assertThat(vurdering.erOppfylt(gjelderFra.plusMonths(1))).isTrue
     }
 
     @Test

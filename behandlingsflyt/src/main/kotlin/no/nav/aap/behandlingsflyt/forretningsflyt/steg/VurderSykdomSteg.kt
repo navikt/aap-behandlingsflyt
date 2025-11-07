@@ -75,7 +75,7 @@ class VurderSykdomSteg private constructor(
         val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)
         return sykdomGrunnlag != null
                 && sykdomGrunnlag.sykdomsvurderinger.isNotEmpty()
-                && sykdomGrunnlag.somSykdomsvurderingstidslinje().helePerioden().inneholder(kontekst.rettighetsperiode)
+                && sykdomGrunnlag.somSykdomsvurderingstidslinje(kontekst.rettighetsperiode.fom).helePerioden().inneholder(kontekst.rettighetsperiode)
     }
 
     companion object : FlytSteg {

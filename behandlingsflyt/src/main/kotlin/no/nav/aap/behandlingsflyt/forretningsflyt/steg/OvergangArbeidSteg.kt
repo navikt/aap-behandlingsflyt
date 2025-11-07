@@ -103,7 +103,7 @@ class OvergangArbeidSteg private constructor(
         val utfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
 
         val sykdomsvurderinger = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)
-            ?.somSykdomsvurderingstidslinje()
+            ?.somSykdomsvurderingstidslinje(kontekst.rettighetsperiode.fom)
             .orEmpty()
 
         val bistandsvurderinger = bistandRepository.hentHvisEksisterer(kontekst.behandlingId)

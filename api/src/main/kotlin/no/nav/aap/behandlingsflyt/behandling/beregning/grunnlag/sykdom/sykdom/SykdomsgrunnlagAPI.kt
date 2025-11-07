@@ -24,6 +24,7 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
+import java.time.LocalDate
 import java.time.ZoneId
 import javax.sql.DataSource
 
@@ -51,12 +52,22 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
 
                     val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandlingId = behandling.id)
                     val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId = behandling.id)
-                    
-                    val sistVedtatteSykdomGrunnlag =
-                        behandling.forrigeBehandlingId?.let { sykdomRepository.hentHvisEksisterer(behandlingId = it) }
 
                     val innhentedeYrkesskader = yrkesskadeGrunnlag?.yrkesskader?.yrkesskader.orEmpty()
                         .map { yrkesskade -> RegistrertYrkesskade(yrkesskade) }
+
+                    val nåTilstand = sykdomGrunnlag?.sykdomsvurderinger.orEmpty()
+
+                    val historikkSykdomsvurderinger =
+                        sykdomRepository.hentHistoriskeSykdomsvurderinger(behandling.sakId, behandling.id)
+
+                    val vedtatteSykdomGrunnlag = behandling.forrigeBehandlingId
+                        ?.let { sykdomRepository.hentHvisEksisterer(it) }
+
+                    val vedtatteSykdomsvurderinger = vedtatteSykdomGrunnlag?.sykdomsvurderinger.orEmpty()
+
+                    val vedtatteSykdomsvurderingerIder = vedtatteSykdomsvurderinger.map { it.id }
+                    val sykdomsvurderinger = nåTilstand.filterNot { it.id in vedtatteSykdomsvurderingerIder }
 
                     SykdomGrunnlagResponse(
                         opplysninger = InnhentetSykdomsOpplysninger(
@@ -64,18 +75,16 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
                             innhentedeYrkesskader = innhentedeYrkesskader,
                         ),
                         skalVurdereYrkesskade = innhentedeYrkesskader.isNotEmpty(),
-                        erÅrsakssammenhengYrkesskade = sistVedtatteSykdomGrunnlag?.yrkesskadevurdering?.erÅrsakssammenheng
+                        erÅrsakssammenhengYrkesskade = vedtatteSykdomGrunnlag?.yrkesskadevurdering?.erÅrsakssammenheng
                             ?: false,
-                        sykdomsvurderinger = sykdomGrunnlag
-                            ?.sykdomsvurderingerVurdertIBehandling(behandlingId = behandling.id).orEmpty()
-                            .sortedBy { it.vurderingenGjelderFra }
+                        sykdomsvurderinger = sykdomsvurderinger
+                            .sortedWith(compareBy({ it.vurderingenGjelderFra ?: LocalDate.MIN }, { it.opprettet }))
                             .map { it.toDto(ansattInfoService) },
-                        historikkSykdomsvurderinger = sykdomGrunnlag
-                            ?.historiskeSykdomsvurderinger(behandling.id).orEmpty()
+                        historikkSykdomsvurderinger = historikkSykdomsvurderinger
                             .sortedBy { it.opprettet }
                             .map { it.toDto(ansattInfoService) },
-                        gjeldendeVedtatteSykdomsvurderinger = sykdomGrunnlag
-                            ?.gjeldendeVedtatteSykdomsvurderinger(behandling.id).orEmpty()
+                        gjeldendeVedtatteSykdomsvurderinger = vedtatteSykdomsvurderinger
+                            .sortedBy { it.vurderingenGjelderFra ?: LocalDate.MIN }
                             .map { it.toDto(ansattInfoService) },
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
