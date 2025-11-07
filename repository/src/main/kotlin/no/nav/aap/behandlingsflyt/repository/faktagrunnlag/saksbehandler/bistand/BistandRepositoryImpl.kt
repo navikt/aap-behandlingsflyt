@@ -63,7 +63,8 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
             skalVurdereAapIOvergangTilArbeid = row.getBooleanOrNull("OVERGANG_TIL_ARBEID"),
             overgangBegrunnelse = row.getStringOrNull("OVERGANG_BEGRUNNELSE"),
             vurdertAv = row.getString("VURDERT_AV"),
-            opprettet = row.getInstant("OPPRETTET_TID")
+            opprettet = row.getInstant("OPPRETTET_TID"),
+            vurdertIBehandling = row.getLongOrNull("VURDERT_I_BEHANDLING")?.let { BehandlingId(it) },
         )
     }
 
@@ -115,8 +116,8 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
         )
 
         val eksisterendeVurderinger =
-            eksisterendeBistandGrunnlag?.vurderinger?.let { it.map { it.copy(opprettet = null) } }.orEmpty().toSet()
-        val nyeVurderinger = bistandsvurderinger.map { it.copy(opprettet = null) }.toSet()
+            eksisterendeBistandGrunnlag?.vurderinger?.let { it.map { it.copy(opprettet = null, vurdertIBehandling = null) } }.orEmpty().toSet()
+        val nyeVurderinger = bistandsvurderinger.map { it.copy(opprettet = null, vurdertIBehandling = null) }.toSet()
 
         if (eksisterendeVurderinger != nyeVurderinger) {
             eksisterendeBistandGrunnlag?.let {
@@ -176,7 +177,7 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
         val bistandvurderingerId = connection.executeReturnKey("""INSERT INTO BISTAND_VURDERINGER DEFAULT VALUES""")
 
         connection.executeBatch(
-            "INSERT INTO BISTAND (BEGRUNNELSE, BEHOV_FOR_AKTIV_BEHANDLING, BEHOV_FOR_ARBEIDSRETTET_TILTAK, BEHOV_FOR_ANNEN_OPPFOELGING, VURDERINGEN_GJELDER_FRA, VURDERT_AV, OVERGANG_BEGRUNNELSE, OVERGANG_TIL_UFOERE, OVERGANG_TIL_ARBEID, BISTAND_VURDERINGER_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO BISTAND (BEGRUNNELSE, BEHOV_FOR_AKTIV_BEHANDLING, BEHOV_FOR_ARBEIDSRETTET_TILTAK, BEHOV_FOR_ANNEN_OPPFOELGING, VURDERINGEN_GJELDER_FRA, VURDERT_AV, OVERGANG_BEGRUNNELSE, OVERGANG_TIL_UFOERE, OVERGANG_TIL_ARBEID, BISTAND_VURDERINGER_ID, VURDERT_I_BEHANDLING) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             vurderinger
         ) {
             setParams { vurdering ->
@@ -190,6 +191,7 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
                 setBoolean(8, vurdering.skalVurdereAapIOvergangTilUføre)
                 setBoolean(9, vurdering.skalVurdereAapIOvergangTilArbeid)
                 setLong(10, bistandvurderingerId)
+                setLong(11, vurdering.vurdertIBehandling?.id)
             }
         }
 
