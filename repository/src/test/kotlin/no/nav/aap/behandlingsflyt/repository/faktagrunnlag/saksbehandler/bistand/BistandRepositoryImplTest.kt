@@ -85,6 +85,7 @@ internal class BistandRepositoryImplTest {
                         skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = null,
+                        vurdertIBehandling = behandling.id
                     )
                 )
             )
@@ -103,6 +104,7 @@ internal class BistandRepositoryImplTest {
                             skalVurdereAapIOvergangTilUføre = null,
                             skalVurdereAapIOvergangTilArbeid = null,
                             overgangBegrunnelse = null,
+                            vurdertIBehandling = behandling.id
                         )
                     )
                 )
@@ -158,6 +160,8 @@ internal class BistandRepositoryImplTest {
         dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
+            BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
+            val behandling2 = finnEllerOpprettBehandling(connection, sak)
 
             val bistandRepository = BistandRepositoryImpl(connection)
             bistandRepository.lagre(
@@ -189,6 +193,7 @@ internal class BistandRepositoryImplTest {
                         skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = null,
+                        vurdertIBehandling = behandling.id
                     )
                 )
             )
@@ -205,6 +210,8 @@ internal class BistandRepositoryImplTest {
                         skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = null,
+                        vurdertIBehandling = behandling2.id
+                        
                     )
                 )
             )
