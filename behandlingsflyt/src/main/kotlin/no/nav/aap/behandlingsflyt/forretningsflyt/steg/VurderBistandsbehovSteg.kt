@@ -72,7 +72,8 @@ class VurderBistandsbehovSteg(
                 }
 
                 val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-                val nyttVilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
+                val nyttVilkår = vilkårsresultat.optionalVilkår(Vilkårtype.BISTANDSVILKÅRET)
+                    ?: return@oppdaterAvklaringsbehov // Ikke gjør noe hvis vilkåret mangler
 
                 val forrigeVilkårTidslinje = kontekst.forrigeBehandlingId?.let { vilkårsresultatRepository.hent(it) }
                     ?.optionalVilkår(Vilkårtype.BISTANDSVILKÅRET)
@@ -109,6 +110,10 @@ class VurderBistandsbehovSteg(
     }
 
     private fun vedtakBehøverVurdering(kontekst: FlytKontekstMedPerioder): Boolean {
+        if (tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())) {
+            return false
+        }
+
         return when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
             VurderingType.REVURDERING -> {
