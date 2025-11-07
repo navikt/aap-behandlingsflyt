@@ -350,7 +350,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
         return Sykdomsvurdering(
             id = sykdomsvurderingId,
             begrunnelse = row.getString("BEGRUNNELSE"),
-            vurderingenGjelderFra = row.getLocalDateOrNull("VURDERINGEN_GJELDER_FRA"),
+            vurderingenGjelderFra = row.getLocalDate("VURDERINGEN_GJELDER_FRA"),
             dokumenterBruktIVurdering = hentSykdomsDokumenter(sykdomsvurderingId),
             harSkadeSykdomEllerLyte = row.getBoolean("HAR_SYKDOM_SKADE_LYTE"),
             erSkadeSykdomEllerLyteVesentligdel = row.getBooleanOrNull("ER_SYKDOM_SKADE_LYTE_VESETLING_DEL"),
@@ -364,7 +364,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
             bidiagnoser = hentBidiagnoser(vurderingId = sykdomsvurderingId),
             opprettet = row.getInstant("OPPRETTET_TID"),
             vurdertAv = Bruker(row.getString("VURDERT_AV_IDENT")),
-            vurdertIBehandling = row.getLongOrNull("VURDERT_I_BEHANDLING")?.let { BehandlingId(it) },
+            vurdertIBehandling = row.getLong("VURDERT_I_BEHANDLING").let { BehandlingId(it) },
             vurderingenGjelderTil = row.getLocalDateOrNull("VURDERINGEN_GJELDER_TIL")
         )
     }
@@ -468,7 +468,7 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
         val vurderingerId: Long,
         val grunnlagOpprettetTid: LocalDateTime,
     )
-
+    
     // Vurdering minus opprettet, id, vurdertIBehandling
     data class SammenlignbarSykdomsvurdering(
         val begrunnelse: String,
