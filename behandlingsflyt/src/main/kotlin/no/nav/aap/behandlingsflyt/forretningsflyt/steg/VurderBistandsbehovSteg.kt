@@ -72,18 +72,21 @@ class VurderBistandsbehovSteg(
                 }
 
                 val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-                val nyttVilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
+                val nyttVilkår = vilkårsresultat.optionalVilkår(Vilkårtype.BISTANDSVILKÅRET)
 
-                val forrigeVilkårTidslinje = kontekst.forrigeBehandlingId?.let { vilkårsresultatRepository.hent(it) }
-                    ?.optionalVilkår(Vilkårtype.BISTANDSVILKÅRET)
-                    ?.tidslinje()
-                    .orEmpty()
+                if (nyttVilkår != null) {
+                    val forrigeVilkårTidslinje =
+                        kontekst.forrigeBehandlingId?.let { vilkårsresultatRepository.hent(it) }
+                            ?.optionalVilkår(Vilkårtype.BISTANDSVILKÅRET)
+                            ?.tidslinje()
+                            .orEmpty()
 
-                if (nyttVilkår.tidslinje() != forrigeVilkårTidslinje) {
-                    nyttVilkår.nullstillTidslinje()
-                        .leggTilVurderinger(forrigeVilkårTidslinje)
+                    if (nyttVilkår.tidslinje() != forrigeVilkårTidslinje) {
+                        nyttVilkår.nullstillTidslinje()
+                            .leggTilVurderinger(forrigeVilkårTidslinje)
 
-                    vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+                        vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+                    }
                 }
             },
             kontekst
