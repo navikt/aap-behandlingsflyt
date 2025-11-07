@@ -22,7 +22,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     LovvalgMedlemskapPeriodisert,
     KvalitetssikringsSteg,
     FatteVedtakAvklaringsbehovService,
-    SykdomPeriodisertMigrering,
     BedreUttrekkAvSakerMedFritakMeldeplikt,
     ;
 
