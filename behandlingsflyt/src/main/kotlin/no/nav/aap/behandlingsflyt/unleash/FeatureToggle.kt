@@ -22,6 +22,8 @@ enum class BehandlingsflytFeature : FeatureToggle {
     LovvalgMedlemskapPeriodisert,
     KvalitetssikringsSteg,
     FatteVedtakAvklaringsbehovService,
+    SykdomPeriodisertMigrering,
+    BedreUttrekkAvSakerMedFritakMeldeplikt,
     ;
 
     override fun key(): String = name

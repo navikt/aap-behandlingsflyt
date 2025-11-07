@@ -3,10 +3,13 @@ package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.*
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.type.Periode
 import java.util.concurrent.atomic.AtomicLong
-import java.util.stream.Collectors.toList
 
 object InMemorySakRepository : SakRepository {
 
@@ -101,6 +104,10 @@ object InMemorySakRepository : SakRepository {
             field.trySetAccessible()
             field.set(sak, status)
         }
+    }
+
+    override fun finnSakerMedFritakMeldeplikt(): List<SakId> {
+        TODO("Not yet implemented")
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
