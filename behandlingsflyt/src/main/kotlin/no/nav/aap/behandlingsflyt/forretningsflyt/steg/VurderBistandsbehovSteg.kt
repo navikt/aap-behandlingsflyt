@@ -87,6 +87,8 @@ class VurderBistandsbehovSteg(
 
                         vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
                     }
+                } else {
+                    log.info("Vilkår for bistandsbehov finnes ikke i vilkårsresultat for behandling ${kontekst.behandlingId}, ingen tilbakestilling utført.")
                 }
             },
             kontekst
@@ -115,6 +117,10 @@ class VurderBistandsbehovSteg(
         return when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
             VurderingType.REVURDERING -> {
+                if (tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())) {
+                    return false
+                }
+
                 val perioderBistandsvilkåretErRelevant = perioderHvorBistandsvilkåretErRelevant(kontekst)
                 if (perioderBistandsvilkåretErRelevant.segmenter().any { it.verdi } && vurderingsbehovTvingerVurdering(
                         kontekst
