@@ -1,7 +1,7 @@
 
 plugins {
     id("behandlingsflyt.conventions")
-    id("com.github.davidmc24.gradle.plugin.avro") version "1.9.1"
+    id("io.github.androa.gradle.plugin.avro") version "0.0.12"
 }
 
 repositories {
@@ -31,7 +31,7 @@ dependencies {
     testImplementation(libs.bundles.junit)
     testImplementation(libs.ktorServerTestHost)
     constraints {
-        implementation("commons-codec:commons-codec:1.19.0")
+        implementation("commons-codec:commons-codec:1.20.0")
     }
     testImplementation(libs.ktorClientContentNegotiation)
     testImplementation("no.nav.security:mock-oauth2-server:$mockOAuth2ServerVersion")

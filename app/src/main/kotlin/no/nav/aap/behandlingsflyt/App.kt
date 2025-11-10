@@ -84,7 +84,6 @@ import no.nav.aap.behandlingsflyt.pip.behandlingsflytPip
 import no.nav.aap.behandlingsflyt.prosessering.BehandlingsflytLogInfoProvider
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
@@ -332,19 +331,12 @@ private fun utførMigreringer(
     scheduler.schedule(Runnable {
         val unleashGateway: UnleashGateway = gatewayProvider.provide()
         val enabled = unleashGateway.isEnabled(BehandlingsflytFeature.LovvalgMedlemskapPeriodisertMigrering)
-        val sykdomEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.SykdomPeriodisertMigrering)
         val isLeader = isLeader(log)
-        log.info("isLeader = $isLeader, LovvalgMedlemskapPeriodisertMigrering = $enabled, SykdomPeriodisertMigrering = $sykdomEnabled")
+        log.info("isLeader = $isLeader, LovvalgMedlemskapPeriodisertMigrering = $enabled")
         if (enabled && isLeader) {
             dataSource.transaction { connection ->
                 val repository = MedlemskapArbeidInntektRepositoryImpl(connection)
                 repository.migrerManuelleVurderingerPeriodisert()
-            }
-        }
-        if (sykdomEnabled && isLeader) {
-            dataSource.transaction { connection ->
-                val repository = SykdomRepositoryImpl(connection)
-                repository.migrerSykdomsvurderinger()
             }
         }
     }, 9, TimeUnit.MINUTES)

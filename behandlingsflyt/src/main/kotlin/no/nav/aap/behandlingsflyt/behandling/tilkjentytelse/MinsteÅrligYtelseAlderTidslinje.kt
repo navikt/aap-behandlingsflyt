@@ -5,6 +5,7 @@ import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.GUnit
+import no.nav.aap.komponenter.verdityper.Tid
 import java.time.LocalDate
 
 internal interface AlderStrategi {
@@ -32,7 +33,7 @@ internal class MinsteÅrligYtelseAlderTidslinje(val fødselsdato: Fødselsdato) 
                     verdi = AlderStrategi.Under25
                 ),
                 Segment(
-                    periode = Periode(fødselsdato.`25årsDagen`(), LocalDate.MAX),
+                    periode = Periode(fødselsdato.`25årsDagen`(), Tid.MAKS),
                     verdi = AlderStrategi.Over25
                 )
             )

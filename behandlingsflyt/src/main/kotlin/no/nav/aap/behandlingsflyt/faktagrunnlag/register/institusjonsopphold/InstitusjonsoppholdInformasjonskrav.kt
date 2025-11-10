@@ -11,7 +11,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.KanTriggeRevurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -19,12 +18,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGateway as IInstitusjonsoppholdGateway
 
 class InstitusjonsoppholdInformasjonskrav private constructor(
-    private val sakOgBehandlingService: SakOgBehandlingService,
+    private val sakService: SakService,
     private val institusjonsoppholdRepository: InstitusjonsoppholdRepository,
     private val institusjonsoppholdRegisterGateway: IInstitusjonsoppholdGateway,
     private val tidligereVurderinger: TidligereVurderinger,
@@ -47,7 +47,7 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
     data class InstitusjonsoppholdRegisterdata(val opphold: List<Institusjonsopphold>) : InformasjonskravRegisterdata
 
     override fun klargjør(kontekst: FlytKontekstMedPerioder): Input {
-        return Input(sakOgBehandlingService.hentSakFor(kontekst.behandlingId))
+        return Input(sakService.hentSakFor(kontekst.behandlingId))
     }
 
     override fun hentData(input: Input): InstitusjonsoppholdRegisterdata {
@@ -75,7 +75,7 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
     }
 
     private fun hentInstitusjonsopphold(behandlingId: BehandlingId): List<Institusjonsopphold> {
-        val sak = sakOgBehandlingService.hentSakFor(behandlingId)
+        val sak = sakService.hentSakFor(behandlingId)
         return institusjonsoppholdRegisterGateway.innhent(sak.person)
             .filter { it.periode().overlapper(sak.rettighetsperiode) }
     }
@@ -102,7 +102,7 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
             gatewayProvider: GatewayProvider
         ): InstitusjonsoppholdInformasjonskrav {
             return InstitusjonsoppholdInformasjonskrav(
-                SakOgBehandlingService(repositoryProvider, gatewayProvider),
+                SakService(repositoryProvider),
                 repositoryProvider.provide(),
                 gatewayProvider.provide(),
                 TidligereVurderingerImpl(repositoryProvider),

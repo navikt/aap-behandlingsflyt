@@ -321,6 +321,11 @@ class BeregningAvklarFaktaSteg private constructor(
             return BeregningAvklarFaktaSteg(repositoryProvider, gatewayProvider)
         }
 
+        override val rekkefølge: List<Definisjon> = listOf(
+            Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT,
+            Definisjon.FASTSETT_YRKESSKADEINNTEKT,
+        )
+
         override fun type(): StegType {
             return StegType.FASTSETT_BEREGNINGSTIDSPUNKT
         }

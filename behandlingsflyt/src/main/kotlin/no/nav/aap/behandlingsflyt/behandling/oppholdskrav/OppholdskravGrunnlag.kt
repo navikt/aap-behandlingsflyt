@@ -6,6 +6,7 @@ import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -38,7 +39,7 @@ data class OppholdskravVurdering(
             perioder.sortedBy { it.fom }
                 .map { periode ->
                     Segment(
-                        periode = Periode(fom = periode.fom, tom = periode.tom ?: LocalDate.MAX),
+                        periode = Periode(fom = periode.fom, tom = periode.tom ?: Tid.MAKS),
                         verdi = OppholdskravTidslinjeData(
                             land = periode.land,
                             opprettet = opprettet,

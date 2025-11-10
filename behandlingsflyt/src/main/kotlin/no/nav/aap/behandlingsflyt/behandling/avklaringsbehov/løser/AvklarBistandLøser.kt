@@ -9,7 +9,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
-import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
@@ -37,10 +36,11 @@ class AvklarBistandLøser(
 
         val nyesteSykdomsvurdering = sykdomRepository.hentHvisEksisterer(behandling.id)
             ?.sykdomsvurderinger?.maxByOrNull { it.opprettet }
-
+        
         val bistandsVurdering = løsning.bistandsVurdering.tilBistandVurdering(
             kontekst.bruker,
-            nyesteSykdomsvurdering?.vurderingenGjelderFra
+            nyesteSykdomsvurdering?.vurderingenGjelderFra,  // TODO: Gjør uavhengig fra sykdom
+            vurdertIBehandling = kontekst.behandlingId()
         )
 
         val eksisterendeBistandsvurderinger = behandling.forrigeBehandlingId

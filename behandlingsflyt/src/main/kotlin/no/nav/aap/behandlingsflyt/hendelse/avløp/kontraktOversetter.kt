@@ -50,7 +50,7 @@ fun sortererteAvklaringsbehov(
     behandling: Behandling,
     alleAvklaringsbehov: List<no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov>,
 ): List<AvklaringsbehovHendelseDto> = alleAvklaringsbehov
-    .sortedWith(compareBy(behandling.flyt().stegComparator) { it.funnetISteg })
+    .sortedWith(behandling.flyt().avklaringsbehovComparator)
     .map { avklaringsbehov ->
         AvklaringsbehovHendelseDto(
             avklaringsbehovDefinisjon = avklaringsbehov.definisjon,

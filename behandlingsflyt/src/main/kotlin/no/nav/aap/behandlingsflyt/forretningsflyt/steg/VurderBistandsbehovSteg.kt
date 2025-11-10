@@ -24,11 +24,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
-import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
-class VurderBistandsbehovSteg private constructor(
+class VurderBistandsbehovSteg(
     private val bistandRepository: BistandRepository,
     private val studentRepository: StudentRepository,
     private val sykdomsRepository: SykdomRepository,
@@ -57,7 +56,7 @@ class VurderBistandsbehovSteg private constructor(
             avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.AVKLAR_BISTANDSBEHOV,
             vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst) },
-            erTilstrekkeligVurdert = { true },
+            erTilstrekkeligVurdert = { erTilstrekkeligVurdert(kontekst) },
             tilbakestillGrunnlag = {
                 val forrigeVurderinger = kontekst.forrigeBehandlingId
                     ?.let { bistandRepository.hentHvisEksisterer(it) }
@@ -73,18 +72,23 @@ class VurderBistandsbehovSteg private constructor(
                 }
 
                 val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-                val nyttVilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
+                val nyttVilkår = vilkårsresultat.optionalVilkår(Vilkårtype.BISTANDSVILKÅRET)
 
-                val forrigeVilkårTidslinje = kontekst.forrigeBehandlingId?.let { vilkårsresultatRepository.hent(it) }
-                    ?.optionalVilkår(Vilkårtype.BISTANDSVILKÅRET)
-                    ?.tidslinje()
-                    .orEmpty()
+                if (nyttVilkår != null) {
+                    val forrigeVilkårTidslinje =
+                        kontekst.forrigeBehandlingId?.let { vilkårsresultatRepository.hent(it) }
+                            ?.optionalVilkår(Vilkårtype.BISTANDSVILKÅRET)
+                            ?.tidslinje()
+                            .orEmpty()
 
-                if (nyttVilkår.tidslinje() != forrigeVilkårTidslinje) {
-                    nyttVilkår.nullstillTidslinje()
-                        .leggTilVurderinger(forrigeVilkårTidslinje)
+                    if (nyttVilkår.tidslinje() != forrigeVilkårTidslinje) {
+                        nyttVilkår.nullstillTidslinje()
+                            .leggTilVurderinger(forrigeVilkårTidslinje)
 
-                    vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+                        vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+                    }
+                } else {
+                    log.info("Vilkår for bistandsbehov finnes ikke i vilkårsresultat for behandling ${kontekst.behandlingId}, ingen tilbakestilling utført.")
                 }
             },
             kontekst
@@ -93,7 +97,9 @@ class VurderBistandsbehovSteg private constructor(
         /* Dette skal på sikt ut av denne metoden, og samles i et eget fastsett-steg. */
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
         vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.BISTANDSVILKÅRET)
-        if (avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_BISTANDSBEHOV)?.status()?.erAvsluttet() == true) {
+        if (avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_BISTANDSBEHOV)?.status()
+                ?.erAvsluttet() == true
+        ) {
             val grunnlag = BistandFaktagrunnlag(
                 kontekst.rettighetsperiode.fom,
                 kontekst.rettighetsperiode.tom,
@@ -111,14 +117,16 @@ class VurderBistandsbehovSteg private constructor(
         return when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
             VurderingType.REVURDERING -> {
-                val perioderBistandsvilkåretErRelevant = perioderHvorBistandsvilkåretErRelevant(kontekst)
+                if (tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())) {
+                    return false
+                }
 
+                val perioderBistandsvilkåretErRelevant = perioderHvorBistandsvilkåretErRelevant(kontekst)
                 if (perioderBistandsvilkåretErRelevant.segmenter().any { it.verdi } && vurderingsbehovTvingerVurdering(
                         kontekst
                     )) {
                     return true
                 }
-
                 val perioderBistandsvilkåretErVurdert = kontekst.forrigeBehandlingId
                     ?.let { forrigeBehandlingId ->
                         val forrigeBehandling = behandlingRepository.hent(forrigeBehandlingId)
@@ -141,9 +149,11 @@ class VurderBistandsbehovSteg private constructor(
                     }
                     .orEmpty()
 
-                perioderBistandsvilkåretErRelevant.leftJoin(perioderBistandsvilkåretErVurdert) { erRelevant, erVurdert ->
-                    erRelevant && erVurdert != true
-                }.segmenter().any { it.verdi }
+                val relevantePerioderSomManglerVedtattVurdering =
+                    perioderBistandsvilkåretErRelevant.leftJoin(perioderBistandsvilkåretErVurdert) { erRelevant, erVurdert ->
+                        erRelevant && erVurdert != true
+                    }.segmenter().any { it.verdi }
+                relevantePerioderSomManglerVedtattVurdering
             }
 
             VurderingType.MELDEKORT -> false
@@ -169,7 +179,7 @@ class VurderBistandsbehovSteg private constructor(
         val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
 
         val sykdomsvurderinger = sykdomsRepository.hentHvisEksisterer(kontekst.behandlingId)
-            ?.somSykdomsvurderingstidslinje(kontekst.rettighetsperiode.fom)
+            ?.somSykdomsvurderingstidslinje()
             ?.begrensetTil(kontekst.rettighetsperiode)
             .orEmpty()
 
@@ -189,6 +199,16 @@ class VurderBistandsbehovSteg private constructor(
                     }
                 }
             }
+    }
+
+    private fun erTilstrekkeligVurdert(kontekst: FlytKontekstMedPerioder): Boolean {
+        val gjeldendeBistandstidslinje = bistandRepository.hentHvisEksisterer(kontekst.behandlingId)
+            ?.somBistandsvurderingstidslinje(kontekst.rettighetsperiode.fom)
+            .orEmpty()
+        val perioderBistandsvilkåretErRelevant = perioderHvorBistandsvilkåretErRelevant(kontekst)
+        return perioderBistandsvilkåretErRelevant.leftJoin(gjeldendeBistandstidslinje) { erRelevant, bistandsvurdering ->
+            !erRelevant || bistandsvurdering != null
+        }.segmenter().all { it.verdi }
     }
 
     companion object : FlytSteg {
