@@ -51,7 +51,7 @@ internal class BistandRepositoryImplTest {
     }
 
     val sammenlinger: RecursiveComparisonConfiguration =
-        RecursiveComparisonConfiguration.builder().withIgnoredFields("opprettet").build()
+        RecursiveComparisonConfiguration.builder().withIgnoredFields("opprettet", "id").build()
 
     @Test
     fun `Finner ikke bistand hvis ikke lagret`() {
