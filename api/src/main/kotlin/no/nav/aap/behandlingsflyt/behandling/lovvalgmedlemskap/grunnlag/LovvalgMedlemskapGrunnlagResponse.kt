@@ -7,9 +7,9 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLan
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.HistoriskManuellVurderingForLovvalgMedlemskap
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøknadsTidspunktDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedSøknadsTidspunktDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
 import no.nav.aap.behandlingsflyt.historiskevurderinger.HistoriskVurderingDto
 import no.nav.aap.behandlingsflyt.historiskevurderinger.ÅpenPeriodeDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -86,15 +86,15 @@ fun ManuellVurderingForLovvalgMedlemskap.toResponse(
             definisjon = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP,
             behandlingId = vurdertIBehandling
         ),
-        lovvalg = lovvalgVedSøknadsTidspunkt.toResponse(),
-        medlemskap = medlemskapVedSøknadsTidspunkt?.toResponse(),
+        lovvalg = lovvalg.toResponse(),
+        medlemskap = medlemskap?.toResponse(),
         overstyrt = overstyrt
     )
 
 fun ManuellVurderingForLovvalgMedlemskap.toResponse(ansattNavnOgEnhet: AnsattNavnOgEnhet?) =
     ManuellVurderingForLovvalgMedlemskapResponse(
-        lovvalgVedSøknadsTidspunkt = lovvalgVedSøknadsTidspunkt.toResponse(),
-        medlemskapVedSøknadsTidspunkt = medlemskapVedSøknadsTidspunkt?.toResponse(),
+        lovvalgVedSøknadsTidspunkt = lovvalg.toResponse(),
+        medlemskapVedSøknadsTidspunkt = medlemskap?.toResponse(),
         vurdertAv =
             VurdertAvResponse(
                 ident = vurdertAv,
@@ -105,13 +105,13 @@ fun ManuellVurderingForLovvalgMedlemskap.toResponse(ansattNavnOgEnhet: AnsattNav
         overstyrt = overstyrt
     )
 
-fun MedlemskapVedSøknadsTidspunktDto.toResponse() =
+fun MedlemskapDto.toResponse() =
     MedlemskapResponse(
         begrunnelse = begrunnelse,
         varMedlemIFolketrygd = varMedlemIFolketrygd
     )
 
-fun LovvalgVedSøknadsTidspunktDto.toResponse() =
+fun LovvalgDto.toResponse() =
     LovvalgResponse(
         begrunnelse = begrunnelse,
         lovvalgsEØSLandEllerLandMedAvtale = lovvalgsEØSLandEllerLandMedAvtale
