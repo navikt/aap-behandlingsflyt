@@ -23,6 +23,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     KvalitetssikringsSteg,
     FatteVedtakAvklaringsbehovService,
     BedreUttrekkAvSakerMedFritakMeldeplikt,
+    NyBeregningAvklarFaktaSteg,
     EOSBeregning,
     ;
 

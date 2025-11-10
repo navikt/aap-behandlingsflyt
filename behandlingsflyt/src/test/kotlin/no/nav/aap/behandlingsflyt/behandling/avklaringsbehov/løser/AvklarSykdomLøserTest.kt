@@ -38,7 +38,7 @@ class AvklarSykdomLøserTest {
     private val sakMock = mockk<SakRepository>()
 
     @Test
-    fun `Vurdering som overskriver flere segmenter skal kun lage ett nytt segment`() {
+    fun `Skal lagre iverksatte vurderinger + nye`() {
         every { behandlingMock.hent(BehandlingId(2L)) } returns mockk {
             every { id } returns BehandlingId(2L)
             every { forrigeBehandlingId } returns BehandlingId(1L)
@@ -87,7 +87,7 @@ class AvklarSykdomLøserTest {
 
         verify {
             sykdomMock.lagre(any(), sykdomsvurderinger = withArg {
-                assertThat(it.size).isEqualTo(2)
+                assertThat(it.size).isEqualTo(3)
             })
         }
     }
@@ -100,7 +100,7 @@ private fun sykdomsvurdering(
     erNedsettelseIArbeidsevneAvEnVissVarighet: Boolean? = true,
     erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean = true,
     erArbeidsevnenNedsatt: Boolean = true,
-    vurderingenGjelderFra: LocalDate? = null,
+    vurderingenGjelderFra: LocalDate = 1 januar 2020,
     vurderingenGjelderTil: LocalDate? = null,
     opprettet: LocalDateTime = LocalDateTime.now(),
     vurdertIBehandling: BehandlingId

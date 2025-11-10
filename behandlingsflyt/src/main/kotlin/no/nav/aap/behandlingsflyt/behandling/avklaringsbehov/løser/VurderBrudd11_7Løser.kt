@@ -13,6 +13,7 @@ import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -46,7 +47,7 @@ class VurderBrudd11_7Løser(
                 .orEmpty()
 
         val ny = Tidslinje(
-            Periode(vurdering.gjelderFra, LocalDate.MAX), vurdering
+            Periode(vurdering.gjelderFra, Tid.MAKS), vurdering
         )
 
         val nyGjeldende = gjeldendeVedtatte.kombiner(ny, StandardSammenslåere.prioriterHøyreSideCrossJoin())

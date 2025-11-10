@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeriodisertLovvalgMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.tilTidslinje
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.validerGyldigVurderinger
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.validerGyldigForRettighetsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -25,6 +26,9 @@ class AvklarPeriodisertLovvalgMedlemskapLøser(
     )
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarPeriodisertLovvalgMedlemskapLøsning): LøsningsResultat {
+        løsning.løsningerForPerioder.validerGyldigVurderinger()
+            .throwOnInvalid { UgyldigForespørselException(it.errorMessage) }
+
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
         val sak = sakRepository.hent(behandling.sakId)
 

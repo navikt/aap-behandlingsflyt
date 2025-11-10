@@ -22,8 +22,8 @@ fun NormalOpenAPIRoute.opprettDummySakApi(
     route("/api/test/opprettDummySak") {
         @Suppress("UnauthorizedPost") // bare tilgjengelig i DEV og lokalt
         post<Unit, Map<String, String>, OpprettDummySakDto> { _, req ->
-            if (Miljø.erProd()) {
-                respondWithStatus(HttpStatusCode.Unauthorized)
+            require(!Miljø.erProd()) {
+                "Kan ikke opprette dummy-sak i produksjonsmiljøet"
             }
 
             try {

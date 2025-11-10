@@ -15,6 +15,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Status as SakStatus
 
 
 /**
+ * Hendelse til statistikk-appen.
+ *
  * @param saksnummer Saksnummer.
  * @param behandlingReferanse Behandlingsreferanse
  * @param relatertBehandling Hvis behandlingen har oppsått med bakgrunn i en annen, skal den foregående behandlingen refereres til her. Dette er tolket som forrige behandling på samme sak.
@@ -121,8 +123,6 @@ public enum class RettighetsType(public val hjemmel: String) {
 
 public data class MeldekortDTO(
     public val journalpostId: String,
-    @Deprecated("Bruk arbeidIPeriode. For ikke å sende samme objekt til api-intern og statistikk.")
-    public val arbeidIPeriodeDTO: List<ArbeidIPeriodeDTO>,
     public val arbeidIPeriode: List<ArbeidIPeriode>,
 )
 

@@ -36,6 +36,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.ident
+import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
@@ -318,7 +319,7 @@ class BistandsvilkåretTest {
         erNedsettelseIArbeidsevneAvEnVissVarighet: Boolean? = true,
         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean = true,
         erArbeidsevnenNedsatt: Boolean = true,
-        vurderingenGjelderFra: LocalDate? = null,
+        vurderingenGjelderFra: LocalDate = 1 januar 2020,
         vurderingenGjelderTil: LocalDate? = null,
         opprettet: Instant = Instant.now(),
         behandlingId: BehandlingId

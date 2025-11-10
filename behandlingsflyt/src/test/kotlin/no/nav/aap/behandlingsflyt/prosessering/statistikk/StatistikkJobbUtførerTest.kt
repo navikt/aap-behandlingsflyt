@@ -88,6 +88,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.json.DefaultJsonMapper
@@ -398,7 +399,7 @@ class StatistikkJobbUtførerTest {
                         kodeverk = "KODEVERK",
                         hoveddiagnose = "PEST",
                         bidiagnoser = listOf("KOLERA"),
-                        vurderingenGjelderFra = null,
+                        vurderingenGjelderFra = 1 januar 2020,
                         vurderingenGjelderTil = null,
                         vurdertAv = Bruker("Z0000"),
                         opprettet = Instant.now(),

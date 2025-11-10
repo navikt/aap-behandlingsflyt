@@ -34,7 +34,7 @@ class FrivilligeAvklaringsbehov(
             }.toMutableList()
         list.addAll(eksisterendeBehov)
 
-        return list.toList()
+        return list.sortedWith(flyt.avklaringsbehovComparator)
     }
 
     fun harVærtSendtTilbakeFraBeslutterTidligere(): Boolean {

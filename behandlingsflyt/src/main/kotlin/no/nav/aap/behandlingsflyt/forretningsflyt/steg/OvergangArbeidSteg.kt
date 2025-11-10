@@ -33,7 +33,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 
-class OvergangArbeidSteg private constructor(
+class OvergangArbeidSteg internal constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val overgangArbeidRepository: OvergangArbeidRepository,
@@ -103,7 +103,7 @@ class OvergangArbeidSteg private constructor(
         val utfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
 
         val sykdomsvurderinger = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)
-            ?.somSykdomsvurderingstidslinje(kontekst.rettighetsperiode.fom)
+            ?.somSykdomsvurderingstidslinje()
             .orEmpty()
 
         val bistandsvurderinger = bistandRepository.hentHvisEksisterer(kontekst.behandlingId)

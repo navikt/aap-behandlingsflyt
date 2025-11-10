@@ -8,7 +8,7 @@ dependencies {
     implementation(project(":behandlingsflyt"))
     implementation(project(":repository"))
     implementation(project(":kontrakt"))
-    implementation("no.nav.aap.brev:kontrakt:0.0.175")
+    implementation("no.nav.aap.brev:kontrakt:0.0.177")
     implementation(libs.tilgangKontrakt)
     implementation(libs.httpklient)
     implementation(libs.verdityper)
@@ -26,7 +26,7 @@ dependencies {
 
     implementation("ch.qos.logback:logback-classic:1.5.20")
 
-    implementation("com.nimbusds:nimbus-jose-jwt:10.5")
+    implementation("com.nimbusds:nimbus-jose-jwt:10.6")
 
     implementation(libs.bundles.junit)
 }

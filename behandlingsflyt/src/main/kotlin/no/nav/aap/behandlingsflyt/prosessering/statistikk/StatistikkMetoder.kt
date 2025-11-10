@@ -23,7 +23,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtle
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.AVSLUTTET
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.kontrakt.datadeling.ArbeidIPeriodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ArbeidIPeriode
@@ -140,13 +139,6 @@ class StatistikkMetoder(
             nyeMeldekort = nyeMeldekort.map { meldekort ->
                 MeldekortDTO(
                     meldekort.journalpostId.identifikator,
-                    meldekort.timerArbeidPerPeriode.map {
-                        ArbeidIPeriodeDTO(
-                            it.periode.fom,
-                            it.periode.tom,
-                            it.timerArbeid.antallTimer
-                        )
-                    },
                     meldekort.timerArbeidPerPeriode.map {
                         ArbeidIPeriode(it.periode.fom, it.periode.tom, it.timerArbeid.antallTimer)
                     }

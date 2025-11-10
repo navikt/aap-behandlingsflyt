@@ -122,7 +122,7 @@ class TidligereVurderingerImpl(
             *   man er i steget VURDER_BiSTANDSBEHOV. */
             val periode = kontekst.rettighetsperiode
             val sykdomstidslinje = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)
-                ?.somSykdomsvurderingstidslinje(periode.fom).orEmpty()
+                ?.somSykdomsvurderingstidslinje().orEmpty()
             val studenttidslinje =
                 studentRepository.hentHvisEksisterer(kontekst.behandlingId)?.somTidslinje(periode).orEmpty()
 

@@ -7,7 +7,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadeS
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.avbrytrevurdering.AvbrytRevurderingRepositoryImpl
@@ -22,6 +21,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
+import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
@@ -54,9 +54,9 @@ internal class SykdomRepositoryImplTest {
 
         private val fom = LocalDate.of(2020, 1, 1)
         private val periode = Periode(fom, fom.plusYears(3))
-        private fun sykdomsvurdering1(behandlingId: BehandlingId?) = Sykdomsvurdering(
+        private fun sykdomsvurdering1(behandlingId: BehandlingId = BehandlingId(1L)) = Sykdomsvurdering(
             begrunnelse = "b1",
-            vurderingenGjelderFra = null,
+            vurderingenGjelderFra = 1 januar 2020,
             vurderingenGjelderTil = null,
             dokumenterBruktIVurdering = listOf(JournalpostId("1")),
             harSkadeSykdomEllerLyte = true,
@@ -72,7 +72,7 @@ internal class SykdomRepositoryImplTest {
         )
 
         private fun sykdomsvurdering2(
-            behandlingId: BehandlingId?,
+            behandlingId: BehandlingId = BehandlingId(1L),
             vurderingenGjelderFra: LocalDate = LocalDate.of(2020, 1, 1)
         ) = Sykdomsvurdering(
             begrunnelse = "b2",
@@ -264,7 +264,7 @@ internal class SykdomRepositoryImplTest {
                     behandling.id, listOf(
                         Sykdomsvurdering(
                             begrunnelse = "b1",
-                            vurderingenGjelderFra = null,
+                            vurderingenGjelderFra = 1 januar 2020,
                             vurderingenGjelderTil = null,
                             dokumenterBruktIVurdering = listOf(JournalpostId("1")),
                             harSkadeSykdomEllerLyte = true,
