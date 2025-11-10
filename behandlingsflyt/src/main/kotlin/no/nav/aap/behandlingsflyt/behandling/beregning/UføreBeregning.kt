@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
@@ -19,7 +20,7 @@ import java.time.Year
 class UføreBeregning(
     private val grunnlag: Grunnlag11_19,
     private val uføregrader: List<Uføre>,
-    private val inntekterForegåendeÅr: Set<InntektPerÅr>, // TODO: trenger ikke inntekt per år, men trenger de relevante årene for å utlede tidslinje
+    private val inntekterForegåendeÅr: Set<InntektPerÅr>,
     private val inntektsPerioder: List<InntektsPeriode>,
 ) {
 
@@ -31,7 +32,7 @@ class UføreBeregning(
         // tidslinjelogikken er basert på antagelsen om at uføre alltid har virkningstidspunkt på den første i måneden
         // og at vi får inntekt fra inntektskomponenten per måned
         val tidslinjeInntektOgUføre = uføreOgInntektTidslinje(inntektsPerioder, uføregrader)
-        val oppjusterteInntekter = oppjusterMhpUføregrad(inntekterForegåendeÅr, tidslinjeInntektOgUføre)
+        val oppjusterteInntekter = oppjusterMhpUføregradPeriodisertInntekt(inntekterForegåendeÅr, tidslinjeInntektOgUføre)
 
         // 6G-begrensning ligger her samt gjennomsnitt
         val ytterligereNedsattGrunnlag = beregn11_19Grunnlag(oppjusterteInntekter)
@@ -59,7 +60,7 @@ class UføreBeregning(
         }
     }
 
-    private fun oppjusterMhpUføregrad(ikkeOppjusterteInntekter: Set<InntektPerÅr>, tidslinjeInntektOgUføre: Tidslinje<Pair<InntektData?, Prosent?>>): List<UføreInntekt> {
+    private fun oppjusterMhpUføregradPeriodisertInntekt(ikkeOppjusterteInntekter: Set<InntektPerÅr>, tidslinjeInntektOgUføre: Tidslinje<Pair<InntektData?, Prosent?>>): List<UføreInntekt> {
         val tidslinjerPerRelevantÅr = ikkeOppjusterteInntekter.map { it.år }.map { tidslinjeInntektOgUføre.begrensetTil(Periode(it.atDay(1), it.atDay(it.length()))) }
 
         val oppjustertePerioderPerÅr = tidslinjerPerRelevantÅr.map { årsTidslinje ->
@@ -70,11 +71,19 @@ class UføreBeregning(
                 UføreInntektPeriodisert(
                     periode = segment.periode,
                     inntektIKroner = inntektIPeriode,
-                    inntektIG = gUnitForPeriode.gUnit, // TODO: kan g-justering ha skjedd i perioden`
+                    inntektIG = gUnit(Year.from(segment.periode.fom), inntektIPeriode).gUnit, // TODO: kan g-justering ha skjedd i perioden`
                     uføregrad = segment.verdi.second ?: Prosent.`0_PROSENT`,
                     arbeidsgrad = arbeidsgrad,
-                    inntektJustertForUføregrad = inntektIPeriode.dividert(arbeidsgrad),
-                    inntektIGJustertForUføregrad = gUnitForPeriode.gUnit.dividert(arbeidsgrad),
+                    inntektJustertForUføregrad = if (arbeidsgrad.prosentverdi() == 0) {
+                        Beløp(0) // TODO er det riktig
+                    } else {
+                        inntektIPeriode.dividert(arbeidsgrad)
+                    },
+                    inntektIGJustertForUføregrad = if (arbeidsgrad.prosentverdi() == 0) {
+                        GUnit(0)
+                    } else {
+                        gUnitForPeriode.gUnit.dividert(arbeidsgrad)
+                    },
                     grunnbeløp = gUnitForPeriode.beløp
                 )
             }
@@ -90,7 +99,7 @@ class UføreBeregning(
                 inntektIKroner = Beløp(summertInntekt),
                 inntektJustertForUføregrad = Beløp(summertInntektJustertForUføre),
                 inntektIGJustertForUføregrad = summertInntektIGJustertForUføregrad,
-                inntektIG = GUnit(summertInntekt),
+                inntektIG = gUnit(Year.from(it.first().periode.fom), Beløp(summertInntekt)).gUnit,
                 grunnbeløp = it.last().grunnbeløp,
             )
         }
@@ -113,26 +122,25 @@ class UføreBeregning(
             it.beløp,
         )) })
 
-        val uføretidslinje = Tidslinje(lagUføreSegmenter(uføregrader))
+        val uføretidslinje = lagUføreTidslinje(uføregrader)
         return Tidslinje.zip2(inntektstidslinje, uføretidslinje)
     }
 
-    private fun lagUføreSegmenter(uføregrader: List<Uføre>): List<Segment<Prosent>> {
-        val sorterteGrader = uføregrader.sortedBy{ it.virkningstidspunkt }
-        var segmenter = emptyList<Segment<Prosent>>()
-        sorterteGrader.forEachIndexed { index, grad ->
-            segmenter = segmenter.plus(Segment(
-                periode = Periode(
-                    fom = grad.virkningstidspunkt,
-                    tom = if (sorterteGrader.size == index + 1) {
-                        LocalDate.now() // er slutten av rettighetsperioden bedre?
-                    } else {
-                        sorterteGrader[index + 1].virkningstidspunkt.minusDays(1) // hacky
-                    }
-                ),
-                verdi = grad.uføregrad
-            ))
-        }
-        return segmenter
+    private fun lagUføreTidslinje(uføregrader: List<Uføre>): Tidslinje<Prosent> {
+        return uføregrader.sortedBy { it.virkningstidspunkt }
+            .map { vurdering ->
+                Tidslinje(
+                    Periode(
+                        fom = vurdering.virkningstidspunkt,
+                        tom = LocalDate.now().plusYears(1) // hva er en god "sluttdato"?
+                    ), vurdering.uføregrad
+                )
+            }.fold(Tidslinje()) { acc, curr ->
+                acc.kombiner(curr, StandardSammenslåere.prioriterHøyreSideCrossJoin())
+            }
     }
+
+    private fun gUnit(år: Year, beløp: Beløp): Grunnbeløp.BenyttetGjennomsnittsbeløp =
+        Grunnbeløp.finnGUnit(år, beløp)
+
 }
