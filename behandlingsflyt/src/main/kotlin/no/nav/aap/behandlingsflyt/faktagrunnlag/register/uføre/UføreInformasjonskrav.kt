@@ -61,7 +61,7 @@ class UføreInformasjonskrav(
     data class UføreRegisterdata(val innhentMedHistorikk: List<Uføre>) : InformasjonskravRegisterdata
 
     override fun klargjør(kontekst: FlytKontekstMedPerioder): UføreInput {
-        return UføreInput(sakOgBehandlingService.hentSakFor(kontekst.behandlingId), kontekst.behandlingId)
+        return UføreInput(sakService.hentSakFor(kontekst.behandlingId), kontekst.behandlingId)
     }
 
     override fun hentData(input: UføreInput): UføreRegisterdata {
@@ -89,7 +89,7 @@ class UføreInformasjonskrav(
     }
 
     private fun hentUføregrader(behandlingId: BehandlingId): List<Uføre> {
-        val sak = sakOgBehandlingService.hentSakFor(behandlingId)
+        val sak = sakService.hentSakFor(behandlingId)
         val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
         // prøver å sette fraDato riktig hvis den finnes
         val fraDato = beregningVurdering?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
