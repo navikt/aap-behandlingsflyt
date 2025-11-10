@@ -23,7 +23,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     KvalitetssikringsSteg,
     FatteVedtakAvklaringsbehovService,
     BedreUttrekkAvSakerMedFritakMeldeplikt,
-    BeregningAvklarFaktaSteg
+    NyBeregningAvklarFaktaSteg
     ;
 
     override fun key(): String = name

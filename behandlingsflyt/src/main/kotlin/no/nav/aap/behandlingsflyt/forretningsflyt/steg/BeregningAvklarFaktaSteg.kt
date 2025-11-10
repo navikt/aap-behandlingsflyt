@@ -52,7 +52,7 @@ class BeregningAvklarFaktaSteg private constructor(
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (unleashGateway.isDisabled(BehandlingsflytFeature.BeregningAvklarFaktaSteg)) {
+        if (unleashGateway.isDisabled(BehandlingsflytFeature.NyBeregningAvklarFaktaSteg)) {
             return gammelUtfør(kontekst)
         }
 
