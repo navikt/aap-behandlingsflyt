@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -48,7 +49,7 @@ class MeldingOmVedtakBrevSteg(
             Definisjon.SKRIV_VEDTAKSBREV,
             vedtakBehøverVurdering = { vedtakBehøverVurdering(klageErTrukket, brevBehov) },
             erTilstrekkeligVurdert = { brevbestillingService.erAlleBestillingerOmVedtakIEndeTilstand(kontekst.behandlingId) },
-            tilbakestillGrunnlag = { tilbakestillGrunnlag() },
+            tilbakestillGrunnlag = { tilbakestillGrunnlag(kontekst.behandlingId) },
             kontekst
         )
         if (brevBehov != null && !klageErTrukket && !harBestillingOmVedtakBrev) {
@@ -57,9 +58,18 @@ class MeldingOmVedtakBrevSteg(
         return Fullført
     }
 
-    private fun tilbakestillGrunnlag() {
-        // Ikke mulig per i dag. Brevbestilling i endeTilstand kan det ikke tilbakestilles i aap-behandlingsflyt.
-        // Hvis dette endres i fremtiden må også denne logikken tilpasses.
+    private fun tilbakestillGrunnlag(behandlingId: BehandlingId) {
+        // Brevbestillinger som er i endeTilstand (FULLFØRT, SENDT, AVBRUTT) kan per i dag ikke tilbakestilles i aap-behandlingsflyt.
+        // Hvis dette endres i fremtiden må også tilbakestillGrunnlag() logikken her tilpasses.
+
+        // BrevBestillinger i tilstand FORHÅNDSVISNING_KLAR kan tilbakestilles hvis brevSteg kan tilbakestilles
+        if (!brevbestillingService.erAlleBestillingerOmVedtakIEndeTilstand(behandlingId)) {
+            val brevBestillingerOmVedtakSomKanTilbakestilles =
+                brevbestillingService.hentTilbakestillbareBestillingerOmVedtak(behandlingId)
+            for (brevBestilling in brevBestillingerOmVedtakSomKanTilbakestilles) {
+                brevbestillingService.avbryt(brevBestilling.behandlingId, brevBestilling.referanse)
+            }
+        }
     }
 
     private fun vedtakBehøverVurdering(klageErTrukket: Boolean, brevBehov: BrevBehov?): Boolean {

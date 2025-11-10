@@ -39,6 +39,11 @@ class BrevbestillingService(
         return vedtakBestillinger.all { it.status.erEndeTilstand() }
     }
 
+    fun hentTilbakestillbareBestillingerOmVedtak(behandlingId: BehandlingId): List<Brevbestilling> {
+        val vedtakBestillinger = brevbestillingRepository.hent(behandlingId).filter { it.typeBrev.erVedtak() }
+        return vedtakBestillinger.filter { !it.status.erEndeTilstand() }
+    }
+
     fun hentBestillinger(behandlingId: BehandlingId, typeBrev: TypeBrev): List<Brevbestilling> {
         val bestillinger = brevbestillingRepository.hent(behandlingId).filter { it.typeBrev == typeBrev }
         return bestillinger

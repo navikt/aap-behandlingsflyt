@@ -11,6 +11,8 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.util.*
+import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 
 class BrevbestillingServiceTest {
 
@@ -23,7 +25,7 @@ class BrevbestillingServiceTest {
     @BeforeEach
     fun setUp() {
         InMemoryBrevbestillingRepository.clearMemory()
-        // Populer repo med bestillinger for samtlige brevtyper
+        // Populer BrevbestillingRepo med ett bestillings-innslag for hver brevtype med start-status FORHÅNDSVISNING_KLAR
         val ikkeEndeTilstand = Status.FORHÅNDSVISNING_KLAR
         for (typeBrev in TypeBrev.entries) {
             InMemoryBrevbestillingRepository.lagre(
@@ -32,6 +34,115 @@ class BrevbestillingServiceTest {
                 bestillingReferanse = BrevbestillingReferanse(UUID.randomUUID()),
                 status = ikkeEndeTilstand
             )
+        }
+    }
+
+    @Test
+    fun hentTilbakestillbareBestillingerOmVedtak_returnEmptyList_hvisIngenBrevBestillingerFinnes() {
+        InMemoryBrevbestillingRepository.clearMemory()
+        val brevbestillingService = BrevbestillingService(
+            signaturService,
+            brevbestillingGateway,
+            brevbestillingRepository = InMemoryBrevbestillingRepository,
+            behandlingRepository,
+            sakRepository
+        )
+
+        val resultat = brevbestillingService.hentTilbakestillbareBestillingerOmVedtak(behandlingId)
+
+        assertTrue(resultat.isEmpty())
+    }
+
+    @Test
+    fun hentTilbakestillbareBestillingerOmVedtak_returnEmptyList_hvisIngenVedtaksBrevHarStatusForhåndsvisningKlar() {
+        val brevbestllingService = BrevbestillingService(
+            signaturService,
+            brevbestillingGateway,
+            brevbestillingRepository = InMemoryBrevbestillingRepository,
+            behandlingRepository,
+            sakRepository
+        )
+        val brevBestillinger = InMemoryBrevbestillingRepository.hent(behandlingId = behandlingId)
+        for (brevBestilling in brevBestillinger.filter { it.typeBrev.erVedtak() }) {
+            InMemoryBrevbestillingRepository.oppdaterStatus(behandlingId, brevBestilling.referanse, Status.SENDT)
+        }
+
+        val resultat = brevbestllingService.hentTilbakestillbareBestillingerOmVedtak(behandlingId)
+
+        assertTrue(resultat.isEmpty())
+    }
+
+    @Test
+    fun hentTilbakestillbareBestillingerOmVedtak_returnEmptyList_hvisIngenVedtakBrevFinnes() {
+        val brevbestllingService = BrevbestillingService(
+            signaturService,
+            brevbestillingGateway,
+            brevbestillingRepository = InMemoryBrevbestillingRepository,
+            behandlingRepository,
+            sakRepository
+        )
+        InMemoryBrevbestillingRepository.clearMemory()
+        InMemoryBrevbestillingRepository.lagre(
+            behandlingId = behandlingId,
+            typeBrev = TypeBrev.FORVALTNINGSMELDING,
+            bestillingReferanse = BrevbestillingReferanse(UUID.randomUUID()),
+            status = Status.FORHÅNDSVISNING_KLAR
+        )
+
+        val resultat = brevbestllingService.hentTilbakestillbareBestillingerOmVedtak(behandlingId)
+
+        assertFalse(TypeBrev.FORVALTNINGSMELDING.erVedtak())
+        assertTrue(resultat.isEmpty())
+    }
+
+    @Test
+    fun hentTilbakestillbareBestillingerOmVedtak_returnKorrektListe_nårAlleVedtaksBrevHarStatusForhåndsvisningKlar() {
+        val brevbestllingService = BrevbestillingService(
+            signaturService,
+            brevbestillingGateway,
+            brevbestillingRepository = InMemoryBrevbestillingRepository,
+            behandlingRepository,
+            sakRepository
+        )
+
+        val resultat = brevbestllingService.hentTilbakestillbareBestillingerOmVedtak(behandlingId)
+
+        val antallVedtakBrev = TypeBrev.entries.filter { it.erVedtak() }.size
+        assertEquals(antallVedtakBrev, resultat.size)
+        for (brevBestilling in resultat) {
+            assertEquals(Status.FORHÅNDSVISNING_KLAR, brevBestilling.status)
+            assertTrue(brevBestilling.typeBrev.erVedtak())
+        }
+    }
+
+    @Test
+    fun hentTilbakestillbareBestillingerOmVedtak_returnKorrektListe_kunMedVedtaksBrevSomHarStatusForhåndsvisningKlar() {
+        val brevbestllingService = BrevbestillingService(
+            signaturService,
+            brevbestillingGateway,
+            brevbestillingRepository = InMemoryBrevbestillingRepository,
+            behandlingRepository,
+            sakRepository
+        )
+        val vedtakBrevBestillinger =
+            InMemoryBrevbestillingRepository.hent(behandlingId = behandlingId).filter { it.typeBrev.erVedtak() }
+        val sendtBrevBestilling = vedtakBrevBestillinger[0]
+        InMemoryBrevbestillingRepository.oppdaterStatus(behandlingId, sendtBrevBestilling.referanse, Status.SENDT)
+        val fullførtBrevBestilling = vedtakBrevBestillinger[1]
+        InMemoryBrevbestillingRepository.oppdaterStatus(behandlingId, fullførtBrevBestilling.referanse, Status.FULLFØRT)
+        val avbruttBrevBestilling = vedtakBrevBestillinger[2]
+        InMemoryBrevbestillingRepository.oppdaterStatus(behandlingId, avbruttBrevBestilling.referanse, Status.AVBRUTT)
+
+        val resultat = brevbestllingService.hentTilbakestillbareBestillingerOmVedtak(behandlingId)
+
+        val antallTilbakestillbareVedtakBrev = TypeBrev.entries.filter { it.erVedtak() }.size - 3
+        assertEquals(antallTilbakestillbareVedtakBrev, resultat.size)
+        for (brevBestilling in resultat) {
+            assertNotEquals(sendtBrevBestilling.referanse, brevBestilling.referanse)
+            assertNotEquals(fullførtBrevBestilling.referanse, brevBestilling.referanse)
+            assertNotEquals(avbruttBrevBestilling.referanse, brevBestilling.referanse)
+            assertEquals(Status.FORHÅNDSVISNING_KLAR, brevBestilling.status)
+            assertTrue(brevBestilling.typeBrev.erVedtak())
         }
     }
 
@@ -232,6 +343,29 @@ class BrevbestillingServiceTest {
 
         val resultat = brevbestllingService.erAlleBestillingerOmVedtakIEndeTilstand(behandlingId)
 
+        assertTrue(resultat)
+    }
+
+    @Test
+    fun erAlleBestillingerOmVedtakIEndeTilstand_returnTrue_hvisIngenVedtakBrevFinnes() {
+        val brevbestllingService = BrevbestillingService(
+            signaturService,
+            brevbestillingGateway,
+            brevbestillingRepository = InMemoryBrevbestillingRepository,
+            behandlingRepository,
+            sakRepository
+        )
+        InMemoryBrevbestillingRepository.clearMemory()
+        InMemoryBrevbestillingRepository.lagre(
+            behandlingId = behandlingId,
+            typeBrev = TypeBrev.FORVALTNINGSMELDING,
+            bestillingReferanse = BrevbestillingReferanse(UUID.randomUUID()),
+            status = Status.FORHÅNDSVISNING_KLAR
+        )
+
+        val resultat = brevbestllingService.erAlleBestillingerOmVedtakIEndeTilstand(behandlingId)
+
+        assertFalse(TypeBrev.FORVALTNINGSMELDING.erVedtak())
         assertTrue(resultat)
     }
 
