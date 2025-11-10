@@ -134,7 +134,7 @@ class OvergangUføreSteg private constructor(
     private fun perioderMedVurderingsbehov(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
         val utfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
         val sykdomsvurderinger = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)
-            ?.somSykdomsvurderingstidslinje(kontekst.rettighetsperiode.fom).orEmpty()
+            ?.somSykdomsvurderingstidslinje().orEmpty()
         val bistandsvurderinger = bistandRepository.hentHvisEksisterer(kontekst.behandlingId)
             ?.somBistandsvurderingstidslinje(startDato = kontekst.rettighetsperiode.fom).orEmpty()
 
