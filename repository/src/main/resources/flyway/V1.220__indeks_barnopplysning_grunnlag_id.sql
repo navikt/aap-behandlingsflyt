@@ -1,0 +1,1 @@
+CREATE INDEX IDX_BARNOPPLYSING_GRUNNLAG_BEHANDLING_ID on barnopplysning_grunnlag (behandling_id);

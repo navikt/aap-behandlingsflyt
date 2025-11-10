@@ -1,22 +1,25 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningYtelseVurderingGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
-import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
@@ -25,62 +28,23 @@ class SamordningSteg(
     private val samordningRepository: SamordningRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val tidligereVurderinger: TidligereVurderinger,
+    private val vilkårsresultatRepository: VilkårsresultatRepository,
+    private val behandlingRepository: BehandlingRepository,
+    private val avklaringsbehovService: AvklaringsbehovService
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider) : this(
         samordningService = SamordningService(repositoryProvider),
         samordningRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        vilkårsresultatRepository = repositoryProvider.provide(),
+        behandlingRepository = repositoryProvider.provide(),
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        // Logikkplan
-        // 1.  hent vurderinger som har vært gjort tidligere
-        // 2.  finn perioder av ytelser som krever manuell vurdering som ikke har blitt vurdert
-        // 2.1 hvis ikke-tom -> avklaringsbehov for å vurdere manuelt
-        // 2.2 for foreldrepenger: ha infokrav om oppstartdato, lag manuelt frivillig behov
-        // 3.  hvis har all tilgjengelig data:
-        // 3.1 lag tidslinje av prosentgradering og lagre i SamordningRepository
-
-        return when (kontekst.vurderingTypeRelevantForSteg) {
-            VurderingType.FØRSTEGANGSBEHANDLING -> {
-                if (tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())) {
-                    avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-                        .avbrytForSteg(type())
-                    return Fullført
-                }
-
-                vurdervilkår(kontekst)
-            }
-
-            VurderingType.REVURDERING -> {
-                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
-                    avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-                        .avbrytForSteg(type())
-                    return Fullført
-                }
-
-                val forrigeBehandlingId =
-                    requireNotNull(kontekst.forrigeBehandlingId) { "En revurdering har alltid en forrige behandling." }
-
-                val forrigeVurdering = samordningService.hentVurderinger(forrigeBehandlingId)
-                val gjeldendeVurdering = samordningService.hentVurderinger(kontekst.behandlingId)
-
-                if (forrigeVurdering == gjeldendeVurdering) {
-                    FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_GRADERING)
-                } else {
-                    vurdervilkår(kontekst)
-                }
-            }
-
-            VurderingType.MELDEKORT, VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
-            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9, VurderingType.IKKE_RELEVANT -> Fullført
-        }
-    }
-
-    private fun vurdervilkår(kontekst: FlytKontekstMedPerioder): StegResultat {
         val vurderinger = samordningService.hentVurderinger(behandlingId = kontekst.behandlingId)
         val ytelser = samordningService.hentYtelser(behandlingId = kontekst.behandlingId)
         val tidligereVurderinger = samordningService.vurderingTidslinje(vurderinger)
@@ -89,28 +53,70 @@ class SamordningSteg(
             ytelser, tidligereVurderinger
         )
 
-        if (perioderSomIkkeHarBlittVurdert.isNotEmpty()) {
-            log.info("Fant perioder som ikke har blitt vurdert: $perioderSomIkkeHarBlittVurdert")
-            return FantAvklaringsbehov(Definisjon.AVKLAR_SAMORDNING_GRADERING)
-        }
-
-        val samordningTidslinje =
-            samordningService.vurder(ytelser, tidligereVurderinger)
-
-        samordningRepository.lagre(
-            kontekst.behandlingId,
-            samordningTidslinje.segmenter()
-                .map {
-                    SamordningPeriode(
-                        it.periode,
-                        it.verdi.gradering
-                    )
-                },
-            SamordningYtelseVurderingGrunnlag(ytelser, vurderinger)
+        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
+            avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId),
+            behandlingRepository = behandlingRepository,
+            vilkårsresultatRepository = vilkårsresultatRepository,
+            definisjon = Definisjon.AVKLAR_SAMORDNING_GRADERING,
+            tvingerAvklaringsbehov = setOf(
+                Vurderingsbehov.SAMORDNING_OG_AVREGNING,
+                Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER
+            ),
+            nårVurderingErRelevant = ::perioderMedVurderingsbehov,
+            kontekst = kontekst,
+            erTilstrekkeligVurdert = { perioderSomIkkeHarBlittVurdert.isEmpty() },
+            tilbakestillGrunnlag = {
+                samordningService.tilbakestillVurderinger(kontekst.behandlingId, kontekst.forrigeBehandlingId)
+            }
         )
 
-        log.info("Samordning tidslinje $samordningTidslinje")
+        if (perioderSomIkkeHarBlittVurdert.isEmpty()) {
+            val samordningTidslinje =
+                samordningService.vurder(ytelser, tidligereVurderinger)
+
+            samordningRepository.lagre(
+                kontekst.behandlingId,
+                samordningTidslinje.segmenter()
+                    .map {
+                        SamordningPeriode(
+                            it.periode,
+                            it.verdi.gradering
+                        )
+                    }.toSet(),
+                SamordningYtelseVurderingGrunnlag(ytelser, vurderinger)
+            )
+        } else {
+            log.info("Mangler vurdering på perioder, lagrer ingenting i SamordningRepository.")
+        }
+
         return Fullført
+    }
+
+    private fun perioderMedVurderingsbehov(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
+        val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
+        val grunnlag = samordningService.hentYtelser(behandlingId = kontekst.behandlingId)
+        val ytelser = samordningService.tidslinjeMedSamordningYtelser(grunnlag)
+
+        // Vi sjekker om det har blitt gjort en manuell vurdering her for å klare å sende tilbake hit
+        // hvis f.eks beslutter underkjenner vurderingen.
+        val vurderinger = samordningService.hentVurderinger(behandlingId = kontekst.behandlingId)
+        val vurderingtidslinje = samordningService.vurderingTidslinje(vurderinger)
+
+        return Tidslinje.map3(
+            tidligereVurderingsutfall,
+            ytelser,
+            vurderingtidslinje
+        ) { utfall, samordningYtelser, vurdering ->
+            when (utfall) {
+                TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
+                TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
+                TidligereVurderinger.Behandlingsutfall.UKJENT -> {
+                    !samordningYtelser.isNullOrEmpty() || !vurdering.isNullOrEmpty()
+                }
+
+                null -> false
+            }
+        }
     }
 
     companion object : FlytSteg {

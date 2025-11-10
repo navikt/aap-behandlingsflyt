@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.utils
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
@@ -44,7 +43,35 @@ class UtfallOppfyltUtilsTest {
         )
 
         val result =
-            utfallOppfyltUtils.allePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(opprettetTidspunkt, underveisGrunnlag)
+            utfallOppfyltUtils.alleEventuellePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(opprettetTidspunkt, underveisGrunnlag)
+        assertTrue(result)
+    }
+
+    @Test
+    fun `sjekker om alle periodene etter at bruker er død ikke har oppfylt utfall, der bruker dør midt i periodene`() {
+        val opprettetTidspunkt = Instant.parse("2025-11-03T10:15:30.00Z")
+        val underveisGrunnlag = underveisGrunnlag(
+            underveisperiode(
+                periode = Periode(1 november 2025, 15 november 2025),
+                rettighetsType = RettighetsType.BISTANDSBEHOV,
+                avslagsÅrsak = UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT,
+                utfall = Utfall.IKKE_OPPFYLT,
+            ), underveisperiode(
+                periode = Periode(16 november 2025, 1 desember 2025),
+                rettighetsType = RettighetsType.BISTANDSBEHOV,
+                avslagsÅrsak = UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT,
+                utfall = Utfall.IKKE_OPPFYLT,
+            )
+            , underveisperiode(
+                periode = Periode(2 desember 2025, 16 desember 2025),
+                rettighetsType = RettighetsType.BISTANDSBEHOV,
+                avslagsÅrsak = UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT,
+                utfall = Utfall.IKKE_OPPFYLT,
+            )
+        )
+
+        val result =
+            utfallOppfyltUtils.alleEventuellePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(opprettetTidspunkt, underveisGrunnlag)
         assertTrue(result)
     }
 
@@ -71,12 +98,12 @@ class UtfallOppfyltUtilsTest {
         )
 
         val result =
-            utfallOppfyltUtils.allePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(opprettetTidspunkt, underveisGrunnlag)
+            utfallOppfyltUtils.alleEventuellePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(opprettetTidspunkt, underveisGrunnlag)
         assertFalse(result)
     }
 
     @Test
-    fun `sjekker om at det er perioder både før og etter som har fått oppfylt eller ikke oppfylt utfall`() {
+    fun `sjekker om at det er perioder både før og etter som har fått ikke oppfylt utfall`() {
         val opprettetTidspunkt = Instant.parse("2025-10-31T10:15:30.00Z")
         val underveisGrunnlag = underveisGrunnlag(
             underveisperiode(
@@ -87,19 +114,19 @@ class UtfallOppfyltUtilsTest {
             ), underveisperiode(
                 periode = Periode(1 november 2025, 15 november 2025),
                 rettighetsType = RettighetsType.BISTANDSBEHOV,
-                avslagsÅrsak = null,
-                utfall = Utfall.OPPFYLT,
+                avslagsÅrsak = UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT,
+                utfall = Utfall.IKKE_OPPFYLT,
             ), underveisperiode(
                 periode = Periode(16 november 2025, 1 desember 2025),
                 rettighetsType = RettighetsType.BISTANDSBEHOV,
-                avslagsÅrsak = null,
-                utfall = Utfall.OPPFYLT,
+                avslagsÅrsak = UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT,
+                utfall = Utfall.IKKE_OPPFYLT,
             )
         )
 
         val result =
-            utfallOppfyltUtils.allePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(opprettetTidspunkt, underveisGrunnlag)
-        assertFalse(result)
+            utfallOppfyltUtils.alleEventuellePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(opprettetTidspunkt, underveisGrunnlag)
+        assertTrue(result)
     }
 
     @Test
@@ -122,12 +149,12 @@ class UtfallOppfyltUtilsTest {
         )
 
         val result =
-            utfallOppfyltUtils.allePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(opprettetTidspunkt, underveisGrunnlag)
+            utfallOppfyltUtils.alleEventuellePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(opprettetTidspunkt, underveisGrunnlag)
         assertFalse(result)
     }
 
     @Test
-    fun `sjekker på om bruker har perioder både før og etter ikke har oppfylt utfall`() {
+    fun `sjekker på om bruker har perioder både før og etter har oppfylt eller ikke har oppfylt utfall`() {
         val opprettetTidspunkt = Instant.parse("2025-10-31T10:15:30.00Z")
 
         val underveisGrunnlag = underveisGrunnlag(
@@ -158,7 +185,7 @@ class UtfallOppfyltUtilsTest {
         )
 
         val result =
-            utfallOppfyltUtils.allePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(opprettetTidspunkt, underveisGrunnlag)
+            utfallOppfyltUtils.alleEventuellePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(opprettetTidspunkt, underveisGrunnlag)
         assertFalse(result)
     }
 
@@ -170,8 +197,8 @@ class UtfallOppfyltUtilsTest {
             underveisperiode(
                 periode = Periode(1 januar 2024, 15 januar 2024),
                 rettighetsType = RettighetsType.BISTANDSBEHOV,
-                avslagsÅrsak = null,
-                utfall = Utfall.OPPFYLT,
+                avslagsÅrsak = UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT,
+                utfall = Utfall.IKKE_OPPFYLT
             ),
             underveisperiode(
                 periode = Periode(16 januar 2026, 31 januar 2026),
@@ -182,7 +209,7 @@ class UtfallOppfyltUtilsTest {
         )
 
         val result =
-            utfallOppfyltUtils.allePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(opprettetTidspunkt, underveisGrunnlag)
+            utfallOppfyltUtils.alleEventuellePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(opprettetTidspunkt, underveisGrunnlag)
         assertTrue(result)
     }
 

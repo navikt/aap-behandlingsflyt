@@ -42,14 +42,29 @@ import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AutoClose
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.time.LocalDate
 
 class BistandsvilkåretTest {
-    @AutoClose
-    private val dataSource = TestDataSource()
+    companion object {
+        private val now = LocalDate.now()
+        private val periode = Periode(now, LocalDate.now().plusYears(3))
+
+        private lateinit var dataSource: TestDataSource
+
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            dataSource = TestDataSource()
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun tearDown() = dataSource.close()
+    }
 
     private val gatewayProvider = createGatewayProvider {
         register<FakeUnleash>()
@@ -281,11 +296,6 @@ class BistandsvilkåretTest {
         vurdertAv = vurdertAv,
         vurderingenGjelderFra = vurderingenGjelderFra
     )
-
-    companion object {
-        private val now = LocalDate.now()
-        private val periode = Periode(now, LocalDate.now().plusYears(3))
-    }
 
     private fun sak(connection: DBConnection): Sak {
         return PersonOgSakService(

@@ -36,7 +36,6 @@ private fun bestemAntallTestTråder(): Int {
             max(processors / 2, processors - 4)
         }
 
-    logger.quiet("Bruker opptil ${antallTråder} tråder for testkjøring ($processors kjerner tilgjengelig)")
     return antallTråder
 }
 

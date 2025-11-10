@@ -85,7 +85,7 @@ class BeregnTilkjentYtelseSteg private constructor(
         val barnetilleggGrunnlag = barnetilleggRepository.hentHvisEksisterer(kontekst.behandlingId) ?: BarnetilleggGrunnlag(id = 0L, perioder = emptyList())
         val samordningGrunnlag = samordningRepository.hentHvisEksisterer(kontekst.behandlingId) ?: SamordningGrunnlag(
             id = 0L,
-            samordningPerioder = emptyList()
+            samordningPerioder = emptySet()
         )
         val samordningUføre = samordningUføreRepository.hentHvisEksisterer(kontekst.behandlingId)
         val samordningArbeidsgiver = samordningArbeidsgiverRepository.hentHvisEksisterer(kontekst.behandlingId)

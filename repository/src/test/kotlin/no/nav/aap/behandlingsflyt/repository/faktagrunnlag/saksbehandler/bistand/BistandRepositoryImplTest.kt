@@ -22,22 +22,33 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.dbtest.TestDataSource.Companion.invoke
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.recursive.comparison.RecursiveComparisonConfiguration
-import org.junit.jupiter.api.AutoClose
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 
 internal class BistandRepositoryImplTest {
+    companion object {
+        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
-    @AutoClose
-    private val dataSource = TestDataSource()
+        private lateinit var dataSource: TestDataSource
+
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            dataSource = TestDataSource()
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun tearDown() = dataSource.close()
+    }
 
     val sammenlinger: RecursiveComparisonConfiguration =
         RecursiveComparisonConfiguration.builder().withIgnoredFields("opprettet").build()
@@ -74,6 +85,7 @@ internal class BistandRepositoryImplTest {
                         skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = null,
+                        vurdertIBehandling = behandling.id
                     )
                 )
             )
@@ -92,6 +104,7 @@ internal class BistandRepositoryImplTest {
                             skalVurdereAapIOvergangTilUføre = null,
                             skalVurdereAapIOvergangTilArbeid = null,
                             overgangBegrunnelse = null,
+                            vurdertIBehandling = behandling.id
                         )
                     )
                 )
@@ -147,6 +160,8 @@ internal class BistandRepositoryImplTest {
         dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
+            BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
+            val behandling2 = finnEllerOpprettBehandling(connection, sak)
 
             val bistandRepository = BistandRepositoryImpl(connection)
             bistandRepository.lagre(
@@ -178,6 +193,7 @@ internal class BistandRepositoryImplTest {
                         skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = null,
+                        vurdertIBehandling = behandling.id
                     )
                 )
             )
@@ -194,6 +210,8 @@ internal class BistandRepositoryImplTest {
                         skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = null,
+                        vurdertIBehandling = behandling2.id
+                        
                     )
                 )
             )
@@ -686,10 +704,6 @@ internal class BistandRepositoryImplTest {
             val historikk = bistandRepo.hentHistoriskeBistandsvurderinger(revurdering.sakId, revurdering.id)
             assertThat(historikk).usingRecursiveComparison(sammenlinger).isEqualTo(listOf(bistandsvurdering1))
         }
-    }
-
-    private companion object {
-        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     }
 
     private fun sak(connection: DBConnection): Sak {
