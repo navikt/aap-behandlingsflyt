@@ -285,7 +285,8 @@ class TestScenarioOrkestrator(
             behandling,
             AvklarBarnetilleggLøsning(
                 vurderingerForBarnetillegg = VurderingerForBarnetillegg(
-                    vurderteBarn = vurderteBarnListe
+                    vurderteBarn = vurderteBarnListe,
+                    saksbehandlerOppgitteBarn = emptyList(),
                 )
             )
         )

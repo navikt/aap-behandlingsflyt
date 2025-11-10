@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Relasjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
@@ -94,7 +95,7 @@ internal class BarnRepositoryImplTest {
             Ident("1"),
             "John Johnsen",
             Fødselsdato(LocalDate.now().minusYears(13)),
-            OppgitteBarn.Relasjon.FOSTERFORELDER
+            Relasjon.FOSTERFORELDER
         )
 
         val behandling = dataSource.transaction { connection ->

@@ -17,6 +17,11 @@ interface BarnRepository : Repository {
     fun lagreOppgitteBarn(behandlingId: BehandlingId, oppgitteBarn: OppgitteBarn)
 
     /**
+     * Saksbehandleroppgitte barn er barn som saksbehandler har lagt til manuelt i Kelvin.
+     */
+    fun lagreSaksbehandlerOppgitteBarn(behandlingId: BehandlingId, saksbehandlerOppgitteBarn: List<SaksbehandlerOppgitteBarn.Barn>)
+
+    /**
      * Lagre registerbarn. Dette er barn som vi også finner i PDL (enten automatisk, eller oppgitt). Se [no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnInformasjonskrav].
      */
     fun lagreRegisterBarn(behandlingId: BehandlingId, barn: Map<Barn, PersonId?>)
@@ -27,4 +32,9 @@ interface BarnRepository : Repository {
     fun lagreVurderinger(behandlingId: BehandlingId, vurdertAv: String, vurderteBarn: List<VurdertBarn>)
     fun hentBehandlingIdForSakSomFårBarnetilleggForBarn(ident: Ident): List<BehandlingId>
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
+
+    /**
+     * Deaktiver alle saksbehandleroppgitte barn for en behandling. Brukes når alle saksbehandleroppgitte barn skal fjernes.
+     */
+    fun deaktiverAlleSaksbehandlerOppgitteBarn(behandlingId: BehandlingId)
 }

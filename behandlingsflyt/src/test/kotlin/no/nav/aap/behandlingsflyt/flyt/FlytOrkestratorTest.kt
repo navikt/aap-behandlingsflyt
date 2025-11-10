@@ -404,7 +404,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                         barn = listOf(Barn(BarnIdentifikator.BarnIdent(barnIdent), Fødselsdato(barnfødseldato)))
                     ),
                     oppgitteBarn = null,
-                    vurderteBarn = null
+                    vurderteBarn = null,
+                    saksbehandlerOppgitteBarn = null
                 )
             )
 
@@ -485,7 +486,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                         id = -1,
                         barn = person.barn.map { Barn(BarnIdentifikator.BarnIdent(it.aktivIdent()), it.fødselsdato) }),
                     oppgitteBarn = null,
-                    vurderteBarn = null
+                    vurderteBarn = null,
+                    saksbehandlerOppgitteBarn = null
                 )
             )
 
@@ -568,7 +570,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                                     )
                                 )
                             )
-                        )
+                        ),
+                        emptyList()
                     ),
                 ),
             )
@@ -606,7 +609,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                                     )
                                 )
                             )
-                        )
+                        ),
+                        emptyList()
                     ),
                 ),
             )

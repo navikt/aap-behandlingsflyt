@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Relasjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import java.time.LocalDate
@@ -23,7 +23,7 @@ open class VurdertBarnDto(
     val navn: String?,
     val fødselsdato: LocalDate?,
     val vurderinger: List<VurderingAvForeldreAnsvarDto>,
-    val oppgittForeldreRelasjon: OppgitteBarn.Relasjon? = null,
+    val oppgittForeldreRelasjon: Relasjon? = null,
 ) {
     init {
         if (ident == null) {

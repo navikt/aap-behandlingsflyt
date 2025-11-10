@@ -564,7 +564,8 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
             avklaringsBehovLøsning =
                 AvklarBarnetilleggLøsning(
                     vurderingerForBarnetillegg = VurderingerForBarnetillegg(
-                        vurderteBarn = emptyList()
+                        vurderteBarn = emptyList(),
+                        saksbehandlerOppgitteBarn = emptyList()
                     )
                 )
         )
