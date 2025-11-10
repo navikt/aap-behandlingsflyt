@@ -29,15 +29,12 @@ class FatteVedtakSteg(
     private val avklaringsbehovService: AvklaringsbehovService,
     private val tidligereVurderinger: TidligereVurderinger,
     private val klageresultatUtleder: KlageresultatUtleder,
-    private val unleashGateway: UnleashGateway,
 
     ) : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.FatteVedtakAvklaringsbehovService)) {
-            return utførNy(kontekst)
-        }
-        return utførGammel(kontekst)
+
+        return utførNy(kontekst)
     }
 
     fun utførNy(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -46,7 +43,8 @@ class FatteVedtakSteg(
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
         val skalTilbakeføres = avklaringsbehovene.skalTilbakeføresEtterTotrinnsVurdering()
-        val harHattAvklaringsbehovSomHarKrevdTotrinnOgSomIkkeErVurdert = avklaringsbehovene.harAvklaringsbehovSomKreverToTrinnMenIkkeErVurdert()
+        val harHattAvklaringsbehovSomHarKrevdTotrinnOgSomIkkeErVurdert =
+            avklaringsbehovene.harAvklaringsbehovSomKreverToTrinnMenIkkeErVurdert()
 
         val erKlage = kontekst.behandlingType == TypeBehandling.Klage
         val erTrukketEllerIngenGrunnlag =
@@ -76,36 +74,6 @@ class FatteVedtakSteg(
         return Fullført
     }
 
-    fun utførGammel(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-
-        if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type()) || trekkKlageService.klageErTrukket(
-                kontekst.behandlingId
-            )
-        ) {
-            avklaringsbehov.avbrytForSteg(type())
-            return Fullført
-        }
-
-        if (kontekst.behandlingType == TypeBehandling.Klage) {
-            val klageresultat = klageresultatUtleder.utledKlagebehandlingResultat(kontekst.behandlingId)
-            if (klageresultat is Opprettholdes) {
-                avklaringsbehov.avbrytForSteg(type())
-                return Fullført
-            }
-        }
-
-        if (avklaringsbehov.skalTilbakeføresEtterTotrinnsVurdering()) {
-            return TilbakeføresFraBeslutter
-        }
-        if (avklaringsbehov.harHattAvklaringsbehovSomHarKrevdToTrinn()) {
-            return FantAvklaringsbehov(Definisjon.FATTE_VEDTAK)
-        }
-
-        return Fullført
-    }
-
-
     private fun vedtakBehøverVurdering(
         kontekst: FlytKontekstMedPerioder,
         avklaringsbehovene: Avklaringsbehovene
@@ -123,7 +91,7 @@ class FatteVedtakSteg(
             }
         }
 
-        return  avklaringsbehovene.harAvklaringsbehovSomKreverToTrinn()
+        return avklaringsbehovene.harAvklaringsbehovSomKreverToTrinn()
     }
 
 
@@ -138,7 +106,6 @@ class FatteVedtakSteg(
                 AvklaringsbehovService(repositoryProvider),
                 TidligereVurderingerImpl(repositoryProvider),
                 klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
-                unleashGateway = gatewayProvider.provide(),
             )
         }
 

@@ -64,7 +64,6 @@ class FatteVedtakStegTest {
         klageresultatUtleder = klageresultatUtleder,
         trekkKlageService = trekkKlageService,
         avklaringsbehovService = avklaringsbehovService,
-        unleashGateway = gatewayProvider.provide()
     )
 
     @Test
