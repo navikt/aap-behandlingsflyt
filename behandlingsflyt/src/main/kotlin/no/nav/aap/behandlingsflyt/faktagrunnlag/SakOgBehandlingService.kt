@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag
 
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
@@ -45,10 +44,6 @@ class SakOgBehandlingService(
         unleashGateway = gatewayProvider.provide(),
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
     )
-
-    fun finnBehandling(behandlingReferanse: BehandlingReferanse): Behandling {
-        return behandlingRepository.hent(behandlingReferanse)
-    }
 
     /**
      * Ytelsesbehandling betyr førstegangsbehandling eller revurdering.
@@ -239,7 +234,6 @@ class SakOgBehandlingService(
         requireNotNull(sisteYtelsesbehandling) {
             "Mottok klage, men det finnes ingen eksisterende behandling"
         }
-
 
         return behandlingRepository.opprettBehandling(
             sakId = sisteYtelsesbehandling.sakId,
