@@ -49,7 +49,7 @@ class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection)
     override fun hentHistoriskeVurderinger(
         sakId: SakId,
         behandlingId: BehandlingId
-    ): List<ManuellInntektVurdering> {
+    ): Set<Set<ManuellInntektVurdering>> {
         val query = """
             SELECT MANUELL_INNTEKT_VURDERINGER_ID
             FROM MANUELL_INNTEKT_VURDERING_GRUNNLAG GRUNNLAG
@@ -69,7 +69,7 @@ class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection)
             setRowMapper {
                 hentManuellInntektVurderinger(it.getLong("MANUELL_INNTEKT_VURDERINGER_ID"))
             }
-        }.flatten()
+        }
     }
 
     private fun hentManuellInntektVurderinger(vurderingerId: Long): Set<ManuellInntektVurdering> {
