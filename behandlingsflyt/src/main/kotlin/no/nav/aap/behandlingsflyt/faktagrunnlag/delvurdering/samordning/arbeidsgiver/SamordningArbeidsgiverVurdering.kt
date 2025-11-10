@@ -11,8 +11,7 @@ data class SamordningArbeidsgiverGrunnlag(
 
 data class SamordningArbeidsgiverVurdering(
     val begrunnelse: String,
-    val fom: LocalDate,
-    val tom: LocalDate,
+    val perioder: List<Periode>,
     val vurdertAv: String,
     val vurdertTidspunkt: LocalDateTime? = null,
     val opprettetTid: LocalDateTime? = null,
