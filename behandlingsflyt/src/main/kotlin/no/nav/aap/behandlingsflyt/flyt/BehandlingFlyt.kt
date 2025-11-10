@@ -124,6 +124,20 @@ class BehandlingFlyt private constructor(
         compareBy { rekkefølge[it] ?: rekkefølge.size }
     }
 
+    /** Sorter avklaringsbehov i samme rekkefølgen som stegene behovet løses i.
+     * Hvis flere avklaringsbehov på samme steg, sorteres disse etter rekkefølgen definert i steget. */
+    val avklaringsbehovComparator: Comparator<Avklaringsbehov> by lazy {
+        val rekkefølgeSteg = flyt.mapIndexed { i, steg -> steg.steg.type() to i }.toMap()
+        val rekkefølgeAvklaringsbehov = flyt.flatMap { flytsteg ->
+            flytsteg.steg.rekkefølge.withIndex().map { (index, definisjon) ->
+                definisjon to index
+            }
+        }.toMap()
+
+        compareBy<Avklaringsbehov> { rekkefølgeSteg[it.funnetISteg] ?: rekkefølgeSteg.size }
+            .thenBy { rekkefølgeAvklaringsbehov[it.definisjon] ?: rekkefølgeAvklaringsbehov.size }
+    }
+
     internal fun erStegFørEllerLik(stegA: StegType, stegB: StegType): Boolean {
         val aIndex = flyt.indexOfFirst { it.steg.type() == stegA }
         val bIndex = flyt.indexOfFirst { it.steg.type() == stegB }
