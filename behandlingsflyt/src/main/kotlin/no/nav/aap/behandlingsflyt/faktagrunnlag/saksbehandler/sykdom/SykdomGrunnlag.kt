@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import java.time.LocalDate
 
 data class SykdomGrunnlag(
@@ -15,7 +16,7 @@ data class SykdomGrunnlag(
             .sortedBy { it.vurderingenGjelderFra ?: startDato }
             .fold(Tidslinje()) { tidslinje, vurdering ->
                 tidslinje.kombiner(
-                    Tidslinje(Periode(vurdering.vurderingenGjelderFra ?: startDato, LocalDate.MAX), vurdering),
+                    Tidslinje(Periode(vurdering.vurderingenGjelderFra ?: startDato, Tid.MAKS), vurdering),
                     StandardSammenslåere.prioriterHøyreSideCrossJoin()
                 )
             }

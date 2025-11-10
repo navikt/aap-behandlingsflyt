@@ -5,6 +5,7 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
+import no.nav.aap.komponenter.verdityper.Tid
 import java.time.LocalDate
 import java.time.Year
 
@@ -142,7 +143,7 @@ object Grunnbeløp {
                         val periode = Periode(gjeldende.dato, neste.dato.minusDays(1))
                         Segment(periode, gjeldende.beløp)
                     }
-                    .plus(Segment(Periode(siste.dato, LocalDate.MAX), siste.beløp))
+                    .plus(Segment(Periode(siste.dato, Tid.MAKS), siste.beløp))
                     .let(::Tidslinje)
             }
         }
@@ -210,7 +211,7 @@ object Grunnbeløp {
                             Periode(gjeldende.år.atDay(1), neste.år.atDay(1).minusDays(1))
                         Segment(periode, gjeldende)
                     }
-                    .plus(Segment(Periode(siste.år.atDay(1), LocalDate.MAX), siste))
+                    .plus(Segment(Periode(siste.år.atDay(1), Tid.MAKS), siste))
                     .let(::Tidslinje)
             }
         }

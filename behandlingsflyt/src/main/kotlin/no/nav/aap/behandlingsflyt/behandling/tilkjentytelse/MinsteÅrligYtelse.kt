@@ -4,6 +4,7 @@ import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.GUnit
+import no.nav.aap.komponenter.verdityper.Tid
 import java.time.LocalDate
 
 val MINSTE_ÅRLIG_YTELSE_TIDSLINJE = Tidslinje(
@@ -13,7 +14,7 @@ val MINSTE_ÅRLIG_YTELSE_TIDSLINJE = Tidslinje(
             verdi = GUnit("2")
         ),
         Segment(
-            periode = Periode(LocalDate.of(2024, 7, 1), LocalDate.MAX),
+            periode = Periode(LocalDate.of(2024, 7, 1), Tid.MAKS),
             verdi = GUnit("2.041")
         )
     )
