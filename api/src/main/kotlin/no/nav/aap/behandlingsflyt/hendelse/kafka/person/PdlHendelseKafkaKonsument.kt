@@ -14,8 +14,11 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.PdlPersonHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.tilInnsendingDødsfallBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.tilInnsendingDødsfallBruker
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.behandlingsflyt.utils.UtfallOppfyltUtils
@@ -93,30 +96,14 @@ class PdlHendelseKafkaKonsument(
                         val behandlingMedSistFattedeVedtak =
                             sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId = sak.id)
 
-                        if (behandlingMedSistFattedeVedtak != null) {
-                            val underveisGrunnlag =
-                                underveisRepository.hentHvisEksisterer(behandlingMedSistFattedeVedtak.id)
-                            if (underveisGrunnlag != null) {
-                                val personHarBareAvslagFremover =
-                                    utfallOppfyltUtils.alleEventuellePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(
-                                        opprettetTidspunkt = personHendelse.opprettet,
-                                        underveisGrunnlag = underveisGrunnlag
-                                    )
-                                if (personHarBareAvslagFremover) {
-                                    log.info("Ignorerer dødsfallhendelse fordi bruker har fått avslag på alle perioder fremover ${sak.saksnummer}")
-                                } else {
-                                    log.info("Registrerer mottatt hendelse fordi dødsfall på bruker. Bruker har iverksatte vedtak der alle fremtidige perioder ikke er oppfylt ${sak.saksnummer}")
-                                    hendelseService.registrerMottattHendelse(
-                                        personHendelse.tilInnsendingDødsfallBruker(sak.saksnummer)
-                                    )
-                                }
-                            }
-                        } else if (sisteOpprettedeBehandling != null) {
-                            log.info("Registrerer mottatt hendelse fordi dødsfall på bruker. Bruker har ingen iverksatte vedtak ${sak.saksnummer}")
-                            hendelseService.registrerMottattHendelse(
-                                personHendelse.tilInnsendingDødsfallBruker(sak.saksnummer)
-                            )
-                        }
+                        sendDødsHendelseHvisRelevant(
+                            behandlingMedSistFattedeVedtak,
+                            underveisRepository,
+                            personHendelse,
+                            sak,
+                            hendelseService,
+                            sisteOpprettedeBehandling
+                        )
                     }
 
                     val behandlingIds = barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForBarn(funnetIdent!!)
@@ -140,6 +127,41 @@ class PdlHendelseKafkaKonsument(
             }
         }
     }
+
+    private fun sendDødsHendelseHvisRelevant(
+        behandlingMedSistFattedeVedtak: BehandlingMedVedtak?,
+        underveisRepository: UnderveisRepository,
+        personHendelse: PdlPersonHendelse,
+        sak: Sak,
+        hendelseService: MottattHendelseService,
+        sisteOpprettedeBehandling: Behandling?
+    ) {
+        if (behandlingMedSistFattedeVedtak != null) {
+            val underveisGrunnlag =
+                underveisRepository.hentHvisEksisterer(behandlingMedSistFattedeVedtak.id)
+            if (underveisGrunnlag != null) {
+                val personHarBareAvslagFremover =
+                    utfallOppfyltUtils.alleEventuellePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(
+                        opprettetTidspunkt = personHendelse.opprettet,
+                        underveisGrunnlag = underveisGrunnlag
+                    )
+                if (personHarBareAvslagFremover) {
+                    log.info("Ignorerer dødsfallhendelse fordi bruker har fått avslag på alle perioder fremover ${sak.saksnummer}")
+                } else {
+                    log.info("Registrerer mottatt hendelse fordi dødsfall på bruker. Bruker har iverksatte vedtak der alle fremtidige perioder ikke er oppfylt ${sak.saksnummer}")
+                    hendelseService.registrerMottattHendelse(
+                        personHendelse.tilInnsendingDødsfallBruker(sak.saksnummer)
+                    )
+                }
+            }
+        } else if (sisteOpprettedeBehandling != null) {
+            log.info("Registrerer mottatt hendelse fordi dødsfall på bruker. Bruker har ingen iverksatte vedtak ${sak.saksnummer}")
+            hendelseService.registrerMottattHendelse(
+                personHendelse.tilInnsendingDødsfallBruker(sak.saksnummer)
+            )
+        }
+    }
+
 
     fun Personhendelse.tilDomain(): PdlPersonHendelse =
         PdlPersonHendelse(
