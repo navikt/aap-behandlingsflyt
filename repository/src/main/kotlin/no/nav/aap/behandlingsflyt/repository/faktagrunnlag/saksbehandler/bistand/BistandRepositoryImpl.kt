@@ -7,8 +7,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
+import java.time.LocalDateTime
 
 class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepository {
 
@@ -54,6 +57,7 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
 
     private fun bistandvurderingRowMapper(row: Row): BistandVurdering {
         return BistandVurdering(
+            id = row.getLong("ID"),
             begrunnelse = row.getString("BEGRUNNELSE"),
             erBehovForAktivBehandling = row.getBoolean("BEHOV_FOR_AKTIV_BEHANDLING"),
             erBehovForArbeidsrettetTiltak = row.getBoolean("BEHOV_FOR_ARBEIDSRETTET_TILTAK"),
@@ -224,4 +228,163 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
             }
         }
     }
+
+
+    override fun migrerBistandsvurderinger() {
+        log.info("Starter migrering av bistandsvurderinger")
+        val start = System.currentTimeMillis()
+
+        // Hent alle koblingstabeller
+        val kandidater = hentKandidater()
+        val kandidaterGruppertPåSak = kandidater.groupBy { it.sakId }
+
+        var migrerteVurderingerCount = 0
+
+        kandidaterGruppertPåSak.forEach { (sakId, kandidaterForSak) ->
+            log.info("Migrerer bistandsvurderinger for sak ${sakId.id} med ${kandidaterForSak.size} kandidater")
+            val sorterteKandidater = kandidaterForSak.sortedBy { it.grunnlagOpprettetTid }
+            val vurderingerMedVurderingerId =
+                hentVurderinger(kandidaterForSak.map { it.vurderingerId }.toSet().toList())
+
+            // Kan skippe grunnlag som peker på vurderinger som allerede er migrert
+            val migrerteVurderingerId = mutableSetOf<Long>()
+
+            // Dette dekker en eksisterende vurdering som er lagret som en del av et nytt grunnlag; 
+            // disse har ikke samme id som den originale.
+            // Antar at like vurderinger innenfor samme sak er samme vurdering
+            val nyeVerdierForVurdering = mutableMapOf<SammenlignbarBistandVurdering, Pair<BehandlingId, LocalDate>>()
+
+            sorterteKandidater.forEach { kandidat ->
+                if (kandidat.vurderingerId in migrerteVurderingerId) {
+                    // Dette er et kopiert grunnlag som allerede er migrert
+                    return@forEach
+                }
+                val vurderingerForGrunnlag =
+                    vurderingerMedVurderingerId.filter { it.vurderingerId == kandidat.vurderingerId }.map{it.bistandsvurdering}
+
+                vurderingerForGrunnlag.forEach { vurdering ->
+                    val sammenlignbarVurdering = vurdering.tilSammenlignbar()
+                    val nyeVerdier = if (nyeVerdierForVurdering.containsKey(sammenlignbarVurdering)) {
+                        // Bruk den migrerte versjonen
+                        nyeVerdierForVurdering[sammenlignbarVurdering]!!
+                    } else {
+                        val nyeVerdier = Pair(kandidat.behandlingId, vurdering.vurderingenGjelderFra ?: kandidat.rettighetsperiode.fom)
+                        nyeVerdierForVurdering.put(sammenlignbarVurdering, nyeVerdier)
+                        nyeVerdier
+                    }
+
+                    // Oppdater
+                    connection.execute(
+                        """
+                        UPDATE BISTAND
+                        SET VURDERT_I_BEHANDLING = ?, VURDERINGEN_GJELDER_FRA = ?
+                        WHERE ID = ?
+                        """.trimIndent()
+                    ) {
+                        setParams {
+                            setLong(1, nyeVerdier.first.id)
+                            setLocalDate(2, nyeVerdier.second)
+                            setLong(3, vurdering.id!!)
+                        }
+                    }
+                    migrerteVurderingerCount = migrerteVurderingerCount + 1
+
+                    migrerteVurderingerId.add(kandidat.vurderingerId)
+                }
+            }
+        }
+
+        val totalTid = System.currentTimeMillis() - start
+
+        log.info("Fullført migrering av manuelle vurderinger for bistand. Migrerte ${kandidater.size} grunnlag og ${migrerteVurderingerCount} vurderinger på $totalTid ms.")
+    }
+
+
+    private data class Kandidat(
+        val sakId: SakId,
+        val grunnlagId: Long,
+        val behandlingId: BehandlingId,
+        val rettighetsperiode: Periode,
+        val vurderingerId: Long,
+        val grunnlagOpprettetTid: LocalDateTime,
+    )
+
+    // Vurdering minus opprettet, id, vurdertIBehandling
+    data class SammenlignbarBistandVurdering(
+        val begrunnelse: String,
+        val erBehovForAktivBehandling: Boolean,
+        val erBehovForArbeidsrettetTiltak: Boolean,
+        val erBehovForAnnenOppfølging: Boolean?,
+        val overgangBegrunnelse: String?,
+        val skalVurdereAapIOvergangTilArbeid: Boolean?,
+        @Deprecated("""Det er i utgangspunktet Kelvin som avgjør om det mangler en vurdering av overgang til uføre når det kan være relevant.""")
+        val skalVurdereAapIOvergangTilUføre: Boolean?,
+        val vurdertAv: String,
+        val vurderingenGjelderFra: LocalDate?,
+    )
+    private fun BistandVurdering.tilSammenlignbar(): SammenlignbarBistandVurdering {
+        return SammenlignbarBistandVurdering(
+            begrunnelse = this.begrunnelse,
+            erBehovForAktivBehandling = this.erBehovForAktivBehandling,
+            erBehovForArbeidsrettetTiltak = this.erBehovForArbeidsrettetTiltak,
+            erBehovForAnnenOppfølging = this.erBehovForAnnenOppfølging,
+            overgangBegrunnelse = this.overgangBegrunnelse,
+            skalVurdereAapIOvergangTilArbeid = this.skalVurdereAapIOvergangTilArbeid,
+            skalVurdereAapIOvergangTilUføre = this.skalVurdereAapIOvergangTilUføre, 
+            vurdertAv = this.vurdertAv,
+            vurderingenGjelderFra = this.vurderingenGjelderFra,
+        )
+    }
+
+    private data class VurderingMedVurderingerId(
+        val vurderingerId: Long,
+        val bistandsvurdering: BistandVurdering
+    )
+
+    private fun hentVurderinger(vurderingerIds: List<Long>): List<VurderingMedVurderingerId> {
+        val query = """
+            select  * from bistand
+            where bistand_vurderinger_id = ANY(?::bigint[])
+        """.trimIndent()
+        return connection.queryList(query) {
+            setParams {
+                setLongArray(1, vurderingerIds)
+            }
+            setRowMapper {
+                VurderingMedVurderingerId(
+                    vurderingerId = it.getLong("bistand_vurderinger_id"),
+                    bistandsvurdering = bistandvurderingRowMapper(it)
+                )
+            }
+        }
+    }
+
+    private fun hentKandidater(): List<Kandidat> {
+        val kandidaterQuery = """
+            select g.id as grunnlag_id,
+                     b.id as behandling_id,
+                     s.id as sak_id,
+                     s.rettighetsperiode,
+                     g.bistand_vurderinger_id,
+                     g.opprettet_tid as grunnlag_opprettet_tid
+            
+            from bistand_grunnlag g 
+            inner join behandling b on g.behandling_id = b.id
+            inner join sak s on b.sak_id = s.id
+        """.trimIndent()
+
+        return connection.queryList(kandidaterQuery) {
+            setRowMapper {
+                Kandidat(
+                    sakId = SakId(it.getLong("sak_id")),
+                    grunnlagId = it.getLong("grunnlag_id"),
+                    behandlingId = BehandlingId(it.getLong("behandling_id")),
+                    rettighetsperiode = it.getPeriode("rettighetsperiode"), // Denne er teknisk sett feil, men kanskje godt nok. Hvis ikke: join på rettighetsperiode_grunnlag
+                    vurderingerId = it.getLong("bistand_vurderinger_id"),
+                    grunnlagOpprettetTid = it.getLocalDateTime("grunnlag_opprettet_tid"),
+                )
+            }
+        }
+    }
+
 }

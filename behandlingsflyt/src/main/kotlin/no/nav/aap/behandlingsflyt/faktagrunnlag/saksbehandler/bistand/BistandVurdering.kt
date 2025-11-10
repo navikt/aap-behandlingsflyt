@@ -5,6 +5,7 @@ import java.time.Instant
 import java.time.LocalDate
 
 data class BistandVurdering(
+    val id: Long? = null,
     val begrunnelse: String,
     val erBehovForAktivBehandling: Boolean,
     val erBehovForArbeidsrettetTiltak: Boolean,

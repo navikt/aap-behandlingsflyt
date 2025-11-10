@@ -735,4 +735,71 @@ internal class BistandRepositoryImplTest {
         )
     }
 
+
+    @Test
+    fun `migrer bistandsvurderinger`() {
+        dataSource.transaction { connection ->
+            val bistandRepo = BistandRepositoryImpl(connection)
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+
+            val bistandsvurderingUtenVurdertIBehandling = BistandVurdering(
+                vurdertIBehandling = null,
+                begrunnelse = "B1",
+                erBehovForAktivBehandling = false,
+                erBehovForArbeidsrettetTiltak = false,
+                erBehovForAnnenOppfølging = false,
+                vurderingenGjelderFra = null,
+                vurdertAv = "Z00000",
+                skalVurdereAapIOvergangTilUføre = null,
+                skalVurdereAapIOvergangTilArbeid = null,
+                overgangBegrunnelse = null,
+            )
+            bistandRepo.lagre(behandling.id, listOf(bistandsvurderingUtenVurdertIBehandling))
+            BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
+
+            val behandling2 = finnEllerOpprettBehandling(connection, sak)
+            val vurdering2fom = sak.rettighetsperiode.fom.plusMonths(2)
+            val nyVurdering = bistand(vurdering2fom, erBehov = true)
+            bistandRepo.lagre(behandling2.id, listOf(bistandsvurderingUtenVurdertIBehandling, nyVurdering))
+
+            bistandRepo.migrerBistandsvurderinger()
+
+            assertThat(bistandRepo.hentHvisEksisterer(behandling.id)!!.vurderinger).usingRecursiveComparison()
+                .ignoringFields("id", "opprettet").isEqualTo(
+                    listOf(
+                        bistandsvurderingUtenVurdertIBehandling.copy(
+                            vurdertIBehandling = behandling.id,
+                            vurderingenGjelderFra = periode.fom
+                        )
+                    )
+                )
+            assertThat(bistandRepo.hentHvisEksisterer(behandling2.id)!!.vurderinger).usingRecursiveComparison()
+                .ignoringFields("id", "opprettet").isEqualTo(
+                    listOf(
+                        bistandsvurderingUtenVurdertIBehandling.copy(
+                            vurdertIBehandling = behandling.id,
+                            vurderingenGjelderFra = periode.fom
+                        ),
+                        nyVurdering.copy(vurdertIBehandling = behandling2.id)
+                    )
+                )
+        }
+    }
+
+    private fun bistand(
+        vurderingenGjelderFra: LocalDate,
+        erBehov: Boolean
+    ) = BistandVurdering(
+        begrunnelse = "Begrunnelse",
+        erBehovForAktivBehandling = erBehov,
+        erBehovForArbeidsrettetTiltak = erBehov,
+        erBehovForAnnenOppfølging = false,
+        vurderingenGjelderFra = vurderingenGjelderFra,
+        vurdertAv = "Z00000",
+        skalVurdereAapIOvergangTilUføre = null,
+        skalVurdereAapIOvergangTilArbeid = null,
+        overgangBegrunnelse = null,
+    )
+
 }
