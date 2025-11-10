@@ -20,6 +20,7 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import java.time.LocalDate
@@ -69,7 +70,7 @@ fun NormalOpenAPIRoute.oppholdskravGrunnlagApi(
                                 OppholdskravVurderingDto(
                                     vurdertAv = VurdertAvResponse.fraIdent(segment.verdi.vurdertAv, segment.verdi.opprettet.toLocalDate(), ansattInfoService),
                                     fom = segment.fom(),
-                                    tom = if (segment.tom().isEqual( LocalDate.MAX)) null else segment.tom(),
+                                    tom = if (segment.tom().isEqual( Tid.MAKS)) null else segment.tom(),
                                     begrunnelse = segment.verdi.begrunnelse,
                                     land = segment.verdi.land,
                                     oppfylt = segment.verdi.oppfylt,

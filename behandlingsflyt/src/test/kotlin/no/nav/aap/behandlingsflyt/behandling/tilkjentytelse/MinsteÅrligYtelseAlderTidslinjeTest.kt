@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fød
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.GUnit
+import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -21,7 +22,7 @@ class MinsteÅrligYtelseAlderTidslinjeTest {
                 verdi = AlderStrategi.Under25
             ),
             Segment(
-                periode = Periode(LocalDate.of(2015, 1, 2), LocalDate.MAX),
+                periode = Periode(LocalDate.of(2015, 1, 2), Tid.MAKS),
                 verdi = AlderStrategi.Over25
             ),
         )
@@ -38,7 +39,7 @@ class MinsteÅrligYtelseAlderTidslinjeTest {
                 verdi = AlderStrategi.Under25
             ),
             Segment(
-                periode = Periode(LocalDate.of(2021, 2, 28), LocalDate.MAX),
+                periode = Periode(LocalDate.of(2021, 2, 28), Tid.MAKS),
                 verdi = AlderStrategi.Over25
             ),
         )
@@ -67,7 +68,7 @@ class MinsteÅrligYtelseAlderTidslinjeTest {
                 verdi = GUnit(2)
             ),
             Segment(
-                periode = Periode(LocalDate.of(2024, 7, 1), LocalDate.MAX),
+                periode = Periode(LocalDate.of(2024, 7, 1), Tid.MAKS),
                 verdi = GUnit("2.041")
             )
         )

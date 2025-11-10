@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.utbetal.kodeverk.AvventÅrsak
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseAvventDto
 import java.time.LocalDate
@@ -127,6 +128,6 @@ class AvventUtbetalingService(
         )
     }
 
-    private fun tilPeriode(fom: LocalDate?, tom: LocalDate?) = Periode(fom ?: LocalDate.MIN, tom ?: LocalDate.MAX)
+    private fun tilPeriode(fom: LocalDate?, tom: LocalDate?) = Periode(fom ?: LocalDate.MIN, tom ?: Tid.MAKS)
 
 }

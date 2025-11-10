@@ -4,6 +4,7 @@ import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.Tid
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -32,7 +33,7 @@ data class SamordningUføreVurdering(
                         neste.virkningstidspunkt.minusDays(1)
                     ), verdi = gjeldende.uføregradTilSamordning
                 )
-            }.plus(Segment(Periode(sisteElement.virkningstidspunkt, LocalDate.MAX), sisteElement.uføregradTilSamordning)).let(::Tidslinje)
+            }.plus(Segment(Periode(sisteElement.virkningstidspunkt, Tid.MAKS), sisteElement.uføregradTilSamordning)).let(::Tidslinje)
     }
 }
 
