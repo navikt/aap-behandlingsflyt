@@ -42,7 +42,7 @@ class TestSakService(
     )
 
 
-    fun opprettTestSak(ident: Ident, erStudent: Boolean, harYrkesskade: Boolean, harMedlemskap: Boolean): Sak {
+    fun opprettTestSak(ident: Ident, erStudent: Boolean, harYrkesskade: Boolean, harMedlemskap: Boolean,andreUtbetalinger: AndreUtbetalingerDto?): Sak {
         if (Miljø.erProd()) {
             throw RuntimeException("Man kan ikke opprette testtsaker i produskjon")
         }
