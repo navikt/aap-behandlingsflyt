@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.RefusjonkravLøsning
+import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
@@ -12,11 +13,13 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class RefusjonkravLøser(
     private val refusjonkravRepository: RefusjonkravRepository,
     private val sakRepository: SakRepository,
-) : AvklaringsbehovsLøser<RefusjonkravLøsning> {
+    private val vedtakService: VedtakService
+    ) : AvklaringsbehovsLøser<RefusjonkravLøsning> {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
         refusjonkravRepository = repositoryProvider.provide(),
         sakRepository = repositoryProvider.provide(),
+        vedtakService = VedtakService(repositoryProvider),
     )
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: RefusjonkravLøsning): LøsningsResultat {
@@ -47,6 +50,14 @@ class RefusjonkravLøser(
         val sak = sakRepository.hent(kontekst.kontekst.sakId)
         val kravDato = sak.rettighetsperiode.fom
 
+
+        val vedtaksTidspunktDato = vedtakService.vedtakstidspunktFørstegangsbehandling(sak.id)?.toLocalDate()
+
+        println("vedtaksTidspunktDato")
+        println(vedtaksTidspunktDato)
+
+
+
         return løsning.refusjonkravVurderinger.map { vurdering ->
             if (vurdering.harKrav) {
                 val refusjonFomDato = vurdering.fom ?: kravDato
@@ -63,7 +74,7 @@ class RefusjonkravLøser(
                 RefusjonkravVurderingDto(
                     harKrav = true,
                     fom = refusjonFomDato,
-                    tom = refusjonTomDato,
+                    tom = vedtaksTidspunktDato?.minusDays(1),
                     navKontor = navKontor
                 )
             } else {

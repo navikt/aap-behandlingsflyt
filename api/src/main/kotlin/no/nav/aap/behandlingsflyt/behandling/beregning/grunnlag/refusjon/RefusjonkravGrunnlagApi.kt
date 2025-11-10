@@ -58,8 +58,6 @@ fun NormalOpenAPIRoute.refusjonGrunnlagApi(
                         val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                         val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
 
-
-
                         //TODO: Skal fikses etter prodsetting slik at det bare er gjeldendeVurderinger man skal forholde seg til
                         val gjeldendeVurderinger = refusjonkravRepository.hentHvisEksisterer(behandling.id)?.map {
                                 it.tilResponse(ansattInfoService)
@@ -75,18 +73,10 @@ fun NormalOpenAPIRoute.refusjonGrunnlagApi(
                                 .hentHistoriskeVurderinger(behandling.sakId, behandling.id)
                                 .map { it.tilResponse(ansattInfoService) }
 
-                        // Skal nå kun finne ut om har krysset av for økonomisk sosialhjelp
 
-                        //mildertidig
-                        val søknadHarData = repositoryProvider.provide<MottattDokumentRepository>()
-                            .hentDokumenterAvType(behandling.id, InnsendingType.SØKNAD).maxBy { it.mottattTidspunkt }
-                            .strukturerteData<SøknadV0>()?.data?.andreUtbetalinger?.stønad?.contains(
-                                AndreUtbetalingerYtelserDto.ØKONOMISK_SOSIALHJELP)
-
-
-                        val økonomiskSosialHjelp: Boolean? = if (andreUtbetalinger?.stønad == null && søknadHarData == null ) {
+                        val økonomiskSosialHjelp: Boolean? = if (andreUtbetalinger?.stønad == null ) {
                             null
-                        } else if (andreUtbetalinger?.stønad?.contains(AndreUtbetalingerYtelser.ØKONOMISK_SOSIALHJELP) == true || søknadHarData == true) {
+                        } else if (andreUtbetalinger.stønad?.contains(AndreUtbetalingerYtelser.ØKONOMISK_SOSIALHJELP) == true) {
                             true
                         } else {
                             false
