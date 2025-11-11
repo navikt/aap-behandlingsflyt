@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsgiver
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverVurdering
@@ -44,6 +45,30 @@ class SamordningArbeidsgiverRepositoryImpl(private val connection: DBConnection)
         }
 
     }
+
+
+
+    private fun hentSamordningArbeidsgiverVurderingPerioder(vurderingId: Long): List<SamordningAndreStatligeYtelserVurderingPeriode> {
+        val query = """
+            SELECT * FROM SAMORDNING_ANDRE_STATLIGE_YTELSER_VURDERING_PERIODE WHERE vurdering_id = ?
+        """.trimIndent()
+        return connection.queryList(query) {
+            setParams {
+                setLong(1, vurderingId)
+            }
+            setRowMapper {
+                SamordningAndreStatligeYtelserVurderingPeriode(
+                    periode = it.getPeriode("periode"),
+                    ytelse = it.getEnum("ytelse_type"),
+                )
+            }
+        }
+    }
+
+
+
+
+
 
     private fun hentVurderingIdForBehandling(behandlingId: BehandlingId): Long? {
         val query = """

@@ -23,7 +23,14 @@ data class SamordningArbeidsgiverVurderingDTO(
     val tom: LocalDate,
 )
 
+
+
+
 fun SamordningArbeidsgiverVurdering.tilTidslinje(): Tidslinje<SamordningArbeidsgiverVurdering> {
-    val periode = Periode(fom, tom)
+
+    perioder.forEach { periode -> Tidslinje(periode.fom) }
+
+    perioder.map { periode -> periode.}
+
     return Tidslinje(periode, this)
 }
