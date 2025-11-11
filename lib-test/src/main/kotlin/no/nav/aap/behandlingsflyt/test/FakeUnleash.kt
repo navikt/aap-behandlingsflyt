@@ -25,7 +25,6 @@ object FakeUnleash : FakeUnleashBase(
         BehandlingsflytFeature.OvergangArbeid to false,
         BehandlingsflytFeature.AvklaringsbehovServiceFormkrav to true,
         BehandlingsflytFeature.KvalitetssikringsSteg to true,
-        BehandlingsflytFeature.LovvalgMedlemskapPeriodisert to true,
         BehandlingsflytFeature.FatteVedtakAvklaringsbehovService to true,
         BehandlingsflytFeature.NyBeregningAvklarFaktaSteg to true,
     )
