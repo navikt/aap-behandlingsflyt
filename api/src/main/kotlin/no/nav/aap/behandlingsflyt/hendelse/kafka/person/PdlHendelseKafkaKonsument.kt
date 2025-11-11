@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.hendelse.kafka.person
 
-import io.ktor.util.caseInsensitiveMap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
