@@ -59,7 +59,7 @@ class VurderKlageNayLøserTest {
                 notat = "Notat",
                 innstilling = KlageInnstilling.OMGJØR,
                 vilkårSomOpprettholdes = emptyList(),
-                vilkårSomOmgjøres = listOf(Hjemmel.FOLKETRYGDLOVEN_11_3)
+                vilkårSomOmgjøres = listOf(Hjemmel.FOLKETRYGDLOVEN_11_31)
             )
         )
 
