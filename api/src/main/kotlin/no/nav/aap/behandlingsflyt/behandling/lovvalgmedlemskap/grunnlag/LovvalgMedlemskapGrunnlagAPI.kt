@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
+import com.papsign.ktor.openapigen.route.response.OpenAPIPipelineResponseContext
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.tilTidslinje
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
@@ -29,41 +29,21 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagAPI(
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,
 ) {
-    val ansattInfoService = AnsattInfoService(gatewayProvider)
-
-
     route("/api/behandling") {
         route("/{referanse}/grunnlag/lovvalgmedlemskap") {
-            getGrunnlag<BehandlingReferanse, LovvalgMedlemskapGrunnlagResponse>(
+            getGrunnlag<BehandlingReferanse, PeriodisertLovvalgMedlemskapGrunnlagResponse>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP.kode.toString()
             ) { req ->
                 val grunnlag =
-                    dataSource.transaction { connection ->
-                        val repositoryProvider = repositoryRegistry.provider(connection)
-                        val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                        val lovvalgMedlemskapRepository =
-                            repositoryProvider
-                                .provide<MedlemskapArbeidInntektRepository>()
-                        val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
+                    hentGrunnlag(dataSource, repositoryRegistry, req, gatewayProvider)
 
-                        val gjeldendeManuellVurdering =
-                            lovvalgMedlemskapRepository.hentHvisEksisterer(behandling.id)?.vurderinger?.firstOrNull()
-                        val historiskeManuelleVurderinger =
-                            lovvalgMedlemskapRepository.hentHistoriskeVurderinger(behandling.sakId, behandling.id)
-                        val ansattNavnOgEnhet = gjeldendeManuellVurdering?.let { ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv)}
-
-                        LovvalgMedlemskapGrunnlagResponse(
-                            kanSaksbehandle(),
-                            gjeldendeManuellVurdering?.toResponse(ansattNavnOgEnhet),
-                            historiskeManuelleVurderinger.map { it.toResponse() }
-                        )
-                    }
                 respond(grunnlag)
             }
         }
 
+        // TODO skal fjernes når frontend er oppdatert til å bruke riktig endepunkt
         route("/{referanse}/grunnlag/lovvalgmedlemskap-v2") {
             getGrunnlag<BehandlingReferanse, PeriodisertLovvalgMedlemskapGrunnlagResponse>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
@@ -71,47 +51,59 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagAPI(
                 avklaringsbehovKode = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP.kode.toString()
             ) { req ->
                 val grunnlag =
-                    dataSource.transaction { connection ->
-                        val repositoryProvider = repositoryRegistry.provider(connection)
-                        val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                        val lovvalgMedlemskapRepository =
-                            repositoryProvider
-                                .provide<MedlemskapArbeidInntektRepository>()
-                        val sakRepository = repositoryProvider.provide<SakRepository>()
-                        val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
-                        val sak = sakRepository.hent(behandling.sakId)
-                        val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
-
-                        val grunnlag = lovvalgMedlemskapRepository.hentHvisEksisterer(behandling.id)
-                        val nyeVurderinger = grunnlag?.vurderinger?.filter { it.vurdertIBehandling == behandling.id }
-                        val gjeldendeVedtatteVurderinger = grunnlag?.vurderinger?.filter { it.vurdertIBehandling != behandling.id }?.tilTidslinje() ?: Tidslinje()
-
-                        val behøverVurderinger =
-                            if (gjeldendeVedtatteVurderinger.isEmpty()) listOf(sak.rettighetsperiode)
-                            else sak.rettighetsperiode.minus(gjeldendeVedtatteVurderinger.helePerioden())
-
-                        PeriodisertLovvalgMedlemskapGrunnlagResponse(
-                            harTilgangTilÅSaksbehandle = kanSaksbehandle(),
-                            overstyrt = (nyeVurderinger)?.any { it.overstyrt } ?: false,
-                            behøverVurderinger = behøverVurderinger.toList(),
-                            kanVurderes = listOf(sak.rettighetsperiode),
-                            nyeVurderinger = nyeVurderinger?.map { it.toResponse(vurdertAvService) } ?: emptyList(),
-                            sisteVedtatteVurderinger = gjeldendeVedtatteVurderinger
-                                .komprimer()
-                                .segmenter()
-                                .map { segment ->
-                                    val verdi = segment.verdi
-                                    verdi.toResponse(
-                                        vurdertAvService = vurdertAvService,
-                                        fom = segment.fom(),
-                                        tom = if (segment.tom().isEqual(Tid.MAKS)) null else segment.tom()
-                                    )
-                                }
-                        )
-                    }
+                    hentGrunnlag(dataSource, repositoryRegistry, req, gatewayProvider)
 
                 respond(grunnlag)
             }
         }
     }
+}
+
+private fun OpenAPIPipelineResponseContext<PeriodisertLovvalgMedlemskapGrunnlagResponse>.hentGrunnlag(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry,
+    req: BehandlingReferanse,
+    gatewayProvider: GatewayProvider
+): PeriodisertLovvalgMedlemskapGrunnlagResponse {
+    val grunnlag =
+        dataSource.transaction { connection ->
+            val repositoryProvider = repositoryRegistry.provider(connection)
+            val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+            val lovvalgMedlemskapRepository =
+                repositoryProvider
+                    .provide<MedlemskapArbeidInntektRepository>()
+            val sakRepository = repositoryProvider.provide<SakRepository>()
+            val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
+            val sak = sakRepository.hent(behandling.sakId)
+            val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
+
+            val grunnlag = lovvalgMedlemskapRepository.hentHvisEksisterer(behandling.id)
+            val nyeVurderinger = grunnlag?.vurderinger?.filter { it.vurdertIBehandling == behandling.id }
+            val gjeldendeVedtatteVurderinger =
+                grunnlag?.vurderinger?.filter { it.vurdertIBehandling != behandling.id }?.tilTidslinje() ?: Tidslinje()
+
+            val behøverVurderinger =
+                if (gjeldendeVedtatteVurderinger.isEmpty()) listOf(sak.rettighetsperiode)
+                else sak.rettighetsperiode.minus(gjeldendeVedtatteVurderinger.helePerioden())
+
+            PeriodisertLovvalgMedlemskapGrunnlagResponse(
+                harTilgangTilÅSaksbehandle = kanSaksbehandle(),
+                overstyrt = (nyeVurderinger)?.any { it.overstyrt } ?: false,
+                behøverVurderinger = behøverVurderinger.toList(),
+                kanVurderes = listOf(sak.rettighetsperiode),
+                nyeVurderinger = nyeVurderinger?.map { it.toResponse(vurdertAvService) } ?: emptyList(),
+                sisteVedtatteVurderinger = gjeldendeVedtatteVurderinger
+                    .komprimer()
+                    .segmenter()
+                    .map { segment ->
+                        val verdi = segment.verdi
+                        verdi.toResponse(
+                            vurdertAvService = vurdertAvService,
+                            fom = segment.fom(),
+                            tom = if (segment.tom().isEqual(Tid.MAKS)) null else segment.tom()
+                        )
+                    }
+            )
+        }
+    return grunnlag
 }
