@@ -3,9 +3,9 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.EnhetGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøknadsTidspunktDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedSøknadsTidspunktDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektInformasjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMaaned
@@ -34,20 +34,29 @@ import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.AutoClose
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
 
 internal class MedlemskapArbeidInntektRepositoryImplTest {
-
-    @AutoClose
-    private val dataSource = TestDataSource()
-
     companion object {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+
+        private lateinit var dataSource: TestDataSource
+
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            dataSource = TestDataSource()
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun tearDown() = dataSource.close()
     }
 
     @Test
@@ -306,8 +315,8 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
         ManuellVurderingForLovvalgMedlemskap(
             fom = fom,
             tom = tom,
-            lovvalgVedSøknadsTidspunkt = LovvalgVedSøknadsTidspunktDto(begrunnelse, EØSLandEllerLandMedAvtale.NOR),
-            medlemskapVedSøknadsTidspunkt = MedlemskapVedSøknadsTidspunktDto(begrunnelse, true),
+            lovvalg = LovvalgDto(begrunnelse, EØSLandEllerLandMedAvtale.NOR),
+            medlemskap = MedlemskapDto(begrunnelse, true),
             vurdertAv = "SAKSBEHANDLER",
             vurdertDato = LocalDateTime.now(),
             vurdertIBehandling = vurdertIBehandling

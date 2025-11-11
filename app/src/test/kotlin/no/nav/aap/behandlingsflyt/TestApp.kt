@@ -38,10 +38,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.AzurePortHolder
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.FakeServers
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.behandlingsflyt.test.modell.defaultInntekt
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
+import no.nav.aap.behandlingsflyt.test.testGatewayProvider
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -51,6 +53,7 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import org.slf4j.LoggerFactory
 import org.testcontainers.containers.PostgreSQLContainer
+import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
 import java.time.Duration
 import java.time.LocalDate
@@ -78,11 +81,11 @@ fun main() {
             port = 8080
         }
     }) {
-        val gatewayProvider = defaultGatewayProvider()
+        val gatewayProvider = testGatewayProvider(FakeUnleash::class)
 
         // Useful for connecting to the test database locally
         // jdbc URL contains the host and port and database name.
-        server(dbConfig, postgresRepositoryRegistry, defaultGatewayProvider())
+        server(dbConfig, postgresRepositoryRegistry, gatewayProvider)
 
         datasource = initDatasource(dbConfig)
         motor = lazy {
@@ -329,8 +332,10 @@ private fun sendInnOgFullførFørstegangsbehandling(dto: OpprettTestcaseDTO): Sa
         if (dto.sykepenger.isEmpty()) {
             løsUtenSamordning(behandling)
         } else {
-            løsSamordning(behandling, dto.sykepenger.first().periode)
+            løsSamordning(behandling, dto.sykepenger)
         }
+
+        løsSamordningAndreStatligeYtelser(behandling)
 
         if (dto.tjenestePensjon == true) {
             løsTjenestepensjonRefusjonskravVurdering(behandling)
@@ -359,14 +364,17 @@ private fun hentSisteBehandlingForSak(sakId: SakId): Behandling {
     }
 }
 
-internal fun postgreSQLContainer(): PostgreSQLContainer<Nothing> =
-    PostgreSQLContainer<Nothing>("postgres:16")
+internal fun postgreSQLContainer(): PostgreSQLContainer<Nothing> {
+    val postgres = PostgreSQLContainer<Nothing>("postgres:16")
         .apply {
             val envPort = System.getenv("POSTGRES_PORT")?.toIntOrNull()
             if (envPort != null) {
                 withExposedPorts(5432)
                 setPortBindings(listOf("$envPort:5432"))
             }
+            withLogConsumer(Slf4jLogConsumer(log))
             waitingFor(HostPortWaitStrategy().withStartupTimeout(Duration.of(60L, ChronoUnit.SECONDS)))
-            start()
         }
+    postgres.start() // venter til container er klar
+    return postgres
+}

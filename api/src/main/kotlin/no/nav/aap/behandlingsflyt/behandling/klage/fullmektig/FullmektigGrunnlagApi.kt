@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.FASTSETT_FULLMEKTIG_K
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -24,6 +25,7 @@ fun NormalOpenAPIRoute.fullmektigGrunnlagApi(
     val ansattInfoService = AnsattInfoService(gatewayProvider)
     route("api/klage/{referanse}/grunnlag/fullmektig") {
         getGrunnlag<BehandlingReferanse, FullmektigGrunnlagDto>(
+            relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
             avklaringsbehovKode = FASTSETT_FULLMEKTIG_KODE
         ) { req ->

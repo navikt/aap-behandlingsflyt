@@ -6,7 +6,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningYtelseRepositoryImpl
@@ -16,6 +15,7 @@ import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.test.januar
@@ -27,14 +27,25 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AutoClose
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 internal class SamordningServiceTest {
+    companion object {
+        private lateinit var dataSource: TestDataSource
 
-    @AutoClose
-    private val dataSource = TestDataSource()
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            dataSource = TestDataSource()
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun tearDown() = dataSource.close()
+    }
 
     @Test
     fun `gjør vurderinger når all data er tilstede`() {
@@ -65,7 +76,7 @@ internal class SamordningServiceTest {
         // Opprett registerdata med vurdering fra 1 januar til 10 januar
         dataSource.transaction { connection ->
             opprettYtelseData(
-                SamordningYtelseRepositoryImpl(connection), behandlingId, ytelser = listOf(
+                SamordningYtelseRepositoryImpl(connection), behandlingId, ytelser = setOf(
                     SamordningYtelse(
                         ytelseType = Ytelse.SYKEPENGER,
                         ytelsePerioder = setOf(
@@ -89,10 +100,10 @@ internal class SamordningServiceTest {
                     maksDatoEndelig = false,
                     fristNyRevurdering = LocalDate.now().plusYears(1),
                     vurdertAv = "ident",
-                    vurderinger = listOf(
+                    vurderinger = setOf(
                         SamordningVurdering(
                             ytelseType = Ytelse.SYKEPENGER,
-                            vurderingPerioder = listOf(
+                            vurderingPerioder = setOf(
                                 SamordningVurderingPeriode(
                                     periode = Periode(5 januar 2024, 10 januar 2024),
                                     gradering = Prosent.`50_PROSENT`,
@@ -144,17 +155,17 @@ internal class SamordningServiceTest {
 
             val grunnlag = SamordningYtelseGrunnlag(
                 1L,
-                listOf(
+                setOf(
                     SamordningYtelse(
                         Ytelse.SYKEPENGER,
                         setOf(
                             SamordningYtelsePeriode(
-                                Periode(13 mars  2025, 31 mars  2025),
+                                Periode(13 mars 2025, 31 mars 2025),
                                 Prosent.`70_PROSENT`,
                                 kronesum = null
                             ),
                             SamordningYtelsePeriode(
-                                Periode(13 mars  2025, 15 mars  2025),
+                                Periode(13 mars 2025, 15 mars 2025),
                                 Prosent.`50_PROSENT`,
                                 kronesum = null
                             )
@@ -169,18 +180,18 @@ internal class SamordningServiceTest {
                 maksDatoEndelig = false,
                 fristNyRevurdering = LocalDate.now().plusYears(1),
                 vurdertAv = "ident",
-                vurderinger = listOf(
+                vurderinger = setOf(
                     SamordningVurdering(
                         Ytelse.SYKEPENGER,
-                        listOf(
+                        setOf(
                             SamordningVurderingPeriode(
-                                Periode(13 mars  2025, 15 mars  2025),
+                                Periode(13 mars 2025, 15 mars 2025),
                                 Prosent(50),
                                 null,
                                 true
                             ),
                             SamordningVurderingPeriode(
-                                Periode(16 mars  2025, 31 mars  2025),
+                                Periode(16 mars 2025, 31 mars 2025),
                                 Prosent(70),
                                 null,
                                 true
@@ -217,7 +228,7 @@ internal class SamordningServiceTest {
 
             val grunnlag = SamordningYtelseGrunnlag(
                 1L,
-                listOf(
+                setOf(
                     SamordningYtelse(
                         Ytelse.SYKEPENGER,
                         setOf(
@@ -253,11 +264,10 @@ internal class SamordningServiceTest {
             maksDatoEndelig = false,
             fristNyRevurdering = LocalDate.now().plusYears(1),
             vurdertAv = "ident",
-            vurderinger = listOf(
+            vurderinger = setOf(
                 SamordningVurdering(
                     Ytelse.SYKEPENGER,
-
-                    listOf(
+                    setOf(
                         SamordningVurderingPeriode(
                             Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
                             Prosent(50),
@@ -275,7 +285,7 @@ internal class SamordningServiceTest {
     private fun opprettYtelseData(
         samordningYtelseRepo: SamordningYtelseRepositoryImpl,
         behandlingId: BehandlingId,
-        ytelser: List<SamordningYtelse> = listOf(
+        ytelser: Set<SamordningYtelse> = setOf(
             SamordningYtelse(
                 Ytelse.SYKEPENGER,
                 setOf(

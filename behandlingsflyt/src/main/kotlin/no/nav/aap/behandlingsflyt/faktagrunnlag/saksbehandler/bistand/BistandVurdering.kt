@@ -1,9 +1,11 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand
 
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import java.time.Instant
 import java.time.LocalDate
 
 data class BistandVurdering(
+    val id: Long? = null,
     val begrunnelse: String,
     val erBehovForAktivBehandling: Boolean,
     val erBehovForArbeidsrettetTiltak: Boolean,
@@ -14,7 +16,8 @@ data class BistandVurdering(
     val skalVurdereAapIOvergangTilUføre: Boolean?,
     val vurdertAv: String,
     val vurderingenGjelderFra: LocalDate?,
-    val opprettet: Instant? = null
+    val opprettet: Instant? = null,
+    val vurdertIBehandling: BehandlingId? = null
 ) {
     fun erBehovForBistand(): Boolean {
         return (erBehovForAktivBehandling || erBehovForArbeidsrettetTiltak || erBehovForAnnenOppfølging == true)

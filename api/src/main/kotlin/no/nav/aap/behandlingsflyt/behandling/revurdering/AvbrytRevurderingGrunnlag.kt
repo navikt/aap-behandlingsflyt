@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.tilDto
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.flate.AvbrytRevurderingVurderingDto
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
@@ -23,6 +24,7 @@ data class AvbrytRevurderingGrunnlagDto(
 fun NormalOpenAPIRoute.avbrytRevurderingGrunnlagAPI(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/behandling/{referanse}/grunnlag/avbryt-revurdering").authorizedGet<BehandlingReferanse, AvbrytRevurderingGrunnlagDto>(
         AuthorizationParamPathConfig(
+            relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             operasjon = Operasjon.SE,
             behandlingPathParam = BehandlingPathParam("referanse")
         )

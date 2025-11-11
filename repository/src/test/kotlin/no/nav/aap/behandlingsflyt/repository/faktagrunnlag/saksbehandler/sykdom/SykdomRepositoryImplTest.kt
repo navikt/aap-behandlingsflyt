@@ -7,7 +7,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadeS
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.avbrytrevurdering.AvbrytRevurderingRepositoryImpl
@@ -22,6 +21,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
+import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
@@ -30,7 +30,8 @@ import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AutoClose
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.Instant
@@ -38,9 +39,75 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 internal class SykdomRepositoryImplTest {
+    companion object {
+        private lateinit var dataSource: TestDataSource
 
-    @AutoClose
-    private val dataSource = TestDataSource()
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            dataSource = TestDataSource()
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun tearDown() = dataSource.close()
+
+        private val fom = LocalDate.of(2020, 1, 1)
+        private val periode = Periode(fom, fom.plusYears(3))
+        private fun sykdomsvurdering1(behandlingId: BehandlingId = BehandlingId(1L)) = Sykdomsvurdering(
+            begrunnelse = "b1",
+            vurderingenGjelderFra = 1 januar 2020,
+            vurderingenGjelderTil = null,
+            dokumenterBruktIVurdering = listOf(JournalpostId("1")),
+            harSkadeSykdomEllerLyte = true,
+            erSkadeSykdomEllerLyteVesentligdel = true,
+            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
+            yrkesskadeBegrunnelse = "b",
+            erArbeidsevnenNedsatt = true,
+            vurdertAv = Bruker("Z00000"),
+            opprettet = Instant.now(),
+            vurdertIBehandling = behandlingId,
+        )
+
+        private fun sykdomsvurdering2(
+            behandlingId: BehandlingId = BehandlingId(1L),
+            vurderingenGjelderFra: LocalDate = LocalDate.of(2020, 1, 1)
+        ) = Sykdomsvurdering(
+            begrunnelse = "b2",
+            vurderingenGjelderFra = vurderingenGjelderFra,
+            vurderingenGjelderTil = null,
+            dokumenterBruktIVurdering = listOf(JournalpostId("2")),
+            harSkadeSykdomEllerLyte = true,
+            erSkadeSykdomEllerLyteVesentligdel = true,
+            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
+            yrkesskadeBegrunnelse = null,
+            erArbeidsevnenNedsatt = true,
+            vurdertAv = Bruker("Z00000"),
+            opprettet = Instant.now(),
+            vurdertIBehandling = behandlingId,
+        )
+
+        private fun sykdomsvurdering3(behandlingId: BehandlingId) = Sykdomsvurdering(
+            begrunnelse = "b3",
+            vurderingenGjelderFra = LocalDate.of(2020, 2, 2),
+            vurderingenGjelderTil = null,
+            dokumenterBruktIVurdering = listOf(JournalpostId("3")),
+            harSkadeSykdomEllerLyte = true,
+            erSkadeSykdomEllerLyteVesentligdel = true,
+            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
+            yrkesskadeBegrunnelse = "y",
+            erArbeidsevnenNedsatt = true,
+            vurdertAv = Bruker("Z00000"),
+            opprettet = Instant.now(),
+            vurdertIBehandling = behandlingId,
+        )
+    }
 
     @Test
     fun `kan lagre tom liste`() {
@@ -197,7 +264,7 @@ internal class SykdomRepositoryImplTest {
                     behandling.id, listOf(
                         Sykdomsvurdering(
                             begrunnelse = "b1",
-                            vurderingenGjelderFra = null,
+                            vurderingenGjelderFra = 1 januar 2020,
                             vurderingenGjelderTil = null,
                             dokumenterBruktIVurdering = listOf(JournalpostId("1")),
                             harSkadeSykdomEllerLyte = true,
@@ -220,64 +287,6 @@ internal class SykdomRepositoryImplTest {
         }
     }
 
-    private companion object {
-        private val fom = LocalDate.of(2020, 1, 1)
-        private val periode = Periode(fom, fom.plusYears(3))
-        private fun sykdomsvurdering1(behandlingId: BehandlingId?) = Sykdomsvurdering(
-            begrunnelse = "b1",
-            vurderingenGjelderFra = null,
-            vurderingenGjelderTil = null,
-            dokumenterBruktIVurdering = listOf(JournalpostId("1")),
-            harSkadeSykdomEllerLyte = true,
-            erSkadeSykdomEllerLyteVesentligdel = true,
-            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
-            yrkesskadeBegrunnelse = "b",
-            erArbeidsevnenNedsatt = true,
-            vurdertAv = Bruker("Z00000"),
-            opprettet = Instant.now(),
-            vurdertIBehandling = behandlingId,
-        )
-
-        private fun sykdomsvurdering2(
-            behandlingId: BehandlingId?,
-            vurderingenGjelderFra: LocalDate = LocalDate.of(2020, 1, 1)
-        ) = Sykdomsvurdering(
-            begrunnelse = "b2",
-            vurderingenGjelderFra = vurderingenGjelderFra,
-            vurderingenGjelderTil = null,
-            dokumenterBruktIVurdering = listOf(JournalpostId("2")),
-            harSkadeSykdomEllerLyte = true,
-            erSkadeSykdomEllerLyteVesentligdel = true,
-            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
-            yrkesskadeBegrunnelse = null,
-            erArbeidsevnenNedsatt = true,
-            vurdertAv = Bruker("Z00000"),
-            opprettet = Instant.now(),
-            vurdertIBehandling = behandlingId,
-        )
-
-        private fun sykdomsvurdering3(behandlingId: BehandlingId) = Sykdomsvurdering(
-            begrunnelse = "b3",
-            vurderingenGjelderFra = LocalDate.of(2020, 2, 2),
-            vurderingenGjelderTil = null,
-            dokumenterBruktIVurdering = listOf(JournalpostId("3")),
-            harSkadeSykdomEllerLyte = true,
-            erSkadeSykdomEllerLyteVesentligdel = true,
-            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
-            yrkesskadeBegrunnelse = "y",
-            erArbeidsevnenNedsatt = true,
-            vurdertAv = Bruker("Z00000"),
-            opprettet = Instant.now(),
-            vurdertIBehandling = behandlingId,
-        )
-    }
-
     private fun sak(connection: DBConnection): Sak {
         return PersonOgSakService(
             FakePdlGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection)
@@ -294,61 +303,5 @@ internal class SykdomRepositoryImplTest {
                 årsak = ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
             )
         )
-    }
-
-    @Test
-    fun `migrer sykdomsvurderinger`() {
-        dataSource.transaction { connection ->
-            val sykdomRepo = SykdomRepositoryImpl(connection)
-            val sak = sak(connection)
-            val behandling = finnEllerOpprettBehandling(connection, sak)
-
-            val sykdomsvurderingUtenVurdertIBehandling = sykdomsvurdering1(null)
-            sykdomRepo.lagre(behandling.id, listOf(sykdomsvurderingUtenVurdertIBehandling))
-            BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
-
-            val behandling2 = finnEllerOpprettBehandling(connection, sak)
-            val vurdering2fom = sak.rettighetsperiode.fom.plusMonths(2)
-            val nyVurdering = sykdomsvurdering2(null, vurdering2fom)
-            sykdomRepo.lagre(behandling2.id, listOf(sykdomsvurderingUtenVurdertIBehandling, nyVurdering))
-
-            sykdomRepo.migrerSykdomsvurderinger()
-
-            // DRY-RUN: Ingen endring
-            assertThat(sykdomRepo.hent(behandling.id).sykdomsvurderinger).usingRecursiveComparison()
-                .ignoringFields("id", "opprettet").isEqualTo(
-                    listOf(
-                        sykdomsvurderingUtenVurdertIBehandling
-                    )
-                )
-            assertThat(sykdomRepo.hent(behandling2.id).sykdomsvurderinger).usingRecursiveComparison()
-                .ignoringFields("id", "opprettet").isEqualTo(
-                    listOf(
-                        sykdomsvurderingUtenVurdertIBehandling,
-                        nyVurdering
-                    )
-                )
-
-
-//            assertThat(sykdomRepo.hent(behandling.id).sykdomsvurderinger).usingRecursiveComparison()
-//                .ignoringFields("id", "opprettet").isEqualTo(
-//                    listOf(
-//                        sykdomsvurderingUtenVurdertIBehandling.copy(
-//                            vurdertIBehandling = behandling.id,
-//                            vurderingenGjelderFra = periode.fom
-//                        )
-//                    )
-//                )
-//            assertThat(sykdomRepo.hent(behandling2.id).sykdomsvurderinger).usingRecursiveComparison()
-//                .ignoringFields("id", "opprettet").isEqualTo(
-//                    listOf(
-//                        sykdomsvurderingUtenVurdertIBehandling.copy(
-//                            vurdertIBehandling = behandling.id,
-//                            vurderingenGjelderFra = periode.fom
-//                        ),
-//                        nyVurdering.copy(vurdertIBehandling = behandling2.id)
-//                    )
-//                )
-        }
     }
 }

@@ -15,10 +15,11 @@ class OpprettJobbForFastsattPeriodeJobbUtfører(
 ) : JobbUtfører {
 
     override fun utfør(input: JobbInput) {
-        /* TODO: optimaliser */
-        for (sak in sakRepository.finnAlle()) {
-            flytJobbRepository.leggTil(JobbInput(OpprettBehandlingFastsattPeriodePassertJobbUtfører).forSak(sak.id.toLong()))
-        }
+        sakRepository
+            .finnAlleSakIder()
+            .forEach {
+                flytJobbRepository.leggTil(JobbInput(OpprettBehandlingFastsattPeriodePassertJobbUtfører).forSak(it.toLong()))
+            }
     }
 
 

@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -26,6 +27,7 @@ fun NormalOpenAPIRoute.forutgåendeMedlemskapAPI(
     route("/api/behandling") {
         route("/{referanse}/grunnlag/forutgaaendemedlemskap") {
             getGrunnlag<BehandlingReferanse, ForutgåendeMedlemskapGrunnlagResponse>(
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode =  Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP.kode.toString()
             ) { req ->

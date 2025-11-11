@@ -5,9 +5,9 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalg.EnhetGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapArbeidInntektGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.HistoriskManuellVurderingForLovvalgMedlemskap
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøknadsTidspunktDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedSøknadsTidspunktDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMaaned
@@ -123,10 +123,10 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
             setParams { manuellVurdering ->
                 setLocalDate(1, manuellVurdering.fom)
                 setLocalDate(2, manuellVurdering.tom)
-                setString(3, manuellVurdering.lovvalgVedSøknadsTidspunkt.begrunnelse)
-                setEnumName(4, manuellVurdering.lovvalgVedSøknadsTidspunkt.lovvalgsEØSLandEllerLandMedAvtale)
-                setString(5, manuellVurdering.medlemskapVedSøknadsTidspunkt?.begrunnelse)
-                setBoolean(6, manuellVurdering.medlemskapVedSøknadsTidspunkt?.varMedlemIFolketrygd)
+                setString(3, manuellVurdering.lovvalg.begrunnelse)
+                setEnumName(4, manuellVurdering.lovvalg.lovvalgsEØSLandEllerLandMedAvtale)
+                setString(5, manuellVurdering.medlemskap?.begrunnelse)
+                setBoolean(6, manuellVurdering.medlemskap?.varMedlemIFolketrygd)
                 setBoolean(7, overstyrt)
                 setString(8, manuellVurdering.vurdertAv)
                 setLocalDateTime(9, manuellVurdering.vurdertDato)
@@ -776,11 +776,11 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
 
     private fun mapManuellVurderingForLovvalgMedlemskap(row: Row): ManuellVurderingForLovvalgMedlemskap =
         ManuellVurderingForLovvalgMedlemskap(
-            lovvalgVedSøknadsTidspunkt = LovvalgVedSøknadsTidspunktDto(
+            lovvalg = LovvalgDto(
                 begrunnelse = row.getString("tekstvurdering_lovvalg"),
                 lovvalgsEØSLandEllerLandMedAvtale = row.getEnumOrNull("lovvalgs_land")
             ),
-            medlemskapVedSøknadsTidspunkt = MedlemskapVedSøknadsTidspunktDto(
+            medlemskap = MedlemskapDto(
                 begrunnelse = row.getStringOrNull("tekstvurdering_medlemskap"),
                 varMedlemIFolketrygd = row.getBooleanOrNull("var_medlem_i_folketrygden")
             ),

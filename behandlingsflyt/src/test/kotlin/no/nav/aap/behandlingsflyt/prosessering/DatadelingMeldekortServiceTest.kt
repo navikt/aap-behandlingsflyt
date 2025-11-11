@@ -40,20 +40,28 @@ import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AutoClose
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate
 
 
 class DatadelingMeldekortServiceTest {
-
-    @AutoClose
-    private val dataSource = TestDataSource()
-
     private companion object {
         private val testPeriode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
         private val testIdent = ident()
+        private lateinit var dataSource: TestDataSource
+
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            dataSource = TestDataSource()
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun tearDown() = dataSource.close()
     }
 
     @Test

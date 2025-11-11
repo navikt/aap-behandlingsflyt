@@ -2,12 +2,15 @@ package no.nav.aap.behandlingsflyt
 
 import io.confluent.kafka.serializers.KafkaAvroDeserializer
 import io.confluent.kafka.serializers.KafkaAvroSerializer
+import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.SchemaRegistryConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PdlHendelseKafkaKonsument
+import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.person.pdl.leesah.Endringstype
 import no.nav.person.pdl.leesah.Personhendelse
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -21,11 +24,12 @@ import org.junit.jupiter.api.BeforeAll
 import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.kafka.KafkaContainer
 import org.apache.kafka.common.serialization.StringSerializer
+import org.slf4j.LoggerFactory
+import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.utility.DockerImageName
 import java.time.Duration
 import java.time.Instant
 import java.util.Properties
-import javax.sql.DataSource
 import kotlin.concurrent.thread
 import kotlin.test.Test
 
@@ -33,12 +37,14 @@ class
 PdlHendelseKafkaKonsumentTest {
 
     companion object {
+        private val logger = LoggerFactory.getLogger(PdlHendelseKafkaKonsumentTest::class.java)
         val kafka: KafkaContainer = KafkaContainer(DockerImageName.parse("apache/kafka-native:4.1.0"))
             .withReuse(true)
             .waitingFor(Wait.forListeningPort())
             .withStartupTimeout(Duration.ofSeconds(60))
+            .withLogConsumer { Slf4jLogConsumer(logger) }
 
-        lateinit var dataSource: TestDataSource
+        private lateinit var dataSource: TestDataSource
         val repositoryRegistry = postgresRepositoryRegistry
 
         @BeforeAll
@@ -56,15 +62,16 @@ PdlHendelseKafkaKonsumentTest {
         }
     }
 
+    val konsument = PdlHendelseKafkaKonsument(
+        testConfig(kafka.bootstrapServers),
+        dataSource = dataSource,
+        repositoryRegistry = repositoryRegistry,
+        gatewayProvider = createGatewayProvider { register<FakeUnleash>() },
+        pollTimeout = Duration.ofMillis(50),
+    )
+
     @Test
     fun `PdlHendelseKafkaKonsument konsumerer Avro Personhendelse`() {
-
-        val konsument = PdlHendelseKafkaKonsument(
-            testConfig(kafka.bootstrapServers),
-            dataSource = dataSource,
-            repositoryRegistry = repositoryRegistry,
-            pollTimeout = Duration.ofMillis(50),
-        )
 
         val topic = "pdl.leesah-v1"
 
@@ -105,21 +112,24 @@ PdlHendelseKafkaKonsumentTest {
         pollThread.join()
     }
 
-    private fun testConfig(brokers: String) = KafkaConsumerConfig<String, Personhendelse>(
-        applicationId = "behandlingsflyt-test",
-        brokers = brokers,
-        ssl = null,
-        schemaRegistry = SchemaRegistryConfig(
-            url = "mock://schema-registry",
-            user = "",
-            password = "",
-        ),
-        keyDeserializer =
-            StringDeserializer::class.java as Class<out Deserializer<String>>,
-        valueDeserializer = KafkaAvroDeserializer::class.java as Class<out Deserializer<Personhendelse>>,
-        additionalProperties = Properties().apply {
-            put("specific.avro.reader", true)
-        })
-
 
 }
+
+
+private fun testConfig(brokers: String) = KafkaConsumerConfig<String, Personhendelse>(
+    applicationId = "behandlingsflyt-test",
+    brokers = brokers,
+    ssl = null,
+    schemaRegistry = SchemaRegistryConfig(
+        url = "mock://schema-registry",
+        user = "",
+        password = "",
+    ),
+    keyDeserializer =
+        StringDeserializer::class.java as Class<out Deserializer<String>>,
+    valueDeserializer = KafkaAvroDeserializer::class.java as Class<out Deserializer<Personhendelse>>,
+    additionalProperties = Properties().apply {
+        put("specific.avro.reader", true)
+    }
+)
+

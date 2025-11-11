@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import java.time.LocalDate
 
 data class OvergangUføreGrunnlag(
@@ -15,7 +16,7 @@ data class OvergangUføreGrunnlag(
             .sortedBy { it.virkningsdato ?: startDato }
             .fold(Tidslinje()) { tidslinje, vurdering ->
                 tidslinje.kombiner(
-                    Tidslinje(Periode(vurdering.virkningsdato ?: startDato, LocalDate.MAX), vurdering),
+                    Tidslinje(Periode(vurdering.virkningsdato ?: startDato, Tid.MAKS), vurdering),
                     StandardSammenslåere.prioriterHøyreSideCrossJoin()
                 )
             }

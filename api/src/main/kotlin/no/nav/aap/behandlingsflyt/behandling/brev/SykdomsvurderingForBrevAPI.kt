@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -26,9 +27,9 @@ fun NormalOpenAPIRoute.sykdomsvurderingForBrevApi(
     val ansattInfoService = AnsattInfoService(gatewayProvider)
     route("/api/behandling/{referanse}/grunnlag/sykdomsvurdering-for-brev") {
         getGrunnlag<BehandlingReferanse, SykdomsvurderingForBrevDto>(
+            relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
             avklaringsbehovKode = Definisjon.SKRIV_SYKDOMSVURDERING_BREV.kode.toString()
-
         ) { behandlingReferanse ->
             val grunnlag = dataSource.transaction { connection ->
                 val repositoryProvider = repositoryRegistry.provider(connection)
@@ -43,7 +44,6 @@ fun NormalOpenAPIRoute.sykdomsvurderingForBrevApi(
                     historiskeVurderinger = historiskeSykdomsvurderingerForBrev.map { it.toDto(ansattInfoService) },
                     kanSaksbehandle = kanSaksbehandle()
                 )
-
             }
             respond(grunnlag)
         }

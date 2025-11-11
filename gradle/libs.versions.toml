@@ -1,9 +1,9 @@
 [versions]
-ktor = "3.3.1"
-komponenter = "1.0.417"
-tilgang = "1.0.144"
-utbetaling = "0.0.66"
-junit = "6.0.0"
+ktor = "3.3.2"
+komponenter = "1.0.431"
+tilgang = "1.0.154"
+utbetaling = "0.0.67"
+junit = "6.0.1"
 
 [libraries]
 ktorClientContentNegotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
@@ -30,6 +30,7 @@ motorTestUtils = { module = "no.nav.aap.kelvin:motor-test-utils", version.ref = 
 tilgangKontrakt = { module = "no.nav.aap.tilgang:api-kontrakt", version.ref = "tilgang" }
 tilgangPlugin = { module = "no.nav.aap.tilgang:plugin", version.ref = "tilgang" }
 utbetalKontrakt = { module = "no.nav.aap.utbetal:api-kontrakt", version.ref = "utbetaling" }
+caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version = "3.2.3" }
 
 junitApi = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
 junitJupiterEngine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }

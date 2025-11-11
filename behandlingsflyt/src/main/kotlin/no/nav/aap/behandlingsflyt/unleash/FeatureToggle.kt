@@ -8,7 +8,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     // Eksempel på feature toggle. Kan fjernes når det legges til nye.
     // Se: https://aap-unleash-web.iap.nav.cloud.nais.io/projects/default
     DummyFeature,
-    FritakMeldeplikt,
     IngenValidering,
     InnhentEnhetsregisterData,
     NyBrevtype11_17,
@@ -23,8 +22,9 @@ enum class BehandlingsflytFeature : FeatureToggle {
     LovvalgMedlemskapPeriodisert,
     KvalitetssikringsSteg,
     FatteVedtakAvklaringsbehovService,
-    SykdomPeriodisertMigrering,
-    HarEndringerIBarn
+    BedreUttrekkAvSakerMedFritakMeldeplikt,
+    NyBeregningAvklarFaktaSteg,
+    BistandPeriodisertMigrering,
     ;
 
     override fun key(): String = name

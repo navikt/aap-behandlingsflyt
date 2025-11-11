@@ -19,6 +19,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -43,9 +44,10 @@ fun NormalOpenAPIRoute.kvalitetssikringApi(
     route("/api/behandling") {
         route("/{referanse}/grunnlag/kvalitetssikring") {
             getGrunnlag<BehandlingReferanse, KvalitetssikringGrunnlagDto>(
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = KVALITETSSIKRING_KODE,
-                TagModule(listOf(Tags.Grunnlag))
+                modules = arrayOf(TagModule(listOf(Tags.Grunnlag)))
             ) { req ->
 
                 val dto = dataSource.transaction(readOnly = true) { connection ->

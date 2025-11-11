@@ -10,16 +10,15 @@ import no.nav.aap.behandlingsflyt.help.opprettSak
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.dbtest.TestDataSource.Companion.invoke
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.AutoClose
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.time.LocalDate
@@ -29,10 +28,19 @@ internal class Aktivitetsplikt11_7RepositoryImplTest {
 
     companion object {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-    }
 
-    @AutoClose
-    private val dataSource = TestDataSource()
+        private lateinit var dataSource: TestDataSource
+
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            dataSource = TestDataSource()
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun tearDown() = dataSource.close()
+    }
 
     @Test
     fun `Lagrer ned og henter vurdering av aktivitetsplikt § 11-7`() {
@@ -75,7 +83,7 @@ internal class Aktivitetsplikt11_7RepositoryImplTest {
             )
             val nyTidslinje = grunnlag!!.tidslinje()
                 .kombiner(
-                    Tidslinje(Periode(vurdering2.gjelderFra, LocalDate.MAX), vurdering2),
+                    Tidslinje(Periode(vurdering2.gjelderFra, Tid.MAKS), vurdering2),
                     StandardSammenslåere.prioriterHøyreSideCrossJoin()
                 )
 
@@ -89,7 +97,7 @@ internal class Aktivitetsplikt11_7RepositoryImplTest {
                 Segment(Periode(1 januar 2023, 31 januar 2023)) {
                     assertThat(it).isEqualTo(vurdering)
                 },
-                Segment(Periode(1 februar 2023, LocalDate.MAX)) {
+                Segment(Periode(1 februar 2023, Tid.MAKS)) {
                     assertThat(it).isEqualTo(vurdering2)
                 }
             )

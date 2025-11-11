@@ -18,20 +18,31 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.dbtest.TestDataSource.Companion.invoke
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AutoClose
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 internal class StegOrkestratorTest {
-    @AutoClose
-    private val dataSource = TestDataSource()
+    companion object {
+        private lateinit var dataSource: TestDataSource
 
-    private val gatewayProvider = createGatewayProvider {  }
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            dataSource = TestDataSource()
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun tearDown() = dataSource.close()
+    }
+
+
+    private val gatewayProvider = createGatewayProvider { }
 
     @Test
     fun `ved avklaringsbehov skal vi gå gjennom statusene START-UTFØRER-AVKARLINGSPUNKT`() {
@@ -61,9 +72,9 @@ internal class StegOrkestratorTest {
             ).utfør(
                 TestFlytSteg,
                 FlytKontekstMedPeriodeService(
-                    SakService(SakRepositoryImpl(connection)),
+                    SakService(SakRepositoryImpl(connection), BehandlingRepositoryImpl(connection)),
                     BehandlingRepositoryImpl(connection),
-               ).utled(kontekst, TestFlytSteg.type()),
+                ).utled(kontekst, TestFlytSteg.type()),
                 behandling,
                 emptyList()
             )

@@ -252,7 +252,7 @@ public enum class Definisjon(
     ),
     AVKLAR_SAMORDNING_UFØRE(
         kode = AvklaringsbehovKode.`5024`,
-        type = BehovType.MANUELT_PÅKREVD,
+        type = BehovType.MANUELT_FRIVILLIG,
         løsesISteg = StegType.SAMORDNING_UFØRE,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
         kreverToTrinn = true,
@@ -391,7 +391,7 @@ public enum class Definisjon(
     ),
     SAMORDNING_REFUSJONS_KRAV(
         kode = AvklaringsbehovKode.`5056`,
-        type = BehovType.MANUELT_PÅKREVD,
+        type = BehovType.MANUELT_FRIVILLIG,
         løsesISteg = StegType.SAMORDNING_TJENESTEPENSJON_REFUSJONSKRAV,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
         kreverToTrinn = true

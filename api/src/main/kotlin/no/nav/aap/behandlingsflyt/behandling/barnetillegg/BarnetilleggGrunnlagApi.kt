@@ -5,7 +5,6 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
@@ -17,7 +16,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -37,6 +38,7 @@ fun NormalOpenAPIRoute.barnetilleggApi(
     route("/api/barnetillegg") {
         route("/grunnlag/{referanse}") {
             getGrunnlag<BehandlingReferanse, BarnetilleggDto>(
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = Definisjon.AVKLAR_BARNETILLEGG.kode.toString()
             ) { req ->
@@ -48,10 +50,9 @@ fun NormalOpenAPIRoute.barnetilleggApi(
                         BehandlingReferanseService(behandlingRepository).behandling(req)
                     val barnRepository = repositoryProvider.provide<BarnRepository>()
 
-                    val sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider)
                     val barnetilleggService = BarnetilleggService(
-                        sakOgBehandlingService,
-                        barnRepository,
+                        repositoryProvider,
+                        gatewayProvider,
                     )
                     val barnetilleggTidslinje = barnetilleggService.beregn(behandling.id)
                     val barnGrunnlag = barnRepository.hentHvisEksisterer(behandling.id)
@@ -71,7 +72,7 @@ fun NormalOpenAPIRoute.barnetilleggApi(
                     val vurderteBarnDto = vurderteBarn?.barn.orEmpty().map {
                         val barn = hentBarn(it.ident, barnGrunnlag)
                         when (val vurdertBartIdent = it.ident) {
-                            is BarnIdentifikator.BarnIdent -> ExtendedVurdertBarnDto(
+                            is BarnIdent -> ExtendedVurdertBarnDto(
                                 ident = vurdertBartIdent.ident.identifikator, null,
                                 vurderinger = it.vurderinger.map {
                                     VurderingAvForeldreAnsvarDto(
@@ -111,7 +112,7 @@ fun NormalOpenAPIRoute.barnetilleggApi(
 
                     BarnetilleggDto(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
-                        søknadstidspunkt = sakOgBehandlingService.hentSakFor(behandling.id).rettighetsperiode.fom,
+                        søknadstidspunkt = SakService(repositoryProvider).hentSakFor(behandling.id).rettighetsperiode.fom,
                         folkeregisterbarn = folkeregister.map {
                             hentBarn(
                                 it.ident,

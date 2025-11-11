@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag
 
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
@@ -16,7 +15,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅ
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
@@ -46,10 +44,6 @@ class SakOgBehandlingService(
         unleashGateway = gatewayProvider.provide(),
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
     )
-
-    fun finnBehandling(behandlingReferanse: BehandlingReferanse): Behandling {
-        return behandlingRepository.hent(behandlingReferanse)
-    }
 
     /**
      * Ytelsesbehandling betyr førstegangsbehandling eller revurdering.
@@ -241,7 +235,6 @@ class SakOgBehandlingService(
             "Mottok klage, men det finnes ingen eksisterende behandling"
         }
 
-
         return behandlingRepository.opprettBehandling(
             sakId = sisteYtelsesbehandling.sakId,
             typeBehandling = TypeBehandling.Klage,
@@ -254,10 +247,6 @@ class SakOgBehandlingService(
         sisteYtelsesbehandling: Behandling,
         vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak
     ): Behandling {
-        requireNotNull(sisteYtelsesbehandling) {
-            "Mottok oppfølgingsbehandling, men det finnes ingen eksisterende behandling. Behandling-ID: ${sisteYtelsesbehandling.id}"
-        }
-
         return behandlingRepository.opprettBehandling(
             sisteYtelsesbehandling.sakId,
             typeBehandling = TypeBehandling.OppfølgingsBehandling,
@@ -310,25 +299,25 @@ class SakOgBehandlingService(
     }
 
     private fun opprettRevurderingForranÅpenBehandling(
-        apenRevurdering: Behandling,
+        åpenRevurdering: Behandling,
         vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak,
     ): Behandling {
-        check(apenRevurdering.status().erÅpen())
-        check(apenRevurdering.typeBehandling() == TypeBehandling.Revurdering)
-        check(!trukketSøknadService.søknadErTrukket(apenRevurdering.id)) {
-            "ikke lov å opprette ny behandling for trukket søknad ${apenRevurdering.sakId}"
+        check(åpenRevurdering.status().erÅpen())
+        check(åpenRevurdering.typeBehandling() == TypeBehandling.Revurdering)
+        check(!trukketSøknadService.søknadErTrukket(åpenRevurdering.id)) {
+            "ikke lov å opprette ny behandling for trukket søknad ${åpenRevurdering.sakId}"
         }
 
-        val sisteAvsluttedeYtelsesvurdering = behandlingRepository.hent(apenRevurdering.forrigeBehandlingId!!)
+        val sisteAvsluttedeYtelsesvurdering = behandlingRepository.hent(åpenRevurdering.forrigeBehandlingId!!)
 
         return behandlingRepository.opprettBehandling(
-            sakId = apenRevurdering.sakId,
+            sakId = åpenRevurdering.sakId,
             typeBehandling = TypeBehandling.Revurdering,
             vurderingsbehovOgÅrsak = vurderingsbehovOgÅrsak,
             forrigeBehandlingId = sisteAvsluttedeYtelsesvurdering.id,
         ).also { behandling ->
             grunnlagKopierer.overfør(sisteAvsluttedeYtelsesvurdering.id, behandling.id)
-            behandlingRepository.flyttForrigeBehandlingId(apenRevurdering.id, behandling.id)
+            behandlingRepository.flyttForrigeBehandlingId(åpenRevurdering.id, behandling.id)
         }
     }
 
@@ -343,15 +332,6 @@ class SakOgBehandlingService(
         validerStegStatus(sisteYtelsesbehandling)
         behandlingRepository.oppdaterVurderingsbehovOgÅrsak(sisteYtelsesbehandling, vurderingsbehovOgÅrsak)
         return sisteYtelsesbehandling
-    }
-
-    fun finnEllerOpprettOrdinærBehandling(
-        saksnummer: Saksnummer,
-        vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak
-    ): Behandling {
-        val sak = sakRepository.hent(saksnummer)
-
-        return finnEllerOpprettOrdinærBehandling(sak.id, vurderingsbehovOgÅrsak)
     }
 
     fun finnEllerOpprettBehandling(
@@ -377,11 +357,6 @@ class SakOgBehandlingService(
         val oppdatertBehandling = behandlingRepository.hent(behandlingId)
         val sisteSteg = oppdatertBehandling.aktivtStegTilstand()
         require(sisteSteg.status() == StegStatus.AVSLUTTER)
-    }
-
-    fun hentSakFor(behandlingId: BehandlingId): Sak {
-        val behandling = behandlingRepository.hent(behandlingId)
-        return sakRepository.hent(behandling.sakId)
     }
 
     fun oppdaterRettighetsperioden(sakId: SakId, brevkategori: InnsendingType, mottattDato: LocalDate) {

@@ -12,6 +12,7 @@ data class SamordningAndreStatligeYtelserVurdering(
     val vurdertAv: String,
     val vurdertTidspunkt: LocalDateTime? = null,
     val vurderingPerioder: List<SamordningAndreStatligeYtelserVurderingPeriode>,
+    val historiskePerioder: List<SamordningAndreStatligeYtelserVurderingPeriode>? = null,
 )
 
 data class SamordningAndreStatligeYtelserVurderingPeriode(

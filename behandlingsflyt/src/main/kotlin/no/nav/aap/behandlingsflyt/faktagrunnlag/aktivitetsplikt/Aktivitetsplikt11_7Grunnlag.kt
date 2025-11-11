@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import java.time.LocalDate
 import java.util.Objects
 
@@ -29,7 +30,7 @@ data class Aktivitetsplikt11_7Grunnlag(
             .fold(Tidslinje()) { tidslinje, vurdering ->
                 tidslinje.kombiner(
                     Tidslinje(
-                        Periode(vurdering.gjelderFra, LocalDate.MAX), vurdering
+                        Periode(vurdering.gjelderFra, Tid.MAKS), vurdering
                     ),
                     StandardSammenslåere.prioriterHøyreSideCrossJoin()
                 )

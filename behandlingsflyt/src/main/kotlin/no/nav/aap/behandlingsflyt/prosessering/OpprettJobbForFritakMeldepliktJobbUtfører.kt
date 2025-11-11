@@ -21,17 +21,16 @@ class OpprettJobbForFritakMeldepliktJobbUtfører(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.FritakMeldeplikt)) {
-            log.info("FritakMeldeplikt er slått på")
-            /* TODO: optimaliser */
-            for (sak in sakRepository.finnAlle()) {
-                flytJobbRepository.leggTil(JobbInput(OpprettBehandlingFritakMeldepliktJobbUtfører).forSak(sak.id.toLong()))
-            }
+        val saker = if (unleashGateway.isEnabled(BehandlingsflytFeature.BedreUttrekkAvSakerMedFritakMeldeplikt)) {
+            sakRepository.finnSakerMedFritakMeldeplikt()
         } else {
-            log.info("FritakMeldeplikt er slått av")
+            sakRepository.finnAlleSakIder()
+        }
+        log.info("Oppretter jobber for alle saker som skal undersøkes for fritak meldeplikt. Antall = ${saker.size}")
+        saker.forEach {
+            flytJobbRepository.leggTil(JobbInput(OpprettBehandlingFritakMeldepliktJobbUtfører).forSak(it.toLong()))
         }
     }
-
 
     companion object : ProvidersJobbSpesifikasjon {
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {

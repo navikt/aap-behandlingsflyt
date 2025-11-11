@@ -2,14 +2,21 @@ package no.nav.aap.behandlingsflyt.kontrakt.statistikk
 
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.ArbeidIPeriodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvklaringsbehovHendelseDto
+import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
+import java.math.BigDecimal
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status as BehandlingsFlytBehandlingStatus
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status as SakStatus
 
+
 /**
+ * Hendelse til statistikk-appen.
+ *
  * @param saksnummer Saksnummer.
  * @param behandlingReferanse Behandlingsreferanse
  * @param relatertBehandling Hvis behandlingen har oppsått med bakgrunn i en annen, skal den foregående behandlingen refereres til her. Dette er tolket som forrige behandling på samme sak.
@@ -35,6 +42,8 @@ public data class StoppetBehandling(
     val avsluttetBehandling: AvsluttetBehandlingDTO? = null,
     val identerForSak: List<String> = emptyList(),
     val opprettetAv: String? = null,
+    val nyeMeldekort: List<MeldekortDTO> = emptyList(),
+    val søknadIder: List<JournalpostId> = emptyList(),
 ) {
     init {
         require(ident.isNotEmpty())
@@ -61,6 +70,7 @@ public enum class Vurderingsbehov {
     REVURDER_YRKESSKADE,        // Yrkesskade
     REVURDER_BEREGNING,         // Beregningstidspunkt
     REVURDER_LOVVALG,
+    // Ikke i bruk
     REVURDER_SAMORDNING,
     REVURDER_STUDENT,
     KLAGE,
@@ -110,3 +120,14 @@ public enum class RettighetsType(public val hjemmel: String) {
     ARBEIDSSØKER(hjemmel = "§ 11-17"),
     VURDERES_FOR_UFØRETRYGD(hjemmel = "§ 11-18"),
 }
+
+public data class MeldekortDTO(
+    public val journalpostId: String,
+    public val arbeidIPeriode: List<ArbeidIPeriode>,
+)
+
+public data class ArbeidIPeriode(
+    val periodeFom: LocalDate,
+    val periodeTom: LocalDate,
+    val timerArbeidet: BigDecimal
+)

@@ -32,6 +32,7 @@ tasks {
             // Merk at META-INF/maven/org.webjars/swagger-ui/pom.properties
             // brukes av com.papsign.ktor.openapigen.SwaggerUIVersion
             duplicatesStrategy = DuplicatesStrategy.INCLUDE
+            // Vi beholder alle pom.properties fra Maven for å støtte generering av SBOM i Nais
         }
 
         // Helt unødvendige filer som ofte skaper duplikater
@@ -65,9 +66,9 @@ dependencies {
     implementation(libs.ktorServerCors)
     implementation(libs.ktorServerStatusPages)
 
-    implementation("io.micrometer:micrometer-registry-prometheus:1.15.5")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.16.0")
     implementation("ch.qos.logback:logback-classic:1.5.20")
-    implementation("net.logstash.logback:logstash-logback-encoder:8.1")
+    implementation("net.logstash.logback:logstash-logback-encoder:9.0")
     implementation("org.slf4j:jul-to-slf4j:2.0.17") // trengs for postgres-logging
 
     implementation(libs.motor)
@@ -87,7 +88,7 @@ dependencies {
     implementation(project(":behandlingsflyt"))
     implementation(project(":repository"))
     implementation("com.zaxxer:HikariCP:7.0.2")
-    implementation("org.flywaydb:flyway-database-postgresql:11.15.0")
+    implementation("org.flywaydb:flyway-database-postgresql:11.16.0")
 
     runtimeOnly("org.postgresql:postgresql") // låst versjon i root build.gradle.kts
 

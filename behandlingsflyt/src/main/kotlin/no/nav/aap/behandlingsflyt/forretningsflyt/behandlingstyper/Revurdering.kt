@@ -250,6 +250,7 @@ object Revurdering : BehandlingType {
                 steg = BeregningAvklarFaktaSteg, vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
                     Vurderingsbehov.REVURDER_BEREGNING,
+                    Vurderingsbehov.REVURDER_YRKESSKADE,
                     Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
                     Vurderingsbehov.HELHETLIG_VURDERING,
                     Vurderingsbehov.REVURDER_LOVVALG,
@@ -355,6 +356,7 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = SamordningAndreStatligeYtelserSteg,
                 vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.MOTTATT_SØKNAD,
                     Vurderingsbehov.SAMORDNING_OG_AVREGNING,
                     Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER,
                     Vurderingsbehov.VURDER_RETTIGHETSPERIODE,

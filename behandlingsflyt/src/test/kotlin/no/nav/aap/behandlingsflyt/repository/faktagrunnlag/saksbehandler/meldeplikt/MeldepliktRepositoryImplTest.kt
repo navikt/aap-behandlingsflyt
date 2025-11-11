@@ -1,10 +1,8 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.meldeplikt
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
-import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
@@ -13,17 +11,16 @@ import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.august
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.dbtest.TestDataSource.Companion.invoke
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AutoClose
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -31,10 +28,18 @@ import java.time.LocalDateTime
 class MeldepliktRepositoryImplTest {
     companion object {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-    }
+        private lateinit var dataSource: TestDataSource
 
-    @AutoClose
-    private val dataSource = TestDataSource()
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            dataSource = TestDataSource()
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun tearDown() = dataSource.close()
+    }
 
     @Test
     fun `Finner ikke fritaksvurderinger hvis ikke lagret`() {
@@ -121,11 +126,8 @@ class MeldepliktRepositoryImplTest {
         }
         dataSource.transaction { connection ->
             val meldepliktRepository = MeldepliktRepositoryImpl(connection)
-            val sakOgBehandlingService = SakOgBehandlingService(
-                postgresRepositoryRegistry.provider(connection),
-                gatewayProvider = createGatewayProvider { register<FakeUnleash>() },
-            )
-            val sak = sakOgBehandlingService.hentSakFor(behandling1.id)
+            val sakService = SakService(postgresRepositoryRegistry.provider(connection))
+            val sak = sakService.hentSakFor(behandling1.id)
             val behandling2 = finnEllerOpprettBehandling(connection, sak)
             assertThat(behandling1.id).isNotEqualTo(behandling2.id)
             assertThat(behandling1.opprettetTidspunkt).isBefore(behandling2.opprettetTidspunkt)
@@ -217,6 +219,31 @@ class MeldepliktRepositoryImplTest {
             val alleVurderingerFørBehandling = meldepliktRepository.hentAlleVurderinger(behandling.sakId, behandling.id)
 
             assertThat(alleVurderingerFørBehandling).isEmpty()
+        }
+    }
+
+    @Test
+    fun `Lagrer nye fritaksvurderinger skal deaktivere forrige grunnlag selv om den ikke har noen vurderinger`() {
+        dataSource.transaction { connection ->
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            val meldepliktRepository = MeldepliktRepositoryImpl(connection)
+
+            val fritaksvurdering = Fritaksvurdering(true, 13 august 2023, "en begrunnelse", "saksbehandler", null)
+
+            meldepliktRepository.lagre(
+                behandling.id,
+                emptyList()
+            )
+
+            meldepliktRepository.lagre(
+                behandling.id,
+                listOf(fritaksvurdering)
+            )
+
+            val oppdatertGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling.id)
+            assertThat(oppdatertGrunnlag?.vurderinger).hasSize(1)
+            assertThat(oppdatertGrunnlag?.vurderinger?.first()?.harFritak).isTrue()
         }
     }
 

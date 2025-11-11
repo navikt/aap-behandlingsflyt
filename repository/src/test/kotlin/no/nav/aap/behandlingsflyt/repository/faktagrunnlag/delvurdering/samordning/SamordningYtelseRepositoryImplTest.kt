@@ -12,27 +12,37 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.dbtest.TestDataSource.Companion.invoke
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AutoClose
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 
 class SamordningYtelseRepositoryImplTest {
+    companion object {
+        private lateinit var dataSource: TestDataSource
 
-    @AutoClose
-    private val dataSource = TestDataSource()
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            dataSource = TestDataSource()
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun tearDown() = dataSource.close()
+    }
+
 
     @Test
     fun `sette inn flere ytelser, skal hente ut nyeste`() {
         val behandling = dataSource.transaction { finnEllerOpprettBehandling(it, sak(it)) }
 
-        val samordningYtelser = listOf(
+        val samordningYtelser = setOf(
             SamordningYtelse(
                 ytelseType = Ytelse.SYKEPENGER,
                 ytelsePerioder = setOf(
@@ -79,7 +89,7 @@ class SamordningYtelseRepositoryImplTest {
         assertThat(samordningYtelser).containsExactlyInAnyOrderElementsOf(uthentet.ytelser)
 
         // Setter inn på nytt
-        val samordningYtelser2 = listOf(
+        val samordningYtelser2 = setOf(
             SamordningYtelse(
                 ytelseType = Ytelse.SYKEPENGER,
                 ytelsePerioder = setOf(
@@ -139,7 +149,7 @@ class SamordningYtelseRepositoryImplTest {
         val behandling = dataSource.transaction { finnEllerOpprettBehandling(it, sak(it)) }
 
         // Første sett med ytelser (eldste)
-        val samordningYtelserEldste = listOf(
+        val samordningYtelserEldste = setOf(
             SamordningYtelse(
                 ytelseType = Ytelse.SYKEPENGER,
                 ytelsePerioder = setOf(
@@ -160,7 +170,7 @@ class SamordningYtelseRepositoryImplTest {
         }
 
         // Andre sett med ytelser (nyeste)
-        val samordningYtelserNyeste = listOf(
+        val samordningYtelserNyeste = setOf(
             SamordningYtelse(
                 ytelseType = Ytelse.OMSORGSPENGER,
                 ytelsePerioder = setOf(
@@ -186,9 +196,9 @@ class SamordningYtelseRepositoryImplTest {
         }
         assertThat(eldsteGrunnlag).isNotNull
         assertThat(eldsteGrunnlag!!.ytelser.size).isEqualTo(1)
-        assertThat(eldsteGrunnlag.ytelser[0].kilde).isEqualTo("kilde-eldste")
-        assertThat(eldsteGrunnlag.ytelser[0].saksRef).isEqualTo("abc-eldste")
-        assertThat(eldsteGrunnlag.ytelser[0].ytelseType).isEqualTo(Ytelse.SYKEPENGER)
+        assertThat(eldsteGrunnlag.ytelser.first().kilde).isEqualTo("kilde-eldste")
+        assertThat(eldsteGrunnlag.ytelser.first().saksRef).isEqualTo("abc-eldste")
+        assertThat(eldsteGrunnlag.ytelser.first().ytelseType).isEqualTo(Ytelse.SYKEPENGER)
 
         // Verifiser at hentHvisEksisterer returnerer det nyeste grunnlaget
         val nyesteGrunnlag = dataSource.transaction {
@@ -196,9 +206,9 @@ class SamordningYtelseRepositoryImplTest {
         }
         assertThat(nyesteGrunnlag).isNotNull
         assertThat(nyesteGrunnlag!!.ytelser.size).isEqualTo(1)
-        assertThat(nyesteGrunnlag.ytelser[0].kilde).isEqualTo("kilde-nyeste")
-        assertThat(nyesteGrunnlag.ytelser[0].saksRef).isEqualTo("abc-nyeste")
-        assertThat(nyesteGrunnlag.ytelser[0].ytelseType).isEqualTo(Ytelse.OMSORGSPENGER)
+        assertThat(nyesteGrunnlag.ytelser.first().kilde).isEqualTo("kilde-nyeste")
+        assertThat(nyesteGrunnlag.ytelser.first().saksRef).isEqualTo("abc-nyeste")
+        assertThat(nyesteGrunnlag.ytelser.first().ytelseType).isEqualTo(Ytelse.OMSORGSPENGER)
     }
 
     @Test
@@ -209,7 +219,7 @@ class SamordningYtelseRepositoryImplTest {
         val behandling2 = dataSource.transaction {
             finnEllerOpprettBehandling(it, sak(it))
         }
-        val samordningYtelser1 = listOf(
+        val samordningYtelser1 = setOf(
             SamordningYtelse(
                 ytelseType = Ytelse.SYKEPENGER,
                 ytelsePerioder = setOf(
@@ -226,7 +236,7 @@ class SamordningYtelseRepositoryImplTest {
                 saksRef = "abc"
             )
         )
-        val samordningYtelser2 = listOf(
+        val samordningYtelser2 = setOf(
             SamordningYtelse(
                 ytelseType = Ytelse.SYKEPENGER,
                 ytelsePerioder = setOf(
@@ -278,7 +288,7 @@ class SamordningYtelseRepositoryImplTest {
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val samordningYtelseRepository = SamordningYtelseRepositoryImpl(connection)
             samordningYtelseRepository.lagre(
-                behandling.id, listOf(
+                behandling.id, setOf(
                     SamordningYtelse(
                         ytelseType = Ytelse.SYKEPENGER,
                         ytelsePerioder = setOf(
@@ -297,7 +307,7 @@ class SamordningYtelseRepositoryImplTest {
                 )
             )
             samordningYtelseRepository.lagre(
-                behandling.id, listOf(
+                behandling.id, setOf(
                     SamordningYtelse(
                         ytelseType = Ytelse.SYKEPENGER,
                         ytelsePerioder = setOf(

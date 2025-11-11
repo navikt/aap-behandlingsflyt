@@ -36,20 +36,36 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.ident
+import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AutoClose
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.time.LocalDate
 
 class BistandsvilkåretTest {
-    @AutoClose
-    private val dataSource = TestDataSource()
+    companion object {
+        private val now = LocalDate.now()
+        private val periode = Periode(now, LocalDate.now().plusYears(3))
+
+        private lateinit var dataSource: TestDataSource
+
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            dataSource = TestDataSource()
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun tearDown() = dataSource.close()
+    }
 
     private val gatewayProvider = createGatewayProvider {
         register<FakeUnleash>()
@@ -282,11 +298,6 @@ class BistandsvilkåretTest {
         vurderingenGjelderFra = vurderingenGjelderFra
     )
 
-    companion object {
-        private val now = LocalDate.now()
-        private val periode = Periode(now, LocalDate.now().plusYears(3))
-    }
-
     private fun sak(connection: DBConnection): Sak {
         return PersonOgSakService(
             FakePdlGateway,
@@ -308,7 +319,7 @@ class BistandsvilkåretTest {
         erNedsettelseIArbeidsevneAvEnVissVarighet: Boolean? = true,
         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean = true,
         erArbeidsevnenNedsatt: Boolean = true,
-        vurderingenGjelderFra: LocalDate? = null,
+        vurderingenGjelderFra: LocalDate = 1 januar 2020,
         vurderingenGjelderTil: LocalDate? = null,
         opprettet: Instant = Instant.now(),
         behandlingId: BehandlingId

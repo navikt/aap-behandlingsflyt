@@ -1,7 +1,7 @@
 
 plugins {
     id("behandlingsflyt.conventions")
-    id("com.github.davidmc24.gradle.plugin.avro") version "1.9.1"
+    id("io.github.androa.gradle.plugin.avro") version "0.0.12"
 }
 
 repositories {
@@ -9,7 +9,7 @@ repositories {
     maven { url = uri("https://packages.confluent.io/maven/") }
 }
 
-val mockOAuth2ServerVersion = "3.0.0"
+val mockOAuth2ServerVersion = "3.0.1"
 val kafkaVersion = "4.1.0"
 
 dependencies {
@@ -31,7 +31,7 @@ dependencies {
     testImplementation(libs.bundles.junit)
     testImplementation(libs.ktorServerTestHost)
     constraints {
-        implementation("commons-codec:commons-codec:1.19.0")
+        implementation("commons-codec:commons-codec:1.20.0")
     }
     testImplementation(libs.ktorClientContentNegotiation)
     testImplementation("no.nav.security:mock-oauth2-server:$mockOAuth2ServerVersion")

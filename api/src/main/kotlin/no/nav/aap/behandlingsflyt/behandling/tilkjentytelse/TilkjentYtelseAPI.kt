@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.Meldep
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
@@ -20,6 +21,7 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource, repositoryRegis
         route("/tilkjentV2/{referanse}") {
             authorizedGet<BehandlingReferanse, TilkjentYtelse2Dto>(
                 AuthorizationParamPathConfig(
+                    relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                     operasjon = Operasjon.SE,
                     behandlingPathParam = BehandlingPathParam("referanse")
                 )

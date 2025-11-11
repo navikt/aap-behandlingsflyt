@@ -21,7 +21,7 @@ class Medlemskapvilkåret(
         val brukManuellVurderingForLovvalgMedlemskap = grunnlag.medlemskapArbeidInntektGrunnlag?.vurderinger?.isNotEmpty() ?: false
 
         if (brukManuellVurderingForLovvalgMedlemskap) {
-            val gjeldendeVurderinger = grunnlag.medlemskapArbeidInntektGrunnlag.gjeldendeVurderinger(maksDato = rettighetsPeriode.tom)
+            val gjeldendeVurderinger = grunnlag.medlemskapArbeidInntektGrunnlag.gjeldendeVurderinger()
 
             val vilkårsvurderinger = gjeldendeVurderinger
                 .map { vurdering ->
@@ -51,6 +51,7 @@ class Medlemskapvilkåret(
                     }
                 }
                 .komprimer()
+                .begrensetTil(rettighetsPeriode)
 
             vilkår.leggTilVurderinger(vilkårsvurderinger)
 

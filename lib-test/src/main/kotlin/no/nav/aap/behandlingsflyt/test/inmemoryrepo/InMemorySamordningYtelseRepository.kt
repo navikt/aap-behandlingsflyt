@@ -26,13 +26,13 @@ object InMemorySamordningYtelseRepository : SamordningYtelseRepository {
         }
     }
 
-    override fun lagre(behandlingId: BehandlingId, samordningYtelser: List<SamordningYtelse>) {
+    override fun lagre(behandlingId: BehandlingId, samordningYtelser: Set<SamordningYtelse>) {
         synchronized(lock) {
             if (ytelser.containsKey(behandlingId)) {
                 ytelser[behandlingId] = ytelser[behandlingId]!! + Pair(
                     SamordningYtelseGrunnlag(
                         grunnlagId = idSeq.andIncrement,
-                        ytelser = samordningYtelser,
+                        ytelser = samordningYtelser.toSet(),
                     ), Instant.now()
                 )
             } else {
@@ -40,7 +40,7 @@ object InMemorySamordningYtelseRepository : SamordningYtelseRepository {
                     Pair(
                         SamordningYtelseGrunnlag(
                             grunnlagId = idSeq.andIncrement,
-                            ytelser = samordningYtelser,
+                            ytelser = samordningYtelser.toSet(),
                         ), Instant.now()
                     )
                 )

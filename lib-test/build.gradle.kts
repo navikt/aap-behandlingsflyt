@@ -2,13 +2,13 @@ plugins {
     id("behandlingsflyt.conventions")
 }
 
-val jacksonVersjon = "2.20.0"
+val jacksonVersjon = "2.20.1"
 
 dependencies {
     implementation(project(":behandlingsflyt"))
     implementation(project(":repository"))
     implementation(project(":kontrakt"))
-    implementation("no.nav.aap.brev:kontrakt:0.0.169")
+    implementation("no.nav.aap.brev:kontrakt:0.0.178")
     implementation(libs.tilgangKontrakt)
     implementation(libs.httpklient)
     implementation(libs.verdityper)
@@ -26,7 +26,7 @@ dependencies {
 
     implementation("ch.qos.logback:logback-classic:1.5.20")
 
-    implementation("com.nimbusds:nimbus-jose-jwt:10.5")
+    implementation("com.nimbusds:nimbus-jose-jwt:10.6")
 
     implementation(libs.bundles.junit)
 }

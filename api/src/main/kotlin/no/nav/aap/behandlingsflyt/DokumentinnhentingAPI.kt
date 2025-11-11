@@ -22,6 +22,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForSakResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -47,6 +49,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(
         route("/bestill") {
             authorizedPost<Unit, String, BestillLegeerklæringDto>(
                 AuthorizationBodyPathConfig(
+                    relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                     operasjon = Operasjon.SAKSBEHANDLE,
                     applicationsOnly = false
                 )
@@ -100,6 +103,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(
             authorizedGet<HentStatusLegeerklæring, List<LegeerklæringStatusResponse>>(
                 AuthorizationParamPathConfig(
                     applicationsOnly = false,
+                    relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
                     sakPathParam = SakPathParam("saksnummer")
                 )
             ) { par ->
@@ -111,6 +115,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(
             authorizedPost<Unit, BrevResponse, ForhåndsvisBrevRequest>(
                 AuthorizationBodyPathConfig(
                     operasjon = Operasjon.SE,
+                    relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
                     applicationsOnly = false
                 )
             ) { _, req ->
@@ -137,6 +142,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingAPI(
         route("/purring") {
             authorizedPost<Unit, String, PurringLegeerklæringRequest>(
                 AuthorizationBodyPathConfig(
+                    relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                     operasjon = Operasjon.SAKSBEHANDLE,
                     applicationsOnly = false
                 )

@@ -14,11 +14,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import java.time.LocalDate
@@ -33,6 +35,7 @@ fun NormalOpenAPIRoute.oppholdskravGrunnlagApi(
 
     route("/api/behandling/{referanse}/grunnlag/oppholdskrav") {
         getGrunnlag<BehandlingReferanse, OppholdskravGrunnlagResponse>(
+            relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
             avklaringsbehovKode = Definisjon.AVKLAR_OPPHOLDSKRAV.kode.toString(),
         ) { req ->
@@ -67,7 +70,7 @@ fun NormalOpenAPIRoute.oppholdskravGrunnlagApi(
                                 OppholdskravVurderingDto(
                                     vurdertAv = VurdertAvResponse.fraIdent(segment.verdi.vurdertAv, segment.verdi.opprettet.toLocalDate(), ansattInfoService),
                                     fom = segment.fom(),
-                                    tom = if (segment.tom().isEqual( LocalDate.MAX)) null else segment.tom(),
+                                    tom = if (segment.tom().isEqual( Tid.MAKS)) null else segment.tom(),
                                     begrunnelse = segment.verdi.begrunnelse,
                                     land = segment.verdi.land,
                                     oppfylt = segment.verdi.oppfylt,

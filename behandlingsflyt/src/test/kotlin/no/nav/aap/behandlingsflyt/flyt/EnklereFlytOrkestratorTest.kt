@@ -11,12 +11,12 @@ import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.AVBRYT_REVURDERING
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.AVKLAR_STUDENT
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.AVKLAR_SYKDOM
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.FASTSETT_MELDEPERIODER
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.FATTE_VEDTAK
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.IVERKSETT_VEDTAK
-import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.AVBRYT_REVURDERING
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.OPPRETT_REVURDERING
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.SEND_FORVALTNINGSMELDING
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.START_BEHANDLING
@@ -48,7 +48,7 @@ import java.util.*
 
 class EnklereFlytOrkestratorTest {
     private val sakRepository = InMemorySakRepository
-    private val sakService = SakService(sakRepository)
+    private val sakService = SakService(sakRepository, InMemoryBehandlingRepository)
     private val behandlingRepository = InMemoryBehandlingRepository
     private val avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
 
@@ -404,7 +404,8 @@ class EnklereFlytOrkestratorTest {
                     stegType = SEND_FORVALTNINGSMELDING,
                     stegStatus = StegStatus.AVSLUTTER,
                     aktiv = false
-                ),StegTilstand(
+                ),
+                StegTilstand(
                     stegType = AVBRYT_REVURDERING,
                     stegStatus = StegStatus.START,
                     aktiv = false

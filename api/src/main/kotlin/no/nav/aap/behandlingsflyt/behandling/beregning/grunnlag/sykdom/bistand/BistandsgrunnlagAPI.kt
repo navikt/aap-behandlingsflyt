@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -34,6 +35,7 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(
     route("/api/behandling") {
         route("/{referanse}/grunnlag/bistand") {
             getGrunnlag<BehandlingReferanse, BistandGrunnlagResponse>(
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = Definisjon.AVKLAR_BISTANDSBEHOV.kode.toString()
             ) { req ->
@@ -56,15 +58,24 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(
                         ?.let { bistandRepository.hentHvisEksisterer(it) }
                         ?.vurderinger.orEmpty()
                     val vurdering = nåTilstand
-                        .filterNot { gjeldendeVurdering -> gjeldendeVurdering.copy(opprettet = null) in vedtatteBistandsvurderinger.map { it.copy(opprettet = null) } }
+                        .filterNot { gjeldendeVurdering ->
+                            gjeldendeVurdering.copy(opprettet = null,  id = null) in vedtatteBistandsvurderinger.map {
+                                it.copy(
+                                    id = null,
+                                    opprettet = null
+                                )
+                            }
+                        }
                         .singleOrNull()
 
                     val gjeldendeSykdomsvurderinger =
-                        sykdomRepository.hentHvisEksisterer(behandling.id)?.sykdomsvurderinger.orEmpty()
+                        sykdomRepository.hentHvisEksisterer(behandling.id)?.gjeldendeSykdomsvurderinger().orEmpty()
 
                     val sisteSykdomsvurdering = gjeldendeSykdomsvurderinger.maxByOrNull { it.opprettet }
 
                     val sak = sakRepository.hent(behandling.sakId)
+                    
+                    // TODO: Denne må være smartere
                     val erOppfylt11_5 = sisteSykdomsvurdering?.erOppfylt(sak.rettighetsperiode.fom)
 
                     BistandGrunnlagResponse(
