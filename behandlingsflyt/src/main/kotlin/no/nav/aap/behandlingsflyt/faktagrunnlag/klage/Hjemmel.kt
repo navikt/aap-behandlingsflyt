@@ -8,7 +8,7 @@ enum class Hjemmel(val hjemmel: String) {
     FOLKETRYGDLOVEN_KAPITTEL_2("Kapittel 2"),
     FOLKETRYGDLOVEN_11_2("§ 11-2"),
 
-    FOLKETRYGDLOVEN_11_3("§ 11-3"), // TODO: Mangler steg
+    FOLKETRYGDLOVEN_11_3("§ 11-3"),
     FOLKETRYGDLOVEN_11_4("§ 11-4"), // TODO: Hva klages på her?
     FOLKETRYGDLOVEN_11_5("§ 11-5"),
     FOLKETRYGDLOVEN_11_6("§ 11-6"),
@@ -57,7 +57,8 @@ enum class Hjemmel(val hjemmel: String) {
 
     fun tilVurderingsbehov(): List<Vurderingsbehov> {
         return when (this) {
-            FOLKETRYGDLOVEN_11_2 -> listOf( Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP)
+            FOLKETRYGDLOVEN_11_2 -> listOf(Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP)
+            FOLKETRYGDLOVEN_11_3 -> listOf(Vurderingsbehov.OPPHOLDSKRAV)
 
             FOLKETRYGDLOVEN_11_5,
             FOLKETRYGDLOVEN_11_6,
@@ -85,7 +86,6 @@ enum class Hjemmel(val hjemmel: String) {
 
             FOLKETRYGDLOVEN_22_13 -> listOf(Vurderingsbehov.HELHETLIG_VURDERING, Vurderingsbehov.VURDER_RETTIGHETSPERIODE)
 
-            FOLKETRYGDLOVEN_11_3,
             FOLKETRYGDLOVEN_11_4,
             FOLKETRYGDLOVEN_11_7,
             FOLKETRYGDLOVEN_11_8,
@@ -100,7 +100,7 @@ enum class Hjemmel(val hjemmel: String) {
             FOLKETRYGDLOVEN_21_3,
             FOLKETRYGDLOVEN_21_7,
             FOLKETRYGDLOVEN_22_15,
-            FOLKETRYGDLOVEN_22_17 -> throw IllegalStateException("Ingen ÅrsaTilBehandling-mapping er implementert for klage på hjemmel $name ($hjemmel).")
+            FOLKETRYGDLOVEN_22_17 -> throw IllegalStateException("Ingen ÅrsakTilBehandling-mapping er implementert for klage på hjemmel $name ($hjemmel).")
         }
     }
 }
