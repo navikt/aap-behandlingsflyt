@@ -4,6 +4,7 @@ import kotlin.math.max
 
 plugins {
     id("org.jetbrains.kotlin.jvm")
+    id("dev.detekt")
 }
 
 group = "no.nav.aap"
@@ -14,6 +15,15 @@ repositories {
     maven("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
     mavenLocal()
 }
+
+detekt {
+    ignoreFailures = true
+}
+
+tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
+    jvmTarget.set("21")
+}
+
 
 // https://docs.gradle.org/8.12.1/userguide/jvm_test_suite_plugin.html
 testing {

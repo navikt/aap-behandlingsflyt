@@ -15,7 +15,7 @@ class NavKontorService(private val enhetGateway: EnhetGateway) {
     fun hentNavEnheter(): List<Enhet>? {
         try {
             val enheter = enhetGateway.hentAlleEnheter()
-            return enheter.map { it }
+            return enheter
         } catch (e: Exception) {
             logger.error("Kunne ikke hente enheter.", e)
             return emptyList()
