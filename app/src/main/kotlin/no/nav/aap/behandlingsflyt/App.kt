@@ -83,11 +83,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
 import no.nav.aap.behandlingsflyt.pip.behandlingsflytPip
 import no.nav.aap.behandlingsflyt.prosessering.BehandlingsflytLogInfoProvider
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.bistand.BistandRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -328,15 +326,8 @@ private fun utførMigreringer(
 
     scheduler.schedule(Runnable {
         val unleashGateway: UnleashGateway = gatewayProvider.provide()
-        val bistandEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.BistandPeriodisertMigrering)
         val isLeader = isLeader(log)
-        log.info("isLeader = $isLeader, BistandPeriodisertMigrering = $bistandEnabled")
-        if (bistandEnabled && isLeader) {
-            dataSource.transaction { connection ->
-                val repository = BistandRepositoryImpl(connection)
-                repository.migrerBistandsvurderinger()
-            }
-        }
+        log.info("isLeader = $isLeader")
     }, 9, TimeUnit.MINUTES)
     return scheduler
 }
