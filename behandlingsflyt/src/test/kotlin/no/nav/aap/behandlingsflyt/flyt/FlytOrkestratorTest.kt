@@ -93,8 +93,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingerFo
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarnDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurderingDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntekterVurderingDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurderingDTO
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.AarsVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flate.OvergangUføreVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
@@ -2942,15 +2941,15 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                         begrunnelse = "Mangler ligning",
                         belop = BigDecimal(300000),
                         vurderinger = listOf(
-                            ManuellInntekterVurderingDto(
+                            AarsVurdering(
                                 ar = Year.now().minusYears(1),
                                 belop = BigDecimal(300000),
                             ),
-                            ManuellInntekterVurderingDto(
+                            AarsVurdering(
                                 ar = Year.now().minusYears(2),
                                 belop = BigDecimal(400000),
                             ),
-                            ManuellInntekterVurderingDto(
+                            AarsVurdering(
                                 ar = Year.now().minusYears(3),
                                 belop = BigDecimal(500000),
                             ),
