@@ -12,6 +12,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn.F
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarnDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
@@ -19,14 +22,18 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 class AvklarBarnetilleggLøser(
     private val barnRepository: BarnRepository,
+    private val unleashGateway: UnleashGateway,
 ) : AvklaringsbehovsLøser<AvklarBarnetilleggLøsning> {
 
-    constructor(repositoryProvider: RepositoryProvider) : this(
-        barnRepository = repositoryProvider.provide()
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
+        barnRepository = repositoryProvider.provide(),
+        unleashGateway = gatewayProvider.provide(),
     )
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarBarnetilleggLøsning): LøsningsResultat {
-        lagreSaksbehandlerOppgitteBarnHvisNye(kontekst, løsning)
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.NyeBarn)) {
+            lagreSaksbehandlerOppgitteBarnHvisNye(kontekst, løsning)
+        }
 
         val oppdatertTilstand =
             oppdaterTilstandBasertPåNyeVurderinger(emptyList(), løsning.vurderingerForBarnetillegg.vurderteBarn)

@@ -28,5 +28,6 @@ object FakeUnleash : FakeUnleashBase(
         BehandlingsflytFeature.LovvalgMedlemskapPeriodisert to true,
         BehandlingsflytFeature.FatteVedtakAvklaringsbehovService to true,
         BehandlingsflytFeature.NyBeregningAvklarFaktaSteg to true,
+        BehandlingsflytFeature.NyeBarn to true,
     )
 )
