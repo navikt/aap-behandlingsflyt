@@ -339,20 +339,6 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         }
     }
 
-    private fun hentManuellVurdering(vurderingId: Long?): ManuellVurderingForLovvalgMedlemskap? {
-        if (vurderingId == null) return null
-        val query = """
-            SELECT * FROM LOVVALG_MEDLEMSKAP_MANUELL_VURDERING WHERE ID = ?
-        """.trimIndent()
-
-        return connection.queryFirst(query) {
-            setParams {
-                setLong(1, vurderingId)
-            }
-            setRowMapper(::mapManuellVurderingForLovvalgMedlemskap)
-        }
-    }
-
     private fun hentVurderinger(vurderingerId: Long?): List<ManuellVurderingForLovvalgMedlemskap> {
         if (vurderingerId == null) return emptyList()
 
