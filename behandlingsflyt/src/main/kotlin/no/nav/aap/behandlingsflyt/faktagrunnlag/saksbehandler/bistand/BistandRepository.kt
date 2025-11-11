@@ -9,4 +9,5 @@ interface BistandRepository : Repository {
     fun hentHistoriskeBistandsvurderinger(sakId: SakId, behandlingId: BehandlingId): List<BistandVurdering>
     fun lagre(behandlingId: BehandlingId, bistandsvurderinger: List<BistandVurdering>)
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
+    fun migrerBistandsvurderinger()
 }

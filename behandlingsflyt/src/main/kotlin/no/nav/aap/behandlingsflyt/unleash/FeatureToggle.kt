@@ -24,6 +24,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     FatteVedtakAvklaringsbehovService,
     BedreUttrekkAvSakerMedFritakMeldeplikt,
     NyBeregningAvklarFaktaSteg,
+    BistandPeriodisertMigrering,
     EOSBeregning,
     ;
 
