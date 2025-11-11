@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
+import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
@@ -259,6 +260,9 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
                     // Dette er et kopiert grunnlag som allerede er migrert
                     return@forEach
                 }
+                if (kandidat.sakId.id != 2666L || Miljø.erProd()) {
+                    return@forEach
+                }
                 val vurderingerForGrunnlag =
                     vurderingerMedVurderingerId.filter { it.vurderingerId == kandidat.vurderingerId }.map{it.bistandsvurdering}
 
@@ -274,19 +278,19 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
                     }
 
                     // Oppdater
-//                    connection.execute(
-//                        """
-//                        UPDATE BISTAND
-//                        SET VURDERT_I_BEHANDLING = ?, VURDERINGEN_GJELDER_FRA = ?
-//                        WHERE ID = ?
-//                        """.trimIndent()
-//                    ) {
-//                        setParams {
-//                            setLong(1, nyeVerdier.first.id)
-//                            setLocalDate(2, nyeVerdier.second)
-//                            setLong(3, vurdering.id!!)
-//                        }
-//                    }
+                    connection.execute(
+                        """
+                        UPDATE BISTAND
+                        SET VURDERT_I_BEHANDLING = ?, VURDERINGEN_GJELDER_FRA = ?
+                        WHERE ID = ?
+                        """.trimIndent()
+                    ) {
+                        setParams {
+                            setLong(1, nyeVerdier.first.id)
+                            setLocalDate(2, nyeVerdier.second)
+                            setLong(3, vurdering.id!!)
+                        }
+                    }
                     migrerteVurderingerCount = migrerteVurderingerCount + 1
 
                     migrerteVurderingerId.add(kandidat.vurderingerId)
@@ -296,7 +300,7 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
 
         val totalTid = System.currentTimeMillis() - start
 
-        log.info("DRY-RUN: Fullført migrering av manuelle vurderinger for bistand. Migrerte ${kandidater.size} grunnlag og ${migrerteVurderingerCount} vurderinger på $totalTid ms.")
+        log.info("Migrer sak 4NR11SG: Fullført migrering av manuelle vurderinger for bistand. Migrerte ${kandidater.size} grunnlag og ${migrerteVurderingerCount} vurderinger på $totalTid ms.")
     }
 
 
