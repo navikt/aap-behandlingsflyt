@@ -274,19 +274,19 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
                     }
 
                     // Oppdater
-                    connection.execute(
-                        """
-                        UPDATE BISTAND
-                        SET VURDERT_I_BEHANDLING = ?, VURDERINGEN_GJELDER_FRA = ?
-                        WHERE ID = ?
-                        """.trimIndent()
-                    ) {
-                        setParams {
-                            setLong(1, nyeVerdier.first.id)
-                            setLocalDate(2, nyeVerdier.second)
-                            setLong(3, vurdering.id!!)
-                        }
-                    }
+//                    connection.execute(
+//                        """
+//                        UPDATE BISTAND
+//                        SET VURDERT_I_BEHANDLING = ?, VURDERINGEN_GJELDER_FRA = ?
+//                        WHERE ID = ?
+//                        """.trimIndent()
+//                    ) {
+//                        setParams {
+//                            setLong(1, nyeVerdier.first.id)
+//                            setLocalDate(2, nyeVerdier.second)
+//                            setLong(3, vurdering.id!!)
+//                        }
+//                    }
                     migrerteVurderingerCount = migrerteVurderingerCount + 1
 
                     migrerteVurderingerId.add(kandidat.vurderingerId)
@@ -296,7 +296,7 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
 
         val totalTid = System.currentTimeMillis() - start
 
-        log.info("Fullført migrering av manuelle vurderinger for bistand. Migrerte ${kandidater.size} grunnlag og ${migrerteVurderingerCount} vurderinger på $totalTid ms.")
+        log.info("DRY-RUN: Fullført migrering av manuelle vurderinger for bistand. Migrerte ${kandidater.size} grunnlag og ${migrerteVurderingerCount} vurderinger på $totalTid ms.")
     }
 
 

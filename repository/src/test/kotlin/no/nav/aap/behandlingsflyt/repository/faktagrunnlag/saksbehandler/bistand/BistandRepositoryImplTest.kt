@@ -764,26 +764,41 @@ internal class BistandRepositoryImplTest {
             bistandRepo.lagre(behandling2.id, listOf(bistandsvurderingUtenVurdertIBehandling, nyVurdering))
 
             bistandRepo.migrerBistandsvurderinger()
-
+            
+            // Dry-run: Ingen endring
             assertThat(bistandRepo.hentHvisEksisterer(behandling.id)!!.vurderinger).usingRecursiveComparison()
                 .ignoringFields("id", "opprettet").isEqualTo(
                     listOf(
-                        bistandsvurderingUtenVurdertIBehandling.copy(
-                            vurdertIBehandling = behandling.id,
-                            vurderingenGjelderFra = periode.fom
-                        )
+                        bistandsvurderingUtenVurdertIBehandling
                     )
                 )
             assertThat(bistandRepo.hentHvisEksisterer(behandling2.id)!!.vurderinger).usingRecursiveComparison()
                 .ignoringFields("id", "opprettet").isEqualTo(
                     listOf(
-                        bistandsvurderingUtenVurdertIBehandling.copy(
-                            vurdertIBehandling = behandling.id,
-                            vurderingenGjelderFra = periode.fom
-                        ),
-                        nyVurdering.copy(vurdertIBehandling = behandling2.id)
+                        bistandsvurderingUtenVurdertIBehandling,
+                        nyVurdering
                     )
                 )
+
+//            assertThat(bistandRepo.hentHvisEksisterer(behandling.id)!!.vurderinger).usingRecursiveComparison()
+//                .ignoringFields("id", "opprettet").isEqualTo(
+//                    listOf(
+//                        bistandsvurderingUtenVurdertIBehandling.copy(
+//                            vurdertIBehandling = behandling.id,
+//                            vurderingenGjelderFra = periode.fom
+//                        )
+//                    )
+//                )
+//            assertThat(bistandRepo.hentHvisEksisterer(behandling2.id)!!.vurderinger).usingRecursiveComparison()
+//                .ignoringFields("id", "opprettet").isEqualTo(
+//                    listOf(
+//                        bistandsvurderingUtenVurdertIBehandling.copy(
+//                            vurdertIBehandling = behandling.id,
+//                            vurderingenGjelderFra = periode.fom
+//                        ),
+//                        nyVurdering.copy(vurdertIBehandling = behandling2.id)
+//                    )
+//                )
         }
     }
 
