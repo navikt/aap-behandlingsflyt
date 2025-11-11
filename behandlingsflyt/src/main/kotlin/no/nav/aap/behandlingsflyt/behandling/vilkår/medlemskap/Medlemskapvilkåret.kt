@@ -81,8 +81,8 @@ class Medlemskapvilkåret(
 
         val vurderingsResultat = if (manuellVurderingForLovvalgMedlemskap != null) {
             vurdertManuelt = true
-            val lovvalgsLand = manuellVurderingForLovvalgMedlemskap.lovvalgVedSøknadsTidspunkt.lovvalgsEØSLandEllerLandMedAvtale
-            val varMedlemIFolketrygd = manuellVurderingForLovvalgMedlemskap.medlemskapVedSøknadsTidspunkt?.varMedlemIFolketrygd
+            val lovvalgsLand = manuellVurderingForLovvalgMedlemskap.lovvalg.lovvalgsEØSLandEllerLandMedAvtale
+            val varMedlemIFolketrygd = manuellVurderingForLovvalgMedlemskap.medlemskap?.varMedlemIFolketrygd
 
             val annetLandMedAvtaleIEØS = lovvalgsLand != null && lovvalgsLand != EØSLandEllerLandMedAvtale.NOR && lovvalgsLand in enumValues<EØSLandEllerLandMedAvtale>().map { it }
 

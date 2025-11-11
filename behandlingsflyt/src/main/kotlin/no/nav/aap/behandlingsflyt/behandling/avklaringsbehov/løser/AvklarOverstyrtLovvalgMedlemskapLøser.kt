@@ -27,8 +27,8 @@ class AvklarOverstyrtLovvalgMedlemskapLøser(
             kontekst.behandlingId(),
             listOf(
                 ManuellVurderingForLovvalgMedlemskap(
-                    lovvalgVedSøknadsTidspunkt = løsning.manuellVurderingForLovvalgMedlemskap.lovvalgVedSøknadsTidspunkt,
-                    medlemskapVedSøknadsTidspunkt = løsning.manuellVurderingForLovvalgMedlemskap.medlemskapVedSøknadsTidspunkt,
+                    lovvalg = løsning.manuellVurderingForLovvalgMedlemskap.lovvalgVedSøknadsTidspunkt,
+                    medlemskap = løsning.manuellVurderingForLovvalgMedlemskap.medlemskapVedSøknadsTidspunkt,
                     vurdertAv = kontekst.bruker.ident,
                     vurdertDato = LocalDateTime.now(),
                     fom = sakRepository.hent(kontekst.kontekst.sakId).rettighetsperiode.fom,
