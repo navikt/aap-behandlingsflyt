@@ -83,7 +83,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
 import no.nav.aap.behandlingsflyt.pip.behandlingsflytPip
 import no.nav.aap.behandlingsflyt.prosessering.BehandlingsflytLogInfoProvider
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.bistand.BistandRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
@@ -319,9 +318,7 @@ internal fun Application.server(
 
 }
 
-// Basert på tall ved lokal kjøring vil denne migreringen ta ca 2-3 sekunder å kjøre med antallet som ligger i prod.
 // Bruker leaderElector for å sikre at kun en pod kjører migreringen og spinner opp en egen tråd for å ikke blokkere.
-// Toggles av etter kjøring og fjernes i ny pr.
 private fun utførMigreringer(
     dataSource: HikariDataSource,
     gatewayProvider: GatewayProvider,
@@ -331,16 +328,9 @@ private fun utførMigreringer(
 
     scheduler.schedule(Runnable {
         val unleashGateway: UnleashGateway = gatewayProvider.provide()
-        val enabled = unleashGateway.isEnabled(BehandlingsflytFeature.LovvalgMedlemskapPeriodisertMigrering)
         val bistandEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.BistandPeriodisertMigrering)
         val isLeader = isLeader(log)
-        log.info("isLeader = $isLeader, LovvalgMedlemskapPeriodisertMigrering = $enabled, BistandPeriodisertMigrering = $bistandEnabled")
-        if (enabled && isLeader) {
-            dataSource.transaction { connection ->
-                val repository = MedlemskapArbeidInntektRepositoryImpl(connection)
-                repository.migrerManuelleVurderingerPeriodisert()
-            }
-        }
+        log.info("isLeader = $isLeader, BistandPeriodisertMigrering = $bistandEnabled")
         if (bistandEnabled && isLeader) {
             dataSource.transaction { connection ->
                 val repository = BistandRepositoryImpl(connection)
