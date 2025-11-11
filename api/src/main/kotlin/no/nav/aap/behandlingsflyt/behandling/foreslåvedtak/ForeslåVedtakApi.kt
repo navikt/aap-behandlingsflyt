@@ -5,7 +5,7 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.utils.tilForeslåVedtakDataTidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.FORESLÅ_VEDTAK_KODE
@@ -55,7 +55,7 @@ fun NormalOpenAPIRoute.foreslaaVedtakAPI(
                                     val avslagsårsaker =
                                         avslagstidslinjer
                                             .flatMap { tidslinje -> tidslinje.begrensetTil(it.periode).segmenter() }
-                                            .mapNotNull { it.verdi }
+                                            .filter { it.verdi.second == Utfall.IKKE_OPPFYLT }.map { it.verdi.first }
                                     ForeslåVedtakDto(
                                         periode = it.periode,
                                         utfall = it.verdi.utfall,
@@ -77,10 +77,10 @@ fun NormalOpenAPIRoute.foreslaaVedtakAPI(
     }
 }
 
-private fun utledAvslagstidslinjer(vilkårsresultat: Vilkårsresultat): List<Tidslinje<Avslagsårsak?>> {
+private fun utledAvslagstidslinjer(vilkårsresultat: Vilkårsresultat): List<Tidslinje<Pair<String, Utfall>>> {
     val allevilkårmedavslag = vilkårsresultat.alle().filter { it.harPerioderSomIkkeErOppfylt() }
     return allevilkårmedavslag.map { vilkår ->
-        vilkår.vilkårsperioder().map { Segment(it.periode, it.avslagsårsak) }.let { Tidslinje(it) }
+        vilkår.vilkårsperioder().map { Segment(it.periode, Pair(vilkår.type.hjemmel, it.utfall)) }.let { Tidslinje(it) }
     }
 }
 
