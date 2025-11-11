@@ -257,7 +257,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
 
         val SØKNAD_STUDENT = SøknadV0(
             student = SøknadStudentDto("JA", "JA"),
-            yrkesskade = "JA",
+            yrkesskade = "NEI",
             oppgitteBarn = null,
             medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
         )

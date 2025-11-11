@@ -46,7 +46,7 @@ fun vurderRettighetsType(vilkårsresultat: Vilkårsresultat): Tidslinje<Rettighe
                 forutgåendeTidslinje.mergePrioriterHøyre(tidslinjeOf(periode to rettighetsType))
         }
         .segmenter()
-        .mapNotNull { segment -> segment.verdi?.let { Segment(segment.periode, it) } }
+        .map { segment -> Segment(segment.periode, segment.verdi) }
         .let(::Tidslinje)
         .komprimer()
 }
