@@ -101,12 +101,7 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
     }
 
     override fun lagre(behandlingId: BehandlingId, vurderinger: List<Fritaksvurdering>) {
-        val meldepliktGrunnlag = hentHvisEksisterer(behandlingId)
-
-        if (meldepliktGrunnlag?.vurderinger == vurderinger) return
-
-        if (meldepliktGrunnlag != null) deaktiverEksisterende(behandlingId)
-
+        deaktiverEksisterende(behandlingId)
         val meldepliktId = connection.executeReturnKey("INSERT INTO MELDEPLIKT_FRITAK DEFAULT VALUES")
 
         connection.execute("INSERT INTO MELDEPLIKT_FRITAK_GRUNNLAG (BEHANDLING_ID, MELDEPLIKT_ID) VALUES (?, ?)") {
@@ -190,9 +185,6 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
         connection.execute("UPDATE MELDEPLIKT_FRITAK_GRUNNLAG SET AKTIV = FALSE WHERE AKTIV AND BEHANDLING_ID = ?") {
             setParams {
                 setLong(1, behandlingId.toLong())
-            }
-            setResultValidator { rowsUpdated ->
-                require(rowsUpdated == 1)
             }
         }
     }
