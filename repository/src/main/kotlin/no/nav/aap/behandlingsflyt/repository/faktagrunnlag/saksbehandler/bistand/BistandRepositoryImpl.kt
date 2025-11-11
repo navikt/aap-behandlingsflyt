@@ -260,9 +260,7 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
                     // Dette er et kopiert grunnlag som allerede er migrert
                     return@forEach
                 }
-                if (kandidat.sakId.id != 2666L || Miljø.erProd()) {
-                    return@forEach
-                }
+
                 val vurderingerForGrunnlag =
                     vurderingerMedVurderingerId.filter { it.vurderingerId == kandidat.vurderingerId }.map{it.bistandsvurdering}
 
@@ -300,7 +298,7 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
 
         val totalTid = System.currentTimeMillis() - start
 
-        log.info("Migrer sak 4NR11SG: Fullført migrering av manuelle vurderinger for bistand. Migrerte ${kandidater.size} grunnlag og ${migrerteVurderingerCount} vurderinger på $totalTid ms.")
+        log.info("Fullført migrering av manuelle vurderinger for bistand. Migrerte ${kandidater.size} grunnlag og ${migrerteVurderingerCount} vurderinger på $totalTid ms.")
     }
 
 
