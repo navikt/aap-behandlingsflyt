@@ -19,6 +19,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.IverksettUtbetalingJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.VarsleVedtakJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
@@ -29,6 +30,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
 
 class IverksettVedtakSteg private constructor(
     private val sakRepository: SakRepository,
@@ -78,7 +80,7 @@ class IverksettVedtakSteg private constructor(
 
         mellomlagretVurderingRepository.slett(kontekst.behandlingId)
 
-        lagGysOppgaveHvisRelevant(kontekst)
+        opprettOppfølgingsoppgaveForNavkontorVedSosialRefusjon(kontekst, vedtakstidspunkt.toLocalDate(),virkningstidspunkt)
 
         return Fullført
     }
@@ -105,31 +107,45 @@ class IverksettVedtakSteg private constructor(
             opprettOppfølgingsoppgaveForNavkontorVedSosialRefusjon(kontekst)
         } else {
             log.info("Oppretter ikke gosysoppgave for sak ${kontekst.sakId} og behandling ${kontekst.behandlingId} , da AAP ikke er innvliget ")
+
+
+    private fun harInnvilgelseFraEnTidligereBehandling(behandling: Behandling): Boolean {
+         val forrigeBehandlingId = behandling.forrigeBehandlingId
+        if (forrigeBehandlingId == null) return false
+        val vedtak = vedtakService.hentVedtakForYtelsesbehandling(forrigeBehandlingId) ?: error("Skal eksistere vedtak for behandling ${forrigeBehandlingId}")
+        if (vedtak.virkningstidspunkt != null) return true
+        else {
+            val forrigeBehandling = behandlingRepository.hent(behandlingId = forrigeBehandlingId)
+            return harInnvilgelseFraEnTidligereBehandling(forrigeBehandling)
         }
+
     }
 
-    private fun opprettOppfølgingsoppgaveForNavkontorVedSosialRefusjon(kontekst: FlytKontekstMedPerioder) {
+
+
+     fun opprettOppfølgingsoppgaveForNavkontorVedSosialRefusjon(kontekst: FlytKontekstMedPerioder, vedtaksDato: LocalDate, virkningsDato: LocalDate?) {
+        val denneBehandling = behandlingRepository.hent(behandlingId = kontekst.behandlingId)
+
         val navkontorSosialRefusjon = refusjonkravRepository.hentHvisEksisterer(kontekst.behandlingId) ?: emptyList()
+
         if (navkontorSosialRefusjon.isNotEmpty()) {
-            val forrigeIverksatteSosialRefusjonsVurderinger =
-                kontekst.forrigeBehandlingId?.let { refusjonkravRepository.hentHvisEksisterer(it) } ?: emptyList()
+            val erInnvilgetMedEtterbetaling = virkningsDato != null && virkningsDato < vedtaksDato
+            val tidligereInnvilgelse = harInnvilgelseFraEnTidligereBehandling(denneBehandling)
+            if (!erInnvilgetMedEtterbetaling || tidligereInnvilgelse){
+                log.info("Er allerede $tidligereInnvilgelse")
+                return
+            }
+
 
             val gjeldendeSosialRefusjonDtoer = navkontorSosialRefusjon
                 .filter { it.harKrav && it.navKontor != null }
-                .map { it.tilNavKontorPeriodeDto() }
+                .map { it.tilNavKontorPeriodeDto(virkningsdato = virkningsDato, vedtaksdato = vedtaksDato) }
                 .toSet()
 
-            val forrigeSosialRefusjonDtoer = forrigeIverksatteSosialRefusjonsVurderinger
-                .filter { it.harKrav && it.navKontor != null }
-                .map { it.tilNavKontorPeriodeDto() }
-                .toSet()
-
-            val sosialRefusjonerSomManglerOppgave = gjeldendeSosialRefusjonDtoer - forrigeSosialRefusjonDtoer
-
-            log.info("Fant ${sosialRefusjonerSomManglerOppgave.size} refusjonskrav som mangler oppgave")
+            log.info("Fant ${gjeldendeSosialRefusjonDtoer.size} refusjonskrav som skal få oppgave")
             val aktivIdent = sakRepository.hent(kontekst.sakId).person.aktivIdent()
 
-            opprettGosysOppgaverForSosialrefusjon(sosialRefusjonerSomManglerOppgave, aktivIdent, kontekst)
+            opprettGosysOppgaverForSosialrefusjon(gjeldendeSosialRefusjonDtoer, aktivIdent, kontekst)
         }
     }
 

@@ -23,13 +23,11 @@ class RefusjonkravLøser(
     )
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: RefusjonkravLøsning): LøsningsResultat {
-        val vurderinger = validerRefusjonDatoer(kontekst, løsning).let {
+        val vurderinger = validerKrav(løsning).let {
             it.map { dto ->
                 RefusjonkravVurdering(
                     harKrav = dto.harKrav,
                     navKontor = dto.navKontor,
-                    fom = dto.fom,
-                    tom = dto.tom,
                     vurdertAv = kontekst.bruker.ident
                 )
             }
@@ -43,38 +41,17 @@ class RefusjonkravLøser(
         return Definisjon.REFUSJON_KRAV
     }
 
-    private fun validerRefusjonDatoer(
-        kontekst: AvklaringsbehovKontekst,
+    private fun validerKrav(
         løsning: RefusjonkravLøsning
     ): List<RefusjonkravVurderingDto> {
-        val sak = sakRepository.hent(kontekst.kontekst.sakId)
-        val kravDato = sak.rettighetsperiode.fom
-
-
-        val vedtaksTidspunktDato = vedtakService.vedtakstidspunktFørstegangsbehandling(sak.id)?.toLocalDate()
-
-        println("vedtaksTidspunktDato")
-        println(vedtaksTidspunktDato)
-
-
 
         return løsning.refusjonkravVurderinger.map { vurdering ->
             if (vurdering.harKrav) {
-                val refusjonFomDato = vurdering.fom ?: kravDato
-                val refusjonTomDato = vurdering.tom
                 val navKontor = vurdering.navKontor
-                if (refusjonFomDato.isBefore(kravDato)) {
-                    throw IllegalArgumentException("Refusjonsdato kan ikke være før kravdato. Refusjonsdato: $refusjonFomDato, kravdato: $kravDato")
-                }
-
-                if (refusjonTomDato != null && refusjonFomDato.isAfter(refusjonTomDato)) {
-                    throw IllegalArgumentException("Tom ($refusjonTomDato) er før fom ($refusjonFomDato)")
-                }
-
                 RefusjonkravVurderingDto(
                     harKrav = true,
-                    fom = refusjonFomDato,
-                    tom = vedtaksTidspunktDato?.minusDays(1),
+                    fom = null,
+                    tom = null,
                     navKontor = navKontor
                 )
             } else {
