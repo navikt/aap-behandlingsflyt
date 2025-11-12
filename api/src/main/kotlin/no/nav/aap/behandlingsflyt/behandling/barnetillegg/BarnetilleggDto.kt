@@ -11,6 +11,6 @@ data class BarnetilleggDto(
     val saksbehandlerOppgitteBarn: List<IdentifiserteBarnDto>,
     val vurderteBarn: List<ExtendedVurdertBarnDto>,
     val vurderteFolkeregisterBarn: List<ExtendedVurdertBarnDto>,
-    val vurderteSaksbehandlerOppgitteBarn: List<ExtendedVurdertBarnDto>,
+    val vurderteSaksbehandlerOppgitteBarn: List<SlettbarVurdertBarnDto>,
     val vurdertAv: VurdertAvResponse?
 )

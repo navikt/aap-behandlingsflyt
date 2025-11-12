@@ -51,11 +51,9 @@ fun NormalOpenAPIRoute.barnetilleggApi(
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
 
                     val behandling: Behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
-                    val barnRepository = repositoryProvider.provide<BarnRepository>()
 
                     opprettBarnetilleggDto(
                         behandling,
-                        barnRepository,
                         repositoryProvider,
                         gatewayProvider,
                         ansattInfoService,
@@ -71,12 +69,12 @@ fun NormalOpenAPIRoute.barnetilleggApi(
 
 private fun opprettBarnetilleggDto(
     behandling: Behandling,
-    barnRepository: BarnRepository,
     repositoryProvider: RepositoryProvider,
     gatewayProvider: GatewayProvider,
     ansattInfoService: AnsattInfoService,
     harTilgangTilÅSaksbehandle: Boolean
 ): BarnetilleggDto {
+    val barnRepository = repositoryProvider.provide<BarnRepository>()
     val barnetilleggService = BarnetilleggService(repositoryProvider, gatewayProvider)
     val barnetilleggTidslinje = barnetilleggService.beregn(behandling.id)
     val barnGrunnlag = barnRepository.hentHvisEksisterer(behandling.id)
@@ -95,7 +93,8 @@ private fun opprettBarnetilleggDto(
 
     val oppgitteBarn = barnGrunnlag?.oppgitteBarn?.oppgitteBarn.orEmpty()
     val vurderteFolkeregisterBarnDto = filtrerFolkeregisterBarn(vurderteBarnDto, folkeregister)
-    val vurderteSaksbehandlerOppgittBarnDto = filtrerSaksbehandlerOppgittBarn(vurderteBarnDto, saksbehandlerOppgittBarn)
+    val vurderteSaksbehandlerOppgittBarnDto =
+        filtrerSaksbehandlerOppgittBarn(vurderteBarnDto, saksbehandlerOppgittBarn, barnRepository, behandling)
     val vurderteOppgittBarnDto = filtrerOppgitteBarn(vurderteBarnDto, oppgitteBarn)
 
     return BarnetilleggDto(
@@ -129,19 +128,39 @@ private fun filtrerFolkeregisterBarn(
 
 private fun filtrerSaksbehandlerOppgittBarn(
     vurderteBarn: List<ExtendedVurdertBarnDto>,
-    saksbehandlerOppgittBarn: List<SaksbehandlerOppgitteBarn.Barn>
-): List<ExtendedVurdertBarnDto> = vurderteBarn.filter { barn ->
-    barn.ident?.let { ident ->
-        saksbehandlerOppgittBarn.any {
-            when (val identifikator = it.identifikator()) {
-                is BarnIdent -> identifikator.er(BarnIdent(ident))
-                else -> false
-            }
+    saksbehandlerOppgittBarn: List<SaksbehandlerOppgitteBarn.Barn>,
+    barnRepository: BarnRepository,
+    behandling: Behandling
+): List<SlettbarVurdertBarnDto> {
+    val nyeBarnIDenneBehandling = barnRepository.hentNyeSaksbehandlerOppgitteBarnFor(behandling)
+    val filtrerteSaksbehandlerOppgittBarn = vurderteBarn.filter { vurdertBarn ->
+        saksbehandlerOppgittBarn.any { saksbehandlerBarn ->
+            matcherBarn(vurdertBarn, saksbehandlerBarn)
         }
-    } ?: run {
-        // Barn uten ident - match på navn og fødselsdato. Fødselsdato og navn er påkrevd og er aldri null for saksbehandleroppgitte barn.
-        saksbehandlerOppgittBarn.any { it.navn == barn.navn && it.fødselsdato?.toLocalDate() == barn.fødselsdato }
     }
+
+    return filtrerteSaksbehandlerOppgittBarn.map { vurdertBarn ->
+        val erNyttBarn = nyeBarnIDenneBehandling.any { nyttBarn ->
+            matcherBarn(vurdertBarn, nyttBarn)
+        }
+        SlettbarVurdertBarnDto(
+            vurdertBarn = vurdertBarn,
+            erSlettbar = erNyttBarn
+        )
+    }
+}
+
+private fun matcherBarn(
+    vurdertBarn: ExtendedVurdertBarnDto,
+    saksbehandlerBarn: SaksbehandlerOppgitteBarn.Barn
+): Boolean {
+    return vurdertBarn.ident?.let { ident ->
+        when (val identifikator = saksbehandlerBarn.identifikator()) {
+            is BarnIdent -> identifikator.er(BarnIdent(ident))
+            else -> false
+        }
+    } ?: (saksbehandlerBarn.navn == vurdertBarn.navn &&
+            saksbehandlerBarn.fødselsdato.toLocalDate() == vurdertBarn.fødselsdato)
 }
 
 private fun filtrerOppgitteBarn(
@@ -199,7 +218,8 @@ fun hentBarn(ident: BarnIdentifikator, barnGrunnlag: BarnGrunnlag?): Identifiser
 private fun hentBarnMedIdent(ident: BarnIdent, barnGrunnlag: BarnGrunnlag?): IdentifiserteBarnDto {
     val registerBarn = barnGrunnlag?.registerbarn?.barn?.singleOrNull { it.ident == ident }
     val oppgittBarn = barnGrunnlag?.oppgitteBarn?.oppgitteBarn?.singleOrNull { it.ident == ident.ident }
-    val saksbehandlerOppgittBarn = barnGrunnlag?.saksbehandlerOppgitteBarn?.barn?.singleOrNull { it.ident == ident.ident }
+    val saksbehandlerOppgittBarn =
+        barnGrunnlag?.saksbehandlerOppgitteBarn?.barn?.singleOrNull { it.ident == ident.ident }
 
     validerBarnData(registerBarn, oppgittBarn, saksbehandlerOppgittBarn, ident)
 

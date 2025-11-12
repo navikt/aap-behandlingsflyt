@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.SaksbehandlerOppgi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.VurderteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import java.time.LocalDateTime
@@ -115,6 +116,10 @@ object InMemoryBarnRepository : BarnRepository {
     }
 
     override fun deaktiverAlleSaksbehandlerOppgitteBarn(behandlingId: BehandlingId) {
+        TODO("Not yet implemented")
+    }
+
+    override fun hentNyeSaksbehandlerOppgitteBarnFor(behandling: Behandling): List<SaksbehandlerOppgitteBarn.Barn> {
         TODO("Not yet implemented")
     }
 
