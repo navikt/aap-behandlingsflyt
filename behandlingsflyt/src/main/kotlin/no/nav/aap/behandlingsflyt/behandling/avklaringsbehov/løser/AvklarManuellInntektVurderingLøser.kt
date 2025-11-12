@@ -13,6 +13,7 @@ import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.math.BigDecimal
+import java.time.Year
 
 class AvklarManuellInntektVurderingLøser(
     private val manuellInntektGrunnlagRepository: ManuellInntektGrunnlagRepository,
@@ -43,7 +44,7 @@ class AvklarManuellInntektVurderingLøser(
                     begrunnelse = begrunnelse,
                     belop = vurdering.belop.let(::Beløp),
                     vurdertAv = kontekst.bruker.ident,
-                    år = vurdering.ar,
+                    år = Year.of(vurdering.ar),
                     aarsak = løsning.manuellVurderingForManglendeInntekt.aarsak
                 )
             }.toSet()

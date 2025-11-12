@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning
 
 import java.math.BigDecimal
-import java.time.Year
 
 data class ManuellInntektVurderingDto(
     val begrunnelse: String,
@@ -12,7 +11,7 @@ data class ManuellInntektVurderingDto(
 
 data class AarsVurdering(
     val belop: BigDecimal,
-    val ar: Year
+    val ar: Int
 )
 
 enum class ÅrsakTilManuellInntektVurdering {

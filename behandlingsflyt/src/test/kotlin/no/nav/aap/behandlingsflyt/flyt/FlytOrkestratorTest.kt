@@ -2942,15 +2942,15 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                         belop = BigDecimal(300000),
                         vurderinger = listOf(
                             AarsVurdering(
-                                ar = Year.now().minusYears(1),
+                                ar = Year.now().minusYears(1).value,
                                 belop = BigDecimal(300000),
                             ),
                             AarsVurdering(
-                                ar = Year.now().minusYears(2),
+                                ar = Year.now().minusYears(2).value,
                                 belop = BigDecimal(400000),
                             ),
                             AarsVurdering(
-                                ar = Year.now().minusYears(3),
+                                ar = Year.now().minusYears(3).value,
                                 belop = BigDecimal(500000),
                             ),
                         )
