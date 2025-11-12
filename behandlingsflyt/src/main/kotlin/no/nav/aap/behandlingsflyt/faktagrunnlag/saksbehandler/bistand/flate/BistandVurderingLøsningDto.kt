@@ -15,7 +15,7 @@ data class BistandVurderingLøsningDto(
     val skalVurdereAapIOvergangTilUføre: Boolean?,
     val skalVurdereAapIOvergangTilArbeid: Boolean?,
 ) {
-    fun tilBistandVurdering(bruker: Bruker, vurderingenGjelderFra: LocalDate?, vurdertIBehandling: BehandlingId) = BistandVurdering(
+    fun tilBistandVurdering(bruker: Bruker, vurderingenGjelderFra: LocalDate, vurdertIBehandling: BehandlingId) = BistandVurdering(
         begrunnelse = begrunnelse,
         erBehovForAktivBehandling = erBehovForAktivBehandling,
         erBehovForArbeidsrettetTiltak = erBehovForArbeidsrettetTiltak,
