@@ -176,16 +176,6 @@ internal fun IdentType.tilOversendtPartIdType(): OversendtPartIdType {
     }
 }
 
-enum class MottakDokumentType {
-    BRUKERS_SOEKNAD,
-    OPPRINNELIG_VEDTAK,
-    BRUKERS_KLAGE,
-    BRUKERS_ANKE,
-    OVERSENDELSESBREV,
-    KLAGE_VEDTAK,
-    ANNET,
-}
-
 enum class Fagsystem {
     KELVIN,
     AO01 // Arena

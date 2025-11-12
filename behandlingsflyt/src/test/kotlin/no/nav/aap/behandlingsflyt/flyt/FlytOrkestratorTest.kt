@@ -13,11 +13,9 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvbrytRevu
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBarnetilleggLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarForutgåendeMedlemskapLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarLovvalgMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarManuellInntektVurderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOverstyrtForutgåendeMedlemskapLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOverstyrtLovvalgMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeriodisertLovvalgMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningUføreLøsning
@@ -78,10 +76,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.kontor.Kla
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.KlagevurderingNayLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetVedtakType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøknadsTidspunktDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskapDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskapDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedSøknadsTidspunktDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForLovvalgMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGrunnlag
@@ -984,7 +981,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             assertTrue(åpneAvklaringsbehov.all { Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP == it.definisjon })
         }
             // Løs lovvalg
-            .løsLovvalg()
+            .løsLovvalg(periode.fom)
             .medKontekst {
                 assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .containsExactly(Definisjon.AVKLAR_SYKDOM)
@@ -1015,7 +1012,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         )
 
         behandling
-            .løsLovvalg()
+            .løsLovvalg(periode.fom)
             // Løs fram til forutgående
             .løsFramTilForutgåendeMedlemskap()
             .medKontekst {
@@ -1755,20 +1752,13 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
 
     @Test
     fun `ved førstegangsbehandling med avslag før sykdom ved manglende medlemskap er ikke sykdomsvurdering for brev aktuelt`() {
-        val (_, behandling) = sendInnFørsteSøknad(
+        val (sak, behandling) = sendInnFørsteSøknad(
             periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3)),
             søknad = TestSøknader.SØKNAD_INGEN_MEDLEMSKAP
         )
 
         val oppdatertBehandling = behandling
-            .løsAvklaringsBehov(
-                AvklarLovvalgMedlemskapLøsning(
-                    manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskapDto(
-                        LovvalgVedSøknadsTidspunktDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
-                        MedlemskapVedSøknadsTidspunktDto("begrunnelse", false)
-                    )
-                )
-            )
+            .løsLovvalg(sak.rettighetsperiode.fom, false)
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
             .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_AVSLAG)
@@ -1778,17 +1768,22 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
 
     @Test
     fun `ved førstegangsbehandling og annet lovvalgsland settes saken på vent`() {
-        val (_, behandling) = sendInnFørsteSøknad(
+        val (sak, behandling) = sendInnFørsteSøknad(
             periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3)),
             søknad = TestSøknader.SØKNAD_INGEN_MEDLEMSKAP
         )
 
         val oppdatertBehandling = behandling
             .løsAvklaringsBehov(
-                AvklarLovvalgMedlemskapLøsning(
-                    manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskapDto(
-                        lovvalgVedSøknadsTidspunkt = LovvalgVedSøknadsTidspunktDto("begrunnelse", EØSLandEllerLandMedAvtale.ESP),
-                        medlemskapVedSøknadsTidspunkt = null,
+                AvklarPeriodisertLovvalgMedlemskapLøsning(
+                    løsningerForPerioder = listOf(
+                        PeriodisertManuellVurderingForLovvalgMedlemskapDto(
+                            fom = sak.rettighetsperiode.fom,
+                            tom = null,
+                            begrunnelse = "",
+                            lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.ESP),
+                            medlemskap = null
+                        )
                     )
                 )
             )
@@ -1807,14 +1802,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         )
 
         val oppdatertBehandling = revurdering
-            .løsAvklaringsBehov(
-                AvklarLovvalgMedlemskapLøsning(
-                    manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskapDto(
-                        LovvalgVedSøknadsTidspunktDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
-                        MedlemskapVedSøknadsTidspunktDto("begrunnelse", false)
-                    )
-                )
-            )
+            .løsLovvalg(sak.rettighetsperiode.fom, false)
             .løsUtenSamordning()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
@@ -1835,15 +1823,15 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                             fom = sak.rettighetsperiode.fom,
                             tom = sak.rettighetsperiode.fom.plusMonths(2),
                             begrunnelse = "",
-                            lovvalg = LovvalgVedSøknadsTidspunktDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
-                            medlemskap = MedlemskapVedSøknadsTidspunktDto("begrunnelse", false)
+                            lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
+                            medlemskap = MedlemskapDto("begrunnelse", false)
                         ),
                         PeriodisertManuellVurderingForLovvalgMedlemskapDto(
                             fom = sak.rettighetsperiode.fom.plusMonths(2).plusDays(1),
                             tom = null,
                             begrunnelse = "",
-                            lovvalg = LovvalgVedSøknadsTidspunktDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
-                            medlemskap = MedlemskapVedSøknadsTidspunktDto("begrunnelse", true)
+                            lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
+                            medlemskap = MedlemskapDto("begrunnelse", true)
                         )
                     )
                 )
@@ -1880,15 +1868,15 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                             fom = sak.rettighetsperiode.fom,
                             tom = sak.rettighetsperiode.fom.plusMonths(2),
                             begrunnelse = "",
-                            lovvalg = LovvalgVedSøknadsTidspunktDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
-                            medlemskap = MedlemskapVedSøknadsTidspunktDto("begrunnelse", false)
+                            lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
+                            medlemskap = MedlemskapDto("begrunnelse", false)
                         ),
                         PeriodisertManuellVurderingForLovvalgMedlemskapDto(
                             fom = sak.rettighetsperiode.fom.plusMonths(2).plusDays(1),
                             tom = null,
                             begrunnelse = "",
-                            lovvalg = LovvalgVedSøknadsTidspunktDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
-                            medlemskap = MedlemskapVedSøknadsTidspunktDto("begrunnelse", true)
+                            lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
+                            medlemskap = MedlemskapDto("begrunnelse", true)
                         )
                     )
                 )
@@ -1919,8 +1907,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                             fom = sak.rettighetsperiode.fom.plusMonths(1).plusDays(1),
                             tom = null,
                             begrunnelse = "",
-                            lovvalg = LovvalgVedSøknadsTidspunktDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
-                            medlemskap = MedlemskapVedSøknadsTidspunktDto("begrunnelse", true)
+                            lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
+                            medlemskap = MedlemskapDto("begrunnelse", true)
                         )
                     )
                 )
@@ -1954,8 +1942,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                             fom = sak.rettighetsperiode.fom,
                             tom = null,
                             begrunnelse = "",
-                            lovvalg = LovvalgVedSøknadsTidspunktDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
-                            medlemskap = MedlemskapVedSøknadsTidspunktDto("begrunnelse", true)
+                            lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
+                            medlemskap = MedlemskapDto("begrunnelse", true)
                         )
                     )
                 )
@@ -1991,8 +1979,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                             fom = nyStartDato,
                             tom = null,
                             begrunnelse = "",
-                            lovvalg = LovvalgVedSøknadsTidspunktDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
-                            medlemskap = MedlemskapVedSøknadsTidspunktDto("begrunnelse", true)
+                            lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
+                            medlemskap = MedlemskapDto("begrunnelse", true)
                         )
                     )
                 )
@@ -2684,16 +2672,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         assertTrue(åpneAvklaringsbehov.all { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP })
 
         // Trigger manuell vurdering
-        behandling = løsAvklaringsBehov(
-            behandling,
-            AvklarLovvalgMedlemskapLøsning(
-                manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskapDto(
-                    LovvalgVedSøknadsTidspunktDto("crazy lovvalgsland vurdering", null),
-                    MedlemskapVedSøknadsTidspunktDto("crazy medlemskap vurdering", true)
-                ),
-                behovstype = AvklaringsbehovKode.`5017`
-            )
-        )
+        behandling = behandling.løsLovvalg(periode.fom)
 
         // Validér riktig resultat
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
@@ -2733,14 +2712,21 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         assertTrue(åpneAvklaringsbehov.all { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP })
 
         // Trigger manuell vurdering
-        behandling = løsAvklaringsBehov(
-            behandling, AvklarLovvalgMedlemskapLøsning(
-                manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskapDto(
-                    LovvalgVedSøknadsTidspunktDto("crazy lovvalgsland vurdering", EØSLandEllerLandMedAvtale.DNK),
-                    MedlemskapVedSøknadsTidspunktDto(null, null)
+        behandling = behandling
+            .løsAvklaringsBehov(
+                AvklarPeriodisertLovvalgMedlemskapLøsning(
+                    løsningerForPerioder = listOf(
+                        PeriodisertManuellVurderingForLovvalgMedlemskapDto(
+                            fom = periode.fom,
+                            tom = null,
+                            begrunnelse = "",
+                            lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.DNK),
+                            medlemskap = null
+                        )
+                    )
                 )
-            )
         )
+
         // Validér riktig resultat
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
         val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
@@ -2779,14 +2765,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         assertTrue(åpneAvklaringsbehov.all { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP })
 
         // Trigger manuell vurdering
-        behandling = løsAvklaringsBehov(
-            behandling, AvklarLovvalgMedlemskapLøsning(
-                manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskapDto(
-                    LovvalgVedSøknadsTidspunktDto("crazy lovvalgsland vurdering", EØSLandEllerLandMedAvtale.NOR),
-                    MedlemskapVedSøknadsTidspunktDto("crazy medlemskap vurdering", false)
-                )
-            )
-        )
+        behandling = behandling.løsLovvalg(periode.fom, false)
 
         // Validér avklaring
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
@@ -2852,14 +2831,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null)
             )
         )
-            .løsAvklaringsBehov(
-                AvklarOverstyrtLovvalgMedlemskapLøsning(
-                    manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskapDto(
-                        LovvalgVedSøknadsTidspunktDto("crazy lovvalgsland vurdering", EØSLandEllerLandMedAvtale.NOR),
-                        MedlemskapVedSøknadsTidspunktDto("crazy medlemskap vurdering", false)
-                    )
-                )
-            )
+            .løsLovvalgOverstyrt(periode.fom, false)
             .medKontekst {
                 assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .doesNotContain(Definisjon.MANUELL_OVERSTYRING_LOVVALG)
@@ -2883,14 +2855,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null)
             )
-        ).løsAvklaringsBehov(
-            AvklarOverstyrtLovvalgMedlemskapLøsning(
-                manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskapDto(
-                    LovvalgVedSøknadsTidspunktDto("crazy lovvalgsland vurdering", EØSLandEllerLandMedAvtale.NOR),
-                    MedlemskapVedSøknadsTidspunktDto("crazy medlemskap vurdering", true)
-                )
-            )
-        )
+        ).løsLovvalgOverstyrt(periode.fom, true)
 
         // Validér avklaring
         val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
@@ -3036,14 +3001,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 .containsOnly(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
         }
             // Trigger manuell vurdering
-            .løsAvklaringsBehov(
-                AvklarLovvalgMedlemskapLøsning(
-                    manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskapDto(
-                        LovvalgVedSøknadsTidspunktDto("crazy lovvalgsland vurdering", EØSLandEllerLandMedAvtale.NOR),
-                        MedlemskapVedSøknadsTidspunktDto(null, true)
-                    )
-                )
-            )
+            .løsLovvalg(periode.fom)
             .medKontekst {
                 assertThat(åpneAvklaringsbehov)
                     .extracting<Definisjon> { it.definisjon }

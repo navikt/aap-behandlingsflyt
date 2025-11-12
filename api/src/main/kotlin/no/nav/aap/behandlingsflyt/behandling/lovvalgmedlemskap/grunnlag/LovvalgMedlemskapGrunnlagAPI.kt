@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.tilTidslinje
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
@@ -22,49 +21,14 @@ import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
-import kotlin.collections.map
 
 fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagAPI(
     dataSource: DataSource,
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,
 ) {
-    val ansattInfoService = AnsattInfoService(gatewayProvider)
-
-
     route("/api/behandling") {
         route("/{referanse}/grunnlag/lovvalgmedlemskap") {
-            getGrunnlag<BehandlingReferanse, LovvalgMedlemskapGrunnlagResponse>(
-                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
-                behandlingPathParam = BehandlingPathParam("referanse"),
-                avklaringsbehovKode = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP.kode.toString()
-            ) { req ->
-                val grunnlag =
-                    dataSource.transaction { connection ->
-                        val repositoryProvider = repositoryRegistry.provider(connection)
-                        val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                        val lovvalgMedlemskapRepository =
-                            repositoryProvider
-                                .provide<MedlemskapArbeidInntektRepository>()
-                        val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
-
-                        val gjeldendeManuellVurdering =
-                            lovvalgMedlemskapRepository.hentHvisEksisterer(behandling.id)?.vurderinger?.firstOrNull()
-                        val historiskeManuelleVurderinger =
-                            lovvalgMedlemskapRepository.hentHistoriskeVurderinger(behandling.sakId, behandling.id)
-                        val ansattNavnOgEnhet = gjeldendeManuellVurdering?.let { ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv)}
-
-                        LovvalgMedlemskapGrunnlagResponse(
-                            kanSaksbehandle(),
-                            gjeldendeManuellVurdering?.toResponse(ansattNavnOgEnhet),
-                            historiskeManuelleVurderinger.map { it.toResponse() }
-                        )
-                    }
-                respond(grunnlag)
-            }
-        }
-
-        route("/{referanse}/grunnlag/lovvalgmedlemskap-v2") {
             getGrunnlag<BehandlingReferanse, PeriodisertLovvalgMedlemskapGrunnlagResponse>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
@@ -84,7 +48,8 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagAPI(
 
                         val grunnlag = lovvalgMedlemskapRepository.hentHvisEksisterer(behandling.id)
                         val nyeVurderinger = grunnlag?.vurderinger?.filter { it.vurdertIBehandling == behandling.id }
-                        val gjeldendeVedtatteVurderinger = grunnlag?.vurderinger?.filter { it.vurdertIBehandling != behandling.id }?.tilTidslinje() ?: Tidslinje()
+                        val gjeldendeVedtatteVurderinger =
+                            grunnlag?.vurderinger?.filter { it.vurdertIBehandling != behandling.id }?.tilTidslinje() ?: Tidslinje()
 
                         val behøverVurderinger =
                             if (gjeldendeVedtatteVurderinger.isEmpty()) listOf(sak.rettighetsperiode)

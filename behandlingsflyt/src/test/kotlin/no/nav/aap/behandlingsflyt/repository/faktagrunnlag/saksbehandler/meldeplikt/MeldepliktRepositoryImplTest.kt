@@ -223,6 +223,31 @@ class MeldepliktRepositoryImplTest {
     }
 
     @Test
+    fun `Lagrer nye fritaksvurderinger skal deaktivere forrige grunnlag selv om den ikke har noen vurderinger`() {
+        dataSource.transaction { connection ->
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            val meldepliktRepository = MeldepliktRepositoryImpl(connection)
+
+            val fritaksvurdering = Fritaksvurdering(true, 13 august 2023, "en begrunnelse", "saksbehandler", null)
+
+            meldepliktRepository.lagre(
+                behandling.id,
+                emptyList()
+            )
+
+            meldepliktRepository.lagre(
+                behandling.id,
+                listOf(fritaksvurdering)
+            )
+
+            val oppdatertGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling.id)
+            assertThat(oppdatertGrunnlag?.vurderinger).hasSize(1)
+            assertThat(oppdatertGrunnlag?.vurderinger?.first()?.harFritak).isTrue()
+        }
+    }
+
+    @Test
     fun `Ved kopiering av fritaksvurderinger fra en avsluttet behandling til en ny skal kun referansen kopieres, ikke hele raden`() {
         dataSource.transaction { connection ->
             val sak = sak(connection)
