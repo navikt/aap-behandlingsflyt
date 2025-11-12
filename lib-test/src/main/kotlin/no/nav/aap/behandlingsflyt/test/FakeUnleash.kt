@@ -29,3 +29,18 @@ object FakeUnleash : FakeUnleashBase(
         BehandlingsflytFeature.NyBeregningAvklarFaktaSteg to true,
     )
 )
+
+object LokalUnleash : FakeUnleashBase(
+    mapOf(
+        BehandlingsflytFeature.IngenValidering to true,
+        BehandlingsflytFeature.NyBrevtype11_17 to true,
+        BehandlingsflytFeature.NyBrevtype11_18 to true,
+        BehandlingsflytFeature.Aktivitetsplikt11_9 to true,
+        BehandlingsflytFeature.OverforingsdatoNullForAvregning to true,
+        BehandlingsflytFeature.OvergangArbeid to true,
+        BehandlingsflytFeature.AvklaringsbehovServiceFormkrav to true,
+        BehandlingsflytFeature.KvalitetssikringsSteg to true,
+        BehandlingsflytFeature.FatteVedtakAvklaringsbehovService to true,
+        BehandlingsflytFeature.NyBeregningAvklarFaktaSteg to true,
+    )
+)
