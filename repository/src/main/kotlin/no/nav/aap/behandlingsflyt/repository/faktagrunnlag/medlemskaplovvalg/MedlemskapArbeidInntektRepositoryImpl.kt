@@ -513,7 +513,8 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
             delete from INNTEKT_I_NORGE where inntekter_i_norge_id = ANY(?::bigint[]);     
             delete from ARBEID where arbeider_id = ANY(?::bigint[]);
             delete from ARBEIDER where id = ANY(?::bigint[]);    
-            delete from LOVVALG_MEDLEMSKAP_MANUELL_VURDERING where id = ANY(?::bigint[]);
+            delete from LOVVALG_MEDLEMSKAP_MANUELL_VURDERING where vurderinger_id = ANY(?::bigint[]);
+            delete from LOVVALG_MEDLEMSKAP_MANUELL_VURDERINGER where id = ANY(?::bigint[]);
             delete from UTENLANDS_PERIODE where oppgitt_utenlandsopphold_id = ANY(?::bigint[]);
             delete from OPPGITT_UTENLANDSOPPHOLD_GRUNNLAG where behandling_id = ?; 
             delete from OPPGITT_UTENLANDSOPPHOLD where id = ANY(?::bigint[]); 
@@ -526,10 +527,11 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 setLongArray(3, arbeidIds)
                 setLongArray(4, arbeiderIds)
                 setLongArray(5, lovvalgMedlemsskapManuellVurderingIds)
-                setLongArray(6, utenlandsOppholdIds)
-                setLong(7, behandlingId.id)
-                setLongArray(8, utenlandsOppholdIds)
-                setLongArray(9, inntektINorgeIds)
+                setLongArray(6, lovvalgMedlemsskapManuellVurderingIds)
+                setLongArray(7, utenlandsOppholdIds)
+                setLong(8, behandlingId.id)
+                setLongArray(9, utenlandsOppholdIds)
+                setLongArray(10, inntektINorgeIds)
             }
         }
         log.info("Slettet $deletedRows rader fra MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG")
@@ -537,15 +539,15 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
 
     private fun getLovvalgMedlemsskapManuellVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
         """
-                    SELECT manuell_vurdering_id
+                    SELECT vurderinger_id
                     FROM MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG
-                    WHERE behandling_id = ? AND manuell_vurdering_id is not null
+                    WHERE behandling_id = ? AND vurderinger_id is not null
                  
                 """.trimIndent()
     ) {
         setParams { setLong(1, behandlingId.id) }
         setRowMapper { row ->
-            row.getLong("manuell_vurdering_id")
+            row.getLong("vurderinger_id")
         }
     }
 
