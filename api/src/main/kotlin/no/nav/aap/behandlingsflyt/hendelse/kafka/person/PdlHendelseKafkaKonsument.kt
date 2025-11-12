@@ -106,34 +106,34 @@ class PdlHendelseKafkaKonsument(
                             Dødsfalltype.DODSFALL_BRUKER
                         )
                     }
-                }
-                
-                val behandlingIds = barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForBarn(funnetIdent!!)
-                log.info("Sjekker mottatt hendelse for barn $behandlingIds")
-                behandlingIds
-                    .map { behandlingRepository.hent(it) }
-                    .map { it.sakId }
-                    .distinct()
-                    .map { sakRepository.hent(it) }
-                    .forEach { sak ->
-                        val behandlingMedSistFattedeVedtak =
-                            sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId = sak.id)
-                        val sisteOpprettedeBehandling = behandlingRepository.finnSisteOpprettedeBehandlingFor(
-                            sak.id,
-                            listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)
-                        )
-                        log.info("Registrerer mottatt hendelse på barn for ${sak.saksnummer}")
-                        sendDødsHendelseHvisRelevant(
-                            behandlingMedSistFattedeVedtak,
-                            underveisRepository,
-                            personHendelse,
-                            sak,
-                            hendelseService,
-                            sisteOpprettedeBehandling,
-                            Dødsfalltype.DODSFALL_BARN
-                        )
-                    }
 
+                    val behandlingIds = barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForBarn(funnetIdent!!)
+                    log.info("Sjekker mottatt hendelse for barn $behandlingIds")
+                    behandlingIds
+                        .map { behandlingRepository.hent(it) }
+                        .map { it.sakId }
+                        .distinct()
+                        .map { sakRepository.hent(it) }
+                        .forEach { sak ->
+                            val behandlingMedSistFattedeVedtak =
+                                sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId = sak.id)
+                            val sisteOpprettedeBehandling = behandlingRepository.finnSisteOpprettedeBehandlingFor(
+                                sak.id,
+                                listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)
+                            )
+                            log.info("Registrerer mottatt hendelse på barn for ${sak.saksnummer}")
+                            sendDødsHendelseHvisRelevant(
+                                behandlingMedSistFattedeVedtak,
+                                underveisRepository,
+                                personHendelse,
+                                sak,
+                                hendelseService,
+                                sisteOpprettedeBehandling,
+                                Dødsfalltype.DODSFALL_BARN
+                            )
+                        }
+
+                }
 
             } else {
                 log.info("Ignorerer hendelse med ${personHendelse.opplysningstype} og ${personHendelse.endringstype}")
@@ -187,7 +187,6 @@ class PdlHendelseKafkaKonsument(
                         personHendelse.tilInnsendingDødsfallBruker(sak.saksnummer)
                     )
                 }
-
                 Dødsfalltype.DODSFALL_BARN -> {
                     log.info("Registrerer mottatt hendelse fordi dødsfall på barn. Bruker har ingen iverksatte vedtak ${sak.saksnummer}")
                     hendelseService.registrerMottattHendelse(
