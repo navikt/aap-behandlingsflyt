@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.EnhetGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapArbeidInntektGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.HistoriskManuellVurderingForLovvalgMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
@@ -16,7 +15,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemM
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.Unntak
-import no.nav.aap.behandlingsflyt.historiskevurderinger.ÅpenPeriodeDto
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -26,7 +24,6 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.slf4j.LoggerFactory
-import java.time.LocalDateTime
 
 class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection) : MedlemskapArbeidInntektRepository {
 
@@ -75,20 +72,12 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
             deaktiverGrunnlag(behandlingId)
         }
 
-        var vurderingerId: Long? = null
-        var manuellVurderingId: Long? = null
-
-        if (vurderinger.isNotEmpty()) {
-            vurderingerId = lagreVurderinger(vurderinger)
-
-            // TODO henter ut manuell id for lagring i grunnlag inntil vi har kjørt migrering - gir kun mening hvis det er én vurdering
-            manuellVurderingId = if (vurderinger.size == 1) hentVurderinger(vurderingerId).first().id else null
-        }
+        val vurderingerId = if (vurderinger.isNotEmpty()) lagreVurderinger(vurderinger) else null
 
         val grunnlagQuery = """
             INSERT INTO MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG 
-            (behandling_id, arbeider_id, inntekter_i_norge_id, medlemskap_unntak_person_id, manuell_vurdering_id, vurderinger_id) 
-            VALUES (?, ?, ?, ?, ?, ?)
+            (behandling_id, arbeider_id, inntekter_i_norge_id, medlemskap_unntak_person_id, vurderinger_id) 
+            VALUES (?, ?, ?, ?, ?)
         """.trimIndent()
 
         connection.execute(grunnlagQuery) {
@@ -97,8 +86,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 setLong(2, grunnlagOppslag?.arbeiderId)
                 setLong(3, grunnlagOppslag?.inntektINorgeId)
                 setLong(4, grunnlagOppslag?.medlId)
-                setLong(5, manuellVurderingId)
-                setLong(6, vurderingerId)
+                setLong(5, vurderingerId)
             }
             setResultValidator { require(it == 1) }
         }
@@ -130,7 +118,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 setBoolean(7, overstyrt)
                 setString(8, manuellVurdering.vurdertAv)
                 setLocalDateTime(9, manuellVurdering.vurdertDato)
-                setLong(10, manuellVurdering.vurdertIBehandling?.toLong())
+                setLong(10, manuellVurdering.vurdertIBehandling.toLong())
                 setLong(11, vurderingerId)
             }
         }
@@ -155,7 +143,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         val inntekterINorgeId = lagreArbeidsInntektGrunnlag(inntektGrunnlag, enhetGrunnlag)
 
         val grunnlagQuery = """
-            INSERT INTO MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG (behandling_id, arbeider_id, inntekter_i_norge_id, medlemskap_unntak_person_id, manuell_vurdering_id, vurderinger_id) VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG (behandling_id, arbeider_id, inntekter_i_norge_id, medlemskap_unntak_person_id, vurderinger_id) VALUES (?, ?, ?, ?, ?)
         """.trimIndent()
         connection.execute(grunnlagQuery) {
             setParams {
@@ -163,48 +151,8 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 setLong(2, arbeiderId)
                 setLong(3, inntekterINorgeId)
                 setLong(4, medlId)
-                setLong(5, grunnlagOppslag?.manuellVurderingId)
-                setLong(6, grunnlagOppslag?.vurderingerId)
+                setLong(5, grunnlagOppslag?.vurderingerId)
             }
-        }
-    }
-
-    override fun hentHistoriskeVurderinger(
-        sakId: SakId,
-        behandlingId: BehandlingId
-    ): List<HistoriskManuellVurderingForLovvalgMedlemskap> {
-        val query = """
-            SELECT vurdering.*
-            FROM MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG grunnlag
-            INNER JOIN LOVVALG_MEDLEMSKAP_MANUELL_VURDERING vurdering ON grunnlag.MANUELL_VURDERING_ID = vurdering.ID
-            JOIN BEHANDLING behandling ON grunnlag.BEHANDLING_ID = behandling.ID
-            LEFT JOIN AVBRYT_REVURDERING_GRUNNLAG ar ON ar.BEHANDLING_ID = behandling.ID
-            WHERE grunnlag.AKTIV AND behandling.SAK_ID = ? 
-                AND behandling.opprettet_tid < (SELECT a.opprettet_tid from behandling a where a.id = ?)
-                AND ar.BEHANDLING_ID IS NULL
-        """.trimIndent()
-
-        val vurderinger = connection.queryList(query) {
-            setParams {
-                setLong(1, sakId.id)
-                setLong(2, behandlingId.id)
-            }
-            setRowMapper {
-                InternalHistoriskManuellVurderingForLovvalgMedlemskap(
-                    manuellVurdering = mapManuellVurderingForLovvalgMedlemskap(it),
-                    vurdertDato = it.getLocalDateTime("opprettet_tid")
-                )
-            }
-        }.sortedBy { it.vurdertDato }
-
-        return vurderinger.map {
-            HistoriskManuellVurderingForLovvalgMedlemskap(
-                it.vurdertDato.toLocalDate(),
-                it.manuellVurdering.vurdertAv,
-                erGjeldendeVurdering = it == vurderinger.last(),
-                periode = ÅpenPeriodeDto(it.vurdertDato.toLocalDate()),
-                vurdering = it.manuellVurdering
-            )
         }
     }
 
@@ -507,7 +455,6 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                     it.getLongOrNull("medlemskap_unntak_person_id"),
                     it.getLongOrNull("inntekter_i_norge_id"),
                     it.getLongOrNull("arbeider_id"),
-                    it.getLongOrNull("manuell_vurdering_id"),
                     it.getLongOrNull("vurderinger_id")
                 )
             }
@@ -694,7 +641,6 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
             overstyrt = row.getBoolean("overstyrt"),
             vurdertAv = row.getString("vurdert_av"),
             vurdertDato = row.getLocalDateTime("opprettet_tid"),
-            id = row.getLongOrNull("id"),
             fom = row.getLocalDate("fom"),
             tom = row.getLocalDateOrNull("tom"),
             vurdertIBehandling = row.getLong("vurdert_i_behandling").let { BehandlingId(it) }
@@ -704,12 +650,6 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         val medlId: Long?,
         val inntektINorgeId: Long?,
         val arbeiderId: Long?,
-        val manuellVurderingId: Long?,
         val vurderingerId: Long?
-    )
-
-    internal data class InternalHistoriskManuellVurderingForLovvalgMedlemskap(
-        val manuellVurdering: ManuellVurderingForLovvalgMedlemskap,
-        val vurdertDato: LocalDateTime
     )
 }

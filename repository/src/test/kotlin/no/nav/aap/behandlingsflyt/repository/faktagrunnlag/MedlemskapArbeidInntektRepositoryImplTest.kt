@@ -81,44 +81,6 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
     }
 
     @Test
-    fun henterRelaterteHistoriskeVurderinger() {
-        // Førstegangsbehandling
-        val behandling = dataSource.transaction { connection ->
-            val repo = MedlemskapArbeidInntektRepositoryImpl(connection)
-            val sak = opprettSak(connection, periode)
-            val behandling = finnEllerOpprettBehandling(connection, sak)
-
-            lagNyFullVurdering(behandling.id, periode, repo, "Første begrunnelse")
-
-            val historikk = repo.hentHistoriskeVurderinger(sak.id, behandling.id)
-            assertEquals(0, historikk.size)
-
-            behandling
-        }
-
-        // Revurdering
-        dataSource.transaction { connection ->
-            val behandlingRepo = BehandlingRepositoryImpl(connection)
-            val repo = MedlemskapArbeidInntektRepositoryImpl(connection)
-
-            val revurdering =
-                behandlingRepo.opprettBehandling(
-                    behandling.sakId,
-                    TypeBehandling.Revurdering,
-                    behandling.id,
-                    VurderingsbehovOgÅrsak(
-                        listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
-                        ÅrsakTilOpprettelse.SØKNAD
-                    )
-                )
-
-            val historikk = repo.hentHistoriskeVurderinger(revurdering.sakId, revurdering.id)
-            lagNyFullVurdering(revurdering.id, periode, repo, "Andre begrunnelse")
-            assertThat(historikk).hasSize(1)
-        }
-    }
-
-    @Test
     fun `skal kunne lagre og hente manuelle vurderinger over flere perioder`() {
         dataSource.transaction { connection ->
             val medlemskapArbeidInntektRepository = MedlemskapArbeidInntektRepositoryImpl(connection)
