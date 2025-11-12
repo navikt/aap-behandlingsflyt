@@ -19,13 +19,16 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
+
+data class IkkeTilstrekkeligVurdert(val begrunnelse: String, val perioder: List<Periode>)
 
 class AvklaringsbehovService(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val avbrytRevurderingService: AvbrytRevurderingService
 ) {
-    constructor(repositoryProvider: RepositoryProvider): this(
+    constructor(repositoryProvider: RepositoryProvider) : this(
         avklaringsbehovRepository = repositoryProvider.provide(),
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider)
     )
@@ -75,7 +78,7 @@ class AvklaringsbehovService(
          * [definisjon] allerede har en løsning. Merk at selv om definisjonen allerede har en løsning,
          * så kan den løsningen ha blitt rullet tilbake (se [tilbakestillGrunnlag]).
          */
-        erTilstrekkeligVurdert: () -> Boolean,
+        perioderSomIkkeErTilstrekkeligVurdert: IkkeTilstrekkeligVurdert,
 
         /** Rydd opp manuelle vurderinger introdusert i denne behandlingen på grunn av løsninger
          * av avklaringsbehovet [definisjon].
@@ -99,7 +102,11 @@ class AvklaringsbehovService(
                     }
 
                     null, AVBRUTT ->
-                        avklaringsbehovene.leggTil(listOf(definisjon), definisjon.løsesISteg)
+                        avklaringsbehovene.leggTil(
+                            listOf(definisjon),
+                            perioderSomIkkeErTilstrekkeligVurdert.perioder,
+                            definisjon.løsesISteg
+                        )
 
                     TOTRINNS_VURDERT,
                     SENDT_TILBAKE_FRA_BESLUTTER,
@@ -108,7 +115,7 @@ class AvklaringsbehovService(
                     AVSLUTTET ->
                         error("Ikke mulig: fikk ${avklaringsbehov.status()}")
                 }
-            } else if (erTilstrekkeligVurdert()) {
+            } else if (perioderSomIkkeErTilstrekkeligVurdert.perioder.isEmpty()) {
                 /* ønsket tilstand: ... */
                 when (avklaringsbehov.status()) {
                     OPPRETTET, AVBRUTT ->
@@ -135,7 +142,12 @@ class AvklaringsbehovService(
                     KVALITETSSIKRET,
                     SENDT_TILBAKE_FRA_KVALITETSSIKRER,
                     AVBRUTT -> {
-                        avklaringsbehovene.leggTil(listOf(definisjon), definisjon.løsesISteg)
+                        avklaringsbehovene.leggTil(
+                            listOf(definisjon),
+                            perioderSomIkkeErTilstrekkeligVurdert.perioder,
+                            definisjon.løsesISteg,
+                            begrunnelse = perioderSomIkkeErTilstrekkeligVurdert.begrunnelse
+                        )
                     }
                 }
             }
@@ -182,7 +194,7 @@ class AvklaringsbehovService(
         tvingerAvklaringsbehov: Set<Vurderingsbehov>,
         nårVurderingErRelevant: (kontekst: FlytKontekstMedPerioder) -> Tidslinje<Boolean>,
         kontekst: FlytKontekstMedPerioder,
-        erTilstrekkeligVurdert: () -> Boolean,
+        perioderSomIkkeErTilstrekkeligVurdert: IkkeTilstrekkeligVurdert,
         tilbakestillGrunnlag: () -> Unit,
     ) {
         oppdaterAvklaringsbehov(
@@ -194,7 +206,9 @@ class AvklaringsbehovService(
                     VurderingType.REVURDERING -> {
                         val perioderVilkåretErRelevant = nårVurderingErRelevant(kontekst)
 
-                        if (perioderVilkåretErRelevant.segmenter().any { it.verdi } && kontekst.vurderingsbehovRelevanteForSteg.any { it in tvingerAvklaringsbehov }) {
+                        if (perioderVilkåretErRelevant.segmenter()
+                                .any { it.verdi } && kontekst.vurderingsbehovRelevanteForSteg.any { it in tvingerAvklaringsbehov }
+                        ) {
                             return@oppdaterAvklaringsbehov true
                         }
 
@@ -231,7 +245,7 @@ class AvklaringsbehovService(
                     VurderingType.IKKE_RELEVANT -> false
                 }
             },
-            erTilstrekkeligVurdert = erTilstrekkeligVurdert,
+            perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
             tilbakestillGrunnlag = tilbakestillGrunnlag,
             kontekst = kontekst
         )

@@ -7,11 +7,11 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.tilgang.Rolle
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
-
 
 class Avklaringsbehovene(
     private val repository: AvklaringsbehovOperasjonerRepository,
@@ -49,7 +49,7 @@ class Avklaringsbehovene(
         if (definisjon.erFrivillig()) {
             if (hentBehovForDefinisjon(definisjon) == null) {
                 // Legger til frivillig behov
-                leggTil(definisjoner = listOf(definisjon), funnetISteg = definisjon.løsesISteg, bruker = bruker)
+                leggTil(definisjoner = listOf(definisjon), funnetISteg = definisjon.løsesISteg, bruker = bruker, perioderSomManglerVurdering = emptyList())
             }
         }
     }
@@ -57,7 +57,7 @@ class Avklaringsbehovene(
     fun leggTilOverstyringHvisMangler(definisjon: Definisjon, bruker: Bruker) {
         if (definisjon.erOverstyring()) {
             if (hentBehovForDefinisjon(definisjon) == null) {
-                leggTil(definisjoner = listOf(definisjon), funnetISteg = definisjon.løsesISteg, bruker = bruker)
+                leggTil(definisjoner = listOf(definisjon), funnetISteg = definisjon.løsesISteg, bruker = bruker, perioderSomManglerVurdering = emptyList())
             }
         }
     }
@@ -69,6 +69,7 @@ class Avklaringsbehovene(
      */
     fun leggTil(
         definisjoner: List<Definisjon>,
+        perioderSomManglerVurdering: List<Periode>,
         funnetISteg: StegType,
         frist: LocalDate? = null,
         begrunnelse: String = "",
@@ -101,6 +102,7 @@ class Avklaringsbehovene(
                     frist = utledFrist(definisjon, frist),
                     begrunnelse = begrunnelse,
                     grunn = grunn,
+                    perioderSomIkkeErTilstrekkeligVurdert = perioderSomManglerVurdering,
                     endretAv = bruker.ident
                 )
             }

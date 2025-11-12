@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -56,7 +57,8 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
         frist: LocalDate?,
         begrunnelse: String,
         grunn: ÅrsakTilSettPåVent?,
-        endretAv: String
+        endretAv: String,
+        perioderSomIkkeErTilstrekkeligVurdert: List<Periode>,
     ) {
         var avklaringsbehovId = hentRelevantAvklaringsbehov(behandlingId, definisjon)
 
@@ -71,7 +73,8 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
                 begrunnelse = begrunnelse,
                 grunn = grunn,
                 endretAv = endretAv,
-                frist = frist
+                frist = frist,
+                perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert
             )
         )
     }
@@ -164,8 +167,8 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
         endring: Endring
     ) {
         val query = """
-            INSERT INTO AVKLARINGSBEHOV_ENDRING (avklaringsbehov_id, status, begrunnelse, frist, opprettet_av, opprettet_tid, venteaarsak) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO AVKLARINGSBEHOV_ENDRING (avklaringsbehov_id, status, begrunnelse, frist, opprettet_av, opprettet_tid, venteaarsak, perioder) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent()
 
         val opprettetAv = endring.endretAv
@@ -179,6 +182,7 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
                 setString(5, opprettetAv)
                 setLocalDateTime(6, LocalDateTime.now())
                 setEnumName(7, endring.grunn)
+                setPeriodeArray(8, endring.perioderSomIkkeErTilstrekkeligVurdert)
             }
         }
         val queryPeriode = """

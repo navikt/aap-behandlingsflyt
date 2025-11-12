@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.IkkeTilstrekkeligVurdert
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
@@ -53,7 +54,7 @@ class VurderSykepengeErstatningSteg private constructor(
             tvingerAvklaringsbehov = setOf(),
             nårVurderingErRelevant = ::perioderMedVurderingsbehov,
             kontekst = kontekst,
-            erTilstrekkeligVurdert = { true }, // ??
+            perioderSomIkkeErTilstrekkeligVurdert = IkkeTilstrekkeligVurdert("", emptyList()), // ??
             tilbakestillGrunnlag = {
                 val vedtatteVurderinger =
                     kontekst.forrigeBehandlingId?.let { sykepengerErstatningRepository.hentHvisEksisterer(it) }
