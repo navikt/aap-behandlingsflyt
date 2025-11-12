@@ -77,7 +77,7 @@ data class Vurdering(
     }
 
     private fun bryterOppholdskrav(): Boolean {
-        return opphørEtterOppholdskrav() || stansEtterOppholdskrav();
+        return opphørEtterOppholdskrav() || stansEtterOppholdskrav()
     }
 
     private fun opphørEtterOppholdskrav(): Boolean {

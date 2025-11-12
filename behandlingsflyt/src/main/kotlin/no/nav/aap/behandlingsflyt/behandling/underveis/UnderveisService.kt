@@ -68,7 +68,7 @@ class UnderveisService(
         vedtakService = VedtakService(repositoryProvider),
     )
 
-    private val kvoteService = KvoteService()
+    private val kvoteService = KvoteService(underveisRepository)
 
     companion object {
         private val regelset = listOf(

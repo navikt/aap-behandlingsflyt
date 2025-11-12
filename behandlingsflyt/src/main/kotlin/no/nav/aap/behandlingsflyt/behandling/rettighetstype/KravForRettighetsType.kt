@@ -10,7 +10,7 @@ import no.nav.aap.komponenter.tidslinje.outerJoinNotNull
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 
 
-/* her er det en del rom for forbedringer:
+/** Her er det en del rom for forbedringer:
  * 1. regn ut alle rettighetstyper som er mulige, ikke bare en
  *
  * 2. bygg opp en konkret begrunnelse:
@@ -27,7 +27,8 @@ fun vurderRettighetsType(vilkårsresultat: Vilkårsresultat): Tidslinje<Rettighe
         .map { vilkår -> vilkår.tidslinje().mapValue { vurdering -> vilkår.type to vurdering } }
         .outerJoinNotNull { it.toMap() }
         .fold(Tidslinje<RettighetsType>()) { forutgåendeTidslinje, periode, vilkårsvurderinger ->
-            /* NB: Vi har ikke noen mekanismer for å identifisere opphør. Når vi får opphør, så skal [forutgåendeTidslinje]
+            /**
+            * NB: Vi har ikke noen mekanismer for å identifisere opphør. Når vi får opphør, så skal [forutgåendeTidslinje]
             *   begrenses til perioden etter opphør når den sendes inn til oppfylles av. */
             val rettighetsType = when {
                 /* Prioritert rekkefølge */
@@ -46,7 +47,7 @@ fun vurderRettighetsType(vilkårsresultat: Vilkårsresultat): Tidslinje<Rettighe
                 forutgåendeTidslinje.mergePrioriterHøyre(tidslinjeOf(periode to rettighetsType))
         }
         .segmenter()
-        .mapNotNull { segment -> segment.verdi?.let { Segment(segment.periode, it) } }
+        .map { segment -> Segment(segment.periode, segment.verdi) }
         .let(::Tidslinje)
         .komprimer()
 }

@@ -234,6 +234,6 @@ class Avklaringsbehov(
     }
 
     override fun toString(): String {
-        return "Avklaringsbehov(definisjon=$definisjon, status=${status()}, løsesISteg=${løsesISteg()})"
+        return "Avklaringsbehov(definisjon=$definisjon, status=${status()}, løsesISteg=${løsesISteg()}, historikk=$historikk)"
     }
 }

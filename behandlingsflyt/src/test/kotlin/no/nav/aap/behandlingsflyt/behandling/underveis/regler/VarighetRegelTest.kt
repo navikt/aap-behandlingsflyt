@@ -14,10 +14,11 @@ import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertInstanceOf
 
 class VarighetRegelTest {
     private val regel = VarighetRegel()
@@ -738,11 +739,11 @@ private fun assertStansGrunnet(
     avslagsÅrsak: UnderveisÅrsak,
     vararg kvoteAvslagsårsak: VarighetVurdering.Avslagsårsak
 ) {
-    assertEquals(avslagsÅrsak, vurdering.avslagsårsak())
-    assertFalse(vurdering.harRett())
+    assertThat(avslagsÅrsak).isEqualTo(vurdering.avslagsårsak())
+    assertThat(vurdering.harRett()).isFalse()
     if (kvoteAvslagsårsak.isNotEmpty()) {
-        assertTrue(vurdering.varighetVurdering is Avslag)
-        assertEquals(kvoteAvslagsårsak.toSet(), (vurdering.varighetVurdering as Avslag).avslagsårsaker)
+        assertInstanceOf<Avslag>(vurdering.varighetVurdering)
+        assertThat(kvoteAvslagsårsak.toSet()).containsExactlyInAnyOrderElementsOf(vurdering.varighetVurdering.avslagsårsaker)
     }
 }
 

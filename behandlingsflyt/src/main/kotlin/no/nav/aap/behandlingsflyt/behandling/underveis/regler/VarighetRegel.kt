@@ -61,7 +61,7 @@ class VarighetRegel : UnderveisRegel {
         val kvoterStansesIPeriode = dagerTilStans < periode.antallHverdager()
 
         if (!telleverk.erKvoterStanset(relevanteKvoter) && !kvoterStansesIPeriode) {
-            telleverk.øk(relevanteKvoter, periode)
+            telleverk.øk(relevanteKvoter, periode.antallHverdager())
             return Tidslinje(
                 periode,
                 Oppfylt(relevanteKvoter)

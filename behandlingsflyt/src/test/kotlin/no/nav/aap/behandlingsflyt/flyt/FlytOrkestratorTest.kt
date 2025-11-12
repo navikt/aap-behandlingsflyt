@@ -47,6 +47,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.Yrkesskade
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.ÅrsakTilRetur
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.flate.TrekkKlageVurderingDto
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.flate.TrekkKlageÅrsakDto
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
@@ -57,14 +58,17 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagI
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingPeriodeDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Hjemmel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.BehandlendeEnhetLøsningDto
@@ -172,6 +176,7 @@ import org.junit.jupiter.params.ParameterizedClass
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
+import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Year
@@ -221,9 +226,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
             .medKontekst {
-                val underveisGrunnlag = dataSource.transaction { connection ->
-                    UnderveisRepositoryImpl(connection).hent(this.behandling.id)
-                }
+                val underveisGrunnlag = repositoryProvider.provide<UnderveisRepository>().hent(this.behandling.id)
 
                 assertThat(underveisGrunnlag.perioder).isNotEmpty
                 assertThat(underveisGrunnlag.perioder).extracting<RettighetsType>(Underveisperiode::rettighetsType)
@@ -263,9 +266,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
             .medKontekst {
-                val underveisGrunnlag = dataSource.transaction { connection ->
-                    UnderveisRepositoryImpl(connection).hent(this.behandling.id)
-                }
+                val underveisGrunnlag = repositoryProvider.provide<UnderveisRepository>().hent(this.behandling.id)
 
                 assertThat(underveisGrunnlag.perioder).isNotEmpty
                 assertThat(underveisGrunnlag.perioder).extracting<RettighetsType>(Underveisperiode::rettighetsType)
@@ -291,9 +292,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             }
             .fattVedtak()
             .medKontekst {
-                val underveisGrunnlag = dataSource.transaction { connection ->
-                    UnderveisRepositoryImpl(connection).hent(this.behandling.id)
-                }
+                val underveisGrunnlag = repositoryProvider.provide<UnderveisRepository>().hent(this.behandling.id)
 
                 assertThat(underveisGrunnlag.perioder).isNotEmpty
                 assertThat(underveisGrunnlag.perioder).extracting<RettighetsType>(Underveisperiode::rettighetsType)
@@ -609,7 +608,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
 
                 val tilkjentYtelse =
-                    dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(behandling.id) }
+                    repositoryProvider.provide<TilkjentYtelseRepository>().hentHvisEksisterer(behandling.id)
                         .orEmpty().map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
 
                 val periodeMedBarneTilleggForToBarn =
@@ -1081,7 +1080,10 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .medKontekst {
                 assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
             }
-            .løsSykdom(vurderingGjelderFra = sak.rettighetsperiode.fom, erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true)
+            .løsSykdom(
+                vurderingGjelderFra = sak.rettighetsperiode.fom,
+                erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true
+            )
             .løsBistand()
             .løsAvklaringsBehov(
                 RefusjonkravLøsning(
@@ -1142,7 +1144,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 // Venter på at brevet skal fullføres
                 assertThat(åpneAvklaringsbehov).anySatisfy { assertTrue(it.definisjon == Definisjon.SKRIV_VEDTAKSBREV) }
 
-                val vilkårsresultat = dataSource.transaction { VilkårsresultatRepositoryImpl(it).hent(behandling.id) }
+                val vilkårsresultat = repositoryProvider.provide<VilkårsresultatRepository>().hent(behandling.id)
                     .finnVilkår(Vilkårtype.SYKDOMSVILKÅRET).tidslinje().komprimer()
 
                 assertTidslinje(vilkårsresultat, periode to {
@@ -1246,9 +1248,9 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
 
-                val resultat = dataSource.transaction {
-                    ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(behandling.id)
-                }
+                val resultat =
+                    ResultatUtleder(repositoryProvider).utledResultat(behandling.id)
+
                 assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
             }
             .løsVedtaksbrev()
@@ -1262,13 +1264,18 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     .extracting(Vilkårsperiode::erOppfylt, Vilkårsperiode::innvilgelsesårsak)
                     .containsExactly(true, Innvilgelsesårsak.SYKEPENGEERSTATNING)
 
-                val resultat =
-                    dataSource.transaction {
-                        ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(
-                            behandling.id
-                        )
-                    }
+                val resultat = ResultatUtleder(repositoryProvider).utledResultat(behandling.id)
+
                 assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
+
+                val underveisTidslinje =
+                    repositoryProvider.provide<UnderveisRepository>().hent(behandling.id).somTidslinje()
+
+                val periodeMedSykepengeerstatning =
+                    underveisTidslinje.filter { it.verdi.utfall == Utfall.OPPFYLT && it.verdi.rettighetsType == RettighetsType.SYKEPENGEERSTATNING }
+                        .helePerioden()
+
+                assertThat(periodeMedSykepengeerstatning).isEqualTo(Periode(periode.fom, periode.fom.plusMonths(6)))
 
                 assertTidslinje(
                     vilkårsresultat.rettighetstypeTidslinje(),
@@ -1290,9 +1297,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
 
-                val underveisTidslinje = dataSource.transaction {
-                    UnderveisRepositoryImpl(it).hent(this.behandling.id).perioder
-                }.map { Segment(it.periode, it) }.let(::Tidslinje)
+                val underveisTidslinje =
+                    repositoryProvider.provide<UnderveisRepository>().hent(this.behandling.id).somTidslinje()
 
                 val oppfyltPeriode = underveisTidslinje.filter { it.verdi.rettighetsType != null }.helePerioden()
                 val vilkårsresultat = hentVilkårsresultat(behandlingId = this.behandling.id)
@@ -1360,9 +1366,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 )
             )
             .medKontekst {
-                val underveisTidslinje = dataSource.transaction {
-                    UnderveisRepositoryImpl(it).hent(this.behandling.id).perioder
-                }.map { Segment(it.periode, it) }.let(::Tidslinje)
+                val underveisTidslinje =
+                    repositoryProvider.provide<UnderveisRepository>().hent(behandling.id).somTidslinje()
 
                 val oppfyltPeriode = underveisTidslinje.filter { it.verdi.rettighetsType != null }.helePerioden()
                 val vilkårsresultat = hentVilkårsresultat(behandlingId = this.behandling.id)
@@ -1466,16 +1471,13 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .fattVedtak()
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
+                val resultat = ResultatUtleder(repositoryProvider).utledResultat(behandling.id)
+                assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
             }
-
-        var resultat =
-            dataSource.transaction { ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(behandling.id) }
-        assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
-
-
-        behandling = behandling.løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_11_18)
-
-        assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
+            .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_11_18)
+            .medKontekst {
+                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
+            }
 
         val vilkårsresultat = hentVilkårsresultat(behandlingId = behandling.id)
         val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
@@ -1485,10 +1487,10 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .extracting(Vilkårsperiode::erOppfylt, Vilkårsperiode::innvilgelsesårsak)
             .containsExactly(true, Innvilgelsesårsak.SYKEPENGEERSTATNING)
 
-        resultat =
-            dataSource.transaction { ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(behandling.id) }
-
-        assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
+        behandling = behandling.medKontekst {
+            val resultat = ResultatUtleder(repositoryProvider).utledResultat(behandling.id)
+            assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
+        }
 
         assertTidslinje(
             vilkårsresultat.rettighetstypeTidslinje(),
@@ -3277,16 +3279,14 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 assertThat(this.behandling.referanse).isNotEqualTo(avslåttFørstegang.referanse)
                 assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Klage)
 
-                dataSource.transaction { connection ->
-                    val mottattDokumentRepository = MottattDokumentRepositoryImpl(connection)
-                    val klageDokumenter =
-                        mottattDokumentRepository.hentDokumenterAvType(klagebehandling.id, InnsendingType.KLAGE)
-                    assertThat(klageDokumenter).hasSize(1)
-                    assertThat(klageDokumenter.first().strukturertDokument).isNotNull
-                    assertThat(klageDokumenter.first().strukturerteData<KlageV0>()?.data?.kravMottatt).isEqualTo(
-                        kravMottatt
-                    )
-                }
+                val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
+                val klageDokumenter =
+                    mottattDokumentRepository.hentDokumenterAvType(klagebehandling.id, InnsendingType.KLAGE)
+                assertThat(klageDokumenter).hasSize(1)
+                assertThat(klageDokumenter.first().strukturertDokument).isNotNull
+                assertThat(klageDokumenter.first().strukturerteData<KlageV0>()?.data?.kravMottatt).isEqualTo(
+                    kravMottatt
+                )
 
                 // PåklagetBehandlingSteg
                 assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)

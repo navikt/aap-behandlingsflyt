@@ -132,6 +132,7 @@ import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Bruker
+import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.testutil.ManuellMotorImpl
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
@@ -426,7 +427,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
 
     @JvmName("løsFramTilGrunnlagExt")
     protected fun Behandling.løsFramTilGrunnlag(rettighetsPeriodeFrom: LocalDate): Behandling {
-        return løsFramTilGrunnlag(rettighetsPeriodeFrom,this)
+        return løsFramTilGrunnlag(rettighetsPeriodeFrom, this)
     }
 
     protected fun løsFramTilGrunnlag(rettighetsPeriodeFrom: LocalDate, behandling: Behandling): Behandling {
@@ -1227,17 +1228,22 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
     class BehandlingInfo(
         val åpneAvklaringsbehov: List<Avklaringsbehov>,
         val behandling: Behandling,
-        val ventebehov: List<Avklaringsbehov>
+        val ventebehov: List<Avklaringsbehov>,
+        val repositoryProvider: RepositoryProvider,
     )
 
     protected fun Behandling.medKontekst(block: BehandlingInfo.() -> Unit): Behandling {
         val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(this)
-        block(
-            BehandlingInfo(
-                åpneAvklaringsbehov = åpneAvklaringsbehov,
-                behandling = this,
-                ventebehov = åpneAvklaringsbehov.filter { it.erVentepunkt() })
-        )
+        dataSource.transaction { connection ->
+            block(
+                BehandlingInfo(
+                    åpneAvklaringsbehov = åpneAvklaringsbehov,
+                    behandling = this,
+                    ventebehov = åpneAvklaringsbehov.filter { it.erVentepunkt() },
+                    repositoryProvider = postgresRepositoryRegistry.provider(connection)
+                )
+            )
+        }
         return this
     }
 
@@ -1350,7 +1356,10 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         return this
     }
 
-    protected fun Behandling.assertVilkårsutfall(vilkårtype: Vilkårtype, vararg expectedVilkårsutfall: Pair<Periode, Utfall?>): Behandling {
+    protected fun Behandling.assertVilkårsutfall(
+        vilkårtype: Vilkårtype,
+        vararg expectedVilkårsutfall: Pair<Periode, Utfall?>
+    ): Behandling {
         val vilkårsutfall = dataSource.transaction(readOnly = true) { VilkårsresultatRepositoryImpl(it).hent(this.id) }
             .optionalVilkår(vilkårtype)
             ?.tidslinje()
