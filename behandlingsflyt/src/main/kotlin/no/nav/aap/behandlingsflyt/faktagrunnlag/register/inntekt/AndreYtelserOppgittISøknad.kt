@@ -4,20 +4,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AndreUtbetalinger
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AndreUtbetalingerYtelserDto
 
 
-/**
- * Enumene kommer fra alternativer som er svart fra søknaden. Disse er:
- *
- * Godtgjørelse eller lønn for verv
- * Økonomisk sosialhjelp
- * Omsorgsstønad (tidligere omsorgslønn)
- * Introduksjonsstønad (introduksjonsprogrammet)
- * Kvalifiseringsstønad (kvalifiseringsprogrammet)
- * Ytelser fra utenlandske trygdemyndigheter
- * Avtalefestet pensjon (AFP)
- * Lån fra Lånekassen
- * Sykestipend fra Lånekassen
- * Ingen av disse
- */
 
 
 /**

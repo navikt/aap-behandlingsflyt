@@ -91,6 +91,8 @@ data class UbehandletSøknad(
     }
 }
 
+
+
 private fun mapOppgitteBarn(oppgitteBarn: OppgitteBarnFraSøknad): OppgitteBarn? =
     oppgitteBarn.let { oppgitteBarn ->
         if (oppgitteBarn.barn.isNotEmpty()) {
