@@ -20,7 +20,6 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
-import org.slf4j.LoggerFactory
 
 class VurderSykepengeErstatningSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
@@ -42,8 +41,6 @@ class VurderSykepengeErstatningSteg private constructor(
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
     )
-
-    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)

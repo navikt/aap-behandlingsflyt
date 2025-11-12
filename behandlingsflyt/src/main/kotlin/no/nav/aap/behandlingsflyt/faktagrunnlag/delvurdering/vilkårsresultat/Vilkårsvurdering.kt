@@ -75,14 +75,6 @@ class Vilkårsvurdering(
         )
     }
 
-    fun faktagrunnlagSomString(): String? {
-        if (faktagrunnlag == null) {
-            return null
-        }
-
-        return faktagrunnlag.hent()
-    }
-
     override fun toString(): String {
         return "Vilkårsvurdering(avslagsårsak=$avslagsårsak, utfall=$utfall, manuellVurdering=$manuellVurdering, begrunnelse=$begrunnelse, innvilgelsesårsak=$innvilgelsesårsak, faktagrunnlag=$faktagrunnlag, versjon='$versjon')"
     }

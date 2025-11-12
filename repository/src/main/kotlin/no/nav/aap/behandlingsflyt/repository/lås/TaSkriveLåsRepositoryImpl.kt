@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.repository.lås
 
-import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.BehandlingSkrivelås
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.SakSkrivelås

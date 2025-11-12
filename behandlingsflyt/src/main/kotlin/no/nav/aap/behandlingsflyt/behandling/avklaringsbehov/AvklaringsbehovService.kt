@@ -19,7 +19,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
-import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class AvklaringsbehovService(

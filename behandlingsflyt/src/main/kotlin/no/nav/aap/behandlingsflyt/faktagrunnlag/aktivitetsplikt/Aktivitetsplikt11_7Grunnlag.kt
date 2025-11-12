@@ -4,7 +4,6 @@ import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
-import java.time.LocalDate
 import java.util.Objects
 
 data class Aktivitetsplikt11_7Grunnlag(

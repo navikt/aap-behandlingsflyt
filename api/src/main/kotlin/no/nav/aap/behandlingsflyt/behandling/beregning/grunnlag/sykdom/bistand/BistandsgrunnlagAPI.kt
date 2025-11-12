@@ -59,8 +59,9 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(
                         ?.vurderinger.orEmpty()
                     val vurdering = nåTilstand
                         .filterNot { gjeldendeVurdering ->
-                            gjeldendeVurdering.copy(opprettet = null) in vedtatteBistandsvurderinger.map {
+                            gjeldendeVurdering.copy(opprettet = null,  id = null) in vedtatteBistandsvurderinger.map {
                                 it.copy(
+                                    id = null,
                                     opprettet = null
                                 )
                             }

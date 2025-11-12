@@ -140,22 +140,23 @@ class BistandsvilkåretTest {
 
     @Test
     fun `Skal bygge tidslinje på tvers av behandlinger`() {
-        val bistandsvurdering1 = BistandVurdering(
-            begrunnelse = "Begrunnelse",
-            erBehovForAktivBehandling = true,
-            erBehovForArbeidsrettetTiltak = true,
-            erBehovForAnnenOppfølging = false,
-            vurderingenGjelderFra = null,
-            vurdertAv = "Z00000",
-            skalVurdereAapIOvergangTilUføre = null,
-            skalVurdereAapIOvergangTilArbeid = null,
-            overgangBegrunnelse = null,
-        )
-
         val (førstegangsbehandling, sak) = dataSource.transaction { connection ->
             val bistandRepo = BistandRepositoryImpl(connection)
             val sak = sak(connection)
             val førstegangsbehandling = finnEllerOpprettBehandling(connection, sak)
+
+            val bistandsvurdering1 = BistandVurdering(
+                vurdertIBehandling = BehandlingId(1),
+                begrunnelse = "Begrunnelse",
+                erBehovForAktivBehandling = true,
+                erBehovForArbeidsrettetTiltak = true,
+                erBehovForAnnenOppfølging = false,
+                vurderingenGjelderFra = sak.rettighetsperiode.fom,
+                vurdertAv = "Z00000",
+                skalVurdereAapIOvergangTilUføre = null,
+                skalVurdereAapIOvergangTilArbeid = null,
+                overgangBegrunnelse = null,
+            )
 
             bistandRepo.lagre(førstegangsbehandling.id, listOf(bistandsvurdering1))
             Pair(førstegangsbehandling, sak)
@@ -284,7 +285,8 @@ class BistandsvilkåretTest {
         skalVurdereAapIOvergangTilUføre: Boolean? = null,
         skalVurdereAapIOvergangTilArbeid: Boolean? = null,
         vurdertAv: String = "Z00000",
-        vurderingenGjelderFra: LocalDate = LocalDate.now()
+        vurderingenGjelderFra: LocalDate = LocalDate.now(),
+        vurdertIBehandling: BehandlingId = BehandlingId(1)
 
     ) = BistandVurdering(
         begrunnelse = begrunnelse,
@@ -295,7 +297,8 @@ class BistandsvilkåretTest {
         skalVurdereAapIOvergangTilUføre = skalVurdereAapIOvergangTilUføre,
         skalVurdereAapIOvergangTilArbeid = skalVurdereAapIOvergangTilArbeid,
         vurdertAv = vurdertAv,
-        vurderingenGjelderFra = vurderingenGjelderFra
+        vurderingenGjelderFra = vurderingenGjelderFra,
+        vurdertIBehandling = vurdertIBehandling
     )
 
     private fun sak(connection: DBConnection): Sak {

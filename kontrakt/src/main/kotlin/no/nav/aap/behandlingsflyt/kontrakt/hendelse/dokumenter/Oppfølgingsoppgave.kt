@@ -1,10 +1,6 @@
 package no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonSubTypes
-import com.fasterxml.jackson.annotation.JsonTypeInfo
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.tilgang.Rolle
 import java.time.LocalDate
 
 public sealed interface Oppfølgingsoppgave : Melding
