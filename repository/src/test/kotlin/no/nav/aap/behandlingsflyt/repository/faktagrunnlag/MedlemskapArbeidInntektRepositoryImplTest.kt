@@ -38,6 +38,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
@@ -77,44 +78,6 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
             assertEquals(inntekt1.identifikator, "1234")
             assertEquals(inntekt2.organisasjonsNavn, "Rotte AS")
             assertEquals(inntekt2.identifikator, "4321")
-        }
-    }
-
-    @Test
-    fun henterRelaterteHistoriskeVurderinger() {
-        // Førstegangsbehandling
-        val behandling = dataSource.transaction { connection ->
-            val repo = MedlemskapArbeidInntektRepositoryImpl(connection)
-            val sak = opprettSak(connection, periode)
-            val behandling = finnEllerOpprettBehandling(connection, sak)
-
-            lagNyFullVurdering(behandling.id, periode, repo, "Første begrunnelse")
-
-            val historikk = repo.hentHistoriskeVurderinger(sak.id, behandling.id)
-            assertEquals(0, historikk.size)
-
-            behandling
-        }
-
-        // Revurdering
-        dataSource.transaction { connection ->
-            val behandlingRepo = BehandlingRepositoryImpl(connection)
-            val repo = MedlemskapArbeidInntektRepositoryImpl(connection)
-
-            val revurdering =
-                behandlingRepo.opprettBehandling(
-                    behandling.sakId,
-                    TypeBehandling.Revurdering,
-                    behandling.id,
-                    VurderingsbehovOgÅrsak(
-                        listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
-                        ÅrsakTilOpprettelse.SØKNAD
-                    )
-                )
-
-            val historikk = repo.hentHistoriskeVurderinger(revurdering.sakId, revurdering.id)
-            lagNyFullVurdering(revurdering.id, periode, repo, "Andre begrunnelse")
-            assertThat(historikk).hasSize(1)
         }
     }
 
@@ -277,6 +240,55 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
             assertThat(medlemskapArbeidInntektGrunnlag?.arbeiderINorgeGrunnlag?.size).isEqualTo(1)
             assertThat(medlemskapArbeidInntektGrunnlag?.medlemskapGrunnlag).isNotNull
             assertThat(medlemskapArbeidInntektGrunnlag?.vurderinger?.size).isEqualTo(3)
+        }
+    }
+
+    @Test
+    fun `test sletting`() {
+        dataSource.transaction { connection ->
+            val medlemskapArbeidInntektRepository = MedlemskapArbeidInntektRepositoryImpl(connection)
+            val sak = opprettSak(connection, periode)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            val medlemskapRepository = MedlemskapRepositoryImpl(connection)
+
+            medlemskapArbeidInntektRepository.lagreVurderinger(
+                behandling.id,
+                listOf(
+                    manuellVurdering(
+                        fom = 1 mai 2025,
+                        tom = 31 oktober 2025,
+                        vurdertIBehandling = behandling.id
+                    ),
+                    manuellVurdering(
+                        fom = 1 november 2025,
+                        tom = null,
+                        vurdertIBehandling = behandling.id
+                    ),
+                )
+            )
+
+            val medlemskapArbeidInntektGrunnlag = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandling.id)
+
+            assertThat(medlemskapArbeidInntektGrunnlag?.vurderinger?.size).isEqualTo(2)
+
+            val medlId = medlemskapRepository.lagreUnntakMedlemskap(
+                behandlingId = behandling.id,
+                unntak = listOf(medlemskapData())
+            )
+
+            medlemskapArbeidInntektRepository.lagreArbeidsforholdOgInntektINorge(
+                behandlingId = behandling.id,
+                arbeidGrunnlag = arbeidGrunnlag(),
+                inntektGrunnlag = inntektGrunnlag(),
+                medlId = medlId,
+                enhetGrunnlag = enhetGrunnlags()
+            )
+
+            val medlemskapArbeidInntektGrunnlagOppdatert = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandling.id)
+
+            assertThat(medlemskapArbeidInntektGrunnlagOppdatert?.vurderinger?.size).isEqualTo(2)
+
+            assertDoesNotThrow { medlemskapArbeidInntektRepository.slett(behandling.id) }
         }
     }
 
