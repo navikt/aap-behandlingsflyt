@@ -14,7 +14,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifik
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -153,44 +152,6 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
                 }
             }
         )
-    }
-
-    override fun hentNyeSaksbehandlerOppgitteBarnFor(behandling: Behandling): List<SaksbehandlerOppgitteBarn.Barn> {
-        return connection.queryList(
-            """
-            SELECT DISTINCT sob.ident, sob.navn, sob.fodselsdato, sob.relasjon
-            FROM BARNOPPLYSNING_GRUNNLAG bg
-            JOIN BARN_SAKSBEHANDLER_OPPGITT sob ON bg.saksbehandler_oppgitt_barn_id = sob.saksbehandler_oppgitt_barn_id
-            WHERE bg.behandling_id = ?
-            AND bg.aktiv
-            AND NOT EXISTS (
-                SELECT 1
-                FROM BARNOPPLYSNING_GRUNNLAG bg_tidligere
-                JOIN BEHANDLING b_tidligere ON bg_tidligere.behandling_id = b_tidligere.id
-                JOIN BARN_SAKSBEHANDLER_OPPGITT sob_tidligere ON bg_tidligere.saksbehandler_oppgitt_barn_id = sob_tidligere.saksbehandler_oppgitt_barn_id
-                WHERE b_tidligere.sak_id = ?
-                AND bg_tidligere.behandling_id < bg.behandling_id
-                AND bg_tidligere.aktiv
-                AND (
-                    (sob_tidligere.ident = sob.ident AND sob.ident IS NOT NULL)
-                    OR (sob_tidligere.navn = sob.navn AND sob_tidligere.fodselsdato = sob.fodselsdato AND sob.ident IS NULL)
-                )
-            )
-            """.trimIndent()
-        ) {
-            setParams {
-                setLong(1, behandling.id.id)
-                setLong(2, behandling.sakId.id)
-            }
-            setRowMapper { row ->
-                SaksbehandlerOppgitteBarn.Barn(
-                    ident = row.getStringOrNull("ident")?.let(::Ident),
-                    navn = row.getString("navn"),
-                    fødselsdato = Fødselsdato(row.getLocalDate("fodselsdato")),
-                    relasjon = row.getString("relasjon").let(Relasjon::valueOf),
-                )
-            }
-        }
     }
 
     private fun hentOppgittBarn(id: Long): OppgitteBarn {
@@ -585,29 +546,6 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
             }
         }
         log.info("Slettet $deletedRows rader fra barnopplysning_grunnlag")
-    }
-
-    override fun deaktiverAlleSaksbehandlerOppgitteBarn(behandlingId: BehandlingId) {
-        val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
-
-        if (eksisterendeGrunnlag != null) {
-            deaktiverEksisterende(behandlingId)
-
-            connection.execute(
-                """
-                INSERT INTO BARNOPPLYSNING_GRUNNLAG (BEHANDLING_ID, register_barn_id, oppgitt_barn_id, vurderte_barn_id, saksbehandler_oppgitt_barn_id)
-                VALUES (?, ?, ?, ?, ?)
-                """.trimIndent()
-            ) {
-                setParams {
-                    setLong(1, behandlingId.toLong())
-                    setLong(2, eksisterendeGrunnlag.registerbarn?.id)
-                    setLong(3, eksisterendeGrunnlag.oppgitteBarn?.id)
-                    setLong(4, eksisterendeGrunnlag.vurderteBarn?.id)
-                    setLong(5, null)
-                }
-            }
-        }
     }
 
     private fun getOppgittBarnIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

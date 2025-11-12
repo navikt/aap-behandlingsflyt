@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.lookup.repository.Repository
@@ -33,14 +32,4 @@ interface BarnRepository : Repository {
     fun lagreVurderinger(behandlingId: BehandlingId, vurdertAv: String, vurderteBarn: List<VurdertBarn>)
     fun hentBehandlingIdForSakSomFårBarnetilleggForBarn(ident: Ident): List<BehandlingId>
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
-
-    /**
-     * Deaktiver alle saksbehandleroppgitte barn for en behandling. Brukes når alle saksbehandleroppgitte barn skal fjernes.
-     */
-    fun deaktiverAlleSaksbehandlerOppgitteBarn(behandlingId: BehandlingId)
-
-    /**
-     * Hent saksbehandleroppgitte barn som er lagt til i denne behandlingen, men som ikke fantes i tidligere behandlinger for saken.
-     */
-    fun hentNyeSaksbehandlerOppgitteBarnFor(behandling: Behandling): List<SaksbehandlerOppgitteBarn.Barn>
 }

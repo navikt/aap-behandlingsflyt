@@ -132,7 +132,7 @@ private fun filtrerSaksbehandlerOppgittBarn(
     barnRepository: BarnRepository,
     behandling: Behandling
 ): List<SlettbarVurdertBarnDto> {
-    val nyeBarnIDenneBehandling = barnRepository.hentNyeSaksbehandlerOppgitteBarnFor(behandling)
+    val nyeBarnIDenneBehandling = hentNyeSaksbehandlerOppgitteBarnFor(behandling, barnRepository)
     val filtrerteSaksbehandlerOppgittBarn = vurderteBarn.filter { vurdertBarn ->
         saksbehandlerOppgittBarn.any { saksbehandlerBarn ->
             matcherBarn(vurdertBarn, saksbehandlerBarn)
@@ -147,6 +147,37 @@ private fun filtrerSaksbehandlerOppgittBarn(
             vurdertBarn = vurdertBarn,
             erSlettbar = erNyttBarn
         )
+    }
+}
+
+private fun hentNyeSaksbehandlerOppgitteBarnFor(
+    behandling: Behandling,
+    barnRepository: BarnRepository
+): List<SaksbehandlerOppgitteBarn.Barn> {
+    val tidligereBarnGrunnlag = behandling.forrigeBehandlingId?.let { barnRepository.hentHvisEksisterer(it) }
+    val gjeldendeBarnGrunnlag = barnRepository.hentHvisEksisterer(behandling.id)
+
+    val tidligereSaksbehandlerOppgitteBarn = tidligereBarnGrunnlag?.saksbehandlerOppgitteBarn?.barn.orEmpty()
+    val gjeldendeSaksbehandlerOppgitteBarn = gjeldendeBarnGrunnlag?.saksbehandlerOppgitteBarn?.barn.orEmpty()
+
+    return gjeldendeSaksbehandlerOppgitteBarn.filter { gjeldendeBarn ->
+        tidligereSaksbehandlerOppgitteBarn.none { tidligereBarn ->
+            matcherSaksbehandlerBarn(tidligereBarn, gjeldendeBarn)
+        }
+    }
+}
+
+private fun matcherSaksbehandlerBarn(
+    barn1: SaksbehandlerOppgitteBarn.Barn,
+    barn2: SaksbehandlerOppgitteBarn.Barn
+): Boolean {
+    val ident1 = barn1.identifikator()
+    val ident2 = barn2.identifikator()
+
+    return if (ident1 is BarnIdent && ident2 is BarnIdent) {
+        ident1.er(ident2)
+    } else {
+        barn1.navn == barn2.navn && barn1.fødselsdato == barn2.fødselsdato
     }
 }
 
