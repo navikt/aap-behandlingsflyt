@@ -7,9 +7,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 /**
  * Barn oppgitt manuelt av saksbehandler.
  */
-data class SaksbehandlerOppgitteBarn(val id: Long? = null, val barn: List<Barn>) {
+data class SaksbehandlerOppgitteBarn(val id: Long? = null, val barn: List<SaksbehandlerOppgitteBarn>) {
 
-    data class Barn(
+    data class SaksbehandlerOppgitteBarn(
         val ident: Ident?,
         val navn: String,
         val fødselsdato: Fødselsdato,

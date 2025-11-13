@@ -19,7 +19,7 @@ interface BarnRepository : Repository {
     /**
      * Saksbehandleroppgitte barn er barn som saksbehandler har lagt til manuelt i Kelvin.
      */
-    fun lagreSaksbehandlerOppgitteBarn(behandlingId: BehandlingId, saksbehandlerOppgitteBarn: List<SaksbehandlerOppgitteBarn.Barn>)
+    fun lagreSaksbehandlerOppgitteBarn(behandlingId: BehandlingId, saksbehandlerOppgitteBarn: List<SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn>)
 
     /**
      * Lagre registerbarn. Dette er barn som vi også finner i PDL (enten automatisk, eller oppgitt). Se [no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnInformasjonskrav].

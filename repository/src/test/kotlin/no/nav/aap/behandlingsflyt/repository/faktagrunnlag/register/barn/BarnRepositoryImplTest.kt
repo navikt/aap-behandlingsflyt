@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Relasjon
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.SaksbehandlerOppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
@@ -231,6 +232,32 @@ internal class BarnRepositoryImplTest {
             val nyeOppgitteBarn = barnRepository.hent(nyBehandling.id).oppgitteBarn?.oppgitteBarn
             assertThat(nyeOppgitteBarn).isEqualTo(gamleOppgitteBarn)
         }
+    }
+
+    @Test
+    fun `Lagre kun saksbehandler oppgitte barn`() {
+        val behandling = dataSource.transaction { connection ->
+            val sak = sak(connection)
+            finnEllerOpprettBehandling(connection, sak)
+        }
+        val saksbehandlerOppgittBarn = SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn(
+            ident = Ident("123456"),
+            navn = "Mini Mus",
+            fødselsdato = Fødselsdato(LocalDate.now().minusYears(5)),
+            relasjon = Relasjon.FORELDER
+        )
+
+        dataSource.transaction {
+            BarnRepositoryImpl(it).lagreSaksbehandlerOppgitteBarn(
+                behandling.id, listOf(saksbehandlerOppgittBarn)
+            )
+        }
+
+        val uthentet = dataSource.transaction {
+            BarnRepositoryImpl(it).hent(behandling.id)
+        }
+
+        assertThat(uthentet.saksbehandlerOppgitteBarn?.barn).containsExactly(saksbehandlerOppgittBarn)
     }
 
     private fun sak(connection: DBConnection): Sak {

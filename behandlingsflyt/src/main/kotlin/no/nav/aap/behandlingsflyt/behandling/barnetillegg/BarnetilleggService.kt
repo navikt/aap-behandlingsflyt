@@ -4,8 +4,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.IBarn
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.SaksbehandlerOppgitteBarn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn.OppgittBarn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -143,8 +143,8 @@ class BarnetilleggService(
                             Barn.periodeMedRettTil(
                                 barnet.fødselsdato(), when (barnet) {
                                     is Barn -> barnet.dødsdato
-                                    is OppgitteBarn.OppgittBarn -> null
-                                    is SaksbehandlerOppgitteBarn.Barn -> null
+                                    is OppgittBarn -> null
+                                    is SaksbehandlerOppgitteBarn -> null
                                 }
                             ),
                             barnet.identifikator()

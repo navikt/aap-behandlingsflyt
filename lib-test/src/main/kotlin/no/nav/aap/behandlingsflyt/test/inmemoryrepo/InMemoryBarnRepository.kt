@@ -72,7 +72,7 @@ object InMemoryBarnRepository : BarnRepository {
 
     override fun lagreSaksbehandlerOppgitteBarn(
         behandlingId: BehandlingId,
-        saksbehandlerOppgitteBarn: List<SaksbehandlerOppgitteBarn.Barn>
+        saksbehandlerOppgitteBarn: List<SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn>
     ) {
         synchronized(lock) {
             this.saksbehandlerOppgitteBarn[behandlingId] =

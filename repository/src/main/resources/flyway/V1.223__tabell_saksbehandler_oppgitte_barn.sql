@@ -12,7 +12,7 @@ ALTER TABLE BARNOPPLYSNING_GRUNNLAG
 CREATE TABLE BARN_SAKSBEHANDLER_OPPGITT
 (
     ID                            BIGSERIAL                              NOT NULL PRIMARY KEY,
-    IDENT                         VARCHAR(11),
+    IDENT                         TEXT,
     NAVN                          TEXT                                   NOT NULL,
     FODSELSDATO                   DATE                                   NOT NULL,
     RELASJON                      TEXT                                   NOT NULL,

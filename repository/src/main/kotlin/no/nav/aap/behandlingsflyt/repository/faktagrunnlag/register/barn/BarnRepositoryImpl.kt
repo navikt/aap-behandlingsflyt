@@ -143,7 +143,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
                     setLong(1, id)
                 }
                 setRowMapper { row ->
-                    SaksbehandlerOppgitteBarn.Barn(
+                    SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn(
                         ident = row.getStringOrNull("ident")?.let(::Ident),
                         navn = row.getString("navn"),
                         fødselsdato = Fødselsdato(row.getLocalDate("fodselsdato")),
@@ -330,7 +330,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
 
     override fun lagreSaksbehandlerOppgitteBarn(
         behandlingId: BehandlingId,
-        saksbehandlerOppgitteBarn: List<SaksbehandlerOppgitteBarn.Barn>
+        saksbehandlerOppgitteBarn: List<SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn>
     ) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
 

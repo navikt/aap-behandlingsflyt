@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBarnetilleggLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.SaksbehandlerOppgitteBarn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
@@ -68,14 +68,14 @@ class AvklarBarnetilleggLøser(
     }
 }
 
-private fun VurdertBarnDto.tilSaksbehandlerOppgittBarn() = SaksbehandlerOppgitteBarn.Barn(
+private fun VurdertBarnDto.tilSaksbehandlerOppgittBarn() = SaksbehandlerOppgitteBarn(
     ident = ident?.let { Ident(it) },
     navn = requireNotNull(navn) { "Navn må være satt for saksbehandler oppgitt barn" },
     fødselsdato = Fødselsdato(requireNotNull(fødselsdato) { "Fødselsdato må være satt" }),
     relasjon = requireNotNull(oppgittForeldreRelasjon) { "Foreldrerelasjon må være satt" }
 )
 
-private fun SaksbehandlerOppgitteBarn.Barn.erSammeBarnSom(annet: SaksbehandlerOppgitteBarn.Barn): Boolean =
+private fun SaksbehandlerOppgitteBarn.erSammeBarnSom(annet: SaksbehandlerOppgitteBarn): Boolean =
     if (ident != null && annet.ident != null) {
         ident == annet.ident
     } else {

@@ -9,7 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.SaksbehandlerOppgitteBarn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator.BarnIdent
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvarDto
@@ -128,14 +128,14 @@ private fun filtrerFolkeregisterBarn(
 
 private fun filtrerSaksbehandlerOppgittBarn(
     vurderteBarn: List<ExtendedVurdertBarnDto>,
-    saksbehandlerOppgittBarn: List<SaksbehandlerOppgitteBarn.Barn>,
+    saksbehandlerOppgittBarn: List<SaksbehandlerOppgitteBarn>,
     barnRepository: BarnRepository,
     behandling: Behandling
 ): List<SlettbarVurdertBarnDto> {
     val nyeBarnIDenneBehandling = hentNyeSaksbehandlerOppgitteBarnFor(behandling, barnRepository)
     val filtrerteSaksbehandlerOppgittBarn = vurderteBarn.filter { vurdertBarn ->
-        saksbehandlerOppgittBarn.any { saksbehandlerBarn ->
-            matcherBarn(vurdertBarn, saksbehandlerBarn)
+        saksbehandlerOppgittBarn.any { sob ->
+            matcherBarn(vurdertBarn, sob)
         }
     }
 
@@ -153,7 +153,7 @@ private fun filtrerSaksbehandlerOppgittBarn(
 private fun hentNyeSaksbehandlerOppgitteBarnFor(
     behandling: Behandling,
     barnRepository: BarnRepository
-): List<SaksbehandlerOppgitteBarn.Barn> {
+): List<SaksbehandlerOppgitteBarn> {
     val tidligereBarnGrunnlag = behandling.forrigeBehandlingId?.let { barnRepository.hentHvisEksisterer(it) }
     val gjeldendeBarnGrunnlag = barnRepository.hentHvisEksisterer(behandling.id)
 
@@ -162,14 +162,14 @@ private fun hentNyeSaksbehandlerOppgitteBarnFor(
 
     return gjeldendeSaksbehandlerOppgitteBarn.filter { gjeldendeBarn ->
         tidligereSaksbehandlerOppgitteBarn.none { tidligereBarn ->
-            matcherSaksbehandlerBarn(tidligereBarn, gjeldendeBarn)
+            matcherSaksbehandlerOppgitteBarn(tidligereBarn, gjeldendeBarn)
         }
     }
 }
 
-private fun matcherSaksbehandlerBarn(
-    barn1: SaksbehandlerOppgitteBarn.Barn,
-    barn2: SaksbehandlerOppgitteBarn.Barn
+private fun matcherSaksbehandlerOppgitteBarn(
+    barn1: SaksbehandlerOppgitteBarn,
+    barn2: SaksbehandlerOppgitteBarn
 ): Boolean {
     val ident1 = barn1.identifikator()
     val ident2 = barn2.identifikator()
@@ -183,15 +183,15 @@ private fun matcherSaksbehandlerBarn(
 
 private fun matcherBarn(
     vurdertBarn: ExtendedVurdertBarnDto,
-    saksbehandlerBarn: SaksbehandlerOppgitteBarn.Barn
+    saksbehandlerOppgittBarn: SaksbehandlerOppgitteBarn
 ): Boolean {
     return vurdertBarn.ident?.let { ident ->
-        when (val identifikator = saksbehandlerBarn.identifikator()) {
+        when (val identifikator = saksbehandlerOppgittBarn.identifikator()) {
             is BarnIdent -> identifikator.er(BarnIdent(ident))
             else -> false
         }
-    } ?: (saksbehandlerBarn.navn == vurdertBarn.navn &&
-            saksbehandlerBarn.fødselsdato.toLocalDate() == vurdertBarn.fødselsdato)
+    } ?: (saksbehandlerOppgittBarn.navn == vurdertBarn.navn &&
+            saksbehandlerOppgittBarn.fødselsdato.toLocalDate() == vurdertBarn.fødselsdato)
 }
 
 private fun filtrerOppgitteBarn(
@@ -289,7 +289,7 @@ private fun hentBarnUtenIdent(
 private fun validerBarnData(
     registerBarn: Barn?,
     oppgittBarn: OppgitteBarn.OppgittBarn?,
-    barn: SaksbehandlerOppgitteBarn.Barn?,
+    barn: SaksbehandlerOppgitteBarn?,
     ident: BarnIdent
 ) {
     if (registerBarn != null && oppgittBarn != null) {
