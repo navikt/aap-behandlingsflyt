@@ -95,11 +95,7 @@ class ArbeidsevneRepositoryImpl(private val connection: DBConnection) : Arbeidse
     }
 
     override fun lagre(behandlingId: BehandlingId, arbeidsevneVurderinger: List<ArbeidsevneVurdering>) {
-        val eksisterendeArbeidsevneGrunnlag = hentHvisEksisterer(behandlingId)
-
-        if (eksisterendeArbeidsevneGrunnlag?.vurderinger == arbeidsevneVurderinger) return
-
-        if (eksisterendeArbeidsevneGrunnlag != null) deaktiverEksisterende(behandlingId)
+        deaktiverEksisterende(behandlingId)
 
         val arbeidsevneId = connection.executeReturnKey("INSERT INTO ARBEIDSEVNE DEFAULT VALUES")
 
@@ -154,9 +150,6 @@ class ArbeidsevneRepositoryImpl(private val connection: DBConnection) : Arbeidse
         connection.execute("UPDATE ARBEIDSEVNE_GRUNNLAG SET AKTIV = FALSE WHERE AKTIV AND BEHANDLING_ID = ?") {
             setParams {
                 setLong(1, behandlingId.toLong())
-            }
-            setResultValidator { rowsUpdated ->
-                require(rowsUpdated == 1)
             }
         }
     }
