@@ -60,7 +60,6 @@ class VurderBistandsbehovStegTest {
                         erBehovForAnnenOppfølging = false,
                         vurderingenGjelderFra = nyRettighetsperiode.fom.plusDays(10),
                         vurdertAv = "Z00000",
-                        skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = null,
                     )

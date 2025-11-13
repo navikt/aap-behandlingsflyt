@@ -157,7 +157,6 @@ class TestScenarioOrkestrator(
                     erBehovForAnnenOppfølging = null,
                     skalVurdereAapIOvergangTilArbeid = null,
                     overgangBegrunnelse = null,
-                    skalVurdereAapIOvergangTilUføre = null,
                 )
             )
         )

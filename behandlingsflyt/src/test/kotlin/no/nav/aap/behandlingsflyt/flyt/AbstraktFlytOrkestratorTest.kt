@@ -441,8 +441,6 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                         erBehovForAnnenOppfølging = null,
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = null,
-                        skalVurdereAapIOvergangTilUføre = null,
-
                         ),
                 ),
             )
@@ -515,7 +513,6 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                     erBehovForAnnenOppfølging = false.takeUnless { erOppfylt },
                     skalVurdereAapIOvergangTilArbeid = null,
                     overgangBegrunnelse = null,
-                    skalVurdereAapIOvergangTilUføre = null,
                 )
             )
         )
