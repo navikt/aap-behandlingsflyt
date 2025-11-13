@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import java.time.Instant
 import java.time.LocalDate
 
-data class BistandVurdering(
+data class Bistandsvurdering(
     val id: Long? = null,
     val begrunnelse: String,
     val erBehovForAktivBehandling: Boolean,

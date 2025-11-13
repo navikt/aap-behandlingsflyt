@@ -103,7 +103,7 @@ class VurderBistandsbehovSteg(
             val grunnlag = BistandFaktagrunnlag(
                 kontekst.rettighetsperiode.fom,
                 kontekst.rettighetsperiode.tom,
-                bistandRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger.orEmpty(),
+                bistandRepository.hentHvisEksisterer(kontekst.behandlingId),
                 studentRepository.hentHvisEksisterer(kontekst.behandlingId)?.studentvurdering,
             )
             Bistandsvilkåret(vilkårsresultat).vurder(grunnlag = grunnlag)
@@ -203,7 +203,7 @@ class VurderBistandsbehovSteg(
 
     private fun erTilstrekkeligVurdert(kontekst: FlytKontekstMedPerioder): Boolean {
         val gjeldendeBistandstidslinje = bistandRepository.hentHvisEksisterer(kontekst.behandlingId)
-            ?.somBistandsvurderingstidslinje(kontekst.rettighetsperiode.fom)
+            ?.somBistandsvurderingstidslinje()
             .orEmpty()
         val perioderBistandsvilkåretErRelevant = perioderHvorBistandsvilkåretErRelevant(kontekst)
         return perioderBistandsvilkåretErRelevant.leftJoin(gjeldendeBistandstidslinje) { erRelevant, bistandsvurdering ->

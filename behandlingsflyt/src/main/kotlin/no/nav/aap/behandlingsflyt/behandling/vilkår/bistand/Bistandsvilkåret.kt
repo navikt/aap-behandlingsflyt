@@ -8,38 +8,24 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
 import no.nav.aap.komponenter.tidslinje.JoinStyle
 import no.nav.aap.komponenter.tidslinje.Segment
-import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
 
 class Bistandsvilkåret(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<BistandFaktagrunnlag> {
     private val vilkår: Vilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
 
     override fun vurder(grunnlag: BistandFaktagrunnlag) {
-        val bistandsvurderinger = grunnlag.vurderinger
-
         val studentvurderingTidslinje = Tidslinje(
             Periode(grunnlag.vurderingsdato, grunnlag.sisteDagMedMuligYtelse),
             grunnlag.studentvurdering
         )
-        val bistandvurderingTidslinje = bistandsvurderinger
-            .sortedBy { it.opprettet }
-            .map { vurdering ->
-                Tidslinje(
-                    Periode(
-                        fom = vurdering.vurderingenGjelderFra ?: grunnlag.vurderingsdato,
-                        tom = grunnlag.sisteDagMedMuligYtelse
-                    ),
-                    vurdering
-                )
-            }
-            .fold(Tidslinje<BistandVurdering>()) { t1, t2 ->
-                t1.kombiner(t2, StandardSammenslåere.prioriterHøyreSideCrossJoin())
-            }
+        val bistandvurderingTidslinje =
+            grunnlag.bistandGrunnlag?.somBistandsvurderingstidslinje(grunnlag.sisteDagMedMuligYtelse).orEmpty()
 
         val tidslinje = studentvurderingTidslinje.kombiner(
             bistandvurderingTidslinje,
@@ -58,7 +44,7 @@ class Bistandsvilkåret(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<B
 
     private fun opprettVilkårsvurdering(
         studentvurdering: StudentVurdering?,
-        bistandsvurdering: BistandVurdering?,
+        bistandsvurdering: Bistandsvurdering?,
         grunnlag: BistandFaktagrunnlag
     ): Vilkårsvurdering {
         val utfall: Utfall

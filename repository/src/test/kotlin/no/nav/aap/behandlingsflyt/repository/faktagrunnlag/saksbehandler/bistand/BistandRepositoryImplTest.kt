@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.bistan
 
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingVurdering
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingÅrsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -75,7 +75,7 @@ internal class BistandRepositoryImplTest {
             bistandRepository.lagre(
                 behandling.id,
                 listOf(
-                    BistandVurdering(
+                    Bistandsvurdering(
                         begrunnelse = "begrunnelse",
                         erBehovForAktivBehandling = false,
                         erBehovForArbeidsrettetTiltak = false,
@@ -93,7 +93,7 @@ internal class BistandRepositoryImplTest {
                 .usingRecursiveComparison(sammenligner)
                 .isEqualTo(
                     listOf(
-                        BistandVurdering(
+                        Bistandsvurdering(
                             begrunnelse = "begrunnelse",
                             erBehovForAktivBehandling = false,
                             erBehovForArbeidsrettetTiltak = false,
@@ -119,7 +119,7 @@ internal class BistandRepositoryImplTest {
                 bistandRepository.lagre(
                     behandling.id,
                     listOf(
-                        BistandVurdering(
+                        Bistandsvurdering(
                             begrunnelse = "begrunnelse",
                             erBehovForAktivBehandling = false,
                             erBehovForArbeidsrettetTiltak = false,
@@ -135,7 +135,7 @@ internal class BistandRepositoryImplTest {
                 bistandRepository.lagre(
                     behandling.id,
                     listOf(
-                        BistandVurdering(
+                        Bistandsvurdering(
                             begrunnelse = "begrunnelse",
                             erBehovForAktivBehandling = true,
                             erBehovForArbeidsrettetTiltak = true,
@@ -164,7 +164,7 @@ internal class BistandRepositoryImplTest {
             bistandRepository.lagre(
                 behandling.id,
                 listOf(
-                    BistandVurdering(
+                    Bistandsvurdering(
                         begrunnelse = "en begrunnelse",
                         erBehovForAktivBehandling = false,
                         erBehovForArbeidsrettetTiltak = false,
@@ -180,7 +180,7 @@ internal class BistandRepositoryImplTest {
             bistandRepository.lagre(
                 behandling.id,
                 listOf(
-                    BistandVurdering(
+                    Bistandsvurdering(
                         begrunnelse = "annen begrunnelse",
                         erBehovForAktivBehandling = false,
                         erBehovForArbeidsrettetTiltak = false,
@@ -196,7 +196,7 @@ internal class BistandRepositoryImplTest {
             bistandRepository.lagre(
                 behandling.id,
                 listOf(
-                    BistandVurdering(
+                    Bistandsvurdering(
                         begrunnelse = "annen begrunnelse",
                         erBehovForAktivBehandling = false,
                         erBehovForArbeidsrettetTiltak = false,
@@ -240,7 +240,7 @@ internal class BistandRepositoryImplTest {
             bistandRepository.lagre(
                 behandling1.id,
                 listOf(
-                    BistandVurdering(
+                    Bistandsvurdering(
                         begrunnelse = "begrunnelse",
                         erBehovForAktivBehandling = false,
                         erBehovForArbeidsrettetTiltak = false,
@@ -262,7 +262,7 @@ internal class BistandRepositoryImplTest {
                 .usingRecursiveComparison(sammenligner)
                 .isEqualTo(
                     listOf(
-                        BistandVurdering(
+                        Bistandsvurdering(
                             begrunnelse = "begrunnelse",
                             erBehovForAktivBehandling = false,
                             erBehovForArbeidsrettetTiltak = false,
@@ -297,7 +297,7 @@ internal class BistandRepositoryImplTest {
             bistandRepository.lagre(
                 behandling1.id,
                 listOf(
-                    BistandVurdering(
+                    Bistandsvurdering(
                         begrunnelse = "en begrunnelse",
                         erBehovForAktivBehandling = false,
                         erBehovForArbeidsrettetTiltak = false,
@@ -313,7 +313,7 @@ internal class BistandRepositoryImplTest {
             bistandRepository.lagre(
                 behandling1.id,
                 listOf(
-                    BistandVurdering(
+                    Bistandsvurdering(
                         begrunnelse = "annen begrunnelse",
                         erBehovForAktivBehandling = false,
                         erBehovForArbeidsrettetTiltak = false,
@@ -336,7 +336,7 @@ internal class BistandRepositoryImplTest {
                 .usingRecursiveComparison(sammenligner)
                 .isEqualTo(
                     listOf(
-                        BistandVurdering(
+                        Bistandsvurdering(
                             begrunnelse = "annen begrunnelse",
                             erBehovForAktivBehandling = false,
                             erBehovForArbeidsrettetTiltak = false,
@@ -362,7 +362,7 @@ internal class BistandRepositoryImplTest {
             bistandRepository.lagre(
                 behandling.id,
                 listOf(
-                    BistandVurdering(
+                    Bistandsvurdering(
                         begrunnelse = "en begrunnelse",
                         erBehovForAktivBehandling = false,
                         erBehovForArbeidsrettetTiltak = false,
@@ -380,7 +380,7 @@ internal class BistandRepositoryImplTest {
                 .usingRecursiveComparison(sammenligner)
                 .isEqualTo(
                     listOf(
-                        BistandVurdering(
+                        Bistandsvurdering(
                             begrunnelse = "en begrunnelse",
                             erBehovForAktivBehandling = false,
                             erBehovForArbeidsrettetTiltak = false,
@@ -397,7 +397,7 @@ internal class BistandRepositoryImplTest {
             bistandRepository.lagre(
                 behandling.id,
                 listOf(
-                    BistandVurdering(
+                    Bistandsvurdering(
                         begrunnelse = "annen begrunnelse",
                         erBehovForAktivBehandling = false,
                         erBehovForArbeidsrettetTiltak = false,
@@ -415,7 +415,7 @@ internal class BistandRepositoryImplTest {
                 .usingRecursiveComparison(sammenligner)
                 .isEqualTo(
                     listOf(
-                        BistandVurdering(
+                        Bistandsvurdering(
                             begrunnelse = "annen begrunnelse",
                             erBehovForAktivBehandling = false,
                             erBehovForArbeidsrettetTiltak = false,
@@ -473,7 +473,7 @@ internal class BistandRepositoryImplTest {
             bistandRepository.lagre(
                 behandling1.id,
                 listOf(
-                    BistandVurdering(
+                    Bistandsvurdering(
                         begrunnelse = "en begrunnelse",
                         erBehovForAktivBehandling = false,
                         erBehovForArbeidsrettetTiltak = false,
@@ -489,7 +489,7 @@ internal class BistandRepositoryImplTest {
             bistandRepository.lagre(
                 behandling1.id,
                 listOf(
-                    BistandVurdering(
+                    Bistandsvurdering(
                         begrunnelse = "annen begrunnelse",
                         erBehovForAktivBehandling = false,
                         erBehovForArbeidsrettetTiltak = false,
@@ -570,7 +570,7 @@ internal class BistandRepositoryImplTest {
             val sak = sak(connection)
             val førstegangsbehandling = finnEllerOpprettBehandling(connection, sak)
 
-            val bistandsvurdering1 = BistandVurdering(
+            val bistandsvurdering1 = Bistandsvurdering(
                 begrunnelse = "Begrunnelse",
                 erBehovForAktivBehandling = true,
                 erBehovForArbeidsrettetTiltak = true,
@@ -581,7 +581,7 @@ internal class BistandRepositoryImplTest {
                 overgangBegrunnelse = null,
                 vurdertIBehandling = førstegangsbehandling.id
             )
-            val bistandsvurdering2 = BistandVurdering(
+            val bistandsvurdering2 = Bistandsvurdering(
                 begrunnelse = "Ny begrunnelse",
                 erBehovForAktivBehandling = true,
                 erBehovForArbeidsrettetTiltak = false,
@@ -610,7 +610,7 @@ internal class BistandRepositoryImplTest {
         dataSource.transaction { connection ->
             val bistandRepo = BistandRepositoryImpl(connection)
             val revurdering = revurdering(connection, revurderingUtenOppdatertBistandsvurdering, sak)
-            val bistandsvurdering3 = BistandVurdering(
+            val bistandsvurdering3 = Bistandsvurdering(
                 begrunnelse = "Tredje begrunnelse",
                 erBehovForAktivBehandling = true,
                 erBehovForArbeidsrettetTiltak = false,
@@ -636,7 +636,7 @@ internal class BistandRepositoryImplTest {
             val sak = sak(connection)
             val førstegangsbehandling = finnEllerOpprettBehandling(connection, sak)
 
-            val bistandsvurdering1 = BistandVurdering(
+            val bistandsvurdering1 = Bistandsvurdering(
                 begrunnelse = "B1",
                 erBehovForAktivBehandling = false,
                 erBehovForArbeidsrettetTiltak = false,
@@ -664,7 +664,7 @@ internal class BistandRepositoryImplTest {
                     Bruker("Z00000")
                 )
             )
-            val bistandsvurdering2 = BistandVurdering(
+            val bistandsvurdering2 = Bistandsvurdering(
                 begrunnelse = "B2",
                 erBehovForAktivBehandling = false,
                 erBehovForArbeidsrettetTiltak = true,
@@ -681,7 +681,7 @@ internal class BistandRepositoryImplTest {
         dataSource.transaction { connection ->
             val bistandRepo = BistandRepositoryImpl(connection)
             val revurdering = revurderingSykdomArbeidsEvneBehovForBistand(connection, førstegangsbehandling)
-            val bistandsvurdering3 = BistandVurdering(
+            val bistandsvurdering3 = Bistandsvurdering(
                 begrunnelse = "B3",
                 erBehovForAktivBehandling = false,
                 erBehovForArbeidsrettetTiltak = false,

@@ -45,13 +45,13 @@ class AvklarBistandLøser(
 
         val eksisterendeBistandsvurderinger = behandling.forrigeBehandlingId
             ?.let { bistandRepository.hentHvisEksisterer(it) }
-            ?.somBistandsvurderingstidslinje(LocalDate.MIN)
+            ?.somBistandsvurderingstidslinje()
             .orEmpty()
 
         val ny = bistandsVurdering.let {
             BistandGrunnlag(
                 vurderinger = listOf(it),
-            ).somBistandsvurderingstidslinje(LocalDate.MIN)
+            ).somBistandsvurderingstidslinje()
         }
 
         val gjeldende = eksisterendeBistandsvurderinger
