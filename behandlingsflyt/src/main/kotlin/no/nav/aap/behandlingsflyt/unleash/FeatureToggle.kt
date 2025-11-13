@@ -22,7 +22,8 @@ enum class BehandlingsflytFeature : FeatureToggle {
     FatteVedtakAvklaringsbehovService,
     BedreUttrekkAvSakerMedFritakMeldeplikt,
     NyBeregningAvklarFaktaSteg,
-    EOSBeregning
+    EOSBeregning,
+    NyeBarn,
     ;
 
     override fun key(): String = name

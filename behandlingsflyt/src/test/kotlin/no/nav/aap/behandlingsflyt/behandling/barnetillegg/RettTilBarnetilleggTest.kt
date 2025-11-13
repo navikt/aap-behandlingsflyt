@@ -13,13 +13,13 @@ class RettTilBarnetilleggTest {
 
         assertThat(rettTilBarnetillegg.barnTilAvklaring().size).isEqualTo(0)
 
-        rettTilBarnetillegg.leggTilOppgitteBarn(setOf(BarnIdentifikator.BarnIdent("123")))
+        rettTilBarnetillegg.leggTilUavklartBarn(setOf(BarnIdentifikator.BarnIdent("123")))
 
         // Fortsatt 0
         assertThat(rettTilBarnetillegg.barnTilAvklaring().size).isEqualTo(0)
 
         // Legger til ukjent barn
-        rettTilBarnetillegg.leggTilOppgitteBarn(setOf(BarnIdentifikator.BarnIdent("543")))
+        rettTilBarnetillegg.leggTilUavklartBarn(setOf(BarnIdentifikator.BarnIdent("543")))
 
         // Nå skal det være ett barn til avklaring
         assertThat(rettTilBarnetillegg.barnTilAvklaring().size).isEqualTo(1)
