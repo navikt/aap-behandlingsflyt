@@ -53,7 +53,7 @@ class BarnetilleggSteg(
             definisjon = Definisjon.AVKLAR_BARNETILLEGG,
             vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst) },
             erTilstrekkeligVurdert = { !harPerioderMedBarnTilAvklaring(barnetilgangTidslinje) },
-            tilbakestillGrunnlag = { tilbakestillBarnetillegg(kontekst)},
+            tilbakestillGrunnlag = { tilbakestillBarnetillegg(kontekst) },
             kontekst
         )
         return Fullført
@@ -69,7 +69,7 @@ class BarnetilleggSteg(
         return when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
             VurderingType.REVURDERING ->
-                (!tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())
+                (tidligereVurderinger.muligMedRettTilAAP(kontekst, type())
                         && (vurderingsbehovSomTvingerStopp.any { kontekst.vurderingsbehovRelevanteForSteg.contains(it) }
                             || (kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty() && (harOppgittBarn(barneGrunnlag) || harGjortManuellVurderingIBehandlingen(kontekst)))
                         )
@@ -100,6 +100,14 @@ class BarnetilleggSteg(
             vurdertAv = forrigeBarnGrunnlag?.vurderteBarn?.vurdertAv ?: SYSTEMBRUKER.ident,
             vurderteBarn = vurderteBarn
         )
+
+        val saksbehandlerOppgitteBarn = forrigeBarnGrunnlag?.saksbehandlerOppgitteBarn?.barn.orEmpty()
+
+        if (forrigeBarnGrunnlag == null) {
+            barnRepository.deaktiverAlleSaksbehandlerOppgitteBarn(kontekst.behandlingId)
+        }
+
+        barnRepository.lagreSaksbehandlerOppgitteBarn(kontekst.behandlingId, saksbehandlerOppgitteBarn)
 
         // Ting er nå helt tilbakestillt, vi må derfor beregne tidslinjen på nytt
         beregnOgOppdaterBarnetilleggTidslinje(kontekst)
