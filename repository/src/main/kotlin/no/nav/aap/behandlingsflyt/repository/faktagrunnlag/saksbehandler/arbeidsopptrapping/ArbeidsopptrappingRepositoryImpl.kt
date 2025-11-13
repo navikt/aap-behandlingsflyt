@@ -5,10 +5,17 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
 
 class ArbeidsopptrappingRepositoryImpl(private val connection: DBConnection) : ArbeidsopptrappingRepository {
     private val log = LoggerFactory.getLogger(javaClass)
+
+    companion object : Factory<ArbeidsopptrappingRepositoryImpl> {
+        override fun konstruer(connection: DBConnection): ArbeidsopptrappingRepositoryImpl {
+            return ArbeidsopptrappingRepositoryImpl(connection)
+        }
+    }
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): ArbeidsopptrappingGrunnlag? {
         val query = """
