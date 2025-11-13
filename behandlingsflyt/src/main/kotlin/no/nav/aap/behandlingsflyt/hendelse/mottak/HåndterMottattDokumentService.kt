@@ -24,8 +24,11 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRe
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Omgjøringskilde
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Oppfølgingsoppgave
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppfølgingsoppgaveV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelseV0
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
@@ -172,13 +175,35 @@ class HåndterMottattDokumentService(
         }
     }
 
+    fun håndterMottattTilbakekrevingHendelse(
+        sakId: SakId,
+        referanse: InnsendingReferanse,
+        mottattTidspunkt: LocalDateTime,
+        brevkategori: InnsendingType,
+        melding: TilbakekrevingHendelse
+    ) {
+        when (melding) {
+            is TilbakekrevingHendelseV0 -> {
+                val behandlingId = melding.eksternBehandlingId?.let { BehandlingId(it.toLong()) } ?: error("Kan ikke finne behandlingId i tilbakekrevinghendelse")
+                /**
+                 * TODO:
+                 * Tror ikke vi alltid får med behandlingId i meldingen - hvordan "markerer" vi hendelsen da?
+                 * Sjekk om tilbakekrevingen finnes i Kelvin - hvis ikke opprett
+                 * Oppdater oppgave basert på tilstand [TilbakekrevingBehandlingsstatus] - mangler "Sendt til beslutter" og "retur fra beslutter"
+                 */
+                TODO()
+//                mottaDokumentService.markerSomBehandlet(sakId, behandlingId, referanse)
+            }
+        }
+    }
+    
     /**
      * Knytter klage og oppfølgingsbehandling direkte til behandlingen den opprettet, ikke via informasjonskrav.
      * Dette fordi det være flere åpne behandlinger av disse typene.
      * ManuellVurdering og NyÅrsakTilBehandling er knyttet eksplisitt til behandling og er ikke et informasjonskrav i flyten
      */
     private fun skalMarkereDokumentSomBehandlet(melding: Melding?): Boolean =
-        melding is KabalHendelse || melding is Oppfølgingsoppgave || melding is ManuellRevurdering || melding is NyÅrsakTilBehandling
+        melding is KabalHendelse || melding is Oppfølgingsoppgave || melding is ManuellRevurdering || melding is NyÅrsakTilBehandling || melding is TilbakekrevingHendelse
 
     fun oppdaterÅrsakerTilBehandlingPåEksisterendeÅpenBehandling(
         sakId: SakId,
@@ -224,6 +249,7 @@ class HåndterMottattDokumentService(
             InnsendingType.PDL_HENDELSE_DODSFALL_BRUKER -> ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA
             InnsendingType.PDL_HENDELSE_DODSFALL_BARN -> ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA
             InnsendingType.OMGJØRING_KLAGE_REVURDERING -> utledÅrsakEtterOmgjøringAvKlage(melding)
+            InnsendingType.TILBAKEKREVING_HENDELSE -> ÅrsakTilOpprettelse.TILBAKEKREVING_HENDELSE
         }
     }
 
@@ -303,6 +329,7 @@ class HåndterMottattDokumentService(
             InnsendingType.OPPFØLGINGSOPPGAVE -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.OPPFØLGINGSOPPGAVE))
             InnsendingType.PDL_HENDELSE_DODSFALL_BRUKER -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.DØDSFALL_BRUKER))
             InnsendingType.PDL_HENDELSE_DODSFALL_BARN -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.DØDSFALL_BARN))
+            InnsendingType.TILBAKEKREVING_HENDELSE -> emptyList()
         }
     }
 
