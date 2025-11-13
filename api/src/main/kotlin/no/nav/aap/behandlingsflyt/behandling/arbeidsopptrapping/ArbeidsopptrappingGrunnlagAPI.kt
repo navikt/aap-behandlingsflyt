@@ -19,6 +19,7 @@ import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
@@ -77,15 +78,16 @@ private fun arbeidsopptrappingGrunnlag(
         val vedtatteVerdier =
             behandling.forrigeBehandlingId?.let { arbeidsopptrappingRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
 
-        val historikk = arbeidsopptrappingRepository.hentAlleVurderinger(behandling.sakId, behandling.id)
+        //val historikk = arbeidsopptrappingRepository.hentAlleVurderinger(behandling.sakId, behandling.id)
+        val vurderbarePerioder = listOf<Periode>() // må hente ut disse fra 11-5 & 11-6
 
         ArbeidsopptrappingGrunnlagResponse(
             harTilgangTilÅSaksbehandle = kanSaksbehandle,
-            historikk =
-                historikk
+            historikk = emptySet(),
+                /*historikk
                     .map { tilResponse(it, ansattInfoService) }
                     .sortedBy { it.vurderingsTidspunkt }
-                    .toSet(),
+                    .toSet(),*/
             gjeldendeVedtatteVurderinger =
                 vedtatteVerdier
                     .map { tilResponse(it, ansattInfoService) }
@@ -96,7 +98,7 @@ private fun arbeidsopptrappingGrunnlag(
                     ?.map { tilResponse(it, ansattInfoService) }
                     ?.sortedBy { it.fraDato }
                     .orEmpty(),
-            perioderSomKanVurderes = listOf()
+            perioderSomKanVurderes = vurderbarePerioder
         )
     }
 }
