@@ -1,0 +1,3 @@
+ALTER TABLE sykepenge_vurdering
+    ADD COLUMN VURDERT_I_BEHANDLING     BIGINT REFERENCES BEHANDLING (ID),
+    ADD COLUMN gjelder_tom              DATE;
