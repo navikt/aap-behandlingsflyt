@@ -114,7 +114,6 @@ private fun BistandVurdering.tilResponse(
         erBehovForAnnenOppfølging = erBehovForAnnenOppfølging,
         vurderingenGjelderFra = vurderingenGjelderFra,
         skalVurdereAapIOvergangTilArbeid = skalVurdereAapIOvergangTilArbeid,
-        skalVurdereAapIOvergangTilUføre = skalVurdereAapIOvergangTilUføre,
         vurdertAv = VurdertAvResponse(
             ident = vurdertAv,
             dato = opprettet?.atZone(ZoneId.of("Europe/Oslo"))?.toLocalDate()

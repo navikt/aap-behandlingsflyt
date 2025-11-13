@@ -1542,7 +1542,6 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                         erBehovForAktivBehandling = false,
                         erBehovForArbeidsrettetTiltak = false,
                         erBehovForAnnenOppfølging = false,
-                        skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = "Yep"
                     ),
