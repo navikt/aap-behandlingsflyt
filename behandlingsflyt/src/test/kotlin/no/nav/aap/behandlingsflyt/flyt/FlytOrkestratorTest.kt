@@ -2229,7 +2229,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
             assertThat(åpneAvklaringsbehov).isNotEmpty()
             assertThat(behandling.status()).isEqualTo(Status.UTREDES)
-        }.leggTilVurderingsbehov(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_YRKESSKADE)
+        }
             .løsAvklaringsBehov(
                 AvklarStudentLøsning(
                     studentvurdering = StudentVurderingDTO(
@@ -2269,17 +2269,6 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }
             .kvalitetssikreOk()
-            .løsAvklaringsBehov(
-                AvklarYrkesskadeLøsning(
-                    yrkesskadesvurdering = YrkesskadevurderingDto(
-                        begrunnelse = "",
-                        relevanteSaker = emptyList(),
-                        relevanteYrkesskadeSaker = emptyList(),
-                        andelAvNedsettelsen = null,
-                        erÅrsakssammenheng = false
-                    )
-                ),
-            )
             .løsAvklaringsBehov(
                 FastsettBeregningstidspunktLøsning(
                     beregningVurdering = BeregningstidspunktVurderingDto(
