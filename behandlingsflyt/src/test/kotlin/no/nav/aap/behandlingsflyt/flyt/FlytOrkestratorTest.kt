@@ -669,7 +669,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsBistand()
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-
+            .leggTilVurderingsbehov(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_YRKESSKADE)
         sak.sendInnMeldekort(
             journalpostId = JournalpostId("220"),
             mottattTidspunkt = LocalDateTime.now(),
@@ -752,6 +752,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 assertThat(åpneAvklaringsbehov).isNotEmpty()
                 assertThat(behandling.status()).isEqualTo(Status.UTREDES)
             }
+            .leggTilVurderingsbehov(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_YRKESSKADE)
             .løsSykdom(sak.rettighetsperiode.fom)
             .løsBistand()
             .løsRefusjonskrav()
@@ -1296,7 +1297,11 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .medKontekst {
                 assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
             }
-            .løsSykdom(vurderingGjelderFra = sak.rettighetsperiode.fom, erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true)
+            .leggTilVurderingsbehov(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_YRKESSKADE)
+            .løsSykdom(
+                vurderingGjelderFra = sak.rettighetsperiode.fom,
+                erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true
+            )
             .løsBistand()
             .løsAvklaringsBehov(
                 RefusjonkravLøsning(
@@ -2224,36 +2229,37 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
             assertThat(åpneAvklaringsbehov).isNotEmpty()
             assertThat(behandling.status()).isEqualTo(Status.UTREDES)
-        }.løsAvklaringsBehov(
-            AvklarStudentLøsning(
-                studentvurdering = StudentVurderingDTO(
-                    begrunnelse = "Er student",
-                    avbruttStudieDato = LocalDate.now(),
-                    avbruddMerEnn6Måneder = true,
-                    harBehovForBehandling = true,
-                    harAvbruttStudie = true,
-                    avbruttPgaSykdomEllerSkade = true,
-                    godkjentStudieAvLånekassen = false,
-                )
-            ),
-        ).løsAvklaringsBehov(
-            AvklarSykdomLøsning(
-                sykdomsvurderinger = listOf(
-                    SykdomsvurderingLøsningDto(
-                        begrunnelse = "Arbeidsevnen er nedsatt med mer enn halvparten",
-                        dokumenterBruktIVurdering = listOf(JournalpostId("12312983")),
-                        harSkadeSykdomEllerLyte = true,
-                        erSkadeSykdomEllerLyteVesentligdel = true,
-                        erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-                        erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-                        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                        erArbeidsevnenNedsatt = true,
-                        yrkesskadeBegrunnelse = null,
-                        vurderingenGjelderFra = null,
+        }.leggTilVurderingsbehov(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_YRKESSKADE)
+            .løsAvklaringsBehov(
+                AvklarStudentLøsning(
+                    studentvurdering = StudentVurderingDTO(
+                        begrunnelse = "Er student",
+                        avbruttStudieDato = LocalDate.now(),
+                        avbruddMerEnn6Måneder = true,
+                        harBehovForBehandling = true,
+                        harAvbruttStudie = true,
+                        avbruttPgaSykdomEllerSkade = true,
+                        godkjentStudieAvLånekassen = false,
+                    )
+                ),
+            ).løsAvklaringsBehov(
+                AvklarSykdomLøsning(
+                    sykdomsvurderinger = listOf(
+                        SykdomsvurderingLøsningDto(
+                            begrunnelse = "Arbeidsevnen er nedsatt med mer enn halvparten",
+                            dokumenterBruktIVurdering = listOf(JournalpostId("12312983")),
+                            harSkadeSykdomEllerLyte = true,
+                            erSkadeSykdomEllerLyteVesentligdel = true,
+                            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                            erArbeidsevnenNedsatt = true,
+                            yrkesskadeBegrunnelse = null,
+                            vurderingenGjelderFra = null,
+                        )
                     )
                 )
-            )
-        ).løsBistand()
+            ).løsBistand()
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
             .medKontekst {
@@ -2844,7 +2850,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null),
             ),
         )
-
+        behandling.leggTilVurderingsbehov(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_YRKESSKADE)
         behandling = løsFramTilForutgåendeMedlemskap(behandling = behandling, harYrkesskade = true)
 
         // Validér avklaring
@@ -2937,7 +2943,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                         )
                     )
                 )
-        )
+            )
 
         // Validér riktig resultat
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
