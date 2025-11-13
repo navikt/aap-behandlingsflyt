@@ -4,10 +4,9 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.søknad.SøknadInformasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.AndreUtbetalingerYtelser
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.navenheter.NavKontorService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.andreYtelserOppgittISøknad.AndreYtelserOppgittISøknadRepository
@@ -15,12 +14,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.Refus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AndreUtbetalingerYtelserDto
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KabalHendelseV0
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Søknad
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
@@ -57,6 +50,8 @@ fun NormalOpenAPIRoute.refusjonGrunnlagApi(
 
                         val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                         val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
+                        val vilkårsresultatRepository =
+                            repositoryProvider.provide<VilkårsresultatRepository>()
 
                         //TODO: Skal fikses etter prodsetting slik at det bare er gjeldendeVurderinger man skal forholde seg til
                         val gjeldendeVurderinger = refusjonkravRepository.hentHvisEksisterer(behandling.id)?.map {
@@ -68,10 +63,18 @@ fun NormalOpenAPIRoute.refusjonGrunnlagApi(
 
                         val gjeldendeVurdering =
                             gjeldendeVurderinger?.firstOrNull()
-                        val historiskeVurderinger =
-                            refusjonkravRepository
-                                .hentHistoriskeVurderinger(behandling.sakId, behandling.id)
-                                .map { it.tilResponse(ansattInfoService) }
+
+                        val virkningstidspunkt =
+                            runCatching {
+                                if (behandling.erYtelsesbehandling()) VirkningstidspunktUtleder(
+                                    vilkårsresultatRepository = vilkårsresultatRepository
+                                ).utledVirkningsTidspunkt(
+                                    behandling.id
+                                ) else null
+                            }.getOrElse {
+                                null
+                            }
+
 
 
                         val økonomiskSosialHjelp: Boolean? = if (andreUtbetalinger?.stønad == null ) {
@@ -84,10 +87,10 @@ fun NormalOpenAPIRoute.refusjonGrunnlagApi(
 
 
                         RefusjonkravGrunnlagResponse(
+                            nåværendeVirkningsTidspunkt = virkningstidspunkt,
                             harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                             gjeldendeVurdering = gjeldendeVurdering,
                             gjeldendeVurderinger = gjeldendeVurderinger,
-                            historiskeVurderinger = historiskeVurderinger,
                             økonomiskSosialHjelp = økonomiskSosialHjelp
                         )
                     }
