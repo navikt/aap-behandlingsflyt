@@ -164,20 +164,6 @@ class OppholdskravGrunnlagRepositoryImplTest {
         assertThat(oppholdskravVurdering1.vurdertIBehandling).isEqualTo(oppholdskravVurdering2.vurdertIBehandling)
     }
 
-
-    private fun opprettBehandlingPåSak(dataSource: DataSource, sakId: SakId): BehandlingId {
-        val behandling = dataSource.transaction { connection ->
-            BehandlingRepositoryImpl(connection).opprettBehandling(
-                sakId = sakId,
-                typeBehandling = TypeBehandling.Førstegangsbehandling,
-                forrigeBehandlingId = null,
-                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(listOf(), ÅrsakTilOpprettelse.SØKNAD)
-            )
-        }
-        return behandling.id
-    }
-
-
     private fun opprettBehandling(dataSource: DataSource): BehandlingId {
         val person = dataSource.transaction { connection ->
             PersonRepositoryImpl(connection).finnEllerOpprett(listOf(Ident("01017012345")))

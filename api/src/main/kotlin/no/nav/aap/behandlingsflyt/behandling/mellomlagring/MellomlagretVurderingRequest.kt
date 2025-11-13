@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.mellomlagring
 
 import no.nav.aap.tilgang.plugin.kontrakt.Behandlingsreferanse
-import java.util.*
+import java.util.UUID
 
 data class MellomlagretVurderingRequest(
     val avklaringsbehovkode: String,

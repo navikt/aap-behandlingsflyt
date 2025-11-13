@@ -9,10 +9,6 @@ import java.time.LocalDate
 data class BistandGrunnlag(
     val vurderinger: List<BistandVurdering>,
 ) {
-    fun harVurdertPeriode(periode: Periode): Boolean {
-        return true
-    }
-
     fun somBistandsvurderingstidslinje(startDato: LocalDate): Tidslinje<BistandVurdering> {
         return vurderinger
             .sortedBy { it.vurderingenGjelderFra ?: startDato }

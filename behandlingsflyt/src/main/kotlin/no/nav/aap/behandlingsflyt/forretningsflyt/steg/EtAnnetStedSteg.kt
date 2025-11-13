@@ -42,8 +42,6 @@ class EtAnnetStedSteg(
         behandlingRepository = repositoryProvider.provide(),
     )
 
-    private val log = LoggerFactory.getLogger(javaClass)
-
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 

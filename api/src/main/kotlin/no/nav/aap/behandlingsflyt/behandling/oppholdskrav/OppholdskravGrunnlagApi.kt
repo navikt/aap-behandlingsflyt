@@ -2,9 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.oppholdskrav
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
-import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
-import io.ktor.http.HttpStatusCode
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -18,12 +16,10 @@ import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
-import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
-import java.time.LocalDate
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.oppholdskravGrunnlagApi(

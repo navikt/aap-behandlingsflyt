@@ -4,11 +4,10 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
-import io.ktor.http.HttpStatusCode
+import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.httpklient.exception.ApiException
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.repository.RepositoryRegistry

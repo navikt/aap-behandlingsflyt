@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.RegisterBarn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.SaksbehandlerOppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.VurderteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -16,6 +17,7 @@ import java.util.concurrent.ConcurrentHashMap
 object InMemoryBarnRepository : BarnRepository {
     private val barn = ConcurrentHashMap<BehandlingId, List<String>>()
     private val oppgitteBarn = ConcurrentHashMap<BehandlingId, OppgitteBarn>()
+    private val saksbehandlerOppgitteBarn = ConcurrentHashMap<BehandlingId, SaksbehandlerOppgitteBarn>()
     private val registerBarn = ConcurrentHashMap<BehandlingId, List<Barn>>()
     private val vurdertBarn = ConcurrentHashMap<BehandlingId, List<VurdertBarn>>()
     private val lock = Object()
@@ -23,10 +25,12 @@ object InMemoryBarnRepository : BarnRepository {
     override fun hentHvisEksisterer(behandlingId: BehandlingId): BarnGrunnlag? {
         synchronized(lock) {
             return if (barn.containsKey(behandlingId) || oppgitteBarn.containsKey(behandlingId) ||
-                registerBarn.containsKey(behandlingId) || vurdertBarn.containsKey(behandlingId)
+                saksbehandlerOppgitteBarn.containsKey(behandlingId) || registerBarn.containsKey(behandlingId) ||
+                vurdertBarn.containsKey(behandlingId)
             ) {
                 BarnGrunnlag(
                     oppgitteBarn = oppgitteBarn[behandlingId],
+                    saksbehandlerOppgitteBarn = saksbehandlerOppgitteBarn[behandlingId],
                     registerbarn = registerBarn[behandlingId]?.let {
                         RegisterBarn(
                             id = 0,
@@ -54,7 +58,7 @@ object InMemoryBarnRepository : BarnRepository {
 
     override fun hent(behandlingId: BehandlingId): BarnGrunnlag {
         return hentHvisEksisterer(behandlingId)
-            ?: BarnGrunnlag(null, null, null)
+            ?: BarnGrunnlag(null, null, null, null)
     }
 
     override fun lagreOppgitteBarn(
@@ -63,6 +67,16 @@ object InMemoryBarnRepository : BarnRepository {
     ) {
         synchronized(lock) {
             this.oppgitteBarn[behandlingId] = oppgitteBarn
+        }
+    }
+
+    override fun lagreSaksbehandlerOppgitteBarn(
+        behandlingId: BehandlingId,
+        saksbehandlerOppgitteBarn: List<SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn>
+    ) {
+        synchronized(lock) {
+            this.saksbehandlerOppgitteBarn[behandlingId] =
+                SaksbehandlerOppgitteBarn(id = 0, barn = saksbehandlerOppgitteBarn)
         }
     }
 
@@ -100,8 +114,7 @@ object InMemoryBarnRepository : BarnRepository {
         TODO("Not yet implemented")
     }
 
-    override fun hentBehandlingIdForSakSomFårBarnetilleggForBarn(ident: Ident): List<BehandlingId>
-    {
+    override fun hentBehandlingIdForSakSomFårBarnetilleggForBarn(ident: Ident): List<BehandlingId> {
         TODO("Not yet implemented")
     }
 
@@ -109,6 +122,7 @@ object InMemoryBarnRepository : BarnRepository {
         synchronized(lock) {
             barn.remove(behandlingId)
             oppgitteBarn.remove(behandlingId)
+            saksbehandlerOppgitteBarn.remove(behandlingId)
             registerBarn.remove(behandlingId)
             vurdertBarn.remove(behandlingId)
         }

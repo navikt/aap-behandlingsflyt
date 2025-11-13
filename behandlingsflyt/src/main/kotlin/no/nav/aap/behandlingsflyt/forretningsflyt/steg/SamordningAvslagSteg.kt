@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
-import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag

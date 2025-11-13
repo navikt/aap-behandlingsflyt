@@ -19,10 +19,8 @@ import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
-import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
-import java.time.LocalDate
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.overgangArbeidGrunnlagApi(

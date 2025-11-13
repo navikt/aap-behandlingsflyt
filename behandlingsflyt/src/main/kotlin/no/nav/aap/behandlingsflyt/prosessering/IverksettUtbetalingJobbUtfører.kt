@@ -11,6 +11,7 @@ import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import org.slf4j.LoggerFactory
+import java.time.Duration
 
 class IverksettUtbetalingJobbUtfører(
     private val utbetalingGateway: UtbetalingGateway,
@@ -53,5 +54,8 @@ class IverksettUtbetalingJobbUtfører(
         override val beskrivelse = "Overfører vedtak fra behandlingsflyt til utbetaling"
         override val navn = "Iverksett utbetaling"
         override val type = "flyt.iverksettUtbetaling"
+        override val retries = 15
+        override val retryBackoffTid = Duration.ofMinutes(1)
+
     }
 }

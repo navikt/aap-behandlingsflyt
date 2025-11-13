@@ -1,6 +1,7 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 val opentelemetryVersion = "2.21.0-alpha"
+val testcontainersVersion = "2.0.1"
 
 repositories {
     mavenCentral()
@@ -101,13 +102,11 @@ dependencies {
     implementation(libs.dbtest)
     implementation(libs.motorTestUtils)
     testImplementation(libs.bundles.junit)
-    testImplementation("org.testcontainers:postgresql:1.21.3")
-    constraints {
-        implementation("org.apache.commons:commons-compress:1.28.0") {
-            because("https://github.com/advisories/GHSA-4g9r-vxhx-9pgx")
-        }
-    }
     testImplementation(kotlin("test"))
-    testImplementation("org.testcontainers:kafka:1.21.3")
+
     testImplementation("org.apache.kafka:kafka-clients:4.1.0")
+
+    testImplementation("org.testcontainers:testcontainers:$testcontainersVersion")
+    testImplementation("org.testcontainers:testcontainers-postgresql:${testcontainersVersion}")
+    testImplementation("org.testcontainers:testcontainers-kafka:${testcontainersVersion}")
 }
