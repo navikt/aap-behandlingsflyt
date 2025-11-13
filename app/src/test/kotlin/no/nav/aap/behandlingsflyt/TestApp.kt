@@ -26,6 +26,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppgitteBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegGruppe
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
@@ -38,7 +40,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.AzurePortHolder
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.FakeServers
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
@@ -104,14 +105,7 @@ fun main() {
             route("/test") {
                 route("/opprett") {
                     post<Unit, OpprettTestcaseDTO, OpprettTestcaseDTO> { _, dto ->
-                        sendInnSøknad(dto)
-                        respond(dto)
-                    }
-                }
-
-                route("/opprett-og-fullfoer") {
-                    post<Unit, OpprettTestcaseDTO, OpprettTestcaseDTO> { _, dto ->
-                        sendInnOgFullførFørstegangsbehandling(dto)
+                        opprettNySakOgBehandling(dto)
                         respond(dto)
                     }
                 }
@@ -275,8 +269,11 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO): Sak {
     return sak
 }
 
-private fun sendInnOgFullførFørstegangsbehandling(dto: OpprettTestcaseDTO): Sak {
+private fun opprettNySakOgBehandling(dto: OpprettTestcaseDTO): Sak {
     val sak = sendInnSøknad(dto)
+
+    if (dto.steg == StegType.AVKLAR_STUDENT) return sak
+
     motor.kjørJobber()
 
     // fullfør førstegangsbehandling
@@ -288,67 +285,91 @@ private fun sendInnOgFullførFørstegangsbehandling(dto: OpprettTestcaseDTO): Sa
         if (dto.student) {
             løsStudent(behandling)
         } else {
+            if (dto.steg == StegType.AVKLAR_SYKDOM) return sak
             løsSykdom(behandling)
+
+            if (dto.steg == StegType.VURDER_BISTANDSBEHOV) return sak
             løsBistand(behandling)
         }
 
         // Vurderinger i sykdom
+        if (dto.steg == StegType.REFUSJON_KRAV) return sak
         løsRefusjonskrav(behandling)
+
+        if (dto.steg == StegType.SYKDOMSVURDERING_BREV) return sak
         løsSykdomsvurderingBrev(behandling)
+
+        if (dto.steg == StegType.KVALITETSSIKRING) return sak
         kvalitetssikreOk(behandling)
 
         // Yrkesskade
         if (dto.yrkesskade) {
+            if (dto.steg == StegType.VURDER_YRKESSKADE) return sak
             løsYrkesSkade(behandling)
         }
 
         // Inntekt
+        if (dto.steg == StegType.FASTSETT_BEREGNINGSTIDSPUNKT) return sak
         løsBeregningstidspunkt(behandling)
 
         if (dto.inntekterPerAr == null || dto.inntekterPerAr.isEmpty()) {
+            if (dto.steg == StegType.MANGLENDE_LIGNING) return sak
             løsManuellInntektVurdering(behandling)
         }
 
         // Forutgående medlemskap
         if (dto.yrkesskade) {
+            if (dto.steg == StegType.VURDER_YRKESSKADE) return sak
             løsFastsettYrkesskadeInntekt(behandling)
         } else {
+            if (dto.steg == StegType.VURDER_MEDLEMSKAP) return sak
             løsForutgåendeMedlemskap(behandling)
         }
 
         // Oppholdskrav
+        if (dto.steg == StegType.VURDER_OPPHOLDSKRAV) return sak
         løsOppholdskrav(behandling)
 
         // Institusjonsopphold
+        if (dto.steg == StegType.DU_ER_ET_ANNET_STED) return sak
         if (dto.institusjoner.fengsel == true) {
             løsSoningsforhold(behandling)
         }
 
         // Barnetillegg
+        if (dto.steg == StegType.BARNETILLEGG) return sak
         if (dto.barn.isNotEmpty()) {
             løsBarnetillegg(behandling)
         }
 
         // Samordning
+        if (dto.steg == StegType.SAMORDNING_GRADERING) return sak
         if (dto.sykepenger.isEmpty()) {
             løsUtenSamordning(behandling)
         } else {
             løsSamordning(behandling, dto.sykepenger)
         }
 
+        if (dto.steg == StegType.SAMORDNING_ANDRE_STATLIGE_YTELSER) return sak
         løsSamordningAndreStatligeYtelser(behandling)
 
         if (dto.tjenestePensjon == true) {
+            if (dto.steg == StegType.SAMORDNING_TJENESTEPENSJON_REFUSJONSKRAV) return sak
             løsTjenestepensjonRefusjonskravVurdering(behandling)
         }
 
         // Vedtak
+        if (dto.steg == StegType.FORESLÅ_VEDTAK) return sak
         løsForeslåVedtakLøsning(behandling)
-        fattVedtakEllerSendRetur(behandling)
-        løsVedtaksbrev(behandling)
-    }
 
-    return sak
+        if (dto.steg == StegType.FATTE_VEDTAK) return sak
+        fattVedtakEllerSendRetur(behandling)
+
+        if (dto.steg == StegType.BREV) return sak
+        løsVedtaksbrev(behandling)
+
+        return sak
+    }
 }
 
 private fun hentSisteBehandlingForSak(sakId: SakId): Behandling {
