@@ -277,7 +277,7 @@ fun NormalOpenAPIRoute.brevApi(
             ) { _, request ->
                 val response = KanDistribuereBrevReponse(
                     mottakereDistStatus = brevbestillingGateway.kanDistribuereBrev(
-                        request.saksnummer,
+                        request.behandlingsReferanse,
                         request.brukerIdent,
                         request.mottakerIdentListe
                     )
