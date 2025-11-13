@@ -55,8 +55,8 @@ fun NormalOpenAPIRoute.refusjonGrunnlagApi(
 
                         //TODO: Skal fikses etter prodsetting slik at det bare er gjeldendeVurderinger man skal forholde seg til
                         val gjeldendeVurderinger = refusjonkravRepository.hentHvisEksisterer(behandling.id)?.map {
-                                it.tilResponse(ansattInfoService)
-                            }
+                            it.tilResponse(ansattInfoService)
+                        }
 
                         val andreYtelserRepository = repositoryProvider.provide<AndreYtelserOppgittISøknadRepository>()
                         val andreUtbetalinger = andreYtelserRepository.hentHvisEksisterer(behandling.id)
@@ -74,10 +74,7 @@ fun NormalOpenAPIRoute.refusjonGrunnlagApi(
                             }.getOrElse {
                                 null
                             }
-
-
-
-                        val økonomiskSosialHjelp: Boolean? = if (andreUtbetalinger?.stønad == null ) {
+                        val økonomiskSosialHjelp: Boolean? = if (andreUtbetalinger?.stønad == null) {
                             null
                         } else if (andreUtbetalinger.stønad?.contains(AndreUtbetalingerYtelser.ØKONOMISK_SOSIALHJELP) == true) {
                             true
