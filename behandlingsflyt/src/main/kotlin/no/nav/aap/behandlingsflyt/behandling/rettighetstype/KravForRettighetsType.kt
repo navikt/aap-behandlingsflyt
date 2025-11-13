@@ -54,7 +54,7 @@ fun vurderRettighetsType(vilkårsresultat: Vilkårsresultat): Tidslinje<Rettighe
 object KravForStudent : KravspesifikasjonForRettighetsType {
     override val kravForutgåendeMedlemskap = MåVæreOppfylt()
     override val kravSykdom = MåVæreOppfylt(Innvilgelsesårsak.STUDENT)
-    override val kravBistand = MåVæreOppfylt(Innvilgelsesårsak.STUDENT)
+    override val kravBistand = IngenKrav
 
     override val kravOvergangUfør = IngenKrav
     override val kravOvergangArbeid = IngenKrav

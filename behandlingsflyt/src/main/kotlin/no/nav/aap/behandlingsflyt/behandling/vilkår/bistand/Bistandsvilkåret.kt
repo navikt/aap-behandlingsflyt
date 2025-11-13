@@ -31,7 +31,7 @@ class Bistandsvilkåret(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<B
             .map { vurdering ->
                 Tidslinje(
                     Periode(
-                        fom = vurdering.vurderingenGjelderFra ?: grunnlag.vurderingsdato,
+                        fom = vurdering.vurderingenGjelderFra,
                         tom = grunnlag.sisteDagMedMuligYtelse
                     ),
                     vurdering
@@ -61,18 +61,12 @@ class Bistandsvilkåret(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<B
         bistandsvurdering: BistandVurdering?,
         grunnlag: BistandFaktagrunnlag
     ): Vilkårsvurdering {
-        val utfall: Utfall
-        var avslagsårsak: Avslagsårsak? = null
-        var innvilgelsesårsak: Innvilgelsesårsak? = null
-
-        if (studentvurdering?.erOppfylt() == true) {
-            utfall = Utfall.OPPFYLT
-            innvilgelsesårsak = Innvilgelsesårsak.STUDENT
+        val (utfall, innvilgelsesårsak, avslagsårsak) = if (studentvurdering?.erOppfylt() == true) {
+            Triple(Utfall.OPPFYLT, Innvilgelsesårsak.STUDENT, null)
         } else if (bistandsvurdering?.erBehovForBistand() == true) {
-            utfall = Utfall.OPPFYLT
+            Triple(Utfall.OPPFYLT, null, null)
         } else {
-            utfall = Utfall.IKKE_OPPFYLT
-            avslagsårsak = Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING
+            Triple(Utfall.IKKE_OPPFYLT, null, Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING)
         }
 
         return Vilkårsvurdering(

@@ -94,19 +94,23 @@ class VurderBistandsbehovSteg(
             kontekst
         )
 
-        /* Dette skal på sikt ut av denne metoden, og samles i et eget fastsett-steg. */
-        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-        vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.BISTANDSVILKÅRET)
+        if (avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_BISTANDSBEHOV)?.status()
+                ?.erAvsluttet() == true
+        ) {
+            /* Dette skal på sikt ut av denne metoden, og samles i et eget fastsett-steg. */
+            val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
+            vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.BISTANDSVILKÅRET)
 
-        val grunnlag = BistandFaktagrunnlag(
-            kontekst.rettighetsperiode.fom,
-            kontekst.rettighetsperiode.tom,
-            bistandRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger.orEmpty(),
-            studentRepository.hentHvisEksisterer(kontekst.behandlingId)?.studentvurdering,
-        )
-        Bistandsvilkåret(vilkårsresultat).vurder(grunnlag = grunnlag)
-
-        vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+            val studentvurdering = studentRepository.hentHvisEksisterer(kontekst.behandlingId)?.studentvurdering
+            val grunnlag = BistandFaktagrunnlag(
+                kontekst.rettighetsperiode.fom,
+                kontekst.rettighetsperiode.tom,
+                bistandRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger.orEmpty(),
+                studentvurdering,
+            )
+            Bistandsvilkåret(vilkårsresultat).vurder(grunnlag = grunnlag)
+            vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+        }
 
         return Fullført
     }
