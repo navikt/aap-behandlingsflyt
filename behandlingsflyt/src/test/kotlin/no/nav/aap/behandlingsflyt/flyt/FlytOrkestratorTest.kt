@@ -1828,13 +1828,15 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
 
         val oppdatertBehandling = behandling
             .løsAvklaringsBehov(
-                AvklarLovvalgMedlemskapLøsning(
-                    manuellVurderingForLovvalgMedlemskap = ManuellVurderingForLovvalgMedlemskapDto(
-                        lovvalgVedSøknadsTidspunkt = LovvalgDto(
-                            "begrunnelse",
-                            EØSLandEllerLandMedAvtale.ESP
-                        ),
-                        medlemskapVedSøknadsTidspunkt = null,
+                AvklarPeriodisertLovvalgMedlemskapLøsning(
+                    løsningerForPerioder = listOf(
+                        PeriodisertManuellVurderingForLovvalgMedlemskapDto(
+                            fom = sak.rettighetsperiode.fom,
+                            tom = sak.rettighetsperiode.tom,
+                            begrunnelse = "",
+                            lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.ESP),
+                            medlemskap = null,
+                        )
                     )
                 )
             )
@@ -2776,7 +2778,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                         )
                     )
                 )
-        )
+            )
 
         // Validér riktig resultat
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
