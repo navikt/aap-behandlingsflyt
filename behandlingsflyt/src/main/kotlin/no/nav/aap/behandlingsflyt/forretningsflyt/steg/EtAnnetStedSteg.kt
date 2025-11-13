@@ -19,7 +19,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.lookup.repository.RepositoryProvider
-import org.slf4j.LoggerFactory
 
 class EtAnnetStedSteg(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
@@ -28,10 +27,8 @@ class EtAnnetStedSteg(
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
-    private val behandlingRepository: BehandlingRepository,
-
-
-    ) : BehandlingSteg {
+    private val behandlingRepository: BehandlingRepository
+) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider) : this(
         avklaringsbehovRepository = repositoryProvider.provide(),
         institusjonsoppholdRepository = repositoryProvider.provide(),
@@ -147,7 +144,6 @@ class EtAnnetStedSteg(
                 }
             }
     }
-
 
 
     companion object : FlytSteg {
