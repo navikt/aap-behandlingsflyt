@@ -122,7 +122,6 @@ class SykdomsvilkårTest {
                 erBehovForAnnenOppfølging = true,
                 overgangBegrunnelse = "...",
                 skalVurdereAapIOvergangTilArbeid = null,
-                skalVurdereAapIOvergangTilUføre = null,
                 vurdertAv = "Foffer",
                 vurderingenGjelderFra = startDato,
                 opprettet = Instant.now()

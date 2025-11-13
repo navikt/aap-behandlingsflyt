@@ -60,7 +60,6 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
             erBehovForArbeidsrettetTiltak = row.getBoolean("BEHOV_FOR_ARBEIDSRETTET_TILTAK"),
             erBehovForAnnenOppfølging = row.getBooleanOrNull("BEHOV_FOR_ANNEN_OPPFOELGING"),
             vurderingenGjelderFra = row.getLocalDate("VURDERINGEN_GJELDER_FRA"),
-            skalVurdereAapIOvergangTilUføre = row.getBooleanOrNull("OVERGANG_TIL_UFOERE"),
             skalVurdereAapIOvergangTilArbeid = row.getBooleanOrNull("OVERGANG_TIL_ARBEID"),
             overgangBegrunnelse = row.getStringOrNull("OVERGANG_BEGRUNNELSE"),
             vurdertAv = row.getString("VURDERT_AV"),
@@ -78,7 +77,6 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
                 b.behov_for_annen_oppfoelging,
                 b.vurderingen_gjelder_fra,
                 b.vurdert_av,
-                b.overgang_til_ufoere,
                 b.overgang_til_arbeid,
                 b.overgang_begrunnelse
                 )
@@ -178,7 +176,7 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
         val bistandvurderingerId = connection.executeReturnKey("""INSERT INTO BISTAND_VURDERINGER DEFAULT VALUES""")
 
         connection.executeBatch(
-            "INSERT INTO BISTAND (BEGRUNNELSE, BEHOV_FOR_AKTIV_BEHANDLING, BEHOV_FOR_ARBEIDSRETTET_TILTAK, BEHOV_FOR_ANNEN_OPPFOELGING, VURDERINGEN_GJELDER_FRA, VURDERT_AV, OVERGANG_BEGRUNNELSE, OVERGANG_TIL_UFOERE, OVERGANG_TIL_ARBEID, BISTAND_VURDERINGER_ID, VURDERT_I_BEHANDLING) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO BISTAND (BEGRUNNELSE, BEHOV_FOR_AKTIV_BEHANDLING, BEHOV_FOR_ARBEIDSRETTET_TILTAK, BEHOV_FOR_ANNEN_OPPFOELGING, VURDERINGEN_GJELDER_FRA, VURDERT_AV, OVERGANG_BEGRUNNELSE, OVERGANG_TIL_ARBEID, BISTAND_VURDERINGER_ID, VURDERT_I_BEHANDLING) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             vurderinger
         ) {
             setParams { vurdering ->
@@ -189,10 +187,9 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
                 setLocalDate(5, vurdering.vurderingenGjelderFra)
                 setString(6, vurdering.vurdertAv)
                 setString(7, vurdering.overgangBegrunnelse)
-                setBoolean(8, vurdering.skalVurdereAapIOvergangTilUføre)
-                setBoolean(9, vurdering.skalVurdereAapIOvergangTilArbeid)
-                setLong(10, bistandvurderingerId)
-                setLong(11, vurdering.vurdertIBehandling?.id)
+                setBoolean(8, vurdering.skalVurdereAapIOvergangTilArbeid)
+                setLong(9, bistandvurderingerId)
+                setLong(10, vurdering.vurdertIBehandling?.id)
             }
         }
 

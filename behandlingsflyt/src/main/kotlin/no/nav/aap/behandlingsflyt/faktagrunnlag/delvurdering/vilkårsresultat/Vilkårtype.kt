@@ -28,7 +28,7 @@ enum class Vilkårtype(
             Avslagsårsak.IKKE_MEDLEM,
             Avslagsårsak.NORGE_IKKE_KOMPETENT_STAT
         ),
-        hjemmel = "§ 11-3"
+        hjemmel = "§ 2"
     ),
     SYKDOMSVILKÅRET(
         kode = "AAP-5",

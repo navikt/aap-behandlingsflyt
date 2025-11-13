@@ -82,7 +82,6 @@ internal class BistandRepositoryImplTest {
                         erBehovForAnnenOppfølging = false,
                         vurderingenGjelderFra = sak.rettighetsperiode.fom,
                         vurdertAv = "Z00000",
-                        skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = null,
                         vurdertIBehandling = behandling.id
@@ -101,7 +100,6 @@ internal class BistandRepositoryImplTest {
                             erBehovForAnnenOppfølging = false,
                             vurderingenGjelderFra = sak.rettighetsperiode.fom,
                             vurdertAv = "Z00000",
-                            skalVurdereAapIOvergangTilUføre = null,
                             skalVurdereAapIOvergangTilArbeid = null,
                             overgangBegrunnelse = null,
                             vurdertIBehandling = behandling.id
@@ -128,7 +126,6 @@ internal class BistandRepositoryImplTest {
                             erBehovForAnnenOppfølging = false,
                             vurderingenGjelderFra = sak.rettighetsperiode.fom,
                             vurdertAv = "Z00000",
-                            skalVurdereAapIOvergangTilUføre = null,
                             skalVurdereAapIOvergangTilArbeid = null,
                             overgangBegrunnelse = null,
                             vurdertIBehandling = behandling.id
@@ -145,7 +142,6 @@ internal class BistandRepositoryImplTest {
                             erBehovForAnnenOppfølging = true,
                             vurderingenGjelderFra = sak.rettighetsperiode.fom,
                             vurdertAv = "Z022222",
-                            skalVurdereAapIOvergangTilUføre = null,
                             skalVurdereAapIOvergangTilArbeid = null,
                             overgangBegrunnelse = null,
                             vurdertIBehandling = behandling.id
@@ -175,7 +171,6 @@ internal class BistandRepositoryImplTest {
                         erBehovForAnnenOppfølging = false,
                         vurderingenGjelderFra = sak.rettighetsperiode.fom,
                         vurdertAv = "Z00000",
-                        skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = null,
                         vurdertIBehandling = behandling.id
@@ -192,7 +187,6 @@ internal class BistandRepositoryImplTest {
                         erBehovForAnnenOppfølging = false,
                         vurderingenGjelderFra = sak.rettighetsperiode.fom,
                         vurdertAv = "Z00000",
-                        skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = null,
                         vurdertIBehandling = behandling.id
@@ -209,7 +203,6 @@ internal class BistandRepositoryImplTest {
                         erBehovForAnnenOppfølging = false,
                         vurderingenGjelderFra = sak.rettighetsperiode.fom,
                         vurdertAv = "Z00000",
-                        skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = null,
                         vurdertIBehandling = behandling.id
@@ -254,7 +247,6 @@ internal class BistandRepositoryImplTest {
                         erBehovForAnnenOppfølging = false,
                         vurderingenGjelderFra = sak.rettighetsperiode.fom,
                         vurdertAv = "Z00000",
-                        skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = null,
                         vurdertIBehandling = behandling1.id
@@ -277,7 +269,6 @@ internal class BistandRepositoryImplTest {
                             erBehovForAnnenOppfølging = false,
                             vurderingenGjelderFra = sak.rettighetsperiode.fom,
                             vurdertAv = "Z00000",
-                            skalVurdereAapIOvergangTilUføre = null,
                             skalVurdereAapIOvergangTilArbeid = null,
                             overgangBegrunnelse = null,
                             vurdertIBehandling = behandling1.id
@@ -313,7 +304,6 @@ internal class BistandRepositoryImplTest {
                         erBehovForAnnenOppfølging = false,
                         vurderingenGjelderFra = sak.rettighetsperiode.fom,
                         vurdertAv = "Z00000",
-                        skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = null,
                         vurdertIBehandling = behandling1.id
@@ -330,7 +320,6 @@ internal class BistandRepositoryImplTest {
                         erBehovForAnnenOppfølging = false,
                         vurderingenGjelderFra = sak.rettighetsperiode.fom,
                         vurdertAv = "Z00000",
-                        skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = null,
                         vurdertIBehandling = behandling1.id
@@ -354,7 +343,6 @@ internal class BistandRepositoryImplTest {
                             erBehovForAnnenOppfølging = false,
                             vurderingenGjelderFra = sak.rettighetsperiode.fom,
                             vurdertAv = "Z00000",
-                            skalVurdereAapIOvergangTilUføre = null,
                             skalVurdereAapIOvergangTilArbeid = null,
                             overgangBegrunnelse = null,
                             vurdertIBehandling = behandling1.id
@@ -381,7 +369,6 @@ internal class BistandRepositoryImplTest {
                         erBehovForAnnenOppfølging = false,
                         vurderingenGjelderFra = sak.rettighetsperiode.fom,
                         vurdertAv = "Z00000",
-                        skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = null,
                         vurdertIBehandling = behandling.id
@@ -400,7 +387,6 @@ internal class BistandRepositoryImplTest {
                             erBehovForAnnenOppfølging = false,
                             vurderingenGjelderFra = sak.rettighetsperiode.fom,
                             vurdertAv = "Z00000",
-                            skalVurdereAapIOvergangTilUføre = null,
                             skalVurdereAapIOvergangTilArbeid = null,
                             overgangBegrunnelse = null,
                             vurdertIBehandling = behandling.id
@@ -418,7 +404,6 @@ internal class BistandRepositoryImplTest {
                         erBehovForAnnenOppfølging = false,
                         vurderingenGjelderFra = sak.rettighetsperiode.fom,
                         vurdertAv = "Z00000",
-                        skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = null,
                         vurdertIBehandling = behandling.id
@@ -437,7 +422,6 @@ internal class BistandRepositoryImplTest {
                             erBehovForAnnenOppfølging = false,
                             vurderingenGjelderFra = sak.rettighetsperiode.fom,
                             vurdertAv = "Z00000",
-                            skalVurdereAapIOvergangTilUføre = null,
                             skalVurdereAapIOvergangTilArbeid = null,
                             overgangBegrunnelse = null,
                             vurdertIBehandling = behandling.id
@@ -496,7 +480,6 @@ internal class BistandRepositoryImplTest {
                         erBehovForAnnenOppfølging = false,
                         vurderingenGjelderFra = sak.rettighetsperiode.fom,
                         vurdertAv = "Z00000",
-                        skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = null,
                         vurdertIBehandling = behandling1.id
@@ -513,7 +496,6 @@ internal class BistandRepositoryImplTest {
                         erBehovForAnnenOppfølging = false,
                         vurderingenGjelderFra = sak.rettighetsperiode.fom,
                         vurdertAv = "Z00000",
-                        skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = null,
                         vurdertIBehandling = behandling1.id
@@ -595,7 +577,6 @@ internal class BistandRepositoryImplTest {
                 erBehovForAnnenOppfølging = false,
                 vurderingenGjelderFra = sak.rettighetsperiode.fom,
                 vurdertAv = "Z00000",
-                skalVurdereAapIOvergangTilUføre = null,
                 skalVurdereAapIOvergangTilArbeid = null,
                 overgangBegrunnelse = null,
                 vurdertIBehandling = førstegangsbehandling.id
@@ -607,7 +588,6 @@ internal class BistandRepositoryImplTest {
                 erBehovForAnnenOppfølging = false,
                 vurderingenGjelderFra = sak.rettighetsperiode.fom,
                 vurdertAv = "Z00000",
-                skalVurdereAapIOvergangTilUføre = null,
                 skalVurdereAapIOvergangTilArbeid = null,
                 overgangBegrunnelse = null,
                 vurdertIBehandling = førstegangsbehandling.id
@@ -637,7 +617,6 @@ internal class BistandRepositoryImplTest {
                 erBehovForAnnenOppfølging = false,
                 vurderingenGjelderFra = sak.rettighetsperiode.fom,
                 vurdertAv = "Z00000",
-                skalVurdereAapIOvergangTilUføre = null,
                 skalVurdereAapIOvergangTilArbeid = null,
                 overgangBegrunnelse = null,
                 vurdertIBehandling = revurdering.id
@@ -664,7 +643,6 @@ internal class BistandRepositoryImplTest {
                 erBehovForAnnenOppfølging = false,
                 vurderingenGjelderFra = sak.rettighetsperiode.fom,
                 vurdertAv = "Z00000",
-                skalVurdereAapIOvergangTilUføre = null,
                 skalVurdereAapIOvergangTilArbeid = null,
                 overgangBegrunnelse = null,
                 vurdertIBehandling = førstegangsbehandling.id
@@ -693,7 +671,6 @@ internal class BistandRepositoryImplTest {
                 erBehovForAnnenOppfølging = false,
                 vurderingenGjelderFra = sak.rettighetsperiode.fom,
                 vurdertAv = "Z00001",
-                skalVurdereAapIOvergangTilUføre = null,
                 skalVurdereAapIOvergangTilArbeid = null,
                 overgangBegrunnelse = "o1",
                 vurdertIBehandling = revurderingAvbrutt.id
@@ -711,7 +688,6 @@ internal class BistandRepositoryImplTest {
                 erBehovForAnnenOppfølging = true,
                 vurderingenGjelderFra = sak.rettighetsperiode.fom,
                 vurdertAv = "Z00002",
-                skalVurdereAapIOvergangTilUføre = null,
                 skalVurdereAapIOvergangTilArbeid = null,
                 overgangBegrunnelse = "o2",
                 vurdertIBehandling = revurdering.id

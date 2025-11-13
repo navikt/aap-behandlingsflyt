@@ -153,7 +153,6 @@ class BistandsvilkåretTest {
                 erBehovForAnnenOppfølging = false,
                 vurderingenGjelderFra = sak.rettighetsperiode.fom,
                 vurdertAv = "Z00000",
-                skalVurdereAapIOvergangTilUføre = null,
                 skalVurdereAapIOvergangTilArbeid = null,
                 overgangBegrunnelse = null,
             )
@@ -216,7 +215,6 @@ class BistandsvilkåretTest {
                 erBehovForAktivBehandling = false,
                 erBehovForArbeidsrettetTiltak = false,
                 erBehovForAnnenOppfølging = false,
-                skalVurdereAapIOvergangTilUføre = false,
                 skalVurdereAapIOvergangTilArbeid = false,
                 overgangBegrunnelse = null,
             )
@@ -282,7 +280,6 @@ class BistandsvilkåretTest {
         erBehovForArbeidsrettetTiltak: Boolean = true,
         erBehovForAnnenOppfølging: Boolean = true,
         overgangBegrunnelse: String? = null,
-        skalVurdereAapIOvergangTilUføre: Boolean? = null,
         skalVurdereAapIOvergangTilArbeid: Boolean? = null,
         vurdertAv: String = "Z00000",
         vurderingenGjelderFra: LocalDate = LocalDate.now(),
@@ -294,7 +291,6 @@ class BistandsvilkåretTest {
         erBehovForArbeidsrettetTiltak = erBehovForArbeidsrettetTiltak,
         erBehovForAnnenOppfølging = erBehovForAnnenOppfølging,
         overgangBegrunnelse = overgangBegrunnelse,
-        skalVurdereAapIOvergangTilUføre = skalVurdereAapIOvergangTilUføre,
         skalVurdereAapIOvergangTilArbeid = skalVurdereAapIOvergangTilArbeid,
         vurdertAv = vurdertAv,
         vurderingenGjelderFra = vurderingenGjelderFra,
