@@ -158,7 +158,6 @@ class ArbeidsopptrappingRepositoryImpl(private val connection: DBConnection) : A
                 setLong(1, behandlingId.id)
                 setLongArray(2, arbeidsopptrappingVurderingerIds)
                 setLongArray(3, arbeidsopptrappingVurderingerIds)
-                setLong(4, behandlingId.id)
             }
         }
         log.info("Slettet $deletedRows rader fra ARBEIDSOPPTRAPPING_GRUNNLAG")
