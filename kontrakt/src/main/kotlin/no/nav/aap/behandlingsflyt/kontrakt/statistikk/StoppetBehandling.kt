@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.kontrakt.statistikk
 
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.kontrakt.datadeling.ArbeidIPeriodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvklaringsbehovHendelseDto
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal

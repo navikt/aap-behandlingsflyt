@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurderingDTO
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurderingDTO
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovHendelseHåndterer
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
@@ -9,18 +11,19 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.Totri
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBarnetilleggLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarForutgåendeMedlemskapLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarLovvalgMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarManuellInntektVurderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOppholdskravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangArbeidLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeriodisertLovvalgMedlemskapLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeriodisertOverstyrtLovvalgMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningAndreStatligeYtelserLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrkesskadeLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBeregningstidspunktLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettYrkesskadeInntektLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
@@ -44,10 +47,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøknadsTidspunktDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskapDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskapDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedSøknadsTidspunktDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForLovvalgMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
@@ -128,6 +130,7 @@ import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.motor.testutil.ManuellMotorImpl
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -438,8 +441,6 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                         erBehovForAnnenOppfølging = null,
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = null,
-                        skalVurdereAapIOvergangTilUføre = null,
-
                         ),
                 ),
             )
@@ -512,7 +513,6 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                     erBehovForAnnenOppfølging = false.takeUnless { erOppfylt },
                     skalVurdereAapIOvergangTilArbeid = null,
                     overgangBegrunnelse = null,
-                    skalVurdereAapIOvergangTilUføre = null,
                 )
             )
         )
@@ -564,7 +564,8 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
             avklaringsBehovLøsning =
                 AvklarBarnetilleggLøsning(
                     vurderingerForBarnetillegg = VurderingerForBarnetillegg(
-                        vurderteBarn = emptyList()
+                        vurderteBarn = emptyList(),
+                        saksbehandlerOppgitteBarn = emptyList()
                     )
                 )
         )
@@ -1108,19 +1109,24 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         )
     }
 
-    protected fun Behandling.løsLovvalg(): Behandling {
+    protected fun Behandling.løsYrkesskadeInntekt(yrkesskader: List<TestYrkesskade>): Behandling {
         return løsAvklaringsBehov(
             this,
-            AvklarLovvalgMedlemskapLøsning(
-                ManuellVurderingForLovvalgMedlemskapDto(
-                    lovvalgVedSøknadsTidspunkt = LovvalgVedSøknadsTidspunktDto("", EØSLandEllerLandMedAvtale.NOR),
-                    medlemskapVedSøknadsTidspunkt = MedlemskapVedSøknadsTidspunktDto("", true)
+            FastsettYrkesskadeInntektLøsning(
+                yrkesskadeInntektVurdering = BeregningYrkeskaderBeløpVurderingDTO(
+                    vurderinger = yrkesskader.map {
+                        YrkesskadeBeløpVurderingDTO(
+                            antattÅrligInntekt = Beløp(5000000),
+                            referanse = it.saksreferanse,
+                            begrunnelse = "Trenger hjelp fra Nav",
+                        )
+                    },
                 )
             )
         )
     }
 
-    protected fun Behandling.løsLovvalgPeriodisert(gjelderFra: LocalDate): Behandling {
+    protected fun Behandling.løsLovvalg(gjelderFra: LocalDate, medlem: Boolean = true): Behandling {
         return løsAvklaringsBehov(
             this,
             AvklarPeriodisertLovvalgMedlemskapLøsning(
@@ -1129,8 +1135,25 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                         fom = gjelderFra,
                         tom = null,
                         begrunnelse = "",
-                        lovvalg = LovvalgVedSøknadsTidspunktDto("", EØSLandEllerLandMedAvtale.NOR),
-                        medlemskap = MedlemskapVedSøknadsTidspunktDto("", true)
+                        lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
+                        medlemskap = MedlemskapDto("begrunnelse", medlem)
+                    )
+                )
+            )
+        )
+    }
+
+    protected fun Behandling.løsLovvalgOverstyrt(gjelderFra: LocalDate, medlem: Boolean = true): Behandling {
+        return løsAvklaringsBehov(
+            this,
+            AvklarPeriodisertOverstyrtLovvalgMedlemskapLøsning(
+                løsningerForPerioder = listOf(
+                    PeriodisertManuellVurderingForLovvalgMedlemskapDto(
+                        fom = gjelderFra,
+                        tom = null,
+                        begrunnelse = "",
+                        lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
+                        medlemskap = MedlemskapDto("begrunnelse", medlem)
                     )
                 )
             )

@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.barnetillegg
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Relasjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
@@ -10,5 +10,5 @@ data class IdentifiserteBarnDto(
     val fodselsDato: LocalDate?,
     val navn: String?,
     val forsorgerPeriode: Periode?,
-    val oppgittForeldreRelasjon: OppgitteBarn.Relasjon? = null,
+    val oppgittForeldreRelasjon: Relasjon? = null
 )

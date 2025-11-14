@@ -1,9 +1,11 @@
 package no.nav.aap.behandlingsflyt.behandling.barnetillegg
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.IBarn
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn.OppgittBarn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -26,30 +28,41 @@ class BarnetilleggService(
 
     fun beregn(behandlingId: BehandlingId): Tidslinje<RettTilBarnetillegg> {
         val sak = sakService.hentSakFor(behandlingId)
+        val barnGrunnlag = barnRepository.hent(behandlingId)
+
         var resultat: Tidslinje<RettTilBarnetillegg> =
             Tidslinje(listOf(Segment(sak.rettighetsperiode, RettTilBarnetillegg())))
 
-        val barnGrunnlag = barnRepository.hent(behandlingId)
-        val folkeregisterBarn =
-            barnGrunnlag.registerbarn?.barn.orEmpty()
+        resultat = kombinerFolkeregisterBarn(resultat, barnGrunnlag)
+        resultat = kombinerOppgitteBarn(resultat, barnGrunnlag)
+        resultat = kombinerSaksbehandlerOppgitteBarn(resultat, barnGrunnlag)
+        resultat = kombinerVurderteBarn(resultat, barnGrunnlag)
+
+        return resultat.begrensetTil(sak.rettighetsperiode)
+    }
+
+    private fun kombinerFolkeregisterBarn(
+        tidslinje: Tidslinje<RettTilBarnetillegg>,
+        barnGrunnlag: BarnGrunnlag
+    ): Tidslinje<RettTilBarnetillegg> {
+        val folkeregisterBarn = barnGrunnlag.registerbarn?.barn.orEmpty()
         val vurderteBarn = barnGrunnlag.vurderteBarn?.barn.orEmpty()
 
-        val folkeregistrerteBarnUtenVurderingTidslinje =
-            tilTidslinje(folkeregisterBarn.filter { barn -> vurderteBarn.none { it.ident.er(barn.ident) && it.vurderinger.isNotEmpty() } })
+        val barnUtenVurdering = folkeregisterBarn.filter { barn ->
+            vurderteBarn.none { it.ident.er(barn.ident) && it.vurderinger.isNotEmpty() }
+        }
 
-        resultat =
-            resultat.kombiner(
-                folkeregistrerteBarnUtenVurderingTidslinje,
-                JoinStyle.LEFT_JOIN { periode, venstreSegment, høyreSegment ->
-                    val venstreVerdi = venstreSegment.verdi.copy()
-                    if (høyreSegment?.verdi != null) {
-                        venstreVerdi.leggTilFolkeregisterBarn(høyreSegment.verdi)
-                    }
-                    Segment(periode, venstreVerdi)
-                })
+        return kombinerMedLeftJoin(tidslinje, tilTidslinje(barnUtenVurdering)) { barn ->
+            leggTilFolkeregisterBarn(barn)
+        }
+    }
 
-        val vurderteBarnIdenter = vurderteBarn.map { it.ident }
-
+    private fun kombinerOppgitteBarn(
+        tidslinje: Tidslinje<RettTilBarnetillegg>,
+        barnGrunnlag: BarnGrunnlag
+    ): Tidslinje<RettTilBarnetillegg> {
+        val folkeregisterBarn = barnGrunnlag.registerbarn?.barn.orEmpty()
+        val vurderteBarnIdenter = barnGrunnlag.vurderteBarn?.barn?.map { it.ident }.orEmpty()
         val oppgittBarnSomIkkeErVurdert =
             barnGrunnlag.oppgitteBarn?.oppgitteBarn
                 ?.filterNot { oppgittBarn ->
@@ -58,16 +71,31 @@ class BarnetilleggService(
                 }
                 .orEmpty()
 
-        val oppgittBarnTidslinje = tilTidslinje(oppgittBarnSomIkkeErVurdert)
+        return kombinerMedLeftJoin(tidslinje, tilTidslinje(oppgittBarnSomIkkeErVurdert)) { barn ->
+            leggTilUavklartBarn(barn)
+        }
+    }
 
-        resultat =
-            resultat.kombiner(oppgittBarnTidslinje, JoinStyle.LEFT_JOIN { periode, venstreSegment, høyreSegment ->
-                val venstreVerdi = venstreSegment.verdi.copy()
-                if (høyreSegment?.verdi != null) {
-                    venstreVerdi.leggTilOppgitteBarn(høyreSegment.verdi)
-                }
-                Segment(periode, venstreVerdi)
-            })
+    private fun kombinerSaksbehandlerOppgitteBarn(
+        tidslinje: Tidslinje<RettTilBarnetillegg>,
+        barnGrunnlag: BarnGrunnlag
+    ): Tidslinje<RettTilBarnetillegg> {
+        val vurderteBarnIdenter = barnGrunnlag.vurderteBarn?.barn?.map { it.ident }.orEmpty()
+        val saksbehandlerOppgittBarnSomIkkeErVurdert = barnGrunnlag.saksbehandlerOppgitteBarn?.barn
+            ?.filterNot { vurderteBarnIdenter.contains(it.identifikator()) }
+            .orEmpty()
+
+        return kombinerMedLeftJoin(tidslinje, tilTidslinje(saksbehandlerOppgittBarnSomIkkeErVurdert)) { barn ->
+            leggTilUavklartBarn(barn)
+        }
+    }
+
+    private fun kombinerVurderteBarn(
+        tidslinje: Tidslinje<RettTilBarnetillegg>,
+        barnGrunnlag: BarnGrunnlag
+    ): Tidslinje<RettTilBarnetillegg> {
+        val vurderteBarn = barnGrunnlag.vurderteBarn?.barn.orEmpty()
+        var resultat = tidslinje
 
         for (barn in vurderteBarn) {
             resultat = resultat.kombiner(
@@ -83,12 +111,27 @@ class BarnetilleggService(
                             nyVenstreVerdi.underkjenteBarn(setOf(barn.ident))
                         }
                     }
-
                     Segment(periode, nyVenstreVerdi)
                 })
         }
 
-        return resultat.begrensetTil(sak.rettighetsperiode)
+        return resultat
+    }
+
+    private fun kombinerMedLeftJoin(
+        tidslinje: Tidslinje<RettTilBarnetillegg>,
+        barnTidslinje: Tidslinje<Set<BarnIdentifikator>>,
+        leggTilBarn: RettTilBarnetillegg.(Set<BarnIdentifikator>) -> Unit
+    ): Tidslinje<RettTilBarnetillegg> {
+        return tidslinje.kombiner(
+            barnTidslinje,
+            JoinStyle.LEFT_JOIN { periode, venstreSegment, høyreSegment ->
+                val venstreVerdi = venstreSegment.verdi.copy()
+                if (høyreSegment?.verdi != null) {
+                    venstreVerdi.leggTilBarn(høyreSegment.verdi)
+                }
+                Segment(periode, venstreVerdi)
+            })
     }
 
     private fun tilTidslinje(barna: List<IBarn>): Tidslinje<Set<BarnIdentifikator>> {
@@ -100,7 +143,8 @@ class BarnetilleggService(
                             Barn.periodeMedRettTil(
                                 barnet.fødselsdato(), when (barnet) {
                                     is Barn -> barnet.dødsdato
-                                    is OppgitteBarn.OppgittBarn -> null
+                                    is OppgittBarn -> null
+                                    is SaksbehandlerOppgitteBarn -> null
                                 }
                             ),
                             barnet.identifikator()

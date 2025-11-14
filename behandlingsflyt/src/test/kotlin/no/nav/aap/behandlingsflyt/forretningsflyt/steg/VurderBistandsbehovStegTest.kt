@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurd
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
@@ -52,13 +53,13 @@ class VurderBistandsbehovStegTest {
             every { hentHvisEksisterer(any()) } returns BistandGrunnlag(
                 vurderinger = listOf(
                     BistandVurdering(
+                        vurdertIBehandling = BehandlingId(1),
                         begrunnelse = "Begrunnelse",
                         erBehovForAktivBehandling = true,
                         erBehovForArbeidsrettetTiltak = true,
                         erBehovForAnnenOppfølging = false,
                         vurderingenGjelderFra = nyRettighetsperiode.fom.plusDays(10),
                         vurdertAv = "Z00000",
-                        skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = null,
                     )

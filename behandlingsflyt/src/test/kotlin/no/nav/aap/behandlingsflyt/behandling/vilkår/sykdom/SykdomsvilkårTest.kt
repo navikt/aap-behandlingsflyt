@@ -115,13 +115,13 @@ class SykdomsvilkårTest {
     private fun bistandGrunnlag(startDato: LocalDate): BistandGrunnlag = BistandGrunnlag(
         vurderinger = listOf(
             BistandVurdering(
+                vurdertIBehandling = BehandlingId(1),
                 begrunnelse = "bistand",
                 erBehovForAktivBehandling = true,
                 erBehovForArbeidsrettetTiltak = true,
                 erBehovForAnnenOppfølging = true,
                 overgangBegrunnelse = "...",
                 skalVurdereAapIOvergangTilArbeid = null,
-                skalVurdereAapIOvergangTilUføre = null,
                 vurdertAv = "Foffer",
                 vurderingenGjelderFra = startDato,
                 opprettet = Instant.now()

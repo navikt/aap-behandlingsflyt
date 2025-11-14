@@ -9,7 +9,6 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Opprettholdes
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
-import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
@@ -18,8 +17,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
@@ -29,15 +26,12 @@ class FatteVedtakSteg(
     private val avklaringsbehovService: AvklaringsbehovService,
     private val tidligereVurderinger: TidligereVurderinger,
     private val klageresultatUtleder: KlageresultatUtleder,
-    private val unleashGateway: UnleashGateway,
 
     ) : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.FatteVedtakAvklaringsbehovService)) {
-            return utførNy(kontekst)
-        }
-        return utførGammel(kontekst)
+
+        return utførNy(kontekst)
     }
 
     fun utførNy(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -46,7 +40,8 @@ class FatteVedtakSteg(
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
         val skalTilbakeføres = avklaringsbehovene.skalTilbakeføresEtterTotrinnsVurdering()
-        val harHattAvklaringsbehovSomHarKrevdTotrinnOgSomIkkeErVurdert = avklaringsbehovene.harAvklaringsbehovSomKreverToTrinnMenIkkeErVurdert()
+        val harHattAvklaringsbehovSomHarKrevdTotrinnOgSomIkkeErVurdert =
+            avklaringsbehovene.harAvklaringsbehovSomKreverToTrinnMenIkkeErVurdert()
 
         val erKlage = kontekst.behandlingType == TypeBehandling.Klage
         val erTrukketEllerIngenGrunnlag =
@@ -76,36 +71,6 @@ class FatteVedtakSteg(
         return Fullført
     }
 
-    fun utførGammel(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-
-        if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type()) || trekkKlageService.klageErTrukket(
-                kontekst.behandlingId
-            )
-        ) {
-            avklaringsbehov.avbrytForSteg(type())
-            return Fullført
-        }
-
-        if (kontekst.behandlingType == TypeBehandling.Klage) {
-            val klageresultat = klageresultatUtleder.utledKlagebehandlingResultat(kontekst.behandlingId)
-            if (klageresultat is Opprettholdes) {
-                avklaringsbehov.avbrytForSteg(type())
-                return Fullført
-            }
-        }
-
-        if (avklaringsbehov.skalTilbakeføresEtterTotrinnsVurdering()) {
-            return TilbakeføresFraBeslutter
-        }
-        if (avklaringsbehov.harHattAvklaringsbehovSomHarKrevdToTrinn()) {
-            return FantAvklaringsbehov(Definisjon.FATTE_VEDTAK)
-        }
-
-        return Fullført
-    }
-
-
     private fun vedtakBehøverVurdering(
         kontekst: FlytKontekstMedPerioder,
         avklaringsbehovene: Avklaringsbehovene
@@ -123,7 +88,7 @@ class FatteVedtakSteg(
             }
         }
 
-        return  avklaringsbehovene.harAvklaringsbehovSomKreverToTrinn()
+        return avklaringsbehovene.harAvklaringsbehovSomKreverToTrinn()
     }
 
 
@@ -138,7 +103,6 @@ class FatteVedtakSteg(
                 AvklaringsbehovService(repositoryProvider),
                 TidligereVurderingerImpl(repositoryProvider),
                 klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
-                unleashGateway = gatewayProvider.provide(),
             )
         }
 

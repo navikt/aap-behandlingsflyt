@@ -6,7 +6,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravRepositor
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravVarsel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory

@@ -59,8 +59,9 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(
                         ?.vurderinger.orEmpty()
                     val vurdering = nåTilstand
                         .filterNot { gjeldendeVurdering ->
-                            gjeldendeVurdering.copy(opprettet = null) in vedtatteBistandsvurderinger.map {
+                            gjeldendeVurdering.copy(opprettet = null,  id = null) in vedtatteBistandsvurderinger.map {
                                 it.copy(
+                                    id = null,
                                     opprettet = null
                                 )
                             }
@@ -113,7 +114,6 @@ private fun BistandVurdering.tilResponse(
         erBehovForAnnenOppfølging = erBehovForAnnenOppfølging,
         vurderingenGjelderFra = vurderingenGjelderFra,
         skalVurdereAapIOvergangTilArbeid = skalVurdereAapIOvergangTilArbeid,
-        skalVurdereAapIOvergangTilUføre = skalVurdereAapIOvergangTilUføre,
         vurdertAv = VurdertAvResponse(
             ident = vurdertAv,
             dato = opprettet?.atZone(ZoneId.of("Europe/Oslo"))?.toLocalDate()

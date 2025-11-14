@@ -250,6 +250,7 @@ object Revurdering : BehandlingType {
                 steg = BeregningAvklarFaktaSteg, vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
                     Vurderingsbehov.REVURDER_BEREGNING,
+                    Vurderingsbehov.REVURDER_YRKESSKADE,
                     Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
                     Vurderingsbehov.HELHETLIG_VURDERING,
                     Vurderingsbehov.REVURDER_LOVVALG,
@@ -299,18 +300,14 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
                 )
             )
-            .apply {
-                if(!Miljø.erProd()) {
-                    medSteg(
-                        steg = VurderOppholdskravSteg,
-                        vurderingsbehovRelevanteForSteg = listOf(
-                            Vurderingsbehov.MOTTATT_SØKNAD,
-                            Vurderingsbehov.OPPHOLDSKRAV,
-                            Vurderingsbehov.HELHETLIG_VURDERING,
-                        )
-                    )
-                }
-            }
+            .medSteg(
+                steg = VurderOppholdskravSteg,
+                vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.OPPHOLDSKRAV,
+                    Vurderingsbehov.HELHETLIG_VURDERING,
+                )
+            )
             .medSteg(
                 // TODO: Midlertidig duplikat av BarnService, skal på sikt kun være i StartBehandlingSteg
                 informasjonskrav = listOf(BarnInformasjonskrav),

@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.barnetillegg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Relasjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
@@ -25,7 +26,6 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
-import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -199,7 +199,7 @@ class BarnetilleggServiceTest {
                         ident = null,
                         navn = navn,
                         fødselsdato = fødselsdato,
-                        relasjon = OppgitteBarn.Relasjon.FOSTERFORELDER
+                        relasjon = Relasjon.FOSTERFORELDER
                     )
                 )
             )

@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.HvemSkalFølgeOpp
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Oppfølgingsoppgave
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppfølgingsoppgaveV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Opprinnelse
-import no.nav.aap.behandlingsflyt.pip.IdentPåSak
 import java.time.LocalDate
 
 

@@ -54,17 +54,17 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
 
     private fun bistandvurderingRowMapper(row: Row): BistandVurdering {
         return BistandVurdering(
+            id = row.getLong("ID"),
             begrunnelse = row.getString("BEGRUNNELSE"),
             erBehovForAktivBehandling = row.getBoolean("BEHOV_FOR_AKTIV_BEHANDLING"),
             erBehovForArbeidsrettetTiltak = row.getBoolean("BEHOV_FOR_ARBEIDSRETTET_TILTAK"),
             erBehovForAnnenOppfølging = row.getBooleanOrNull("BEHOV_FOR_ANNEN_OPPFOELGING"),
-            vurderingenGjelderFra = row.getLocalDateOrNull("VURDERINGEN_GJELDER_FRA"),
-            skalVurdereAapIOvergangTilUføre = row.getBooleanOrNull("OVERGANG_TIL_UFOERE"),
+            vurderingenGjelderFra = row.getLocalDate("VURDERINGEN_GJELDER_FRA"),
             skalVurdereAapIOvergangTilArbeid = row.getBooleanOrNull("OVERGANG_TIL_ARBEID"),
             overgangBegrunnelse = row.getStringOrNull("OVERGANG_BEGRUNNELSE"),
             vurdertAv = row.getString("VURDERT_AV"),
             opprettet = row.getInstant("OPPRETTET_TID"),
-            vurdertIBehandling = row.getLongOrNull("VURDERT_I_BEHANDLING")?.let(::BehandlingId),
+            vurdertIBehandling = row.getLong("VURDERT_I_BEHANDLING").let(::BehandlingId),
         )
     }
 
@@ -77,7 +77,6 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
                 b.behov_for_annen_oppfoelging,
                 b.vurderingen_gjelder_fra,
                 b.vurdert_av,
-                b.overgang_til_ufoere,
                 b.overgang_til_arbeid,
                 b.overgang_begrunnelse
                 )
@@ -116,8 +115,8 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
         )
 
         val eksisterendeVurderinger =
-            eksisterendeBistandGrunnlag?.vurderinger?.let { it.map { it.copy(opprettet = null, vurdertIBehandling = null) } }.orEmpty().toSet()
-        val nyeVurderinger = bistandsvurderinger.map { it.copy(opprettet = null, vurdertIBehandling = null) }.toSet()
+            eksisterendeBistandGrunnlag?.vurderinger?.let { it.map { it.copy(opprettet = null, id = null) } }.orEmpty().toSet()
+        val nyeVurderinger = bistandsvurderinger.map { it.copy(opprettet = null, id = null) }.toSet()
 
         if (eksisterendeVurderinger != nyeVurderinger) {
             eksisterendeBistandGrunnlag?.let {
@@ -177,7 +176,7 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
         val bistandvurderingerId = connection.executeReturnKey("""INSERT INTO BISTAND_VURDERINGER DEFAULT VALUES""")
 
         connection.executeBatch(
-            "INSERT INTO BISTAND (BEGRUNNELSE, BEHOV_FOR_AKTIV_BEHANDLING, BEHOV_FOR_ARBEIDSRETTET_TILTAK, BEHOV_FOR_ANNEN_OPPFOELGING, VURDERINGEN_GJELDER_FRA, VURDERT_AV, OVERGANG_BEGRUNNELSE, OVERGANG_TIL_UFOERE, OVERGANG_TIL_ARBEID, BISTAND_VURDERINGER_ID, VURDERT_I_BEHANDLING) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO BISTAND (BEGRUNNELSE, BEHOV_FOR_AKTIV_BEHANDLING, BEHOV_FOR_ARBEIDSRETTET_TILTAK, BEHOV_FOR_ANNEN_OPPFOELGING, VURDERINGEN_GJELDER_FRA, VURDERT_AV, OVERGANG_BEGRUNNELSE, OVERGANG_TIL_ARBEID, BISTAND_VURDERINGER_ID, VURDERT_I_BEHANDLING) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             vurderinger
         ) {
             setParams { vurdering ->
@@ -188,10 +187,9 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
                 setLocalDate(5, vurdering.vurderingenGjelderFra)
                 setString(6, vurdering.vurdertAv)
                 setString(7, vurdering.overgangBegrunnelse)
-                setBoolean(8, vurdering.skalVurdereAapIOvergangTilUføre)
-                setBoolean(9, vurdering.skalVurdereAapIOvergangTilArbeid)
-                setLong(10, bistandvurderingerId)
-                setLong(11, vurdering.vurdertIBehandling?.id)
+                setBoolean(8, vurdering.skalVurdereAapIOvergangTilArbeid)
+                setLong(9, bistandvurderingerId)
+                setLong(10, vurdering.vurdertIBehandling?.id)
             }
         }
 
@@ -224,4 +222,5 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
             }
         }
     }
+
 }

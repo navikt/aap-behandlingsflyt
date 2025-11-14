@@ -3,16 +3,13 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.LøsningForPeriode
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
-import no.nav.aap.behandlingsflyt.historiskevurderinger.HistoriskVurderingDto
-import no.nav.aap.behandlingsflyt.historiskevurderinger.ÅpenPeriodeDto
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import java.time.LocalDate
 import java.time.LocalDateTime
 
 data class ManuellVurderingForLovvalgMedlemskap(
-    val id: Long? = null,
-    val lovvalgVedSøknadsTidspunkt: LovvalgVedSøknadsTidspunktDto,
-    val medlemskapVedSøknadsTidspunkt: MedlemskapVedSøknadsTidspunktDto?,
+    val lovvalg: LovvalgDto,
+    val medlemskap: MedlemskapDto?,
     val vurdertAv: String,
     val vurdertDato: LocalDateTime,
     val overstyrt: Boolean = false,
@@ -21,26 +18,21 @@ data class ManuellVurderingForLovvalgMedlemskap(
     val vurdertIBehandling: BehandlingId,
 ) {
     fun lovvalgslandErAnnetLandIEØSEllerLandMedAvtale(): Boolean {
-        val lovvalgsLand = lovvalgVedSøknadsTidspunkt.lovvalgsEØSLandEllerLandMedAvtale
+        val lovvalgsLand = lovvalg.lovvalgsEØSLandEllerLandMedAvtale
         return lovvalgsLand != null && lovvalgsLand != EØSLandEllerLandMedAvtale.NOR && lovvalgsLand in enumValues<EØSLandEllerLandMedAvtale>().map { it }
     }
 
     fun medlemIFolketrygd(): Boolean {
-        return medlemskapVedSøknadsTidspunkt?.varMedlemIFolketrygd ?: false
+        return medlemskap?.varMedlemIFolketrygd ?: false
     }
 }
-
-data class ManuellVurderingForLovvalgMedlemskapDto(
-    val lovvalgVedSøknadsTidspunkt: LovvalgVedSøknadsTidspunktDto,
-    val medlemskapVedSøknadsTidspunkt: MedlemskapVedSøknadsTidspunktDto?
-)
 
 data class PeriodisertManuellVurderingForLovvalgMedlemskapDto(
     override val fom: LocalDate,
     override val tom: LocalDate?,
     override val begrunnelse: String,
-    val lovvalg: LovvalgVedSøknadsTidspunktDto,
-    val medlemskap: MedlemskapVedSøknadsTidspunktDto?,
+    val lovvalg: LovvalgDto,
+    val medlemskap: MedlemskapDto?,
 ) : LøsningForPeriode {
     fun toManuellVurderingForLovvalgMedlemskap(
         kontekst: AvklaringsbehovKontekst,
@@ -49,31 +41,21 @@ data class PeriodisertManuellVurderingForLovvalgMedlemskapDto(
         fom = fom,
         tom = tom,
         vurdertIBehandling = kontekst.behandlingId(),
-        lovvalgVedSøknadsTidspunkt = lovvalg,
-        medlemskapVedSøknadsTidspunkt = medlemskap,
+        lovvalg = lovvalg,
+        medlemskap = medlemskap,
         vurdertAv = kontekst.bruker.ident,
         vurdertDato = LocalDateTime.now(),
         overstyrt = overstyrt
     )
 }
 
-class HistoriskManuellVurderingForLovvalgMedlemskap(
-    vurdertDato: LocalDate,
-    vurdertAvIdent: String,
-    erGjeldendeVurdering: Boolean,
-    periode: ÅpenPeriodeDto,
-    vurdering: ManuellVurderingForLovvalgMedlemskap
-) : HistoriskVurderingDto<ManuellVurderingForLovvalgMedlemskap>(
-    vurdertDato, vurdertAvIdent, erGjeldendeVurdering, periode, vurdering
-)
-
-data class LovvalgVedSøknadsTidspunktDto(
+data class LovvalgDto(
     val begrunnelse: String,
-    val lovvalgsEØSLandEllerLandMedAvtale: EØSLandEllerLandMedAvtale?,
+    val lovvalgsEØSLandEllerLandMedAvtale: EØSLandEllerLandMedAvtale,
 )
 
-data class MedlemskapVedSøknadsTidspunktDto(
-    val begrunnelse: String?,
-    val varMedlemIFolketrygd: Boolean?
+data class MedlemskapDto(
+    val begrunnelse: String,
+    val varMedlemIFolketrygd: Boolean
 )
 

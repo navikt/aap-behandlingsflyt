@@ -2,32 +2,16 @@ package no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag
 
 import no.nav.aap.behandlingsflyt.PeriodiserteVurderingerDto
 import no.nav.aap.behandlingsflyt.VurderingDto
-import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattNavnOgEnhet
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.HistoriskManuellVurderingForLovvalgMedlemskap
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøknadsTidspunktDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedSøknadsTidspunktDto
-import no.nav.aap.behandlingsflyt.historiskevurderinger.HistoriskVurderingDto
-import no.nav.aap.behandlingsflyt.historiskevurderinger.ÅpenPeriodeDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
 
-data class LovvalgMedlemskapGrunnlagResponse(
-    val harTilgangTilÅSaksbehandle: Boolean,
-    val vurdering: ManuellVurderingForLovvalgMedlemskapResponse?,
-    val historiskeManuelleVurderinger: List<HistoriskManuellVurderingForLovvalgMedlemskapResponse>
-)
-
-data class ManuellVurderingForLovvalgMedlemskapResponse(
-    val lovvalgVedSøknadsTidspunkt: LovvalgResponse,
-    val medlemskapVedSøknadsTidspunkt: MedlemskapResponse?,
-    val vurdertAv: VurdertAvResponse,
-    val overstyrt: Boolean = false
-)
 
 data class PeriodisertLovvalgMedlemskapGrunnlagResponse(
     override val harTilgangTilÅSaksbehandle: Boolean,
@@ -51,27 +35,13 @@ data class PeriodisertManuellVurderingForLovvalgMedlemskapResponse(
 
 data class LovvalgResponse(
     val begrunnelse: String,
-    val lovvalgsEØSLandEllerLandMedAvtale: EØSLandEllerLandMedAvtale?
+    val lovvalgsEØSLandEllerLandMedAvtale: EØSLandEllerLandMedAvtale
 )
 
 data class MedlemskapResponse(
-    val begrunnelse: String?,
-    val varMedlemIFolketrygd: Boolean?
+    val begrunnelse: String,
+    val varMedlemIFolketrygd: Boolean
 )
-
-class HistoriskManuellVurderingForLovvalgMedlemskapResponse(
-    vurdertDato: LocalDate,
-    vurdertAvIdent: String,
-    erGjeldendeVurdering: Boolean,
-    periode: ÅpenPeriodeDto,
-    vurdering: ManuellVurderingForLovvalgMedlemskapResponse
-) : HistoriskVurderingDto<ManuellVurderingForLovvalgMedlemskapResponse>(
-        vurdertDato,
-        vurdertAvIdent,
-        erGjeldendeVurdering,
-        periode,
-        vurdering
-    )
 
 fun ManuellVurderingForLovvalgMedlemskap.toResponse(
     vurdertAvService: VurdertAvService,
@@ -86,42 +56,19 @@ fun ManuellVurderingForLovvalgMedlemskap.toResponse(
             definisjon = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP,
             behandlingId = vurdertIBehandling
         ),
-        lovvalg = lovvalgVedSøknadsTidspunkt.toResponse(),
-        medlemskap = medlemskapVedSøknadsTidspunkt?.toResponse(),
+        lovvalg = lovvalg.toResponse(),
+        medlemskap = medlemskap?.toResponse(),
         overstyrt = overstyrt
     )
 
-fun ManuellVurderingForLovvalgMedlemskap.toResponse(ansattNavnOgEnhet: AnsattNavnOgEnhet?) =
-    ManuellVurderingForLovvalgMedlemskapResponse(
-        lovvalgVedSøknadsTidspunkt = lovvalgVedSøknadsTidspunkt.toResponse(),
-        medlemskapVedSøknadsTidspunkt = medlemskapVedSøknadsTidspunkt?.toResponse(),
-        vurdertAv =
-            VurdertAvResponse(
-                ident = vurdertAv,
-                dato = vurdertDato.toLocalDate(),
-                ansattnavn = ansattNavnOgEnhet?.navn,
-                enhetsnavn = ansattNavnOgEnhet?.enhet
-            ),
-        overstyrt = overstyrt
-    )
-
-fun MedlemskapVedSøknadsTidspunktDto.toResponse() =
+fun MedlemskapDto.toResponse() =
     MedlemskapResponse(
         begrunnelse = begrunnelse,
         varMedlemIFolketrygd = varMedlemIFolketrygd
     )
 
-fun LovvalgVedSøknadsTidspunktDto.toResponse() =
+fun LovvalgDto.toResponse() =
     LovvalgResponse(
         begrunnelse = begrunnelse,
         lovvalgsEØSLandEllerLandMedAvtale = lovvalgsEØSLandEllerLandMedAvtale
-    )
-
-fun HistoriskManuellVurderingForLovvalgMedlemskap.toResponse() =
-    HistoriskManuellVurderingForLovvalgMedlemskapResponse(
-        vurdertDato = vurdertDato,
-        vurdertAvIdent = vurdertAvIdent,
-        erGjeldendeVurdering = erGjeldendeVurdering,
-        periode = periode,
-        vurdering = vurdering.toResponse(ansattNavnOgEnhet = null)
     )

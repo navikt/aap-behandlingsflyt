@@ -15,7 +15,6 @@ import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
-import java.time.LocalDate
 import java.time.LocalDateTime
 
 class VurderBrudd11_7Løser(

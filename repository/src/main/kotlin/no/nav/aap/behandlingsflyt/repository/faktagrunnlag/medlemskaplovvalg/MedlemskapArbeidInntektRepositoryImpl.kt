@@ -4,10 +4,9 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.EnhetGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapArbeidInntektGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.HistoriskManuellVurderingForLovvalgMedlemskap
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøknadsTidspunktDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedSøknadsTidspunktDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMaaned
@@ -16,7 +15,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemM
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.Unntak
-import no.nav.aap.behandlingsflyt.historiskevurderinger.ÅpenPeriodeDto
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -26,7 +24,6 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.slf4j.LoggerFactory
-import java.time.LocalDateTime
 
 class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection) : MedlemskapArbeidInntektRepository {
 
@@ -75,20 +72,12 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
             deaktiverGrunnlag(behandlingId)
         }
 
-        var vurderingerId: Long? = null
-        var manuellVurderingId: Long? = null
-
-        if (vurderinger.isNotEmpty()) {
-            vurderingerId = lagreVurderinger(vurderinger)
-
-            // TODO henter ut manuell id for lagring i grunnlag inntil vi har kjørt migrering - gir kun mening hvis det er én vurdering
-            manuellVurderingId = if (vurderinger.size == 1) hentVurderinger(vurderingerId).first().id else null
-        }
+        val vurderingerId = if (vurderinger.isNotEmpty()) lagreVurderinger(vurderinger) else null
 
         val grunnlagQuery = """
             INSERT INTO MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG 
-            (behandling_id, arbeider_id, inntekter_i_norge_id, medlemskap_unntak_person_id, manuell_vurdering_id, vurderinger_id) 
-            VALUES (?, ?, ?, ?, ?, ?)
+            (behandling_id, arbeider_id, inntekter_i_norge_id, medlemskap_unntak_person_id, vurderinger_id) 
+            VALUES (?, ?, ?, ?, ?)
         """.trimIndent()
 
         connection.execute(grunnlagQuery) {
@@ -97,8 +86,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 setLong(2, grunnlagOppslag?.arbeiderId)
                 setLong(3, grunnlagOppslag?.inntektINorgeId)
                 setLong(4, grunnlagOppslag?.medlId)
-                setLong(5, manuellVurderingId)
-                setLong(6, vurderingerId)
+                setLong(5, vurderingerId)
             }
             setResultValidator { require(it == 1) }
         }
@@ -123,14 +111,14 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
             setParams { manuellVurdering ->
                 setLocalDate(1, manuellVurdering.fom)
                 setLocalDate(2, manuellVurdering.tom)
-                setString(3, manuellVurdering.lovvalgVedSøknadsTidspunkt.begrunnelse)
-                setEnumName(4, manuellVurdering.lovvalgVedSøknadsTidspunkt.lovvalgsEØSLandEllerLandMedAvtale)
-                setString(5, manuellVurdering.medlemskapVedSøknadsTidspunkt?.begrunnelse)
-                setBoolean(6, manuellVurdering.medlemskapVedSøknadsTidspunkt?.varMedlemIFolketrygd)
+                setString(3, manuellVurdering.lovvalg.begrunnelse)
+                setEnumName(4, manuellVurdering.lovvalg.lovvalgsEØSLandEllerLandMedAvtale)
+                setString(5, manuellVurdering.medlemskap?.begrunnelse)
+                setBoolean(6, manuellVurdering.medlemskap?.varMedlemIFolketrygd)
                 setBoolean(7, overstyrt)
                 setString(8, manuellVurdering.vurdertAv)
                 setLocalDateTime(9, manuellVurdering.vurdertDato)
-                setLong(10, manuellVurdering.vurdertIBehandling?.toLong())
+                setLong(10, manuellVurdering.vurdertIBehandling.toLong())
                 setLong(11, vurderingerId)
             }
         }
@@ -155,7 +143,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         val inntekterINorgeId = lagreArbeidsInntektGrunnlag(inntektGrunnlag, enhetGrunnlag)
 
         val grunnlagQuery = """
-            INSERT INTO MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG (behandling_id, arbeider_id, inntekter_i_norge_id, medlemskap_unntak_person_id, manuell_vurdering_id, vurderinger_id) VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG (behandling_id, arbeider_id, inntekter_i_norge_id, medlemskap_unntak_person_id, vurderinger_id) VALUES (?, ?, ?, ?, ?)
         """.trimIndent()
         connection.execute(grunnlagQuery) {
             setParams {
@@ -163,48 +151,8 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 setLong(2, arbeiderId)
                 setLong(3, inntekterINorgeId)
                 setLong(4, medlId)
-                setLong(5, grunnlagOppslag?.manuellVurderingId)
-                setLong(6, grunnlagOppslag?.vurderingerId)
+                setLong(5, grunnlagOppslag?.vurderingerId)
             }
-        }
-    }
-
-    override fun hentHistoriskeVurderinger(
-        sakId: SakId,
-        behandlingId: BehandlingId
-    ): List<HistoriskManuellVurderingForLovvalgMedlemskap> {
-        val query = """
-            SELECT vurdering.*
-            FROM MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG grunnlag
-            INNER JOIN LOVVALG_MEDLEMSKAP_MANUELL_VURDERING vurdering ON grunnlag.MANUELL_VURDERING_ID = vurdering.ID
-            JOIN BEHANDLING behandling ON grunnlag.BEHANDLING_ID = behandling.ID
-            LEFT JOIN AVBRYT_REVURDERING_GRUNNLAG ar ON ar.BEHANDLING_ID = behandling.ID
-            WHERE grunnlag.AKTIV AND behandling.SAK_ID = ? 
-                AND behandling.opprettet_tid < (SELECT a.opprettet_tid from behandling a where a.id = ?)
-                AND ar.BEHANDLING_ID IS NULL
-        """.trimIndent()
-
-        val vurderinger = connection.queryList(query) {
-            setParams {
-                setLong(1, sakId.id)
-                setLong(2, behandlingId.id)
-            }
-            setRowMapper {
-                InternalHistoriskManuellVurderingForLovvalgMedlemskap(
-                    manuellVurdering = mapManuellVurderingForLovvalgMedlemskap(it),
-                    vurdertDato = it.getLocalDateTime("opprettet_tid")
-                )
-            }
-        }.sortedBy { it.vurdertDato }
-
-        return vurderinger.map {
-            HistoriskManuellVurderingForLovvalgMedlemskap(
-                it.vurdertDato.toLocalDate(),
-                it.manuellVurdering.vurdertAv,
-                erGjeldendeVurdering = it == vurderinger.last(),
-                periode = ÅpenPeriodeDto(it.vurdertDato.toLocalDate()),
-                vurdering = it.manuellVurdering
-            )
         }
     }
 
@@ -336,20 +284,6 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 setString(2, journalpostId.identifikator)
                 setLong(3, oppgittUtenlandsOppholdId)
             }
-        }
-    }
-
-    private fun hentManuellVurdering(vurderingId: Long?): ManuellVurderingForLovvalgMedlemskap? {
-        if (vurderingId == null) return null
-        val query = """
-            SELECT * FROM LOVVALG_MEDLEMSKAP_MANUELL_VURDERING WHERE ID = ?
-        """.trimIndent()
-
-        return connection.queryFirst(query) {
-            setParams {
-                setLong(1, vurderingId)
-            }
-            setRowMapper(::mapManuellVurderingForLovvalgMedlemskap)
         }
     }
 
@@ -521,7 +455,6 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                     it.getLongOrNull("medlemskap_unntak_person_id"),
                     it.getLongOrNull("inntekter_i_norge_id"),
                     it.getLongOrNull("arbeider_id"),
-                    it.getLongOrNull("manuell_vurdering_id"),
                     it.getLongOrNull("vurderinger_id")
                 )
             }
@@ -551,8 +484,8 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
 
         val query = """
             INSERT INTO MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG 
-                (behandling_id, medlemskap_unntak_person_id, inntekter_i_norge_id, arbeider_id, manuell_vurdering_id, vurderinger_id) 
-            SELECT ?, medlemskap_unntak_person_id, inntekter_i_norge_id, arbeider_id, manuell_vurdering_id, vurderinger_id
+                (behandling_id, medlemskap_unntak_person_id, inntekter_i_norge_id, arbeider_id, vurderinger_id) 
+            SELECT ?, medlemskap_unntak_person_id, inntekter_i_norge_id, arbeider_id, vurderinger_id
                 from MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG 
                 where behandling_id = ? and aktiv
         """.trimIndent()
@@ -580,7 +513,8 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
             delete from INNTEKT_I_NORGE where inntekter_i_norge_id = ANY(?::bigint[]);     
             delete from ARBEID where arbeider_id = ANY(?::bigint[]);
             delete from ARBEIDER where id = ANY(?::bigint[]);    
-            delete from LOVVALG_MEDLEMSKAP_MANUELL_VURDERING where id = ANY(?::bigint[]);
+            delete from LOVVALG_MEDLEMSKAP_MANUELL_VURDERING where vurderinger_id = ANY(?::bigint[]);
+            delete from LOVVALG_MEDLEMSKAP_MANUELL_VURDERINGER where id = ANY(?::bigint[]);
             delete from UTENLANDS_PERIODE where oppgitt_utenlandsopphold_id = ANY(?::bigint[]);
             delete from OPPGITT_UTENLANDSOPPHOLD_GRUNNLAG where behandling_id = ?; 
             delete from OPPGITT_UTENLANDSOPPHOLD where id = ANY(?::bigint[]); 
@@ -593,119 +527,27 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 setLongArray(3, arbeidIds)
                 setLongArray(4, arbeiderIds)
                 setLongArray(5, lovvalgMedlemsskapManuellVurderingIds)
-                setLongArray(6, utenlandsOppholdIds)
-                setLong(7, behandlingId.id)
-                setLongArray(8, utenlandsOppholdIds)
-                setLongArray(9, inntektINorgeIds)
+                setLongArray(6, lovvalgMedlemsskapManuellVurderingIds)
+                setLongArray(7, utenlandsOppholdIds)
+                setLong(8, behandlingId.id)
+                setLongArray(9, utenlandsOppholdIds)
+                setLongArray(10, inntektINorgeIds)
             }
         }
         log.info("Slettet $deletedRows rader fra MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG")
     }
 
-    override fun migrerManuelleVurderingerPeriodisert() {
-        data class MigreringGrunnlagInternal(
-            val id: Long,
-            val behandlingId: BehandlingId,
-            val rettighetsperiode: Periode,
-            val manuellVurderingId: Long,
-            val grunnlagOpprettetTid: LocalDateTime,
-            val vurderingOpprettetTid: LocalDateTime,
-        )
-
-        // Dette er alle grunnlag som er kandidater for migrering - dvs de som har en manuell vurdering knyttet til seg
-        // og ikke har noen kobling til vurderinger enda
-        fun hentKandidater(): List<MigreringGrunnlagInternal> {
-            val kandidaterQuery = """
-                SELECT g.id, g.manuell_vurdering_id, v.opprettet_tid as vurdering_opprettet_tid, 
-                    g.opprettet_tid as grunnlag_opprettet_tid, g.behandling_id, s.rettighetsperiode, 
-                    b.opprettet_tid as behandling_opprettet_tid
-                FROM medlemskap_arbeid_og_inntekt_i_norge_grunnlag g
-                    JOIN lovvalg_medlemskap_manuell_vurdering v ON g.manuell_vurdering_id = v.id
-                    JOIN behandling b ON g.behandling_id = b.id
-                    JOIN sak s ON b.sak_id = s.id
-                WHERE g.manuell_vurdering_id IS NOT NULL 
-                AND g.vurderinger_id IS NULL
-            """.trimIndent()
-
-            return connection.queryList(kandidaterQuery) {
-                setRowMapper {
-                    MigreringGrunnlagInternal(
-                        id = it.getLong("id"),
-                        behandlingId = BehandlingId(it.getLong("behandling_id")),
-                        rettighetsperiode = it.getPeriode("rettighetsperiode"),
-                        manuellVurderingId = it.getLong("manuell_vurdering_id"),
-                        grunnlagOpprettetTid = it.getLocalDateTime("grunnlag_opprettet_tid"),
-                        vurderingOpprettetTid = it.getLocalDateTime("vurdering_opprettet_tid")
-                    )
-                }
-            }
-        }
-
-        log.info("Starter migrering av manuelle vurderinger for lovvalg medlemskap til periodisert format")
-        val start = System.currentTimeMillis()
-        val kandidaterForMigrering = hentKandidater()
-        val kandidaterForMigreringGruppertPåManuellVurdering = kandidaterForMigrering.groupBy { it.manuellVurderingId }
-
-        log.info("Fant ${kandidaterForMigrering.size} kandidater for migrering av manuelle vurderinger for lovvalg medlemskap")
-
-        kandidaterForMigreringGruppertPåManuellVurdering.forEach { kandidaterSomPerkerPåSammeVurdering ->
-            val opprettetTid = kandidaterSomPerkerPåSammeVurdering.value.minByOrNull { it.vurderingOpprettetTid }!!.grunnlagOpprettetTid
-
-            val vurderingerId = connection.executeReturnKey(
-                """
-                    INSERT INTO lovvalg_medlemskap_manuell_vurderinger(opprettet_tid) values (?)
-                """.trimIndent()
-            ) {
-                setParams {
-                    setLocalDateTime(1, opprettetTid)
-                }
-            }
-
-            // Oppdatere alle grunnlag for en behandling til å peke på den nye vurderinger_id.
-            kandidaterSomPerkerPåSammeVurdering.value.forEach { kandidat ->
-                log.info("Migrerer grunnlag med id=${kandidat.id} for behandlingId=${kandidat.behandlingId}")
-
-                // Oppdaterer grunnlaget med riktig vurderinger_id
-                connection.execute("UPDATE MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG SET vurderinger_id = ? WHERE id = ?") {
-                    setParams {
-                        setLong(1, vurderingerId)
-                        setLong(2, kandidat.id)
-                    }
-                    setResultValidator { require(it == 1) }
-                }
-            }
-
-            // Oppdaterer den manuelle vurderingen med riktig vurderinger_id, fom-dato og vurdertIBehandling.
-            // Henter ut verdier fra det eldste grunnlaget som er knyttet til vurderingen da dette er knyttet til behandlingen vurderingen ble opprettet i
-            kandidaterSomPerkerPåSammeVurdering.value.minByOrNull { it.grunnlagOpprettetTid }?.let { kandidat ->
-                connection.execute("UPDATE LOVVALG_MEDLEMSKAP_MANUELL_VURDERING SET vurderinger_id = ?, fom = ?, vurdert_i_behandling = ? WHERE id = ?") {
-                    setParams {
-                        setLong(1, vurderingerId)
-                        setLocalDate(2, kandidat.rettighetsperiode.fom)
-                        setLong(3, kandidat.behandlingId.id)
-                        setLong(4, kandidat.manuellVurderingId)
-                    }
-                    setResultValidator { require(it == 1) }
-                }
-            } ?: log.warn("Fant ingen kandidat og oppdatere vurdering for")
-        }
-
-        val totalTid = System.currentTimeMillis() - start
-
-        log.info("Fullført migrering av manuelle vurderinger for lovvalg medlemskap. Migrerte ${kandidaterForMigrering.size} grunnlag med ${kandidaterForMigreringGruppertPåManuellVurdering.size} tilhørende manuelle vurderinger på $totalTid ms.")
-    }
-
     private fun getLovvalgMedlemsskapManuellVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
         """
-                    SELECT manuell_vurdering_id
+                    SELECT vurderinger_id
                     FROM MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG
-                    WHERE behandling_id = ? AND manuell_vurdering_id is not null
+                    WHERE behandling_id = ? AND vurderinger_id is not null
                  
                 """.trimIndent()
     ) {
         setParams { setLong(1, behandlingId.id) }
         setRowMapper { row ->
-            row.getLong("manuell_vurdering_id")
+            row.getLong("vurderinger_id")
         }
     }
 
@@ -790,18 +632,19 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
 
     private fun mapManuellVurderingForLovvalgMedlemskap(row: Row): ManuellVurderingForLovvalgMedlemskap =
         ManuellVurderingForLovvalgMedlemskap(
-            lovvalgVedSøknadsTidspunkt = LovvalgVedSøknadsTidspunktDto(
+            lovvalg = LovvalgDto(
                 begrunnelse = row.getString("tekstvurdering_lovvalg"),
-                lovvalgsEØSLandEllerLandMedAvtale = row.getEnumOrNull("lovvalgs_land")
+                lovvalgsEØSLandEllerLandMedAvtale = row.getEnum("lovvalgs_land")
             ),
-            medlemskapVedSøknadsTidspunkt = MedlemskapVedSøknadsTidspunktDto(
-                begrunnelse = row.getStringOrNull("tekstvurdering_medlemskap"),
-                varMedlemIFolketrygd = row.getBooleanOrNull("var_medlem_i_folketrygden")
-            ),
+            medlemskap = row.getStringOrNull("tekstvurdering_medlemskap")?.let { tekstvurdering_medlemskap ->
+                MedlemskapDto(
+                    begrunnelse = tekstvurdering_medlemskap,
+                    varMedlemIFolketrygd = row.getBoolean("var_medlem_i_folketrygden")
+                )
+            },
             overstyrt = row.getBoolean("overstyrt"),
             vurdertAv = row.getString("vurdert_av"),
             vurdertDato = row.getLocalDateTime("opprettet_tid"),
-            id = row.getLongOrNull("id"),
             fom = row.getLocalDate("fom"),
             tom = row.getLocalDateOrNull("tom"),
             vurdertIBehandling = row.getLong("vurdert_i_behandling").let { BehandlingId(it) }
@@ -811,12 +654,6 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         val medlId: Long?,
         val inntektINorgeId: Long?,
         val arbeiderId: Long?,
-        val manuellVurderingId: Long?,
         val vurderingerId: Long?
-    )
-
-    internal data class InternalHistoriskManuellVurderingForLovvalgMedlemskap(
-        val manuellVurdering: ManuellVurderingForLovvalgMedlemskap,
-        val vurdertDato: LocalDateTime
     )
 }

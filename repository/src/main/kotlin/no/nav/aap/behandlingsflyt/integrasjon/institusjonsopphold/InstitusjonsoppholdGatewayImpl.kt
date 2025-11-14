@@ -4,13 +4,14 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonsopphold
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGateway
+import no.nav.aap.behandlingsflyt.integrasjon.unleash.UnleashGatewayImpl
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
-import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
@@ -77,8 +78,12 @@ object InstitusjonsoppholdGatewayImpl : InstitusjonsoppholdGateway {
     private fun query(request: InstitusjonoppholdRequest): List<InstitusjonsoppholdJSON> {
         val httpRequest = PostRequest(
             body = request,
-            additionalHeaders = listOf(
+            additionalHeaders = listOfNotNull(
                 Header("Nav-Consumer-Id", "aap-behandlingsflyt"),
+                if (UnleashGatewayImpl.isEnabled(BehandlingsflytFeature.InstFormaal))
+                    Header("Nav-Formaal", "ARBEIDSAVKLARINGSPENGER")
+                else
+                    null,
                 Header("Accept", "application/json")
             )
         )

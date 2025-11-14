@@ -3,9 +3,9 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.EnhetGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgVedSøknadsTidspunktDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapVedSøknadsTidspunktDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektInformasjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMaaned
@@ -20,7 +20,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.medlemsskap.MedlemskapRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
@@ -30,7 +29,6 @@ import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.behandlingsflyt.test.oktober
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
@@ -40,6 +38,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
@@ -79,44 +78,6 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
             assertEquals(inntekt1.identifikator, "1234")
             assertEquals(inntekt2.organisasjonsNavn, "Rotte AS")
             assertEquals(inntekt2.identifikator, "4321")
-        }
-    }
-
-    @Test
-    fun henterRelaterteHistoriskeVurderinger() {
-        // Førstegangsbehandling
-        val behandling = dataSource.transaction { connection ->
-            val repo = MedlemskapArbeidInntektRepositoryImpl(connection)
-            val sak = opprettSak(connection, periode)
-            val behandling = finnEllerOpprettBehandling(connection, sak)
-
-            lagNyFullVurdering(behandling.id, periode, repo, "Første begrunnelse")
-
-            val historikk = repo.hentHistoriskeVurderinger(sak.id, behandling.id)
-            assertEquals(0, historikk.size)
-
-            behandling
-        }
-
-        // Revurdering
-        dataSource.transaction { connection ->
-            val behandlingRepo = BehandlingRepositoryImpl(connection)
-            val repo = MedlemskapArbeidInntektRepositoryImpl(connection)
-
-            val revurdering =
-                behandlingRepo.opprettBehandling(
-                    behandling.sakId,
-                    TypeBehandling.Revurdering,
-                    behandling.id,
-                    VurderingsbehovOgÅrsak(
-                        listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
-                        ÅrsakTilOpprettelse.SØKNAD
-                    )
-                )
-
-            val historikk = repo.hentHistoriskeVurderinger(revurdering.sakId, revurdering.id)
-            lagNyFullVurdering(revurdering.id, periode, repo, "Andre begrunnelse")
-            assertThat(historikk).hasSize(1)
         }
     }
 
@@ -282,6 +243,55 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
         }
     }
 
+    @Test
+    fun `test sletting`() {
+        dataSource.transaction { connection ->
+            val medlemskapArbeidInntektRepository = MedlemskapArbeidInntektRepositoryImpl(connection)
+            val sak = opprettSak(connection, periode)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            val medlemskapRepository = MedlemskapRepositoryImpl(connection)
+
+            medlemskapArbeidInntektRepository.lagreVurderinger(
+                behandling.id,
+                listOf(
+                    manuellVurdering(
+                        fom = 1 mai 2025,
+                        tom = 31 oktober 2025,
+                        vurdertIBehandling = behandling.id
+                    ),
+                    manuellVurdering(
+                        fom = 1 november 2025,
+                        tom = null,
+                        vurdertIBehandling = behandling.id
+                    ),
+                )
+            )
+
+            val medlemskapArbeidInntektGrunnlag = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandling.id)
+
+            assertThat(medlemskapArbeidInntektGrunnlag?.vurderinger?.size).isEqualTo(2)
+
+            val medlId = medlemskapRepository.lagreUnntakMedlemskap(
+                behandlingId = behandling.id,
+                unntak = listOf(medlemskapData())
+            )
+
+            medlemskapArbeidInntektRepository.lagreArbeidsforholdOgInntektINorge(
+                behandlingId = behandling.id,
+                arbeidGrunnlag = arbeidGrunnlag(),
+                inntektGrunnlag = inntektGrunnlag(),
+                medlId = medlId,
+                enhetGrunnlag = enhetGrunnlags()
+            )
+
+            val medlemskapArbeidInntektGrunnlagOppdatert = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandling.id)
+
+            assertThat(medlemskapArbeidInntektGrunnlagOppdatert?.vurderinger?.size).isEqualTo(2)
+
+            assertDoesNotThrow { medlemskapArbeidInntektRepository.slett(behandling.id) }
+        }
+    }
+
     private fun lagNyFullVurdering(
         behandlingId: BehandlingId,
         periode: Periode,
@@ -317,8 +327,8 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
         ManuellVurderingForLovvalgMedlemskap(
             fom = fom,
             tom = tom,
-            lovvalgVedSøknadsTidspunkt = LovvalgVedSøknadsTidspunktDto(begrunnelse, EØSLandEllerLandMedAvtale.NOR),
-            medlemskapVedSøknadsTidspunkt = MedlemskapVedSøknadsTidspunktDto(begrunnelse, true),
+            lovvalg = LovvalgDto(begrunnelse, EØSLandEllerLandMedAvtale.NOR),
+            medlemskap = MedlemskapDto(begrunnelse, true),
             vurdertAv = "SAKSBEHANDLER",
             vurdertDato = LocalDateTime.now(),
             vurdertIBehandling = vurdertIBehandling

@@ -29,9 +29,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.DokumentResponsDTO
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForSakResolver
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.brev.kontrakt.Brev
+import no.nav.aap.brev.kontrakt.KanDistribuereBrevReponse
+import no.nav.aap.brev.kontrakt.KanDistribuereBrevRequest
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
@@ -47,7 +50,7 @@ import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
 import no.nav.aap.tilgang.authorizedPut
 import org.slf4j.LoggerFactory
-import java.util.*
+import java.util.UUID
 import javax.sql.DataSource
 
 private val log = LoggerFactory.getLogger("BrevAPI")
@@ -263,6 +266,23 @@ fun NormalOpenAPIRoute.brevApi(
                     }
                     respond(DokumentResponsDTO(pdf))
                 }
+            }
+        }
+        route("/distribusjon/kan-distribuere-brev") {
+            authorizedPost<Unit, KanDistribuereBrevReponse, KanDistribuereBrevRequest>(
+                AuthorizationBodyPathConfig(
+                    operasjon = Operasjon.SE,
+                    relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource)
+                )
+            ) { _, request ->
+                val response = KanDistribuereBrevReponse(
+                    mottakereDistStatus = brevbestillingGateway.kanDistribuereBrev(
+                        request.behandlingsReferanse,
+                        request.brukerIdent,
+                        request.mottakerIdentListe
+                    )
+                )
+                respond(response, HttpStatusCode.Accepted)
             }
         }
     }

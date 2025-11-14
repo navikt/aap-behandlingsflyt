@@ -31,15 +31,15 @@ class AvklarBistandLøser(
         løsning: AvklarBistandsbehovLøsning
     ): LøsningsResultat {
         løsning.bistandsVurdering.valider()
-    
+
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
 
-        val nyesteSykdomsvurdering = sykdomRepository.hentHvisEksisterer(behandling.id)
-            ?.sykdomsvurderinger?.maxByOrNull { it.opprettet }
-        
+        val nyesteSykdomsvurdering = sykdomRepository.hent(behandling.id)
+            .sykdomsvurderinger.maxBy { it.opprettet }
+
         val bistandsVurdering = løsning.bistandsVurdering.tilBistandVurdering(
             kontekst.bruker,
-            nyesteSykdomsvurdering?.vurderingenGjelderFra,  // TODO: Gjør uavhengig fra sykdom
+            nyesteSykdomsvurdering.vurderingenGjelderFra,  // TODO: Gjør uavhengig fra sykdom
             vurdertIBehandling = kontekst.behandlingId()
         )
 
