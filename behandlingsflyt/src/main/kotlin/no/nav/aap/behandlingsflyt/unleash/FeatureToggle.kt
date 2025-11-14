@@ -14,7 +14,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     NyBrevtype11_18,
     Aktivitetsplikt11_9,
     OverforingsdatoNullForAvregning,
-    NyeSykdomVilkar,
     OvergangArbeid,
     AvklaringsbehovService,
     AvklaringsbehovServiceFormkrav,
@@ -23,6 +22,8 @@ enum class BehandlingsflytFeature : FeatureToggle {
     BedreUttrekkAvSakerMedFritakMeldeplikt,
     NyBeregningAvklarFaktaSteg,
     EOSBeregning,
+    NyeBarn,
+    InstFormaal,
     Arbeidsopptrapping
     ;
 

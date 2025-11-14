@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.test
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.FeatureToggle
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
-import kotlin.to
 
 open class FakeUnleashBase(
     private val flags: Map<BehandlingsflytFeature, Boolean>,
@@ -29,6 +28,7 @@ object FakeUnleash : FakeUnleashBase(
         BehandlingsflytFeature.FatteVedtakAvklaringsbehovService to true,
         BehandlingsflytFeature.NyBeregningAvklarFaktaSteg to true,
         BehandlingsflytFeature.EOSBeregning to true,
+        BehandlingsflytFeature.NyeBarn to true,
         BehandlingsflytFeature.Arbeidsopptrapping to true
     )
 )
@@ -46,6 +46,7 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.FatteVedtakAvklaringsbehovService to true,
         BehandlingsflytFeature.NyBeregningAvklarFaktaSteg to true,
         BehandlingsflytFeature.EOSBeregning to true,
+        BehandlingsflytFeature.NyeBarn to true,
         BehandlingsflytFeature.Arbeidsopptrapping to true
     )
 )

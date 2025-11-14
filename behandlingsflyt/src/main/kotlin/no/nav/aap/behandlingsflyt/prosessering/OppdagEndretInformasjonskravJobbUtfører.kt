@@ -55,6 +55,7 @@ class OppdagEndretInformasjonskravJobbUtfører(
                 sakId,
                 VurderingsbehovOgÅrsak(vurderingsbehov, ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA)
             )
+            log.info("Opprettet revurdering for sak $sakId med behov $vurderingsbehov. Behandling: ${revurdering.referanse}.")
             prosesserBehandlingService.triggProsesserBehandling(
                 revurdering,
                 emptyList() // TODO: Se om vi bør legge ved triggere

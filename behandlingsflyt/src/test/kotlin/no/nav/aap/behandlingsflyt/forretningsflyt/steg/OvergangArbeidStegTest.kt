@@ -163,7 +163,6 @@ class OvergangArbeidStegTest {
         erBehovForAnnenOppfølging = false,
         vurderingenGjelderFra = vurderingenGjelderFra,
         vurdertAv = "Z00000",
-        skalVurdereAapIOvergangTilUføre = null,
         skalVurdereAapIOvergangTilArbeid = null,
         overgangBegrunnelse = null,
         vurdertIBehandling = BehandlingId(1)
