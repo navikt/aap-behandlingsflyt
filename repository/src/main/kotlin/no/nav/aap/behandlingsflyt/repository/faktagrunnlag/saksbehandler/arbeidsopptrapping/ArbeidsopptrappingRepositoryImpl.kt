@@ -110,7 +110,7 @@ class ArbeidsopptrappingRepositoryImpl(private val connection: DBConnection) : A
                 setLong(5, it.vurdertIBehandling.id)
                 setString(6, it.vurdertAv)
                 setLocalDate(7, it.vurderingenGjelderFra)
-                setLocalDate(7, it.vurderingenGjelderTil)
+                setLocalDate(8, it.vurderingenGjelderTil)
             }
         }
 
