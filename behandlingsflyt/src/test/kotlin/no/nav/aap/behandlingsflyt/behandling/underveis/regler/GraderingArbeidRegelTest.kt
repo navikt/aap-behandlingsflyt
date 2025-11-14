@@ -181,7 +181,7 @@ class GraderingArbeidRegelTest {
             rettighetsperiode = rettighetsperiode,
             fastsattArbeidsevne = null,
             opptrappingPerioder = listOf(periode),
-            meldekort = meldekort(periode to BigDecimal(80))
+            meldekort = meldekort(periode to BigDecimal(60))
         )
         val vurdering = vurder(input)
 
