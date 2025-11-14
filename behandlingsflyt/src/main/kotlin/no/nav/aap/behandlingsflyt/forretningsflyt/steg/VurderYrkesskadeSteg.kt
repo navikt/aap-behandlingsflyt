@@ -69,27 +69,15 @@ class VurderYrkesskadeSteg private constructor(
         yrkesskadeGrunnlag: YrkesskadeGrunnlag?
     ): Boolean {
         return when (flytKontekstMedPerioder.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
-                return if (tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(
-                        flytKontekstMedPerioder,
-                        type()
-                    )
-                ) {
-                    false
-                } else {
-                    if (flytKontekstMedPerioder.vurderingsbehovRelevanteForSteg.isEmpty()) {
-                        false
-                    } else
-                        if (Vurderingsbehov.REVURDER_YRKESSKADE in flytKontekstMedPerioder.vurderingsbehovRelevanteForSteg && yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() == true) {
-                            true
-                        } else {
-                            if (yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() != true) {
-                                false
-                            } else {
-                                true
-                            }
-                        }
-                }
+            VurderingType.FØRSTEGANGSBEHANDLING,
+            VurderingType.REVURDERING -> {
+                
+                !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(
+                    flytKontekstMedPerioder,
+                    type()
+                ) &&
+                        flytKontekstMedPerioder.vurderingsbehovRelevanteForSteg.isNotEmpty() &&
+                        yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() == true
             }
 
             VurderingType.MELDEKORT,
