@@ -1,8 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurderingDTO
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurderingDTO
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovHendelseHåndterer
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
@@ -54,8 +52,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertMan
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingerForBarnetillegg
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.flate.OvergangArbeidVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flate.OvergangUføreVurderingLøsningDto
@@ -82,6 +82,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ArbeidIPeriodeV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KabalHendelseV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Klage
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KommeTilbake
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManueltOppgittBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
@@ -89,6 +90,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppfølgingsoppgaveV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppgitteBarn
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Søknad
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
@@ -232,12 +234,12 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
 
     object TestSøknader {
         val STANDARD_SØKNAD = SøknadV0(
-            student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+            student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
             medlemskap = SøknadMedlemskapDto("JA", "JA", "NEI", "NEI", null)
         )
 
         val SØKNAD_INGEN_MEDLEMSKAP = SøknadV0(
-            student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+            student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
             medlemskap = SøknadMedlemskapDto(
                 "JA", null, "JA", null,
                 listOf(
@@ -255,7 +257,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         )
 
         val SØKNAD_STUDENT = SøknadV0(
-            student = SøknadStudentDto("JA", "JA"),
+            student = SøknadStudentDto(StudentStatus.Ja, KommeTilbake.Ja),
             yrkesskade = "JA",
             oppgitteBarn = null,
             medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
@@ -426,7 +428,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
 
     @JvmName("løsFramTilGrunnlagExt")
     protected fun Behandling.løsFramTilGrunnlag(rettighetsPeriodeFrom: LocalDate): Behandling {
-        return løsFramTilGrunnlag(rettighetsPeriodeFrom,this)
+        return løsFramTilGrunnlag(rettighetsPeriodeFrom, this)
     }
 
     protected fun løsFramTilGrunnlag(rettighetsPeriodeFrom: LocalDate, behandling: Behandling): Behandling {
@@ -441,7 +443,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                         erBehovForAnnenOppfølging = null,
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = null,
-                        ),
+                    ),
                 ),
             )
             .løsAvklaringsBehov(
@@ -1348,7 +1350,10 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         return this
     }
 
-    protected fun Behandling.assertVilkårsutfall(vilkårtype: Vilkårtype, vararg expectedVilkårsutfall: Pair<Periode, Utfall?>): Behandling {
+    protected fun Behandling.assertVilkårsutfall(
+        vilkårtype: Vilkårtype,
+        vararg expectedVilkårsutfall: Pair<Periode, Utfall?>
+    ): Behandling {
         val vilkårsutfall = dataSource.transaction(readOnly = true) { VilkårsresultatRepositoryImpl(it).hent(this.id) }
             .optionalVilkår(vilkårtype)
             ?.tidslinje()
