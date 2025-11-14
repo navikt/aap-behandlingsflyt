@@ -112,7 +112,10 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
             val overstyrt = manuellVurdering.overstyrt || eksisterendeManuellVurdering?.overstyrt == true
 
             val manuellVurderingQuery = """
-            INSERT INTO FORUTGAAENDE_MEDLEMSKAP_MANUELL_VURDERING (BEGRUNNELSE, HAR_FORUTGAAENDE_MEDLEMSKAP, VAR_MEDLEM_MED_NEDSATT_ARBEIDSEVNE, MEDLEM_MED_UNNTAK_AV_MAKS_FEM_AAR, OVERSTYRT, VURDERT_AV) VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO FORUTGAAENDE_MEDLEMSKAP_MANUELL_VURDERING (BEGRUNNELSE, HAR_FORUTGAAENDE_MEDLEMSKAP, 
+                VAR_MEDLEM_MED_NEDSATT_ARBEIDSEVNE, MEDLEM_MED_UNNTAK_AV_MAKS_FEM_AAR, OVERSTYRT, VURDERT_AV, 
+                OPPRETTET_TID, FOM, TOM, VURDERT_I_BEHANDLING) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent()
 
             connection.executeReturnKey(manuellVurderingQuery) {
@@ -123,6 +126,10 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
                     setBoolean(4, manuellVurdering.medlemMedUnntakAvMaksFemAar)
                     setBoolean(5, overstyrt)
                     setString(6, manuellVurdering.vurdertAv)
+                    setLocalDateTime(7, manuellVurdering.vurdertTidspunkt)
+                    setLocalDate(8, manuellVurdering.fom)
+                    setLocalDate(9, manuellVurdering.tom)
+                    setLong(10, manuellVurdering.vurdertIBehandling?.id)
                 }
             }
         }
@@ -335,7 +342,10 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
                     medlemMedUnntakAvMaksFemAar = it.getBooleanOrNull("medlem_med_unntak_av_maks_fem_aar"),
                     overstyrt = it.getBoolean("overstyrt"),
                     vurdertAv = it.getString("vurdert_av"),
-                    vurdertTidspunkt = it.getLocalDateTime("opprettet_tid")
+                    vurdertTidspunkt = it.getLocalDateTime("opprettet_tid"),
+                    fom = it.getLocalDateOrNull("fom"),
+                    tom = it.getLocalDateOrNull("tom"),
+                    vurdertIBehandling = it.getLongOrNull("vurdert_i_behandling")?.let { id -> BehandlingId(id) }
                 )
             }
         }

@@ -41,6 +41,8 @@ class AvklarOverstyrtForutgåendeMedlemskapLøser(
             return LøsningsResultat("OVERSTYRT: Fant yrkesskade, overstyring ikke tillat.")
         }
 
+        val sak = sakRepository.hent(kontekst.kontekst.sakId)
+
         forutgåendeMedlemskapArbeidInntektRepository.lagreManuellVurdering(
             kontekst.behandlingId(),
             ManuellVurderingForForutgåendeMedlemskap(
@@ -49,11 +51,12 @@ class AvklarOverstyrtForutgåendeMedlemskapLøser(
                 varMedlemMedNedsattArbeidsevne = løsning.manuellVurderingForForutgåendeMedlemskap.varMedlemMedNedsattArbeidsevne,
                 medlemMedUnntakAvMaksFemAar = løsning.manuellVurderingForForutgåendeMedlemskap.medlemMedUnntakAvMaksFemAar,
                 vurdertAv = kontekst.bruker.ident,
-                overstyrt = true
+                overstyrt = true,
+                vurdertIBehandling = kontekst.behandlingId(),
+                fom = sak.rettighetsperiode.fom
             )
         )
 
-        val sak = sakRepository.hent(kontekst.kontekst.sakId)
         val personopplysningGrunnlag = personopplysningForutgåendeRepository.hentHvisEksisterer(kontekst.behandlingId())
             ?: throw IllegalStateException("Forventet å finne personopplysninger")
         val medlemskapArbeidInntektGrunnlag =
