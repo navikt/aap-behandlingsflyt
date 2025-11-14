@@ -2219,10 +2219,11 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
     fun `to-trinn og ingen endring i gruppe etter sendt tilbake fra beslutter`() {
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
+        val person = TestPersoner.STANDARD_PERSON()
         // Sender inn en søknad
         val (_, behandling) = sendInnFørsteSøknad(
             periode = periode,
-            person = TestPersoner.PERSON_MED_YRKESSKADE(),
+            person = person,
             søknad = TestSøknader.SØKNAD_STUDENT
         )
         behandling.medKontekst {
@@ -2260,8 +2261,10 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     )
                 )
             ).løsBistand()
+
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+
             .medKontekst {
                 // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
                 assertThat(åpneAvklaringsbehov).isNotEmpty()

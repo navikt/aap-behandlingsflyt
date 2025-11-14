@@ -76,14 +76,19 @@ class VurderYrkesskadeSteg private constructor(
                     )
                 ) {
                     false
-                } else if (yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() != true) {
-                    false
                 } else {
-                    if (Vurderingsbehov.REVURDER_YRKESSKADE in flytKontekstMedPerioder.vurderingsbehovRelevanteForSteg) {
-                        true
-                    } else {
+                    if (flytKontekstMedPerioder.vurderingsbehovRelevanteForSteg.isEmpty()) {
                         false
-                    }
+                    } else
+                        if (Vurderingsbehov.REVURDER_YRKESSKADE in flytKontekstMedPerioder.vurderingsbehovRelevanteForSteg && yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() == true) {
+                            true
+                        } else {
+                            if (yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() != true) {
+                                false
+                            } else {
+                                true
+                            }
+                        }
                 }
             }
 
