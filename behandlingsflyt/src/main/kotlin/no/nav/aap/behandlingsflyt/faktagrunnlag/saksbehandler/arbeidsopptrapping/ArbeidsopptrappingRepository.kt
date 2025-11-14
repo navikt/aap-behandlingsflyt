@@ -6,5 +6,6 @@ import no.nav.aap.lookup.repository.Repository
 interface ArbeidsopptrappingRepository : Repository {
     fun hentHvisEksisterer(behandlingId: BehandlingId): ArbeidsopptrappingGrunnlag?
     fun lagre(behandlingId: BehandlingId, arbeidsopptrappingVurderinger: List<ArbeidsopptrappingVurdering>)
+    override fun slett(behandlingId: BehandlingId)
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
 }

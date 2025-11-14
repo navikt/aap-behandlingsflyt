@@ -45,12 +45,14 @@ class ArbeidsopptrappingRepositoryImpl(private val connection: DBConnection) : A
             }
             setRowMapper { row ->
                 ArbeidsopptrappingVurdering(
-                    begrunnelse = row.getString("begrunnelse"),
-                    fraDato = row.getLocalDate("gjelder_fra"),
-                    vurdertAv = row.getString("vurdert_av"),
+                    begrunnelse = row.getString("BEGRUNNELSE"),
+                    vurderingenGjelderFra = row.getLocalDate("GJELDER_FRA"),
                     reellMulighetTilOpptrapping = row.getBoolean("MULIGHET_TIL_OPPTRAPPING"),
                     rettPaaAAPIOpptrapping = row.getBoolean("RETT_PAA_AAP"),
-                    opprettetTid = row.getLocalDateTime("OPPRETTET_TID")
+                    vurdertAv = row.getString("VURDERT_AV"),
+                    opprettetTid = row.getInstant("OPPRETTET_TID"),
+                    vurdertIBehandling = BehandlingId(row.getLong("VURDERT_I_BEHANDLING")),
+                    vurderingenGjelderTil = row.getLocalDate("GJELDER_TIL")
                 )
             }
         }
@@ -69,8 +71,8 @@ class ArbeidsopptrappingRepositoryImpl(private val connection: DBConnection) : A
 
         connection.executeBatch(
             """
-            INSERT INTO ARBEIDSOPPTRAPPING_VURDERING (BEGRUNNELSE, MULIGHET_TIL_OPPTRAPPING, RETT_PAA_AAP, VURDERINGER_ID, VURDERT_AV, GJELDER_FRA)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO ARBEIDSOPPTRAPPING_VURDERING (BEGRUNNELSE, MULIGHET_TIL_OPPTRAPPING, RETT_PAA_AAP, VURDERINGER_ID, VURDERT_I_BEHANDLING, VURDERT_AV, GJELDER_FRA, GJELDER_TIL)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """.trimIndent(), arbeidsopptrappingVurdering
         ) {
             setParams {
@@ -78,8 +80,10 @@ class ArbeidsopptrappingRepositoryImpl(private val connection: DBConnection) : A
                 setBoolean(2, it.reellMulighetTilOpptrapping)
                 setBoolean(3, it.rettPaaAAPIOpptrapping)
                 setLong(4, vurderingerId)
-                setString(5, it.vurdertAv)
-                setLocalDate(6, it.fraDato)
+                setLong(5, it.vurdertIBehandling.id)
+                setString(6, it.vurdertAv)
+                setLocalDate(7, it.vurderingenGjelderFra)
+                setLocalDate(7, it.vurderingenGjelderTil)
             }
         }
 

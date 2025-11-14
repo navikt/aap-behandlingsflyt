@@ -21,8 +21,10 @@ CREATE TABLE ARBEIDSOPPTRAPPING_VURDERING
     MULIGHET_TIL_OPPTRAPPING    BOOLEAN                                NOT NULL,
     RETT_PAA_AAP                BOOLEAN                                NOT NULL,
     VURDERINGER_ID              BIGINT                                 NOT NULL REFERENCES ARBEIDSOPPTRAPPING_VURDERINGER (ID),
+    VURDERT_I_BEHANDLING        BIGINT                                 NOT NULL REFERENCES BEHANDLING (ID),
     VURDERT_AV                  varchar(50)                            NOT NULL,
     GJELDER_FRA                 DATE                                   NOT NULL,
+    GJELDER_TIL                 DATE                                   NULL,
     OPPRETTET_TID               TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 CREATE INDEX IDX_ARBEIDSOPPTRAPPING_VURDERING_VURDERINGER_ID ON ARBEIDSOPPTRAPPING_VURDERING (VURDERINGER_ID);
