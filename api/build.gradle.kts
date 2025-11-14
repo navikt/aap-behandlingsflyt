@@ -10,7 +10,7 @@ repositories {
 }
 
 val mockOAuth2ServerVersion = "3.0.1"
-val kafkaVersion = "4.1.0"
+val kafkaVersion = "4.1.1"
 
 dependencies {
     api(project(":behandlingsflyt"))
