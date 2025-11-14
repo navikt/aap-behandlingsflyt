@@ -281,7 +281,6 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         val fom = LocalDate.now().minusMonths(3)
         val periode = Periode(fom, fom.plusYears(3))
 
-        // Simulerer et svar fra YS-løsning om at det finnes en yrkesskade
         val person = TestPersoner.STANDARD_PERSON()
 
         var (sak, behandling) = sendInnFørsteSøknad(
