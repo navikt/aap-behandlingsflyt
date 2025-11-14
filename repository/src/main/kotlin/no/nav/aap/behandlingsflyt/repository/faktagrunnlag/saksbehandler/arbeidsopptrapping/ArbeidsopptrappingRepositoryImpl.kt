@@ -79,7 +79,7 @@ class ArbeidsopptrappingRepositoryImpl(private val connection: DBConnection) : A
                     vurdertAv = row.getString("VURDERT_AV"),
                     opprettetTid = row.getInstant("OPPRETTET_TID"),
                     vurdertIBehandling = BehandlingId(row.getLong("VURDERT_I_BEHANDLING")),
-                    vurderingenGjelderTil = row.getLocalDate("GJELDER_TIL")
+                    vurderingenGjelderTil = row.getLocalDateOrNull("GJELDER_TIL")
                 )
             }
         }
@@ -150,8 +150,8 @@ class ArbeidsopptrappingRepositoryImpl(private val connection: DBConnection) : A
         val deletedRows = connection.executeReturnUpdated(
             """
             delete from ARBEIDSOPPTRAPPING_GRUNNLAG where behandling_id = ?; 
-            delete from ARBEIDSOPPTRAPPING_VURDERING where id = ANY(?::bigint[]);
-            delete from ARBEIDSOPPTRAPPING_VURDERINGER where id in (select id from ARBEIDSOPPTRAPPING_GRUNNLAG where behandling_id = ?)
+            delete from ARBEIDSOPPTRAPPING_VURDERING where vurderinger_id = ANY(?::bigint[]);
+            delete from ARBEIDSOPPTRAPPING_VURDERINGER where id = ANY(?::bigint[]);
         """.trimIndent()
         ) {
             setParams {
@@ -181,7 +181,6 @@ class ArbeidsopptrappingRepositoryImpl(private val connection: DBConnection) : A
             setParams {
                 setLong(1, behandlingId.id)
             }
-            setResultValidator { require(it == 1) }
         }
     }
 }
