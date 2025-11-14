@@ -31,10 +31,10 @@ class ArbeidsopptrappingRepositoryImpl(private val connection: DBConnection) : A
                     vurdering.vurderingenGjelderTil!!
 
                 index < vurderinger.lastIndex ->
-                    vurderinger[index + 1].vurderingenGjelderFra.minusDays(1)
+                    vurderinger[index + 1].vurderingenGjelderFra
 
                 else ->
-                    vurdering.vurderingenGjelderFra.plusMonths(12).minusDays(1)
+                    vurdering.vurderingenGjelderFra.plusMonths(12)
             }
             vurdering to Periode(fom, tom)
         }
