@@ -968,6 +968,216 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
     }
 
     @Test
+    fun `ved revurdering med yrkesskade og årsakssammenheng må både beregningstidspunkt og yrkesskadeinntekt avklares ved revurdering av beregning`() {
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        val person = TestPersoner.PERSON_MED_YRKESSKADE()
+        // Sender inn en søknad
+        val (sak, behandling) = sendInnFørsteSøknad(
+            periode = periode,
+            person = person,
+            søknad = TestSøknader.STANDARD_SØKNAD
+        )
+
+        val oppdatertBehandling = behandling
+            .løsSykdom(periode.fom)
+            .løsBistand()
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .kvalitetssikreOk()
+            .løsAvklaringsBehov(
+                AvklarYrkesskadeLøsning(
+                    yrkesskadesvurdering = YrkesskadevurderingDto(
+                        begrunnelse = "Veldig relevante",
+                        relevanteSaker = person.yrkesskade.map { it.saksreferanse },
+                        relevanteYrkesskadeSaker = person.yrkesskade.map {
+                            YrkesskadeSakDto(
+                                it.saksreferanse,
+                                null,
+                            )
+                        },
+                        andelAvNedsettelsen = 50,
+                        erÅrsakssammenheng = true
+                    )
+                )
+            )
+            .løsBeregningstidspunkt()
+            .løsYrkesskadeInntekt(person.yrkesskade)
+            .løsOppholdskrav(periode.fom)
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_INNVILGELSE)
+
+        assertThat(oppdatertBehandling.status()).isEqualTo(Status.AVSLUTTET)
+
+        val revurdering = sak.opprettManuellRevurdering(
+            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_BEREGNING),
+        )
+            // TODO denne skal bort med PR som er på vei siden dette ikke skal vurderes her
+            .løsAvklaringsBehov(
+                AvklarYrkesskadeLøsning(
+                    yrkesskadesvurdering = YrkesskadevurderingDto(
+                        begrunnelse = "Veldig relevante",
+                        relevanteSaker = person.yrkesskade.map { it.saksreferanse },
+                        relevanteYrkesskadeSaker = person.yrkesskade.map {
+                            YrkesskadeSakDto(
+                                it.saksreferanse,
+                                null,
+                            )
+                        },
+                        andelAvNedsettelsen = 50,
+                        erÅrsakssammenheng = true
+                    )
+                )
+            )
+            .løsBeregningstidspunkt()
+            .løsYrkesskadeInntekt(person.yrkesskade)
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_ENDRING)
+
+
+        assertThat(revurdering.status()).isEqualTo(Status.AVSLUTTET)
+    }
+
+    @Test
+    fun `ved revurdering med yrkesskade skal både årsakssammenheng og yrkesskadeinntekt avklares hvis årsak revurder yrkesskade`() {
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        val person = TestPersoner.PERSON_MED_YRKESSKADE()
+        // Sender inn en søknad
+        val (sak, behandling) = sendInnFørsteSøknad(
+            periode = periode,
+            person = person,
+            søknad = TestSøknader.STANDARD_SØKNAD
+        )
+
+        val oppdatertBehandling = behandling
+            .løsSykdom(periode.fom)
+            .løsBistand()
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .kvalitetssikreOk()
+            .løsAvklaringsBehov(
+                AvklarYrkesskadeLøsning(
+                    yrkesskadesvurdering = YrkesskadevurderingDto(
+                        begrunnelse = "Veldig relevante",
+                        relevanteSaker = person.yrkesskade.map { it.saksreferanse },
+                        relevanteYrkesskadeSaker = person.yrkesskade.map {
+                            YrkesskadeSakDto(
+                                it.saksreferanse,
+                                null,
+                            )
+                        },
+                        andelAvNedsettelsen = 50,
+                        erÅrsakssammenheng = true
+                    )
+                )
+            )
+            .løsBeregningstidspunkt()
+            .løsYrkesskadeInntekt(person.yrkesskade)
+            .løsOppholdskrav(periode.fom)
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_INNVILGELSE)
+
+        assertThat(oppdatertBehandling.status()).isEqualTo(Status.AVSLUTTET)
+
+        val revurdering = sak.opprettManuellRevurdering(
+            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_YRKESSKADE),
+        )
+            .løsAvklaringsBehov(
+                AvklarYrkesskadeLøsning(
+                    yrkesskadesvurdering = YrkesskadevurderingDto(
+                        begrunnelse = "Veldig relevante",
+                        relevanteSaker = person.yrkesskade.map { it.saksreferanse },
+                        relevanteYrkesskadeSaker = person.yrkesskade.map {
+                            YrkesskadeSakDto(
+                                it.saksreferanse,
+                                null,
+                            )
+                        },
+                        andelAvNedsettelsen = 50,
+                        erÅrsakssammenheng = true
+                    )
+                )
+            )
+            .løsYrkesskadeInntekt(person.yrkesskade)
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_ENDRING)
+
+
+        assertThat(revurdering.status()).isEqualTo(Status.AVSLUTTET)
+    }
+
+    @Test
+    fun `ved revurdering med yrkesskade hvor yrkesskade fjernes må forutgående medlemskap vurderes da den igjen er aktuell`() {
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        val person = TestPersoner.PERSON_MED_YRKESSKADE()
+        // Sender inn en søknad
+        val (sak, behandling) = sendInnFørsteSøknad(
+            periode = periode,
+            person = person,
+            søknad = TestSøknader.SØKNAD_INGEN_MEDLEMSKAP
+        )
+
+        val oppdatertBehandling = behandling
+            .løsLovvalg(periode.fom)
+            .løsSykdom(periode.fom)
+            .løsBistand()
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .kvalitetssikreOk()
+            .løsAvklaringsBehov(
+                AvklarYrkesskadeLøsning(
+                    yrkesskadesvurdering = YrkesskadevurderingDto(
+                        begrunnelse = "Ikke lenger relevant, dette var feil i fgbh",
+                        relevanteSaker = person.yrkesskade.map { it.saksreferanse },
+                        relevanteYrkesskadeSaker = person.yrkesskade.map {
+                            YrkesskadeSakDto(
+                                it.saksreferanse,
+                                null,
+                            )
+                        },
+                        andelAvNedsettelsen = 50,
+                        erÅrsakssammenheng = true
+                    )
+                )
+            )
+            .løsBeregningstidspunkt()
+            .løsYrkesskadeInntekt(person.yrkesskade)
+            .løsOppholdskrav(periode.fom)
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_INNVILGELSE)
+
+        assertThat(oppdatertBehandling.status()).isEqualTo(Status.AVSLUTTET)
+
+        val revurdering = sak.opprettManuellRevurdering(
+            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_YRKESSKADE),
+        )
+            .løsAvklaringsBehov(
+                AvklarYrkesskadeLøsning(
+                    yrkesskadesvurdering = YrkesskadevurderingDto(
+                        begrunnelse = "Ikke lenger relevant, dette var feil i fgbh",
+                        relevanteSaker = person.yrkesskade.map { it.saksreferanse },
+                        relevanteYrkesskadeSaker = emptyList(),
+                        andelAvNedsettelsen = null,
+                        erÅrsakssammenheng = false
+                    )
+                )
+            )
+            .løsForutgåendeMedlemskap()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_ENDRING)
+
+        assertThat(revurdering.status()).isEqualTo(Status.AVSLUTTET)
+    }
+
+    @Test
     fun `kan trekke søknad som har passert manuelt vurdert lovvalg`() {
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
