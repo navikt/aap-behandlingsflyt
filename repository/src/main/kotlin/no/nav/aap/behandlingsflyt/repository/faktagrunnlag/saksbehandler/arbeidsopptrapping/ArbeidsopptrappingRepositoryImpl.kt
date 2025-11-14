@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
 
@@ -15,6 +16,32 @@ class ArbeidsopptrappingRepositoryImpl(private val connection: DBConnection) : A
         override fun konstruer(connection: DBConnection): ArbeidsopptrappingRepositoryImpl {
             return ArbeidsopptrappingRepositoryImpl(connection)
         }
+    }
+
+    override fun hentPerioder(behandlingId: BehandlingId): List<Periode> {
+        val grunnlag = hentHvisEksisterer(behandlingId) ?: return emptyList()
+
+        val vurderinger = grunnlag.vurderinger
+            .sortedBy { it.vurderingenGjelderFra }
+
+        val vurderingMedPerioder = vurderinger.mapIndexed { index, vurdering ->
+            val fom = vurdering.vurderingenGjelderFra
+            val tom = when {
+                vurdering.vurderingenGjelderTil != null ->
+                    vurdering.vurderingenGjelderTil!!
+
+                index < vurderinger.lastIndex ->
+                    vurderinger[index + 1].vurderingenGjelderFra.minusDays(1)
+
+                else ->
+                    vurdering.vurderingenGjelderFra.plusMonths(12).minusDays(1)
+            }
+            vurdering to Periode(fom, tom)
+        }
+
+        return vurderingMedPerioder
+            .filter { (v) -> v.rettPaaAAPIOpptrapping && v.reellMulighetTilOpptrapping }
+            .map { (_, periode) -> periode }
     }
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): ArbeidsopptrappingGrunnlag? {
