@@ -272,7 +272,7 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO): Sak {
 private fun opprettNySakOgBehandling(dto: OpprettTestcaseDTO): Sak {
     val sak = sendInnSøknad(dto)
 
-    if (dto.steg == StegType.AVKLAR_STUDENT) return sak
+    if (dto.steg in listOf(StegType.START_BEHANDLING, StegType.AVKLAR_STUDENT) ) return sak
 
     motor.kjørJobber()
 
