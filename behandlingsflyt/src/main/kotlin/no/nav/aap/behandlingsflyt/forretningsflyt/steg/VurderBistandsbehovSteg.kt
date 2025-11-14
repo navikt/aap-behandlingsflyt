@@ -101,12 +101,9 @@ class VurderBistandsbehovSteg(
             val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
             vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.BISTANDSVILKÅRET)
 
-            val studentvurdering = studentRepository.hentHvisEksisterer(kontekst.behandlingId)?.studentvurdering
             val grunnlag = BistandFaktagrunnlag(
-                kontekst.rettighetsperiode.fom,
                 kontekst.rettighetsperiode.tom,
                 bistandRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger.orEmpty(),
-                studentvurdering,
             )
             Bistandsvilkåret(vilkårsresultat).vurder(grunnlag = grunnlag)
             vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
