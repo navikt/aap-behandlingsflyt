@@ -46,9 +46,7 @@ class VurderYrkesskadeSteg private constructor(
             definisjon = Definisjon.AVKLAR_YRKESSKADE,
             vedtakBehøverVurdering = {
                 behøverVurdering(
-                    kontekst,
-                    tidligereVurderinger,
-                    yrkesskader
+                    kontekst, tidligereVurderinger, yrkesskader
                 )
             },
             erTilstrekkeligVurdert = { sykdomsgrunnlag != null && sykdomsgrunnlag.yrkesskadevurdering != null },
@@ -69,28 +67,20 @@ class VurderYrkesskadeSteg private constructor(
         yrkesskadeGrunnlag: YrkesskadeGrunnlag?
     ): Boolean {
         return when (flytKontekstMedPerioder.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING,
-            VurderingType.REVURDERING -> {
-                
+            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
+
                 !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(
-                    flytKontekstMedPerioder,
-                    type()
-                ) &&
-                        flytKontekstMedPerioder.vurderingsbehovRelevanteForSteg.isNotEmpty() &&
-                        yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() == true
+                    flytKontekstMedPerioder, type()
+                ) && flytKontekstMedPerioder.vurderingsbehovRelevanteForSteg.isNotEmpty() && yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() == true
             }
 
-            VurderingType.MELDEKORT,
-            VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
-            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
-            VurderingType.IKKE_RELEVANT -> false
+            VurderingType.MELDEKORT, VurderingType.EFFEKTUER_AKTIVITETSPLIKT, VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9, VurderingType.IKKE_RELEVANT -> false
         }
     }
 
     companion object : FlytSteg {
         override fun konstruer(
-            repositoryProvider: RepositoryProvider,
-            gatewayProvider: GatewayProvider
+            repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider
         ): BehandlingSteg {
             return VurderYrkesskadeSteg(repositoryProvider)
         }
