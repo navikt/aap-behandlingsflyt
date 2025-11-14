@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.repository
 
+import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapForutgåendeRepositoryImpl
@@ -143,4 +144,5 @@ val postgresRepositoryRegistry = RepositoryRegistry()
     .register<AvbrytRevurderingRepositoryImpl>()
     .register<Aktivitetsplikt11_9RepositoryImpl>()
     .register<Reduksjon11_9RepositoryImpl>()
+    .register<TilbakekrevingRepository>()
 
