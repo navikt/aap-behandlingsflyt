@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.hendelse.mottak
 
+import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingService
+import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.Tilbakekrevingshendelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -24,6 +26,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRe
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Omgjøringskilde
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Oppfølgingsoppgave
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppfølgingsoppgaveV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingBehandlingsstatus
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelseV0
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -40,8 +43,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
+import java.net.URI
 import java.time.LocalDateTime
 import java.util.*
 
@@ -52,6 +57,7 @@ class HåndterMottattDokumentService(
     private val prosesserBehandling: ProsesserBehandlingService,
     private val mottaDokumentService: MottaDokumentService,
     private val behandlingRepository: BehandlingRepository,
+    private val tilbakekrevingService: TilbakekrevingService,
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -62,7 +68,8 @@ class HåndterMottattDokumentService(
         låsRepository = repositoryProvider.provide(),
         prosesserBehandling = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
         mottaDokumentService = MottaDokumentService(repositoryProvider),
-        behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+        behandlingRepository = repositoryProvider.provide<BehandlingRepository>(),
+        tilbakekrevingService = TilbakekrevingService(repositoryProvider),
     )
 
     fun håndterMottatteKlage(
@@ -185,6 +192,7 @@ class HåndterMottattDokumentService(
         when (melding) {
             is TilbakekrevingHendelseV0 -> {
                 val behandlingId = melding.eksternBehandlingId?.let { BehandlingId(it.toLong()) } ?: error("Kan ikke finne behandlingId i tilbakekrevinghendelse")
+                tilbakekrevingService.håndter(sakId, melding.tilTilbakekrevingshendelse())
                 /**
                  * TODO:
                  * Tror ikke vi alltid får med behandlingId i meldingen - hvordan "markerer" vi hendelsen da?
@@ -196,7 +204,22 @@ class HåndterMottattDokumentService(
             }
         }
     }
-    
+
+    private fun TilbakekrevingHendelseV0.tilTilbakekrevingshendelse(): Tilbakekrevingshendelse {
+        return Tilbakekrevingshendelse(
+            eksternFagsakId = this.eksternFagsakId,
+            hendelseOpprettet = this.hendelseOpprettet,
+            eksternBehandlingId = this.eksternBehandlingId,
+            sakOpprettet = this.tilbakekreving.sakOpprettet,
+            varselSendt = this.tilbakekreving.varselSendt,
+            behandlingsstatus = no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingBehandlingsstatus.valueOf(this.tilbakekreving.behandlingsstatus.name),
+            totaltFeilutbetaltBeløp = Beløp(this.tilbakekreving.totaltFeilutbetaltBeløp),
+            saksbehandlingURL = URI.create(this.tilbakekreving.saksbehandlingURL),
+            fullstendigPeriode = Periode(fom = this.tilbakekreving.fullstendigPeriode.fom, tom = this.tilbakekreving.fullstendigPeriode.tom),
+            versjon = this.versjon,
+        )
+    }
+
     /**
      * Knytter klage og oppfølgingsbehandling direkte til behandlingen den opprettet, ikke via informasjonskrav.
      * Dette fordi det være flere åpne behandlinger av disse typene.
