@@ -110,13 +110,8 @@ class BeregningAvklarFaktaSteg private constructor(
                         when {
                             tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
                             kontekst.vurderingsbehovRelevanteForSteg.isEmpty() -> false
-                            manueltTriggetVurderingsbehovYrkesskade(kontekst) -> {
-                                harYrkesskadeMedÅrsakssammenheng(behandlingId)
-                            }
-                            manueltTriggetVurderingsbehovBeregning(kontekst) -> false
-                            else -> {
-                                harYrkesskadeMedÅrsakssammenheng(behandlingId)
-                            }
+                            else -> harYrkesskadeMedÅrsakssammenheng(behandlingId)
+
                         }
                     }
                     VurderingType.MELDEKORT,
@@ -166,7 +161,8 @@ class BeregningAvklarFaktaSteg private constructor(
                 Vurderingsbehov.MOTTATT_SØKNAD,
                 Vurderingsbehov.HELHETLIG_VURDERING,
                 Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
-                Vurderingsbehov.REVURDER_YRKESSKADE
+                Vurderingsbehov.REVURDER_YRKESSKADE,
+                Vurderingsbehov.REVURDER_BEREGNING
             )
         }
     }
