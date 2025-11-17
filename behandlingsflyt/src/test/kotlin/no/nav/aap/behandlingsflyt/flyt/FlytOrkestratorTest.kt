@@ -2003,7 +2003,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
 
         val oppdatertBehandling = revurdering
             .løsLovvalg(sak.rettighetsperiode.fom, false)
-            .løsUtenSamordning()
+            // TODO: Legge tilbake når MANUELT_FRIVILLIG er støttet
+            //            .løsUtenSamordning()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
             .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_ENDRING)
@@ -2117,7 +2118,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsBistand()
             .løsSykdomsvurderingBrev()
             .løsBeregningstidspunkt()
-            .løsUtenSamordning()
+            // TODO: Legge tilbake når MANUELT_FRIVILLIG er støttet
+            //            .løsUtenSamordning()
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
@@ -2189,7 +2191,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsBistand()
             .løsSykdomsvurderingBrev()
             .løsBeregningstidspunkt()
-            .løsUtenSamordning()
+            // TODO: Legge tilbake når MANUELT_FRIVILLIG er støttet
+            //            .løsUtenSamordning()
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
@@ -2344,7 +2347,11 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
         // Sender inn en søknad
-        var (sak, behandling) = sendInnFørsteSøknad(periode = periode)
+        var (sak, behandling) = sendInnFørsteSøknad(
+            // TODO: Sykepenger skal være "manuelt registrert" her, men settes på bruker pga. midlertidig endring i [Definisjon.kt]
+            person = TestPersoner.STANDARD_PERSON()
+                .medSykepenger(listOf(TestPerson.Sykepenger(40, Periode(periode.fom, periode.fom.plusMonths(3))))),
+            periode = periode)
 
         val alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
         assertThat(alleAvklaringsbehov).isNotEmpty()
@@ -2384,8 +2391,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                             SamordningVurderingData(
                                 ytelseType = Ytelse.SYKEPENGER,
                                 periode = Periode(
-                                    fom = LocalDate.now(),
-                                    tom = LocalDate.now().plusDays(5),
+                                    fom = periode.fom,
+                                    tom = periode.fom.plusMonths(3),
                                 ),
                                 gradering = 50,
                                 manuell = true
@@ -4639,7 +4646,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsBistand()
             .løsSykdomsvurderingBrev()
             .løsBeregningstidspunkt(nyStartDato)
-            .løsUtenSamordning()
+            // TODO: Legge tilbake når MANUELT_FRIVILLIG er støttet
+            //            .løsUtenSamordning()
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
@@ -4680,7 +4688,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsBistand()
             .løsSykdomsvurderingBrev()
             .løsBeregningstidspunkt(LocalDate.now())
-            .løsUtenSamordning()
+            // TODO: Legge tilbake når MANUELT_FRIVILLIG er støttet
+            //            .løsUtenSamordning()
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
@@ -4707,7 +4716,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsBistand()
             .løsSykdomsvurderingBrev()
             .løsBeregningstidspunkt(LocalDate.now())
-            .løsUtenSamordning()
+            // TODO: Legge tilbake når MANUELT_FRIVILLIG er støttet
+            //            .løsUtenSamordning()
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
