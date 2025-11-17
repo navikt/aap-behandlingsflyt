@@ -41,7 +41,7 @@ class AndreYtelserOppgittISøknadRepositoryImpl(private val connection: DBConnec
 
 
         val insertSvarQuery = """
-        INSERT INTO ANDRE_YTELSER_SVAR_I_SØKNAD (ekstraLønn , afpKilder)
+        INSERT INTO ANDRE_YTELSER_SVAR_I_SOKNAD (ekstraLonn , afpKilder)
         VALUES (?,?) RETURNING id
     """.trimIndent()
 
@@ -53,7 +53,7 @@ class AndreYtelserOppgittISøknadRepositoryImpl(private val connection: DBConnec
         }
 
             val insertYtelseQuery = """
-        INSERT INTO ANDRE_YTELSE_OPPGITT_I_SØKNAD (ytelse, andre_ytelser_id)
+        INSERT INTO ANNEN_YTELSE_OPPGITT_I_SOKNAD (ytelse, andre_ytelser_id)
         VALUES (?,?)
         RETURNING id
     """.trimIndent()
@@ -68,7 +68,7 @@ class AndreYtelserOppgittISøknadRepositoryImpl(private val connection: DBConnec
             }
 
         val insertGrunnlagQuery = """
-        INSERT INTO ANDRE_YTELSER_OPPGITT_I_SØKNAD_GRUNNLAG (behandling_id, andre_ytelser_id)
+        INSERT INTO ANDRE_YTELSER_OPPGITT_I_SOKNAD_GRUNNLAG (behandling_id, andre_ytelser_id)
         VALUES (?,?)
         """.trimIndent()
 
@@ -83,7 +83,7 @@ class AndreYtelserOppgittISøknadRepositoryImpl(private val connection: DBConnec
 
     private fun hentYtelseIderPÅBehandlingId(behandlingId: BehandlingId): Long? {
         val query = """
-                select andre_ytelser_id from ANDRE_YTELSER_OPPGITT_I_SØKNAD_GRUNNLAG where behandling_id = ? and aktiv = true
+                select andre_ytelser_id from ANDRE_YTELSER_OPPGITT_I_SOKNAD_GRUNNLAG where behandling_id = ? and aktiv = true
                 """.trimIndent()
         return connection.queryFirstOrNull(query)
         {
@@ -101,7 +101,7 @@ class AndreYtelserOppgittISøknadRepositoryImpl(private val connection: DBConnec
     private fun hentAktivYtelserGrunnlagId(behandlingId: BehandlingId): Long? = connection.queryFirstOrNull(
         """
                     SELECT id
-                    FROM ANDRE_YTELSER_OPPGITT_I_SØKNAD_GRUNNLAG
+                    FROM ANDRE_YTELSER_OPPGITT_I_SOKNAD_GRUNNLAG
                     WHERE behandling_id = ? and aktiv is true
                  
                 """.trimIndent()
@@ -116,7 +116,7 @@ class AndreYtelserOppgittISøknadRepositoryImpl(private val connection: DBConnec
     private fun hentAlleGrunnlagIdPåAndreYtelseId(andreYtelserId: Long): List<Long> {
 
         val query = """
-            SELECT id FROM ANDRE_YTELSER_OPPGITT_I_SØKNAD_GRUNNLAG WHERE andre_ytelser_id = ?
+            SELECT id FROM ANDRE_YTELSER_OPPGITT_I_SOKNAD_GRUNNLAG WHERE andre_ytelser_id = ?
         """.trimIndent()
 
         return connection.queryList(query) {
@@ -145,7 +145,7 @@ class AndreYtelserOppgittISøknadRepositoryImpl(private val connection: DBConnec
         //sletter de på behandling id
         connection.execute(
             """
-            delete from ANDRE_YTELSER_OPPGITT_I_SØKNAD_GRUNNLAG where behandling_id = ?;
+            delete from ANDRE_YTELSER_OPPGITT_I_SOKNAD_GRUNNLAG where behandling_id = ?;
         """.trimIndent()
         ) {
             setParams {
@@ -157,7 +157,7 @@ class AndreYtelserOppgittISøknadRepositoryImpl(private val connection: DBConnec
         if (kunEtGrunnlagPåDetteSvaret) {
             connection.execute(
                 """
-            delete from ANDRE_YTELSER_OPPGITT_I_SØKNAD_GRUNNLAG where andre_ytelser_id = ?; 
+            delete from ANDRE_YTELSER_OPPGITT_I_SOKNAD_GRUNNLAG where andre_ytelser_id = ?; 
         """.trimIndent()
             ) {
                 setParams {
@@ -167,7 +167,7 @@ class AndreYtelserOppgittISøknadRepositoryImpl(private val connection: DBConnec
 
             connection.execute(
                 """
-            delete from ANDRE_YTELSER_SVAR_I_SØKNAD where id = ?;
+            delete from ANDRE_YTELSER_SVAR_I_SOKNAD where id = ?;
         """.trimIndent()
             ) {
                 setParams {
@@ -175,13 +175,13 @@ class AndreYtelserOppgittISøknadRepositoryImpl(private val connection: DBConnec
                 }
             }
         }
-        log.info("Slettet ${alleGrunnlagPåYtelseId.size} rader fra ANDRE_YTELSER_OPPGITT_I_SØKNAD_GRUNNLAG")
+        log.info("Slettet ${alleGrunnlagPåYtelseId.size} rader fra ANDRE_YTELSER_OPPGITT_I_SOKNAD_GRUNNLAG")
 
     }
 
 
     private fun deaktiverGrunnlag(behandlingId: BehandlingId) {
-        connection.execute("UPDATE ANDRE_YTELSER_OPPGITT_I_SØKNAD_GRUNNLAG SET aktive = FALSE WHERE aktive AND behandling_id = ?") {
+        connection.execute("UPDATE ANDRE_YTELSER_OPPGITT_I_SOKNAD_GRUNNLAG SET aktive = FALSE WHERE aktive AND behandling_id = ?") {
             setParams {
                 setLong(1, behandlingId.toLong())
             }
@@ -199,7 +199,7 @@ class AndreYtelserOppgittISøknadRepositoryImpl(private val connection: DBConnec
         val fraYtelserId = hentYtelseIderPÅBehandlingId(fraBehandling)
         if (fraYtelserId == null) return
         val insertGrunnlagQuery = """
-        INSERT INTO ANDRE_YTELSER_OPPGITT_I_SØKNAD_GRUNNLAG (behandling_id, andre_ytelser_id)
+        INSERT INTO ANDRE_YTELSER_OPPGITT_I_SOKNAD_GRUNNLAG (behandling_id, andre_ytelser_id)
         VALUES (?,?)
         """.trimIndent()
 
@@ -217,20 +217,20 @@ class AndreYtelserOppgittISøknadRepositoryImpl(private val connection: DBConnec
     override fun hentHvisEksisterer(behandlingId: BehandlingId): AndreYtelserSøknad? {
         val query = """
         SELECT 
-            ytelser.ekstraLønn AS ekstraLønn,
+            ytelser.ekstraLonn AS ekstraLonn,
             ytelser.afpKilder as afpKilder,
             array_agg(ytelse.ytelse) AS ytelsestyper
         FROM 
-            ANDRE_YTELSER_OPPGITT_I_SØKNAD_GRUNNLAG grunnlag
+            ANDRE_YTELSER_OPPGITT_I_SOKNAD_GRUNNLAG grunnlag
         JOIN 
-            ANDRE_YTELSER_SVAR_I_SØKNAD ytelser ON ytelser.id = grunnlag.andre_ytelser_id
+            ANDRE_YTELSER_SVAR_I_SOKNAD ytelser ON ytelser.id = grunnlag.andre_ytelser_id
         JOIN 
-            ANDRE_YTELSE_OPPGITT_I_SØKNAD ytelse ON ytelser.id = ytelse.andre_ytelser_id
+            ANNEN_YTELSE_OPPGITT_I_SOKNAD ytelse ON ytelser.id = ytelse.andre_ytelser_id
         WHERE 
             grunnlag.behandling_id = ?
         AND grunnlag.aktiv = TRUE
         GROUP BY 
-            grunnlag.id, ytelser.ekstraLønn, ytelser.afpKilder;
+            grunnlag.id, ytelser.ekstraLonn, ytelser.afpKilder;
 
     """.trimIndent()
 
@@ -245,7 +245,7 @@ class AndreYtelserOppgittISøknadRepositoryImpl(private val connection: DBConnec
     }
 
     private fun mapGrunnlag(row: Row): AndreYtelserSøknad {
-        val ekstraLønn = row.getBoolean("ekstraLønn")
+        val ekstraLønn = row.getBoolean("ekstraLonn")
         val afpKilder = row.getStringOrNull("afpKilder")
         val sqlArray = row.getArray("ytelsestyper", String::class)
         val ytelser = sqlArray.map { AndreUtbetalingerYtelser.fromDb(it) }
