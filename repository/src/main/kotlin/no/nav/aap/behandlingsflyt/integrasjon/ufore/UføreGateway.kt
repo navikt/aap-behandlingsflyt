@@ -21,7 +21,6 @@ import java.time.format.DateTimeFormatter
 /**
  * @param uforegrad Uføregrad i prosent. `null` om personen er registrert i systemet, men ikke har uføregrad.
  */
-data class UføreRespons(val uforegrad: Int?)
 data class UførePeriode(
     val uforegradFom: LocalDate? = null,
     val uforegradTom: LocalDate? = null,
