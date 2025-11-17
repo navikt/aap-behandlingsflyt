@@ -143,10 +143,9 @@ fun beregnForInput(input: Input, fødselsdato: Fødselsdato): Triple<Year, GUnit
             )
         ),
         barnetilleggGrunnlag = BarnetilleggGrunnlag(
-            id = 0,
             perioder = emptyList()
         ),
-        samordningGrunnlag = SamordningGrunnlag(0L, emptySet()),
+        samordningGrunnlag = SamordningGrunnlag(emptySet()),
         samordningUføre = null,
         samordningArbeidsgiver = null
     )
