@@ -19,8 +19,6 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.LocalDate
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppgitteBarn as OppgitteBarnFraSøknad
 
-
-
 data class UbehandletSøknad(
     val journalpostId: JournalpostId,
     val periode: Periode,
@@ -86,8 +84,6 @@ data class UbehandletSøknad(
         }
     }
 }
-
-
 
 private fun mapOppgitteBarn(oppgitteBarn: OppgitteBarnFraSøknad): OppgitteBarn? =
     oppgitteBarn.let { oppgitteBarn ->

@@ -3,20 +3,6 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AndreUtbetalingerDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AndreUtbetalingerYtelserDto
 
-
-
-
-/**
- * Lønn I Søknad svarer på spørsmålet "Har du fått eller skal du få ekstra utbetalinger fra arbeidsgiver"
- * Dette kan for eksempel være sluttpakke, etterlønn eller andre goder.
- * Du skal svare “nei” hvis du bare mottar vanlig lønn eller feriepenger.
- *
- */
-
-/**
- * @property ekstraLønn Kan være ekstra utbetalinger som sluttpakke, etterlønn ellr andre goder. Ikke vanlig lønn eller feriepenger
- * @property afpKilder Kilde til AFP
- */
 data class AndreYtelserSøknad(
     val ekstraLønn: Boolean?,
     val afpKilder: String? = null,
