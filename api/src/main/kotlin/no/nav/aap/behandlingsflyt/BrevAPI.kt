@@ -268,18 +268,14 @@ fun NormalOpenAPIRoute.brevApi(
                 }
             }
         }
-        route("/distribusjon/kan-distribuere-brev") {
-            authorizedPost<Unit, KanDistribuereBrevReponse, KanDistribuereBrevRequest>(
-                AuthorizationBodyPathConfig(
-                    operasjon = Operasjon.SE,
-                    relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource)
-                )
-            ) { _, request ->
+        route("/{brevbestillingReferanse}/kan-distribuere-brev") {
+            authorizedPost<BrevbestillingReferanse, KanDistribuereBrevReponse, KanDistribuereBrevRequest>(
+                authorizationParamPathConfig
+            ) { brevbestillingReferanse, request ->
                 val response = KanDistribuereBrevReponse(
                     mottakereDistStatus = brevbestillingGateway.kanDistribuereBrev(
-                        request.behandlingsReferanse,
-                        request.brukerIdent,
-                        request.mottakerIdentListe
+                        request.mottakerIdentListe,
+                        brevbestillingReferanse
                     )
                 )
                 respond(response, HttpStatusCode.Accepted)
