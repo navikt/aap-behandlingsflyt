@@ -7,7 +7,7 @@ dependencies {
     implementation(project(":behandlingsflyt"))
 
     implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.21.0")
-    implementation("ch.qos.logback:logback-classic:1.5.20")
+    implementation("ch.qos.logback:logback-classic:1.5.21")
     implementation(libs.verdityper)
     implementation(libs.dbconnect)
     implementation(libs.dbmigrering)
@@ -15,7 +15,7 @@ dependencies {
     implementation(libs.infrastructure)
     implementation(libs.tidslinje)
     implementation(libs.caffeine)
-    implementation("org.flywaydb:flyway-database-postgresql:11.16.0")
+    implementation("org.flywaydb:flyway-database-postgresql:11.17.0")
     implementation("io.getunleash:unleash-client-java:11.1.1")
     runtimeOnly("org.postgresql:postgresql") // låst versjon i root build.gradle.kts
     implementation("no.bekk.bekkopen:nocommons:0.16.0")
