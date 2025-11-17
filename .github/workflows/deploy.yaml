@@ -14,7 +14,6 @@ jobs:
   build:
     name: Bygg og test og push
     runs-on: ubuntu-latest-8-cores
-    timeout-minutes: 20
     permissions:
         contents: read
         id-token: write
