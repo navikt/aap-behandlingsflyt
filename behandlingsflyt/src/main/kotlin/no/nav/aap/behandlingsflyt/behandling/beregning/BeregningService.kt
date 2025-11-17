@@ -56,13 +56,15 @@ class BeregningService(
         val student = studentRepository.hentHvisEksisterer(behandlingId)
         val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
         val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
-        val inntektsPerioder = requireNotNull(medlemskapArbeidInntektRepository.hentHvisEksisterer(behandlingId)?.inntekterINorgeGrunnlag) {
-            "Må ha hentet inntekt i lovvalgssteget før grunnlagsberegningen"
-        }.map { InntektsPeriode(
-            periode = it.periode,
-            beløp = it.beloep,
-            inntektType = it.inntektType
-        ) }
+        val inntektsPerioder = // TODO: ikke hent fra?
+            requireNotNull(medlemskapArbeidInntektRepository.hentHvisEksisterer(behandlingId)?.inntekterINorgeGrunnlag) {
+                "Må ha hentet inntekt i lovvalgssteget før grunnlagsberegningen"
+            }.map {
+                InntektsPeriode(
+                    periode = it.periode,
+                    beløp = it.beloep
+                )
+            }
 
 
         val kombinertInntekt =

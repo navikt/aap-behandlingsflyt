@@ -46,28 +46,20 @@ class InntektsbehovTest {
                 inntektsPerioder = listOf(
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
-                        beløp = 500000.toDouble(),
-                        inntektType = "lønn"
-                    ),
-                    InntektsPeriode(
+                        beløp = 500000.toDouble()
+                    ), InntektsPeriode(
                         periode = Periode(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 12, 31)),
-                        beløp = 400000.toDouble(),
-                        inntektType = "lønn"
-                    ),
-                    InntektsPeriode(
+                        beløp = 400000.toDouble()
+                    ), InntektsPeriode(
                         periode = Periode(LocalDate.of(2020, 1, 1), LocalDate.of(2020, 12, 31)),
-                        beløp = 300000.toDouble(),
-                        inntektType = "lønn"
-                    ),
-
-                    ),
+                        beløp = 300000.toDouble()
+                    )
+                )
             )
         ).utledForOrdinær()
 
         assertThat(forOrdinær).containsExactlyInAnyOrder(
-            InntektPerÅr(2004, Beløp(126)),
-            InntektPerÅr(2003, Beløp(127)),
-            InntektPerÅr(2002, Beløp(128))
+            InntektPerÅr(2004, Beløp(126)), InntektPerÅr(2003, Beløp(127)), InntektPerÅr(2002, Beløp(128))
         )
     }
 
@@ -85,21 +77,15 @@ class InntektsbehovTest {
                 inntektsPerioder = listOf(
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
-                        beløp = 500000.toDouble(),
-                        inntektType = "lønn"
-                    ),
-                    InntektsPeriode(
+                        beløp = 500000.toDouble()
+                    ), InntektsPeriode(
                         periode = Periode(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 12, 31)),
-                        beløp = 400000.toDouble(),
-                        inntektType = "lønn"
-                    ),
-                    InntektsPeriode(
+                        beløp = 400000.toDouble()
+                    ), InntektsPeriode(
                         periode = Periode(LocalDate.of(2020, 1, 1), LocalDate.of(2020, 12, 31)),
-                        beløp = 300000.toDouble(),
-                        inntektType = "lønn"
-                    ),
-
+                        beløp = 300000.toDouble()
                     )
+                )
             )
         ).utledAlleRelevanteÅr()
 
@@ -107,9 +93,7 @@ class InntektsbehovTest {
 
         assertThat(relevanteÅr).hasSize(3)
         assertThat(relevanteÅr).containsExactlyInAnyOrder(
-            nedsattYear.minusYears(3),
-            nedsattYear.minusYears(2),
-            nedsattYear.minusYears(1)
+            nedsattYear.minusYears(3), nedsattYear.minusYears(2), nedsattYear.minusYears(1)
         )
     }
 
@@ -125,21 +109,15 @@ class InntektsbehovTest {
                 inntektsPerioder = listOf(
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
-                        beløp = 500000.toDouble(),
-                        inntektType = "lønn"
-                    ),
-                    InntektsPeriode(
+                        beløp = 500000.toDouble()
+                    ), InntektsPeriode(
                         periode = Periode(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 12, 31)),
-                        beløp = 400000.toDouble(),
-                        inntektType = "lønn"
-                    ),
-                    InntektsPeriode(
+                        beløp = 400000.toDouble()
+                    ), InntektsPeriode(
                         periode = Periode(LocalDate.of(2020, 1, 1), LocalDate.of(2020, 12, 31)),
-                        beløp = 300000.toDouble(),
-                        inntektType = "lønn"
-                    ),
-
-                    ),
+                        beløp = 300000.toDouble()
+                    )
+                ),
                 beregningGrunnlag = BeregningGrunnlag(
                     tidspunktVurdering = BeregningstidspunktVurdering(
                         begrunnelse = "asdf",
@@ -190,21 +168,15 @@ class InntektsbehovTest {
                 inntektsPerioder = listOf(
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
-                        beløp = 500000.toDouble(),
-                        inntektType = "lønn"
-                    ),
-                    InntektsPeriode(
+                        beløp = 500000.toDouble()
+                    ), InntektsPeriode(
                         periode = Periode(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 12, 31)),
-                        beløp = 400000.toDouble(),
-                        inntektType = "lønn"
-                    ),
-                    InntektsPeriode(
+                        beløp = 400000.toDouble()
+                    ), InntektsPeriode(
                         periode = Periode(LocalDate.of(2020, 1, 1), LocalDate.of(2020, 12, 31)),
-                        beløp = 300000.toDouble(),
-                        inntektType = "lønn"
-                    ),
-
-                    ),
+                        beløp = 300000.toDouble()
+                    )
+                )
             )
         )
 
@@ -229,10 +201,7 @@ class InntektsbehovTest {
                 registrerteYrkesskader = Yrkesskader(
                     listOf(
                         Yrkesskade(
-                            ref = "123",
-                            saksnummer = 0,
-                            kildesystem = "KLVN",
-                            skadedato = null
+                            ref = "123", saksnummer = 0, kildesystem = "KLVN", skadedato = null
                         )
                     )
                 ),
@@ -257,21 +226,15 @@ class InntektsbehovTest {
                 inntektsPerioder = listOf(
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
-                        beløp = 500000.toDouble(),
-                        inntektType = "lønn"
-                    ),
-                    InntektsPeriode(
+                        beløp = 500000.toDouble()
+                    ), InntektsPeriode(
                         periode = Periode(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 12, 31)),
-                        beløp = 400000.toDouble(),
-                        inntektType = "lønn"
-                    ),
-                    InntektsPeriode(
+                        beløp = 400000.toDouble()
+                    ), InntektsPeriode(
                         periode = Periode(LocalDate.of(2020, 1, 1), LocalDate.of(2020, 12, 31)),
                         beløp = 300000.toDouble(),
-                        inntektType = "lønn"
-                    ),
-
-                    ),
+                    )
+                )
             )
         )
 
@@ -287,15 +250,12 @@ class InntektsbehovTest {
                 ytterligereNedsattBegrunnelse = null,
                 ytterligereNedsattArbeidsevneDato = LocalDate.now(),
                 vurdertAv = "saksbehandler",
-            ),
-            yrkesskadeBeløpVurdering = null
+            ), yrkesskadeBeløpVurdering = null
         )
 
         val relevanteÅr = Inntektsbehov.utledAlleRelevanteÅr(beregningGrunnlag, null)
         assertThat(relevanteÅr).containsExactlyInAnyOrder(
-            Year.of(2024),
-            Year.of(2023),
-            Year.of(2022)
+            Year.of(2024), Year.of(2023), Year.of(2022)
         )
     }
 
@@ -311,22 +271,19 @@ class InntektsbehovTest {
                 harBehovForBehandling = true,
                 avbruttStudieDato = 1 januar 2025,
                 avbruddMerEnn6Måneder = true,
-            ),
-            oppgittStudent = null
+            ), oppgittStudent = null
         )
 
         val relevanteÅr = Inntektsbehov.utledAlleRelevanteÅr(null, studentGrunnlag)
         assertThat(relevanteÅr).containsExactlyInAnyOrder(
-            Year.of(2024),
-            Year.of(2023),
-            Year.of(2022)
+            Year.of(2024), Year.of(2023), Year.of(2022)
         )
     }
 
     @Test
     fun `skal utlede de tre forutgående kalenderårene for både nedsettelsesdato og ytterligereNedsattArbeidsevneDato`() {
-        val nedsettelsesDato =  1 januar 2025
-        val ytterligereNedsattArbeidsevneDato =  1 januar 2020
+        val nedsettelsesDato = 1 januar 2025
+        val ytterligereNedsattArbeidsevneDato = 1 januar 2020
 
         val relevanteÅr = Inntektsbehov.utledAlleRelevanteÅr(nedsettelsesDato, ytterligereNedsattArbeidsevneDato)
         assertThat(relevanteÅr).containsExactlyInAnyOrder(

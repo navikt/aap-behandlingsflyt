@@ -46,17 +46,14 @@ class BeregningTest {
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
                         beløp = 500000.toDouble(),
-                        inntektType = "lønn"
                     ),
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 12, 31)),
                         beløp = 400000.toDouble(),
-                        inntektType = "lønn"
                     ),
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2020, 1, 1), LocalDate.of(2020, 12, 31)),
                         beløp = 300000.toDouble(),
-                        inntektType = "lønn"
                     ),
                 )
             )
@@ -93,17 +90,14 @@ class BeregningTest {
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
                         beløp = 500000.toDouble(),
-                        inntektType = "lønn"
                     ),
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 12, 31)),
                         beløp = 400000.toDouble(),
-                        inntektType = "lønn"
                     ),
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2020, 1, 1), LocalDate.of(2020, 12, 31)),
                         beløp = 300000.toDouble(),
-                        inntektType = "lønn"
                     ),
                 )
             )
@@ -165,20 +159,16 @@ class BeregningTest {
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
                         beløp = 500000.toDouble(),
-                        inntektType = "lønn"
                     ),
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 12, 31)),
                         beløp = 400000.toDouble(),
-                        inntektType = "lønn"
                     ),
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2020, 1, 1), LocalDate.of(2020, 12, 31)),
                         beløp = 300000.toDouble(),
-                        inntektType = "lønn"
-                    ),
-
                     )
+                )
             )
         )
 
@@ -240,20 +230,16 @@ class BeregningTest {
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
                         beløp = 500000.toDouble(),
-                        inntektType = "lønn"
                     ),
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 12, 31)),
                         beløp = 400000.toDouble(),
-                        inntektType = "lønn"
                     ),
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2020, 1, 1), LocalDate.of(2020, 12, 31)),
                         beløp = 300000.toDouble(),
-                        inntektType = "lønn"
                     ),
-
-                    )
+                )
             )
         )
 
@@ -291,17 +277,14 @@ class BeregningTest {
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
                         beløp = 500000.toDouble(),
-                        inntektType = "lønn"
                     ),
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 12, 31)),
                         beløp = 400000.toDouble(),
-                        inntektType = "lønn"
                     ),
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2020, 1, 1), LocalDate.of(2020, 12, 31)),
                         beløp = 300000.toDouble(),
-                        inntektType = "lønn"
                     ),
 
                     )
@@ -332,20 +315,16 @@ class BeregningTest {
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
                         beløp = 500000.toDouble(),
-                        inntektType = "lønn"
                     ),
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 12, 31)),
                         beløp = 400000.toDouble(),
-                        inntektType = "lønn"
                     ),
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2020, 1, 1), LocalDate.of(2020, 12, 31)),
                         beløp = 300000.toDouble(),
-                        inntektType = "lønn "
-                    ),
-
                     )
+                )
             )
         )
 

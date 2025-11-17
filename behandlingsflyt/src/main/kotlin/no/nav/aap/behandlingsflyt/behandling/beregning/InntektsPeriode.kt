@@ -4,8 +4,7 @@ import no.nav.aap.komponenter.type.Periode
 
 data class InntektsPeriode(
     val periode: Periode,
-    val beløp: Double,
-    val inntektType: String?
+    val beløp: Double
 )
 
 data class InntektData(

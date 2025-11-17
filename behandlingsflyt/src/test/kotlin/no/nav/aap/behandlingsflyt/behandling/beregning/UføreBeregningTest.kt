@@ -56,7 +56,6 @@ class UføreBeregningTest {
                             tom = LocalDate.parse("2024-12-31"),
                         ),
                         beløp = BigDecimal(5 * 109_784).toDouble(), // 548 920
-                        inntektType = "lønn"
                     )
                 )
             )
@@ -64,7 +63,7 @@ class UføreBeregningTest {
     }
 
     @Test
-    fun `Hvis bruker hadde høyere inntekt ved ytterligere nedsatt, justert for uføregrad, brukes inntekter fra ytteligere nedsatt`() {
+    fun `Hvis bruker hadde høyere inntekt ved ytterligere nedsatt, justert for uføregrad, brukes inntekter fra ytterligere nedsatt`() {
         val uføreBeregning = UføreBeregning(
             grunnlag = Grunnlag11_19(
                 grunnlaget = GUnit(4),
@@ -72,10 +71,12 @@ class UføreBeregningTest {
                 gjennomsnittligInntektIG = GUnit(0),
                 inntekter = emptyList()
             ),
-            uføregrader = setOf(Uføre(
-                virkningstidspunkt = LocalDate.now().minusYears(8),
-                uføregrad = Prosent.`30_PROSENT`
-            )),
+            uføregrader = setOf(
+                Uføre(
+                    virkningstidspunkt = LocalDate.now().minusYears(8),
+                    uføregrad = Prosent.`30_PROSENT`
+                )
+            ),
             inntekterForegåendeÅr = setOf(
                 InntektPerÅr(
                     Year.of(2022),
@@ -94,19 +95,16 @@ class UføreBeregningTest {
                 InntektsPeriode(
                     periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
                     beløp = BigDecimal(5 * 109_784).multiply(BigDecimal("0.7")).toDouble(),
-                    inntektType = "lønn"
                 ),
                 InntektsPeriode(
                     periode = Periode(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 12, 31)),
                     beløp = BigDecimal(5 * 104_716).multiply(BigDecimal("0.7")).toDouble(),
-                    inntektType = "lønn"
                 ),
                 InntektsPeriode(
                     periode = Periode(LocalDate.of(2020, 1, 1), LocalDate.of(2020, 12, 31)),
                     beløp = BigDecimal(5 * 100_853).multiply(BigDecimal("0.7")).toDouble(),
-                    inntektType = "lønn"
-                ),
                 )
+            )
         )
 
         val grunnlagUføre = uføreBeregning.beregnUføre(Year.of(2023))
@@ -124,10 +122,12 @@ class UføreBeregningTest {
                 gjennomsnittligInntektIG = GUnit(0),
                 inntekter = emptyList()
             ),
-            uføregrader = setOf(Uføre(
-                virkningstidspunkt = LocalDate.now().minusYears(1),
-                uføregrad = Prosent.`30_PROSENT`
-            )),
+            uføregrader = setOf(
+                Uføre(
+                    virkningstidspunkt = LocalDate.now().minusYears(1),
+                    uføregrad = Prosent.`30_PROSENT`
+                )
+            ),
             inntekterForegåendeÅr = setOf(
                 InntektPerÅr(
                     Year.of(2022),
@@ -146,20 +146,16 @@ class UføreBeregningTest {
                 InntektsPeriode(
                     periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
                     beløp = 500000.toDouble(),
-                    inntektType = "lønn"
                 ),
                 InntektsPeriode(
                     periode = Periode(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 12, 31)),
                     beløp = 400000.toDouble(),
-                    inntektType = "lønn"
                 ),
                 InntektsPeriode(
                     periode = Periode(LocalDate.of(2020, 1, 1), LocalDate.of(2020, 12, 31)),
                     beløp = 300000.toDouble(),
-                    inntektType = "lønn"
-                ),
-
                 )
+            )
         )
 
         val grunnlagUføre = uføreBeregning.beregnUføre(Year.of(2023))
@@ -177,10 +173,12 @@ class UføreBeregningTest {
                 gjennomsnittligInntektIG = GUnit(0),
                 inntekter = emptyList()
             ),
-            uføregrader = setOf(Uføre(
-                virkningstidspunkt = LocalDate.of(2022, 7, 1),
-                uføregrad = Prosent.`50_PROSENT`
-            )),
+            uføregrader = setOf(
+                Uføre(
+                    virkningstidspunkt = LocalDate.of(2022, 7, 1),
+                    uføregrad = Prosent.`50_PROSENT`
+                )
+            ),
             inntekterForegåendeÅr = setOf(
                 InntektPerÅr(
                     Year.of(2022),
@@ -247,16 +245,24 @@ class UføreBeregningTest {
                     Beløp(BigDecimal(12 * 20000))
                 )
             ),
-            inntektsPerioder = listOf(oppsplittetInntekt(2022, 10000.toDouble()), oppsplittetInntekt(2021, 5000.toDouble()), oppsplittetInntekt(2020, 20000.toDouble())).flatten()
+            inntektsPerioder = listOf(
+                oppsplittetInntekt(2022, 10000.toDouble()),
+                oppsplittetInntekt(2021, 5000.toDouble()),
+                oppsplittetInntekt(2020, 20000.toDouble())
+            ).flatten()
         )
 
         val grunnlagUføre = uføreBeregning.beregnUføre(Year.of(2023))
 
         // 6 mnd 50% uføre, 6 mnd 80% uføre
-        assertThat(grunnlagUføre.uføreInntekterFraForegåendeÅr().first { it.år == Year.of(2022) }.inntektJustertForUføregrad).isEqualTo(Beløp(6 * 20000 + 6 * 50000))
+        assertThat(
+            grunnlagUføre.uføreInntekterFraForegåendeÅr().first { it.år == Year.of(2022) }.inntektJustertForUføregrad
+        ).isEqualTo(Beløp(6 * 20000 + 6 * 50000))
 
         // 1 mnd vanlig inntekt uten oppjustering, 11 mnd 80% uføre
-        assertThat(grunnlagUføre.uføreInntekterFraForegåendeÅr().first { it.år == Year.of(2021) }.inntektJustertForUføregrad).isEqualTo(Beløp(1 * 5000 + 11 * 25000))
+        assertThat(
+            grunnlagUføre.uføreInntekterFraForegåendeÅr().first { it.år == Year.of(2021) }.inntektJustertForUføregrad
+        ).isEqualTo(Beløp(1 * 5000 + 11 * 25000))
         assertThat(grunnlagUføre.type()).isEqualTo(GrunnlagUføre.Type.YTTERLIGERE_NEDSATT)
     }
 
@@ -265,7 +271,6 @@ class UføreBeregningTest {
             InntektsPeriode(
                 periode = Periode(YearMonth.of(år, it).atDay(1), YearMonth.of(år, it).atEndOfMonth()),
                 beløp = månedsInntekt,
-                inntektType = "lønn"
             )
         }
     }
