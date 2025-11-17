@@ -164,15 +164,7 @@ class VurderBistandsbehovSteg(
     }
 
     private fun vurderingsbehovTvingerVurdering(kontekst: FlytKontekstMedPerioder): Boolean {
-        return kontekst.vurderingsbehovRelevanteForSteg.any {
-            it in listOf(
-                Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
-                Vurderingsbehov.MOTTATT_SØKNAD,
-                Vurderingsbehov.DØDSFALL_BRUKER,
-                Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
-                Vurderingsbehov.HELHETLIG_VURDERING
-            )
-        }
+        return kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty()
     }
 
     private fun perioderHvorBistandsvilkåretErRelevant(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
