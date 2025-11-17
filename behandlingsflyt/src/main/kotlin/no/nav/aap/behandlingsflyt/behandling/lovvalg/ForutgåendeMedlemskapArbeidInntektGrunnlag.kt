@@ -16,10 +16,5 @@ data class ForutgåendeMedlemskapArbeidInntektGrunnlag(
     val medlemskapGrunnlag: MedlemskapUnntakGrunnlag?,
     val inntekterINorgeGrunnlag: List<InntektINorgeGrunnlag>,
     val arbeiderINorgeGrunnlag: List<ArbeidINorgeGrunnlag>,
-    private val manuellVurdering_: ManuellVurderingForForutgåendeMedlemskap?,
     val vurderinger: List<ManuellVurderingForForutgåendeMedlemskap>,
-) {
-    // TODO midlertidig for å støtte nye verdier som henter fra vurderinger og gamle verdier som ikke ennå har en kobling
-    val manuellVurdering: ManuellVurderingForForutgåendeMedlemskap?
-        get() = vurderinger.firstOrNull() ?: manuellVurdering_
-}
+)

@@ -58,7 +58,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
             vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst) },
             erTilstrekkeligVurdert = {
                 val manuellVurdering =
-                    forutgåendeMedlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)?.manuellVurdering
+                    forutgåendeMedlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger?.firstOrNull() // TODO må legge innn støtte for periodisering her
                 manuellVurdering != null
             },
             tilbakestillGrunnlag = { tilbakestillGrunnlag(kontekst, grunnlag.value) },
@@ -87,12 +87,12 @@ class VurderForutgåendeMedlemskapSteg private constructor(
     ) {
         val forrigeManuelleVurdering = kontekst.forrigeBehandlingId?.let { forrigeBehandlingId ->
             forutgåendeMedlemskapArbeidInntektRepository.hentHvisEksisterer(forrigeBehandlingId)
-                ?.manuellVurdering
+                ?.vurderinger?.firstOrNull() // TODO må legge innn støtte for periodisering her
         }
-        if (forrigeManuelleVurdering != grunnlag?.manuellVurdering) {
-            forutgåendeMedlemskapArbeidInntektRepository.lagreManuellVurdering(
+        if (forrigeManuelleVurdering != grunnlag?.vurderinger?.firstOrNull()) { // TODO må legge innn støtte for periodisering her
+            forutgåendeMedlemskapArbeidInntektRepository.lagreVurderinger(
                 kontekst.behandlingId,
-                forrigeManuelleVurdering
+                listOfNotNull(forrigeManuelleVurdering)
             )
         }
 
@@ -117,7 +117,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
     ): Boolean {
         val vurderingFraForrigeBehandling = kontekst.forrigeBehandlingId?.let { forrigeBehandlingId ->
             forutgåendeMedlemskapArbeidInntektRepository.hentHvisEksisterer(forrigeBehandlingId)
-                ?.manuellVurdering
+                ?.vurderinger?.firstOrNull() // TODO må legge innn støtte for periodisering her
         }
 
         return when (kontekst.vurderingType) {

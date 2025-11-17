@@ -86,7 +86,7 @@ class ForutgåendeMedlemskapVurderingServiceTest {
                 medlemskapGrunnlag = medlUnntak,
                 inntekterINorgeGrunnlag = inntekterINorgeGrunnlag,
                 arbeiderINorgeGrunnlag = emptyList(),
-                manuellVurdering = null
+                vurderinger = emptyList()
             ),
             personopplysningGrunnlag = PersonopplysningMedHistorikkGrunnlag(
                 brukerPersonopplysning = PersonopplysningMedHistorikk(
