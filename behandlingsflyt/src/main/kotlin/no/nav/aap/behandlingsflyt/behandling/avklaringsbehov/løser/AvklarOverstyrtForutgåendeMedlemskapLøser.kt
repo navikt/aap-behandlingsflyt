@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Pers
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.time.LocalDateTime
 
 class AvklarOverstyrtForutgåendeMedlemskapLøser(
     private val forutgåendeMedlemskapArbeidInntektRepository: MedlemskapArbeidInntektForutgåendeRepository,
@@ -52,6 +53,7 @@ class AvklarOverstyrtForutgåendeMedlemskapLøser(
                     varMedlemMedNedsattArbeidsevne = løsning.manuellVurderingForForutgåendeMedlemskap.varMedlemMedNedsattArbeidsevne,
                     medlemMedUnntakAvMaksFemAar = løsning.manuellVurderingForForutgåendeMedlemskap.medlemMedUnntakAvMaksFemAar,
                     vurdertAv = kontekst.bruker.ident,
+                    vurdertTidspunkt = LocalDateTime.now(),
                     overstyrt = true,
                     vurdertIBehandling = kontekst.behandlingId(),
                     fom = sak.rettighetsperiode.fom

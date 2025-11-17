@@ -11,7 +11,7 @@ data class ManuellVurderingForForutgåendeMedlemskap(
     val varMedlemMedNedsattArbeidsevne: Boolean?,
     val medlemMedUnntakAvMaksFemAar: Boolean?,
     val vurdertAv: String,
-    val vurdertTidspunkt: LocalDateTime? = null,
+    val vurdertTidspunkt: LocalDateTime,
     val overstyrt: Boolean = false,
 
     // TODO disse skal ikke være nullable etter migrering
