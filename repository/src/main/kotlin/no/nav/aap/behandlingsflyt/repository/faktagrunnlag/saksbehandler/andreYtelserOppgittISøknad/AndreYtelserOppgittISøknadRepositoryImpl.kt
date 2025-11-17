@@ -48,31 +48,31 @@ class AndreYtelserOppgittISøknadRepositoryImpl(private val connection: DBConnec
         val andreYtelserId = connection.executeReturnKey(insertSvarQuery) {
             setParams {
                 setBoolean(1, andreUtbetalinger.ekstraLønn)
-                setString(2,andreUtbetalinger.afpKilder)
+                setString(2, andreUtbetalinger.afpKilder)
             }
         }
 
-            val insertYtelseQuery = """
+        val insertYtelseQuery = """
         INSERT INTO ANNEN_YTELSE_OPPGITT_I_SOKNAD (ytelse, andre_ytelser_id)
         VALUES (?,?)
         RETURNING id
     """.trimIndent()
 
-            for (ytelse in stønadstyper) {
-                connection.executeReturnKey(insertYtelseQuery) {
-                    setParams {
-                        setEnumName(1, ytelse)
-                        setLong(2, andreYtelserId)
-                    }
+        for (ytelse in stønadstyper) {
+            connection.executeReturnKey(insertYtelseQuery) {
+                setParams {
+                    setEnumName(1, ytelse)
+                    setLong(2, andreYtelserId)
                 }
             }
+        }
 
         val insertGrunnlagQuery = """
         INSERT INTO ANDRE_YTELSER_OPPGITT_I_SOKNAD_GRUNNLAG (behandling_id, andre_ytelser_id)
         VALUES (?,?)
         """.trimIndent()
 
-         connection.executeReturnKey(insertGrunnlagQuery) {
+        connection.executeReturnKey(insertGrunnlagQuery) {
             setParams {
                 setLong(1, behandlingId.id)
                 setLong(2, andreYtelserId)
@@ -96,13 +96,11 @@ class AndreYtelserOppgittISøknadRepositoryImpl(private val connection: DBConnec
     }
 
 
-
-
     private fun hentAktivYtelserGrunnlagId(behandlingId: BehandlingId): Long? = connection.queryFirstOrNull(
         """
-                    SELECT id
-                    FROM ANDRE_YTELSER_OPPGITT_I_SOKNAD_GRUNNLAG
-                    WHERE behandling_id = ? and aktiv is true
+                SELECT id
+                FROM ANDRE_YTELSER_OPPGITT_I_SOKNAD_GRUNNLAG
+                WHERE behandling_id = ? and aktiv is true
                  
                 """.trimIndent()
     ) {
@@ -139,7 +137,7 @@ class AndreYtelserOppgittISøknadRepositoryImpl(private val connection: DBConnec
 
         //Skal slette alle??! :*/
 
-        val kunEtGrunnlagPåDetteSvaret = if(alleGrunnlagPåYtelseId.size == 1) true else false
+        val kunEtGrunnlagPåDetteSvaret = if (alleGrunnlagPåYtelseId.size == 1) true else false
 
 
         //sletter de på behandling id
