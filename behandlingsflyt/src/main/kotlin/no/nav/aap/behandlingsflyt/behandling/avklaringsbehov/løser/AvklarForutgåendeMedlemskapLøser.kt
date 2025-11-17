@@ -22,18 +22,20 @@ class AvklarForutgåendeMedlemskapLøser(
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarForutgåendeMedlemskapLøsning): LøsningsResultat {
         val sak = sakRepository.hent(kontekst.kontekst.sakId)
 
-        forutgåendeMedlemskapRepository.lagreManuellVurdering(
-            kontekst.behandlingId(),
-            ManuellVurderingForForutgåendeMedlemskap(
-                begrunnelse = løsning.manuellVurderingForForutgåendeMedlemskap.begrunnelse,
-                harForutgåendeMedlemskap = løsning.manuellVurderingForForutgåendeMedlemskap.harForutgåendeMedlemskap,
-                varMedlemMedNedsattArbeidsevne = løsning.manuellVurderingForForutgåendeMedlemskap.varMedlemMedNedsattArbeidsevne,
-                medlemMedUnntakAvMaksFemAar = løsning.manuellVurderingForForutgåendeMedlemskap.medlemMedUnntakAvMaksFemAar,
-                vurdertAv = kontekst.bruker.ident,
-                vurdertTidspunkt = LocalDateTime.now(),
-                overstyrt = false,
-                vurdertIBehandling = kontekst.behandlingId(),
-                fom = sak.rettighetsperiode.fom
+        forutgåendeMedlemskapRepository.lagreVurderinger(
+            behandlingId = kontekst.behandlingId(),
+            vurderinger = listOf(
+                ManuellVurderingForForutgåendeMedlemskap(
+                    begrunnelse = løsning.manuellVurderingForForutgåendeMedlemskap.begrunnelse,
+                    harForutgåendeMedlemskap = løsning.manuellVurderingForForutgåendeMedlemskap.harForutgåendeMedlemskap,
+                    varMedlemMedNedsattArbeidsevne = løsning.manuellVurderingForForutgåendeMedlemskap.varMedlemMedNedsattArbeidsevne,
+                    medlemMedUnntakAvMaksFemAar = løsning.manuellVurderingForForutgåendeMedlemskap.medlemMedUnntakAvMaksFemAar,
+                    vurdertAv = kontekst.bruker.ident,
+                    vurdertTidspunkt = LocalDateTime.now(),
+                    overstyrt = false,
+                    vurdertIBehandling = kontekst.behandlingId(),
+                    fom = sak.rettighetsperiode.fom
+                )
             )
         )
         return LøsningsResultat("Vurdert forutgående medlemskap manuelt.")

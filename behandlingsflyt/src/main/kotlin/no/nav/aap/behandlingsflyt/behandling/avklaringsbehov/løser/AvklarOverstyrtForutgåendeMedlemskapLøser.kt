@@ -43,18 +43,19 @@ class AvklarOverstyrtForutgåendeMedlemskapLøser(
 
         val sak = sakRepository.hent(kontekst.kontekst.sakId)
 
-        forutgåendeMedlemskapArbeidInntektRepository.lagreManuellVurdering(
-            kontekst.behandlingId(),
-            ManuellVurderingForForutgåendeMedlemskap(
-                begrunnelse = løsning.manuellVurderingForForutgåendeMedlemskap.begrunnelse,
-                harForutgåendeMedlemskap = løsning.manuellVurderingForForutgåendeMedlemskap.harForutgåendeMedlemskap,
-                varMedlemMedNedsattArbeidsevne = løsning.manuellVurderingForForutgåendeMedlemskap.varMedlemMedNedsattArbeidsevne,
-                medlemMedUnntakAvMaksFemAar = løsning.manuellVurderingForForutgåendeMedlemskap.medlemMedUnntakAvMaksFemAar,
-                vurdertAv = kontekst.bruker.ident,
-                overstyrt = true,
-                vurdertIBehandling = kontekst.behandlingId(),
-                fom = sak.rettighetsperiode.fom
-            )
+        forutgåendeMedlemskapArbeidInntektRepository.lagreVurderinger(
+            behandlingId = kontekst.behandlingId(),
+            vurderinger = listOf(
+                ManuellVurderingForForutgåendeMedlemskap(
+                    begrunnelse = løsning.manuellVurderingForForutgåendeMedlemskap.begrunnelse,
+                    harForutgåendeMedlemskap = løsning.manuellVurderingForForutgåendeMedlemskap.harForutgåendeMedlemskap,
+                    varMedlemMedNedsattArbeidsevne = løsning.manuellVurderingForForutgåendeMedlemskap.varMedlemMedNedsattArbeidsevne,
+                    medlemMedUnntakAvMaksFemAar = løsning.manuellVurderingForForutgåendeMedlemskap.medlemMedUnntakAvMaksFemAar,
+                    vurdertAv = kontekst.bruker.ident,
+                    overstyrt = true,
+                    vurdertIBehandling = kontekst.behandlingId(),
+                    fom = sak.rettighetsperiode.fom
+                ))
         )
 
         val personopplysningGrunnlag = personopplysningForutgåendeRepository.hentHvisEksisterer(kontekst.behandlingId())
