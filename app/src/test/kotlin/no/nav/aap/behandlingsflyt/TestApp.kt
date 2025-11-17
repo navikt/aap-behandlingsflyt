@@ -23,10 +23,10 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Ident
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManueltOppgittBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppgitteBarn
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
-import no.nav.aap.behandlingsflyt.kontrakt.steg.StegGruppe
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
@@ -54,9 +54,9 @@ import no.nav.aap.motor.testutil.ManuellMotorImpl
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import org.slf4j.LoggerFactory
-import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
+import org.testcontainers.postgresql.PostgreSQLContainer
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -159,7 +159,7 @@ private fun genererBarn(dto: TestBarn): TestPerson {
 }
 
 private fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPerson>): SøknadV0 {
-    val erStudent = if (dto.student) "JA" else "NEI"
+    val erStudent = if (dto.student) StudentStatus.Ja else StudentStatus.Nei
     val harYrkesskade = if (dto.yrkesskade) "JA" else "NEI"
 
     val oppgitteBarn = if (urelaterteBarn.isNotEmpty()) {
@@ -272,7 +272,7 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO): Sak {
 private fun opprettNySakOgBehandling(dto: OpprettTestcaseDTO): Sak {
     val sak = sendInnSøknad(dto)
 
-    if (dto.steg == StegType.AVKLAR_STUDENT) return sak
+    if (dto.steg in listOf(StegType.START_BEHANDLING, StegType.AVKLAR_STUDENT) ) return sak
 
     motor.kjørJobber()
 
@@ -319,7 +319,6 @@ private fun opprettNySakOgBehandling(dto: OpprettTestcaseDTO): Sak {
 
         // Forutgående medlemskap
         if (dto.yrkesskade) {
-            if (dto.steg == StegType.VURDER_YRKESSKADE) return sak
             løsFastsettYrkesskadeInntekt(behandling)
         } else {
             if (dto.steg == StegType.VURDER_MEDLEMSKAP) return sak
@@ -386,13 +385,13 @@ private fun hentSisteBehandlingForSak(sakId: SakId): Behandling {
     }
 }
 
-internal fun postgreSQLContainer(): PostgreSQLContainer<Nothing> {
-    val postgres = PostgreSQLContainer<Nothing>("postgres:16")
+internal fun postgreSQLContainer(): PostgreSQLContainer {
+    val postgres = PostgreSQLContainer("postgres:16")
         .apply {
             val envPort = System.getenv("POSTGRES_PORT")?.toIntOrNull()
             if (envPort != null) {
                 withExposedPorts(5432)
-                setPortBindings(listOf("$envPort:5432"))
+                portBindings = listOf("$envPort:5432")
             }
             withLogConsumer(Slf4jLogConsumer(log))
             waitingFor(HostPortWaitStrategy().withStartupTimeout(Duration.of(60L, ChronoUnit.SECONDS)))

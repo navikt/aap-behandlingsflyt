@@ -37,14 +37,14 @@ fun runCommand(command: String): String {
 dependencies {
     api(project(":kontrakt"))
     implementation("io.micrometer:micrometer-registry-prometheus:1.16.0")
-    implementation("ch.qos.logback:logback-classic:1.5.20")
+    implementation("ch.qos.logback:logback-classic:1.5.21")
     implementation("net.logstash.logback:logstash-logback-encoder:9.0")
     implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.21.0")
 
     api(libs.tilgangPlugin)
     api(libs.tilgangKontrakt)
     api("no.nav.aap.brev:kontrakt:0.0.180")
-    api("no.nav.aap.meldekort:kontrakt:0.0.145")
+    api("no.nav.aap.meldekort:kontrakt:0.0.147")
     api(libs.motor)
     api(libs.gateway)
     api(libs.utbetalKontrakt)
@@ -56,7 +56,7 @@ dependencies {
     implementation(libs.verdityper)
     implementation(libs.tidslinje)
     implementation(kotlin("reflect"))
-    implementation("org.flywaydb:flyway-database-postgresql:11.16.0")
+    implementation("org.flywaydb:flyway-database-postgresql:11.17.0")
     runtimeOnly("org.postgresql:postgresql") // låst versjon i root build.gradle.kts
 
 

@@ -70,15 +70,14 @@ class PdlHendelseKafkaKonsument(
             val sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider)
             if (personHendelse.opplysningstype == Opplysningstype.DOEDSFALL_V1 && personHendelse.endringstype == Endringstype.OPPRETTET) {
                 log.info("Håndterer hendelse med ${personHendelse.opplysningstype} og ${personHendelse.endringstype}")
-
                 var person: Person? = null
                 var funnetIdent: Ident? = null
-
                 for (ident in personHendelse.personidenter) {
-                    secureLogger.info("Håndterer hendelse for ${ident}")
+
                     person = personRepository.finn(Ident(ident))
                     // Håndterer D-nummer og Fnr
                     if (person != null) {
+                        secureLogger.info("Håndterer hendelse for ${ident}")
                         funnetIdent = Ident(ident)
                         break
                     }
