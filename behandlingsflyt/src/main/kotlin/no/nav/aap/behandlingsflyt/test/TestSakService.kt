@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.test
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PdlQueryException
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
@@ -76,10 +77,10 @@ class TestSakService(
 
         val melding = SøknadV0(
             student = SøknadStudentDto(erStudent = erStudent.toJaNei()),
-            yrkesskade = harYrkesskade.toJaNei(),
+            yrkesskade = if (harYrkesskade) "Ja" else "Nei",
             oppgitteBarn = null,
             medlemskap = SøknadMedlemskapDto(
-                harBoddINorgeSiste5År = harMedlemskap.toJaNei(),
+                harBoddINorgeSiste5År = if (harMedlemskap) "JA" else "NEI",
                 harArbeidetINorgeSiste5År = null,
                 arbeidetUtenforNorgeFørSykdom = null,
                 iTilleggArbeidUtenforNorge = null,
@@ -101,7 +102,7 @@ class TestSakService(
         return sak
     }
 
-    private fun Boolean.toJaNei() = if (this) "JA" else "NEI"
+    private fun Boolean.toJaNei() = if (this) StudentStatus.Ja else StudentStatus.Nei
 }
 
 class OpprettTestSakException(message: String) : RuntimeException(message)
