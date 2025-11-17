@@ -86,7 +86,6 @@ import no.nav.aap.behandlingsflyt.integrasjon.pdl.PersonStatus
 import no.nav.aap.behandlingsflyt.integrasjon.ufore.UføreHistorikkRespons
 import no.nav.aap.behandlingsflyt.integrasjon.ufore.UførePeriode
 import no.nav.aap.behandlingsflyt.integrasjon.ufore.UføreRequest
-import no.nav.aap.behandlingsflyt.integrasjon.ufore.UføreRespons
 import no.nav.aap.behandlingsflyt.integrasjon.util.GraphQLResponse
 import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeModell
 import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeRequest
@@ -216,20 +215,6 @@ object FakeServers : AutoCloseable {
             }
         }
         routing() {
-            get("/api/uforetrygd/uforegrad") {
-                val ident = requireNotNull(call.request.header("fnr"))
-                val hentPerson = FakePersoner.hentPerson(ident)
-                if (hentPerson == null) {
-                    call.respond(HttpStatusCode.NotFound, "Fant ikke person med fnr $ident")
-                    return@get
-                }
-                val uføregrad = hentPerson.uføre?.prosentverdi()
-                if (uføregrad == null) {
-                    call.respond(HttpStatusCode.NotFound)
-                } else {
-                    call.respond(HttpStatusCode.OK, UføreRespons(uforegrad = uføregrad))
-                }
-            }
             post("/api/uforetrygd/uforehistorikk/perioder") {
                 val body = call.receive<UføreRequest>()
                 val hentPerson = FakePersoner.hentPerson(body.fnr)

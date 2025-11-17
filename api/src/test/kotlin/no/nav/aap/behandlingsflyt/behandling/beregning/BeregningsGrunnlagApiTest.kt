@@ -31,7 +31,7 @@ class BeregningsGrunnlagApiTest {
                     InntektPerÅr(2021, Beløp(400000)),
                     InntektPerÅr(2020, Beløp(300000))
                 ),
-                uføregrad = listOf(Uføre(LocalDate.now(), Prosent(30))),
+                uføregrad = setOf(Uføre(LocalDate.now(), Prosent(30))),
                 yrkesskadevurdering = Yrkesskadevurdering(
                     begrunnelse = "en begrunnelse",
                     andelAvNedsettelsen = Prosent(30),
@@ -100,7 +100,7 @@ class BeregningsGrunnlagApiTest {
                     InntektPerÅr(2021, Beløp(400000)),
                     InntektPerÅr(2020, Beløp(300000))
                 ),
-                uføregrad = listOf(Uføre(LocalDate.now(), Prosent(30))),
+                uføregrad = setOf(Uføre(LocalDate.now(), Prosent(30))),
                 yrkesskadevurdering = Yrkesskadevurdering(
                     begrunnelse = "en begrunnelse",
                     andelAvNedsettelsen = Prosent(30),

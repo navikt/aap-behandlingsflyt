@@ -84,7 +84,7 @@ class Inntektsbehov(private val input: Input) {
         }.toSet()
     }
 
-    fun uføregrad(): List<Uføre> {
+    fun uføregrad(): Set<Uføre> {
         return requireNotNull(input.uføregrad)
     }
 
