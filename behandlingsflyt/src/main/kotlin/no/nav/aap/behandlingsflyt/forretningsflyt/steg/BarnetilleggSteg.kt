@@ -71,11 +71,8 @@ class BarnetilleggSteg(
             VurderingType.REVURDERING ->
                 (tidligereVurderinger.muligMedRettTilAAP(kontekst, type())
                         && (vurderingsbehovSomTvingerStopp.any { kontekst.vurderingsbehovRelevanteForSteg.contains(it) }
-                        || (kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty() && (harOppgittBarn(barneGrunnlag) || harGjortManuellVurderingIBehandlingen(
-                    kontekst
-                )))
-                        )
-                        )
+                        || (kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty() && (harOppgittBarn(barneGrunnlag)
+                        || harGjortManuellVurderingIBehandlingen(kontekst)))))
 
             VurderingType.MELDEKORT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
