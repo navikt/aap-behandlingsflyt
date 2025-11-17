@@ -5,7 +5,6 @@ import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
 
 class StudentGrunnlag(
-    val id: Long? = null,
     val studentvurdering: StudentVurdering?,
     val oppgittStudent: OppgittStudent?
 ) {
