@@ -181,7 +181,7 @@ class TidligereVurderingerImpl(
     }
 
     private var sjekkerRevurdering = lagSjekker(definerteSjekker(TypeBehandling.Revurdering))
-    private var sjekkerFørstegangsbehandling = lagSjekker(definerteSjekker(TypeBehandling.Revurdering))
+    private var sjekkerFørstegangsbehandling = lagSjekker(definerteSjekker(TypeBehandling.Førstegangsbehandling))
 
     private fun lagSjekker(definerteSjekker: List<Sjekk>) = buildList {
         val sjekker = definerteSjekker.iterator()
