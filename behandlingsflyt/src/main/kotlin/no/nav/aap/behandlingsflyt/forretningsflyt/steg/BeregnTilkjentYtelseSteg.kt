@@ -82,9 +82,11 @@ class BeregnTilkjentYtelseSteg private constructor(
         val underveisgrunnlag = underveisRepository.hent(kontekst.behandlingId)
         val fødselsdato =
             requireNotNull(personopplysningRepository.hentBrukerPersonOpplysningHvisEksisterer(kontekst.behandlingId)?.fødselsdato) { "Finner ikke fødselsdato. BehandlingId: ${kontekst.behandlingId}" }
-        val barnetilleggGrunnlag = barnetilleggRepository.hentHvisEksisterer(kontekst.behandlingId) ?: BarnetilleggGrunnlag(id = 0L, perioder = emptyList())
+        val barnetilleggGrunnlag =
+            barnetilleggRepository.hentHvisEksisterer(kontekst.behandlingId) ?: BarnetilleggGrunnlag(
+                perioder = emptyList()
+            )
         val samordningGrunnlag = samordningRepository.hentHvisEksisterer(kontekst.behandlingId) ?: SamordningGrunnlag(
-            id = 0L,
             samordningPerioder = emptySet()
         )
         val samordningUføre = samordningUføreRepository.hentHvisEksisterer(kontekst.behandlingId)

@@ -267,7 +267,7 @@ object FakeServers : AutoCloseable {
             route("/api/vedtak") {
                 route("samordne") {
                     post {
-                        val req = call.receive<SamordneVedtakRequest>()
+                        call.receive<SamordneVedtakRequest>()
 
                         call.respond(
                             SamordneVedtakRespons(
@@ -277,7 +277,6 @@ object FakeServers : AutoCloseable {
                     }
                 }
                 get {
-                    val params = call.queryParameters
                     call.respond(
                         HttpStatusCode.OK, listOf(
                             HentSamIdResponse(
