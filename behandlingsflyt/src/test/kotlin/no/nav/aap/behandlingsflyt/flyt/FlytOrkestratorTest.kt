@@ -1015,23 +1015,6 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         val revurdering = sak.opprettManuellRevurdering(
             listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_BEREGNING),
         )
-            // TODO denne skal bort med PR som er på vei siden dette ikke skal vurderes her
-            .løsAvklaringsBehov(
-                AvklarYrkesskadeLøsning(
-                    yrkesskadesvurdering = YrkesskadevurderingDto(
-                        begrunnelse = "Veldig relevante",
-                        relevanteSaker = person.yrkesskade.map { it.saksreferanse },
-                        relevanteYrkesskadeSaker = person.yrkesskade.map {
-                            YrkesskadeSakDto(
-                                it.saksreferanse,
-                                null,
-                            )
-                        },
-                        andelAvNedsettelsen = 50,
-                        erÅrsakssammenheng = true
-                    )
-                )
-            )
             .løsBeregningstidspunkt()
             .løsYrkesskadeInntekt(person.yrkesskade)
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
