@@ -8,6 +8,9 @@ import no.nav.aap.komponenter.verdityper.Tid
 import java.time.LocalDate
 
 data class BistandGrunnlag(
+    /**
+     * Nye vurderinger for inneværende behandling + vedtatte vurderinger
+     */
     val vurderinger: List<Bistandsvurdering>,
 ) {
     fun somBistandsvurderingstidslinje(
