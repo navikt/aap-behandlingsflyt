@@ -648,4 +648,16 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
             }
         }
     }
+
+    override fun tilbakestillGrunnlag(behandlingId: BehandlingId, forrigeBehandling: BehandlingId?) {
+        val eksisternedeBarnGrunnlag = hentHvisEksisterer(behandlingId)
+
+        if (eksisternedeBarnGrunnlag != null) {
+            deaktiverEksisterende(behandlingId)
+        }
+
+        if (forrigeBehandling != null) {
+            kopier(forrigeBehandling, behandlingId)
+        }
+    }
 }

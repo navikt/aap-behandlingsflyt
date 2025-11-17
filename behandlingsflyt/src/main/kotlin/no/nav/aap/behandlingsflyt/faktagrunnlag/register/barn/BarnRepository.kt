@@ -37,4 +37,5 @@ interface BarnRepository : Repository {
      * Deaktiver alle saksbehandleroppgitte barn for en behandling. Brukes når alle saksbehandleroppgitte barn skal fjernes.
      */
     fun deaktiverAlleSaksbehandlerOppgitteBarn(behandlingId: BehandlingId)
+    fun tilbakestillGrunnlag(behandlingId: BehandlingId, forrigeBehandling: BehandlingId?)
 }

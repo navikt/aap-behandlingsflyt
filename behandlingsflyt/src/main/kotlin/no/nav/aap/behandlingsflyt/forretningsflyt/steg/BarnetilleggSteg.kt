@@ -71,9 +71,11 @@ class BarnetilleggSteg(
             VurderingType.REVURDERING ->
                 (tidligereVurderinger.muligMedRettTilAAP(kontekst, type())
                         && (vurderingsbehovSomTvingerStopp.any { kontekst.vurderingsbehovRelevanteForSteg.contains(it) }
-                            || (kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty() && (harOppgittBarn(barneGrunnlag) || harGjortManuellVurderingIBehandlingen(kontekst)))
+                        || (kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty() && (harOppgittBarn(barneGrunnlag) || harGjortManuellVurderingIBehandlingen(
+                    kontekst
+                )))
                         )
-                )
+                        )
 
             VurderingType.MELDEKORT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
@@ -84,14 +86,14 @@ class BarnetilleggSteg(
     }
 
     private fun tilbakestillBarnetillegg(kontekst: FlytKontekstMedPerioder) {
-        val vedtatteBarnetillegg = kontekst.forrigeBehandlingId
+        val forrigeBehandlingId = kontekst.forrigeBehandlingId
+        val vedtatteBarnetillegg = forrigeBehandlingId
             ?.let { barnetilleggRepository.hentHvisEksisterer(it) }
             ?.perioder
             ?: emptyList()
         barnetilleggRepository.lagre(kontekst.behandlingId, vedtatteBarnetillegg)
 
-        val forrigeBarnGrunnlag = kontekst.forrigeBehandlingId
-            ?.let { barnRepository.hentHvisEksisterer(it) }
+        val forrigeBarnGrunnlag = forrigeBehandlingId?.let { barnRepository.hentHvisEksisterer(it) }
 
         val vurderteBarn = forrigeBarnGrunnlag?.vurderteBarn?.barn.orEmpty()
 
@@ -105,6 +107,10 @@ class BarnetilleggSteg(
 
         if (forrigeBarnGrunnlag == null) {
             barnRepository.deaktiverAlleSaksbehandlerOppgitteBarn(kontekst.behandlingId)
+        }
+
+        if (forrigeBehandlingId != null) {
+            barnRepository.tilbakestillGrunnlag(forrigeBehandlingId, kontekst.behandlingId)
         }
 
         barnRepository.lagreSaksbehandlerOppgitteBarn(kontekst.behandlingId, saksbehandlerOppgitteBarn)
