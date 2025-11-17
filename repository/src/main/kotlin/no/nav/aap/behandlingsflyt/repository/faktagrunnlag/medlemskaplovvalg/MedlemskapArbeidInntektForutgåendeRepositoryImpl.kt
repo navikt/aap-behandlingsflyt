@@ -218,7 +218,8 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
     override fun slett(behandlingId: BehandlingId) {
         val arbeidIds = getArbeidIds(behandlingId)
         val inntekterIds = getInntekterIds(behandlingId)
-        val manuellVurderingIds = getManuellVurderingIds(behandlingId)
+        val manuellVurderingIds = getManuellVurderingIds(behandlingId) // TODO fjernes etter migrering
+        val vurderingerIds = getManuellVurderingerIds(behandlingId)
 
         val deletedRows = connection.executeReturnUpdated(
             """
@@ -227,6 +228,8 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
             delete from ARBEID_FORUTGAAENDE where arbeider_id = ANY(?::bigint[]);
             delete from ARBEIDER_FORUTGAAENDE where id = ANY(?::bigint[]);
             delete from FORUTGAAENDE_MEDLEMSKAP_MANUELL_VURDERING where id = ANY(?::bigint[]);
+            delete from FORUTGAAENDE_MEDLEMSKAP_MANUELL_VURDERING where vurderinger_id = ANY(?::bigint[]);
+            delete from FORUTGAAENDE_MEDLEMSKAP_MANUELL_VURDERINGER where id = ANY(?::bigint[]);
            
         """.trimIndent()
         ) {
@@ -236,6 +239,8 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
                 setLongArray(3, arbeidIds)
                 setLongArray(4, arbeidIds)
                 setLongArray(5, manuellVurderingIds)
+                setLongArray(6, vurderingerIds)
+                setLongArray(7, vurderingerIds)
             }
         }
         log.info("Slettet $deletedRows rader fra FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG")
@@ -252,6 +257,20 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
         setParams { setLong(1, behandlingId.id) }
         setRowMapper { row ->
             row.getLong("manuell_vurdering_id")
+        }
+    }
+
+    private fun getManuellVurderingerIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT vurderinger_id
+                    FROM FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG
+                    WHERE behandling_id = ? AND vurderinger_id is not null
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("vurderinger_id")
         }
     }
 
