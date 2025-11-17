@@ -11,7 +11,6 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
-import java.time.LocalDate
 
 class AvklarBistandLøser(
     private val behandlingRepository: BehandlingRepository,

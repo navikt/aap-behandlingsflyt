@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvu
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
+import java.time.Instant
 import java.time.LocalDate
 
 data class BistandVurderingLøsningDto(
@@ -24,6 +25,7 @@ data class BistandVurderingLøsningDto(
         skalVurdereAapIOvergangTilArbeid = skalVurdereAapIOvergangTilArbeid,
         vurdertAv = bruker.ident,
         vurdertIBehandling = vurdertIBehandling,
+        opprettet = Instant.now(),
     )
 
     fun valider() {
