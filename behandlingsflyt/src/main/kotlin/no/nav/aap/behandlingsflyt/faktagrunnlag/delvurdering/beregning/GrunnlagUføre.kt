@@ -16,7 +16,7 @@ import java.time.Year
  * @param uføreInntekterFraForegåendeÅr Inntekter de siste 3 år før [uføreYtterligereNedsattArbeidsevneÅr].
  * @param uføreYtterligereNedsattArbeidsevneÅr Hvilket år arbeidsevnen ble ytterligere nedsatt.
  */
-class GrunnlagUføre(
+data class GrunnlagUføre(
     private val grunnlaget: GUnit,
     private val type: Type,
     private val grunnlag: Grunnlag11_19,
@@ -42,6 +42,8 @@ class GrunnlagUføre(
         )
     }
 
+    // TODO, denne burde fjernes
+    @Deprecated("Bruk periodisert")
     fun uføregrad(): Prosent {
         return uføregrad
     }
@@ -71,37 +73,5 @@ class GrunnlagUføre(
 
     fun underliggendeYtterligereNedsatt(): Grunnlag11_19 {
         return grunnlagYtterligereNedsatt
-    }
-
-    override fun toString(): String {
-        return "GrunnlagUføre(grunnlaget=$grunnlaget, type=$type, grunnlag=$grunnlag, grunnlagYtterligereNedsatt=$grunnlagYtterligereNedsatt, uføregrad=$uføregrad, uføreInntekterFraForegåendeÅr=$uføreInntekterFraForegåendeÅr, uføreYtterligereNedsattArbeidsevneÅr=$uføreYtterligereNedsattArbeidsevneÅr)"
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as GrunnlagUføre
-
-        if (grunnlaget != other.grunnlaget) return false
-        if (type != other.type) return false
-        if (grunnlag != other.grunnlag) return false
-        if (grunnlagYtterligereNedsatt != other.grunnlagYtterligereNedsatt) return false
-        if (uføregrad != other.uføregrad) return false
-        if (uføreInntekterFraForegåendeÅr != other.uføreInntekterFraForegåendeÅr) return false
-        if (uføreYtterligereNedsattArbeidsevneÅr != other.uføreYtterligereNedsattArbeidsevneÅr) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = grunnlaget.hashCode()
-        result = 31 * result + type.hashCode()
-        result = 31 * result + grunnlag.hashCode()
-        result = 31 * result + grunnlagYtterligereNedsatt.hashCode()
-        result = 31 * result + uføregrad.hashCode()
-        result = 31 * result + uføreInntekterFraForegåendeÅr.hashCode()
-        result = 31 * result + uføreYtterligereNedsattArbeidsevneÅr.hashCode()
-        return result
     }
 }

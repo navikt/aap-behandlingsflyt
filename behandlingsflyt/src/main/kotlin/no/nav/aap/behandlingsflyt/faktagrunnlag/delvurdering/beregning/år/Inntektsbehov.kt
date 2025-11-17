@@ -39,10 +39,11 @@ class Inntektsbehov(private val input: Input) {
         return input.inntektsPerioder
     }
 
-    fun utledForYtterligereNedsatt(): Set<InntektPerÅr> {
-        val ytterligereNedsettelsesDato = input.beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
-        requireNotNull(ytterligereNedsettelsesDato)
-        return filtrerInntekter(ytterligereNedsettelsesDato, input.årsInntekter)
+    fun utledForYtterligereNedsatt(): Set<Year> {
+        val ytterligereNedsettelsesDato =
+            requireNotNull(input.beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato)
+
+        return treÅrForutFor(ytterligereNedsettelsesDato)
     }
 
     /**
@@ -112,7 +113,7 @@ class Inntektsbehov(private val input: Input) {
                 ?: input.yrkesskadevurdering?.relevanteSaker?.firstOrNull { it.referanse == sak.ref }?.manuellYrkesskadeDato
             YrkesskadeBeregning(
                 sak.ref,
-                requireNotNull(skadedato) { "Ulovlig tilstand. skadedato er null, og mangler manuell yrkesskade dato."},
+                requireNotNull(skadedato) { "Ulovlig tilstand. skadedato er null, og mangler manuell yrkesskade dato." },
                 input.beregningGrunnlag?.yrkesskadeBeløpVurdering?.vurderinger?.firstOrNull { it.referanse == sak.ref }?.antattÅrligInntekt!!
             )
         }
@@ -123,7 +124,10 @@ class Inntektsbehov(private val input: Input) {
     }
 
     companion object {
-        fun utledAlleRelevanteÅr(nedsettelsesDato: LocalDate, ytterligereNedsattArbeidsevneDato: LocalDate?): Set<Year> {
+        fun utledAlleRelevanteÅr(
+            nedsettelsesDato: LocalDate,
+            ytterligereNedsattArbeidsevneDato: LocalDate?
+        ): Set<Year> {
             val datoerForInnhenting = setOfNotNull(nedsettelsesDato, ytterligereNedsattArbeidsevneDato)
             return datoerForInnhenting.flatMap(::treÅrForutFor).toSortedSet()
         }

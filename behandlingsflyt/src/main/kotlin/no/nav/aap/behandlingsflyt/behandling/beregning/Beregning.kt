@@ -10,7 +10,7 @@ class Beregning(
     private val input: Inntektsbehov
 ) {
     fun beregneMedInput(): Beregningsgrunnlag {
-        //6G begrensning ligger her samt gjennomsnitt
+        // 6G-begrensning ligger her samt gjennomsnitt
         val grunnlag11_19 = beregn11_19Grunnlag(input.utledForOrdinær())
 
         val beregningMedEllerUtenUføre = if (input.finnesUføreData()) {
@@ -19,11 +19,10 @@ class Beregning(
             val uføreberegning = UføreBeregning(
                 grunnlag = grunnlag11_19,
                 uføregrader = input.uføregrad(),
-                inntekterForegåendeÅr = inntekterFørYtterligereNedsattDato,
+                relevanteÅr = inntekterFørYtterligereNedsattDato,
                 inntektsPerioder = input.inntektsPerioder(),
             )
-            val ytterligereNedsattArbeidsevneDato = input.hentYtterligereNedsattArbeidsevneDato()
-            requireNotNull(ytterligereNedsattArbeidsevneDato)
+            val ytterligereNedsattArbeidsevneDato = requireNotNull(input.hentYtterligereNedsattArbeidsevneDato())
 
             val grunnlagUføre = uføreberegning.beregnUføre(Year.from(ytterligereNedsattArbeidsevneDato))
             grunnlagUføre

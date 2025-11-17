@@ -237,7 +237,7 @@ class BeregningsgrunnlagRepositoryImpl(private val connection: DBConnection) : B
     private fun hentInntektsPerioderUføre(id: BigDecimal): List<UføreInntektPeriodisert> {
         return connection.queryList(
             """
-                SELECT PERIODE, INNTEKT_I_KRONER, UFOREGRAD, ARBEIDSGRAD, INNTEKT_JUSTERT_FOR_UFOREGRAD, INNTEKT_I_G, GRUNNBELOP, inntekt_justert_ufore_g
+                SELECT PERIODE, INNTEKT_I_KRONER, UFOREGRAD, INNTEKT_JUSTERT_FOR_UFOREGRAD
                 FROM BEREGNING_UFORE_TIDSPERIODE
                 WHERE BEREGNING_UFORE_INNTEKT_ID = ?
             """.trimIndent()
@@ -247,12 +247,8 @@ class BeregningsgrunnlagRepositoryImpl(private val connection: DBConnection) : B
                 UføreInntektPeriodisert(
                     periode = row.getPeriode("PERIODE"),
                     inntektIKroner = Beløp(row.getInt("INNTEKT_I_KRONER")),
-                    inntektIG = GUnit(row.getBigDecimal("INNTEKT_I_G")),
                     uføregrad = Prosent(row.getInt("UFOREGRAD")),
-                    arbeidsgrad = Prosent(row.getInt("ARBEIDSGRAD")),
                     inntektJustertForUføregrad = Beløp(row.getInt("INNTEKT_JUSTERT_FOR_UFOREGRAD")),
-                    inntektIGJustertForUføregrad = GUnit(row.getInt("inntekt_justert_ufore_g")),
-                    grunnbeløp = Beløp(row.getBigDecimal("GRUNNBELOP"))
                 )
             }
         }
@@ -483,9 +479,9 @@ VALUES (?, ?, ?, ?, ?, ?, ?)"""
     private fun lagreUføreInnteksperioder(perioder: List<UføreInntektPeriodisert>, beregningUføreInntektID: Long) {
         connection.executeBatch(
             """INSERT INTO BEREGNING_UFORE_TIDSPERIODE(
-            BEREGNING_UFORE_INNTEKT_ID, PERIODE, INNTEKT_I_KRONER, INNTEKT_I_G, INNTEKT_JUSTERT_FOR_UFOREGRAD,
-            INNTEKT_JUSTERT_UFORE_G, GRUNNBELOP, UFOREGRAD, ARBEIDSGRAD
-            ) VALUES (?, ?::daterange, ?, ?, ?, ?, ?, ?, ?)
+            BEREGNING_UFORE_INNTEKT_ID, PERIODE, INNTEKT_I_KRONER, INNTEKT_JUSTERT_FOR_UFOREGRAD,
+            UFOREGRAD
+            ) VALUES (?, ?::daterange, ?, ?, ?)
             """,
             perioder
         ) {
@@ -493,12 +489,8 @@ VALUES (?, ?, ?, ?, ?, ?, ?)"""
                 setLong(1, beregningUføreInntektID)
                 setPeriode(2, it.periode)
                 setBigDecimal(3, it.inntektIKroner.verdi())
-                setBigDecimal(4, it.inntektIG.verdi())
-                setBigDecimal(5, it.inntektJustertForUføregrad.verdi())
-                setBigDecimal(6, it.inntektIGJustertForUføregrad.verdi())
-                setBigDecimal(7, it.grunnbeløp.verdi())
-                setInt(8, it.uføregrad.prosentverdi())
-                setInt(9, it.arbeidsgrad.prosentverdi())
+                setBigDecimal(4, it.inntektJustertForUføregrad.verdi())
+                setInt(5, it.uføregrad.prosentverdi())
             }
         }
     }

@@ -1,8 +1,9 @@
+@file:Suppress("IDENTITY_SENSITIVE_OPERATIONS_WITH_VALUE_TYPE")
+
 package no.nav.aap.behandlingsflyt.behandling.beregning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
@@ -35,20 +36,7 @@ class UføreBeregningTest {
                         kilde = "PESYS"
                     )
                 ),
-                inntekterForegåendeÅr = setOf(
-                    InntektPerÅr(
-                        Year.of(2022),
-                        Beløp(BigDecimal(5 * 109_784)) // 548 920
-                    ),
-                    InntektPerÅr(
-                        Year.of(2021),
-                        Beløp(BigDecimal(5 * 104_716)) // 209 432
-                    ),
-                    InntektPerÅr(
-                        Year.of(2020),
-                        Beløp(BigDecimal(5 * 100_853)) // 201 706
-                    )
-                ),
+                relevanteÅr = setOf(),
                 inntektsPerioder = listOf(
                     InntektsPeriode(
                         periode = Periode(
@@ -77,32 +65,19 @@ class UføreBeregningTest {
                     uføregrad = Prosent.`30_PROSENT`
                 )
             ),
-            inntekterForegåendeÅr = setOf(
-                InntektPerÅr(
-                    Year.of(2022),
-                    Beløp(BigDecimal(5 * 109_784).multiply(BigDecimal("0.7"))) // 548 920
-                ),
-                InntektPerÅr(
-                    Year.of(2021),
-                    Beløp(BigDecimal(5 * 104_716).multiply(BigDecimal("0.7"))) // 209 432
-                ),
-                InntektPerÅr(
-                    Year.of(2020),
-                    Beløp(BigDecimal(5 * 100_853).multiply(BigDecimal("0.7"))) // 201 706
-                )
-            ),
+            relevanteÅr = listOf(2020, 2021, 2022).map(Year::of).toSet(),
             inntektsPerioder = listOf(
                 InntektsPeriode(
                     periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
-                    beløp = BigDecimal(5 * 109_784).multiply(BigDecimal("0.7")).toDouble(),
+                    beløp = BigDecimal(5 * 109_784).multiply(BigDecimal("0.7")).toDouble(), // // 548 920
                 ),
                 InntektsPeriode(
                     periode = Periode(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 12, 31)),
-                    beløp = BigDecimal(5 * 104_716).multiply(BigDecimal("0.7")).toDouble(),
+                    beløp = BigDecimal(5 * 104_716).multiply(BigDecimal("0.7")).toDouble(),  // 209 432
                 ),
                 InntektsPeriode(
                     periode = Periode(LocalDate.of(2020, 1, 1), LocalDate.of(2020, 12, 31)),
-                    beløp = BigDecimal(5 * 100_853).multiply(BigDecimal("0.7")).toDouble(),
+                    beløp = BigDecimal(5 * 100_853).multiply(BigDecimal("0.7")).toDouble(), // 201 706
                 )
             )
         )
@@ -128,20 +103,21 @@ class UføreBeregningTest {
                     uføregrad = Prosent.`30_PROSENT`
                 )
             ),
-            inntekterForegåendeÅr = setOf(
-                InntektPerÅr(
-                    Year.of(2022),
-                    Beløp(BigDecimal(4 * 109_784).multiply(BigDecimal("0.7"))) // 448 920
-                ),
-                InntektPerÅr(
-                    Year.of(2021),
-                    Beløp(BigDecimal(4 * 104_716).multiply(BigDecimal("0.7"))) // 209 432
-                ),
-                InntektPerÅr(
-                    Year.of(2020),
-                    Beløp(BigDecimal(4 * 100_853).multiply(BigDecimal("0.7"))) // 201 706
-                )
-            ),
+            relevanteÅr = listOf(2020, 2021, 2022).map(Year::of).toSet(),
+//            inntekterForegåendeÅr = setOf(
+//                InntektPerÅr(
+//                    Year.of(2022),
+//                    Beløp(BigDecimal(4 * 109_784).multiply(BigDecimal("0.7"))) // 448 920
+//                ),
+//                InntektPerÅr(
+//                    Year.of(2021),
+//                    Beløp(BigDecimal(4 * 104_716).multiply(BigDecimal("0.7"))) // 209 432
+//                ),
+//                InntektPerÅr(
+//                    Year.of(2020),
+//                    Beløp(BigDecimal(4 * 100_853).multiply(BigDecimal("0.7"))) // 201 706
+//                )
+//            ),
             inntektsPerioder = listOf(
                 InntektsPeriode(
                     periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
@@ -179,20 +155,7 @@ class UføreBeregningTest {
                     uføregrad = Prosent.`50_PROSENT`
                 )
             ),
-            inntekterForegåendeÅr = setOf(
-                InntektPerÅr(
-                    Year.of(2022),
-                    Beløp(BigDecimal(12 * 20000))
-                ),
-                InntektPerÅr(
-                    Year.of(2021),
-                    Beløp(BigDecimal(12 * 20000))
-                ),
-                InntektPerÅr(
-                    Year.of(2020),
-                    Beløp(BigDecimal(12 * 20000))
-                )
-            ),
+            relevanteÅr = listOf(2020, 2021, 2022).map(Year::of).toSet(),
             inntektsPerioder = listOf(
                 oppsplittetInntekt(2022, 20000.toDouble()),
                 oppsplittetInntekt(2021, 20000.toDouble()),
@@ -231,39 +194,65 @@ class UføreBeregningTest {
                     uføregrad = Prosent(80)
                 )
             ),
-            inntekterForegåendeÅr = setOf(
-                InntektPerÅr(
-                    Year.of(2022),
-                    Beløp(BigDecimal(12 * 20000))
-                ),
-                InntektPerÅr(
-                    Year.of(2021),
-                    Beløp(BigDecimal(12 * 20000))
-                ),
-                InntektPerÅr(
-                    Year.of(2020),
-                    Beløp(BigDecimal(12 * 20000))
-                )
-            ),
+            relevanteÅr = listOf(2020, 2021, 2022).map(Year::of).toSet(),
             inntektsPerioder = listOf(
-                oppsplittetInntekt(2022, 10000.toDouble()),
+                oppsplittetInntekt(2022, 10_000.toDouble()),
                 oppsplittetInntekt(2021, 5000.toDouble()),
-                oppsplittetInntekt(2020, 20000.toDouble())
+                oppsplittetInntekt(2020, 20_000.toDouble())
             ).flatten()
         )
 
         val grunnlagUføre = uføreBeregning.beregnUføre(Year.of(2023))
 
         // 6 mnd 50% uføre, 6 mnd 80% uføre
+        val uføreInntekterFraForegåendeÅr = grunnlagUføre.uføreInntekterFraForegåendeÅr()
+        val for2022 = uføreInntekterFraForegåendeÅr.first { it.år == Year.of(2022) }
         assertThat(
-            grunnlagUføre.uføreInntekterFraForegåendeÅr().first { it.år == Year.of(2022) }.inntektJustertForUføregrad
-        ).isEqualTo(Beløp(6 * 20000 + 6 * 50000))
+            for2022.inntektJustertForUføregrad
+        ).isEqualTo(Beløp(6 * 20_000 + 6 * 50_000))
+        assertThat(for2022.inntektIKroner.verdi.toDouble()).isEqualTo(12 * 10_000.0)
 
         // 1 mnd vanlig inntekt uten oppjustering, 11 mnd 80% uføre
         assertThat(
-            grunnlagUføre.uføreInntekterFraForegåendeÅr().first { it.år == Year.of(2021) }.inntektJustertForUføregrad
+            uføreInntekterFraForegåendeÅr.first { it.år == Year.of(2021) }.inntektJustertForUføregrad
         ).isEqualTo(Beløp(1 * 5000 + 11 * 25000))
         assertThat(grunnlagUføre.type()).isEqualTo(GrunnlagUføre.Type.YTTERLIGERE_NEDSATT)
+    }
+
+    @Test
+    fun `50 prosent uføre et halvt år, 0 prosent uføre resten av året`() {
+        val uføreBeregning = UføreBeregning(
+            grunnlag = Grunnlag11_19(
+                grunnlaget = GUnit(2),
+                erGjennomsnitt = false,
+                gjennomsnittligInntektIG = GUnit(0),
+                inntekter = emptyList()
+            ),
+            uføregrader = setOf(
+                Uføre(
+                    virkningstidspunkt = LocalDate.of(2020, 1, 1),
+                    uføregrad = Prosent.`50_PROSENT`
+                ),
+                Uføre(
+                    virkningstidspunkt = LocalDate.of(2022, 7, 1),
+                    uføregrad = Prosent.`0_PROSENT`
+                )
+            ),
+            relevanteÅr = listOf(2020, 2021, 2022).map(Year::of).toSet(),
+            inntektsPerioder = listOf(
+                oppsplittetInntekt(2022, 10_000.toDouble()),
+                oppsplittetInntekt(2021, 15_000.toDouble()),
+                oppsplittetInntekt(2020, 20_000.toDouble())
+            ).flatten()
+        )
+
+        val grunnlag = uføreBeregning.beregnUføre(Year.of(2023))
+
+        val uføreInntekt2022 = grunnlag.uføreInntekterFraForegåendeÅr().first { it.år == Year.of(2022) }
+        assertThat(uføreInntekt2022.inntektIKroner.verdi.toDouble()).isEqualTo(10_000 * 12.0)
+        // Halve året skal oppjusteres med uføregraden
+        assertThat(uføreInntekt2022.inntektJustertForUføregrad.verdi.toDouble()).isEqualTo(10_000 * 6 + 10_000 * 6 / 0.5)
+
     }
 
     private fun oppsplittetInntekt(år: Int, månedsInntekt: Double): List<InntektsPeriode> {

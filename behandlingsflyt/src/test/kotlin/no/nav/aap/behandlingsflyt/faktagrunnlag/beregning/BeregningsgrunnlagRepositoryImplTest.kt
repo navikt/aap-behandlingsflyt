@@ -88,12 +88,8 @@ internal class BeregningsgrunnlagRepositoryImplTest {
                     UføreInntektPeriodisert(
                         periode = Periode(LocalDate.parse("2020-01-01"), LocalDate.parse("2020-12-31")),
                         inntektIKroner = Beløp(300000),
-                        inntektIG = GUnit(4),
                         uføregrad = Prosent.`50_PROSENT`,
-                        arbeidsgrad = Prosent.`50_PROSENT`,
                         inntektJustertForUføregrad = Beløp(300000).dividert(Prosent.`50_PROSENT`),
-                        inntektIGJustertForUføregrad = GUnit(4).dividert(Prosent.`50_PROSENT`),
-                        grunnbeløp = Beløp(100000)
                     )
                 )
             ),
@@ -109,12 +105,8 @@ internal class BeregningsgrunnlagRepositoryImplTest {
                     UføreInntektPeriodisert(
                         periode = Periode(LocalDate.parse("2021-01-01"), LocalDate.parse("2021-12-31")),
                         inntektIKroner = Beløp(350000),
-                        inntektIG = GUnit(4),
                         uføregrad = Prosent.`50_PROSENT`,
-                        arbeidsgrad = Prosent.`50_PROSENT`,
-                        inntektJustertForUføregrad = Beløp(350000).dividert(Prosent.`50_PROSENT`),
-                        inntektIGJustertForUføregrad = GUnit(4).dividert(Prosent.`50_PROSENT`),
-                        grunnbeløp = Beløp(100000)
+                        inntektJustertForUføregrad = Beløp(350000).dividert(Prosent.`50_PROSENT`)
                     )
                 )
             ),
@@ -130,12 +122,8 @@ internal class BeregningsgrunnlagRepositoryImplTest {
                     UføreInntektPeriodisert(
                         periode = Periode(LocalDate.parse("2022-01-01"), LocalDate.parse("2022-12-31")),
                         inntektIKroner = Beløp(350000),
-                        inntektIG = GUnit(4),
                         uføregrad = Prosent.`50_PROSENT`,
-                        arbeidsgrad = Prosent.`50_PROSENT`,
                         inntektJustertForUføregrad = Beløp(350000).dividert(Prosent.`50_PROSENT`),
-                        inntektIGJustertForUføregrad = GUnit(4).dividert(Prosent.`50_PROSENT`),
-                        grunnbeløp = Beløp(100000)
                     )
                 )
             )
@@ -242,12 +230,8 @@ internal class BeregningsgrunnlagRepositoryImplTest {
                     UføreInntektPeriodisert(
                         periode = Periode(LocalDate.parse("2020-01-01"), LocalDate.parse("2020-12-31")),
                         inntektIKroner = Beløp(300000),
-                        inntektIG = GUnit(4),
                         uføregrad = Prosent.`50_PROSENT`,
-                        arbeidsgrad = Prosent.`50_PROSENT`,
                         inntektJustertForUføregrad = Beløp(300000).dividert(Prosent.`50_PROSENT`),
-                        inntektIGJustertForUføregrad = GUnit(4).dividert(Prosent.`50_PROSENT`),
-                        grunnbeløp = Beløp(100000)
                     )
                 )
             ),
@@ -263,12 +247,8 @@ internal class BeregningsgrunnlagRepositoryImplTest {
                     UføreInntektPeriodisert(
                         periode = Periode(LocalDate.parse("2021-01-01"), LocalDate.parse("2021-12-31")),
                         inntektIKroner = Beløp(350000),
-                        inntektIG = GUnit(4),
                         uføregrad = Prosent.`50_PROSENT`,
-                        arbeidsgrad = Prosent.`50_PROSENT`,
                         inntektJustertForUføregrad = Beløp(350000).dividert(Prosent.`50_PROSENT`),
-                        inntektIGJustertForUføregrad = GUnit(4).dividert(Prosent.`50_PROSENT`),
-                        grunnbeløp = Beløp(100000)
                     )
                 )
             ),
@@ -284,12 +264,8 @@ internal class BeregningsgrunnlagRepositoryImplTest {
                     UføreInntektPeriodisert(
                         periode = Periode(LocalDate.parse("2022-01-01"), LocalDate.parse("2022-12-31")),
                         inntektIKroner = Beløp(350000),
-                        inntektIG = GUnit(4),
                         uføregrad = Prosent.`50_PROSENT`,
-                        arbeidsgrad = Prosent.`50_PROSENT`,
                         inntektJustertForUføregrad = Beløp(350000).dividert(Prosent.`50_PROSENT`),
-                        inntektIGJustertForUføregrad = GUnit(4).dividert(Prosent.`50_PROSENT`),
-                        grunnbeløp = Beløp(100000)
                     )
                 )
             )
@@ -409,12 +385,8 @@ internal class BeregningsgrunnlagRepositoryImplTest {
                     UføreInntektPeriodisert(
                         periode = Periode(LocalDate.parse("2020-01-01"), LocalDate.parse("2020-12-31")),
                         inntektIKroner = Beløp(300000),
-                        inntektIG = GUnit(4),
                         uføregrad = Prosent.`50_PROSENT`,
-                        arbeidsgrad = Prosent.`50_PROSENT`,
                         inntektJustertForUføregrad = Beløp(300000).dividert(Prosent.`50_PROSENT`),
-                        inntektIGJustertForUføregrad = GUnit(4).dividert(Prosent.`50_PROSENT`),
-                        grunnbeløp = Beløp(100000)
                     )
                 )
             ),
@@ -430,12 +402,8 @@ internal class BeregningsgrunnlagRepositoryImplTest {
                     UføreInntektPeriodisert(
                         periode = Periode(LocalDate.parse("2021-01-01"), LocalDate.parse("2021-12-31")),
                         inntektIKroner = Beløp(350000),
-                        inntektIG = GUnit(4),
                         uføregrad = Prosent.`50_PROSENT`,
-                        arbeidsgrad = Prosent.`50_PROSENT`,
                         inntektJustertForUføregrad = Beløp(350000).dividert(Prosent.`50_PROSENT`),
-                        inntektIGJustertForUføregrad = GUnit(4).dividert(Prosent.`50_PROSENT`),
-                        grunnbeløp = Beløp(100000)
                     )
                 )
             ),
@@ -451,12 +419,8 @@ internal class BeregningsgrunnlagRepositoryImplTest {
                     UføreInntektPeriodisert(
                         periode = Periode(LocalDate.parse("2022-01-01"), LocalDate.parse("2022-12-31")),
                         inntektIKroner = Beløp(350000),
-                        inntektIG = GUnit(4),
                         uføregrad = Prosent.`50_PROSENT`,
-                        arbeidsgrad = Prosent.`50_PROSENT`,
                         inntektJustertForUføregrad = Beløp(350000).dividert(Prosent.`50_PROSENT`),
-                        inntektIGJustertForUføregrad = GUnit(4).dividert(Prosent.`50_PROSENT`),
-                        grunnbeløp = Beløp(100000)
                     )
                 )
             )
