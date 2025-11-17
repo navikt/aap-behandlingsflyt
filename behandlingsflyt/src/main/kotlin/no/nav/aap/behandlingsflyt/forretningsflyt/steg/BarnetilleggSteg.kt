@@ -107,9 +107,7 @@ class BarnetilleggSteg(
 
         if (forrigeBarnGrunnlag == null) {
             barnRepository.deaktiverAlleSaksbehandlerOppgitteBarn(kontekst.behandlingId)
-        }
-
-        if (forrigeBehandlingId != null) {
+        } else {
             barnRepository.tilbakestillGrunnlag(forrigeBehandlingId, kontekst.behandlingId)
         }
 
