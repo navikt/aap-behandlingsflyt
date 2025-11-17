@@ -4,9 +4,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.AndreUtbetaling
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.AndreYtelserSøknad
 import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
@@ -17,20 +14,33 @@ import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
-import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
+import java.time.LocalDate
 
 class AndreYtelserRepositoryImplTest {
-    private val source = InitTestDatabase.freshDatabase()
+    private companion object {
+        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        private lateinit var dataSource: TestDataSource
 
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            dataSource = TestDataSource()
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun tearDown() = dataSource.close()
+    }
     @Test
     fun `lagre og kopier, så slette gamle`() {
-        val dataSource = source
+
         val sak = dataSource.transaction { sak(it) }
 
         val behandling1 = dataSource.transaction {
@@ -97,7 +107,6 @@ class AndreYtelserRepositoryImplTest {
 
     @Test
     fun `lagre og henter andre ytelser`() {
-        val dataSource = source
 
         val sak = dataSource.transaction { sak(it) }
 
