@@ -36,7 +36,7 @@ class BeregnTilkjentYtelseService(
 ) {
 
     internal companion object {
-        private const val ANTALL_ÅRLIGE_ARBEIDSDAGER = 260
+        const val ANTALL_ÅRLIGE_ARBEIDSDAGER = 260
     }
 
     fun beregnTilkjentYtelse(): Tidslinje<Tilkjent> {

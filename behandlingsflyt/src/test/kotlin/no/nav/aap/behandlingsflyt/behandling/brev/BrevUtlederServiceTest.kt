@@ -5,7 +5,12 @@ import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.GraderingGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.MINSTE_ÅRLIG_YTELSE_TIDSLINJE
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
+import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
@@ -18,8 +23,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
@@ -48,10 +55,17 @@ import org.junit.jupiter.api.assertThrows
 import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.Year
 import kotlin.random.Random
+import kotlin.test.assertEquals
+import kotlin.test.assertIs
+import kotlin.test.assertNotNull
 
 class BrevUtlederServiceTest {
+    val tilkjentYtelseRepository = mockk<TilkjentYtelseRepository>()
+    val vedtakRepository = mockk<VedtakRepository>()
+    val trukketSøknadService = mockk<TrukketSøknadService>()
     val behandlingRepository = mockk<BehandlingRepository>()
     val beregningsgrunnlagRepository = mockk<BeregningsgrunnlagRepository>()
     val beregningVurderingRepository = mockk<BeregningVurderingRepository>()
@@ -64,20 +78,88 @@ class BrevUtlederServiceTest {
         resultatUtleder = ResultatUtleder(
             underveisRepository = underveisRepository,
             behandlingRepository = behandlingRepository,
-            trukketSøknadService = mockk<TrukketSøknadService>(),
+            trukketSøknadService = trukketSøknadService,
             avbrytRevurderingService = avbrytRevurderingService
         ),
         klageresultatUtleder = mockk<KlageresultatUtleder>(),
         behandlingRepository = behandlingRepository,
-        vedtakRepository = mockk<VedtakRepository>(),
+        vedtakRepository = vedtakRepository,
         beregningsgrunnlagRepository = beregningsgrunnlagRepository,
         beregningVurderingRepository = beregningVurderingRepository,
-        tilkjentYtelseRepository = mockk<TilkjentYtelseRepository>(),
+        tilkjentYtelseRepository = tilkjentYtelseRepository,
         underveisRepository = underveisRepository,
         aktivitetsplikt11_7Repository = aktivitetspliktRepository,
         arbeidsopptrappingRepository = arbeidsopptrappingRepository,
         unleashGateway = unleashGateway,
     )
+
+    val førsteTilkjentYtelsePeriode = Periode(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 12, 31))
+
+    /**
+     * Testen vil bli utdatert når ny brevbygger er implementert, da automatisering av beløpsvalg forventes innført
+     *
+     * Dette er kun for å sjekke at BrevUtlederService legger ved disse 3 årlige ytelse beløpene
+     */
+    @Test
+    fun `utledBehov legger ved 3 alternative beløp for årlig ytelse`() {
+        val virkningstidspunkt = LocalDate.of(2025, 1, 1)
+        val førstegangsbehandling = behandling(typeBehandling = TypeBehandling.Førstegangsbehandling)
+        every { vedtakRepository.hent(any<BehandlingId>()) } returns Vedtak(
+            behandlingId = førstegangsbehandling.id,
+            vedtakstidspunkt = LocalDateTime.of(2025,1,1, 0, 0,0),
+            virkningstidspunkt = virkningstidspunkt,
+        )
+        every { beregningsgrunnlagRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns Grunnlag11_19(
+            grunnlaget = GUnit(2),
+            erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(0),
+            inntekter = listOf(
+                grunnlagInntekt(2024, 220_000),
+                grunnlagInntekt(2023, 210_000),
+                grunnlagInntekt(2022, 200_000),
+            )
+        )
+        every { beregningVurderingRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns BeregningGrunnlag(
+            BeregningstidspunktVurdering(
+                begrunnelse = "",
+                nedsattArbeidsevneDato = LocalDate.of(2025, 1, 1),
+                ytterligereNedsattBegrunnelse = null,
+                ytterligereNedsattArbeidsevneDato = null,
+                vurdertAv = ""
+            ), null
+        )
+        every { behandlingRepository.hent(any<BehandlingId>()) } returns førstegangsbehandling
+        every { trukketSøknadService.søknadErTrukket(any<BehandlingId>()) } returns false
+        every { underveisRepository.hent(førstegangsbehandling.id) } returns underveisGrunnlag()
+        every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_18) } returns true
+        every { unleashGateway.isEnabled(BehandlingsflytFeature.Arbeidsopptrapping) } returns false
+
+        val dagsats = Beløp("1000.00")
+        every { tilkjentYtelseRepository.hentHvisEksisterer(førstegangsbehandling.id)} returns tilkjentYtelseForFørstegangsbehandling(dagsats)
+        every { underveisRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns underveisGrunnlag()
+
+        val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(førstegangsbehandling.id)
+
+        assertIs<Innvilgelse>(resultat, "forventer brevbehov er av typen Innvilgelse")
+
+        assertNotNull(resultat.tilkjentYtelse, "tilkjent ytelse må eksistere")
+        // Gitt tilkjent dagsats på 1000.00 NOK, så skal årligYtelse være dagsats x 260 dager for fullt år
+        val forventetÅrligYtelse = dagsats.multiplisert(260)
+        assertEquals(forventetÅrligYtelse, resultat.tilkjentYtelse.årligYtelse)
+        println("Forventet årlig ytelse: $forventetÅrligYtelse")
+
+        val minsteÅrligeYtelseGUnit: GUnit = MINSTE_ÅRLIG_YTELSE_TIDSLINJE.segment(virkningstidspunkt)?.verdi!!
+        // MinsteÅrligYtelse som faktagrunnlag til brevforhåndsvisning er et statisk beløp og sammenfaller kun med
+        // beregnet dagsats når dagsats også er beregnet fra minstesats. testen hardkoder dagsats til 1000.00 NOK
+        val grunnbeløp = Grunnbeløp.tilTidslinje().segment(virkningstidspunkt)?.verdi
+        val forventetMinsteÅrligYtelse = grunnbeløp?.multiplisert(minsteÅrligeYtelseGUnit)
+        assertEquals(forventetMinsteÅrligYtelse, resultat.tilkjentYtelse.minsteÅrligYtelse)
+        println("Forventet minste årlig ytelse: $forventetMinsteÅrligYtelse")
+
+        val forventetMinsteÅrligYtelseUnder25 = grunnbeløp?.multiplisert(minsteÅrligeYtelseGUnit.toTredjedeler())
+        assertEquals(forventetMinsteÅrligYtelseUnder25, resultat.tilkjentYtelse.minsteÅrligYtelseUnder25)
+        println("Forventet minste  årlig ytelse under 25år: $forventetMinsteÅrligYtelseUnder25")
+    }
 
     @Test
     fun `skal feile ved utleding av brevtype dersom det aktivitetsplikt mangler`() {
@@ -169,7 +251,7 @@ class BrevUtlederServiceTest {
             underveisperiode(
                 periode = Periode(1 januar 2023, 31 desember 2023),
                 rettighetsType = RettighetsType.BISTANDSBEHOV,
-                utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.OPPFYLT,
+                utfall = Utfall.OPPFYLT,
             )
         )
         every { behandlingRepository.hent(revurdering.id) } returns revurdering
@@ -178,7 +260,7 @@ class BrevUtlederServiceTest {
             underveisperiode(
                 periode = Periode(1 januar 2023, 31 desember 2023),
                 rettighetsType = RettighetsType.ARBEIDSSØKER,
-                utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.OPPFYLT,
+                utfall = Utfall.OPPFYLT,
             )
         )
         every { unleashGateway.isEnabled(BehandlingsflytFeature.Arbeidsopptrapping) } returns false
@@ -200,7 +282,7 @@ class BrevUtlederServiceTest {
             underveisperiode(
                 periode = Periode(1 januar 2023, 31 desember 2023),
                 rettighetsType = RettighetsType.ARBEIDSSØKER,
-                utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.OPPFYLT,
+                utfall = Utfall.OPPFYLT,
             )
         )
         every { behandlingRepository.hent(revurdering.id) } returns revurdering
@@ -209,7 +291,7 @@ class BrevUtlederServiceTest {
             underveisperiode(
                 periode = Periode(1 januar 2023, 31 desember 2023),
                 rettighetsType = RettighetsType.ARBEIDSSØKER,
-                utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.OPPFYLT,
+                utfall = Utfall.OPPFYLT,
             )
         )
         every { unleashGateway.isEnabled(BehandlingsflytFeature.Arbeidsopptrapping) } returns false
@@ -231,7 +313,7 @@ class BrevUtlederServiceTest {
             underveisperiode(
                 periode = Periode(1 januar 2023, 31 desember 2023),
                 rettighetsType = RettighetsType.BISTANDSBEHOV,
-                utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.OPPFYLT,
+                utfall = Utfall.OPPFYLT,
             )
         )
         every { behandlingRepository.hent(revurdering.id) } returns revurdering
@@ -240,7 +322,7 @@ class BrevUtlederServiceTest {
             underveisperiode(
                 periode = Periode(1 januar 2023, 31 desember 2023),
                 rettighetsType = RettighetsType.VURDERES_FOR_UFØRETRYGD,
-                utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.OPPFYLT,
+                utfall = Utfall.OPPFYLT,
             )
         )
         every { beregningsgrunnlagRepository.hentHvisEksisterer(revurdering.id) } returns Grunnlag11_19(
@@ -294,7 +376,7 @@ class BrevUtlederServiceTest {
             underveisperiode(
                 periode = Periode(1 januar 2023, 31 desember 2023),
                 rettighetsType = RettighetsType.VURDERES_FOR_UFØRETRYGD,
-                utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.OPPFYLT,
+                utfall = Utfall.OPPFYLT,
             )
         )
         every { behandlingRepository.hent(revurdering.id) } returns revurdering
@@ -303,7 +385,7 @@ class BrevUtlederServiceTest {
             underveisperiode(
                 periode = Periode(1 januar 2023, 31 desember 2023),
                 rettighetsType = RettighetsType.VURDERES_FOR_UFØRETRYGD,
-                utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.OPPFYLT,
+                utfall = Utfall.OPPFYLT,
             )
         )
         every { unleashGateway.isEnabled(BehandlingsflytFeature.Arbeidsopptrapping) } returns false
@@ -382,7 +464,7 @@ class BrevUtlederServiceTest {
     private fun underveisperiode(
         periode: Periode,
         rettighetsType: RettighetsType,
-        utfall: no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+        utfall: Utfall
     ): Underveisperiode {
         return Underveisperiode(
             periode = periode,
@@ -402,6 +484,43 @@ class BrevUtlederServiceTest {
             trekk = Dagsatser(0),
             brukerAvKvoter = emptySet(),
             meldepliktStatus = null,
+        )
+    }
+
+    private fun underveisGrunnlag(): UnderveisGrunnlag {
+        return underveisGrunnlag(
+            underveisperiode(
+                periode = Periode(1 januar 2025, 31 desember 2025),
+                rettighetsType = RettighetsType.BISTANDSBEHOV,
+                utfall = Utfall.OPPFYLT,
+            )
+        )
+    }
+
+    private fun tilkjentYtelseForFørstegangsbehandling(dagsats: Beløp): List<TilkjentYtelsePeriode> = listOf(
+        TilkjentYtelsePeriode(
+            periode = førsteTilkjentYtelsePeriode,
+            tilkjent = tilkjentYtelseDto(dagsats, førsteTilkjentYtelsePeriode.tom)
+        )
+    )
+
+    private fun tilkjentYtelseDto(dagsats: Beløp, utbetalingsdato: LocalDate): Tilkjent {
+        return Tilkjent(
+            dagsats = dagsats,
+            gradering = Prosent.`100_PROSENT`,
+            graderingGrunnlag = GraderingGrunnlag(
+                    samordningGradering = Prosent.`0_PROSENT`,
+                    institusjonGradering = Prosent.`0_PROSENT`,
+                    arbeidGradering = Prosent.`0_PROSENT`,
+                    samordningUføregradering = Prosent.`0_PROSENT`,
+                    samordningArbeidsgiverGradering = Prosent.`0_PROSENT`
+            ),
+            grunnlagsfaktor = GUnit(1),
+            grunnbeløp = Beløp(300000),
+            antallBarn = 0,
+            barnetilleggsats = Beløp(0),
+            barnetillegg = Beløp(0),
+            utbetalingsdato = utbetalingsdato
         )
     }
 }

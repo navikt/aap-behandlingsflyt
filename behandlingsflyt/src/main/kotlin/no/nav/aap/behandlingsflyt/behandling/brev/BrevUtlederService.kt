@@ -2,6 +2,8 @@ package no.nav.aap.behandlingsflyt.behandling.brev
 
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelseService.Companion.ANTALL_ÅRLIGE_ARBEIDSDAGER
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.MINSTE_ÅRLIG_YTELSE_TIDSLINJE
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
@@ -271,7 +273,16 @@ class BrevUtlederService(
         val underveisTidslinje =
             Tidslinje(underveisRepository.hent(behandlingId).perioder.map { Segment(it.periode, it) })
 
+        // Minste årlige ytelse beløp utledes her fra Grunnbeløp's tilTidslinje() og ikke tilTidslinjeGjennomsnitt().
+        // Det gir identisk beløp som nav.no/aap/kalkulator og benytter Grunnbeløp.beløp og ikke Grunnbeløp.gjennomsnittBeløp
+        val minsteÅrligYtelseBeløpTidslinje =
+            MINSTE_ÅRLIG_YTELSE_TIDSLINJE.innerJoin(Grunnbeløp.tilTidslinje()) { _, minsteÅrligeYtelse, grunnbeløp ->
+                minsteÅrligeYtelse.multiplisert(grunnbeløp)
+            }
+
         return tilkjentYtelseTidslinje.innerJoin(underveisTidslinje) { _, tilkjent, underveisperiode ->
+            Pair(tilkjent, underveisperiode)
+        }.innerJoin(minsteÅrligYtelseBeløpTidslinje) { _, (tilkjent, underveisperiode), minsteÅrligYtelse ->
 
             /**
              * Gradering tar høyde for fastsatt arbeidsevne, men ikke timer arbeidet (derfor benyttes ikke
@@ -307,7 +318,10 @@ class BrevUtlederService(
                 gradertBarnetillegg = gradertBarnetillegg,
                 gradertDagsatsInkludertBarnetillegg = gradertDagsatsInkludertBarnetillegg,
                 antallBarn = tilkjent.antallBarn,
-                barnetilleggsats = tilkjent.barnetilleggsats
+                barnetilleggsats = tilkjent.barnetilleggsats,
+                minsteÅrligYtelse = minsteÅrligYtelse,
+                minsteÅrligYtelseUnder25 = Beløp(minsteÅrligYtelse.toTredjedeler()),
+                årligYtelse = tilkjent.dagsats.multiplisert(ANTALL_ÅRLIGE_ARBEIDSDAGER)
             )
         }.segment(virkningstidspunkt)?.verdi
     }

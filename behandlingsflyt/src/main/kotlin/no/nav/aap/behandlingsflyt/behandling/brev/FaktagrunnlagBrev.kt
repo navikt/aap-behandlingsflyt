@@ -12,7 +12,10 @@ data class TilkjentYtelse(
     val gradertBarnetillegg: Beløp,
     val gradertDagsatsInkludertBarnetillegg: Beløp,
     val antallBarn: Int,
-    val barnetilleggsats: Beløp
+    val barnetilleggsats: Beløp,
+    val minsteÅrligYtelse: Beløp,
+    val minsteÅrligYtelseUnder25: Beløp,
+    val årligYtelse: Beløp
 )
 
 data class GrunnlagBeregning(
