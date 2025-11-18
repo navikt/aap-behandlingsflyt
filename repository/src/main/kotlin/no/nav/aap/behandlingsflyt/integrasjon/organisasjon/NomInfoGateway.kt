@@ -28,10 +28,6 @@ class NomInfoGateway : AnsattInfoGateway {
         scope = requiredConfigForKey("integrasjon.nom.scope"),
     )
 
-    init {
-        CaffeineCacheMetrics.monitor(prometheus, ansattInfoCache, "nom_ansatt_info")
-        CaffeineCacheMetrics.monitor(prometheus, ansattVisningsnavnCache, "nom_ansatte_visningsnavn")
-    }
     private val client = RestClient(
         config = config,
         tokenProvider = ClientCredentialsTokenProvider,
@@ -104,6 +100,11 @@ class NomInfoGateway : AnsattInfoGateway {
             .expireAfterWrite(Duration.ofHours(6))
             .recordStats()
             .build<List<String>, List<AnsattVisningsnavn?>>()
+
+        init {
+            CaffeineCacheMetrics.monitor(prometheus, ansattInfoCache, "nom_ansatt_info")
+            CaffeineCacheMetrics.monitor(prometheus, ansattVisningsnavnCache, "nom_ansatte_visningsnavn")
+        }
     }
 }
 

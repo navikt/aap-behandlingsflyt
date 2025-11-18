@@ -278,6 +278,54 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
     }
 
     @Test
+    fun `innvilge som student`() {
+        val fom = LocalDate.now().minusMonths(3)
+        val periode = Periode(fom, fom.plusYears(3))
+
+        val person = TestPersoner.STANDARD_PERSON()
+
+        var (sak, behandling) = sendInnFørsteSøknad(
+            person = person,
+            mottattTidspunkt = fom.atStartOfDay(),
+            periode = periode,
+            søknad = TestSøknader.SØKNAD_STUDENT
+        )
+
+        behandling = behandling
+            .løsAvklaringsBehov(
+                AvklarStudentLøsning(
+                    studentvurdering = StudentVurderingDTO(
+                        begrunnelse = "...",
+                        harAvbruttStudie = true,
+                        godkjentStudieAvLånekassen = true,
+                        avbruttPgaSykdomEllerSkade = true,
+                        harBehovForBehandling = true,
+                        avbruttStudieDato = LocalDate.now().minusMonths(3),
+                        avbruddMerEnn6Måneder = true
+                    ),
+                )
+            )
+            .løsRefusjonskrav()
+            .løsForutgåendeMedlemskap()
+            .løsOppholdskrav(sak.rettighetsperiode.fom)
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .medKontekst {
+                val vilkår = dataSource.transaction { VilkårsresultatRepositoryImpl(it).hent(behandling.id) }
+                val v = vilkår.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
+                assertThat(v.harPerioderSomErOppfylt()).isTrue
+
+                val underveisperioder =
+                    dataSource.transaction { UnderveisRepositoryImpl(it).hent(behandling.id).perioder }
+
+                assertThat(underveisperioder.map { it.rettighetsType }).allSatisfy { rettighetstype ->
+                    assertThat(rettighetstype).isEqualTo(RettighetsType.STUDENT)
+                }
+            }
+    }
+
+    @Test
     fun `revurdere sykepengeerstatning - skal ikke trigge 11-13 om gjelderFra ikke er kravdato`() {
         val sak = happyCaseFørstegangsbehandling()
         val gjelderFra = sak.rettighetsperiode.fom.plusMonths(1)
@@ -1979,10 +2027,10 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     løsningerForPerioder = listOf(
                         PeriodisertManuellVurderingForLovvalgMedlemskapDto(
                             fom = sak.rettighetsperiode.fom,
-                            tom = null,
+                            tom = sak.rettighetsperiode.tom,
                             begrunnelse = "",
                             lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.ESP),
-                            medlemskap = null
+                            medlemskap = null,
                         )
                     )
                 )

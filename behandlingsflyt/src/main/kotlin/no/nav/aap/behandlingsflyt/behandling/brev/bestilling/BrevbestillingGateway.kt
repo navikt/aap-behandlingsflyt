@@ -34,7 +34,7 @@ interface BrevbestillingGateway : Gateway {
 
     fun avbryt(bestillingReferanse: BrevbestillingReferanse)
 
-    fun kanDistribuereBrev(saksnummer: String, brukerIdent: String, mottakerIdentListe: List<String>): List<MottakerDistStatus>
+    fun kanDistribuereBrev(mottakerIdentListe: List<String>, brevbestillingReferanse: BrevbestillingReferanse): List<MottakerDistStatus>
 
     fun hentSignaturForhåndsvisning(
         signaturer: List<SignaturGrunnlag>,

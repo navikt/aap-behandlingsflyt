@@ -94,21 +94,20 @@ class VurderBistandsbehovSteg(
             kontekst
         )
 
-        /* Dette skal på sikt ut av denne metoden, og samles i et eget fastsett-steg. */
-        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-        vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.BISTANDSVILKÅRET)
         if (avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_BISTANDSBEHOV)?.status()
                 ?.erAvsluttet() == true
         ) {
+            /* Dette skal på sikt ut av denne metoden, og samles i et eget fastsett-steg. */
+            val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
+            vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.BISTANDSVILKÅRET)
+
             val grunnlag = BistandFaktagrunnlag(
-                kontekst.rettighetsperiode.fom,
                 kontekst.rettighetsperiode.tom,
                 bistandRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger.orEmpty(),
-                studentRepository.hentHvisEksisterer(kontekst.behandlingId)?.studentvurdering,
             )
             Bistandsvilkåret(vilkårsresultat).vurder(grunnlag = grunnlag)
+            vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
         }
-        vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
 
         return Fullført
     }
@@ -164,15 +163,7 @@ class VurderBistandsbehovSteg(
     }
 
     private fun vurderingsbehovTvingerVurdering(kontekst: FlytKontekstMedPerioder): Boolean {
-        return kontekst.vurderingsbehovRelevanteForSteg.any {
-            it in listOf(
-                Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
-                Vurderingsbehov.MOTTATT_SØKNAD,
-                Vurderingsbehov.DØDSFALL_BRUKER,
-                Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
-                Vurderingsbehov.HELHETLIG_VURDERING
-            )
-        }
+        return kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty()
     }
 
     private fun perioderHvorBistandsvilkåretErRelevant(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
