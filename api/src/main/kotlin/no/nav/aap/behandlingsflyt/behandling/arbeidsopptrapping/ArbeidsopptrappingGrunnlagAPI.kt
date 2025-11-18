@@ -105,7 +105,7 @@ private fun utledIkkeVurderbarePerioder(
 ): List<Periode> {
     val sykdomsvurderinger = sykdomGrunnlag?.somSykdomsvurderingstidslinje().orEmpty()
     val bistandsvurderinger =
-        bistandGrunnlag?.somBistandsvurderingstidslinje(startDato = fom).orEmpty()
+        bistandGrunnlag?.somBistandsvurderingstidslinje(fom).orEmpty()
 
     val mapped = Tidslinje.zip2(sykdomsvurderinger, bistandsvurderinger)
         .filter {
