@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -52,7 +52,7 @@ class VurderBistandsbehovStegTest {
         val bistandMock: BistandRepository = mockk(relaxed = true) {
             every { hentHvisEksisterer(any()) } returns BistandGrunnlag(
                 vurderinger = listOf(
-                    BistandVurdering(
+                    Bistandsvurdering(
                         vurdertIBehandling = BehandlingId(1),
                         begrunnelse = "Begrunnelse",
                         erBehovForAktivBehandling = true,

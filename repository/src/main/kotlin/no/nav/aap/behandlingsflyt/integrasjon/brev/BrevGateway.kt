@@ -226,11 +226,12 @@ class BrevGateway : BrevbestillingGateway {
     }
 
     override fun kanDistribuereBrev(
+        brukerIdent: String,
         mottakerIdentListe: List<String>,
         brevbestillingReferanse: BrevbestillingReferanse
     ): List<MottakerDistStatus> {
         val httpRequest = PostRequest(
-            body = KanDistribuereBrevRequest("", "", mottakerIdentListe)
+            body = KanDistribuereBrevRequest("", brukerIdent, mottakerIdentListe)
         )
         val response: KanDistribuereBrevReponse = requireNotNull(
             client.post(

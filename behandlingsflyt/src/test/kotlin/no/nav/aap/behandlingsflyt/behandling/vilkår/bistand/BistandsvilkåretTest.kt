@@ -7,7 +7,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Av
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -79,8 +80,7 @@ class BistandsvilkåretTest {
         Bistandsvilkåret(vilkårsresultat).vurder(
             BistandFaktagrunnlag(
                 sisteDagMedMuligYtelse = LocalDate.now().plusYears(3),
-                vurderinger = listOf(bistandvurdering()),
-
+                bistandGrunnlag = BistandGrunnlag(listOf(bistandvurdering())),
             )
         )
         val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
@@ -90,14 +90,13 @@ class BistandsvilkåretTest {
         Bistandsvilkåret(vilkårsresultat).vurder(
             BistandFaktagrunnlag(
                 sisteDagMedMuligYtelse = LocalDate.now().plusYears(3),
-                vurderinger = listOf(
+                bistandGrunnlag = BistandGrunnlag(listOf(
                     bistandvurdering(
                         erBehovForAktivBehandling = false,
                         erBehovForAnnenOppfølging = false,
                         erBehovForArbeidsrettetTiltak = false
                     )
-                ),
-
+                )),
             )
         )
         assertThat(vilkår.vilkårsperioder()).hasSize(1).allMatch { periode -> periode.utfall == Utfall.IKKE_OPPFYLT }
@@ -112,14 +111,14 @@ class BistandsvilkåretTest {
         Bistandsvilkåret(vilkårsresultat).vurder(
             BistandFaktagrunnlag(
                 sisteDagMedMuligYtelse = LocalDate.now().plusYears(3),
-                vurderinger = listOf(
+                bistandGrunnlag = BistandGrunnlag(listOf(
                     bistandvurdering(), bistandvurdering(
                         vurderingenGjelderFra = iDag.plusDays(10),
                         erBehovForAktivBehandling = false,
                         erBehovForAnnenOppfølging = false,
                         erBehovForArbeidsrettetTiltak = false
                     )
-                ),
+                )),
             )
         )
 
@@ -141,7 +140,7 @@ class BistandsvilkåretTest {
             val sak = sak(connection)
             val førstegangsbehandling = finnEllerOpprettBehandling(connection, sak)
 
-            val bistandsvurdering1 = BistandVurdering(
+            val bistandsvurdering1 = Bistandsvurdering(
                 vurdertIBehandling = BehandlingId(1),
                 begrunnelse = "Begrunnelse",
                 erBehovForAktivBehandling = true,
@@ -281,7 +280,7 @@ class BistandsvilkåretTest {
         vurderingenGjelderFra: LocalDate = LocalDate.now(),
         vurdertIBehandling: BehandlingId = BehandlingId(1)
 
-    ) = BistandVurdering(
+    ) = Bistandsvurdering(
         begrunnelse = begrunnelse,
         erBehovForAktivBehandling = erBehovForAktivBehandling,
         erBehovForArbeidsrettetTiltak = erBehovForArbeidsrettetTiltak,

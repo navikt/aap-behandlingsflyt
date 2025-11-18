@@ -93,6 +93,11 @@ class SamordningSteg(
     }
 
     private fun perioderMedVurderingsbehov(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
+        if (Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER in kontekst.vurderingsbehovRelevanteForSteg) {
+            // FIXME: Stygg hack for å tvinge manuell revurdering
+            return Tidslinje(kontekst.rettighetsperiode, true)
+        }
+
         val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
         val grunnlag = samordningService.hentYtelser(behandlingId = kontekst.behandlingId)
         val ytelser = samordningService.tidslinjeMedSamordningYtelser(grunnlag)

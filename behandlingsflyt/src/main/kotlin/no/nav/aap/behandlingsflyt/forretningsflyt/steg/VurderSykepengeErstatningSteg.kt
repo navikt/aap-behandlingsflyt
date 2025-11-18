@@ -82,7 +82,7 @@ class VurderSykepengeErstatningSteg private constructor(
                 .orEmpty()
 
         val bistandvurderinger =
-            bistandRepository.hentHvisEksisterer(kontekst.behandlingId)?.somBistandsvurderingstidslinje(kravDato)
+            bistandRepository.hentHvisEksisterer(kontekst.behandlingId)?.somBistandsvurderingstidslinje()
                 ?: Tidslinje.empty()
 
         return Tidslinje.zip3(tidligereVurderingsutfall, sykdomsvurderinger, bistandvurderinger)

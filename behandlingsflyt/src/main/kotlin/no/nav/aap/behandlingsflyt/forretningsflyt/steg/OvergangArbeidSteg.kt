@@ -107,7 +107,7 @@ class OvergangArbeidSteg internal constructor(
             .orEmpty()
 
         val bistandsvurderinger = bistandRepository.hentHvisEksisterer(kontekst.behandlingId)
-            ?.somBistandsvurderingstidslinje(kontekst.rettighetsperiode.fom)
+            ?.somBistandsvurderingstidslinje()
             .orEmpty()
 
         val studentVurderinger = studentRepository.hentHvisEksisterer(kontekst.behandlingId)

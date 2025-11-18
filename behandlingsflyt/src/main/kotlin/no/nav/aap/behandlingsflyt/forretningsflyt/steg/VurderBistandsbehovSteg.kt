@@ -20,7 +20,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
@@ -103,7 +102,7 @@ class VurderBistandsbehovSteg(
 
             val grunnlag = BistandFaktagrunnlag(
                 kontekst.rettighetsperiode.tom,
-                bistandRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger.orEmpty(),
+                bistandRepository.hentHvisEksisterer(kontekst.behandlingId)
             )
             Bistandsvilkåret(vilkårsresultat).vurder(grunnlag = grunnlag)
             vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
@@ -194,7 +193,7 @@ class VurderBistandsbehovSteg(
 
     private fun erTilstrekkeligVurdert(kontekst: FlytKontekstMedPerioder): Boolean {
         val gjeldendeBistandstidslinje = bistandRepository.hentHvisEksisterer(kontekst.behandlingId)
-            ?.somBistandsvurderingstidslinje(kontekst.rettighetsperiode.fom)
+            ?.somBistandsvurderingstidslinje()
             .orEmpty()
         val perioderBistandsvilkåretErRelevant = perioderHvorBistandsvilkåretErRelevant(kontekst)
         return perioderBistandsvilkåretErRelevant.leftJoin(gjeldendeBistandstidslinje) { erRelevant, bistandsvurdering ->
