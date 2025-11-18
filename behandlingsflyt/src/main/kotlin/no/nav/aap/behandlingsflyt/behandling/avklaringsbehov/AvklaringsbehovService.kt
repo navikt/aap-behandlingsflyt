@@ -228,7 +228,7 @@ class AvklaringsbehovService(
         nårVurderingErRelevant: (kontekst: FlytKontekstMedPerioder) -> Tidslinje<Boolean>,
         kontekst: FlytKontekstMedPerioder,
         erTilstrekkeligVurdert: () -> Boolean,
-        perioderSomIkkeErTilstrekkeligVurdert: () -> Set<Periode>?,
+        nårVurderingErGyldig: () -> Tidslinje<Boolean>?,
         tilbakestillGrunnlag: () -> Unit,
     ) {
         oppdaterAvklaringsbehov(
@@ -280,7 +280,15 @@ class AvklaringsbehovService(
                 }
             },
             erTilstrekkeligVurdert = erTilstrekkeligVurdert,
-            perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
+            perioderSomIkkeErTilstrekkeligVurdert = {
+                if (nårVurderingErGyldig() == null) {
+                    null
+                } else {
+                    nårVurderingErRelevant(kontekst).leftJoin(nårVurderingErGyldig()!!) { erRelevant, erGyldig ->
+                        !erRelevant || erGyldig == true
+                    }.komprimer().filter { !it.verdi }.perioder().toSet()
+                }
+            },
             tilbakestillGrunnlag = tilbakestillGrunnlag,
             kontekst = kontekst
         )
@@ -320,7 +328,7 @@ class AvklaringsbehovService(
         tvingerAvklaringsbehov: Set<Vurderingsbehov>,
         nårVurderingErRelevant: (kontekst: FlytKontekstMedPerioder) -> Tidslinje<Boolean>,
         kontekst: FlytKontekstMedPerioder,
-        perioderSomIkkeErTilstrekkeligVurdert: () -> Set<Periode>?,
+        nårVurderingErGyldig: () -> Tidslinje<Boolean>?,
         tilbakestillGrunnlag: () -> Unit
     ) {
         return oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
@@ -332,7 +340,7 @@ class AvklaringsbehovService(
             nårVurderingErRelevant,
             kontekst,
             { false },
-            perioderSomIkkeErTilstrekkeligVurdert,
+            nårVurderingErGyldig,
             tilbakestillGrunnlag
 
         )

@@ -51,11 +51,19 @@ class VurderBistandsbehovSteg(
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-        avklaringsbehovService.oppdaterAvklaringsbehov(
+        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             avklaringsbehovene = avklaringsbehovene,
+            behandlingRepository = behandlingRepository,
+            vilkårsresultatRepository = vilkårsresultatRepository,
             definisjon = Definisjon.AVKLAR_BISTANDSBEHOV,
-            vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst) },
-            erTilstrekkeligVurdert = { erTilstrekkeligVurdert(kontekst) },
+            tvingerAvklaringsbehov = kontekst.vurderingsbehovRelevanteForSteg,
+            nårVurderingErRelevant = { perioderHvorBistandsvilkåretErRelevant(kontekst) },
+            nårVurderingErGyldig = {
+                bistandRepository.hentHvisEksisterer(kontekst.behandlingId)
+                    ?.somBistandsvurderingstidslinje()
+                    .orEmpty()
+                    .mapValue { true } // Alle vurderinger er gyldige hvis de finnes
+            },
             tilbakestillGrunnlag = {
                 val forrigeVurderinger = kontekst.forrigeBehandlingId
                     ?.let { bistandRepository.hentHvisEksisterer(it) }
@@ -90,7 +98,7 @@ class VurderBistandsbehovSteg(
                     log.info("Vilkår for bistandsbehov finnes ikke i vilkårsresultat for behandling ${kontekst.behandlingId}, ingen tilbakestilling utført.")
                 }
             },
-            kontekst
+            kontekst = kontekst
         )
 
         if (avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_BISTANDSBEHOV)?.status()
@@ -191,15 +199,6 @@ class VurderBistandsbehovSteg(
             }
     }
 
-    private fun erTilstrekkeligVurdert(kontekst: FlytKontekstMedPerioder): Boolean {
-        val gjeldendeBistandstidslinje = bistandRepository.hentHvisEksisterer(kontekst.behandlingId)
-            ?.somBistandsvurderingstidslinje()
-            .orEmpty()
-        val perioderBistandsvilkåretErRelevant = perioderHvorBistandsvilkåretErRelevant(kontekst)
-        return perioderBistandsvilkåretErRelevant.leftJoin(gjeldendeBistandstidslinje) { erRelevant, bistandsvurdering ->
-            !erRelevant || bistandsvurdering != null
-        }.segmenter().all { it.verdi }
-    }
 
     companion object : FlytSteg {
         override fun konstruer(
