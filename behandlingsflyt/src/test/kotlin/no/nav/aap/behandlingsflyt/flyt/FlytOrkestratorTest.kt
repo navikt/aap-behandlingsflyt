@@ -118,6 +118,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlagebehandlingAv
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManueltOppgittBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRevurderingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppgitteBarn
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
@@ -273,6 +274,54 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     .allSatisfy { rettighetsType ->
                         assertThat(rettighetsType).isEqualTo(null)
                     }
+            }
+    }
+
+    @Test
+    fun `innvilge som student`() {
+        val fom = LocalDate.now().minusMonths(3)
+        val periode = Periode(fom, fom.plusYears(3))
+
+        val person = TestPersoner.STANDARD_PERSON()
+
+        var (sak, behandling) = sendInnFørsteSøknad(
+            person = person,
+            mottattTidspunkt = fom.atStartOfDay(),
+            periode = periode,
+            søknad = TestSøknader.SØKNAD_STUDENT
+        )
+
+        behandling = behandling
+            .løsAvklaringsBehov(
+                AvklarStudentLøsning(
+                    studentvurdering = StudentVurderingDTO(
+                        begrunnelse = "...",
+                        harAvbruttStudie = true,
+                        godkjentStudieAvLånekassen = true,
+                        avbruttPgaSykdomEllerSkade = true,
+                        harBehovForBehandling = true,
+                        avbruttStudieDato = LocalDate.now().minusMonths(3),
+                        avbruddMerEnn6Måneder = true
+                    ),
+                )
+            )
+            .løsRefusjonskrav()
+            .løsForutgåendeMedlemskap()
+            .løsOppholdskrav(sak.rettighetsperiode.fom)
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .medKontekst {
+                val vilkår = dataSource.transaction { VilkårsresultatRepositoryImpl(it).hent(behandling.id) }
+                val v = vilkår.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
+                assertThat(v.harPerioderSomErOppfylt()).isTrue
+
+                val underveisperioder =
+                    dataSource.transaction { UnderveisRepositoryImpl(it).hent(behandling.id).perioder }
+
+                assertThat(underveisperioder.map { it.rettighetsType }).allSatisfy { rettighetstype ->
+                    assertThat(rettighetstype).isEqualTo(RettighetsType.STUDENT)
+                }
             }
     }
 
@@ -668,7 +717,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsBistand()
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-
+            .leggTilVurderingsbehov(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_YRKESSKADE)
         sak.sendInnMeldekort(
             journalpostId = JournalpostId("220"),
             mottattTidspunkt = LocalDateTime.now(),
@@ -751,6 +800,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 assertThat(åpneAvklaringsbehov).isNotEmpty()
                 assertThat(behandling.status()).isEqualTo(Status.UTREDES)
             }
+            .leggTilVurderingsbehov(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_YRKESSKADE)
             .løsSykdom(sak.rettighetsperiode.fom)
             .løsBistand()
             .løsRefusjonskrav()
@@ -1013,23 +1063,6 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         val revurdering = sak.opprettManuellRevurdering(
             listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_BEREGNING),
         )
-            // TODO denne skal bort med PR som er på vei siden dette ikke skal vurderes her
-            .løsAvklaringsBehov(
-                AvklarYrkesskadeLøsning(
-                    yrkesskadesvurdering = YrkesskadevurderingDto(
-                        begrunnelse = "Veldig relevante",
-                        relevanteSaker = person.yrkesskade.map { it.saksreferanse },
-                        relevanteYrkesskadeSaker = person.yrkesskade.map {
-                            YrkesskadeSakDto(
-                                it.saksreferanse,
-                                null,
-                            )
-                        },
-                        andelAvNedsettelsen = 50,
-                        erÅrsakssammenheng = true
-                    )
-                )
-            )
             .løsBeregningstidspunkt()
             .løsYrkesskadeInntekt(person.yrkesskade)
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
@@ -1184,7 +1217,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         val (_, behandling) = sendInnFørsteSøknad(
             periode = periode,
             søknad = SøknadV0(
-                student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("NEI", "NEI", "NEI", null, null)
             )
         )
@@ -1218,7 +1251,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         val (_, behandling) = sendInnFørsteSøknad(
             periode = periode,
             søknad = SøknadV0(
-                student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("NEI", "NEI", "NEI", null, null)
             )
         )
@@ -1269,7 +1302,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
 
         behandling = sak.sendInnSøknad(
             SøknadV0(
-                student = SøknadStudentDto("NEI"),
+                student = SøknadStudentDto(StudentStatus.Nei),
                 yrkesskade = "NEI",
                 oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
@@ -1295,7 +1328,11 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .medKontekst {
                 assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
             }
-            .løsSykdom(vurderingGjelderFra = sak.rettighetsperiode.fom, erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true)
+            .leggTilVurderingsbehov(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_YRKESSKADE)
+            .løsSykdom(
+                vurderingGjelderFra = sak.rettighetsperiode.fom,
+                erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true
+            )
             .løsBistand()
             .løsAvklaringsBehov(
                 RefusjonkravLøsning(
@@ -1990,10 +2027,10 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     løsningerForPerioder = listOf(
                         PeriodisertManuellVurderingForLovvalgMedlemskapDto(
                             fom = sak.rettighetsperiode.fom,
-                            tom = null,
+                            tom = sak.rettighetsperiode.tom,
                             begrunnelse = "",
                             lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.ESP),
-                            medlemskap = null
+                            medlemskap = null,
                         )
                     )
                 )
@@ -2014,7 +2051,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
 
         val oppdatertBehandling = revurdering
             .løsLovvalg(sak.rettighetsperiode.fom, false)
-            .løsUtenSamordning()
+            // TODO: Legge tilbake når MANUELT_FRIVILLIG er støttet
+            //            .løsUtenSamordning()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
             .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_ENDRING)
@@ -2128,7 +2166,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsBistand()
             .løsSykdomsvurderingBrev()
             .løsBeregningstidspunkt()
-            .løsUtenSamordning()
+            // TODO: Legge tilbake når MANUELT_FRIVILLIG er støttet
+            //            .løsUtenSamordning()
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
@@ -2200,7 +2239,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsBistand()
             .løsSykdomsvurderingBrev()
             .løsBeregningstidspunkt()
-            .løsUtenSamordning()
+            // TODO: Legge tilbake når MANUELT_FRIVILLIG er støttet
+            //            .løsUtenSamordning()
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
@@ -2213,48 +2253,52 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
     fun `to-trinn og ingen endring i gruppe etter sendt tilbake fra beslutter`() {
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
+        val person = TestPersoner.STANDARD_PERSON()
         // Sender inn en søknad
         val (_, behandling) = sendInnFørsteSøknad(
             periode = periode,
-            person = TestPersoner.PERSON_MED_YRKESSKADE(),
+            person = person,
             søknad = TestSøknader.SØKNAD_STUDENT
         )
         behandling.medKontekst {
             assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
             assertThat(åpneAvklaringsbehov).isNotEmpty()
             assertThat(behandling.status()).isEqualTo(Status.UTREDES)
-        }.løsAvklaringsBehov(
-            AvklarStudentLøsning(
-                studentvurdering = StudentVurderingDTO(
-                    begrunnelse = "Er student",
-                    avbruttStudieDato = LocalDate.now(),
-                    avbruddMerEnn6Måneder = true,
-                    harBehovForBehandling = true,
-                    harAvbruttStudie = true,
-                    avbruttPgaSykdomEllerSkade = true,
-                    godkjentStudieAvLånekassen = false,
-                )
-            ),
-        ).løsAvklaringsBehov(
-            AvklarSykdomLøsning(
-                sykdomsvurderinger = listOf(
-                    SykdomsvurderingLøsningDto(
-                        begrunnelse = "Arbeidsevnen er nedsatt med mer enn halvparten",
-                        dokumenterBruktIVurdering = listOf(JournalpostId("12312983")),
-                        harSkadeSykdomEllerLyte = true,
-                        erSkadeSykdomEllerLyteVesentligdel = true,
-                        erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-                        erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-                        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                        erArbeidsevnenNedsatt = true,
-                        yrkesskadeBegrunnelse = null,
-                        vurderingenGjelderFra = null,
+        }
+            .løsAvklaringsBehov(
+                AvklarStudentLøsning(
+                    studentvurdering = StudentVurderingDTO(
+                        begrunnelse = "Er student",
+                        avbruttStudieDato = LocalDate.now(),
+                        avbruddMerEnn6Måneder = true,
+                        harBehovForBehandling = true,
+                        harAvbruttStudie = true,
+                        avbruttPgaSykdomEllerSkade = true,
+                        godkjentStudieAvLånekassen = false,
+                    )
+                ),
+            ).løsAvklaringsBehov(
+                AvklarSykdomLøsning(
+                    sykdomsvurderinger = listOf(
+                        SykdomsvurderingLøsningDto(
+                            begrunnelse = "Arbeidsevnen er nedsatt med mer enn halvparten",
+                            dokumenterBruktIVurdering = listOf(JournalpostId("12312983")),
+                            harSkadeSykdomEllerLyte = true,
+                            erSkadeSykdomEllerLyteVesentligdel = true,
+                            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                            erArbeidsevnenNedsatt = true,
+                            yrkesskadeBegrunnelse = null,
+                            vurderingenGjelderFra = null,
+                        )
                     )
                 )
-            )
-        ).løsBistand()
+            ).løsBistand()
+
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+
             .medKontekst {
                 // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
                 assertThat(åpneAvklaringsbehov).isNotEmpty()
@@ -2262,17 +2306,6 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }
             .kvalitetssikreOk()
-            .løsAvklaringsBehov(
-                AvklarYrkesskadeLøsning(
-                    yrkesskadesvurdering = YrkesskadevurderingDto(
-                        begrunnelse = "",
-                        relevanteSaker = emptyList(),
-                        relevanteYrkesskadeSaker = emptyList(),
-                        andelAvNedsettelsen = null,
-                        erÅrsakssammenheng = false
-                    )
-                ),
-            )
             .løsAvklaringsBehov(
                 FastsettBeregningstidspunktLøsning(
                     beregningVurdering = BeregningstidspunktVurderingDto(
@@ -2362,7 +2395,11 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
         // Sender inn en søknad
-        var (sak, behandling) = sendInnFørsteSøknad(periode = periode)
+        var (sak, behandling) = sendInnFørsteSøknad(
+            // TODO: Sykepenger skal være "manuelt registrert" her, men settes på bruker pga. midlertidig endring i [Definisjon.kt]
+            person = TestPersoner.STANDARD_PERSON()
+                .medSykepenger(listOf(TestPerson.Sykepenger(40, Periode(periode.fom, periode.fom.plusMonths(3))))),
+            periode = periode)
 
         val alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
         assertThat(alleAvklaringsbehov).isNotEmpty()
@@ -2402,8 +2439,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                             SamordningVurderingData(
                                 ytelseType = Ytelse.SYKEPENGER,
                                 periode = Periode(
-                                    fom = LocalDate.now(),
-                                    tom = LocalDate.now().plusDays(5),
+                                    fom = periode.fom,
+                                    tom = periode.fom.plusMonths(3),
                                 ),
                                 gradering = 50,
                                 manuell = true
@@ -2487,7 +2524,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
 
         sak.sendInnSøknad(
             SøknadV0(
-                student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", "JA", "NEI", "NEI", null)
             ),
         ).medKontekst {
@@ -2644,7 +2681,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             mottattTidspunkt = periode.fom.atStartOfDay(),
             periode = periode,
             søknad = SøknadV0(
-                student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("NEI", null, "JA", null, null)
             )
         )
@@ -2664,7 +2701,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         // Oppretter vanlig søknad
         val behandling = sendInnSøknad(
             ident, periode, SøknadV0(
-                student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null)
             )
         )
@@ -2683,7 +2720,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         var behandling = sendInnSøknad(
             ident, periode,
             SøknadV0(
-                student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null),
             ),
         )
@@ -2720,7 +2757,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             person = person,
             periode = periode,
             søknad = SøknadV0(
-                student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null),
             ),
         )
@@ -2765,7 +2802,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         // Oppretter vanlig søknad
         val behandling = sendInnSøknad(
             ident, periode, SøknadV0(
-                student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto(
                     "JA", null, "NEI", null, null
                 )
@@ -2803,7 +2840,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         // Oppretter vanlig søknad
         sendInnSøknad(
             ident, periode, SøknadV0(
-                student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto(
                     "JA", null, "NEI", null, null
                 ),
@@ -2839,11 +2876,11 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         var behandling = sendInnSøknad(
             ident, periode,
             SøknadV0(
-                student = SøknadStudentDto("NEI"), yrkesskade = "JA", oppgitteBarn = null,
+                student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "JA", oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null),
             ),
         )
-
+        behandling.leggTilVurderingsbehov(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_YRKESSKADE)
         behandling = løsFramTilForutgåendeMedlemskap(behandling = behandling, harYrkesskade = true)
 
         // Validér avklaring
@@ -2860,7 +2897,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         var behandling = sendInnSøknad(
             ident, periode,
             SøknadV0(
-                student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto(
                     "JA", null, "JA", null,
                     listOf(
@@ -2900,7 +2937,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         // Oppretter vanlig søknad
         var behandling = sendInnSøknad(
             ident, periode, SøknadV0(
-                student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto(
                     "JA", null, "JA", null,
                     listOf(
@@ -2936,7 +2973,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                         )
                     )
                 )
-        )
+            )
 
         // Validér riktig resultat
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
@@ -2953,7 +2990,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         // Oppretter vanlig søknad
         var behandling = sendInnSøknad(
             ident, periode, SøknadV0(
-                student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto(
                     "JA", null, "JA", null,
                     listOf(
@@ -2996,7 +3033,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         // Oppretter vanlig søknad
         var behandling = sendInnSøknad(
             ident, periode, SøknadV0(
-                student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null)
             )
         )
@@ -3038,7 +3075,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         // Oppretter vanlig søknad
         sendInnSøknad(
             ident, periode, SøknadV0(
-                student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null)
             )
         )
@@ -3063,7 +3100,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
 
         val behandling = sendInnSøknad(
             ident, periode, SøknadV0(
-                student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null)
             )
         ).løsLovvalgOverstyrt(periode.fom, true)
@@ -3090,7 +3127,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         // Oppretter vanlig søknad
         val behandling = sendInnSøknad(
             ident, periode, SøknadV0(
-                student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null)
             )
         )
@@ -3145,7 +3182,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         // Oppretter vanlig søknad
         val behandling = sendInnSøknad(
             ident, periode, SøknadV0(
-                student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null)
             )
         ).løsFramTilGrunnlag(periode.fom)
@@ -3173,7 +3210,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         // Oppretter vanlig søknad
         val behandling = sendInnSøknad(
             ident, periode, SøknadV0(
-                student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = null,
+                student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto(
                     "JA", null, "JA", null,
                     listOf(
@@ -3232,7 +3269,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             periode = periode,
             mottattTidspunkt = periode.fom.atStartOfDay(),
             søknad = SøknadV0(
-                student = SøknadStudentDto("NEI"),
+                student = SøknadStudentDto(StudentStatus.Nei),
                 yrkesskade = "NEI",
                 oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
@@ -3469,7 +3506,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         // Avslås pga. alder
         val avslåttFørstegang = sendInnSøknad(
             ident, periode, SøknadV0(
-                student = SøknadStudentDto("NEI"),
+                student = SøknadStudentDto(StudentStatus.Nei),
                 yrkesskade = "NEI",
                 oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
@@ -3669,7 +3706,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         // Avslås pga. alder
         val avslåttFørstegang = sendInnSøknad(
             ident, periode, SøknadV0(
-                student = SøknadStudentDto("NEI"),
+                student = SøknadStudentDto(StudentStatus.Nei),
                 yrkesskade = "NEI",
                 oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
@@ -3888,7 +3925,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         // Avslås pga. alder
         val avslåttFørstegang = sendInnSøknad(
             ident, periode, SøknadV0(
-                student = SøknadStudentDto("NEI"),
+                student = SøknadStudentDto(StudentStatus.Nei),
                 yrkesskade = "NEI",
                 oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
@@ -3985,7 +4022,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         val avslåttFørstegang = sendInnSøknad(
             ident, periode,
             SøknadV0(
-                student = SøknadStudentDto("NEI"),
+                student = SøknadStudentDto(StudentStatus.Nei),
                 yrkesskade = "NEI",
                 oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
@@ -4202,7 +4239,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         // Avslås pga. alder
         val avslåttFørstegang = sendInnSøknad(
             ident, periode, SøknadV0(
-                student = SøknadStudentDto("NEI"),
+                student = SøknadStudentDto(StudentStatus.Nei),
                 yrkesskade = "NEI",
                 oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
@@ -4375,7 +4412,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         // Avslås pga. alder
         val avslåttFørstegang = sendInnSøknad(
             ident, periode, SøknadV0(
-                student = SøknadStudentDto("NEI"),
+                student = SøknadStudentDto(StudentStatus.Nei),
                 yrkesskade = "NEI",
                 oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
@@ -4469,7 +4506,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         // Avslås pga. alder
         val avslåttFørstegang = sendInnSøknad(
             ident, periode, SøknadV0(
-                student = SøknadStudentDto("NEI"),
+                student = SøknadStudentDto(StudentStatus.Nei),
                 yrkesskade = "NEI",
                 oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
@@ -4657,7 +4694,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsBistand()
             .løsSykdomsvurderingBrev()
             .løsBeregningstidspunkt(nyStartDato)
-            .løsUtenSamordning()
+            // TODO: Legge tilbake når MANUELT_FRIVILLIG er støttet
+            //            .løsUtenSamordning()
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
@@ -4698,7 +4736,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsBistand()
             .løsSykdomsvurderingBrev()
             .løsBeregningstidspunkt(LocalDate.now())
-            .løsUtenSamordning()
+            // TODO: Legge tilbake når MANUELT_FRIVILLIG er støttet
+            //            .løsUtenSamordning()
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
@@ -4725,7 +4764,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsBistand()
             .løsSykdomsvurderingBrev()
             .løsBeregningstidspunkt(LocalDate.now())
-            .løsUtenSamordning()
+            // TODO: Legge tilbake når MANUELT_FRIVILLIG er støttet
+            //            .løsUtenSamordning()
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
@@ -4853,7 +4893,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             person = person,
             periode = periode,
             søknad = SøknadV0(
-                student = SøknadStudentDto("NEI"), yrkesskade = "NEI", oppgitteBarn = OppgitteBarn(
+                student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = OppgitteBarn(
                     barn = listOf(
                         ManueltOppgittBarn(
                             navn = "manuelt barn",

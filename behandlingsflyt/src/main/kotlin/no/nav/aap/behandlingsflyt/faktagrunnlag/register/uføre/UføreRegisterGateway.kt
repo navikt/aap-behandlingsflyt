@@ -8,5 +8,5 @@ interface UføreRegisterGateway : Gateway {
     fun innhentMedHistorikk(
         person: Person,
         fraDato: LocalDate
-    ): List<Uføre>
+    ): Set<Uføre>
 }
