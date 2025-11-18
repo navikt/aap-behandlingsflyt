@@ -2,16 +2,14 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.bistan
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
 
 class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepository {
-
     private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<BistandRepositoryImpl> {
@@ -39,7 +37,7 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
         }
     }
 
-    private fun mapBistandsvurderinger(bistandsvurderingerId: Long?): List<BistandVurdering> {
+    private fun mapBistandsvurderinger(bistandsvurderingerId: Long?): List<Bistandsvurdering> {
         return connection.queryList(
             """
                 SELECT * FROM bistand WHERE BISTAND_VURDERINGER_ID = ?
@@ -52,8 +50,8 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
         }
     }
 
-    private fun bistandvurderingRowMapper(row: Row): BistandVurdering {
-        return BistandVurdering(
+    private fun bistandvurderingRowMapper(row: Row): Bistandsvurdering {
+        return Bistandsvurdering(
             id = row.getLong("ID"),
             begrunnelse = row.getString("BEGRUNNELSE"),
             erBehovForAktivBehandling = row.getBoolean("BEHOV_FOR_AKTIV_BEHANDLING"),
@@ -68,46 +66,7 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
         )
     }
 
-    override fun hentHistoriskeBistandsvurderinger(sakId: SakId, behandlingId: BehandlingId): List<BistandVurdering> {
-        val query = """WITH vurderinger_historikk AS (
-            SELECT DISTINCT ON (
-                b.begrunnelse,
-                b.behov_for_aktiv_behandling,
-                b.behov_for_arbeidsrettet_tiltak,
-                b.behov_for_annen_oppfoelging,
-                b.vurderingen_gjelder_fra,
-                b.vurdert_av,
-                b.overgang_til_arbeid,
-                b.overgang_begrunnelse
-                )
-                b.*
-            FROM bistand_grunnlag g
-                     JOIN bistand_vurderinger v ON g.bistand_vurderinger_id = v.id
-                     JOIN bistand b ON b.bistand_vurderinger_id = v.id
-                     JOIN behandling beh ON g.behandling_id = beh.id
-                     LEFT JOIN avbryt_revurdering_grunnlag ar ON ar.behandling_id = beh.id
-            WHERE g.aktiv
-              AND beh.sak_id = ?
-              AND beh.opprettet_tid < (
-                SELECT opprettet_tid
-                FROM behandling
-                WHERE id = ?
-            )
-                AND ar.behandling_id IS NULL
-        )
-        SELECT * FROM vurderinger_historikk;
-        """.trimIndent()
-
-        return connection.queryList(query) {
-            setParams {
-                setLong(1, sakId.id)
-                setLong(2, behandlingId.id)
-            }
-            setRowMapper(::bistandvurderingRowMapper)
-        }
-    }
-
-    override fun lagre(behandlingId: BehandlingId, bistandsvurderinger: List<BistandVurdering>) {
+    override fun lagre(behandlingId: BehandlingId, bistandsvurderinger: List<Bistandsvurdering>) {
         val eksisterendeBistandGrunnlag = hentHvisEksisterer(behandlingId)
 
         val nyttGrunnlag = BistandGrunnlag(
@@ -172,7 +131,7 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
         }
     }
 
-    private fun lagreBistandsvurderinger(vurderinger: List<BistandVurdering>): Long {
+    private fun lagreBistandsvurderinger(vurderinger: List<Bistandsvurdering>): Long {
         val bistandvurderingerId = connection.executeReturnKey("""INSERT INTO BISTAND_VURDERINGER DEFAULT VALUES""")
 
         connection.executeBatch(

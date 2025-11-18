@@ -137,8 +137,6 @@ public enum class Definisjon(
         løsesISteg = StegType.KVALITETSSIKRING,
         løsesAv = listOf(Rolle.KVALITETSSIKRER)
     ),
-
-    @OptIn(EksperimentellManueltFrivillig::class)
     FASTSETT_ARBEIDSEVNE(
         kode = AvklaringsbehovKode.`5004`,
         type = BehovType.MANUELT_FRIVILLIG,
@@ -178,8 +176,6 @@ public enum class Definisjon(
         kreverToTrinn = true,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
     ),
-
-    @OptIn(EksperimentellManueltFrivillig::class)
     FRITAK_MELDEPLIKT(
         kode = AvklaringsbehovKode.`5005`,
         type = BehovType.MANUELT_FRIVILLIG,
@@ -249,14 +245,14 @@ public enum class Definisjon(
     ),
     AVKLAR_SAMORDNING_GRADERING(
         kode = AvklaringsbehovKode.`5012`,
-        type = BehovType.MANUELT_PÅKREVD,
+        type = BehovType.MANUELT_FRIVILLIG,
         løsesISteg = StegType.SAMORDNING_GRADERING,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
         kreverToTrinn = true,
     ),
     AVKLAR_SAMORDNING_UFØRE(
         kode = AvklaringsbehovKode.`5024`,
-        type = BehovType.MANUELT_PÅKREVD,
+        type = BehovType.MANUELT_FRIVILLIG,
         løsesISteg = StegType.SAMORDNING_UFØRE,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
         kreverToTrinn = true,
@@ -272,13 +268,11 @@ public enum class Definisjon(
     ),
     SAMORDNING_ANDRE_STATLIGE_YTELSER(
         kode = AvklaringsbehovKode.`5027`,
-        type = BehovType.MANUELT_PÅKREVD,
+        type = BehovType.MANUELT_FRIVILLIG,
         løsesISteg = StegType.SAMORDNING_ANDRE_STATLIGE_YTELSER,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
         kreverToTrinn = true
     ),
-
-    @OptIn(EksperimentellManueltFrivillig::class)
     SAMORDNING_ARBEIDSGIVER(
         kode = AvklaringsbehovKode.`5030`,
         type = BehovType.MANUELT_FRIVILLIG,
@@ -397,7 +391,7 @@ public enum class Definisjon(
     ),
     SAMORDNING_REFUSJONS_KRAV(
         kode = AvklaringsbehovKode.`5056`,
-        type = BehovType.MANUELT_PÅKREVD,
+        type = BehovType.MANUELT_FRIVILLIG,
         løsesISteg = StegType.SAMORDNING_TJENESTEPENSJON_REFUSJONSKRAV,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
         kreverToTrinn = true
@@ -577,7 +571,6 @@ public enum class Definisjon(
         /**
          * Frivillig er at saksbehandler og system kan trigge behovet
          */
-        @EksperimentellManueltFrivillig
         MANUELT_FRIVILLIG(Definisjon::validerManuelt),
 
         /**
@@ -656,7 +649,6 @@ public enum class Definisjon(
         return "$name(kode='$kode')"
     }
 
-    @OptIn(EksperimentellManueltFrivillig::class)
     public fun erFrivillig(): Boolean {
         return type == BehovType.MANUELT_FRIVILLIG
     }
@@ -687,16 +679,3 @@ public enum class Definisjon(
         return LocalDate.now().plus(defaultFrist)
     }
 }
-
-/**
- * Midlertidig annotasjon for å unngå utilsiktet bruk av MANUELT_FRIVILLIG før støtte er implementert i
- * [AvklaringsbehovService] eller annet sted for å gjøre det felles for hele løsningen.
- **/
-@MustBeDocumented
-@Retention(value = AnnotationRetention.BINARY)
-@RequiresOptIn(
-    level = RequiresOptIn.Level.ERROR,
-    message = "MANUELT_FRIVILLIG fungerer ikke med de nye funksjonene i [AvklaringsbehovService] og må brukes med omhu. " +
-            "Dersom et Steg bruker [AvklaringsbehovService] må du IKKE bruke MANUELT_FRIVILLIG før støtte er implementert."
-)
-public annotation class EksperimentellManueltFrivillig
