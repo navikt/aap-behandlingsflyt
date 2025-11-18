@@ -108,8 +108,8 @@ private fun utledIkkeVurderbarePerioder(
         bistandGrunnlag?.somBistandsvurderingstidslinje(startDato = fom).orEmpty()
 
     val mapped = Tidslinje.zip2(sykdomsvurderinger, bistandsvurderinger)
-        .mapValue { (sykdomsvurdering, bistandsvurdering) ->
-            sykdomsvurdering?.erOppfylt(fom) != true  && bistandsvurdering?.erBehovForBistand() != true
+        .filter {
+            it.verdi.first?.erOppfylt(fom) != true || it.verdi.second?.erBehovForBistand() != true
         }
     return mapped.perioder().toList()
 }
