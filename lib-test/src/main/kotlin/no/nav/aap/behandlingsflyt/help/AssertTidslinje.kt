@@ -14,6 +14,8 @@ inline fun <reified T> Tidslinje<T>.assertTidslinje(assertions: Tidslinje<(T) ->
 
             try {
                 assertion!!.verdi.invoke(tsegment!!.verdi)
+            } catch (e: java.lang.AssertionError) {
+                throw java.lang.AssertionError("for periode $periode: ${e.message}", e)
             } catch (e: AssertionFailedError) {
                 println("Assert feilet for periode: $periode")
                 throw e
