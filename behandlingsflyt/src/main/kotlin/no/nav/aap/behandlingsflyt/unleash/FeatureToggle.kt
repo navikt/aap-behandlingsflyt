@@ -23,6 +23,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     EOSBeregning,
     NyeBarn,
     InstFormaal,
+    Arbeidsopptrapping
     ;
 
     override fun key(): String = name
