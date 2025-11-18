@@ -60,6 +60,7 @@ class FakeBrevbestillingGateway : BrevbestillingGateway {
     }
 
     override fun kanDistribuereBrev(
+        brukerIdent: String,
         mottakerIdentListe: List<String>,
         brevbestillingReferanse: BrevbestillingReferanse
     ): List<MottakerDistStatus> {
