@@ -137,6 +137,7 @@ public enum class Definisjon(
         løsesISteg = StegType.KVALITETSSIKRING,
         løsesAv = listOf(Rolle.KVALITETSSIKRER)
     ),
+    @OptIn(EksperimentellManueltFrivillig::class)
     ARBEIDSOPPTRAPPING(
         kode = AvklaringsbehovKode.`5057`,
         type = BehovType.MANUELT_FRIVILLIG,
