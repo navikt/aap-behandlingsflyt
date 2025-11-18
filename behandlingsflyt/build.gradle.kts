@@ -62,7 +62,8 @@ dependencies {
 
     testImplementation(project(":lib-test"))
     testImplementation(project(":repository"))
-    implementation(libs.dbtest)
+    testImplementation(libs.dbtest)
+    testImplementation(libs.tabletest)
     implementation(libs.motorTestUtils)
     testImplementation(libs.bundles.junit)
 
