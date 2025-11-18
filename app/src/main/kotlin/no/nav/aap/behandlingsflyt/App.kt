@@ -215,7 +215,7 @@ internal fun Application.server(
         startKabalKonsument(dataSource, repositoryRegistry)
 
     }
-    if (Miljø.erDev()) {
+    if (!Miljø.erLokal()) {
         startPDLHendelseKonsument(dataSource, repositoryRegistry, gatewayProvider)
     }
 

@@ -12,7 +12,7 @@ data class UførePeriodeMedEndringStatus(
     val endringStatus: EndringStatus,
 )
 
-fun List<Uføre>.medStatus(status: EndringStatus): List<UførePeriodeMedEndringStatus> {
+fun Collection<Uføre>.medStatus(status: EndringStatus): List<UførePeriodeMedEndringStatus> {
     return this.map {
         UførePeriodeMedEndringStatus(
             virkningstidspunkt = it.virkningstidspunkt,

@@ -2,11 +2,9 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
@@ -15,7 +13,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadeSak
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
-import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
@@ -25,8 +22,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
@@ -38,7 +33,6 @@ class BeregningAvklarFaktaSteg private constructor(
     private val yrkesskadeRepository: YrkesskadeRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
-    private val unleashGateway: UnleashGateway
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         beregningVurderingRepository = repositoryProvider.provide(),
@@ -48,14 +42,9 @@ class BeregningAvklarFaktaSteg private constructor(
         yrkesskadeRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
-        unleashGateway = gatewayProvider.provide()
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (unleashGateway.isDisabled(BehandlingsflytFeature.NyBeregningAvklarFaktaSteg)) {
-            return gammelUtfør(kontekst)
-        }
-
         val behandlingId = kontekst.behandlingId
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
 
@@ -186,127 +175,6 @@ class BeregningAvklarFaktaSteg private constructor(
     ): Boolean {
         val vurderteSaker = beregningGrunnlag?.yrkesskadeBeløpVurdering?.vurderinger.orEmpty()
         return relevanteSaker.all { sak -> vurderteSaker.any { it.referanse == sak.referanse } }
-    }
-
-    fun gammelUtfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val behandlingId = kontekst.behandlingId
-
-        if (tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())) {
-            avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-                .avbrytForSteg(type())
-            return Fullført
-        }
-
-        when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING -> {
-                if (skalAvbryteForStegPgaIngenBehandlingsgrunnlag(kontekst)) {
-                    return Fullført
-                }
-
-                val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
-
-                val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
-                val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
-                if (beregningVurdering == null && erIkkeStudent(vilkårsresultat)) {
-                    return FantAvklaringsbehov(Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT)
-                }
-                val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.FASTSETT_YRKESSKADEINNTEKT)
-                if (erBehovForÅAvklareYrkesskade(behandlingId, beregningVurdering)) {
-                    return FantAvklaringsbehov(Definisjon.FASTSETT_YRKESSKADEINNTEKT)
-                } else if (avklaringsbehov != null && avklaringsbehov.erÅpent()) {
-                    avklaringsbehovene.avbryt(Definisjon.FASTSETT_YRKESSKADEINNTEKT)
-                }
-            }
-
-            VurderingType.REVURDERING -> {
-                if (skalAvbryteForStegPgaIngenBehandlingsgrunnlag(kontekst)) {
-                    return Fullført
-                }
-
-                val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
-
-                val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
-                val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
-                if ((beregningVurdering == null || erIkkeVurdertTidligereIBehandlingen(
-                        avklaringsbehovene,
-                        Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT
-                    )) && erIkkeStudent(vilkårsresultat)
-                ) {
-                    return FantAvklaringsbehov(Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT)
-                }
-                val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.FASTSETT_YRKESSKADEINNTEKT)
-                if (erBehovForÅAvklareYrkesskadeRevurdering(behandlingId, beregningVurdering, avklaringsbehovene)) {
-                    return FantAvklaringsbehov(Definisjon.FASTSETT_YRKESSKADEINNTEKT)
-                } else if (avklaringsbehov != null && avklaringsbehov.erÅpent()) {
-                    avklaringsbehovene.avbryt(Definisjon.FASTSETT_YRKESSKADEINNTEKT)
-                }
-            }
-
-            VurderingType.MELDEKORT,
-            VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
-            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
-            VurderingType.IKKE_RELEVANT -> {
-                // Always do nothing
-            }
-        }
-        return Fullført
-    }
-
-    private fun erIkkeVurdertTidligereIBehandlingen(
-        avklaringsbehovene: Avklaringsbehovene,
-        definisjon: Definisjon
-    ): Boolean {
-        return !avklaringsbehovene.erVurdertTidligereIBehandlingen(definisjon)
-    }
-
-    private fun erIkkeStudent(vilkårsresultat: Vilkårsresultat): Boolean {
-        return vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET).vilkårsperioder()
-            .firstOrNull()?.innvilgelsesårsak != Innvilgelsesårsak.STUDENT
-    }
-
-    private fun erBehovForÅAvklareYrkesskade(
-        behandlingId: BehandlingId,
-        beregningGrunnlag: BeregningGrunnlag?
-    ): Boolean {
-        val yrkesskadeVurdering = sykdomRepository.hentHvisEksisterer(behandlingId)?.yrkesskadevurdering
-        val yrkesskader = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
-        return yrkesskader?.yrkesskader?.harYrkesskade() == true && yrkesskadeVurdering?.erÅrsakssammenheng == true && harIkkeFastsattBeløpForAlle(
-            yrkesskadeVurdering.relevanteSaker,
-            beregningGrunnlag
-        )
-    }
-
-    private fun erBehovForÅAvklareYrkesskadeRevurdering(
-        behandlingId: BehandlingId,
-        beregningGrunnlag: BeregningGrunnlag?,
-        avklaringsbehovene: Avklaringsbehovene
-    ): Boolean {
-        val yrkesskadeVurdering = sykdomRepository.hentHvisEksisterer(behandlingId)?.yrkesskadevurdering
-        val yrkesskader = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
-        return yrkesskader?.yrkesskader?.harYrkesskade() == true && yrkesskadeVurdering?.erÅrsakssammenheng == true && (harIkkeFastsattBeløpForAlle(
-            yrkesskadeVurdering.relevanteSaker,
-            beregningGrunnlag
-        ) || erIkkeVurdertTidligereIBehandlingen(avklaringsbehovene, Definisjon.FASTSETT_YRKESSKADEINNTEKT))
-    }
-
-    private fun harIkkeFastsattBeløpForAlle(
-        relevanteSaker: List<YrkesskadeSak>,
-        beregningGrunnlag: BeregningGrunnlag?
-    ): Boolean {
-        val vurderteSaker = beregningGrunnlag?.yrkesskadeBeløpVurdering?.vurderinger.orEmpty()
-        if (relevanteSaker.isEmpty()) {
-            return false
-        }
-        return !relevanteSaker.all { sak -> vurderteSaker.any { it.referanse == sak.referanse } }
-    }
-
-    private fun skalAvbryteForStegPgaIngenBehandlingsgrunnlag(kontekst: FlytKontekstMedPerioder): Boolean {
-        if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
-            avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-                .avbrytForSteg(type())
-            return true
-        }
-        return false
     }
 
     companion object : FlytSteg {

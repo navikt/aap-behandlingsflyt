@@ -79,10 +79,8 @@ class BistandsvilkåretTest {
 
         Bistandsvilkåret(vilkårsresultat).vurder(
             BistandFaktagrunnlag(
-                vurderingsdato = LocalDate.now(),
                 sisteDagMedMuligYtelse = LocalDate.now().plusYears(3),
                 bistandGrunnlag = BistandGrunnlag(listOf(bistandvurdering())),
-                studentvurdering = null
             )
         )
         val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
@@ -91,7 +89,6 @@ class BistandsvilkåretTest {
 
         Bistandsvilkåret(vilkårsresultat).vurder(
             BistandFaktagrunnlag(
-                vurderingsdato = LocalDate.now(),
                 sisteDagMedMuligYtelse = LocalDate.now().plusYears(3),
                 bistandGrunnlag = BistandGrunnlag(listOf(
                     bistandvurdering(
@@ -100,7 +97,6 @@ class BistandsvilkåretTest {
                         erBehovForArbeidsrettetTiltak = false
                     )
                 )),
-                studentvurdering = null
             )
         )
         assertThat(vilkår.vilkårsperioder()).hasSize(1).allMatch { periode -> periode.utfall == Utfall.IKKE_OPPFYLT }
@@ -114,7 +110,6 @@ class BistandsvilkåretTest {
         val iDag = LocalDate.now()
         Bistandsvilkåret(vilkårsresultat).vurder(
             BistandFaktagrunnlag(
-                vurderingsdato = iDag,
                 sisteDagMedMuligYtelse = LocalDate.now().plusYears(3),
                 bistandGrunnlag = BistandGrunnlag(listOf(
                     bistandvurdering(), bistandvurdering(
@@ -124,7 +119,6 @@ class BistandsvilkåretTest {
                         erBehovForArbeidsrettetTiltak = false
                     )
                 )),
-                studentvurdering = null
             )
         )
 

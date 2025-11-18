@@ -74,10 +74,12 @@ class InntektInformasjonskrav(
         val inntektGrunnlag = inntektGrunnlagRepository.hentHvisEksisterer(behandlingId)
         val oppdaterteInntekter = registerdata.inntekter
 
-        // TODO: kun lagre hvis forskjell!
-        inntektGrunnlagRepository.lagre(behandlingId, oppdaterteInntekter)
-
-        return if (inntektGrunnlag?.inntekter == oppdaterteInntekter) IKKE_ENDRET else ENDRET
+        if (inntektGrunnlag?.inntekter == oppdaterteInntekter) {
+            return IKKE_ENDRET
+        } else {
+            inntektGrunnlagRepository.lagre(behandlingId, oppdaterteInntekter)
+            return ENDRET
+        }
     }
 
     private fun kanUtledeRelevanteÅr(kontekst: FlytKontekstMedPerioder): Boolean {
