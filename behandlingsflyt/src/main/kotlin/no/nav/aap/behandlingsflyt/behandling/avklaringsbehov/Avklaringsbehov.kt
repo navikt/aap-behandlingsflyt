@@ -245,6 +245,10 @@ class Avklaringsbehov(
     fun sistEndret(): LocalDateTime {
         return historikk.last().tidsstempel
     }
+    
+    fun perioder(): Set<Periode>? {
+        return historikk.last().perioderSomIkkeErTilstrekkeligVurdert
+    }
 
     override fun toString(): String {
         return "Avklaringsbehov(definisjon=$definisjon, status=${status()}, løsesISteg=${løsesISteg()})"

@@ -201,7 +201,6 @@ class Avklaringsbehovene(
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
         avklaringsbehov.oppdaterPerioder(perioder)
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
-        
     }
 
 
