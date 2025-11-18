@@ -54,22 +54,22 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
     fun `ingen sykepenger i register, vurderer sykepenger for samordning med ukjent maksdato som fører til revurdering og ingen utbetaling etter kjent sykepengedato`() {
         val fom = LocalDate.now()
         val periode = Periode(fom, fom.plusYears(3))
-        val sykePengerPeriode = Periode(LocalDate.now().minusMonths(1), LocalDate.now().plusMonths(1))
-        // Simulerer et svar fra YS-løsning om at det finnes en yrkesskade
-        val person = TestPersoner.STANDARD_PERSON()
-
-        val ident = person.aktivIdent()
+        val sykePengerPeriode = Periode(fom.minusMonths(1), fom.plusMonths(1))
 
         // Sender inn en søknad
-        var behandling = sendInnSøknad(
-            ident, periode,
-            SøknadV0(
+        var (sak, behandling) = sendInnFørsteSøknad(
+            periode = periode,
+            søknad = SøknadV0(
                 student = SøknadStudentDto(StudentStatus.Nei),
                 yrkesskade = "NEI",
                 oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
             ),
         )
+
+        sak.sendInnMeldekort(periode.dager().associateWith { 0.0 })
+
+        behandling
             .medKontekst {
                 assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
                 assertThat(åpneAvklaringsbehov).isNotEmpty()
@@ -202,8 +202,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         val sisteBehandling = hentSisteOpprettedeBehandlingForSak(behandling.sakId)
         assertThat(sisteBehandling.referanse).isEqualTo(behandlingReferanse)
 
-        val sak = hentSak(behandling)
-        var revurdering =
+        val revurdering =
             sak.opprettManuellRevurdering(listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SAMORDNING_OG_AVREGNING))
                 .medKontekst {
                     assertThat(this.behandling.id).isNotEqualTo(sisteBehandling.id)
