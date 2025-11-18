@@ -22,8 +22,6 @@ import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 
-data class IkkeTilstrekkeligVurdert(val begrunnelse: String, val perioder: List<Periode>)
-
 class AvklaringsbehovService(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val avbrytRevurderingService: AvbrytRevurderingService
@@ -39,6 +37,26 @@ class AvklaringsbehovService(
         avklaringsbehovene.avbrytForSteg(steg)
     }
 
+    fun oppdaterAvklaringsbehov(
+        avklaringsbehovene: Avklaringsbehovene,
+        definisjon: Definisjon,
+        vedtakBehøverVurdering: () -> Boolean,
+        erTilstrekkeligVurdert: () -> Boolean,
+        tilbakestillGrunnlag: () -> Unit,
+        kontekst: FlytKontekstMedPerioder
+    ) {
+        oppdaterAvklaringsbehov(
+            avklaringsbehovene,
+            definisjon,
+            vedtakBehøverVurdering = vedtakBehøverVurdering,
+            perioderSomIkkeErTilstrekkeligVurdert = { null },
+            erTilstrekkeligVurdert = erTilstrekkeligVurdert,
+            tilbakestillGrunnlag,
+            kontekst
+        )
+
+    }
+
     /** Oppdater tilstanden på avklaringsbehovet [definisjon], slik at kvalitetssikring,
      * to-trinnskontroll og tilbakeflyt blir riktig.
      *
@@ -50,7 +68,7 @@ class AvklaringsbehovService(
      * så er det viktig at et steg rydder opp etter seg når det viser seg at steget
      * ikke er relevant allikevel. Denne funksjonen hjelper også med det.
      */
-    fun oppdaterAvklaringsbehov(
+    private fun oppdaterAvklaringsbehov(
         avklaringsbehovene: Avklaringsbehovene,
         definisjon: Definisjon,
 
@@ -71,14 +89,14 @@ class AvklaringsbehovService(
          */
         vedtakBehøverVurdering: () -> Boolean,
 
-
         /** Er avklaringsbehovet [definisjon] tilstrekkelig vurdert for å fortsette behandlingen?
          *
          * Denne funksjonen kalles kun om `vedtakBehøverVurdering() == true` og avklaringsbehovet
          * [definisjon] allerede har en løsning. Merk at selv om definisjonen allerede har en løsning,
          * så kan den løsningen ha blitt rullet tilbake (se [tilbakestillGrunnlag]).
          */
-        perioderSomIkkeErTilstrekkeligVurdert: IkkeTilstrekkeligVurdert,
+        perioderSomIkkeErTilstrekkeligVurdert: () -> Set<Periode>?,
+        erTilstrekkeligVurdert: () -> Boolean,
 
         /** Rydd opp manuelle vurderinger introdusert i denne behandlingen på grunn av løsninger
          * av avklaringsbehovet [definisjon].
@@ -93,19 +111,29 @@ class AvklaringsbehovService(
         require(definisjon.løsesISteg != StegType.UDEFINERT)
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
 
+        // TODO: Fjern denne når alle kall tar i bruk perioderSomIkkeErTilstrekkeligVurdert
+        val erTilstrekkeligVurdertBakoverkompatibel =
+            { erTilstrekkeligVurdert() || perioderSomIkkeErTilstrekkeligVurdert()?.isEmpty() == true }
+
         if (vedtakBehøverVurdering()) {
             if (avklaringsbehov == null || !avklaringsbehov.harAvsluttetStatusIHistorikken() || avklaringsbehov.status() == AVBRUTT) {
                 /* ønsket tilstand: OPPRETTET */
                 when (avklaringsbehov?.status()) {
                     OPPRETTET -> {
                         /* ønsket tilstand er OPPRETTET */
+                        perioderSomIkkeErTilstrekkeligVurdert()?.let {
+                            avklaringsbehovene.oppdaterPerioder(
+                                avklaringsbehov.definisjon,
+                                it
+                            )
+                        }
                     }
 
                     null, AVBRUTT ->
                         avklaringsbehovene.leggTil(
                             listOf(definisjon),
-                            perioderSomIkkeErTilstrekkeligVurdert.perioder,
-                            definisjon.løsesISteg
+                            definisjon.løsesISteg,
+                            perioderSomIkkeErTilstrekkeligVurdert()
                         )
 
                     TOTRINNS_VURDERT,
@@ -115,7 +143,7 @@ class AvklaringsbehovService(
                     AVSLUTTET ->
                         error("Ikke mulig: fikk ${avklaringsbehov.status()}")
                 }
-            } else if (perioderSomIkkeErTilstrekkeligVurdert.perioder.isEmpty()) {
+            } else if (erTilstrekkeligVurdertBakoverkompatibel()) {
                 /* ønsket tilstand: ... */
                 when (avklaringsbehov.status()) {
                     OPPRETTET, AVBRUTT ->
@@ -134,6 +162,12 @@ class AvklaringsbehovService(
                 when (avklaringsbehov.status()) {
                     OPPRETTET -> {
                         /* forbli OPPRETTET */
+                        perioderSomIkkeErTilstrekkeligVurdert()?.let {
+                            avklaringsbehovene.oppdaterPerioder(
+                                avklaringsbehov.definisjon,
+                                it
+                            )
+                        }
                     }
 
                     AVSLUTTET,
@@ -144,9 +178,8 @@ class AvklaringsbehovService(
                     AVBRUTT -> {
                         avklaringsbehovene.leggTil(
                             listOf(definisjon),
-                            perioderSomIkkeErTilstrekkeligVurdert.perioder,
                             definisjon.løsesISteg,
-                            begrunnelse = perioderSomIkkeErTilstrekkeligVurdert.begrunnelse
+                            perioderSomIkkeErTilstrekkeligVurdert(),
                         )
                     }
                 }
@@ -186,7 +219,7 @@ class AvklaringsbehovService(
      *
      * Vurder å skrive om til service, slik at man slipper å injecte inn alle repositoriesene?
      */
-    fun oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
+    private fun oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
         avklaringsbehovene: Avklaringsbehovene,
         behandlingRepository: BehandlingRepository,
         vilkårsresultatRepository: VilkårsresultatRepository,
@@ -194,7 +227,8 @@ class AvklaringsbehovService(
         tvingerAvklaringsbehov: Set<Vurderingsbehov>,
         nårVurderingErRelevant: (kontekst: FlytKontekstMedPerioder) -> Tidslinje<Boolean>,
         kontekst: FlytKontekstMedPerioder,
-        perioderSomIkkeErTilstrekkeligVurdert: IkkeTilstrekkeligVurdert,
+        erTilstrekkeligVurdert: () -> Boolean,
+        perioderSomIkkeErTilstrekkeligVurdert: () -> Set<Periode>?,
         tilbakestillGrunnlag: () -> Unit,
     ) {
         oppdaterAvklaringsbehov(
@@ -245,9 +279,62 @@ class AvklaringsbehovService(
                     VurderingType.IKKE_RELEVANT -> false
                 }
             },
+            erTilstrekkeligVurdert = erTilstrekkeligVurdert,
             perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
             tilbakestillGrunnlag = tilbakestillGrunnlag,
             kontekst = kontekst
+        )
+    }
+
+    @Deprecated("Bruk perioderSomIkkeErTilstrekkeligVurdert")
+    fun oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårGammel(
+        avklaringsbehovene: Avklaringsbehovene,
+        behandlingRepository: BehandlingRepository,
+        vilkårsresultatRepository: VilkårsresultatRepository,
+        definisjon: Definisjon,
+        tvingerAvklaringsbehov: Set<Vurderingsbehov>,
+        nårVurderingErRelevant: (kontekst: FlytKontekstMedPerioder) -> Tidslinje<Boolean>,
+        kontekst: FlytKontekstMedPerioder,
+        erTilstrekkeligVurdert: () -> Boolean,
+        tilbakestillGrunnlag: () -> Unit
+    ) {
+        return oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
+            avklaringsbehovene,
+            behandlingRepository,
+            vilkårsresultatRepository,
+            definisjon,
+            tvingerAvklaringsbehov,
+            nårVurderingErRelevant,
+            kontekst,
+            erTilstrekkeligVurdert,
+            { null },
+            tilbakestillGrunnlag
+        )
+    }
+
+    fun oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
+        avklaringsbehovene: Avklaringsbehovene,
+        behandlingRepository: BehandlingRepository,
+        vilkårsresultatRepository: VilkårsresultatRepository,
+        definisjon: Definisjon,
+        tvingerAvklaringsbehov: Set<Vurderingsbehov>,
+        nårVurderingErRelevant: (kontekst: FlytKontekstMedPerioder) -> Tidslinje<Boolean>,
+        kontekst: FlytKontekstMedPerioder,
+        perioderSomIkkeErTilstrekkeligVurdert: () -> Set<Periode>?,
+        tilbakestillGrunnlag: () -> Unit
+    ) {
+        return oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
+            avklaringsbehovene,
+            behandlingRepository,
+            vilkårsresultatRepository,
+            definisjon,
+            tvingerAvklaringsbehov,
+            nårVurderingErRelevant,
+            kontekst,
+            { false },
+            perioderSomIkkeErTilstrekkeligVurdert,
+            tilbakestillGrunnlag
+
         )
     }
 }

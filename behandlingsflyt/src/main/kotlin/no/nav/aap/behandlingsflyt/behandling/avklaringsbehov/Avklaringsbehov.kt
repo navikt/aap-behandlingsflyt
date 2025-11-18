@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegGruppe
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -106,6 +107,18 @@ class Avklaringsbehov(
             frist = frist,
             endretAv = bruker.ident
         )
+    }
+    
+    internal fun oppdaterPerioder(perioder: Set<Periode>) {
+        val siste = historikk.last()
+        require(siste.status.erÅpent()) {
+            "Prøvde å oppdatere perioder på et lukket avklaringsbehov"
+        }
+        if (perioder != siste.perioderSomIkkeErTilstrekkeligVurdert) {
+            historikk += siste.copy(
+                perioderSomIkkeErTilstrekkeligVurdert = perioder
+            )
+        }
     }
 
     fun erÅpent(): Boolean {

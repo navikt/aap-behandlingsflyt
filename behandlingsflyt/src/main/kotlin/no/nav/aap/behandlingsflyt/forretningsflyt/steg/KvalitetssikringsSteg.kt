@@ -52,7 +52,6 @@ class KvalitetssikringsSteg private constructor(
             definisjon = Definisjon.KVALITETSSIKRING,
             vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst, avklaringsbehovene) },
             erTilstrekkeligVurdert = { erTilstrekkeligVurdert(avklaringsbehovene) },
-            perioderSomIkkeErTilstrekkeligVurdert = emptyList(),
             tilbakestillGrunnlag = {},
             kontekst
         )

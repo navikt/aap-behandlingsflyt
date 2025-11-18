@@ -77,7 +77,7 @@ class OvergangArbeidSteg internal constructor(
             ),
             nårVurderingErRelevant = ::perioderVurderingErRelevant,
             kontekst = kontekst,
-            erTilstrekkeligVurdert = { true },
+            perioderSomIkkeErTilstrekkeligVurdert = { emptySet() },
             tilbakestillGrunnlag = { tilbakestillGrunnlag(kontekst) },
         )
 

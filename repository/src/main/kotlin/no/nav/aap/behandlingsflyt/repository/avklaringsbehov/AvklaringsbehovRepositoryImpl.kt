@@ -58,7 +58,7 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
         begrunnelse: String,
         grunn: ÅrsakTilSettPåVent?,
         endretAv: String,
-        perioderSomIkkeErTilstrekkeligVurdert: List<Periode>,
+        perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
     ) {
         var avklaringsbehovId = hentRelevantAvklaringsbehov(behandlingId, definisjon)
 
@@ -138,7 +138,8 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
         )
     }
 
-    override fun endreSkrivBrev(avklaringsbehovId: Long, endring: Endring, funnetISteg: StegType
+    override fun endreSkrivBrev(
+        avklaringsbehovId: Long, endring: Endring, funnetISteg: StegType
     ) {
         oppdaterFunnetISteg(avklaringsbehovId, funnetISteg)
         endreAvklaringsbehov(
@@ -182,7 +183,7 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
                 setString(5, opprettetAv)
                 setLocalDateTime(6, LocalDateTime.now())
                 setEnumName(7, endring.grunn)
-                setPeriodeArray(8, endring.perioderSomIkkeErTilstrekkeligVurdert)
+                setPeriodeArray(8, endring.perioderSomIkkeErTilstrekkeligVurdert?.toList())
             }
         }
         val queryPeriode = """
@@ -341,7 +342,8 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
             grunn = endring.grunn,
             frist = endring.frist,
             endretAv = endring.endretAv,
-            årsakTilRetur = relevanteÅrsaker
+            årsakTilRetur = relevanteÅrsaker,
+            perioderSomIkkeErTilstrekkeligVurdert = endring.perioderSomIkkeErTilstrekkeligVurdert
         )
     }
 
@@ -353,8 +355,9 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
             definisjon = definisjon,
             funnetISteg = row.getEnum("funnet_i_steg"),
             kreverToTrinn = row.getBooleanOrNull("krever_to_trinn"),
-            behandlingId = row.getLong("behandling_id")
-        )
+            behandlingId = row.getLong("behandling_id"),
+
+            )
     }
 
 
@@ -367,7 +370,8 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
             begrunnelse = row.getString("begrunnelse"),
             endretAv = row.getString("opprettet_av"),
             frist = row.getLocalDateOrNull("frist"),
-            grunn = row.getEnumOrNull("venteaarsak")
+            grunn = row.getEnumOrNull("venteaarsak"),
+            perioderSomIkkeErTilstrekkeligVurdert = row.getPeriodeArrayOrNull("perioder")?.toSet()
         )
     }
 
@@ -395,7 +399,8 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
         val begrunnelse: String,
         val endretAv: String,
         val frist: LocalDate?,
-        val grunn: ÅrsakTilSettPåVent?
+        val grunn: ÅrsakTilSettPåVent?,
+        val perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?
     )
 
     internal class ÅrsakInternal(val endringId: Long, val årsak: ÅrsakTilReturKode, val årsakFritekst: String?)

@@ -64,7 +64,7 @@ class SamordningSteg(
             ),
             nårVurderingErRelevant = ::perioderMedVurderingsbehov,
             kontekst = kontekst,
-            erTilstrekkeligVurdert = { perioderSomIkkeHarBlittVurdert.isEmpty() },
+            perioderSomIkkeErTilstrekkeligVurdert = { perioderSomIkkeHarBlittVurdert.perioder().toSet() },
             tilbakestillGrunnlag = {
                 samordningService.tilbakestillVurderinger(kontekst.behandlingId, kontekst.forrigeBehandlingId)
             }

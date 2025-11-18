@@ -49,7 +49,7 @@ class Avklaringsbehovene(
         if (definisjon.erFrivillig()) {
             if (hentBehovForDefinisjon(definisjon) == null) {
                 // Legger til frivillig behov
-                leggTil(definisjoner = listOf(definisjon), funnetISteg = definisjon.løsesISteg, bruker = bruker, perioderSomManglerVurdering = emptyList())
+                leggTil(definisjoner = listOf(definisjon), funnetISteg = definisjon.løsesISteg, bruker = bruker)
             }
         }
     }
@@ -57,7 +57,7 @@ class Avklaringsbehovene(
     fun leggTilOverstyringHvisMangler(definisjon: Definisjon, bruker: Bruker) {
         if (definisjon.erOverstyring()) {
             if (hentBehovForDefinisjon(definisjon) == null) {
-                leggTil(definisjoner = listOf(definisjon), funnetISteg = definisjon.løsesISteg, bruker = bruker, perioderSomManglerVurdering = emptyList())
+                leggTil(definisjoner = listOf(definisjon), funnetISteg = definisjon.løsesISteg, bruker = bruker)
             }
         }
     }
@@ -69,8 +69,8 @@ class Avklaringsbehovene(
      */
     fun leggTil(
         definisjoner: List<Definisjon>,
-        perioderSomManglerVurdering: List<Periode>,
         funnetISteg: StegType,
+        perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>? = null,
         frist: LocalDate? = null,
         begrunnelse: String = "",
         grunn: ÅrsakTilSettPåVent? = null,
@@ -102,13 +102,13 @@ class Avklaringsbehovene(
                     frist = utledFrist(definisjon, frist),
                     begrunnelse = begrunnelse,
                     grunn = grunn,
-                    perioderSomIkkeErTilstrekkeligVurdert = perioderSomManglerVurdering,
+                    perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
                     endretAv = bruker.ident
                 )
             }
         }
     }
-
+    
     private fun utledFrist(definisjon: Definisjon, frist: LocalDate?): LocalDate? {
         if (definisjon.erVentebehov()) {
             return definisjon.utledFrist(frist)
@@ -196,6 +196,14 @@ class Avklaringsbehovene(
         avklaringsbehov.reåpne(frist = frist, venteårsak = avklaringsbehov.venteårsak())
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
+
+    fun oppdaterPerioder(definisjon: Definisjon, perioder: Set<Periode>) {
+        val avklaringsbehov = alle().single { it.definisjon == definisjon }
+        avklaringsbehov.oppdaterPerioder(perioder)
+        repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
+        
+    }
+
 
     override fun alle(): List<Avklaringsbehov> {
         return avklaringsbehovene

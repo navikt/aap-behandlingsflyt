@@ -62,7 +62,7 @@ class VurderLovvalgSteg private constructor(
             grunnlag = lazy { hentGrunnlag(kontekst.sakId, kontekst.behandlingId) }
         }
 
-        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
+        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårGammel(
             avklaringsbehovene = avklaringsbehovene,
             behandlingRepository = behandlingRepository,
             vilkårsresultatRepository = vilkårsresultatRepository,
@@ -127,7 +127,10 @@ class VurderLovvalgSteg private constructor(
         }
     }
 
-    private fun perioderVurderingErRelevant(kontekst: FlytKontekstMedPerioder, grunnlag: MedlemskapLovvalgGrunnlag): Tidslinje<Boolean> {
+    private fun perioderVurderingErRelevant(
+        kontekst: FlytKontekstMedPerioder,
+        grunnlag: MedlemskapLovvalgGrunnlag
+    ): Tidslinje<Boolean> {
         val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
         val automatiskVilkårsvurderingLovvalg = vilkårsvurderingLovvalgUtenManuelleVurderinger(kontekst, grunnlag)
 
@@ -138,7 +141,8 @@ class VurderLovvalgSteg private constructor(
                     TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
                     TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
                     TidligereVurderinger.Behandlingsutfall.UKJENT -> {
-                        val automatiskVilkårsvurderinglovvalgIkkeOppfylt = automatiskVilkårsvurderingLovvalg?.erOppfylt() == false
+                        val automatiskVilkårsvurderinglovvalgIkkeOppfylt =
+                            automatiskVilkårsvurderingLovvalg?.erOppfylt() == false
 
                         // Må gjøres slik for å trigge overstyrt avklaringsbehov hvis allerede automatisk oppfylt
                         val tvingerAvklaringsbehov = kontekst.vurderingsbehovRelevanteForSteg.any {

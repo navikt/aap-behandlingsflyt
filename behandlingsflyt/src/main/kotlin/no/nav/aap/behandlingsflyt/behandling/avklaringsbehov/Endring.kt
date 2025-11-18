@@ -14,7 +14,7 @@ data class Endring(
     val frist: LocalDate? = null,
     val endretAv: String,
     val årsakTilRetur: List<ÅrsakTilRetur> = emptyList(),
-    val perioderSomIkkeErTilstrekkeligVurdert: List<Periode> = emptyList(),
+    val perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>? = null
 ) : Comparable<Endring> {
 
     override fun compareTo(other: Endring): Int {

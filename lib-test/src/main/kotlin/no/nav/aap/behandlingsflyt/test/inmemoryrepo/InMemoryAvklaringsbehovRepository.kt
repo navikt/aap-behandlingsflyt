@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
 import java.util.concurrent.atomic.AtomicLong
 
@@ -43,7 +44,8 @@ object InMemoryAvklaringsbehovRepository : AvklaringsbehovRepository,
         frist: LocalDate?,
         begrunnelse: String,
         grunn: ÅrsakTilSettPåVent?,
-        endretAv: String
+        endretAv: String,
+        perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?
     ) {
         synchronized(lock) {
             ensureDefault(behandlingId)
@@ -59,7 +61,8 @@ object InMemoryAvklaringsbehovRepository : AvklaringsbehovRepository,
                         begrunnelse = begrunnelse,
                         grunn = grunn,
                         endretAv = endretAv,
-                        frist = frist
+                        frist = frist,
+                        perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert
                     )
                 )
             }

@@ -23,7 +23,7 @@ interface AvklaringsbehovOperasjonerRepository : Repository {
         begrunnelse: String = "",
         grunn: ÅrsakTilSettPåVent? = null,
         endretAv: String = SYSTEMBRUKER.ident,
-        perioderSomIkkeErTilstrekkeligVurdert: List<Periode> = emptyList(),
+        perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>? = null,
     )
 
     fun kreverToTrinn(avklaringsbehovId: Long, kreverToTrinn: Boolean)
