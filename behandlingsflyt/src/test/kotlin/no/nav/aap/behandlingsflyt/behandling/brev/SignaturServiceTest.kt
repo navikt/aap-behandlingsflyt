@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDateTime
 import java.util.*
+import kotlin.random.Random
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
 
 @ExtendWith(MockKExtension::class)
@@ -37,7 +38,7 @@ class SignaturServiceTest {
 
         val signaturService = SignaturService(avklaringsbehovRepository)
 
-        val behandlingId = BehandlingId(1)
+        val behandlingId = BehandlingId(Random.nextLong())
         val brevbestilling = Brevbestilling(
             id = 0,
             behandlingId = behandlingId,
@@ -96,7 +97,7 @@ class SignaturServiceTest {
 
         val signaturService = SignaturService(avklaringsbehovRepository)
 
-        val behandlingId = BehandlingId(1)
+        val behandlingId = BehandlingId(Random.nextLong())
         val brevbestilling = Brevbestilling(
             id = 0,
             behandlingId = behandlingId,
@@ -143,6 +144,36 @@ class SignaturServiceTest {
             SignaturGrunnlag(navIdent = kvalitetssikrerIdent, rolle = Rolle.KVALITETSSIKRER),
             SignaturGrunnlag(navIdent = veilederIdent, rolle = Rolle.SAKSBEHANDLER_NASJONAL)
         )
+    }
+
+    @Test
+    fun `tar med innlogget bruker i signatur for vedtaksbrev dersom beslutter ikke har saksbehandlet`() {
+        val avklaringsbehovRepository = mockk<AvklaringsbehovRepository>()
+        val avklaringsbehovOperasjonerRepository = mockk<AvklaringsbehovOperasjonerRepository>()
+
+        val signaturService = SignaturService(avklaringsbehovRepository)
+
+        val behandlingId = BehandlingId(Random.nextLong())
+        val brevbestilling = Brevbestilling(
+            id = 0,
+            behandlingId = behandlingId,
+            typeBrev = TypeBrev.VEDTAK_INNVILGELSE,
+            referanse = BrevbestillingReferanse(UUID.randomUUID()),
+            status = Status.FORHÅNDSVISNING_KLAR,
+            opprettet = LocalDateTime.now()
+        )
+        val innloggetBrukerIdent = "i000000"
+
+        every { avklaringsbehovOperasjonerRepository.hent(behandlingId) } returns avklaringsbehovene
+        every { avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId) } returns Avklaringsbehovene(
+            avklaringsbehovOperasjonerRepository,
+            behandlingId
+        )
+
+        val signaturer = signaturService.finnSignaturGrunnlag(brevbestilling, Bruker(innloggetBrukerIdent))
+
+        assertThat(signaturer).containsExactlyInAnyOrder(
+            SignaturGrunnlag(navIdent = innloggetBrukerIdent, rolle = null))
     }
 
     private val avklaringsbehovene = mutableListOf<Avklaringsbehov>()
