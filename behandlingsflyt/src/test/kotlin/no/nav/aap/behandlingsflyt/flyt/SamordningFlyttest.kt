@@ -238,7 +238,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 assertThat(it.gradering.samordningGradering).isEqualTo(Prosent.`100_PROSENT`)
                 assertThat(it.redusertDagsats()).isEqualTo(Beløp(0))
             },
-            Periode(sykePengerPeriode.tom.plusDays(1), sak.rettighetsperiode.tom) to {
+            Periode(sykePengerPeriode.tom.plusDays(1), tilkjentYtelse.tilTidslinje().helePerioden().tom) to {
                 assertThat(it.gradering.samordningGradering).isEqualTo(Prosent.`0_PROSENT`)
                 assertThat(it.redusertDagsats()).isNotEqualTo(Beløp(0))
             }
