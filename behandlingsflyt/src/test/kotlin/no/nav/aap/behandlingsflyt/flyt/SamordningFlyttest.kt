@@ -440,7 +440,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 .filter { it.verdi == Prosent.`100_PROSENT` }.helePerioden()
 
         // Verifiser at samordningen ble fanget opp
-        assertThat(periodeMedFullSamordning).isEqualTo(sykePengerPeriode)
+        assertThat(periodeMedFullSamordning).isEqualTo(Periode(fom=sykePengerPeriode.fom, tom = minOf(sykePengerPeriode.tom, uthentetTilkjentYtelse.maxOf { it.periode.tom })))
         behandling = behandling.løsVedtaksbrev()
 
         val nyesteBehandling = hentSisteOpprettedeBehandlingForSak(behandling.sakId)

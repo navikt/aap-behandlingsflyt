@@ -8,8 +8,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.Arbeid
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
-import no.nav.aap.behandlingsflyt.help.assertTidslinje
-import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -342,7 +340,7 @@ class GraderingArbeidRegelTest {
             input,
             UtledMeldeperiodeRegel().vurder(
                 input,
-                Tidslinje(input.rettighetsperiode, Vurdering(fårAapEtter = RettighetsType.BISTANDSBEHOV))
+                Tidslinje(input.periodeForVurdering, Vurdering(fårAapEtter = RettighetsType.BISTANDSBEHOV))
             )
         ).mapValue { it.copy(fårAapEtter = RettighetsType.BISTANDSBEHOV) }
     }

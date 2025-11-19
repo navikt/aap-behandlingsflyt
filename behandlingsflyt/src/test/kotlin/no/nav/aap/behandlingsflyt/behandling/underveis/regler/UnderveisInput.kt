@@ -48,20 +48,20 @@ fun tomUnderveisInput(
     vedtaksdatoFørstegangsbehandling: LocalDate? = rettighetsperiode.fom,
 ): UnderveisInput {
     return UnderveisInput(
-        rettighetsperiode = rettighetsperiode,
+        periodeForVurdering = rettighetsperiode,
         vilkårsresultat = vilkårsresultat,
         opptrappingPerioder = opptrappingPerioder,
         meldekort = meldekort,
         innsendingsTidspunkt = innsendingsTidspunkt,
         kvoter = kvoter,
         aktivitetsplikt11_7Grunnlag = aktivitetsplikt11_7Grunnlag,
+        oppholdskravGrunnlag = oppholdskravGrunnlag,
         etAnnetSted = etAnnetSted,
         arbeidsevneGrunnlag = arbeidsevneGrunnlag,
         meldepliktGrunnlag = meldepliktGrunnlag,
         overstyringMeldepliktGrunnlag = overstyringMeldepliktGrunnlag,
         meldeperioder = meldeperioder,
         vedtaksdatoFørstegangsbehandling = vedtaksdatoFørstegangsbehandling,
-        oppholdskravGrunnlag = oppholdskravGrunnlag,
     )
 }
 
