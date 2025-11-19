@@ -5,6 +5,7 @@ import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -28,21 +29,24 @@ fun NormalOpenAPIRoute.driftAPI(
     gatewayProvider: GatewayProvider,
 ) {
     route("/api/drift") {
-        route("/flyttbehandlingtilstart/{referanse}") {
-            authorizedPost<BehandlingReferanse, Unit, Unit>(
+
+        data class KjorFraSteg(val steg: StegType)
+        route("/behandling/{referanse}/kjor-fra-steg") {
+            authorizedPost<BehandlingReferanse, Unit, KjorFraSteg>(
                 AuthorizationParamPathConfig(
                     behandlingPathParam = BehandlingPathParam("referanse"),
                     operasjon = Operasjon.DRIFTE
                 )
-            ){ req, _ ->
+            ){ params, request ->
                 dataSource.transaction { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                    val behandling = behandlingRepository.hent(BehandlingReferanse(req.referanse))
+                    val driftfunksjoner = Driftfunksjoner(repositoryProvider, gatewayProvider)
 
-                    Driftfunksjoner(repositoryProvider, gatewayProvider).flyttBehandlingTilSteg(behandling.id, connection)
+                    val behandling = behandlingRepository.hent(BehandlingReferanse(params.referanse))
+                    driftfunksjoner.kjørFraSteg(behandling, request.steg)
                 }
-                respondWithStatus(HttpStatusCode.Accepted)
+                respondWithStatus(HttpStatusCode.NoContent)
             }
         }
     }
