@@ -41,12 +41,15 @@ class MeldingOmVedtakBrevSteg(
     )
 
     /**
-     * TODO: AAP-1676 : vurder teoretisk tilbakestill() da gjenopptakelse per nå ikke er mulig
+     * TODO: AAP-1676 : vurder å gjøre teoretisk tilbakestillGrunnlag() fullt funksjonell
      *
-     * Behandling kun kan ha ett vedtaksbrev og ny brevbestilling per i dag er ikke mulig hvis det finnes et avbrutt
+     * En behandling kan kun ha ett vedtaksbrev og ny brevbestilling per i dag er ikke mulig hvis det finnes et avbrutt
      * vedtaksbrev. Da må avbrutt vedtaksbrev isteden endre status fra AVBRUTT til FORHÅNDSVISNING_KLAR slik at det
      * kan sparkes igang igjen med nytt kall til fremtidig API-endepunkt brevbestilling/gjenoppta-bestilling i aap-brev.
-     * Først do vil brevet kunne behandles videre igjen.
+     * Først da vil brevet kunne behandles videre igjen. Hvis brev-steg plutselig blir mulig å tilbakestille med nåværende
+     * tilbakestillGrunnlag() logikk, så vil utfør() feile når ny runde i BrevSteg.utfør() trigges da vedtaksbrev med
+     * status AVBRUTT må kunne gjenopptas og settes tilbake til FORHÅNDSVISNING_KLAR i aap-behandlingsflyt og aap-brev
+     * må motta API-kall /gjenoppta-bestilling slik at brevet igjen får status UNDER_ARBEID i aap-brev
      */
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val klageErTrukket = trekkKlageService.klageErTrukket(kontekst.behandlingId)
@@ -66,14 +69,15 @@ class MeldingOmVedtakBrevSteg(
         return Fullført
     }
 
-    // TODO: Fas ut Status.SENDT da denne statusen ikke lenger er i bruker.
-    // Status.SENDT var egentlig "START" og altså ikke en ende-tilstand i en tidligere mer synkron versjon av
-    // brev-tjenesten (og dermed også status-tilstanden før FORHÅNDSVISNING_KLAR).
+    /**
+     * Brevbestillinger i endeTilstand (FULLFØRT, AVBRUTT) kan per i dag ikke tilbakestilles i aap-behandlingsflyt.
+     * Hvis dette endres i fremtiden må også tilbakestillGrunnlag() logikken her tilpasses.
+     *
+     * BrevBestillinger i tilstand FORHÅNDSVISNING_KLAR og SENDT kan i teorien tilbakestilles. Den praktiske
+     * begrensningen per i dag er at selve brev steget ikke kan tilbakestilles (ingen fremtidige scenarior for dette foreløpig)
+     * og i tillegg at funsjonalitet for å gjenoppta-brevbestilling via aap-brev må implementeres (AAP-1676)
+     */
     private fun tilbakestillGrunnlag(behandlingId: BehandlingId) {
-        // Brevbestillinger som er i endeTilstand (FULLFØRT, SENDT, AVBRUTT) kan per i dag ikke tilbakestilles i aap-behandlingsflyt.
-        // Hvis dette endres i fremtiden må også tilbakestillGrunnlag() logikken her tilpasses.
-
-        // BrevBestillinger i tilstand FORHÅNDSVISNING_KLAR kan tilbakestilles hvis brevSteg kan tilbakestilles
         if (!brevbestillingService.erAlleBestillingerOmVedtakIEndeTilstand(behandlingId)) {
             val brevBestillingerOmVedtakSomKanTilbakestilles =
                 brevbestillingService.hentTilbakestillbareBestillingerOmVedtak(behandlingId)
