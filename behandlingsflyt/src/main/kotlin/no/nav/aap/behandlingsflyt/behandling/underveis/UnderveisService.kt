@@ -28,7 +28,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
@@ -38,6 +37,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -60,6 +61,7 @@ class UnderveisService(
     private val oppholdskravRepository: OppholdskravGrunnlagRepository,
     private val arbeidsopptrappingRepository: ArbeidsopptrappingRepository,
     private val vedtakService: VedtakService,
+    private val unleashGateway: UnleashGateway,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         sakService = SakService(repositoryProvider),
@@ -75,6 +77,7 @@ class UnderveisService(
         oppholdskravRepository = repositoryProvider.provide(),
         arbeidsopptrappingRepository = repositoryProvider.provide(),
         vedtakService = VedtakService(repositoryProvider),
+        unleashGateway = gatewayProvider.provide(),
     )
 
     private val kvoteService = KvoteService()
@@ -195,6 +198,7 @@ class UnderveisService(
             oppholdskravGrunnlag = oppholdskravGrunnlag,
             meldeperioder = meldeperioder,
             vedtaksdatoFørstegangsbehandling = vedtaksdatoFørstegangsbehandling?.toLocalDate(),
+            ikkeAntaNullTimerArbeidetFeature = unleashGateway.isEnabled(BehandlingsflytFeature.IkkeAntaNullTimerArbeidet),
 
             )
     }

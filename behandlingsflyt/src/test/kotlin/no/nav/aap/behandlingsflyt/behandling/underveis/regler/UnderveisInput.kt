@@ -62,6 +62,7 @@ fun tomUnderveisInput(
         overstyringMeldepliktGrunnlag = overstyringMeldepliktGrunnlag,
         meldeperioder = meldeperioder,
         vedtaksdatoFørstegangsbehandling = vedtaksdatoFørstegangsbehandling,
+        ikkeAntaNullTimerArbeidetFeature = false,
     )
 }
 

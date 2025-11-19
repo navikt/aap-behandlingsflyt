@@ -106,15 +106,17 @@ class GraderingArbeidRegel : UnderveisRegel {
             .outerJoin(opplysningerFraMeldekort(input), OpplysningerOmArbeid::mergePrioriterHøyre)
             .outerJoin(harRettTidslinje(resultat), OpplysningerOmArbeid::mergePrioriterHøyre)
 
-        if (skalAntaTimerArbeidet(resultat, opplysninger)) {
-            // anta null timer arbeidet hvis medlemmet har gitt alle opplysninger
-            opplysninger = Tidslinje(
-                input.periodeForVurdering,
-                OpplysningerOmArbeid(timerArbeid = TimerArbeid(BigDecimal.ZERO))
-            )
-                .outerJoin(opplysninger, OpplysningerOmArbeid::mergePrioriterHøyre)
-        }
 
+        if (!input.ikkeAntaNullTimerArbeidetFeature) {
+            if (skalAntaTimerArbeidet(resultat, opplysninger)) {
+                // anta null timer arbeidet hvis medlemmet har gitt alle opplysninger
+                opplysninger = Tidslinje(
+                    input.periodeForVurdering,
+                    OpplysningerOmArbeid(timerArbeid = TimerArbeid(BigDecimal.ZERO))
+                )
+                    .outerJoin(opplysninger, OpplysningerOmArbeid::mergePrioriterHøyre)
+            }
+        }
 
         return groupByMeldeperiode(resultat, opplysninger)
             .flatMap { meldeperiode ->
