@@ -62,6 +62,7 @@ fun tomUnderveisInput(
         meldeperioder = meldeperioder,
         vedtaksdatoFørstegangsbehandling = vedtaksdatoFørstegangsbehandling,
         oppholdskravGrunnlag = oppholdskravGrunnlag,
+        ikkeAntaNullTimerArbeidetFeature = false,
     )
 }
 
