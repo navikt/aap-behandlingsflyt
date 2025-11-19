@@ -34,8 +34,14 @@ class FastsettMeldeperiodeSteg(
                     return Fullført
                 }
 
-                val rettighetsperiode = rettighetsperiode
-                oppdaterMeldeperioder(kontekst.behandlingId, rettighetsperiode)
+                /**
+                 * TODO: Hva er en fornuftig lengde for en aktuell periode med meldeperioder?
+                 * Hvor langt frem i tid "trenger" man å generere 2-ukers-perioder
+                  */
+
+                val aktuellPeriode = Periode(rettighetsperiode.fom, rettighetsperiode.fom.plusYears(10))
+
+                oppdaterMeldeperioder(kontekst.behandlingId, aktuellPeriode)
                 return Fullført
             }
 
@@ -72,19 +78,19 @@ class FastsettMeldeperiodeSteg(
 
         fun utledMeldeperiode(
             gamlePerioder: List<Periode>,
-            rettighetsperiode: Periode
+            aktuellTidsperiode: Periode
         ): List<Periode> {
             val fastsattDag = gamlePerioder.firstOrNull()?.fom
 
             val førsteFastsatteDag = if (fastsattDag == null)
-                generateSequence(rettighetsperiode.fom) { it.minusDays(1) }
+                generateSequence(aktuellTidsperiode.fom) { it.minusDays(1) }
                     .first { it.dayOfWeek == DayOfWeek.MONDAY }
             else
                 generateSequence(fastsattDag) { it.minusDays(MELDEPERIODE_LENGDE) }
-                    .first { it <= rettighetsperiode.fom }
+                    .first { it <= aktuellTidsperiode.fom }
 
             return generateSequence(førsteFastsatteDag) { it.plusDays(MELDEPERIODE_LENGDE) }
-                .takeWhile { it <= rettighetsperiode.fom.plusYears(10) } // TODO: Hva kan vi egentlig sette her?
+                .takeWhile { it <= aktuellTidsperiode.tom }
                 .map { Periode(it, it.plusDays(MELDEPERIODE_LENGDE - 1)) }
                 .toList()
         }

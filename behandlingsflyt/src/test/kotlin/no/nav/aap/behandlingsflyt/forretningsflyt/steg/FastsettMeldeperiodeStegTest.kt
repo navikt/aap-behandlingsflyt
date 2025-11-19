@@ -23,8 +23,8 @@ class FastsettMeldeperiodeStegTest {
         )
 
 
-        var rettighetsperiode = Periode(10 mars 2025, 10 april 2025)
-        steg.oppdaterMeldeperioder(behandlingId, rettighetsperiode)
+        var aktuellPeriode = Periode(10 mars 2025, 10 april 2025)
+        steg.oppdaterMeldeperioder(behandlingId, aktuellPeriode)
         InMemoryMeldeperiodeRepository.hent(behandlingId).also {
             assertEquals(
                 listOf(
@@ -36,11 +36,11 @@ class FastsettMeldeperiodeStegTest {
         }
 
         /* flytt "søknadstidspunktet" bakover */
-        rettighetsperiode = Periode(
-            rettighetsperiode.fom.minusDays(7),
-            rettighetsperiode.tom,
+        aktuellPeriode = Periode(
+            aktuellPeriode.fom.minusDays(7),
+            aktuellPeriode.tom,
         )
-        steg.oppdaterMeldeperioder(behandlingId, rettighetsperiode)
+        steg.oppdaterMeldeperioder(behandlingId, aktuellPeriode)
         InMemoryMeldeperiodeRepository.hent(behandlingId).also {
             assertEquals(
                 listOf(
@@ -53,11 +53,11 @@ class FastsettMeldeperiodeStegTest {
         }
 
         /* utvid med en meldeperiode */
-        rettighetsperiode = Periode(
-            rettighetsperiode.fom,
-            rettighetsperiode.tom.plusDays(14),
+        aktuellPeriode = Periode(
+            aktuellPeriode.fom,
+            aktuellPeriode.tom.plusDays(14),
         )
-        steg.oppdaterMeldeperioder(behandlingId, rettighetsperiode)
+        steg.oppdaterMeldeperioder(behandlingId, aktuellPeriode)
         InMemoryMeldeperiodeRepository.hent(behandlingId).also {
             assertEquals(
                 listOf(
