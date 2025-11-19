@@ -213,7 +213,7 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
             val vurderingerSomSkalMigreres = finnAlleVurderingerUtenVurdertIBehandling()
             log.info("Fant ${vurderingerSomSkalMigreres.size} vurderinger for sykepengeerstatning som må migreres")
 
-            val alleGrunnlag = hentAlleAktiveGrunnlag()
+            val alleGrunnlag = hentAlleGrunnlag()
 
             vurderingerSomSkalMigreres.forEach { vurdering ->
                 val førsteGrunnlagMedVurdering = finnFørsteGrunnlagMedVurdering(vurdering, alleGrunnlag)
@@ -233,7 +233,6 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
             LEFT JOIN behandling ON behandling.id = grunnlag.behandling_id
             LEFT JOIN sak ON sak.id = behandling.sak_id
             WHERE vurdert_i_behandling IS NULL
-            AND grunnlag.aktiv = TRUE
             """.trimIndent()) {
             setRowMapper { row ->
                 SykepengerVurderingWithId(
@@ -252,8 +251,8 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
         }
     }
 
-    private fun hentAlleAktiveGrunnlag(): List<SykepengerErstatningGrunnlagWithId> {
-        return connection.queryList("SELECT * FROM sykepenge_erstatning_grunnlag WHERE aktiv=TRUE ORDER BY opprettet_tid asc") {
+    private fun hentAlleGrunnlag(): List<SykepengerErstatningGrunnlagWithId> {
+        return connection.queryList("SELECT * FROM sykepenge_erstatning_grunnlag ORDER BY opprettet_tid asc") {
             setRowMapper { row ->
                 SykepengerErstatningGrunnlagWithId(
                     id = row.getLong("id"),
