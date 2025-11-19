@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerG
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerVurdering
 import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
@@ -146,6 +147,77 @@ internal class SykepengerErstatningRepositoryImplTest {
     }
 
     @Test
+    fun `Skal lagre forrige vedtatte + nye vurderinger`() {
+        val (sak, behandling1) = dataSource.transaction { connection ->
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            Pair(sak, behandling)
+        }
+
+        val vurdering1 = SykepengerVurdering(
+            begrunnelse = "yolo",
+            dokumenterBruktIVurdering = listOf(JournalpostId("123"), JournalpostId("321")),
+            harRettPå = true,
+            grunn = null,
+            vurdertAv = "saksbehandler",
+            gjelderFra = null,
+            vurdertIBehandling = behandling1.id
+        )
+
+        dataSource.transaction { connection ->
+            SykepengerErstatningRepositoryImpl(connection).lagre(behandling1.id, listOf(vurdering1))
+            BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling1.id, Status.AVSLUTTET)
+        }
+
+        val behandling2 = dataSource.transaction { connection ->
+            val behandling2 = finnEllerOpprettBehandling(connection, sak)
+            val res = SykepengerErstatningRepositoryImpl(connection).hentHvisEksisterer(behandling2.id)
+            assertThat(res!!.vurderinger).usingRecursiveComparison()
+                .ignoringFields("vurdertTidspunkt")
+                .isEqualTo(listOf(vurdering1))
+            behandling2
+        }
+
+        val vurdering2 = SykepengerVurdering(
+            begrunnelse = "yolo x2",
+            dokumenterBruktIVurdering = listOf(JournalpostId("456")),
+            harRettPå = false,
+            grunn = SykepengerGrunn.SYKEPENGER_FORTSATT_ARBEIDSUFOR,
+            vurdertAv = "saksbehandler!!",
+            vurdertIBehandling = behandling2.id
+        )
+
+        dataSource.transaction { connection ->
+            SykepengerErstatningRepositoryImpl(connection).lagre(behandling2.id, listOf(vurdering2))
+        }
+
+        val vurdering3 = SykepengerVurdering(
+            begrunnelse = "Ny vurdering",
+            dokumenterBruktIVurdering = listOf(JournalpostId("456")),
+            harRettPå = true,
+            grunn = SykepengerGrunn.SYKEPENGER_FORTSATT_ARBEIDSUFOR,
+            vurdertAv = "saksbehandler!!",
+            vurdertIBehandling = behandling2.id
+        )
+        dataSource.transaction { connection ->
+            SykepengerErstatningRepositoryImpl(connection).lagre(behandling2.id, listOf(vurdering3))
+        }
+
+        val res = dataSource.transaction {
+            SykepengerErstatningRepositoryImpl(it).hentHvisEksisterer(behandling2.id)
+        }!!
+
+        assertThat(res.vurderinger)
+            .usingRecursiveComparison()
+            .ignoringFields("vurdertTidspunkt")
+            .isEqualTo(listOf(vurdering1, vurdering3))
+
+        assertThat(res.vurderinger).allSatisfy { vurdering ->
+            assertThat(vurdering.vurdertTidspunkt).isNotNull
+        }
+    }
+
+    @Test
     fun `test at migrering funker for flere behandlinger på samme sak `() {
         val behandling = dataSource.transaction { connection ->
             finnEllerOpprettBehandling(connection, sak(connection))
@@ -153,10 +225,15 @@ internal class SykepengerErstatningRepositoryImplTest {
 
         val behandling2 = dataSource.transaction { connection ->
             val behandlingRepository = BehandlingRepositoryImpl(connection)
-            behandlingRepository.opprettBehandling(behandling.sakId, TypeBehandling.Revurdering, forrigeBehandlingId = behandling.id, vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
-                vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
-                årsak = ÅrsakTilOpprettelse.SØKNAD,
-            ))
+            behandlingRepository.opprettBehandling(
+                behandling.sakId,
+                TypeBehandling.Revurdering,
+                forrigeBehandlingId = behandling.id,
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
+                    årsak = ÅrsakTilOpprettelse.SØKNAD,
+                )
+            )
         }
 
         val vurdering1 = SykepengerVurdering(
