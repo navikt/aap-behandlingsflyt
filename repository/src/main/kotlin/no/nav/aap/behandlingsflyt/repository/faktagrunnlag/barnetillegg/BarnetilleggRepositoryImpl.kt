@@ -199,7 +199,7 @@ class BarnetilleggRepositoryImpl(private val connection: DBConnection) : Barneti
             }
         }.toList()
 
-        return BarnetilleggGrunnlag(row.getLong("id"), barnetilleggPerioder)
+        return BarnetilleggGrunnlag(barnetilleggPerioder)
     }
 
     private fun mapPeriode(periodeRow: Row): BarnetilleggPeriode {

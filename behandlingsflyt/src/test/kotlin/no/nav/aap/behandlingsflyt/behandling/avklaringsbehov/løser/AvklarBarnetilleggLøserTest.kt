@@ -39,7 +39,8 @@ class AvklarBarnetilleggLøserTest {
                         ),
                         navn = null,
                     )
-                )
+                ),
+                saksbehandlerOppgitteBarn = emptyList()
             )
         )
 

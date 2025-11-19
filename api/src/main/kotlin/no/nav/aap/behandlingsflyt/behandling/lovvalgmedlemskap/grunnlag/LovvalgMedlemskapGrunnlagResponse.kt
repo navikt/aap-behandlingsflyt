@@ -35,12 +35,12 @@ data class PeriodisertManuellVurderingForLovvalgMedlemskapResponse(
 
 data class LovvalgResponse(
     val begrunnelse: String,
-    val lovvalgsEØSLandEllerLandMedAvtale: EØSLandEllerLandMedAvtale?
+    val lovvalgsEØSLandEllerLandMedAvtale: EØSLandEllerLandMedAvtale
 )
 
 data class MedlemskapResponse(
-    val begrunnelse: String?,
-    val varMedlemIFolketrygd: Boolean?
+    val begrunnelse: String,
+    val varMedlemIFolketrygd: Boolean
 )
 
 fun ManuellVurderingForLovvalgMedlemskap.toResponse(

@@ -27,10 +27,8 @@ class EtAnnetStedSteg(
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
-    private val behandlingRepository: BehandlingRepository,
-
-
-    ) : BehandlingSteg {
+    private val behandlingRepository: BehandlingRepository
+) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider) : this(
         avklaringsbehovRepository = repositoryProvider.provide(),
         institusjonsoppholdRepository = repositoryProvider.provide(),
@@ -94,7 +92,7 @@ class EtAnnetStedSteg(
                 }
             },
             definisjon = Definisjon.AVKLAR_SONINGSFORRHOLD,
-            tvingerAvklaringsbehov = setOf<Vurderingsbehov>(Vurderingsbehov.INSTITUSJONSOPPHOLD),
+            tvingerAvklaringsbehov = setOf(Vurderingsbehov.INSTITUSJONSOPPHOLD),
             nårVurderingErRelevant = ::perioderMedVurderingsbehovSoning
         )
 
@@ -146,7 +144,6 @@ class EtAnnetStedSteg(
                 }
             }
     }
-
 
 
     companion object : FlytSteg {

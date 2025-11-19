@@ -43,6 +43,33 @@ class ArbeidsevneRepositoryImplTest {
     }
 
     @Test
+    fun `Lagrer nye arbeidsevnevurderinger skal deaktivere forrige grunnlag selv om den ikke har noen vurderinger`() {
+        dataSource.transaction { connection ->
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
+
+            val arbeidsevneVurdering = ArbeidsevneVurdering(
+                "begrunnelse", Prosent(34), LocalDate.now(), LocalDateTime.now(), "saksbehandler"
+            )
+
+            arbeidsevneRepository.lagre(
+                behandling.id,
+                emptyList()
+            )
+
+            arbeidsevneRepository.lagre(
+                behandling.id,
+                listOf(arbeidsevneVurdering)
+            )
+
+            val oppdatertGrunnlag = arbeidsevneRepository.hentHvisEksisterer(behandling.id)
+            assertThat(oppdatertGrunnlag?.vurderinger).hasSize(1)
+            assertThat(oppdatertGrunnlag?.vurderinger?.first()?.arbeidsevne).isEqualTo(Prosent(34))
+        }
+    }
+
+    @Test
     fun `Finner ikke arbeidsevne hvis ikke lagret`() {
         dataSource.transaction { connection ->
             val sak = sak(connection)

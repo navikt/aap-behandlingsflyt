@@ -6,6 +6,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.RegisterBarn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Relasjon
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.SaksbehandlerOppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.VurderteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
@@ -44,6 +46,8 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
                 BarnGrunnlag(
                     registerbarn = it.getLongOrNull("register_barn_id")?.let(::hentBarn),
                     oppgitteBarn = it.getLongOrNull("oppgitt_barn_id")?.let(::hentOppgittBarn),
+                    saksbehandlerOppgitteBarn = it.getLongOrNull("saksbehandler_oppgitt_barn_id")
+                        ?.let(::hentSaksbehandlerOppgitteBarn),
                     vurderteBarn = it.getLongOrNull("vurderte_barn_id")?.let(::hentVurderteBarn)
                 )
             }
@@ -126,6 +130,30 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         }
     }
 
+    private fun hentSaksbehandlerOppgitteBarn(id: Long): SaksbehandlerOppgitteBarn {
+        return SaksbehandlerOppgitteBarn(
+            id, connection.queryList(
+                """
+                SELECT p.ident, p.navn, p.fodselsdato, p.relasjon
+                FROM BARN_SAKSBEHANDLER_OPPGITT p
+                WHERE p.saksbehandler_oppgitt_barn_id = ?
+            """.trimIndent()
+            ) {
+                setParams {
+                    setLong(1, id)
+                }
+                setRowMapper { row ->
+                    SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn(
+                        ident = row.getStringOrNull("ident")?.let(::Ident),
+                        navn = row.getString("navn"),
+                        fødselsdato = Fødselsdato(row.getLocalDate("fodselsdato")),
+                        relasjon = row.getString("relasjon").let(Relasjon::valueOf),
+                    )
+                }
+            }
+        )
+    }
+
     private fun hentOppgittBarn(id: Long): OppgitteBarn {
         return OppgitteBarn(
             id, connection.queryList(
@@ -143,7 +171,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
                         ident = row.getStringOrNull("IDENT")?.let(::Ident),
                         navn = row.getStringOrNull("navn"),
                         fødselsdato = row.getLocalDateOrNull("fodselsdato")?.let(::Fødselsdato),
-                        relasjon = row.getStringOrNull("relasjon")?.let(OppgitteBarn.Relasjon::valueOf),
+                        relasjon = row.getStringOrNull("relasjon")?.let(Relasjon::valueOf),
                     )
                 }
             }
@@ -287,7 +315,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
 
         connection.execute(
             """
-                INSERT INTO BARNOPPLYSNING_GRUNNLAG (BEHANDLING_ID, register_barn_id, oppgitt_barn_id, vurderte_barn_id) VALUES (?, ?, ?, ?)
+                INSERT INTO BARNOPPLYSNING_GRUNNLAG (BEHANDLING_ID, register_barn_id, oppgitt_barn_id, vurderte_barn_id, saksbehandler_oppgitt_barn_id) VALUES (?,?, ?, ?, ?)
             """.trimIndent()
         ) {
             setParams {
@@ -295,6 +323,54 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
                 setLong(2, eksisterendeGrunnlag?.registerbarn?.id)
                 setLong(3, oppgittBarnId)
                 setLong(4, eksisterendeGrunnlag?.vurderteBarn?.id)
+                setLong(5, eksisterendeGrunnlag?.saksbehandlerOppgitteBarn?.id)
+            }
+        }
+    }
+
+    override fun lagreSaksbehandlerOppgitteBarn(
+        behandlingId: BehandlingId,
+        saksbehandlerOppgitteBarn: List<SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn>
+    ) {
+        val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
+
+        if (eksisterendeGrunnlag != null) {
+            deaktiverEksisterende(behandlingId)
+        }
+
+        val saksbehandlerOppgitteBarnId = if (saksbehandlerOppgitteBarn.isNotEmpty()) {
+            connection.executeReturnKey("INSERT INTO BARN_SAKSBEHANDLER_OPPGITT_BARNOPPLYSNING DEFAULT VALUES")
+        } else {
+            null
+        }
+
+        connection.executeBatch(
+            """
+        INSERT INTO BARN_SAKSBEHANDLER_OPPGITT (IDENT, saksbehandler_oppgitt_barn_id, navn, fodselsdato, relasjon)
+        VALUES (?, ?, ?, ?, ?)
+        """.trimIndent(),
+            saksbehandlerOppgitteBarn
+        ) {
+            setParams { barnet ->
+                setString(1, barnet.ident?.identifikator)
+                setLong(2, saksbehandlerOppgitteBarnId)
+                setString(3, barnet.navn)
+                setLocalDate(4, barnet.fødselsdato.toLocalDate())
+                setString(5, barnet.relasjon.name)
+            }
+        }
+
+        connection.execute(
+            """
+            INSERT INTO BARNOPPLYSNING_GRUNNLAG (BEHANDLING_ID, register_barn_id, oppgitt_barn_id, vurderte_barn_id, saksbehandler_oppgitt_barn_id) VALUES (?, ?, ?, ?, ?)
+        """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+                setLong(2, eksisterendeGrunnlag?.registerbarn?.id)
+                setLong(3, eksisterendeGrunnlag?.oppgitteBarn?.id)
+                setLong(4, eksisterendeGrunnlag?.vurderteBarn?.id)
+                setLong(5, saksbehandlerOppgitteBarnId)
             }
         }
     }
@@ -331,7 +407,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
 
         connection.execute(
             """
-                INSERT INTO BARNOPPLYSNING_GRUNNLAG (BEHANDLING_ID, register_barn_id, oppgitt_barn_id, vurderte_barn_id) VALUES (?, ?, ?, ?)
+                INSERT INTO BARNOPPLYSNING_GRUNNLAG (BEHANDLING_ID, register_barn_id, oppgitt_barn_id, vurderte_barn_id, saksbehandler_oppgitt_barn_id) VALUES (?,?, ?, ?, ?)
             """.trimIndent()
         ) {
             setParams {
@@ -339,6 +415,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
                 setLong(2, bgbId)
                 setLong(3, eksisterendeGrunnlag?.oppgitteBarn?.id)
                 setLong(4, eksisterendeGrunnlag?.vurderteBarn?.id)
+                setLong(5, eksisterendeGrunnlag?.saksbehandlerOppgitteBarn?.id)
             }
         }
     }
@@ -368,8 +445,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         for (barn in vurderteBarn) {
             val barnVurderingId =
                 connection.executeReturnKey(
-                    """INSERT INTO BARN_VURDERING (IDENT, BARN_VURDERINGER_ID, navn, fodselsdato)
-VALUES (?, ?, ?, ?)"""
+                    """INSERT INTO BARN_VURDERING (IDENT, BARN_VURDERINGER_ID, navn, fodselsdato) VALUES (?, ?, ?, ?)"""
                 ) {
                     setParams {
                         when (val barnIdent = barn.ident) {
@@ -406,14 +482,15 @@ VALUES (?, ?, ?, ?)"""
 
         connection.execute(
             """
-                INSERT INTO BARNOPPLYSNING_GRUNNLAG (BEHANDLING_ID, register_barn_id, oppgitt_barn_id, vurderte_barn_id) VALUES (?, ?, ?, ?)
+                INSERT INTO BARNOPPLYSNING_GRUNNLAG (BEHANDLING_ID, register_barn_id, oppgitt_barn_id, saksbehandler_oppgitt_barn_id, vurderte_barn_id) VALUES (?, ?, ?, ?, ?)
             """.trimIndent()
         ) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, eksisterendeGrunnlag?.registerbarn?.id)
                 setLong(3, eksisterendeGrunnlag?.oppgitteBarn?.id)
-                setLong(4, vurderteBarnId)
+                setLong(4, eksisterendeGrunnlag?.saksbehandlerOppgitteBarn?.id)
+                setLong(5, vurderteBarnId)
             }
         }
     }
@@ -422,8 +499,8 @@ VALUES (?, ?, ?, ?)"""
         require(fraBehandling != tilBehandling)
         val query = """
             INSERT INTO BARNOPPLYSNING_GRUNNLAG
-                (behandling_id, register_barn_id, oppgitt_barn_id, vurderte_barn_id)
-            SELECT ?, register_barn_id, oppgitt_barn_id, vurderte_barn_id
+                (behandling_id, register_barn_id, oppgitt_barn_id, vurderte_barn_id, saksbehandler_oppgitt_barn_id)
+            SELECT ?, register_barn_id, oppgitt_barn_id, vurderte_barn_id, saksbehandler_oppgitt_barn_id
                 from BARNOPPLYSNING_GRUNNLAG
                 where behandling_id = ? and aktiv
         """.trimIndent()
@@ -541,12 +618,46 @@ VALUES (?, ?, ?, ?)"""
         }
     }
 
-
     private fun deaktiverEksisterende(behandlingId: BehandlingId) {
         connection.execute("UPDATE BARNOPPLYSNING_GRUNNLAG SET AKTIV = FALSE WHERE AKTIV AND BEHANDLING_ID = ?") {
             setParams {
                 setLong(1, behandlingId.toLong())
             }
+        }
+    }
+
+    override fun deaktiverAlleSaksbehandlerOppgitteBarn(behandlingId: BehandlingId) {
+        val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
+
+        if (eksisterendeGrunnlag != null) {
+            deaktiverEksisterende(behandlingId)
+
+            connection.execute(
+                """
+                INSERT INTO BARNOPPLYSNING_GRUNNLAG (BEHANDLING_ID, register_barn_id, oppgitt_barn_id, vurderte_barn_id, saksbehandler_oppgitt_barn_id)
+                VALUES (?, ?, ?, ?, ?)
+                """.trimIndent()
+            ) {
+                setParams {
+                    setLong(1, behandlingId.toLong())
+                    setLong(2, eksisterendeGrunnlag.registerbarn?.id)
+                    setLong(3, eksisterendeGrunnlag.oppgitteBarn?.id)
+                    setLong(4, eksisterendeGrunnlag.vurderteBarn?.id)
+                    setLong(5, null)
+                }
+            }
+        }
+    }
+
+    override fun tilbakestillGrunnlag(behandlingId: BehandlingId, forrigeBehandling: BehandlingId?) {
+        val eksisternedeBarnGrunnlag = hentHvisEksisterer(behandlingId)
+
+        if (eksisternedeBarnGrunnlag != null) {
+            deaktiverEksisterende(behandlingId)
+        }
+
+        if (forrigeBehandling != null) {
+            kopier(forrigeBehandling, behandlingId)
         }
     }
 }

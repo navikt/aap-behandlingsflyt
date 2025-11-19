@@ -22,6 +22,6 @@ class AvklarBarnetilleggLøsning(
     @param:JsonProperty("behovstype", required = true, defaultValue = AVKLAR_BARNETILLEGG_KODE) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5009`
 ) : EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
-        return AvklarBarnetilleggLøser(repositoryProvider).løs(kontekst, this)
+        return AvklarBarnetilleggLøser(repositoryProvider, gatewayProvider).løs(kontekst, this)
     }
 }

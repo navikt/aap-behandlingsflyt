@@ -40,6 +40,8 @@ class FakeBrevbestillingGateway : BrevbestillingGateway {
                 brevbestillingResponse = BrevbestillingResponse(
                     referanse = it.brevbestillingReferanse,
                     brev = null,
+                    brevmal = null,
+                    brevdata = null,
                     opprettet = LocalDateTime.now(),
                     oppdatert = LocalDateTime.now(),
                     behandlingReferanse = behandlingReferanse.referanse,
@@ -60,12 +62,12 @@ class FakeBrevbestillingGateway : BrevbestillingGateway {
     }
 
     override fun kanDistribuereBrev(
-        saksnummer: String,
         brukerIdent: String,
-        mottakerIdentListe: List<String>
+        mottakerIdentListe: List<String>,
+        brevbestillingReferanse: BrevbestillingReferanse
     ): List<MottakerDistStatus> {
-        val brevKanDistribueres = MottakerDistStatus(brukerIdent, true)
-        val brevKanIkkeDistribueres = MottakerDistStatus("1234", false)
+        val brevKanDistribueres = MottakerDistStatus("1234", true)
+        val brevKanIkkeDistribueres = MottakerDistStatus("5678", false)
         return listOf(brevKanDistribueres, brevKanIkkeDistribueres)
     }
 

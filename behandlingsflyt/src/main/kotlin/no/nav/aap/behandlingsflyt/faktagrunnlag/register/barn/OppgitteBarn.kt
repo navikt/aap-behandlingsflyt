@@ -8,10 +8,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
  * Barn oppgitt i søknaden.
  */
 data class OppgitteBarn(val id: Long? = null, val oppgitteBarn: List<OppgittBarn>) {
-    enum class Relasjon {
-        FORELDER,
-        FOSTERFORELDER,
-    }
 
     data class OppgittBarn(
         val ident: Ident?,

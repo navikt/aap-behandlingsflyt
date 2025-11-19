@@ -45,7 +45,7 @@ class VilkårsresultatTest {
                         periode,
                         utfall = Utfall.OPPFYLT,
                         begrunnelse = null,
-                        innvilgelsesårsak = if (it in listOf(BISTANDSVILKÅRET, SYKDOMSVILKÅRET)) Innvilgelsesårsak.STUDENT else null,
+                        innvilgelsesårsak = if (it in listOf(SYKDOMSVILKÅRET)) Innvilgelsesårsak.STUDENT else null,
                     )
                 )
             }
@@ -115,14 +115,6 @@ class VilkårsresultatTest {
                 )
             )
             val andrePeriode = Periode(dagensDato.plusDays(1), dagensDato.plusDays(15))
-            v.leggTilHvisIkkeEksisterer(BISTANDSVILKÅRET).leggTilVurdering(
-                Vilkårsperiode(
-                    andrePeriode,
-                    utfall = Utfall.OPPFYLT,
-                    innvilgelsesårsak = Innvilgelsesårsak.STUDENT,
-                    begrunnelse = null
-                )
-            )
             v.leggTilHvisIkkeEksisterer(SYKDOMSVILKÅRET).leggTilVurdering(
                 Vilkårsperiode(
                     andrePeriode,
