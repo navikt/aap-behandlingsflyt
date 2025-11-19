@@ -1507,11 +1507,11 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
 
                 val vilkårsresultat = hentVilkårsresultat(behandlingId = behandling.id)
-                val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
-//
-//                assertThat(sykdomsvilkåret.vilkårsperioder()).hasSize(1).first()
-//                    .extracting(Vilkårsperiode::erOppfylt, Vilkårsperiode::innvilgelsesårsak)
-//                    .containsExactly(true, Innvilgelsesårsak.SYKEPENGEERSTATNING)
+                val sykepengeerstatningvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKEPENGEERSTATNING)
+
+                assertThat(sykepengeerstatningvilkåret.vilkårsperioder()).hasSize(1).first()
+                    .extracting(Vilkårsperiode::erOppfylt, Vilkårsperiode::innvilgelsesårsak)
+                    .containsExactly(true, null)
 
                 val resultat =
                     dataSource.transaction {

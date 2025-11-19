@@ -32,12 +32,12 @@ fun vurderRettighetsType(vilkårsresultat: Vilkårsresultat): Tidslinje<Rettighe
             val rettighetsType = when {
                 /* Prioritert rekkefølge */
                 KravForStudent.oppfyllesAv(forutgåendeTidslinje, vilkårsvurderinger) -> RettighetsType.STUDENT
+                KravForOrdinærAap.oppfyllesAv(forutgåendeTidslinje, vilkårsvurderinger) -> RettighetsType.BISTANDSBEHOV
+                KravForYrkesskade.oppfyllesAv(forutgåendeTidslinje, vilkårsvurderinger) -> RettighetsType.BISTANDSBEHOV
                 KravForOvergangUføretrygd.oppfyllesAv(forutgåendeTidslinje, vilkårsvurderinger) -> RettighetsType.VURDERES_FOR_UFØRETRYGD
                 KravForSykepengeerstatningMedYrkesskade.oppfyllesAv(forutgåendeTidslinje, vilkårsvurderinger) -> RettighetsType.SYKEPENGEERSTATNING
                 KravForSykepengeerstatning.oppfyllesAv(forutgåendeTidslinje, vilkårsvurderinger) -> RettighetsType.SYKEPENGEERSTATNING
                 KravForOvergangArbeid.oppfyllesAv(forutgåendeTidslinje, vilkårsvurderinger) -> RettighetsType.ARBEIDSSØKER
-                KravForOrdinærAap.oppfyllesAv(forutgåendeTidslinje, vilkårsvurderinger) -> RettighetsType.BISTANDSBEHOV
-                KravForYrkesskade.oppfyllesAv(forutgåendeTidslinje, vilkårsvurderinger) -> RettighetsType.BISTANDSBEHOV
                 else -> null
             }
 
