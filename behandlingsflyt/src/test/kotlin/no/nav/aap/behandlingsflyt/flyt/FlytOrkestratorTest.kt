@@ -3238,7 +3238,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             assertThat(behandlingRepo.hent(behandlingId).aktivtSteg()).isEqualTo(StegType.AVKLAR_SYKDOM)
 
             // Tilbakefør med hjelpefunksjon
-            Driftfunksjoner(postgresRepositoryRegistry.provider(connection), gatewayProvider).flyttBehandlingTilStart(
+            Driftfunksjoner(postgresRepositoryRegistry.provider(connection), gatewayProvider).flyttBehandlingTilSteg(
                 behandlingId,
                 connection
             )
