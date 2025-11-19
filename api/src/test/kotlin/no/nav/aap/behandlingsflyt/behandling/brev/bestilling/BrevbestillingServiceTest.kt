@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.brev.bestilling
 
+import kotlin.random.Random
 import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.behandling.brev.SignaturService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -20,7 +21,7 @@ class BrevbestillingServiceTest {
     val brevbestillingGateway = mockk<BrevbestillingGateway>()
     val behandlingRepository = mockk<BehandlingRepository>()
     val sakRepository = mockk<SakRepository>()
-    val behandlingId = BehandlingId(1L)
+    val behandlingId = BehandlingId(Random.nextLong())
 
     @BeforeEach
     fun setUp() {
@@ -38,7 +39,7 @@ class BrevbestillingServiceTest {
     }
 
     @Test
-    fun hentTilbakestillbareBestillingerOmVedtak_returnEmptyList_hvisIngenBrevBestillingerFinnes() {
+    fun `hentTilbakestillbareBestillingerOmVedtak_returnEmptyList_hvisIngenBrevBestillingerFinnes`() {
         InMemoryBrevbestillingRepository.clearMemory()
         val brevbestillingService = BrevbestillingService(
             signaturService,
@@ -54,7 +55,7 @@ class BrevbestillingServiceTest {
     }
 
     @Test
-    fun hentTilbakestillbareBestillingerOmVedtak_returnEmptyList_hvisIngenVedtaksBrevHarStatusForhåndsvisningKlar() {
+    fun `hentTilbakestillbareBestillingerOmVedtak_returnEmptyList_hvisAlleVedtaksBrevHarEndeStatus`() {
         val brevbestllingService = BrevbestillingService(
             signaturService,
             brevbestillingGateway,
@@ -64,7 +65,7 @@ class BrevbestillingServiceTest {
         )
         val brevBestillinger = InMemoryBrevbestillingRepository.hent(behandlingId = behandlingId)
         for (brevBestilling in brevBestillinger.filter { it.typeBrev.erVedtak() }) {
-            InMemoryBrevbestillingRepository.oppdaterStatus(behandlingId, brevBestilling.referanse, Status.SENDT)
+            InMemoryBrevbestillingRepository.oppdaterStatus(behandlingId, brevBestilling.referanse, Status.FULLFØRT)
         }
 
         val resultat = brevbestllingService.hentTilbakestillbareBestillingerOmVedtak(behandlingId)
@@ -73,7 +74,7 @@ class BrevbestillingServiceTest {
     }
 
     @Test
-    fun hentTilbakestillbareBestillingerOmVedtak_returnEmptyList_hvisIngenVedtakBrevFinnes() {
+    fun `hentTilbakestillbareBestillingerOmVedtak_returnEmptyList_hvisIngenVedtakBrevFinnes`() {
         val brevbestllingService = BrevbestillingService(
             signaturService,
             brevbestillingGateway,
@@ -96,7 +97,7 @@ class BrevbestillingServiceTest {
     }
 
     @Test
-    fun hentTilbakestillbareBestillingerOmVedtak_returnKorrektListe_nårAlleVedtaksBrevHarStatusForhåndsvisningKlar() {
+    fun `hentTilbakestillbareBestillingerOmVedtak_returnKorrektListe_nårAlleVedtaksBrevHarStatusForhåndsvisningKlar`() {
         val brevbestllingService = BrevbestillingService(
             signaturService,
             brevbestillingGateway,
@@ -116,7 +117,7 @@ class BrevbestillingServiceTest {
     }
 
     @Test
-    fun hentTilbakestillbareBestillingerOmVedtak_returnKorrektListe_kunMedVedtaksBrevSomHarStatusForhåndsvisningKlar() {
+    fun `hentTilbakestillbareBestillingerOmVedtak() return korrekt liste kun med vedtaksBrev som har status FORHÅNDSVISNING_KLAR og SENDT`() {
         val brevbestllingService = BrevbestillingService(
             signaturService,
             brevbestillingGateway,
@@ -126,19 +127,16 @@ class BrevbestillingServiceTest {
         )
         val vedtakBrevBestillinger =
             InMemoryBrevbestillingRepository.hent(behandlingId = behandlingId).filter { it.typeBrev.erVedtak() }
-        val sendtBrevBestilling = vedtakBrevBestillinger[0]
-        InMemoryBrevbestillingRepository.oppdaterStatus(behandlingId, sendtBrevBestilling.referanse, Status.SENDT)
-        val fullførtBrevBestilling = vedtakBrevBestillinger[1]
+        val fullførtBrevBestilling = vedtakBrevBestillinger[0]
         InMemoryBrevbestillingRepository.oppdaterStatus(behandlingId, fullførtBrevBestilling.referanse, Status.FULLFØRT)
-        val avbruttBrevBestilling = vedtakBrevBestillinger[2]
+        val avbruttBrevBestilling = vedtakBrevBestillinger[1]
         InMemoryBrevbestillingRepository.oppdaterStatus(behandlingId, avbruttBrevBestilling.referanse, Status.AVBRUTT)
 
         val resultat = brevbestllingService.hentTilbakestillbareBestillingerOmVedtak(behandlingId)
 
-        val antallTilbakestillbareVedtakBrev = TypeBrev.entries.filter { it.erVedtak() }.size - 3
+        val antallTilbakestillbareVedtakBrev = TypeBrev.entries.filter { it.erVedtak() }.size - 2
         assertEquals(antallTilbakestillbareVedtakBrev, resultat.size)
         for (brevBestilling in resultat) {
-            assertNotEquals(sendtBrevBestilling.referanse, brevBestilling.referanse)
             assertNotEquals(fullførtBrevBestilling.referanse, brevBestilling.referanse)
             assertNotEquals(avbruttBrevBestilling.referanse, brevBestilling.referanse)
             assertEquals(Status.FORHÅNDSVISNING_KLAR, brevBestilling.status)
@@ -147,7 +145,7 @@ class BrevbestillingServiceTest {
     }
 
     @Test
-    fun erAlleBestillingerOmVedtakIEndeTilstand_returnTrue_hvisIngenBrevBestillingerFinnes() {
+    fun `erAlleBestillingerOmVedtakIEndeTilstand_returnTrue_hvisIngenBrevBestillingerFinnes`() {
         InMemoryBrevbestillingRepository.clearMemory()
         val brevbestillingService = BrevbestillingService(
             signaturService,
@@ -163,7 +161,7 @@ class BrevbestillingServiceTest {
     }
 
     @Test
-    fun erAlleBestillingerOmVedtakIEndeTilstand_returnFalse_hvisIngenVedtaksBrevHarEndeTilstand() {
+    fun `erAlleBestillingerOmVedtakIEndeTilstand_returnFalse_hvisIngenVedtaksBrevHarEndeTilstand`() {
         val brevbestllingService = BrevbestillingService(
             signaturService,
             brevbestillingGateway,
@@ -178,7 +176,7 @@ class BrevbestillingServiceTest {
     }
 
     @Test
-    fun erAlleBestillingerOmVedtakIEndeTilstand_returnFalse_hvisIkkeVedtakBrevHarEndeTilstandMenAndreHarFullført() {
+    fun `erAlleBestillingerOmVedtakIEndeTilstand_returnFalse_hvisIkkeVedtakBrevHarEndeTilstandMenAndreHarFullført`() {
         val brevbestllingService = BrevbestillingService(
             signaturService,
             brevbestillingGateway,
@@ -198,7 +196,7 @@ class BrevbestillingServiceTest {
     }
 
     @Test
-    fun erAlleBestillingerOmVedtakIEndeTilstand_returnFalse_hvisIkkeVedtakBrevHarEndeTilstandMenAndreHarSendt() {
+    fun `erAlleBestillingerOmVedtakIEndeTilstand_returnFalse_hvisIkkeVedtakBrevHarEndeTilstandMenAndreHarSendt`() {
         val brevbestllingService = BrevbestillingService(
             signaturService,
             brevbestillingGateway,
@@ -217,7 +215,7 @@ class BrevbestillingServiceTest {
     }
 
     @Test
-    fun erAlleBestillingerOmVedtakIEndeTilstand_returnFalse_hvisIkkeVedtakBrevHarEndeTilstandMenAndreHarAvbrutt() {
+    fun `erAlleBestillingerOmVedtakIEndeTilstand_returnFalse_hvisIkkeVedtakBrevHarEndeTilstandMenAndreHarAvbrutt`() {
         val brevbestllingService = BrevbestillingService(
             signaturService,
             brevbestillingGateway,
@@ -236,7 +234,7 @@ class BrevbestillingServiceTest {
     }
 
     @Test
-    fun erAlleBestillingerOmVedtakIEndeTilstand_returnFalse_hvisEttVedtakBrevHarEndeTilstandFullført() {
+    fun `erAlleBestillingerOmVedtakIEndeTilstand_returnFalse_hvisEttVedtakBrevHarEndeTilstandFullført`() {
         val brevbestllingService = BrevbestillingService(
             signaturService,
             brevbestillingGateway,
@@ -254,7 +252,7 @@ class BrevbestillingServiceTest {
     }
 
     @Test
-    fun erAlleBestillingerOmVedtakIEndeTilstand_returnFalse_hvisEttVedtakBrevHarEndeTilstandSent() {
+    fun `erAlleBestillingerOmVedtakIEndeTilstand_returnFalse_hvisEttVedtakBrevHarEndeTilstandSent`() {
         val brevbestllingService = BrevbestillingService(
             signaturService,
             brevbestillingGateway,
@@ -272,7 +270,7 @@ class BrevbestillingServiceTest {
     }
 
     @Test
-    fun erAlleBestillingerOmVedtakIEndeTilstand_returnFalse_hvisEttVedtakBrevHarEndeTilstandAvbrutt() {
+    fun `erAlleBestillingerOmVedtakIEndeTilstand_returnFalse_hvisEttVedtakBrevHarEndeTilstandAvbrutt`() {
         val brevbestllingService = BrevbestillingService(
             signaturService,
             brevbestillingGateway,
@@ -290,7 +288,7 @@ class BrevbestillingServiceTest {
     }
 
     @Test
-    fun erAlleBestillingerOmVedtakIEndeTilstand_returnTrue_hvisAlleVedtakBrevHarEndeTilstandFullført() {
+    fun `erAlleBestillingerOmVedtakIEndeTilstand_returnTrue_hvisAlleVedtakBrevHarEndeTilstandFullført`() {
         val brevbestllingService = BrevbestillingService(
             signaturService,
             brevbestillingGateway,
@@ -309,7 +307,7 @@ class BrevbestillingServiceTest {
     }
 
     @Test
-    fun erAlleBestillingerOmVedtakIEndeTilstand_returnTrue_hvisAlleVedtakBrevHarEndeTilstandSent() {
+    fun `erAlleBestillingerOmVedtakIEndeTilstand_returnFalse_hvisAlleVedtakBrevHarEndeTilstandSent`() {
         val brevbestllingService = BrevbestillingService(
             signaturService,
             brevbestillingGateway,
@@ -324,11 +322,11 @@ class BrevbestillingServiceTest {
 
         val resultat = brevbestllingService.erAlleBestillingerOmVedtakIEndeTilstand(behandlingId)
 
-        assertTrue(resultat)
+        assertFalse(resultat)
     }
 
     @Test
-    fun erAlleBestillingerOmVedtakIEndeTilstand_returnTrue_hvisAlleVedtakBrevHarEndeTilstandAvbrutt() {
+    fun `erAlleBestillingerOmVedtakIEndeTilstand_returnTrue_hvisAlleVedtakBrevHarEndeTilstandAvbrutt`() {
         val brevbestllingService = BrevbestillingService(
             signaturService,
             brevbestillingGateway,
@@ -347,7 +345,7 @@ class BrevbestillingServiceTest {
     }
 
     @Test
-    fun erAlleBestillingerOmVedtakIEndeTilstand_returnTrue_hvisIngenVedtakBrevFinnes() {
+    fun `erAlleBestillingerOmVedtakIEndeTilstand_returnTrue_hvisIngenVedtakBrevFinnes`() {
         val brevbestllingService = BrevbestillingService(
             signaturService,
             brevbestillingGateway,

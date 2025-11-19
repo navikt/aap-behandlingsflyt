@@ -40,6 +40,14 @@ class MeldingOmVedtakBrevSteg(
         avklaringsbehovRepository = repositoryProvider.provide()
     )
 
+    /**
+     * TODO: AAP-1676 : vurder teoretisk tilbakestill() da gjenopptakelse per nå ikke er mulig
+     *
+     * Behandling kun kan ha ett vedtaksbrev og ny brevbestilling per i dag er ikke mulig hvis det finnes et avbrutt
+     * vedtaksbrev. Da må avbrutt vedtaksbrev isteden endre status fra AVBRUTT til FORHÅNDSVISNING_KLAR slik at det
+     * kan sparkes igang igjen med nytt kall til fremtidig API-endepunkt brevbestilling/gjenoppta-bestilling i aap-brev.
+     * Først do vil brevet kunne behandles videre igjen.
+     */
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val klageErTrukket = trekkKlageService.klageErTrukket(kontekst.behandlingId)
         val brevBehov = brevUtlederService.utledBehovForMeldingOmVedtak(kontekst.behandlingId)
@@ -58,6 +66,9 @@ class MeldingOmVedtakBrevSteg(
         return Fullført
     }
 
+    // TODO: Fas ut Status.SENDT da denne statusen ikke lenger er i bruker.
+    // Status.SENDT var egentlig "START" og altså ikke en ende-tilstand i en tidligere mer synkron versjon av
+    // brev-tjenesten (og dermed også status-tilstanden før FORHÅNDSVISNING_KLAR).
     private fun tilbakestillGrunnlag(behandlingId: BehandlingId) {
         // Brevbestillinger som er i endeTilstand (FULLFØRT, SENDT, AVBRUTT) kan per i dag ikke tilbakestilles i aap-behandlingsflyt.
         // Hvis dette endres i fremtiden må også tilbakestillGrunnlag() logikken her tilpasses.

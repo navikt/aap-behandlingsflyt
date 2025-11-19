@@ -54,7 +54,9 @@ class MeldingOmVedtakBrevStegTest {
      * Vurderinger rundt MeldingOmVedtakBrevSteg.utfør() og AvklaringsbehovService
      *   BrevSteg har per idag ingen periodiseringsbehov
      *   BrevSteg krever by-design manuelt avklaringsbehov ved brevbehov, dvs. vedtakBehøverVurdering gitt brevBehov og ingen klage trukket
-     *   BrevSteg kan ikke tilbakestilles da behandlingsflyten har nådd stegstatus IVERKSETTES, tilbakestillGrunnlag = {}
+     *   BrevSteg kan per i dag ikke tilbakestilles da behandlingsflyten har nådd stegstatus IVERKSETTES. Nåværende
+     *   tilbakestillGrunnlag() logikk er delivs komplett (se AAP-1676 for manglende logikk ifm. tilbakestillGrunnlag)
+     *
      *   Forventa runder i BrevSteg og oppdateringer av avklaringsbehov for førstegangsbehandling:
      *     Runde-1:
      *       - oppdaterAvklaringsbehov() i BrevSteg legger til nytt SKRIV_VEDTAKSBREV avklaringsbehov med status OPPRETTET, da erTilstrekkeligVurdert er false
