@@ -625,4 +625,39 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
             }
         }
     }
+
+    override fun deaktiverAlleSaksbehandlerOppgitteBarn(behandlingId: BehandlingId) {
+        val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
+
+        if (eksisterendeGrunnlag != null) {
+            deaktiverEksisterende(behandlingId)
+
+            connection.execute(
+                """
+                INSERT INTO BARNOPPLYSNING_GRUNNLAG (BEHANDLING_ID, register_barn_id, oppgitt_barn_id, vurderte_barn_id, saksbehandler_oppgitt_barn_id)
+                VALUES (?, ?, ?, ?, ?)
+                """.trimIndent()
+            ) {
+                setParams {
+                    setLong(1, behandlingId.toLong())
+                    setLong(2, eksisterendeGrunnlag.registerbarn?.id)
+                    setLong(3, eksisterendeGrunnlag.oppgitteBarn?.id)
+                    setLong(4, eksisterendeGrunnlag.vurderteBarn?.id)
+                    setLong(5, null)
+                }
+            }
+        }
+    }
+
+    override fun tilbakestillGrunnlag(behandlingId: BehandlingId, forrigeBehandling: BehandlingId?) {
+        val eksisternedeBarnGrunnlag = hentHvisEksisterer(behandlingId)
+
+        if (eksisternedeBarnGrunnlag != null) {
+            deaktiverEksisterende(behandlingId)
+        }
+
+        if (forrigeBehandling != null) {
+            kopier(forrigeBehandling, behandlingId)
+        }
+    }
 }

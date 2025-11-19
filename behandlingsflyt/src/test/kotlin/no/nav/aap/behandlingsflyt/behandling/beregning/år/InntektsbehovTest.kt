@@ -37,7 +37,7 @@ class InntektsbehovTest {
                     InntektPerÅr(nedsettelsesDato.minusYears(3).year, Beløp(128)),
                     InntektPerÅr(nedsettelsesDato.minusYears(4).year, Beløp(129))
                 ),
-                uføregrad = listOf(Uføre(LocalDate.now(), Prosent.`0_PROSENT`)),
+                uføregrad = setOf(Uføre(LocalDate.now(), Prosent.`0_PROSENT`)),
                 yrkesskadevurdering = null,
                 beregningGrunnlag = null,
                 registrerteYrkesskader = null
@@ -58,7 +58,7 @@ class InntektsbehovTest {
             Input(
                 nedsettelsesDato,
                 inntekter = emptySet(),
-                uføregrad = listOf(Uføre(LocalDate.now(), Prosent.`0_PROSENT`)),
+                uføregrad = setOf(Uføre(LocalDate.now(), Prosent.`0_PROSENT`)),
                 yrkesskadevurdering = null,
                 beregningGrunnlag = null,
                 registrerteYrkesskader = null
@@ -83,7 +83,7 @@ class InntektsbehovTest {
             Input(
                 nedsettelsesDato,
                 emptySet(),
-                listOf(Uføre(LocalDate.now(), Prosent.`0_PROSENT`)),
+                setOf(Uføre(LocalDate.now(), Prosent.`0_PROSENT`)),
                 null,
                 null,
                 BeregningGrunnlag(
@@ -119,7 +119,7 @@ class InntektsbehovTest {
             Input(
                 nedsettelsesDato,
                 inntekter = emptySet(),
-                uføregrad = listOf(Uføre(LocalDate.now(), Prosent.`30_PROSENT`)),
+                uføregrad = setOf(Uføre(LocalDate.now(), Prosent.`30_PROSENT`)),
                 yrkesskadevurdering = null,
                 registrerteYrkesskader = null,
                 beregningGrunnlag = BeregningGrunnlag(
@@ -144,7 +144,7 @@ class InntektsbehovTest {
             Input(
                 nedsettelsesDato,
                 inntekter = emptySet(),
-                uføregrad = listOf(Uføre(LocalDate.now(), Prosent.`30_PROSENT`)),
+                uføregrad = setOf(Uføre(LocalDate.now(), Prosent.`30_PROSENT`)),
                 yrkesskadevurdering = Yrkesskadevurdering(
                     begrunnelse = "...",
                     relevanteSaker = listOf(YrkesskadeSak("123", LocalDate.of(2023, 1, 1))),

@@ -42,17 +42,6 @@ class ForutgåendeMedlemskapvilkåret(
         leggTilVurdering(grunnlag, vurderingsResultat, vurdertManuelt)
     }
 
-    fun vurderOverstyrt(grunnlag: ForutgåendeMedlemskapGrunnlag) {
-        val manuellVurdering = grunnlag.medlemskapArbeidInntektGrunnlag?.vurderinger?.firstOrNull() // TODO må legge innn støtte for periodisering her
-        val vurderingsResultat = if (!manuellVurdering!!.harForutgåendeMedlemskap
-            && (manuellVurdering.medlemMedUnntakAvMaksFemAar != true && manuellVurdering.varMedlemMedNedsattArbeidsevne != true)) {
-                VurderingsResultat(Utfall.IKKE_OPPFYLT, Avslagsårsak.IKKE_MEDLEM_FORUTGÅENDE, null)
-            } else {
-                VurderingsResultat(Utfall.OPPFYLT, null, null)
-            }
-        leggTilVurdering(grunnlag, vurderingsResultat, true)
-    }
-
     fun leggTilYrkesskadeVurdering() {
         val vurderingsResultat = VurderingsResultat(Utfall.OPPFYLT, null, Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG)
         vilkår.leggTilVurdering(

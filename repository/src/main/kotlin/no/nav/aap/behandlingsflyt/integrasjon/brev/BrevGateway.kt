@@ -226,16 +226,16 @@ class BrevGateway : BrevbestillingGateway {
     }
 
     override fun kanDistribuereBrev(
-        saksnummer: String,
         brukerIdent: String,
-        mottakerIdentListe: List<String>
+        mottakerIdentListe: List<String>,
+        brevbestillingReferanse: BrevbestillingReferanse
     ): List<MottakerDistStatus> {
         val httpRequest = PostRequest(
-            body = KanDistribuereBrevRequest(saksnummer, brukerIdent, mottakerIdentListe)
+            body = KanDistribuereBrevRequest(brukerIdent = brukerIdent, mottakerIdentListe = mottakerIdentListe)
         )
         val response: KanDistribuereBrevReponse = requireNotNull(
             client.post(
-                uri = baseUri.resolve("/api/distribusjon/kan-distribuere-brev"),
+                uri = baseUri.resolve("/api/$brevbestillingReferanse/kan-distribuere-brev"),
                 request = httpRequest
             )
         )
@@ -274,6 +274,9 @@ class BrevGateway : BrevbestillingGateway {
                                 gradertDagsatsInkludertBarnetillegg = brevBehov.tilkjentYtelse?.gradertDagsatsInkludertBarnetillegg?.verdi,
                                 barnetillegg = brevBehov.tilkjentYtelse?.barnetillegg?.verdi,
                                 antallBarn = brevBehov.tilkjentYtelse?.antallBarn,
+                                minsteÅrligYtelse = null,
+                                minsteÅrligYtelseUnder25 = null,
+                                årligYtelse = null,
                             )
                         )
                     }

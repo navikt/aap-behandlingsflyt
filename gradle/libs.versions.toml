@@ -1,7 +1,7 @@
 [versions]
 ktor = "3.3.2"
-komponenter = "1.0.432"
-tilgang = "1.0.154"
+komponenter = "1.0.441"
+tilgang = "1.0.159"
 utbetaling = "0.0.67"
 junit = "6.0.1"
 testcontainers = "2.0.1"
@@ -9,12 +9,12 @@ testcontainers = "2.0.1"
 [libraries]
 ktorClientContentNegotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 ktorServerContentNegotation = { module = "io.ktor:ktor-server-content-negotiation", version.ref = "ktor" }
-ktorHttpJvm = { module = "io.ktor:ktor-http-jvm", version.ref = "ktor"}
-ktorServerNetty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor"}
-ktorServerTestHost = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor"}
-ktorServerCors = { module = "io.ktor:ktor-server-cors", version.ref = "ktor"}
-ktorServerStatusPages = { module = "io.ktor:ktor-server-status-pages", version.ref = "ktor"}
-ktorSerializationJackson = { module = "io.ktor:ktor-serialization-jackson", version.ref = "ktor"}
+ktorHttpJvm = { module = "io.ktor:ktor-http-jvm", version.ref = "ktor" }
+ktorServerNetty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }
+ktorServerTestHost = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor" }
+ktorServerCors = { module = "io.ktor:ktor-server-cors", version.ref = "ktor" }
+ktorServerStatusPages = { module = "io.ktor:ktor-server-status-pages", version.ref = "ktor" }
+ktorSerializationJackson = { module = "io.ktor:ktor-serialization-jackson", version.ref = "ktor" }
 json = { module = "no.nav.aap.kelvin:json", version.ref = "komponenter" }
 dbconnect = { module = "no.nav.aap.kelvin:dbconnect", version.ref = "komponenter" }
 verdityper = { module = "no.nav.aap.kelvin:verdityper", version.ref = "komponenter" }
@@ -37,9 +37,13 @@ junitApi = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "juni
 junitJupiterEngine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
 junitJupiterParams = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit" }
 assertJ = { module = "org.assertj:assertj-core", version = "3.27.6" }
+tabletest = { module = "io.github.nchaugen:tabletest-junit", version = "0.5.5" }
+testcontainers = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers"}
+testcontainersPostgres = { module = "org.testcontainers:testcontainers-postgresql", version.ref = "testcontainers"}
+testcontainersKafka = { module = "org.testcontainers:testcontainers-kafka", version.ref = "testcontainers"}
 
 [bundles]
 junit = ["junitApi", "junitJupiterEngine", "junitJupiterParams", "assertJ"]
 
 [plugins]
-ktor = {id = "io.ktor.plugin", version.ref = "ktor"}
+ktor = { id = "io.ktor.plugin", version.ref = "ktor" }

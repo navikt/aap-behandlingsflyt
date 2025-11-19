@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningAndreStatligeYtelserLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBeregningstidspunktLøsning
@@ -9,22 +8,23 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVe
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FritakMeldepliktLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.RefusjonkravLøsning
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurderingDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.FritaksvurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.SamordningVurderingData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
+import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.InstitusjonsoppholdJSON
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
@@ -56,22 +56,22 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
     fun `ingen sykepenger i register, vurderer sykepenger for samordning med ukjent maksdato som fører til revurdering og ingen utbetaling etter kjent sykepengedato`() {
         val fom = LocalDate.now()
         val periode = Periode(fom, fom.plusYears(3))
-        val sykePengerPeriode = Periode(LocalDate.now().minusMonths(1), LocalDate.now().plusMonths(1))
-        // Simulerer et svar fra YS-løsning om at det finnes en yrkesskade
-        val person = TestPersoner.STANDARD_PERSON()
-
-        val ident = person.aktivIdent()
+        val sykePengerPeriode = Periode(fom.minusMonths(1), fom.plusMonths(1))
 
         // Sender inn en søknad
-        var behandling = sendInnSøknad(
-            ident, periode,
-            SøknadV0(
-                student = SøknadStudentDto("NEI"),
+        var (sak, behandling) = sendInnFørsteSøknad(
+            periode = periode,
+            søknad = SøknadV0(
+                student = SøknadStudentDto(StudentStatus.Nei),
                 yrkesskade = "NEI",
                 oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
             ),
         )
+
+        sak.sendInnMeldekort(periode.dager().associateWith { 0.0 })
+
+        behandling
             .medKontekst {
                 assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
                 assertThat(åpneAvklaringsbehov).isNotEmpty()
@@ -204,8 +204,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         val sisteBehandling = hentSisteOpprettedeBehandlingForSak(behandling.sakId)
         assertThat(sisteBehandling.referanse).isEqualTo(behandlingReferanse)
 
-        val sak = hentSak(behandling)
-        var revurdering =
+        val revurdering =
             sak.opprettManuellRevurdering(listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SAMORDNING_OG_AVREGNING))
                 .medKontekst {
                     assertThat(this.behandling.id).isNotEqualTo(sisteBehandling.id)
@@ -234,20 +233,19 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         val tilkjentYtelse =
             requireNotNull(dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(revurdering.id) }) { "Tilkjent ytelse skal være beregnet her." }
 
-        assertThat(tilkjentYtelse).hasSizeGreaterThan(2)
-        tilkjentYtelse.forEach {
-            if (it.periode.overlapper(sykePengerPeriode)) {
-                assertThat(it.tilkjent.gradering.samordningGradering).isEqualTo(Prosent.`100_PROSENT`)
-                assertThat(it.tilkjent.redusertDagsats()).isEqualTo(Beløp(0))
-            } else {
-                assertThat(it.tilkjent.gradering.samordningGradering).isEqualTo(Prosent.`0_PROSENT`)
-                assertThat(it.tilkjent.redusertDagsats()).isNotEqualTo(Beløp(0))
+        assertTidslinje(tilkjentYtelse.tilTidslinje(),
+            sykePengerPeriode.overlapp(periode)!! to {
+                assertThat(it.gradering.samordningGradering).isEqualTo(Prosent.`100_PROSENT`)
+                assertThat(it.redusertDagsats()).isEqualTo(Beløp(0))
+            },
+            Periode(sykePengerPeriode.tom.plusDays(1), sak.rettighetsperiode.tom) to {
+                assertThat(it.gradering.samordningGradering).isEqualTo(Prosent.`0_PROSENT`)
+                assertThat(it.redusertDagsats()).isNotEqualTo(Beløp(0))
             }
-        }
+        )
 
         val åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
         assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
-
     }
 
     @Test
@@ -348,7 +346,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             journalpostId = JournalpostId("20"),
             mottattTidspunkt = LocalDateTime.now().minusMonths(0),
             søknad = SøknadV0(
-                student = SøknadStudentDto("NEI"),
+                student = SøknadStudentDto(StudentStatus.Nei),
                 yrkesskade = "NEI",
                 oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
