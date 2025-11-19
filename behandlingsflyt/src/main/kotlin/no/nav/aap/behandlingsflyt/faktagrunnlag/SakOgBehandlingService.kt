@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
 
@@ -367,14 +368,9 @@ class SakOgBehandlingService(
             } else {
                 rettighetsperiode.fom
             }
-            val tom = if (mottattDato.plusYears(1).minusDays(1).isAfter(rettighetsperiode.tom)) {
-                mottattDato.plusYears(1).minusDays(1)
-            } else {
-                rettighetsperiode.tom
-            }
             val periode = Periode(
                 fom,
-                tom
+                Tid.MAKS
             ) // TODO: Usikker på om dette blir helt korrekt.. // Spør Peter
             if (periode != rettighetsperiode) {
                 sakRepository.oppdaterRettighetsperiode(sakId, periode)

@@ -84,7 +84,7 @@ class FastsettMeldeperiodeSteg(
                     .first { it <= rettighetsperiode.fom }
 
             return generateSequence(førsteFastsatteDag) { it.plusDays(MELDEPERIODE_LENGDE) }
-                .takeWhile { it <= rettighetsperiode.tom }
+                .takeWhile { it <= rettighetsperiode.fom.plusYears(10) } // TODO: Hva kan vi egentlig sette her?
                 .map { Periode(it, it.plusDays(MELDEPERIODE_LENGDE - 1)) }
                 .toList()
         }

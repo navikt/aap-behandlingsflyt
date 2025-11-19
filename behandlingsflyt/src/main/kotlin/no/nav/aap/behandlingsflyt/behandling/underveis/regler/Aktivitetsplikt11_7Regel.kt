@@ -12,7 +12,7 @@ import no.nav.aap.komponenter.type.Periode
 class Aktivitetsplikt11_7Regel : UnderveisRegel {
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
         return resultat.leggTilVurderinger(
-            input.aktivitetsplikt11_7Grunnlag.tilAktivitetspliktVurderingTidslinje(input.rettighetsperiode),
+            input.aktivitetsplikt11_7Grunnlag.tilAktivitetspliktVurderingTidslinje(input.periodeForVurdering),
             Vurdering::leggTilAktivitetspliktVurdering
         )
     }
