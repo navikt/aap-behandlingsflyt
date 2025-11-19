@@ -51,11 +51,11 @@ data class PeriodisertManuellVurderingForLovvalgMedlemskapDto(
 
 data class LovvalgDto(
     val begrunnelse: String,
-    val lovvalgsEØSLandEllerLandMedAvtale: EØSLandEllerLandMedAvtale?,
+    val lovvalgsEØSLandEllerLandMedAvtale: EØSLandEllerLandMedAvtale,
 )
 
 data class MedlemskapDto(
-    val begrunnelse: String?,
-    val varMedlemIFolketrygd: Boolean?
+    val begrunnelse: String,
+    val varMedlemIFolketrygd: Boolean
 )
 

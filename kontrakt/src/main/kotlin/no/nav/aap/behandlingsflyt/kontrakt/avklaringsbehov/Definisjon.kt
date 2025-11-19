@@ -137,6 +137,14 @@ public enum class Definisjon(
         løsesISteg = StegType.KVALITETSSIKRING,
         løsesAv = listOf(Rolle.KVALITETSSIKRER)
     ),
+    ARBEIDSOPPTRAPPING(
+        kode = AvklaringsbehovKode.`5057`,
+        type = BehovType.MANUELT_FRIVILLIG,
+        løsesISteg = StegType.ARBEIDSOPPTRAPPING,
+        kreverToTrinn = true,
+        kvalitetssikres = true,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
+    ),
     FASTSETT_ARBEIDSEVNE(
         kode = AvklaringsbehovKode.`5004`,
         type = BehovType.MANUELT_FRIVILLIG,

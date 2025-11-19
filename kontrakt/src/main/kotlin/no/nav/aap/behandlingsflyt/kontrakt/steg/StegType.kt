@@ -91,6 +91,10 @@ public enum class StegType(
         gruppe = StegGruppe.SYKDOM,
         status = Status.UTREDES
     ),
+    ARBEIDSOPPTRAPPING(
+        gruppe = StegGruppe.SYKDOM,
+        status = Status.UTREDES,
+    ),
     REFUSJON_KRAV(
         gruppe = StegGruppe.SYKDOM,
         status = Status.UTREDES

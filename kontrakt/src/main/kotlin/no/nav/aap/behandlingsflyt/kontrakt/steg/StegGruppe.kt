@@ -12,7 +12,7 @@ public enum class StegGruppe(public val skalVises: Boolean, public val obligator
     LOVVALG(true, true),
     MEDLEMSKAP(true, true),
     OPPHOLDSKRAV(true, true),
-    BARNETILLEGG(true, false),
+    BARNETILLEGG(true, true),
     STUDENT(true, false),
     SYKDOM(true, true),
     GRUNNLAG(true, true),

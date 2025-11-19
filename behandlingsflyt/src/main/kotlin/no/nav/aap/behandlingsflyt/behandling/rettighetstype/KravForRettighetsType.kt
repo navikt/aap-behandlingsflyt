@@ -46,7 +46,7 @@ fun vurderRettighetsType(vilkårsresultat: Vilkårsresultat): Tidslinje<Rettighe
                 forutgåendeTidslinje.mergePrioriterHøyre(tidslinjeOf(periode to rettighetsType))
         }
         .segmenter()
-        .mapNotNull { segment -> segment.verdi?.let { Segment(segment.periode, it) } }
+        .map { segment -> Segment(segment.periode, segment.verdi) }
         .let(::Tidslinje)
         .komprimer()
 }
@@ -54,7 +54,7 @@ fun vurderRettighetsType(vilkårsresultat: Vilkårsresultat): Tidslinje<Rettighe
 object KravForStudent : KravspesifikasjonForRettighetsType {
     override val kravForutgåendeMedlemskap = MåVæreOppfylt()
     override val kravSykdom = MåVæreOppfylt(Innvilgelsesårsak.STUDENT)
-    override val kravBistand = MåVæreOppfylt(Innvilgelsesårsak.STUDENT)
+    override val kravBistand = IngenKrav
 
     override val kravOvergangUfør = IngenKrav
     override val kravOvergangArbeid = IngenKrav

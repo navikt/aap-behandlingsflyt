@@ -13,7 +13,7 @@ class RettTilBarnetillegg(barn: Set<BarnIdentifikator> = emptySet()) {
         return this
     }
 
-    fun leggTilOppgitteBarn(barn: Set<BarnIdentifikator>): RettTilBarnetillegg {
+    fun leggTilUavklartBarn(barn: Set<BarnIdentifikator>): RettTilBarnetillegg {
         val identer = barn.toSet()
         uavklarteBarn.addAll(identer.filter { ident -> !barnMedFolkeregisterRelasjonTil.any { it.er(ident) } })
         return this
