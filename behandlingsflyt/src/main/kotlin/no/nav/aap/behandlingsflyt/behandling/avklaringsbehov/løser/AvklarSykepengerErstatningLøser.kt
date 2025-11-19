@@ -26,11 +26,12 @@ class AvklarSykepengerErstatningLøser(
         løsning: AvklarSykepengerErstatningLøsning
     ): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
+        val tidligereVurderinger = behandling.forrigeBehandlingId?.let { sykepengerErstatningRepository.hentHvisEksisterer(it)?.vurderinger }.orEmpty()
         val nyVurdering = tilVurdering(løsning.sykepengeerstatningVurdering, behandling.id, kontekst.bruker.ident)
 
         sykepengerErstatningRepository.lagre(
             behandlingId = behandling.id,
-            nyeVurderinger = listOf(nyVurdering)
+            vurderinger = tidligereVurderinger + nyVurdering
         )
 
         return LøsningsResultat(

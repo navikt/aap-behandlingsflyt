@@ -25,22 +25,10 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
         }
     }
 
-    override fun lagre(behandlingId: BehandlingId, nyeVurderinger: List<SykepengerVurdering>) {
-        val grunnlagId = opprettGrunnlagEllerKopierTidligereGrunnlag(behandlingId)
-        lagreVurderingerPåGrunnlag(grunnlagId, nyeVurderinger)
-    }
-
-    private fun opprettGrunnlagEllerKopierTidligereGrunnlag(behandlingId: BehandlingId): Long {
-        val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
-
+    override fun lagre(behandlingId: BehandlingId, vurderinger: List<SykepengerVurdering>) {
         deaktiverGrunnlag(behandlingId)
         val grunnlagId = opprettTomtGrunnlag(behandlingId)
-
-        if(eksisterendeGrunnlag != null) {
-            lagreVurderingerPåGrunnlag(grunnlagId, eksisterendeGrunnlag.vurderinger)
-        }
-
-        return grunnlagId
+        lagreVurderingerPåGrunnlag(grunnlagId, vurderinger)
     }
 
     private fun opprettTomtGrunnlag(behandlingId: BehandlingId): Long {
