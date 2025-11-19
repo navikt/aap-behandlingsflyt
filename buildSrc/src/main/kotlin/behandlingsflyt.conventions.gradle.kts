@@ -4,6 +4,7 @@ import kotlin.math.max
 
 plugins {
     id("org.jetbrains.kotlin.jvm")
+    id("org.jetbrains.dokka")
 }
 
 group = "no.nav.aap"
@@ -20,6 +21,15 @@ testing {
     suites {
         @Suppress("UnstableApiUsage") val test by getting(JvmTestSuite::class) {
             useJUnitJupiter()
+        }
+    }
+}
+
+dokka {
+    dokkaSourceSets.configureEach {
+        sourceLink {
+            remoteUrl("https://github.com/navikt/aap-behandlingsflyt/")
+            localDirectory.set(rootDir)
         }
     }
 }
