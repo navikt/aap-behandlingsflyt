@@ -21,6 +21,7 @@ data class ManuellInntektGrunnlagResponse(
     @Deprecated("Erstattes av vurderinger") val historiskeVurderinger: List<ManuellInntektVurderingGrunnlagResponse>,
     val manuelleVurderinger: ManuellInntektGrunnlagVurdering? = null,
     val historiskeManuelleVurderinger: List<ManuellInntektGrunnlagVurdering>? = emptyList(),
+    val registrerteInntekterSisteRelevanteAr: List<AarData> = emptyList(),
     val harTilgangTilÅSaksbehandle: Boolean,
 )
 
