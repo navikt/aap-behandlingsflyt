@@ -63,7 +63,7 @@ jobs:
         image: ${{ steps.docker-push.outputs.image }}
 
   bygg-docs:
-    name: Bygg og test og push
+    name: Bygg docs
     runs-on: ubuntu-latest
     permissions:
         contents: read
