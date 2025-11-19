@@ -1911,7 +1911,7 @@ object FakeServers : AutoCloseable {
 
         routing {
             route("/api") {
-                route("/v2") {
+                route("/*") {
                     post("/bestill") {
                         val request = call.receive<BestillBrevV2Request>()
                         val brevbestillingReferanse = UUID.randomUUID()
