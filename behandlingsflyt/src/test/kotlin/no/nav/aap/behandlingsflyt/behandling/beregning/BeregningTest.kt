@@ -352,9 +352,10 @@ class BeregningTest {
                 uføregrad = emptySet(),
                 yrkesskadevurdering = null,
                 beregningGrunnlag = null,
+
                 registrerteYrkesskader = null,
-                årsInntekter = TODO(),
-                inntektsPerioder = TODO()
+                årsInntekter = inntektPerÅr,
+                inntektsPerioder = emptyList()
             )
         )
         val beregning = Beregning(input).beregneMedInput()
