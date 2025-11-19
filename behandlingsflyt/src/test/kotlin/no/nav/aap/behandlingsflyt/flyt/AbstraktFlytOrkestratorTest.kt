@@ -927,8 +927,8 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
 
 
     protected fun Sak.sendInnMeldekort(
-        journalpostId: JournalpostId,
         timerArbeidet: Map<LocalDate, Double>,
+        journalpostId: JournalpostId = journalpostId(),
         mottattTidspunkt: LocalDateTime = LocalDateTime.now(),
     ) {
         sendInn(
