@@ -195,7 +195,7 @@ class SamordningYtelseVurderingInformasjonskrav(
 
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.SAMORDNING_YTELSE
-        private val log = LoggerFactory.getLogger(SamordningYtelseVurderingInformasjonskrav::class.java)
+        private val secureLogger = LoggerFactory.getLogger("secureLog")
         override fun konstruer(
             repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider
         ): SamordningYtelseVurderingInformasjonskrav {
@@ -211,8 +211,8 @@ class SamordningYtelseVurderingInformasjonskrav(
         fun harEndringerIYtelser(
             eksisterende: SamordningYtelseGrunnlag?, samordningYtelser: Set<SamordningYtelse>
         ): Boolean {
-            log.info("Hentet samordningytelse eksisterende ${eksisterende?.ytelser} med nye samordningsytelser ${samordningYtelser.map { it.ytelsePerioder }}")
-            log.info("Overlapp " + harFullstendigOverlapp(eksisterende, samordningYtelser))
+            secureLogger.info("Hentet samordningytelse eksisterende ${eksisterende?.ytelser} med nye samordningsytelser ${samordningYtelser.map { it.ytelsePerioder }}")
+            secureLogger.info("Overlapp " + harFullstendigOverlapp(eksisterende, samordningYtelser))
             // TDOD: return eksisterende == null || harFullstendigOverlapp(eksisterende, samordningYtelser)
             return eksisterende == null || samordningYtelser != eksisterende.ytelser
         }
