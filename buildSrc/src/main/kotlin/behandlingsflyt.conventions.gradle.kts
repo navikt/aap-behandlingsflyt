@@ -28,7 +28,7 @@ testing {
 dokka {
     dokkaSourceSets.configureEach {
         sourceLink {
-            remoteUrl("https://github.com/navikt/aap-behandlingsflyt/")
+            remoteUrl("https://github.com/navikt/aap-behandlingsflyt/blob/main")
             localDirectory.set(rootDir)
         }
     }
