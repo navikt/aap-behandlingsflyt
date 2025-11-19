@@ -1898,6 +1898,8 @@ object FakeServers : AutoCloseable {
                     )
                 )
             ),
+            brevmal = null,
+            brevdata = null,
             opprettet = LocalDateTime.now(),
             oppdatert = LocalDateTime.now(),
             behandlingReferanse = UUID.randomUUID(),
