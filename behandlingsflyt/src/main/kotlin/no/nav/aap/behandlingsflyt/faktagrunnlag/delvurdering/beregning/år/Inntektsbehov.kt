@@ -16,7 +16,7 @@ import java.time.LocalDate
 import java.time.Year
 import java.util.*
 
-class Inntektsbehov(private val input: Input) {
+class Inntektsbehov(private val input: BeregningInput) {
 
     private val log = LoggerFactory.getLogger(javaClass)
 

@@ -17,7 +17,7 @@ import java.time.LocalDate
  * @param beregningGrunnlag Se [no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag]
  * @param inntektsPerioder Inntekt per måned
  */
-data class Input(
+data class BeregningInput(
     val nedsettelsesDato: LocalDate,
     val årsInntekter: Set<InntektPerÅr>,
     val inntektsPerioder: List<InntektsPeriode>,

@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Input
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.BeregningInput
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
@@ -57,6 +57,8 @@ class BeregningService(
         val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
         val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
         val inntektsPerioder = // TODO: ikke hent fra?
+            // TODO: hent dette fra eget informasjonskrav i stedet
+            // trengs popp da lenger?
             requireNotNull(medlemskapArbeidInntektRepository.hentHvisEksisterer(behandlingId)?.inntekterINorgeGrunnlag) {
                 "Må ha hentet inntekt i lovvalgssteget før grunnlagsberegningen"
             }.map {
@@ -135,7 +137,7 @@ class BeregningService(
         registrerteYrkesskader: Yrkesskader?
     ): Inntektsbehov {
         return Inntektsbehov(
-            Input(
+            BeregningInput(
                 nedsettelsesDato = Inntektsbehov.utledNedsettelsesdato(vurdering?.tidspunktVurdering, studentVurdering),
                 årsInntekter = årsInntekter,
                 uføregrad = uføregrad,

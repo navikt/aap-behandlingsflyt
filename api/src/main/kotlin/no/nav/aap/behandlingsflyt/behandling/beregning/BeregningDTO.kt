@@ -32,7 +32,7 @@ data class Grunnlag11_19DTO(
     val grunnlag: BigDecimal
 )
 
-class InntektDTO(
+data class InntektDTO(
     val år: String,
     val inntektIKroner: BigDecimal,
     val inntektIG: BigDecimal,
@@ -76,7 +76,7 @@ data class StandardYrkesskadeDTO(
 )
 
 
-class UføreGrunnlagDTO(
+data class UføreGrunnlagDTO(
     val nedsattArbeidsevneÅr: String,
     val ytterligereNedsattArbeidsevneÅr: String,
     val inntekter: List<InntektDTO>,
@@ -88,7 +88,7 @@ class UføreGrunnlagDTO(
     val grunnlag: BigDecimal
 )
 
-class UføreInntektDTO(
+data class UføreInntektDTO(
     val år: String,
     val inntektIKroner: BigDecimal,
     val inntektIG: BigDecimal,
@@ -98,7 +98,7 @@ class UføreInntektDTO(
     val uføreGrad: Int
 )
 
-class YrkesskadeUføreGrunnlagDTO(
+data class YrkesskadeUføreGrunnlagDTO(
     val uføreGrunnlag: UføreGrunnlagDTO,
     val yrkesskadeGrunnlag: YrkesskadeGrunnlagDTO,
     val grunnlag: BigDecimal
