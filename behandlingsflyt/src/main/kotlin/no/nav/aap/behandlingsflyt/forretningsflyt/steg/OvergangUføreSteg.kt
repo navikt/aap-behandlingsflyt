@@ -135,7 +135,7 @@ class OvergangUføreSteg private constructor(
         val sykdomsvurderinger = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)
             ?.somSykdomsvurderingstidslinje().orEmpty()
         val bistandsvurderinger = bistandRepository.hentHvisEksisterer(kontekst.behandlingId)
-            ?.somBistandsvurderingstidslinje(startDato = kontekst.rettighetsperiode.fom).orEmpty()
+            ?.somBistandsvurderingstidslinje().orEmpty()
 
         return Tidslinje.zip3(utfall, sykdomsvurderinger, bistandsvurderinger)
             .mapValue { (utfall, sykdomsvurdering, bistandsvurdering) ->

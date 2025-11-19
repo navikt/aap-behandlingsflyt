@@ -88,14 +88,8 @@ fun List<PeriodisertManuellVurderingForLovvalgMedlemskapDto>.validerGyldigVurder
         if (it.lovvalg.begrunnelse.isBlank()) {
             return Validation.Invalid(this, "Det mangler begrunnelse for lovvalg [$periode]")
         }
-        if (it.lovvalg.lovvalgsEØSLandEllerLandMedAvtale == null) {
-            return Validation.Invalid(this, "Det mangler lovvalgsland [$periode]")
-        }
-        if (it.medlemskap != null && it.medlemskap.begrunnelse.isNullOrBlank()) {
+        if (it.medlemskap != null && it.medlemskap.begrunnelse.isBlank()) {
             return Validation.Invalid(this, "Det mangler begrunnelse for medlemskap [$periode]")
-        }
-        if (it.medlemskap != null && it.medlemskap.varMedlemIFolketrygd == null) {
-            return Validation.Invalid(this, "Det er ikke vurdert om brukeren er medlem i folketrygden [$periode]")
         }
     }
 

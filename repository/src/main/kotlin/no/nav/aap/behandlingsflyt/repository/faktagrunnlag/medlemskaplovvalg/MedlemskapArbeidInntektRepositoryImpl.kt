@@ -484,8 +484,8 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
 
         val query = """
             INSERT INTO MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG 
-                (behandling_id, medlemskap_unntak_person_id, inntekter_i_norge_id, arbeider_id, manuell_vurdering_id, vurderinger_id) 
-            SELECT ?, medlemskap_unntak_person_id, inntekter_i_norge_id, arbeider_id, manuell_vurdering_id, vurderinger_id
+                (behandling_id, medlemskap_unntak_person_id, inntekter_i_norge_id, arbeider_id, vurderinger_id) 
+            SELECT ?, medlemskap_unntak_person_id, inntekter_i_norge_id, arbeider_id, vurderinger_id
                 from MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG 
                 where behandling_id = ? and aktiv
         """.trimIndent()
@@ -634,12 +634,14 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         ManuellVurderingForLovvalgMedlemskap(
             lovvalg = LovvalgDto(
                 begrunnelse = row.getString("tekstvurdering_lovvalg"),
-                lovvalgsEØSLandEllerLandMedAvtale = row.getEnumOrNull("lovvalgs_land")
+                lovvalgsEØSLandEllerLandMedAvtale = row.getEnum("lovvalgs_land")
             ),
-            medlemskap = MedlemskapDto(
-                begrunnelse = row.getStringOrNull("tekstvurdering_medlemskap"),
-                varMedlemIFolketrygd = row.getBooleanOrNull("var_medlem_i_folketrygden")
-            ),
+            medlemskap = row.getStringOrNull("tekstvurdering_medlemskap")?.let { tekstvurdering_medlemskap ->
+                MedlemskapDto(
+                    begrunnelse = tekstvurdering_medlemskap,
+                    varMedlemIFolketrygd = row.getBoolean("var_medlem_i_folketrygden")
+                )
+            },
             overstyrt = row.getBoolean("overstyrt"),
             vurdertAv = row.getString("vurdert_av"),
             vurdertDato = row.getLocalDateTime("opprettet_tid"),

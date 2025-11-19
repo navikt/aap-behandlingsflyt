@@ -172,6 +172,24 @@ class GraderingArbeidRegelTest {
     }
 
     @Test
+    fun `Kan jobbe opp til 80 prosent hvis det foreligger arbeidsopptrapping i perioden`() {
+        val rettighetsperiode = Periode(LocalDate.parse("2024-10-31"), LocalDate.parse("2025-10-31"))
+        val periode = Periode(rettighetsperiode.fom, rettighetsperiode.fom.plusDays(13))
+        val input = underveisInput(
+            rettighetsperiode = rettighetsperiode,
+            fastsattArbeidsevne = null,
+            opptrappingPerioder = listOf(periode),
+            meldekort = meldekort(periode to BigDecimal(60))
+        )
+        val vurdering = vurder(input)
+
+        assertEquals(
+            Prosent(80),
+            vurdering.segment(rettighetsperiode.fom)?.verdi?.grenseverdi()
+        )
+    }
+
+    @Test
     fun `Hvis det ikke er registrert arbeidsevne brukes timer arbeidet i utregning av gradering`() {
         val rettighetsperiode = Periode(LocalDate.parse("2024-10-31"), LocalDate.parse("2025-10-31"))
         val periode = Periode(rettighetsperiode.fom, rettighetsperiode.fom.plusDays(13))
@@ -302,11 +320,13 @@ class GraderingArbeidRegelTest {
         fastsattArbeidsevne: Prosent?,
         meldekort: List<Meldekort>,
         fritaksvurderinger: List<Fritaksvurdering> = emptyList(),
+        opptrappingPerioder: List<Periode> = emptyList()
     ) = tomUnderveisInput(
         innsendingsTidspunkt = meldekort.associate { it.mottattTidspunkt.toLocalDate() to it.journalpostId },
         rettighetsperiode = rettighetsperiode,
         meldekort = meldekort,
         meldepliktGrunnlag = MeldepliktGrunnlag(vurderinger = fritaksvurderinger),
+        opptrappingPerioder = opptrappingPerioder,
         arbeidsevneGrunnlag = ArbeidsevneGrunnlag(
             listOfNotNull(fastsattArbeidsevne?.let {
                 ArbeidsevneVurdering(

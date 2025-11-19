@@ -24,11 +24,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fød
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningMedHistorikk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningInformasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningMedHistorikk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRegisterGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreInformasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRegisterGateway
 import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
@@ -100,7 +100,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
     }
 
     object FakeUføreRegisterGateway : UføreRegisterGateway {
-        var response: List<Uføre> = emptyList()
+        var response: Set<Uføre> = emptySet()
         override fun innhentMedHistorikk(person: Person, fraDato: LocalDate) = response
     }
 
@@ -166,7 +166,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
                 )
             )
             FakeUføreRegisterGateway.response =
-                listOf(
+                setOf(
                     Uføre(
                         virkningstidspunkt = periode.fom,
                         uføregrad = Prosent.`100_PROSENT`,

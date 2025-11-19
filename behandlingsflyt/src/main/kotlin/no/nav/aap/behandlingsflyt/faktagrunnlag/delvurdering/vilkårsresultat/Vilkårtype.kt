@@ -2,6 +2,9 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat
 
 /**
  * Er `kode` fra felles kodeverk? Eller noe vi har funnet på selv? Dokumenter plz.
+ *
+ * @param obligatorisk Sier om vilkåret må være tilstede for at flyten skal gå bra. Ikke koblet til lovverk eller valg
+ *        av rettighetstype.
  */
 enum class Vilkårtype(
     val kode: String,
@@ -28,7 +31,7 @@ enum class Vilkårtype(
             Avslagsårsak.IKKE_MEDLEM,
             Avslagsårsak.NORGE_IKKE_KOMPETENT_STAT
         ),
-        hjemmel = "§ 11-3"
+        hjemmel = "§ 2"
     ),
     SYKDOMSVILKÅRET(
         kode = "AAP-5",
@@ -48,7 +51,6 @@ enum class Vilkårtype(
     BISTANDSVILKÅRET(
         kode = "AAP-6",
         spesielleInnvilgelsesÅrsaker = listOf(
-            Innvilgelsesårsak.STUDENT,
             Innvilgelsesårsak.VURDERES_FOR_UFØRETRYGD,
         ),
         avslagsårsaker = listOf(

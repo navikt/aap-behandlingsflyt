@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.prosessering
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamGateway
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamordneVedtakRequest
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -18,29 +17,35 @@ import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 class VarsleVedtakJobbUtfører(
     private val repositoryProvider: RepositoryProvider,
     private val gatewayProvider: GatewayProvider,
-    private val sakRepository: SakRepository = repositoryProvider.provide(),
-    private val behandlingRepository: BehandlingRepository = repositoryProvider.provide(),
-    private val vedtakRepository: VedtakRepository = repositoryProvider.provide(),
-    private val flytJobbRepository: FlytJobbRepository = repositoryProvider.provide(),
-    private val tjenestepensjonRefusjonskravVurdering: TjenestepensjonRefusjonsKravVurderingRepository = repositoryProvider.provide(),
-    private val samGateway: SamGateway = gatewayProvider.provide(),
 ) : JobbUtfører {
+
     override fun utfør(input: JobbInput) {
+        val samGateway: SamGateway = gatewayProvider.provide()
+        val sakRepository: SakRepository = repositoryProvider.provide()
+        val behandlingRepository: BehandlingRepository = repositoryProvider.provide()
+        val vedtakRepository: VedtakRepository = repositoryProvider.provide()
+
         val behandlingId = input.payload<BehandlingId>()
         val behandling = behandlingRepository.hent(behandlingId)
         val sak = sakRepository.hent(behandling.sakId)
         val vedtak = vedtakRepository.hent(behandling.id)
         val vedtakId = requireNotNull(vedtakRepository.hentId(behandling.id))
 
+
+        requireNotNull(vedtak) { "Forventer at vedtak-objekter er lagret når denne jobben kjøres." }
+
+        // Hvis avslag, bruk vedtakstidspunkt som fallback
+        val virkFom = vedtak.virkningstidspunkt ?: vedtak.vedtakstidspunkt.toLocalDate()
+
         val request = SamordneVedtakRequest(
             pid = sak.person.aktivIdent().identifikator,
             vedtakId = vedtakId.toString(),
             sakId = sak.id.id,
-            virkFom = vedtak!!.vedtakstidspunkt.toLocalDate(),
+            virkFom = virkFom,
             virkTom = sak.rettighetsperiode.tom,
             fagomrade = "AAP",
             ytelseType = "AAP",
-            etterbetaling = vedtak.virkningstidspunkt?.let { vedtak.vedtakstidspunkt.toLocalDate() > it } ?: false,
+            etterbetaling = vedtak.virkningstidspunkt.let { vedtak.vedtakstidspunkt.toLocalDate() > it },
             utvidetFrist = null,
         )
 
@@ -51,7 +56,7 @@ class VarsleVedtakJobbUtfører(
             samGateway.varsleVedtak(request)
         }
 
-
+        val flytJobbRepository: FlytJobbRepository = repositoryProvider.provide()
         flytJobbRepository.leggTil(JobbInput(HentSamIdJobbUtfører).medPayload(behandling.id).forSak(sak.id.id))
     }
 

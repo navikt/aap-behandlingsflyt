@@ -18,7 +18,6 @@ object InMemorySamordningRepository : SamordningRepository {
 
     override fun lagre(behandlingId: BehandlingId, samordningPerioder: Set<SamordningPeriode>, input: Faktagrunnlag) {
         grunnlag[behandlingId] = SamordningGrunnlag(
-            id = id.getAndIncrement(),
             samordningPerioder = samordningPerioder
         )
     }

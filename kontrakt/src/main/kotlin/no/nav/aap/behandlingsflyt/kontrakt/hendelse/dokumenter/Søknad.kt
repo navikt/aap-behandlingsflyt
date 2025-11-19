@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter
 
 import com.fasterxml.jackson.annotation.JsonAlias
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonValue
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import no.nav.aap.komponenter.json.WhiteSpaceRemovalDeserializer
 import java.time.LocalDate
@@ -12,7 +13,7 @@ public sealed interface Søknad : Melding
  * Dagens søknad-objekt. Ved inkompatibel endring, lag ny versjon.
  *
  * @param student Hvis ikke oppgitt, skal dette objektet være null.
- * @param yrkesskade Lovlig verdi er "ja/jA/Ja/JA". Alt annet blir tolket som false.
+ * @param yrkesskade Lovlig verdi er "ja/jA/Ja/JA". Alt annet blir tolket som false. Fra db, mulige verdier er "Ikke oppgitt", "Ja", "Nei".
  * @param oppgitteBarn Om barn er oppgitt, mengden av identer.
  * @param medlemskap Søkers opphold i utland
  */
@@ -24,14 +25,29 @@ public data class SøknadV0(
     public val medlemskap: SøknadMedlemskapDto? = null
 ) : Søknad
 
+
 /**
- * @param erStudent Lovlig verdier er JA, AVBRUTT, NEI.
- * @param kommeTilbake Lovlige verdier er JA, NEI, VET_IKKE, IKKE_OPPGITT.
+ * @param erStudent Lovlig verdier er Ja, Nei, Avbrutt.
+ * @param kommeTilbake Lovlige verdier er JA, NEI, VET_IKKE.
  */
 public data class SøknadStudentDto(
-    public val erStudent: String,
-    public val kommeTilbake: String? = null
+    public val erStudent: StudentStatus,
+    public val kommeTilbake: KommeTilbake? = null
 )
+
+public enum class KommeTilbake(public val stringRepresentation: String) {
+    Ja("Ja"), Nei("Nei"),
+
+    @JsonAlias("Vet ikke", "VetIkke")
+    VetIkke("Vet ikke");
+
+    @JsonValue
+    public fun customValue(): String = stringRepresentation
+}
+
+public enum class StudentStatus {
+    Ja, Avbrutt, Nei
+}
 
 /**
  * @param harBoddINorgeSiste5År Lovlig verdi er "ja/jA/Ja/JA". Alt annet blir tolket som false.

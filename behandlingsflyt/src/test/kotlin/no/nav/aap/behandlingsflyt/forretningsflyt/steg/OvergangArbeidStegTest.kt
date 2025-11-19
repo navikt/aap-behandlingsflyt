@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
@@ -156,14 +156,13 @@ class OvergangArbeidStegTest {
     private fun bistand(
         vurderingenGjelderFra: LocalDate,
         erBehov: Boolean
-    ) = BistandVurdering(
+    ) = Bistandsvurdering(
         begrunnelse = "Begrunnelse",
         erBehovForAktivBehandling = erBehov,
         erBehovForArbeidsrettetTiltak = erBehov,
         erBehovForAnnenOppfølging = false,
         vurderingenGjelderFra = vurderingenGjelderFra,
         vurdertAv = "Z00000",
-        skalVurdereAapIOvergangTilUføre = null,
         skalVurdereAapIOvergangTilArbeid = null,
         overgangBegrunnelse = null,
         vurdertIBehandling = BehandlingId(1)

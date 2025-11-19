@@ -53,7 +53,7 @@ class BarnetilleggSteg(
             definisjon = Definisjon.AVKLAR_BARNETILLEGG,
             vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst) },
             erTilstrekkeligVurdert = { !harPerioderMedBarnTilAvklaring(barnetilgangTidslinje) },
-            tilbakestillGrunnlag = { tilbakestillBarnetillegg(kontekst)},
+            tilbakestillGrunnlag = { tilbakestillBarnetillegg(kontekst) },
             kontekst
         )
         return Fullført
@@ -69,11 +69,10 @@ class BarnetilleggSteg(
         return when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
             VurderingType.REVURDERING ->
-                (!tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())
+                (tidligereVurderinger.muligMedRettTilAAP(kontekst, type())
                         && (vurderingsbehovSomTvingerStopp.any { kontekst.vurderingsbehovRelevanteForSteg.contains(it) }
-                            || (kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty() && (harOppgittBarn(barneGrunnlag) || harGjortManuellVurderingIBehandlingen(kontekst)))
-                        )
-                )
+                        || (kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty() && (harOppgittBarn(barneGrunnlag)
+                        || harGjortManuellVurderingIBehandlingen(kontekst)))))
 
             VurderingType.MELDEKORT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
@@ -84,14 +83,14 @@ class BarnetilleggSteg(
     }
 
     private fun tilbakestillBarnetillegg(kontekst: FlytKontekstMedPerioder) {
-        val vedtatteBarnetillegg = kontekst.forrigeBehandlingId
+        val forrigeBehandlingId = kontekst.forrigeBehandlingId
+        val vedtatteBarnetillegg = forrigeBehandlingId
             ?.let { barnetilleggRepository.hentHvisEksisterer(it) }
             ?.perioder
             ?: emptyList()
         barnetilleggRepository.lagre(kontekst.behandlingId, vedtatteBarnetillegg)
 
-        val forrigeBarnGrunnlag = kontekst.forrigeBehandlingId
-            ?.let { barnRepository.hentHvisEksisterer(it) }
+        val forrigeBarnGrunnlag = forrigeBehandlingId?.let { barnRepository.hentHvisEksisterer(it) }
 
         val vurderteBarn = forrigeBarnGrunnlag?.vurderteBarn?.barn.orEmpty()
 
@@ -100,6 +99,16 @@ class BarnetilleggSteg(
             vurdertAv = forrigeBarnGrunnlag?.vurderteBarn?.vurdertAv ?: SYSTEMBRUKER.ident,
             vurderteBarn = vurderteBarn
         )
+
+        val saksbehandlerOppgitteBarn = forrigeBarnGrunnlag?.saksbehandlerOppgitteBarn?.barn.orEmpty()
+
+        if (forrigeBarnGrunnlag == null) {
+            barnRepository.deaktiverAlleSaksbehandlerOppgitteBarn(kontekst.behandlingId)
+        } else {
+            barnRepository.tilbakestillGrunnlag(forrigeBehandlingId, kontekst.behandlingId)
+        }
+
+        barnRepository.lagreSaksbehandlerOppgitteBarn(kontekst.behandlingId, saksbehandlerOppgitteBarn)
 
         // Ting er nå helt tilbakestillt, vi må derfor beregne tidslinjen på nytt
         beregnOgOppdaterBarnetilleggTidslinje(kontekst)
