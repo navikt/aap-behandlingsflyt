@@ -189,7 +189,7 @@ class FormkravSteg (
         val behandling = behandlingRepository.hent(behandlingId)
         val vårReferanse = "${behandling.referanse}-${brevBehov.typeBrev}"
 
-        val brevReferanse = brevbestillingService.bestillV2(
+        val brevReferanse = brevbestillingService.bestill(
             behandlingId,
             brevBehov = brevBehov,
             unikReferanse = vårReferanse,
@@ -306,7 +306,7 @@ class FormkravSteg (
             val behandling = behandlingRepository.hent(behandlingId)
             val vårReferanse = "${behandling.referanse}-${brevBehov.typeBrev}"
 
-            val brevReferanse = brevbestillingService.bestillV2(
+            val brevReferanse = brevbestillingService.bestill(
                 behandlingId,
                 brevBehov = brevBehov,
                 unikReferanse = vårReferanse,
