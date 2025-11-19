@@ -58,15 +58,6 @@ jobs:
         id: docker-push
         with:
             team: aap # required
-
-      - name: Genererer docs
-        run: |
-          ./gradlew dokkaGenerate
-
-      - name: upload-artifact for docs
-        uses: actions/upload-pages-artifact@v4
-        with:
-          path: './build/dokka/html'
             
     outputs:
         image: ${{ steps.docker-push.outputs.image }}
