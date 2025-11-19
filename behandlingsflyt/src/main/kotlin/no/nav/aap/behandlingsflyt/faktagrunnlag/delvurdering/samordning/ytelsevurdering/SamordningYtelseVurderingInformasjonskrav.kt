@@ -50,8 +50,7 @@ class SamordningYtelseVurderingInformasjonskrav(
         kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?
     ): Boolean {
         return kontekst.erFørstegangsbehandlingEllerRevurdering() && !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(
-            kontekst,
-            steg
+            kontekst, steg
         ) && (oppdatert.ikkeKjørtSisteKalenderdag() || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode)
     }
 
@@ -116,8 +115,7 @@ class SamordningYtelseVurderingInformasjonskrav(
     ): List<ForeldrePengerYtelse> {
         return fpGateway.hentVedtakYtelseForPerson(
             ForeldrepengerRequest(
-                Aktør(personIdent),
-                oppslagsPeriode
+                Aktør(personIdent), oppslagsPeriode
             )
         ).ytelser.mapNotNull { ytelse ->
             val anvistInnenforPeriode = ytelse.anvist.filter {
@@ -215,7 +213,7 @@ class SamordningYtelseVurderingInformasjonskrav(
         ): Boolean {
             log.info("Hentet samordningytelse eksisterende ${eksisterende?.ytelser} med nye samordningsytelser ${samordningYtelser.map { it.ytelsePerioder }}")
             log.info("Overlapp " + harFullstendigOverlapp(eksisterende, samordningYtelser))
-          // TDOD: return eksisterende == null || harFullstendigOverlapp(eksisterende, samordningYtelser)
+            // TDOD: return eksisterende == null || harFullstendigOverlapp(eksisterende, samordningYtelser)
             return eksisterende == null || samordningYtelser != eksisterende.ytelser
         }
 
@@ -224,30 +222,25 @@ class SamordningYtelseVurderingInformasjonskrav(
 }
 
 fun harFullstendigOverlapp(
-    eksisterende: SamordningYtelseGrunnlag?,
-    nye: Set<SamordningYtelse>
+    eksisterende: SamordningYtelseGrunnlag?, nye: Set<SamordningYtelse>
 ): Boolean {
     if (eksisterende == null) return false
 
     return eksisterende.ytelser.any { eksisterendeYtelse ->
         nye.any { nyYtelse ->
-            eksisterendeYtelse.ytelseType == nyYtelse.ytelseType &&
-                    alleNyeInnenforAlleEksisterende(
-                        eksisterendeYtelse.ytelsePerioder,
-                        nyYtelse.ytelsePerioder
-                    )
+            eksisterendeYtelse.ytelseType == nyYtelse.ytelseType && alleNyeInnenforAlleEksisterende(
+                eksisterendeYtelse.ytelsePerioder, nyYtelse.ytelsePerioder
+            )
         }
     }
 }
 
 private fun alleNyeInnenforAlleEksisterende(
-    eksisterende: Set<SamordningYtelsePeriode>,
-    nye: Set<SamordningYtelsePeriode>
-): Boolean =
-    nye.all { ny ->
-        eksisterende.all { eks ->
-            eks.periode.inneholder(ny.periode)
-        }
+    eksisterende: Set<SamordningYtelsePeriode>, nye: Set<SamordningYtelsePeriode>
+): Boolean = nye.all { ny ->
+    eksisterende.all { eks ->
+        eks.periode.inneholder(ny.periode)
     }
+}
 
 
