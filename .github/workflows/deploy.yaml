@@ -58,8 +58,34 @@ jobs:
         id: docker-push
         with:
             team: aap # required
+
+      - name: Genererer docs
+        run: |
+          ./gradlew dokkaGenerate
+
+      - name: upload-artifact for docs
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: './build/dokka/html'
+            
     outputs:
         image: ${{ steps.docker-push.outputs.image }}
+
+
+  deploy-pages:
+    runs-on: ubuntu-latest
+    needs: test
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.test.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
 
   publiser-kontrakt:
       needs: build
