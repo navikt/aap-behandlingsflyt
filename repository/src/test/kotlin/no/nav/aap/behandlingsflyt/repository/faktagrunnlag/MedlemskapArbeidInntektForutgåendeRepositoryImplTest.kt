@@ -371,6 +371,8 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
             sjekkBehandlingFørMigrering(medlemskapArbeidInntektForutgåendeRepository, behandling)
             sjekkBehandlingFørMigrering(medlemskapArbeidInntektForutgåendeRepository, revurdering)
 
+            val antallVurderingerKoblingerFørMigrering = hentVurderingerId(connection)
+
             // Kjører migrering
             medlemskapArbeidInntektForutgåendeRepository.migrerManuelleVurderingerPeriodisert()
 
@@ -382,7 +384,7 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
             assertThat(hentGrunnlag(connection, revurdering.id)).hasSize(1) // 1 aktiv
 
             // Sjekker at innslag i lovvalg_medlemskap_manuell_vurderinger finnes og at det er to stk en for hver vurdering
-            assertThat(hentVurderingerId(connection)).hasSize(2)
+            assertThat(hentVurderingerId(connection) - antallVurderingerKoblingerFørMigrering).hasSize(2)
         }
     }
 
