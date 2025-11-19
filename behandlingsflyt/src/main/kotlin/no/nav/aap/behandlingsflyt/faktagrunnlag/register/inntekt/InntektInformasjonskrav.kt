@@ -47,7 +47,7 @@ class InntektInformasjonskrav(
                 (oppdatert.ikkeKjørtSisteKalenderdag() || relevanteÅrErEndret(kontekst))
     }
 
-    data class InntektRegisterdata(val inntekter: Set<InntektPerÅr>) : InformasjonskravRegisterdata
+    data class InntektRegisterdata(val inntekter: Set<InntektPerÅrFraRegister>) : InformasjonskravRegisterdata
 
     data class InntektInput(val person: Person, val relevanteÅr: Set<Year>) : InformasjonskravInput
 
@@ -77,7 +77,7 @@ class InntektInformasjonskrav(
         if (inntektGrunnlag?.inntekter == oppdaterteInntekter) {
             return IKKE_ENDRET
         } else {
-            inntektGrunnlagRepository.lagre(behandlingId, oppdaterteInntekter)
+            inntektGrunnlagRepository.lagre(behandlingId, oppdaterteInntekter.map { it.tilInntektPerÅr() }.toSet())
             return ENDRET
         }
     }

@@ -352,7 +352,6 @@ class BeregningTest {
                 uføregrad = emptySet(),
                 yrkesskadevurdering = null,
                 beregningGrunnlag = null,
-
                 registrerteYrkesskader = null,
                 årsInntekter = inntektPerÅr,
                 inntektsPerioder = emptyList()
