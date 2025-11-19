@@ -251,15 +251,16 @@ class BeregningTest {
 
     @TableTest(
         """    
-        Scenario                                   | nedsettelsesDato | inntektPerÅr                 | ForventetG
-        Enkel 11-19                                | 2023-01-01       | [2020: 3, 2021: 4, 2022: 5]  | 5
-        Velg gjennomsnitt hvis høyere              | 2023-01-01       | [2020: 5, 2021: 5, 2022: 2]  | 4
-        Begrens til 6G om siste år er høyt         | 2023-01-01       | [2020: 3, 2021: 3, 2022: 10] | 6
-        Begrens til 6G om gjennomsnitt høyt        | 2023-01-01       | [2020: 7, 2021: 7, 2022: 7]  | 6
-        Om vi mangler inntekter, blir grunnlaget 0 | 2023-01-01       | [2024: 0]                    | 0
+        Scenario                                   | nedsettelsesÅr | inntektPerÅr                 | ForventetG
+        Enkel 11-19                                | 2023           | [2020: 3, 2021: 4, 2022: 5]  | 5
+        Velg gjennomsnitt hvis høyere              | 2023           | [2020: 5, 2021: 5, 2022: 2]  | 4
+        Begrens til 6G om siste år er høyt         | 2023           | [2020: 3, 2021: 3, 2022: 10] | 6
+        Begrens til 6G om gjennomsnitt høyt        | 2023           | [2020: 7, 2021: 7, 2022: 7]  | 6
+        Om vi mangler inntekter, blir grunnlaget 0 | 2023           | [2024: 0]                    | 0
         """
     )
-    fun `11-19 tabelldrevet test`(nedsettelsesDato: LocalDate, inntektPerÅr: Set<InntektPerÅr>, forventetGrunnlag: GUnit) {
+    fun `11-19 tabelldrevet test`(nedsettelsesÅr: Year, inntektPerÅr: Set<InntektPerÅr>, forventetGrunnlag: GUnit) {
+        val nedsettelsesDato = nedsettelsesÅr.atDay(1)
         val input = Inntektsbehov(
             input = Input(
                 nedsettelsesDato = nedsettelsesDato,
