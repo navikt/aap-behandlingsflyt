@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory
 import kotlin.time.measureTimedValue
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Ytelse as ForeldrePengerYtelse
 
+
 class SamordningYtelseVurderingInformasjonskrav(
     private val samordningYtelseRepository: SamordningYtelseRepository,
     private val tidligereVurderinger: TidligereVurderinger,
@@ -196,7 +197,7 @@ class SamordningYtelseVurderingInformasjonskrav(
 
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.SAMORDNING_YTELSE
-
+        private val log = LoggerFactory.getLogger(SamordningYtelseVurderingInformasjonskrav::class.java)
         override fun konstruer(
             repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider
         ): SamordningYtelseVurderingInformasjonskrav {
@@ -212,7 +213,41 @@ class SamordningYtelseVurderingInformasjonskrav(
         fun harEndringerIYtelser(
             eksisterende: SamordningYtelseGrunnlag?, samordningYtelser: Set<SamordningYtelse>
         ): Boolean {
+            log.info("Hentet samordningytelse eksisterende ${eksisterende?.ytelser} med nye samordningsytelser ${samordningYtelser.map { it.ytelsePerioder }}")
+            log.info("Overlapp " + harFullstendigOverlapp(eksisterende, samordningYtelser))
+          // TDOD: return eksisterende == null || harFullstendigOverlapp(eksisterende, samordningYtelser)
             return eksisterende == null || samordningYtelser != eksisterende.ytelser
+        }
+
+    }
+
+}
+
+fun harFullstendigOverlapp(
+    eksisterende: SamordningYtelseGrunnlag?,
+    nye: Set<SamordningYtelse>
+): Boolean {
+    if (eksisterende == null) return false
+
+    return eksisterende.ytelser.any { eksisterendeYtelse ->
+        nye.any { nyYtelse ->
+            eksisterendeYtelse.ytelseType == nyYtelse.ytelseType &&
+                    alleNyeInnenforAlleEksisterende(
+                        eksisterendeYtelse.ytelsePerioder,
+                        nyYtelse.ytelsePerioder
+                    )
         }
     }
 }
+
+private fun alleNyeInnenforAlleEksisterende(
+    eksisterende: Set<SamordningYtelsePeriode>,
+    nye: Set<SamordningYtelsePeriode>
+): Boolean =
+    nye.all { ny ->
+        eksisterende.all { eks ->
+            eks.periode.inneholder(ny.periode)
+        }
+    }
+
+
