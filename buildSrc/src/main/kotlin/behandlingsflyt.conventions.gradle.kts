@@ -32,6 +32,12 @@ dokka {
             localDirectory.set(rootDir)
         }
     }
+    dokkaPublications {
+        configureEach {
+            suppressObviousFunctions.set(true)
+            suppressInheritedMembers.set(true)
+        }
+    }
 }
 
 private fun bestemAntallTestTråder(): Int {
