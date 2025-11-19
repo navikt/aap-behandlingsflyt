@@ -229,7 +229,7 @@ class AktivitetspliktFlytTest :
                 assertEquals(VilkårsresultatUtfall.OPPFYLT, it.first)
                 assertEquals(null, it.second)
             },
-            Segment(Periode(bruddFom, sak.rettighetsperiode.tom)) {
+            Segment(Periode(bruddFom, underveisÅpenTidslinje.helePerioden().tom)) {
                 assertEquals(VilkårsresultatUtfall.IKKE_OPPFYLT, it.first)
                 assertEquals(UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT_11_7_STANS, it.second)
             }
@@ -344,7 +344,7 @@ class AktivitetspliktFlytTest :
                 assertEquals(VilkårsresultatUtfall.OPPFYLT, it.first)
                 assertEquals(null, it.second)
             },
-            Segment(Periode(bruddFom, sak.rettighetsperiode.tom)) {
+            Segment(Periode(bruddFom, underveisTidslinjeEtterEffektuering.helePerioden().tom)) {
                 assertEquals(VilkårsresultatUtfall.IKKE_OPPFYLT, it.first)
                 assertEquals(UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT_11_7_STANS, it.second)
             }
