@@ -114,7 +114,7 @@ class BeregningsGrunnlagApiTest {
                     InntektPerÅr(2021, Beløp(400000)),
                     InntektPerÅr(2020, Beløp(300000))
                 ),
-                uføregrad = setOf(Uføre(LocalDate.now(), Prosent(30))), // yrkesskade tilbake i tid, ikke bare fra dagens dato
+                uføregrad = setOf(Uføre(LocalDate.of(2021, 1, 1), Prosent(30))),
                 yrkesskadevurdering = Yrkesskadevurdering(
                     begrunnelse = "en begrunnelse",
                     andelAvNedsettelsen = Prosent(30),
