@@ -47,6 +47,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
                     medlemskapGrunnlag = hentMedlemskapGrunnlag(it.getLongOrNull("medlemskap_unntak_person_id")),
                     inntekterINorgeGrunnlag = hentInntekterINorgeGrunnlag(it.getLongOrNull("inntekter_i_norge_id")),
                     arbeiderINorgeGrunnlag = hentArbeiderINorgeGrunnlag(it.getLongOrNull("arbeider_id")),
+                    manuellVurdering = hentManuellVurdering(it.getLongOrNull("manuell_vurdering_id")),
                     vurderinger = hentVurderinger(it.getLongOrNull("vurderinger_id"))
                         .ifEmpty { listOfNotNull(hentManuellVurdering(it.getLongOrNull("manuell_vurdering_id"))) } // TODO midlertidig inntil vi har migrert
                 )
@@ -112,6 +113,51 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
                 opprettet = it.vurdertDato,
                 erGjeldendeVurdering = it == vurderinger.last(),
             )
+        }
+    }
+
+    override fun lagreManuellVurdering(
+        behandlingId: BehandlingId,
+        manuellVurdering: ManuellVurderingForForutgåendeMedlemskap?
+    ) {
+        val grunnlagOppslag = hentGrunnlag(behandlingId)
+        deaktiverGrunnlag(behandlingId)
+
+        val manuellVurderingId = if (manuellVurdering == null) {
+            null
+        } else {
+            val eksisterendeManuellVurdering = hentManuellVurdering(grunnlagOppslag?.manuellVurderingId)
+            val overstyrt = manuellVurdering.overstyrt || eksisterendeManuellVurdering?.overstyrt == true
+
+            val manuellVurderingQuery = """
+            INSERT INTO FORUTGAAENDE_MEDLEMSKAP_MANUELL_VURDERING (BEGRUNNELSE, HAR_FORUTGAAENDE_MEDLEMSKAP, VAR_MEDLEM_MED_NEDSATT_ARBEIDSEVNE, MEDLEM_MED_UNNTAK_AV_MAKS_FEM_AAR, OVERSTYRT, VURDERT_AV) VALUES (?, ?, ?, ?, ?, ?)
+            """.trimIndent()
+
+            connection.executeReturnKey(manuellVurderingQuery) {
+                setParams {
+                    setString(1, manuellVurdering.begrunnelse)
+                    setBoolean(2, manuellVurdering.harForutgåendeMedlemskap)
+                    setBoolean(3, manuellVurdering.varMedlemMedNedsattArbeidsevne)
+                    setBoolean(4, manuellVurdering.medlemMedUnntakAvMaksFemAar)
+                    setBoolean(5, overstyrt)
+                    setString(6, manuellVurdering.vurdertAv)
+                }
+            }
+        }
+
+        val grunnlagQuery = """
+            INSERT INTO FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG (behandling_id, arbeider_id, inntekter_i_norge_id, medlemskap_unntak_person_id, manuell_vurdering_id) VALUES (?, ?, ?, ?, ?)
+        """.trimIndent()
+
+        connection.execute(grunnlagQuery) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+                setLong(2, grunnlagOppslag?.arbeiderId)
+                setLong(3, grunnlagOppslag?.inntektINorgeId)
+                setLong(4, grunnlagOppslag?.medlId)
+                setLong(5, manuellVurderingId)
+            }
+            setResultValidator { require(it == 1) }
         }
     }
 
