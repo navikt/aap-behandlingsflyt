@@ -205,58 +205,7 @@ class SykdomsvilkårTest {
             },
         )
     }
-
-    @Test
-    fun `hvis revurdering av førstegangsvurdering, så skal viss varigheten vurderes`() {
-        val vilkårsresultat = Vilkårsresultat()
-        vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SYKDOMSVILKÅRET)
-        val startDato = 1 januar 2024
-        val opprettet = LocalDateTime.now()
-
-        Sykdomsvilkår(vilkårsresultat).vurder(
-            SykdomsFaktagrunnlag(
-                typeBehandling = TypeBehandling.Revurdering,
-                kravDato = startDato,
-                sisteDagMedMuligYtelse = startDato.plusYears(3),
-                yrkesskadevurdering = null,
-                sykdomsvurderinger = listOf(
-                    sykdomsvurdering(opprettet = opprettet, vurderingenGjelderFra = startDato),
-                    sykdomsvurdering(
-                        erNedsettelseIArbeidsevneAvEnVissVarighet = false,
-                        vurderingenGjelderFra = startDato,
-                        opprettet = opprettet.plusSeconds(50)
-                    )
-                ),
-                studentvurdering = null,
-                bistandvurderingFaktagrunnlag = null,
-                sykepengerErstatningFaktagrunnlag =
-                    SykepengerErstatningGrunnlag(
-                        vurderinger = listOf(
-                            SykepengerVurdering(
-                                begrunnelse = "",
-                                dokumenterBruktIVurdering = emptyList(),
-                                harRettPå = true,
-                                grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
-                                vurdertAv = "abc123",
-                                vurdertTidspunkt = LocalDateTime.now(),
-                            )
-                        )
-                    ),
-            )
-        )
-
-        val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
-
-        assertThat(vilkår.vilkårsperioder()).hasSize(1)
-
-        vilkår.tidslinje().assertTidslinje(
-            Segment(Periode(1 januar 2024, 1 januar 2027)) { vurdering ->
-                assertThat(vurdering.utfall).isEqualTo(Utfall.OPPFYLT)
-                assertThat(vurdering.innvilgelsesårsak).isEqualTo(Innvilgelsesårsak.SYKEPENGEERSTATNING)
-            },
-        )
-    }
-
+    
     private fun sykdomsvurdering(
         harSkadeSykdomEllerLyte: Boolean = true,
         erSkadeSykdomEllerLyteVesentligdel: Boolean = true,

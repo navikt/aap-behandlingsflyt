@@ -50,11 +50,6 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
                 t1.kombiner(t2, StandardSammenslåere.prioriterHøyreSideCrossJoin())
             }
 
-        val sykepengeerstatningTidslinje = grunnlag.sykepengerErstatningFaktagrunnlag?.somTidslinje(
-            kravDato = grunnlag.kravDato,
-            sisteMuligDagMedYtelse = grunnlag.sisteDagMedMuligYtelse
-        ).orEmpty()
-
         val bistandvurderingtidslinje =
             grunnlag.bistandvurderingFaktagrunnlag
                 ?.somBistandsvurderingstidslinje(grunnlag.sisteDagMedMuligYtelse)
@@ -65,15 +60,13 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
                 studentVurderingTidslinje,
                 yrkesskadeVurderingTidslinje,
                 sykdomsvurderingTidslinje,
-                sykepengeerstatningTidslinje,
                 bistandvurderingtidslinje
             )
-                .mapValue { (studentVurdering, yrkesskadeVurdering, sykdomVurdering, sykepengerVurdering, bistandVurdering) ->
+                .mapValue { (studentVurdering, yrkesskadeVurdering, sykdomVurdering, bistandVurdering) ->
                     opprettVilkårsvurdering(
                         studentVurdering,
                         sykdomVurdering,
                         yrkesskadeVurdering,
-                        sykepengerVurdering,
                         bistandVurdering,
                         grunnlag
                     )
@@ -86,7 +79,6 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
         studentVurderingTidslinje: Tidslinje<StudentVurdering?>,
         yrkesskadeVurderingTidslinje: Tidslinje<Yrkesskadevurdering?>,
         sykdomsvurderingTidslinje: Tidslinje<Sykdomsvurdering>,
-        sykepengerVurderingTidslinje: Tidslinje<SykepengerVurdering>,
         bistandvurderingTidslinje: Tidslinje<Bistandsvurdering>,
     ): Tidslinje<LokaltSegment> {
         val zip3 = Tidslinje.zip3(
@@ -95,17 +87,15 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
             sykdomsvurderingTidslinje,
         )
 
-        return Tidslinje.zip3(
+        return Tidslinje.zip2(
             zip3,
-            sykepengerVurderingTidslinje,
             bistandvurderingTidslinje,
-        ).mapValue { (a, b, c) ->
+        ).mapValue { (a, b) ->
             LokaltSegment(
                 studentVurdering = a?.first,
                 yrkesskadeVurdering = a?.second,
                 sykdomVurdering = a?.third,
-                sykepengerVurdering = b,
-                bistandsvurdering = c
+                bistandsvurdering = b
             )
         }
     }
@@ -114,7 +104,6 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
         val studentVurdering: StudentVurdering?,
         val yrkesskadeVurdering: Yrkesskadevurdering?,
         val sykdomVurdering: Sykdomsvurdering?,
-        val sykepengerVurdering: SykepengerVurdering?,
         val bistandsvurdering: Bistandsvurdering?
     )
 
@@ -122,7 +111,6 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
         studentVurdering: StudentVurdering?,
         sykdomVurdering: Sykdomsvurdering?,
         yrkesskadeVurdering: Yrkesskadevurdering?,
-        sykepengerVurdering: SykepengerVurdering?,
         bistandsvurdering: Bistandsvurdering?,
         grunnlag: SykdomsFaktagrunnlag
     ): Vilkårsvurdering {
@@ -139,9 +127,6 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
         } else if (sykdomVurdering?.erOppfylt(grunnlag.kravDato) == true && bistandsvurdering?.erBehovForBistand() == true) {
             utfall = Utfall.OPPFYLT
             innvilgelsesårsak = null
-        } else if (sykepengerVurdering?.harRettPå == true && sykdomVurdering?.erOppfyltSettBortIfraVissVarighet() == true) {
-            utfall = Utfall.OPPFYLT
-            innvilgelsesårsak = Innvilgelsesårsak.SYKEPENGEERSTATNING
         } else {
             innvilgelsesårsak = null
             utfall = Utfall.IKKE_OPPFYLT
@@ -156,7 +141,7 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
                 Avslagsårsak.MANGLENDE_DOKUMENTASJON // TODO noe mer rett
             }
 
-            log.info("Avslagsårsak $avslagsårsak. Er nedsettelse i arbeidsevne: ${sykdomVurdering?.erNedsettelseIArbeidsevneAvEnVissVarighet}. Har rett på sykepengeerstatning: ${sykepengerVurdering?.harRettPå}")
+            log.info("Avslagsårsak $avslagsårsak. Er nedsettelse i arbeidsevne: ${sykdomVurdering?.erNedsettelseIArbeidsevneAvEnVissVarighet}")
         }
 
         return Vilkårsvurdering(
