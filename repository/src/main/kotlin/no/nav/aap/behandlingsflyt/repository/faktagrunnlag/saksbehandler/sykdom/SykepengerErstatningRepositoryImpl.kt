@@ -285,7 +285,6 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
             LEFT JOIN behandling ON behandling.id = grunnlag.behandling_id
             LEFT JOIN sak ON sak.id = behandling.sak_id
             WHERE sv.vurderinger_id = ?
-            AND grunnlag.aktiv = true
         """.trimIndent()
 
         return connection.queryList(query) {
