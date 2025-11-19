@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.drift
 
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -19,7 +20,11 @@ class Driftfunksjoner(
         sakService = SakService(repositoryProvider)
     )
 
-    fun flyttBehandlingTilStart(behandlingId: BehandlingId, connection: DBConnection) {
+    fun flyttBehandlingTilSteg(behandlingId: BehandlingId, connection: DBConnection, stegType: StegType) {
+
+        // valider at stegtype er FØR gjeldende steg
+        // Kun lov å flyutte til et steg som er i "utredes"-fasen
+
         val query = """
             UPDATE STEG_HISTORIKK
             SET aktiv = false
@@ -29,13 +34,13 @@ class Driftfunksjoner(
                   SELECT 1 
                   FROM behandling 
                   WHERE behandling.id = ?
-                    AND behandling.status IN ('UTREDES', 'IVERKSETTES')
+                    AND behandling.status IN ('UTREDES')
               );
             INSERT INTO STEG_HISTORIKK (behandling_id, steg, status)
-            SELECT id, 'START_BEHANDLING', 'START'
-            FROM behandling
-            WHERE id = ?
-              AND status IN ('UTREDES', 'IVERKSETTES');
+                SELECT id, ?, 'START'
+                FROM behandling
+                WHERE id = ?
+                    AND status IN ('UTREDES');
         """.trimIndent()
 
         val sak = sakService.hentSakFor(behandlingId)
@@ -49,7 +54,8 @@ class Driftfunksjoner(
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLong(2, behandlingId.toLong())
-                setLong(3, behandlingId.toLong())
+                setEnumName(3, stegType)
+                setLong(4, behandlingId.toLong())
             }
         }
     }
