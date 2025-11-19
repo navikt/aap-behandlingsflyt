@@ -40,6 +40,8 @@ class FakeBrevbestillingGateway : BrevbestillingGateway {
                 brevbestillingResponse = BrevbestillingResponse(
                     referanse = it.brevbestillingReferanse,
                     brev = null,
+                    brevmal = null,
+                    brevdata = null,
                     opprettet = LocalDateTime.now(),
                     oppdatert = LocalDateTime.now(),
                     behandlingReferanse = behandlingReferanse.referanse,

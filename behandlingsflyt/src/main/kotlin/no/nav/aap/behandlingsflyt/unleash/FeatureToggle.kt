@@ -24,6 +24,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     PeriodisertSykepengeErstatning,
     NyeBarn,
     InstFormaal,
+    Arbeidsopptrapping
     ;
 
     override fun key(): String = name
