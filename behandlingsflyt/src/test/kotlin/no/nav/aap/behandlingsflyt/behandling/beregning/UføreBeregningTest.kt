@@ -4,6 +4,7 @@ package no.nav.aap.behandlingsflyt.behandling.beregning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
@@ -11,7 +12,6 @@ import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.Year
@@ -20,33 +20,56 @@ import java.time.YearMonth
 class UføreBeregningTest {
 
     @Test
-    fun `Hvis bruker har en uføregrad på 100 prosent, skal ikke uføreberegningen gjøres`() {
-        assertThrows<IllegalArgumentException> {
-            UføreBeregning(
-                grunnlag = Grunnlag11_19(
-                    grunnlaget = GUnit(4),
-                    erGjennomsnitt = false,
-                    gjennomsnittligInntektIG = GUnit(0),
-                    inntekter = emptyList()
+    fun `beregningen håndterer en kort periode med 100 prosent uføre, da justeres inntektene til null kroner`() {
+        val uføreBeregning = UføreBeregning(
+            grunnlag = Grunnlag11_19(
+                grunnlaget = GUnit(4),
+                erGjennomsnitt = false,
+                gjennomsnittligInntektIG = GUnit(0),
+                inntekter = emptyList()
+            ),
+            uføregrader = setOf(
+                Uføre(
+                    virkningstidspunkt = LocalDate.of(2020, 1, 1),
+                    uføregrad = Prosent.`30_PROSENT`
                 ),
-                uføregrader = setOf(
-                    Uføre(
-                        virkningstidspunkt = LocalDate.now().minusYears(1),
-                        uføregrad = Prosent.`100_PROSENT`
-                    )
+                Uføre(
+                    virkningstidspunkt = LocalDate.of(2021, 1, 1),
+                    uføregrad = Prosent.`100_PROSENT`
                 ),
-                relevanteÅr = setOf(),
-                inntektsPerioder = setOf(
-                    InntektsPeriode(
-                        periode = Periode(
-                            fom = LocalDate.parse("2024-01-01"),
-                            tom = LocalDate.parse("2024-12-31"),
-                        ),
-                        beløp = BigDecimal(5 * 109_784).toDouble(), // 548 920
-                    )
+                Uføre(
+                    virkningstidspunkt = LocalDate.of(2022, 1, 1),
+                    uføregrad = Prosent.`30_PROSENT`
+                )
+            ),
+            relevanteÅr = listOf(2020, 2021, 2022).map(Year::of).toSet(),
+            inntektsPerioder = setOf(
+                InntektsPeriode(
+                    periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
+                    beløp = BigDecimal(5 * 109_784).multiply(BigDecimal("0.7")).toDouble(), // // 548 920
+                ),
+                InntektsPeriode(
+                    periode = Periode(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 12, 31)),
+                    beløp = BigDecimal(5 * 104_716).multiply(BigDecimal("0.7")).toDouble(),  // 209 432
+                ),
+                InntektsPeriode(
+                    periode = Periode(LocalDate.of(2020, 1, 1), LocalDate.of(2020, 12, 31)),
+                    beløp = BigDecimal(5 * 100_853).multiply(BigDecimal("0.7")).toDouble(), // 201 706
                 )
             )
-        }
+        )
+
+        val resultat = uføreBeregning.beregnUføre(Year.of(2023))
+
+        assertThat(
+            resultat.uføreInntekterFraForegåendeÅr().first { it.år == Year.of(2021) }.inntektJustertForUføregrad
+        ).isEqualTo(Beløp(0))
+        val inntektJustertForUføregrad2022 =
+            resultat.uføreInntekterFraForegåendeÅr().first { it.år == Year.of(2022) }
+        assertThat(
+            inntektJustertForUføregrad2022.inntektJustertForUføregrad
+        ).isEqualTo(Beløp("548920.00"))
+        assertThat(inntektJustertForUføregrad2022.inntektIGJustertForUføregrad).isEqualTo(GUnit((3.5 / 0.7).toBigDecimal()))
     }
 
     @Test
