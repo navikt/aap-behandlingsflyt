@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.integrasjon.datadeling
 
-import no.nav.aap.api.intern.ArenaStatusResponse as ApiInternArenaStatusResponse
+import no.nav.aap.api.intern.PersonEksistererIAAPArena
 import no.nav.aap.api.intern.SakerRequest
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.datadeling.SakStatus
@@ -25,6 +25,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import java.math.BigDecimal
@@ -157,17 +158,13 @@ class ApiInternGatewayImpl() : ApiInternGateway {
     }
 
     override fun hentArenaStatus(personidentifikatorer: List<String>): ArenaStatusResponse {
-        //FIXME: kall den mer basic metoden i API-intern, samme som Postmottak
-        val gatewayResponse: ApiInternArenaStatusResponse = try {
-            restClient.post(
-                uri.resolve("/person/aap/soknad/kan_behandles_i_kelvin"),
-                PostRequest(body = SakerRequest(personidentifikatorer)),
-                mapper = { _, _ -> }
-            )
-        } catch (e: Exception) {
-            throw e
-        }
-
-        return ArenaStatusResponse(gatewayResponse.kanBehandlesIKelvin,)
+        val reqbody = SakerRequest(personidentifikatorer = personidentifikatorer)
+        val remoteResponse: PersonEksistererIAAPArena = restClient.post(
+            uri.resolve("/arena/person/aap/eksisterer"),
+            PostRequest(body = reqbody),
+            mapper = { body, _ ->
+                DefaultJsonMapper.fromJson(body)
+            })!!
+        return ArenaStatusResponse(remoteResponse.eksisterer)
     }
 }
