@@ -222,24 +222,31 @@ class SamordningYtelseVurderingInformasjonskrav(
 }
 
 fun harFullstendigOverlapp(
-    eksisterende: SamordningYtelseGrunnlag?, nye: Set<SamordningYtelse>
+    eksisterende: SamordningYtelseGrunnlag?,
+    nye: Set<SamordningYtelse>
 ): Boolean {
     if (eksisterende == null) return false
+    if (eksisterende.ytelser.size != nye.size) return false
 
-    return eksisterende.ytelser.any { eksisterendeYtelse ->
+    return eksisterende.ytelser.all { eksisterendeYtelse ->
         nye.any { nyYtelse ->
-            eksisterendeYtelse.ytelseType == nyYtelse.ytelseType && alleNyeInnenforAlleEksisterende(
-                eksisterendeYtelse.ytelsePerioder, nyYtelse.ytelsePerioder
-            )
+            perioderErLike(eksisterendeYtelse.ytelsePerioder, nyYtelse.ytelsePerioder)
         }
     }
 }
 
-private fun alleNyeInnenforAlleEksisterende(
-    eksisterende: Set<SamordningYtelsePeriode>, nye: Set<SamordningYtelsePeriode>
-): Boolean = nye.all { ny ->
-    eksisterende.all { eks ->
-        eks.periode.inneholder(ny.periode) && eks.gradering == ny.gradering
+private fun perioderErLike(
+    eksisterende: Set<SamordningYtelsePeriode>,
+    nye: Set<SamordningYtelsePeriode>
+): Boolean {
+    if (eksisterende.size != nye.size) return false
+
+    return eksisterende.all { eks ->
+        nye.any { ny ->
+            eks.periode.fom.isEqual(ny.periode.fom) &&
+                    eks.periode.tom.isEqual(ny.periode.tom) &&
+                    eks.gradering == ny.gradering
+        }
     }
 }
 
