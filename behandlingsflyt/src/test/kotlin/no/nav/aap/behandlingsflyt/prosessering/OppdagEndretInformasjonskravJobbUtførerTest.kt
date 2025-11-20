@@ -31,12 +31,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreInformasjo
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRegisterGateway
 import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
-import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -45,12 +44,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
-import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.januar
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
@@ -233,7 +228,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
     private fun settOppFørstegangsvurdering(): Behandling {
         return dataSource.transaction { connection ->
             val repositoryProvider = postgresRepositoryRegistry.provider(connection)
-            val sak = sak(connection)
+            val sak = sak(connection, periode)
             val førstegangsbehandlingen = finnEllerOpprettBehandling(connection, sak)
 
             val kontekst = FlytKontekstMedPerioder(
@@ -269,14 +264,5 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
                 .oppdaterBehandlingStatus(førstegangsbehandlingen.id, Status.AVSLUTTET)
             førstegangsbehandlingen
         }
-    }
-
-
-    private fun sak(connection: DBConnection): Sak {
-        return PersonOgSakService(
-            FakePdlGateway,
-            PersonRepositoryImpl(connection),
-            SakRepositoryImpl(connection)
-        ).finnEllerOpprett(ident(), periode)
     }
 }

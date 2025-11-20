@@ -6,21 +6,16 @@ import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
-import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.avbrytrevurdering.AvbrytRevurderingRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -38,7 +33,6 @@ import java.time.LocalDate
 
 internal class SamordningVurderingRepositoryImplTest {
     companion object {
-        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
         private lateinit var dataSource: TestDataSource
 
@@ -230,7 +224,6 @@ internal class SamordningVurderingRepositoryImplTest {
 
         // Save the second vurdering
         val andreBegrunnelse = "Andre begrunnelse"
-        val andreMaksDato = LocalDate.of(2026, 1, 1)
 
         dataSource.transaction {
             SamordningVurderingRepositoryImpl(it).lagreVurderinger(
@@ -423,17 +416,6 @@ internal class SamordningVurderingRepositoryImplTest {
                 vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SAMORDNING_OG_AVREGNING)),
                 årsak = ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
             )
-        )
-    }
-
-    private fun sak(connection: DBConnection): Sak {
-        return PersonOgSakService(
-            FakePdlGateway,
-            PersonRepositoryImpl(connection),
-            SakRepositoryImpl(connection)
-        ).finnEllerOpprett(
-            ident(),
-            periode
         )
     }
 }

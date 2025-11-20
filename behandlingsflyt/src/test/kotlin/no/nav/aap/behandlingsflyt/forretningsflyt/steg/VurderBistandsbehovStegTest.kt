@@ -36,8 +36,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.time.LocalDate
-import java.util.Random
-import java.util.UUID
+import java.util.*
 
 class VurderBistandsbehovStegTest {
     private val random = Random(1235123)
