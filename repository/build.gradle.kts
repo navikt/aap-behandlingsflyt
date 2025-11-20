@@ -14,13 +14,15 @@ dependencies {
     implementation(libs.httpklient)
     implementation(libs.infrastructure)
     implementation(libs.tidslinje)
+    implementation("no.nav.aap.api.intern:kontrakt:0.0.21")
+
     implementation(libs.caffeine)
     implementation("org.flywaydb:flyway-database-postgresql:11.17.0")
     implementation("io.getunleash:unleash-client-java:11.1.1")
     runtimeOnly("org.postgresql:postgresql") // låst versjon i root build.gradle.kts
     implementation("no.bekk.bekkopen:nocommons:0.16.0")
 
-    implementation("no.nav.aap.api.intern:kontrakt:0.0.21")
+    implementation("com.github.ben-manes.caffeine:caffeine:3.2.3")
 
     testImplementation(project(":lib-test"))
     testImplementation(libs.dbtest)
