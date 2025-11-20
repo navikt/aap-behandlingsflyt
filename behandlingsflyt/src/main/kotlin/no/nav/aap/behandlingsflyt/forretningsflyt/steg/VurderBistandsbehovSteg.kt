@@ -119,60 +119,6 @@ class VurderBistandsbehovSteg(
         return Fullført
     }
 
-    private fun vedtakBehøverVurdering(kontekst: FlytKontekstMedPerioder): Boolean {
-        return when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING,
-            VurderingType.REVURDERING -> {
-                if (tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())) {
-                    return false
-                }
-
-                val perioderBistandsvilkåretErRelevant = perioderHvorBistandsvilkåretErRelevant(kontekst)
-                if (perioderBistandsvilkåretErRelevant.segmenter().any { it.verdi } && vurderingsbehovTvingerVurdering(
-                        kontekst
-                    )) {
-                    return true
-                }
-                val perioderBistandsvilkåretErVurdert = kontekst.forrigeBehandlingId
-                    ?.let { forrigeBehandlingId ->
-                        val forrigeBehandling = behandlingRepository.hent(forrigeBehandlingId)
-                        val forrigeRettighetsperiode =
-                            /* Lagrer vi ned rettighetsperioden som ble brukt for en behandling noe sted? */
-                            vilkårsresultatRepository.hent(forrigeBehandlingId)
-                                .finnVilkår(Vilkårtype.ALDERSVILKÅRET)
-                                .tidslinje()
-                                .helePerioden()
-
-                        perioderHvorBistandsvilkåretErRelevant(
-                            kontekst.copy(
-                                /* TODO: hacky. Er faktisk bare behandlingId som brukes av sjekkene. */
-                                behandlingId = forrigeBehandlingId,
-                                forrigeBehandlingId = forrigeBehandling.forrigeBehandlingId,
-                                rettighetsperiode = forrigeRettighetsperiode,
-                                behandlingType = forrigeBehandling.typeBehandling(),
-                            )
-                        )
-                    }
-                    .orEmpty()
-
-                val relevantePerioderSomManglerVedtattVurdering =
-                    perioderBistandsvilkåretErRelevant.leftJoin(perioderBistandsvilkåretErVurdert) { erRelevant, erVurdert ->
-                        erRelevant && erVurdert != true
-                    }.segmenter().any { it.verdi }
-                relevantePerioderSomManglerVedtattVurdering
-            }
-
-            VurderingType.MELDEKORT -> false
-            VurderingType.EFFEKTUER_AKTIVITETSPLIKT -> false
-            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9 -> false
-            VurderingType.IKKE_RELEVANT -> false
-        }
-    }
-
-    private fun vurderingsbehovTvingerVurdering(kontekst: FlytKontekstMedPerioder): Boolean {
-        return kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty()
-    }
-
     private fun perioderHvorBistandsvilkåretErRelevant(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
         val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
 
