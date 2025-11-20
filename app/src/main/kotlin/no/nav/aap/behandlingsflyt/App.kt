@@ -330,7 +330,7 @@ private fun utførMigreringer(
     scheduler.schedule(Runnable {
         val unleashGateway: UnleashGateway = gatewayProvider.provide()
         val forutgåendeMedlemskapMigreringEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.ForutgaendeMedlemskapMigrering)
-        val isLeader = true
+        val isLeader = isLeader(log)
         log.info("isLeader = $isLeader, ForutgaendeMedlemskapMigrering=$forutgåendeMedlemskapMigreringEnabled")
 
         if (forutgåendeMedlemskapMigreringEnabled && isLeader) {

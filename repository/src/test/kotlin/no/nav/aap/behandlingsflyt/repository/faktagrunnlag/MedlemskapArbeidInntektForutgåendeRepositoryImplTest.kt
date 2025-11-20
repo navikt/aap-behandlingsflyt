@@ -398,7 +398,6 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
         assertThat(grunnlag?.manuellVurdering).isNotNull
         assertThat(grunnlag?.manuellVurdering?.fom).isNull()
         assertThat(grunnlag?.manuellVurdering?.vurdertIBehandling).isNull()
-       // assertThat(grunnlag?.vurderinger).isEmpty()
     }
 
     private fun sjekkBehandlingEtterMigrering(
