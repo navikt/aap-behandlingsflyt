@@ -1,10 +1,13 @@
 package no.nav.aap.behandlingsflyt.integrasjon.datadeling
 
+import no.nav.aap.api.intern.ArenaStatusResponse as ApiInternArenaStatusResponse
+import no.nav.aap.api.intern.SakerRequest
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.datadeling.SakStatus
 import no.nav.aap.behandlingsflyt.datadeling.SakStatusDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
+import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaStatusResponse
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.MeldekortPerioderDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DatadelingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DetaljertMeldekortDTO
@@ -151,5 +154,19 @@ class ApiInternGatewayImpl() : ApiInternGateway {
             throw e
         }
 
+    }
+
+    override fun hentArenaStatus(personidentifikatorer: List<String>): ArenaStatusResponse {
+        val gatewayResponse: ApiInternArenaStatusResponse = try {
+            restClient.post(
+                uri.resolve("/person/aap/soknad/kan_behandles_i_kelvin"),
+                PostRequest(body = SakerRequest(personidentifikatorer)),
+                mapper = { _, _ -> }
+            )
+        } catch (e: Exception) {
+            throw e
+        }
+
+        return ArenaStatusResponse(gatewayResponse.kanBehandlesIKelvin,)
     }
 }

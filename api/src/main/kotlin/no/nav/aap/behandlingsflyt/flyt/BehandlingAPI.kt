@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.dokument.KlagedokumentInformasjonUtleder
+import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.pip.PipRepository
@@ -86,6 +87,14 @@ fun NormalOpenAPIRoute.behandlingApi(
 
                     val vurderingsbehovOgÅrsaker = behandlingRepository.hentVurderingsbehovOgÅrsaker(behandling.id)
 
+                    val identer = dataSource.transaction(readOnly = true) { connection ->
+                        val repositoryProvider = repositoryRegistry.provider(connection)
+                        val pipRepository = repositoryProvider.provide<PipRepository>()
+                        pipRepository.finnIdenterPåBehandling(behandling.referanse)
+                    }.map { it.ident }
+
+                    val arenaStatus = gatewayProvider.provide(ApiInternGateway::class).hentArenaStatus(identer)
+
                     DetaljertBehandlingDTO(
                         referanse = behandling.referanse.referanse,
                         type = behandling.typeBehandling(),
@@ -137,7 +146,8 @@ fun NormalOpenAPIRoute.behandlingApi(
                         kravMottatt = kravMottatt,
                         tilhørendeKlagebehandling = tilhørendeKlagebehandling?.referanse,
                         vedtaksdato = VedtakService(repositoryProvider).vedtakstidspunkt(behandling)?.toLocalDate(),
-                        vurderingsbehovOgÅrsaker = vurderingsbehovOgÅrsaker
+                        vurderingsbehovOgÅrsaker = vurderingsbehovOgÅrsaker,
+                        arenaStatusDTO = ArenaStatusDTO(harRelevantHistorikk = arenaStatus.harRelevantArenaHistorikk)
                     )
                 }
                 respond(dto)

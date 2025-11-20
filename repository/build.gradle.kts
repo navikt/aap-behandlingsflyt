@@ -20,6 +20,8 @@ dependencies {
     runtimeOnly("org.postgresql:postgresql") // låst versjon i root build.gradle.kts
     implementation("no.bekk.bekkopen:nocommons:0.16.0")
 
+    implementation("no.nav.aap.api.intern:kontrakt:0.0.21")
+
     testImplementation(project(":lib-test"))
     testImplementation(libs.dbtest)
 
