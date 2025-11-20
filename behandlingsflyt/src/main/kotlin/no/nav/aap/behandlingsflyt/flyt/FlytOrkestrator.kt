@@ -80,6 +80,10 @@ class FlytOrkestrator(
 
     private val log = LoggerFactory.getLogger(javaClass)
 
+    fun opprettKontekst(behandling: Behandling): FlytKontekst {
+        return opprettKontekst(behandling.sakId, behandling.id)
+    }
+
     fun opprettKontekst(sakId: SakId, behandlingId: BehandlingId): FlytKontekst {
         val behandling = behandlingRepository.hent(behandlingId)
 
@@ -207,7 +211,7 @@ class FlytOrkestrator(
         }
     }
 
-    private fun prosesserBehandling(kontekst: FlytKontekst) {
+    fun prosesserBehandling(kontekst: FlytKontekst) {
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
