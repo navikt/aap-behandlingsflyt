@@ -250,7 +250,7 @@ fun NormalOpenAPIRoute.brevApi(
                     respond("{}", HttpStatusCode.Accepted)
                 }
             }
-            route("/{brevbestillingReferanse}/oppdaterbrevmal") {
+            route("/{brevbestillingReferanse}/oppdater-brevdata") {
                 authorizedPut<BrevbestillingReferanse, String, BrevdataDto>(authorizationParamPathConfig) { brevbestillingReferanse, brev ->
                     brevbestillingGateway.oppdaterV3(brevbestillingReferanse, brev)
                     respond("{}", HttpStatusCode.Accepted)
