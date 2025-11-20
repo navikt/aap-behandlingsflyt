@@ -90,9 +90,10 @@ data class SamordningUføreVurderingGrunnlagDTO(
 data class SamordningUføreGrunnlagDTO(
     val virkningstidspunkt: LocalDate,
     val uføregrad: Int,
-    val kilde: String = "PESYS",
     val endringStatus: EndringStatus
-)
+) {
+    val kilde = "PESYS"
+}
 
 data class SamordningUføreVurderingDTO(
     val begrunnelse: String,
@@ -516,8 +517,6 @@ private fun mapSamordningUføreGrunnlag(
         SamordningUføreGrunnlagDTO(
             virkningstidspunkt = it.virkningstidspunkt,
             uføregrad = it.uføregrad.prosentverdi(),
-            // Alltid PESYS
-            kilde = "PESYS",
             endringStatus = it.endringStatus
         )
     }

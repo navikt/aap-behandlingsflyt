@@ -53,7 +53,7 @@ class InntektInformasjonskrav(
 
     data class InntektRegisterdata(
         val inntekter: Set<InntektPerÅrFraRegister>,
-        val inntektsperioder: List<InntektsPeriode>
+        val inntektsperioder: Set<InntektsPeriode>
     ) : InformasjonskravRegisterdata
 
     data class InntektInput(val person: Person, val relevanteÅr: Set<Year>) : InformasjonskravInput
@@ -86,6 +86,7 @@ class InntektInformasjonskrav(
                     beløp
                 )
             }
+            .toSet()
 
         return InntektRegisterdata(oppdaterteInntekter, inntektPerMåned)
     }
@@ -100,15 +101,17 @@ class InntektInformasjonskrav(
         val inntektGrunnlag = inntektGrunnlagRepository.hentHvisEksisterer(behandlingId)
         val (oppdaterteInntekter, inntektPerMåned) = registerdata
 
-        if (inntektGrunnlag?.inntekter == oppdaterteInntekter.map { it.tilInntektPerÅr() }.toSet()
-            && inntektGrunnlag.inntektPerMåned.toSet() == inntektPerMåned.toSet()
+        val inntekterPerÅrFraRegister = oppdaterteInntekter.map { it.tilInntektPerÅr() }.toSet()
+
+        if (inntektGrunnlag?.inntekter == inntekterPerÅrFraRegister
+            && inntektGrunnlag.inntektPerMåned == inntektPerMåned
         ) {
             return IKKE_ENDRET
         } else {
             inntektGrunnlagRepository.lagre(
                 behandlingId,
-                oppdaterteInntekter.map { it.tilInntektPerÅr() }.toSet(),
-                inntektPerMåned.toSet()
+                inntekterPerÅrFraRegister,
+                inntektPerMåned
             )
             return ENDRET
         }

@@ -66,7 +66,6 @@ class InntektGrunnlagRepositoryImpl(private val connection: DBConnection) :
     }
 
     private fun lagreInntekter(inntekter: Set<InntektPerÅr>, inntektPerMåned: Set<InntektsPeriode>): Long {
-        // TODO lagre inntektPerMåned
         val query = """
             INSERT INTO INNTEKTER DEFAULT VALUES
         """.trimIndent()
