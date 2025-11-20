@@ -23,11 +23,15 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.ident
+import no.nav.aap.behandlingsflyt.test.mai
+import no.nav.aap.behandlingsflyt.test.november
+import no.nav.aap.behandlingsflyt.test.oktober
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeAll
@@ -199,6 +203,104 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
         }
     }
 
+    @Test
+    fun `skal lagre manuelle vurderinger`() {
+        dataSource.transaction { connection ->
+            val personOgSakService = PersonOgSakService(
+                FakePdlGateway,
+                PersonRepositoryImpl(connection),
+                SakRepositoryImpl(connection)
+            )
+            val behandlingRepo = BehandlingRepositoryImpl(connection)
+            val medlemskapArbeidInntektForutgåendeRepo = MedlemskapArbeidInntektForutgåendeRepositoryImpl(connection)
+
+            val sak =
+                personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
+            val behandling =
+                behandlingRepo.opprettBehandling(
+                    sak.id,
+                    TypeBehandling.Førstegangsbehandling,
+                    null,
+                    VurderingsbehovOgÅrsak(
+                        listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
+                        ÅrsakTilOpprettelse.SØKNAD
+                    )
+                )
+
+            medlemskapArbeidInntektForutgåendeRepo.lagreArbeidsforholdOgInntektINorge(
+                behandling.id, emptyList(),
+                listOf(
+                    ArbeidsInntektMaaned(
+                        aarMaaned = YearMonth.now(),
+                        arbeidsInntektInformasjon = ArbeidsInntektInformasjon(
+                            listOf(
+                                Inntekt(
+                                    beloep = 1.0,
+                                    opptjeningsland = null,
+                                    skattemessigBosattLand = null,
+                                    opptjeningsperiodeFom = null,
+                                    opptjeningsperiodeTom = null,
+                                    virksomhet = Virksomhet(
+                                        identifikator = "1234"
+                                    ),
+                                    beskrivelse = null
+                                ),
+                                Inntekt(
+                                    beloep = 1.0,
+                                    opptjeningsland = null,
+                                    skattemessigBosattLand = null,
+                                    opptjeningsperiodeFom = null,
+                                    opptjeningsperiodeTom = null,
+                                    virksomhet = Virksomhet(
+                                        identifikator = "4321"
+                                    ),
+                                    beskrivelse = null
+                                ),
+                            )
+                        )
+                    ),
+                ),
+                null,
+                enhetGrunnlag = listOf(
+                    EnhetGrunnlag("1234", "Bepis AS"),
+                    EnhetGrunnlag("4321", "Rotte AS")
+                )
+            )
+
+            medlemskapArbeidInntektForutgåendeRepo.lagreVurderinger(
+                behandlingId = behandling.id,
+                vurderinger = listOf(
+                    ManuellVurderingForForutgåendeMedlemskap(
+                        begrunnelse = "begrunnelse",
+                        harForutgåendeMedlemskap = false,
+                        varMedlemMedNedsattArbeidsevne = false,
+                        medlemMedUnntakAvMaksFemAar = false,
+                        vurdertAv = "NavIdent",
+                        vurdertTidspunkt = LocalDateTime.now(),
+                        vurdertIBehandling = behandling.id,
+                        fom = 1 mai 2025,
+                        tom = 31 oktober 2025,
+                    ),
+                    ManuellVurderingForForutgåendeMedlemskap(
+                        begrunnelse = "begrunnelse",
+                        harForutgåendeMedlemskap = true,
+                        varMedlemMedNedsattArbeidsevne = false,
+                        medlemMedUnntakAvMaksFemAar = false,
+                        vurdertAv = "NavIdent",
+                        vurdertTidspunkt = LocalDateTime.now(),
+                        vurdertIBehandling = behandling.id,
+                        fom = 1 november 2025
+                    )
+                )
+            )
+
+            val lagretGrunnlag =
+                medlemskapArbeidInntektForutgåendeRepo.hentHvisEksisterer(behandling.id)
+
+            assertThat(lagretGrunnlag?.vurderinger).hasSize(2)
+        }
+    }
+
     private fun opprettBehandlingMedVurdering(
         typeBehandling: TypeBehandling,
         sakId: SakId,
@@ -279,15 +381,17 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
                 EnhetGrunnlag("4321", "Rotte AS")
             )
         )
-        forutgåendeRepository.lagreManuellVurdering(
-            behandlingId,
-            ManuellVurderingForForutgåendeMedlemskap(
-                begrunnelse = begrunnelse,
-                harForutgåendeMedlemskap = true,
-                varMedlemMedNedsattArbeidsevne = false,
-                medlemMedUnntakAvMaksFemAar = false,
-                vurdertAv = "NavIdent",
-                vurdertTidspunkt = LocalDateTime.now()
+        forutgåendeRepository.lagreVurderinger(
+            behandlingId = behandlingId,
+            vurderinger = listOf(
+                ManuellVurderingForForutgåendeMedlemskap(
+                    begrunnelse = begrunnelse,
+                    harForutgåendeMedlemskap = true,
+                    varMedlemMedNedsattArbeidsevne = false,
+                    medlemMedUnntakAvMaksFemAar = false,
+                    vurdertAv = "NavIdent",
+                    vurdertTidspunkt = LocalDateTime.now()
+                )
             )
         )
     }
