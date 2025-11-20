@@ -23,6 +23,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Year
 
@@ -83,7 +84,7 @@ class InntektInformasjonskrav(
             .map { (årMåned, beløp) ->
                 InntektsPeriode(
                     Periode(fom = årMåned.atDay(1), tom = årMåned.atEndOfMonth()),
-                    beløp
+                    Beløp(beløp.toBigDecimal())
                 )
             }
             .toSet()

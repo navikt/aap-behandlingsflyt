@@ -90,7 +90,7 @@ class BeregningService(
         manuelleInntekter: Set<ManuellInntektVurdering>
     ): Set<InntektPerÅr> {
         val manuelleByÅr = manuelleInntekter
-            .map { InntektPerÅr(it.år, it.belop, it) }
+            .map { InntektPerÅr(it.år, it.belop) }
             .groupBy { it.år }
             .mapValues {
                 require(it.value.size == 1)
