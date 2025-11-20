@@ -206,19 +206,7 @@ class AvklaringsbehovService(
             }
         }
     }
-
-    /** Special case av [oppdaterAvklaringsbehov] for vilkår som er periodisert. Brukeren
-     * av funksjonen må fortelle hvilke perioder hvor vilkåret kan bli vurdert for ([nårVurderingErRelevant]).
-     *
-     * Hvis det er en periode som trenger vurdering som ikke trengte vurdering i forrige behandling, så løftes
-     * avklaringsbehovet.
-     *
-     * Hvis vurderingsbehovene relevant for steget er i [tvingerAvklaringsbehov], så åpnes avklaringsbehovet
-     * også hvis det ikke er en endring i periodene som behøver vurdering, gitt at det er noen perioder som
-     * behøver vurdering.
-     *
-     * Vurder å skrive om til service, slik at man slipper å injecte inn alle repositoriesene?
-     */
+    
     private fun oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
         avklaringsbehovene: Avklaringsbehovene,
         behandlingRepository: BehandlingRepository,
@@ -227,7 +215,7 @@ class AvklaringsbehovService(
         tvingerAvklaringsbehov: Set<Vurderingsbehov>,
         nårVurderingErRelevant: (kontekst: FlytKontekstMedPerioder) -> Tidslinje<Boolean>,
         kontekst: FlytKontekstMedPerioder,
-        erTilstrekkeligVurdert: () -> Boolean,
+        perioderSomIkkeErTilstrekkeligVurdert: () -> Set<Periode>?,
         nårVurderingErGyldig: () -> Tidslinje<Boolean>?,
         tilbakestillGrunnlag: () -> Unit,
     ) {
@@ -279,22 +267,26 @@ class AvklaringsbehovService(
                     VurderingType.IKKE_RELEVANT -> false
                 }
             },
-            erTilstrekkeligVurdert = erTilstrekkeligVurdert,
             perioderSomIkkeErTilstrekkeligVurdert = {
-                if (nårVurderingErGyldig() == null) {
-                    null
+                if (perioderSomIkkeErTilstrekkeligVurdert() != null) {
+                    perioderSomIkkeErTilstrekkeligVurdert()!!.toSet()
                 } else {
-                    nårVurderingErRelevant(kontekst).leftJoin(nårVurderingErGyldig()!!) { erRelevant, erGyldig ->
-                        !erRelevant || erGyldig == true
-                    }.komprimer().filter { !it.verdi }.perioder().toSet()
+                    if (nårVurderingErGyldig() == null) {
+                        null
+                    } else {
+                        nårVurderingErRelevant(kontekst).leftJoin(nårVurderingErGyldig()!!) { erRelevant, erGyldig ->
+                            !erRelevant || erGyldig == true
+                        }.komprimer().filter { !it.verdi }.perioder().toSet()
+                    }
                 }
             },
+            erTilstrekkeligVurdert = { false },
             tilbakestillGrunnlag = tilbakestillGrunnlag,
             kontekst = kontekst
         )
     }
 
-    @Deprecated("Bruk perioderSomIkkeErTilstrekkeligVurdert")
+    @Deprecated("Bruk nårVurderingErGyldig i stedet for perioderSomIkkeErTilstrekkeligVurdert")
     fun oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårGammel(
         avklaringsbehovene: Avklaringsbehovene,
         behandlingRepository: BehandlingRepository,
@@ -303,7 +295,7 @@ class AvklaringsbehovService(
         tvingerAvklaringsbehov: Set<Vurderingsbehov>,
         nårVurderingErRelevant: (kontekst: FlytKontekstMedPerioder) -> Tidslinje<Boolean>,
         kontekst: FlytKontekstMedPerioder,
-        erTilstrekkeligVurdert: () -> Boolean,
+        perioderSomIkkeErTilstrekkeligVurdert: () -> Set<Periode>?,
         tilbakestillGrunnlag: () -> Unit
     ) {
         return oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
@@ -314,21 +306,41 @@ class AvklaringsbehovService(
             tvingerAvklaringsbehov,
             nårVurderingErRelevant,
             kontekst,
-            erTilstrekkeligVurdert,
+            perioderSomIkkeErTilstrekkeligVurdert,
             { null },
             tilbakestillGrunnlag
         )
     }
 
+    /** Special case av [oppdaterAvklaringsbehov] for vilkår som er periodisert. Brukeren
+     * av funksjonen må fortelle hvilke perioder hvor vilkåret kan bli vurdert for ([nårVurderingErRelevant]).
+     *
+     * Hvis det er en periode som trenger vurdering som ikke trengte vurdering i forrige behandling, så løftes
+     * avklaringsbehovet.
+     *
+     * Hvis vurderingsbehovene relevant for steget er i [tvingerAvklaringsbehov], så åpnes avklaringsbehovet
+     * også hvis det ikke er en endring i periodene som behøver vurdering, gitt at det er noen perioder som
+     * behøver vurdering.
+     *
+     * Vurder å skrive om til service, slik at man slipper å injecte inn alle repositoriesene?
+     */
     fun oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
         avklaringsbehovene: Avklaringsbehovene,
         behandlingRepository: BehandlingRepository,
         vilkårsresultatRepository: VilkårsresultatRepository,
         definisjon: Definisjon,
         tvingerAvklaringsbehov: Set<Vurderingsbehov>,
+        /**
+         * Hvilke perioder vurdering er relevant.
+         * Brukes til å utlede hvorvidt vedtaket behøver vurdering.
+         */
         nårVurderingErRelevant: (kontekst: FlytKontekstMedPerioder) -> Tidslinje<Boolean>,
+        /**
+         * Hvilke perioder behandlingen har en god nok vurdering for.
+         * Det vil løftes avklaringsbehov for relevante perioder som mangler gyldig vurdering.
+         */
+        nårVurderingErGyldig: () -> Tidslinje<Boolean>,
         kontekst: FlytKontekstMedPerioder,
-        nårVurderingErGyldig: () -> Tidslinje<Boolean>?,
         tilbakestillGrunnlag: () -> Unit
     ) {
         return oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
@@ -339,7 +351,7 @@ class AvklaringsbehovService(
             tvingerAvklaringsbehov,
             nårVurderingErRelevant,
             kontekst,
-            { false },
+            { null },
             nårVurderingErGyldig,
             tilbakestillGrunnlag
 
