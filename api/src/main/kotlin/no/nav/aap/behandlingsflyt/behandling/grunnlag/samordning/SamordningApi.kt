@@ -521,6 +521,7 @@ private fun mapSamordningUføreGrunnlag(
         SamordningUføreGrunnlagDTO(
             virkningstidspunkt = it.virkningstidspunkt,
             uføregrad = it.uføregrad.prosentverdi(),
+            // Alltid PESYS
             kilde = "PESYS",
             endringStatus = it.endringStatus
         )
