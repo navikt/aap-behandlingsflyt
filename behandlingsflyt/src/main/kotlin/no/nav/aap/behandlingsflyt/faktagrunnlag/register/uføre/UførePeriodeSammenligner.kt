@@ -8,7 +8,6 @@ import java.time.LocalDate
 data class UførePeriodeMedEndringStatus(
     val virkningstidspunkt: LocalDate,
     val uføregrad: Prosent,
-    val kilde: String = "PESYS",
     val endringStatus: EndringStatus,
 )
 
@@ -17,7 +16,6 @@ fun Collection<Uføre>.medStatus(status: EndringStatus): List<UførePeriodeMedEn
         UførePeriodeMedEndringStatus(
             virkningstidspunkt = it.virkningstidspunkt,
             uføregrad = it.uføregrad,
-            kilde = it.kilde,
             endringStatus = status
         )
     }

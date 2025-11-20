@@ -115,8 +115,6 @@ class SamordningStegTest {
         InMemorySamordningVurderingRepository.lagreVurderinger(
             behandling.id, SamordningVurderingGrunnlag(
                 begrunnelse = "En god begrunnelse",
-                maksDatoEndelig = false,
-                fristNyRevurdering = LocalDate.now().plusYears(1),
                 vurderinger = setOf(
                     SamordningVurdering(
                         ytelseType = ytelse,
@@ -164,8 +162,6 @@ class SamordningStegTest {
         InMemorySamordningVurderingRepository.lagreVurderinger(
             behandling.id, SamordningVurderingGrunnlag(
                 begrunnelse = "En god begrunnelse",
-                maksDatoEndelig = true,
-                fristNyRevurdering = null,
                 vurderinger = setOf(
                     SamordningVurdering(
                         ytelseType = Ytelse.PLEIEPENGER,
@@ -218,8 +214,6 @@ class SamordningStegTest {
         InMemorySamordningVurderingRepository.lagreVurderinger(
             behandling.id, SamordningVurderingGrunnlag(
                 begrunnelse = "",
-                maksDatoEndelig = true,
-                fristNyRevurdering = null,
                 vurderinger = setOf(
                     SamordningVurdering(
                         ytelseType = Ytelse.SYKEPENGER,
@@ -271,8 +265,6 @@ class SamordningStegTest {
         InMemorySamordningVurderingRepository.lagreVurderinger(
             behandling.id, SamordningVurderingGrunnlag(
                 begrunnelse = "",
-                maksDatoEndelig = true,
-                fristNyRevurdering = null,
                 vurderinger = setOf(
                     SamordningVurdering(
                         ytelseType = Ytelse.SYKEPENGER,
@@ -319,8 +311,6 @@ class SamordningStegTest {
         InMemorySamordningVurderingRepository.lagreVurderinger(
             behandling.id, SamordningVurderingGrunnlag(
                 begrunnelse = "",
-                maksDatoEndelig = true,
-                fristNyRevurdering = null,
                 vurderinger = setOf(
                     SamordningVurdering(
                         ytelseType = Ytelse.SYKEPENGER,
@@ -371,8 +361,6 @@ class SamordningStegTest {
             behandlingId = behandling.id,
             samordningVurderinger = SamordningVurderingGrunnlag(
                 begrunnelse = "",
-                maksDatoEndelig = true,
-                fristNyRevurdering = null,
                 vurderinger = setOf(
                     SamordningVurdering(
                         Ytelse.SYKEPENGER, setOf(
@@ -418,8 +406,6 @@ class SamordningStegTest {
             behandlingId = behandling.id,
             samordningVurderinger = SamordningVurderingGrunnlag(
                 begrunnelse = "bla bla",
-                maksDatoEndelig = false,
-                fristNyRevurdering = LocalDate.now().plusWeeks(1),
                 vurderinger = setOf(
                     SamordningVurdering(
                         Ytelse.SYKEPENGER, setOf(

@@ -3,7 +3,11 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFailsWith
@@ -156,5 +160,39 @@ class AvklaringsbehoveneTest {
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_SYKDOM, begrunnelse = "Derfor", endretAv = "Meg")
 
         assertThat(avklaringsbehovene.åpne()).hasSize(1)
+    }
+
+    @Test
+    fun `skal kunne oppdatere perioder avklaringsbehovet gjelder`() {
+        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, BehandlingId(599))
+        val avklaringsbehov = Avklaringsbehov(
+            definisjon = Definisjon.AVKLAR_SYKDOM,
+            funnetISteg = StegType.AVKLAR_SYKDOM,
+            id = 1L,
+            kreverToTrinn = null,
+        )
+        val gamlePerioder = setOf(
+            Periode(1 januar 2021, Tid.MAKS),
+        )
+        avklaringsbehovene.leggTil(
+            listOf(avklaringsbehov.definisjon),
+            avklaringsbehov.funnetISteg,
+            perioderSomIkkeErTilstrekkeligVurdert = gamlePerioder
+        )
+
+        assertThat(avklaringsbehovene.åpne()).hasSize(1)
+        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)?.perioder())
+            .isEqualTo(gamlePerioder)
+
+        val nyePerioder = setOf(
+            Periode(1 januar 2021, 1 april 2022),
+            Periode(10 april 2022, Tid.MAKS)
+        )
+        avklaringsbehovene.oppdaterPerioder(Definisjon.AVKLAR_SYKDOM, nyePerioder)
+
+        assertThat(avklaringsbehovene.åpne()).hasSize(1)
+        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)?.perioder())
+            .isEqualTo(nyePerioder)
+
     }
 }

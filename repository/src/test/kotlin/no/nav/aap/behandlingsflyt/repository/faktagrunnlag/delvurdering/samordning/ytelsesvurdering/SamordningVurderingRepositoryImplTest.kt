@@ -99,8 +99,6 @@ internal class SamordningVurderingRepositoryImplTest {
                 behandlingId = behandling.id,
                 samordningVurderinger = SamordningVurderingGrunnlag(
                     begrunnelse = "En god begrunnelse",
-                    maksDatoEndelig = false,
-                    fristNyRevurdering = LocalDate.now().plusYears(1),
                     vurderinger = setOf(vurdering, vurdering2),
                     vurdertAv = "ident"
                 )
@@ -122,8 +120,6 @@ internal class SamordningVurderingRepositoryImplTest {
             SamordningVurderingRepositoryImpl(it).lagreVurderinger(
                 behandling.id, SamordningVurderingGrunnlag(
                     begrunnelse = "xxxx",
-                    maksDatoEndelig = true,
-                    fristNyRevurdering = LocalDate.now().plusYears(1),
                     vurderinger = emptySet(),
                     vurdertAv = "ident"
                 )
@@ -135,8 +131,6 @@ internal class SamordningVurderingRepositoryImplTest {
         }
 
         assertThat(uthentet?.begrunnelse).isEqualTo("xxxx")
-        assertThat(uthentet?.maksDatoEndelig).isTrue()
-        assertThat(uthentet?.fristNyRevurdering).isEqualTo(LocalDate.now().plusYears(1))
     }
 
     @Test
@@ -164,8 +158,6 @@ internal class SamordningVurderingRepositoryImplTest {
                     behandlingId = behandling.id,
                     samordningVurderinger = SamordningVurderingGrunnlag(
                         begrunnelse = "En god begrunnelse",
-                        maksDatoEndelig = false,
-                        fristNyRevurdering = LocalDate.now().plusYears(1),
                         vurderinger = setOf(vurdering),
                         vurdertAv = "ident"
                     )
@@ -203,8 +195,6 @@ internal class SamordningVurderingRepositoryImplTest {
                 behandlingId = behandling.id,
                 samordningVurderinger = SamordningVurderingGrunnlag(
                     begrunnelse = "Første begrunnelse",
-                    maksDatoEndelig = false,
-                    fristNyRevurdering = LocalDate.of(2025, 1, 1),
                     vurderinger = setOf(førsteVurdering),
                     vurdertAv = "ident"
                 )
@@ -247,8 +237,6 @@ internal class SamordningVurderingRepositoryImplTest {
                 behandlingId = behandling.id,
                 samordningVurderinger = SamordningVurderingGrunnlag(
                     begrunnelse = andreBegrunnelse,
-                    maksDatoEndelig = true,
-                    fristNyRevurdering = andreMaksDato,
                     vurderinger = setOf(andreVurdering1, andreVurdering2),
                     vurdertAv = "ident"
                 )
@@ -319,8 +307,6 @@ internal class SamordningVurderingRepositoryImplTest {
                 samordningVurderingRepository.lagreVurderinger(
                     behandling.id, SamordningVurderingGrunnlag(
                         begrunnelse = "begrunnelse1",
-                        maksDatoEndelig = false,
-                        fristNyRevurdering = null,
                         vurdertAv = "ident",
                         vurderinger = setOf(
                             SamordningVurdering(
@@ -339,8 +325,6 @@ internal class SamordningVurderingRepositoryImplTest {
                 samordningVurderingRepository.lagreVurderinger(
                     behandling.id, SamordningVurderingGrunnlag(
                         begrunnelse = "begrunnelse2",
-                        maksDatoEndelig = false,
-                        fristNyRevurdering = null,
                         vurdertAv = "ident",
                         vurderinger = setOf(
                             SamordningVurdering(
@@ -414,8 +398,6 @@ internal class SamordningVurderingRepositoryImplTest {
     ): SamordningVurderingGrunnlag {
         return SamordningVurderingGrunnlag(
             begrunnelse = begrunnelse,
-            maksDatoEndelig = false,
-            fristNyRevurdering = null,
             vurdertAv = vurdertAv,
             vurderinger = setOf(
                 SamordningVurdering(

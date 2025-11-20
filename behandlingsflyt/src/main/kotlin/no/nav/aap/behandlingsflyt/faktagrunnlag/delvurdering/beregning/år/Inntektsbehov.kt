@@ -15,37 +15,37 @@ import java.time.LocalDate
 import java.time.Year
 import java.util.*
 
-class Inntektsbehov(private val input: Input) {
+class Inntektsbehov(private val beregningInput: BeregningInput) {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
     fun utledAlleRelevanteÅr(): Set<Year> {
         val ytterligereNedsattArbeidsevneDato =
-            input.beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
-        val nedsettelsesDato = input.nedsettelsesDato
+            beregningInput.beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
+        val nedsettelsesDato = beregningInput.nedsettelsesDato
         return utledAlleRelevanteÅr(nedsettelsesDato, ytterligereNedsattArbeidsevneDato)
     }
 
     fun hentYtterligereNedsattArbeidsevneDato(): LocalDate? {
-        return input.beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
+        return beregningInput.beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
     }
 
     fun utledForOrdinær(): Set<InntektPerÅr> {
-        return filtrerInntekter(input.nedsettelsesDato, input.inntekter)
+        return filtrerInntekter(beregningInput.nedsettelsesDato, beregningInput.inntekter)
     }
 
     fun utledForYtterligereNedsatt(): Set<InntektPerÅr> {
-        val ytterligereNedsettelsesDato = input.beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
+        val ytterligereNedsettelsesDato = beregningInput.beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
         requireNotNull(ytterligereNedsettelsesDato)
-        return filtrerInntekter(ytterligereNedsettelsesDato, input.inntekter)
+        return filtrerInntekter(ytterligereNedsettelsesDato, beregningInput.inntekter)
     }
 
     /**
      * Skal beregne med uføre om det finnes data på uføregrad.
      */
     fun finnesUføreData(): Boolean {
-        return input.beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato != null
-                && input.uføregrad.isNotEmpty()
+        return beregningInput.beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato != null
+                && beregningInput.uføregrad.isNotEmpty()
     }
 
     /**
@@ -53,12 +53,12 @@ class Inntektsbehov(private val input: Input) {
      * inntekt, så skal beregningen skje med yrkesskadefordel (§11-22)
      */
     fun yrkesskadeVurderingEksisterer(): Boolean {
-        if (input.yrkesskadevurdering == null) return false
+        if (beregningInput.yrkesskadevurdering == null) return false
         val betingelser = listOf(
-            input.registrerteYrkesskader?.harYrkesskade() == true,
-            input.yrkesskadevurdering.relevanteSaker.isNotEmpty(),
-            input.beregningGrunnlag?.yrkesskadeBeløpVurdering != null,
-            input.yrkesskadevurdering.andelAvNedsettelsen != null
+            beregningInput.registrerteYrkesskader?.harYrkesskade() == true,
+            beregningInput.yrkesskadevurdering.relevanteSaker.isNotEmpty(),
+            beregningInput.beregningGrunnlag?.yrkesskadeBeløpVurdering != null,
+            beregningInput.yrkesskadevurdering.andelAvNedsettelsen != null
         )
 
         return betingelser.all { it }
@@ -85,7 +85,7 @@ class Inntektsbehov(private val input: Input) {
     }
 
     fun uføregrad(): Set<Uføre> {
-        return requireNotNull(input.uføregrad)
+        return requireNotNull(beregningInput.uføregrad)
     }
 
     fun skadetidspunkt(): LocalDate {
@@ -98,23 +98,23 @@ class Inntektsbehov(private val input: Input) {
 
     private fun samleOpplysningerOmYrkesskade(): List<YrkesskadeBeregning> {
         // Finn den saken med størst beløp basert på antall G på skadetidspunktet
-        val relevanteSaker = input.yrkesskadevurdering?.relevanteSaker.orEmpty()
+        val relevanteSaker = beregningInput.yrkesskadevurdering?.relevanteSaker.orEmpty()
         val sakerMedDato =
-            relevanteSaker.mapNotNull { sak -> input.registrerteYrkesskader?.yrkesskader?.singleOrNull { it.ref == sak.referanse } }
+            relevanteSaker.mapNotNull { sak -> beregningInput.registrerteYrkesskader?.yrkesskader?.singleOrNull { it.ref == sak.referanse } }
 
         return sakerMedDato.map { sak ->
             val skadedato = sak.skadedato
-                ?: input.yrkesskadevurdering?.relevanteSaker?.firstOrNull { it.referanse == sak.ref }?.manuellYrkesskadeDato
+                ?: beregningInput.yrkesskadevurdering?.relevanteSaker?.firstOrNull { it.referanse == sak.ref }?.manuellYrkesskadeDato
             YrkesskadeBeregning(
                 sak.ref,
                 requireNotNull(skadedato) { "Ulovlig tilstand. skadedato er null, og mangler manuell yrkesskade dato."},
-                input.beregningGrunnlag?.yrkesskadeBeløpVurdering?.vurderinger?.firstOrNull { it.referanse == sak.ref }?.antattÅrligInntekt!!
+                beregningInput.beregningGrunnlag?.yrkesskadeBeløpVurdering?.vurderinger?.firstOrNull { it.referanse == sak.ref }?.antattÅrligInntekt!!
             )
         }
     }
 
     fun andelYrkesskade(): Prosent {
-        return requireNotNull(input.yrkesskadevurdering?.andelAvNedsettelsen)
+        return requireNotNull(beregningInput.yrkesskadevurdering?.andelAvNedsettelsen)
     }
 
     companion object {

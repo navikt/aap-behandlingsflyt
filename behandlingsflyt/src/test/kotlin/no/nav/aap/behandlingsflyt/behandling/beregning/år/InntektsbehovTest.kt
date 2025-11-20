@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning.år
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Input
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.BeregningInput
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
@@ -27,7 +27,7 @@ class InntektsbehovTest {
     fun `henter ut relevante år, nemlig tre år før nedsettelsen`() {
         val nedsettelsesDato = LocalDate.now().withYear(2005)
         val forOrdinær = Inntektsbehov(
-            Input(
+            BeregningInput(
                 nedsettelsesDato,
                 inntekter = setOf(
                     InntektPerÅr(nedsettelsesDato.plusYears(1).year, Beløp(123)),
@@ -55,7 +55,7 @@ class InntektsbehovTest {
     fun `skal utlede de tre forutgående kalenderårene fra nedsettelsesdato`() {
         val nedsettelsesDato = LocalDate.now().minusYears(3)
         val relevanteÅr = Inntektsbehov(
-            Input(
+            BeregningInput(
                 nedsettelsesDato,
                 inntekter = emptySet(),
                 uføregrad = setOf(Uføre(LocalDate.now(), Prosent.`0_PROSENT`)),
@@ -80,7 +80,7 @@ class InntektsbehovTest {
         val nedsettelsesDato = LocalDate.now().minusYears(6)
         val ytterligereNedsattDato = LocalDate.now().minusYears(2)
         val relevanteÅr = Inntektsbehov(
-            Input(
+            BeregningInput(
                 nedsettelsesDato,
                 emptySet(),
                 setOf(Uføre(LocalDate.now(), Prosent.`0_PROSENT`)),
@@ -116,7 +116,7 @@ class InntektsbehovTest {
     fun `om det finnes uføredata, skal det oppgis`() {
         val nedsettelsesDato = LocalDate.now().minusYears(3)
         val inntektsbehov = Inntektsbehov(
-            Input(
+            BeregningInput(
                 nedsettelsesDato,
                 inntekter = emptySet(),
                 uføregrad = setOf(Uføre(LocalDate.now(), Prosent.`30_PROSENT`)),
@@ -141,7 +141,7 @@ class InntektsbehovTest {
     fun `bruker manuell dato for yrkesskade om den er null fra register`() {
         val nedsettelsesDato = LocalDate.now().minusYears(3)
         val inntektsbehov = Inntektsbehov(
-            Input(
+            BeregningInput(
                 nedsettelsesDato,
                 inntekter = emptySet(),
                 uføregrad = setOf(Uføre(LocalDate.now(), Prosent.`30_PROSENT`)),

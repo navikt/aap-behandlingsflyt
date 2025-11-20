@@ -649,7 +649,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
                     it.getLongOrNull("inntekter_i_norge_id"),
                     it.getLongOrNull("arbeider_id"),
                     it.getLongOrNull("manuell_vurdering_id"),
-                    it.getLongOrNull("vurderinger_id"),
+                    it.getLongOrNull("vurderinger_id")
                 )
             }
         }
