@@ -371,7 +371,7 @@ class SakOgBehandlingService(
             val periode = Periode(
                 fom,
                 Tid.MAKS
-            ) // TODO: Usikker på om dette blir helt korrekt.. // Spør Peter
+            )
             if (periode != rettighetsperiode) {
                 sakRepository.oppdaterRettighetsperiode(sakId, periode)
             }
