@@ -1,16 +1,10 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.inntekt
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurdering
-import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
-import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.test.desember
-import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.januar
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
@@ -157,13 +151,5 @@ class ManuellInntektGrunnlagRepositoryImplTest {
 
             assertThat(uthentetEtterSletting?.manuelleInntekter).hasSize(1)
         }
-    }
-
-    private fun sak(connection: DBConnection, periode: Periode): Sak {
-        return PersonOgSakService(
-            FakePdlGateway,
-            PersonRepositoryImpl(connection),
-            SakRepositoryImpl(connection)
-        ).finnEllerOpprett(ident(), periode)
     }
 }

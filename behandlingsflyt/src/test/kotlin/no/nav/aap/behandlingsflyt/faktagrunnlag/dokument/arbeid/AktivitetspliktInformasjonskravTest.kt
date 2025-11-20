@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt1
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Vurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Utfall
-import no.nav.aap.behandlingsflyt.help.FakePdlGateway
+import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -15,8 +15,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7RepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
-import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -26,11 +24,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
-import no.nav.aap.behandlingsflyt.test.ident
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
@@ -43,7 +38,7 @@ import java.time.LocalDate
 import java.time.ZoneOffset
 
 class AktivitetspliktInformasjonskravTest {
-        companion object {
+    companion object {
         private lateinit var dataSource: TestDataSource
 
         @BeforeAll
@@ -59,7 +54,12 @@ class AktivitetspliktInformasjonskravTest {
 
     @Test
     fun `Revurdering med vurderingstype 'EFFEKTUER_AKTIVITETSPLIKT' skal kopiere grunnlag fra nyeste iverksatte aktvitetspliktbehandling`() {
-        val sak = dataSource.transaction { connection -> nySak(connection) }
+        val sak = dataSource.transaction { connection ->
+            sak(
+                connection,
+                Periode(fom = LocalDate.of(2020, 1, 1), tom = LocalDate.of(2020, 2, 2))
+            )
+        }
 
         val aktivitetspliktBehandling1 = opprettAktivitetspliktBehandlingMedVurdering(
             sak, status = Status.AVSLUTTET
@@ -213,16 +213,4 @@ class AktivitetspliktInformasjonskravTest {
             )
         )
     }
-
-    fun nySak(connection: DBConnection): Sak {
-        return PersonOgSakService(
-            FakePdlGateway,
-            PersonRepositoryImpl(connection),
-            SakRepositoryImpl(connection)
-        ).finnEllerOpprett(
-            ident(),
-            Periode(fom = LocalDate.of(2020, 1, 1), tom = LocalDate.of(2020, 2, 2))
-        )
-    }
-
 }

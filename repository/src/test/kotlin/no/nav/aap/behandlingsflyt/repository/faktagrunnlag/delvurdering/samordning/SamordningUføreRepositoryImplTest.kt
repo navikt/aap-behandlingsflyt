@@ -2,14 +2,8 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordn
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingPeriode
-import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
-import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.ident
-import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
@@ -42,7 +36,7 @@ internal class SamordningUføreRepositoryImplTest {
     @Test
     fun `skal lagre ned en helt ny vurdering og hente den opp igjen`() {
         val behandling = dataSource.transaction {
-            finnEllerOpprettBehandling(it, sak(it))
+            finnEllerOpprettBehandling(it, sak(it, periode))
         }
 
         // Lagre ytelse
@@ -116,16 +110,5 @@ internal class SamordningUføreRepositoryImplTest {
 
             }
         }
-    }
-
-    private fun sak(connection: DBConnection): Sak {
-        return PersonOgSakService(
-            FakePdlGateway,
-            PersonRepositoryImpl(connection),
-            SakRepositoryImpl(connection)
-        ).finnEllerOpprett(
-            ident(),
-            periode
-        )
     }
 }

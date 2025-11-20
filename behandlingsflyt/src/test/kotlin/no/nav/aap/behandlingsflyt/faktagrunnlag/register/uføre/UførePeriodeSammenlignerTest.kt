@@ -1,15 +1,9 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre
 
 import no.nav.aap.behandlingsflyt.behandling.samordning.EndringStatus
-import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.uføre.UføreRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.ident
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
@@ -43,7 +37,7 @@ internal class UførePeriodeSammenlignerTest {
     @Test
     fun `når det kun finnes ett grunnlag skal periodene markeres som nye`() {
         dataSource.transaction { connection ->
-            val behandlingId = finnEllerOpprettBehandling(connection, sak(connection)).id
+            val behandlingId = finnEllerOpprettBehandling(connection, sak(connection, periode)).id
             val uføreRepository = UføreRepositoryImpl(connection)
             uføreRepository.lagre(behandlingId, setOf(femtiProsentUføreIFjor))
             val vurderinger = UførePeriodeSammenligner(uføreRepository).hentUføreGrunnlagMedEndretStatus(behandlingId)
@@ -55,7 +49,7 @@ internal class UførePeriodeSammenlignerTest {
     @Test
     fun `når et uføregrunnlag har forsvunnet skal det markeres som slettet`() {
         dataSource.transaction { connection ->
-            val behandlingId = finnEllerOpprettBehandling(connection, sak(connection)).id
+            val behandlingId = finnEllerOpprettBehandling(connection, sak(connection, periode)).id
             val uføreRepository = UføreRepositoryImpl(connection)
             uføreRepository.lagre(behandlingId, setOf(femtiProsentUføreIFjor))
             uføreRepository.lagre(behandlingId, emptySet())
@@ -68,7 +62,7 @@ internal class UførePeriodeSammenlignerTest {
     @Test
     fun `når et av to uføregrunnlag har forsvunnet skal det markeres som slettet`() {
         dataSource.transaction { connection ->
-            val behandlingId = finnEllerOpprettBehandling(connection, sak(connection)).id
+            val behandlingId = finnEllerOpprettBehandling(connection, sak(connection, periode)).id
             val uføreRepository = UføreRepositoryImpl(connection)
             uføreRepository.lagre(behandlingId, setOf(femtiProsentUføreIFjor, hundreProsentUføreNå))
             uføreRepository.lagre(behandlingId, setOf(femtiProsentUføreIFjor))
@@ -82,7 +76,7 @@ internal class UførePeriodeSammenlignerTest {
     @Test
     fun `når et nytt uføregrunnlag oppstår skal det markeres som nytt`() {
         dataSource.transaction { connection ->
-            val behandlingId = finnEllerOpprettBehandling(connection, sak(connection)).id
+            val behandlingId = finnEllerOpprettBehandling(connection, sak(connection, periode)).id
             val uføreRepository = UføreRepositoryImpl(connection)
             uføreRepository.lagre(behandlingId, setOf(femtiProsentUføreIFjor))
             uføreRepository.lagre(behandlingId, setOf(femtiProsentUføreIFjor, hundreProsentUføreNå))
@@ -96,7 +90,7 @@ internal class UførePeriodeSammenlignerTest {
     @Test
     fun `når et uføregrunnlag har endret grad skal det markeres som slettet og nytt`() {
         dataSource.transaction { connection ->
-            val behandlingId = finnEllerOpprettBehandling(connection, sak(connection)).id
+            val behandlingId = finnEllerOpprettBehandling(connection, sak(connection, periode)).id
             val uføreRepository = UføreRepositoryImpl(connection)
             uføreRepository.lagre(behandlingId, setOf(femtiProsentUføreIFjor))
             uføreRepository.lagre(behandlingId, setOf(femtiProsentUføreIFjor.copy(uføregrad = Prosent.`100_PROSENT`)))
@@ -105,13 +99,5 @@ internal class UførePeriodeSammenlignerTest {
             assertThat(vurderinger.first().endringStatus).isEqualTo(EndringStatus.NY)
             assertThat(vurderinger.last().endringStatus).isEqualTo(EndringStatus.SLETTET)
         }
-    }
-
-    private fun sak(connection: DBConnection): Sak {
-        return PersonOgSakService(
-            FakePdlGateway,
-            PersonRepositoryImpl(connection),
-            SakRepositoryImpl(connection)
-        ).finnEllerOpprett(ident(), periode)
     }
 }

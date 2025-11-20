@@ -1,16 +1,10 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.refusjonskrav
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonskravVurdering
-import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
-import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.test.desember
-import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.januar
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
@@ -39,7 +33,7 @@ class TjenestepensjonRefusjonskravVurderingRepositoryImplTest {
     fun `lagre, hente ut igjen, slette`() {
 
 
-        val sak = dataSource.transaction { sak(it) }
+        val sak = dataSource.transaction { sak(it, Periode(1 januar 2022, 31.desember(2023))) }
 
         val behandling = dataSource.transaction {
             finnEllerOpprettBehandling(it, sak)
@@ -81,13 +75,5 @@ class TjenestepensjonRefusjonskravVurderingRepositoryImplTest {
         dataSource.transaction {
             TjenestepensjonRefusjonskravVurderingRepositoryImpl(it).slett(behandling.id)
         }
-    }
-
-    private fun sak(connection: DBConnection): Sak {
-        return PersonOgSakService(
-            FakePdlGateway,
-            PersonRepositoryImpl(connection),
-            SakRepositoryImpl(connection)
-        ).finnEllerOpprett(ident(), Periode(1 januar 2022, 31.desember(2023)))
     }
 }

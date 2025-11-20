@@ -2,20 +2,14 @@ package no.nav.aap.behandlingsflyt.repository.klage
 
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageVurdering
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageÅrsak
-import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.TrekkKlageRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.ident
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -44,7 +38,7 @@ internal class TrekkKlageRepositoryImplTest {
     @Test
     fun `Lagrer og henter trukket klage`() {
         dataSource.transaction { connection ->
-            val sak = sak(connection)
+            val sak = sak(connection, periode)
             finnEllerOpprettBehandling(connection, sak)
             val klageBehandling = finnEllerOpprettBehandling(connection, sak, Vurderingsbehov.MOTATT_KLAGE)
 
@@ -66,7 +60,7 @@ internal class TrekkKlageRepositoryImplTest {
     @Test
     fun `kan lagre flere vurderinger på samme klage og hente ut nyeste vurdering som del av grunnlaget`() {
         dataSource.transaction { connection ->
-            val sak = sak(connection)
+            val sak = sak(connection, periode)
             finnEllerOpprettBehandling(connection, sak)
             val klageBehandling = finnEllerOpprettBehandling(connection, sak, Vurderingsbehov.MOTATT_KLAGE)
 
@@ -95,13 +89,4 @@ internal class TrekkKlageRepositoryImplTest {
                 .ignoringFields("vurdert").isEqualTo(vurdering2)
         }
     }
-
-    private fun sak(connection: DBConnection): Sak {
-        return PersonOgSakService(
-            FakePdlGateway,
-            PersonRepositoryImpl(connection),
-            SakRepositoryImpl(connection)
-        ).finnEllerOpprett(ident(), periode)
-    }
-
 }
