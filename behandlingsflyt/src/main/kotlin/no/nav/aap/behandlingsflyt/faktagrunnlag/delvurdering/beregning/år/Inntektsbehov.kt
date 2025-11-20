@@ -35,7 +35,7 @@ class Inntektsbehov(private val input: BeregningInput) {
         return filtrerInntekter(input.nedsettelsesDato, input.årsInntekter)
     }
 
-    fun inntektsPerioder(): List<InntektsPeriode> {
+    fun inntektsPerioder(): Set<InntektsPeriode> {
         return input.inntektsPerioder
     }
 

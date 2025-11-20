@@ -133,7 +133,7 @@ class UføreInformasjonskrav(
             return if (eksisterende == null) {
                 uføregrader.isNotEmpty()
             } else {
-                uføregrader != eksisterende.vurderinger.toSet()
+                uføregrader != eksisterende.vurderinger
             }
         }
     }

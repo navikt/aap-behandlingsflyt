@@ -56,6 +56,7 @@ data class SamordningYtelseVurderingGrunnlagDTO(
 
 data class SamordningYtelseVurderingDTO(
     val begrunnelse: String?,
+    @Deprecated("Ikke i bruk i backend")
     val fristNyRevurdering: LocalDate?,
     val maksDatoEndelig: Boolean?,
     val vurderinger: List<SamordningVurderingDTO>,
@@ -86,10 +87,13 @@ data class SamordningUføreVurderingGrunnlagDTO(
     val grunnlag: List<SamordningUføreGrunnlagDTO>
 )
 
+/**
+ * @param kilde Alltid lik PESYS.
+ */
 data class SamordningUføreGrunnlagDTO(
     val virkningstidspunkt: LocalDate,
     val uføregrad: Int,
-    val kilde: String,
+    val kilde: String = "PESYS",
     val endringStatus: EndringStatus
 )
 
@@ -517,7 +521,7 @@ private fun mapSamordningUføreGrunnlag(
         SamordningUføreGrunnlagDTO(
             virkningstidspunkt = it.virkningstidspunkt,
             uføregrad = it.uføregrad.prosentverdi(),
-            kilde = it.kilde,
+            kilde = "PESYS",
             endringStatus = it.endringStatus
         )
     }

@@ -7,7 +7,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Bereg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
@@ -31,9 +30,7 @@ class BeregningService(
     private val beregningsgrunnlagRepository: BeregningsgrunnlagRepository,
     private val beregningVurderingRepository: BeregningVurderingRepository,
     private val yrkesskadeRepository: YrkesskadeRepository,
-    private val manuellInntektGrunnlagRepository: ManuellInntektGrunnlagRepository,
-    // TODO: Kan det skje at denne ikke har data langt nok tilbake i tid?
-    private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository
+    private val manuellInntektGrunnlagRepository: ManuellInntektGrunnlagRepository
 ) {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
@@ -45,7 +42,6 @@ class BeregningService(
         beregningVurderingRepository = repositoryProvider.provide(),
         yrkesskadeRepository = repositoryProvider.provide(),
         manuellInntektGrunnlagRepository = repositoryProvider.provide(),
-        medlemskapArbeidInntektRepository = repositoryProvider.provide(),
     )
 
     fun beregnGrunnlag(behandlingId: BehandlingId): Beregningsgrunnlag {
@@ -56,18 +52,6 @@ class BeregningService(
         val student = studentRepository.hentHvisEksisterer(behandlingId)
         val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
         val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
-        val inntektsPerioder = // TODO: ikke hent fra?
-            // TODO: hent dette fra eget informasjonskrav i stedet
-            // trengs popp da lenger?
-            requireNotNull(medlemskapArbeidInntektRepository.hentHvisEksisterer(behandlingId)?.inntekterINorgeGrunnlag) {
-                "Må ha hentet inntekt i lovvalgssteget før grunnlagsberegningen"
-            }.map {
-                InntektsPeriode(
-                    periode = it.periode,
-                    beløp = it.beloep
-                )
-            }
-
 
         val kombinertInntekt =
             kombinerInntektOgManuellInntekt(
@@ -83,7 +67,7 @@ class BeregningService(
             // TODO: Hvor langt tilbake i tid skal man hente uføregrader?
             uføregrad = uføre?.vurderinger.orEmpty(),
             registrerteYrkesskader = yrkesskadeGrunnlag?.yrkesskader,
-            inntektsPerioder = inntektsPerioder
+            inntektsPerioder = inntektGrunnlag.inntektPerMåned
         )
 
         val beregning = Beregning(input)
@@ -132,7 +116,7 @@ class BeregningService(
         yrkesskadevurdering: Yrkesskadevurdering?,
         vurdering: BeregningGrunnlag?,
         årsInntekter: Set<InntektPerÅr>,
-        inntektsPerioder: List<InntektsPeriode>,
+        inntektsPerioder: Set<InntektsPeriode>,
         uføregrad: Set<Uføre>,
         registrerteYrkesskader: Yrkesskader?
     ): Inntektsbehov {

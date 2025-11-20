@@ -32,12 +32,11 @@ class UføreBeregningTest {
                 uføregrader = setOf(
                     Uføre(
                         virkningstidspunkt = LocalDate.now().minusYears(1),
-                        uføregrad = Prosent.`100_PROSENT`,
-                        kilde = "PESYS"
+                        uføregrad = Prosent.`100_PROSENT`
                     )
                 ),
                 relevanteÅr = setOf(),
-                inntektsPerioder = listOf(
+                inntektsPerioder = setOf(
                     InntektsPeriode(
                         periode = Periode(
                             fom = LocalDate.parse("2024-01-01"),
@@ -66,7 +65,7 @@ class UføreBeregningTest {
                 )
             ),
             relevanteÅr = listOf(2020, 2021, 2022).map(Year::of).toSet(),
-            inntektsPerioder = listOf(
+            inntektsPerioder = setOf(
                 InntektsPeriode(
                     periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
                     beløp = BigDecimal(5 * 109_784).multiply(BigDecimal("0.7")).toDouble(), // // 548 920
@@ -118,7 +117,7 @@ class UføreBeregningTest {
 //                    Beløp(BigDecimal(4 * 100_853).multiply(BigDecimal("0.7"))) // 201 706
 //                )
 //            ),
-            inntektsPerioder = listOf(
+            inntektsPerioder = setOf(
                 InntektsPeriode(
                     periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
                     beløp = 500000.toDouble(),
@@ -160,7 +159,7 @@ class UføreBeregningTest {
                 oppsplittetInntekt(2022, 20000.toDouble()),
                 oppsplittetInntekt(2021, 20000.toDouble()),
                 oppsplittetInntekt(2020, 20000.toDouble())
-            ).flatten()
+            ).flatten().toSet()
         )
 
         val grunnlagUføre = uføreBeregning.beregnUføre(Year.of(2023))
@@ -199,7 +198,7 @@ class UføreBeregningTest {
                 oppsplittetInntekt(2022, 10_000.toDouble()),
                 oppsplittetInntekt(2021, 5000.toDouble()),
                 oppsplittetInntekt(2020, 20_000.toDouble())
-            ).flatten()
+            ).flatten().toSet()
         )
 
         val grunnlagUføre = uføreBeregning.beregnUføre(Year.of(2023))
@@ -243,7 +242,7 @@ class UføreBeregningTest {
                 oppsplittetInntekt(2022, 10_000.toDouble()),
                 oppsplittetInntekt(2021, 15_000.toDouble()),
                 oppsplittetInntekt(2020, 20_000.toDouble())
-            ).flatten()
+            ).flatten().toSet()
         )
 
         val grunnlag = uføreBeregning.beregnUføre(Year.of(2023))

@@ -42,7 +42,7 @@ class BeregningTest {
                 yrkesskadevurdering = null,
                 beregningGrunnlag = null,
                 registrerteYrkesskader = null,
-                inntektsPerioder = listOf(
+                inntektsPerioder = setOf(
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
                         beløp = 500000.toDouble(),
@@ -86,7 +86,7 @@ class BeregningTest {
                     ), yrkesskadeBeløpVurdering = null
                 ),
                 registrerteYrkesskader = null,
-                inntektsPerioder = listOf(
+                inntektsPerioder = setOf(
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
                         beløp = 500000.toDouble(),
@@ -155,7 +155,7 @@ class BeregningTest {
                         )
                     )
                 ),
-                inntektsPerioder = listOf(
+                inntektsPerioder = setOf(
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
                         beløp = 500000.toDouble(),
@@ -226,7 +226,7 @@ class BeregningTest {
                         )
                     )
                 ),
-                inntektsPerioder = listOf(
+                inntektsPerioder = setOf(
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
                         beløp = 500000.toDouble(),
@@ -273,7 +273,7 @@ class BeregningTest {
                     yrkesskadeBeløpVurdering = null
                 ),
                 registrerteYrkesskader = null,
-                inntektsPerioder = listOf(
+                inntektsPerioder = setOf(
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
                         beløp = 500000.toDouble(),
@@ -311,7 +311,7 @@ class BeregningTest {
                     ), yrkesskadeBeløpVurdering = null
                 ),
                 registrerteYrkesskader = null,
-                inntektsPerioder = listOf(
+                inntektsPerioder = setOf(
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
                         beløp = 500000.toDouble(),
@@ -354,7 +354,7 @@ class BeregningTest {
                 beregningGrunnlag = null,
                 registrerteYrkesskader = null,
                 årsInntekter = inntektPerÅr,
-                inntektsPerioder = emptyList()
+                inntektsPerioder = emptySet()
             )
         )
         val beregning = Beregning(input).beregneMedInput()

@@ -20,7 +20,7 @@ import java.time.LocalDate
 data class BeregningInput(
     val nedsettelsesDato: LocalDate,
     val årsInntekter: Set<InntektPerÅr>,
-    val inntektsPerioder: List<InntektsPeriode>,
+    val inntektsPerioder: Set<InntektsPeriode>,
     val uføregrad: Set<Uføre>, // TODO: ta hensyn til stopp av uføre?
     val yrkesskadevurdering: Yrkesskadevurdering?,
     val registrerteYrkesskader: Yrkesskader?,

@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.inntekt
 
+import no.nav.aap.behandlingsflyt.behandling.beregning.InntektsPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
@@ -33,11 +34,13 @@ class InntektGrunnlagRepositoryImpl(private val connection: DBConnection) :
 
     override fun lagre(
         behandlingId: BehandlingId,
-        inntekter: Set<InntektPerÅr>
+        inntekter: Set<InntektPerÅr>,
+        inntektPerMåned: Set<InntektsPeriode>
     ) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         val nyttGrunnlag = InntektGrunnlag(
             inntekter = inntekter,
+            inntektPerMåned = inntektPerMåned
         )
 
         if (eksisterendeGrunnlag != null) {
@@ -45,11 +48,10 @@ class InntektGrunnlagRepositoryImpl(private val connection: DBConnection) :
         }
 
         lagre(behandlingId, nyttGrunnlag)
-
     }
 
     private fun lagre(behandlingId: BehandlingId, nyttGrunnlag: InntektGrunnlag) {
-        val inntekterId = lagreInntekter(nyttGrunnlag.inntekter)
+        val inntekterId = lagreInntekter(nyttGrunnlag.inntekter, nyttGrunnlag.inntektPerMåned)
 
         val query = """
             INSERT INTO INNTEKT_GRUNNLAG (behandling_id, inntekt_id) VALUES (?, ?)
@@ -63,33 +65,42 @@ class InntektGrunnlagRepositoryImpl(private val connection: DBConnection) :
         }
     }
 
-    private fun lagreInntekter(inntekter: Set<InntektPerÅr>): Long {
+    private fun lagreInntekter(inntekter: Set<InntektPerÅr>, inntektPerMåned: Set<InntektsPeriode>): Long {
+        // TODO lagre inntektPerMåned
         val query = """
             INSERT INTO INNTEKTER DEFAULT VALUES
         """.trimIndent()
 
         val inntekterId = connection.executeReturnKey(query)
 
-        for (inntektPerÅr in inntekter) {
-            val inntektQuery = """
+        val inntektQuery = """
                 INSERT INTO INNTEKT (inntekt_id, ar, belop) VALUES (?, ?, ?)
             """.trimIndent()
-            connection.execute(inntektQuery) {
-                setParams {
-                    setLong(1, inntekterId)
-                    setLong(2, inntektPerÅr.år.value.toLong())
-                    setBigDecimal(3, inntektPerÅr.beløp.verdi())
-                }
+        connection.executeBatch(inntektQuery, inntekter.toList()) {
+            setParams { inntektPerÅr ->
+                setLong(1, inntekterId)
+                setLong(2, inntektPerÅr.år.value.toLong())
+                setBigDecimal(3, inntektPerÅr.beløp.verdi())
             }
         }
+
+        val inntektPerMndInsertQuery = """
+            INSERT INTO INNTEKT_PERIODE (inntekt_id, periode, belop) VALUES (?, ?::daterange, ?)
+        """.trimIndent()
+        connection.executeBatch(inntektPerMndInsertQuery, inntektPerMåned.toList()) {
+            setParams { inntektPerMåned ->
+                setLong(1, inntekterId)
+                setPeriode(2, inntektPerMåned.periode)
+                setBigDecimal(3, inntektPerMåned.beløp.toBigDecimal())
+            }
+        }
+
         return inntekterId
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
-        val eksisterendeGrunnlag = hentHvisEksisterer(fraBehandling)
-        if (eksisterendeGrunnlag == null) {
-            return
-        }
+        val eksisterendeGrunnlag = hentHvisEksisterer(fraBehandling) ?: return
+
         val query = """
             INSERT INTO INNTEKT_GRUNNLAG (behandling_id, inntekt_id) SELECT ?, inntekt_id from INNTEKT_GRUNNLAG where behandling_id = ? and aktiv
         """.trimIndent()
@@ -118,14 +129,17 @@ class InntektGrunnlagRepositoryImpl(private val connection: DBConnection) :
 
         val inntektIds = getInntektIds(behandlingId)
 
-        val deletedRows = connection.executeReturnUpdated("""
+        val deletedRows = connection.executeReturnUpdated(
+            """
             delete from inntekt_grunnlag where behandling_id = ?; 
             delete from inntekt where inntekt_id = ANY(?::bigint[]);
-          
-        """.trimIndent()) {
+            delete from inntekt_periode where inntekt_id = ANY(?::bigint[]);
+        """.trimIndent()
+        ) {
             setParams {
                 setLong(1, behandlingId.id)
                 setLongArray(2, inntektIds)
+                setLongArray(3, inntektIds)
             }
         }
         log.info("Slettet $deletedRows rader fra inntekt_grunnlag")
@@ -135,7 +149,7 @@ class InntektGrunnlagRepositoryImpl(private val connection: DBConnection) :
         """
                     SELECT inntekt_id
                     FROM inntekt_grunnlag
-                    WHERE behandling_id = ? AND inntekt_id is not null
+                    WHERE behandling_id = ?
                  
                 """.trimIndent()
     ) {
@@ -147,19 +161,28 @@ class InntektGrunnlagRepositoryImpl(private val connection: DBConnection) :
 
     private fun mapGrunnlag(row: Row): InntektGrunnlag {
         return InntektGrunnlag(
-            mapInntekter(row.getLongOrNull("inntekt_id"))
+            inntekter = row.getLongOrNull("inntekt_id")?.let(::mapInntekter).orEmpty(),
+            inntektPerMåned = row.getLongOrNull("inntekt_id")?.let(::mapInntektPerMåned).orEmpty()
         )
     }
 
-    private fun mapInntekter(inntektId: Long?): Set<InntektPerÅr> {
-        if (inntektId == null) {
-            return emptySet()
+    private fun mapInntektPerMåned(id: Long): Set<InntektsPeriode> =
+        connection.querySet("SELECT * FROM INNTEKT_PERIODE WHERE INNTEKT_ID = ?") {
+            setParams { setLong(1, id) }
+            setRowMapper {
+                InntektsPeriode(
+                    periode = it.getPeriode("periode"),
+                    beløp = it.getDouble("belop")
+                )
+            }
         }
+
+    private fun mapInntekter(inntektId: Long): Set<InntektPerÅr> {
         val query = """
             SELECT * FROM INNTEKT WHERE inntekt_id = ?
         """.trimIndent()
 
-        return connection.queryList(query) {
+        return connection.querySet(query) {
             setParams {
                 setLong(1, inntektId)
             }
@@ -169,7 +192,7 @@ class InntektGrunnlagRepositoryImpl(private val connection: DBConnection) :
                     Beløp(it.getBigDecimal("belop"))
                 )
             }
-        }.toSet()
+        }
     }
 
     override fun hent(behandlingId: BehandlingId): InntektGrunnlag {

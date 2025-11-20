@@ -20,7 +20,7 @@ class UføreBeregning(
     private val grunnlag: Grunnlag11_19,
     private val uføregrader: Set<Uføre>,
     private val relevanteÅr: Set<Year>,
-    private val inntektsPerioder: List<InntektsPeriode>,
+    private val inntektsPerioder: Set<InntektsPeriode>,
 ) {
 
     init {
@@ -121,7 +121,7 @@ class UføreBeregning(
     }
 
     private fun uføreOgInntektTidslinje(
-        inntektsPerioder: List<InntektsPeriode>,
+        inntektsPerioder: Set<InntektsPeriode>,
         uføregrader: Set<Uføre>
     ): Tidslinje<Pair<InntektData?, Prosent?>> {
         val inntektstidslinje = inntektTidslinje(inntektsPerioder)
@@ -130,7 +130,7 @@ class UføreBeregning(
         return Tidslinje.zip2(inntektstidslinje, uføretidslinje)
     }
 
-    private fun inntektTidslinje(inntektsPerioder: List<InntektsPeriode>): Tidslinje<InntektData> {
+    private fun inntektTidslinje(inntektsPerioder: Set<InntektsPeriode>): Tidslinje<InntektData> {
         val inntektstidslinje = Tidslinje(inntektsPerioder.map {
             Segment(it.periode, InntektData(it.beløp))
         })

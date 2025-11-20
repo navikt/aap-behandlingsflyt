@@ -105,7 +105,7 @@ fun tilInput(csvLine: CSVLine): Pair<BeregningInput, Fødselsdato> {
             yrkesskadevurdering = null,
             registrerteYrkesskader = null,
             beregningGrunnlag = null,
-            inntektsPerioder = emptyList()
+            inntektsPerioder = emptySet()
         ), csvLine.fødselsdato
     )
 }

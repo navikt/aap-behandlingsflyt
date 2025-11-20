@@ -43,7 +43,7 @@ class InntektsbehovTest {
                 yrkesskadevurdering = null,
                 beregningGrunnlag = null,
                 registrerteYrkesskader = null,
-                inntektsPerioder = listOf(
+                inntektsPerioder = setOf(
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
                         beløp = 500000.toDouble()
@@ -74,7 +74,7 @@ class InntektsbehovTest {
                 yrkesskadevurdering = null,
                 beregningGrunnlag = null,
                 registrerteYrkesskader = null,
-                inntektsPerioder = listOf(
+                inntektsPerioder = setOf(
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
                         beløp = 500000.toDouble()
@@ -106,7 +106,7 @@ class InntektsbehovTest {
                 nedsettelsesDato = nedsettelsesDato,
                 årsInntekter = emptySet(),
                 uføregrad = setOf(Uføre(LocalDate.now(), Prosent.`0_PROSENT`)),
-                inntektsPerioder = listOf(
+                inntektsPerioder = setOf(
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
                         beløp = 500000.toDouble()
@@ -165,7 +165,7 @@ class InntektsbehovTest {
                         vurdertAv = "saksbehandler"
                     ), yrkesskadeBeløpVurdering = null
                 ),
-                inntektsPerioder = listOf(
+                inntektsPerioder = setOf(
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
                         beløp = 500000.toDouble()
@@ -223,7 +223,7 @@ class InntektsbehovTest {
                         )
                     )
                 ),
-                inntektsPerioder = listOf(
+                inntektsPerioder = setOf(
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
                         beløp = 500000.toDouble()

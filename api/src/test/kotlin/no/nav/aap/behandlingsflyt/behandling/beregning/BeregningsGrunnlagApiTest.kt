@@ -69,7 +69,7 @@ class BeregningsGrunnlagApiTest {
                         )
                     )
                 ),
-                inntektsPerioder = listOf(
+                inntektsPerioder = setOf(
                     InntektsPeriode(
                         Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
                         beløp = 500000.toDouble(),
@@ -151,7 +151,7 @@ class BeregningsGrunnlagApiTest {
                         )
                     )
                 ),
-                inntektsPerioder = listOf(
+                inntektsPerioder = setOf(
                     InntektsPeriode(
                         Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
                         beløp = 500000.toDouble(),
