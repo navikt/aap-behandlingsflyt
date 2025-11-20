@@ -81,7 +81,13 @@ class ForutgåendeMedlemskapVurderingService {
 
                 if (harRelevanteUtlandsPerioderIJobb) {
                     val mappedArbeidUtland =
-                        relevantePerioder.map { OppgittJobbetIUtlandGrunnlag(it.land, it.fraDato, it.tilDato) }
+                        relevantePerioder.map {
+                            OppgittJobbetIUtlandGrunnlag(
+                                land = it.land,
+                                fraDato = it.fraDato,
+                                tilDato = it.tilDato
+                            )
+                        }
                     arbeidUtlandPerioder.addAll(mappedArbeidUtland)
                     true
                 } else {
@@ -91,7 +97,13 @@ class ForutgåendeMedlemskapVurderingService {
 
             grunnlag.arbeidetUtenforNorgeFørSykdom -> {
                 val mappedArbeidUtland =
-                    relevantePerioder?.map { OppgittJobbetIUtlandGrunnlag(it.land, it.fraDato, it.tilDato) }
+                    relevantePerioder?.map {
+                        OppgittJobbetIUtlandGrunnlag(
+                            land = it.land,
+                            fraDato = it.fraDato,
+                            tilDato = it.tilDato
+                        )
+                    }
                 if (mappedArbeidUtland != null) {
                     arbeidUtlandPerioder.addAll(mappedArbeidUtland)
                 }
@@ -134,8 +146,8 @@ class ForutgåendeMedlemskapVurderingService {
         val oppholdUtlandPerioder = relevantePerioder?.map {
             OppgittUtenlandsOppholdGrunnlag(
                 land = it.land,
-                tilDato = it.tilDato,
                 fraDato = it.fraDato,
+                tilDato = it.tilDato,
             )
         }
 
@@ -171,7 +183,7 @@ class ForutgåendeMedlemskapVurderingService {
                     || forutgåendePeriode.inneholder(it.gyldigTilOgMed)
                     || (it.gyldigFraOgMed != null && forutgåendePeriode.inneholder(it.gyldigFraOgMed))
         }
-        val folkeregisterStatuserDto = grunnlag?.brukerPersonopplysning?.folkeregisterStatuser?.map{
+        val folkeregisterStatuserDto = grunnlag?.brukerPersonopplysning?.folkeregisterStatuser?.map {
             FolkeregisterStatusDto(it.status, it.gyldighetstidspunkt, it.opphoerstidspunkt)
         }
 
