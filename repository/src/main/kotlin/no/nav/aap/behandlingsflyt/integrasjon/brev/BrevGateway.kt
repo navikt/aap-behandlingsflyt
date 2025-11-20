@@ -231,7 +231,7 @@ class BrevGateway : BrevbestillingGateway {
         brevbestillingReferanse: BrevbestillingReferanse
     ): List<MottakerDistStatus> {
         val httpRequest = PostRequest(
-            body = KanDistribuereBrevRequest("", brukerIdent, mottakerIdentListe)
+            body = KanDistribuereBrevRequest(brukerIdent = brukerIdent, mottakerIdentListe = mottakerIdentListe)
         )
         val response: KanDistribuereBrevReponse = requireNotNull(
             client.post(
@@ -274,6 +274,9 @@ class BrevGateway : BrevbestillingGateway {
                                 gradertDagsatsInkludertBarnetillegg = brevBehov.tilkjentYtelse?.gradertDagsatsInkludertBarnetillegg?.verdi,
                                 barnetillegg = brevBehov.tilkjentYtelse?.barnetillegg?.verdi,
                                 antallBarn = brevBehov.tilkjentYtelse?.antallBarn,
+                                minsteÅrligYtelse = null,
+                                minsteÅrligYtelseUnder25 = null,
+                                årligYtelse = null,
                             )
                         )
                     }

@@ -1,7 +1,6 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 val opentelemetryVersion = "2.21.0-alpha"
-val testcontainersVersion = "2.0.2"
 
 repositories {
     mavenCentral()
@@ -106,7 +105,7 @@ dependencies {
 
     testImplementation("org.apache.kafka:kafka-clients:4.1.1")
 
-    testImplementation("org.testcontainers:testcontainers:$testcontainersVersion")
-    testImplementation("org.testcontainers:testcontainers-postgresql:${testcontainersVersion}")
-    testImplementation("org.testcontainers:testcontainers-kafka:${testcontainersVersion}")
+    testImplementation(libs.testcontainers)
+    testImplementation(libs.testcontainersPostgres)
+    testImplementation(libs.testcontainersKafka)
 }

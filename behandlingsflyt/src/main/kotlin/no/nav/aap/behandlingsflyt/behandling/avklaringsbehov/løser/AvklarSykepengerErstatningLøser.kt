@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerE
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykepengerVurderingDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -25,19 +26,12 @@ class AvklarSykepengerErstatningLøser(
         løsning: AvklarSykepengerErstatningLøsning
     ): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
-
-        val nyVurdering = tilVurdering(løsning.sykepengeerstatningVurdering, kontekst.bruker.ident)
-
-        val eksisterendeVurderinger =
-            behandling.forrigeBehandlingId
-                ?.let { sykepengerErstatningRepository.hentHvisEksisterer(it) }
-                ?.vurderinger.orEmpty()
-
-        val nyeVurderinger = eksisterendeVurderinger + nyVurdering
+        val tidligereVurderinger = behandling.forrigeBehandlingId?.let { sykepengerErstatningRepository.hentHvisEksisterer(it)?.vurderinger }.orEmpty()
+        val nyVurdering = tilVurdering(løsning.sykepengeerstatningVurdering, behandling.id, kontekst.bruker.ident)
 
         sykepengerErstatningRepository.lagre(
             behandlingId = behandling.id,
-            vurderinger = nyeVurderinger
+            vurderinger = tidligereVurderinger + nyVurdering
         )
 
         return LøsningsResultat(
@@ -47,12 +41,14 @@ class AvklarSykepengerErstatningLøser(
 
     private fun tilVurdering(
         dto: SykepengerVurderingDto,
+        behandlingId: BehandlingId,
         vurdertAv: String
     ): SykepengerVurdering = SykepengerVurdering(
         begrunnelse = dto.begrunnelse,
         dokumenterBruktIVurdering = dto.dokumenterBruktIVurdering,
         harRettPå = dto.harRettPå,
         grunn = dto.grunn,
+        vurdertIBehandling = behandlingId,
         vurdertAv = vurdertAv,
         gjelderFra = dto.gjelderFra
     )

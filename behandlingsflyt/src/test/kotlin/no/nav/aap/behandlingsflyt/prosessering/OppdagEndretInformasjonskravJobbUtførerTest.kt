@@ -170,7 +170,6 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
                     Uføre(
                         virkningstidspunkt = periode.fom,
                         uføregrad = Prosent.`100_PROSENT`,
-                        kilde = "",
                     )
                 )
             FakeInstitusjonsoppholdGateway.response = listOf(

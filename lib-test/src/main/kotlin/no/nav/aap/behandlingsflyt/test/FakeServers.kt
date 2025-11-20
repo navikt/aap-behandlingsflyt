@@ -232,7 +232,7 @@ object FakeServers : AutoCloseable {
                                 UførePeriode(
                                     uforegrad = uføregrad,
                                     uforegradTom = null,
-                                    uforegradFom = null,
+                                    uforegradFom = LocalDate.parse(body.dato),
                                     uforetidspunkt = null,
                                     virkningstidspunkt = LocalDate.parse(body.dato)
                                 )
@@ -1898,6 +1898,8 @@ object FakeServers : AutoCloseable {
                     )
                 )
             ),
+            brevmal = null,
+            brevdata = null,
             opprettet = LocalDateTime.now(),
             oppdatert = LocalDateTime.now(),
             behandlingReferanse = UUID.randomUUID(),

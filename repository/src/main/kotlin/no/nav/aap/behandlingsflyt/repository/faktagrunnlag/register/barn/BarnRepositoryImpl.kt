@@ -79,9 +79,9 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         return requireNotNull(hentHvisEksisterer(behandlingId))
     }
 
-    override fun hentBehandlingIdForSakSomFårBarnetilleggForBarn(barneIdent: Ident): List<BehandlingId> {
-        log.info("Henter info for ident {}", barneIdent)
-        val registerBarnId = getRegisterBarnId(barneIdent)
+    override fun hentBehandlingIdForSakSomFårBarnetilleggForBarn(ident: Ident): List<BehandlingId> {
+        log.info("Henter info for ident {}", ident)
+        val registerBarnId = getRegisterBarnId(ident)
         log.info("Henter registerbarnid for registerBarnId {}", registerBarnId)
         if (registerBarnId != null) {
             val behandlingId = hentBehandlingIdForBarneId(registerBarnId)

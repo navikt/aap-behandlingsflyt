@@ -38,7 +38,7 @@ public data class SøknadStudentDto(
 public enum class KommeTilbake(public val stringRepresentation: String) {
     Ja("Ja"), Nei("Nei"),
 
-    @JsonAlias("Vet ikke")
+    @JsonAlias("Vet ikke", "VetIkke")
     VetIkke("Vet ikke");
 
     @JsonValue

@@ -5,6 +5,5 @@ import java.time.LocalDate
 
 data class Uføre(
     val virkningstidspunkt: LocalDate,
-    val uføregrad: Prosent,
-    val kilde: String = "PESYS"
+    val uføregrad: Prosent
 )
