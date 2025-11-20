@@ -157,6 +157,7 @@ class ApiInternGatewayImpl() : ApiInternGateway {
     }
 
     override fun hentArenaStatus(personidentifikatorer: List<String>): ArenaStatusResponse {
+        //FIXME: kall den mer basic metoden i API-intern, samme som Postmottak
         val gatewayResponse: ApiInternArenaStatusResponse = try {
             restClient.post(
                 uri.resolve("/person/aap/soknad/kan_behandles_i_kelvin"),
