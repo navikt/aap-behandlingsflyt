@@ -37,4 +37,10 @@ enum class AndreStatligeYtelser {
     OVERGANGSSTØNAD,
     DAGPENGER,
     BARNEPENSJON,
+    /**
+     * Da etterlattereformen trådde i kraft 1. januar 2024 ble det satt en tidsbegrensning for en del av de som mottok
+     * gjenlevendepensjon på 3 år (eventuelt +2 år). Fra 1. januar 2029 skal alle de gjenværende på gjenlevendepensjon
+     * over på omstillingsstønad, som har en litt annen beregning. 
+     **/
+    GJENLEVENDEPENSJON,
 }
