@@ -232,7 +232,7 @@ object FakeServers : AutoCloseable {
                                 UførePeriode(
                                     uforegrad = uføregrad,
                                     uforegradTom = null,
-                                    uforegradFom = null,
+                                    uforegradFom = LocalDate.parse(body.dato),
                                     uforetidspunkt = null,
                                     virkningstidspunkt = LocalDate.parse(body.dato)
                                 )
