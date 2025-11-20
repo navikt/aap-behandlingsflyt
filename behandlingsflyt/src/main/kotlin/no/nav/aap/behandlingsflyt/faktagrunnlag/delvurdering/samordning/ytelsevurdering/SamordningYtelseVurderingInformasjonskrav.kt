@@ -239,7 +239,7 @@ private fun alleNyeInnenforAlleEksisterende(
     eksisterende: Set<SamordningYtelsePeriode>, nye: Set<SamordningYtelsePeriode>
 ): Boolean = nye.all { ny ->
     eksisterende.all { eks ->
-        eks.periode.inneholder(ny.periode)
+        eks.periode.inneholder(ny.periode) && eks.gradering == ny.gradering
     }
 }
 
