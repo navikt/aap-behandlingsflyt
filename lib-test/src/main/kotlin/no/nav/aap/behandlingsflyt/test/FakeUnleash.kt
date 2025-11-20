@@ -47,7 +47,6 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.EOSBeregning to true,
         BehandlingsflytFeature.NyeBarn to true,
         BehandlingsflytFeature.Arbeidsopptrapping to true,
-        BehandlingsflytFeature.PeriodisertSykepengeErstatning to true,
         BehandlingsflytFeature.IkkeAntaNullTimerArbeidet to true,
     )
 )
