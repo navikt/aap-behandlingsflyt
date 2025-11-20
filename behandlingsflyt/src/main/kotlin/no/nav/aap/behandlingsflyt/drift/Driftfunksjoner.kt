@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.drift
 
+import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
@@ -17,14 +17,14 @@ import org.slf4j.LoggerFactory
  * Klasse for alle driftsfunksjoner. Skal kún brukes av DriftApi.
  * */
 class Driftfunksjoner(
-    private val prosesserBehandlingService: ProsesserBehandlingService,
     private val behandlingRepository: BehandlingRepository,
     private val taSkriveLåsRepository: TaSkriveLåsRepository,
+    private val flytOrkestrator: FlytOrkestrator,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
-        prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
         behandlingRepository = repositoryProvider.provide(),
         taSkriveLåsRepository = repositoryProvider.provide(),
+        flytOrkestrator = FlytOrkestrator(repositoryProvider, gatewayProvider),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -55,7 +55,7 @@ class Driftfunksjoner(
                 )
             )
 
-            prosesserBehandlingService.triggProsesserBehandling(behandling)
+            flytOrkestrator.prosesserBehandling(flytOrkestrator.opprettKontekst(behandling))
         }
     }
 }
