@@ -109,13 +109,13 @@ class KvalitetssikringsSteg private constructor(
     }
 
     private fun erTilstrekkeligVurdert(avklaringsbehovene: Avklaringsbehovene): Boolean {
-        if (avklaringsbehovene.alle().any { it.status() == Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER }) {
+        if (avklaringsbehovene.alle().any { it.status() == Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER || it.status() == Status.SENDT_TILBAKE_FRA_BESLUTTER }) {
             return false
         }
         return avklaringsbehovene.alle()
             .filter { it.kreverKvalitetssikring() }
             .filter { it.status() != Status.AVBRUTT }
-            .all { it.status() == Status.KVALITETSSIKRET || it.historikk.any { it.status == Status.KVALITETSSIKRET } }
+            .all { it.status() == Status.KVALITETSSIKRET }
     }
 
     companion object : FlytSteg {
