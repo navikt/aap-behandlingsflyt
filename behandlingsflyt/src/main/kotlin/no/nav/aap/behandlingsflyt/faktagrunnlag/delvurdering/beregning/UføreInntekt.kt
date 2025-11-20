@@ -9,7 +9,7 @@ import java.time.Year
 /**
  * @param år Hvilket år inntekten gjelder for.
  * @param inntektIKroner Inntekt i kroner for dette året.
- * @param uføregrad Uføregrad i prosent.
+ * @param uføregrad Uføregrad i prosent. PS: denne brukes ikke i beregningen, her brukes uføregrad i [inntektsPerioder].
  * @param inntektJustertForUføregrad Inntekter oppjustert for uføregrad etter §11-28, fjerde ledd.
  */
 data class UføreInntekt(
@@ -24,6 +24,9 @@ data class UføreInntekt(
     val inntektsPerioder: List<UføreInntektPeriodisert> = emptyList()
 )
 
+/**
+ * @param uføregrad Uføregrad i en gitt periode.
+ */
 data class UføreInntektPeriodisert(
     val periode: Periode,
     val inntektIKroner: Beløp,

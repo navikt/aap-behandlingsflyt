@@ -42,8 +42,9 @@ data class GrunnlagUføre(
         )
     }
 
-    // TODO, denne burde fjernes
-    @Deprecated("Bruk periodisert")
+    /**
+     * Returner nyeste uføregraden. Ønskes periodisert, bruk [uføreInntekterFraForegåendeÅr].
+     */
     fun uføregrad(): Prosent {
         return uføregrad
     }
@@ -56,8 +57,7 @@ data class GrunnlagUføre(
         return uføreYtterligereNedsattArbeidsevneÅr
     }
 
-    internal class Fakta(
-        // FIXME: BigDecimal serialiseres til JSON på standardform
+    internal data class Fakta(
         val grunnlaget: BigDecimal,
         val grunnlag: Faktagrunnlag,
         val grunnlagYtterligereNedsatt: Faktagrunnlag
