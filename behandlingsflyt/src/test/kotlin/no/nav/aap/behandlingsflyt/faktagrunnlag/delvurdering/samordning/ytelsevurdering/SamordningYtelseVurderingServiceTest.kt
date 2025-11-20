@@ -279,8 +279,6 @@ class SamordningYtelseVurderingServiceTest {
             behandlingId,
             SamordningVurderingGrunnlag(
                 begrunnelse = "En god begrunnelse",
-                maksDatoEndelig = false,
-                fristNyRevurdering = LocalDate.now().plusYears(1),
                 vurderinger = setOf(
                     SamordningVurdering(
                         Ytelse.SYKEPENGER,

@@ -56,9 +56,6 @@ data class SamordningYtelseVurderingGrunnlagDTO(
 
 data class SamordningYtelseVurderingDTO(
     val begrunnelse: String?,
-    @Deprecated("Ikke i bruk i backend")
-    val fristNyRevurdering: LocalDate?,
-    val maksDatoEndelig: Boolean?,
     val vurderinger: List<SamordningVurderingDTO>,
     val vurdertAv: VurdertAvResponse?
 )
@@ -463,8 +460,6 @@ private fun mapSamordningVurdering(
 
     return SamordningYtelseVurderingDTO(
         begrunnelse = samordning.begrunnelse,
-        fristNyRevurdering = samordning.fristNyRevurdering,
-        maksDatoEndelig = samordning.maksDatoEndelig,
         vurderinger = samordning.vurderinger.flatMap { vurdering ->
             vurdering.vurderingPerioder.map {
                 SamordningVurderingDTO(
