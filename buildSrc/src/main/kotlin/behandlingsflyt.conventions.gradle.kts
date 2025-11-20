@@ -35,7 +35,7 @@ dokka {
     dokkaPublications {
         configureEach {
             suppressObviousFunctions.set(true)
-            suppressInheritedMembers.set(true)
+            suppressInheritedMembers.set(false)
         }
     }
 }

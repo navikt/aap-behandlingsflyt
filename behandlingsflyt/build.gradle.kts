@@ -18,6 +18,12 @@ tasks{
     }
 }
 
+dokka {
+    dokkaSourceSets.configureEach {
+        includes.from("behandlingsflyt.md")
+    }
+}
+
 fun getCheckedOutGitCommitHash(): String {
     if (System.getenv("GITHUB_ACTIONS") == "true") {
         return System.getenv("GITHUB_SHA")
