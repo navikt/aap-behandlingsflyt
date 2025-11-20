@@ -39,7 +39,8 @@ class IverksettKonsekvensSteg private constructor(
         when (vurdering.konsekvens) {
             SvarFraAndreinstansKonsekvens.INGENTING -> {}
             SvarFraAndreinstansKonsekvens.OMGJØRING -> opprettRevurdering(kontekst, vurdering)
-            SvarFraAndreinstansKonsekvens.BEHANDLE_PÅ_NYTT -> opprettNyKlagebehandling()
+            // TODO: automatisk opprette ny klagebehandling
+            SvarFraAndreinstansKonsekvens.BEHANDLE_PÅ_NYTT -> { /* Saksbehandler må opprette ny klagebehandling manuelt */ }
         }
         return Fullført
     }
@@ -70,10 +71,6 @@ class IverksettKonsekvensSteg private constructor(
                 mottattTidspunkt = LocalDateTime.now()
             ),
         )
-    }
-    
-    private fun opprettNyKlagebehandling() {
-        TODO("Ikke implementert enda")
     }
 
     private fun konstruerMelding(vurdering: SvarFraAndreinstansVurdering): OmgjøringKlageRevurdering {
