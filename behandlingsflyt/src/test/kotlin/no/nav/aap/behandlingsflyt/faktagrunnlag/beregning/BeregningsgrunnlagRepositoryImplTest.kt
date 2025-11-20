@@ -6,14 +6,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagI
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.UføreInntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.UføreInntektPeriodisert
-import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
-import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.ident
-import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
@@ -46,7 +40,7 @@ internal class BeregningsgrunnlagRepositoryImplTest {
 
     @Test
     fun `Lagre og hente opp beregningsgrunnlaget med uføre og yrkesskade`() {
-        val sak = dataSource.transaction { sak(it) }
+        val sak = dataSource.transaction { sak(it, periode) }
         val behandling = dataSource.transaction { finnEllerOpprettBehandling(it, sak) }
         val inntektPerÅr = listOf(
             GrunnlagInntekt(
@@ -180,7 +174,7 @@ internal class BeregningsgrunnlagRepositoryImplTest {
 
     @Test
     fun `Lagre og hente opp beregningsgrunnlaget med uføre uten yrkesskade`() {
-        val sak = dataSource.transaction { sak(it) }
+        val sak = dataSource.transaction { sak(it, periode) }
         val behandling = dataSource.transaction { finnEllerOpprettBehandling(it, sak) }
 
         val inntektPerÅr = listOf(
@@ -302,7 +296,7 @@ internal class BeregningsgrunnlagRepositoryImplTest {
 
     @Test
     fun `Lagre og hente opp beregningsgrunnlaget uten uføre og yrkesskade`() {
-        val sak = dataSource.transaction { sak(it) }
+        val sak = dataSource.transaction { sak(it, periode) }
         val behandling = dataSource.transaction {
             finnEllerOpprettBehandling(it, sak)
         }
@@ -326,7 +320,7 @@ internal class BeregningsgrunnlagRepositoryImplTest {
 
     @Test
     fun `lagre flere grunnlag`() {
-        val sak = dataSource.transaction { sak(it) }
+        val sak = dataSource.transaction { sak(it, periode) }
         val behandling = dataSource.transaction {
             finnEllerOpprettBehandling(it, sak)
         }
@@ -343,7 +337,7 @@ internal class BeregningsgrunnlagRepositoryImplTest {
             beregningsgrunnlagRepository.lagre(behandling.id, grunnlag11_19Standard)
         }
 
-        val sak2 = dataSource.transaction { sak(it) }
+        val sak2 = dataSource.transaction { sak(it, periode) }
         val behandling2 = dataSource.transaction { finnEllerOpprettBehandling(it, sak2) }
         val inntektPerÅr = listOf(
             GrunnlagInntekt(
@@ -465,14 +459,6 @@ internal class BeregningsgrunnlagRepositoryImplTest {
         assertThat(uthentet).isEqualTo(grunnlag11_19Standard)
         assertThat(uthentet2).isEqualTo(grunnlagUføre)
 
-    }
-
-    private fun sak(connection: DBConnection): Sak {
-        return PersonOgSakService(
-            FakePdlGateway,
-            PersonRepositoryImpl(connection),
-            SakRepositoryImpl(connection)
-        ).finnEllerOpprett(ident(), periode)
     }
 
     private class InntekterForUføre(
