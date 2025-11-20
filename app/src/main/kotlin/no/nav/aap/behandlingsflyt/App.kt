@@ -84,11 +84,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
 import no.nav.aap.behandlingsflyt.pip.behandlingsflytPip
 import no.nav.aap.behandlingsflyt.prosessering.BehandlingsflytLogInfoProvider
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -333,14 +331,8 @@ private fun utførMigreringer(
         val isLeader = isLeader(log)
         log.info("isLeader = $isLeader")
 
-        val migrerSykepengeErstatning = unleashGateway.isEnabled(BehandlingsflytFeature.PeriodisertSykepengeErstatning)
-        log.info("Migrering av sykepengeerstatning enabled = $migrerSykepengeErstatning")
-
-        if(migrerSykepengeErstatning && isLeader) {
-            dataSource.transaction { connection ->
-                val sykepengerErstatningRepository = SykepengerErstatningRepositoryImpl(connection)
-                sykepengerErstatningRepository.migrerPeriodisering()
-            }
+        if (isLeader) {
+            // Legg migreringsjobber som skal kjøres her, gjerne bak en feature-toggke
         }
     }, 9, TimeUnit.MINUTES)
     return scheduler
