@@ -58,7 +58,7 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
                         setString(4, vurdering.vurdertAv)
                         setLocalDate(5, vurdering.gjelderFra)
                         setLong(6, vurderingerId)
-                        setLong(7, vurdering.vurdertIBehandling?.toLong())
+                        setLong(7, vurdering.vurdertIBehandling.toLong())
                     }
                 }
 
@@ -137,7 +137,7 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
                     dokumenterBruktIVurdering = hentDokumenter(row.getLong("id")),
                     harRettPå = row.getBoolean("oppfylt"),
                     grunn = row.getEnumOrNull("grunn"),
-                    vurdertIBehandling = row.getLongOrNull("vurdert_i_behandling")?.let { BehandlingId(it) },
+                    vurdertIBehandling = BehandlingId(row.getLong("vurdert_i_behandling")),
                     vurdertAv = row.getString("vurdert_av"),
                     vurdertTidspunkt = row.getLocalDateTime("opprettet_tid"),
                     gjelderFra = row.getLocalDateOrNull("gjelder_fra")
