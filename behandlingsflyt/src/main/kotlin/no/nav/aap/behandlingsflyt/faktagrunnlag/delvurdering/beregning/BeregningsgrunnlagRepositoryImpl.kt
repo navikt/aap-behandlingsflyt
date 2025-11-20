@@ -213,7 +213,7 @@ class BeregningsgrunnlagRepositoryImpl(private val connection: DBConnection) : B
     private fun hentUføreInntekt(beregningsId: Long): List<UføreInntekt> {
         return connection.queryList(
             """
-                SELECT ARSTALL, INNTEKT_I_KRONER, UFOREGRAD, ARBEIDSGRAD, INNTEKT_JUSTERT_FOR_UFOREGRAD, INNTEKT_I_G, GRUNNBELOP, inntekt_justert_ufore_g
+                SELECT ID, ARSTALL, INNTEKT_I_KRONER, UFOREGRAD, ARBEIDSGRAD, INNTEKT_JUSTERT_FOR_UFOREGRAD, INNTEKT_I_G, GRUNNBELOP, inntekt_justert_ufore_g
                 FROM BEREGNING_UFORE_INNTEKT
                 WHERE BEREGNING_UFORE_ID = ?
                 ORDER BY ARSTALL ASC
