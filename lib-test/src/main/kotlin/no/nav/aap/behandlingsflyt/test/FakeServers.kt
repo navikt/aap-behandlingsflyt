@@ -318,8 +318,7 @@ object FakeServers : AutoCloseable {
                     InntektResponse(person.inntekter().map { inntekt ->
                         SumPi(
                             inntektAr = inntekt.år.value,
-                            belop = inntekt.beløp.verdi().toLong(),
-                            inntektType = "Lønnsinntekt"
+                            belop = inntekt.beløp.verdi().toLong()
                         )
                     }.toList())
                 )

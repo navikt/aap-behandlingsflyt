@@ -8,5 +8,6 @@ interface InntektRegisterGateway : Gateway {
     fun innhent(
         person: Person,
         år: Set<Year>
-    ): Set<InntektPerÅr>
+    ): Set<InntektPerÅrFraRegister>
 }
+
