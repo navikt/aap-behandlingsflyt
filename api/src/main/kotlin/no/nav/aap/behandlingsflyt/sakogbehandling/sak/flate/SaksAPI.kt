@@ -21,7 +21,6 @@ import no.nav.aap.behandlingsflyt.medAzureTokenGen
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
@@ -307,30 +306,9 @@ fun NormalOpenAPIRoute.saksApi(
                 modules = arrayOf(TagModule(listOf(Tags.Sak))),
             ) { req ->
                 val saksnummer = req.saksnummer
-                var søknadErTrukket: Boolean? = null
-                val (sak, behandlinger) = dataSource.transaction(readOnly = true) { connection ->
+                val (sak, behandlinger, søknadErTrukket) = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
-                    val resultatUtleder = ResultatUtleder(repositoryProvider)
-                    val sak = repositoryProvider.provide<SakRepository>().hent(saksnummer = Saksnummer(saksnummer))
-
-                    val behandlinger =
-                        repositoryProvider.provide<BehandlingRepository>().hentAlleFor(sak.id).map { behandling ->
-                            if (behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling) {
-                                søknadErTrukket =
-                                    resultatUtleder.utledResultatFørstegangsBehandling(behandling) == Resultat.TRUKKET
-                            }
-                            val vurderingsbehov = behandling.vurderingsbehov().map(VurderingsbehovMedPeriode::type)
-                            BehandlinginfoDTO(
-                                referanse = behandling.referanse.referanse,
-                                type = behandling.typeBehandling().identifikator(),
-                                status = behandling.status(),
-                                vurderingsbehov = vurderingsbehov,
-                                årsakTilOpprettelse = behandling.årsakTilOpprettelse,
-                                opprettet = behandling.opprettetTidspunkt
-                            )
-                        }
-
-                    sak to behandlinger
+                    SakOgBehandlingService(repositoryProvider).finnSakOgBehandlinger(Saksnummer(saksnummer))
                 }
 
                 respond(
