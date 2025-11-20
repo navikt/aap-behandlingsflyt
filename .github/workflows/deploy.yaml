@@ -86,7 +86,7 @@ jobs:
       - name: upload-artifact for docs
         uses: actions/upload-pages-artifact@v4
         with:
-          path: './build/dokka/html'
+          path: './docs/build/dokka/html'
 
 
   deploy-pages:
