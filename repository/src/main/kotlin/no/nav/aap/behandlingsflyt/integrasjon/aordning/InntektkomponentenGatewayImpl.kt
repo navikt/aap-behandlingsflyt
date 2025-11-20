@@ -19,6 +19,9 @@ import java.net.URI
 import java.time.LocalDate
 import java.time.YearMonth
 
+/**
+ * Se [Swagger](https://ikomp-q2.intern.dev.nav.no/swagger-ui/index.html?urls.primaryName=V1#/Legacy) for responstyper.
+ */
 class InntektkomponentenGatewayImpl : InntektkomponentenGateway {
     private val url = URI.create(requiredConfigForKey("integrasjon.inntektskomponenten.url") + "/hentinntektliste")
     private val config =
@@ -81,7 +84,7 @@ private fun mapFraRespons(response: InntektskomponentResponse): Inntektskomponen
                             virksomhet = Virksomhet(inntekt.virksomhet.identifikator),
                             beskrivelse = inntekt.beskrivelse
                         )
-                    } ?: emptyList()
+                    }.orEmpty()
                 )
             )
         }
