@@ -2,17 +2,12 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerGrunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.slf4j.LoggerFactory
-import java.time.LocalDate
-import java.time.LocalDateTime
-import kotlin.time.measureTime
 
 class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
     SykepengerErstatningRepository {
@@ -196,146 +191,6 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
         setParams { setLong(1, behandlingId.id) }
         setRowMapper { row ->
             row.getLong("vurderinger_id")
-        }
-    }
-
-
-    /**
-     * Alt under her er midlertidig kode som skal slettes etter migrering av dataene er utført
-     * Noe av dette er derfor litt duplisering av kode over, men siden dette er midlertidig kode tenker
-     * jeg det er helt greit
-     */
-
-    override fun migrerPeriodisering() {
-        log.info("Starter migrering sykepengeerstatning for periodisering")
-
-        val duration = measureTime {
-            val vurderingerSomSkalMigreres = finnAlleVurderingerUtenVurdertIBehandling()
-            log.info("Fant ${vurderingerSomSkalMigreres.size} vurderinger for sykepengeerstatning som må migreres")
-
-            val alleGrunnlag = hentAlleGrunnlag()
-
-            vurderingerSomSkalMigreres.forEach { vurdering ->
-                val førsteGrunnlagMedVurdering = finnFørsteGrunnlagMedVurdering(vurdering, alleGrunnlag)
-                oppdaterVurderingMedVurdertIBehandsling(vurdering.id, førsteGrunnlagMedVurdering.behandlingId)
-            }
-        }
-
-        log.info("Ferdig med migrering av sykepengererstatning for periodisering. Migrering tok ${duration.inWholeSeconds} sekunder")
-    }
-
-    private fun finnAlleVurderingerUtenVurdertIBehandling(): List<SykepengerVurderingWithId> {
-        return connection.queryList("""
-            SELECT distinct(sv.id), sv.begrunnelse, sv.oppfylt, sv.grunn, sv.vurdert_i_behandling, sv.vurdert_av, sv.opprettet_tid, sv.gjelder_fra, sak.id AS sakid
-            FROM sykepenge_vurdering sv
-            LEFT JOIN sykepenge_vurderinger vurderinger ON vurderinger.id = sv.vurderinger_id
-            LEFT JOIN sykepenge_erstatning_grunnlag grunnlag ON grunnlag.vurderinger_id = vurderinger.id
-            LEFT JOIN behandling ON behandling.id = grunnlag.behandling_id
-            LEFT JOIN sak ON sak.id = behandling.sak_id
-            WHERE vurdert_i_behandling IS NULL
-            """.trimIndent()) {
-            setRowMapper { row ->
-                SykepengerVurderingWithId(
-                    id = row.getLong("id"),
-                    begrunnelse = row.getString("begrunnelse"),
-                    dokumenterBruktIVurdering = hentDokumenter(row.getLong("id")),
-                    harRettPå = row.getBoolean("oppfylt"),
-                    grunn = row.getEnumOrNull("grunn"),
-                    vurdertIBehandling = row.getLongOrNull("vurdert_i_behandling")?.let { BehandlingId(it) },
-                    vurdertAv = row.getString("vurdert_av"),
-                    vurdertTidspunkt = row.getLocalDateTime("opprettet_tid"),
-                    gjelderFra = row.getLocalDateOrNull("gjelder_fra"),
-                    sakId = SakId(row.getLong("sakid")),
-                )
-            }
-        }
-    }
-
-    private fun hentAlleGrunnlag(): List<SykepengerErstatningGrunnlagWithId> {
-        return connection.queryList("SELECT * FROM sykepenge_erstatning_grunnlag ORDER BY opprettet_tid asc") {
-            setRowMapper { row ->
-                SykepengerErstatningGrunnlagWithId(
-                    id = row.getLong("id"),
-                    behandlingId = BehandlingId(row.getLong("behandling_id")),
-                    vurderinger = row.getLongOrNull("vurderinger_id")?.let(::mapVurderingWithId).orEmpty()
-                )
-            }
-        }
-    }
-
-    private fun finnFørsteGrunnlagMedVurdering(vurdering: SykepengerVurderingWithId, alleGrunnlag: List<SykepengerErstatningGrunnlagWithId>): SykepengerErstatningGrunnlagWithId {
-        return alleGrunnlag.first { grunnlag -> grunnlag.vurderinger.any { it.erSammeVurdering(vurdering) } }
-    }
-
-    private fun oppdaterVurderingMedVurdertIBehandsling(vurderingId: Long, vurdertIBehandling: BehandlingId) {
-        connection.execute("UPDATE sykepenge_vurdering SET vurdert_i_behandling=? WHERe id=?") {
-            setParams {
-                setLong(1, vurdertIBehandling.toLong())
-                setLong(2, vurderingId)
-            }
-        }
-    }
-
-    private fun mapVurderingWithId(vurderingerId: Long): List<SykepengerVurderingWithId> {
-        val query = """
-            SELECT distinct(sv.id), sv.begrunnelse, sv.oppfylt, sv.grunn, sv.vurdert_i_behandling, sv.vurdert_av, sv.opprettet_tid, sv.gjelder_fra, sak.id AS sakid
-            FROM sykepenge_vurdering sv
-            LEFT JOIN sykepenge_vurderinger vurderinger ON vurderinger.id = sv.vurderinger_id
-            LEFT JOIN sykepenge_erstatning_grunnlag grunnlag ON grunnlag.vurderinger_id = vurderinger.id
-            LEFT JOIN behandling ON behandling.id = grunnlag.behandling_id
-            LEFT JOIN sak ON sak.id = behandling.sak_id
-            WHERE sv.vurderinger_id = ?
-        """.trimIndent()
-
-        return connection.queryList(query) {
-            setParams {
-                setLong(1, vurderingerId)
-            }
-            setRowMapper { row ->
-                SykepengerVurderingWithId(
-                    id = row.getLong("id"),
-                    begrunnelse = row.getString("begrunnelse"),
-                    dokumenterBruktIVurdering = hentDokumenter(row.getLong("id")),
-                    harRettPå = row.getBoolean("oppfylt"),
-                    grunn = row.getEnumOrNull("grunn"),
-                    vurdertIBehandling = row.getLongOrNull("vurdert_i_behandling")?.let { BehandlingId(it) },
-                    vurdertAv = row.getString("vurdert_av"),
-                    vurdertTidspunkt = row.getLocalDateTime("opprettet_tid"),
-                    gjelderFra = row.getLocalDateOrNull("gjelder_fra"),
-                    sakId = SakId(row.getLong("sakid")),
-                )
-            }
-        }
-    }
-
-    private data class SykepengerErstatningGrunnlagWithId(
-        val id: Long,
-        val behandlingId: BehandlingId,
-        val vurderinger: List<SykepengerVurderingWithId>
-    )
-
-    private data class SykepengerVurderingWithId(
-        val id: Long,
-        val sakId: SakId,
-        val begrunnelse: String,
-        val dokumenterBruktIVurdering: List<JournalpostId>,
-        val harRettPå: Boolean,
-        val vurdertIBehandling: BehandlingId? = null,
-        val grunn: SykepengerGrunn? = null,
-        val vurdertAv: String,
-        val vurdertTidspunkt: LocalDateTime? = null,
-        val gjelderFra: LocalDate? = null,
-    ) {
-        fun erSammeVurdering(other: SykepengerVurderingWithId): Boolean {
-            return begrunnelse == other.begrunnelse
-                    && harRettPå == other.harRettPå
-                    && sakId == other.sakId
-                    && vurdertAv == other.vurdertAv
-                    && vurdertTidspunkt == other.vurdertTidspunkt
-                    && gjelderFra == other.gjelderFra
-                    && grunn == other.grunn
-                    && dokumenterBruktIVurdering.toSet() == other.dokumenterBruktIVurdering.toSet()
-
         }
     }
 }
