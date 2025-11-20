@@ -31,7 +31,7 @@ class BeregningTest {
     @Test
     fun `beregn input med basic 11_19 uten yrkesskade eller uføre`() {
         val input = Inntektsbehov(
-            input = BeregningInput(
+            beregningInput = BeregningInput(
                 nedsettelsesDato = LocalDate.of(2023, 1, 1),
                 årsInntekter = setOf(
                     InntektPerÅr(2022, Beløp(500000)),
@@ -347,7 +347,7 @@ class BeregningTest {
     fun `11-19 tabelldrevet test`(nedsettelsesÅr: Year, inntektPerÅr: Set<InntektPerÅr>, forventetGrunnlag: GUnit) {
         val nedsettelsesDato = nedsettelsesÅr.atDay(1)
         val input = Inntektsbehov(
-            input = BeregningInput(
+            beregningInput = BeregningInput(
                 nedsettelsesDato = nedsettelsesDato,
                 uføregrad = emptySet(),
                 yrkesskadevurdering = null,
