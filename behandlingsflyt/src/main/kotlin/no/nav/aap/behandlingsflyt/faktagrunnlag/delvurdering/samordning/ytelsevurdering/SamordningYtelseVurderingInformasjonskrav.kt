@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory
 import kotlin.time.measureTimedValue
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Ytelse as ForeldrePengerYtelse
 
+
 class SamordningYtelseVurderingInformasjonskrav(
     private val samordningYtelseRepository: SamordningYtelseRepository,
     private val tidligereVurderinger: TidligereVurderinger,
@@ -49,8 +50,7 @@ class SamordningYtelseVurderingInformasjonskrav(
         kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?
     ): Boolean {
         return kontekst.erFørstegangsbehandlingEllerRevurdering() && !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(
-            kontekst,
-            steg
+            kontekst, steg
         ) && (oppdatert.ikkeKjørtSisteKalenderdag() || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode)
     }
 
@@ -115,8 +115,7 @@ class SamordningYtelseVurderingInformasjonskrav(
     ): List<ForeldrePengerYtelse> {
         return fpGateway.hentVedtakYtelseForPerson(
             ForeldrepengerRequest(
-                Aktør(personIdent),
-                oppslagsPeriode
+                Aktør(personIdent), oppslagsPeriode
             )
         ).ytelser.mapNotNull { ytelse ->
             val anvistInnenforPeriode = ytelse.anvist.filter {
@@ -196,7 +195,7 @@ class SamordningYtelseVurderingInformasjonskrav(
 
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.SAMORDNING_YTELSE
-
+        private val secureLogger = LoggerFactory.getLogger("secureLog")
         override fun konstruer(
             repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider
         ): SamordningYtelseVurderingInformasjonskrav {
@@ -212,7 +211,43 @@ class SamordningYtelseVurderingInformasjonskrav(
         fun harEndringerIYtelser(
             eksisterende: SamordningYtelseGrunnlag?, samordningYtelser: Set<SamordningYtelse>
         ): Boolean {
+            secureLogger.info("Hentet samordningytelse eksisterende ${eksisterende?.ytelser} med nye samordningsytelser ${samordningYtelser.map { it.ytelsePerioder }}  ${samordningYtelser.map { it.ytelseType.name }}")
+            secureLogger.info("Overlapp " + harFullstendigOverlapp(eksisterende, samordningYtelser))
+            // TDOD: return eksisterende == null || !harFullstendigOverlapp(eksisterende, samordningYtelser)
             return eksisterende == null || samordningYtelser != eksisterende.ytelser
+        }
+
+    }
+
+}
+
+fun harFullstendigOverlapp(
+    eksisterende: SamordningYtelseGrunnlag?,
+    nye: Set<SamordningYtelse>
+): Boolean {
+    if (eksisterende == null) return false
+    if (eksisterende.ytelser.size != nye.size) return false
+
+    return eksisterende.ytelser.all { eksisterendeYtelse ->
+        nye.any { nyYtelse ->
+            perioderErLike(eksisterendeYtelse.ytelsePerioder, nyYtelse.ytelsePerioder)
         }
     }
 }
+
+private fun perioderErLike(
+    eksisterende: Set<SamordningYtelsePeriode>,
+    nye: Set<SamordningYtelsePeriode>
+): Boolean {
+    if (eksisterende.size != nye.size) return false
+
+    return eksisterende.all { eks ->
+        nye.any { ny ->
+            eks.periode.fom.isEqual(ny.periode.fom) &&
+                    eks.periode.tom.isEqual(ny.periode.tom) &&
+                    eks.gradering == ny.gradering
+        }
+    }
+}
+
+

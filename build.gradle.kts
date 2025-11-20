@@ -1,5 +1,9 @@
 // top-level build gradle
 
+plugins {
+    base
+}
+
 allprojects {
     configurations.configureEach {
         resolutionStrategy {

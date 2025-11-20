@@ -18,7 +18,7 @@ class ForutgåendeMedlemskapvilkåret(
     private val vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.MEDLEMSKAP)
 
     override fun vurder(grunnlag: ForutgåendeMedlemskapGrunnlag) {
-        val manuellVurdering = grunnlag.medlemskapArbeidInntektGrunnlag?.manuellVurdering
+        val manuellVurdering = grunnlag.medlemskapArbeidInntektGrunnlag?.vurderinger?.firstOrNull() // TODO må legge innn støtte for periodisering her
 
         var vurdertManuelt = false
         val vurderingsResultat = if (manuellVurdering != null) {
@@ -40,17 +40,6 @@ class ForutgåendeMedlemskapvilkåret(
         }
 
         leggTilVurdering(grunnlag, vurderingsResultat, vurdertManuelt)
-    }
-
-    fun vurderOverstyrt(grunnlag: ForutgåendeMedlemskapGrunnlag) {
-        val manuellVurdering = grunnlag.medlemskapArbeidInntektGrunnlag?.manuellVurdering
-        val vurderingsResultat = if (!manuellVurdering!!.harForutgåendeMedlemskap
-            && (manuellVurdering.medlemMedUnntakAvMaksFemAar != true && manuellVurdering.varMedlemMedNedsattArbeidsevne != true)) {
-                VurderingsResultat(Utfall.IKKE_OPPFYLT, Avslagsårsak.IKKE_MEDLEM_FORUTGÅENDE, null)
-            } else {
-                VurderingsResultat(Utfall.OPPFYLT, null, null)
-            }
-        leggTilVurdering(grunnlag, vurderingsResultat, true)
     }
 
     fun leggTilYrkesskadeVurdering() {
@@ -78,7 +67,7 @@ class ForutgåendeMedlemskapvilkåret(
                 periode = rettighetsPeriode,
                 utfall = vurderingsResultat.utfall,
                 avslagsårsak = vurderingsResultat.avslagsårsak,
-                begrunnelse = grunnlag.medlemskapArbeidInntektGrunnlag?.manuellVurdering?.begrunnelse,
+                begrunnelse = grunnlag.medlemskapArbeidInntektGrunnlag?.vurderinger?.firstOrNull()?.begrunnelse, // TODO må legge innn støtte for periodisering her
                 faktagrunnlag = grunnlag,
                 versjon = vurderingsResultat.versjon(),
                 manuellVurdering = vurdertManuelt

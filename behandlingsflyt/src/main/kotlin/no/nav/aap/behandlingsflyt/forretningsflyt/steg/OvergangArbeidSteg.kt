@@ -77,7 +77,10 @@ class OvergangArbeidSteg internal constructor(
             ),
             nårVurderingErRelevant = ::perioderVurderingErRelevant,
             kontekst = kontekst,
-            erTilstrekkeligVurdert = { true },
+            nårVurderingErGyldig = {
+                overgangArbeidRepository.hentHvisEksisterer(kontekst.behandlingId)?.gjeldendeVurderinger().orEmpty()
+                    .mapValue { true }
+            },
             tilbakestillGrunnlag = { tilbakestillGrunnlag(kontekst) },
         )
 

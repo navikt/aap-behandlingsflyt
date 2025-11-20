@@ -45,7 +45,7 @@ class VurderSykepengeErstatningSteg private constructor(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
-        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
+        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårGammel(
             avklaringsbehovene = avklaringsbehovene,
             behandlingRepository = behandlingRepository,
             vilkårsresultatRepository = vilkårsresultatRepository,
@@ -53,7 +53,7 @@ class VurderSykepengeErstatningSteg private constructor(
             tvingerAvklaringsbehov = setOf(),
             nårVurderingErRelevant = ::perioderMedVurderingsbehov,
             kontekst = kontekst,
-            erTilstrekkeligVurdert = { true }, // ??
+            perioderSomIkkeErTilstrekkeligVurdert = { emptySet() }, // Denne må minst sjekke at man har vurderinger for perioder når vurdering er relevant
             tilbakestillGrunnlag = {
                 val vedtatteVurderinger =
                     kontekst.forrigeBehandlingId?.let { sykepengerErstatningRepository.hentHvisEksisterer(it) }

@@ -330,6 +330,10 @@ private fun utførMigreringer(
         val unleashGateway: UnleashGateway = gatewayProvider.provide()
         val isLeader = isLeader(log)
         log.info("isLeader = $isLeader")
+
+        if (isLeader) {
+            // Legg migreringsjobber som skal kjøres her, gjerne bak en feature-toggke
+        }
     }, 9, TimeUnit.MINUTES)
     return scheduler
 }

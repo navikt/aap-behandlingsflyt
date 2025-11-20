@@ -232,7 +232,7 @@ class FormkravSteg (
         if(trekkKlageService.klageErTrukket(kontekst.behandlingId)) {
             return true
         }
-        if (grunnlag == null || grunnlag.vurdering == null) {
+        if (grunnlag == null) {
             return false
         } else if (grunnlag.vurdering.erOppfylt()) {
             return true

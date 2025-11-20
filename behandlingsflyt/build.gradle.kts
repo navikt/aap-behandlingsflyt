@@ -18,6 +18,12 @@ tasks{
     }
 }
 
+dokka {
+    dokkaSourceSets.configureEach {
+        includes.from("behandlingsflyt.md")
+    }
+}
+
 fun getCheckedOutGitCommitHash(): String {
     if (System.getenv("GITHUB_ACTIONS") == "true") {
         return System.getenv("GITHUB_SHA")
@@ -43,8 +49,8 @@ dependencies {
 
     api(libs.tilgangPlugin)
     api(libs.tilgangKontrakt)
-    api("no.nav.aap.brev:kontrakt:0.0.186")
-    api("no.nav.aap.meldekort:kontrakt:0.0.147")
+    api("no.nav.aap.brev:kontrakt:0.0.187")
+    api("no.nav.aap.meldekort:kontrakt:0.0.148")
     api(libs.motor)
     api(libs.gateway)
     api(libs.utbetalKontrakt)
@@ -62,7 +68,8 @@ dependencies {
 
     testImplementation(project(":lib-test"))
     testImplementation(project(":repository"))
-    implementation(libs.dbtest)
+    testImplementation(libs.dbtest)
+    testImplementation(libs.tabletest)
     implementation(libs.motorTestUtils)
     testImplementation(libs.bundles.junit)
 

@@ -163,9 +163,13 @@ class FlytOrkestrator(
 
         if (!tilbakeføringsflyt.erTom()) {
             log.info(
-                "Tilbakeført etter oppdatering av registeropplysninger fra '{}' til '{}'",
+                "Tilbakeført etter oppdatering av registeropplysninger fra '{}' til '{}'. " +
+                        "Oppdatert faktagrunnlag for kravliste: {} " +
+                        "Med triggere: {}",
                 behandling.aktivtSteg(),
-                tilbakeføringsflyt.stegene().last()
+                tilbakeføringsflyt.stegene().last(),
+                oppdaterFaktagrunnlagForKravliste.joinToString { it.navn.toString() },
+                triggere?.joinToString { it.toString() }
             )
         }
         tilbakefør(kontekst, behandling, tilbakeføringsflyt, avklaringsbehovene)
