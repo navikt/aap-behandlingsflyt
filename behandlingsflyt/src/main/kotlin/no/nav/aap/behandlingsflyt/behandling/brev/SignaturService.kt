@@ -32,7 +32,13 @@ class SignaturService(
 
                 val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(brevbestilling.behandlingId)
                 listOfNotNull(
-                    utledSignatur(Rolle.BESLUTTER, avklaringsbehovene),
+                    utledSignatur(Rolle.BESLUTTER, avklaringsbehovene)
+                    // Dersom ingen har saksbehandlet med rollen beslutter så tas innlogget bruker med i signatur.
+                    // Dette fordi det er saksbehandlere med beslutter-rolle som skriver vedtaksbrev.
+                        ?: SignaturGrunnlag(
+                        bruker.ident,
+                        null
+                    ),
                     utledSignatur(Rolle.SAKSBEHANDLER_NASJONAL, avklaringsbehovene),
                     utledSignatur(Rolle.KVALITETSSIKRER, avklaringsbehovene),
                     utledSignatur(Rolle.SAKSBEHANDLER_OPPFOLGING, avklaringsbehovene)

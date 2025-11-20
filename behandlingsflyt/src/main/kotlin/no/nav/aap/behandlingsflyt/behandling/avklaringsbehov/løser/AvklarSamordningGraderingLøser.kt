@@ -29,8 +29,6 @@ class AvklarSamordningGraderingLøser(
         val samordningYtelseGrunnlag = samordningYtelseRepository.hentHvisEksisterer(kontekst.behandlingId())
         val samordningsvurderinger = SamordningVurderingGrunnlag(
             begrunnelse = vurderingerForSamordning.begrunnelse,
-            maksDatoEndelig = vurderingerForSamordning.maksDatoEndelig,
-            fristNyRevurdering = vurderingerForSamordning.fristNyRevurdering,
             vurderinger = vurderingerForSamordning.vurderteSamordningerData.groupBy { it.ytelseType }.map {
                 SamordningVurdering(
                     ytelseType = it.key,

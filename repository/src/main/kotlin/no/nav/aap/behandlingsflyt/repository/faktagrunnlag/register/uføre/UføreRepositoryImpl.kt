@@ -98,7 +98,7 @@ class UføreRepositoryImpl(private val connection: DBConnection) : UføreReposit
     }
 
     private fun hentVurderinger(uføreId: Long): Set<Uføre> {
-        return connection.queryList(
+        return connection.querySet(
             """
             SELECT * FROM UFORE_GRADERING WHERE UFORE_ID = ?
         """.trimIndent()
@@ -112,7 +112,7 @@ class UføreRepositoryImpl(private val connection: DBConnection) : UføreReposit
                     uføregrad = Prosent(row.getInt("uforegrad"))
                 )
             }
-        }.toSet()
+        }
     }
 
     override fun lagre(behandlingId: BehandlingId, uføre: Set<Uføre>) {

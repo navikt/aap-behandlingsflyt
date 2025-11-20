@@ -97,8 +97,6 @@ internal class SamordningServiceTest {
             opprettVurderingData(
                 ytelseVurderingRepo, behandlingId, vurderinger = SamordningVurderingGrunnlag(
                     begrunnelse = "En god begrunnelse",
-                    maksDatoEndelig = false,
-                    fristNyRevurdering = LocalDate.now().plusYears(1),
                     vurdertAv = "ident",
                     vurderinger = setOf(
                         SamordningVurdering(
@@ -177,8 +175,6 @@ internal class SamordningServiceTest {
 
             val vurderinger = SamordningVurderingGrunnlag(
                 begrunnelse = "En god begrunnelse",
-                maksDatoEndelig = false,
-                fristNyRevurdering = LocalDate.now().plusYears(1),
                 vurdertAv = "ident",
                 vurderinger = setOf(
                     SamordningVurdering(
@@ -261,8 +257,6 @@ internal class SamordningServiceTest {
         behandlingId: BehandlingId,
         vurderinger: SamordningVurderingGrunnlag = SamordningVurderingGrunnlag(
             begrunnelse = "En god begrunnelse",
-            maksDatoEndelig = false,
-            fristNyRevurdering = LocalDate.now().plusYears(1),
             vurdertAv = "ident",
             vurderinger = setOf(
                 SamordningVurdering(
