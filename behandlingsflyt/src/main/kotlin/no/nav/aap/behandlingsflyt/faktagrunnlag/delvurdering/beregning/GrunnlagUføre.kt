@@ -22,7 +22,7 @@ data class GrunnlagUføre(
     private val grunnlag: Grunnlag11_19,
     private val grunnlagYtterligereNedsatt: Grunnlag11_19,
     private val uføregrad: Prosent,
-    private val uføreInntekterFraForegåendeÅr: List<UføreInntekt>, // uføre før og etter oppjustering
+    private val uføreInntekterFraForegåendeÅr: List<UføreInntekt>,
     private val uføreYtterligereNedsattArbeidsevneÅr: Year
 ) : Beregningsgrunnlag {
 
