@@ -14,4 +14,12 @@ data class InstitusjonsOpphold(val helse: HelseOpphold? = null, val soning: Soni
         }
         return helse?.vurdering == OppholdVurdering.UAVKLART
     }
+
+    fun harUavklartSoningsopphold(): Boolean {
+        return soning?.vurdering == OppholdVurdering.UAVKLART
+    }
+
+    fun harUavklartHelseopphold(): Boolean {
+        return helse?.vurdering == OppholdVurdering.UAVKLART
+    }
 }

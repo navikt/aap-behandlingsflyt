@@ -59,9 +59,8 @@ class HåndterMottattDokumentService(
         låsRepository = repositoryProvider.provide(),
         prosesserBehandling = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
         mottaDokumentService = MottaDokumentService(repositoryProvider),
-        behandlingRepository = repositoryProvider.provide<BehandlingRepository>(),
-
-        )
+        behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+    )
 
     fun håndterMottatteKlage(
         sakId: SakId,
@@ -130,7 +129,7 @@ class HåndterMottattDokumentService(
                 årsak = årsakTilOpprettelse,
                 vurderingsbehov = vurderingsbehov,
                 opprettet = mottattTidspunkt,
-                beskrivelse =  when (melding) {
+                beskrivelse = when (melding) {
                     is ManuellRevurderingV0 -> melding.beskrivelse
                     is OmgjøringKlageRevurderingV0 -> melding.beskrivelse
                     else -> null
@@ -149,8 +148,17 @@ class HåndterMottattDokumentService(
             mottaDokumentService.markerSomBehandlet(sakId, opprettetBehandling.åpenBehandling.id, referanse)
         } else {
             when (opprettetBehandling) {
-                is SakOgBehandlingService.Ordinær -> mottaDokumentService.oppdaterMedBehandlingId(sakId, opprettetBehandling.åpenBehandling.id, referanse)
-                is SakOgBehandlingService.MåBehandlesAtomært -> mottaDokumentService.oppdaterMedBehandlingId(sakId, opprettetBehandling.nyBehandling.id, referanse)
+                is SakOgBehandlingService.Ordinær -> mottaDokumentService.oppdaterMedBehandlingId(
+                    sakId,
+                    opprettetBehandling.åpenBehandling.id,
+                    referanse
+                )
+
+                is SakOgBehandlingService.MåBehandlesAtomært -> mottaDokumentService.oppdaterMedBehandlingId(
+                    sakId,
+                    opprettetBehandling.nyBehandling.id,
+                    referanse
+                )
             }
         }
 
@@ -179,13 +187,16 @@ class HåndterMottattDokumentService(
         melding: NyÅrsakTilBehandlingV0,
         referanse: InnsendingReferanse
     ) {
-        val behandling = sakOgBehandlingService.finnBehandling(behandlingsreferanse)
+        val behandling = behandlingRepository.hent(behandlingsreferanse)
         val årsakTilOpprettelse = utledÅrsakTilOpprettelse(innsendingType, melding)
 
         låsRepository.withLåstBehandling(behandling.id) {
             val vurderingsbehov =
                 melding.årsakerTilBehandling.map { VurderingsbehovMedPeriode(it.tilVurderingsbehov()) }
-            sakOgBehandlingService.oppdaterVurderingsbehovTilBehandling(behandling, VurderingsbehovOgÅrsak(vurderingsbehov, årsakTilOpprettelse))
+            sakOgBehandlingService.oppdaterVurderingsbehovTilBehandling(
+                behandling,
+                VurderingsbehovOgÅrsak(vurderingsbehov, årsakTilOpprettelse)
+            )
             mottaDokumentService.markerSomBehandlet(sakId, behandling.id, referanse)
             prosesserBehandling.triggProsesserBehandling(
                 sakId,
@@ -215,6 +226,7 @@ class HåndterMottattDokumentService(
             InnsendingType.OMGJØRING_KLAGE_REVURDERING -> utledÅrsakEtterOmgjøringAvKlage(melding)
         }
     }
+
     private fun utledÅrsakTilOppfølgningsOppave(melding: Melding?): ÅrsakTilOpprettelse {
         require(melding is OppfølgingsoppgaveV0) { "Melding must be of type OppfølgingsoppgaveV0" }
         val kode = melding.opprinnelse?.avklaringsbehovKode
@@ -226,7 +238,7 @@ class HåndterMottattDokumentService(
     }
 
 
-    private fun finnStegType(avklaringsTypeKode:String): StegType {
+    private fun finnStegType(avklaringsTypeKode: String): StegType {
         return Definisjon.forKode(avklaringsTypeKode).løsesISteg
     }
 

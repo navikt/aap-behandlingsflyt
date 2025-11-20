@@ -38,6 +38,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -75,6 +76,7 @@ fun NormalOpenAPIRoute.flytApi(
         route("/{referanse}/flyt") {
             authorizedGet<BehandlingReferanse, BehandlingFlytOgTilstandDto>(
                 AuthorizationParamPathConfig(
+                    relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                     behandlingPathParam = BehandlingPathParam("referanse")
                 )
             ) { req ->
@@ -210,6 +212,7 @@ fun NormalOpenAPIRoute.flytApi(
         route("/{referanse}/resultat") {
             authorizedGet<BehandlingReferanse, BehandlingResultatDto>(
                 AuthorizationParamPathConfig(
+                    relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                     behandlingPathParam = BehandlingPathParam("referanse")
                 ),
             ) { req ->
@@ -231,6 +234,7 @@ fun NormalOpenAPIRoute.flytApi(
         route("/{referanse}/sett-på-vent") {
             authorizedPost<BehandlingReferanse, BehandlingResultatDto, SettPåVentRequest>(
                 AuthorizationParamPathConfig(
+                    relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                     operasjon = Operasjon.SAKSBEHANDLE,
                     behandlingPathParam = BehandlingPathParam("referanse"),
                     avklaringsbehovKode = MANUELT_SATT_PÅ_VENT_KODE
@@ -256,9 +260,8 @@ fun NormalOpenAPIRoute.flytApi(
                             repositoryProvider.provide<AvklaringsbehovRepository>()
                         val behandlingId = behandling(behandlingRepository, request).id
                         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
-                        if (unleashGateway.isEnabled(BehandlingsflytFeature.TilgangssjekkSettPaaVent)) {
-                            sjekkTilgangTilSettPåVent(avklaringsbehovene, tilgangGateway, request.referanse, token())
-                        }
+                        sjekkTilgangTilSettPåVent(avklaringsbehovene, tilgangGateway, request.referanse, token())
+
 
                         val taSkriveLåsRepository =
                             repositoryProvider.provide<TaSkriveLåsRepository>()
@@ -283,6 +286,7 @@ fun NormalOpenAPIRoute.flytApi(
         route("/{referanse}/vente-informasjon") {
             authorizedGet<BehandlingReferanse, Venteinformasjon>(
                 AuthorizationParamPathConfig(
+                    relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                     behandlingPathParam = BehandlingPathParam(
                         "referanse"
                     )

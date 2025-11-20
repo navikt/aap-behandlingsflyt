@@ -1,9 +1,10 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.sykdom
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling.Førstegangsbehandling
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling.Revurdering
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -23,9 +24,11 @@ class SykdomsInformasjonskravTest {
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
             erArbeidsevnenNedsatt = true,
             yrkesskadeBegrunnelse = null,
-            vurderingenGjelderFra = null,
+            vurderingenGjelderFra = 1 januar 2020,
+            vurderingenGjelderTil = null,
             vurdertAv = Bruker("Z00000"),
             opprettet = Instant.now(),
+            vurdertIBehandling = BehandlingId(1L)
         )
 
         assertThat(vurdering.erKonsistentForSykdom(false, Førstegangsbehandling)).isTrue
@@ -43,9 +46,11 @@ class SykdomsInformasjonskravTest {
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
             erArbeidsevnenNedsatt = true,
             yrkesskadeBegrunnelse = null,
-            vurderingenGjelderFra = null,
+            vurderingenGjelderFra = 1 januar 2020,
             vurdertAv = Bruker("Z00000"),
             opprettet = Instant.now(),
+            vurdertIBehandling = BehandlingId(1L),
+            vurderingenGjelderTil = null,
         )
 
         assertThat(vurdering.erKonsistentForSykdom(true, Førstegangsbehandling)).isTrue
@@ -63,9 +68,11 @@ class SykdomsInformasjonskravTest {
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
             erArbeidsevnenNedsatt = true,
             yrkesskadeBegrunnelse = null,
-            vurderingenGjelderFra = null,
+            vurderingenGjelderFra = 1 januar 2020,
             vurdertAv = Bruker("Z00000"),
             opprettet = Instant.now(),
+            vurdertIBehandling = BehandlingId(1L),
+            vurderingenGjelderTil = null,
         )
 
         assertThat(vurdering.erKonsistentForSykdom(true, Førstegangsbehandling)).isFalse
@@ -83,9 +90,11 @@ class SykdomsInformasjonskravTest {
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
             erArbeidsevnenNedsatt = true,
             yrkesskadeBegrunnelse = null,
-            vurderingenGjelderFra = null,
+            vurderingenGjelderFra = 1 januar 2020,
             vurdertAv = Bruker("Z00000"),
             opprettet = Instant.now(),
+            vurdertIBehandling = BehandlingId(1L),
+            vurderingenGjelderTil = null,
         )
 
         assertThat(vurdering.erKonsistentForSykdom(true, Førstegangsbehandling)).isFalse
@@ -103,9 +112,11 @@ class SykdomsInformasjonskravTest {
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
             erArbeidsevnenNedsatt = true,
             yrkesskadeBegrunnelse = null,
-            vurderingenGjelderFra = null,
+            vurderingenGjelderFra = 1 januar 2020,
             vurdertAv = Bruker("Z00000"),
             opprettet = Instant.now(),
+            vurdertIBehandling = BehandlingId(1L),
+            vurderingenGjelderTil = null,
         )
 
         assertThat(vurdering.erKonsistentForSykdom(true, Revurdering)).isTrue
@@ -123,11 +134,13 @@ class SykdomsInformasjonskravTest {
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
             erArbeidsevnenNedsatt = true,
             yrkesskadeBegrunnelse = null,
-            vurderingenGjelderFra = null,
+            vurderingenGjelderFra = 1 januar 2020,
             vurdertAv = Bruker("Z00000"),
             opprettet = Instant.now(),
+            vurdertIBehandling = BehandlingId(1L),
+            vurderingenGjelderTil = null,
         )
-
+        
         assertThat(vurdering.erKonsistentForSykdom(true, Førstegangsbehandling)).isTrue
     }
 
@@ -143,9 +156,11 @@ class SykdomsInformasjonskravTest {
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
             erArbeidsevnenNedsatt = true,
             yrkesskadeBegrunnelse = null,
-            vurderingenGjelderFra = null,
+            vurderingenGjelderFra = 1 januar 2020,
             vurdertAv = Bruker("Z00000"),
             opprettet = Instant.now(),
+            vurdertIBehandling = BehandlingId(1L),
+            vurderingenGjelderTil = null,
         )
 
         assertThat(vurdering.erKonsistentForSykdom(false, Førstegangsbehandling)).isTrue
@@ -163,9 +178,11 @@ class SykdomsInformasjonskravTest {
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
             erArbeidsevnenNedsatt = true,
             yrkesskadeBegrunnelse = null,
-            vurderingenGjelderFra = null,
+            vurderingenGjelderFra = 1 januar 2020,
             vurdertAv = Bruker("Z00000"),
             opprettet = Instant.now(),
+            vurdertIBehandling = BehandlingId(1L),
+            vurderingenGjelderTil = null,
         )
 
         assertThat(vurdering.erKonsistentForSykdom(false, Førstegangsbehandling)).isTrue
@@ -183,9 +200,11 @@ class SykdomsInformasjonskravTest {
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
             erArbeidsevnenNedsatt = true,
             yrkesskadeBegrunnelse = null,
-            vurderingenGjelderFra = null,
+            vurderingenGjelderFra = 1 januar 2020,
             vurdertAv = Bruker("Z00000"),
             opprettet = Instant.now(),
+            vurdertIBehandling = BehandlingId(1L),
+            vurderingenGjelderTil = null,
         )
 
         assertThat(vurdering.erKonsistentForSykdom(false, Førstegangsbehandling)).isTrue
@@ -203,9 +222,11 @@ class SykdomsInformasjonskravTest {
             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
             erArbeidsevnenNedsatt = true,
             yrkesskadeBegrunnelse = null,
-            vurderingenGjelderFra = null,
+            vurderingenGjelderFra = 1 januar 2020,
             vurdertAv = Bruker("Z00000"),
             opprettet = Instant.now(),
+            vurdertIBehandling = BehandlingId(1L),
+            vurderingenGjelderTil = null,
         )
 
         assertThat(vurdering.erKonsistentForSykdom(false, Førstegangsbehandling)).isFalse

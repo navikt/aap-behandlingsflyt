@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.Arbeid
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
 import no.nav.aap.komponenter.verdityper.TimerArbeid
@@ -105,15 +106,16 @@ class GraderingArbeidRegel : UnderveisRegel {
             .outerJoin(opplysningerFraMeldekort(input), OpplysningerOmArbeid::mergePrioriterHøyre)
             .outerJoin(harRettTidslinje(resultat), OpplysningerOmArbeid::mergePrioriterHøyre)
 
-        if (skalAntaTimerArbeidet(resultat, opplysninger)) {
-            // anta null timer arbeidet hvis medlemmet har gitt alle opplysninger
-            opplysninger = Tidslinje(
-                input.rettighetsperiode,
-                OpplysningerOmArbeid(timerArbeid = TimerArbeid(BigDecimal.ZERO))
-            )
-                .outerJoin(opplysninger, OpplysningerOmArbeid::mergePrioriterHøyre)
+        if (!input.ikkeAntaNullTimerArbeidetFeature) {
+            if (skalAntaTimerArbeidet(resultat, opplysninger)) {
+                // anta null timer arbeidet hvis medlemmet har gitt alle opplysninger
+                opplysninger = Tidslinje(
+                    input.rettighetsperiode,
+                    OpplysningerOmArbeid(timerArbeid = TimerArbeid(BigDecimal.ZERO))
+                )
+                    .outerJoin(opplysninger, OpplysningerOmArbeid::mergePrioriterHøyre)
+            }
         }
-
 
         return groupByMeldeperiode(resultat, opplysninger)
             .flatMap { meldeperiode ->
@@ -164,23 +166,32 @@ class GraderingArbeidRegel : UnderveisRegel {
         }
     }
 
-    private fun nullTimerVedFritakFraMeldeplikt(input: UnderveisInput): Tidslinje<OpplysningerOmArbeid> =
-        input.meldepliktGrunnlag.tilTidslinje().mapValue {
-            if (it.harFritak) {
+    private fun nullTimerVedFritakFraMeldeplikt(
+        input: UnderveisInput,
+        dagensDato: LocalDate = LocalDate.now()
+    ): Tidslinje<OpplysningerOmArbeid> =
+        Tidslinje.map2(
+            input.meldeperioder.somTidslinje { it },
+            input.meldepliktGrunnlag.tilTidslinje()
+        ) { meldeperiode, fritaksvurdering ->
+            val harPassertMeldeperiodeITid = meldeperiode?.let { dagensDato >= meldeperiode.tom.plusDays(1) } ?: false
+            if (fritaksvurdering?.harFritak == true && harPassertMeldeperiodeITid) {
                 OpplysningerOmArbeid(
                     timerArbeid = TimerArbeid(BigDecimal.ZERO),
+                    opplysningerFørstMottatt = meldeperiode.tom.plusDays(3) // Settes til samme dag som fritak-jobbkjøringstidspunktet
                 )
             } else {
                 OpplysningerOmArbeid()
             }
         }
 
+
     private fun opplysningerFraMeldekort(input: UnderveisInput): Tidslinje<OpplysningerOmArbeid> {
         var tidslinje = Tidslinje<OpplysningerOmArbeid>()
 
         for (meldekort in input.meldekort.sortedBy { it.mottattTidspunkt }) {
             tidslinje = tidslinje.outerJoin(meldekort.somTidslinje()) { tidligereOpplysninger, meldekortopplysninger ->
-                /* Opplysninger fra nyeste meldekort, opplysningerMottatt fra eldste meldekort */
+                /* Opplysninger fra nyeste meldekort, opplysningerFørstMottatt fra eldste meldekort */
                 val timerArbeidetOpplysninger = OpplysningerOmArbeid(
                     timerArbeid = meldekortopplysninger?.let { (timerArbeidet, antallDager) ->
                         TimerArbeid(
@@ -212,7 +223,9 @@ class GraderingArbeidRegel : UnderveisRegel {
                     BigDecimal.ZERO
             }
 
-        if (antallHverdager == BigDecimal.ZERO || opplysningerOmArbeid.segmenter().any { it.verdi.harRett == true && it.verdi.timerArbeid == null }) {
+        if (antallHverdager == BigDecimal.ZERO || opplysningerOmArbeid.segmenter()
+                .any { it.verdi.harRett == true && it.verdi.timerArbeid == null }
+        ) {
             /* mangler opplysninger for hele perioden, vet derfor ikke hva som er
              * totalt antall timer.
              */

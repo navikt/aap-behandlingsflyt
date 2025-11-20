@@ -13,7 +13,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRe
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskader
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
@@ -21,7 +20,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepos
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.lookup.repository.RepositoryProvider
-import java.time.LocalDate
 import java.time.Year
 
 class BeregningService(
@@ -117,7 +115,7 @@ class BeregningService(
         yrkesskadevurdering: Yrkesskadevurdering?,
         vurdering: BeregningGrunnlag?,
         inntekter: Set<InntektPerÅr>,
-        uføregrad: List<Uføre>,
+        uføregrad: Set<Uføre>,
         registrerteYrkesskader: Yrkesskader?
     ): Inntektsbehov {
         return Inntektsbehov(

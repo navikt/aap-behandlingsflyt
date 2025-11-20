@@ -14,18 +14,30 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 
 internal class BarnetilleggRepositoryImplTest {
-    private val dataSource = InitTestDatabase.freshDatabase()
-
     companion object {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+
+        private lateinit var dataSource: TestDataSource
+
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            dataSource = TestDataSource()
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun tearDown() = dataSource.close()
     }
 
     @Test
@@ -133,28 +145,31 @@ internal class BarnetilleggRepositoryImplTest {
 
     @Test
     fun `test sletting`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
-            val sak = sak(connection)
-            val behandling = finnEllerOpprettBehandling(connection, sak)
-            val barnetilleggRepository = BarnetilleggRepositoryImpl(connection)
-            barnetilleggRepository.lagre(
-                behandling.id, listOf(
-                    BarnetilleggPeriode(
-                        Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1).plusYears(18)),
-                        setOf(BarnIdentifikator.BarnIdent("12345678910"))
+        // FIXME ny db trengs her?
+        TestDataSource().use { dataSource ->
+            dataSource.transaction { connection ->
+                val sak = sak(connection)
+                val behandling = finnEllerOpprettBehandling(connection, sak)
+                val barnetilleggRepository = BarnetilleggRepositoryImpl(connection)
+                barnetilleggRepository.lagre(
+                    behandling.id, listOf(
+                        BarnetilleggPeriode(
+                            Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1).plusYears(18)),
+                            setOf(BarnIdentifikator.BarnIdent("12345678910"))
+                        )
                     )
                 )
-            )
-            barnetilleggRepository.lagre(
-                behandling.id, listOf(
-                    BarnetilleggPeriode(
-                        Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1).plusYears(18)),
-                        setOf(BarnIdentifikator.BarnIdent("12345678910"))
+                barnetilleggRepository.lagre(
+                    behandling.id, listOf(
+                        BarnetilleggPeriode(
+                            Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1).plusYears(18)),
+                            setOf(BarnIdentifikator.BarnIdent("12345678910"))
+                        )
                     )
                 )
-            )
-            assertDoesNotThrow {
-                barnetilleggRepository.slett(behandling.id)
+                assertDoesNotThrow {
+                    barnetilleggRepository.slett(behandling.id)
+                }
             }
         }
     }

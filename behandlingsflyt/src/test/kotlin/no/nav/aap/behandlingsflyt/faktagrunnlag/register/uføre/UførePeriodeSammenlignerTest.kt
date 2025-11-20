@@ -11,17 +11,31 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 internal class UførePeriodeSammenlignerTest {
+    companion object {
+        private val periode = Periode(LocalDate.now().minusYears(1), LocalDate.now().plusYears(2))
 
-    private val dataSource = InitTestDatabase.freshDatabase()
-    private val periode = Periode(LocalDate.now().minusYears(1), LocalDate.now().plusYears(2))
+        private lateinit var dataSource: TestDataSource
+
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            dataSource = TestDataSource()
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun tearDown() = dataSource.close()
+    }
 
     val femtiProsentUføreIFjor = Uføre(LocalDate.now().minusYears(1), Prosent.`50_PROSENT`)
     val hundreProsentUføreNå = Uføre(LocalDate.now(), Prosent.`100_PROSENT`)
@@ -31,7 +45,7 @@ internal class UførePeriodeSammenlignerTest {
         dataSource.transaction { connection ->
             val behandlingId = finnEllerOpprettBehandling(connection, sak(connection)).id
             val uføreRepository = UføreRepositoryImpl(connection)
-            uføreRepository.lagre(behandlingId, listOf(femtiProsentUføreIFjor))
+            uføreRepository.lagre(behandlingId, setOf(femtiProsentUføreIFjor))
             val vurderinger = UførePeriodeSammenligner(uføreRepository).hentUføreGrunnlagMedEndretStatus(behandlingId)
             assertThat(vurderinger.size).isEqualTo(1)
             assertThat(vurderinger.first().endringStatus).isEqualTo(EndringStatus.NY)
@@ -43,8 +57,8 @@ internal class UførePeriodeSammenlignerTest {
         dataSource.transaction { connection ->
             val behandlingId = finnEllerOpprettBehandling(connection, sak(connection)).id
             val uføreRepository = UføreRepositoryImpl(connection)
-            uføreRepository.lagre(behandlingId, listOf(femtiProsentUføreIFjor))
-            uføreRepository.lagre(behandlingId, emptyList())
+            uføreRepository.lagre(behandlingId, setOf(femtiProsentUføreIFjor))
+            uføreRepository.lagre(behandlingId, emptySet())
             val vurderinger = UførePeriodeSammenligner(uføreRepository).hentUføreGrunnlagMedEndretStatus(behandlingId)
             assertThat(vurderinger.size).isEqualTo(1)
             assertThat(vurderinger.first().endringStatus).isEqualTo(EndringStatus.SLETTET)
@@ -56,8 +70,8 @@ internal class UførePeriodeSammenlignerTest {
         dataSource.transaction { connection ->
             val behandlingId = finnEllerOpprettBehandling(connection, sak(connection)).id
             val uføreRepository = UføreRepositoryImpl(connection)
-            uføreRepository.lagre(behandlingId, listOf(femtiProsentUføreIFjor, hundreProsentUføreNå))
-            uføreRepository.lagre(behandlingId, listOf(femtiProsentUføreIFjor))
+            uføreRepository.lagre(behandlingId, setOf(femtiProsentUføreIFjor, hundreProsentUføreNå))
+            uføreRepository.lagre(behandlingId, setOf(femtiProsentUføreIFjor))
             val vurderinger = UførePeriodeSammenligner(uføreRepository).hentUføreGrunnlagMedEndretStatus(behandlingId)
             assertThat(vurderinger.size).isEqualTo(2)
             assertThat(vurderinger.first().endringStatus).isEqualTo(EndringStatus.UENDRET)
@@ -70,8 +84,8 @@ internal class UførePeriodeSammenlignerTest {
         dataSource.transaction { connection ->
             val behandlingId = finnEllerOpprettBehandling(connection, sak(connection)).id
             val uføreRepository = UføreRepositoryImpl(connection)
-            uføreRepository.lagre(behandlingId, listOf(femtiProsentUføreIFjor))
-            uføreRepository.lagre(behandlingId, listOf(femtiProsentUføreIFjor, hundreProsentUføreNå))
+            uføreRepository.lagre(behandlingId, setOf(femtiProsentUføreIFjor))
+            uføreRepository.lagre(behandlingId, setOf(femtiProsentUføreIFjor, hundreProsentUføreNå))
             val vurderinger = UførePeriodeSammenligner(uføreRepository).hentUføreGrunnlagMedEndretStatus(behandlingId)
             assertThat(vurderinger.size).isEqualTo(2)
             assertThat(vurderinger.first().endringStatus).isEqualTo(EndringStatus.UENDRET)
@@ -84,8 +98,8 @@ internal class UførePeriodeSammenlignerTest {
         dataSource.transaction { connection ->
             val behandlingId = finnEllerOpprettBehandling(connection, sak(connection)).id
             val uføreRepository = UføreRepositoryImpl(connection)
-            uføreRepository.lagre(behandlingId, listOf(femtiProsentUføreIFjor))
-            uføreRepository.lagre(behandlingId, listOf(femtiProsentUføreIFjor.copy(uføregrad = Prosent.`100_PROSENT`)))
+            uføreRepository.lagre(behandlingId, setOf(femtiProsentUføreIFjor))
+            uføreRepository.lagre(behandlingId, setOf(femtiProsentUføreIFjor.copy(uføregrad = Prosent.`100_PROSENT`)))
             val vurderinger = UførePeriodeSammenligner(uføreRepository).hentUføreGrunnlagMedEndretStatus(behandlingId)
             assertThat(vurderinger.size).isEqualTo(2)
             assertThat(vurderinger.first().endringStatus).isEqualTo(EndringStatus.NY)

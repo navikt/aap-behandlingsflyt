@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReposito
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.MottattDokumentDto
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
 import no.nav.aap.behandlingsflyt.pip.PipRepository
@@ -33,13 +34,13 @@ class BehandlingHendelseServiceImpl(
     private val flytJobbRepository: FlytJobbRepository,
     private val sakService: SakService,
     private val dokumentRepository: MottattDokumentRepository,
-    private val pipRepository: PipRepository,
+    private val pipRepository: PipRepository
 ) : BehandlingHendelseService {
     constructor(repositoryProvider: RepositoryProvider) : this(
         flytJobbRepository = repositoryProvider.provide(),
         sakService = SakService(repositoryProvider),
         dokumentRepository = repositoryProvider.provide(),
-        pipRepository = repositoryProvider.provide(),
+        pipRepository = repositoryProvider.provide()
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -89,7 +90,8 @@ class BehandlingHendelseServiceImpl(
                     avklaringsbehov = hendelse.avklaringsbehov,
                     opprettetTidspunkt = hendelse.opprettetTidspunkt,
                     hendelsesTidspunkt = hendelse.hendelsesTidspunkt,
-                    versjon = hendelse.versjon
+                    versjon = hendelse.versjon,
+                    opprettetAv = hentBehandlingOpprettetAv(behandling.id),
                 )
             )
                 .forBehandling(sak.id.id, behandling.id.id)
@@ -111,21 +113,42 @@ class BehandlingHendelseServiceImpl(
         val oppfølgingsoppgavedokument =
             MottaDokumentService(dokumentRepository).hentOppfølgingsBehandlingDokument(behandlingId)
 
-        val reserverTilBrukerRevurderingAvbrutt = finnReserverTilBrukerGittVurderingsbehov(behandlingId, no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDERING_AVBRUTT)
-        val reserverTilBrukerSøknadTrukket = finnReserverTilBrukerGittVurderingsbehov(behandlingId, no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SØKNAD_TRUKKET)
+        val reserverTilBrukerRevurderingAvbrutt = finnReserverTilBrukerGittVurderingsbehov(
+            behandlingId,
+            no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDERING_AVBRUTT
+        )
+        val reserverTilBrukerSøknadTrukket = finnReserverTilBrukerGittVurderingsbehov(
+            behandlingId,
+            no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SØKNAD_TRUKKET
+        )
 
         if (listOfNotNull(
                 oppfølgingsoppgavedokument?.reserverTilBruker,
                 reserverTilBrukerRevurderingAvbrutt,
                 reserverTilBrukerSøknadTrukket
-            ).size > 1) {
+            ).size > 1
+        ) {
             log.warn("Fant mer enn én reserverTil-verdi i hendelse til oppgave")
         }
 
-        return oppfølgingsoppgavedokument?.reserverTilBruker ?: reserverTilBrukerRevurderingAvbrutt ?: reserverTilBrukerSøknadTrukket
+        return oppfølgingsoppgavedokument?.reserverTilBruker ?: reserverTilBrukerRevurderingAvbrutt
+        ?: reserverTilBrukerSøknadTrukket
     }
 
-    private fun finnReserverTilBrukerGittVurderingsbehov(behandlingId: BehandlingId, vurderingsbehov: no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov): String? {
+    private fun hentBehandlingOpprettetAv(behandlingId: BehandlingId): String? {
+        val eldsteManuellVurderingDokument = MottaDokumentService(dokumentRepository).hentMottattDokumenterAvType(
+            behandlingId,
+            InnsendingType.MANUELL_REVURDERING
+        ).minByOrNull { it.mottattTidspunkt }
+
+        val manuellVurdering = eldsteManuellVurderingDokument?.strukturerteData<ManuellRevurderingV0>()?.data
+        return manuellVurdering?.opprettetAv
+    }
+
+    private fun finnReserverTilBrukerGittVurderingsbehov(
+        behandlingId: BehandlingId,
+        vurderingsbehov: no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
+    ): String? {
         val nyÅrsakTilBehandlingDokumenter = MottaDokumentService(dokumentRepository).hentMottattDokumenterAvType(
             behandlingId,
             InnsendingType.NY_ÅRSAK_TIL_BEHANDLING

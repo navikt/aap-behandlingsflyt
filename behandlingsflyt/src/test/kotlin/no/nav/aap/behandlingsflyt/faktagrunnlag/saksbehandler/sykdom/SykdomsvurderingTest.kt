@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom
 
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -21,9 +23,11 @@ class SykdomsvurderingTest {
             erArbeidsevnenNedsatt = true,
             yrkesskadeBegrunnelse = null,
             erNedsettelseIArbeidsevneAvEnVissVarighet = false,
-            vurderingenGjelderFra = null,
+            vurderingenGjelderFra = 1 januar 2020,
+            vurderingenGjelderTil = null,
             vurdertAv = Bruker("Z00000"),
             opprettet = Instant.now(),
+            vurdertIBehandling = BehandlingId(1L)
         )
 
         assertThat(vurdering.erOppfylt(LocalDate.now())).isFalse
@@ -32,10 +36,12 @@ class SykdomsvurderingTest {
 
     @ParameterizedTest
     @MethodSource("trueFalseNullSource")
-    fun `skal ikke ta hensyn til viss varighet for vurderinger hvor kravdato != gjelderFra`(erNedsettelseIArbeidsevneAvEnVissVarighet: Boolean?) {
+    fun `skal ikke ta hensyn til viss varighet for vurderinger hvor kravdato er før gjelderFra`(erNedsettelseIArbeidsevneAvEnVissVarighet: Boolean?) {
         // Parameterisert test. Skal ignorere verdien av erNedsettelseIArbeidsevneAvEnVissVarighet
 
         val gjelderFra = LocalDate.now()
+        val kravdato = gjelderFra.plusMonths(1)
+        
         val vurdering = Sykdomsvurdering(
             begrunnelse = "",
             dokumenterBruktIVurdering = emptyList(),
@@ -46,12 +52,14 @@ class SykdomsvurderingTest {
             erArbeidsevnenNedsatt = true,
             yrkesskadeBegrunnelse = null,
             erNedsettelseIArbeidsevneAvEnVissVarighet = erNedsettelseIArbeidsevneAvEnVissVarighet,
-            vurderingenGjelderFra = gjelderFra.plusDays(1),
+            vurderingenGjelderFra = kravdato.plusDays(1),
+            vurderingenGjelderTil = null,
             vurdertAv = Bruker("Z00000"),
             opprettet = Instant.now(),
+            vurdertIBehandling = BehandlingId(1L)
         )
 
-        assertThat(vurdering.erOppfylt(gjelderFra.plusMonths(1))).isTrue
+        assertThat(vurdering.erOppfylt(kravdato)).isTrue
     }
 
     @Test
@@ -68,8 +76,10 @@ class SykdomsvurderingTest {
             yrkesskadeBegrunnelse = null,
             erNedsettelseIArbeidsevneAvEnVissVarighet = false,
             vurderingenGjelderFra = gjelderFra,
+            vurderingenGjelderTil = null,
             vurdertAv = Bruker("Z00000"),
             opprettet = Instant.now(),
+            vurdertIBehandling = BehandlingId(1L)
         )
 
         assertThat(vurdering.erOppfylt(gjelderFra)).isFalse

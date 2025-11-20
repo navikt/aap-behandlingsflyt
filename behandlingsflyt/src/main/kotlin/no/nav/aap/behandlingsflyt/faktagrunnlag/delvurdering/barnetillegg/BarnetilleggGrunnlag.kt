@@ -5,7 +5,7 @@ import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 
 
-data class BarnetilleggGrunnlag(val id: Long, val perioder: List<BarnetilleggPeriode>)
+data class BarnetilleggGrunnlag(val perioder: List<BarnetilleggPeriode>)
 
 fun List<BarnetilleggPeriode>?.tilTidslinje(): Tidslinje<RettTilBarnetillegg> {
     if (this == null) return Tidslinje.empty()

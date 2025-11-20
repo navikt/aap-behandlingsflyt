@@ -1,7 +1,9 @@
 package no.nav.aap.behandlingsflyt.test
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PdlQueryException
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
@@ -29,7 +31,7 @@ class TestSakService(
     private val identGateway: IdentGateway
 ) {
 
-    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         sakRepository = repositoryProvider.provide(),
         personRepository = repositoryProvider.provide(),
         flytJobbRepository = repositoryProvider.provide(),
@@ -38,12 +40,20 @@ class TestSakService(
 
 
     fun opprettTestSak(ident: Ident, erStudent: Boolean, harYrkesskade: Boolean, harMedlemskap: Boolean): Sak {
-        if(Miljø.erProd()) {
+        if (Miljø.erProd()) {
             throw RuntimeException("Man kan ikke opprette testtsaker i produskjon")
         }
 
-        val identer = identGateway.hentAlleIdenterForPerson(ident)
-        if(identer.isEmpty()) {
+        val identer = try {
+            identGateway.hentAlleIdenterForPerson(ident)
+        } catch (e: PdlQueryException) {
+            if (e.message?.contains("Fant ikke person") == true) {
+                throw OpprettTestSakException("Fant ikke person i PDL")
+            } else {
+                throw e
+            }
+        }
+        if (identer.isEmpty()) {
             throw OpprettTestSakException("Fant ikke ident i PDL. Har man brukt en gyldig bruker fra Dolly?")
         }
 
@@ -59,7 +69,7 @@ class TestSakService(
         )
 
         val eksisterendeSaker = sakService.finnSakerFor(ident)
-        if(eksisterendeSaker.isNotEmpty()) {
+        if (eksisterendeSaker.isNotEmpty()) {
             throw OpprettTestSakException("Det finnes allerede en eller flere saker for bruker ${ident.getMasked()}. Fant sak med saksnummer: ${eksisterendeSaker.first().saksnummer}. Vennligst bruk en annen testbruker eller gjenbruk den åpne saken.")
         }
 
@@ -67,10 +77,10 @@ class TestSakService(
 
         val melding = SøknadV0(
             student = SøknadStudentDto(erStudent = erStudent.toJaNei()),
-            yrkesskade = harYrkesskade.toJaNei(),
+            yrkesskade = if (harYrkesskade) "Ja" else "Nei",
             oppgitteBarn = null,
             medlemskap = SøknadMedlemskapDto(
-                harBoddINorgeSiste5År =  harMedlemskap.toJaNei(),
+                harBoddINorgeSiste5År = if (harMedlemskap) "JA" else "NEI",
                 harArbeidetINorgeSiste5År = null,
                 arbeidetUtenforNorgeFørSykdom = null,
                 iTilleggArbeidUtenforNorge = null,
@@ -92,7 +102,7 @@ class TestSakService(
         return sak
     }
 
-    private fun Boolean.toJaNei() = if (this) "JA" else "NEI"
+    private fun Boolean.toJaNei() = if (this) StudentStatus.Ja else StudentStatus.Nei
 }
 
 class OpprettTestSakException(message: String) : RuntimeException(message)

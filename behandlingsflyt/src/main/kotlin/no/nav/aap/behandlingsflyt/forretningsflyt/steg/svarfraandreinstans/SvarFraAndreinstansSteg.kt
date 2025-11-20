@@ -1,14 +1,12 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg.svarfraandreinstans
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
-import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -16,20 +14,29 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 class SvarFraAndreinstansSteg private constructor(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val avklaringsbehovService: AvklaringsbehovService,
 ) : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
-        return if (avklaringsbehov.harIkkeBlittLøst(Definisjon.HÅNDTER_SVAR_FRA_ANDREINSTANS)) {
-            FantAvklaringsbehov(Definisjon.HÅNDTER_SVAR_FRA_ANDREINSTANS)
-        } else Fullført
+        avklaringsbehovService.oppdaterAvklaringsbehov(
+            avklaringsbehovene = avklaringsbehovene,
+            definisjon = Definisjon.HÅNDTER_SVAR_FRA_ANDREINSTANS,
+            vedtakBehøverVurdering = { true },
+            erTilstrekkeligVurdert = { true },
+            tilbakestillGrunnlag = {},
+            kontekst = kontekst,
+        )
+
+        return Fullført
     }
 
     companion object : FlytSteg {
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
             return SvarFraAndreinstansSteg(
-                avklaringsbehovRepository = repositoryProvider.provide()
+                avklaringsbehovRepository = repositoryProvider.provide(),
+                avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
             )
         }
 
@@ -38,9 +45,4 @@ class SvarFraAndreinstansSteg private constructor(
         }
     }
 
-    private fun Avklaringsbehovene.harIkkeBlittLøst(definisjon: Definisjon): Boolean {
-        return this.alle()
-            .filter { it.definisjon == definisjon }
-            .none { it.status() == Status.AVSLUTTET }
-    }
 }

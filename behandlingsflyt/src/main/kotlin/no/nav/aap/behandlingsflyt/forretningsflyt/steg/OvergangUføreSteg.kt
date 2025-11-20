@@ -24,7 +24,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
-import no.nav.aap.komponenter.tidslinje.tidslinjeOf
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class OvergangUføreSteg private constructor(
@@ -110,7 +110,7 @@ class OvergangUføreSteg private constructor(
                             behandlingType = forrigeBehandling.typeBehandling(),
                         )
                     )
-                } ?: tidslinjeOf()
+                }.orEmpty()
 
                 perioderOvergangUføreErRelevant.leftJoin(perioderOvergangUføreErVurdert) { erRelevant, erVurdert ->
                     erRelevant && erVurdert != true
@@ -133,9 +133,9 @@ class OvergangUføreSteg private constructor(
     private fun perioderMedVurderingsbehov(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
         val utfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
         val sykdomsvurderinger = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)
-            ?.somSykdomsvurderingstidslinje(kontekst.rettighetsperiode.fom) ?: tidslinjeOf()
+            ?.somSykdomsvurderingstidslinje().orEmpty()
         val bistandsvurderinger = bistandRepository.hentHvisEksisterer(kontekst.behandlingId)
-            ?.somBistandsvurderingstidslinje(startDato = kontekst.rettighetsperiode.fom) ?: tidslinjeOf()
+            ?.somBistandsvurderingstidslinje().orEmpty()
 
         return Tidslinje.zip3(utfall, sykdomsvurderinger, bistandsvurderinger)
             .mapValue { (utfall, sykdomsvurdering, bistandsvurdering) ->

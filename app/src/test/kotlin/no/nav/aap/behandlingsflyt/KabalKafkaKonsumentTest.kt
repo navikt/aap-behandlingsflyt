@@ -31,7 +31,7 @@ import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.testutil.ManuellMotorImpl
@@ -44,6 +44,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.slf4j.LoggerFactory
+import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.kafka.KafkaContainer
 import org.testcontainers.utility.DockerImageName
@@ -55,25 +57,33 @@ import kotlin.concurrent.thread
 
 class KabalKafkaKonsumentTest {
     companion object {
-        private val dataSource = InitTestDatabase.freshDatabase()
+        private val logger = LoggerFactory.getLogger(KabalKafkaKonsumentTest::class.java)
         private val repositoryRegistry = postgresRepositoryRegistry
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-        private val motor =
-            ManuellMotorImpl(
-                dataSource,
-                jobber = listOf(HendelseMottattHåndteringJobbUtfører, KafkaFeilJobbUtfører),
-                repositoryRegistry = repositoryRegistry,
-                gatewayProvider = createGatewayProvider { register<FakeUnleash>() }
-            )
+
+        private lateinit var dataSource: TestDataSource
+        private lateinit var motor: ManuellMotorImpl
+
         val kafka: KafkaContainer = KafkaContainer(DockerImageName.parse("apache/kafka-native:4.1.0"))
             .withReuse(true)
             .waitingFor(Wait.forListeningPort())
             .withStartupTimeout(Duration.ofSeconds(60))
+            .withLogConsumer { Slf4jLogConsumer(logger) }
 
         @BeforeAll
         @JvmStatic
         internal fun beforeAll() {
+            // Avoid starting testcontainers and motor during class initialization, as it takes a while, and
+            // can lead to exceptions with root cause InitializationError.
+            dataSource = TestDataSource()
+            motor = ManuellMotorImpl(
+                    dataSource,
+                    jobber = listOf(HendelseMottattHåndteringJobbUtfører, KafkaFeilJobbUtfører),
+                    repositoryRegistry = repositoryRegistry,
+                    gatewayProvider = createGatewayProvider { register<FakeUnleash>() }
+                )
             motor.start()
+
             kafka.start()
         }
 
@@ -82,7 +92,7 @@ class KabalKafkaKonsumentTest {
         internal fun afterAll() {
             motor.stop()
             kafka.stop()
-            InitTestDatabase.closerFor(dataSource)
+            dataSource.close()
         }
     }
 

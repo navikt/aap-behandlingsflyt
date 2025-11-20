@@ -13,18 +13,34 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 class InstitusjonsoppholdRepositoryImplTest {
-    private val source = InitTestDatabase.freshDatabase()
+    companion object {
+        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+
+        private lateinit var dataSource: TestDataSource
+
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            dataSource = TestDataSource()
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun tearDown() = dataSource.close()
+    }
 
     @Test
     fun `Tom tidslinje dersom ingen opphold finnes`() {
-        source.transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
@@ -36,7 +52,7 @@ class InstitusjonsoppholdRepositoryImplTest {
 
     @Test
     fun `kan lagre og hente fra raw data fra gateway`() {
-        source.transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
@@ -71,7 +87,7 @@ class InstitusjonsoppholdRepositoryImplTest {
 
     @Test
     fun kopier() {
-        source.transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
@@ -105,10 +121,6 @@ class InstitusjonsoppholdRepositoryImplTest {
             )
 
         }
-    }
-
-    private companion object {
-        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     }
 
     private fun sak(connection: DBConnection): Sak {

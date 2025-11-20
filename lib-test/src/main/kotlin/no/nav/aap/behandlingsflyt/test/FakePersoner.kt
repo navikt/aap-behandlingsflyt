@@ -50,6 +50,10 @@ object FakePersoner {
         return person
     }
 
+    fun oppdater(person: TestPerson): TestPerson {
+        return leggTil(person)
+    }
+
     fun hentPerson(ident: String): TestPerson? {
         return fakePersoner[ident]
     }

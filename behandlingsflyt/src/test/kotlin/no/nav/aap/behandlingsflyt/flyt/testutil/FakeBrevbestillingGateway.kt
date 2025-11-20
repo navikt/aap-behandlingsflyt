@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.brev.kontrakt.Brev
 import no.nav.aap.brev.kontrakt.BrevbestillingResponse
 import no.nav.aap.brev.kontrakt.Brevtype
+import no.nav.aap.brev.kontrakt.MottakerDistStatus
 import no.nav.aap.brev.kontrakt.MottakerDto
 import no.nav.aap.brev.kontrakt.Signatur
 import no.nav.aap.brev.kontrakt.SignaturGrunnlag
@@ -39,6 +40,8 @@ class FakeBrevbestillingGateway : BrevbestillingGateway {
                 brevbestillingResponse = BrevbestillingResponse(
                     referanse = it.brevbestillingReferanse,
                     brev = null,
+                    brevmal = null,
+                    brevdata = null,
                     opprettet = LocalDateTime.now(),
                     oppdatert = LocalDateTime.now(),
                     behandlingReferanse = behandlingReferanse.referanse,
@@ -56,6 +59,16 @@ class FakeBrevbestillingGateway : BrevbestillingGateway {
 
     override fun avbryt(bestillingReferanse: BrevbestillingReferanse) {
         brevbestillingResponse = brevbestillingResponse!!.copy(status = Status.AVBRUTT)
+    }
+
+    override fun kanDistribuereBrev(
+        brukerIdent: String,
+        mottakerIdentListe: List<String>,
+        brevbestillingReferanse: BrevbestillingReferanse
+    ): List<MottakerDistStatus> {
+        val brevKanDistribueres = MottakerDistStatus("1234", true)
+        val brevKanIkkeDistribueres = MottakerDistStatus("5678", false)
+        return listOf(brevKanDistribueres, brevKanIkkeDistribueres)
     }
 
     override fun hent(bestillingReferanse: BrevbestillingReferanse): BrevbestillingResponse {

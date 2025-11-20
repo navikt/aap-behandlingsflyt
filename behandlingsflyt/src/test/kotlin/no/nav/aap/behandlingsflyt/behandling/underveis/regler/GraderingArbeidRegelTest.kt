@@ -1,20 +1,19 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.GraderingArbeidRegel.OpplysningerOmArbeid
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneVurdering
-import no.nav.aap.behandlingsflyt.test.mars
-import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.verdityper.dokument.JournalpostId
+import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
@@ -45,80 +44,6 @@ class GraderingArbeidRegelTest {
         val vurdering = vurder(input)
 
         assertTrue(rettighetsperiode.inneholder(vurdering.helePerioden()))
-    }
-
-    @Test
-    fun `skal anta timer hvis frist ikke er passert selv om opplysninger mangler`() {
-        assertTrue(
-            regel.skalAntaTimerArbeidet(
-                underveisVurderinger = Tidslinje(
-                    listOf(
-                        Segment(
-                            Periode(3 mars 2025, 16 mars 2025),
-                            Vurdering(
-                                fårAapEtter = RettighetsType.BISTANDSBEHOV,
-                                meldeperiode = Periode(3 mars 2025, 16 mars 2025),
-                            )
-                        )
-                    )
-                ),
-                opplysningerTidslinje = Tidslinje(emptyList()),
-                dagensDato = 24 mars 2025
-            ),
-        )
-    }
-
-    @Test
-    fun `skal ikke anta timer hvis opplysninger mangler`() {
-        assertFalse(
-            regel.skalAntaTimerArbeidet(
-                underveisVurderinger = Tidslinje(
-                    listOf(
-                        Segment(
-                            Periode(3 mars 2025, 16 mars 2025),
-                            Vurdering(
-                                fårAapEtter = RettighetsType.BISTANDSBEHOV,
-                                meldeperiode = Periode(3 mars 2025, 16 mars 2025),
-                            )
-                        )
-                    )
-                ),
-                opplysningerTidslinje = Tidslinje(emptyList()),
-                dagensDato = 25 mars 2025
-            ),
-        )
-    }
-
-    @Test
-    fun `skal anta timer hvis opplysninger er gitt`() {
-        assertTrue(
-            regel.skalAntaTimerArbeidet(
-                underveisVurderinger = Tidslinje(
-                    listOf(
-                        Segment(
-                            Periode(3 mars 2025, 16 mars 2025),
-                            Vurdering(
-                                fårAapEtter = RettighetsType.BISTANDSBEHOV,
-                                meldeperiode = Periode(3 mars 2025, 16 mars 2025),
-                            )
-                        )
-                    )
-                ),
-                opplysningerTidslinje = Tidslinje(
-                    listOf(
-                        Segment(
-                            Periode(3 mars 2025, 16 mars 2025),
-                            OpplysningerOmArbeid(
-                                timerArbeid = TimerArbeid(BigDecimal.ZERO),
-                                arbeidsevne = null,
-                                opplysningerFørstMottatt = 17 mars 2025
-                            )
-                        )
-                    ),
-                ),
-                dagensDato = 25 mars 2025
-            )
-        )
     }
 
     @Test
@@ -165,6 +90,24 @@ class GraderingArbeidRegelTest {
         assertEquals(
             Prosent.`0_PROSENT`,
             vurdering.segment(rettighetsperiode.fom)?.verdi?.arbeidsgradering()?.gradering
+        )
+    }
+
+    @Test
+    fun `Kan jobbe opp til 80 prosent hvis det foreligger arbeidsopptrapping i perioden`() {
+        val rettighetsperiode = Periode(LocalDate.parse("2024-10-31"), LocalDate.parse("2025-10-31"))
+        val periode = Periode(rettighetsperiode.fom, rettighetsperiode.fom.plusDays(13))
+        val input = underveisInput(
+            rettighetsperiode = rettighetsperiode,
+            fastsattArbeidsevne = null,
+            opptrappingPerioder = listOf(periode),
+            meldekort = meldekort(periode to BigDecimal(60))
+        )
+        val vurdering = vurder(input)
+
+        assertEquals(
+            Prosent(80),
+            vurdering.segment(rettighetsperiode.fom)?.verdi?.grenseverdi()
         )
     }
 
@@ -260,14 +203,52 @@ class GraderingArbeidRegelTest {
         assertEquals(Prosent.`70_PROSENT`, vurdering.segment(meldeperiode2.fom)?.verdi?.arbeidsgradering()?.gradering)
     }
 
+    @Test
+    fun `Fritak for meldeperiode som er passert skal gi null timer med opplysningstidspunkt satt, fritak som kommer senere skal ikke ha satt opplysninger mottatt tidspunkt`() {
+        val rettighetsperiode = Periode(LocalDate.now().minusMonths(1), LocalDate.now().plusMonths(11).minusDays(1))
+        val input = underveisInput(
+            rettighetsperiode = rettighetsperiode,
+            fastsattArbeidsevne = Prosent.`0_PROSENT`,
+            meldekort = emptyList(),
+            fritaksvurderinger =
+                listOf(
+                    Fritaksvurdering(
+                        harFritak = true,
+                        fraDato = rettighetsperiode.fom,
+                        begrunnelse = "kan ikke",
+                        vurdertAv = "saksbehandler",
+                        opprettetTid = rettighetsperiode.fom.atStartOfDay(),
+                    )
+                )
+        )
+        val vurdering = vurder(input)
+
+        vurdering.segmenter().forEach {
+            if (LocalDate.now() >= it.tom().plusDays(1)) {
+                Assertions.assertThat(it.verdi.arbeidsgradering().opplysningerMottatt).isNotNull
+            } else {
+                Assertions.assertThat(it.verdi.arbeidsgradering().opplysningerMottatt).isNull()
+            }
+        }
+        assertEquals(
+            Prosent.`100_PROSENT`,
+            vurdering.segment(rettighetsperiode.fom)?.verdi?.arbeidsgradering()?.gradering
+        )
+    }
+
+
     private fun underveisInput(
         rettighetsperiode: Periode,
         fastsattArbeidsevne: Prosent?,
-        meldekort: List<Meldekort>
+        meldekort: List<Meldekort>,
+        fritaksvurderinger: List<Fritaksvurdering> = emptyList(),
+        opptrappingPerioder: List<Periode> = emptyList()
     ) = tomUnderveisInput(
         innsendingsTidspunkt = meldekort.associate { it.mottattTidspunkt.toLocalDate() to it.journalpostId },
         rettighetsperiode = rettighetsperiode,
         meldekort = meldekort,
+        meldepliktGrunnlag = MeldepliktGrunnlag(vurderinger = fritaksvurderinger),
+        opptrappingPerioder = opptrappingPerioder,
         arbeidsevneGrunnlag = ArbeidsevneGrunnlag(
             listOfNotNull(fastsattArbeidsevne?.let {
                 ArbeidsevneVurdering(

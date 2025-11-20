@@ -28,9 +28,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.DokumentResponsDTO
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForSakResolver
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.brev.kontrakt.Brev
+import no.nav.aap.brev.kontrakt.KanDistribuereBrevReponse
+import no.nav.aap.brev.kontrakt.KanDistribuereBrevRequest
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
@@ -46,7 +50,7 @@ import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
 import no.nav.aap.tilgang.authorizedPut
 import org.slf4j.LoggerFactory
-import java.util.*
+import java.util.UUID
 import javax.sql.DataSource
 
 private val log = LoggerFactory.getLogger("BrevAPI")
@@ -56,6 +60,7 @@ fun NormalOpenAPIRoute.brevApi(
     gatewayProvider: GatewayProvider,
 ) {
     val authorizationParamPathConfig = AuthorizationParamPathConfig(
+        relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
         operasjon = Operasjon.SAKSBEHANDLE,
         avklaringsbehovKode = SKRIV_BREV_KODE,
         behandlingPathParam = BehandlingPathParam(
@@ -81,6 +86,10 @@ fun NormalOpenAPIRoute.brevApi(
             route("/{referanse}/grunnlag/brev") {
                 authorizedGet<BehandlingReferanse, BrevGrunnlag>(
                     AuthorizationParamPathConfig(
+                        relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(
+                            repositoryRegistry,
+                            dataSource
+                        ),
                         behandlingPathParam = BehandlingPathParam(
                             "referanse"
                         )
@@ -104,7 +113,7 @@ fun NormalOpenAPIRoute.brevApi(
 
                         val behandling = behandlingRepository.hent(behandlingReferanse)
                         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-                        val sak = SakService(sakRepository).hent(behandling.sakId)
+                        val sak = SakService(repositoryProvider).hent(behandling.sakId)
                         val personIdent = sak.person.aktivIdent()
                         val personinfo = personinfoGateway.hentPersoninfoForIdent(personIdent, token())
 
@@ -257,6 +266,20 @@ fun NormalOpenAPIRoute.brevApi(
                     }
                     respond(DokumentResponsDTO(pdf))
                 }
+            }
+        }
+        route("/{brevbestillingReferanse}/kan-distribuere-brev") {
+            authorizedPost<BrevbestillingReferanse, KanDistribuereBrevReponse, KanDistribuereBrevRequest>(
+                authorizationParamPathConfig
+            ) { brevbestillingReferanse, request ->
+                val response = KanDistribuereBrevReponse(
+                    mottakereDistStatus = brevbestillingGateway.kanDistribuereBrev(
+                        request.brukerIdent,
+                        request.mottakerIdentListe,
+                        brevbestillingReferanse
+                    )
+                )
+                respond(response, HttpStatusCode.Accepted)
             }
         }
     }

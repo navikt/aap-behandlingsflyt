@@ -6,6 +6,8 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
 import io.mockk.verify
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Brevbestilling
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
@@ -16,9 +18,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravVarsel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravVurdering
-import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FantVentebehov
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
+import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -30,6 +32,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
@@ -49,6 +52,11 @@ class FormkravStegTest {
     val formkravRepositoryMock = mockk<FormkravRepository>()
     val behandlingRepositoryMock = mockk<BehandlingRepository>()
     val brevbestillingServiceMock = mockk<BrevbestillingService>()
+    val avklaringsbehovServiceMock = mockk<AvklaringsbehovService>()
+    val avbrytRevurderingServiceMock = mockk<AvbrytRevurderingService>()
+    val gatewayProvider = createGatewayProvider {
+        register<FakeUnleash>()
+    }
 
     @BeforeEach
     fun setup() {
@@ -61,6 +69,15 @@ class FormkravStegTest {
 
         every { trekkKlageServiceMock.klageErTrukket(any()) } returns false
         every { formkravRepositoryMock.hentHvisEksisterer(any()) } returns null
+        every { avbrytRevurderingServiceMock.revurderingErAvbrutt(any()) } returns true
+        every { avklaringsbehovServiceMock.oppdaterAvklaringsbehov(
+            avklaringsbehovene = any(),
+             definisjon = Definisjon.VURDER_FORMKRAV,
+            vedtakBehøverVurdering = any(),
+            erTilstrekkeligVurdert = any(),
+            tilbakestillGrunnlag = any(),
+            kontekst = any(),
+        ) } returns Unit
         InMemoryAvklaringsbehovRepository.clearMemory()
     }
 
@@ -71,6 +88,7 @@ class FormkravStegTest {
 
     @Test
     fun `FormkravSteg-utfører skal gi avklaringsbehov VURDER_FORMKRAV om man ikke har vurdert dette formkravet enda`() {
+        every { brevbestillingServiceMock.hentBestillinger(any(), any()) } returns listOf()
         val kontekst = FlytKontekstMedPerioder(
             sakId = SakId(1L),
             behandlingId = BehandlingId(1L),
@@ -96,11 +114,17 @@ class FormkravStegTest {
             behandlingRepository = behandlingRepositoryMock,
             brevbestillingService = brevbestillingServiceMock,
             trekkKlageService = trekkKlageServiceMock,
+            avklaringsbehovService = AvklaringsbehovService(
+                avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
+                avbrytRevurderingService = avbrytRevurderingServiceMock,
+            ),
+            unleashGateway = gatewayProvider.provide()
         )
 
-        val resultat = steg.utfør(kontekst)
+        steg.utfør(kontekst)
 
-        assertThat(resultat).isEqualTo(FantAvklaringsbehov(Definisjon.VURDER_FORMKRAV))
+        val avklaringsbehovene = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(BehandlingId(1))
+        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.VURDER_FORMKRAV)?.definisjon).isEqualTo(Definisjon.VURDER_FORMKRAV)
     }
 
     @Test
@@ -147,7 +171,12 @@ class FormkravStegTest {
             formkravRepository = formkravRepositoryMock,
             behandlingRepository = behandlingRepositoryMock,
             brevbestillingService = brevbestillingServiceMock,
-            trekkKlageService = trekkKlageServiceMock
+            trekkKlageService = trekkKlageServiceMock,
+            avklaringsbehovService = AvklaringsbehovService(
+                avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
+                avbrytRevurderingService = avbrytRevurderingServiceMock,
+            ),
+            unleashGateway = gatewayProvider.provide()
         )
 
 
@@ -171,6 +200,9 @@ class FormkravStegTest {
 
     @Test
     fun `FormkravSteg-utfører skal gi avklaringsbehov FULLFØRT om fristen ikke er overholdt, selv om man ikke har oppfylt formkravene`() {
+        every { behandlingRepositoryMock.hent(any<BehandlingId>()) } returns tomBehandling(BehandlingId(1L))
+        every { formkravRepositoryMock.lagreVarsel(any(), any()) } returns Unit
+
         val kontekst = FlytKontekstMedPerioder(
             sakId = SakId(1L),
             behandlingId = BehandlingId(1L),
@@ -202,7 +234,12 @@ class FormkravStegTest {
             formkravRepository = formkravRepositoryMock,
             behandlingRepository = behandlingRepositoryMock,
             brevbestillingService = brevbestillingServiceMock,
-            trekkKlageService = trekkKlageServiceMock
+            trekkKlageService = trekkKlageServiceMock,
+            avklaringsbehovService = AvklaringsbehovService(
+                avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
+                avbrytRevurderingService = avbrytRevurderingServiceMock,
+            ),
+            unleashGateway = gatewayProvider.provide()
         )
 
         every { formkravRepositoryMock.hentHvisEksisterer(any()) } returns FormkravGrunnlag(
@@ -219,6 +256,7 @@ class FormkravStegTest {
         )
 
         every { brevbestillingServiceMock.hentBestillinger(any(), any()) } returns emptyList()
+        every { brevbestillingServiceMock.bestillV2(any(),any(),any(),any(),) } returns UUID.randomUUID()
 
         val resultat = steg.utfør(kontekst)
 
@@ -262,7 +300,12 @@ class FormkravStegTest {
             formkravRepository = formkravRepositoryMock,
             behandlingRepository = behandlingRepositoryMock,
             brevbestillingService = brevbestillingServiceMock,
-            trekkKlageService = trekkKlageServiceMock
+            trekkKlageService = trekkKlageServiceMock,
+            avklaringsbehovService = AvklaringsbehovService(
+                avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
+                avbrytRevurderingService = avbrytRevurderingServiceMock,
+            ),
+            unleashGateway = gatewayProvider.provide()
         )
 
         every { formkravRepositoryMock.hentHvisEksisterer(any()) } returns FormkravGrunnlag(
@@ -285,9 +328,10 @@ class FormkravStegTest {
 
         every { brevbestillingServiceMock.hentBestillinger(any(), any()) } returns emptyList()
 
-        val resultat = steg.utfør(kontekst)
+        steg.utfør(kontekst)
+        val avklaringsbehovene = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(BehandlingId(1))
+        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV)?.definisjon).isEqualTo(Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV)
 
-        assertThat(resultat).isEqualTo(FantAvklaringsbehov(Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV))
         verify { brevbestillingServiceMock.bestillV2(BehandlingId(1L), any(), any(), any()) }
     }
 
@@ -317,8 +361,8 @@ class FormkravStegTest {
             ),
             varsel = FormkravVarsel(
                 varselId = BrevbestillingReferanse(UUID.randomUUID()),
-                sendtDato = null,
-                svarfrist = null,
+                sendtDato = LocalDate.now(),
+                svarfrist = LocalDate.now().plusWeeks(3)
             )
         )
 
@@ -362,12 +406,18 @@ class FormkravStegTest {
             formkravRepository = formkravRepositoryMock,
             behandlingRepository = behandlingRepositoryMock,
             brevbestillingService = brevbestillingServiceMock,
-            trekkKlageService = trekkKlageServiceMock
+            trekkKlageService = trekkKlageServiceMock,
+            avklaringsbehovService = AvklaringsbehovService(
+                avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
+                avbrytRevurderingService = avbrytRevurderingServiceMock,
+            ),
+            unleashGateway = gatewayProvider.provide()
         )
 
         val resultat = steg.utfør(kontekst)
 
-        assertThat(resultat).isEqualTo(FantAvklaringsbehov(Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV))
+        val avklaringsbehovene = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(BehandlingId(1))
+        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV)?.definisjon).isEqualTo(Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV)
     }
 
     @Test
@@ -403,7 +453,12 @@ class FormkravStegTest {
             formkravRepository = formkravRepositoryMock,
             behandlingRepository = behandlingRepositoryMock,
             brevbestillingService = brevbestillingServiceMock,
-            trekkKlageService = trekkKlageServiceMock
+            trekkKlageService = trekkKlageServiceMock,
+            avklaringsbehovService = AvklaringsbehovService(
+                avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
+                avbrytRevurderingService = avbrytRevurderingServiceMock,
+            ),
+            unleashGateway = gatewayProvider.provide()
         )
 
         every { formkravRepositoryMock.hentHvisEksisterer(any()) } returns FormkravGrunnlag(
@@ -413,7 +468,7 @@ class FormkravStegTest {
                 erBrukerPart = false,
                 erSignert = false,
                 erFristOverholdt = true,
-                likevelBehandles = true,
+                likevelBehandles = false,
                 vurdertAv = "indent",
                 opprettet = Instant.now(),
             ),
@@ -470,7 +525,12 @@ class FormkravStegTest {
             formkravRepository = formkravRepositoryMock,
             behandlingRepository = behandlingRepositoryMock,
             brevbestillingService = brevbestillingServiceMock,
-            trekkKlageService = trekkKlageServiceMock
+            trekkKlageService = trekkKlageServiceMock,
+            avklaringsbehovService = AvklaringsbehovService(
+                avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
+                avbrytRevurderingService = avbrytRevurderingServiceMock,
+            ),
+            unleashGateway = gatewayProvider.provide()
         )
 
         every { formkravRepositoryMock.hentHvisEksisterer(any()) } returns FormkravGrunnlag(

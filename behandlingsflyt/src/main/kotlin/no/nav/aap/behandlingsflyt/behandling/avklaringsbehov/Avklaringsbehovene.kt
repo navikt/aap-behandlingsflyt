@@ -231,19 +231,24 @@ class Avklaringsbehovene(
         return alle().filter { it.definisjon in definisjoner }.toList()
     }
 
-    fun harHattAvklaringsbehov(): Boolean {
-        return alle().any { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
+    fun avklaringsbehovLøstAvNay(): List<Avklaringsbehov> {
+        return alle().filter { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
+            .filter { it.definisjon.løsesAv == listOf(Rolle.SAKSBEHANDLER_NASJONAL) }
+            .filterNot { it.erForeslåttVedtak() }
     }
 
-    fun harHattAvklaringsbehovLøstAvNay(): Boolean {
-        return alle().filter { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
-            .any { it.definisjon.løsesAv == listOf(Rolle.SAKSBEHANDLER_NASJONAL) }
+    fun harAvklaringsbehovSomKreverToTrinn(): Boolean {
+        return alle().any { it.erIkkeAvbrutt() && it.erTotrinn() }
     }
 
     fun harHattAvklaringsbehovSomHarKrevdToTrinn(): Boolean {
         return alle()
             .filter { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
             .any { avklaringsbehov -> avklaringsbehov.erTotrinn() && !avklaringsbehov.erTotrinnsVurdert() }
+    }
+
+    fun harAvklaringsbehovSomKreverToTrinnMenIkkeErVurdert(): Boolean {
+        return alle().any { it.erIkkeAvbrutt() && it.erTotrinn() && !it.erTotrinnsVurdert() }
     }
 
     fun harHattAvklaringsbehovSomKreverKvalitetssikring(): Boolean {
@@ -253,16 +258,10 @@ class Avklaringsbehovene(
             .any { avklaringsbehov -> !avklaringsbehov.erKvalitetssikretTidligere() }
     }
 
-    fun harIkkeForeslåttVedtak(): Boolean {
+    fun harAvklaringsbehovSomKreverKvalitetssikring(): Boolean {
         return alle()
-            .filter { avklaringsbehov -> avklaringsbehov.erForeslåttVedtak() }
-            .none { it.status() == Status.AVSLUTTET }
-    }
-
-    fun harIkkeForeslåttUttak(): Boolean {
-        return alle()
-            .filter { avklaringsbehov -> avklaringsbehov.erForeslåttUttak() }
-            .none { it.status() == Status.AVSLUTTET }
+            .filter { avklaringsbehov -> avklaringsbehov.kreverKvalitetssikring() }
+            .any { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
     }
 
     fun harVærtSendtTilbakeFraBeslutterTidligere(): Boolean {
@@ -270,11 +269,13 @@ class Avklaringsbehovene(
     }
 
     fun hentNyesteKvalitetssikringGittDefinisjon(definisjon: Definisjon): Endring? {
-        return hentBehovForDefinisjon(definisjon)?.historikk?.filter { it.status == Status.KVALITETSSIKRET }?.maxOrNull()
+        return hentBehovForDefinisjon(definisjon)?.historikk?.filter { it.status == Status.KVALITETSSIKRET }
+            ?.maxOrNull()
     }
 
     fun beslutningFor(definisjon: Definisjon): Endring? {
-        return hentBehovForDefinisjon(definisjon)?.historikk?.filter { it.status == Status.TOTRINNS_VURDERT }?.maxOrNull()
+        return hentBehovForDefinisjon(definisjon)?.historikk?.filter { it.status == Status.TOTRINNS_VURDERT }
+            ?.maxOrNull()
     }
 
     fun validateTilstand(behandling: Behandling, avklaringsbehov: Definisjon? = null) {

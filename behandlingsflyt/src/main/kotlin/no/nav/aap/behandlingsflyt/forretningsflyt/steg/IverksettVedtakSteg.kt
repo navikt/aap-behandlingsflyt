@@ -1,11 +1,11 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.GosysService
 import no.nav.aap.behandlingsflyt.behandling.mellomlagring.MellomlagretVurderingRepository
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
-import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingGateway
 import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingService
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
@@ -24,8 +24,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
@@ -40,17 +38,14 @@ class IverksettVedtakSteg private constructor(
     private val utbetalingService: UtbetalingService,
     private val vedtakService: VedtakService,
     private val virkningstidspunktUtleder: VirkningstidspunktUtleder,
-    private val utbetalingGateway: UtbetalingGateway,
     private val trukketSøknadService: TrukketSøknadService,
     private val avbrytRevurderingService: AvbrytRevurderingService,
     private val gosysService: GosysService,
     private val flytJobbRepository: FlytJobbRepository,
-    private val unleashGateway: UnleashGateway,
-    private val mellomlagretVurderingRepository: MellomlagretVurderingRepository
+    private val mellomlagretVurderingRepository: MellomlagretVurderingRepository,
+    private val resultatUtleder: ResultatUtleder
 ) : BehandlingSteg {
-
     private val log = LoggerFactory.getLogger(javaClass)
-
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         if (kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING && trukketSøknadService.søknadErTrukket(
                 kontekst.behandlingId
@@ -84,9 +79,18 @@ class IverksettVedtakSteg private constructor(
 
         mellomlagretVurderingRepository.slett(kontekst.behandlingId)
 
-        opprettOppfølgingsoppgaveForNavkontorVedSosialRefusjon(kontekst)
+        lagGysOppgaveHvisRelevant(kontekst)
 
         return Fullført
+    }
+
+    private fun lagGysOppgaveHvisRelevant(kontekst: FlytKontekstMedPerioder) {
+        val behandling = behandlingRepository.hent(behandlingId = kontekst.behandlingId)
+        if (!resultatUtleder.erRentAvslag(behandling)) {
+            opprettOppfølgingsoppgaveForNavkontorVedSosialRefusjon(kontekst)
+        } else {
+            log.info("Oppretter ikke gosysoppgave for sak ${kontekst.sakId} og behandling ${kontekst.behandlingId} , da AAP ikke er innvliget ")
+        }
     }
 
     private fun opprettOppfølgingsoppgaveForNavkontorVedSosialRefusjon(kontekst: FlytKontekstMedPerioder) {
@@ -118,19 +122,15 @@ class IverksettVedtakSteg private constructor(
         kontekst: FlytKontekstMedPerioder,
         tilkjentYtelseDto: TilkjentYtelseDto
     ) {
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.IverksettUtbetalingSomSelvstendigJobb)) {
-            /**
-             * Må opprette jobb med sakId, men uten behandlingId for at disse skal bli kjørt sekvensielt i riktig rekkefølge.
-             * Viktig at eldste jobb kjøres først slik at utbetaling blir konsistent med Kelvin
-             */
-            flytJobbRepository.leggTil(
-                jobbInput = JobbInput(jobb = IverksettUtbetalingJobbUtfører)
-                    .medPayload(kontekst.behandlingId)
-                    .forSak(sakId = kontekst.sakId.toLong())
-            )
-        } else {
-            utbetalingGateway.utbetal(tilkjentYtelseDto)
-        }
+        /**
+         * Må opprette jobb med sakId, men uten behandlingId for at disse skal bli kjørt sekvensielt i riktig rekkefølge.
+         * Viktig at eldste jobb kjøres først slik at utbetaling blir konsistent med Kelvin
+         */
+        flytJobbRepository.leggTil(
+            jobbInput = JobbInput(jobb = IverksettUtbetalingJobbUtfører)
+                .medPayload(kontekst.behandlingId)
+                .forSak(sakId = kontekst.sakId.toLong())
+        )
     }
 
     private fun opprettGosysOppgaverForSosialrefusjon(
@@ -162,13 +162,13 @@ class IverksettVedtakSteg private constructor(
             val sakRepository = repositoryProvider.provide<SakRepository>()
             val refusjonkravRepository = repositoryProvider.provide<RefusjonkravRepository>()
             val vedtakRepository = repositoryProvider.provide<VedtakRepository>()
-            val utbetalingGateway = gatewayProvider.provide<UtbetalingGateway>()
             val flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>()
             val gosysService = GosysService(gatewayProvider)
             val virkningstidspunktUtlederService = VirkningstidspunktUtleder(
                 vilkårsresultatRepository = repositoryProvider.provide(),
             )
             val mellomlagretVurderingRepository = repositoryProvider.provide<MellomlagretVurderingRepository>()
+            val resultatUtleder = ResultatUtleder(repositoryProvider)
             return IverksettVedtakSteg(
                 sakRepository = sakRepository,
                 refusjonkravRepository = refusjonkravRepository,
@@ -178,14 +178,13 @@ class IverksettVedtakSteg private constructor(
                     gatewayProvider = gatewayProvider
                 ),
                 vedtakService = VedtakService(vedtakRepository, behandlingRepository),
-                utbetalingGateway = utbetalingGateway,
                 virkningstidspunktUtleder = virkningstidspunktUtlederService,
                 trukketSøknadService = TrukketSøknadService(repositoryProvider),
                 avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
                 flytJobbRepository = flytJobbRepository,
-                unleashGateway = gatewayProvider.provide(),
                 mellomlagretVurderingRepository = mellomlagretVurderingRepository,
-                gosysService = gosysService
+                gosysService = gosysService,
+                resultatUtleder = resultatUtleder
             )
         }
 

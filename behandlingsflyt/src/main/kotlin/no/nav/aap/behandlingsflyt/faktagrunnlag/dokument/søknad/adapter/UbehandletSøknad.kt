@@ -3,10 +3,13 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.søknad.adapter
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Relasjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.ErStudentStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.SkalGjenopptaStudieStatus
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KommeTilbake
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManueltOppgittBarn
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Søknad
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -30,7 +33,7 @@ data class UbehandletSøknad(
                     journalpostId = journalPostId,
                     periode = Periode(mottattDato, mottattDato),
                     studentData = if (søknad.student == null) null else søknad.student?.let {
-                        val erStudent = erStudent(it.erStudent) ?: return@let null
+                        val erStudent = erStudent(it.erStudent)
                         StudentData(
                             erStudent = erStudent, skalGjenopptaStudie = skalGjennopptaStudie(it.kommeTilbake)
                         )
@@ -59,28 +62,21 @@ data class UbehandletSøknad(
             }
         }
 
-        private fun erStudent(stringVerdi: String): ErStudentStatus? {
-            return if (stringVerdi.uppercase() == "JA") {
-                ErStudentStatus.JA
-            } else if (stringVerdi.uppercase() == "AVBRUTT") {
-                ErStudentStatus.AVBRUTT
-            } else if (stringVerdi.uppercase() == "NEI") {
-                ErStudentStatus.NEI
-            } else {
-                null
+        private fun erStudent(stringVerdi: StudentStatus): ErStudentStatus {
+            return when (stringVerdi) {
+                StudentStatus.Ja -> ErStudentStatus.JA
+                StudentStatus.Avbrutt -> ErStudentStatus.AVBRUTT
+                StudentStatus.Nei -> ErStudentStatus.NEI
             }
         }
 
 
-        private fun skalGjennopptaStudie(stringVerdi: String?): SkalGjenopptaStudieStatus {
-            return if (stringVerdi?.uppercase() == "JA") {
-                SkalGjenopptaStudieStatus.JA
-            } else if (stringVerdi?.uppercase() == "NEI") {
-                SkalGjenopptaStudieStatus.NEI
-            } else if (stringVerdi?.uppercase() == "VET IKKE") {
-                SkalGjenopptaStudieStatus.VET_IKKE
-            } else {
-                SkalGjenopptaStudieStatus.IKKE_OPPGITT
+        private fun skalGjennopptaStudie(kommeTilbake: KommeTilbake?): SkalGjenopptaStudieStatus {
+            return when (kommeTilbake) {
+                KommeTilbake.Ja -> SkalGjenopptaStudieStatus.JA
+                KommeTilbake.Nei -> SkalGjenopptaStudieStatus.NEI
+                KommeTilbake.VetIkke -> SkalGjenopptaStudieStatus.VET_IKKE
+                null -> SkalGjenopptaStudieStatus.IKKE_OPPGITT
             }
         }
     }
@@ -97,11 +93,11 @@ private fun mapOppgitteBarn(oppgitteBarn: OppgitteBarnFraSøknad): OppgitteBarn?
                         )
                     },
                     navn = oppgittBarn.navn,
-                    fødselsdato = oppgittBarn.fødselsdato?.let(::Fødselsdato),
-                    relasjon = oppgittBarn.relasjon?.let {
+                    fødselsdato = oppgittBarn.fødselsdato.let(::Fødselsdato),
+                    relasjon = oppgittBarn.relasjon.let {
                         when (it) {
-                            ManueltOppgittBarn.Relasjon.FORELDER -> OppgitteBarn.Relasjon.FORELDER
-                            ManueltOppgittBarn.Relasjon.FOSTERFORELDER -> OppgitteBarn.Relasjon.FOSTERFORELDER
+                            ManueltOppgittBarn.Relasjon.FORELDER -> Relasjon.FORELDER
+                            ManueltOppgittBarn.Relasjon.FOSTERFORELDER -> Relasjon.FOSTERFORELDER
                         }
                     })
             })

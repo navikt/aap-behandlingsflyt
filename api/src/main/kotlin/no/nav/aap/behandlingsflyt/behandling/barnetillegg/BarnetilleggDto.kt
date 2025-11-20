@@ -6,8 +6,11 @@ import java.time.LocalDate
 data class BarnetilleggDto(
     val harTilgangTilÅSaksbehandle: Boolean,
     val søknadstidspunkt: LocalDate,
+    val barnSomTrengerVurdering: List<IdentifiserteBarnDto>,
     val folkeregisterbarn: List<IdentifiserteBarnDto>,
+    val saksbehandlerOppgitteBarn: List<IdentifiserteBarnDto>,
     val vurderteBarn: List<ExtendedVurdertBarnDto>,
-    val vurdertAv: VurdertAvResponse?,
-    val barnSomTrengerVurdering: List<IdentifiserteBarnDto>
+    val vurderteFolkeregisterBarn: List<ExtendedVurdertBarnDto>,
+    val vurderteSaksbehandlerOppgitteBarn: List<SlettbarVurdertBarnDto>,
+    val vurdertAv: VurdertAvResponse?
 )

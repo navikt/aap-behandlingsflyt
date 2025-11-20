@@ -18,8 +18,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
-import org.slf4j.LoggerFactory
 
 class VurderSykepengeErstatningSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
@@ -41,8 +41,6 @@ class VurderSykepengeErstatningSteg private constructor(
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
     )
-
-    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
@@ -79,11 +77,12 @@ class VurderSykepengeErstatningSteg private constructor(
         val kravDato = kontekst.rettighetsperiode.fom
 
         val sykdomsvurderinger =
-            sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)?.somSykdomsvurderingstidslinje(kravDato)
-                ?: Tidslinje.empty()
+            sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)
+                ?.somSykdomsvurderingstidslinje()
+                .orEmpty()
 
         val bistandvurderinger =
-            bistandRepository.hentHvisEksisterer(kontekst.behandlingId)?.somBistandsvurderingstidslinje(kravDato)
+            bistandRepository.hentHvisEksisterer(kontekst.behandlingId)?.somBistandsvurderingstidslinje()
                 ?: Tidslinje.empty()
 
         return Tidslinje.zip3(tidligereVurderingsutfall, sykdomsvurderinger, bistandvurderinger)

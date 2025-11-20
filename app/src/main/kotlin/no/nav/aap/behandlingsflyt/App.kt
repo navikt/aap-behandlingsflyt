@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.papsign.ktor.openapigen.model.info.InfoModel
 import com.papsign.ktor.openapigen.route.apiRouting
 import com.zaxxer.hikari.HikariConfig
@@ -20,6 +21,7 @@ import no.nav.aap.behandlingsflyt.auditlog.auditlogApi
 import no.nav.aap.behandlingsflyt.behandling.aktivitetsplikt.brudd_11_7.aktivitetsplikt11_7GrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.aktivitetsplikt.brudd_11_9.aktivitetsplikt11_9GrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.arbeidsevne.arbeidsevneGrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.arbeidsopptrapping.arbeidsopptrappingGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.avklaringsbehovApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.fatteVedtakGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.utledSubtypesTilAvklaringsbehovLøsning
@@ -85,6 +87,8 @@ import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbmigrering.Migrering
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -101,11 +105,20 @@ import no.nav.aap.motor.retry.RetryService
 import no.nav.person.pdl.leesah.Personhendelse
 import org.slf4j.LoggerFactory
 import org.slf4j.bridge.SLF4JBridgeHandler
+import java.net.InetAddress
+import java.net.URI
+import java.net.http.HttpClient
+import java.net.http.HttpRequest
+import java.net.http.HttpResponse
 import java.util.*
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.TimeUnit
 import java.util.logging.Level
 import java.util.logging.Logger
 import javax.sql.DataSource
 import kotlin.time.Duration.Companion.seconds
+
 
 fun utledSubtypesTilMottattHendelseDTO(): List<Class<*>> {
     return Innsending::class.sealedSubclasses.map { it.java }.toList()
@@ -194,14 +207,17 @@ internal fun Application.server(
 
     val dataSource = initDatasource(dbConfig)
     Migrering.migrate(dataSource)
+
+    val scheduler = utførMigreringer(dataSource, gatewayProvider, environment.log)
+
     val motor = startMotor(dataSource, repositoryRegistry, gatewayProvider)
 
     if (!Miljø.erLokal()) {
         startKabalKonsument(dataSource, repositoryRegistry)
 
     }
-    if (Miljø.erDev()) {
-        startPDLHendelseKonsument(dataSource, repositoryRegistry)
+    if (!Miljø.erLokal()) {
+        startPDLHendelseKonsument(dataSource, repositoryRegistry, gatewayProvider)
     }
 
     monitor.subscribe(ApplicationStopPreparing) { environment ->
@@ -212,8 +228,8 @@ internal fun Application.server(
     }
     monitor.subscribe(ApplicationStopped) { environment ->
         environment.log.info("ktor har fullført nedstoppingen sin. Eventuelle requester og annet arbeid som ikke ble fullført innen timeout ble avbrutt.")
-
         try {
+            scheduler.shutdownNow()
             // Helt til slutt, nå som vi har stanset Motor, etc. Lukk database-koblingen.
             dataSource.close()
         } catch (_: Exception) {
@@ -237,6 +253,7 @@ internal fun Application.server(
                 meldepliktsgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 meldepliktOverstyringGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 arbeidsevneGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                arbeidsopptrappingGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 overgangUforeGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 medlemskapsgrunnlagApi(dataSource, repositoryRegistry)
                 studentgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
@@ -301,6 +318,36 @@ internal fun Application.server(
 
 }
 
+// Bruker leaderElector for å sikre at kun en pod kjører migreringen og spinner opp en egen tråd for å ikke blokkere.
+private fun utførMigreringer(
+    dataSource: HikariDataSource,
+    gatewayProvider: GatewayProvider,
+    log: io.ktor.util.logging.Logger
+): ScheduledExecutorService {
+    val scheduler = Executors.newScheduledThreadPool(1)
+
+    scheduler.schedule(Runnable {
+        val unleashGateway: UnleashGateway = gatewayProvider.provide()
+        val isLeader = isLeader(log)
+        log.info("isLeader = $isLeader")
+    }, 9, TimeUnit.MINUTES)
+    return scheduler
+}
+
+private fun isLeader(log: io.ktor.util.logging.Logger): Boolean {
+    val electorUrl = requiredConfigForKey("elector.get.url")
+    val client = HttpClient.newHttpClient()
+    val response = client.send(
+        HttpRequest.newBuilder().uri(URI.create(electorUrl)).GET().build(),
+        HttpResponse.BodyHandlers.ofString()
+    )
+    val json = ObjectMapper().readTree(response.body())
+    val leaderHostname = json.get("name").asText()
+    val hostname = InetAddress.getLocalHost().hostName
+    log.info("electorUrl=${electorUrl}, leaderHostname=$leaderHostname, hostname=$hostname")
+    return hostname == leaderHostname
+}
+
 fun Application.startMotor(
     dataSource: HikariDataSource,
     repositoryRegistry: RepositoryRegistry,
@@ -360,7 +407,8 @@ fun Application.startKabalKonsument(
 
 fun Application.startPDLHendelseKonsument(
     dataSource: DataSource,
-    repositoryRegistry: RepositoryRegistry
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
 ): KafkaKonsument<String, Personhendelse> {
     val konsument = PdlHendelseKafkaKonsument(
         config = KafkaConsumerConfig(
@@ -368,7 +416,8 @@ fun Application.startPDLHendelseKonsument(
             valueDeserializer = io.confluent.kafka.serializers.KafkaAvroDeserializer::class.java
         ),
         dataSource = dataSource,
-        repositoryRegistry = repositoryRegistry
+        repositoryRegistry = repositoryRegistry,
+        gatewayProvider = gatewayProvider
     )
     monitor.subscribe(ApplicationStarted) {
         val t = Thread() {

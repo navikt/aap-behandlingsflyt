@@ -22,20 +22,20 @@ jobs:
             -   uses: actions/checkout@v5
             -   uses: actions/setup-java@v5
                 with:
-                    java-version: 23
+                    java-version: 25
                     distribution: 'temurin'
             -   name: Setup Gradle for a non-wrapper project
                 uses: gradle/actions/setup-gradle@v5
                 with:
                     gradle-version: wrapper
             -   name: Bygg & test
-                run: gradle genererOpenApiJson
+                run: ./gradlew genererOpenApiJson
             -   uses: actions/checkout@v5
                 with:
                     repository: navikt/aap-backend-typescript-types
                     path: ./aap-backend-typescript-types
                     token: ${{ secrets.github_token }}
-            -   uses: actions/upload-artifact@v4
+            -   uses: actions/upload-artifact@v5
                 id: artifact-upload-step
                 with:
                     name: openapi

@@ -18,8 +18,7 @@ data class SamordningYtelseVurderingGrunnlag(
  * lagres ned som [no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag] sammen med denne.
  */
 data class SamordningGrunnlag(
-    val id: Long,
-    val samordningPerioder: List<SamordningPeriode>,
+    val samordningPerioder: Set<SamordningPeriode>,
 )
 
 /**

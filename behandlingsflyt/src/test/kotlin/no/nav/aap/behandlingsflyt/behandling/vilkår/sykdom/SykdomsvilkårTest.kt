@@ -5,13 +5,14 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerGrunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerVurdering
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
@@ -25,19 +26,24 @@ import java.time.ZoneOffset
 
 
 class SykdomsvilkårTest {
+    // TODO: 
+    //  Sykdomsvurderinger som gjelder fra dato før rettighetsperiodens start gir avslag på sykdomsvilkåret
+    //  Vilkåret bør vel kun bry seg om vurderinger innenfor rettighetsperioden?
+    
     @Test
     fun `Nye vurderinger skal overskrive`() {
         val vilkårsresultat = Vilkårsresultat()
         vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SYKDOMSVILKÅRET)
-
+        
+        val kravdato = LocalDate.now()
         Sykdomsvilkår(vilkårsresultat).vurder(
             SykdomsFaktagrunnlag(
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
-                kravDato = LocalDate.now(),
-                sisteDagMedMuligYtelse = LocalDate.now().plusYears(3),
+                kravDato = kravdato,
+                sisteDagMedMuligYtelse = kravdato.plusYears(3),
                 yrkesskadevurdering = null,
                 sykdomsvurderinger = listOf(
-                    sykdomsvurdering()
+                    sykdomsvurdering(vurderingenGjelderFra = kravdato)
                 ),
                 studentvurdering = null,
                 sykepengerErstatningFaktagrunnlag = null,
@@ -51,11 +57,11 @@ class SykdomsvilkårTest {
         Sykdomsvilkår(vilkårsresultat).vurder(
             SykdomsFaktagrunnlag(
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
-                kravDato = LocalDate.now(),
-                sisteDagMedMuligYtelse = LocalDate.now().plusYears(3),
+                kravDato = kravdato,
+                sisteDagMedMuligYtelse = kravdato.plusYears(3),
                 yrkesskadevurdering = null,
                 sykdomsvurderinger = listOf(
-                    sykdomsvurdering(erNedsettelseIArbeidsevneMerEnnHalvparten = false)
+                    sykdomsvurdering(vurderingenGjelderFra = kravdato, erNedsettelseIArbeidsevneMerEnnHalvparten = false)
                 ),
                 studentvurdering = null,
                 sykepengerErstatningFaktagrunnlag = null,
@@ -79,7 +85,7 @@ class SykdomsvilkårTest {
                 sisteDagMedMuligYtelse = startDato.plusYears(3),
                 yrkesskadevurdering = null,
                 sykdomsvurderinger = listOf(
-                    sykdomsvurdering(opprettet = opprettet),
+                    sykdomsvurdering(opprettet = opprettet, vurderingenGjelderFra = startDato),
                     sykdomsvurdering(
                         erNedsettelseIArbeidsevneMerEnnHalvparten = false,
                         vurderingenGjelderFra = startDato.plusWeeks(1),
@@ -108,14 +114,14 @@ class SykdomsvilkårTest {
 
     private fun bistandGrunnlag(startDato: LocalDate): BistandGrunnlag = BistandGrunnlag(
         vurderinger = listOf(
-            BistandVurdering(
+            Bistandsvurdering(
+                vurdertIBehandling = BehandlingId(1),
                 begrunnelse = "bistand",
                 erBehovForAktivBehandling = true,
                 erBehovForArbeidsrettetTiltak = true,
                 erBehovForAnnenOppfølging = true,
                 overgangBegrunnelse = "...",
                 skalVurdereAapIOvergangTilArbeid = null,
-                skalVurdereAapIOvergangTilUføre = null,
                 vurdertAv = "Foffer",
                 vurderingenGjelderFra = startDato,
                 opprettet = Instant.now()
@@ -136,7 +142,7 @@ class SykdomsvilkårTest {
                 sisteDagMedMuligYtelse = startDato.plusYears(3),
                 yrkesskadevurdering = null,
                 sykdomsvurderinger = listOf(
-                    sykdomsvurdering(opprettet = opprettet),
+                    sykdomsvurdering(vurderingenGjelderFra = startDato, opprettet = opprettet),
                     sykdomsvurdering(
                         erNedsettelseIArbeidsevneAvEnVissVarighet = false,
                         vurderingenGjelderFra = startDato,
@@ -173,7 +179,7 @@ class SykdomsvilkårTest {
                 sisteDagMedMuligYtelse = startDato.plusYears(3),
                 yrkesskadevurdering = null,
                 sykdomsvurderinger = listOf(
-                    sykdomsvurdering(opprettet = opprettet),
+                    sykdomsvurdering(opprettet = opprettet, vurderingenGjelderFra = startDato),
                     sykdomsvurdering(
                         erNedsettelseIArbeidsevneAvEnVissVarighet = null,
                         vurderingenGjelderFra = startDato.plusWeeks(1),
@@ -214,7 +220,7 @@ class SykdomsvilkårTest {
                 sisteDagMedMuligYtelse = startDato.plusYears(3),
                 yrkesskadevurdering = null,
                 sykdomsvurderinger = listOf(
-                    sykdomsvurdering(opprettet = opprettet),
+                    sykdomsvurdering(opprettet = opprettet, vurderingenGjelderFra = startDato),
                     sykdomsvurdering(
                         erNedsettelseIArbeidsevneAvEnVissVarighet = false,
                         vurderingenGjelderFra = startDato,
@@ -258,8 +264,10 @@ class SykdomsvilkårTest {
         erNedsettelseIArbeidsevneAvEnVissVarighet: Boolean? = true,
         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean = true,
         erArbeidsevnenNedsatt: Boolean = true,
-        vurderingenGjelderFra: LocalDate? = null,
-        opprettet: LocalDateTime = LocalDateTime.now()
+        vurderingenGjelderFra: LocalDate,
+        vurderingenGjelderTil: LocalDate? = null,
+        opprettet: LocalDateTime = LocalDateTime.now(),
+        behandlingId: BehandlingId = BehandlingId(1L)
     ) = Sykdomsvurdering(
         begrunnelse = "",
         dokumenterBruktIVurdering = emptyList(),
@@ -271,7 +279,9 @@ class SykdomsvilkårTest {
         erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
         yrkesskadeBegrunnelse = null,
         vurderingenGjelderFra = vurderingenGjelderFra,
+        vurderingenGjelderTil = vurderingenGjelderTil,
         vurdertAv = Bruker("Z00000"),
-        opprettet = opprettet.toInstant(ZoneOffset.UTC)
+        opprettet = opprettet.toInstant(ZoneOffset.UTC),
+        vurdertIBehandling = behandlingId
     )
 }

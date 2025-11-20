@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeIn
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlytBuilder
 import no.nav.aap.behandlingsflyt.flyt.BehandlingType
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.ArbeidsopptrappingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.AvbrytRevurderingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BarnetilleggSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BeregnTilkjentYtelseSteg
@@ -149,6 +150,18 @@ object Revurdering : BehandlingType {
                 )
             )
             .medSteg(
+                steg = ArbeidsopptrappingSteg, vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.MOTTATT_DIALOGMELDING,
+                    Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
+                    Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
+                    Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
+                    Vurderingsbehov.HELHETLIG_VURDERING,
+                    Vurderingsbehov.REVURDER_LOVVALG,
+                    Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
+                )
+            )
+            .medSteg(
                 steg = FritakMeldepliktSteg, vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
                     Vurderingsbehov.MOTTATT_DIALOGMELDING,
@@ -250,6 +263,7 @@ object Revurdering : BehandlingType {
                 steg = BeregningAvklarFaktaSteg, vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
                     Vurderingsbehov.REVURDER_BEREGNING,
+                    Vurderingsbehov.REVURDER_YRKESSKADE,
                     Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
                     Vurderingsbehov.HELHETLIG_VURDERING,
                     Vurderingsbehov.REVURDER_LOVVALG,
@@ -299,18 +313,14 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
                 )
             )
-            .apply {
-                if(!Miljø.erProd()) {
-                    medSteg(
-                        steg = VurderOppholdskravSteg,
-                        vurderingsbehovRelevanteForSteg = listOf(
-                            Vurderingsbehov.MOTTATT_SØKNAD,
-                            Vurderingsbehov.OPPHOLDSKRAV,
-                            Vurderingsbehov.HELHETLIG_VURDERING,
-                        )
-                    )
-                }
-            }
+            .medSteg(
+                steg = VurderOppholdskravSteg,
+                vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.OPPHOLDSKRAV,
+                    Vurderingsbehov.HELHETLIG_VURDERING,
+                )
+            )
             .medSteg(
                 // TODO: Midlertidig duplikat av BarnService, skal på sikt kun være i StartBehandlingSteg
                 informasjonskrav = listOf(BarnInformasjonskrav),
@@ -322,8 +332,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.HELHETLIG_VURDERING,
                     Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
                     Vurderingsbehov.REVURDER_LOVVALG,
-                    Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
-
+                    Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP
                     )
             )
             .medSteg(
@@ -356,6 +365,7 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = SamordningAndreStatligeYtelserSteg,
                 vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.MOTTATT_SØKNAD,
                     Vurderingsbehov.SAMORDNING_OG_AVREGNING,
                     Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER,
                     Vurderingsbehov.VURDER_RETTIGHETSPERIODE,

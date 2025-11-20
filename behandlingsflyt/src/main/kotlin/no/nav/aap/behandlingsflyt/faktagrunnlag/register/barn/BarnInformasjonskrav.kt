@@ -8,10 +8,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_END
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravInput
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.KanTriggeRevurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.adapter.BarnInnhentingRespons
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
@@ -24,6 +23,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.BARNETILL
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -35,7 +35,7 @@ class BarnInformasjonskrav private constructor(
     private val barnGateway: BarnGateway,
     private val identGateway: IdentGateway,
     private val tidligereVurderinger: TidligereVurderinger,
-    private val sakOgBehandlingService: SakOgBehandlingService
+    private val sakService: SakService,
 ) : Informasjonskrav<BarnInformasjonskrav.BarnInput, BarnInformasjonskrav.Registerdata>, KanTriggeRevurdering {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -68,7 +68,7 @@ class BarnInformasjonskrav private constructor(
     override fun klargjør(kontekst: FlytKontekstMedPerioder): BarnInput {
         val behandlingId = kontekst.behandlingId
         val barnGrunnlag = barnRepository.hentHvisEksisterer(behandlingId)
-        val sak = sakOgBehandlingService.hentSakFor(behandlingId)
+        val sak = sakService.hentSakFor(behandlingId)
         val person = sak.person
 
         return BarnInput(
@@ -144,23 +144,12 @@ class BarnInformasjonskrav private constructor(
     }
 
     private fun harEndringer(barnGrunnlag: BarnGrunnlag?, registerBarn: List<Barn>): Boolean {
-        return manglerBarnGrunnlagEllerFantNyeBarnFraRegister(
-            registerBarn,
-            barnGrunnlag?.registerbarn?.barn
-        )
-    }
-
-
-    private fun manglerBarnGrunnlagEllerFantNyeBarnFraRegister(
-        barnIdenter: List<Barn>,
-        eksisterendeRegisterBarn: List<Barn>?
-    ): Boolean {
-        return barnIdenter.map { it.ident }.toSet() != eksisterendeRegisterBarn?.map { it.ident }?.toSet()
+        return registerBarn.toSet() != barnGrunnlag?.registerbarn?.barn?.toSet()
     }
 
     override fun behovForRevurdering(behandlingId: BehandlingId): List<VurderingsbehovMedPeriode> {
         val barnGrunnlag = barnRepository.hentHvisEksisterer(behandlingId)
-        val sak = sakOgBehandlingService.hentSakFor(behandlingId)
+        val sak = sakService.hentSakFor(behandlingId)
         val registerBarn = hentRegisterBarn(barnGrunnlag, sak.person).registerBarn
         return if (!harEndringer(barnGrunnlag, registerBarn)) {
             emptyList()
@@ -182,7 +171,7 @@ class BarnInformasjonskrav private constructor(
                 gatewayProvider.provide(),
                 gatewayProvider.provide(),
                 TidligereVurderingerImpl(repositoryProvider),
-                SakOgBehandlingService(repositoryProvider, gatewayProvider)
+                SakService(repositoryProvider),
             )
         }
     }

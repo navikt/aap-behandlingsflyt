@@ -16,9 +16,8 @@ object InMemorySamordningRepository : SamordningRepository {
         return grunnlag[behandlingId]
     }
 
-    override fun lagre(behandlingId: BehandlingId, samordningPerioder: List<SamordningPeriode>, input: Faktagrunnlag) {
+    override fun lagre(behandlingId: BehandlingId, samordningPerioder: Set<SamordningPeriode>, input: Faktagrunnlag) {
         grunnlag[behandlingId] = SamordningGrunnlag(
-            id = id.getAndIncrement(),
             samordningPerioder = samordningPerioder
         )
     }

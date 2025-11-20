@@ -3,16 +3,16 @@ package no.nav.aap.behandlingsflyt.behandling.foreslåvedtak
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import no.nav.aap.behandlingsflyt.behandling.foreslåvedtak.UnderveisPeriodeInfo.Companion.tilForeslåVedtakData
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
+import no.nav.aap.behandlingsflyt.utils.tilForeslåVedtakDataTidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.FORESLÅ_VEDTAK_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.tidslinje.Segment
@@ -27,6 +27,7 @@ fun NormalOpenAPIRoute.foreslaaVedtakAPI(
 ) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/foreslaa-vedtak").getGrunnlag<BehandlingReferanse, ForeslåVedtakResponse>(
+            relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
             avklaringsbehovKode = FORESLÅ_VEDTAK_KODE
         ) { behandlingReferanse ->
@@ -54,7 +55,7 @@ fun NormalOpenAPIRoute.foreslaaVedtakAPI(
                                     val avslagsårsaker =
                                         avslagstidslinjer
                                             .flatMap { tidslinje -> tidslinje.begrensetTil(it.periode).segmenter() }
-                                            .mapNotNull { it.verdi }
+                                            .filter { it.verdi.second == Utfall.IKKE_OPPFYLT }.map { it.verdi.first }
                                     ForeslåVedtakDto(
                                         periode = it.periode,
                                         utfall = it.verdi.utfall,
@@ -76,26 +77,10 @@ fun NormalOpenAPIRoute.foreslaaVedtakAPI(
     }
 }
 
-private fun utledAvslagstidslinjer(vilkårsresultat: Vilkårsresultat): List<Tidslinje<Avslagsårsak?>> {
+private fun utledAvslagstidslinjer(vilkårsresultat: Vilkårsresultat): List<Tidslinje<Pair<String, Utfall>>> {
     val allevilkårmedavslag = vilkårsresultat.alle().filter { it.harPerioderSomIkkeErOppfylt() }
     return allevilkårmedavslag.map { vilkår ->
-        vilkår.vilkårsperioder().map { Segment(it.periode, it.avslagsårsak) }.let { Tidslinje(it) }
+        vilkår.vilkårsperioder().map { Segment(it.periode, Pair(vilkår.type.hjemmel, it.utfall)) }.let { Tidslinje(it) }
     }
 }
 
-private fun UnderveisGrunnlag.tilForeslåVedtakDataTidslinje(): Tidslinje<ForeslåVedtakData> {
-    val underveisPerioder =
-        this.perioder.map {
-            UnderveisPeriodeInfo(
-                periode = it.periode,
-                utfall = it.utfall,
-                rettighetsType = it.rettighetsType,
-                underveisÅrsak = it.avslagsårsak
-            )
-        }
-    return underveisPerioder
-        .map {
-            Segment(it.periode, it.tilForeslåVedtakData())
-        }.let(::Tidslinje)
-        .komprimer()
-}

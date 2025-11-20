@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class AvklarHelseinstitusjonLøser(
@@ -91,7 +92,7 @@ class AvklarHelseinstitusjonLøser(
                     forsoergerEktefelle = it.forsoergerEktefelle,
                     harFasteUtgifter = it.harFasteUtgifter
                 )
-            } ?: Tidslinje()
+            }.orEmpty()
     }
 
     override fun forBehov(): Definisjon {

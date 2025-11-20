@@ -22,6 +22,7 @@ import no.nav.aap.tilgang.getGrunnlag
 import java.time.ZoneId
 import javax.sql.DataSource
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.utils.tilResponse
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 
 fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(
     dataSource: DataSource, repositoryRegistry: RepositoryRegistry,
@@ -32,6 +33,7 @@ fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(
     route("/api/behandling") {
         route("/{referanse}/grunnlag/overgangufore") {
             getGrunnlag<BehandlingReferanse, OvergangUføreGrunnlagResponse>(
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = Definisjon.AVKLAR_OVERGANG_UFORE.kode.toString()
             ) { req ->

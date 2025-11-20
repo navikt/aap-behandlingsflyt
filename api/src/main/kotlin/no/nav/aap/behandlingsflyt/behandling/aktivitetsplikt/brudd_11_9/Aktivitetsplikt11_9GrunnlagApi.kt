@@ -23,6 +23,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.HentSakDTO
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForSakResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -44,6 +46,7 @@ fun NormalOpenAPIRoute.aktivitetsplikt11_9GrunnlagApi(
 
     route("api/aktivitetsplikt/{referanse}/grunnlag/brudd-11-9") {
         getGrunnlag<BehandlingReferanse, Aktivitetsplikt11_9GrunnlagDto>(
+            relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
             avklaringsbehovKode = VURDER_BRUDD_11_9_KODE
         ) { behandlingsreferanse ->
@@ -82,10 +85,11 @@ fun NormalOpenAPIRoute.aktivitetsplikt11_9GrunnlagApi(
     route("api/aktivitetsplikt/trekk/{saksnummer}") {
         authorizedGet<HentSakDTO, AktivitetspliktMedTrekkDto>(
             AuthorizationParamPathConfig(
+                relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
                 sakPathParam = SakPathParam("saksnummer")
             ),
             null,
-            TagModule(listOf(Tags.Sak)),
+            modules = arrayOf(TagModule(listOf(Tags.Sak))),
         ) { req ->
             val aktivitetspliktVurderingerMedTrekk = dataSource.transaction(readOnly = true) { connection ->
                 val utbetalingGateway = gatewayProvider.provide<UtbetalingGateway>()

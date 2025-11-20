@@ -5,7 +5,6 @@ import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -40,11 +39,11 @@ class BehandlingHendelseServiceTest {
         // SETUP
         val sakService = mockk<SakService>()
         val flytJobbRepository = mockk<FlytJobbRepository>()
-        val brevbestillingRepository = mockk<BrevbestillingRepository>()
         val mottattDokumentRepository = mockk<MottattDokumentRepository>()
         val pipRepository = mockk<PipRepository>()
 
         every { flytJobbRepository.leggTil(any()) } returns Unit
+
         every {
             mottattDokumentRepository.hentDokumenterAvType(
                 any<BehandlingId>(),
@@ -59,6 +58,14 @@ class BehandlingHendelseServiceTest {
             )
         } returns emptySet()
 
+        every {
+            mottattDokumentRepository.hentDokumenterAvType(
+                any<BehandlingId>(),
+                InnsendingType.MANUELL_REVURDERING
+            )
+        } returns emptySet()
+
+
         every { pipRepository.finnIdenterPåBehandling(any<BehandlingReferanse>()) } returns emptyList()
 
         val behandlingHendelseService =
@@ -66,7 +73,7 @@ class BehandlingHendelseServiceTest {
                 flytJobbRepository,
                 sakService,
                 mottattDokumentRepository,
-                pipRepository,
+                pipRepository
             )
 
         val behandling = Behandling(

@@ -28,24 +28,34 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.FakeUnleashFasttrackAktivitetsplikt
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.TestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.ZoneOffset
-import javax.sql.DataSource
 
 class AktivitetspliktInformasjonskravTest {
+        companion object {
+        private lateinit var dataSource: TestDataSource
 
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            dataSource = TestDataSource()
+        }
 
-    @TestDatabase
-    lateinit var dataSource: DataSource
+        @AfterAll
+        @JvmStatic
+        fun tearDown() = dataSource.close()
+    }
 
     @Test
     fun `Revurdering med vurderingstype 'EFFEKTUER_AKTIVITETSPLIKT' skal kopiere grunnlag fra nyeste iverksatte aktvitetspliktbehandling`() {
@@ -113,7 +123,7 @@ class AktivitetspliktInformasjonskravTest {
 
             val aktivitetsplikt11_7Informasjonskrav = Aktivitetsplikt11_7Informasjonskrav.konstruer(
                 postgresRepositoryRegistry.provider(connection),
-                createGatewayProvider { register<FakeUnleashFasttrackAktivitetsplikt>() },
+                createGatewayProvider { register<FakeUnleash>() },
             )
             val flytKontekstMedPerioder = flytKontekstMedPerioder(effektueringsbehandling, sak)
 

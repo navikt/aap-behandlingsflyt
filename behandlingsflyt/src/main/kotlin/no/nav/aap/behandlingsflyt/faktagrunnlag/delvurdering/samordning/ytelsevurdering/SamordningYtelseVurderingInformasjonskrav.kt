@@ -10,7 +10,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.KanTriggeRevurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingInformasjonskrav.SamordningInput
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingInformasjonskrav.SamordningRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Aktør
@@ -26,12 +25,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
-import java.time.LocalDate
 import kotlin.time.measureTimedValue
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Ytelse as ForeldrePengerYtelse
 
@@ -40,7 +39,7 @@ class SamordningYtelseVurderingInformasjonskrav(
     private val tidligereVurderinger: TidligereVurderinger,
     private val fpGateway: ForeldrepengerGateway,
     private val spGateway: SykepengerGateway,
-    private val sakOgBehandlingService: SakOgBehandlingService,
+    private val sakService: SakService
 ) : Informasjonskrav<SamordningInput, SamordningRegisterdata>, KanTriggeRevurdering {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -63,20 +62,22 @@ class SamordningYtelseVurderingInformasjonskrav(
 
 
     data class SamordningRegisterdata(
-        val samordningYtelser: List<SamordningYtelse>
+        val samordningYtelser: Set<SamordningYtelse>
     ) : InformasjonskravRegisterdata
 
     override fun klargjør(kontekst: FlytKontekstMedPerioder): SamordningInput {
-        val sak = sakOgBehandlingService.hentSakFor(kontekst.behandlingId)
+        val sak = sakService.hentSakFor(kontekst.behandlingId)
         return SamordningInput(sak.person, sak.rettighetsperiode)
     }
 
     override fun hentData(input: SamordningInput): SamordningRegisterdata {
         val (person, rettighetsperiode) = input
         val personIdent = person.aktivIdent().identifikator
+        val oppslagsPeriode = Periode(rettighetsperiode.fom.minusWeeks(4), rettighetsperiode.tom)
+
         val (foreldrepenger, foreldrepengerDuration) = measureTimedValue {
             hentYtelseForeldrepenger(
-                personIdent, rettighetsperiode.fom.minusWeeks(4), rettighetsperiode.tom
+                personIdent, oppslagsPeriode
             )
         }
 
@@ -84,7 +85,7 @@ class SamordningYtelseVurderingInformasjonskrav(
 
         val (sykepenger, sykepengerDuration) = measureTimedValue {
             hentYtelseSykepenger(
-                personIdent, rettighetsperiode.fom.minusWeeks(4), rettighetsperiode.tom
+                personIdent, oppslagsPeriode
             )
         }
 
@@ -110,24 +111,34 @@ class SamordningYtelseVurderingInformasjonskrav(
     }
 
     private fun hentYtelseForeldrepenger(
-        personIdent: String, fom: LocalDate, tom: LocalDate
+        personIdent: String, oppslagsPeriode: Periode
     ): List<ForeldrePengerYtelse> {
         return fpGateway.hentVedtakYtelseForPerson(
             ForeldrepengerRequest(
-                Aktør(personIdent), Periode(fom, tom)
+                Aktør(personIdent),
+                oppslagsPeriode
             )
-        ).ytelser
+        ).ytelser.mapNotNull { ytelse ->
+            val anvistInnenforPeriode = ytelse.anvist.filter {
+                oppslagsPeriode.inneholder(it.periode)
+            }
+            if (anvistInnenforPeriode.isNotEmpty()) {
+                ytelse.copy(anvist = anvistInnenforPeriode)
+            } else {
+                null
+            }
+        }
     }
 
-    private fun hentYtelseSykepenger(personIdent: String, fom: LocalDate, tom: LocalDate): List<UtbetaltePerioder> {
+    private fun hentYtelseSykepenger(personIdent: String, oppslagsPeriode: Periode): List<UtbetaltePerioder> {
         return spGateway.hentYtelseSykepenger(
-            setOf(personIdent), fom, tom
-        )
+            setOf(personIdent), oppslagsPeriode.fom, oppslagsPeriode.tom
+        ).filter { oppslagsPeriode.inneholder((Periode(it.fom, it.tom))) }
     }
 
     private fun mapTilSamordningYtelse(
         foreldrepenger: List<ForeldrePengerYtelse>, sykepenger: List<UtbetaltePerioder>
-    ): List<SamordningYtelse> {
+    ): Set<SamordningYtelse> {
         val foreldrepengerKildeMapped =
             foreldrepenger.filter { konverterFraForeldrePengerDomene(it) != null }.map { ytelse ->
                 SamordningYtelse(
@@ -137,7 +148,7 @@ class SamordningYtelseVurderingInformasjonskrav(
                             gradering = Prosent(it.utbetalingsgrad.verdi.toInt()),
                             kronesum = it.beløp,
                         )
-                    }, kilde = ytelse.kildesystem, saksRef = ytelse.saksnummer
+                    }.toSet(), kilde = ytelse.kildesystem, saksRef = ytelse.saksnummer
                 )
             }
 
@@ -150,10 +161,10 @@ class SamordningYtelseVurderingInformasjonskrav(
                 SamordningYtelsePeriode(
                     Periode(it.fom, it.tom), Prosent(it.grad.toInt()), null
                 )
-            }, kilde = sykepengerKilde)
+            }.toSet(), kilde = sykepengerKilde)
         }
 
-        return foreldrepengerKildeMapped.plus(listOfNotNull(sykepengerYtelse))
+        return foreldrepengerKildeMapped.plus(listOfNotNull(sykepengerYtelse)).toSet()
     }
 
     private fun konverterFraForeldrePengerDomene(ytelse: ForeldrePengerYtelse): Ytelse? {
@@ -170,7 +181,7 @@ class SamordningYtelseVurderingInformasjonskrav(
 
     override fun behovForRevurdering(behandlingId: BehandlingId): List<VurderingsbehovMedPeriode> {
         val eksisterendeData = samordningYtelseRepository.hentHvisEksisterer(behandlingId)
-        val sak = sakOgBehandlingService.hentSakFor(behandlingId)
+        val sak = sakService.hentSakFor(behandlingId)
         val samordningYtelser = hentData(SamordningInput(sak.person, sak.rettighetsperiode)).samordningYtelser
 
         // Ønsker ikke trigge revurdering automatisk i dette tilfellet enn så lenge
@@ -194,14 +205,14 @@ class SamordningYtelseVurderingInformasjonskrav(
                 TidligereVurderingerImpl(repositoryProvider),
                 gatewayProvider.provide(),
                 gatewayProvider.provide(),
-                SakOgBehandlingService(repositoryProvider, gatewayProvider)
+                SakService(repositoryProvider)
             )
         }
 
         fun harEndringerIYtelser(
-            eksisterende: SamordningYtelseGrunnlag?, samordningYtelser: List<SamordningYtelse>
+            eksisterende: SamordningYtelseGrunnlag?, samordningYtelser: Set<SamordningYtelse>
         ): Boolean {
-            return eksisterende == null || samordningYtelser.toSet() != eksisterende.ytelser.toSet()
+            return eksisterende == null || samordningYtelser != eksisterende.ytelser
         }
     }
 }

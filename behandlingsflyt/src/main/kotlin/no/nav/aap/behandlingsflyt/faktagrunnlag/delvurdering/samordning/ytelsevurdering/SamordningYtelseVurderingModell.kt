@@ -5,30 +5,13 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.Objects
 
 data class SamordningYtelse(
     val ytelseType: Ytelse,
-    val ytelsePerioder: List<SamordningYtelsePeriode>,
+    val ytelsePerioder: Set<SamordningYtelsePeriode>,
     val kilde: String,
     val saksRef: String? = null,
-) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is SamordningYtelse) return false
-
-        if (ytelseType != other.ytelseType) return false
-        if (ytelsePerioder.toSet() != other.ytelsePerioder.toSet()) return false
-        if (kilde != other.kilde) return false
-        if (saksRef != other.saksRef) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        return Objects.hash(ytelseType, ytelsePerioder.toSet(), kilde, saksRef)
-    }
-}
+)
 
 data class SamordningYtelsePeriode(
     val periode: Periode,
@@ -38,7 +21,7 @@ data class SamordningYtelsePeriode(
 
 data class SamordningVurdering(
     val ytelseType: Ytelse,
-    val vurderingPerioder: List<SamordningVurderingPeriode>,
+    val vurderingPerioder: Set<SamordningVurderingPeriode>,
 )
 
 data class SamordningVurderingPeriode(
@@ -50,17 +33,17 @@ data class SamordningVurderingPeriode(
 
 data class SamordningYtelseGrunnlag(
     val grunnlagId: Long,
-    val ytelser: List<SamordningYtelse>,
+    val ytelser: Set<SamordningYtelse>,
 )
 
 data class SamordningVurderingGrunnlag(
     val vurderingerId: Long? = null,
     val begrunnelse: String?,
     @Deprecated("Ikke lenger i bruk - erstattet av Oppfølgingsoppgave")
-    val maksDatoEndelig: Boolean?,
+    val maksDatoEndelig: Boolean? = null,
     @Deprecated("Ikke lenger i bruk - erstattet av Oppfølgingsoppgave")
-    val fristNyRevurdering: LocalDate?,
-    val vurderinger: List<SamordningVurdering>,
+    val fristNyRevurdering: LocalDate? = null,
+    val vurderinger: Set<SamordningVurdering>,
     val vurdertAv: String,
     val vurdertTidspunkt: LocalDateTime? = null
 )

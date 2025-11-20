@@ -24,11 +24,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fød
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningMedHistorikk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningInformasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningMedHistorikk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRegisterGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreInformasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRegisterGateway
 import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
@@ -52,15 +52,16 @@ import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.TestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbType
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import javax.sql.DataSource
 
 class OppdagEndretInformasjonskravJobbUtførerTest {
     init {
@@ -99,7 +100,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
     }
 
     object FakeUføreRegisterGateway : UføreRegisterGateway {
-        var response: List<Uføre> = emptyList()
+        var response: Set<Uføre> = emptySet()
         override fun innhentMedHistorikk(person: Person, fraDato: LocalDate) = response
     }
 
@@ -132,8 +133,19 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
         register<FakeUnleash>()
     }
 
-    @TestDatabase
-    lateinit var dataSource: DataSource
+    companion object {
+        private lateinit var dataSource: TestDataSource
+
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            dataSource = TestDataSource()
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun tearDown() = dataSource.close()
+    }
 
 
     @Test
@@ -149,11 +161,12 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
                         fom = 10 januar 2020,
                         tom = 20 januar 2020,
                         grad = 100,
+                        organisasjonsnummer = null
                     )
                 )
             )
             FakeUføreRegisterGateway.response =
-                listOf(
+                setOf(
                     Uføre(
                         virkningstidspunkt = periode.fom,
                         uføregrad = Prosent.`100_PROSENT`,

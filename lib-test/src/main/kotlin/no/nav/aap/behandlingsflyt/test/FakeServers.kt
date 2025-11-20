@@ -86,7 +86,6 @@ import no.nav.aap.behandlingsflyt.integrasjon.pdl.PersonStatus
 import no.nav.aap.behandlingsflyt.integrasjon.ufore.UføreHistorikkRespons
 import no.nav.aap.behandlingsflyt.integrasjon.ufore.UførePeriode
 import no.nav.aap.behandlingsflyt.integrasjon.ufore.UføreRequest
-import no.nav.aap.behandlingsflyt.integrasjon.ufore.UføreRespons
 import no.nav.aap.behandlingsflyt.integrasjon.util.GraphQLResponse
 import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeModell
 import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeRequest
@@ -98,6 +97,7 @@ import no.nav.aap.behandlingsflyt.test.modell.MockUnleashFeature
 import no.nav.aap.behandlingsflyt.test.modell.MockUnleashFeatures
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.brev.kontrakt.AvbrytBrevbestillingRequest
 import no.nav.aap.brev.kontrakt.BestillBrevResponse
 import no.nav.aap.brev.kontrakt.BestillBrevV2Request
 import no.nav.aap.brev.kontrakt.Brev
@@ -161,6 +161,7 @@ object FakeServers : AutoCloseable {
     private val ereg = embeddedServer(Netty, port = 0, module = { eregFake() })
     private val sam = embeddedServer(Netty, port = 0, module = { sam() })
     private val gosys = embeddedServer(Netty, port = 0, module = { gosysFake() })
+    private val leaderElector = embeddedServer(Netty, port = 0, module = { leaderElectorFake() })
 
     internal val statistikkHendelser = mutableListOf<StoppetBehandling>()
     internal val legeerklæringStatuser = mutableListOf<LegeerklæringStatusResponse>()
@@ -214,21 +215,7 @@ object FakeServers : AutoCloseable {
             }
         }
         routing() {
-            get("/pen/api/uforetrygd/uforegrad") {
-                val ident = requireNotNull(call.request.header("fnr"))
-                val hentPerson = FakePersoner.hentPerson(ident)
-                if (hentPerson == null) {
-                    call.respond(HttpStatusCode.NotFound, "Fant ikke person med fnr $ident")
-                    return@get
-                }
-                val uføregrad = hentPerson.uføre?.prosentverdi()
-                if (uføregrad == null) {
-                    call.respond(HttpStatusCode.NotFound)
-                } else {
-                    call.respond(HttpStatusCode.OK, UføreRespons(uforegrad = uføregrad))
-                }
-            }
-            post("/pen/api/uforetrygd/uforehistorikk/perioder") {
+            post("/api/uforetrygd/uforehistorikk/perioder") {
                 val body = call.receive<UføreRequest>()
                 val hentPerson = FakePersoner.hentPerson(body.fnr)
                 if (hentPerson == null) {
@@ -245,7 +232,7 @@ object FakeServers : AutoCloseable {
                                 UførePeriode(
                                     uforegrad = uføregrad,
                                     uforegradTom = null,
-                                    uforegradFom = null,
+                                    uforegradFom = LocalDate.parse(body.dato),
                                     uforetidspunkt = null,
                                     virkningstidspunkt = LocalDate.parse(body.dato)
                                 )
@@ -280,7 +267,7 @@ object FakeServers : AutoCloseable {
             route("/api/vedtak") {
                 route("samordne") {
                     post {
-                        val req = call.receive<SamordneVedtakRequest>()
+                        call.receive<SamordneVedtakRequest>()
 
                         call.respond(
                             SamordneVedtakRespons(
@@ -290,7 +277,6 @@ object FakeServers : AutoCloseable {
                     }
                 }
                 get {
-                    val params = call.queryParameters
                     call.respond(
                         HttpStatusCode.OK, listOf(
                             HentSamIdResponse(
@@ -363,6 +349,21 @@ object FakeServers : AutoCloseable {
                         OpprettOppgaveResponse(
                             success = true
                         )
+                    )
+                }
+            }
+        }
+    }
+
+    private fun Application.leaderElectorFake() {
+        install(ContentNegotiation) {
+            jackson()
+        }
+        routing {
+            route("/") {
+                get {
+                    call.respond(
+                       mapOf("name" to "localhost")
                     )
                 }
             }
@@ -820,7 +821,8 @@ object FakeServers : AutoCloseable {
                                 UtbetaltePerioder(
                                     fom = it.periode.fom,
                                     tom = it.periode.tom,
-                                    grad = it.grad
+                                    grad = it.grad,
+                                    organisasjonsnummer = null
                                 )
                             }
                         ))
@@ -1728,13 +1730,18 @@ object FakeServers : AutoCloseable {
                 val trekkRespons = TrekkResponsDto(
                     listOf(
                         TrekkDto(
-                            saksnummer, UUID.randomUUID(), LocalDate.now(), 1234, listOf(
+                            saksnummer = saksnummer,
+                            behandlingsreferanse = UUID.randomUUID(),
+                            dato = LocalDate.now(),
+                            beløp = 1234,
+                            aktiv = true,
+                            posteringer = listOf(
                                 TrekkPosteringDto(LocalDate.now(), 400),
                                 TrekkPosteringDto(LocalDate.now().plusDays(1), 834)
-                            )
+                            ),
                         ),
                         TrekkDto(
-                            saksnummer, UUID.randomUUID(), LocalDate.now().minusDays(1), 200, emptyList()
+                            saksnummer, UUID.randomUUID(), LocalDate.now().minusDays(1), 200, false, emptyList()
                         )
                     )
                 )
@@ -1790,13 +1797,13 @@ object FakeServers : AutoCloseable {
             post("/graphql") {
 
                 val requestBody = call.receiveText()
-                val data = if(requestBody.contains("ressurser")){
-                   NomRessurserVisningsnavn(
-                           ressurser = listOf(
-                               NomRessursResponse(NomRessursVisningsnavn("ABC1245", "Sak Behandlersen")),
-                               NomRessursResponse(NomRessursVisningsnavn("DEFG123", "Annen Testesen")),
-                           )
-                       )
+                val data = if (requestBody.contains("ressurser")) {
+                    NomRessurserVisningsnavn(
+                        ressurser = listOf(
+                            NomRessursResponse(NomRessursVisningsnavn("ABC1245", "Sak Behandlersen")),
+                            NomRessursResponse(NomRessursVisningsnavn("DEFG123", "Annen Testesen")),
+                        )
+                    )
                 } else {
                     NomData(
                         NomDataRessurs(
@@ -1891,6 +1898,8 @@ object FakeServers : AutoCloseable {
                     )
                 )
             ),
+            brevmal = null,
+            brevdata = null,
             opprettet = LocalDateTime.now(),
             oppdatert = LocalDateTime.now(),
             behandlingReferanse = UUID.randomUUID(),
@@ -1947,6 +1956,14 @@ object FakeServers : AutoCloseable {
                             call.respond(HttpStatusCode.NoContent, Unit)
                         }
                     }
+                }
+                post("/avbryt") {
+                    val ref = call.receive<AvbrytBrevbestillingRequest>().referanse
+                    synchronized(mutex) {
+                        val i = brevStore.indexOfFirst { it.referanse == ref }
+                        brevStore[i] = brevStore[i].copy(status = Status.AVBRUTT)
+                    }
+                    call.respond(HttpStatusCode.Accepted, Unit)
                 }
                 post("/ferdigstill") {
                     val ref = call.receive<FerdigstillBrevRequest>().referanse
@@ -2018,6 +2035,7 @@ object FakeServers : AutoCloseable {
         kabal.start()
         ereg.start()
         gosys.start()
+        leaderElector.start()
 
         println("AZURE PORT ${azure.port()}")
 
@@ -2158,6 +2176,9 @@ object FakeServers : AutoCloseable {
 
         // Texas
         System.setProperty("nais.token.exchange.endpoint", "http://localhost:${texas.port()}/token")
+
+        // LeaderElector
+        System.setProperty("ELECTOR_GET_URL", "http://localhost:${leaderElector.port()}")
     }
 
     override fun close() {
@@ -2190,6 +2211,7 @@ object FakeServers : AutoCloseable {
         norg.stop(0L, 0L)
         kabal.stop(0L, 0L)
         ereg.stop(0L, 0L)
+        leaderElector.stop(0L, 0L)
     }
 }
 

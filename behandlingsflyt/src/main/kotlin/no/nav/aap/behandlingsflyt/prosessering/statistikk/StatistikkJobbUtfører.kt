@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.prosessering.statistikk
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.hendelse.statistikk.StatistikkGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -55,6 +56,7 @@ class StatistikkJobbUtfører(
  * @param status Status på behandlingen.
  * @param opprettetTidspunkt Når behandlingen ble opprettet.
  * @param hendelsesTidspunkt Når denne hendelsen ble opprettet i Behandlingsflyt.
+ * @param opprettetAv Hvem som opprettet behandlingen, dersom behandlingen er en manuell revurdering.
  */
 data class BehandlingFlytStoppetHendelseTilStatistikk(
     val personIdent: String,
@@ -65,5 +67,7 @@ data class BehandlingFlytStoppetHendelseTilStatistikk(
     val avklaringsbehov: List<AvklaringsbehovHendelseDto>,
     val opprettetTidspunkt: LocalDateTime,
     val hendelsesTidspunkt: LocalDateTime,
-    val versjon: String
+    val versjon: String,
+    val opprettetAv: String? = null,
+    val nyeMeldekort: List<Meldekort>? = emptyList(),
 )

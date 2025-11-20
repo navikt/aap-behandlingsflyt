@@ -16,10 +16,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
@@ -34,6 +36,7 @@ fun NormalOpenAPIRoute.institusjonAPI(
     route("/api/behandling") {
         route("/{referanse}/grunnlag/institusjon/soning") {
             getGrunnlag<BehandlingReferanse, SoningsGrunnlagDto>(
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = Definisjon.AVKLAR_SONINGSFORRHOLD.kode.toString()
             ) { req ->
@@ -106,6 +109,7 @@ fun NormalOpenAPIRoute.institusjonAPI(
     route("/api/behandling") {
         route("/{referanse}/grunnlag/institusjon/helse") {
             getGrunnlag<BehandlingReferanse, HelseinstitusjonGrunnlagDto>(
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = Definisjon.AVKLAR_HELSEINSTITUSJON.kode.toString()
             ) { req ->
@@ -131,7 +135,7 @@ fun NormalOpenAPIRoute.institusjonAPI(
                         byggTidslinjeAvType(grunnlag, Institusjonstype.HS)
 
                     val perioderMedHelseopphold = behov.perioderTilVurdering.mapValue { it.helse }.komprimer()
-                    val vurderinger = grunnlag?.helseoppholdvurderinger?.tilTidslinje() ?: Tidslinje()
+                    val vurderinger = grunnlag?.helseoppholdvurderinger?.tilTidslinje().orEmpty()
 
                     val manglendePerioder = perioderMedHelseopphold.segmenter()
                         .filterNot { it.verdi == null }

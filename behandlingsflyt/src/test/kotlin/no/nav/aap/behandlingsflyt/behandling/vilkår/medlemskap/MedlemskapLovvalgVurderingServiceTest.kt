@@ -35,7 +35,7 @@ class MedlemskapLovvalgVurderingServiceTest {
                                 "grunnlag",
                                 "lovvalg",
                                 false,
-                                EØSLand.NOR.toString(),
+                                EØSLandEllerLandMedAvtale.NOR.toString(),
                                 null
                             )
                         )
@@ -43,7 +43,6 @@ class MedlemskapLovvalgVurderingServiceTest {
                 ),
                 inntekterINorgeGrunnlag = emptyList(),
                 arbeiderINorgeGrunnlag = emptyList(),
-                manuellVurdering = null
             ),
             personopplysning = Personopplysning(
                 Fødselsdato(LocalDate.now().minusYears(18)),
@@ -80,7 +79,7 @@ class MedlemskapLovvalgVurderingServiceTest {
                                 "grunnlag",
                                 "lovvalg",
                                 false,
-                                EØSLand.NOR.toString(),
+                                EØSLandEllerLandMedAvtale.NOR.toString(),
                                 null
                             )
                         )
@@ -88,7 +87,6 @@ class MedlemskapLovvalgVurderingServiceTest {
                 ),
                 inntekterINorgeGrunnlag = emptyList(),
                 arbeiderINorgeGrunnlag = emptyList(),
-                manuellVurdering = null
             ),
             personopplysning = Personopplysning(
                 Fødselsdato(LocalDate.now().minusYears(18)), 1, null, PersonStatus.bosatt,
@@ -125,7 +123,7 @@ class MedlemskapLovvalgVurderingServiceTest {
                                 "grunnlag",
                                 "lovvalg",
                                 false,
-                                EØSLand.SWE.toString(),
+                                EØSLandEllerLandMedAvtale.SWE.toString(),
                                 KildesystemMedl(KildesystemKode.MEDL, "MEDL")
                             )
                         )
@@ -133,7 +131,6 @@ class MedlemskapLovvalgVurderingServiceTest {
                 ),
                 inntekterINorgeGrunnlag = emptyList(),
                 arbeiderINorgeGrunnlag = emptyList(),
-                manuellVurdering = null
             ),
             personopplysning = Personopplysning(
                 Fødselsdato(LocalDate.now().minusYears(18)), 1, null, PersonStatus.bosatt, listOf(

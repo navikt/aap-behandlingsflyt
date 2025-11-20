@@ -89,37 +89,41 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
             }
         }.sortedBy { it.manuellVurdering.vurdertTidspunkt }
 
-        return vurderinger.map { HistoriskManuellVurderingForForutgåendeMedlemskap(
-            manuellVurdering = it.manuellVurdering,
-            opprettet = it.vurdertDato,
-            erGjeldendeVurdering = it == vurderinger.last(),
-        ) }
+        return vurderinger.map {
+            HistoriskManuellVurderingForForutgåendeMedlemskap(
+                manuellVurdering = it.manuellVurdering,
+                opprettet = it.vurdertDato,
+                erGjeldendeVurdering = it == vurderinger.last(),
+            )
+        }
     }
 
     override fun lagreManuellVurdering(
         behandlingId: BehandlingId,
-        manuellVurdering: ManuellVurderingForForutgåendeMedlemskap
+        manuellVurdering: ManuellVurderingForForutgåendeMedlemskap?
     ) {
         val grunnlagOppslag = hentGrunnlag(behandlingId)
-        val eksisterendeManuellVurdering = hentManuellVurdering(grunnlagOppslag?.manuellVurderingId)
-        val overstyrt = manuellVurdering.overstyrt || eksisterendeManuellVurdering?.overstyrt == true
+        deaktiverGrunnlag(behandlingId)
 
-        if (grunnlagOppslag != null) {
-            deaktiverGrunnlag(behandlingId)
-        }
+        val manuellVurderingId = if (manuellVurdering == null) {
+            null
+        } else {
+            val eksisterendeManuellVurdering = hentManuellVurdering(grunnlagOppslag?.manuellVurderingId)
+            val overstyrt = manuellVurdering.overstyrt || eksisterendeManuellVurdering?.overstyrt == true
 
-        val manuellVurderingQuery = """
+            val manuellVurderingQuery = """
             INSERT INTO FORUTGAAENDE_MEDLEMSKAP_MANUELL_VURDERING (BEGRUNNELSE, HAR_FORUTGAAENDE_MEDLEMSKAP, VAR_MEDLEM_MED_NEDSATT_ARBEIDSEVNE, MEDLEM_MED_UNNTAK_AV_MAKS_FEM_AAR, OVERSTYRT, VURDERT_AV) VALUES (?, ?, ?, ?, ?, ?)
             """.trimIndent()
 
-        val manuellVurderingId = connection.executeReturnKey(manuellVurderingQuery) {
-            setParams {
-                setString(1, manuellVurdering.begrunnelse)
-                setBoolean(2, manuellVurdering.harForutgåendeMedlemskap)
-                setBoolean(3, manuellVurdering.varMedlemMedNedsattArbeidsevne)
-                setBoolean(4, manuellVurdering.medlemMedUnntakAvMaksFemAar)
-                setBoolean(5, overstyrt)
-                setString(6, manuellVurdering.vurdertAv)
+            connection.executeReturnKey(manuellVurderingQuery) {
+                setParams {
+                    setString(1, manuellVurdering.begrunnelse)
+                    setBoolean(2, manuellVurdering.harForutgåendeMedlemskap)
+                    setBoolean(3, manuellVurdering.varMedlemMedNedsattArbeidsevne)
+                    setBoolean(4, manuellVurdering.medlemMedUnntakAvMaksFemAar)
+                    setBoolean(5, overstyrt)
+                    setString(6, manuellVurdering.vurdertAv)
+                }
             }
         }
 

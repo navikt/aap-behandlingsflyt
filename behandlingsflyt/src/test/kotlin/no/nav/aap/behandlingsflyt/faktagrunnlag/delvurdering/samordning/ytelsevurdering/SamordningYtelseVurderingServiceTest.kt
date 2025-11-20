@@ -2,8 +2,6 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsev
 
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusForeldrepengerGateway
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusSykepengerGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -21,22 +19,140 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.Fakes
+import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.TestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import javax.sql.DataSource
 
 @Fakes
 class SamordningYtelseVurderingServiceTest {
-    @TestDatabase
-    lateinit var dataSource: DataSource
+    companion object {
+        private lateinit var dataSource: TestDataSource
+
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            dataSource = TestDataSource()
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun tearDown() = dataSource.close()
+    }
+
+    @Test
+    fun `fpabakus tar ikke med perioder utenfor oppslagsperioden`() {
+        val person = TestPerson(
+            foreldrepenger = listOf(
+                TestPerson.ForeldrePenger(
+                    50,
+                    Periode(LocalDate.now().minusYears(1), LocalDate.now())
+                ),
+                TestPerson.ForeldrePenger(
+                    60,
+                    Periode(LocalDate.now().minusYears(5), LocalDate.now().minusYears(4))
+                ),
+                TestPerson.ForeldrePenger(
+                    52,
+                    Periode(LocalDate.now().minusYears(5), LocalDate.now())
+                ),
+                TestPerson.ForeldrePenger(
+                    51,
+                    Periode(LocalDate.now().minusWeeks(5), LocalDate.now())
+                ),
+                TestPerson.ForeldrePenger(
+                    49,
+                    Periode(LocalDate.now().minusWeeks(3), LocalDate.now())
+                )
+            )
+        )
+        FakePersoner.leggTil(person)
+
+        dataSource.transaction { connection ->
+            val samordningYtelseVurderingInformasjonskrav = SamordningYtelseVurderingInformasjonskrav(
+                SamordningYtelseRepositoryImpl(connection),
+                FakeTidligereVurderinger(),
+                AbakusForeldrepengerGateway(),
+                AbakusSykepengerGateway(),
+                SakService(postgresRepositoryRegistry.provider(connection))
+            )
+            val foreldrePerson = PersonRepositoryImpl(connection).finnEllerOpprett(
+                listOf(
+                    Ident(
+                        person.identer.first().identifikator,
+                        true
+                    )
+                )
+            )
+            val kontekst =
+                opprettSakdata(connection, foreldrePerson, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+
+            val input = samordningYtelseVurderingInformasjonskrav.klargjør(kontekst)
+            val data = samordningYtelseVurderingInformasjonskrav.hentData(input)
+
+            val ytelsePerioder = data.samordningYtelser.flatMap { it.ytelsePerioder }
+            assertThat(ytelsePerioder.size).isEqualTo(1)
+        }
+    }
+
+    @Test
+    fun `k9 tar ikke med perioder utenfor oppslagsperioden`() {
+        val person = TestPerson(
+            sykepenger = listOf(
+                TestPerson.Sykepenger(
+                    52,
+                    Periode(LocalDate.now().minusYears(5), LocalDate.now())
+                ),
+                TestPerson.Sykepenger(
+                    51,
+                    Periode(LocalDate.now().minusWeeks(5), LocalDate.now())
+                ),
+                TestPerson.Sykepenger(
+                    49,
+                    Periode(LocalDate.now().minusWeeks(3), LocalDate.now())
+                )
+            )
+        )
+        FakePersoner.leggTil(person)
+
+        dataSource.transaction { connection ->
+            val samordningYtelseVurderingInformasjonskrav = SamordningYtelseVurderingInformasjonskrav(
+                SamordningYtelseRepositoryImpl(connection),
+                FakeTidligereVurderinger(),
+                AbakusForeldrepengerGateway(),
+                AbakusSykepengerGateway(),
+                SakService(postgresRepositoryRegistry.provider(connection))
+            )
+            val sykepengerPerson = PersonRepositoryImpl(connection).finnEllerOpprett(
+                listOf(
+                    Ident(
+                        person.identer.first().identifikator,
+                        true
+                    )
+                )
+            )
+            val kontekst =
+                opprettSakdata(connection, sykepengerPerson, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+
+            val input = samordningYtelseVurderingInformasjonskrav.klargjør(kontekst)
+            val data = samordningYtelseVurderingInformasjonskrav.hentData(input)
+
+            val ytelsePerioder = data.samordningYtelser.flatMap { it.ytelsePerioder }
+            assertThat(ytelsePerioder.size).isEqualTo(1)
+        }
+    }
 
     @Test
     fun `krever avklaring når endringer kommer`() {
@@ -48,7 +164,7 @@ class SamordningYtelseVurderingServiceTest {
                 FakeTidligereVurderinger(),
                 AbakusForeldrepengerGateway(),
                 AbakusSykepengerGateway(),
-                SakOgBehandlingService(postgresRepositoryRegistry.provider(connection), defaultGatewayProvider()),
+                SakService(postgresRepositoryRegistry.provider(connection))
             )
             val kontekst = opprettSakdata(connection)
 
@@ -83,10 +199,10 @@ class SamordningYtelseVurderingServiceTest {
         val nå = LocalDate.now()
 
         val eksisterendeGrunnlag = SamordningYtelseGrunnlag(
-            1, listOf(
+            1, setOf(
                 SamordningYtelse(
                     Ytelse.SYKEPENGER,
-                    listOf(
+                    setOf(
                         SamordningYtelsePeriode(
                             Periode(nå.plusDays(5), nå.plusDays(10)),
                             Prosent(50),
@@ -103,7 +219,7 @@ class SamordningYtelseVurderingServiceTest {
                 ),
                 SamordningYtelse(
                     Ytelse.SYKEPENGER,
-                    listOf(
+                    setOf(
                         SamordningYtelsePeriode(
                             Periode(nå.plusDays(5), nå.plusDays(10)),
                             Prosent(50),
@@ -116,10 +232,10 @@ class SamordningYtelseVurderingServiceTest {
             )
         )
 
-        val ny = listOf(
+        val ny = setOf(
             SamordningYtelse(
                 Ytelse.SYKEPENGER,
-                listOf(
+                setOf(
                     SamordningYtelsePeriode(
                         Periode(nå.plusDays(5), nå.plusDays(10)),
                         Prosent(50),
@@ -131,7 +247,7 @@ class SamordningYtelseVurderingServiceTest {
             ),
             SamordningYtelse(
                 Ytelse.SYKEPENGER,
-                listOf(
+                setOf(
                     SamordningYtelsePeriode(
                         Periode(nå.plusDays(5), nå.plusDays(10)),
                         Prosent(40),
@@ -155,18 +271,20 @@ class SamordningYtelseVurderingServiceTest {
         ).isFalse()
     }
 
-    private fun opprettVurderingData(samordningVurderingRepo: SamordningVurderingRepositoryImpl, behandlingId: BehandlingId) {
+    private fun opprettVurderingData(
+        samordningVurderingRepo: SamordningVurderingRepositoryImpl,
+        behandlingId: BehandlingId
+    ) {
         samordningVurderingRepo.lagreVurderinger(
             behandlingId,
             SamordningVurderingGrunnlag(
                 begrunnelse = "En god begrunnelse",
                 maksDatoEndelig = false,
                 fristNyRevurdering = LocalDate.now().plusYears(1),
-                vurderinger = listOf(
+                vurderinger = setOf(
                     SamordningVurdering(
                         Ytelse.SYKEPENGER,
-
-                        listOf(
+                        setOf(
                             SamordningVurderingPeriode(
                                 Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
                                 Prosent(50),
@@ -184,10 +302,10 @@ class SamordningYtelseVurderingServiceTest {
     private fun opprettYtelseData(samordningYtelseRepo: SamordningYtelseRepositoryImpl, behandlingId: BehandlingId) {
         samordningYtelseRepo.lagre(
             behandlingId,
-            listOf(
+            setOf(
                 SamordningYtelse(
                     Ytelse.SYKEPENGER,
-                    listOf(
+                    setOf(
                         SamordningYtelsePeriode(
                             Periode(LocalDate.now(), LocalDate.now().plusDays(5)),
                             Prosent(50),
@@ -201,9 +319,13 @@ class SamordningYtelseVurderingServiceTest {
         )
     }
 
-    private fun opprettSakdata(connection: DBConnection): FlytKontekstMedPerioder {
-        val person = PersonRepositoryImpl(connection).finnEllerOpprett(listOf(Ident("ident", true)))
-        val rettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusDays(5))
+    private fun opprettSakdata(
+        connection: DBConnection,
+        foreldrePerson: Person? = null,
+        rettighetsPeriode: Periode? = null
+    ): FlytKontekstMedPerioder {
+        val person = foreldrePerson ?: PersonRepositoryImpl(connection).finnEllerOpprett(listOf(Ident("ident", true)))
+        val rettighetsperiode = rettighetsPeriode ?: Periode(LocalDate.now(), LocalDate.now().plusDays(5))
         val sakId = SakRepositoryImpl(connection).finnEllerOpprett(
             person,
             rettighetsperiode

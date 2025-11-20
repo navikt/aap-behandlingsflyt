@@ -8,8 +8,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav.Endret.IKKE_END
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravInput
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
-import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
@@ -18,7 +18,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -75,10 +74,12 @@ class InntektInformasjonskrav(
         val inntektGrunnlag = inntektGrunnlagRepository.hentHvisEksisterer(behandlingId)
         val oppdaterteInntekter = registerdata.inntekter
 
-        // TODO: kun lagre hvis forskjell!
-        inntektGrunnlagRepository.lagre(behandlingId, oppdaterteInntekter)
-
-        return if (inntektGrunnlag?.inntekter == oppdaterteInntekter) IKKE_ENDRET else ENDRET
+        if (inntektGrunnlag?.inntekter == oppdaterteInntekter) {
+            return IKKE_ENDRET
+        } else {
+            inntektGrunnlagRepository.lagre(behandlingId, oppdaterteInntekter)
+            return ENDRET
+        }
     }
 
     private fun kanUtledeRelevanteÅr(kontekst: FlytKontekstMedPerioder): Boolean {
@@ -115,11 +116,10 @@ class InntektInformasjonskrav(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
         ): InntektInformasjonskrav {
-            val sakRepository = repositoryProvider.provide<SakRepository>()
             val beregningVurderingRepository = repositoryProvider.provide<BeregningVurderingRepository>()
 
             return InntektInformasjonskrav(
-                sakService = SakService(sakRepository),
+                sakService = SakService(repositoryProvider),
                 inntektGrunnlagRepository = repositoryProvider.provide(),
                 studentRepository = repositoryProvider.provide(),
                 beregningVurderingRepository = beregningVurderingRepository,

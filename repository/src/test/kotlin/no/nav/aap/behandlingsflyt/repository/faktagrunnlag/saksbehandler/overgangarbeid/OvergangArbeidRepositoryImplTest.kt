@@ -11,16 +11,32 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.Instant
 import java.time.LocalDate
 
 internal class OvergangArbeidRepositoryImplTest {
-    private val dataSource = InitTestDatabase.freshDatabase()
+    companion object {
+        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+
+        private lateinit var dataSource: TestDataSource
+
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            dataSource = TestDataSource()
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun tearDown() = dataSource.close()
+    }
 
     @Test
     fun `Finner ikke overgang til arbeid grunnlag hvis ikke lagret`() {
@@ -65,45 +81,42 @@ internal class OvergangArbeidRepositoryImplTest {
 
     @Test
     fun `test sletting`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
-            val sak = sak(connection)
-            val behandling = finnEllerOpprettBehandling(connection, sak)
-            val overgangArbeidRepository = OvergangArbeidRepositoryImpl(connection)
-            overgangArbeidRepository.lagre(
-                behandling.id,
-                listOf(
-                    OvergangArbeidVurdering(
-                        begrunnelse = "test",
-                        brukerRettPåAAP = true,
-                        vurderingenGjelderFra = LocalDate.now(),
-                        vurdertAv = "Saks behandler",
-                        vurderingenGjelderTil = null,
-                        opprettet = Instant.now(),
-                        vurdertIBehandling = behandling.id,
+        TestDataSource().use { dataSource ->
+            dataSource.transaction { connection ->
+                val sak = sak(connection)
+                val behandling = finnEllerOpprettBehandling(connection, sak)
+                val overgangArbeidRepository = OvergangArbeidRepositoryImpl(connection)
+                overgangArbeidRepository.lagre(
+                    behandling.id,
+                    listOf(
+                        OvergangArbeidVurdering(
+                            begrunnelse = "test",
+                            brukerRettPåAAP = true,
+                            vurderingenGjelderFra = LocalDate.now(),
+                            vurdertAv = "Saks behandler",
+                            vurderingenGjelderTil = null,
+                            opprettet = Instant.now(),
+                            vurdertIBehandling = behandling.id,
+                        )
                     )
                 )
-            )
-            overgangArbeidRepository.lagre(
-                behandling.id,
-                listOf(
-                    OvergangArbeidVurdering(
-                        begrunnelse = "test",
-                        brukerRettPåAAP = true,
-                        vurderingenGjelderFra = LocalDate.now(),
-                        vurdertAv = "Saks behandler",
-                        vurderingenGjelderTil = LocalDate.now().plusDays(2),
-                        opprettet = Instant.now(),
-                        vurdertIBehandling = behandling.id,
+                overgangArbeidRepository.lagre(
+                    behandling.id,
+                    listOf(
+                        OvergangArbeidVurdering(
+                            begrunnelse = "test",
+                            brukerRettPåAAP = true,
+                            vurderingenGjelderFra = LocalDate.now(),
+                            vurdertAv = "Saks behandler",
+                            vurderingenGjelderTil = LocalDate.now().plusDays(2),
+                            opprettet = Instant.now(),
+                            vurdertIBehandling = behandling.id,
+                        )
                     )
                 )
-            )
-            assertDoesNotThrow { overgangArbeidRepository.slett(behandling.id) }
+                assertDoesNotThrow { overgangArbeidRepository.slett(behandling.id) }
+            }
         }
-    }
-
-
-    private companion object {
-        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
     }
 
     private fun sak(connection: DBConnection): Sak {

@@ -1,7 +1,9 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import io.mockk.every
+import io.mockk.mockk
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
-import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -29,7 +31,10 @@ class ForeslåVedtakStegTest {
     private val random = Random(1235123)
 
     private val avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
-    private val steg = ForeslåVedtakSteg(avklaringsbehovRepository, FakeTidligereVurderinger())
+    private val avklaringsbehovService = AvklaringsbehovService(avklaringsbehovRepository, mockk {
+        every { revurderingErAvbrutt(any()) } returns false
+    })
+    private val steg = ForeslåVedtakSteg(avklaringsbehovRepository, FakeTidligereVurderinger(), avklaringsbehovService)
     private val sakRepository = InMemorySakRepository
 
 
@@ -128,7 +133,8 @@ class ForeslåVedtakStegTest {
 
         val resultat = steg.utfør(kontekstMedPerioder)
 
-        assertThat(resultat).isEqualTo(FantAvklaringsbehov(Definisjon.FORESLÅ_VEDTAK))
+        assertThat(resultat).isEqualTo(Fullført)
+        assertThat(avklaringsbehovene.åpne().map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
     }
 
     @Test
@@ -147,7 +153,7 @@ class ForeslåVedtakStegTest {
                     årsak = ÅrsakTilOpprettelse.SØKNAD
                 )
             )
-        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+        var avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
         avklaringsbehovene.leggTil(
             definisjoner = listOf(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP),
             funnetISteg = StegType.VURDER_LOVVALG
@@ -157,6 +163,7 @@ class ForeslåVedtakStegTest {
             definisjoner = listOf(Definisjon.FORESLÅ_VEDTAK),
             funnetISteg = StegType.FORESLÅ_VEDTAK
         )
+        
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.FORESLÅ_VEDTAK, "ja", "TESTEN")
         val kontekstMedPerioder = FlytKontekstMedPerioder(
             sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling(),
@@ -165,9 +172,17 @@ class ForeslåVedtakStegTest {
             rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
         )
 
-        steg.vedTilbakeføring(kontekstMedPerioder)
-        val resultat = steg.utfør(kontekstMedPerioder)
+        val resultatFørTilbakehopp = steg.utfør(kontekstMedPerioder)
+        assertThat(resultatFørTilbakehopp).isEqualTo(Fullført)
+        avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+        assertThat(avklaringsbehovene.åpne()).isEmpty()
 
-        assertThat(resultat).isEqualTo(FantAvklaringsbehov(Definisjon.FORESLÅ_VEDTAK))
+        // Gjør om på et NAY-avklaringsbehov
+        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP, "gjorde om på noe", "TESTEN")
+        
+        val resultatEtterTilbakehopp = steg.utfør(kontekstMedPerioder)
+        assertThat(resultatEtterTilbakehopp).isEqualTo(Fullført)
+        avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+        assertThat(avklaringsbehovene.åpne().map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
     }
 }

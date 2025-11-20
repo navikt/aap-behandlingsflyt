@@ -11,16 +11,31 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 
 internal class SamordningUføreRepositoryImplTest {
-    private val dataSource = InitTestDatabase.freshDatabase()
+    companion object {
+        private lateinit var dataSource: TestDataSource
+
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            dataSource = TestDataSource()
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun tearDown() = dataSource.close()
+    }
+
 
     private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
 
@@ -58,47 +73,48 @@ internal class SamordningUføreRepositoryImplTest {
 
     @Test
     fun `test sletting`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
-            val sak = sak(connection)
-            val behandling = finnEllerOpprettBehandling(connection, sak)
-            val samordningUføreRepository = SamordningUføreRepositoryImpl(connection)
-            samordningUføreRepository.lagre(
-                behandling.id,
-                SamordningUføreVurdering(
-                    begrunnelse = "En fin begrunnelse", vurderingPerioder = listOf(
-                        SamordningUføreVurderingPeriode(
-                            virkningstidspunkt = periode.fom,
-                            uføregradTilSamordning = Prosent.`50_PROSENT`
+        TestDataSource().use { dataSource ->
+            dataSource.transaction { connection ->
+                val sak = sak(connection)
+                val behandling = finnEllerOpprettBehandling(connection, sak)
+                val samordningUføreRepository = SamordningUføreRepositoryImpl(connection)
+                samordningUføreRepository.lagre(
+                    behandling.id,
+                    SamordningUføreVurdering(
+                        begrunnelse = "En fin begrunnelse", vurderingPerioder = listOf(
+                            SamordningUføreVurderingPeriode(
+                                virkningstidspunkt = periode.fom,
+                                uføregradTilSamordning = Prosent.`50_PROSENT`
+                            ),
+                            SamordningUføreVurderingPeriode(
+                                virkningstidspunkt = periode.fom.plusMonths(4),
+                                uføregradTilSamordning = Prosent.`70_PROSENT`
+                            )
                         ),
-                        SamordningUføreVurderingPeriode(
-                            virkningstidspunkt = periode.fom.plusMonths(4),
-                            uføregradTilSamordning = Prosent.`70_PROSENT`
-                        )
-                    ),
-                    vurdertAv = "ident"
-                )
-            )
-            samordningUføreRepository.lagre(
-                behandling.id,
-                SamordningUføreVurdering(
-                    begrunnelse = "En fin begrunnelse", vurderingPerioder = listOf(
-                        SamordningUføreVurderingPeriode(
-                            virkningstidspunkt = periode.fom,
-                            uføregradTilSamordning = Prosent.`50_PROSENT`
-                        ),
-                        SamordningUføreVurderingPeriode(
-                            virkningstidspunkt = periode.fom.plusMonths(2),
-                            uføregradTilSamordning = Prosent.`70_PROSENT`
-                        )
-                    ),
-                    vurdertAv = "ident"
+                        vurdertAv = "ident"
                     )
-            )
-            assertDoesNotThrow {
-                samordningUføreRepository.slett(behandling.id)
+                )
+                samordningUføreRepository.lagre(
+                    behandling.id,
+                    SamordningUføreVurdering(
+                        begrunnelse = "En fin begrunnelse", vurderingPerioder = listOf(
+                            SamordningUføreVurderingPeriode(
+                                virkningstidspunkt = periode.fom,
+                                uføregradTilSamordning = Prosent.`50_PROSENT`
+                            ),
+                            SamordningUføreVurderingPeriode(
+                                virkningstidspunkt = periode.fom.plusMonths(2),
+                                uføregradTilSamordning = Prosent.`70_PROSENT`
+                            )
+                        ),
+                        vurdertAv = "ident"
+                    )
+                )
+                assertDoesNotThrow {
+                    samordningUføreRepository.slett(behandling.id)
+                }
+
             }
-
-
         }
     }
 

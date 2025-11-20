@@ -4,11 +4,11 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
-import io.ktor.http.HttpStatusCode
+import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.httpklient.exception.ApiException
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import javax.sql.DataSource
@@ -21,8 +21,8 @@ fun NormalOpenAPIRoute.opprettDummySakApi(
     route("/api/test/opprettDummySak") {
         @Suppress("UnauthorizedPost") // bare tilgjengelig i DEV og lokalt
         post<Unit, Map<String, String>, OpprettDummySakDto> { _, req ->
-            if (Miljø.erProd()) {
-                respondWithStatus(HttpStatusCode.Unauthorized)
+            require(!Miljø.erProd()) {
+                "Kan ikke opprette dummy-sak i produksjonsmiljøet"
             }
 
             try {
@@ -37,7 +37,7 @@ fun NormalOpenAPIRoute.opprettDummySakApi(
                 }
                 respondWithStatus(HttpStatusCode.Accepted)
             } catch (e: OpprettTestSakException) {
-                throw ApiException(status = HttpStatusCode.BadRequest, message = e.message ?: "Ukjent feil")
+                throw UgyldigForespørselException(message = e.message ?: "Ukjent feil")
             }
         }
     }

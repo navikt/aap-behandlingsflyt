@@ -101,7 +101,7 @@ fun tilInput(csvLine: CSVLine): Pair<Input, Fødselsdato> {
                     InntektPerÅr(inntektTredjeSisteAar, Beløp(intTredjeSiste))
                 )
             },
-            uføregrad = emptyList(),
+            uføregrad = emptySet(),
             yrkesskadevurdering = null,
             registrerteYrkesskader = null,
             beregningGrunnlag = null
@@ -143,10 +143,9 @@ fun beregnForInput(input: Input, fødselsdato: Fødselsdato): Triple<Year, GUnit
             )
         ),
         barnetilleggGrunnlag = BarnetilleggGrunnlag(
-            id = 0,
             perioder = emptyList()
         ),
-        samordningGrunnlag = SamordningGrunnlag(0L, emptyList()),
+        samordningGrunnlag = SamordningGrunnlag(emptySet()),
         samordningUføre = null,
         samordningArbeidsgiver = null
     )

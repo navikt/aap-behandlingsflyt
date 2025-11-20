@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.avbrytr
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
@@ -20,14 +21,17 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
+import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.Instant
@@ -35,7 +39,75 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 internal class SykdomRepositoryImplTest {
-    private val dataSource = InitTestDatabase.freshDatabase()
+    companion object {
+        private lateinit var dataSource: TestDataSource
+
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            dataSource = TestDataSource()
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun tearDown() = dataSource.close()
+
+        private val fom = LocalDate.of(2020, 1, 1)
+        private val periode = Periode(fom, fom.plusYears(3))
+        private fun sykdomsvurdering1(behandlingId: BehandlingId = BehandlingId(1L)) = Sykdomsvurdering(
+            begrunnelse = "b1",
+            vurderingenGjelderFra = 1 januar 2020,
+            vurderingenGjelderTil = null,
+            dokumenterBruktIVurdering = listOf(JournalpostId("1")),
+            harSkadeSykdomEllerLyte = true,
+            erSkadeSykdomEllerLyteVesentligdel = true,
+            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
+            yrkesskadeBegrunnelse = "b",
+            erArbeidsevnenNedsatt = true,
+            vurdertAv = Bruker("Z00000"),
+            opprettet = Instant.now(),
+            vurdertIBehandling = behandlingId,
+        )
+
+        private fun sykdomsvurdering2(
+            behandlingId: BehandlingId = BehandlingId(1L),
+            vurderingenGjelderFra: LocalDate = LocalDate.of(2020, 1, 1)
+        ) = Sykdomsvurdering(
+            begrunnelse = "b2",
+            vurderingenGjelderFra = vurderingenGjelderFra,
+            vurderingenGjelderTil = null,
+            dokumenterBruktIVurdering = listOf(JournalpostId("2")),
+            harSkadeSykdomEllerLyte = true,
+            erSkadeSykdomEllerLyteVesentligdel = true,
+            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
+            yrkesskadeBegrunnelse = null,
+            erArbeidsevnenNedsatt = true,
+            vurdertAv = Bruker("Z00000"),
+            opprettet = Instant.now(),
+            vurdertIBehandling = behandlingId,
+        )
+
+        private fun sykdomsvurdering3(behandlingId: BehandlingId) = Sykdomsvurdering(
+            begrunnelse = "b3",
+            vurderingenGjelderFra = LocalDate.of(2020, 2, 2),
+            vurderingenGjelderTil = null,
+            dokumenterBruktIVurdering = listOf(JournalpostId("3")),
+            harSkadeSykdomEllerLyte = true,
+            erSkadeSykdomEllerLyteVesentligdel = true,
+            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
+            yrkesskadeBegrunnelse = "y",
+            erArbeidsevnenNedsatt = true,
+            vurdertAv = Bruker("Z00000"),
+            opprettet = Instant.now(),
+            vurdertIBehandling = behandlingId,
+        )
+    }
 
     @Test
     fun `kan lagre tom liste`() {
@@ -55,7 +127,7 @@ internal class SykdomRepositoryImplTest {
             val sykdomRepo = SykdomRepositoryImpl(connection)
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
-
+            val sykdomsvurdering1 = sykdomsvurdering1(behandling.id)
             sykdomRepo.lagre(behandling.id, listOf(sykdomsvurdering1))
             assertThat(sykdomRepo.hent(behandling.id).sykdomsvurderinger).usingRecursiveComparison()
                 .ignoringFields("id", "opprettet").isEqualTo(listOf(sykdomsvurdering1))
@@ -68,6 +140,9 @@ internal class SykdomRepositoryImplTest {
             val sykdomRepo = SykdomRepositoryImpl(connection)
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
+
+            val sykdomsvurdering1 = sykdomsvurdering1(behandling.id)
+            val sykdomsvurdering2 = sykdomsvurdering2(behandling.id)
 
             sykdomRepo.lagre(behandling.id, listOf(sykdomsvurdering1, sykdomsvurdering2))
             assertThat(sykdomRepo.hent(behandling.id).sykdomsvurderinger).usingRecursiveComparison()
@@ -106,18 +181,22 @@ internal class SykdomRepositoryImplTest {
 
     @Test
     fun `historikk viser kun vurderinger fra tidligere behandlinger`() {
-        val førstegangsbehandling = dataSource.transaction { connection ->
+        val (førstegangsbehandling, sykdomsvurdering1) = dataSource.transaction { connection ->
             val sykdomRepo = SykdomRepositoryImpl(connection)
             val sak = sak(connection)
             val førstegangsbehandling = finnEllerOpprettBehandling(connection, sak)
 
+            val sykdomsvurdering1 = sykdomsvurdering1(førstegangsbehandling.id)
+
             sykdomRepo.lagre(førstegangsbehandling.id, listOf(sykdomsvurdering1))
-            førstegangsbehandling
+            Pair(førstegangsbehandling, sykdomsvurdering1)
         }
 
         dataSource.transaction { connection ->
             val sykdomRepo = SykdomRepositoryImpl(connection)
             val revurdering = revurdering(connection, førstegangsbehandling)
+
+            val sykdomsvurdering2 = sykdomsvurdering2(revurdering.id)
 
             sykdomRepo.lagre(revurdering.id, listOf(sykdomsvurdering2))
 
@@ -131,13 +210,15 @@ internal class SykdomRepositoryImplTest {
 
     @Test
     fun `historikk viser kun vurderinger fra tidligere behandlinger og ikke inkluderer vurdering fra avbrutt revurdering`() {
-        val førstegangsbehandling = dataSource.transaction { connection ->
+        val (førstegangsbehandling, sykdomsvurdering1) = dataSource.transaction { connection ->
             val sykdomRepo = SykdomRepositoryImpl(connection)
             val sak = sak(connection)
             val førstegangsbehandling = finnEllerOpprettBehandling(connection, sak)
 
+            val sykdomsvurdering1 = sykdomsvurdering1(førstegangsbehandling.id)
+
             sykdomRepo.lagre(førstegangsbehandling.id, listOf(sykdomsvurdering1))
-            førstegangsbehandling
+            Pair(førstegangsbehandling, sykdomsvurdering1)
         }
 
         dataSource.transaction { connection ->
@@ -153,12 +234,16 @@ internal class SykdomRepositoryImplTest {
                     Bruker("Z00000")
                 )
             )
+
+            val sykdomsvurdering2 = sykdomsvurdering2(revurderingAvbrutt.id)
             sykdomRepo.lagre(revurderingAvbrutt.id, listOf(sykdomsvurdering2))
         }
 
         dataSource.transaction { connection ->
             val sykdomRepo = SykdomRepositoryImpl(connection)
             val revurdering = revurdering(connection, førstegangsbehandling)
+
+            val sykdomsvurdering3 = sykdomsvurdering3(revurdering.id)
 
             sykdomRepo.lagre(revurdering.id, listOf(sykdomsvurdering3))
 
@@ -170,82 +255,36 @@ internal class SykdomRepositoryImplTest {
 
     @Test
     fun `test sletting`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
-            val sak = sak(connection)
-            val behandling = finnEllerOpprettBehandling(connection, sak)
-            val sykdomRepository = SykdomRepositoryImpl(connection)
-            sykdomRepository.lagre(
-                behandling.id, listOf(
-                    Sykdomsvurdering(
-                        begrunnelse = "b1",
-                        vurderingenGjelderFra = null,
-                        dokumenterBruktIVurdering = listOf(JournalpostId("1")),
-                        harSkadeSykdomEllerLyte = true,
-                        erSkadeSykdomEllerLyteVesentligdel = true,
-                        erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-                        erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-                        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
-                        yrkesskadeBegrunnelse = "b",
-                        erArbeidsevnenNedsatt = true,
-                        vurdertAv = Bruker("Z00000"),
-                        opprettet = Instant.now(),
+        TestDataSource().use { dataSource ->
+            dataSource.transaction { connection ->
+                val sak = sak(connection)
+                val behandling = finnEllerOpprettBehandling(connection, sak)
+                val sykdomRepository = SykdomRepositoryImpl(connection)
+                sykdomRepository.lagre(
+                    behandling.id, listOf(
+                        Sykdomsvurdering(
+                            begrunnelse = "b1",
+                            vurderingenGjelderFra = 1 januar 2020,
+                            vurderingenGjelderTil = null,
+                            dokumenterBruktIVurdering = listOf(JournalpostId("1")),
+                            harSkadeSykdomEllerLyte = true,
+                            erSkadeSykdomEllerLyteVesentligdel = true,
+                            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
+                            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
+                            yrkesskadeBegrunnelse = "b",
+                            erArbeidsevnenNedsatt = true,
+                            vurdertAv = Bruker("Z00000"),
+                            vurdertIBehandling = behandling.id,
+                            opprettet = Instant.now(),
+                        )
                     )
                 )
-            )
-            assertDoesNotThrow {
-                sykdomRepository.slett(behandling.id)
+                assertDoesNotThrow {
+                    sykdomRepository.slett(behandling.id)
+                }
             }
         }
-    }
-
-
-    private companion object {
-        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-        private val sykdomsvurdering1 = Sykdomsvurdering(
-            begrunnelse = "b1",
-            vurderingenGjelderFra = null,
-            dokumenterBruktIVurdering = listOf(JournalpostId("1")),
-            harSkadeSykdomEllerLyte = true,
-            erSkadeSykdomEllerLyteVesentligdel = true,
-            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
-            yrkesskadeBegrunnelse = "b",
-            erArbeidsevnenNedsatt = true,
-            vurdertAv = Bruker("Z00000"),
-            opprettet = Instant.now(),
-        )
-
-        private val sykdomsvurdering2 = Sykdomsvurdering(
-            begrunnelse = "b2",
-            vurderingenGjelderFra = LocalDate.of(2020, 1, 1),
-            dokumenterBruktIVurdering = listOf(JournalpostId("2")),
-            harSkadeSykdomEllerLyte = true,
-            erSkadeSykdomEllerLyteVesentligdel = true,
-            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
-            yrkesskadeBegrunnelse = null,
-            erArbeidsevnenNedsatt = true,
-            vurdertAv = Bruker("Z00000"),
-            opprettet = Instant.now(),
-        )
-
-        private val sykdomsvurdering3 = Sykdomsvurdering(
-            begrunnelse = "b3",
-            vurderingenGjelderFra = LocalDate.of(2020, 2, 2),
-            dokumenterBruktIVurdering = listOf(JournalpostId("3")),
-            harSkadeSykdomEllerLyte = true,
-            erSkadeSykdomEllerLyteVesentligdel = true,
-            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
-            yrkesskadeBegrunnelse = "y",
-            erArbeidsevnenNedsatt = true,
-            vurdertAv = Bruker("Z00000"),
-            opprettet = Instant.now(),
-        )
-
     }
 
     private fun sak(connection: DBConnection): Sak {

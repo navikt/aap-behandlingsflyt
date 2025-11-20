@@ -16,7 +16,6 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UtledMeldeperiodeR
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Vurdering
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
@@ -26,12 +25,16 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.verdityper.Dagsatser
@@ -40,7 +43,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import kotlin.reflect.KClass
 
 class UnderveisService(
-    private val behandlingService: SakOgBehandlingService,
+    private val sakService: SakService,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val meldekortRepository: MeldekortRepository,
     private val underveisRepository: UnderveisRepository,
@@ -51,10 +54,12 @@ class UnderveisService(
     private val overstyringMeldepliktRepository: OverstyringMeldepliktRepository,
     private val meldeperiodeRepository: MeldeperiodeRepository,
     private val oppholdskravRepository: OppholdskravGrunnlagRepository,
+    private val arbeidsopptrappingRepository: ArbeidsopptrappingRepository,
     private val vedtakService: VedtakService,
+    private val unleashGateway: UnleashGateway,
 ) {
-    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): this(
-        behandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
+        sakService = SakService(repositoryProvider),
         vilkårsresultatRepository = repositoryProvider.provide(),
         meldekortRepository = repositoryProvider.provide(),
         underveisRepository = repositoryProvider.provide(),
@@ -65,7 +70,9 @@ class UnderveisService(
         meldeperiodeRepository = repositoryProvider.provide(),
         overstyringMeldepliktRepository = repositoryProvider.provide(),
         oppholdskravRepository = repositoryProvider.provide(),
+        arbeidsopptrappingRepository = repositoryProvider.provide(),
         vedtakService = VedtakService(repositoryProvider),
+        unleashGateway = gatewayProvider.provide(),
     )
 
     private val kvoteService = KvoteService()
@@ -137,7 +144,7 @@ class UnderveisService(
     }
 
     private fun genererInput(sakId: SakId, behandlingId: BehandlingId): UnderveisInput {
-        val sak = behandlingService.hentSakFor(behandlingId)
+        val sak = sakService.hentSakFor(behandlingId)
         val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
 
         val meldekortGrunnlag = meldekortRepository.hentHvisEksisterer(behandlingId)
@@ -160,6 +167,8 @@ class UnderveisService(
         val overstyringMeldepliktGrunnlag = overstyringMeldepliktRepository.hentHvisEksisterer(behandlingId)
             ?: OverstyringMeldepliktGrunnlag(vurderinger = emptyList())
 
+        val arbeidsopptrappingPerioder = arbeidsopptrappingRepository.hentPerioder(behandlingId)
+
         val meldeperioder = meldeperiodeRepository.hent(behandlingId)
 
         val oppholdskravGrunnlag = oppholdskravRepository.hentHvisEksisterer(behandlingId)
@@ -170,7 +179,7 @@ class UnderveisService(
         return UnderveisInput(
             rettighetsperiode = sak.rettighetsperiode,
             vilkårsresultat = vilkårsresultat,
-            opptrappingPerioder = emptyList(),
+            opptrappingPerioder = arbeidsopptrappingPerioder,
             meldekort = meldekort,
             innsendingsTidspunkt = innsendingsTidspunkt,
             kvoter = kvote,
@@ -182,6 +191,7 @@ class UnderveisService(
             oppholdskravGrunnlag = oppholdskravGrunnlag,
             meldeperioder = meldeperioder,
             vedtaksdatoFørstegangsbehandling = vedtaksdatoFørstegangsbehandling?.toLocalDate(),
+            ikkeAntaNullTimerArbeidetFeature = unleashGateway.isEnabled(BehandlingsflytFeature.IkkeAntaNullTimerArbeidet),
         )
     }
 }

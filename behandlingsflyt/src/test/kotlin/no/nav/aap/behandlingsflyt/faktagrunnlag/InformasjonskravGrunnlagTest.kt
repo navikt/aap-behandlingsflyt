@@ -37,10 +37,11 @@ import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
@@ -49,13 +50,17 @@ class InformasjonskravGrunnlagTest {
 
     companion object {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-        private val dataSource = InitTestDatabase.freshDatabase()
+        private lateinit var dataSource: TestDataSource
+
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            dataSource = TestDataSource()
+        }
 
         @AfterAll
         @JvmStatic
-        fun afterAll() {
-            InitTestDatabase.closerFor(dataSource)
-        }
+        fun tearDown() = dataSource.close()
     }
     
     private val gatewayProvider = createGatewayProvider {

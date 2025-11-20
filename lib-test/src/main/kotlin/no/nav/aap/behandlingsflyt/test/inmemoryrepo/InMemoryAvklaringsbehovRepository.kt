@@ -172,13 +172,5 @@ object InMemoryAvklaringsbehovRepository : AvklaringsbehovRepository,
             )
             avklaringsbehovene.add(avklaringsbehov)
         }
-
-        fun harBehovMedId(avklaringsbehovId: Long): Boolean {
-            return avklaringsbehovene.any { it.id == avklaringsbehovId }
-        }
-
-        fun hentBehov(avklaringsbehovId: Long): Avklaringsbehov {
-            return avklaringsbehovene.single { avklaringsbehov -> avklaringsbehov.id == avklaringsbehovId }
-        }
     }
 }

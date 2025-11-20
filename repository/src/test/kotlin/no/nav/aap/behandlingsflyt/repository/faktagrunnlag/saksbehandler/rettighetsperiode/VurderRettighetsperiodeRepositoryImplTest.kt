@@ -10,17 +10,31 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 class VurderRettighetsperiodeRepositoryImplTest {
 
+    private lateinit var dataSource: TestDataSource
+
+    @BeforeEach
+    fun setUp() {
+        dataSource = TestDataSource()
+    }
+
+    @AfterEach
+    fun tearDown() {
+        dataSource.close()
+    }
+
     @Test
     fun `skal lagre vurdering av rettighetsperiode`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val vurderRettighetsPeriodeRepo= VurderRettighetsperiodeRepositoryImpl(connection)
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
@@ -48,7 +62,7 @@ class VurderRettighetsperiodeRepositoryImplTest {
 
     @Test
     fun `skal lagre vurdering av rettighetsperiode uten ny startdato`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val vurderRettighetsPeriodeRepo = VurderRettighetsperiodeRepositoryImpl(connection)
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
@@ -76,7 +90,7 @@ class VurderRettighetsperiodeRepositoryImplTest {
 
     @Test
     fun `skal deaktivere vurdering av rettighetsperiode`() {
-        InitTestDatabase.freshDatabase().transaction { connection ->
+        dataSource.transaction { connection ->
             val vurderRettighetsPeriodeRepo = VurderRettighetsperiodeRepositoryImpl(connection)
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)

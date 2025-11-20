@@ -18,26 +18,35 @@ open class FakeUnleashBase(
 object FakeUnleash : FakeUnleashBase(
     mapOf(
         BehandlingsflytFeature.IngenValidering to false,
-        BehandlingsflytFeature.SendForvaltningsmelding to true,
         BehandlingsflytFeature.NyBrevtype11_17 to true,
         BehandlingsflytFeature.NyBrevtype11_18 to true,
-        BehandlingsflytFeature.Aktivitetsplikt11_7 to false,
-        BehandlingsflytFeature.Aktivitetsplikt11_9 to false,
+        BehandlingsflytFeature.Aktivitetsplikt11_9 to true,
         BehandlingsflytFeature.OverforingsdatoNullForAvregning to true,
-        BehandlingsflytFeature.IverksettUtbetalingSomSelvstendigJobb to true,
         BehandlingsflytFeature.OvergangArbeid to false,
+        BehandlingsflytFeature.AvklaringsbehovServiceFormkrav to true,
+        BehandlingsflytFeature.KvalitetssikringsSteg to true,
+        BehandlingsflytFeature.FatteVedtakAvklaringsbehovService to true,
+        BehandlingsflytFeature.EOSBeregning to true,
+        BehandlingsflytFeature.NyeBarn to true,
+        BehandlingsflytFeature.Arbeidsopptrapping to true,
+        BehandlingsflytFeature.IkkeAntaNullTimerArbeidet to true,
     )
 )
 
-object FakeUnleashFasttrackAktivitetsplikt : FakeUnleashBase(
+object LokalUnleash : FakeUnleashBase(
     mapOf(
-        BehandlingsflytFeature.IngenValidering to false,
-        BehandlingsflytFeature.SendForvaltningsmelding to true,
-        BehandlingsflytFeature.Aktivitetsplikt11_7 to true,
-        BehandlingsflytFeature.Aktivitetsplikt11_9 to true,
+        BehandlingsflytFeature.IngenValidering to true,
         BehandlingsflytFeature.NyBrevtype11_17 to true,
         BehandlingsflytFeature.NyBrevtype11_18 to true,
-        BehandlingsflytFeature.IverksettUtbetalingSomSelvstendigJobb to true,
+        BehandlingsflytFeature.Aktivitetsplikt11_9 to true,
+        BehandlingsflytFeature.OverforingsdatoNullForAvregning to true,
         BehandlingsflytFeature.OvergangArbeid to true,
+        BehandlingsflytFeature.AvklaringsbehovServiceFormkrav to true,
+        BehandlingsflytFeature.KvalitetssikringsSteg to true,
+        BehandlingsflytFeature.FatteVedtakAvklaringsbehovService to true,
+        BehandlingsflytFeature.EOSBeregning to true,
+        BehandlingsflytFeature.NyeBarn to true,
+        BehandlingsflytFeature.Arbeidsopptrapping to true,
+        BehandlingsflytFeature.IkkeAntaNullTimerArbeidet to true,
     )
 )

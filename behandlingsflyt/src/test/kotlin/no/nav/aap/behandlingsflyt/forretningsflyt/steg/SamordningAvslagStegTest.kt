@@ -75,7 +75,6 @@ class SamordningAvslagStegTest {
         assertThat(vilkårTidslinje.segmenter().count()).isEqualTo(1)
         assertThat(vilkårTidslinje.segmenter().first().verdi.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
         assertThat(vilkårTidslinje.segmenter().first().periode).isEqualTo(periode)
-
     }
 
     @Test

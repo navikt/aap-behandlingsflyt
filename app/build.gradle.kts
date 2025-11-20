@@ -10,6 +10,7 @@ repositories {
 plugins {
     id("behandlingsflyt.conventions")
     alias(libs.plugins.ktor)
+    id("com.gradleup.shadow") version "9.2.2"
 }
 
 application {
@@ -17,22 +18,31 @@ application {
 }
 
 tasks {
-    val projectProps by registering(WriteProperties::class) {
-        destinationFile = layout.buildDirectory.file("version.properties")
-        // Define property.
-        property("project.version", getCheckedOutGitCommitHash())
-    }
-
-    processResources {
-        // Depend on output of the task to create properties,
-        // so the properties file will be part of the Java resources.
-
-        from(projectProps)
-    }
 
     withType<ShadowJar> {
-        duplicatesStrategy = DuplicatesStrategy.INCLUDE
+        // Duplikate class og ressurs-filer kan skape runtime-feil, fordi JVM-en velger den første på classpath
+        // ved duplikater, og det kan være noe annet enn vår kode (og libs vi bruker) forventer.
+        // Derfor logger vi en advarsel hvis vi oppdager duplikater.
+        duplicatesStrategy = DuplicatesStrategy.WARN
+
         mergeServiceFiles()
+
+        filesMatching(listOf("META-INF/io.netty.*", "META-INF/services/**", "META-INF/maven/**")) {
+            // For disse filene fra upstream, antar vi at de er identiske hvis de har samme navn.
+            // Merk at META-INF/maven/org.webjars/swagger-ui/pom.properties
+            // brukes av com.papsign.ktor.openapigen.SwaggerUIVersion
+            duplicatesStrategy = DuplicatesStrategy.INCLUDE
+            // Vi beholder alle pom.properties fra Maven for å støtte generering av SBOM i Nais
+        }
+
+        // Helt unødvendige filer som ofte skaper duplikater
+        val fjernDisseDuplikatene = listOf(
+            "*.SF", "*.DSA", "*.RSA", // Signatur-filer som ikke trengs på runtime
+            "*NOTICE*", "*LICENSE*", "*DEPENDENCIES*", "*README*", "*COPYRIGHT*", // til mennesker bare
+            "proguard/**", // Proguard-konfigurasjoner som ikke trengs på runtime
+            "com.android.tools/**" // Android build-filer som ikke trengs på runtime
+        )
+        fjernDisseDuplikatene.forEach { pattern -> exclude("META-INF/$pattern") }
     }
 }
 
@@ -46,41 +56,19 @@ tasks.register<JavaExec>("genererOpenApiJson") {
     mainClass.set("no.nav.aap.behandlingsflyt.GenererOpenApiJsonKt")
 }
 
-
 tasks.register<JavaExec>("beregnCSV") {
     classpath = sourceSets.test.get().runtimeClasspath
     standardInput = System.`in`
     mainClass.set("no.nav.aap.behandlingsflyt.BeregnMedCSVKt")
 }
 
-tasks.register<Copy>("copyRuntimeLibs") {
-    from(configurations.runtimeClasspath)
-    into("build/libs/runtime-libs")
-}
-
-fun runCommand(command: String): String {
-    val execResult = providers.exec {
-        this.workingDir = project.projectDir
-        commandLine(command.split("\\s".toRegex()))
-    }.standardOutput.asText
-
-    return execResult.get()
-}
-
-fun getCheckedOutGitCommitHash(): String {
-    if (System.getenv("GITHUB_ACTIONS") == "true") {
-        return System.getenv("GITHUB_SHA")
-    }
-    return runCommand("git rev-parse --verify HEAD")
-}
-
 dependencies {
     implementation(libs.ktorServerCors)
     implementation(libs.ktorServerStatusPages)
 
-    implementation("io.micrometer:micrometer-registry-prometheus:1.15.5")
-    implementation("ch.qos.logback:logback-classic:1.5.20")
-    implementation("net.logstash.logback:logstash-logback-encoder:8.1")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.16.0")
+    implementation("ch.qos.logback:logback-classic:1.5.21")
+    implementation("net.logstash.logback:logstash-logback-encoder:9.0")
     implementation("org.slf4j:jul-to-slf4j:2.0.17") // trengs for postgres-logging
 
     implementation(libs.motor)
@@ -100,11 +88,11 @@ dependencies {
     implementation(project(":behandlingsflyt"))
     implementation(project(":repository"))
     implementation("com.zaxxer:HikariCP:7.0.2")
-    implementation("org.flywaydb:flyway-database-postgresql:11.14.1")
+    implementation("org.flywaydb:flyway-database-postgresql:11.17.0")
 
     runtimeOnly("org.postgresql:postgresql") // låst versjon i root build.gradle.kts
 
-    implementation("ch.qos.logback:logback-classic:1.5.20")
+    implementation("ch.qos.logback:logback-classic:1.5.21")
     implementation("io.opentelemetry.instrumentation:opentelemetry-logback-mdc-1.0:${opentelemetryVersion}")
     implementation("io.opentelemetry.instrumentation:opentelemetry-ktor-3.0:${opentelemetryVersion}")
     implementation("org.apache.avro:avro:1.12.1")
@@ -113,13 +101,11 @@ dependencies {
     implementation(libs.dbtest)
     implementation(libs.motorTestUtils)
     testImplementation(libs.bundles.junit)
-    testImplementation("org.testcontainers:postgresql:1.21.3")
-    constraints {
-        implementation("org.apache.commons:commons-compress:1.28.0") {
-            because("https://github.com/advisories/GHSA-4g9r-vxhx-9pgx")
-        }
-    }
     testImplementation(kotlin("test"))
-    testImplementation("org.testcontainers:kafka:1.21.3")
-    testImplementation("org.apache.kafka:kafka-clients:4.1.0")
+
+    testImplementation("org.apache.kafka:kafka-clients:4.1.1")
+
+    testImplementation(libs.testcontainers)
+    testImplementation(libs.testcontainersPostgres)
+    testImplementation(libs.testcontainersKafka)
 }

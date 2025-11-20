@@ -18,7 +18,7 @@ import java.time.LocalDate
 data class Input(
     val nedsettelsesDato: LocalDate,
     val inntekter: Set<InntektPerÅr>,
-    val uføregrad: List<Uføre>,
+    val uføregrad: Set<Uføre>,
     val yrkesskadevurdering: Yrkesskadevurdering?,
     val registrerteYrkesskader: Yrkesskader?,
     val beregningGrunnlag: BeregningGrunnlag?,

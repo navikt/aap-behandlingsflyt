@@ -12,23 +12,28 @@ import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.InitTestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 
 class TjenestepensjonRefusjonskravVurderingRepositoryImplTest {
-
     companion object {
-        val dataSource = InitTestDatabase.freshDatabase()
+        private lateinit var dataSource: TestDataSource
+
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            dataSource = TestDataSource()
+        }
 
         @AfterAll
         @JvmStatic
-        fun afterall() {
-            InitTestDatabase.closerFor(dataSource)
-        }
+        fun tearDown() = dataSource.close()
     }
+
 
     @Test
     fun `lagre, hente ut igjen, slette`() {

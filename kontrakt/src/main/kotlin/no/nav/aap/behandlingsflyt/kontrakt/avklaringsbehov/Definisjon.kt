@@ -137,6 +137,14 @@ public enum class Definisjon(
         løsesISteg = StegType.KVALITETSSIKRING,
         løsesAv = listOf(Rolle.KVALITETSSIKRER)
     ),
+    ARBEIDSOPPTRAPPING(
+        kode = AvklaringsbehovKode.`5057`,
+        type = BehovType.MANUELT_FRIVILLIG,
+        løsesISteg = StegType.ARBEIDSOPPTRAPPING,
+        kreverToTrinn = true,
+        kvalitetssikres = true,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
+    ),
     FASTSETT_ARBEIDSEVNE(
         kode = AvklaringsbehovKode.`5004`,
         type = BehovType.MANUELT_FRIVILLIG,
@@ -224,7 +232,7 @@ public enum class Definisjon(
     ),
     AVKLAR_BARNETILLEGG(
         kode = AvklaringsbehovKode.`5009`,
-        type = BehovType.MANUELT_PÅKREVD,
+        type = BehovType.OVERSTYR,
         løsesISteg = StegType.BARNETILLEGG,
         kreverToTrinn = true,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
@@ -252,7 +260,7 @@ public enum class Definisjon(
     ),
     AVKLAR_SAMORDNING_UFØRE(
         kode = AvklaringsbehovKode.`5024`,
-        type = BehovType.MANUELT_PÅKREVD,
+        type = BehovType.MANUELT_FRIVILLIG,
         løsesISteg = StegType.SAMORDNING_UFØRE,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
         kreverToTrinn = true,
@@ -391,7 +399,7 @@ public enum class Definisjon(
     ),
     SAMORDNING_REFUSJONS_KRAV(
         kode = AvklaringsbehovKode.`5056`,
-        type = BehovType.MANUELT_PÅKREVD,
+        type = BehovType.MANUELT_FRIVILLIG,
         løsesISteg = StegType.SAMORDNING_TJENESTEPENSJON_REFUSJONSKRAV,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
         kreverToTrinn = true

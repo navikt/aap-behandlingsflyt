@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Av
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.komponenter.type.Periode
 
@@ -17,33 +18,52 @@ class Medlemskapvilkåret(
     private val vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.LOVVALG)
 
     override fun vurder(grunnlag: MedlemskapLovvalgGrunnlag) {
-        var vurdertManuelt = false
-        val manuellVurderingForLovvalgMedlemskap = grunnlag.medlemskapArbeidInntektGrunnlag?.manuellVurdering
+        val brukManuellVurderingForLovvalgMedlemskap = grunnlag.medlemskapArbeidInntektGrunnlag?.vurderinger?.isNotEmpty() ?: false
 
-        val vurderingsResultat = if (manuellVurderingForLovvalgMedlemskap != null) {
-            vurdertManuelt = true
-            val lovvalgsLand = manuellVurderingForLovvalgMedlemskap.lovvalgVedSøknadsTidspunkt.lovvalgsEØSLand
-            val varMedlemIFolketrygd = manuellVurderingForLovvalgMedlemskap.medlemskapVedSøknadsTidspunkt?.varMedlemIFolketrygd
+        if (brukManuellVurderingForLovvalgMedlemskap) {
+            val gjeldendeVurderinger = grunnlag.medlemskapArbeidInntektGrunnlag.gjeldendeVurderinger()
 
-            val annetLandMedAvtaleIEØS = lovvalgsLand != null && lovvalgsLand != EØSLand.NOR && lovvalgsLand in enumValues<EØSLand>().map { it }
+            val vilkårsvurderinger = gjeldendeVurderinger
+                .map { vurdering ->
+                    if (vurdering.lovvalgslandErAnnetLandIEØSEllerLandMedAvtale()) {
+                        Vilkårsvurdering(
+                            utfall = Utfall.IKKE_OPPFYLT,
+                            avslagsårsak = Avslagsårsak.NORGE_IKKE_KOMPETENT_STAT,
+                            begrunnelse = null,
+                            faktagrunnlag = grunnlag,
+                            manuellVurdering = true
+                        )
+                    } else if (!vurdering.medlemIFolketrygd()) {
+                        Vilkårsvurdering(
+                            utfall = Utfall.IKKE_OPPFYLT,
+                            avslagsårsak = Avslagsårsak.IKKE_MEDLEM,
+                            begrunnelse = null,
+                            faktagrunnlag = grunnlag,
+                            manuellVurdering = true
+                        )
+                    } else {
+                        Vilkårsvurdering(
+                            utfall = Utfall.OPPFYLT,
+                            begrunnelse = null,
+                            faktagrunnlag = grunnlag,
+                            manuellVurdering = true
+                        )
+                    }
+                }
+                .komprimer()
+                .begrensetTil(rettighetsPeriode)
 
-            if (annetLandMedAvtaleIEØS) {
-                VurderingsResultat(Utfall.IKKE_OPPFYLT, Avslagsårsak.NORGE_IKKE_KOMPETENT_STAT, null)
-            }
-            else if (varMedlemIFolketrygd != true) {
-                VurderingsResultat(Utfall.IKKE_OPPFYLT, Avslagsårsak.IKKE_MEDLEM, null)
-            } else {
-                VurderingsResultat(Utfall.OPPFYLT, null, null)
-            }
+            vilkår.leggTilVurderinger(vilkårsvurderinger)
+
         } else if (grunnlag.nyeSoknadGrunnlag == null)  {
-            VurderingsResultat(Utfall.IKKE_RELEVANT, null, null)
+            val vurderingsResultat = VurderingsResultat(Utfall.IKKE_RELEVANT, null, null)
+            leggTilVurdering(rettighetsPeriode, grunnlag, vurderingsResultat, false)
         } else {
             val kanBehandlesAutomatisk = MedlemskapLovvalgVurderingService().vurderTilhørighet(grunnlag, rettighetsPeriode).kanBehandlesAutomatisk
             val utfall = if (kanBehandlesAutomatisk) Utfall.OPPFYLT else Utfall.IKKE_VURDERT
-            VurderingsResultat(utfall, null, null)
+            val vurderingsResultat = VurderingsResultat(utfall, null, null)
+            leggTilVurdering(rettighetsPeriode, grunnlag, vurderingsResultat, false)
         }
-
-        leggTilVurdering(rettighetsPeriode, grunnlag, vurderingsResultat, vurdertManuelt)
     }
 
     private fun leggTilVurdering(

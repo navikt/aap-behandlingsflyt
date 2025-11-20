@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅ
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -53,5 +54,8 @@ fun finnEllerOpprettBehandling(
     saksnummer: Saksnummer,
     vurderingsbehov: List<VurderingsbehovMedPeriode> = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
     årsakTilOpprettelse: ÅrsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
-) = SakOgBehandlingService(repositoryProvider, gatewayProvider)
-    .finnEllerOpprettOrdinærBehandling(saksnummer, VurderingsbehovOgÅrsak(vurderingsbehov, årsakTilOpprettelse))
+): Behandling {
+    val sak = repositoryProvider.provide<SakRepository>().hent(saksnummer)
+    return SakOgBehandlingService(repositoryProvider, gatewayProvider)
+        .finnEllerOpprettOrdinærBehandling(sak.id, VurderingsbehovOgÅrsak(vurderingsbehov, årsakTilOpprettelse))
+}
