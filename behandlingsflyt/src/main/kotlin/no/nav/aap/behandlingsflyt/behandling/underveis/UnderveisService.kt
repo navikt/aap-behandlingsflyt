@@ -174,14 +174,14 @@ class UnderveisService(
 
         val arbeidsopptrappingPerioder = arbeidsopptrappingRepository.hentPerioder(behandlingId)
 
-        val meldeperioder = meldeperiodeRepository.hent(behandlingId)
+        val periodeForVurdering = utledPeriodeForUnderveisvurderinger(behandlingId, sak)
+        val meldeperioder = meldeperiodeRepository.hentMeldeperioder(behandlingId, periodeForVurdering)
 
         val oppholdskravGrunnlag = oppholdskravRepository.hentHvisEksisterer(behandlingId)
             ?: OppholdskravGrunnlag(vurderinger = emptyList())
 
         val vedtaksdatoFørstegangsbehandling = vedtakService.vedtakstidspunktFørstegangsbehandling(sakId)
 
-        val periodeForVurdering = utledPeriodeForUnderveisvurderinger(behandlingId, sak)
 
         return UnderveisInput(
             periodeForVurdering = periodeForVurdering,

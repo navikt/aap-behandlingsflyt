@@ -176,7 +176,7 @@ class FasttrackMeldekortFlytTest :
         åpenBehandling.løsSykdom(sak.rettighetsperiode.fom).løsBistand().løsSykdomsvurderingBrev()
 
         val (førsteMeldeperiode, andreMeldeperiode) = dataSource.transaction { connection ->
-            MeldeperiodeRepositoryImpl(connection).hent(åpenBehandling.id)
+            MeldeperiodeRepositoryImpl(connection).hentMeldeperioder(åpenBehandling.id, sak.rettighetsperiodeEttÅrFraStartDato())
         }
         sak.sendInnMeldekort(
             journalpostId = journalpostId(),
