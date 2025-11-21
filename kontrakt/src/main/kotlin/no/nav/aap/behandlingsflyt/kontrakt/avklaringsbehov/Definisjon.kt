@@ -121,7 +121,7 @@ public enum class Definisjon(
         type = BehovType.OVERSTYR,
         løsesISteg = StegType.IKKE_OPPFYLT_MELDEPLIKT,
         kreverToTrinn = true,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
     ),
     AVKLAR_SYKDOM(
         kode = AvklaringsbehovKode.`5003`,
