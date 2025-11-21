@@ -55,18 +55,3 @@ data class GraderingGrunnlag(
         .minus(institusjonGradering)
         .minus(samordningUføregradering)
 }
-
-data class TilkjentGUnit(
-    val dagsats: GUnit,
-    val gradering: Prosent,
-    val graderingGrunnlag: GraderingGrunnlag,
-    val utbetalingsdato: LocalDate
-) {
-    private fun redusertDagsats(): GUnit {
-        return dagsats.multiplisert(gradering)
-    }
-
-    override fun toString(): String {
-        return "Tilkjent(dagsats=$dagsats, gradering=$graderingGrunnlag, redusertDagsats=${redusertDagsats()})"
-    }
-}

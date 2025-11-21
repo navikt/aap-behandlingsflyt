@@ -15,10 +15,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.filterNotNull
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
-import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
+import no.nav.aap.komponenter.verdityper.Prosent.Companion.`100_PROSENT`
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`66_PROSENT`
 import java.time.LocalDate
 
@@ -41,146 +43,87 @@ class BeregnTilkjentYtelseService(
         /** § 11-19 Grunnlaget for beregningen av arbeidsavklaringspenger. */
         val grunnlagsfaktor = beregningsgrunnlag?.grunnlaget() ?: GUnit(0)
 
-        /** § 11-20 første avsnitt:
-         * > Arbeidsavklaringspenger gis med 66 prosent av grunnlaget, se § 11-19.
-         * > Minste årlige ytelse er 2,041 ganger grunnbeløpet.
-         * > For medlem under 25 år er minste årlige ytelse 2/3 av 2,041 ganger grunnbeløpet
-         */
-        val årligYtelseTidslinje = aldersjusteringAvMinsteÅrligeYtelse(fødselsdato)
+        val dagsatsTidslinje = aldersjusteringAvMinsteÅrligeYtelse(fødselsdato)
             .innerJoin(MINSTE_ÅRLIG_YTELSE_TIDSLINJE) { aldersjustering, minsteYtelse ->
-                maxOf(
+                /** § 11-20 første avsnitt:
+                 * > Arbeidsavklaringspenger gis med 66 prosent av grunnlaget, se § 11-19.
+                 * > Minste årlige ytelse er 2,041 ganger grunnbeløpet.
+                 * > For medlem under 25 år er minste årlige ytelse 2/3 av 2,041 ganger grunnbeløpet
+                 */
+                val årligYtelse = maxOf(
                     aldersjustering(minsteYtelse),
                     grunnlagsfaktor.multiplisert(`66_PROSENT`)
                 )
-            }
 
-        val gradertÅrligYtelseTidslinje =
-            underveisgrunnlag.somTidslinje().innerJoin(årligYtelseTidslinje) { underveisperiode, årligYtelse ->
-                TilkjentGUnit(
-                    /** § 11-20 andre avsnitt andre setning:
-                     * > Dagsatsen er den årlige ytelsen delt på 260
-                     */
-                    dagsats = årligYtelse.dividert(ANTALL_ÅRLIGE_ARBEIDSDAGER),
-
-                    gradering = if (underveisperiode.utfall == Utfall.IKKE_OPPFYLT) {
-                        Prosent.`0_PROSENT`
-                    } else {
-                        underveisperiode.arbeidsgradering.gradering
-                    },
-                    graderingGrunnlag = GraderingGrunnlag(
-                        arbeidGradering = underveisperiode.arbeidsgradering.gradering,
-                        institusjonGradering = underveisperiode.institusjonsoppholdReduksjon,
-                        samordningGradering = Prosent.`0_PROSENT`,
-                        samordningUføregradering = Prosent.`0_PROSENT`,
-                        samordningArbeidsgiverGradering = Prosent.`0_PROSENT`
-                    ),
-
-                    utbetalingsdato = utledUtbetalingsdato(underveisperiode)
-                )
-            }
-
-        val samordningUføreTidslinje = samordningUføre?.vurdering?.tilTidslinje().orEmpty()
-        val gradertÅrligYtelseTidslinjeMedSamordningUføre =
-            gradertÅrligYtelseTidslinje.leftJoin(samordningUføreTidslinje) { tilkjentGUnit, samordningUføre ->
-                if (samordningUføre == null) {
-                    tilkjentGUnit
-                } else {
-                    tilkjentGUnit.copy(
-                        gradering = tilkjentGUnit.gradering.minus(
-                            samordningUføre,
-                            Prosent.`0_PROSENT`
-                        ),
-                        graderingGrunnlag = tilkjentGUnit.graderingGrunnlag.copy(
-                            samordningUføregradering = samordningUføre
-                        )
-                    )
-                }
-            }
-
-        val samordningTidslinje = samordningGrunnlag.samordningPerioder.map { Segment(it.periode, it) }.let(::Tidslinje)
-        val gradertÅrligYtelseTidslinjeMedSamordning =
-            gradertÅrligYtelseTidslinjeMedSamordningUføre.leftJoin(samordningTidslinje) { tilkjentGUnit, samordning ->
-                if (samordning == null) {
-                    tilkjentGUnit
-                } else {
-                    tilkjentGUnit.copy(
-                        gradering = tilkjentGUnit.gradering.minus(
-                            samordning.gradering,
-                            Prosent.`0_PROSENT`
-                        ),
-                        graderingGrunnlag = tilkjentGUnit.graderingGrunnlag.copy(
-                            samordningGradering = samordning.gradering,
-                        )
-                    )
-                }
-            }
-
-        val samordningArbeidsgiverTidslinje = samordningArbeidsgiver?.vurdering?.tilTidslinje()
-        val gradertÅrligYtelseTidslinjeMedArbeidgiver =
-            gradertÅrligYtelseTidslinjeMedSamordning.leftJoin(samordningArbeidsgiverTidslinje.orEmpty()) { tilkjentGUnit, samordningArbeidsgiver ->
-                if (samordningArbeidsgiver == null) {
-                    tilkjentGUnit
-                } else {
-                    tilkjentGUnit.copy(
-                        gradering = tilkjentGUnit.gradering.minus(
-                            Prosent.`100_PROSENT`,
-                            Prosent.`0_PROSENT`
-                        ),
-                        graderingGrunnlag = tilkjentGUnit.graderingGrunnlag.copy(
-                            samordningArbeidsgiverGradering = Prosent.`100_PROSENT`,
-                        )
-                    )
-                }
-            }
-
-        val gradertÅrligTilkjentYtelseBeløp =
-            gradertÅrligYtelseTidslinjeMedArbeidgiver.innerJoin(Grunnbeløp.tilTidslinje()) { tilkjentGUnit, grunnbeløp ->
-                val dagsats = grunnbeløp.multiplisert(tilkjentGUnit.dagsats)
-                val redusertUtbetalingsgrad = reduserUtbetalingsgradVedInstitusjonsopphold(tilkjentGUnit)
-                TilkjentFørBarn(
-                    dagsats = dagsats,
-                    gradering = redusertUtbetalingsgrad,
-                    grunnlagsfaktor = tilkjentGUnit.dagsats,
-                    grunnbeløp = grunnbeløp,
-                    utbetalingsdato = tilkjentGUnit.utbetalingsdato,
-                    samordningGradering = tilkjentGUnit.graderingGrunnlag.samordningGradering,
-                    samordningUføreGradering = tilkjentGUnit.graderingGrunnlag.samordningUføregradering,
-                    arbeidsGradering = tilkjentGUnit.graderingGrunnlag.arbeidGradering,
-                    institusjonGradering = tilkjentGUnit.graderingGrunnlag.institusjonGradering,
-                    samordningArbeidsgiverGradering = tilkjentGUnit.graderingGrunnlag.samordningArbeidsgiverGradering,
-                )
+                /** § 11-20 andre avsnitt andre setning:
+                 * > Dagsatsen er den årlige ytelsen delt på 260
+                 */
+                årligYtelse.dividert(ANTALL_ÅRLIGE_ARBEIDSDAGER)
             }
 
         val barnetilleggGrunnlagTidslinje = barnetilleggGrunnlag.perioder.tilTidslinje()
         val barnetilleggTidslinje =
             BARNETILLEGGSATS_TIDSLINJE.innerJoin(barnetilleggGrunnlagTidslinje) { barnetilleggsats, rettTilBarnetillegg ->
+                val antallBarnMedRett = rettTilBarnetillegg.barnMedRettTil().size
                 Barnetillegg(
-                    barnetillegg = barnetilleggsats.multiplisert(rettTilBarnetillegg.barnMedRettTil().size),
-                    antallBarn = rettTilBarnetillegg.barnMedRettTil().size,
+                    barnetillegg = barnetilleggsats.multiplisert(antallBarnMedRett),
+                    antallBarn = antallBarnMedRett,
                     barnetilleggsats = barnetilleggsats
                 )
             }
 
-        return gradertÅrligTilkjentYtelseBeløp.leftJoin(barnetilleggTidslinje) { tilkjentFørBarn, barnetillegg ->
-            val graderingGrunnlag = GraderingGrunnlag(
-                samordningGradering = tilkjentFørBarn.samordningGradering,
-                institusjonGradering = tilkjentFørBarn.institusjonGradering,
-                arbeidGradering = tilkjentFørBarn.arbeidsGradering,
-                samordningUføregradering = tilkjentFørBarn.samordningUføreGradering,
-                samordningArbeidsgiverGradering = tilkjentFørBarn.samordningArbeidsgiverGradering,
-            )
-            Tilkjent(
-                dagsats = tilkjentFørBarn.dagsats,
-                gradering = tilkjentFørBarn.gradering,
-                graderingGrunnlag = graderingGrunnlag,
-                barnetillegg = barnetillegg?.barnetillegg ?: Beløp(0),
-                grunnlagsfaktor = tilkjentFørBarn.grunnlagsfaktor,
-                grunnbeløp = tilkjentFørBarn.grunnbeløp,
-                antallBarn = barnetillegg?.antallBarn ?: 0,
-                barnetilleggsats = barnetillegg?.barnetilleggsats ?: Beløp(0),
-                utbetalingsdato = tilkjentFørBarn.utbetalingsdato,
+            val graderingGrunnlagTidslinje = Tidslinje.map4(
+                underveisgrunnlag.somTidslinje(),
+                samordningUføre?.vurdering?.tilTidslinje().orEmpty(),
+                samordningGrunnlag.samordningPerioder.map { Segment(it.periode, it) }.let(::Tidslinje),
+                samordningArbeidsgiver?.vurdering?.tilTidslinje().orEmpty(),
+            ) { underveisperiode, samordningUføre, samordning, samordningArbeidsgiver ->
+                if (underveisperiode == null) {
+                    return@map4 null
+                }
+
+                GraderingGrunnlag(
+                    arbeidGradering = underveisperiode.arbeidsgradering.gradering,
+                    institusjonGradering = underveisperiode.institusjonsoppholdReduksjon,
+                    samordningGradering = samordning?.gradering ?: `0_PROSENT`,
+                    samordningUføregradering = samordningUføre ?: `0_PROSENT`,
+                    samordningArbeidsgiverGradering = if (samordningArbeidsgiver == null) `0_PROSENT` else `100_PROSENT`,
             )
         }
+            .filterNotNull()
+
+        return Tidslinje.map5(
+            underveisgrunnlag.somTidslinje(),
+            dagsatsTidslinje,
+            graderingGrunnlagTidslinje,
+            Grunnbeløp.tilTidslinje(),
+            barnetilleggTidslinje,
+        ) { underveisperiode, dagsatsG, graderingGrunnlag, grunnbeløp, barnetillegg ->
+            if (underveisperiode == null || dagsatsG == null || graderingGrunnlag == null || grunnbeløp == null) {
+                return@map5 null
+            }
+
+            Tilkjent(
+                dagsats = grunnbeløp.multiplisert(dagsatsG),
+                gradering = graderingGrunnlag.run {
+                    `100_PROSENT`
+                        .minus(if (underveisperiode.utfall == Utfall.IKKE_OPPFYLT) `100_PROSENT` else `0_PROSENT`)
+                        .minus(arbeidGradering.komplement())
+                        .minus(samordningUføregradering)
+                        .minus(samordningGradering)
+                        .minus(samordningArbeidsgiverGradering)
+                        .multiplisert(institusjonGradering.komplement())
+                },
+                graderingGrunnlag = graderingGrunnlag,
+                barnetillegg = barnetillegg?.barnetillegg ?: Beløp(0),
+                antallBarn = barnetillegg?.antallBarn ?: 0,
+                barnetilleggsats = barnetillegg?.barnetilleggsats ?: Beløp(0),
+                grunnlagsfaktor = dagsatsG,
+                grunnbeløp = grunnbeløp,
+                utbetalingsdato = utledUtbetalingsdato(underveisperiode),
+            )
+        }
+            .filterNotNull()
     }
 
     private fun utledUtbetalingsdato(underveisperiode: Underveisperiode): LocalDate {
@@ -198,22 +141,6 @@ class BeregnTilkjentYtelseService(
             .coerceIn(førsteMeldedagForMeldeperiode..sisteMeldedagForMeldeperiode)
         return utbetalingsdato
     }
-
-    private fun reduserUtbetalingsgradVedInstitusjonsopphold(tilkjentGUnit: TilkjentGUnit) =
-        tilkjentGUnit.gradering.multiplisert(tilkjentGUnit.graderingGrunnlag.institusjonGradering.komplement())
-
-    private class TilkjentFørBarn(
-        val dagsats: Beløp,
-        val gradering: Prosent,
-        val grunnlagsfaktor: GUnit,
-        val grunnbeløp: Beløp,
-        val utbetalingsdato: LocalDate,
-        val samordningGradering: Prosent,
-        val samordningUføreGradering: Prosent,
-        val samordningArbeidsgiverGradering: Prosent,
-        val arbeidsGradering: Prosent,
-        val institusjonGradering: Prosent
-    )
 
     private class Barnetillegg(
         val antallBarn: Int,
