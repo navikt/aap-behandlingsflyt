@@ -83,6 +83,7 @@ class SamordningYtelseVurderingServiceTest {
         dataSource.transaction { connection ->
             val samordningYtelseVurderingInformasjonskrav = SamordningYtelseVurderingInformasjonskrav(
                 SamordningYtelseRepositoryImpl(connection),
+                SamordningVurderingRepositoryImpl(connection),
                 FakeTidligereVurderinger(),
                 AbakusForeldrepengerGateway(),
                 AbakusSykepengerGateway(),
@@ -130,6 +131,7 @@ class SamordningYtelseVurderingServiceTest {
         dataSource.transaction { connection ->
             val samordningYtelseVurderingInformasjonskrav = SamordningYtelseVurderingInformasjonskrav(
                 SamordningYtelseRepositoryImpl(connection),
+                SamordningVurderingRepositoryImpl(connection),
                 FakeTidligereVurderinger(),
                 AbakusForeldrepengerGateway(),
                 AbakusSykepengerGateway(),
@@ -161,6 +163,7 @@ class SamordningYtelseVurderingServiceTest {
             val repo = SamordningVurderingRepositoryImpl(connection)
             val samordningYtelseVurderingInformasjonskrav = SamordningYtelseVurderingInformasjonskrav(
                 SamordningYtelseRepositoryImpl(connection),
+                SamordningVurderingRepositoryImpl(connection),
                 FakeTidligereVurderinger(),
                 AbakusForeldrepengerGateway(),
                 AbakusSykepengerGateway(),
