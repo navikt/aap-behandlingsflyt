@@ -275,6 +275,7 @@ private fun ytelsesperioderErLike(
             eks.periode.fom.isEqual(ny.periode.fom) &&
                     eks.periode.tom.isEqual(ny.periode.tom) &&
                     eks.gradering == ny.gradering
+            // TODO: Mer logikk på graderinger
         }
     }
 }
@@ -287,7 +288,7 @@ fun harFullstendigOverlappMedEksisterendeVurderinger(
     return nye.all { nyYtelse ->
         manuellVurderingGrunnlag.vurderinger.any { eksisterendeVurdering ->
             eksisterendeVurdering.ytelseType == nyYtelse.ytelseType &&
-            vurderingperioderErLike(eksisterendeVurdering.vurderingPerioder, nyYtelse.ytelsePerioder)
+                    vurderingperioderErLike(eksisterendeVurdering.vurderingPerioder, nyYtelse.ytelsePerioder)
         }
     }
 }
@@ -303,6 +304,7 @@ private fun vurderingperioderErLike(
             eks.periode.fom.isEqual(ny.periode.fom) &&
                     eks.periode.tom.isEqual(ny.periode.tom) &&
                     eks.gradering == ny.gradering
+            // TODO: Mer logikk på graderinger
         }
     }
 }
