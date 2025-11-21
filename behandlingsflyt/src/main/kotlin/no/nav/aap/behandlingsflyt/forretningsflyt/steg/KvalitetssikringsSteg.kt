@@ -64,12 +64,15 @@ class KvalitetssikringsSteg private constructor(
     }
 
     fun utførGammel(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (kontekst.behandlingType !in listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Klage)  ) {
+        if (kontekst.behandlingType !in listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Klage)) {
             return Fullført
         }
 
         val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-        if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type()) || trekkKlageService.klageErTrukket(kontekst.behandlingId)) {
+        if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type()) || trekkKlageService.klageErTrukket(
+                kontekst.behandlingId
+            )
+        ) {
             avklaringsbehov.avbrytForSteg(type())
             return Fullført
         }
@@ -109,9 +112,13 @@ class KvalitetssikringsSteg private constructor(
     }
 
     private fun erTilstrekkeligVurdert(avklaringsbehovene: Avklaringsbehovene): Boolean {
-        if (avklaringsbehovene.alle().any { it.status() == Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER || it.status() == Status.SENDT_TILBAKE_FRA_BESLUTTER }) {
+        if (avklaringsbehovene.alle()
+            .filter { it.kreverKvalitetssikring() }
+            .any { it.status() == Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER || it.status() == Status.SENDT_TILBAKE_FRA_BESLUTTER }
+        ) {
             return false
         }
+
         return avklaringsbehovene.alle()
             .filter { it.kreverKvalitetssikring() }
             .filter { it.status() != Status.AVBRUTT }
