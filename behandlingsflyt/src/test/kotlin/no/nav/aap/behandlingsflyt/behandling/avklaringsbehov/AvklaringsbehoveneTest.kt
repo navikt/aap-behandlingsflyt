@@ -208,7 +208,7 @@ class AvklaringsbehoveneTest {
 
     @Test
     fun `Periodisert løsning må dekke periodene avklaringsbehovet ber om`() {
-        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, BehandlingId(8))
+        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, BehandlingId(9))
         val avklaringsbehov = Avklaringsbehov(
             definisjon = Definisjon.AVKLAR_OVERGANG_ARBEID,
             funnetISteg = StegType.OVERGANG_ARBEID,
@@ -259,7 +259,7 @@ class AvklaringsbehoveneTest {
 
     @Test
     fun `Avklaringsbehov med tom mengde med perioder skal ikke bry seg om perioder`() {
-        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, BehandlingId(8))
+        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, BehandlingId(10))
         val avklaringsbehov = Avklaringsbehov(
             definisjon = Definisjon.AVKLAR_OVERGANG_ARBEID,
             funnetISteg = StegType.OVERGANG_ARBEID,
@@ -295,7 +295,7 @@ class AvklaringsbehoveneTest {
 
     @Test
     fun `Avklaringsbehov med null-perioder skal ikke bry seg om perioder`() {
-        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, BehandlingId(8))
+        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, BehandlingId(11))
         val avklaringsbehov = Avklaringsbehov(
             definisjon = Definisjon.AVKLAR_OVERGANG_ARBEID,
             funnetISteg = StegType.OVERGANG_ARBEID,
@@ -330,7 +330,7 @@ class AvklaringsbehoveneTest {
 
     @Test
     fun `Ikke-periodiserte løsninger skal ikke valideres mot avklaringsbehovperioder`() {
-        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, BehandlingId(8))
+        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, BehandlingId(12))
         val avklaringsbehov = Avklaringsbehov(
             definisjon = Definisjon.AVKLAR_SYKDOM,
             funnetISteg = StegType.AVKLAR_SYKDOM,
