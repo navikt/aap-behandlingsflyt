@@ -428,6 +428,7 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
             medlemMedUnntakAvMaksFemAar = false,
             vurdertAv = "NavIdent",
             vurdertTidspunkt = LocalDateTime.now(),
+            vurdertIBehandling = vurdertIBehandling
         )
 
     private fun arbeidGrunnlag(): List<ArbeidINorgeGrunnlag> = listOf(
@@ -580,7 +581,9 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
                     varMedlemMedNedsattArbeidsevne = false,
                     medlemMedUnntakAvMaksFemAar = false,
                     vurdertAv = "NavIdent",
-                    vurdertTidspunkt = LocalDateTime.now()
+                    vurdertTidspunkt = LocalDateTime.now(),
+                    vurdertIBehandling = behandlingId,
+                    fom = LocalDate.now(),
                 )
             )
         )

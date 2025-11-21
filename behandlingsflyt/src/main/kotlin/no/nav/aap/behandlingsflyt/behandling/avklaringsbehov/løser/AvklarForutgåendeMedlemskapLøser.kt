@@ -34,7 +34,7 @@ class AvklarForutgåendeMedlemskapLøser(
                     vurdertTidspunkt = LocalDateTime.now(),
                     overstyrt = false,
                     vurdertIBehandling = kontekst.behandlingId(),
-                    fom = sak.rettighetsperiode.fom
+                    fom = sak.rettighetsperiode.fom,
                 )
             )
         )

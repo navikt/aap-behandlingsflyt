@@ -13,11 +13,9 @@ data class ManuellVurderingForForutgåendeMedlemskap(
     val vurdertAv: String,
     val vurdertTidspunkt: LocalDateTime,
     val overstyrt: Boolean = false,
-
-    // TODO disse skal ikke være nullable etter migrering
-    val fom: LocalDate? = null,
-    val tom: LocalDate? = null,
-    val vurdertIBehandling: BehandlingId? = null,
+    val vurdertIBehandling: BehandlingId,
+    val fom: LocalDate,
+    val tom: LocalDate? = null
 )
 
 data class ManuellVurderingForForutgåendeMedlemskapDto(
