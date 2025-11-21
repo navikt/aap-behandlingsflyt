@@ -44,7 +44,7 @@ class ArbeidsopptrappingSteg private constructor(
                             tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
                             kontekst.vurderingsbehovRelevanteForSteg.isEmpty() -> false
                             Vurderingsbehov.ARBEIDSOPPTRAPPING in kontekst.vurderingsbehovRelevanteForSteg -> true
-                            else -> false
+                            else -> arbeidsopptrappingRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger?.isNotEmpty() ?: false
                         }
                     }
 
