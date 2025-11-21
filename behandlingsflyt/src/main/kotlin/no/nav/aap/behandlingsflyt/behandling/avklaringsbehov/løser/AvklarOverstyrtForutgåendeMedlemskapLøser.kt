@@ -8,15 +8,19 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektForutgåendeRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.time.LocalDateTime
 
 class AvklarOverstyrtForutgåendeMedlemskapLøser(
     private val forutgåendeMedlemskapArbeidInntektRepository: MedlemskapArbeidInntektForutgåendeRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
+    private val sakRepository: SakRepository,
 ) : AvklaringsbehovsLøser<AvklarOverstyrtForutgåendeMedlemskapLøsning> {
     constructor(repositoryProvider: RepositoryProvider) : this(
         forutgåendeMedlemskapArbeidInntektRepository = repositoryProvider.provide(),
         vilkårsresultatRepository = repositoryProvider.provide(),
+        sakRepository = repositoryProvider.provide(),
     )
 
     override fun løs(
@@ -30,16 +34,22 @@ class AvklarOverstyrtForutgåendeMedlemskapLøser(
             return LøsningsResultat("OVERSTYRT: Fant yrkesskade, overstyring ikke tillat.")
         }
 
-        forutgåendeMedlemskapArbeidInntektRepository.lagreManuellVurdering(
-            kontekst.behandlingId(),
-            ManuellVurderingForForutgåendeMedlemskap(
-                begrunnelse = løsning.manuellVurderingForForutgåendeMedlemskap.begrunnelse,
-                harForutgåendeMedlemskap = løsning.manuellVurderingForForutgåendeMedlemskap.harForutgåendeMedlemskap,
-                varMedlemMedNedsattArbeidsevne = løsning.manuellVurderingForForutgåendeMedlemskap.varMedlemMedNedsattArbeidsevne,
-                medlemMedUnntakAvMaksFemAar = løsning.manuellVurderingForForutgåendeMedlemskap.medlemMedUnntakAvMaksFemAar,
-                vurdertAv = kontekst.bruker.ident,
-                overstyrt = true
-            )
+        val sak = sakRepository.hent(kontekst.kontekst.sakId)
+
+        forutgåendeMedlemskapArbeidInntektRepository.lagreVurderinger(
+            behandlingId = kontekst.behandlingId(),
+            vurderinger = listOf(
+                ManuellVurderingForForutgåendeMedlemskap(
+                    begrunnelse = løsning.manuellVurderingForForutgåendeMedlemskap.begrunnelse,
+                    harForutgåendeMedlemskap = løsning.manuellVurderingForForutgåendeMedlemskap.harForutgåendeMedlemskap,
+                    varMedlemMedNedsattArbeidsevne = løsning.manuellVurderingForForutgåendeMedlemskap.varMedlemMedNedsattArbeidsevne,
+                    medlemMedUnntakAvMaksFemAar = løsning.manuellVurderingForForutgåendeMedlemskap.medlemMedUnntakAvMaksFemAar,
+                    vurdertAv = kontekst.bruker.ident,
+                    vurdertTidspunkt = LocalDateTime.now(),
+                    overstyrt = true,
+                    vurdertIBehandling = kontekst.behandlingId(),
+                    fom = sak.rettighetsperiode.fom
+                ))
         )
 
         return LøsningsResultat("OVERSTYRT: Vurdert forutgående medlemskap manuelt.")

@@ -9,6 +9,7 @@ import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
 
+@Suppress("ClassName")
 class Aktivitetsplikt11_9RepositoryImpl(private val connection: DBConnection) : Aktivitetsplikt11_9Repository {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -45,12 +46,12 @@ class Aktivitetsplikt11_9RepositoryImpl(private val connection: DBConnection) : 
             order by opprettet_tid desc
         """.trimIndent()
 
-        return connection.queryList(query) {
+        return connection.querySet(query) {
             setParams {
                 setLong(1, vurderingerId)
             }
             setRowMapper(::mapVurdering)
-        }.toSet()
+        }
     }
 
     override fun lagre(

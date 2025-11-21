@@ -87,7 +87,7 @@ class ArbeidsopptrappingRepositoryImpl(private val connection: DBConnection) : A
 
     override fun lagre(
         behandlingId: BehandlingId,
-        arbeidsopptrappingVurdering: List<ArbeidsopptrappingVurdering>
+        arbeidsopptrappingVurderinger: List<ArbeidsopptrappingVurdering>
     ) {
         deaktiverGrunnlag(behandlingId)
 
@@ -100,7 +100,7 @@ class ArbeidsopptrappingRepositoryImpl(private val connection: DBConnection) : A
             """
             INSERT INTO ARBEIDSOPPTRAPPING_VURDERING (BEGRUNNELSE, MULIGHET_TIL_OPPTRAPPING, RETT_PAA_AAP, VURDERINGER_ID, VURDERT_I_BEHANDLING, VURDERT_AV, GJELDER_FRA, GJELDER_TIL)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """.trimIndent(), arbeidsopptrappingVurdering
+        """.trimIndent(), arbeidsopptrappingVurderinger
         ) {
             setParams {
                 setString(1, it.begrunnelse)

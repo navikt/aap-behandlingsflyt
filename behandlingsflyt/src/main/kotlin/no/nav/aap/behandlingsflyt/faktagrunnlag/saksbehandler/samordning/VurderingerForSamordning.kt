@@ -8,9 +8,9 @@ import java.time.LocalDate
 data class VurderingerForSamordning(
     val begrunnelse: String?,
     @Deprecated("Ikke lenger i bruk")
-    val maksDatoEndelig: Boolean?,
+    val maksDatoEndelig: Boolean? = null,
     @Deprecated("Ikke lenger i bruk")
-    val fristNyRevurdering: LocalDate?,
+    val fristNyRevurdering: LocalDate? = null,
     val vurderteSamordningerData: List<SamordningVurderingData>
 ) {
     init {

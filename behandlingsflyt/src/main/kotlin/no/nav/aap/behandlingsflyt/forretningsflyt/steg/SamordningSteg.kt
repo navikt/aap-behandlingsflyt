@@ -53,7 +53,7 @@ class SamordningSteg(
             ytelser, tidligereVurderinger
         )
 
-        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
+        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårGammel(
             avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId),
             behandlingRepository = behandlingRepository,
             vilkårsresultatRepository = vilkårsresultatRepository,
@@ -64,7 +64,7 @@ class SamordningSteg(
             ),
             nårVurderingErRelevant = ::perioderMedVurderingsbehov,
             kontekst = kontekst,
-            erTilstrekkeligVurdert = { perioderSomIkkeHarBlittVurdert.isEmpty() },
+            perioderSomIkkeErTilstrekkeligVurdert = { perioderSomIkkeHarBlittVurdert.perioder().toSet() },
             tilbakestillGrunnlag = {
                 samordningService.tilbakestillVurderinger(kontekst.behandlingId, kontekst.forrigeBehandlingId)
             }

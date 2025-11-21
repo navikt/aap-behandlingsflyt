@@ -77,7 +77,13 @@ class MedlemskapLovvalgVurderingService {
 
                 if (harRelevanteUtlandsPerioderIJobb) {
                     val mappedArbeidUtland =
-                        relevantePerioder.map { OppgittJobbetIUtlandGrunnlag(it.land, it.fraDato, it.tilDato) }
+                        relevantePerioder.map {
+                            OppgittJobbetIUtlandGrunnlag(
+                                land = it.land,
+                                fraDato = it.fraDato,
+                                tilDato = it.tilDato
+                            )
+                        }
                     arbeidUtlandPerioder.addAll(mappedArbeidUtland)
                     true
                 } else {
@@ -87,7 +93,13 @@ class MedlemskapLovvalgVurderingService {
 
             grunnlag.arbeidetUtenforNorgeFørSykdom -> {
                 val mappedArbeidUtland =
-                    relevantePerioder?.map { OppgittJobbetIUtlandGrunnlag(it.land, it.fraDato, it.tilDato) }
+                    relevantePerioder?.map {
+                        OppgittJobbetIUtlandGrunnlag(
+                            land = it.land,
+                            fraDato = it.fraDato,
+                            tilDato = it.tilDato
+                        )
+                    }
                 if (mappedArbeidUtland != null) {
                     arbeidUtlandPerioder.addAll(mappedArbeidUtland)
                 }
@@ -130,8 +142,8 @@ class MedlemskapLovvalgVurderingService {
         val oppholdUtlandPerioder = relevantePerioder?.map {
             OppgittUtenlandsOppholdGrunnlag(
                 land = it.land,
-                tilDato = it.tilDato,
                 fraDato = it.fraDato,
+                tilDato = it.tilDato,
             )
         }
 

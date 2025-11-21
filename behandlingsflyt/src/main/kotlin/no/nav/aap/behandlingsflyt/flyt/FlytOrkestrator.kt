@@ -80,6 +80,10 @@ class FlytOrkestrator(
 
     private val log = LoggerFactory.getLogger(javaClass)
 
+    fun opprettKontekst(behandling: Behandling): FlytKontekst {
+        return opprettKontekst(behandling.sakId, behandling.id)
+    }
+
     fun opprettKontekst(sakId: SakId, behandlingId: BehandlingId): FlytKontekst {
         val behandling = behandlingRepository.hent(behandlingId)
 
@@ -163,9 +167,13 @@ class FlytOrkestrator(
 
         if (!tilbakeføringsflyt.erTom()) {
             log.info(
-                "Tilbakeført etter oppdatering av registeropplysninger fra '{}' til '{}'",
+                "Tilbakeført etter oppdatering av registeropplysninger fra '{}' til '{}'. " +
+                        "Oppdatert faktagrunnlag for kravliste: {} " +
+                        "Med triggere: {}",
                 behandling.aktivtSteg(),
-                tilbakeføringsflyt.stegene().last()
+                tilbakeføringsflyt.stegene().last(),
+                oppdaterFaktagrunnlagForKravliste.joinToString { it.navn.toString() },
+                triggere?.joinToString { it.toString() }
             )
         }
         tilbakefør(kontekst, behandling, tilbakeføringsflyt, avklaringsbehovene)
@@ -203,7 +211,7 @@ class FlytOrkestrator(
         }
     }
 
-    private fun prosesserBehandling(kontekst: FlytKontekst) {
+    fun prosesserBehandling(kontekst: FlytKontekst) {
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 

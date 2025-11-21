@@ -239,6 +239,7 @@ class SykdomsvilkårTest {
                                 grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
                                 vurdertAv = "abc123",
                                 vurdertTidspunkt = LocalDateTime.now(),
+                                vurdertIBehandling = BehandlingId(1L)
                             )
                         )
                     ),

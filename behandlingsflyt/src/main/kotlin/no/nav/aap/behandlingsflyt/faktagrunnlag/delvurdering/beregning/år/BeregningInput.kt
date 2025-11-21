@@ -15,7 +15,7 @@ import java.time.LocalDate
  * @param registrerteYrkesskader
  * @param beregningGrunnlag Se [no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag]
  */
-data class Input(
+data class BeregningInput(
     val nedsettelsesDato: LocalDate,
     val inntekter: Set<InntektPerÅr>,
     val uføregrad: Set<Uføre>,

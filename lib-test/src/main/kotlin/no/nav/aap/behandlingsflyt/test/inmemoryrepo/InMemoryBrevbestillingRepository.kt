@@ -55,4 +55,8 @@ object InMemoryBrevbestillingRepository: BrevbestillingRepository {
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
     }
+
+    fun clearMemory() {
+        bestilling.clear()
+    }
 }
