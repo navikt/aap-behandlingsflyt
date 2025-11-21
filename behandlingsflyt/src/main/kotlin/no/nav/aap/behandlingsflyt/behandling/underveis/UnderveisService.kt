@@ -191,7 +191,6 @@ class UnderveisService(
             oppholdskravGrunnlag = oppholdskravGrunnlag,
             meldeperioder = meldeperioder,
             vedtaksdatoFørstegangsbehandling = vedtaksdatoFørstegangsbehandling?.toLocalDate(),
-            ikkeAntaNullTimerArbeidetFeature = unleashGateway.isEnabled(BehandlingsflytFeature.IkkeAntaNullTimerArbeidet),
         )
     }
 }
