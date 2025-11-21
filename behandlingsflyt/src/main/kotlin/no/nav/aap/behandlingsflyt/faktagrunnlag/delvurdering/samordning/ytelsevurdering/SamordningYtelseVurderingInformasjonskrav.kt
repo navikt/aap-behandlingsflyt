@@ -190,7 +190,7 @@ class SamordningYtelseVurderingInformasjonskrav(
         val samordningVurderinger = samordningVurderingRepository.hentHvisEksisterer(behandlingId)
         if (samordningVurderinger != null) {
             samordningVurderinger.vurderinger
-                .map() { vurdering -> vurdering.vurderingPerioder }
+                .map { vurdering -> vurdering.vurderingPerioder }
         }
         //bare skriver ut loggmeldinger enn så lenge
         erHeltDekketAvManuelleVurderinger(samordningVurderinger, samordningYtelser)
@@ -275,7 +275,7 @@ private fun ytelsesperioderErLike(
             eks.periode.fom.isEqual(ny.periode.fom) &&
                     eks.periode.tom.isEqual(ny.periode.tom) &&
                     eks.gradering == ny.gradering
-            // TODO: Mer logikk på graderinger
+            // TODO: Mer logikk på graderinger. Ulik logikk mellom sykepenger og foreldrepenger
         }
     }
 }
@@ -304,7 +304,7 @@ private fun vurderingperioderErLike(
             eks.periode.fom.isEqual(ny.periode.fom) &&
                     eks.periode.tom.isEqual(ny.periode.tom) &&
                     eks.gradering == ny.gradering
-            // TODO: Mer logikk på graderinger
+            // TODO: Mer logikk på graderinger. Ulik logikk mellom sykepenger og foreldrepenger
         }
     }
 }
