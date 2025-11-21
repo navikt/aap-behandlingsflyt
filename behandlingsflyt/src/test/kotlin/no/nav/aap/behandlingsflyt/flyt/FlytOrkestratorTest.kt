@@ -33,6 +33,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVe
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FullmektigLøsningDto
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.HåndterSvarFraAndreinstansLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.HåndterSvarFraAndreinstansLøsningDto
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.RefusjonkravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivForhåndsvarselKlageFormkravBrevLøsning
@@ -1916,6 +1917,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                         begrunnelse = "Er ikke syk nok",
                         dokumenterBruktIVurdering = listOf(JournalpostId("1231299")),
                         harSkadeSykdomEllerLyte = false,
+                        vurderingenGjelderFra = null,
                         erArbeidsevnenNedsatt = null,
                         erSkadeSykdomEllerLyteVesentligdel = null,
                         erNedsettelseIArbeidsevneAvEnVissVarighet = null,
@@ -4543,4 +4545,81 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 assertThat(åpneAvklaringsbehov.map { it.definisjon }).contains(Definisjon.AVKLAR_HELSEINSTITUSJON)
             }
     }
+    @Test
+    fun `Kvalitetssikringssteg - retur fra kvalitetssikrer`() {
+        val fom = LocalDate.now().minusMonths(3)
+        val periode = Periode(fom, fom.plusYears(3))
+
+        val person = TestPersoner.STANDARD_PERSON()
+
+        val (_, behandling) = sendInnFørsteSøknad(
+            person = person,
+            periode = periode,
+        )
+        behandling
+            .løsSykdom(fom)
+            .løsBistand()
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+
+        val alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
+        løsAvklaringsBehov(
+            behandling,
+            KvalitetssikringLøsning(alleAvklaringsbehov.filter { behov -> behov.erTotrinn() || behov.kreverKvalitetssikring() }
+                .map { behov ->
+                    TotrinnsVurdering(
+                        behov.definisjon.kode, false, "begrunnelse", emptyList()
+                    )
+                }),
+            Bruker("KVALITETSSIKRER"),
+        )
+
+        val avklaringsbehovSomKreverKvalitetssikring = hentAlleAvklaringsbehov(behandling)
+            .filter { behov -> behov.kreverKvalitetssikring() }
+        assertThat(avklaringsbehovSomKreverKvalitetssikring.any { it.status() == AvklaringsbehovStatus.SENDT_TILBAKE_FRA_KVALITETSSIKRER }).isTrue()
+    }
+
+    @Test
+    fun `Kvalitetssikringssteg - retur fra beslutter`() {
+        val fom = LocalDate.now().minusMonths(3)
+        val periode = Periode(fom, fom.plusYears(3))
+
+        val person = TestPersoner.STANDARD_PERSON()
+
+        val (_, behandling) = sendInnFørsteSøknad(
+            person = person,
+            periode = periode,
+        )
+
+        behandling
+            .løsSykdom(fom)
+            .løsBistand()
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .kvalitetssikreOk()
+            .løsBeregningstidspunkt()
+            .løsForutgåendeMedlemskap()
+            .løsOppholdskrav(fom)
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+
+        løsAvklaringsBehov(
+            behandling,
+            FatteVedtakLøsning(
+                hentAlleAvklaringsbehov(behandling)
+                    .filter { behov -> behov.erTotrinn() }
+                    .map { behov ->
+                        TotrinnsVurdering(
+                            behov.definisjon.kode, false, "begrunnelse", emptyList()
+                        )
+                    }),
+            Bruker("BESLUTTER")
+        )
+
+        val avklaringsbehovSomKreverKvalitetssikring = hentAlleAvklaringsbehov(behandling)
+            .filter { behov -> behov.kreverKvalitetssikring() }
+        assertThat(avklaringsbehovSomKreverKvalitetssikring.any { it.status() == AvklaringsbehovStatus.SENDT_TILBAKE_FRA_BESLUTTER }).isTrue()
+    }
+
+
 }
