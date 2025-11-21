@@ -2,7 +2,9 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.filterNotNull
 import no.nav.aap.komponenter.tidslinje.somTidslinje
+import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import java.time.LocalDate
@@ -15,6 +17,10 @@ data class SykdomGrunnlag(
      */
     val sykdomsvurderinger: List<Sykdomsvurdering>,
 ) {
+
+    fun yrkesskadevurdringTidslinje(periode: Periode): Tidslinje<Yrkesskadevurdering> {
+        return tidslinjeOf(periode to yrkesskadevurdering).filterNotNull()
+    }
 
     fun somSykdomsvurderingstidslinje(
         maksDato: LocalDate = Tid.MAKS

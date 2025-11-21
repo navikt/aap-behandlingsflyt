@@ -38,6 +38,7 @@ enum class Vilkårtype(
         spesielleInnvilgelsesÅrsaker = listOf(
             Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG,
             Innvilgelsesårsak.STUDENT,
+            Innvilgelsesårsak.SYKEPENGEERSTATNING,
         ),
         avslagsårsaker = listOf(
             Avslagsårsak.MANGLENDE_DOKUMENTASJON,
@@ -112,7 +113,7 @@ enum class Vilkårtype(
         kode = "AAP-13",
         spesielleInnvilgelsesÅrsaker = emptyList(),
         avslagsårsaker = listOf(
-            Avslagsårsak.MANGLENDE_DOKUMENTASJON
+            Avslagsårsak.IKKE_RETT_PA_SYKEPENGEERSTATNING,
         ),
         hjemmel = "§ 11-13",
         obligatorisk = false

@@ -198,7 +198,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
     fun `happy case førstegangsbehandling + revurder førstegangssøknad, gi sykepengererstatning hele perioden`() {
         val sak = happyCaseFørstegangsbehandling()
 
-        revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom)
+        revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom, vissVarighet = false)
             .løsSykdomsvurderingBrev()
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }

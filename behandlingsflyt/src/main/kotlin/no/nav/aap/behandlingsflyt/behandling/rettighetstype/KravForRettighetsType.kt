@@ -36,6 +36,7 @@ fun vurderRettighetsType(vilkårsresultat: Vilkårsresultat): Tidslinje<Rettighe
                 KravForYrkesskade.oppfyllesAv(forutgåendeTidslinje, vilkårsvurderinger) -> RettighetsType.BISTANDSBEHOV
                 KravForOvergangUføretrygd.oppfyllesAv(forutgåendeTidslinje, vilkårsvurderinger) -> RettighetsType.VURDERES_FOR_UFØRETRYGD
                 KravForSykepengeerstatning.oppfyllesAv(forutgåendeTidslinje, vilkårsvurderinger) -> RettighetsType.SYKEPENGEERSTATNING
+                KravForSykepengeerstatningGammeltFormat.oppfyllesAv(forutgåendeTidslinje, vilkårsvurderinger) -> RettighetsType.SYKEPENGEERSTATNING
                 KravForOvergangArbeid.oppfyllesAv(forutgåendeTidslinje, vilkårsvurderinger) -> RettighetsType.ARBEIDSSØKER
                 else -> null
             }
@@ -89,6 +90,17 @@ object KravForSykepengeerstatning : KravspesifikasjonForRettighetsType {
     override val kravSykepengeerstatning = MåVæreOppfylt()
 
     override val kravSykdom = IngenKrav
+    override val kravBistand = IngenKrav
+    override val kravOvergangUfør = IngenKrav
+    override val kravOvergangArbeid = IngenKrav
+    override val forutgåendeAap = IngenKravOmForutgåendeAAP
+}
+
+object KravForSykepengeerstatningGammeltFormat : KravspesifikasjonForRettighetsType {
+    override val kravForutgåendeMedlemskap = MåVæreOppfylt()
+    override val kravSykdom = MåVæreOppfylt(Innvilgelsesårsak.SYKEPENGEERSTATNING)
+
+    override val kravSykepengeerstatning = IngenKrav
     override val kravBistand = IngenKrav
     override val kravOvergangUfør = IngenKrav
     override val kravOvergangArbeid = IngenKrav
