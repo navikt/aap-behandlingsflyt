@@ -8,6 +8,7 @@ enum class TypeBrev {
     VEDTAK_ENDRING,
     VEDTAK_11_7,
     VEDTAK_11_9,
+    VEDTAK_11_23_SJETTE_LEDD,
     VARSEL_OM_BESTILLING,
     FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT,
     FORHÅNDSVARSEL_KLAGE_FORMKRAV,
@@ -15,7 +16,6 @@ enum class TypeBrev {
     KLAGE_OPPRETTHOLDELSE,
     KLAGE_TRUKKET,
     FORVALTNINGSMELDING;
-
 
     fun erVedtak(): Boolean {
         return setOf(
@@ -25,6 +25,7 @@ enum class TypeBrev {
             VEDTAK_11_18,
             VEDTAK_11_7,
             VEDTAK_11_9,
+            VEDTAK_11_23_SJETTE_LEDD,
             VEDTAK_ENDRING,
             KLAGE_AVVIST,
             KLAGE_OPPRETTHOLDELSE,

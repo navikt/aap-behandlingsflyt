@@ -68,7 +68,7 @@ class InstitusjonRegel : UnderveisRegel {
 
     private fun konstruerTidslinje(input: UnderveisInput): Tidslinje<InstitusjonVurdering> {
         return Tidslinje(
-            input.etAnnetSted.filter {
+            input.institusjonsopphold.filter {
                 it.institusjon?.erPåInstitusjon == true
             }.map {
                 if (it.institusjon?.skalGiReduksjon == false) {
@@ -92,7 +92,7 @@ class InstitusjonRegel : UnderveisRegel {
 
     private fun utledTidslinjeHvorDetKanGisReduksjon(input: UnderveisInput): Tidslinje<Boolean> {
         val tidslinjeOverInnleggelser = Tidslinje(
-            input.etAnnetSted.filter {
+            input.institusjonsopphold.filter {
                 it.institusjon?.erPåInstitusjon == true
             }.map {
                 Segment(
