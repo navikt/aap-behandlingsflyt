@@ -372,7 +372,11 @@ class StatistikkMetoder(
                 }
             }
 
-            TypeBehandling.Tilbakekreving, TypeBehandling.SvarFraAndreinstans, TypeBehandling.OppfølgingsBehandling, TypeBehandling.Aktivitetsplikt, TypeBehandling.Aktivitetsplikt11_9 -> {
+            TypeBehandling.Tilbakekreving,
+            TypeBehandling.SvarFraAndreinstans,
+            TypeBehandling.OppfølgingsBehandling,
+            TypeBehandling.Aktivitetsplikt,
+            TypeBehandling.Aktivitetsplikt11_9 -> {
                 null
             }
         }
