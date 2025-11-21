@@ -211,10 +211,18 @@ class UnderveisService(
             VirkningstidspunktUtleder(vilkårsresultatRepository).utledVirkningsTidspunkt(behandlingId)
                 ?: sak.rettighetsperiode.fom
 
-        // TODO: Når skal vi utvide maksdato - egen vurdering? Hvordan utleder vi hva som er "første" år?
+        /**
+         * TODO: Dersom sluttdato skal utvides må det håndteres her
+         */
         val sluttdatoForBehandlingen = maxOf(sak.rettighetsperiode.fom, startdatoForBehandlingen)
             .plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
 
-        return Periode(sak.rettighetsperiode.fom, sluttdatoForBehandlingen)
+        /**
+         * For behandlinger som har passert alle vilkår og vurderinger med kortere rettighetsperiode
+         * enn "sluttdatoForBehandlingen" så vil det bli feil å vurdere underveis lenger enn faktisk rettighetsperiode.
+         */
+        val sluttdatoForBakoverkompabilitet = minOf(sak.rettighetsperiode.tom, sluttdatoForBehandlingen)
+
+        return Periode(sak.rettighetsperiode.fom, sluttdatoForBakoverkompabilitet)
     }
 }
