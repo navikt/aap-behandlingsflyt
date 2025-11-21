@@ -186,11 +186,40 @@ class SamordningYtelseVurderingInformasjonskrav(
         // Ønsker ikke trigge revurdering automatisk i dette tilfellet enn så lenge
         val gikkFraNullTilTomtGrunnlag = samordningYtelser.isEmpty() && eksisterendeData == null
 
+        // flere behov for å droppe  revurdering, f.eks. dersom alle nye perioder er innenfor
+        erNyeYtelserInnenforDetSomAlleredeEksisterer(eksisterendeData, samordningYtelser)
+        // flere behov for å droppe  revurdering, f.eks. dersom alle nye perioder er innenfor
+
+
         return if (!gikkFraNullTilTomtGrunnlag && harEndringerIYtelser(eksisterendeData, samordningYtelser)) listOf(
             VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER)
         )
         else emptyList()
     }
+
+    private fun erNyeYtelserInnenforDetSomAlleredeEksisterer(
+        eksisterendeData: SamordningYtelseGrunnlag?,
+        samordningYtelser: Set<SamordningYtelse>
+    ): Boolean {
+        if (eksisterendeData == null) return false
+
+        val eksisterendePerioder = eksisterendeData.ytelser
+            .filter { it.ytelseType == Ytelse.SYKEPENGER }
+            .flatMap { it.ytelsePerioder }
+            .map { it.periode }
+
+        val nyePerioder = samordningYtelser
+            .filter { it.ytelseType == Ytelse.SYKEPENGER }
+            .flatMap { it.ytelsePerioder }
+            .map { it.periode }
+
+        return nyePerioder.all { ny ->
+            eksisterendePerioder.any { eks ->
+                !ny.fom.isBefore(eks.fom) && !ny.tom.isAfter(eks.tom)
+            }
+        }
+    }
+
 
 
     companion object : Informasjonskravkonstruktør {
@@ -213,7 +242,7 @@ class SamordningYtelseVurderingInformasjonskrav(
         ): Boolean {
             secureLogger.info("Hentet samordningytelse eksisterende ${eksisterende?.ytelser} med nye samordningsytelser ${samordningYtelser.map { it.ytelsePerioder }}  ${samordningYtelser.map { it.ytelseType.name }}")
             secureLogger.info("Overlapp " + harFullstendigOverlapp(eksisterende, samordningYtelser))
-            secureLogger.info("YtelseneErLike " + (samordningYtelser != eksisterende?.ytelser) )
+            secureLogger.info("YtelseneErLike " + (samordningYtelser != eksisterende?.ytelser))
             // TODO: return eksisterende == null || !harFullstendigOverlapp(eksisterende, samordningYtelser)
             return eksisterende == null || samordningYtelser != eksisterende.ytelser
         }
@@ -242,11 +271,9 @@ private fun perioderErLike(
 ): Boolean {
     if (eksisterende.size != nye.size) return false
 
-    return eksisterende.all { eks ->
-        nye.any { ny ->
-            eks.periode.fom.isEqual(ny.periode.fom) &&
-                    eks.periode.tom.isEqual(ny.periode.tom) &&
-                    eks.gradering == ny.gradering
+    return nye.all { ny ->
+        eksisterende.any { eksisterende ->
+            !ny.periode.fom.isBefore(eksisterende.periode.fom) && !ny.periode.tom.isAfter(eksisterende.tom)
         }
     }
 }
