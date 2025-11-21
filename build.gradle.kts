@@ -2,7 +2,6 @@
 
 plugins {
     base
-    id("behandlingsflyt.conventions")
 }
 
 allprojects {
@@ -11,11 +10,5 @@ allprojects {
             // Lås postgres-versjonen til en "known good" versjon for nå
             force("org.postgresql:postgresql:42.7.8")
         }
-    }
-}
-
-dependencies {
-    rootProject.subprojects.forEach { subproject ->
-        dokka(project(":" + subproject.name))
     }
 }

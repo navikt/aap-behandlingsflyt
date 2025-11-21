@@ -7,11 +7,11 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.tilgang.Rolle
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
-
 
 class Avklaringsbehovene(
     private val repository: AvklaringsbehovOperasjonerRepository,
@@ -70,6 +70,7 @@ class Avklaringsbehovene(
     fun leggTil(
         definisjoner: List<Definisjon>,
         funnetISteg: StegType,
+        perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>? = null,
         frist: LocalDate? = null,
         begrunnelse: String = "",
         grunn: ÅrsakTilSettPåVent? = null,
@@ -101,12 +102,13 @@ class Avklaringsbehovene(
                     frist = utledFrist(definisjon, frist),
                     begrunnelse = begrunnelse,
                     grunn = grunn,
+                    perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
                     endretAv = bruker.ident
                 )
             }
         }
     }
-
+    
     private fun utledFrist(definisjon: Definisjon, frist: LocalDate?): LocalDate? {
         if (definisjon.erVentebehov()) {
             return definisjon.utledFrist(frist)
@@ -194,6 +196,13 @@ class Avklaringsbehovene(
         avklaringsbehov.reåpne(frist = frist, venteårsak = avklaringsbehov.venteårsak())
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
+
+    fun oppdaterPerioder(definisjon: Definisjon, perioder: Set<Periode>) {
+        val avklaringsbehov = alle().single { it.definisjon == definisjon }
+        avklaringsbehov.oppdaterPerioder(perioder)
+        repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
+    }
+
 
     override fun alle(): List<Avklaringsbehov> {
         return avklaringsbehovene

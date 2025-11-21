@@ -121,7 +121,7 @@ public enum class Definisjon(
         type = BehovType.OVERSTYR,
         løsesISteg = StegType.IKKE_OPPFYLT_MELDEPLIKT,
         kreverToTrinn = true,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
     ),
     AVKLAR_SYKDOM(
         kode = AvklaringsbehovKode.`5003`,
@@ -329,7 +329,7 @@ public enum class Definisjon(
         kode = AvklaringsbehovKode.`5096`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.FASTSETT_UTTAK,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
     ),
     FORESLÅ_VEDTAK(
         kode = AvklaringsbehovKode.`5098`,

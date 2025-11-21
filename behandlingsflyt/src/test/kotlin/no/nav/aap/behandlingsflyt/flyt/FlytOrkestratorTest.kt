@@ -143,6 +143,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.Med
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.barn.BarnRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.pip.PipRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
+import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
@@ -3227,59 +3228,41 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
 
     @Test
     fun `kan tilbakeføre behandling til start`() {
-        val ident = ident()
-        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        // Given:
+        val (_, behandling) = sendInnFørsteSøknad()
 
-        // Oppretter vanlig søknad
-        val behandling = sendInnSøknad(
-            ident, periode, SøknadV0(
-                student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
-                medlemskap = SøknadMedlemskapDto(
-                    "JA", null, "JA", null,
-                    listOf(
-                        UtenlandsPeriodeDto(
-                            land = "SWE",
-                            tilDato = LocalDate.now().plusMonths(1),
-                            fraDato = LocalDate.now().minusMonths(1),
-                            iArbeid = "JA",
-                            utenlandsId = null,
-                            tilDatoLocalDate = LocalDate.now().plusMonths(1),
-                            fraDatoLocalDate = LocalDate.now().minusMonths(1),
-                        )
-                    )
-                ),
-            )
-        ).medKontekst {
-            assertThat(åpneAvklaringsbehov)
-                .extracting<Definisjon> { it.definisjon }
-                .containsOnly(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
-        }
-            // Trigger manuell vurdering
-            .løsLovvalg(periode.fom)
-            .medKontekst {
+        behandling.medKontekst {
                 assertThat(åpneAvklaringsbehov)
                     .extracting<Definisjon> { it.definisjon }
                     .containsOnly(Definisjon.AVKLAR_SYKDOM)
             }
 
-        dataSource.transaction { connection ->
-            val behandlingId = behandling.id
-            val behandlingRepo = BehandlingRepositoryImpl(connection)
-            assertThat(behandlingRepo.hent(behandlingId).aktivtSteg()).isEqualTo(StegType.AVKLAR_SYKDOM)
-
-            // Tilbakefør med hjelpefunksjon
-            Driftfunksjoner(postgresRepositoryRegistry.provider(connection), gatewayProvider).flyttBehandlingTilStart(
-                behandlingId,
-                connection
-            )
-
-            // Validér avklaring
-            assertThat(behandlingRepo.hent(behandlingId).aktivtSteg()).isEqualTo(START_BEHANDLING)
+        val antallKjøringerVurderRettighetsperiode = dataSource.transaction { connection ->
+            BehandlingRepositoryImpl(connection).hentStegHistorikk(behandling.id)
+                .count { it.steg() == VURDER_RETTIGHETSPERIODE && it.status() == StegStatus.AVSLUTTER }
         }
 
-        motor.kjørJobber()
-        val b = hentSisteOpprettedeBehandlingForSak(behandling.sakId)
-        assertThat(b.aktivtSteg()).isEqualTo(StegType.AVKLAR_SYKDOM)
+        // When:
+        dataSource.transaction { connection ->
+            val driftfunksjoner = Driftfunksjoner(postgresRepositoryRegistry.provider(connection), gatewayProvider)
+            driftfunksjoner.kjørFraSteg(behandling, VURDER_RETTIGHETSPERIODE)
+        }
+
+        // Then:
+        // Har kjørt steget vi rullet tilbake til én gang til
+        val antallKjøringerVurderRettighetsperiodeEtterTilbakekjøring = dataSource.transaction { connection ->
+            BehandlingRepositoryImpl(connection).hentStegHistorikk(behandling.id)
+                .count { it.steg() == VURDER_RETTIGHETSPERIODE && it.status() == StegStatus.AVSLUTTER }
+        }
+        assertThat(antallKjøringerVurderRettighetsperiodeEtterTilbakekjøring)
+            .isEqualTo(antallKjøringerVurderRettighetsperiode + 1)
+
+        // Tilbake til AVKLAR_SYKDOM
+        dataSource.transaction { connection ->
+            assertThat(BehandlingRepositoryImpl(connection).hentAktivtSteg(behandling.id))
+                .extracting { it?.steg() }
+                .isEqualTo(StegType.AVKLAR_SYKDOM)
+        }
     }
 
     @Test

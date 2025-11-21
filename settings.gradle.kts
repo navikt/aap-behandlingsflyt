@@ -8,5 +8,6 @@ include(
     "api",
     "repository",
     "lib-test",
-    "kontrakt"
+    "kontrakt",
+    "docs"
 )

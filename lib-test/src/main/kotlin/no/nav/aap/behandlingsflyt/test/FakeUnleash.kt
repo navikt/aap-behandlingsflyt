@@ -30,6 +30,7 @@ object FakeUnleash : FakeUnleashBase(
         BehandlingsflytFeature.NyeBarn to true,
         BehandlingsflytFeature.Arbeidsopptrapping to true,
         BehandlingsflytFeature.IkkeAntaNullTimerArbeidet to true,
+        BehandlingsflytFeature.ForutgaendeMedlemskapMigrering to false,
     )
 )
 
@@ -48,5 +49,6 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.NyeBarn to true,
         BehandlingsflytFeature.Arbeidsopptrapping to true,
         BehandlingsflytFeature.IkkeAntaNullTimerArbeidet to true,
+        BehandlingsflytFeature.ForutgaendeMedlemskapMigrering to true,
     )
 )

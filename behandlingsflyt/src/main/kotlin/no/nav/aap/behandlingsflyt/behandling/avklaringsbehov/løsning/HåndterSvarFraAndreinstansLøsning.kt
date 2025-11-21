@@ -13,7 +13,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.HÅNDTER_SVAR_FRA_ANDREINSTANS_KODE
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.verdityper.Bruker
-import no.nav.aap.komponenter.httpklient.exception.IkkeTillattException
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -28,11 +27,6 @@ class HåndterSvarFraAndreinstansLøsning(
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`6008`
 ) : EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
-        // TODO: Støtt konsekvens 'BEHANDLE_PÅ_NYTT' i steget
-        if (svarFraAndreinstansVurdering.konsekvens == SvarFraAndreinstansKonsekvens.BEHANDLE_PÅ_NYTT) {
-            throw IkkeTillattException("Opprettelse av ny klagebehandling er enda ikke implementert")
-        }
-        
         return HåndterSvarFraAndreinstansLøser(repositoryProvider).løs(kontekst, this)
     }
 }

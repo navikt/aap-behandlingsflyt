@@ -1,23 +1,16 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.meldeplikt
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
-import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
-import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.august
-import no.nav.aap.behandlingsflyt.test.ident
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -27,7 +20,6 @@ import java.time.LocalDateTime
 
 class MeldepliktRepositoryImplTest {
     companion object {
-        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
         private lateinit var dataSource: TestDataSource
 
         @BeforeAll
@@ -332,13 +324,5 @@ class MeldepliktRepositoryImplTest {
                     )
                 )
         }
-    }
-
-    private fun sak(connection: DBConnection): Sak {
-        return PersonOgSakService(
-            FakePdlGateway,
-            PersonRepositoryImpl(connection),
-            SakRepositoryImpl(connection)
-        ).finnEllerOpprett(ident(), periode)
     }
 }
