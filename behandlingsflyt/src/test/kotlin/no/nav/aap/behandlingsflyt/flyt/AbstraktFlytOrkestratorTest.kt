@@ -1037,8 +1037,29 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         )
     }
 
+    protected fun løsForutgåendeMedlemskapPeriodisert(
+        behandling: Behandling
+    ): Behandling {
+        return løsAvklaringsBehov(
+            behandling,
+            AvklarForutgåendeMedlemskapLøsning(
+                ManuellVurderingForForutgåendeMedlemskapDto(
+                    begrunnelse = "",
+                    harForutgåendeMedlemskap = true,
+                    varMedlemMedNedsattArbeidsevne = true,
+                    medlemMedUnntakAvMaksFemAar = null
+                )
+            )
+        )
+    }
+
     @JvmName("losForutgaaendeMedlemskapExt")
     protected fun Behandling.løsForutgåendeMedlemskap(): Behandling {
+        return løsForutgåendeMedlemskap(this)
+    }
+
+    @JvmName("losForutgaaendeMedlemskapExt")
+    protected fun Behandling.løsForutgåendeMedlemskapPeriodisert(): Behandling {
         return løsForutgåendeMedlemskap(this)
     }
 
