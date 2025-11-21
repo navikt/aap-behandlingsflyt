@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
-import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`100_PROSENT`
 import java.math.RoundingMode
 import java.time.LocalDate
@@ -44,17 +43,17 @@ data class Tilkjent(
 
 data class TilkjentGradering(
     val endeligGradering: Prosent,
-    val samordningGradering: Prosent?,
-    val institusjonGradering: Prosent?,
-    val arbeidGradering: Prosent?,
-    val samordningUføregradering: Prosent?,
-    val samordningArbeidsgiverGradering: Prosent?
+    val samordningGradering: Prosent,
+    val institusjonGradering: Prosent,
+    val arbeidGradering: Prosent,
+    val samordningUføregradering: Prosent,
+    val samordningArbeidsgiverGradering: Prosent
 ) {
     fun graderingForDagsats11_9Reduksjon() = `100_PROSENT`
-        .minus(samordningGradering ?: `0_PROSENT`)
-        .minus(samordningArbeidsgiverGradering ?: `0_PROSENT`)
-        .minus(institusjonGradering ?: `0_PROSENT`)
-        .minus(samordningUføregradering ?: `0_PROSENT`)
+        .minus(samordningGradering)
+        .minus(samordningArbeidsgiverGradering)
+        .minus(institusjonGradering)
+        .minus(samordningUføregradering)
 }
 
 data class TilkjentGUnit(val dagsats: GUnit, val gradering: TilkjentGradering, val utbetalingsdato: LocalDate) {

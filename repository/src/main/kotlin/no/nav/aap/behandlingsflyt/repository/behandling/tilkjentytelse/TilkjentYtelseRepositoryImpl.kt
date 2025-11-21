@@ -10,6 +10,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
 
@@ -38,11 +39,11 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
                     Tilkjent(
                         dagsats = Beløp(it.getInt("DAGSATS")),
                         gradering = TilkjentGradering(
-                            samordningUføregradering = it.getIntOrNull("SAMORDNING_UFORE_GRADERING")?.let { result -> Prosent(result) },
-                            samordningArbeidsgiverGradering = it.getIntOrNull("SAMORDNING_ARBEIDSGIVER_GRADERING")?.let { result -> Prosent(result) },
-                            samordningGradering = it.getIntOrNull("SAMORDNING_GRADERING")?.let { result -> Prosent(result) },
-                            institusjonGradering = it.getIntOrNull("INSTITUSJON_GRADERING")?.let { result -> Prosent(result) },
-                            arbeidGradering = it.getIntOrNull("ARBEID_GRADERING")?.let { result -> Prosent(result) },
+                            samordningUføregradering = it.getIntOrNull("SAMORDNING_UFORE_GRADERING")?.let { result -> Prosent(result) } ?: `0_PROSENT`,
+                            samordningArbeidsgiverGradering = it.getIntOrNull("SAMORDNING_ARBEIDSGIVER_GRADERING")?.let { result -> Prosent(result) } ?: `0_PROSENT`,
+                            samordningGradering = it.getIntOrNull("SAMORDNING_GRADERING")?.let { result -> Prosent(result) } ?: `0_PROSENT`,
+                            institusjonGradering = it.getIntOrNull("INSTITUSJON_GRADERING")?.let { result -> Prosent(result) } ?: `0_PROSENT`,
+                            arbeidGradering = it.getIntOrNull("ARBEID_GRADERING")?.let { result -> Prosent(result) } ?: `0_PROSENT`,
                             endeligGradering = Prosent(it.getInt("GRADERING"))
                         ),
                         barnetillegg = Beløp(it.getInt("BARNETILLEGG")),
@@ -120,11 +121,11 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
                 setBigDecimal(9, tilkjent.barnetilleggsats.verdi())
                 setBigDecimal(10, tilkjent.grunnbeløp.verdi())
                 setLocalDate(11, tilkjent.utbetalingsdato)
-                setInt(12, tilkjent.gradering.samordningGradering?.prosentverdi())
-                setInt(13, tilkjent.gradering.institusjonGradering?.prosentverdi())
-                setInt(14, tilkjent.gradering.arbeidGradering?.prosentverdi())
-                setInt(15, tilkjent.gradering.samordningUføregradering?.prosentverdi())
-                setInt(16, tilkjent.gradering.samordningArbeidsgiverGradering?.prosentverdi())
+                setInt(12, tilkjent.gradering.samordningGradering.prosentverdi())
+                setInt(13, tilkjent.gradering.institusjonGradering.prosentverdi())
+                setInt(14, tilkjent.gradering.arbeidGradering.prosentverdi())
+                setInt(15, tilkjent.gradering.samordningUføregradering.prosentverdi())
+                setInt(16, tilkjent.gradering.samordningArbeidsgiverGradering.prosentverdi())
             }
         }
     }

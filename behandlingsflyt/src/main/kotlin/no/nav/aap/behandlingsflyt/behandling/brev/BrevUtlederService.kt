@@ -281,10 +281,10 @@ class BrevUtlederService(
              * i brevet.
              */
             val gradering = Prosent.`100_PROSENT`
-                .minus(tilkjent.gradering.samordningGradering ?: Prosent.`0_PROSENT`)
-                .minus(tilkjent.gradering.institusjonGradering ?: Prosent.`0_PROSENT`)
-                .minus(tilkjent.gradering.samordningUføregradering ?: Prosent.`0_PROSENT`)
-                .minus(tilkjent.gradering.samordningArbeidsgiverGradering ?: Prosent.`0_PROSENT`)
+                .minus(tilkjent.gradering.samordningGradering)
+                .minus(tilkjent.gradering.institusjonGradering)
+                .minus(tilkjent.gradering.samordningUføregradering)
+                .minus(tilkjent.gradering.samordningArbeidsgiverGradering)
                 .minus(underveisperiode.arbeidsgradering.fastsattArbeidsevne)
 
             /**

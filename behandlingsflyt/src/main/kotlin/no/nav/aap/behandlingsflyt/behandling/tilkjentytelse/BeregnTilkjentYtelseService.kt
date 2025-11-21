@@ -232,9 +232,7 @@ class BeregnTilkjentYtelseService(
     }
 
     private fun reduserUtbetalingsgradVedInstitusjonsopphold(tilkjentGradering: TilkjentGradering) =
-        tilkjentGradering.institusjonGradering?.let {
-            tilkjentGradering.endeligGradering.multiplisert(it.komplement())
-        } ?: tilkjentGradering.endeligGradering
+        tilkjentGradering.endeligGradering.multiplisert(tilkjentGradering.institusjonGradering.komplement())
 
     private class TilkjentFørBarn(
         val dagsats: Beløp,
@@ -242,11 +240,11 @@ class BeregnTilkjentYtelseService(
         val grunnlagsfaktor: GUnit,
         val grunnbeløp: Beløp,
         val utbetalingsdato: LocalDate,
-        val samordningGradering: Prosent?,
-        val samordningUføreGradering: Prosent?,
-        val samordningArbeidsgiverGradering: Prosent?,
-        val arbeidsGradering: Prosent?,
-        val institusjonGradering: Prosent?
+        val samordningGradering: Prosent,
+        val samordningUføreGradering: Prosent,
+        val samordningArbeidsgiverGradering: Prosent,
+        val arbeidsGradering: Prosent,
+        val institusjonGradering: Prosent
     )
 
     private class Barnetillegg(
