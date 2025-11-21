@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordn
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingInformasjonskrav
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -323,5 +324,37 @@ class SamordningYtelseRepositoryImplTest {
                 samordningYtelseRepository.slett(behandling.id)
             }
         }
+    }
+
+    fun `test overlappingEksisterendeYtelserMedNyeYtelser`() {
+       // TODO val samordningYtelseInformasjonskrav = SamordningYtelseVurderingInformasjonskrav.harEndringerIYtelser()
+    }
+
+    fun `test overlappingEksisterendeVurderingerMedNyeYtelser`() {
+       // TODO val samordningYtelseInformasjonskrav = SamordningYtelseVurderingInformasjonskrav.harEndringerIYtelser()
+    }
+
+    fun `test ikkeOverlappingEksisterendeYtelserMedNyeYtelser`() {
+        // TODO val samordningYtelseInformasjonskrav = SamordningYtelseVurderingInformasjonskrav.harEndringerIYtelser()
+    }
+
+    fun `test ikkeOverlappingEksisterendeVurderingerMedNyeYtelser`() {
+        // TODO val samordningYtelseInformasjonskrav = SamordningYtelseVurderingInformasjonskrav.harEndringerIYtelser()
+    }
+
+    fun `test overlappingMenIkkeRettYtelseTypeEksisterendeYtelserMedNyeYtelser`() {
+        // TODO val samordningYtelseInformasjonskrav = SamordningYtelseVurderingInformasjonskrav.harEndringerIYtelser()
+    }
+
+    fun `test overlappingMenIkkeRettYtelseTypeEksisterendeVurderingerMedNyeYtelser`() {
+        // TODO val samordningYtelseInformasjonskrav = SamordningYtelseVurderingInformasjonskrav.harEndringerIYtelser()
+    }
+
+    fun `test overlappingMenIkkeRettGraderingEksisterendeYtelserMedNyeYtelser`() {
+        // TODO val samordningYtelseInformasjonskrav = SamordningYtelseVurderingInformasjonskrav.harEndringerIYtelser()
+    }
+
+    fun `test overlappingMenIkkeRettGraderingEksisterendeVurderingerMedNyeYtelser`() {
+        // TODO val samordningYtelseInformasjonskrav = SamordningYtelseVurderingInformasjonskrav.harEndringerIYtelser()
     }
 }
