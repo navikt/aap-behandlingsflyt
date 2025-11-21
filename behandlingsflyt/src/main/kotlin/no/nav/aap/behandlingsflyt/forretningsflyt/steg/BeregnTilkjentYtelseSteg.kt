@@ -26,7 +26,6 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.verdityper.Beløp
@@ -66,15 +65,7 @@ class BeregnTilkjentYtelseSteg private constructor(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if ((kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING && tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(
-                kontekst,
-                type()
-            ))
-            || (kontekst.vurderingType == VurderingType.REVURDERING && tidligereVurderinger.girIngenBehandlingsgrunnlag(
-                kontekst,
-                type()
-            ))
-        ) {
+        if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
             return Fullført
         }
 

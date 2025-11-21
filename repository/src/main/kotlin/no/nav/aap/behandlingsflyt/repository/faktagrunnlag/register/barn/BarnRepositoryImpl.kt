@@ -626,7 +626,25 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         }
     }
 
-    override fun deaktiverAlleSaksbehandlerOppgitteBarn(behandlingId: BehandlingId) {
+    override fun tilbakestillGrunnlag(behandlingId: BehandlingId, forrigeBehandlingId: BehandlingId?) {
+        val eksisternedeBarnGrunnlag = hentHvisEksisterer(behandlingId)
+
+        if (forrigeBehandlingId == null) {
+            deaktiverAlleSaksbehandlerOppgitteBarn(behandlingId)
+            return
+        }
+
+        if (eksisternedeBarnGrunnlag != null) {
+            deaktiverEksisterende(behandlingId)
+        }
+
+        kopier(forrigeBehandlingId, behandlingId)
+    }
+
+    /**
+     * Deaktiver alle saksbehandleroppgitte barn for en behandling. Brukes når alle saksbehandleroppgitte barn skal fjernes.
+     */
+    private fun deaktiverAlleSaksbehandlerOppgitteBarn(behandlingId: BehandlingId) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
 
         if (eksisterendeGrunnlag != null) {
@@ -646,18 +664,6 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
                     setLong(5, null)
                 }
             }
-        }
-    }
-
-    override fun tilbakestillGrunnlag(behandlingId: BehandlingId, forrigeBehandling: BehandlingId?) {
-        val eksisternedeBarnGrunnlag = hentHvisEksisterer(behandlingId)
-
-        if (eksisternedeBarnGrunnlag != null) {
-            deaktiverEksisterende(behandlingId)
-        }
-
-        if (forrigeBehandling != null) {
-            kopier(forrigeBehandling, behandlingId)
         }
     }
 }

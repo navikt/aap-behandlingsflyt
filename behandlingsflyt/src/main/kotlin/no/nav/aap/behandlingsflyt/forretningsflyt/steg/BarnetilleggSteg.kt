@@ -102,11 +102,7 @@ class BarnetilleggSteg(
 
         val saksbehandlerOppgitteBarn = forrigeBarnGrunnlag?.saksbehandlerOppgitteBarn?.barn.orEmpty()
 
-        if (forrigeBarnGrunnlag == null) {
-            barnRepository.deaktiverAlleSaksbehandlerOppgitteBarn(kontekst.behandlingId)
-        } else {
-            barnRepository.tilbakestillGrunnlag(forrigeBehandlingId, kontekst.behandlingId)
-        }
+        barnRepository.tilbakestillGrunnlag(kontekst.behandlingId, forrigeBehandlingId)
 
         barnRepository.lagreSaksbehandlerOppgitteBarn(kontekst.behandlingId, saksbehandlerOppgitteBarn)
 
