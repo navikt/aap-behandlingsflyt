@@ -314,7 +314,7 @@ class Avklaringsbehovene(
                 }.filter{!it.verdi}.perioder().toSet()
                 
                 if (perioderSomManglerLøsning.isNotEmpty()) {
-                    throw UgyldigForespørselException("Periodisert løsning for avklaringsbehov '${løsning.definisjon()}' mangler vurdering for perioder: $perioderSomManglerLøsning")
+                    throw UgyldigForespørselException("Løsning mangler vurdering for perioder: $perioderSomManglerLøsning")
                 }
             }
         }

@@ -226,7 +226,7 @@ class AvklaringsbehoveneTest {
 
         assertThat(avklaringsbehov.erÅpent()).isTrue
 
-        assertThrows<UgyldigForespørselException> {
+        val exception = assertThrows<UgyldigForespørselException> {
             avklaringsbehovene.validerPerioder(
                 løsning = AvklarOvergangArbeidLøsning(
                     listOf(
@@ -240,6 +240,8 @@ class AvklaringsbehoveneTest {
                 ),
             )
         }
+
+        assertThat(exception.message).isEqualTo("Løsning mangler vurdering for perioder: [Periode(fom=2021-03-01, tom=2021-04-01)]")
 
         assertDoesNotThrow {
             avklaringsbehovene.validerPerioder(
