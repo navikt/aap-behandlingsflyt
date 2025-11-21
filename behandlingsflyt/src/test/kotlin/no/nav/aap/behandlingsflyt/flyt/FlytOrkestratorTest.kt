@@ -865,6 +865,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsBistand()
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .kvalitetssikreOk()
             .løsAvklaringsBehov(
                 AvklarYrkesskadeLøsning(
                     yrkesskadesvurdering = YrkesskadevurderingDto(
@@ -1917,7 +1918,6 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                         begrunnelse = "Er ikke syk nok",
                         dokumenterBruktIVurdering = listOf(JournalpostId("1231299")),
                         harSkadeSykdomEllerLyte = false,
-                        vurderingenGjelderFra = null,
                         erArbeidsevnenNedsatt = null,
                         erSkadeSykdomEllerLyteVesentligdel = null,
                         erNedsettelseIArbeidsevneAvEnVissVarighet = null,
@@ -2304,7 +2304,9 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 ),
                 ingenEndringIGruppe = true,
                 bruker = Bruker("SAKSBEHANDLER")
-            ).løsAvklaringsBehov(
+            )
+            .kvalitetssikreOk()
+            .løsAvklaringsBehov(
                 FastsettBeregningstidspunktLøsning(
                     beregningVurdering = BeregningstidspunktVurderingDto(
                         begrunnelse = "Trenger hjelp fra Nav",
@@ -4598,7 +4600,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
             .løsBeregningstidspunkt()
-            .løsForutgåendeMedlemskap()
+            .løsForutgåendeMedlemskap(fom)
             .løsOppholdskrav(fom)
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
