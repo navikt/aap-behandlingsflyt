@@ -17,4 +17,7 @@ interface MedlemskapArbeidInntektForutgåendeRepository : Repository {
     fun lagreManuellVurdering(behandlingId: BehandlingId, manuellVurdering: ManuellVurderingForForutgåendeMedlemskap?)
     fun lagreVurderinger(behandlingId: BehandlingId, vurderinger: List<ManuellVurderingForForutgåendeMedlemskap>)
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
+
+    // TODO fjernes etter migrering er fullført
+    fun migrerManuelleVurderingerPeriodisert()
 }

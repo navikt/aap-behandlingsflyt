@@ -84,9 +84,11 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
 import no.nav.aap.behandlingsflyt.pip.behandlingsflytPip
 import no.nav.aap.behandlingsflyt.prosessering.BehandlingsflytLogInfoProvider
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektForutgåendeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -325,15 +327,19 @@ private fun utførMigreringer(
     log: io.ktor.util.logging.Logger
 ): ScheduledExecutorService {
     val scheduler = Executors.newScheduledThreadPool(1)
-
     scheduler.schedule(Runnable {
         val unleashGateway: UnleashGateway = gatewayProvider.provide()
+        val forutgåendeMedlemskapMigreringEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.ForutgaendeMedlemskapMigrering)
         val isLeader = isLeader(log)
-        log.info("isLeader = $isLeader")
+        log.info("isLeader = $isLeader, ForutgaendeMedlemskapMigrering=$forutgåendeMedlemskapMigreringEnabled")
 
-        if (isLeader) {
-            // Legg migreringsjobber som skal kjøres her, gjerne bak en feature-toggke
+        if (forutgåendeMedlemskapMigreringEnabled && isLeader) {
+            dataSource.transaction { connection ->
+                val repository = MedlemskapArbeidInntektForutgåendeRepositoryImpl(connection)
+                repository.migrerManuelleVurderingerPeriodisert()
+            }
         }
+
     }, 9, TimeUnit.MINUTES)
     return scheduler
 }
