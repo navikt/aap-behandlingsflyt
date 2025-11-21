@@ -23,6 +23,7 @@ import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import org.slf4j.LoggerFactory
+import java.math.BigDecimal
 import java.time.MonthDay
 import java.time.Year
 import javax.sql.DataSource
@@ -99,7 +100,7 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(
                                         vurdering.opprettet.toLocalDate()
                                     ),
                                     ar = vurdering.år.value,
-                                    belop = vurdering.belop.verdi,
+                                    belop = vurdering.belop?.verdi ?: BigDecimal.ZERO,
                                 )
                             },
                             historiskeVurderinger = gamleHistoriske.map { vurdering ->
@@ -110,7 +111,7 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(
                                         vurdering.opprettet.toLocalDate()
                                     ),
                                     ar = vurdering.år.value,
-                                    belop = vurdering.belop.verdi,
+                                    belop = vurdering.belop?.verdi ?: BigDecimal.ZERO,
                                 )
                             },
                             manuelleVurderinger = mappedVurdering,
@@ -170,7 +171,7 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(
                                     begrunnelse = it.begrunnelse,
                                     vurdertAv = VurdertAvResponse(it.vurdertAv, it.opprettet.toLocalDate()),
                                     ar = it.år.value,
-                                    belop = it.belop.verdi,
+                                    belop = it.belop?.verdi ?: BigDecimal.ZERO,
                                 )
                             },
                             historiskeVurderinger = historiskeVurderinger.map {
@@ -178,7 +179,7 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(
                                     begrunnelse = it.begrunnelse,
                                     vurdertAv = VurdertAvResponse(it.vurdertAv, it.opprettet.toLocalDate()),
                                     ar = it.år.value,
-                                    belop = it.belop.verdi,
+                                    belop = it.belop?.verdi ?: BigDecimal.ZERO,
                                 )
                             }
                         )

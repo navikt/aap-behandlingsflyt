@@ -36,14 +36,14 @@ class ManglendeInntektGrunnlagService(
 
             AarData(
                 ar = manuellInntekt.år.value,
-                belop = manuellInntekt.belop.verdi,
+                belop = manuellInntekt.belop?.verdi,
+                eosBelop = manuellInntekt.belop?.verdi,
                 gverdi = gVerdi.verdi
             )
         }
 
         return ManuellInntektGrunnlagVurdering(
             begrunnelse = manuelleInntekter.first().begrunnelse,
-            aarsak = manuelleInntekter.first().aarsak?.name,
             vurdertAv = VurdertAvResponse(
                 manuelleInntekter.first().vurdertAv,
                 manuelleInntekter.first().opprettet.toLocalDate()
@@ -70,14 +70,14 @@ class ManglendeInntektGrunnlagService(
 
                 AarData(
                     ar = historiskManuellInntekt.år.value,
-                    belop = historiskManuellInntekt.belop.verdi,
+                    belop = historiskManuellInntekt.belop?.verdi,
+                    eosBelop = historiskManuellInntekt.eosBelop?.verdi,
                     gverdi = gVerdi.verdi
                 )
             }
 
             ManuellInntektGrunnlagVurdering(
                 begrunnelse = historiskManuellInntektSet.first().begrunnelse,
-                aarsak = historiskManuellInntektSet.first().aarsak?.name,
                 vurdertAv = VurdertAvResponse(
                     historiskManuellInntektSet.first().vurdertAv,
                     historiskManuellInntektSet.first().opprettet.toLocalDate()

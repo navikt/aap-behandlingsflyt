@@ -10,7 +10,8 @@ data class ManuellInntektVurderingDto(
 )
 
 data class AarsVurdering(
-    val belop: BigDecimal,
+    val belop: BigDecimal?,
+    val eosBelop: BigDecimal? = null,
     val ar: Int
 )
 

@@ -27,13 +27,13 @@ data class ManuellInntektGrunnlagResponse(
 
 data class ManuellInntektGrunnlagVurdering(
     val begrunnelse: String,
-    val aarsak: String?,
     val vurdertAv: VurdertAvResponse,
     val aarsVurderinger: List<AarData>,
 )
 
 data class AarData(
     val ar: Int,
-    val belop: BigDecimal,
+    val belop: BigDecimal?,
     val gverdi: BigDecimal,
+    val eosBelop: BigDecimal? = null,
 )

@@ -33,31 +33,35 @@ class AvklarManuellInntektVurderingLøser(
         val relevantePeriode = beregningService.utledRelevanteBeregningsÅr(kontekst.behandlingId())
         val sisteRelevanteÅr = relevantePeriode.max()
 
-        if (løsning.manuellVurderingForManglendeInntekt.belop < BigDecimal.ZERO || løsning.manuellVurderingForManglendeInntekt.vurderinger?.any { it.belop < BigDecimal.ZERO } == true) {
+        if (løsning.manuellVurderingForManglendeInntekt.belop < BigDecimal.ZERO
+            || løsning.manuellVurderingForManglendeInntekt.vurderinger?.any { it.belop != null && it.belop < BigDecimal.ZERO } == true
+            || løsning.manuellVurderingForManglendeInntekt.vurderinger?.any { it.eosBelop != null && it.eosBelop < BigDecimal.ZERO } == true
+        ) {
             throw UgyldigForespørselException("Inntekt kan ikke være negativ")
         }
 
-        val vurderinger = if (unleashGateway.isEnabled(BehandlingsflytFeature.EOSBeregning) && løsning.manuellVurderingForManglendeInntekt.vurderinger != null) {
-            val begrunnelse = løsning.manuellVurderingForManglendeInntekt.begrunnelse
-            løsning.manuellVurderingForManglendeInntekt.vurderinger.map { vurdering ->
-                ManuellInntektVurdering(
-                    begrunnelse = begrunnelse,
-                    belop = vurdering.belop.let(::Beløp),
-                    vurdertAv = kontekst.bruker.ident,
-                    år = Year.of(vurdering.ar),
-                    aarsak = løsning.manuellVurderingForManglendeInntekt.aarsak
+        val vurderinger =
+            if (unleashGateway.isEnabled(BehandlingsflytFeature.EOSBeregning) && løsning.manuellVurderingForManglendeInntekt.vurderinger != null) {
+                val begrunnelse = løsning.manuellVurderingForManglendeInntekt.begrunnelse
+                løsning.manuellVurderingForManglendeInntekt.vurderinger.map { vurdering ->
+                    ManuellInntektVurdering(
+                        begrunnelse = begrunnelse,
+                        belop = vurdering.belop?.let { Beløp(it) },
+                        vurdertAv = kontekst.bruker.ident,
+                        år = Year.of(vurdering.ar),
+                        eosBelop = vurdering.eosBelop?.let { Beløp(it) },
+                    )
+                }.toSet()
+            } else {
+                setOf(
+                    ManuellInntektVurdering(
+                        begrunnelse = løsning.manuellVurderingForManglendeInntekt.begrunnelse,
+                        belop = løsning.manuellVurderingForManglendeInntekt.belop.let(::Beløp),
+                        vurdertAv = kontekst.bruker.ident,
+                        år = sisteRelevanteÅr
+                    )
                 )
-            }.toSet()
-        } else {
-            setOf(
-                ManuellInntektVurdering(
-                    begrunnelse = løsning.manuellVurderingForManglendeInntekt.begrunnelse,
-                    belop = løsning.manuellVurderingForManglendeInntekt.belop.let(::Beløp),
-                    vurdertAv = kontekst.bruker.ident,
-                    år = sisteRelevanteÅr
-                )
-            )
-        }
+            }
 
         manuellInntektGrunnlagRepository.lagre(
             behandlingId = kontekst.behandlingId(),

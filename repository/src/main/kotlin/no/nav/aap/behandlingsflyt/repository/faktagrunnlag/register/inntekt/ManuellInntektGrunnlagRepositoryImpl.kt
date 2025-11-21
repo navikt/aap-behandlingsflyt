@@ -85,9 +85,9 @@ class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection)
                 ManuellInntektVurdering(
                     år = Year.of(it.getInt("ar")),
                     begrunnelse = it.getString("begrunnelse"),
-                    belop = it.getBigDecimal("belop").let(::Beløp),
+                    belop = it.getBigDecimalOrNull("belop")?.let { verdi -> Beløp(verdi) },
                     vurdertAv = it.getString("vurdert_av"),
-                    aarsak = it.getEnumOrNull("aarsak")
+                    eosBelop = it.getBigDecimalOrNull("eos_belop")?.let { verdi -> Beløp(verdi)}
                 )
             }
         }
@@ -133,17 +133,17 @@ class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection)
         manuellInntektVurderingerId: Long
     ) {
         val query = """
-            INSERT INTO MANUELL_INNTEKT_VURDERING (AR, BEGRUNNELSE, BELOP, VURDERT_AV, MANUELL_INNTEKT_VURDERINGER_ID, AARSAK) VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO MANUELL_INNTEKT_VURDERING (AR, BEGRUNNELSE, BELOP, VURDERT_AV, MANUELL_INNTEKT_VURDERINGER_ID, EOS_BELOP) VALUES (?, ?, ?, ?, ?, ?)
         """.trimIndent()
 
         connection.executeBatch(query, manuellVurderinger) {
             setParams {
                 setInt(1, it.år.value)
                 setString(2, it.begrunnelse)
-                setBigDecimal(3, it.belop.verdi)
+                setBigDecimal(3, it.belop?.verdi)
                 setString(4, it.vurdertAv)
                 setLong(5, manuellInntektVurderingerId)
-                setEnumName(6, it.aarsak)
+                setBigDecimal(6, it.eosBelop?.verdi)
             }
         }
     }

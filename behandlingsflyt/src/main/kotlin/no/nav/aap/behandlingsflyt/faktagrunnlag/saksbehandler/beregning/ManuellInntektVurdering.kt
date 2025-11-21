@@ -7,8 +7,8 @@ import java.time.Year
 data class ManuellInntektVurdering(
     val år: Year,
     val begrunnelse: String,
-    val belop: Beløp,
+    val belop: Beløp? = null,
     val vurdertAv: String,
     val opprettet: LocalDateTime = LocalDateTime.now(),
-    val aarsak: ÅrsakTilManuellInntektVurdering? = null,
+    val eosBelop: Beløp? = null,
 )
