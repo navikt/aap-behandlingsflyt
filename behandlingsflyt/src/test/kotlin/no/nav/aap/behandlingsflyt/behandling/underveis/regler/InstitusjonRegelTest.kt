@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
-import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedInput
-import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedUtlederService
+import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.InstitusjonsoppholdInput
+import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.InstitusjonsoppholdUtlederService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
@@ -27,7 +27,7 @@ import java.time.LocalDate
 @Fakes
 class InstitusjonRegelTest {
     private val mockConnection = MockConnection().toDBConnection()
-    val utlederService = EtAnnetStedUtlederService(
+    val utlederService = InstitusjonsoppholdUtlederService(
         BarnetilleggRepositoryImpl(mockConnection),
         InstitusjonsoppholdRepositoryImpl(mockConnection),
         SakRepositoryImpl(mockConnection),
@@ -54,7 +54,7 @@ class InstitusjonRegelTest {
             grenseverdi = Prosent(60)
         )
 
-        val utlederInput = EtAnnetStedInput(
+        val utlederInput = InstitusjonsoppholdInput(
             institusjonsOpphold = listOf(
                 Segment(
                     Periode(LocalDate.of(2024, 1, 15), (LocalDate.of(2024, 7, 15))),
@@ -116,7 +116,7 @@ class InstitusjonRegelTest {
         val intitusjonsOppholdet = MapInstitusjonoppholdTilRegel.map(behovForAvklaringer)
 
         val input = tomUnderveisInput.copy(
-            etAnnetSted = intitusjonsOppholdet,
+            institusjonsopphold = intitusjonsOppholdet,
         )
 
         val tidligereResultatTidslinje = Tidslinje(listOf(Segment(periode, vurderingFraTidligereResultat)))

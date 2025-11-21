@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.behandling.etannetsted
+package no.nav.aap.behandlingsflyt.behandling.institusjonsopphold
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Soning
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 
-internal class EtAnnetStedInput(
+internal class InstitusjonsoppholdInput(
     val rettighetsperiode: Periode,
     val institusjonsOpphold: List<Segment<Institusjon>>,
     val soningsvurderinger: List<Soningsvurdering>,

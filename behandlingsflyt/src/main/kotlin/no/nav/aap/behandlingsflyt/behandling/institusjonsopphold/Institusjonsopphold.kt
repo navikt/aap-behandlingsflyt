@@ -1,8 +1,8 @@
-package no.nav.aap.behandlingsflyt.behandling.etannetsted
+package no.nav.aap.behandlingsflyt.behandling.institusjonsopphold
 
 import no.nav.aap.komponenter.type.Periode
 
-data class EtAnnetSted (
+data class Institusjonsopphold(
     val periode: Periode,
     val soning: Soning? = null,
     val institusjon: Institusjon? = null,
