@@ -217,6 +217,7 @@ class StatistikkMetoder(
                 Vurderingsbehov.OVERGANG_ARBEID -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.OVERGANG_ARBEID
                 Vurderingsbehov.DØDSFALL_BRUKER -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.DØDSFALL_BRUKER
                 Vurderingsbehov.DØDSFALL_BARN -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.DØDSFALL_BARN
+                Vurderingsbehov.ARBEIDSOPPTRAPPING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.ARBEIDSOPPTRAPPING
             }
         }.distinct()
 
