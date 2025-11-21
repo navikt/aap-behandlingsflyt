@@ -25,7 +25,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     InstFormaal,
     Arbeidsopptrapping,
     IkkeAntaNullTimerArbeidet,
-    NyBrevbygger,
+    NyBrevbyggerV3,
     ;
 
     override fun key(): String = name

@@ -55,7 +55,7 @@ class BrevbestillingService(
         unikReferanse: String,
         ferdigstillAutomatisk: Boolean,
         vedlegg: Vedlegg? = null,
-        brukV3: Boolean = false,
+        brukApiV3: Boolean = false,
     ): UUID {
         val behandling = behandlingRepository.hent(behandlingId)
         val sak = sakRepository.hent(behandling.sakId)
@@ -67,7 +67,7 @@ class BrevbestillingService(
             brevBehov = brevBehov,
             vedlegg = vedlegg,
             ferdigstillAutomatisk = ferdigstillAutomatisk,
-            brukV3 = brukV3,
+            brukApiV3 = brukApiV3,
         )
 
         val status = if (ferdigstillAutomatisk) {

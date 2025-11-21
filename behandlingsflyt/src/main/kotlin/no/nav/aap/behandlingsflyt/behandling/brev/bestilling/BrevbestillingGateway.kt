@@ -25,7 +25,7 @@ interface BrevbestillingGateway : Gateway {
         brevBehov: BrevBehov,
         vedlegg: Vedlegg?,
         ferdigstillAutomatisk: Boolean,
-        brukV3: Boolean,
+        brukApiV3: Boolean,
     ): BrevbestillingReferanse
 
     fun ferdigstill(referanse: BrevbestillingReferanse, signaturer: List<SignaturGrunnlag>, mottakere: List<MottakerDto> =  emptyList()): Boolean

@@ -104,15 +104,15 @@ class MeldingOmVedtakBrevSteg(
             brevBehov = brevBehov,
             unikReferanse = unikReferanse,
             ferdigstillAutomatisk = false,
-            brukV3 = brukV3(kontekst.behandlingId)
+            brukApiV3 = brukApiV3(kontekst.behandlingId)
         )
     }
 
-    private fun brukV3(behandlingId: BehandlingId): Boolean {
+    private fun brukApiV3(behandlingId: BehandlingId): Boolean {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.FATTE_VEDTAK) ?: return false
         val endretAv = avklaringsbehov.endretAv()
-        return unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevbygger, endretAv)
+        return unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevbyggerV3, endretAv)
     }
 
     companion object : FlytSteg {

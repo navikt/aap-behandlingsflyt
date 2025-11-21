@@ -80,7 +80,7 @@ class BrevGateway : BrevbestillingGateway {
         brevBehov: BrevBehov,
         vedlegg: Vedlegg?,
         ferdigstillAutomatisk: Boolean,
-        brukV3: Boolean,
+        brukApiV3: Boolean,
     ): BrevbestillingReferanse {
         val request = BestillBrevV2Request(
             saksnummer = saksnummer.toString(),
@@ -100,7 +100,7 @@ class BrevGateway : BrevbestillingGateway {
             )
         )
 
-        val path = if (brukV3) {
+        val path = if (brukApiV3) {
             "/api/v3/bestill"
         } else {
             "/api/v2/bestill"
