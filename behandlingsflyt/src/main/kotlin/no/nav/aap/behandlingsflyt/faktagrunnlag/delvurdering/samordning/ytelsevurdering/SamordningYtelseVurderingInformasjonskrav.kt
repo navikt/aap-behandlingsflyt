@@ -37,6 +37,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 
 class SamordningYtelseVurderingInformasjonskrav(
     private val samordningYtelseRepository: SamordningYtelseRepository,
+    private val samordningVurderingRepository: SamordningVurderingRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val fpGateway: ForeldrepengerGateway,
     private val spGateway: SykepengerGateway,
@@ -182,9 +183,17 @@ class SamordningYtelseVurderingInformasjonskrav(
         val eksisterendeData = samordningYtelseRepository.hentHvisEksisterer(behandlingId)
         val sak = sakService.hentSakFor(behandlingId)
         val samordningYtelser = hentData(SamordningInput(sak.person, sak.rettighetsperiode)).samordningYtelser
-
         // Ønsker ikke trigge revurdering automatisk i dette tilfellet enn så lenge
         val gikkFraNullTilTomtGrunnlag = samordningYtelser.isEmpty() && eksisterendeData == null
+
+        // Sjekker på vurderinger
+        val samordningVurderinger = samordningVurderingRepository.hentHvisEksisterer(behandlingId)
+        if (samordningVurderinger != null) {
+            samordningVurderinger.vurderinger
+                .map() { vurdering -> vurdering.vurderingPerioder }
+        }
+        //bare skriver ut loggmeldinger enn så lenge
+        erHeltDekketAvManuelleVurderinger(samordningVurderinger, samordningYtelser)
 
         return if (!gikkFraNullTilTomtGrunnlag && harEndringerIYtelser(eksisterendeData, samordningYtelser)) listOf(
             VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER)
@@ -201,6 +210,7 @@ class SamordningYtelseVurderingInformasjonskrav(
         ): SamordningYtelseVurderingInformasjonskrav {
             return SamordningYtelseVurderingInformasjonskrav(
                 repositoryProvider.provide(),
+                repositoryProvider.provide(),
                 TidligereVurderingerImpl(repositoryProvider),
                 gatewayProvider.provide(),
                 gatewayProvider.provide(),
@@ -212,16 +222,35 @@ class SamordningYtelseVurderingInformasjonskrav(
             eksisterende: SamordningYtelseGrunnlag?, samordningYtelser: Set<SamordningYtelse>
         ): Boolean {
             secureLogger.info("Hentet samordningytelse eksisterende ${eksisterende?.ytelser} med nye samordningsytelser ${samordningYtelser.map { it.ytelsePerioder }}  ${samordningYtelser.map { it.ytelseType.name }}")
-            secureLogger.info("Overlapp " + harFullstendigOverlapp(eksisterende, samordningYtelser) + "YtelseneErLike " + (samordningYtelser == eksisterende?.ytelser))
+            secureLogger.info(
+                "Overlapp " + harFullstendigOverlappMedEksisterendeYtelser(
+                    eksisterende,
+                    samordningYtelser
+                ) + "YtelseneErLike " + (samordningYtelser == eksisterende?.ytelser)
+            )
             // TODO: return eksisterende == null || !harFullstendigOverlapp(eksisterende, samordningYtelser)
             return eksisterende == null || samordningYtelser != eksisterende.ytelser
+        }
+
+        fun erHeltDekketAvManuelleVurderinger(
+            eksisterendeVurderinger: SamordningVurderingGrunnlag?, samordningYtelser: Set<SamordningYtelse>
+        ): Boolean {
+            secureLogger.info("Hentet samordningytelse eksisterende ${eksisterendeVurderinger?.vurderinger} med nye samordningsytelser ${samordningYtelser.map { it.ytelsePerioder }}  ${samordningYtelser.map { it.ytelseType.name }}")
+            secureLogger.info(
+                "Overlapp " + harFullstendigOverlappMedEksisterendeVurderinger(
+                    eksisterendeVurderinger,
+                    samordningYtelser
+                ) + "VurderingeneErLike " + (samordningYtelser == eksisterendeVurderinger?.vurderinger)
+            )
+            // TODO: return eksisterende == null || !harFullstendigOverlappMedEksisterendeVurderinger(eksisterende, samordningYtelser)
+            return eksisterendeVurderinger == null || samordningYtelser != eksisterendeVurderinger.vurderinger
         }
 
     }
 
 }
 
-fun harFullstendigOverlapp(
+fun harFullstendigOverlappMedEksisterendeYtelser(
     eksisterende: SamordningYtelseGrunnlag?,
     nye: Set<SamordningYtelse>
 ): Boolean {
@@ -230,18 +259,46 @@ fun harFullstendigOverlapp(
 
     return nye.all { nyYtelse ->
         eksisterende.ytelser.any { eksisterendeYtelse ->
-            perioderErLike(eksisterendeYtelse.ytelsePerioder, nyYtelse.ytelsePerioder)
+            ytelsesperioderErLike(eksisterendeYtelse.ytelsePerioder, nyYtelse.ytelsePerioder)
         }
     }
 }
 
-private fun perioderErLike(
+private fun ytelsesperioderErLike(
     eksisterende: Set<SamordningYtelsePeriode>,
     nye: Set<SamordningYtelsePeriode>
 ): Boolean {
     if (eksisterende.size != nye.size) return false
 
     return eksisterende.all { eks ->
+        nye.any { ny ->
+            eks.periode.fom.isEqual(ny.periode.fom) &&
+                    eks.periode.tom.isEqual(ny.periode.tom) &&
+                    eks.gradering == ny.gradering
+        }
+    }
+}
+
+fun harFullstendigOverlappMedEksisterendeVurderinger(
+    manuellVurderingGrunnlag: SamordningVurderingGrunnlag?,
+    nye: Set<SamordningYtelse>
+): Boolean {
+    if (manuellVurderingGrunnlag == null) return false
+    return nye.all { nyYtelse ->
+        manuellVurderingGrunnlag.vurderinger.any { eksisterendeVurdering ->
+            eksisterendeVurdering.ytelseType == nyYtelse.ytelseType &&
+            vurderingperioderErLike(eksisterendeVurdering.vurderingPerioder, nyYtelse.ytelsePerioder)
+        }
+    }
+}
+
+private fun vurderingperioderErLike(
+    eksisterendeVurderinger: Set<SamordningVurderingPeriode>,
+    nye: Set<SamordningYtelsePeriode>
+): Boolean {
+    if (eksisterendeVurderinger.size != nye.size) return false
+
+    return eksisterendeVurderinger.all { eks ->
         nye.any { ny ->
             eks.periode.fom.isEqual(ny.periode.fom) &&
                     eks.periode.tom.isEqual(ny.periode.tom) &&
