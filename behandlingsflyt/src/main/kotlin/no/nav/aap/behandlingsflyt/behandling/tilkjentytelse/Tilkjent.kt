@@ -14,7 +14,8 @@ import java.time.LocalDate
  */
 data class Tilkjent(
     val dagsats: Beløp,
-    val gradering: TilkjentGradering,
+    val gradering: Prosent,
+    val graderingGrunnlag: GraderingGrunnlag,
     val grunnlagsfaktor: GUnit,
     val grunnbeløp: Beløp,
     val antallBarn: Int,
@@ -28,21 +29,20 @@ data class Tilkjent(
      */
     fun redusertDagsats(): Beløp {
         return Beløp(
-            dagsats.multiplisert(gradering.endeligGradering)
-                .pluss(barnetillegg.multiplisert(gradering.endeligGradering)).verdi().setScale(0, RoundingMode.HALF_UP)
+            dagsats.multiplisert(gradering)
+                .pluss(barnetillegg.multiplisert(gradering)).verdi().setScale(0, RoundingMode.HALF_UP)
         )
     }
 
     fun dagsatsFor11_9Reduksjon(): Beløp {
         return Beløp(
-            dagsats.multiplisert(gradering.graderingForDagsats11_9Reduksjon())
-                .pluss(barnetillegg.multiplisert(gradering.graderingForDagsats11_9Reduksjon())).verdi().setScale(0, RoundingMode.HALF_UP)
+            dagsats.multiplisert(graderingGrunnlag.graderingForDagsats11_9Reduksjon())
+                .pluss(barnetillegg.multiplisert(graderingGrunnlag.graderingForDagsats11_9Reduksjon())).verdi().setScale(0, RoundingMode.HALF_UP)
         )
     }
 }
 
-data class TilkjentGradering(
-    val endeligGradering: Prosent,
+data class GraderingGrunnlag(
     val samordningGradering: Prosent,
     val institusjonGradering: Prosent,
     val arbeidGradering: Prosent,
@@ -56,12 +56,17 @@ data class TilkjentGradering(
         .minus(samordningUføregradering)
 }
 
-data class TilkjentGUnit(val dagsats: GUnit, val gradering: TilkjentGradering, val utbetalingsdato: LocalDate) {
+data class TilkjentGUnit(
+    val dagsats: GUnit,
+    val gradering: Prosent,
+    val graderingGrunnlag: GraderingGrunnlag,
+    val utbetalingsdato: LocalDate
+) {
     private fun redusertDagsats(): GUnit {
-        return dagsats.multiplisert(gradering.endeligGradering)
+        return dagsats.multiplisert(gradering)
     }
 
     override fun toString(): String {
-        return "Tilkjent(dagsats=$dagsats, gradering=$gradering, redusertDagsats=${redusertDagsats()})"
+        return "Tilkjent(dagsats=$dagsats, gradering=$graderingGrunnlag, redusertDagsats=${redusertDagsats()})"
     }
 }

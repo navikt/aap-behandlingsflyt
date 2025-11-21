@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse
 
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentGradering
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.GraderingGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -38,13 +38,13 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
                     periode = it.getPeriode("PERIODE"),
                     Tilkjent(
                         dagsats = Beløp(it.getInt("DAGSATS")),
-                        gradering = TilkjentGradering(
+                        gradering = Prosent(it.getInt("GRADERING")),
+                        graderingGrunnlag = GraderingGrunnlag(
                             samordningUføregradering = it.getIntOrNull("SAMORDNING_UFORE_GRADERING")?.let { result -> Prosent(result) } ?: `0_PROSENT`,
                             samordningArbeidsgiverGradering = it.getIntOrNull("SAMORDNING_ARBEIDSGIVER_GRADERING")?.let { result -> Prosent(result) } ?: `0_PROSENT`,
                             samordningGradering = it.getIntOrNull("SAMORDNING_GRADERING")?.let { result -> Prosent(result) } ?: `0_PROSENT`,
                             institusjonGradering = it.getIntOrNull("INSTITUSJON_GRADERING")?.let { result -> Prosent(result) } ?: `0_PROSENT`,
                             arbeidGradering = it.getIntOrNull("ARBEID_GRADERING")?.let { result -> Prosent(result) } ?: `0_PROSENT`,
-                            endeligGradering = Prosent(it.getInt("GRADERING"))
                         ),
                         barnetillegg = Beløp(it.getInt("BARNETILLEGG")),
                         grunnlagsfaktor = GUnit(it.getBigDecimal("GRUNNLAGSFAKTOR")),
@@ -113,7 +113,7 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
                 setLong(1, tilkjentYtelseId)
                 setPeriode(2, periode)
                 setBigDecimal(3, tilkjent.dagsats.verdi())
-                setInt(4, tilkjent.gradering.endeligGradering.prosentverdi())
+                setInt(4, tilkjent.gradering.prosentverdi())
                 setBigDecimal(5, tilkjent.barnetillegg.verdi())
                 setBigDecimal(6, tilkjent.grunnlagsfaktor.verdi())
                 setBigDecimal(7, tilkjent.dagsats.verdi())
@@ -121,11 +121,11 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
                 setBigDecimal(9, tilkjent.barnetilleggsats.verdi())
                 setBigDecimal(10, tilkjent.grunnbeløp.verdi())
                 setLocalDate(11, tilkjent.utbetalingsdato)
-                setInt(12, tilkjent.gradering.samordningGradering.prosentverdi())
-                setInt(13, tilkjent.gradering.institusjonGradering.prosentverdi())
-                setInt(14, tilkjent.gradering.arbeidGradering.prosentverdi())
-                setInt(15, tilkjent.gradering.samordningUføregradering.prosentverdi())
-                setInt(16, tilkjent.gradering.samordningArbeidsgiverGradering.prosentverdi())
+                setInt(12, tilkjent.graderingGrunnlag.samordningGradering.prosentverdi())
+                setInt(13, tilkjent.graderingGrunnlag.institusjonGradering.prosentverdi())
+                setInt(14, tilkjent.graderingGrunnlag.arbeidGradering.prosentverdi())
+                setInt(15, tilkjent.graderingGrunnlag.samordningUføregradering.prosentverdi())
+                setInt(16, tilkjent.graderingGrunnlag.samordningArbeidsgiverGradering.prosentverdi())
             }
         }
     }

@@ -277,7 +277,7 @@ class StatistikkMetoder(
                         fraDato = it.periode.fom,
                         tilDato = it.periode.tom,
                         dagsats = verdi.dagsats.verdi().toDouble(),
-                        gradering = verdi.gradering.endeligGradering.prosentverdi().toDouble(),
+                        gradering = verdi.gradering.prosentverdi().toDouble(),
                         redusertDagsats = verdi.redusertDagsats().verdi().toDouble(),
                         antallBarn = verdi.antallBarn,
                         barnetilleggSats = verdi.barnetilleggsats.verdi().toDouble(),

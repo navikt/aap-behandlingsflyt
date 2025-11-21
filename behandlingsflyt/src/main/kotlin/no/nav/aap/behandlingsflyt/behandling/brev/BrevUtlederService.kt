@@ -275,16 +275,16 @@ class BrevUtlederService(
 
             /**
              * Gradering tar høyde for fastsatt arbeidsevne, men ikke timer arbeidet (derfor benyttes ikke
-             * [no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent.gradering.arbeidGradering]).
+             * [no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent.graderingGrunnlag.arbeidGradering]).
              * Inkluderer ikke barnetillegg slik som
              * [no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent.redusertDagsats] siden barnetillegg skilles ut
              * i brevet.
              */
             val gradering = Prosent.`100_PROSENT`
-                .minus(tilkjent.gradering.samordningGradering)
-                .minus(tilkjent.gradering.institusjonGradering)
-                .minus(tilkjent.gradering.samordningUføregradering)
-                .minus(tilkjent.gradering.samordningArbeidsgiverGradering)
+                .minus(tilkjent.graderingGrunnlag.samordningGradering)
+                .minus(tilkjent.graderingGrunnlag.institusjonGradering)
+                .minus(tilkjent.graderingGrunnlag.samordningUføregradering)
+                .minus(tilkjent.graderingGrunnlag.samordningArbeidsgiverGradering)
                 .minus(underveisperiode.arbeidsgradering.fastsattArbeidsevne)
 
             /**

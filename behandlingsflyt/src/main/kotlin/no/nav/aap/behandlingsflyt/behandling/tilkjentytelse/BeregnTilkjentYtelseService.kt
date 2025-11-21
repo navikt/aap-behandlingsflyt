@@ -62,12 +62,12 @@ class BeregnTilkjentYtelseService(
                      */
                     dagsats = årligYtelse.dividert(ANTALL_ÅRLIGE_ARBEIDSDAGER),
 
-                    gradering = TilkjentGradering(
-                        endeligGradering = if (underveisperiode.utfall == Utfall.IKKE_OPPFYLT) {
-                            Prosent.`0_PROSENT`
-                        } else {
-                            underveisperiode.arbeidsgradering.gradering
-                        },
+                    gradering = if (underveisperiode.utfall == Utfall.IKKE_OPPFYLT) {
+                        Prosent.`0_PROSENT`
+                    } else {
+                        underveisperiode.arbeidsgradering.gradering
+                    },
+                    graderingGrunnlag = GraderingGrunnlag(
                         arbeidGradering = underveisperiode.arbeidsgradering.gradering,
                         institusjonGradering = underveisperiode.institusjonsoppholdReduksjon,
                         samordningGradering = Prosent.`0_PROSENT`,
@@ -86,11 +86,11 @@ class BeregnTilkjentYtelseService(
                     tilkjentGUnit
                 } else {
                     tilkjentGUnit.copy(
-                        gradering = tilkjentGUnit.gradering.copy(
-                            endeligGradering = tilkjentGUnit.gradering.endeligGradering.minus(
-                                samordningUføre,
-                                Prosent.`0_PROSENT`
-                            ),
+                        gradering = tilkjentGUnit.gradering.minus(
+                            samordningUføre,
+                            Prosent.`0_PROSENT`
+                        ),
+                        graderingGrunnlag = tilkjentGUnit.graderingGrunnlag.copy(
                             samordningUføregradering = samordningUføre
                         )
                     )
@@ -104,11 +104,11 @@ class BeregnTilkjentYtelseService(
                     tilkjentGUnit
                 } else {
                     tilkjentGUnit.copy(
-                        gradering = tilkjentGUnit.gradering.copy(
-                            endeligGradering = tilkjentGUnit.gradering.endeligGradering.minus(
-                                samordning.gradering,
-                                Prosent.`0_PROSENT`
-                            ),
+                        gradering = tilkjentGUnit.gradering.minus(
+                            samordning.gradering,
+                            Prosent.`0_PROSENT`
+                        ),
+                        graderingGrunnlag = tilkjentGUnit.graderingGrunnlag.copy(
                             samordningGradering = samordning.gradering,
                         )
                     )
@@ -122,11 +122,11 @@ class BeregnTilkjentYtelseService(
                     tilkjentGUnit
                 } else {
                     tilkjentGUnit.copy(
-                        gradering = tilkjentGUnit.gradering.copy(
-                            endeligGradering = tilkjentGUnit.gradering.endeligGradering.minus(
-                                Prosent.`100_PROSENT`,
-                                Prosent.`0_PROSENT`
-                            ),
+                        gradering = tilkjentGUnit.gradering.minus(
+                            Prosent.`100_PROSENT`,
+                            Prosent.`0_PROSENT`
+                        ),
+                        graderingGrunnlag = tilkjentGUnit.graderingGrunnlag.copy(
                             samordningArbeidsgiverGradering = Prosent.`100_PROSENT`,
                         )
                     )
@@ -136,18 +136,18 @@ class BeregnTilkjentYtelseService(
         val gradertÅrligTilkjentYtelseBeløp =
             gradertÅrligYtelseTidslinjeMedArbeidgiver.innerJoin(Grunnbeløp.tilTidslinje()) { tilkjentGUnit, grunnbeløp ->
                 val dagsats = grunnbeløp.multiplisert(tilkjentGUnit.dagsats)
-                val redusertUtbetalingsgrad = reduserUtbetalingsgradVedInstitusjonsopphold(tilkjentGUnit.gradering)
+                val redusertUtbetalingsgrad = reduserUtbetalingsgradVedInstitusjonsopphold(tilkjentGUnit)
                 TilkjentFørBarn(
                     dagsats = dagsats,
                     gradering = redusertUtbetalingsgrad,
                     grunnlagsfaktor = tilkjentGUnit.dagsats,
                     grunnbeløp = grunnbeløp,
                     utbetalingsdato = tilkjentGUnit.utbetalingsdato,
-                    samordningGradering = tilkjentGUnit.gradering.samordningGradering,
-                    samordningUføreGradering = tilkjentGUnit.gradering.samordningUføregradering,
-                    arbeidsGradering = tilkjentGUnit.gradering.arbeidGradering,
-                    institusjonGradering = tilkjentGUnit.gradering.institusjonGradering,
-                    samordningArbeidsgiverGradering = tilkjentGUnit.gradering.samordningArbeidsgiverGradering,
+                    samordningGradering = tilkjentGUnit.graderingGrunnlag.samordningGradering,
+                    samordningUføreGradering = tilkjentGUnit.graderingGrunnlag.samordningUføregradering,
+                    arbeidsGradering = tilkjentGUnit.graderingGrunnlag.arbeidGradering,
+                    institusjonGradering = tilkjentGUnit.graderingGrunnlag.institusjonGradering,
+                    samordningArbeidsgiverGradering = tilkjentGUnit.graderingGrunnlag.samordningArbeidsgiverGradering,
                 )
             }
 
@@ -162,17 +162,17 @@ class BeregnTilkjentYtelseService(
             }
 
         return gradertÅrligTilkjentYtelseBeløp.leftJoin(barnetilleggTidslinje) { tilkjentFørBarn, barnetillegg ->
-            val gradering = TilkjentGradering(
+            val graderingGrunnlag = GraderingGrunnlag(
                 samordningGradering = tilkjentFørBarn.samordningGradering,
                 institusjonGradering = tilkjentFørBarn.institusjonGradering,
                 arbeidGradering = tilkjentFørBarn.arbeidsGradering,
-                endeligGradering = tilkjentFørBarn.gradering,
                 samordningUføregradering = tilkjentFørBarn.samordningUføreGradering,
                 samordningArbeidsgiverGradering = tilkjentFørBarn.samordningArbeidsgiverGradering,
             )
             Tilkjent(
                 dagsats = tilkjentFørBarn.dagsats,
-                gradering = gradering,
+                gradering = tilkjentFørBarn.gradering,
+                graderingGrunnlag = graderingGrunnlag,
                 barnetillegg = barnetillegg?.barnetillegg ?: Beløp(0),
                 grunnlagsfaktor = tilkjentFørBarn.grunnlagsfaktor,
                 grunnbeløp = tilkjentFørBarn.grunnbeløp,
@@ -199,8 +199,8 @@ class BeregnTilkjentYtelseService(
         return utbetalingsdato
     }
 
-    private fun reduserUtbetalingsgradVedInstitusjonsopphold(tilkjentGradering: TilkjentGradering) =
-        tilkjentGradering.endeligGradering.multiplisert(tilkjentGradering.institusjonGradering.komplement())
+    private fun reduserUtbetalingsgradVedInstitusjonsopphold(tilkjentGUnit: TilkjentGUnit) =
+        tilkjentGUnit.gradering.multiplisert(tilkjentGUnit.graderingGrunnlag.institusjonGradering.komplement())
 
     private class TilkjentFørBarn(
         val dagsats: Beløp,
