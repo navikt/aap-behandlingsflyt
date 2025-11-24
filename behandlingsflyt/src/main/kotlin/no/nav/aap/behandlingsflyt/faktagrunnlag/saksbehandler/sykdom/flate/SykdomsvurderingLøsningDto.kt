@@ -33,7 +33,6 @@ data class SykdomsvurderingLøsningDto(
     override val begrunnelse: String,
 
     /** Hvis null, så gjelder den fra starten. */
-    @param:JsonProperty("vurderingenGjelderFra")
     override val fom: LocalDate,
     override val tom: LocalDate?,
     val dokumenterBruktIVurdering: List<JournalpostId>,
