@@ -270,7 +270,7 @@ class SamordningYtelseVurderingInformasjonskrav(
                         .flatMap { it.vurderingPerioder }
                         .filter { it.gradering == nyPeriode.gradering || it.gradering == Prosent.`100_PROSENT` }
 
-                    secureLogger.info("Hentet samordninvurdering eksisterende ${eksisterendeVurderinger.vurderinger} med nye samordningsytelser ${samordningYtelser.map { it.ytelsePerioder }}  ${samordningYtelser.map { it.ytelseType.name }}")
+                    secureLogger.info("Hentet samordningvurdering eksisterende ${eksisterendeVurderinger.vurderinger} med nye samordningsytelser ${samordningYtelser.map { it.ytelsePerioder }}  ${samordningYtelser.map { it.ytelseType.name }}")
                     secureLogger.info(
                         "Overlapp " + isPeriodeDekketAvEksisterendePerioder(
                             relevanteEksPerioder,
