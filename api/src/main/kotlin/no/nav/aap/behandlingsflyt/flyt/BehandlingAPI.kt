@@ -160,7 +160,7 @@ fun NormalOpenAPIRoute.behandlingApi(
                         tilhørendeKlagebehandling = tilhørendeKlagebehandling?.referanse,
                         vedtaksdato = VedtakService(repositoryProvider).vedtakstidspunkt(behandling)?.toLocalDate(),
                         vurderingsbehovOgÅrsaker = vurderingsbehovOgÅrsaker,
-                        arenaStatusDTO = arenaStatus
+                        arenaStatus = arenaStatus
                     )
                 }
                 respond(dto)
