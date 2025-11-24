@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarSamordningArbeidsgiverLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverVurderingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_SAMORDNING_ARBEIDSGIVER_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -18,7 +17,8 @@ class AvklarSamordningArbeidsgiverLøsning(
     @param:JsonProperty(
         "samordningArbeidsgiverVurdering",
         required = true
-    ) val samordningArbeidsgiverVurdering: SamordningArbeidsgiverVurderingDTO,
+    ) val samordningArbeidsgiverVurdering: Any,
+
     @param:JsonProperty(
         "behovstype",
         required = true,

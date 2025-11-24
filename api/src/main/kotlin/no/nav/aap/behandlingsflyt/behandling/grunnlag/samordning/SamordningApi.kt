@@ -127,8 +127,7 @@ data class SamordningArbeidsgiverGrunnlagDTO(
 
 data class SamordningArbeidsgiverVurderingDTO(
     val begrunnelse: String,
-    val fom: LocalDate,
-    val tom: LocalDate,
+    val perioder: List<Periode>,
     val vurdertAv: VurdertAvResponse?
 )
 
@@ -443,8 +442,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                     }
                     SamordningArbeidsgiverVurderingDTO(
                         begrunnelse = vurdering.begrunnelse,
-                        fom = vurdering.fom,
-                        tom = vurdering.tom,
+                        perioder = vurdering.perioder,
                         vurdertAv = VurdertAvResponse(
                             ident = vurdering.vurdertAv,
                             dato = requireNotNull(vurdering.vurdertTidspunkt?.toLocalDate()) {
@@ -468,8 +466,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                             enhetsnavn = navnOgEnhet?.enhet
                         ),
                         begrunnelse = vurdering.begrunnelse,
-                        fom = vurdering.fom,
-                        tom = vurdering.tom
+                        perioder = vurdering.perioder
                     )
                 }
 
