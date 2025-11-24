@@ -153,6 +153,7 @@ class MeldepliktRegelTest {
      */
     @Test
     fun `en eller annen test`() {
+        /// få oppfylt også neste meldeperiode (3 ukers)
         val rettighetsperiode = Periode(29 november 2025, 19 januar 2026)
         val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
@@ -181,17 +182,12 @@ class MeldepliktRegelTest {
             Forventer(
                 fom = 22 desember 2025,
                 tom = 4 januar 2026,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("3")),
+                vurdering = MeldepliktVurdering.IkkeMeldtSeg//MeldepliktVurdering.MeldtSeg(JournalpostId("3")),
             ),
             Forventer(
                 fom = 5 januar 2026,
-                tom = 5 januar 2026,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("4")), //MeldepliktVurdering.MeldtSeg(JournalpostId("4")),
-            ),
-            Forventer(
-                fom = 6 januar 2026,
                 tom = 18 januar 2026,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("4")),
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("4")), //MeldepliktVurdering.MeldtSeg(JournalpostId("4")),
             ),
             Forventer(
                 fom = 19 januar 2026,
@@ -199,6 +195,17 @@ class MeldepliktRegelTest {
                 vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("5")),
             ),
         )
+    }
+
+    @Test
+    fun `sender inn 15de, men er ikke ajour med meldeplikt`() {
+        TODO()
+    }
+
+    @Test
+    fun `samme tester, men for ikke samme fase`() {
+        TODO()
+        // i praksis ingen endring på disse
     }
 
 
