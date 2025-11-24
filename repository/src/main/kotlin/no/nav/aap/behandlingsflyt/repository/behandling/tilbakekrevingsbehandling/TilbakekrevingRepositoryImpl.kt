@@ -24,7 +24,7 @@ class TilbakekrevingRepositoryImpl(private val connection: DBConnection) : Tilba
                 VARSEL_SENDT,
                 BEHANDLINGSSTATUS,
                 TOTALT_FEILUTBETALT_BELOP,
-                SAKSBEHANDLING_URL,
+                TILBAKEKREVING_SAKSBEHANDLING_URL,
                 FULLSTENDIG_PERIODE,
                 VERSJON
             ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?::daterange, ?)
