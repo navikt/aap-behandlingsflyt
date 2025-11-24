@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarManu
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOppholdskravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangArbeidLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeriodisertForutgåendeMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeriodisertLovvalgMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeriodisertOverstyrtLovvalgMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningAndreStatligeYtelserLøsning
@@ -48,6 +49,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForForutgåendeMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForLovvalgMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
@@ -335,7 +337,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                     ),
                 ),
             )
-            .løsForutgåendeMedlemskap()
+            .løsForutgåendeMedlemskap(sak.rettighetsperiode.fom)
             .løsOppholdskrav(sak.rettighetsperiode.fom)
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
@@ -1022,45 +1024,30 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         }
 
     protected fun løsForutgåendeMedlemskap(
-        behandling: Behandling
+        behandling: Behandling,
+        gjelderFra: LocalDate,
+        harForutgåendeMedlemskap: Boolean = true
     ): Behandling {
         return løsAvklaringsBehov(
             behandling,
-            AvklarForutgåendeMedlemskapLøsning(
-                ManuellVurderingForForutgåendeMedlemskapDto(
-                    begrunnelse = "",
-                    harForutgåendeMedlemskap = true,
-                    varMedlemMedNedsattArbeidsevne = true,
-                    medlemMedUnntakAvMaksFemAar = null
-                )
-            )
-        )
-    }
-
-    protected fun løsForutgåendeMedlemskapPeriodisert(
-        behandling: Behandling
-    ): Behandling {
-        return løsAvklaringsBehov(
-            behandling,
-            AvklarForutgåendeMedlemskapLøsning(
-                ManuellVurderingForForutgåendeMedlemskapDto(
-                    begrunnelse = "",
-                    harForutgåendeMedlemskap = true,
-                    varMedlemMedNedsattArbeidsevne = true,
-                    medlemMedUnntakAvMaksFemAar = null
+            AvklarPeriodisertForutgåendeMedlemskapLøsning(
+                løsningerForPerioder = listOf(
+                    PeriodisertManuellVurderingForForutgåendeMedlemskapDto(
+                        fom = gjelderFra,
+                        tom = null,
+                        begrunnelse = "begrunnelse",
+                        harForutgåendeMedlemskap = harForutgåendeMedlemskap,
+                        varMedlemMedNedsattArbeidsevne = null,
+                        medlemMedUnntakAvMaksFemAar = null
+                    )
                 )
             )
         )
     }
 
     @JvmName("losForutgaaendeMedlemskapExt")
-    protected fun Behandling.løsForutgåendeMedlemskap(): Behandling {
-        return løsForutgåendeMedlemskap(this)
-    }
-
-    @JvmName("losForutgaaendeMedlemskapExt")
-    protected fun Behandling.løsForutgåendeMedlemskapPeriodisert(): Behandling {
-        return løsForutgåendeMedlemskap(this)
+    protected fun Behandling.løsForutgåendeMedlemskap(gjelderFra: LocalDate): Behandling {
+        return løsForutgåendeMedlemskap(this, gjelderFra)
     }
 
     @JvmName("løsFramTilForutgåendeMedlemskapExt")

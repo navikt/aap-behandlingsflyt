@@ -216,11 +216,13 @@ class VurderForutgåendeMedlemskapSteg private constructor(
             if (harYrkesskadeSammenheng(kontekst)) {
                 ForutgåendeMedlemskapvilkåret(
                     vilkårsresultat,
-                    kontekst.rettighetsperiode
+                    kontekst.rettighetsperiode,
+                    unleashGateway
                 ).leggTilYrkesskadeVurdering()
                 vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
 
             } else {
+                // TODO dette kan vel forenkles?
                 val personopplysningForutgåendeGrunnlag =
                     personopplysningForutgåendeRepository.hentHvisEksisterer(kontekst.behandlingId)
 
@@ -232,7 +234,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
                             kontekst.sakId
                         )
 
-                ForutgåendeMedlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode).vurder(
+                ForutgåendeMedlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode, unleashGateway).vurder(
                     ForutgåendeMedlemskapGrunnlag(
                         forutgåendeMedlemskapArbeidInntektGrunnlag,
                         personopplysningForutgåendeGrunnlag,
@@ -330,10 +332,11 @@ class VurderForutgåendeMedlemskapSteg private constructor(
         if (harYrkesskadeSammenheng(kontekst)) {
             ForutgåendeMedlemskapvilkåret(
                 vilkårsresultat,
-                kontekst.rettighetsperiode
+                kontekst.rettighetsperiode,
+                unleashGateway
             ).leggTilYrkesskadeVurdering()
         } else {
-            ForutgåendeMedlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode)
+            ForutgåendeMedlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode, unleashGateway)
                 .vurder(grunnlagUtenManuellVurdering)
         }
 

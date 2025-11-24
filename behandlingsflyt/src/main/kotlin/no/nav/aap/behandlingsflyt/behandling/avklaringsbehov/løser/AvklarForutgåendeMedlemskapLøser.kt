@@ -1,43 +1,32 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarForutgåendeMedlemskapLøsning
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskap
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeriodisertForutgåendeMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektForutgåendeRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.lookup.repository.RepositoryProvider
-import java.time.LocalDateTime
 
 class AvklarForutgåendeMedlemskapLøser(
     private val forutgåendeMedlemskapRepository: MedlemskapArbeidInntektForutgåendeRepository,
-    private val sakRepository: SakRepository
-) : AvklaringsbehovsLøser<AvklarForutgåendeMedlemskapLøsning> {
+    private val behandlingRepository: BehandlingRepository,
+) : AvklaringsbehovsLøser<AvklarPeriodisertForutgåendeMedlemskapLøsning> {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
         forutgåendeMedlemskapRepository = repositoryProvider.provide(),
-        sakRepository = repositoryProvider.provide(),
+        behandlingRepository = repositoryProvider.provide(),
     )
 
-    override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarForutgåendeMedlemskapLøsning): LøsningsResultat {
-        val sak = sakRepository.hent(kontekst.kontekst.sakId)
+    override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarPeriodisertForutgåendeMedlemskapLøsning): LøsningsResultat {
+        // TODO få inn noe validering her av data?
+        val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
+        val nyeVurderinger = løsning.løsningerForPerioder.map { it.toManuellVurderingForForutgåendeMedlemskap(kontekst, overstyrt = false) }
+        val tidligereVurderinger = kontekst.kontekst.forrigeBehandlingId?.let {
+            forutgåendeMedlemskapRepository.hentHvisEksisterer(it)
+        }?.vurderinger.orEmpty()
+        val vurderinger = tidligereVurderinger + nyeVurderinger
 
-        forutgåendeMedlemskapRepository.lagreVurderinger(
-            behandlingId = kontekst.behandlingId(),
-            vurderinger = listOf(
-                ManuellVurderingForForutgåendeMedlemskap(
-                    begrunnelse = løsning.manuellVurderingForForutgåendeMedlemskap.begrunnelse,
-                    harForutgåendeMedlemskap = løsning.manuellVurderingForForutgåendeMedlemskap.harForutgåendeMedlemskap,
-                    varMedlemMedNedsattArbeidsevne = løsning.manuellVurderingForForutgåendeMedlemskap.varMedlemMedNedsattArbeidsevne,
-                    medlemMedUnntakAvMaksFemAar = løsning.manuellVurderingForForutgåendeMedlemskap.medlemMedUnntakAvMaksFemAar,
-                    vurdertAv = kontekst.bruker.ident,
-                    vurdertTidspunkt = LocalDateTime.now(),
-                    overstyrt = false,
-                    vurdertIBehandling = kontekst.behandlingId(),
-                    fom = sak.rettighetsperiode.fom,
-                )
-            )
-        )
+        forutgåendeMedlemskapRepository.lagreVurderinger(behandling.id, vurderinger)
         return LøsningsResultat("Vurdert forutgående medlemskap manuelt.")
     }
 

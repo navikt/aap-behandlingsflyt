@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarForu
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarManuellInntektVurderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOverstyrtForutgåendeMedlemskapLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeriodisertForutgåendeMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeriodisertLovvalgMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningUføreLøsning
@@ -79,6 +80,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.Påkla
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForForutgåendeMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForLovvalgMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGrunnlag
@@ -140,7 +142,6 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.Med
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.barn.BarnRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.pip.PipRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
@@ -179,6 +180,7 @@ import java.time.LocalDateTime
 import java.time.Year
 import java.util.*
 import kotlin.reflect.KClass
+import kotlin.test.assertFalse
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
 
 @Tag("motor")
@@ -307,7 +309,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 )
             )
             .løsRefusjonskrav()
-            .løsForutgåendeMedlemskap()
+            .løsForutgåendeMedlemskap(sak.rettighetsperiode.fom)
             .løsOppholdskrav(sak.rettighetsperiode.fom)
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
@@ -427,7 +429,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
             .løsBeregningstidspunkt()
-            .løsForutgåendeMedlemskap()
+            .løsForutgåendeMedlemskap(fom)
             .løsOppholdskrav(fom)
             .løsAndreStatligeYtelser()
             .løsBarnetillegg()
@@ -511,7 +513,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
             .løsBeregningstidspunkt()
-            .løsForutgåendeMedlemskap()
+            .løsForutgåendeMedlemskap(fom)
             .løsOppholdskrav(fom)
             .løsAndreStatligeYtelser()
             .løsBarnetillegg()
@@ -593,7 +595,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
             .løsBeregningstidspunkt()
-            .løsForutgåendeMedlemskap()
+            .løsForutgåendeMedlemskap(fom)
             .løsOppholdskrav(fom)
             .medKontekst {
                 assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsExactly(Definisjon.AVKLAR_BARNETILLEGG)
@@ -828,7 +830,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 ),
             )
             .løsBeregningstidspunkt()
-            .løsForutgåendeMedlemskap()
+            .løsForutgåendeMedlemskap(fom)
             .løsOppholdskrav(fom)
             .løsBarnetillegg()
             .løsAvklaringsBehov(
@@ -867,7 +869,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 )
             )
             .løsBeregningstidspunkt()
-            .løsForutgåendeMedlemskap()
+            .løsForutgåendeMedlemskap(fom)
             .løsOppholdskrav(fom)
             .løsAvklaringsBehov(
                 AvklarSamordningUføreLøsning(
@@ -1203,7 +1205,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     )
                 )
             )
-            .løsForutgåendeMedlemskap()
+            .løsForutgåendeMedlemskap(sak.rettighetsperiode.fom)
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
             .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_ENDRING)
@@ -1267,7 +1269,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     .contains(Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP)
             }
             // Løs forutgående
-            .løsForutgåendeMedlemskap()
+            .løsForutgåendeMedlemskap(periode.fom)
             .løsOppholdskrav(periode.fom)
             // Trekk søknad
             .leggTilVurderingsbehov(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SØKNAD_TRUKKET)
@@ -1478,7 +1480,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 )
             )
             .løsBeregningstidspunkt()
-            .løsForutgåendeMedlemskap()
+            .løsForutgåendeMedlemskap(periode.fom)
             .løsOppholdskrav(periode.fom)
             .løsAndreStatligeYtelser()
             .medKontekst {
@@ -1702,7 +1704,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 )
             )
             .løsBeregningstidspunkt()
-            .løsForutgåendeMedlemskap()
+            .løsForutgåendeMedlemskap(periode.fom)
             .løsOppholdskrav(periode.fom)
             .løsAndreStatligeYtelser()
             .medKontekst {
@@ -1824,7 +1826,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 )
             )
             .løsBeregningstidspunkt()
-            .løsForutgåendeMedlemskap()
+            .løsForutgåendeMedlemskap(periode.fom)
             .løsOppholdskrav(periode.fom)
             .løsAndreStatligeYtelser()
             .medKontekst {
@@ -1964,7 +1966,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
             .løsBeregningstidspunkt()
-            .løsForutgåendeMedlemskap()
+            .løsForutgåendeMedlemskap(sak.rettighetsperiode.fom)
             .løsOppholdskrav(sak.rettighetsperiode.fom)
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
@@ -2091,7 +2093,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
             .løsBeregningstidspunkt()
-            .løsForutgåendeMedlemskap()
+            .løsForutgåendeMedlemskap(sak.rettighetsperiode.fom)
             .løsOppholdskrav(sak.rettighetsperiode.fom)
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
@@ -2136,7 +2138,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
             .løsBeregningstidspunkt()
-            .løsForutgåendeMedlemskap()
+            .løsForutgåendeMedlemskap(sak.rettighetsperiode.fom)
             .løsOppholdskrav(sak.rettighetsperiode.fom)
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
@@ -2166,6 +2168,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsBistand()
             .løsSykdomsvurderingBrev()
             .løsBeregningstidspunkt()
+            .løsForutgåendeMedlemskap(sak.rettighetsperiode.fom)
             .løsUtenSamordning()
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
@@ -2203,7 +2206,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
             .løsBeregningstidspunkt()
-            .løsForutgåendeMedlemskap()
+            .løsForutgåendeMedlemskap(sak.rettighetsperiode.fom)
             .løsOppholdskrav(sak.rettighetsperiode.fom)
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
@@ -2238,6 +2241,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsBistand()
             .løsSykdomsvurderingBrev()
             .løsBeregningstidspunkt()
+            .løsForutgåendeMedlemskap(nyStartDato)
             .løsUtenSamordning()
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
@@ -2314,7 +2318,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     ),
                 ),
             )
-            .løsForutgåendeMedlemskap()
+            .løsForutgåendeMedlemskap(periode.fom)
             .løsOppholdskrav(periode.fom)
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
@@ -2356,7 +2360,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     ),
                 ),
                 Bruker("SAKSBEHANDLER")
-            ).løsForutgåendeMedlemskap()
+            ).løsForutgåendeMedlemskap(periode.fom)
             .løsOppholdskrav(periode.fom)
             .medKontekst {
                 assertThat(behandling.status()).isEqualTo(Status.UTREDES)
@@ -2421,7 +2425,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
             .løsBeregningstidspunkt()
-            .løsForutgåendeMedlemskap()
+            .løsForutgåendeMedlemskap(sak.rettighetsperiode.fom)
             .løsOppholdskrav(sak.rettighetsperiode.fom)
             .løsAvklaringsBehov(
                 AvklarSamordningGraderingLøsning(
@@ -2883,6 +2887,68 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
     }
 
     @Test
+    fun `Oppfyller forutgående medlemskap etter to måneder`() {
+        val person =
+            FakePersoner.hentPerson(nyPerson(harYrkesskade = false, harUtenlandskOpphold = true).identifikator)!!
+        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+
+        var (sak, behandling) = sendInnFørsteSøknad(
+            person = person,
+            periode = periode,
+            søknad = SøknadV0(
+                student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
+                medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null),
+            ),
+        )
+
+        val oppdatertBehandling = behandling
+            .løsFramTilForutgåendeMedlemskap(harYrkesskade = false)
+            .medKontekst {
+                assertTrue(åpneAvklaringsbehov.all { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP })
+            }
+            .løsAvklaringsBehov(
+                AvklarPeriodisertForutgåendeMedlemskapLøsning(
+                    løsningerForPerioder = listOf(
+                        PeriodisertManuellVurderingForForutgåendeMedlemskapDto(
+                            fom = sak.rettighetsperiode.fom,
+                            tom = sak.rettighetsperiode.fom.plusMonths(2),
+                            begrunnelse = "begrunnelse",
+                            harForutgåendeMedlemskap = false,
+                            varMedlemMedNedsattArbeidsevne = null,
+                            medlemMedUnntakAvMaksFemAar = null
+                        ),
+                        PeriodisertManuellVurderingForForutgåendeMedlemskapDto(
+                            fom = sak.rettighetsperiode.fom.plusMonths(2).plusDays(1),
+                            tom = null,
+                            begrunnelse = "begrunnelse",
+                            harForutgåendeMedlemskap = true,
+                            varMedlemMedNedsattArbeidsevne = null,
+                            medlemMedUnntakAvMaksFemAar = null
+                        )
+                    )
+                )
+            )
+            .medKontekst {
+                assertTrue(this.åpneAvklaringsbehov.none { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP })
+                val vilkårsResultat =
+                    hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.MEDLEMSKAP).vilkårsperioder()
+                assertFalse(vilkårsResultat[0].erOppfylt())
+                assertTrue(vilkårsResultat[1].erOppfylt())
+            }
+            .løsOppholdskrav(sak.rettighetsperiode.fom)
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev()
+
+        // Virkningstidspunktet skal settes til datoen hvor medlemskap er oppfylt
+        val vedtak = hentVedtak(behandling.id)
+        assertThat(vedtak.virkningstidspunkt).isEqualTo(sak.rettighetsperiode.fom.plusMonths(2).plusDays(1))
+
+        assertThat(oppdatertBehandling.status()).isEqualTo(Status.AVSLUTTET)
+    }
+
+    @Test
     fun `Gir oppfylt når bruker ikke har lovvalgsland men oppfyller trygdeloven`() {
         val ident = ident()
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
@@ -3039,7 +3105,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         assertThat(åpneAvklaringsbehov).noneMatch { it.definisjon == Definisjon.MANUELL_OVERSTYRING_MEDLEMSKAP }
 
         // Validér riktig resultat
-        behandling = løsForutgåendeMedlemskap(behandling)
+        behandling = løsForutgåendeMedlemskap(behandling, periode.fom)
         var vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.MEDLEMSKAP).vilkårsperioder()
         assertThat(vilkårsResultat).allMatch { it.erOppfylt() }
 
@@ -4631,7 +4697,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsSykdom(nyStartDato)
             .løsBistand()
             .løsBeregningstidspunkt(nyStartDato)
-            .løsForutgåendeMedlemskap()
+            .løsForutgåendeMedlemskap(nyStartDato)
             .løsOppholdskrav(nyStartDato)
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
@@ -4670,6 +4736,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsBistand()
             .løsSykdomsvurderingBrev()
             .løsBeregningstidspunkt(nyStartDato)
+            .løsForutgåendeMedlemskap(nyStartDato)
             .løsUtenSamordning()
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
@@ -4711,7 +4778,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsBistand()
             .løsSykdomsvurderingBrev()
             .løsBeregningstidspunkt(LocalDate.now())
-            .løsForutgåendeMedlemskap()
+            .løsForutgåendeMedlemskap(førsteOverstyring)
             .løsUtenSamordning()
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
