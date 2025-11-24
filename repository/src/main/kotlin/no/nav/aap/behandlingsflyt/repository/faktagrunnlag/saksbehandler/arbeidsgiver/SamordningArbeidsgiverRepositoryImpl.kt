@@ -26,8 +26,6 @@ class SamordningArbeidsgiverRepositoryImpl(private val connection: DBConnection)
 
         val vurderingId = hentVurderingIdForBehandling(behandlingId) ?: return null
 
-
-        //finn perioder
         val perioderQuery = """
             select FOM, TOM from SAMORDNING_ARBEIDSGIVER_VURDERING_PERIODE where VURDERING_ID = ?
         """.trimIndent()
@@ -43,8 +41,6 @@ class SamordningArbeidsgiverRepositoryImpl(private val connection: DBConnection)
                 )
             }
         }
-
-
 
         val query = """
         SELECT * FROM SAMORDNING_ARBEIDSGIVER_VURDERING WHERE id = ?
@@ -72,13 +68,7 @@ class SamordningArbeidsgiverRepositoryImpl(private val connection: DBConnection)
                 )
             }
         }
-
-
-
     }
-
-
-
 
 
     private fun hentVurderingIdForBehandling(behandlingId: BehandlingId): Long? {
@@ -188,8 +178,6 @@ class SamordningArbeidsgiverRepositoryImpl(private val connection: DBConnection)
 
 
     private fun lagreVurdering(vurdering: SamordningArbeidsgiverVurdering): Long {
-
-
         val query = """
             INSERT INTO SAMORDNING_ARBEIDSGIVER_VURDERING (BEGRUNNELSE, VURDERT_AV) VALUES (?, ?)
         """.trimIndent()
@@ -200,7 +188,6 @@ class SamordningArbeidsgiverRepositoryImpl(private val connection: DBConnection)
                 setString(2, vurdering.vurdertAv)
             }
         }
-
         val periodeQuery = """
             INSERT INTO SAMORDNING_ARBEIDSGIVER_VURDERING_PERIODE (VURDERING_ID, FOM, TOM) VALUES (?, ?, ?)
         """.trimIndent()
@@ -212,7 +199,6 @@ class SamordningArbeidsgiverRepositoryImpl(private val connection: DBConnection)
                 setLocalDate(3,it.tom)
             }
         }
-
         return vunderingsId
     }
 

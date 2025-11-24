@@ -640,9 +640,6 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         )
     }
 
-
-
-
     protected fun Behandling.løsUtenSamordning(): Behandling {
         return this.løsAvklaringsBehov(
             AvklarSamordningGraderingLøsning(
