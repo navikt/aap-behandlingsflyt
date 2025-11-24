@@ -55,7 +55,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtfører(
             return false
         }
         val sisteIverksatteBehandling = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sak.id) ?: return false
-        val aktuellPeriode = underveisRepository.hentHvisEksisterer(sisteIverksatteBehandling.id)?.somTidslinje()?.helePerioden() ?: sak.rettighetsperiodeEttÅrFraStartDato()
+        val aktuellPeriode = underveisRepository.hentHvisEksisterer(sisteIverksatteBehandling.id)?.somTidslinje()?.helePerioden() ?: error("For å få fritak for meldeplikten skal det eksistere en underveistidslinje fra forrige iverksatte behandling")
 
         // NB Sjekker 7 dager tilbake for å få med siste utbetaling som har fritak.
         val sistePasserteMeldeperiode = meldeperiodeRepository.hentMeldeperioder(sisteIverksatteBehandling.id, aktuellPeriode).firstOrNull { it.inneholder(nå.minusDays(7)) } ?: return false
