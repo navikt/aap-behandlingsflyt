@@ -22,8 +22,6 @@ dependencies {
     runtimeOnly("org.postgresql:postgresql") // låst versjon i root build.gradle.kts
     implementation("no.bekk.bekkopen:nocommons:0.16.0")
 
-    implementation("com.github.ben-manes.caffeine:caffeine:3.2.3")
-
     testImplementation(project(":lib-test"))
     testImplementation(libs.dbtest)
 
