@@ -55,7 +55,7 @@ data class SykdomsvurderingLøsningDto(
         return Sykdomsvurdering(
             begrunnelse = begrunnelse,
             vurderingenGjelderFra = fom,
-            vurderingenGjelderTil = null, // TODO: Støtt ny periodisert løsning
+            vurderingenGjelderTil = tom,
             dokumenterBruktIVurdering = dokumenterBruktIVurdering,
             erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
             harSkadeSykdomEllerLyte = harSkadeSykdomEllerLyte,
