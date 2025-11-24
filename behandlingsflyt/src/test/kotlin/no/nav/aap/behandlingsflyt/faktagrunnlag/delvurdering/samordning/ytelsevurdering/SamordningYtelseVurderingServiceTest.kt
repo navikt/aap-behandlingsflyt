@@ -268,7 +268,7 @@ class SamordningYtelseVurderingServiceTest {
         )
 
         assertThat(
-            SamordningYtelseVurderingInformasjonskrav.harEndringerIYtelser(
+            SamordningYtelseVurderingInformasjonskrav.harEndringerIYtelserIkkeDekketAvEksisterendeGrunnlag(
                 eksisterendeGrunnlag, ny
             )
         ).isFalse()

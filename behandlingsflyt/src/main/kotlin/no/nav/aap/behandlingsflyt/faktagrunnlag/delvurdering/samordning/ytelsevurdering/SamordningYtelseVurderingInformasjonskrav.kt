@@ -31,6 +31,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
 import kotlin.time.measureTimedValue
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Ytelse as ForeldrePengerYtelse
 
@@ -102,7 +103,7 @@ class SamordningYtelseVurderingInformasjonskrav(
 
         val (samordningYtelser) = registerdata
 
-        if (harEndringerIYtelser(eksisterendeData, samordningYtelser)) {
+        if (harEndringerIYtelserIkkeDekketAvEksisterendeGrunnlag(eksisterendeData, samordningYtelser)) {
             log.info("Oppdaterer samordning ytelser for behandling ${kontekst.behandlingId}. Ytelser funnet: ${samordningYtelser.map { it.ytelseType }}")
             samordningYtelseRepository.lagre(kontekst.behandlingId, samordningYtelser)
             return Informasjonskrav.Endret.ENDRET
@@ -193,9 +194,13 @@ class SamordningYtelseVurderingInformasjonskrav(
                 .map { vurdering -> vurdering.vurderingPerioder }
         }
         //bare skriver ut loggmeldinger enn så lenge
-        erHeltDekketAvManuelleVurderinger(samordningVurderinger, samordningYtelser)
+        harEndringerIYtelserIkkeDekketAvManuelleVurderinger(samordningVurderinger, samordningYtelser)
 
-        return if (!gikkFraNullTilTomtGrunnlag && harEndringerIYtelser(eksisterendeData, samordningYtelser)) listOf(
+        return if (!gikkFraNullTilTomtGrunnlag && harEndringerIYtelserIkkeDekketAvEksisterendeGrunnlag(
+                eksisterendeData,
+                samordningYtelser
+            )
+        ) listOf(
             VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER)
         )
         else emptyList()
@@ -218,95 +223,96 @@ class SamordningYtelseVurderingInformasjonskrav(
             )
         }
 
-        fun harEndringerIYtelser(
-            eksisterende: SamordningYtelseGrunnlag?, samordningYtelser: Set<SamordningYtelse>
+        fun harEndringerIYtelserIkkeDekketAvEksisterendeGrunnlag(
+            eksisterende: SamordningYtelseGrunnlag?,
+            nye: Set<SamordningYtelse>
         ): Boolean {
-            secureLogger.info("Hentet samordningytelse eksisterende ${eksisterende?.ytelser} med nye samordningsytelser ${samordningYtelser.map { it.ytelsePerioder }}  ${samordningYtelser.map { it.ytelseType.name }}")
-            secureLogger.info(
-                "Overlapp " + harFullstendigOverlappMedEksisterendeYtelser(
-                    eksisterende,
-                    samordningYtelser
-                ) + "YtelseneErLike " + (samordningYtelser == eksisterende?.ytelser)
-            )
-            // TODO: return eksisterende == null || !harFullstendigOverlapp(eksisterende, samordningYtelser)
-            return eksisterende == null || samordningYtelser != eksisterende.ytelser
+            if (eksisterende == null) return true
+
+            for (ny in nye) {
+                val eksisterendeForType = eksisterende.ytelser.filter { it.ytelseType == ny.ytelseType }
+
+                if (eksisterendeForType.isEmpty()) return true
+
+                for (nyPeriode in ny.ytelsePerioder) {
+                    val relevanteEksPerioder = eksisterendeForType
+                        .flatMap { it.ytelsePerioder }
+                        .filter { it.gradering == nyPeriode.gradering || it.gradering == Prosent.`100_PROSENT` }
+
+                    if (!isPeriodeDekketAvEksisterendeUnion(relevanteEksPerioder, nyPeriode)) {
+                        return true
+                    }
+                }
+            }
+            return false
         }
 
-        fun erHeltDekketAvManuelleVurderinger(
+        fun harEndringerIYtelserIkkeDekketAvManuelleVurderinger(
             eksisterendeVurderinger: SamordningVurderingGrunnlag?, samordningYtelser: Set<SamordningYtelse>
         ): Boolean {
-            secureLogger.info("Hentet samordningytelse eksisterende ${eksisterendeVurderinger?.vurderinger} med nye samordningsytelser ${samordningYtelser.map { it.ytelsePerioder }}  ${samordningYtelser.map { it.ytelseType.name }}")
-            secureLogger.info(
-                "Overlapp " + harFullstendigOverlappMedEksisterendeVurderinger(
-                    eksisterendeVurderinger,
-                    samordningYtelser
-                ) + "VurderingeneErLike " + (samordningYtelser == eksisterendeVurderinger?.vurderinger)
-            )
-            // TODO: return eksisterende == null || !harFullstendigOverlappMedEksisterendeVurderinger(eksisterende, samordningYtelser)
-            return eksisterendeVurderinger == null || samordningYtelser != eksisterendeVurderinger.vurderinger
-        }
+            if (eksisterendeVurderinger == null) return true
 
-    }
+            for (ny in samordningYtelser) {
+                val eksisterendeForType = eksisterendeVurderinger.vurderinger.filter { it.ytelseType == ny.ytelseType }
 
-}
+                if (eksisterendeForType.isEmpty()) return true
 
-fun harFullstendigOverlappMedEksisterendeYtelser(
-    eksisterende: SamordningYtelseGrunnlag?,
-    nye: Set<SamordningYtelse>
-): Boolean {
-    if (eksisterende == null) return false
-    if (eksisterende.ytelser.size != nye.size) return false
+                for (nyPeriode in ny.ytelsePerioder) {
+                    val relevanteEksPerioder = eksisterendeForType
+                        .flatMap { it.vurderingPerioder }
+                        .filter { it.gradering == nyPeriode.gradering || it.gradering == Prosent.`100_PROSENT` }
 
-    return nye.all { nyYtelse ->
-        eksisterende.ytelser.any { eksisterendeYtelse ->
-            ytelsesperioderErLike(eksisterendeYtelse.ytelsePerioder, nyYtelse.ytelsePerioder)
+                    if (!isPeriodeDekketAvEksisterendeUnion(relevanteEksPerioder, nyPeriode)) {
+                        return true
+                    }
+                }
+            }
+            return false
         }
     }
 }
 
-private fun ytelsesperioderErLike(
-    eksisterende: Set<SamordningYtelsePeriode>,
-    nye: Set<SamordningYtelsePeriode>
-): Boolean {
-    if (eksisterende.size != nye.size) return false
+    private fun <T : HarPeriode> isPeriodeDekketAvEksisterendeUnion(
+        eksisterendePerioder: List<T>,
+        target: T
+    ): Boolean {
+        if (eksisterendePerioder.isEmpty()) return false
 
-    return eksisterende.all { eks ->
-        nye.any { ny ->
-            eks.periode.fom.isEqual(ny.periode.fom) &&
-                    eks.periode.tom.isEqual(ny.periode.tom) &&
-                    eks.gradering == ny.gradering
-            // TODO: Mer logikk på graderinger. Ulik logikk mellom sykepenger og foreldrepenger
+        val intersections = eksisterendePerioder.mapNotNull { eks ->
+            val start = maxOf(eks.periode.fom, target.periode.fom)
+            val end = minOf(eks.periode.tom, target.periode.tom)
+            if (!start.isAfter(end)) start to end else null
+        }.sortedBy { it.first }
+
+        if (intersections.isEmpty()) return false
+
+        val merged = mutableListOf<Pair<LocalDate, LocalDate>>()
+        for ((s, e) in intersections) {
+            if (merged.isEmpty()) {
+                merged.add(s to e)
+            } else {
+                val (curS, curE) = merged.last()
+                if (!s.isAfter(curE.plusDays(1))) {
+                    val newEnd = if (e.isAfter(curE)) e else curE
+                    merged[merged.lastIndex] = curS to newEnd
+                } else {
+                    merged.add(s to e)
+                }
+            }
         }
-    }
-}
 
-fun harFullstendigOverlappMedEksisterendeVurderinger(
-    manuellVurderingGrunnlag: SamordningVurderingGrunnlag?,
-    nye: Set<SamordningYtelse>
-): Boolean {
-    if (manuellVurderingGrunnlag == null) return false
-    return nye.all { nyYtelse ->
-        manuellVurderingGrunnlag.vurderinger.any { eksisterendeVurdering ->
-            eksisterendeVurdering.ytelseType == nyYtelse.ytelseType &&
-                    vurderingperioderErLike(eksisterendeVurdering.vurderingPerioder, nyYtelse.ytelsePerioder)
-        }
-    }
-}
+        if (merged.size != 1) return false
 
-private fun vurderingperioderErLike(
-    eksisterendeVurderinger: Set<SamordningVurderingPeriode>,
-    nye: Set<SamordningYtelsePeriode>
-): Boolean {
-    if (eksisterendeVurderinger.size != nye.size) return false
-
-    return eksisterendeVurderinger.all { eks ->
-        nye.any { ny ->
-            eks.periode.fom.isEqual(ny.periode.fom) &&
-                    eks.periode.tom.isEqual(ny.periode.tom) &&
-                    eks.gradering == ny.gradering
-            // TODO: Mer logikk på graderinger. Ulik logikk mellom sykepenger og foreldrepenger
-        }
+        val (coverStart, coverEnd) = merged[0]
+        return !coverStart.isAfter(target.periode.fom) && !coverEnd.isBefore(target.periode.tom)
     }
-}
+
+
+
+
+
+
+
+
 
 

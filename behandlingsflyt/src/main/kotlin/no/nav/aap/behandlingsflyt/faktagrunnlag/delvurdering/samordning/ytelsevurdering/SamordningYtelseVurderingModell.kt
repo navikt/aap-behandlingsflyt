@@ -14,10 +14,10 @@ data class SamordningYtelse(
 )
 
 data class SamordningYtelsePeriode(
-    val periode: Periode,
+    override val periode: Periode,
     val gradering: Prosent?,
     val kronesum: Number? = null
-)
+) : HarPeriode
 
 data class SamordningVurdering(
     val ytelseType: Ytelse,
@@ -25,11 +25,11 @@ data class SamordningVurdering(
 )
 
 data class SamordningVurderingPeriode(
-    val periode: Periode,
+    override val periode: Periode,
     val gradering: Prosent?,
     val kronesum: Number? = null,
     val manuell: Boolean?,
-)
+) : HarPeriode
 
 data class SamordningYtelseGrunnlag(
     val grunnlagId: Long,
@@ -43,3 +43,7 @@ data class SamordningVurderingGrunnlag(
     val vurdertAv: String,
     val vurdertTidspunkt: LocalDateTime? = null
 )
+
+interface HarPeriode {
+    val periode: Periode
+}
