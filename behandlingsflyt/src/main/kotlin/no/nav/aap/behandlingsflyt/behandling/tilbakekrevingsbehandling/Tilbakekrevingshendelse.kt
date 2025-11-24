@@ -4,8 +4,10 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import java.net.URI
 import java.time.LocalDateTime
+import java.util.UUID
 
 data class Tilbakekrevingshendelse(
+    val tilbakekrevingBehandlingId: UUID,
     val eksternFagsakId: String,
     val hendelseOpprettet: LocalDateTime,
     val eksternBehandlingId: String?,
@@ -13,7 +15,7 @@ data class Tilbakekrevingshendelse(
     val varselSendt: LocalDateTime?,
     val behandlingsstatus: TilbakekrevingBehandlingsstatus,
     val totaltFeilutbetaltBeløp: Beløp,
-    val saksbehandlingURL: URI,
+    val tilbakekrevingSaksbehandlingUrl: URI,
     val fullstendigPeriode: Periode,
     val versjon: Int,
 )

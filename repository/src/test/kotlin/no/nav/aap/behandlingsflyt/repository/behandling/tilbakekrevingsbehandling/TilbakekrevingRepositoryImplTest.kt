@@ -48,6 +48,7 @@ class TilbakekrevingRepositoryImplTest {
             val sak = sak(connection)
             val nå = LocalDateTime.now()
             val hendelse = Tilbakekrevingshendelse(
+                tilbakekrevingBehandlingId = UUID.randomUUID(),
                 eksternFagsakId = "123",
                 hendelseOpprettet = nå,
                 eksternBehandlingId = UUID.randomUUID().toString(),
@@ -55,7 +56,7 @@ class TilbakekrevingRepositoryImplTest {
                 varselSendt = nå,
                 behandlingsstatus = TilbakekrevingBehandlingsstatus.OPPRETTET,
                 totaltFeilutbetaltBeløp = Beløp(1000),
-                saksbehandlingURL = URI.create("https://nav.no"),
+                tilbakekrevingSaksbehandlingUrl = URI.create("https://nav.no"),
                 fullstendigPeriode = periode,
                 versjon = 1
             )
@@ -84,6 +85,7 @@ class TilbakekrevingRepositoryImplTest {
             val sak = sak(connection)
             val nå = LocalDateTime.now()
             val hendelse = Tilbakekrevingshendelse(
+                tilbakekrevingBehandlingId = UUID.randomUUID(),
                 eksternFagsakId = "123",
                 hendelseOpprettet = nå,
                 eksternBehandlingId = UUID.randomUUID().toString(),
@@ -91,7 +93,7 @@ class TilbakekrevingRepositoryImplTest {
                 varselSendt = nå,
                 behandlingsstatus = TilbakekrevingBehandlingsstatus.OPPRETTET,
                 totaltFeilutbetaltBeløp = Beløp(1000),
-                saksbehandlingURL = URI.create("https://nav.no"),
+                tilbakekrevingSaksbehandlingUrl = URI.create("https://nav.no"),
                 fullstendigPeriode = periode,
                 versjon = 1
             )
@@ -105,7 +107,7 @@ class TilbakekrevingRepositoryImplTest {
             assertThat(behandlinger.first().behandlingsstatus).isEqualTo(TilbakekrevingBehandlingsstatus.OPPRETTET)
 
 
-            repo.lagre(sak.id, hendelse.copy(eksternBehandlingId = UUID.randomUUID().toString()))
+            repo.lagre(sak.id, hendelse.copy(tilbakekrevingBehandlingId = UUID.randomUUID()))
             val behandlingerEtterHendelse2 = repo.hent(sak.id)
 
             assertThat(behandlingerEtterHendelse2).hasSize(2)

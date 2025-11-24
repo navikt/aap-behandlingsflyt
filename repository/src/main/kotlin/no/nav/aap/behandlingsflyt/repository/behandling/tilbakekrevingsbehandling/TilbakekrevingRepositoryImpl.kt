@@ -16,6 +16,7 @@ class TilbakekrevingRepositoryImpl(private val connection: DBConnection) : Tilba
         val insertHendelse = """
             INSERT INTO TILBAKEKREVINGSHENDELSE(
                 SAK_ID,
+                TILBAKEKREVING_BEHANDLING_ID,
                 EKSTERN_FAGSAK_ID,
                 HENDELSE_OPPRETTET,
                 EKSTERN_BEHANDLING_ID,
@@ -26,22 +27,23 @@ class TilbakekrevingRepositoryImpl(private val connection: DBConnection) : Tilba
                 SAKSBEHANDLING_URL,
                 FULLSTENDIG_PERIODE,
                 VERSJON
-            ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?::daterange, ?)
+            ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?::daterange, ?)
         """.trimIndent()
 
         connection.execute(insertHendelse) {
             setParams {
                 setLong(1, sakId.id)
-                setString(2, tilbakekrevingshendelse.eksternFagsakId)
-                setLocalDateTime(3, tilbakekrevingshendelse.hendelseOpprettet)
-                setString(4, tilbakekrevingshendelse.eksternBehandlingId)
-                setLocalDateTime(5, tilbakekrevingshendelse.sakOpprettet)
-                setLocalDateTime(6, tilbakekrevingshendelse.varselSendt)
-                setEnumName(7, tilbakekrevingshendelse.behandlingsstatus)
-                setBigDecimal(8, tilbakekrevingshendelse.totaltFeilutbetaltBeløp.verdi)
-                setString(9, tilbakekrevingshendelse.saksbehandlingURL.toString())
-                setPeriode(10, tilbakekrevingshendelse.fullstendigPeriode)
-                setInt(11, tilbakekrevingshendelse.versjon)
+                setUUID(2, tilbakekrevingshendelse.tilbakekrevingBehandlingId)
+                setString(3, tilbakekrevingshendelse.eksternFagsakId)
+                setLocalDateTime(4, tilbakekrevingshendelse.hendelseOpprettet)
+                setString(5, tilbakekrevingshendelse.eksternBehandlingId)
+                setLocalDateTime(6, tilbakekrevingshendelse.sakOpprettet)
+                setLocalDateTime(7, tilbakekrevingshendelse.varselSendt)
+                setEnumName(8, tilbakekrevingshendelse.behandlingsstatus)
+                setBigDecimal(9, tilbakekrevingshendelse.totaltFeilutbetaltBeløp.verdi)
+                setString(10, tilbakekrevingshendelse.tilbakekrevingSaksbehandlingUrl.toString())
+                setPeriode(11, tilbakekrevingshendelse.fullstendigPeriode)
+                setInt(12, tilbakekrevingshendelse.versjon)
             }
         }
 
@@ -52,6 +54,7 @@ class TilbakekrevingRepositoryImpl(private val connection: DBConnection) : Tilba
         val upsertBehandling = """
             INSERT INTO TILBAKEKREVINGSBEHANDLING(
                 SAK_ID,
+                TILBAKEKREVING_BEHANDLING_ID,
                 EKSTERN_FAGSAK_ID,
                 HENDELSE_OPPRETTET,
                 EKSTERN_BEHANDLING_ID,
@@ -59,30 +62,31 @@ class TilbakekrevingRepositoryImpl(private val connection: DBConnection) : Tilba
                 VARSEL_SENDT,
                 BEHANDLINGSSTATUS,
                 TOTALT_FEILUTBETALT_BELOP,
-                SAKSBEHANDLING_URL,
+                TILBAKEKREVING_SAKSBEHANDLING_URL,
                 FULLSTENDIG_PERIODE
-            ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?::daterange)
-            ON CONFLICT(EKSTERN_FAGSAK_ID, EKSTERN_BEHANDLING_ID) DO UPDATE SET 
+            ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?::daterange)
+            ON CONFLICT(TILBAKEKREVING_BEHANDLING_ID) DO UPDATE SET 
                 HENDELSE_OPPRETTET = EXCLUDED.HENDELSE_OPPRETTET,
                 VARSEL_SENDT = EXCLUDED.VARSEL_SENDT,
                 BEHANDLINGSSTATUS = EXCLUDED.BEHANDLINGSSTATUS,
                 TOTALT_FEILUTBETALT_BELOP = EXCLUDED.TOTALT_FEILUTBETALT_BELOP,
-                SAKSBEHANDLING_URL = EXCLUDED.SAKSBEHANDLING_URL,
+                TILBAKEKREVING_SAKSBEHANDLING_URL = EXCLUDED.TILBAKEKREVING_SAKSBEHANDLING_URL,
                 FULLSTENDIG_PERIODE = EXCLUDED.FULLSTENDIG_PERIODE
         """.trimIndent()
 
         connection.execute(upsertBehandling) {
             setParams {
                 setLong(1, sakId.id)
-                setString(2, tilbakekrevingshendelse.eksternFagsakId)
-                setLocalDateTime(3, tilbakekrevingshendelse.hendelseOpprettet)
-                setString(4, tilbakekrevingshendelse.eksternBehandlingId)
-                setLocalDateTime(5, tilbakekrevingshendelse.sakOpprettet)
-                setLocalDateTime(6, tilbakekrevingshendelse.varselSendt)
-                setEnumName(7, tilbakekrevingshendelse.behandlingsstatus)
-                setBigDecimal(8, tilbakekrevingshendelse.totaltFeilutbetaltBeløp.verdi)
-                setString(9, tilbakekrevingshendelse.saksbehandlingURL.toString())
-                setPeriode(10, tilbakekrevingshendelse.fullstendigPeriode)
+                setUUID(2, tilbakekrevingshendelse.tilbakekrevingBehandlingId)
+                setString(3, tilbakekrevingshendelse.eksternFagsakId)
+                setLocalDateTime(4, tilbakekrevingshendelse.hendelseOpprettet)
+                setString(5, tilbakekrevingshendelse.eksternBehandlingId)
+                setLocalDateTime(6, tilbakekrevingshendelse.sakOpprettet)
+                setLocalDateTime(7, tilbakekrevingshendelse.varselSendt)
+                setEnumName(8, tilbakekrevingshendelse.behandlingsstatus)
+                setBigDecimal(9, tilbakekrevingshendelse.totaltFeilutbetaltBeløp.verdi)
+                setString(10, tilbakekrevingshendelse.tilbakekrevingSaksbehandlingUrl.toString())
+                setPeriode(11, tilbakekrevingshendelse.fullstendigPeriode)
             }
         }
     }
@@ -97,7 +101,7 @@ class TilbakekrevingRepositoryImpl(private val connection: DBConnection) : Tilba
                 VARSEL_SENDT,
                 BEHANDLINGSSTATUS,
                 TOTALT_FEILUTBETALT_BELOP,
-                SAKSBEHANDLING_URL,
+                TILBAKEKREVING_SAKSBEHANDLING_URL,
                 FULLSTENDIG_PERIODE
             FROM TILBAKEKREVINGSBEHANDLING
             WHERE SAK_ID = ?
@@ -116,7 +120,7 @@ class TilbakekrevingRepositoryImpl(private val connection: DBConnection) : Tilba
                     varselSendt = row.getLocalDateTimeOrNull("VARSEL_SENDT"),
                     behandlingsstatus = row.getEnum("BEHANDLINGSSTATUS"),
                     totaltFeilutbetaltBeløp = Beløp(row.getBigDecimal("TOTALT_FEILUTBETALT_BELOP")),
-                    saksbehandlingURL = URI.create(row.getString("SAKSBEHANDLING_URL")),
+                    saksbehandlingURL = URI.create(row.getString("TILBAKEKREVING_SAKSBEHANDLING_URL")),
                     fullstendigPeriode = row.getPeriode("FULLSTENDIG_PERIODE")
                 )
             }

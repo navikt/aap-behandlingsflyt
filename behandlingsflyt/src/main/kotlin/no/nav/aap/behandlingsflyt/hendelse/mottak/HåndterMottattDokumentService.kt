@@ -207,6 +207,7 @@ class HåndterMottattDokumentService(
 
     private fun TilbakekrevingHendelseV0.tilTilbakekrevingshendelse(): Tilbakekrevingshendelse {
         return Tilbakekrevingshendelse(
+            tilbakekrevingBehandlingId = this.tilbakekreving.behandlingId,
             eksternFagsakId = this.eksternFagsakId,
             hendelseOpprettet = this.hendelseOpprettet,
             eksternBehandlingId = this.eksternBehandlingId,
@@ -214,7 +215,7 @@ class HåndterMottattDokumentService(
             varselSendt = this.tilbakekreving.varselSendt,
             behandlingsstatus = no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingBehandlingsstatus.valueOf(this.tilbakekreving.behandlingsstatus.name),
             totaltFeilutbetaltBeløp = Beløp(this.tilbakekreving.totaltFeilutbetaltBeløp),
-            saksbehandlingURL = URI.create(this.tilbakekreving.saksbehandlingURL),
+            tilbakekrevingSaksbehandlingUrl = URI.create(this.tilbakekreving.saksbehandlingURL),
             fullstendigPeriode = Periode(fom = this.tilbakekreving.fullstendigPeriode.fom, tom = this.tilbakekreving.fullstendigPeriode.tom),
             versjon = this.versjon,
         )

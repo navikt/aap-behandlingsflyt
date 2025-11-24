@@ -98,6 +98,7 @@ class SakOgBehandlingServiceTest {
 
     private fun tilbakekrevingBehandling(connection: DBConnection, sak: Sak) {
         TilbakekrevingRepositoryImpl(connection).lagre(sak.id, Tilbakekrevingshendelse(
+            tilbakekrevingBehandlingId = UUID.randomUUID(),
             eksternFagsakId = sak.saksnummer.toString(),
             hendelseOpprettet = LocalDateTime.now(),
             eksternBehandlingId = UUID.randomUUID().toString(),
@@ -105,7 +106,7 @@ class SakOgBehandlingServiceTest {
             varselSendt = LocalDateTime.now(),
             behandlingsstatus = TilbakekrevingBehandlingsstatus.OPPRETTET,
             totaltFeilutbetaltBeløp = Beløp(1000),
-            saksbehandlingURL = URI.create("https://localhost"),
+            tilbakekrevingSaksbehandlingUrl = URI.create("https://localhost"),
             fullstendigPeriode = periode,
             versjon = 1
         ))

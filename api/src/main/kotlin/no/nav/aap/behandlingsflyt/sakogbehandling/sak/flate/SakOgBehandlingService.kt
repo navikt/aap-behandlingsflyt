@@ -35,7 +35,7 @@ class SakOgBehandlingService(private val repositoryProvider: RepositoryProvider)
                     vurderingsbehov = vurderingsbehov,
                     årsakTilOpprettelse = behandling.årsakTilOpprettelse,
                     opprettet = behandling.opprettetTidspunkt,
-                    url = null,
+                    eksternSaksbehandlingsløsningUrl = null,
                 )
             }
 
@@ -47,12 +47,14 @@ class SakOgBehandlingService(private val repositoryProvider: RepositoryProvider)
                 status = when (tilbakekrevingBehandling.behandlingsstatus) {
                     TilbakekrevingBehandlingsstatus.OPPRETTET -> no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.OPPRETTET
                     TilbakekrevingBehandlingsstatus.TIL_BEHANDLING -> no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.UTREDES
+                    TilbakekrevingBehandlingsstatus.TIL_BESLUTTER -> no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.UTREDES
+                    TilbakekrevingBehandlingsstatus.RETUR_FRA_BESLUTTER -> no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.UTREDES
                     TilbakekrevingBehandlingsstatus.AVSLUTTET -> no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.AVSLUTTET
                 },
                 vurderingsbehov = emptyList(),
                 årsakTilOpprettelse = ÅrsakTilOpprettelse.TILBAKEKREVING_HENDELSE,
                 opprettet = tilbakekrevingBehandling.sakOpprettet,
-                url = tilbakekrevingBehandling.saksbehandlingURL.toString(),
+                eksternSaksbehandlingsløsningUrl = tilbakekrevingBehandling.saksbehandlingURL.toString(),
             )
         }
 
