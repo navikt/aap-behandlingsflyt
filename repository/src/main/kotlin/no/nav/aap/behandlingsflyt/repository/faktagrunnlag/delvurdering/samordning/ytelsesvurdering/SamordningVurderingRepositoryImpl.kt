@@ -97,8 +97,6 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
                 setRowMapper {
                     SamordningVurderingGrunnlag(
                         begrunnelse = it.getStringOrNull("begrunnelse"),
-                        maksDatoEndelig = it.getBoolean("maksdato_endelig"),
-                        fristNyRevurdering = it.getLocalDateOrNull("frist_ny_revurdering"),
                         vurderingerId = vurderingerId,
                         vurdertAv = it.getString("vurdert_av"),
                         vurdertTidspunkt = it.getLocalDateTime("opprettet_tid"),
@@ -140,15 +138,13 @@ class SamordningVurderingRepositoryImpl(private val connection: DBConnection) :
         }
 
         val samordningVurderingerQuery = """
-            INSERT INTO SAMORDNING_VURDERINGER (begrunnelse, maksdato_endelig, frist_ny_revurdering, vurdert_av)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO SAMORDNING_VURDERINGER (begrunnelse, vurdert_av)
+            VALUES (?, ?)
             """.trimIndent()
         val vurderingerId = connection.executeReturnKey(samordningVurderingerQuery) {
             setParams {
                 setString(1, samordningVurderinger.begrunnelse)
-                setBoolean(2, samordningVurderinger.maksDatoEndelig)
-                setLocalDate(3, samordningVurderinger.fristNyRevurdering)
-                setString(4, samordningVurderinger.vurdertAv)
+                setString(2, samordningVurderinger.vurdertAv)
             }
         }
 

@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.beregning.Beregning
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelseService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Input
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.BeregningInput
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
@@ -89,10 +89,10 @@ fun readCSV(inputStream: InputStream): List<CSVLine> {
         }.toList()
 }
 
-fun tilInput(csvLine: CSVLine): Pair<Input, Fødselsdato> {
+fun tilInput(csvLine: CSVLine): Pair<BeregningInput, Fødselsdato> {
 
     return Pair(
-        Input(
+        BeregningInput(
             nedsettelsesDato = LocalDate.of(csvLine.beregningsAar, 1, 1),
             inntekter = csvLine.let { (intSiste, intNestSiste, intTredjeSiste, _, inntektSisteAar, inntektNestSisteAar, inntektTredjeSisteAar) ->
                 setOf(
@@ -109,7 +109,7 @@ fun tilInput(csvLine: CSVLine): Pair<Input, Fødselsdato> {
     )
 }
 
-fun beregnForInput(input: Input, fødselsdato: Fødselsdato): Triple<Year, GUnit, Double> {
+fun beregnForInput(input: BeregningInput, fødselsdato: Fødselsdato): Triple<Year, GUnit, Double> {
     val beregnet = Beregning(Inntektsbehov((input))).beregneMedInput()
 
     val tilkjent = BeregnTilkjentYtelseService(

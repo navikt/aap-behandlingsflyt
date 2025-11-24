@@ -90,16 +90,13 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource, repositoryRegis
                                             barneTilleggsats = it.verdi.barnetilleggsats.verdi.toDouble(),
                                             barnetillegg = it.verdi.barnetillegg.verdi().toDouble(),
                                             arbeidGradering = 100.minus(
-                                                it.verdi.gradering.arbeidGradering?.prosentverdi() ?: 0
+                                                it.verdi.graderingGrunnlag.arbeidGradering.prosentverdi()
                                             ),
-                                            samordningGradering = it.verdi.gradering.samordningGradering?.prosentverdi()
-                                                ?.plus(
-                                                    it.verdi.gradering.samordningUføregradering?.prosentverdi()
-                                                        ?: 0
-                                                ),
-                                            institusjonGradering = it.verdi.gradering.institusjonGradering?.prosentverdi(),
-                                            arbeidsgiverGradering = it.verdi.gradering.samordningArbeidsgiverGradering?.prosentverdi(),
-                                            totalReduksjon = 100.minus(it.verdi.gradering.endeligGradering.prosentverdi()),
+                                            samordningGradering = it.verdi.graderingGrunnlag.samordningGradering.prosentverdi()
+                                                .plus(it.verdi.graderingGrunnlag.samordningUføregradering.prosentverdi()),
+                                            institusjonGradering = it.verdi.graderingGrunnlag.institusjonGradering.prosentverdi(),
+                                            arbeidsgiverGradering = it.verdi.graderingGrunnlag.samordningArbeidsgiverGradering.prosentverdi(),
+                                            totalReduksjon = 100.minus(it.verdi.gradering.prosentverdi()),
                                             effektivDagsats = it.verdi.redusertDagsats().verdi().toDouble()
                                         )
                                     )

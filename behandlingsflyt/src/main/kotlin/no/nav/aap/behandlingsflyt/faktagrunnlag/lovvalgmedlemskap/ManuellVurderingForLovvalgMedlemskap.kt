@@ -19,7 +19,7 @@ data class ManuellVurderingForLovvalgMedlemskap(
 ) {
     fun lovvalgslandErAnnetLandIEØSEllerLandMedAvtale(): Boolean {
         val lovvalgsLand = lovvalg.lovvalgsEØSLandEllerLandMedAvtale
-        return lovvalgsLand != null && lovvalgsLand != EØSLandEllerLandMedAvtale.NOR && lovvalgsLand in enumValues<EØSLandEllerLandMedAvtale>().map { it }
+        return lovvalgsLand != EØSLandEllerLandMedAvtale.NOR && lovvalgsLand in enumValues<EØSLandEllerLandMedAvtale>().map { it }
     }
 
     fun medlemIFolketrygd(): Boolean {

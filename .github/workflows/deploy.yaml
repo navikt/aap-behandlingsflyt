@@ -20,7 +20,7 @@ jobs:
         packages: write
         checks: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
         with:
           java-version: 25
@@ -58,8 +58,53 @@ jobs:
         id: docker-push
         with:
             team: aap # required
+            
     outputs:
         image: ${{ steps.docker-push.outputs.image }}
+
+  bygg-docs:
+    name: Bygg docs
+    runs-on: ubuntu-latest
+    permissions:
+        contents: read
+        id-token: write
+        packages: write
+        checks: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          java-version: 25
+          distribution: 'temurin'
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
+        with:
+            gradle-version: wrapper
+      - name: Genererer docs
+        run: |
+          ./gradlew dokkaGenerate
+      - name: upload-artifact for docs
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: './docs/build/dokka/html'
+
+
+  deploy-pages:
+    runs-on: ubuntu-latest
+    needs: bygg-docs
+    concurrency:
+      group: docs
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.test.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
 
   publiser-kontrakt:
       needs: build
@@ -71,7 +116,7 @@ jobs:
           id-token: write
       runs-on: ubuntu-latest
       steps:
-          - uses: actions/checkout@v5
+          - uses: actions/checkout@v6
             with:
                 fetch-depth: 0
             #  Ha denne tidlig, så action kan skippe raskt om ingen endringer.
@@ -125,7 +170,7 @@ jobs:
     concurrency:
       group: deploy-dev
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: nais/deploy/actions/deploy@v2
         env:
           PRINT_PAYLOAD: true
@@ -143,7 +188,7 @@ jobs:
           contents: read
           id-token: write
       steps:
-          - uses: actions/checkout@v5
+          - uses: actions/checkout@v6
           - uses: nais/deploy/actions/deploy@v2
             env:
                 PRINT_PAYLOAD: true

@@ -38,10 +38,10 @@ import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykepenge
 import no.nav.aap.behandlingsflyt.behandling.beregning.manuellinntekt.manglendeGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.tidspunkt.beregningVurderingAPI
 import no.nav.aap.behandlingsflyt.behandling.brev.sykdomsvurderingForBrevApi
-import no.nav.aap.behandlingsflyt.behandling.etannetsted.institusjonAPI
 import no.nav.aap.behandlingsflyt.behandling.foreslåvedtak.foreslaaVedtakAPI
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.medlemskap.medlemskapsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.samordningGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.institusjonAPI
 import no.nav.aap.behandlingsflyt.behandling.klage.behandlendeenhet.behandlendeEnhetGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.klage.formkrav.formkravGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.klage.fullmektig.fullmektigGrunnlagApi
@@ -325,11 +325,15 @@ private fun utførMigreringer(
     log: io.ktor.util.logging.Logger
 ): ScheduledExecutorService {
     val scheduler = Executors.newScheduledThreadPool(1)
-
     scheduler.schedule(Runnable {
         val unleashGateway: UnleashGateway = gatewayProvider.provide()
         val isLeader = isLeader(log)
         log.info("isLeader = $isLeader")
+
+        if (isLeader) {
+            // Kjør migrering
+        }
+
     }, 9, TimeUnit.MINUTES)
     return scheduler
 }

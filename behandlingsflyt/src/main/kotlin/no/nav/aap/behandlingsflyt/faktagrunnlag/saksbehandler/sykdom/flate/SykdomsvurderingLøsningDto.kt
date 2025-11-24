@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate
 
+import com.fasterxml.jackson.annotation.JsonProperty
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.LøsningForPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -28,10 +30,12 @@ data class RegistrertYrkesskade(
 }
 
 data class SykdomsvurderingLøsningDto(
-    val begrunnelse: String,
+    override val begrunnelse: String,
 
     /** Hvis null, så gjelder den fra starten. */
-    val vurderingenGjelderFra: LocalDate?,
+    @param:JsonProperty("vurderingenGjelderFra")
+    override val fom: LocalDate,
+    override val tom: LocalDate?,
     val dokumenterBruktIVurdering: List<JournalpostId>,
     val erArbeidsevnenNedsatt: Boolean?,
     val harSkadeSykdomEllerLyte: Boolean,
@@ -43,16 +47,15 @@ data class SykdomsvurderingLøsningDto(
     val kodeverk: String? = null,
     val hoveddiagnose: String? = null,
     val bidiagnoser: List<String>? = emptyList(),
-) {
+): LøsningForPeriode {
     fun toSykdomsvurdering(
         bruker: Bruker,
         vurdertIBehandling: BehandlingId,
-        defaultGjelderFra: LocalDate
     ): Sykdomsvurdering {
         return Sykdomsvurdering(
             begrunnelse = begrunnelse,
-            vurderingenGjelderFra = vurderingenGjelderFra ?: defaultGjelderFra,
-            vurderingenGjelderTil = null, // TODO: Støtt ny periodisert løsning
+            vurderingenGjelderFra = fom,
+            vurderingenGjelderTil = tom,
             dokumenterBruktIVurdering = dokumenterBruktIVurdering,
             erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
             harSkadeSykdomEllerLyte = harSkadeSykdomEllerLyte,

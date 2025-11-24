@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSet
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Repository
 import java.time.LocalDate
 
@@ -21,7 +22,8 @@ interface AvklaringsbehovOperasjonerRepository : Repository {
         frist: LocalDate? = null,
         begrunnelse: String = "",
         grunn: ÅrsakTilSettPåVent? = null,
-        endretAv: String = SYSTEMBRUKER.ident
+        endretAv: String = SYSTEMBRUKER.ident,
+        perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>? = null,
     )
 
     fun kreverToTrinn(avklaringsbehovId: Long, kreverToTrinn: Boolean)

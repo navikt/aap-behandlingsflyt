@@ -1,15 +1,21 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap
 
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 data class ManuellVurderingForForutgåendeMedlemskap(
+    val id: Long? = null,
     val begrunnelse: String,
     val harForutgåendeMedlemskap: Boolean,
     val varMedlemMedNedsattArbeidsevne: Boolean?,
     val medlemMedUnntakAvMaksFemAar: Boolean?,
     val vurdertAv: String,
-    val vurdertTidspunkt: LocalDateTime? = null,
-    val overstyrt: Boolean = false
+    val vurdertTidspunkt: LocalDateTime,
+    val overstyrt: Boolean = false,
+    val vurdertIBehandling: BehandlingId,
+    val fom: LocalDate,
+    val tom: LocalDate? = null
 )
 
 data class ManuellVurderingForForutgåendeMedlemskapDto(

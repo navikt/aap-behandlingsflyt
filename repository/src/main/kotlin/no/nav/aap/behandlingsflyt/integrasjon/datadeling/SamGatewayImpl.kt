@@ -44,8 +44,9 @@ class SamGatewayImpl : SamGateway {
         )
     }
 
-    override fun hentSamId(ident: Ident, sakId: Long, vedtakId: Long): Long { //returnerer List<SamordningsvedtakApi> ????????
-        return requireNotNull(restClient.get(
+    override fun hentSamId(ident: Ident, sakId: Long, vedtakId: Long): Long {
+        return requireNotNull(
+            restClient.get(
             uri = uri.resolve("/api/vedtak?sakId=$sakId&vedtakId=$vedtakId&fagomrade=AAP"),
             request = GetRequest(
                 additionalHeaders = listOf(Header("pid", ident.identifikator))
@@ -53,7 +54,7 @@ class SamGatewayImpl : SamGateway {
             mapper = { body, _ ->
                 val respons = DefaultJsonMapper.fromJson<List<SamordningsvedtakApi>>(body).first()
                 logger.info("respons fra SAM ved henting av samId: $respons")
-                require(respons.samordningsmeldinger.size<2 && respons.samordningsmeldinger.isNotEmpty()) {"for mangen eller for få samordningsmeldinger i responsen fra SAM ved henting av samId. Antall samordningsmeldinger: ${respons.samordningsmeldinger.size}"}
+                require(respons.samordningsmeldinger.size < 2 && respons.samordningsmeldinger.isNotEmpty()) { "for mangen eller for få samordningsmeldinger i responsen fra SAM ved henting av samId. Antall samordningsmeldinger: ${respons.samordningsmeldinger.size}" }
                 respons.samordningsmeldinger.first().samId
             }
         ))

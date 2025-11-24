@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
 import java.util.concurrent.atomic.AtomicLong
 
@@ -43,7 +44,8 @@ object InMemoryAvklaringsbehovRepository : AvklaringsbehovRepository,
         frist: LocalDate?,
         begrunnelse: String,
         grunn: ÅrsakTilSettPåVent?,
-        endretAv: String
+        endretAv: String,
+        perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?
     ) {
         synchronized(lock) {
             ensureDefault(behandlingId)
@@ -51,7 +53,15 @@ object InMemoryAvklaringsbehovRepository : AvklaringsbehovRepository,
 
             val eksisterendeBehov = avklaringsbehov.hentBehov(definisjon)
             if (eksisterendeBehov == null) {
-                avklaringsbehov.leggTilBehov(definisjon, funnetISteg, frist, begrunnelse, grunn, endretAv)
+                avklaringsbehov.leggTilBehov(
+                    definisjon,
+                    funnetISteg,
+                    frist,
+                    begrunnelse,
+                    grunn,
+                    endretAv,
+                    perioderSomIkkeErTilstrekkeligVurdert
+                )
             } else {
                 eksisterendeBehov.historikk.add(
                     Endring(
@@ -59,7 +69,8 @@ object InMemoryAvklaringsbehovRepository : AvklaringsbehovRepository,
                         begrunnelse = begrunnelse,
                         grunn = grunn,
                         endretAv = endretAv,
-                        frist = frist
+                        frist = frist,
+                        perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert
                     )
                 )
             }
@@ -154,7 +165,8 @@ object InMemoryAvklaringsbehovRepository : AvklaringsbehovRepository,
             frist: LocalDate?,
             begrunnelse: String,
             venteÅrsak: ÅrsakTilSettPåVent?,
-            endretAv: String
+            endretAv: String,
+            perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?
         ) {
             val avklaringsbehov = Avklaringsbehov(
                 idSeq.andIncrement, definisjon,
@@ -164,7 +176,8 @@ object InMemoryAvklaringsbehovRepository : AvklaringsbehovRepository,
                         begrunnelse = begrunnelse,
                         grunn = venteÅrsak,
                         endretAv = endretAv,
-                        frist = frist
+                        frist = frist,
+                        perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert
                     )
                 ),
                 funnetISteg = funnetISteg,
