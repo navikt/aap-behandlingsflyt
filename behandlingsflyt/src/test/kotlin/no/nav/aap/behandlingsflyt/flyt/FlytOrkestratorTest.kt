@@ -140,7 +140,6 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.Med
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.barn.BarnRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.pip.PipRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
@@ -3202,10 +3201,10 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         val (_, behandling) = sendInnFørsteSøknad()
 
         behandling.medKontekst {
-                assertThat(åpneAvklaringsbehov)
-                    .extracting<Definisjon> { it.definisjon }
-                    .containsOnly(Definisjon.AVKLAR_SYKDOM)
-            }
+            assertThat(åpneAvklaringsbehov)
+                .extracting<Definisjon> { it.definisjon }
+                .containsOnly(Definisjon.AVKLAR_SYKDOM)
+        }
 
         val antallKjøringerVurderRettighetsperiode = dataSource.transaction { connection ->
             BehandlingRepositoryImpl(connection).hentStegHistorikk(behandling.id)
