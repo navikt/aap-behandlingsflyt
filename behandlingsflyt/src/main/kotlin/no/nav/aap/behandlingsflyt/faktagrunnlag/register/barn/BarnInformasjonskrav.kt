@@ -79,8 +79,9 @@ class BarnInformasjonskrav private constructor(
 
     override fun hentData(input: BarnInput): Registerdata {
         val (barnGrunnlag, person) = input
+        val saksbehandlerOppgitteBarnIdenter = barnGrunnlag?.saksbehandlerOppgitteBarn?.barn?.mapNotNull { it.ident }.orEmpty()
         val oppgitteBarnIdenter = barnGrunnlag?.oppgitteBarn?.oppgitteBarn?.mapNotNull { it.ident }.orEmpty()
-        val barn = barnGateway.hentBarn(person, oppgitteBarnIdenter)
+        val barn = barnGateway.hentBarn(person, oppgitteBarnIdenter, saksbehandlerOppgitteBarnIdenter)
 
         val identListeForBarn = barn.alleBarn()
             .map { it.ident }
@@ -138,8 +139,9 @@ class BarnInformasjonskrav private constructor(
         barnGrunnlag: BarnGrunnlag?,
         person: Person,
     ): BarnInnhentingRespons {
+        val saksbehandlerOppgitteBarn = barnGrunnlag?.saksbehandlerOppgitteBarn?.barn?.mapNotNull { it.ident }.orEmpty()
         val oppgitteBarnIdenter = barnGrunnlag?.oppgitteBarn?.oppgitteBarn?.mapNotNull { it.ident }.orEmpty()
-        val barn = barnGateway.hentBarn(person, oppgitteBarnIdenter)
+        val barn = barnGateway.hentBarn(person, oppgitteBarnIdenter, saksbehandlerOppgitteBarn)
         return barn
     }
 

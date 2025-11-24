@@ -69,9 +69,14 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
         var barnInnhentingRespons = BarnInnhentingRespons(
             registerBarn = emptyList(),
             oppgitteBarnFraPDL = emptyList(),
+            saksbehandlerOppgitteBarnPDL = emptyList()
         )
 
-        override fun hentBarn(person: Person, oppgitteBarnIdenter: List<Ident>) = barnInnhentingRespons
+        override fun hentBarn(
+            person: Person,
+            oppgitteBarnIdenter: List<Ident>,
+            saksbehandlerOppgitteBarn: List<Ident>
+        ) = barnInnhentingRespons
     }
 
     object FakeForeldrepengerGateway : ForeldrepengerGateway {

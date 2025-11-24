@@ -22,6 +22,7 @@ dependencies {
 
     testImplementation(project(":lib-test"))
     testImplementation(libs.dbtest)
+    testImplementation("io.mockk:mockk:1.14.6")
 
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation(libs.bundles.junit)
