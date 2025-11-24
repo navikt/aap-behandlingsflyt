@@ -52,9 +52,11 @@ class FastsettMeldeperiodeSteg(
     fun oppdaterFørsteMeldeperiode(behandlingId: BehandlingId, aktuellPeriode: Periode) {
         val førsteMeldeperiode = meldeperiodeRepository.hentFørsteMeldeperiode(behandlingId)
 
-        val meldeperioder = utledMeldeperiode(førsteMeldeperiode?.fom, aktuellPeriode)
+        val startdatoForrigeMeldeperiode = førsteMeldeperiode?.fom
+        val meldeperioder = utledMeldeperiode(startdatoForrigeMeldeperiode, aktuellPeriode)
 
-        if (meldeperioder.first().fom != førsteMeldeperiode) {
+        val startdatoNyMeldeperiode = meldeperioder.first().fom
+        if (startdatoNyMeldeperiode != startdatoForrigeMeldeperiode) {
             meldeperiodeRepository.lagreFørsteMeldeperiode(behandlingId, meldeperioder.first())
         }
     }
