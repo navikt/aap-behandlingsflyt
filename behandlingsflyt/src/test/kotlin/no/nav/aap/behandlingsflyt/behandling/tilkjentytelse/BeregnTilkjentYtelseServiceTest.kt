@@ -68,13 +68,15 @@ class BeregnTilkjentYtelseServiceTest {
         )
 
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
-            fødselsdato,
-            beregningsgrunnlag,
-            underveisgrunnlag,
-            barnetilleggGrunnlag,
-            samordningsgrunnlag,
-            samordningUføre,
-            samordningArbeidsgiver
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                barnetilleggGrunnlag,
+                samordningsgrunnlag,
+                samordningUføre,
+                samordningArbeidsgiver
+            )
         ).beregnTilkjentYtelse()
 
         assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
@@ -151,13 +153,15 @@ class BeregnTilkjentYtelseServiceTest {
         )
 
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
-            fødselsdato,
-            beregningsgrunnlag,
-            underveisgrunnlag,
-            barnetilleggGrunnlag,
-            samordningsgrunnlag,
-            samordningUføre,
-            samordningArbeidsgiver
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                barnetilleggGrunnlag,
+                samordningsgrunnlag,
+                samordningUføre,
+                samordningArbeidsgiver
+            )
         ).beregnTilkjentYtelse()
 
         assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
@@ -218,13 +222,15 @@ class BeregnTilkjentYtelseServiceTest {
         )
 
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
-            fødselsdato,
-            beregningsgrunnlag,
-            underveisgrunnlag,
-            barnetilleggGrunnlag,
-            samordningsgrunnlag,
-            samordningUføre,
-            samordningArbeidsgiver
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                barnetilleggGrunnlag,
+                samordningsgrunnlag,
+                samordningUføre,
+                samordningArbeidsgiver
+            )
         ).beregnTilkjentYtelse()
 
         assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
@@ -294,13 +300,15 @@ class BeregnTilkjentYtelseServiceTest {
         )
 
         val beregnetTilkjentYtelse = BeregnTilkjentYtelseService(
-            fødeselsdato,
-            beregningsgrunnlag,
-            underveisgrunnlag,
-            barnetilleggGrunnlag,
-            samordningsgrunnlag,
-            samordningUføre,
-            samordningArbeidsgiver
+            TilkjentYtelseGrunnlag(
+                fødeselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                barnetilleggGrunnlag,
+                samordningsgrunnlag,
+                samordningUføre,
+                samordningArbeidsgiver
+            )
         ).beregnTilkjentYtelse()
 
         assertThat(beregnetTilkjentYtelse.segmenter()).containsExactly(
@@ -371,13 +379,15 @@ class BeregnTilkjentYtelseServiceTest {
         )
 
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
-            fødselsdato,
-            beregningsgrunnlag,
-            underveisgrunnlag,
-            barnetilleggGrunnlag,
-            samordningsgrunnlag,
-            samordningUføre,
-            samordningArbeidsgiver
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                barnetilleggGrunnlag,
+                samordningsgrunnlag,
+                samordningUføre,
+                samordningArbeidsgiver
+            )
         ).beregnTilkjentYtelse()
 
         assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
@@ -446,13 +456,15 @@ class BeregnTilkjentYtelseServiceTest {
         )
 
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
-            fødselsdato,
-            beregningsgrunnlag,
-            underveisgrunnlag,
-            barnetilleggGrunnlag,
-            samordningsgrunnlag,
-            samordningUføre,
-            samordningArbeidsgiver
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                barnetilleggGrunnlag,
+                samordningsgrunnlag,
+                samordningUføre,
+                samordningArbeidsgiver
+            )
         ).beregnTilkjentYtelse()
 
         assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
@@ -519,13 +531,15 @@ class BeregnTilkjentYtelseServiceTest {
         )
 
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
-            fødselsdato,
-            beregningsgrunnlag,
-            underveisgrunnlag,
-            barnetilleggGrunnlag,
-            samordningsgrunnlag,
-            samordningUføre,
-            samordningArbeidsgiver
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                barnetilleggGrunnlag,
+                samordningsgrunnlag,
+                samordningUføre,
+                samordningArbeidsgiver
+            )
         ).beregnTilkjentYtelse()
 
         // Forventer 30 prosent grunnlag først, deretter 100 prosent
@@ -632,13 +646,15 @@ class BeregnTilkjentYtelseServiceTest {
         )
 
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
-            fødselsdato,
-            beregningsgrunnlag,
-            underveisgrunnlag,
-            barnetilleggGrunnlag,
-            samordningsgrunnlag,
-            samordningUføre,
-            samordningArbeidsgiver
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                barnetilleggGrunnlag,
+                samordningsgrunnlag,
+                samordningUføre,
+                samordningArbeidsgiver
+            )
         ).beregnTilkjentYtelse()
 
         // Forventer 30 prosent grunnlag først, deretter 100 prosent
@@ -713,13 +729,15 @@ class BeregnTilkjentYtelseServiceTest {
         )
 
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
-            fødselsdato,
-            beregningsgrunnlag,
-            underveisgrunnlag,
-            barnetilleggGrunnlag,
-            samordningsgrunnlag,
-            samordningUføre,
-            samordningArbeidsgiver
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                barnetilleggGrunnlag,
+                samordningsgrunnlag,
+                samordningUføre,
+                samordningArbeidsgiver
+            ),
         ).beregnTilkjentYtelse()
 
         assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
@@ -777,13 +795,15 @@ class BeregnTilkjentYtelseServiceTest {
         )
 
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
-            fødselsdato,
-            beregningsgrunnlag,
-            underveisgrunnlag,
-            barnetilleggGrunnlag,
-            samordningsgrunnlag,
-            samordningUføre,
-            samordningArbeidsgiver
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                barnetilleggGrunnlag,
+                samordningsgrunnlag,
+                samordningUføre,
+                samordningArbeidsgiver
+            )
         ).beregnTilkjentYtelse()
 
         assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
@@ -871,13 +891,15 @@ class BeregnTilkjentYtelseServiceTest {
         )
 
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
-            fødselsdato,
-            beregningsgrunnlag,
-            underveisgrunnlag,
-            barnetilleggGrunnlag,
-            samordningsgrunnlag,
-            samordningUføre,
-            samordningArbeidsgiver
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                barnetilleggGrunnlag,
+                samordningsgrunnlag,
+                samordningUføre,
+                samordningArbeidsgiver
+            )
         ).beregnTilkjentYtelse()
 
         assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
@@ -942,13 +964,15 @@ class BeregnTilkjentYtelseServiceTest {
         )
 
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
-            fødselsdato,
-            beregningsgrunnlag,
-            underveisgrunnlag,
-            barnetilleggGrunnlag,
-            samordningsgrunnlag,
-            samordningUføre,
-            samordningArbeidsgiver
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                barnetilleggGrunnlag,
+                samordningsgrunnlag,
+                samordningUføre,
+                samordningArbeidsgiver
+            )
         ).beregnTilkjentYtelse()
 
         assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
@@ -1038,13 +1062,15 @@ class BeregnTilkjentYtelseServiceTest {
         )
 
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
-            fødselsdato,
-            beregningsgrunnlag,
-            underveisgrunnlag,
-            barnetilleggGrunnlag,
-            samordningsgrunnlag,
-            samordningUføre,
-            samordningArbeidsgiver
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                barnetilleggGrunnlag,
+                samordningsgrunnlag,
+                samordningUføre,
+                samordningArbeidsgiver
+            )
         ).beregnTilkjentYtelse()
 
         assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
@@ -1103,13 +1129,15 @@ class BeregnTilkjentYtelseServiceTest {
         )
 
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
-            fødselsdato,
-            beregningsgrunnlag,
-            underveisgrunnlag,
-            barnetilleggGrunnlag,
-            samordningsgrunnlag,
-            samordningUføre,
-            samordningArbeidsgiver
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                barnetilleggGrunnlag,
+                samordningsgrunnlag,
+                samordningUføre,
+                samordningArbeidsgiver
+            )
         ).beregnTilkjentYtelse()
 
         val tilkjent = Tilkjent(
