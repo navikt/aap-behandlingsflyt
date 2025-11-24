@@ -22,6 +22,7 @@ import no.nav.aap.komponenter.tidslinje.filterNotNull
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
+import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`100_PROSENT`
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`66_PROSENT`
@@ -47,53 +48,21 @@ class BeregnTilkjentYtelseService(private val grunnlag: TilkjentYtelseGrunnlag) 
         const val ANTALL_ÅRLIGE_ARBEIDSDAGER = 260
     }
 
+    /** Regner ut tilkjent ytelse, per dag. Utregningen er basert på:
+     * - [dagsatsen][beregnDagsatsTidslinje]
+     * - [barnetillegget][utledBarnetillegg]
+     * - [graderingen][gradering]
+     *
+     * Endelig dagsags regnes ut som:
+     * ```
+     * (barnetillegg × gradering) + (dagsats × gradering)
+     * ```
+     */
     fun beregnTilkjentYtelse(): Tidslinje<Tilkjent> {
-        /** § 11-19 Grunnlaget for beregningen av arbeidsavklaringspenger. */
-        val grunnlagsfaktor = grunnlag.beregningsgrunnlag ?: GUnit(0)
-
-        val dagsatsTidslinje = aldersjusteringAvMinsteÅrligeYtelse(grunnlag.fødselsdato)
-            .innerJoin(grunnlag.minsteÅrligeYtelse) { aldersjustering, minsteYtelse ->
-                /** § 11-20 første avsnitt:
-                 * > Arbeidsavklaringspenger gis med 66 prosent av grunnlaget, se § 11-19.
-                 * > Minste årlige ytelse er 2,041 ganger grunnbeløpet.
-                 * > For medlem under 25 år er minste årlige ytelse 2/3 av 2,041 ganger grunnbeløpet
-                 */
-                val årligYtelse = maxOf(
-                    aldersjustering(minsteYtelse),
-                    grunnlagsfaktor.multiplisert(`66_PROSENT`)
-                )
-
-                /** § 11-20 andre avsnitt andre setning:
-                 * > Dagsatsen er den årlige ytelsen delt på 260
-                 */
-                årligYtelse.dividert(ANTALL_ÅRLIGE_ARBEIDSDAGER)
-            }
-
-            val graderingGrunnlagTidslinje = Tidslinje.map4(
-                grunnlag.underveisgrunnlag.somTidslinje(),
-                grunnlag.samordningUføre?.vurdering?.tilTidslinje().orEmpty(),
-                grunnlag.samordningGrunnlag.samordningPerioder.map { Segment(it.periode, it) }.let(::Tidslinje),
-                grunnlag.samordningArbeidsgiver?.vurdering?.tilTidslinje().orEmpty(),
-            ) { underveisperiode, samordningUføre, samordning, samordningArbeidsgiver ->
-                if (underveisperiode == null) {
-                    return@map4 null
-                }
-
-                GraderingGrunnlag(
-                    arbeidGradering = underveisperiode.arbeidsgradering.gradering,
-                    institusjonGradering = underveisperiode.institusjonsoppholdReduksjon,
-                    samordningGradering = samordning?.gradering ?: `0_PROSENT`,
-                    samordningUføregradering = samordningUføre ?: `0_PROSENT`,
-                    samordningArbeidsgiverGradering = if (samordningArbeidsgiver == null) `0_PROSENT` else `100_PROSENT`,
-                    meldepliktGradering = underveisperiode.meldepliktGradering ?: `0_PROSENT`,
-            )
-        }
-            .filterNotNull()
-
         return Tidslinje.map6(
             grunnlag.underveisgrunnlag.somTidslinje(),
-            dagsatsTidslinje,
-            graderingGrunnlagTidslinje,
+            beregnDagsatsTidslinje(),
+            gradering(),
             Grunnbeløp.tilTidslinje(),
             BARNETILLEGGSATS_TIDSLINJE,
             grunnlag.barnetilleggGrunnlag.perioder.tilTidslinje(),
@@ -110,16 +79,10 @@ class BeregnTilkjentYtelseService(private val grunnlag: TilkjentYtelseGrunnlag) 
 
             Tilkjent(
                 dagsats = grunnbeløp.multiplisert(dagsatsG),
-                gradering = graderingGrunnlag.run {
-                    `100_PROSENT`
-                        .minus(if (underveisperiode.utfall == Utfall.IKKE_OPPFYLT) `100_PROSENT` else `0_PROSENT`)
-                        .minus(arbeidGradering.komplement())
-                        .minus(samordningUføregradering)
-                        .minus(samordningGradering)
-                        .minus(samordningArbeidsgiverGradering)
-                        .minus(meldepliktGradering)
-                        .multiplisert(institusjonGradering.komplement())
-                },
+                gradering = if (underveisperiode.utfall == Utfall.IKKE_OPPFYLT)
+                    `0_PROSENT`
+                else
+                    graderingGrunnlag.gradering(),
                 graderingGrunnlag = graderingGrunnlag,
                 barnetillegg = barnetillegg.barnetillegg,
                 antallBarn = barnetillegg.antallBarn,
@@ -130,6 +93,109 @@ class BeregnTilkjentYtelseService(private val grunnlag: TilkjentYtelseGrunnlag) 
             )
         }
             .filterNotNull()
+    }
+
+    /** Regner ut reduksjon av AAP, som en prosent, for en gitt dag.
+     * Hvis resultatet er 0%, så betyr det at ingen AAP skal utbetales den dagen.
+     * Hvis resultatet er 100%, så betyr det at full AAP skal utbetales den dagen.
+     * Hvis resultatet er 70%, så betyr det at 70% av full AAP skal utbetales den dagen.
+     *
+     * Følgende legges til grunn for utregningen:
+     * - [Gradering basert på arbeid][no.nav.aap.behandlingsflyt.behandling.underveis.regler.GraderingArbeidRegel] (prosent, heltall)
+     * - Samordning med uføre (prosent, heltall)
+     * - Samordning (annet) (prosent, heltall)
+     * - [Samordning ytelser fra arbeidsgiver][no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningArbeidsgiverSteg] (prosent, heltall)
+     * - [Reduksjon på grunn av ikke oppfylt meldeplikt][no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktRegel] (prosent, heltall)
+     * - [Gradering på grunn av opphold på helseinstitusjon][no.nav.aap.behandlingsflyt.behandling.underveis.regler.InstitusjonRegel] (prosent, heltall)
+     *
+     * Utregningen gjøres med heltall mellom 0 og 100 (prosenter). Resultatet og delresultater kan aldri bli mindre enn 0%.
+     *
+     * ```
+     *  (
+     *         100
+     *       – graderingArbeidReduksjon
+     *       – uføreReduksjon
+     *       – annenSamordningReduksjon
+     *       – ytelserArbeidsgiverReduksjon
+     *       – meldepliktReduksjon
+     *   )
+     *      × institusjonsgradering
+     * ```
+     */
+    fun GraderingGrunnlag.gradering(): Prosent {
+        return `100_PROSENT`
+            .minus(arbeidGradering.komplement())
+            .minus(samordningUføregradering)
+            .minus(samordningGradering)
+            .minus(samordningArbeidsgiverGradering)
+            .minus(meldepliktGradering)
+            .multiplisert(institusjonGradering.komplement())
+    }
+
+    private fun gradering(): Tidslinje<GraderingGrunnlag> = Tidslinje.map4(
+        grunnlag.underveisgrunnlag.somTidslinje(),
+        grunnlag.samordningUføre?.vurdering?.tilTidslinje().orEmpty(),
+        grunnlag.samordningGrunnlag.samordningPerioder.map { Segment(it.periode, it) }.let(::Tidslinje),
+        grunnlag.samordningArbeidsgiver?.vurdering?.tilTidslinje().orEmpty(),
+    ) { underveisperiode, samordningUføre, samordning, samordningArbeidsgiver ->
+        if (underveisperiode == null) {
+            return@map4 null
+        }
+
+        GraderingGrunnlag(
+            arbeidGradering = underveisperiode.arbeidsgradering.gradering,
+            institusjonGradering = underveisperiode.institusjonsoppholdReduksjon,
+            samordningGradering = samordning?.gradering ?: `0_PROSENT`,
+            samordningUføregradering = samordningUføre ?: `0_PROSENT`,
+            samordningArbeidsgiverGradering = if (samordningArbeidsgiver == null) `0_PROSENT` else `100_PROSENT`,
+            meldepliktGradering = underveisperiode.meldepliktGradering ?: `0_PROSENT`,
+        )
+    }
+        .filterNotNull()
+
+    /** Utregning av dagsats, beregnet per dag.
+     * Følgende legges til grunn:
+     * - [Grunnlaget fra § 11-19][no.nav.aap.behandlingsflyt.behandling.beregning.BeregningService.beregnGrunnlag] i G (10 desimaler)
+     * - [Utgangspunktet for minste årlig ytelse, definert per dag][MINSTE_ÅRLIG_YTELSE_TIDSLINJE] i G (10 desimaler)
+     * - [Aldersjustering av minstesats, definert per dag][aldersjusteringAvMinsteÅrligeYtelse] transformasjon av G til G (10 desimaler)
+     *
+     * Formelen, som regnes ut for hver dag, er:
+     * ```
+     * (aldersjustert(minstesats) × grunnlagsfaktor × 0.66) / 260
+     * ```
+     *
+     * @return Minstesatsjustert dagsats, per dag, i G (10 desimaler)
+     */
+    private fun beregnDagsatsTidslinje(): Tidslinje<GUnit> {
+        /** § 11-19 Grunnlaget for beregningen av arbeidsavklaringspenger. */
+        val grunnlagsfaktor = grunnlag.beregningsgrunnlag ?: GUnit(0)
+
+        return aldersjusteringAvMinsteÅrligeYtelse(grunnlag.fødselsdato)
+            .innerJoin(grunnlag.minsteÅrligeYtelse) { aldersjustering, minsteYtelse ->
+                /** § 11-20 første avsnitt:
+                 * > Arbeidsavklaringspenger gis med 66 prosent av grunnlaget, se § 11-19.
+                 * > Minste årlige ytelse er 2,041 ganger grunnbeløpet.
+                 * > For medlem under 25 år er minste årlige ytelse 2/3 av 2,041 ganger grunnbeløpet
+                 */
+                /** § 11-20 første avsnitt:
+                 * > Arbeidsavklaringspenger gis med 66 prosent av grunnlaget, se § 11-19.
+                 * > Minste årlige ytelse er 2,041 ganger grunnbeløpet.
+                 * > For medlem under 25 år er minste årlige ytelse 2/3 av 2,041 ganger grunnbeløpet
+                 */
+                val årligYtelse = maxOf(
+                    aldersjustering(minsteYtelse),
+                    grunnlagsfaktor.multiplisert(`66_PROSENT`)
+                )
+
+                /** § 11-20 andre avsnitt andre setning:
+                 * > Dagsatsen er den årlige ytelsen delt på 260
+                 */
+
+                /** § 11-20 andre avsnitt andre setning:
+                 * > Dagsatsen er den årlige ytelsen delt på 260
+                 */
+                årligYtelse.dividert(ANTALL_ÅRLIGE_ARBEIDSDAGER)
+            }
     }
 
     private fun utledBarnetillegg(
