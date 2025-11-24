@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.komponenter.verdityper.Tid
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotEquals
@@ -107,7 +108,7 @@ class VurdertBarnTest {
 
         val tidslinje = vurdertBarn.tilTidslinje()
 
-        assertTrue(tidslinje.perioder().toList().isEmpty())
+        assertThat(tidslinje.perioder().toList()).isEmpty()
     }
 
     // Test for klasse BarnIdentifikator
@@ -116,7 +117,7 @@ class VurdertBarnTest {
         val barn1 = BarnIdentifikator.NavnOgFødselsdato("Ole Hansen", Fødselsdato(LocalDate.of(2020, 1, 1)))
         val barn2 = BarnIdentifikator.NavnOgFødselsdato("ole hansen", Fødselsdato(LocalDate.of(2020, 1, 1)))
 
-        assertEquals(0, barn1.compareTo(barn2))
+        assertThat(barn1.compareTo(barn2)).isEqualTo(0)
     }
 
     @Test

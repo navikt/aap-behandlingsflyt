@@ -38,9 +38,15 @@ class PdlBarnGateway : BarnGateway {
             )
         }
 
-        val registerBarn = hentBarn(barnIdenter)
-        val oppgitteBarn = hentBarn(oppgitteBarnIdenter)
-        val saksbehandlerOppgitteBarn = hentBarn(saksbehandlerOppgitteBarnIdenter)
+        val alleBarnIdenter = (barnIdenter + oppgitteBarnIdenter + saksbehandlerOppgitteBarnIdenter).distinct()
+        val alleBarn = hentBarn(alleBarnIdenter)
+
+        val barnMap = alleBarn.associateBy { (it.ident as? BarnIdentifikator.BarnIdent)?.ident }
+
+        val registerBarn = barnIdenter.mapNotNull { ident -> barnMap[ident] }
+        val oppgitteBarn = oppgitteBarnIdenter.mapNotNull { ident -> barnMap[ident] }
+        val saksbehandlerOppgitteBarn = saksbehandlerOppgitteBarnIdenter.mapNotNull { ident -> barnMap[ident] }
+
         return BarnInnhentingRespons(registerBarn + barnUtenIdent, oppgitteBarn, saksbehandlerOppgitteBarn)
     }
 
