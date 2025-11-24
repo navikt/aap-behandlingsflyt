@@ -19,7 +19,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.dokument.KlagedokumentInfo
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.pip.PipRepository
+import no.nav.aap.behandlingsflyt.pip.PipService
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -207,9 +207,8 @@ fun NormalOpenAPIRoute.behandlingApi(
                 val referanse = req.referanse
 
                 val identer = dataSource.transaction(readOnly = true) { connection ->
-                    val repositoryProvider = repositoryRegistry.provider(connection)
-                    val pipRepository = repositoryProvider.provide<PipRepository>()
-                    pipRepository.finnIdenterPåBehandling(BehandlingReferanse(referanse))
+                    PipService(repositoryRegistry.provider(connection))
+                        .finnIdenterPåBehandling(BehandlingReferanse(referanse))
                 }
 
                 val response = HashMap<String, String>()

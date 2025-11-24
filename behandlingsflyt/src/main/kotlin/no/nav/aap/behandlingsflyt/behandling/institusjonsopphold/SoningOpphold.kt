@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.behandling.etannetsted
+package no.nav.aap.behandlingsflyt.behandling.institusjonsopphold
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.OppholdVurdering
 

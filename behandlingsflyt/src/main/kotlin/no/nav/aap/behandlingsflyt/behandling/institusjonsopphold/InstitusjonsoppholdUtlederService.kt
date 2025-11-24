@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.behandling.etannetsted
+package no.nav.aap.behandlingsflyt.behandling.institusjonsopphold
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.tilTidslinje
@@ -23,7 +23,7 @@ import java.time.LocalDate
 import java.util.stream.IntStream
 import kotlin.math.max
 
-class EtAnnetStedUtlederService(
+class InstitusjonsoppholdUtlederService(
     private val barnetilleggRepository: BarnetilleggRepository,
     private val institusjonsoppholdRepository: InstitusjonsoppholdRepository,
     private val sakRepository: SakRepository,
@@ -45,7 +45,7 @@ class EtAnnetStedUtlederService(
         return utledBehov(input)
     }
 
-    internal fun utledBehov(input: EtAnnetStedInput): BehovForAvklaringer {
+    internal fun utledBehov(input: InstitusjonsoppholdInput): BehovForAvklaringer {
         val opphold = input.institusjonsOpphold
         val soningsOppgold = opphold.filter { segment -> segment.verdi.type == Institusjonstype.FO }
         val helseopphold = opphold.filter { segment -> segment.verdi.type == Institusjonstype.HS }
@@ -56,7 +56,7 @@ class EtAnnetStedUtlederService(
         var perioderSomTrengerVurdering =
             Tidslinje(soningsOppgold)
                 .begrensetTil(input.rettighetsperiode)
-                .mapValue { InstitusjonsOpphold(soning = SoningOpphold(vurdering = OppholdVurdering.UAVKLART)) }
+                .mapValue { InstitusjonsoppholdVurdering(soning = SoningOpphold(vurdering = OppholdVurdering.UAVKLART)) }
                 .kombiner(soningsvurderingTidslinje, JoinStyle.OUTER_JOIN { periode, venstreSegment, høyreSegment ->
                     val venstreVerdi = venstreSegment?.verdi
                     val høyreVerdi = høyreSegment?.verdi
@@ -64,7 +64,7 @@ class EtAnnetStedUtlederService(
                     val soning = utledSoning(venstreVerdi?.soning, høyreVerdi)
                     val helse = venstreVerdi?.helse
 
-                    val verdi = InstitusjonsOpphold(helse = helse, soning = soning)
+                    val verdi = InstitusjonsoppholdVurdering(helse = helse, soning = soning)
                     Segment(periode, verdi)
                 })
 
@@ -80,7 +80,7 @@ class EtAnnetStedUtlederService(
         val oppholdSomKanGiReduksjon = harOppholdSomKreverAvklaring(oppholdUtenBarnetillegg)
 
         perioderSomTrengerVurdering = perioderSomTrengerVurdering.kombiner(oppholdSomKanGiReduksjon.mapValue {
-            InstitusjonsOpphold(helse = HelseOpphold(vurdering = OppholdVurdering.UAVKLART))
+            InstitusjonsoppholdVurdering(helse = HelseOpphold(vurdering = OppholdVurdering.UAVKLART))
         }, sammenslåer()).kombiner(helsevurderingerTidslinje, helsevurderingSammenslåer()).komprimer()
 
         // Hvis det er mindre en 3 måneder siden sist opphold og bruker er nå innlagt
@@ -107,7 +107,7 @@ class EtAnnetStedUtlederService(
         return BehovForAvklaringer(perioderSomTrengerVurdering)
     }
 
-    private fun helsevurderingSammenslåer(): JoinStyle.LEFT_JOIN<InstitusjonsOpphold, HelseOpphold, InstitusjonsOpphold> =
+    private fun helsevurderingSammenslåer(): JoinStyle.LEFT_JOIN<InstitusjonsoppholdVurdering, HelseOpphold, InstitusjonsoppholdVurdering> =
         JoinStyle.LEFT_JOIN { periode, venstreSegment, høyreSegment ->
             val venstreVerdi = venstreSegment.verdi
             val høyreVerdi = høyreSegment?.verdi
@@ -115,16 +115,16 @@ class EtAnnetStedUtlederService(
             val soning = venstreVerdi.soning
             val helse = utledHelse(venstreVerdi.helse, høyreVerdi)
 
-            val verdi = InstitusjonsOpphold(helse = helse, soning = soning)
+            val verdi = InstitusjonsoppholdVurdering(helse = helse, soning = soning)
             Segment(periode, verdi)
         }
 
     private fun regnUtTidslinjeOverOppholdSomErMindreEnnTreMånederFraForrigeSomGaReduksjon(
-        perioderSomTrengerVurdering: Tidslinje<InstitusjonsOpphold>,
+        perioderSomTrengerVurdering: Tidslinje<InstitusjonsoppholdVurdering>,
         helseoppholdUtenBarnetillegg: Tidslinje<Boolean>,
         helsevurderingerTidslinje: Tidslinje<HelseOpphold>
-    ): Tidslinje<InstitusjonsOpphold> {
-        var result = Tidslinje<InstitusjonsOpphold>()
+    ): Tidslinje<InstitusjonsoppholdVurdering> {
+        var result = Tidslinje<InstitusjonsoppholdVurdering>()
         // Kjører gjennom noen ganger for å ta med per vi får med et og et nytt opphold basert på den dumme regelen her
         IntStream.range(0, max(helseoppholdUtenBarnetillegg.segmenter().count() - 1, 0)).forEach { i ->
             val oppholdSomKanGiReduksjon = Tidslinje(
@@ -137,7 +137,7 @@ class EtAnnetStedUtlederService(
                         null
                     } else {
                         Segment(
-                            it.periode, InstitusjonsOpphold(
+                            it.periode, InstitusjonsoppholdVurdering(
                                 helse = HelseOpphold(
                                     vurdering = OppholdVurdering.UAVKLART,
                                     umiddelbarReduksjon = true
@@ -191,7 +191,7 @@ class EtAnnetStedUtlederService(
         }).komprimer()
     }
 
-    private fun sammenslåer(): JoinStyle.OUTER_JOIN<InstitusjonsOpphold, InstitusjonsOpphold, InstitusjonsOpphold> {
+    private fun sammenslåer(): JoinStyle.OUTER_JOIN<InstitusjonsoppholdVurdering, InstitusjonsoppholdVurdering, InstitusjonsoppholdVurdering> {
         return JoinStyle.OUTER_JOIN { periode, venstreSegment, høyreSegment ->
             val venstreVerdi = venstreSegment?.verdi
             val høyreVerdi = høyreSegment?.verdi
@@ -199,7 +199,7 @@ class EtAnnetStedUtlederService(
             val soning = utledSoning(venstreVerdi?.soning, høyreVerdi?.soning)
             val helse = utledHelse(venstreVerdi?.helse, høyreVerdi?.helse)
 
-            val verdi = InstitusjonsOpphold(helse = helse, soning = soning)
+            val verdi = InstitusjonsoppholdVurdering(helse = helse, soning = soning)
             Segment(periode, verdi)
         }
     }
@@ -243,7 +243,7 @@ class EtAnnetStedUtlederService(
 
     private fun oppholdSomLiggerMindreEnnTreMånederFraForrigeSomGaReduksjon(
         helseOpphold: Tidslinje<Boolean>,
-        oppholdUtenBarnetillegg: Tidslinje<InstitusjonsOpphold>
+        oppholdUtenBarnetillegg: Tidslinje<InstitusjonsoppholdVurdering>
     ): Tidslinje<Boolean> {
         val tidslinje = Tidslinje(
             helseOpphold.segmenter()
@@ -299,7 +299,7 @@ class EtAnnetStedUtlederService(
     private fun konstruerInput(
         behandlingId: BehandlingId,
         basertPåVurderingerFørDenneBehandlingen: Boolean
-    ): EtAnnetStedInput {
+    ): InstitusjonsoppholdInput {
         val behandling = behandlingRepository.hent(behandlingId)
         val rettighetsperiode = sakRepository.hent(behandling.sakId).rettighetsperiode
         val grunnlag = institusjonsoppholdRepository.hentHvisEksisterer(behandlingId)
@@ -318,6 +318,6 @@ class EtAnnetStedUtlederService(
             helsevurderinger = grunnlag?.helseoppholdvurderinger?.vurderinger.orEmpty()
         }
 
-        return EtAnnetStedInput(rettighetsperiode, opphold, soningsvurderinger, barnetillegg, helsevurderinger)
+        return InstitusjonsoppholdInput(rettighetsperiode, opphold, soningsvurderinger, barnetillegg, helsevurderinger)
     }
 }
