@@ -23,7 +23,10 @@ class AvklarSykdomEnkelLøser(
         kontekst: AvklaringsbehovKontekst,
         løsning: AvklarSykdomEnkelLøsning
     ): LøsningsResultat {
-        return AvklarSykdomLøser(repositoryProvider).løs(kontekst, AvklarSykdomLøsning(løsning.sykdomsvurderinger))
+        return AvklarSykdomLøser(repositoryProvider).løs(
+            kontekst,
+            AvklarSykdomLøsning(løsning.sykdomsvurderinger.map { it.tilNyDto() })
+        )
     }
 
     override fun forBehov(): Definisjon {

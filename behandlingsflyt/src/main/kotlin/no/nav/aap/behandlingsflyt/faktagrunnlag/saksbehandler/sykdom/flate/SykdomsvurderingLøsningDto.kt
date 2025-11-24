@@ -29,6 +29,46 @@ data class RegistrertYrkesskade(
     )
 }
 
+data class SykdomsvurderingLøsningGammelDto(
+    val begrunnelse: String,
+
+    /** Hvis null, så gjelder den fra starten. */
+    @param:JsonProperty(value = "vurderingenGjelderFra")
+    val fom: LocalDate,
+    @param:JsonProperty(value = "fom")
+    val nyFom: LocalDate?,
+    val dokumenterBruktIVurdering: List<JournalpostId>,
+    val erArbeidsevnenNedsatt: Boolean?,
+    val harSkadeSykdomEllerLyte: Boolean,
+    val erSkadeSykdomEllerLyteVesentligdel: Boolean?,
+    val erNedsettelseIArbeidsevneAvEnVissVarighet: Boolean?,
+    val erNedsettelseIArbeidsevneMerEnnHalvparten: Boolean?,
+    val erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean?,
+    val yrkesskadeBegrunnelse: String?,
+    val kodeverk: String? = null,
+    val hoveddiagnose: String? = null,
+    val bidiagnoser: List<String>? = emptyList(),
+) {
+    fun tilNyDto(): SykdomsvurderingLøsningDto {
+        return SykdomsvurderingLøsningDto(
+            begrunnelse = begrunnelse,
+            fom = nyFom ?: fom,
+            tom = null,
+            dokumenterBruktIVurdering = dokumenterBruktIVurdering,
+            erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
+            harSkadeSykdomEllerLyte = harSkadeSykdomEllerLyte,
+            erSkadeSykdomEllerLyteVesentligdel = erSkadeSykdomEllerLyteVesentligdel,
+            erNedsettelseIArbeidsevneMerEnnHalvparten = erNedsettelseIArbeidsevneMerEnnHalvparten,
+            erNedsettelseIArbeidsevneAvEnVissVarighet = erNedsettelseIArbeidsevneAvEnVissVarighet,
+            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
+            yrkesskadeBegrunnelse = yrkesskadeBegrunnelse,
+            kodeverk = kodeverk,
+            hoveddiagnose = hoveddiagnose,
+            bidiagnoser = bidiagnoser,
+        )
+    }
+}
+
 data class SykdomsvurderingLøsningDto(
     override val begrunnelse: String,
 
