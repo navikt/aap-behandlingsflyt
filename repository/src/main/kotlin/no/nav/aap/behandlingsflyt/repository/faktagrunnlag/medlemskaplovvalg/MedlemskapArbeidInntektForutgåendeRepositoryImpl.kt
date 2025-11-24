@@ -47,9 +47,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
                     medlemskapGrunnlag = hentMedlemskapGrunnlag(it.getLongOrNull("medlemskap_unntak_person_id")),
                     inntekterINorgeGrunnlag = hentInntekterINorgeGrunnlag(it.getLongOrNull("inntekter_i_norge_id")),
                     arbeiderINorgeGrunnlag = hentArbeiderINorgeGrunnlag(it.getLongOrNull("arbeider_id")),
-                    manuellVurdering = hentManuellVurdering(it.getLongOrNull("manuell_vurdering_id")),
                     vurderinger = hentVurderinger(it.getLongOrNull("vurderinger_id"))
-                        .ifEmpty { listOfNotNull(hentManuellVurdering(it.getLongOrNull("manuell_vurdering_id"))) } // TODO midlertidig inntil vi har migrert
                 )
             }
         }
@@ -93,15 +91,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
             }
             setRowMapper {
                 InternalHistoriskManuellVurderingForForutgåendeMedlemskap(
-                    ManuellVurderingForForutgåendeMedlemskap(
-                        begrunnelse = it.getString("begrunnelse"),
-                        harForutgåendeMedlemskap = it.getBoolean("har_forutgaaende_medlemskap"),
-                        varMedlemMedNedsattArbeidsevne = it.getBooleanOrNull("var_medlem_med_nedsatt_arbeidsevne"),
-                        medlemMedUnntakAvMaksFemAar = it.getBooleanOrNull("medlem_med_unntak_av_maks_fem_aar"),
-                        vurdertAv = it.getString("vurdert_av"),
-                        vurdertTidspunkt = it.getLocalDateTime("opprettet_tid"),
-                        overstyrt = it.getBoolean("overstyrt")
-                    ),
+                    manuellVurdering = mapManuellVurderingForForutgåendeMedlemskap(it),
                     vurdertDato = it.getLocalDateTime("opprettet_tid")
                 )
             }
@@ -113,55 +103,6 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
                 opprettet = it.vurdertDato,
                 erGjeldendeVurdering = it == vurderinger.last(),
             )
-        }
-    }
-
-    override fun lagreManuellVurdering(
-        behandlingId: BehandlingId,
-        manuellVurdering: ManuellVurderingForForutgåendeMedlemskap?
-    ) {
-        val grunnlagOppslag = hentGrunnlag(behandlingId)
-        if (grunnlagOppslag != null) deaktiverGrunnlag(behandlingId)
-
-        val manuellVurderingId = if (manuellVurdering == null) {
-            null
-        } else {
-            val eksisterendeManuellVurdering = hentManuellVurdering(grunnlagOppslag?.manuellVurderingId)
-            val overstyrt = manuellVurdering.overstyrt || eksisterendeManuellVurdering?.overstyrt == true
-
-            val manuellVurderingQuery = """
-            INSERT INTO FORUTGAAENDE_MEDLEMSKAP_MANUELL_VURDERING (BEGRUNNELSE, HAR_FORUTGAAENDE_MEDLEMSKAP, 
-                VAR_MEDLEM_MED_NEDSATT_ARBEIDSEVNE, MEDLEM_MED_UNNTAK_AV_MAKS_FEM_AAR, OVERSTYRT, VURDERT_AV, 
-                OPPRETTET_TID) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-            """.trimIndent()
-
-            connection.executeReturnKey(manuellVurderingQuery) {
-                setParams {
-                    setString(1, manuellVurdering.begrunnelse)
-                    setBoolean(2, manuellVurdering.harForutgåendeMedlemskap)
-                    setBoolean(3, manuellVurdering.varMedlemMedNedsattArbeidsevne)
-                    setBoolean(4, manuellVurdering.medlemMedUnntakAvMaksFemAar)
-                    setBoolean(5, overstyrt)
-                    setString(6, manuellVurdering.vurdertAv)
-                    setLocalDateTime(7, manuellVurdering.vurdertTidspunkt)
-                }
-            }
-        }
-
-        val grunnlagQuery = """
-            INSERT INTO FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG (behandling_id, arbeider_id, inntekter_i_norge_id, medlemskap_unntak_person_id, manuell_vurdering_id) VALUES (?, ?, ?, ?, ?)
-        """.trimIndent()
-
-        connection.execute(grunnlagQuery) {
-            setParams {
-                setLong(1, behandlingId.toLong())
-                setLong(2, grunnlagOppslag?.arbeiderId)
-                setLong(3, grunnlagOppslag?.inntektINorgeId)
-                setLong(4, grunnlagOppslag?.medlId)
-                setLong(5, manuellVurderingId)
-            }
-            setResultValidator { require(it == 1) }
         }
     }
 
@@ -266,103 +207,9 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
         }
     }
 
-    override fun migrerManuelleVurderingerPeriodisert() {
-        data class MigreringGrunnlagInternal(
-            val id: Long,
-            val behandlingId: BehandlingId,
-            val rettighetsperiode: Periode,
-            val manuellVurderingId: Long,
-            val grunnlagOpprettetTid: LocalDateTime,
-            val vurderingOpprettetTid: LocalDateTime,
-        )
-
-        // Dette er alle grunnlag som er kandidater for migrering - dvs de som har en manuell vurdering knyttet til seg
-        // og ikke har noen kobling til vurderinger enda
-        fun hentKandidater(): List<MigreringGrunnlagInternal> {
-            val kandidaterQuery = """
-                SELECT g.id, g.manuell_vurdering_id, v.opprettet_tid as vurdering_opprettet_tid, 
-                    g.opprettet_tid as grunnlag_opprettet_tid, g.behandling_id, s.rettighetsperiode, 
-                    b.opprettet_tid as behandling_opprettet_tid
-                FROM forutgaaende_medlemskap_arbeid_og_inntekt_i_norge_grunnlag g
-                    JOIN forutgaaende_medlemskap_manuell_vurdering v ON g.manuell_vurdering_id = v.id
-                    JOIN behandling b ON g.behandling_id = b.id
-                    JOIN sak s ON b.sak_id = s.id
-                WHERE g.manuell_vurdering_id IS NOT NULL 
-                AND g.vurderinger_id IS NULL
-            """.trimIndent()
-
-            return connection.queryList(kandidaterQuery) {
-                setRowMapper {
-                    MigreringGrunnlagInternal(
-                        id = it.getLong("id"),
-                        behandlingId = BehandlingId(it.getLong("behandling_id")),
-                        rettighetsperiode = it.getPeriode("rettighetsperiode"),
-                        manuellVurderingId = it.getLong("manuell_vurdering_id"),
-                        grunnlagOpprettetTid = it.getLocalDateTime("grunnlag_opprettet_tid"),
-                        vurderingOpprettetTid = it.getLocalDateTime("vurdering_opprettet_tid")
-                    )
-                }
-            }
-        }
-
-        log.info("Starter migrering av manuelle vurderinger for forutgående medlemskap til periodisert format")
-        val start = System.currentTimeMillis()
-        val kandidaterForMigrering = hentKandidater()
-        val kandidaterForMigreringGruppertPåManuellVurdering = kandidaterForMigrering.groupBy { it.manuellVurderingId }
-
-        log.info("Fant ${kandidaterForMigrering.size} kandidater for migrering av manuelle vurderinger for forutgående medlemskap")
-
-        kandidaterForMigreringGruppertPåManuellVurdering.forEach { kandidaterSomPerkerPåSammeVurdering ->
-            val opprettetTid = kandidaterSomPerkerPåSammeVurdering.value.minByOrNull { it.vurderingOpprettetTid }!!.grunnlagOpprettetTid
-
-            val vurderingerId = connection.executeReturnKey(
-                """
-                    INSERT INTO forutgaaende_medlemskap_manuell_vurderinger(opprettet_tid) values (?)
-                """.trimIndent()
-            ) {
-                setParams {
-                    setLocalDateTime(1, opprettetTid)
-                }
-            }
-
-            // Oppdatere alle grunnlag for en behandling til å peke på den nye vurderinger_id.
-            kandidaterSomPerkerPåSammeVurdering.value.forEach { kandidat ->
-                log.info("Migrerer grunnlag med id=${kandidat.id} for behandlingId=${kandidat.behandlingId}")
-
-                // Oppdaterer grunnlaget med riktig vurderinger_id
-                connection.execute("UPDATE forutgaaende_medlemskap_arbeid_og_inntekt_i_norge_grunnlag SET vurderinger_id = ? WHERE id = ?") {
-                    setParams {
-                        setLong(1, vurderingerId)
-                        setLong(2, kandidat.id)
-                    }
-                    setResultValidator { require(it == 1) }
-                }
-            }
-
-            // Oppdaterer den manuelle vurderingen med riktig vurderinger_id, fom-dato og vurdertIBehandling.
-            // Henter ut verdier fra det eldste grunnlaget som er knyttet til vurderingen da dette er knyttet til behandlingen vurderingen ble opprettet i
-            kandidaterSomPerkerPåSammeVurdering.value.minByOrNull { it.grunnlagOpprettetTid }?.let { kandidat ->
-                connection.execute("UPDATE forutgaaende_medlemskap_manuell_vurdering SET vurderinger_id = ?, fom = ?, vurdert_i_behandling = ? WHERE id = ?") {
-                    setParams {
-                        setLong(1, vurderingerId)
-                        setLocalDate(2, kandidat.rettighetsperiode.fom)
-                        setLong(3, kandidat.behandlingId.id)
-                        setLong(4, kandidat.manuellVurderingId)
-                    }
-                    setResultValidator { require(it == 1) }
-                }
-            } ?: log.warn("Fant ingen kandidat og oppdatere vurdering for")
-        }
-
-        val totalTid = System.currentTimeMillis() - start
-
-        log.info("Fullført migrering av manuelle vurderinger for forutgående medlemskap. Migrerte ${kandidaterForMigrering.size} grunnlag med ${kandidaterForMigreringGruppertPåManuellVurdering.size} tilhørende manuelle vurderinger på $totalTid ms.")
-    }
-
     override fun slett(behandlingId: BehandlingId) {
         val arbeidIds = getArbeidIds(behandlingId)
         val inntekterIds = getInntekterIds(behandlingId)
-        val manuellVurderingIds = getManuellVurderingIds(behandlingId) // TODO fjernes etter migrering
         val vurderingerIds = getManuellVurderingerIds(behandlingId)
 
         val deletedRows = connection.executeReturnUpdated(
@@ -371,7 +218,6 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
             delete from INNTEKT_I_NORGE_FORUTGAAENDE where id = ANY(?::bigint[]);
             delete from ARBEID_FORUTGAAENDE where arbeider_id = ANY(?::bigint[]);
             delete from ARBEIDER_FORUTGAAENDE where id = ANY(?::bigint[]);
-            delete from FORUTGAAENDE_MEDLEMSKAP_MANUELL_VURDERING where id = ANY(?::bigint[]);
             delete from FORUTGAAENDE_MEDLEMSKAP_MANUELL_VURDERING where vurderinger_id = ANY(?::bigint[]);
             delete from FORUTGAAENDE_MEDLEMSKAP_MANUELL_VURDERINGER where id = ANY(?::bigint[]);
            
@@ -382,26 +228,11 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
                 setLongArray(2, inntekterIds)
                 setLongArray(3, arbeidIds)
                 setLongArray(4, arbeidIds)
-                setLongArray(5, manuellVurderingIds)
+                setLongArray(5, vurderingerIds)
                 setLongArray(6, vurderingerIds)
-                setLongArray(7, vurderingerIds)
             }
         }
         log.info("Slettet $deletedRows rader fra FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG")
-    }
-
-    private fun getManuellVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
-        """
-                    SELECT manuell_vurdering_id
-                    FROM FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG
-                    WHERE behandling_id = ? AND manuell_vurdering_id is not null
-                 
-                """.trimIndent()
-    ) {
-        setParams { setLong(1, behandlingId.id) }
-        setRowMapper { row ->
-            row.getLong("manuell_vurdering_id")
-        }
     }
 
     private fun getManuellVurderingerIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
@@ -546,9 +377,9 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
             overstyrt = row.getBoolean("overstyrt"),
             vurdertAv = row.getString("vurdert_av"),
             vurdertTidspunkt = row.getLocalDateTime("opprettet_tid"),
-            fom = row.getLocalDateOrNull("fom"),
+            vurdertIBehandling = row.getLong("vurdert_i_behandling").let { id -> BehandlingId(id) },
+            fom = row.getLocalDate("fom"),
             tom = row.getLocalDateOrNull("tom"),
-            vurdertIBehandling = row.getLongOrNull("vurdert_i_behandling")?.let { id -> BehandlingId(id) }
         )
 
     private fun hentMedlemskapGrunnlag(medlemskapId: Long?): MedlemskapUnntakGrunnlag? {

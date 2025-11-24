@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.behandling.etannetsted
+package no.nav.aap.behandlingsflyt.behandling.institusjonsopphold
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
@@ -49,7 +49,7 @@ fun NormalOpenAPIRoute.institusjonAPI(
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
 
                     val utlederService =
-                        EtAnnetStedUtlederService(
+                        InstitusjonsoppholdUtlederService(
                             barnetilleggRepository, institusjonsoppholdRepository,
                             sakRepository,
                             behandlingRepository
@@ -122,7 +122,7 @@ fun NormalOpenAPIRoute.institusjonAPI(
                     val barnetilleggRepository = repositoryProvider.provide<BarnetilleggRepository>()
 
                     val utlederService =
-                        EtAnnetStedUtlederService(
+                        InstitusjonsoppholdUtlederService(
                             barnetilleggRepository, institusjonsoppholdRepository,
                             sakRepository,
                             behandlingRepository
