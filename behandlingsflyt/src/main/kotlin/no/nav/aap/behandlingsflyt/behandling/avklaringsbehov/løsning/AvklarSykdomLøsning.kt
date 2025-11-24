@@ -15,13 +15,14 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = AVKLAR_SYKDOM_KODE)
 class AvklarSykdomLøsning(
-    @param:JsonProperty("sykdomsvurderinger", required = true) val sykdomsvurderinger: List<SykdomsvurderingLøsningDto>,
+    @param:JsonProperty("løsningerForPerioder", required = true) 
+    override val løsningerForPerioder: List<SykdomsvurderingLøsningDto>,
     @param:JsonProperty(
         "behovstype",
         required = true,
         defaultValue = AVKLAR_SYKDOM_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5003`
-) : EnkeltAvklaringsbehovLøsning {
+) : PeriodisertAvklaringsbehovLøsning<SykdomsvurderingLøsningDto> {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return AvklarSykdomLøser(repositoryProvider).løs(kontekst, this)
     }

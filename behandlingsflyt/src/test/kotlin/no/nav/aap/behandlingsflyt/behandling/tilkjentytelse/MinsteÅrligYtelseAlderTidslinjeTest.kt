@@ -14,16 +14,16 @@ class MinsteÅrligYtelseAlderTidslinjeTest {
     @Test
     fun `produserer korrekt tidlinje ut fra fødselsdato`() {
         val fødelsdato = Fødselsdato(LocalDate.of(1990, 1, 2))
-        val tidslinje = MinsteÅrligYtelseAlderTidslinje(fødelsdato).tilTidslinje()
+        val tidslinje = aldersjusteringAvMinsteÅrligeYtelse(fødelsdato)
 
         assertThat(tidslinje.segmenter()).containsExactly(
             Segment(
                 periode = Periode(LocalDate.MIN, LocalDate.of(2015, 1, 1)),
-                verdi = AlderStrategi.Under25
+                verdi = Under25
             ),
             Segment(
                 periode = Periode(LocalDate.of(2015, 1, 2), Tid.MAKS),
-                verdi = AlderStrategi.Over25
+                verdi = Over25
             ),
         )
     }
@@ -31,16 +31,16 @@ class MinsteÅrligYtelseAlderTidslinjeTest {
     @Test
     fun `blir riktig med skuddårs fødsel`() {
         val fødelsdato = Fødselsdato(LocalDate.of(1996, 2, 29))
-        val tidslinje = MinsteÅrligYtelseAlderTidslinje(fødelsdato).tilTidslinje()
+        val tidslinje = aldersjusteringAvMinsteÅrligeYtelse(fødelsdato)
 
         assertThat(tidslinje.segmenter()).containsExactly(
             Segment(
                 periode = Periode(LocalDate.MIN, LocalDate.of(2021, 2, 27)),
-                verdi = AlderStrategi.Under25
+                verdi = Under25
             ),
             Segment(
                 periode = Periode(LocalDate.of(2021, 2, 28), Tid.MAKS),
-                verdi = AlderStrategi.Over25
+                verdi = Over25
             ),
         )
     }
@@ -48,15 +48,13 @@ class MinsteÅrligYtelseAlderTidslinjeTest {
     @Test
     fun `riktig minste ytelse utregning`() {
         val fødelsdato = Fødselsdato(LocalDate.of(1996, 2, 29))
-        val minsteÅrligYtelseAlderTidslinje = MinsteÅrligYtelseAlderTidslinje(fødelsdato).tilTidslinje()
+        val minsteÅrligYtelseAlderTidslinje = aldersjusteringAvMinsteÅrligeYtelse(fødelsdato)
 
         val minsteÅrligYtelseTidslinje = MINSTE_ÅRLIG_YTELSE_TIDSLINJE
 
-        val tidslinje = minsteÅrligYtelseAlderTidslinje.kombiner(
-            minsteÅrligYtelseTidslinje,
-            BeregnTilkjentYtelseService.Companion.AldersjusteringAvMinsteÅrligYtelse
-        )
-
+        val tidslinje = minsteÅrligYtelseAlderTidslinje.innerJoin(minsteÅrligYtelseTidslinje) { alderjustering, årligYtelse ->
+            alderjustering(årligYtelse)
+        }
 
         assertThat(tidslinje.segmenter()).containsExactly(
             Segment(

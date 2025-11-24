@@ -21,6 +21,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.DelvisOmgjøres
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Opprettholdes
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -53,6 +54,7 @@ class BrevUtlederService(
     private val tilkjentYtelseRepository: TilkjentYtelseRepository,
     private val underveisRepository: UnderveisRepository,
     private val aktivitetsplikt11_7Repository: Aktivitetsplikt11_7Repository,
+    private val arbeidsopptrappingRepository: ArbeidsopptrappingRepository,
     private val unleashGateway: UnleashGateway
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
@@ -65,14 +67,21 @@ class BrevUtlederService(
         tilkjentYtelseRepository = repositoryProvider.provide(),
         underveisRepository = repositoryProvider.provide(),
         aktivitetsplikt11_7Repository = repositoryProvider.provide(),
+        arbeidsopptrappingRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide()
     )
 
     fun utledBehovForMeldingOmVedtak(behandlingId: BehandlingId): BrevBehov? {
         val behandling = behandlingRepository.hent(behandlingId)
+        var harArbeidsopptrapping = unleashGateway.isEnabled(BehandlingsflytFeature.Arbeidsopptrapping)
+                && arbeidsopptrappingRepository.hentPerioder(behandlingId).isNotEmpty()
 
         when (behandling.typeBehandling()) {
             TypeBehandling.Førstegangsbehandling -> {
+                if (harArbeidsopptrapping) {
+                    return VedtakArbeidsopptrapping11_23_sjette_ledd
+                }
+
                 val resultat = resultatUtleder.utledResultat(behandlingId)
 
                 return when (resultat) {
@@ -93,6 +102,10 @@ class BrevUtlederService(
             }
 
             TypeBehandling.Revurdering -> {
+                if (harArbeidsopptrapping) {
+                    return VedtakArbeidsopptrapping11_23_sjette_ledd
+                }
+
                 val resultat = resultatUtleder.utledRevurderingResultat(behandlingId)
                 val vurderingsbehov = behandling.vurderingsbehov().map { it.type }.toSet()
                 if (setOf(
@@ -262,16 +275,16 @@ class BrevUtlederService(
 
             /**
              * Gradering tar høyde for fastsatt arbeidsevne, men ikke timer arbeidet (derfor benyttes ikke
-             * [no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent.gradering.arbeidGradering]).
+             * [no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent.graderingGrunnlag.arbeidGradering]).
              * Inkluderer ikke barnetillegg slik som
              * [no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent.redusertDagsats] siden barnetillegg skilles ut
              * i brevet.
              */
             val gradering = Prosent.`100_PROSENT`
-                .minus(tilkjent.gradering.samordningGradering ?: Prosent.`0_PROSENT`)
-                .minus(tilkjent.gradering.institusjonGradering ?: Prosent.`0_PROSENT`)
-                .minus(tilkjent.gradering.samordningUføregradering ?: Prosent.`0_PROSENT`)
-                .minus(tilkjent.gradering.samordningArbeidsgiverGradering ?: Prosent.`0_PROSENT`)
+                .minus(tilkjent.graderingGrunnlag.samordningGradering)
+                .minus(tilkjent.graderingGrunnlag.institusjonGradering)
+                .minus(tilkjent.graderingGrunnlag.samordningUføregradering)
+                .minus(tilkjent.graderingGrunnlag.samordningArbeidsgiverGradering)
                 .minus(underveisperiode.arbeidsgradering.fastsattArbeidsevne)
 
             /**

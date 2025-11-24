@@ -320,7 +320,7 @@ private fun opprettNySakOgBehandling(dto: OpprettTestcaseDTO): Sak {
             løsStudent(behandling)
         } else {
             if (dto.steg == StegType.AVKLAR_SYKDOM) return sak
-            løsSykdom(behandling)
+            løsSykdom(behandling, sak.rettighetsperiode.fom)
 
             if (dto.steg == StegType.VURDER_BISTANDSBEHOV) return sak
             løsBistand(behandling)

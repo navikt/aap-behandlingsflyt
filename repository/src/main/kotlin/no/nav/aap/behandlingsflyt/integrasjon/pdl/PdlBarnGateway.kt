@@ -21,7 +21,11 @@ class PdlBarnGateway : BarnGateway {
         }
     }
 
-    override fun hentBarn(person: Person, oppgitteBarnIdenter: List<Ident>): BarnInnhentingRespons {
+    override fun hentBarn(
+        person: Person,
+        oppgitteBarnIdenter: List<Ident>,
+        saksbehandlerOppgitteBarnIdenter: List<Ident>
+    ): BarnInnhentingRespons {
         val barnRelasjoner = hentBarnRelasjoner(person)
 
         val barnIdenter = barnRelasjoner.filterIsInstance<BarnIdentifikator.BarnIdent>().map { it.ident }
@@ -34,9 +38,16 @@ class PdlBarnGateway : BarnGateway {
             )
         }
 
-        val registerBarn = hentBarn(barnIdenter)
-        val oppgitteBarn = hentBarn(oppgitteBarnIdenter)
-        return BarnInnhentingRespons(registerBarn + barnUtenIdent, oppgitteBarn)
+        val alleBarnIdenter = (barnIdenter + oppgitteBarnIdenter + saksbehandlerOppgitteBarnIdenter).distinct()
+        val alleBarn = hentBarn(alleBarnIdenter)
+
+        val barnMap = alleBarn.associateBy { (it.ident as? BarnIdentifikator.BarnIdent)?.ident }
+
+        val registerBarn = barnIdenter.mapNotNull { ident -> barnMap[ident] }
+        val oppgitteBarn = oppgitteBarnIdenter.mapNotNull { ident -> barnMap[ident] }
+        val saksbehandlerOppgitteBarn = saksbehandlerOppgitteBarnIdenter.mapNotNull { ident -> barnMap[ident] }
+
+        return BarnInnhentingRespons(registerBarn + barnUtenIdent, oppgitteBarn, saksbehandlerOppgitteBarn)
     }
 
     private fun hentBarnRelasjoner(person: Person): List<BarnIdentifikator> {

@@ -24,7 +24,11 @@ sealed class BarnIdentifikator : Comparable<BarnIdentifikator> {
         override fun compareTo(other: BarnIdentifikator): Int {
             return when (other) {
                 is BarnIdent -> other.ident.identifikator.compareTo(navn)
-                is NavnOgFødselsdato -> other.navn.compareTo(this.navn)
+                is NavnOgFødselsdato -> {
+                    val navnComparison = other.navn.trim().compareTo(this.navn.trim(), ignoreCase = true)
+                    if (navnComparison != 0) navnComparison else other.fødselsdato.toLocalDate()
+                        .compareTo(this.fødselsdato.toLocalDate())
+                }
             }
         }
     }

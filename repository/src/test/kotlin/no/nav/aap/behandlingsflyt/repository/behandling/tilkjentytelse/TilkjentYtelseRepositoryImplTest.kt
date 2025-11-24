@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse
 
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentGradering
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.GraderingGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
@@ -50,8 +50,8 @@ class TilkjentYtelseRepositoryImplTest {
                         ),
                         tilkjent = Tilkjent(
                             dagsats = Beløp(999),
-                            gradering = TilkjentGradering(
-                                Prosent.`66_PROSENT`,
+                            gradering = Prosent.`66_PROSENT`,
+                            graderingGrunnlag = GraderingGrunnlag(
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
@@ -73,8 +73,8 @@ class TilkjentYtelseRepositoryImplTest {
                         ),
                         tilkjent = Tilkjent(
                             dagsats = Beløp(1000),
-                            gradering = TilkjentGradering(
-                                Prosent.`50_PROSENT`,
+                            gradering = Prosent.`50_PROSENT`,
+                            graderingGrunnlag = GraderingGrunnlag(
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
@@ -128,8 +128,8 @@ class TilkjentYtelseRepositoryImplTest {
                         ),
                         tilkjent = Tilkjent(
                             dagsats = Beløp(999),
-                            gradering = TilkjentGradering(
-                                Prosent.`66_PROSENT`,
+                            gradering = Prosent.`66_PROSENT`,
+                            graderingGrunnlag = GraderingGrunnlag(
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
@@ -151,8 +151,8 @@ class TilkjentYtelseRepositoryImplTest {
                         ),
                         tilkjent = Tilkjent(
                             dagsats = Beløp(1000),
-                            gradering = TilkjentGradering(
-                                Prosent.`50_PROSENT`,
+                            gradering = Prosent.`50_PROSENT`,
+                            graderingGrunnlag = GraderingGrunnlag(
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
@@ -179,8 +179,8 @@ class TilkjentYtelseRepositoryImplTest {
                         ),
                         tilkjent = Tilkjent(
                             dagsats = Beløp(999),
-                            gradering = TilkjentGradering(
-                                Prosent.`66_PROSENT`,
+                            gradering = Prosent.`66_PROSENT`,
+                            graderingGrunnlag = GraderingGrunnlag(
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
@@ -202,8 +202,8 @@ class TilkjentYtelseRepositoryImplTest {
                         ),
                         tilkjent = Tilkjent(
                             dagsats = Beløp(1000),
-                            gradering = TilkjentGradering(
-                                Prosent.`50_PROSENT`,
+                            gradering = Prosent.`50_PROSENT`,
+                            graderingGrunnlag = GraderingGrunnlag(
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,

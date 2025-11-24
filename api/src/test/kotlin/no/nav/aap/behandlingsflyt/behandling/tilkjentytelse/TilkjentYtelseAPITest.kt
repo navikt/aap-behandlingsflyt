@@ -55,8 +55,8 @@ class TilkjentYtelseAPITest : BaseApiTest() {
 
             val tilkjentYtelseVerdi = Tilkjent(
                 dagsats = Beløp(500),
-                gradering = TilkjentGradering(
-                    endeligGradering = Prosent(50),
+                gradering = Prosent(50),
+                graderingGrunnlag = GraderingGrunnlag(
                     samordningGradering = Prosent(50),
                     institusjonGradering = Prosent(50),
                     arbeidGradering = Prosent(50),
