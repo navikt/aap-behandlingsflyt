@@ -193,13 +193,13 @@ class SamordningYtelseVurderingInformasjonskrav(
             samordningVurderinger.vurderinger
                 .map { vurdering -> vurdering.vurderingPerioder }
         }
-        //bare skriver ut loggmeldinger enn så lenge
         harEndringerIYtelserIkkeDekketAvManuelleVurderinger(samordningVurderinger, samordningYtelser)
 
-        return if (!gikkFraNullTilTomtGrunnlag && harEndringerIYtelserIkkeDekketAvEksisterendeGrunnlag(
+        return if (!gikkFraNullTilTomtGrunnlag
+            && harEndringerIYtelserIkkeDekketAvEksisterendeGrunnlag(
                 eksisterendeData,
                 samordningYtelser
-            )
+            ) && harEndringerIYtelserIkkeDekketAvManuelleVurderinger(samordningVurderinger, samordningYtelser)
         ) listOf(
             VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER)
         )
@@ -270,12 +270,12 @@ class SamordningYtelseVurderingInformasjonskrav(
                         .flatMap { it.vurderingPerioder }
                         .filter { it.gradering == nyPeriode.gradering || it.gradering == Prosent.`100_PROSENT` }
 
-                    secureLogger.info("Hentet samordningytelse eksisterende ${eksisterendeVurderinger?.vurderinger} med nye samordningsytelser ${samordningYtelser.map { it.ytelsePerioder }}  ${samordningYtelser.map { it.ytelseType.name }}")
+                    secureLogger.info("Hentet samordningytelse eksisterende ${eksisterendeVurderinger.vurderinger} med nye samordningsytelser ${samordningYtelser.map { it.ytelsePerioder }}  ${samordningYtelser.map { it.ytelseType.name }}")
                     secureLogger.info(
                         "Overlapp " + isPeriodeDekketAvEksisterendePerioder(
                             relevanteEksPerioder,
                             nyPeriode
-                        ) + "VurderingeneErLike " + (samordningYtelser == eksisterendeVurderinger?.vurderinger)
+                        ) + "VurderingeneErLike " + (samordningYtelser == eksisterendeVurderinger.vurderinger)
                     )
 
                     if (!isPeriodeDekketAvEksisterendePerioder(relevanteEksPerioder, nyPeriode)) {
@@ -288,47 +288,37 @@ class SamordningYtelseVurderingInformasjonskrav(
     }
 }
 
-    private fun <T : HarPeriode> isPeriodeDekketAvEksisterendePerioder(
-        eksisterendePerioder: List<T>,
-        target: T
-    ): Boolean {
-        if (eksisterendePerioder.isEmpty()) return false
+private fun <T : HarPeriode> isPeriodeDekketAvEksisterendePerioder(
+    eksisterendePerioder: List<T>,
+    target: T
+): Boolean {
+    if (eksisterendePerioder.isEmpty()) return false
 
-        val intersections = eksisterendePerioder.mapNotNull { eks ->
-            val start = maxOf(eks.periode.fom, target.periode.fom)
-            val end = minOf(eks.periode.tom, target.periode.tom)
-            if (!start.isAfter(end)) start to end else null
-        }.sortedBy { it.first }
+    val intersections = eksisterendePerioder.mapNotNull { eks ->
+        val start = maxOf(eks.periode.fom, target.periode.fom)
+        val end = minOf(eks.periode.tom, target.periode.tom)
+        if (!start.isAfter(end)) start to end else null
+    }.sortedBy { it.first }
 
-        if (intersections.isEmpty()) return false
+    if (intersections.isEmpty()) return false
 
-        val merged = mutableListOf<Pair<LocalDate, LocalDate>>()
-        for ((s, e) in intersections) {
-            if (merged.isEmpty()) {
-                merged.add(s to e)
+    val merged = mutableListOf<Pair<LocalDate, LocalDate>>()
+    for ((s, e) in intersections) {
+        if (merged.isEmpty()) {
+            merged.add(s to e)
+        } else {
+            val (curS, curE) = merged.last()
+            if (!s.isAfter(curE.plusDays(1))) {
+                val newEnd = if (e.isAfter(curE)) e else curE
+                merged[merged.lastIndex] = curS to newEnd
             } else {
-                val (curS, curE) = merged.last()
-                if (!s.isAfter(curE.plusDays(1))) {
-                    val newEnd = if (e.isAfter(curE)) e else curE
-                    merged[merged.lastIndex] = curS to newEnd
-                } else {
-                    merged.add(s to e)
-                }
+                merged.add(s to e)
             }
         }
-
-        if (merged.size != 1) return false
-
-        val (coverStart, coverEnd) = merged[0]
-        return !coverStart.isAfter(target.periode.fom) && !coverEnd.isBefore(target.periode.tom)
     }
 
+    if (merged.size != 1) return false
 
-
-
-
-
-
-
-
-
+    val (coverStart, coverEnd) = merged[0]
+    return !coverStart.isAfter(target.periode.fom) && !coverEnd.isBefore(target.periode.tom)
+}
