@@ -1,7 +1,8 @@
 package no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse
 
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.GraderingGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -18,6 +19,7 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
     TilkjentYtelseRepository {
 
     private val log = LoggerFactory.getLogger(javaClass)
+
     companion object : Factory<TilkjentYtelseRepositoryImpl> {
         override fun konstruer(connection: DBConnection): TilkjentYtelseRepositoryImpl {
             return TilkjentYtelseRepositoryImpl(connection)
@@ -40,11 +42,16 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
                         dagsats = Beløp(it.getInt("DAGSATS")),
                         gradering = Prosent(it.getInt("GRADERING")),
                         graderingGrunnlag = GraderingGrunnlag(
-                            samordningUføregradering = it.getIntOrNull("SAMORDNING_UFORE_GRADERING")?.let { result -> Prosent(result) } ?: `0_PROSENT`,
-                            samordningArbeidsgiverGradering = it.getIntOrNull("SAMORDNING_ARBEIDSGIVER_GRADERING")?.let { result -> Prosent(result) } ?: `0_PROSENT`,
-                            samordningGradering = it.getIntOrNull("SAMORDNING_GRADERING")?.let { result -> Prosent(result) } ?: `0_PROSENT`,
-                            institusjonGradering = it.getIntOrNull("INSTITUSJON_GRADERING")?.let { result -> Prosent(result) } ?: `0_PROSENT`,
-                            arbeidGradering = it.getIntOrNull("ARBEID_GRADERING")?.let { result -> Prosent(result) } ?: `0_PROSENT`,
+                            samordningUføregradering = it.getIntOrNull("SAMORDNING_UFORE_GRADERING")
+                                ?.let { result -> Prosent(result) } ?: `0_PROSENT`,
+                            samordningArbeidsgiverGradering = it.getIntOrNull("SAMORDNING_ARBEIDSGIVER_GRADERING")
+                                ?.let { result -> Prosent(result) } ?: `0_PROSENT`,
+                            samordningGradering = it.getIntOrNull("SAMORDNING_GRADERING")
+                                ?.let { result -> Prosent(result) } ?: `0_PROSENT`,
+                            institusjonGradering = it.getIntOrNull("INSTITUSJON_GRADERING")
+                                ?.let { result -> Prosent(result) } ?: `0_PROSENT`,
+                            arbeidGradering = it.getIntOrNull("ARBEID_GRADERING")?.let { result -> Prosent(result) }
+                                ?: `0_PROSENT`,
                         ),
                         barnetillegg = Beløp(it.getInt("BARNETILLEGG")),
                         grunnlagsfaktor = GUnit(it.getBigDecimal("GRUNNLAGSFAKTOR")),
@@ -62,7 +69,21 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
         return tilkjent
     }
 
-    override fun lagre(behandlingId: BehandlingId, tilkjent: List<TilkjentYtelsePeriode>) {
+    override fun lagre(
+        behandlingId: BehandlingId,
+        tilkjent: List<TilkjentYtelsePeriode>,
+        faktagrunnlag: TilkjentYtelseGrunnlag,
+        versjon: String,
+    ) {
+        return lagre(behandlingId, tilkjent, faktagrunnlag.hent(), versjon)
+    }
+
+    private fun lagre(
+        behandlingId: BehandlingId,
+        tilkjent: List<TilkjentYtelsePeriode>,
+        faktagrunnlag: String?,
+        versjon: String?
+    ) {
         val eksisterendeTilkjent = hentHvisEksisterer(behandlingId)
         if (eksisterendeTilkjent == tilkjent) {
             return
@@ -72,7 +93,7 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
             deaktiverEksisterende(behandlingId)
         }
 
-        val tilkjentYtelseKey = connection.executeReturnKey(
+        val tilkjentYtelseId = connection.executeReturnKey(
             """
             INSERT INTO TILKJENT_YTELSE (BEHANDLING_ID, AKTIV) VALUES (?, TRUE)
         """.trimIndent()
@@ -82,19 +103,36 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
             }
         }
         tilkjent.forEach { segment ->
-            lagrePeriode(tilkjentYtelseKey, segment.periode,segment.tilkjent)
+            lagrePeriode(tilkjentYtelseId, segment.periode, segment.tilkjent)
         }
 
+        if (faktagrunnlag != null && versjon != null) {
+            connection.execute(
+                """
+            insert into tilkjent_ytelse_sporing(tilkjent_ytelse_id, faktagrunnlag, versjon) values (?, ?, ?)
+        """.trimIndent()
+            ) {
+                setParams {
+                    setLong(1, tilkjentYtelseId)
+                    setString(2, faktagrunnlag)
+                    setString(3, versjon)
+                }
+            }
+        }
     }
 
     override fun slett(behandlingId: BehandlingId) {
-        val deletedRows = connection.executeReturnUpdated("""
+        val deletedRows = connection.executeReturnUpdated(
+            """
+            delete from tilkjent_ytelse_sporing where tilkjent_ytelse_id in (select tilkjent_ytelse.id from tilkjent_ytelse where behandling_id = ?);
             delete from tilkjent_periode where tilkjent_ytelse_id in (select tilkjent_ytelse.id from tilkjent_ytelse where behandling_id = ?);
             delete from tilkjent_ytelse where behandling_id = ? 
-        """.trimIndent()) {
+        """.trimIndent()
+        ) {
             setParams {
                 setLong(1, behandlingId.id)
                 setLong(2, behandlingId.id)
+                setLong(3, behandlingId.id)
             }
         }
         log.info("Slettet $deletedRows rader fra tilkjent_periode")
@@ -144,6 +182,24 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
             return
         }
 
-        lagre(tilBehandling, eksisterendeGrunnlag)
+        val faktaOgVersjon = connection.queryFirstOrNull(
+            """
+            select faktagrunnlag, tilkjent_ytelse_sporing.versjon
+             from tilkjent_ytelse_sporing
+             join tilkjent_ytelse on tilkjent_ytelse.id = tilkjent_ytelse_sporing.tilkjent_ytelse_id
+             join behandling on tilkjent_ytelse.behandling_id = behandling.id
+             where tilkjent_ytelse.aktiv and behandling.id = ?
+        """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, fraBehandling.id)
+            }
+            setRowMapper {
+                Pair(it.getString("faktagrunnlag"), it.getString("versjon"))
+            }
+        }
+
+
+        lagre(tilBehandling, eksisterendeGrunnlag, faktaOgVersjon?.first, faktaOgVersjon?.second)
     }
 }

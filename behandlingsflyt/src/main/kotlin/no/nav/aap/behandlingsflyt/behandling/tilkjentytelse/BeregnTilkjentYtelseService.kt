@@ -2,9 +2,9 @@ package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 
 import no.nav.aap.behandlingsflyt.behandling.barnetillegg.RettTilBarnetillegg
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.tilTidslinje
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.tilTidslinje
@@ -25,16 +25,17 @@ import no.nav.aap.komponenter.verdityper.Prosent.Companion.`100_PROSENT`
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`66_PROSENT`
 import java.time.LocalDate
 
+class TilkjentYtelseGrunnlag(
+    val fødselsdato: Fødselsdato,
+    val beregningsgrunnlag: GUnit?,
+    val underveisgrunnlag: UnderveisGrunnlag,
+    val barnetilleggGrunnlag: BarnetilleggGrunnlag,
+    val samordningGrunnlag: SamordningGrunnlag,
+    val samordningUføre: SamordningUføreGrunnlag?,
+    val samordningArbeidsgiver: SamordningArbeidsgiverGrunnlag?,
+) : Faktagrunnlag
 
-class BeregnTilkjentYtelseService(
-    private val fødselsdato: Fødselsdato,
-    private val beregningsgrunnlag: Grunnlag?,
-    private val underveisgrunnlag: UnderveisGrunnlag,
-    private val barnetilleggGrunnlag: BarnetilleggGrunnlag,
-    private val samordningGrunnlag: SamordningGrunnlag,
-    private val samordningUføre: SamordningUføreGrunnlag?,
-    private val samordningArbeidsgiver: SamordningArbeidsgiverGrunnlag?,
-) {
+class BeregnTilkjentYtelseService(val grunnlag: TilkjentYtelseGrunnlag) {
 
     internal companion object {
         private const val ANTALL_ÅRLIGE_ARBEIDSDAGER = 260
@@ -42,9 +43,9 @@ class BeregnTilkjentYtelseService(
 
     fun beregnTilkjentYtelse(): Tidslinje<Tilkjent> {
         /** § 11-19 Grunnlaget for beregningen av arbeidsavklaringspenger. */
-        val grunnlagsfaktor = beregningsgrunnlag?.grunnlaget() ?: GUnit(0)
+        val grunnlagsfaktor = grunnlag.beregningsgrunnlag ?: GUnit(0)
 
-        val dagsatsTidslinje = aldersjusteringAvMinsteÅrligeYtelse(fødselsdato)
+        val dagsatsTidslinje = aldersjusteringAvMinsteÅrligeYtelse(grunnlag.fødselsdato)
             .innerJoin(MINSTE_ÅRLIG_YTELSE_TIDSLINJE) { aldersjustering, minsteYtelse ->
                 /** § 11-20 første avsnitt:
                  * > Arbeidsavklaringspenger gis med 66 prosent av grunnlaget, se § 11-19.
@@ -63,10 +64,10 @@ class BeregnTilkjentYtelseService(
             }
 
             val graderingGrunnlagTidslinje = Tidslinje.map4(
-                underveisgrunnlag.somTidslinje(),
-                samordningUføre?.vurdering?.tilTidslinje().orEmpty(),
-                samordningGrunnlag.samordningPerioder.map { Segment(it.periode, it) }.let(::Tidslinje),
-                samordningArbeidsgiver?.vurdering?.tilTidslinje().orEmpty(),
+                grunnlag.underveisgrunnlag.somTidslinje(),
+                grunnlag.samordningUføre?.vurdering?.tilTidslinje().orEmpty(),
+                grunnlag.samordningGrunnlag.samordningPerioder.map { Segment(it.periode, it) }.let(::Tidslinje),
+                grunnlag.samordningArbeidsgiver?.vurdering?.tilTidslinje().orEmpty(),
             ) { underveisperiode, samordningUføre, samordning, samordningArbeidsgiver ->
                 if (underveisperiode == null) {
                     return@map4 null
@@ -83,12 +84,12 @@ class BeregnTilkjentYtelseService(
             .filterNotNull()
 
         return Tidslinje.map6(
-            underveisgrunnlag.somTidslinje(),
+            grunnlag.underveisgrunnlag.somTidslinje(),
             dagsatsTidslinje,
             graderingGrunnlagTidslinje,
             Grunnbeløp.tilTidslinje(),
             BARNETILLEGGSATS_TIDSLINJE,
-            barnetilleggGrunnlag.perioder.tilTidslinje(),
+            grunnlag.barnetilleggGrunnlag.perioder.tilTidslinje(),
         ) { underveisperiode, dagsatsG, graderingGrunnlag, grunnbeløp, barnetilleggsats, rettTilBarnetillegg ->
             if (underveisperiode == null || dagsatsG == null || graderingGrunnlag == null || grunnbeløp == null) {
                 return@map6 null
