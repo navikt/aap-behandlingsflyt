@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.LøsningForPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -33,10 +32,8 @@ data class SykdomsvurderingLøsningGammelDto(
     val begrunnelse: String,
 
     /** Hvis null, så gjelder den fra starten. */
-    @param:JsonProperty(value = "vurderingenGjelderFra")
-    val fom: LocalDate,
-    @param:JsonProperty(value = "fom")
-    val nyFom: LocalDate?,
+    val fom: LocalDate?,
+    val vurderingenGjelderFra: LocalDate?,
     val dokumenterBruktIVurdering: List<JournalpostId>,
     val erArbeidsevnenNedsatt: Boolean?,
     val harSkadeSykdomEllerLyte: Boolean,
@@ -52,7 +49,7 @@ data class SykdomsvurderingLøsningGammelDto(
     fun tilNyDto(): SykdomsvurderingLøsningDto {
         return SykdomsvurderingLøsningDto(
             begrunnelse = begrunnelse,
-            fom = nyFom ?: fom,
+            fom = fom ?: vurderingenGjelderFra!!, // Minst én av disse må være satt
             tom = null,
             dokumenterBruktIVurdering = dokumenterBruktIVurdering,
             erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
