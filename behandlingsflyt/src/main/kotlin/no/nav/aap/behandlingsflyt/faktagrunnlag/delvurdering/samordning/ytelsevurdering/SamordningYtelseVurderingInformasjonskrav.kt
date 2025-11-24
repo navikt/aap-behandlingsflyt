@@ -239,7 +239,15 @@ class SamordningYtelseVurderingInformasjonskrav(
                         .flatMap { it.ytelsePerioder }
                         .filter { it.gradering == nyPeriode.gradering || it.gradering == Prosent.`100_PROSENT` }
 
-                    if (!isPeriodeDekketAvEksisterendeUnion(relevanteEksPerioder, nyPeriode)) {
+                    secureLogger.info("Hentet samordningytelse eksisterende ${eksisterende?.ytelser} med nye samordningsytelser ${nye.map { it.ytelsePerioder }}  ${nye.map { it.ytelseType.name }}")
+                    secureLogger.info(
+                        "Overlapp " + isPeriodeDekketAvEksisterendePerioder(
+                            relevanteEksPerioder,
+                            nyPeriode
+                        ) + "VurderingeneErLike " + (nye == eksisterende?.ytelser)
+                    )
+
+                    if (!isPeriodeDekketAvEksisterendePerioder(relevanteEksPerioder, nyPeriode)) {
                         return true
                     }
                 }
@@ -262,7 +270,15 @@ class SamordningYtelseVurderingInformasjonskrav(
                         .flatMap { it.vurderingPerioder }
                         .filter { it.gradering == nyPeriode.gradering || it.gradering == Prosent.`100_PROSENT` }
 
-                    if (!isPeriodeDekketAvEksisterendeUnion(relevanteEksPerioder, nyPeriode)) {
+                    secureLogger.info("Hentet samordningytelse eksisterende ${eksisterendeVurderinger?.vurderinger} med nye samordningsytelser ${samordningYtelser.map { it.ytelsePerioder }}  ${samordningYtelser.map { it.ytelseType.name }}")
+                    secureLogger.info(
+                        "Overlapp " + isPeriodeDekketAvEksisterendePerioder(
+                            relevanteEksPerioder,
+                            nyPeriode
+                        ) + "VurderingeneErLike " + (samordningYtelser == eksisterendeVurderinger?.vurderinger)
+                    )
+
+                    if (!isPeriodeDekketAvEksisterendePerioder(relevanteEksPerioder, nyPeriode)) {
                         return true
                     }
                 }
@@ -272,7 +288,7 @@ class SamordningYtelseVurderingInformasjonskrav(
     }
 }
 
-    private fun <T : HarPeriode> isPeriodeDekketAvEksisterendeUnion(
+    private fun <T : HarPeriode> isPeriodeDekketAvEksisterendePerioder(
         eksisterendePerioder: List<T>,
         target: T
     ): Boolean {
