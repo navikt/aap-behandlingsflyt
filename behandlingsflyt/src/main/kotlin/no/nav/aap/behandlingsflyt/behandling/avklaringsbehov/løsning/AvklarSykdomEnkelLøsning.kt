@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarSykdomEnkelLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningGammelDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_SYKDOM_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -16,7 +16,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 @JsonTypeName(value = AVKLAR_SYKDOM_KODE)
 class AvklarSykdomEnkelLøsning(
     @param:JsonProperty("sykdomsvurderinger", required = true) 
-    val sykdomsvurderinger: List<SykdomsvurderingLøsningDto>,
+    val sykdomsvurderinger: List<SykdomsvurderingLøsningGammelDto>,
     @param:JsonProperty(
         "behovstype",
         required = true,
