@@ -189,7 +189,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             { "Tilkjent ytelse skal være beregnet her." }
 
         val periodeMedFullSamordning =
-            uthentetTilkjentYtelse.map { Segment(it.periode, it.tilkjent.gradering.samordningGradering) }
+            uthentetTilkjentYtelse.map { Segment(it.periode, it.tilkjent.graderingGrunnlag.samordningGradering) }
                 .let(::Tidslinje)
                 .filter { it.verdi == Prosent.`100_PROSENT` }.helePerioden()
 
@@ -235,11 +235,11 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
 
         assertTidslinje(tilkjentYtelse.tilTidslinje(),
             sykePengerPeriode.overlapp(periode)!! to {
-                assertThat(it.gradering.samordningGradering).isEqualTo(Prosent.`100_PROSENT`)
+                assertThat(it.graderingGrunnlag.samordningGradering).isEqualTo(Prosent.`100_PROSENT`)
                 assertThat(it.redusertDagsats()).isEqualTo(Beløp(0))
             },
             Periode(sykePengerPeriode.tom.plusDays(1), sak.rettighetsperiode.tom) to {
-                assertThat(it.gradering.samordningGradering).isEqualTo(Prosent.`0_PROSENT`)
+                assertThat(it.graderingGrunnlag.samordningGradering).isEqualTo(Prosent.`0_PROSENT`)
                 assertThat(it.redusertDagsats()).isNotEqualTo(Beløp(0))
             }
         )
@@ -433,7 +433,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             requireNotNull(dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(behandling.id) }) { "Tilkjent ytelse skal være beregnet her." }
 
         val periodeMedFullSamordning =
-            uthentetTilkjentYtelse.map { Segment(it.periode, it.tilkjent.gradering.samordningGradering) }
+            uthentetTilkjentYtelse.map { Segment(it.periode, it.tilkjent.graderingGrunnlag.samordningGradering) }
                 .let(::Tidslinje)
                 .filter { it.verdi == Prosent.`100_PROSENT` }.helePerioden()
 

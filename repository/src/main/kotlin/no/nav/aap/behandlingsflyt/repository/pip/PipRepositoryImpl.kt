@@ -15,6 +15,30 @@ class PipRepositoryImpl(private val connection: DBConnection) : PipRepository {
         }
     }
 
+    override fun sakEksisterer(saksnummer: Saksnummer): Boolean {
+        return connection.queryFirst("SELECT EXISTS(SELECT 1 FROM sak WHERE saksnummer = ?)") {
+            setParams {
+                setString(1, saksnummer.toString())
+            }
+            setRowMapper {
+                it.getBoolean("exists")
+            }
+        }
+    }
+
+    override fun behandlingEksisterer(behandlingReferanse: BehandlingReferanse): Boolean {
+        return connection.queryFirst(
+            "SELECT EXISTS(SELECT 1 FROM behandling WHERE referanse = ?)"
+        ) {
+            setParams {
+                setUUID(1, behandlingReferanse.referanse)
+            }
+            setRowMapper {
+                it.getBoolean("exists")
+            }
+        }
+    }
+
     override fun finnIdenterPåSak(saksnummer: Saksnummer): List<IdentPåSak> {
         val grunnlag = connection.queryList(
             """

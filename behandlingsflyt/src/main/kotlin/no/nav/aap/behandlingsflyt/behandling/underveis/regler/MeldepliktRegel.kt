@@ -14,7 +14,7 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.Clock
 import java.time.LocalDate
 
-/* Vurder meldeplikt, § 11-10. Basert på meldekort, fritak fra meldeplikt og at at det ikke er
+/** Vurder meldeplikt, § 11-10. Basert på meldekort, fritak fra meldeplikt og at at det ikke er
  * meldeplikt før vedtak er fattet.
  */
 class MeldepliktRegel(

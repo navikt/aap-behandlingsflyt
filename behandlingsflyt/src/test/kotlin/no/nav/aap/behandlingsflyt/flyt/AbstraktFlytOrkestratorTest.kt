@@ -481,7 +481,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
 
     protected fun løsSykdom(
         behandling: Behandling,
-        vurderingGjelderFra: LocalDate? = null,
+        vurderingGjelderFra: LocalDate,
         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean? = null,
         vissVarighet: Boolean? = true,
         erOppfylt: Boolean = true,
@@ -489,7 +489,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         return løsAvklaringsBehov(
             behandling,
             AvklarSykdomLøsning(
-                sykdomsvurderinger = listOf(
+                løsningerForPerioder = listOf(
                     SykdomsvurderingLøsningDto(
                         begrunnelse = "Er syk nok",
                         dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
@@ -500,7 +500,8 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
                         erArbeidsevnenNedsatt = true.takeIf { erOppfylt },
                         yrkesskadeBegrunnelse = if (erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense != null) "test" else null,
-                        vurderingenGjelderFra = vurderingGjelderFra,
+                        fom = vurderingGjelderFra,
+                        tom = null
                     )
                 )
             ),
@@ -1051,16 +1052,17 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
     }
 
     @JvmName("løsFramTilForutgåendeMedlemskapExt")
-    protected fun Behandling.løsFramTilForutgåendeMedlemskap(harYrkesskade: Boolean = false): Behandling {
-        return løsFramTilForutgåendeMedlemskap(this, harYrkesskade)
+    protected fun Behandling.løsFramTilForutgåendeMedlemskap(vurderingerGjelderFra: LocalDate, harYrkesskade: Boolean = false): Behandling {
+        return løsFramTilForutgåendeMedlemskap(this, vurderingerGjelderFra, harYrkesskade)
     }
 
     protected fun løsFramTilForutgåendeMedlemskap(
         behandling: Behandling,
+        vurderingerGjelderFra: LocalDate,
         harYrkesskade: Boolean = false,
     ): Behandling {
         var behandling = behandling
-        behandling = løsSykdom(behandling)
+        behandling = løsSykdom(behandling, vurderingerGjelderFra)
             .løsBistand()
             .løsAvklaringsBehov(
                 RefusjonkravLøsning(
