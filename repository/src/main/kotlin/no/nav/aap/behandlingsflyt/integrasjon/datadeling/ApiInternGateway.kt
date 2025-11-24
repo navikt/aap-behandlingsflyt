@@ -177,7 +177,8 @@ class ApiInternGatewayImpl() : ApiInternGateway {
             uri.resolve("/arena/person/aap/eksisterer"),
             PostRequest(body = sakerRequest),
             mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }
-        )!!
+        )
+        requireNotNull(remoteResponse, "Fikk ikke gyldig svar på om personen eksisterer i AAP Arena")
         return ArenaStatusResponse(remoteResponse.eksisterer)
     }
 }
