@@ -1,7 +1,9 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangArbeidLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.flate.OvergangArbeidVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -334,15 +336,14 @@ class AvklaringsbehoveneTest {
     fun `Ikke-periodiserte løsninger skal ikke valideres mot avklaringsbehovperioder`() {
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, BehandlingId(12))
         val avklaringsbehov = Avklaringsbehov(
-            definisjon = Definisjon.AVKLAR_SYKDOM,
-            funnetISteg = StegType.AVKLAR_SYKDOM,
+            definisjon = Definisjon.FATTE_VEDTAK,
+            funnetISteg = StegType.FATTE_VEDTAK,
             id = 1L,
             kreverToTrinn = null
         )
         avklaringsbehovene.leggTil(
             perioderSomIkkeErTilstrekkeligVurdert = setOf(
-                Periode(1 januar 2021, 1 februar 2021),
-                Periode(1 mars 2021, 1 april 2021)
+                Periode(1 mars 2021, 1 april 2021) // Ikke egentlig en reell case
             ),
             definisjoner = listOf(
                 avklaringsbehov.definisjon
@@ -353,19 +354,13 @@ class AvklaringsbehoveneTest {
 
         assertDoesNotThrow {
             avklaringsbehovene.validerPerioder(
-                løsning = AvklarSykdomLøsning(
+                løsning = FatteVedtakLøsning(
                     listOf(
-                        SykdomsvurderingLøsningDto(
-                            begrunnelse = "Er syk nok",
-                            dokumenterBruktIVurdering = listOf(JournalpostId("1349532")),
-                            harSkadeSykdomEllerLyte = true,
-                            erSkadeSykdomEllerLyteVesentligdel = true,
-                            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-                            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                            erArbeidsevnenNedsatt = true,
-                            yrkesskadeBegrunnelse = null,
-                            vurderingenGjelderFra = 1 februar 2021,
+                        TotrinnsVurdering(
+                            godkjent = true,
+                            begrunnelse = "begrunnelse",
+                            definisjon = Definisjon.AVKLAR_SYKDOM.kode,
+                            grunner = null,
                         )
                     )
                 ),
