@@ -329,7 +329,7 @@ public enum class Definisjon(
         kode = AvklaringsbehovKode.`5096`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.FASTSETT_UTTAK,
-        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
     ),
     FORESLÅ_VEDTAK(
         kode = AvklaringsbehovKode.`5098`,

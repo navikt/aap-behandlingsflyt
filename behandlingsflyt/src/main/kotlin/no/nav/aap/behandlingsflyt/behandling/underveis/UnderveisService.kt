@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis
 
-import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedUtlederService
+import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.InstitusjonsoppholdUtlederService
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlagRepository
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.AapEtterRegel
@@ -48,7 +48,7 @@ class UnderveisService(
     private val meldekortRepository: MeldekortRepository,
     private val underveisRepository: UnderveisRepository,
     private val aktivitetsplikt11_7Repository: Aktivitetsplikt11_7Repository,
-    private val etAnnetStedUtlederService: EtAnnetStedUtlederService,
+    private val institusjonsoppholdUtlederService: InstitusjonsoppholdUtlederService,
     private val arbeidsevneRepository: ArbeidsevneRepository,
     private val meldepliktRepository: MeldepliktRepository,
     private val overstyringMeldepliktRepository: OverstyringMeldepliktRepository,
@@ -64,7 +64,7 @@ class UnderveisService(
         meldekortRepository = repositoryProvider.provide(),
         underveisRepository = repositoryProvider.provide(),
         aktivitetsplikt11_7Repository = repositoryProvider.provide(),
-        etAnnetStedUtlederService = EtAnnetStedUtlederService(repositoryProvider),
+        institusjonsoppholdUtlederService = InstitusjonsoppholdUtlederService(repositoryProvider),
         arbeidsevneRepository = repositoryProvider.provide(),
         meldepliktRepository = repositoryProvider.provide(),
         meldeperiodeRepository = repositoryProvider.provide(),
@@ -151,9 +151,9 @@ class UnderveisService(
         val meldekort = meldekortGrunnlag?.meldekort().orEmpty()
         val innsendingsTidspunkt = meldekortGrunnlag?.innsendingsdatoPerMelding().orEmpty()
         val kvote = kvoteService.beregn(behandlingId)
-        val utlederResultat = etAnnetStedUtlederService.utled(behandlingId)
+        val utlederResultat = institusjonsoppholdUtlederService.utled(behandlingId)
 
-        val etAnnetSted = MapInstitusjonoppholdTilRegel.map(utlederResultat)
+        val institusjonsopphold = MapInstitusjonoppholdTilRegel.map(utlederResultat)
 
         val aktivitetsplikt11_7Grunnlag = aktivitetsplikt11_7Repository.hentHvisEksisterer(behandlingId)
             ?: Aktivitetsplikt11_7Grunnlag(vurderinger = emptyList())
@@ -184,7 +184,7 @@ class UnderveisService(
             innsendingsTidspunkt = innsendingsTidspunkt,
             kvoter = kvote,
             aktivitetsplikt11_7Grunnlag = aktivitetsplikt11_7Grunnlag,
-            etAnnetSted = etAnnetSted,
+            institusjonsopphold = institusjonsopphold,
             arbeidsevneGrunnlag = arbeidsevneGrunnlag,
             meldepliktGrunnlag = meldepliktGrunnlag,
             overstyringMeldepliktGrunnlag = overstyringMeldepliktGrunnlag,

@@ -1,5 +1,4 @@
-package no.nav.aap.behandlingsflyt.behandling.etannetsted
-
+package no.nav.aap.behandlingsflyt.behandling.institusjonsopphold
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
@@ -10,7 +9,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Helsei
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Soningsvurdering
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.barnetillegg.BarnetilleggRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.test.MockConnection
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
@@ -22,11 +20,11 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class EtAnnetStedUtlederServiceTest {
+internal class InstitusjonsoppholdServiceTest {
     val connection = MockConnection().toDBConnection()
 
     // TODO: Erstatt med InMemory*Repo
-    val utlederService = EtAnnetStedUtlederService(
+    val utlederService = InstitusjonsoppholdUtlederService(
         BarnetilleggRepositoryImpl(connection),
         InstitusjonsoppholdRepositoryImpl(connection),
         InMemorySakRepository,
@@ -35,7 +33,7 @@ class EtAnnetStedUtlederServiceTest {
 
     @Test
     fun `Oppholder seg på inst mellom søknads tidspunkt og behandlingstidspunkt`() {
-        val input = EtAnnetStedInput(
+        val input = InstitusjonsoppholdInput(
             institusjonsOpphold = listOf(
                 Segment(
                     Periode(
@@ -63,7 +61,7 @@ class EtAnnetStedUtlederServiceTest {
     @Test
     fun `skal først trigge avklaring når vi oppholdet varer lenger enn 3 kalender måneder `() {
         val innleggelsesperiode = Periode(27 februar 2024, 31 mai 2024)
-        val input = EtAnnetStedInput(
+        val input = InstitusjonsoppholdInput(
             institusjonsOpphold = listOf(
                 Segment(
                     innleggelsesperiode,
@@ -96,7 +94,7 @@ class EtAnnetStedUtlederServiceTest {
     @Test
     fun `soner noe, det krever avklaring`() {
         val soningsstart = LocalDate.now().minusMonths(5)
-        val input = EtAnnetStedInput(
+        val input = InstitusjonsoppholdInput(
             institusjonsOpphold = listOf(
                 Segment(
                     Periode(
@@ -136,7 +134,7 @@ class EtAnnetStedUtlederServiceTest {
     @Test
     fun `soner noe, det krever avklaring men ikke etter at det har blitt vurdert`() {
         val soningsstart = LocalDate.now().minusMonths(5)
-        val input = EtAnnetStedInput(
+        val input = InstitusjonsoppholdInput(
             institusjonsOpphold = listOf(
                 Segment(
                     Periode(
@@ -181,7 +179,7 @@ class EtAnnetStedUtlederServiceTest {
 
     @Test
     fun `Delvis overlappende barnetillegg trenger avklaring`() {
-        val input = EtAnnetStedInput(
+        val input = InstitusjonsoppholdInput(
             institusjonsOpphold = listOf(
                 Segment(
                     Periode(
@@ -218,7 +216,7 @@ class EtAnnetStedUtlederServiceTest {
 
     @Test
     fun `Delvis overlappende barnetillegg trenger ikke avklaring`() {
-        val input = EtAnnetStedInput(
+        val input = InstitusjonsoppholdInput(
             institusjonsOpphold = listOf(
                 Segment(
                     Periode(
@@ -259,7 +257,7 @@ class EtAnnetStedUtlederServiceTest {
             LocalDate.now().minusMonths(12),
             LocalDate.now().minusMonths(5)
         )
-        val input = EtAnnetStedInput(
+        val input = InstitusjonsoppholdInput(
             institusjonsOpphold = listOf(
                 Segment(
                     innleggelsesperiode,
@@ -311,7 +309,7 @@ class EtAnnetStedUtlederServiceTest {
             LocalDate.now()
         )
         val rettighetsperiode = Periode(LocalDate.now().minusMonths(6), LocalDate.now().plusYears(2).plusMonths(6))
-        val input = EtAnnetStedInput(
+        val input = InstitusjonsoppholdInput(
             institusjonsOpphold = listOf(
                 Segment(
                     innleggelsesperiode,
@@ -345,7 +343,7 @@ class EtAnnetStedUtlederServiceTest {
 
     @Test
     fun `ingen opphold trengs ingen avklaring`() {
-        val input = EtAnnetStedInput(
+        val input = InstitusjonsoppholdInput(
             institusjonsOpphold = emptyList(),
             soningsvurderinger = emptyList(),
             barnetillegg = emptyList(),
@@ -359,7 +357,7 @@ class EtAnnetStedUtlederServiceTest {
 
     @Test
     fun `barnetillegg gjennom hele periodern gir ingen avklaring`() {
-        val input = EtAnnetStedInput(
+        val input = InstitusjonsoppholdInput(
             institusjonsOpphold = listOf(
                 Segment(
                     Periode(

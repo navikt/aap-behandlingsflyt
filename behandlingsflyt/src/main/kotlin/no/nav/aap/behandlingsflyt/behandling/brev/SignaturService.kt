@@ -28,7 +28,7 @@ class SignaturService(
         return when (brevbestilling.typeBrev) {
             TypeBrev.VEDTAK_AVSLAG, TypeBrev.VEDTAK_INNVILGELSE, TypeBrev.VEDTAK_ENDRING, TypeBrev.KLAGE_AVVIST,
             TypeBrev.KLAGE_OPPRETTHOLDELSE, TypeBrev.KLAGE_TRUKKET, TypeBrev.VEDTAK_11_17, TypeBrev.VEDTAK_11_18,
-            TypeBrev.VEDTAK_11_7, TypeBrev.VEDTAK_11_9 -> {
+            TypeBrev.VEDTAK_11_7, TypeBrev.VEDTAK_11_9, TypeBrev.VEDTAK_11_23_SJETTE_LEDD -> {
 
                 val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(brevbestilling.behandlingId)
                 listOfNotNull(

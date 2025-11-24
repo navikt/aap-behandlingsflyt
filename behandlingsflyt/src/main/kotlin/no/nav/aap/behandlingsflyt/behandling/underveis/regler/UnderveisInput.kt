@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
-import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetSted
+import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.Institusjonsopphold
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.underveis.Kvoter
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
@@ -24,7 +24,7 @@ data class UnderveisInput(
     val kvoter: Kvoter,
     val aktivitetsplikt11_7Grunnlag: Aktivitetsplikt11_7Grunnlag,
     val oppholdskravGrunnlag: OppholdskravGrunnlag,
-    val etAnnetSted: List<EtAnnetSted>,
+    val institusjonsopphold: List<Institusjonsopphold>,
     val arbeidsevneGrunnlag: ArbeidsevneGrunnlag,
     val meldepliktGrunnlag: MeldepliktGrunnlag,
     val overstyringMeldepliktGrunnlag: OverstyringMeldepliktGrunnlag,

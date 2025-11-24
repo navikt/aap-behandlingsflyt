@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
-import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedUtlederService
+import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.InstitusjonsoppholdUtlederService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
@@ -21,9 +21,9 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 
-class EtAnnetStedSteg(
+class InstitusjonsoppholdSteg(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
-    private val etAnnetStedUtlederService: EtAnnetStedUtlederService,
+    private val institusjonsoppholdUtlederService: InstitusjonsoppholdUtlederService,
     private val institusjonsoppholdRepository: InstitusjonsoppholdRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
@@ -33,7 +33,7 @@ class EtAnnetStedSteg(
     constructor(repositoryProvider: RepositoryProvider) : this(
         avklaringsbehovRepository = repositoryProvider.provide(),
         institusjonsoppholdRepository = repositoryProvider.provide(),
-        etAnnetStedUtlederService = EtAnnetStedUtlederService(repositoryProvider),
+        institusjonsoppholdUtlederService = InstitusjonsoppholdUtlederService(repositoryProvider),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
         vilkårsresultatRepository = repositoryProvider.provide(),
@@ -102,20 +102,20 @@ class EtAnnetStedSteg(
 
 
     private fun perioderHelseoppholdIkkeErTilstrekkeligVurdert(kontekst: FlytKontekstMedPerioder): Set<Periode> {
-        val harBehovForAvklaringer = etAnnetStedUtlederService.utled(kontekst.behandlingId)
+        val harBehovForAvklaringer = institusjonsoppholdUtlederService.utled(kontekst.behandlingId)
         return harBehovForAvklaringer.perioderTilVurdering.map { it.harUavklartHelseopphold() }.filter { it.verdi }
             .komprimer().perioder().toSet()
     }
 
     private fun perioderSoningOppholdIkkeErTilstrekkeligVurdert(kontekst: FlytKontekstMedPerioder): Set<Periode> {
-        val harBehovForAvklaringer = etAnnetStedUtlederService.utled(kontekst.behandlingId)
+        val harBehovForAvklaringer = institusjonsoppholdUtlederService.utled(kontekst.behandlingId)
         return harBehovForAvklaringer.perioderTilVurdering.map { it.harUavklartSoningsopphold() }.filter { it.verdi }
             .komprimer().perioder().toSet()
     }
 
     private fun perioderMedVurderingsbehovHelse(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
         val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
-        val harBehovForAvklaringer = etAnnetStedUtlederService.utled(kontekst.behandlingId)
+        val harBehovForAvklaringer = institusjonsoppholdUtlederService.utled(kontekst.behandlingId)
 
         return Tidslinje.zip2(tidligereVurderingsutfall, harBehovForAvklaringer.perioderTilVurdering)
             .mapValue { (behandlingsutfall, denneBehandling) ->
@@ -131,7 +131,7 @@ class EtAnnetStedSteg(
 
     private fun perioderMedVurderingsbehovSoning(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
         val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
-        val harBehovForAvklaringer = etAnnetStedUtlederService.utled(kontekst.behandlingId)
+        val harBehovForAvklaringer = institusjonsoppholdUtlederService.utled(kontekst.behandlingId)
 
         return Tidslinje.zip2(tidligereVurderingsutfall, harBehovForAvklaringer.perioderTilVurdering)
             .mapValue { (behandlingsutfall, denneBehandling) ->
@@ -150,7 +150,7 @@ class EtAnnetStedSteg(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
         ): BehandlingSteg {
-            return EtAnnetStedSteg(repositoryProvider)
+            return InstitusjonsoppholdSteg(repositoryProvider)
         }
 
         override fun type(): StegType {
