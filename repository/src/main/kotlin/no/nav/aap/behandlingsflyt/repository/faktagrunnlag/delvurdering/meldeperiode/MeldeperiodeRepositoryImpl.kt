@@ -21,16 +21,14 @@ class MeldeperiodeRepositoryImpl(private val connection: DBConnection) : Meldepe
             WHERE behandling_id = ? AND aktiv = true
             order by periode
         """.trimIndent()
-        val perioder = connection.queryList(query) {
+        return connection.queryFirstOrNull<Periode>(query) {
             setParams {
                 setLong(1, behandlingId.toLong())
             }
             setRowMapper {
                 it.getPeriode("periode")
             }
-        }.toList()
-
-        return perioder.firstOrNull()
+        }
     }
 
     override fun hentMeldeperioder(
