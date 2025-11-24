@@ -9,8 +9,10 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.komponenter.type.Periode
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
 import java.util.*
 
 class FastsettMeldeperiodeStegTest {
@@ -71,5 +73,23 @@ class FastsettMeldeperiodeStegTest {
                 ), it
             )
         }
+    }
+
+    @Test
+    fun `skal ikke oppdatere perioden dersom den har samme startdato`() {
+        val steg = FastsettMeldeperiodeSteg(
+            meldeperiodeRepository = InMemoryMeldeperiodeRepository,
+            tidligereVurderinger = FakeTidligereVurderinger(),
+            sakRepository = InMemorySakRepository,
+        )
+
+        val startMeldeperiode = LocalDate.of(2024, 1, 1)
+        val behandlingId = BehandlingId(Random().nextLong())
+        val meldeperiodeFraStart = Periode(startMeldeperiode, startMeldeperiode)
+        val nyMeldeperiodeMedUlikSluttdato = Periode(startMeldeperiode, startMeldeperiode.plusDays(14))
+        InMemoryMeldeperiodeRepository.lagreFørsteMeldeperiode(behandlingId, meldeperiodeFraStart)
+        steg.oppdaterFørsteMeldeperiode(behandlingId, nyMeldeperiodeMedUlikSluttdato)
+        val persistertMeldeperiode = InMemoryMeldeperiodeRepository.hentFørsteMeldeperiode(behandlingId)
+        assertThat(persistertMeldeperiode).isEqualTo(meldeperiodeFraStart)
     }
 }
