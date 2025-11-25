@@ -4,9 +4,10 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
-import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykepengerErstatningFaktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykepengeerstatningVilkår
+import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykepengerErstatningFaktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
@@ -81,8 +82,10 @@ class VurderSykepengeErstatningSteg private constructor(
                     sykepengeerstatningGrunnlag = sykepengerErstatningRepository.hentHvisEksisterer(kontekst.behandlingId)
                 )
                 SykepengeerstatningVilkår(vilkårsresultat).vurder(grunnlag = grunnlag)
+
                 vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
             }
+
             VurderingType.MELDEKORT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
@@ -99,30 +102,46 @@ class VurderSykepengeErstatningSteg private constructor(
 
         val kravDato = kontekst.rettighetsperiode.fom
 
-        val sykdomsvurderinger =
-            sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)
-                ?.somSykdomsvurderingstidslinje()
-                .orEmpty()
+        val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)
+
+        val sykdomsvurderinger = sykdomGrunnlag
+            ?.somSykdomsvurderingstidslinje()
+            .orEmpty()
 
         val bistandvurderinger =
             bistandRepository.hentHvisEksisterer(kontekst.behandlingId)?.somBistandsvurderingstidslinje()
                 ?: Tidslinje.empty()
 
-        return Tidslinje.zip3(tidligereVurderingsutfall, sykdomsvurderinger, bistandvurderinger)
-            .mapValue { (behandlingsutfall, sykdomsvurdering, bistandvurdering) ->
-                when (behandlingsutfall) {
-                    null -> false
-                    TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
-                    TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
-                    TidligereVurderinger.Behandlingsutfall.UKJENT -> {
-                        (sykdomsvurdering?.erOppfyltSettBortIfraVissVarighet() == true && !sykdomsvurdering.erOppfylt(
-                            kravDato
-                        )) || (bistandvurdering?.erBehovForBistand() == false && sykdomsvurdering?.erOppfylt(
-                            kravDato
-                        ) == true)
+        val yrkesskadevurderinger = sykdomGrunnlag?.yrkesskadevurdringTidslinje(kontekst.rettighetsperiode).orEmpty()
+
+        return Tidslinje.map4(
+            tidligereVurderingsutfall,
+            sykdomsvurderinger,
+            bistandvurderinger,
+            yrkesskadevurderinger
+        ) { behandlingsutfall, sykdomsvurdering, bistandvurdering, yrkesskadevurdering ->
+            // TODO: implementer overload for map4 som også gir perioden man vurderer
+            when (behandlingsutfall) {
+                null -> false
+                TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
+                TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
+                TidligereVurderinger.Behandlingsutfall.UKJENT -> {
+                    when {
+                        /* ikke nødvendig å vurdere SPE fordi medlemmet oppfyller vilkårene for ordinær aap */
+                        // TODO: må sjekke kravdato opp mot perioden på segmentet vi er i, ikke opp mot fom til vurderingen
+                        sykdomsvurdering?.erOppfylt(kravDato) == true && bistandvurdering?.erBehovForBistand() != true ->
+                            /* TODO: Her burde vi også se på 11-17 og 11-18 før vi sier ja */
+                            true
+
+                        /* i dette caset oppfyller ikke medlemmet vilkåret for ordinær AAP, men SPE er mulig */
+                        sykdomsvurdering?.erOppfyltOrdinærtEllerMedYrkesskadeMenIkkeVissVarighet(kravDato, yrkesskadevurdering) == true ->
+                            true
+
+                        else -> false
                     }
                 }
             }
+        }
     }
 
     companion object : FlytSteg {
