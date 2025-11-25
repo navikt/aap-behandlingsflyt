@@ -61,7 +61,7 @@ private const val HØYESTE_GRADERING_OPPTRAPPING = 80
  */
 class GraderingArbeidRegel : UnderveisRegel {
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
-        require(input.rettighetsperiode.inneholder(resultat.helePerioden())) {
+        require(input.periodeForVurdering.inneholder(resultat.helePerioden())) {
             "kan ikke vurdere utenfor rettighetsperioden fordi meldeperioden ikke er definert"
         }
 
@@ -100,11 +100,12 @@ class GraderingArbeidRegel : UnderveisRegel {
         resultat: Tidslinje<Vurdering>,
         input: UnderveisInput
     ): Tidslinje<ArbeidsGradering> {
-        val opplysninger = Tidslinje(input.rettighetsperiode, OpplysningerOmArbeid())
+        val opplysninger = Tidslinje(input.periodeForVurdering, OpplysningerOmArbeid())
             .outerJoin(arbeidsevnevurdering(input), OpplysningerOmArbeid::mergePrioriterHøyre)
             .outerJoin(nullTimerVedFritakFraMeldeplikt(input), OpplysningerOmArbeid::mergePrioriterHøyre)
             .outerJoin(opplysningerFraMeldekort(input), OpplysningerOmArbeid::mergePrioriterHøyre)
             .outerJoin(harRettTidslinje(resultat), OpplysningerOmArbeid::mergePrioriterHøyre)
+
 
         return groupByMeldeperiode(resultat, opplysninger)
             .flatMap { meldeperiode ->

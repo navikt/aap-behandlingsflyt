@@ -1299,7 +1299,7 @@ Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su
         input: UnderveisInput,
         nå: LocalDate,
         vurderinger: Tidslinje<Vurdering> = Tidslinje(
-            input.rettighetsperiode,
+            input.periodeForVurdering,
             Vurdering(fårAapEtter = BISTANDSBEHOV)
         ),
     ): Tidslinje<Vurdering> {

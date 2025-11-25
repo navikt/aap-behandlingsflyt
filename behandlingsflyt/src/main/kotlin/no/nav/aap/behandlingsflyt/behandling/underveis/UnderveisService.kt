@@ -3,8 +3,10 @@ package no.nav.aap.behandlingsflyt.behandling.underveis
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.InstitusjonsoppholdUtlederService
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlagRepository
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.AapEtterRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.GraderingArbeidRegel
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.InstitusjonRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MapInstitusjonoppholdTilRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktRegel
@@ -15,6 +17,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UnderveisInput
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UtledMeldeperiodeRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Vurdering
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
@@ -31,12 +34,14 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Meldepl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -139,7 +144,7 @@ class UnderveisService(
 
     internal fun vurderRegler(input: UnderveisInput): Tidslinje<Vurdering> {
         return regelset.fold(Tidslinje()) { resultat, regel ->
-            regel.vurder(input, resultat).begrensetTil(input.rettighetsperiode)
+            regel.vurder(input, resultat).begrensetTil(input.periodeForVurdering)
         }
     }
 
@@ -169,15 +174,17 @@ class UnderveisService(
 
         val arbeidsopptrappingPerioder = arbeidsopptrappingRepository.hentPerioder(behandlingId)
 
-        val meldeperioder = meldeperiodeRepository.hent(behandlingId)
+        val periodeForVurdering = utledPeriodeForUnderveisvurderinger(behandlingId, sak)
+        val meldeperioder = meldeperiodeRepository.hentMeldeperioder(behandlingId, periodeForVurdering)
 
         val oppholdskravGrunnlag = oppholdskravRepository.hentHvisEksisterer(behandlingId)
             ?: OppholdskravGrunnlag(vurderinger = emptyList())
 
         val vedtaksdatoFørstegangsbehandling = vedtakService.vedtakstidspunktFørstegangsbehandling(sakId)
 
+
         return UnderveisInput(
-            rettighetsperiode = sak.rettighetsperiode,
+            periodeForVurdering = periodeForVurdering,
             vilkårsresultat = vilkårsresultat,
             opptrappingPerioder = arbeidsopptrappingPerioder,
             meldekort = meldekort,
@@ -191,6 +198,29 @@ class UnderveisService(
             oppholdskravGrunnlag = oppholdskravGrunnlag,
             meldeperioder = meldeperioder,
             vedtaksdatoFørstegangsbehandling = vedtaksdatoFørstegangsbehandling?.toLocalDate(),
-        )
+            )
+    }
+
+    private fun utledPeriodeForUnderveisvurderinger(
+        behandlingId: BehandlingId,
+        sak: Sak
+    ): Periode {
+        val startdatoForBehandlingen =
+            VirkningstidspunktUtleder(vilkårsresultatRepository).utledVirkningsTidspunkt(behandlingId)
+                ?: sak.rettighetsperiode.fom
+
+        /**
+         * TODO: Dersom sluttdato skal utvides må det håndteres her
+         */
+        val sluttdatoForBehandlingen = maxOf(sak.rettighetsperiode.fom, startdatoForBehandlingen)
+            .plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
+
+        /**
+         * For behandlinger som har passert alle vilkår og vurderinger med kortere rettighetsperiode
+         * enn "sluttdatoForBehandlingen" så vil det bli feil å vurdere underveis lenger enn faktisk rettighetsperiode.
+         */
+        val sluttdatoForBakoverkompabilitet = minOf(sak.rettighetsperiode.tom, sluttdatoForBehandlingen)
+
+        return Periode(sak.rettighetsperiode.fom, sluttdatoForBakoverkompabilitet)
     }
 }
