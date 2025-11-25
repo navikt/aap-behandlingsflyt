@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsev
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
-import java.time.LocalDate
 import java.time.LocalDateTime
 
 data class SamordningYtelse(
@@ -17,7 +16,7 @@ data class SamordningYtelsePeriode(
     override val periode: Periode,
     val gradering: Prosent?,
     val kronesum: Number? = null
-) : HarPeriode
+) : SamordningPeriode
 
 data class SamordningVurdering(
     val ytelseType: Ytelse,
@@ -29,7 +28,7 @@ data class SamordningVurderingPeriode(
     val gradering: Prosent?,
     val kronesum: Number? = null,
     val manuell: Boolean?,
-) : HarPeriode
+) : SamordningPeriode
 
 data class SamordningYtelseGrunnlag(
     val grunnlagId: Long,
@@ -44,6 +43,6 @@ data class SamordningVurderingGrunnlag(
     val vurdertTidspunkt: LocalDateTime? = null
 )
 
-interface HarPeriode {
+interface SamordningPeriode {
     val periode: Periode
 }

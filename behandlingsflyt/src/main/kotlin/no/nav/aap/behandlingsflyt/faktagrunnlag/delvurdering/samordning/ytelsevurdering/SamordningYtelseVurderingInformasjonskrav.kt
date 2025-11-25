@@ -286,7 +286,7 @@ class SamordningYtelseVurderingInformasjonskrav(
     }
 }
 
-private fun <T : HarPeriode> isPeriodeDekketAvEksisterendePerioder(
+private fun <T : SamordningPeriode> isPeriodeDekketAvEksisterendePerioder(
     eksisterendePerioder: List<T>,
     target: T
 ): Boolean {
