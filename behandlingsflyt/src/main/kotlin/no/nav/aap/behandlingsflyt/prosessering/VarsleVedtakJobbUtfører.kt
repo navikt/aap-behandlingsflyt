@@ -13,11 +13,14 @@ import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
+import org.slf4j.LoggerFactory
 
 class VarsleVedtakJobbUtfører(
     private val repositoryProvider: RepositoryProvider,
     private val gatewayProvider: GatewayProvider,
 ) : JobbUtfører {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
         val samGateway: SamGateway = gatewayProvider.provide()
@@ -29,7 +32,8 @@ class VarsleVedtakJobbUtfører(
         val behandling = behandlingRepository.hent(behandlingId)
         val sak = sakRepository.hent(behandling.sakId)
         val vedtak = vedtakRepository.hent(behandling.id)
-        val vedtakId = requireNotNull(vedtakRepository.hentId(behandling.id))
+        val vedtakId =
+            requireNotNull(vedtakRepository.hentId(behandling.id)) { "Fant ikke vedtak for behandlingId $behandlingId." }
 
 
         requireNotNull(vedtak) { "Forventer at vedtak-objekter er lagret når denne jobben kjøres." }
@@ -57,6 +61,7 @@ class VarsleVedtakJobbUtfører(
         // På sikt skal vi varsle hver gang det skjer en "betydelig" endring i ytelsen. F.eks rettighetstype, stans,
         // etc.
         if (behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling) {
+            log.info("Varsler SAM for behandling med referanse ${behandling.referanse} og saksnummer ${sak.saksnummer}.")
             samGateway.varsleVedtak(request)
         }
 
