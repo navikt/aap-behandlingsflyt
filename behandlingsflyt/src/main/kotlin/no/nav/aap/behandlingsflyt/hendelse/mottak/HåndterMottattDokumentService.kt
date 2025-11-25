@@ -26,7 +26,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRe
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Omgjøringskilde
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Oppfølgingsoppgave
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppfølgingsoppgaveV0
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingBehandlingsstatus
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelseV0
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -191,18 +190,23 @@ class HåndterMottattDokumentService(
     ) {
         when (melding) {
             is TilbakekrevingHendelseV0 -> {
-                val behandlingId = melding.eksternBehandlingId?.let { BehandlingId(it.toLong()) } ?: error("Kan ikke finne behandlingId i tilbakekrevinghendelse")
+                log.info("Mottatt tilbakekrevingHendelse for sakId $sakId og eksternBehandlingId ${melding.eksternBehandlingId}")
+                val behandlingsref = melding.eksternBehandlingId  ?: error("Kan ikke finne behandlingId i tilbakekrevinghendelse")
                 tilbakekrevingService.håndter(sakId, melding.tilTilbakekrevingshendelse())
-                /**
-                 * TODO:
-                 * Tror ikke vi alltid får med behandlingId i meldingen - hvordan "markerer" vi hendelsen da?
-                 * Sjekk om tilbakekrevingen finnes i Kelvin - hvis ikke opprett
-                 * Oppdater oppgave basert på tilstand [TilbakekrevingBehandlingsstatus] - mangler "Sendt til beslutter" og "retur fra beslutter"
-                 */
-                TODO()
-//                mottaDokumentService.markerSomBehandlet(sakId, behandlingId, referanse)
+                val behandlingId = try {
+                    behandlingRepository.hent(referanse = BehandlingReferanse(UUID.fromString(behandlingsref))).id
+                } catch (_: NoSuchElementException) {
+                    //Forsøker å finne behandlingId fra siste iverksatte behandling dersom vi ikke finner den utifra eksternBehandlingId.
+                    finnSisteIverksatteBehandling(sakId)
+                }
+                mottaDokumentService.markerSomBehandlet(sakId, behandlingId, referanse)
             }
         }
+    }
+
+    private fun finnSisteIverksatteBehandling(sakId: SakId): BehandlingId {
+        return behandlingRepository.hentAlleFor(sakId).firstOrNull { it.status().erAvsluttet() }?.id
+            ?: throw IllegalStateException("Kan ikke finne behandlingId for siste iverksatte behandling")
     }
 
     private fun TilbakekrevingHendelseV0.tilTilbakekrevingshendelse(): Tilbakekrevingshendelse {
