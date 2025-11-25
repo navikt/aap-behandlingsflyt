@@ -34,7 +34,7 @@ class RettighetstyperFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) 
             assertThat(åpneAvklaringsbehov).isNotEmpty()
             assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         }
-            .løsSykdom(sak.rettighetsperiode.fom, vissVarighet = false, erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true)
+            .løsSykdom(sak.rettighetsperiode.fom, vissVarighet = false)
             .medKontekst {
                 assertThat(åpneAvklaringsbehov.map { it.definisjon }).describedAs(
                     "Bistandsbehov skal ikke vurderes hvis viss varighet er nei"

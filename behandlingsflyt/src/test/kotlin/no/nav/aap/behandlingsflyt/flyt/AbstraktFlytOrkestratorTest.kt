@@ -494,11 +494,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                         dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                         harSkadeSykdomEllerLyte = erOppfylt,
                         erSkadeSykdomEllerLyteVesentligdel = true.takeIf { erOppfylt },
-                        erNedsettelseIArbeidsevneMerEnnHalvparten =  when {
-                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense != null -> false
-                            erOppfylt -> true
-                            else -> null
-                        },
+                        erNedsettelseIArbeidsevneMerEnnHalvparten = true.takeIf { erOppfylt },
                         erNedsettelseIArbeidsevneAvEnVissVarighet = vissVarighet.takeIf { erOppfylt },
                         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
                         erArbeidsevnenNedsatt = true.takeIf { erOppfylt },

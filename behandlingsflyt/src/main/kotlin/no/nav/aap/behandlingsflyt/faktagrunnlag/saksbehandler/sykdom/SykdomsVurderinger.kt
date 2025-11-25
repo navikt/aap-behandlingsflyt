@@ -29,28 +29,6 @@ data class Sykdomsvurdering(
     val opprettet: Instant,
     val vurdertAv: Bruker,
 ) {
-    fun erOppfyltOrdinærtEllerMedYrkesskadeSettBortFraVissVarighet(yrkesskadevurdering: Yrkesskadevurdering?): Boolean {
-        return harSkadeSykdomEllerLyte
-                && erArbeidsevnenNedsatt == true
-                && erSkadeSykdomEllerLyteVesentligdel == true
-                && (
-                erNedsettelseIArbeidsevneMerEnnHalvparten == true ||
-                        ((yrkesskadevurdering?.erÅrsakssammenheng ?: false) &&
-                                erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true)
-                )
-    }
-
-    fun erOppfyltOrdinærtEllerMedYrkesskadeMenIkkeVissVarighet(kravdato: LocalDate, yrkesskadevurdering: Yrkesskadevurdering?): Boolean {
-        return harSkadeSykdomEllerLyte
-                && erArbeidsevnenNedsatt == true
-                && erSkadeSykdomEllerLyteVesentligdel == true
-                && (if (erFørsteVurdering(kravdato)) erNedsettelseIArbeidsevneAvEnVissVarighet == false else true)
-                && (
-                erNedsettelseIArbeidsevneMerEnnHalvparten == true ||
-                        ((yrkesskadevurdering?.erÅrsakssammenheng ?: false) &&
-                               erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true)
-                )
-    }
 
     /* Denne metoden må sannsynligvis generaliseres når vi skal implementere gjeninntreden etter opphør. */
     fun erFørsteVurdering(kravdato: LocalDate): Boolean {

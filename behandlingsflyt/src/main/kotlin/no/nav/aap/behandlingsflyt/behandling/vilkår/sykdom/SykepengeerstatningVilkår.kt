@@ -10,7 +10,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 
@@ -22,17 +21,14 @@ class SykepengeerstatningVilkår(vilkårsresultat: Vilkårsresultat) :
         val sykdomsvurderingTidslinje = grunnlag.sykdomGrunnlag?.somSykdomsvurderingstidslinje(
             maksDato = grunnlag.rettighetsperiode.tom
         ).orEmpty()
-        val yrkesskadevurderingTidslinje = grunnlag.sykdomGrunnlag
-            ?.yrkesskadevurdringTidslinje(grunnlag.rettighetsperiode)
-            .orEmpty()
         val sykepengeerstatningTidslinje = grunnlag.sykepengeerstatningGrunnlag?.somTidslinje(
             kravDato = grunnlag.rettighetsperiode.fom,
             sisteMuligDagMedYtelse = grunnlag.rettighetsperiode.tom
         ).orEmpty()
 
-        val tidslinje = Tidslinje.zip3(sykdomsvurderingTidslinje, sykepengeerstatningTidslinje, yrkesskadevurderingTidslinje)
-            .mapValue { (sykdomsvurdering, sykepengeerstatningVurdering, yrkesskadevurdering) ->
-                opprettVilkårsvurdering(sykdomsvurdering, sykepengeerstatningVurdering, yrkesskadevurdering, grunnlag)
+        val tidslinje = Tidslinje.zip2(sykdomsvurderingTidslinje, sykepengeerstatningTidslinje)
+            .mapValue { (sykdomsvurdering, sykepengeerstatningVurdering) ->
+                opprettVilkårsvurdering(sykdomsvurdering, sykepengeerstatningVurdering, grunnlag)
             }
         vilkår.leggTilVurderinger(tidslinje)
     }
@@ -40,17 +36,14 @@ class SykepengeerstatningVilkår(vilkårsresultat: Vilkårsresultat) :
     private fun opprettVilkårsvurdering(
         sykdomsvurdering: Sykdomsvurdering?,
         sykepengeerstatningVurdering: SykepengerVurdering?,
-        yrkesskadeVurdering: Yrkesskadevurdering?,
         grunnlag: SykepengerErstatningFaktagrunnlag,
     ): Vilkårsvurdering {
-        return if (sykepengeerstatningVurdering?.harRettPå == true &&
-            sykdomsvurdering?.erOppfyltOrdinærtEllerMedYrkesskadeSettBortFraVissVarighet(yrkesskadeVurdering) ?: false
-        ) {
+        return if (sykepengeerstatningVurdering?.harRettPå == true && sykdomsvurdering?.erOppfyltSettBortIfraVissVarighet() == true) {
             Vilkårsvurdering(
                 Vilkårsperiode(
                     periode = grunnlag.rettighetsperiode,
                     utfall = Utfall.OPPFYLT,
-                    begrunnelse = sykepengeerstatningVurdering.begrunnelse,
+                    begrunnelse = null,
                     innvilgelsesårsak = null,
                     avslagsårsak = null,
                     faktagrunnlag = grunnlag,
@@ -61,9 +54,9 @@ class SykepengeerstatningVilkår(vilkårsresultat: Vilkårsresultat) :
                 Vilkårsperiode(
                     periode = grunnlag.rettighetsperiode,
                     utfall = Utfall.IKKE_OPPFYLT,
-                    begrunnelse = sykepengeerstatningVurdering?.begrunnelse,
+                    begrunnelse = null,
                     innvilgelsesårsak = null,
-                    avslagsårsak = Avslagsårsak.IKKE_RETT_PA_SYKEPENGEERSTATNING,
+                    avslagsårsak = Avslagsårsak.MANGLENDE_DOKUMENTASJON, // TODO noe mer rett
                     faktagrunnlag = grunnlag,
                 )
             )
