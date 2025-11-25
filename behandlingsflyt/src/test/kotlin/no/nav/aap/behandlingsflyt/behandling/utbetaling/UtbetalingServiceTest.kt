@@ -162,7 +162,8 @@ class UtbetalingServiceTest {
                 institusjonGradering = Prosent.`0_PROSENT`,
                 arbeidGradering = Prosent.`0_PROSENT`,
                 samordningUføregradering = Prosent.`0_PROSENT`,
-                samordningArbeidsgiverGradering = Prosent.`0_PROSENT`
+                samordningArbeidsgiverGradering = Prosent.`0_PROSENT`,
+                meldepliktGradering = Prosent.`0_PROSENT`,
             ),
             grunnlagsfaktor = GUnit(1),
             grunnbeløp = Beløp(100),

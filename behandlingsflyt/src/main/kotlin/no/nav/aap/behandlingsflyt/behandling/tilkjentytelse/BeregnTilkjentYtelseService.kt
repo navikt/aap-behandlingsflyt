@@ -85,6 +85,7 @@ class BeregnTilkjentYtelseService(val grunnlag: TilkjentYtelseGrunnlag) {
                     samordningGradering = samordning?.gradering ?: `0_PROSENT`,
                     samordningUføregradering = samordningUføre ?: `0_PROSENT`,
                     samordningArbeidsgiverGradering = if (samordningArbeidsgiver == null) `0_PROSENT` else `100_PROSENT`,
+                    meldepliktGradering = underveisperiode.meldepliktGradering ?: `0_PROSENT`,
             )
         }
             .filterNotNull()
@@ -116,6 +117,7 @@ class BeregnTilkjentYtelseService(val grunnlag: TilkjentYtelseGrunnlag) {
                         .minus(samordningUføregradering)
                         .minus(samordningGradering)
                         .minus(samordningArbeidsgiverGradering)
+                        .minus(meldepliktGradering)
                         .multiplisert(institusjonGradering.komplement())
                 },
                 graderingGrunnlag = graderingGrunnlag,

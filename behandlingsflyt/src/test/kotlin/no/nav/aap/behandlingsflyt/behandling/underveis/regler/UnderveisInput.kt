@@ -63,7 +63,8 @@ fun tomUnderveisInput(
         vedtaksdatoFørstegangsbehandling = vedtaksdatoFørstegangsbehandling,
         oppholdskravGrunnlag = oppholdskravGrunnlag,
         reduksjonArbeidOverGrenseEnabled = false,
-        unntakMeldepliktDesemberEnabled = true
+        reduksjonIkkeMeldtSegEnabled = false,
+        unntakMeldepliktDesemberEnabled = true,
     )
 }
 

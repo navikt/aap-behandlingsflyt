@@ -429,6 +429,7 @@ class StatistikkJobbUtførerTest {
                         avslagsårsak = null,
                         institusjonsoppholdReduksjon = Prosent.`0_PROSENT`,
                         meldepliktStatus = MeldepliktStatus.MELDT_SEG,
+                        meldepliktGradering = Prosent.`0_PROSENT`,
                     )
                 ),
                 input = object : Faktagrunnlag {}

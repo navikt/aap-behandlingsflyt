@@ -209,6 +209,7 @@ private fun testUnderveisperiode(testPeriode: Periode, meldeperiode: Periode): U
         institusjonsoppholdReduksjon = Prosent(0),
         meldepliktStatus = MeldepliktStatus.RIMELIG_GRUNN,
         meldePeriode = meldeperiode,
+        meldepliktGradering = Prosent(0),
     )
 
 private fun lagreMeldekort(
