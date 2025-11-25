@@ -29,6 +29,7 @@ import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -147,6 +148,7 @@ class ResultatUtlederTest {
         brukerAvKvoter = emptySet(),
         institusjonsoppholdReduksjon = Prosent.`0_PROSENT`,
         meldepliktStatus = MeldepliktStatus.MELDT_SEG,
+        meldepliktGradering = `0_PROSENT`,
     )
 
     private fun nySak(periode: Periode): Sak {
