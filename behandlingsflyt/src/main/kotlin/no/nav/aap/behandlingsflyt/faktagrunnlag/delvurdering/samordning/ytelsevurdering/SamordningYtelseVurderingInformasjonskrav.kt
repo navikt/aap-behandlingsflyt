@@ -241,10 +241,10 @@ class SamordningYtelseVurderingInformasjonskrav(
 
                     secureLogger.info("Hentet samordningytelse eksisterende ${eksisterende.ytelser} med nye samordningsytelser ${nye.map { it.ytelsePerioder }}  ${nye.map { it.ytelseType.name }}")
                     secureLogger.info(
-                        "Overlapp " + isPeriodeDekketAvEksisterendePerioder(
+                        "Overlapp grunnlag " + isPeriodeDekketAvEksisterendePerioder(
                             relevanteEksPerioder,
                             nyPeriode
-                        ) + "YtelseneErLike " + (nye == eksisterende.ytelser)
+                        )
                     )
 
                     if (!isPeriodeDekketAvEksisterendePerioder(relevanteEksPerioder, nyPeriode)) {
@@ -272,10 +272,10 @@ class SamordningYtelseVurderingInformasjonskrav(
 
                     secureLogger.info("Hentet samordningvurdering eksisterende ${eksisterendeVurderinger.vurderinger} med nye samordningsytelser ${samordningYtelser.map { it.ytelsePerioder }}  ${samordningYtelser.map { it.ytelseType.name }}")
                     secureLogger.info(
-                        "Overlapp " + isPeriodeDekketAvEksisterendePerioder(
+                        "Overlapp vurderinger " + isPeriodeDekketAvEksisterendePerioder(
                             relevanteEksPerioder,
                             nyPeriode
-                        ) + "VurderingeneErLike " + (samordningYtelser == eksisterendeVurderinger.vurderinger)
+                        )
                     )
 
                     if (!isPeriodeDekketAvEksisterendePerioder(relevanteEksPerioder, nyPeriode)) {
