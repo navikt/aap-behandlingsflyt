@@ -23,13 +23,14 @@ data class SamordningArbeidsgiverVurdering(
     val opprettetTid: LocalDateTime? = null,
 )
 
+
 data class SamordningArbeidsgiverVurderingDTO(
-    val vurdering: String,
+    val begrunnelse: String,
     val fom: LocalDate,
     val tom: LocalDate,
 )
 data class SamordningArbeidsgiverVurderingerDTO(
-    val vurdering: String,
+    val begrunnelse: String,
     val perioder: List<Periode>,
 )
 

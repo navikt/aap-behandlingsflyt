@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverVurderingerDTO
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -24,36 +25,33 @@ class AvklarSamordningArbeidsgiverLøser(
         løsning: AvklarSamordningArbeidsgiverLøsning
     ): LøsningsResultat {
 
-        if (!Miljø.erProd() && løsning.samordningArbeidsgiverVurdering is SamordningArbeidsgiverVurderingerDTO) {
+        if ( sjekkOmPerioderOverlapper(løsning.samordningArbeidsgiverVurdering.perioder) ) {
+            throw UgyldigForespørselException("Perioder for samordning arbeidsgiver vurdering overlapper hverandre.")
+        }
 
-            samordningArbeidsgiverRepository.lagre(
+        samordningArbeidsgiverRepository.lagre(
                 kontekst.kontekst.sakId,
                 kontekst.behandlingId(),
                 SamordningArbeidsgiverVurdering(
-                    begrunnelse = løsning.samordningArbeidsgiverVurdering.vurdering,
+                    begrunnelse = løsning.samordningArbeidsgiverVurdering.begrunnelse,
                     perioder =  løsning.samordningArbeidsgiverVurdering.perioder,
                     vurdertAv = kontekst.bruker.ident,
                 )
             )
 
-
-        } else if (løsning.samordningArbeidsgiverVurdering is SamordningArbeidsgiverVurderingDTO) {
-            //gammel løsning
-            val perioder = listOf(Periode(løsning.samordningArbeidsgiverVurdering!!.fom,løsning.samordningArbeidsgiverVurdering.tom))
-            samordningArbeidsgiverRepository.lagre(
-                kontekst.kontekst.sakId,
-                kontekst.behandlingId(),
-                SamordningArbeidsgiverVurdering(
-                    begrunnelse = løsning.samordningArbeidsgiverVurdering.vurdering,
-                    perioder =  perioder,
-                    vurdertAv = kontekst.bruker.ident,
-                )
-            )
-
-        }
-
         return LøsningsResultat("Vurdert samordning arbeidsgiver")
 
+    }
+
+    private fun sjekkOmPerioderOverlapper(perioder: List<Periode>): Boolean {
+        if (perioder.size < 2) return false
+        val sortert = perioder.sortedBy { it.fom }
+        for (i in 1 until sortert.size) {
+            if (sortert[i].overlapper(sortert[i - 1])) {
+                return true
+            }
+        }
+        return false
     }
 
     override fun forBehov(): Definisjon {

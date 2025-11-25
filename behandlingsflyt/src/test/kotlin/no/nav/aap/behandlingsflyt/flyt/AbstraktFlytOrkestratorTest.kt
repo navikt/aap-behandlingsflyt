@@ -633,7 +633,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         return this.løsAvklaringsBehov(
             avklaringsBehovLøsning = AvklarSamordningArbeidsgiverLøsning(
                 samordningArbeidsgiverVurdering = SamordningArbeidsgiverVurderingerDTO(
-                    vurdering = "Vurdering",
+                    begrunnelse = "begrunnelse",
                     perioder = perioder
                 )
             )
