@@ -3,14 +3,8 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordn
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
-import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
-import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.ident
-import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
@@ -330,17 +324,4 @@ class SamordningYtelseRepositoryImplTest {
             }
         }
     }
-
-    private fun sak(connection: DBConnection): Sak {
-        return PersonOgSakService(
-            FakePdlGateway,
-            PersonRepositoryImpl(connection),
-            SakRepositoryImpl(connection)
-        ).finnEllerOpprett(
-            ident(),
-            periode
-        )
-    }
-
-    private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 }

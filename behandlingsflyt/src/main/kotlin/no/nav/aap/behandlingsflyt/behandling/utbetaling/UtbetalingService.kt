@@ -231,7 +231,7 @@ class UtbetalingService(
                 tom = periode.tom,
                 detaljer = TilkjentYtelseDetaljerDto(
                     redusertDagsats = detaljer.redusertDagsats().verdi(),
-                    gradering = detaljer.gradering.endeligGradering.prosentverdi(),
+                    gradering = detaljer.gradering.prosentverdi(),
                     dagsats = detaljer.dagsats.verdi(),
                     grunnlag = detaljer.dagsats.verdi(),
                     grunnlagsfaktor = detaljer.grunnlagsfaktor.verdi(),

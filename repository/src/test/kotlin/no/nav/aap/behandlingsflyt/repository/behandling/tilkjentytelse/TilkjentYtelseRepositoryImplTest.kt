@@ -1,16 +1,10 @@
 package no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse
 
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentGradering
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.GraderingGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
-import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
-import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.ident
-import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
@@ -56,8 +50,8 @@ class TilkjentYtelseRepositoryImplTest {
                         ),
                         tilkjent = Tilkjent(
                             dagsats = Beløp(999),
-                            gradering = TilkjentGradering(
-                                Prosent.`66_PROSENT`,
+                            gradering = Prosent.`66_PROSENT`,
+                            graderingGrunnlag = GraderingGrunnlag(
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
@@ -79,8 +73,8 @@ class TilkjentYtelseRepositoryImplTest {
                         ),
                         tilkjent = Tilkjent(
                             dagsats = Beløp(1000),
-                            gradering = TilkjentGradering(
-                                Prosent.`50_PROSENT`,
+                            gradering = Prosent.`50_PROSENT`,
+                            graderingGrunnlag = GraderingGrunnlag(
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
@@ -134,8 +128,8 @@ class TilkjentYtelseRepositoryImplTest {
                         ),
                         tilkjent = Tilkjent(
                             dagsats = Beløp(999),
-                            gradering = TilkjentGradering(
-                                Prosent.`66_PROSENT`,
+                            gradering = Prosent.`66_PROSENT`,
+                            graderingGrunnlag = GraderingGrunnlag(
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
@@ -157,8 +151,8 @@ class TilkjentYtelseRepositoryImplTest {
                         ),
                         tilkjent = Tilkjent(
                             dagsats = Beløp(1000),
-                            gradering = TilkjentGradering(
-                                Prosent.`50_PROSENT`,
+                            gradering = Prosent.`50_PROSENT`,
+                            graderingGrunnlag = GraderingGrunnlag(
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
@@ -185,8 +179,8 @@ class TilkjentYtelseRepositoryImplTest {
                         ),
                         tilkjent = Tilkjent(
                             dagsats = Beløp(999),
-                            gradering = TilkjentGradering(
-                                Prosent.`66_PROSENT`,
+                            gradering = Prosent.`66_PROSENT`,
+                            graderingGrunnlag = GraderingGrunnlag(
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
@@ -208,8 +202,8 @@ class TilkjentYtelseRepositoryImplTest {
                         ),
                         tilkjent = Tilkjent(
                             dagsats = Beløp(1000),
-                            gradering = TilkjentGradering(
-                                Prosent.`50_PROSENT`,
+                            gradering = Prosent.`50_PROSENT`,
+                            graderingGrunnlag = GraderingGrunnlag(
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
@@ -228,21 +222,5 @@ class TilkjentYtelseRepositoryImplTest {
             )
             assertDoesNotThrow { tilkjentYtelseRepository.slett(behandling.id) }
         }
-    }
-
-    private companion object {
-        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-    }
-
-
-    private fun sak(connection: DBConnection): Sak {
-        return PersonOgSakService(
-            FakePdlGateway,
-            PersonRepositoryImpl(connection),
-            SakRepositoryImpl(connection)
-        ).finnEllerOpprett(
-            ident(),
-            periode
-        )
     }
 }

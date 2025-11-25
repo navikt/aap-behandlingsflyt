@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
-import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedInput
-import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetStedUtlederService
+import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.InstitusjonsoppholdInput
+import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.InstitusjonsoppholdUtlederService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
@@ -27,7 +27,7 @@ import java.time.LocalDate
 class SoningRegelTest {
 
     private val mockConnection = MockConnection().toDBConnection()
-    val utlederService = EtAnnetStedUtlederService(
+    val utlederService = InstitusjonsoppholdUtlederService(
         BarnetilleggRepositoryImpl(mockConnection),
         InstitusjonsoppholdRepositoryImpl(mockConnection),
         SakRepositoryImpl(mockConnection),
@@ -54,7 +54,7 @@ class SoningRegelTest {
         )
         val tidligereResultatTidslinje = Tidslinje(listOf(Segment(periode, vurderingFraTidligereResultat)))
 
-        val utlederInput = EtAnnetStedInput(
+        val utlederInput = InstitusjonsoppholdInput(
             institusjonsOpphold = listOf(
                 Segment(
                     Periode(LocalDate.of(2024, 1, 6), (LocalDate.of(2024, 2, 15))),
@@ -98,7 +98,7 @@ class SoningRegelTest {
         val soningOppholdet = MapInstitusjonoppholdTilRegel.map(delresultat)
 
         val input = tomUnderveisInput.copy(
-            etAnnetSted = soningOppholdet,
+            institusjonsopphold = soningOppholdet,
         )
 
         val resultat = regel.vurder(input, tidligereResultatTidslinje)

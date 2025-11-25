@@ -69,6 +69,8 @@ enum class Hjemmel(val hjemmel: String) {
             FOLKETRYGDLOVEN_11_23_UUTNYTTET_ARB_EVNE
                 -> listOf(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
 
+            FOLKETRYGDLOVEN_11_10_MELDEPLIKT -> listOf(Vurderingsbehov.REVURDER_MELDEPLIKT_RIMELIG_GRUNN)
+
             FOLKETRYGDLOVEN_11_19 -> listOf(Vurderingsbehov.REVURDER_BEREGNING)
 
             FOLKETRYGDLOVEN_11_20 -> listOf(Vurderingsbehov.BARNETILLEGG)
@@ -90,7 +92,6 @@ enum class Hjemmel(val hjemmel: String) {
             FOLKETRYGDLOVEN_11_7,
             FOLKETRYGDLOVEN_11_8,
             FOLKETRYGDLOVEN_11_9,
-            FOLKETRYGDLOVEN_11_10_MELDEPLIKT,
             FOLKETRYGDLOVEN_11_12,
             FOLKETRYGDLOVEN_11_14,
             FOLKETRYGDLOVEN_11_15,

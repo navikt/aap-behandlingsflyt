@@ -26,7 +26,7 @@ class SoningRegel : UnderveisRegel {
 
     private fun konstruerTidslinje(input: UnderveisInput): Tidslinje<SoningVurdering> {
         return Tidslinje(
-            input.etAnnetSted.filter {
+            input.institusjonsopphold.filter {
                 it.soning?.soner == true
             }.map {
                 if (it.soning?.girOpphør == true) {

@@ -54,14 +54,14 @@ data class ManglerStatsborgerskapGrunnlag(
 
 data class OppgittJobbetIUtlandGrunnlag(
     val land: String?,
-    val tilDato: LocalDate?,
     val fraDato: LocalDate?,
+    val tilDato: LocalDate?,
 )
 
 data class OppgittUtenlandsOppholdGrunnlag(
     val land: String?,
+    val fraDato: LocalDate?,
     val tilDato: LocalDate?,
-    val fraDato: LocalDate?
 )
 
 data class UtenlandsAdresserGrunnlag(

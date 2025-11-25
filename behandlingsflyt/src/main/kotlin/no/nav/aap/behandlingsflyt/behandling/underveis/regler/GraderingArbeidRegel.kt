@@ -61,7 +61,7 @@ private const val HØYESTE_GRADERING_OPPTRAPPING = 80
  */
 class GraderingArbeidRegel : UnderveisRegel {
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
-        require(input.rettighetsperiode.inneholder(resultat.helePerioden())) {
+        require(input.periodeForVurdering.inneholder(resultat.helePerioden())) {
             "kan ikke vurdere utenfor rettighetsperioden fordi meldeperioden ikke er definert"
         }
 
@@ -100,58 +100,18 @@ class GraderingArbeidRegel : UnderveisRegel {
         resultat: Tidslinje<Vurdering>,
         input: UnderveisInput
     ): Tidslinje<ArbeidsGradering> {
-        var opplysninger = Tidslinje(input.rettighetsperiode, OpplysningerOmArbeid())
+        val opplysninger = Tidslinje(input.periodeForVurdering, OpplysningerOmArbeid())
             .outerJoin(arbeidsevnevurdering(input), OpplysningerOmArbeid::mergePrioriterHøyre)
             .outerJoin(nullTimerVedFritakFraMeldeplikt(input), OpplysningerOmArbeid::mergePrioriterHøyre)
             .outerJoin(opplysningerFraMeldekort(input), OpplysningerOmArbeid::mergePrioriterHøyre)
             .outerJoin(harRettTidslinje(resultat), OpplysningerOmArbeid::mergePrioriterHøyre)
 
-        if (!input.ikkeAntaNullTimerArbeidetFeature) {
-            if (skalAntaTimerArbeidet(resultat, opplysninger)) {
-                // anta null timer arbeidet hvis medlemmet har gitt alle opplysninger
-                opplysninger = Tidslinje(
-                    input.rettighetsperiode,
-                    OpplysningerOmArbeid(timerArbeid = TimerArbeid(BigDecimal.ZERO))
-                )
-                    .outerJoin(opplysninger, OpplysningerOmArbeid::mergePrioriterHøyre)
-            }
-        }
 
         return groupByMeldeperiode(resultat, opplysninger)
             .flatMap { meldeperiode ->
                 regnUtGradering(meldeperiode.verdi)
             }
             .komprimer()
-    }
-
-    fun skalAntaTimerArbeidet(
-        underveisVurderinger: Tidslinje<Vurdering>,
-        opplysningerTidslinje: Tidslinje<OpplysningerOmArbeid>,
-        dagensDato: LocalDate = LocalDate.now(),
-    ): Boolean {
-
-        val skalHaOpplysningerTidslinje = underveisVurderinger.mapValue { underveisVurdering ->
-            /* uten rett skal vi ikke ha opplysninger */
-            if (underveisVurdering.fårAapEtter == null) {
-                return@mapValue false
-            }
-
-            val fastsattDag = underveisVurdering.meldeperiode().tom.plusDays(1)
-            val sisteFrist = fastsattDag.plusDays(7)
-
-            return@mapValue sisteFrist < dagensDato
-        }
-
-        val manglerOpplysninger =
-            skalHaOpplysningerTidslinje.outerJoin(opplysningerTidslinje) { skalHaOpplysninger, opplysninger ->
-                if (skalHaOpplysninger == true) {
-                    return@outerJoin opplysninger?.timerArbeid == null
-                } else {
-                    return@outerJoin false
-                }
-            }
-
-        return manglerOpplysninger.segmenter().none { it.verdi }
     }
 
     private fun harRettTidslinje(vurderinger: Tidslinje<Vurdering>): Tidslinje<OpplysningerOmArbeid> {

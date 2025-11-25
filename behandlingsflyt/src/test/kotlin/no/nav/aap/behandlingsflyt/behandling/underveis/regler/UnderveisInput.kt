@@ -1,10 +1,11 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
-import no.nav.aap.behandlingsflyt.behandling.etannetsted.EtAnnetSted
+import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.Institusjonsopphold
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.underveis.Kvoter
 import no.nav.aap.behandlingsflyt.behandling.underveis.tomKvoter
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Grunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
@@ -39,30 +40,29 @@ fun tomUnderveisInput(
     innsendingsTidspunkt: Map<LocalDate, JournalpostId> = emptyMap(),
     kvoter: Kvoter = tomKvoter,
     aktivitetsplikt11_7Grunnlag: Aktivitetsplikt11_7Grunnlag = Aktivitetsplikt11_7Grunnlag(emptyList()),
-    etAnnetSted: List<EtAnnetSted> = emptyList(),
+    institusjonsopphold: List<Institusjonsopphold> = emptyList(),
     oppholdskravGrunnlag: OppholdskravGrunnlag = OppholdskravGrunnlag(emptyList()),
     arbeidsevneGrunnlag: ArbeidsevneGrunnlag = ArbeidsevneGrunnlag(emptyList()),
     meldepliktGrunnlag: MeldepliktGrunnlag = MeldepliktGrunnlag(emptyList()),
     overstyringMeldepliktGrunnlag: OverstyringMeldepliktGrunnlag = OverstyringMeldepliktGrunnlag(emptyList()),
-    meldeperioder: List<Periode> = FastsettMeldeperiodeSteg.utledMeldeperiode(emptyList(), rettighetsperiode),
+    meldeperioder: List<Periode> = MeldeperiodeUtleder.utledMeldeperiode(null, rettighetsperiode),
     vedtaksdatoFørstegangsbehandling: LocalDate? = rettighetsperiode.fom,
 ): UnderveisInput {
     return UnderveisInput(
-        rettighetsperiode = rettighetsperiode,
+        periodeForVurdering = rettighetsperiode,
         vilkårsresultat = vilkårsresultat,
         opptrappingPerioder = opptrappingPerioder,
         meldekort = meldekort,
         innsendingsTidspunkt = innsendingsTidspunkt,
         kvoter = kvoter,
         aktivitetsplikt11_7Grunnlag = aktivitetsplikt11_7Grunnlag,
-        etAnnetSted = etAnnetSted,
+        institusjonsopphold = institusjonsopphold,
         arbeidsevneGrunnlag = arbeidsevneGrunnlag,
         meldepliktGrunnlag = meldepliktGrunnlag,
         overstyringMeldepliktGrunnlag = overstyringMeldepliktGrunnlag,
         meldeperioder = meldeperioder,
         vedtaksdatoFørstegangsbehandling = vedtaksdatoFørstegangsbehandling,
         oppholdskravGrunnlag = oppholdskravGrunnlag,
-        ikkeAntaNullTimerArbeidetFeature = false,
     )
 }
 
