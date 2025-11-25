@@ -32,11 +32,12 @@ fun vurderRettighetsType(vilkårsresultat: Vilkårsresultat): Tidslinje<Rettighe
             val rettighetsType = when {
                 /* Prioritert rekkefølge */
                 KravForStudent.oppfyllesAv(forutgåendeTidslinje, vilkårsvurderinger) -> RettighetsType.STUDENT
-                KravForOvergangUføretrygd.oppfyllesAv(forutgåendeTidslinje, vilkårsvurderinger) -> RettighetsType.VURDERES_FOR_UFØRETRYGD
-                KravForSykepengeerstatning.oppfyllesAv(forutgåendeTidslinje, vilkårsvurderinger) -> RettighetsType.SYKEPENGEERSTATNING
-                KravForOvergangArbeid.oppfyllesAv(forutgåendeTidslinje, vilkårsvurderinger) -> RettighetsType.ARBEIDSSØKER
                 KravForOrdinærAap.oppfyllesAv(forutgåendeTidslinje, vilkårsvurderinger) -> RettighetsType.BISTANDSBEHOV
                 KravForYrkesskade.oppfyllesAv(forutgåendeTidslinje, vilkårsvurderinger) -> RettighetsType.BISTANDSBEHOV
+                KravForOvergangUføretrygd.oppfyllesAv(forutgåendeTidslinje, vilkårsvurderinger) -> RettighetsType.VURDERES_FOR_UFØRETRYGD
+                KravForSykepengeerstatning.oppfyllesAv(forutgåendeTidslinje, vilkårsvurderinger) -> RettighetsType.SYKEPENGEERSTATNING
+                KravForSykepengeerstatningGammeltFormat.oppfyllesAv(forutgåendeTidslinje, vilkårsvurderinger) -> RettighetsType.SYKEPENGEERSTATNING
+                KravForOvergangArbeid.oppfyllesAv(forutgåendeTidslinje, vilkårsvurderinger) -> RettighetsType.ARBEIDSSØKER
                 else -> null
             }
 
@@ -51,6 +52,17 @@ fun vurderRettighetsType(vilkårsresultat: Vilkårsresultat): Tidslinje<Rettighe
         .komprimer()
 }
 
+object KravForSykepengeerstatningGammeltFormat : KravspesifikasjonForRettighetsType {
+    override val kravForutgåendeMedlemskap = MåVæreOppfylt()
+    override val kravSykdom = MåVæreOppfylt(Innvilgelsesårsak.SYKEPENGEERSTATNING)
+
+    override val kravSykepengeerstatning = IngenKrav
+    override val kravBistand = IngenKrav
+    override val kravOvergangUfør = IngenKrav
+    override val kravOvergangArbeid = IngenKrav
+    override val forutgåendeAap = IngenKravOmForutgåendeAAP
+}
+
 object KravForStudent : KravspesifikasjonForRettighetsType {
     override val kravForutgåendeMedlemskap = MåVæreOppfylt()
     override val kravSykdom = MåVæreOppfylt(Innvilgelsesårsak.STUDENT)
@@ -58,6 +70,7 @@ object KravForStudent : KravspesifikasjonForRettighetsType {
 
     override val kravOvergangUfør = IngenKrav
     override val kravOvergangArbeid = IngenKrav
+    override val kravSykepengeerstatning = IngenKrav
     override val forutgåendeAap = IngenKravOmForutgåendeAAP
 }
 
@@ -68,6 +81,7 @@ object KravForOrdinærAap : KravspesifikasjonForRettighetsType {
 
     override val kravOvergangUfør = IngenKrav
     override val kravOvergangArbeid = IngenKrav
+    override val kravSykepengeerstatning = IngenKrav
     override val forutgåendeAap = IngenKravOmForutgåendeAAP
 }
 
@@ -78,13 +92,15 @@ object KravForYrkesskade: KravspesifikasjonForRettighetsType {
     override val kravForutgåendeMedlemskap = IngenKrav
     override val kravOvergangUfør = IngenKrav
     override val kravOvergangArbeid = IngenKrav
+    override val kravSykepengeerstatning = IngenKrav
     override val forutgåendeAap = IngenKravOmForutgåendeAAP
 }
 
 object KravForSykepengeerstatning : KravspesifikasjonForRettighetsType {
     override val kravForutgåendeMedlemskap = MåVæreOppfylt()
-    override val kravSykdom = MåVæreOppfylt(Innvilgelsesårsak.SYKEPENGEERSTATNING)
+    override val kravSykepengeerstatning = MåVæreOppfylt()
 
+    override val kravSykdom = IngenKrav
     override val kravBistand = IngenKrav
     override val kravOvergangUfør = IngenKrav
     override val kravOvergangArbeid = IngenKrav
@@ -98,6 +114,7 @@ object KravForOvergangUføretrygd : KravspesifikasjonForRettighetsType {
 
     override val kravBistand = IngenKrav
     override val kravOvergangArbeid = IngenKrav
+    override val kravSykepengeerstatning = IngenKrav
     override val forutgåendeAap = IngenKravOmForutgåendeAAP
 }
 
@@ -109,4 +126,5 @@ object KravForOvergangArbeid : KravspesifikasjonForRettighetsType {
     override val kravBistand = IngenKrav
     override val kravSykdom = IngenKrav
     override val kravOvergangUfør = IngenKrav
+    override val kravSykepengeerstatning = IngenKrav
 }

@@ -16,8 +16,10 @@ import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.dokument.KlagedokumentInformasjonUtleder
+import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.pip.PipRepository
 import no.nav.aap.behandlingsflyt.pip.PipService
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -46,6 +48,23 @@ fun NormalOpenAPIRoute.behandlingApi(
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,
 ) {
+    fun hentArenaStatus(behandlingReferanse: BehandlingReferanse): ArenaStatusDTO? {
+        val identer = dataSource.transaction(readOnly = true) { connection ->
+            val repositoryProvider = repositoryRegistry.provider(connection)
+            val pipRepository = repositoryProvider.provide<PipRepository>()
+            pipRepository.finnIdenterPåBehandling(behandlingReferanse)
+        }.map { it.ident }
+
+        val arenaStatus: ArenaStatusDTO? = runCatching {
+            gatewayProvider.provide(ApiInternGateway::class).hentArenaStatus(identer)
+        }.onFailure {
+            log.warn("Kall mot ApiInternGateway for å hente Arenastatus feilet", it)
+        }.getOrNull()?.let {
+            ArenaStatusDTO(harArenaHistorikk = it.harArenaHistorikk)
+        }
+        return arenaStatus
+    }
+
     route("/api/behandling").tag(Tags.Behandling) {
         route("/{referanse}") {
             authorizedGet<BehandlingReferanse, DetaljertBehandlingDTO>(
@@ -85,6 +104,8 @@ fun NormalOpenAPIRoute.behandlingApi(
                     )
 
                     val vurderingsbehovOgÅrsaker = behandlingRepository.hentVurderingsbehovOgÅrsaker(behandling.id)
+
+                    val arenaStatus= hentArenaStatus(behandling.referanse)
 
                     DetaljertBehandlingDTO(
                         referanse = behandling.referanse.referanse,
@@ -129,7 +150,8 @@ fun NormalOpenAPIRoute.behandlingApi(
                                                 innvilgelsesårsak = vp.innvilgelsesårsak
                                             )
                                         },
-                                    vurdertDato = vilkår.vurdertTidspunkt?.toLocalDate())
+                                    vurdertDato = vilkår.vurdertTidspunkt?.toLocalDate()
+                                )
                             },
                         aktivtSteg = behandling.aktivtSteg(),
                         versjon = behandling.versjon,
@@ -137,7 +159,8 @@ fun NormalOpenAPIRoute.behandlingApi(
                         kravMottatt = kravMottatt,
                         tilhørendeKlagebehandling = tilhørendeKlagebehandling?.referanse,
                         vedtaksdato = VedtakService(repositoryProvider).vedtakstidspunkt(behandling)?.toLocalDate(),
-                        vurderingsbehovOgÅrsaker = vurderingsbehovOgÅrsaker
+                        vurderingsbehovOgÅrsaker = vurderingsbehovOgÅrsaker,
+                        arenaStatus = arenaStatus
                     )
                 }
                 respond(dto)

@@ -13,6 +13,7 @@ interface KravspesifikasjonForRettighetsType {
     val kravSykdom: Krav
     val kravOvergangUfør: Krav
     val kravOvergangArbeid: Krav
+    val kravSykepengeerstatning: Krav
 
     val forutgåendeAap: ForutgåendeKrav
 
@@ -78,6 +79,7 @@ interface KravspesifikasjonForRettighetsType {
                 && kravSykdom.oppfyllesAv(vilkårsresultat[Vilkårtype.SYKDOMSVILKÅRET])
                 && kravOvergangArbeid.oppfyllesAv(vilkårsresultat[Vilkårtype.OVERGANGARBEIDVILKÅRET])
                 && kravOvergangUfør.oppfyllesAv(vilkårsresultat[Vilkårtype.OVERGANGUFØREVILKÅRET])
+                && kravSykepengeerstatning.oppfyllesAv(vilkårsresultat[Vilkårtype.SYKEPENGEERSTATNING])
                 && forutgåendeAap.oppfyllesAv(forutgåendeRettighetstyper)
     }
 }

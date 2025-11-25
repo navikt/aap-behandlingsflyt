@@ -16,7 +16,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     OverforingsdatoNullForAvregning,
     OvergangArbeid,
     AvklaringsbehovService,
-    AvklaringsbehovServiceFormkrav,
     KvalitetssikringsSteg,
     FatteVedtakAvklaringsbehovService,
     BedreUttrekkAvSakerMedFritakMeldeplikt,
