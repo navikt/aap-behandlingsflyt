@@ -9,5 +9,5 @@ data class SykepengerVurderingDto(
     val dokumenterBruktIVurdering: List<JournalpostId>,
     val harRettPå: Boolean,
     val grunn: SykepengerGrunn? = null,
-    val gjelderFra: LocalDate? = null,
+    val gjelderFra: LocalDate,
 )

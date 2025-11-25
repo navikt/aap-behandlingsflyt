@@ -215,7 +215,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                         begrunnelse = "...",
                         dokumenterBruktIVurdering = emptyList(),
                         harRettPå = true,
-                        grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR
+                        grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
+                        gjelderFra = sak.rettighetsperiode.fom
                     ),
                 )
             )
@@ -257,7 +258,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                         begrunnelse = "HAR IKKE RETT",
                         dokumenterBruktIVurdering = emptyList(),
                         harRettPå = false,
-                        grunn = null
+                        grunn = null,
+                        gjelderFra = sak.rettighetsperiode.fom
                     ),
                 )
             )
@@ -390,7 +392,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                         begrunnelse = "test",
                         dokumenterBruktIVurdering = emptyList(),
                         harRettPå = true,
-                        grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR
+                        grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
+                        gjelderFra = sak.rettighetsperiode.fom
                     ),
                     behovstype = Definisjon.AVKLAR_SYKEPENGEERSTATNING.kode
                 )
@@ -1488,7 +1491,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                         begrunnelse = "...",
                         dokumenterBruktIVurdering = emptyList(),
                         harRettPå = true,
-                        grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR
+                        grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
+                        gjelderFra = sak.rettighetsperiode.fom
                     ),
                 )
             )
@@ -1724,7 +1728,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                         begrunnelse = "...",
                         dokumenterBruktIVurdering = emptyList(),
                         harRettPå = true,
-                        grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR
+                        grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
+                        gjelderFra = periode.fom
                     ),
                 )
             )
@@ -1849,7 +1854,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                         begrunnelse = "...",
                         dokumenterBruktIVurdering = emptyList(),
                         harRettPå = false,
-                        grunn = null
+                        grunn = null,
+                        gjelderFra = LocalDate.now()
                     ),
                 )
             )

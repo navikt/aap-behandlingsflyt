@@ -207,7 +207,7 @@ class SykdomsvilkårTest {
             },
         )
     }
-    
+
     private fun sykdomsvurdering(
         harSkadeSykdomEllerLyte: Boolean = true,
         erSkadeSykdomEllerLyteVesentligdel: Boolean = true,
