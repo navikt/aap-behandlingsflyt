@@ -24,11 +24,7 @@ data class SamordningArbeidsgiverVurdering(
 )
 
 
-data class SamordningArbeidsgiverVurderingDTO(
-    val begrunnelse: String,
-    val fom: LocalDate,
-    val tom: LocalDate,
-)
+
 data class SamordningArbeidsgiverVurderingerDTO(
     val begrunnelse: String,
     val perioder: List<Periode>,
