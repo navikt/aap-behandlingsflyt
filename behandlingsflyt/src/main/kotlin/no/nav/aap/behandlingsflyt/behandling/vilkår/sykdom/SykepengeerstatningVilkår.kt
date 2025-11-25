@@ -56,7 +56,7 @@ class SykepengeerstatningVilkår(vilkårsresultat: Vilkårsresultat) :
                     utfall = Utfall.IKKE_OPPFYLT,
                     begrunnelse = null,
                     innvilgelsesårsak = null,
-                    avslagsårsak = Avslagsårsak.MANGLENDE_DOKUMENTASJON, // TODO noe mer rett
+                    avslagsårsak = Avslagsårsak.IKKE_RETT_PA_SYKEPENGEERSTATNING,
                     faktagrunnlag = grunnlag,
                 )
             )
