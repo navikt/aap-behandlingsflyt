@@ -4639,7 +4639,6 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .assertRettighetstype(
                 Periode(sak.rettighetsperiode.fom, endringsdato.minusDays(1)) to RettighetsType.BISTANDSBEHOV,
                 Periode(endringsdato, sluttdato) to RettighetsType.ARBEIDSSØKER,
-                Periode(sluttdato.plusDays(1), sak.rettighetsperiode.tom) to null
             )
 
         /* Revurdering som ombestemmer seg, og ikke gir AAP som arbeidssøker. */
@@ -4655,7 +4654,6 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 assertThat(it.status()).isEqualTo(Status.IVERKSETTES)
                 it.assertRettighetstype(
                     Periode(sak.rettighetsperiode.fom, endringsdato.minusDays(1)) to RettighetsType.BISTANDSBEHOV,
-                    Periode(endringsdato, sak.rettighetsperiode.tom) to null,
                 )
             }
     }
