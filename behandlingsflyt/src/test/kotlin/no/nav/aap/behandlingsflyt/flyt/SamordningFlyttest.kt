@@ -238,7 +238,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 assertThat(it.graderingGrunnlag.samordningGradering).isEqualTo(Prosent.`100_PROSENT`)
                 assertThat(it.redusertDagsats()).isEqualTo(Beløp(0))
             },
-            Periode(sykePengerPeriode.tom.plusDays(1), sak.rettighetsperiode.tom) to {
+            Periode(sykePengerPeriode.tom.plusDays(1), tilkjentYtelse.tilTidslinje().helePerioden().tom) to {
                 assertThat(it.graderingGrunnlag.samordningGradering).isEqualTo(Prosent.`0_PROSENT`)
                 assertThat(it.redusertDagsats()).isNotEqualTo(Beløp(0))
             }
@@ -438,7 +438,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 .filter { it.verdi == Prosent.`100_PROSENT` }.helePerioden()
 
         // Verifiser at samordningen ble fanget opp
-        assertThat(periodeMedFullSamordning).isEqualTo(sykePengerPeriode)
+        assertThat(periodeMedFullSamordning).isEqualTo(Periode(fom=sykePengerPeriode.fom, tom = minOf(sykePengerPeriode.tom, uthentetTilkjentYtelse.maxOf { it.periode.tom })))
         behandling = behandling.løsVedtaksbrev()
 
         val nyesteBehandling = hentSisteOpprettedeBehandlingForSak(behandling.sakId)

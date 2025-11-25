@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.underveis.Kvoter
 import no.nav.aap.behandlingsflyt.behandling.underveis.tomKvoter
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Grunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
@@ -44,11 +45,11 @@ fun tomUnderveisInput(
     arbeidsevneGrunnlag: ArbeidsevneGrunnlag = ArbeidsevneGrunnlag(emptyList()),
     meldepliktGrunnlag: MeldepliktGrunnlag = MeldepliktGrunnlag(emptyList()),
     overstyringMeldepliktGrunnlag: OverstyringMeldepliktGrunnlag = OverstyringMeldepliktGrunnlag(emptyList()),
-    meldeperioder: List<Periode> = FastsettMeldeperiodeSteg.utledMeldeperiode(emptyList(), rettighetsperiode),
+    meldeperioder: List<Periode> = MeldeperiodeUtleder.utledMeldeperiode(null, rettighetsperiode),
     vedtaksdatoFørstegangsbehandling: LocalDate? = rettighetsperiode.fom,
 ): UnderveisInput {
     return UnderveisInput(
-        rettighetsperiode = rettighetsperiode,
+        periodeForVurdering = rettighetsperiode,
         vilkårsresultat = vilkårsresultat,
         opptrappingPerioder = opptrappingPerioder,
         meldekort = meldekort,
