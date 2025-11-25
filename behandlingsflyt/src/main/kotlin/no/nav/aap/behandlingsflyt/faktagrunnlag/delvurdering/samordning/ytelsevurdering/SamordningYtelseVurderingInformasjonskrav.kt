@@ -212,8 +212,8 @@ class SamordningYtelseVurderingInformasjonskrav(
             eksisterende: SamordningYtelseGrunnlag?, samordningYtelser: Set<SamordningYtelse>
         ): Boolean {
             secureLogger.info("Hentet samordningytelse eksisterende ${eksisterende?.ytelser} med nye samordningsytelser ${samordningYtelser.map { it.ytelsePerioder }}  ${samordningYtelser.map { it.ytelseType.name }}")
-            secureLogger.info("Overlapp " + harFullstendigOverlapp(eksisterende, samordningYtelser))
-            // TDOD: return eksisterende == null || !harFullstendigOverlapp(eksisterende, samordningYtelser)
+            secureLogger.info("Overlapp " + harFullstendigOverlapp(eksisterende, samordningYtelser) + "YtelseneErLike " + (samordningYtelser == eksisterende?.ytelser))
+            // TODO: return eksisterende == null || !harFullstendigOverlapp(eksisterende, samordningYtelser)
             return eksisterende == null || samordningYtelser != eksisterende.ytelser
         }
 
@@ -228,8 +228,8 @@ fun harFullstendigOverlapp(
     if (eksisterende == null) return false
     if (eksisterende.ytelser.size != nye.size) return false
 
-    return eksisterende.ytelser.all { eksisterendeYtelse ->
-        nye.any { nyYtelse ->
+    return nye.all { nyYtelse ->
+        eksisterende.ytelser.any { eksisterendeYtelse ->
             perioderErLike(eksisterendeYtelse.ytelsePerioder, nyYtelse.ytelsePerioder)
         }
     }

@@ -28,7 +28,6 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
-import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseDto
 import org.slf4j.LoggerFactory
 
 class IverksettVedtakSteg private constructor(
@@ -43,7 +42,8 @@ class IverksettVedtakSteg private constructor(
     private val gosysService: GosysService,
     private val flytJobbRepository: FlytJobbRepository,
     private val mellomlagretVurderingRepository: MellomlagretVurderingRepository,
-    private val resultatUtleder: ResultatUtleder
+    private val resultatUtleder: ResultatUtleder,
+    private val vedtakRepository: VedtakRepository,
 ) : BehandlingSteg {
     private val log = LoggerFactory.getLogger(javaClass)
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -57,19 +57,18 @@ class IverksettVedtakSteg private constructor(
             return Fullført
         }
 
-        val stegHistorikk = behandlingRepository.hentStegHistorikk(kontekst.behandlingId)
-        val vedtakstidspunkt =
-            stegHistorikk
-                .find { it.steg() == StegType.FATTE_VEDTAK && it.status() == StegStatus.AVSLUTTER }
-                ?.tidspunkt() ?: error("Forventet å finne et avsluttet fatte vedtak steg")
-
-        val virkningstidspunkt = virkningstidspunktUtleder.utledVirkningsTidspunkt(kontekst.behandlingId)
-        vedtakService.lagreVedtak(kontekst.behandlingId, vedtakstidspunkt, virkningstidspunkt)
+        /** Denne lagringen skjer nå i `FatteVedtakSteg`, siden det er i det steget
+         * at vedtaket fattes. Det kan i prinsippet være åpne behandlinger som
+         * er forbi `FatteVedtakSteg` men som ikke har fullført `IverksettVedtakSteg`,
+         * så vi lagrer her også til vi er sikre på at ingen behandlinger faller mellom to stoler.
+         */
+        lagreVedtak(kontekst)
 
         val tilkjentYtelseDto = utbetalingService.lagTilkjentYtelseForUtbetaling(kontekst.sakId, kontekst.behandlingId)
         if (tilkjentYtelseDto != null) {
-            utbetal(kontekst, tilkjentYtelseDto)
+            utbetal(kontekst)
         } else {
+            val virkningstidspunkt = virkningstidspunktUtleder.utledVirkningsTidspunkt(kontekst.behandlingId)
             log.info("Fant ikke tilkjent ytelse for behandingsref ${kontekst.behandlingId}. Virkningstidspunkt: $virkningstidspunkt.")
         }
         flytJobbRepository.leggTil(
@@ -82,6 +81,22 @@ class IverksettVedtakSteg private constructor(
         lagGysOppgaveHvisRelevant(kontekst)
 
         return Fullført
+    }
+
+    private fun lagreVedtak(kontekst: FlytKontekstMedPerioder) {
+        if (vedtakRepository.hent(kontekst.behandlingId) != null) {
+            /* Vedtak lagret i `FatteVedtakSteg`, så ikke noe å gjøre her. */
+            return
+        }
+
+        val stegHistorikk = behandlingRepository.hentStegHistorikk(kontekst.behandlingId)
+        val vedtakstidspunkt = stegHistorikk
+            .find { it.steg() == StegType.FATTE_VEDTAK && it.status() == StegStatus.AVSLUTTER }
+            ?.tidspunkt()
+            ?: error("Forventet å finne et avsluttet fatte vedtak steg")
+
+        val virkningstidspunkt = virkningstidspunktUtleder.utledVirkningsTidspunkt(kontekst.behandlingId)
+        vedtakService.lagreVedtak(kontekst.behandlingId, vedtakstidspunkt, virkningstidspunkt)
     }
 
     private fun lagGysOppgaveHvisRelevant(kontekst: FlytKontekstMedPerioder) {
@@ -118,10 +133,7 @@ class IverksettVedtakSteg private constructor(
         }
     }
 
-    private fun utbetal(
-        kontekst: FlytKontekstMedPerioder,
-        tilkjentYtelseDto: TilkjentYtelseDto
-    ) {
+    private fun utbetal(kontekst: FlytKontekstMedPerioder) {
         /**
          * Må opprette jobb med sakId, men uten behandlingId for at disse skal bli kjørt sekvensielt i riktig rekkefølge.
          * Viktig at eldste jobb kjøres først slik at utbetaling blir konsistent med Kelvin
@@ -184,7 +196,8 @@ class IverksettVedtakSteg private constructor(
                 flytJobbRepository = flytJobbRepository,
                 mellomlagretVurderingRepository = mellomlagretVurderingRepository,
                 gosysService = gosysService,
-                resultatUtleder = resultatUtleder
+                resultatUtleder = resultatUtleder,
+                vedtakRepository = repositoryProvider.provide(),
             )
         }
 

@@ -16,7 +16,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     OverforingsdatoNullForAvregning,
     OvergangArbeid,
     AvklaringsbehovService,
-    AvklaringsbehovServiceFormkrav,
     KvalitetssikringsSteg,
     FatteVedtakAvklaringsbehovService,
     BedreUttrekkAvSakerMedFritakMeldeplikt,
@@ -26,6 +25,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     Arbeidsopptrapping,
     IkkeAntaNullTimerArbeidet,
     NyBrevbyggerV3,
+    LagreVedtakIFatteVedtak,
     ;
 
     override fun key(): String = name

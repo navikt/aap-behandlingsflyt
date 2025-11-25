@@ -102,13 +102,13 @@ class TestScenarioOrkestrator(
 
     fun løsSykdom(
         behandling: Behandling,
-        vurderingGjelderFra: LocalDate? = null,
+        vurderingGjelderFra: LocalDate,
         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean? = null
     ): Behandling {
         return løsAvklaringsBehov(
             behandling,
             AvklarSykdomLøsning(
-                sykdomsvurderinger = listOf(
+                løsningerForPerioder = listOf(
                     SykdomsvurderingLøsningDto(
                         begrunnelse = "Er syk nok",
                         dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
@@ -119,7 +119,8 @@ class TestScenarioOrkestrator(
                         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
                         erArbeidsevnenNedsatt = true,
                         yrkesskadeBegrunnelse = if (erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense != null) "test" else null,
-                        vurderingenGjelderFra = vurderingGjelderFra,
+                        fom = vurderingGjelderFra,
+                        tom = null
                     )
                 )
             )

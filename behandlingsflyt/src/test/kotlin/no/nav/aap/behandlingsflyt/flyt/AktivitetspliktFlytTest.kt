@@ -50,6 +50,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
 import java.time.ZoneOffset
 
 class AktivitetspliktFlytTest :
@@ -229,7 +230,7 @@ class AktivitetspliktFlytTest :
                 assertEquals(VilkårsresultatUtfall.OPPFYLT, it.first)
                 assertEquals(null, it.second)
             },
-            Segment(Periode(bruddFom, sak.rettighetsperiode.tom)) {
+            Segment(Periode(bruddFom, underveisÅpenTidslinje.helePerioden().tom)) {
                 assertEquals(VilkårsresultatUtfall.IKKE_OPPFYLT, it.first)
                 assertEquals(UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT_11_7_STANS, it.second)
             }
@@ -344,7 +345,7 @@ class AktivitetspliktFlytTest :
                 assertEquals(VilkårsresultatUtfall.OPPFYLT, it.first)
                 assertEquals(null, it.second)
             },
-            Segment(Periode(bruddFom, sak.rettighetsperiode.tom)) {
+            Segment(Periode(bruddFom, underveisTidslinjeEtterEffektuering.helePerioden().tom)) {
                 assertEquals(VilkårsresultatUtfall.IKKE_OPPFYLT, it.first)
                 assertEquals(UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT_11_7_STANS, it.second)
             }
@@ -383,7 +384,7 @@ class AktivitetspliktFlytTest :
             )
         )
         val sak = happyCaseFørstegangsbehandling(
-            fom = 1 januar 2023,
+            fom = LocalDate.now().minusMonths(1),
             person = person,
         )
         var åpenBehandlingForbiTilkjentYtelse =
@@ -431,7 +432,7 @@ class AktivitetspliktFlytTest :
                     aktivitetsplikt11_9Vurderinger = setOf(
                         Aktivitetsplikt11_9LøsningDto(
                             begrunnelse = "Det var et brudd",
-                            dato = 2 januar 2024,
+                            dato = LocalDate.now().minusDays(10),
                             grunn = Grunn.IKKE_RIMELIG_GRUNN,
                             brudd = Brudd.IKKE_MØTT_TIL_TILTAK,
                         )

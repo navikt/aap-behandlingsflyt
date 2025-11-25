@@ -107,6 +107,9 @@ import no.nav.aap.brev.kontrakt.FerdigstillBrevRequest
 import no.nav.aap.brev.kontrakt.HentSignaturerRequest
 import no.nav.aap.brev.kontrakt.HentSignaturerResponse
 import no.nav.aap.brev.kontrakt.Innhold
+import no.nav.aap.brev.kontrakt.KanDistribuereBrevReponse
+import no.nav.aap.brev.kontrakt.KanDistribuereBrevRequest
+import no.nav.aap.brev.kontrakt.MottakerDistStatus
 import no.nav.aap.brev.kontrakt.Signatur
 import no.nav.aap.brev.kontrakt.Språk
 import no.nav.aap.brev.kontrakt.Status
@@ -1984,6 +1987,11 @@ object FakeServers : AutoCloseable {
                     }
                     val response = HentSignaturerResponse(signaturer)
                     call.respond(response)
+                }
+                post("/{referanse}/kan-distribuere-brev") {
+                    val req = call.receive<KanDistribuereBrevRequest>()
+                    val mottakerDistStatus = req.mottakerIdentListe.map { MottakerDistStatus(it, true) }
+                    call.respond(HttpStatusCode.Accepted, KanDistribuereBrevReponse(mottakerDistStatus))
                 }
             }
         }

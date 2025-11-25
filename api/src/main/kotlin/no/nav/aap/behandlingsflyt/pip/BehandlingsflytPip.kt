@@ -26,7 +26,7 @@ fun NormalOpenAPIRoute.behandlingsflytPip(dataSource: DataSource, repositoryRegi
             ) { req ->
                 val saksnummer = req.saksnummer
                 val identer = dataSource.transaction(readOnly = true) { connection ->
-                    repositoryRegistry.provider(connection).provide<PipRepository>()
+                    PipService(repositoryRegistry.provider(connection))
                         .finnIdenterPåSak(Saksnummer(saksnummer))
                 }
                 respond(
@@ -48,7 +48,7 @@ fun NormalOpenAPIRoute.behandlingsflytPip(dataSource: DataSource, repositoryRegi
             ) { req ->
                 val behandlingsnummer = req.behandlingsnummer
                 val identer = dataSource.transaction(readOnly = true) { connection ->
-                    repositoryRegistry.provider(connection).provide<PipRepository>()
+                    PipService(repositoryRegistry.provider(connection))
                         .finnIdenterPåBehandling(BehandlingReferanse(behandlingsnummer))
                 }
                 respond(

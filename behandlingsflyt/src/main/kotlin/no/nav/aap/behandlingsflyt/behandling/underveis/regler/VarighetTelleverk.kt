@@ -18,6 +18,10 @@ value class Hverdager(val asInt: Int) : Comparable<Hverdager> {
             return hverdagerFraOgMed(this).elementAt(hverdager.asInt)
         }
 
+        fun LocalDate.plussEtÅrMedHverdager(årMedHverdager: ÅrMedHverdager): LocalDate {
+            return hverdagerFraOgMed(this).elementAt(årMedHverdager.hverdagerIÅret.asInt)
+        }
+
         private val hverdagene = listOf(
             DayOfWeek.MONDAY,
             DayOfWeek.TUESDAY,
@@ -45,6 +49,17 @@ value class Hverdager(val asInt: Int) : Comparable<Hverdager> {
             }
         }
     }
+}
+
+/**
+ * Antall mandag-fredager per år er bestemt til å være 261 + 261 + 262 for at kvoten skal bli riktig.
+ * https://confluence.adeo.no/spaces/PAAP/pages/739025519/Kvoter+og+overganger+mellom+bestemmelser
+ */
+enum class ÅrMedHverdager(val hverdagerIÅret: Hverdager){
+    FØRSTE_ÅR(Hverdager(261)),
+    ANDRE_ÅR(Hverdager(261)),
+    TREDJE_ÅR(Hverdager(262)),
+    ANNET(Hverdager(261))
 }
 
 enum class Kvote(val avslagsårsak: VarighetVurdering.Avslagsårsak, val tellerMotKvote: (Vurdering) -> Boolean) {

@@ -7,13 +7,12 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 // Er ikke ubrukt, men blir opprettet med refleksjon
 @Suppress("unused")
-class EtAnnetStedVisningUtleder(
+class InstitusjonsoppholdVisningUtleder(
     private val institusjonsoppholdRepository: InstitusjonsoppholdRepository,
 ) : StegGruppeVisningUtleder {
     constructor(repositoryProvider: RepositoryProvider): this(
         institusjonsoppholdRepository = repositoryProvider.provide(),
     )
-
 
     override fun skalVises(behandlingId: BehandlingId): Boolean {
         return !institusjonsoppholdRepository.hentHvisEksisterer(behandlingId)?.oppholdene?.opphold.isNullOrEmpty()
