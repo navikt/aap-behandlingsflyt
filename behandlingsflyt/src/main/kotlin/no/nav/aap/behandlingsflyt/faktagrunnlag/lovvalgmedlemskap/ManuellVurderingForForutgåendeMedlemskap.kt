@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.LøsningForPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.utils.Validation
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -64,3 +65,17 @@ data class HistoriskManuellVurderingForForutgåendeMedlemskap(
     val opprettet: LocalDateTime,
     val erGjeldendeVurdering: Boolean
 )
+
+fun List<PeriodisertManuellVurderingForForutgåendeMedlemskapDto>.validerGyldigVurderinger(): Validation<List<PeriodisertManuellVurderingForForutgåendeMedlemskapDto>> {
+    forEach {
+        val periode = if (it.tom != null) "${it.fom} - ${it.tom}" else "${it.fom}"
+        if (it.begrunnelse.isBlank()) {
+            return Validation.Invalid(this, "Det mangler begrunnelse for vurdering [$periode]")
+        }
+        if (it.harForutgåendeMedlemskap && (it.medlemMedUnntakAvMaksFemAar == true || it.varMedlemMedNedsattArbeidsevne == true)) {
+            return Validation.Invalid(this, "Kan ikke oppfylle både hovedvilår og unntaksvilkår [$periode]")
+        }
+    }
+
+    return Validation.Valid(this)
+}
