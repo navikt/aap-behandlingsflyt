@@ -30,6 +30,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevA
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedtaksbrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SykdomsvurderingForBrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderRettighetsperiodeLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.YrkesskadeSakDto
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.YrkesskadevurderingDto
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.mellomlagring.MellomlagretVurdering
@@ -1215,6 +1216,26 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                         tom = null,
                         navKontor = "",
                     )
+                )
+            )
+        )
+    }
+    
+    protected fun Behandling.løsYrkesskade(person: TestPerson): Behandling {
+        require(person.yrkesskade.isNotEmpty()) { "Testperson må ha yrkesskade for å bruke denne metoden" }
+        return løsAvklaringsBehov(
+            AvklarYrkesskadeLøsning(
+                yrkesskadesvurdering = YrkesskadevurderingDto(
+                    begrunnelse = "Veldig relevante",
+                    relevanteSaker = person.yrkesskade.map { it.saksreferanse },
+                    relevanteYrkesskadeSaker = person.yrkesskade.map {
+                        YrkesskadeSakDto(
+                            it.saksreferanse,
+                            null,
+                        )
+                    },
+                    andelAvNedsettelsen = 50,
+                    erÅrsakssammenheng = true
                 )
             )
         )
