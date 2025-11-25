@@ -108,15 +108,19 @@ class Avklaringsbehov(
             endretAv = bruker.ident
         )
     }
-    
-    internal fun oppdaterPerioder(perioder: Set<Periode>) {
+
+    internal fun oppdaterPerioder(
+        perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
+        perioderVedtaketBehøverVurdering: Set<Periode>?
+    ) {
         val siste = historikk.last()
         require(siste.status.erÅpent()) {
             "Prøvde å oppdatere perioder på et lukket avklaringsbehov"
         }
-        if (perioder != siste.perioderSomIkkeErTilstrekkeligVurdert) {
+        if (perioderSomIkkeErTilstrekkeligVurdert != siste.perioderSomIkkeErTilstrekkeligVurdert || perioderVedtaketBehøverVurdering != siste.perioderVedtaketBehøverVurdering) {
             historikk += siste.copy(
-                perioderSomIkkeErTilstrekkeligVurdert = perioder
+                perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
+                perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering
             )
         }
     }
@@ -171,7 +175,7 @@ class Avklaringsbehov(
     fun harAvsluttetStatusIHistorikken(): Boolean {
         return historikk.any { it.status == Status.AVSLUTTET }
     }
-    
+
     fun sistAvsluttet(): LocalDateTime {
         return historikk.filter { it.status == Status.AVSLUTTET }.maxOf { it.tidsstempel }
     }
@@ -197,7 +201,7 @@ class Avklaringsbehov(
     fun erForeslåttVedtak(): Boolean {
         return definisjon == Definisjon.FORESLÅ_VEDTAK
     }
-    
+
     fun erForeslåttUttak(): Boolean {
         return definisjon == Definisjon.FORESLÅ_UTTAK
     }
@@ -241,11 +245,11 @@ class Avklaringsbehov(
     fun erBrevVentebehov(): Boolean {
         return definisjon.erBrevVentebehov()
     }
-    
+
     fun sistEndret(): LocalDateTime {
         return historikk.last().tidsstempel
     }
-    
+
     fun perioder(): Set<Periode>? {
         return historikk.last().perioderSomIkkeErTilstrekkeligVurdert
     }
