@@ -44,14 +44,16 @@ data class Sykdomsvurdering(
     }
 
     fun erOppfyltForYrkesskade(kravdato: LocalDate): Boolean {
+        val erTilstrekkeligNedsattArbeidsevne = erNedsettelseIArbeidsevneMerEnnHalvparten == true
+                || erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true
+        
         return harSkadeSykdomEllerLyte
                 && erArbeidsevnenNedsatt == true
                 && erSkadeSykdomEllerLyteVesentligdel == true
-                && (erNedsettelseIArbeidsevneMerEnnHalvparten == true
-                || erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true)
+                && erTilstrekkeligNedsattArbeidsevne
                 && erVissVarighetOmRelevant(kravdato)
     }
-    
+
     fun erVissVarighetOmRelevant(kravdato: LocalDate): Boolean {
         return if (erFørsteVurdering(kravdato))
             erNedsettelseIArbeidsevneAvEnVissVarighet == true
