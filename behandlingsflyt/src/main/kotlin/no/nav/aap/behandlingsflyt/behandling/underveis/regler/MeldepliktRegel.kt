@@ -5,9 +5,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktOverstyringStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktData
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.FeatureToggle
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.tidslinje.JoinStyle
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
@@ -23,7 +20,6 @@ import java.time.LocalDate
  */
 class MeldepliktRegel(
     private val clock: Clock = Clock.systemDefaultZone(),
-    private val unleashGateway: UnleashGateway,
 ) : UnderveisRegel {
     data class MeldepliktData(
         val fritaksvurdering: Fritaksvurdering.FritaksvurderingData? = null,
@@ -111,7 +107,7 @@ class MeldepliktRegel(
                     forrigeSegmentOppfylt = meldeperioderVurdert.segmenter().lastOrNull()?.verdi?.utfall == OPPFYLT,
                     dataForForrigeMeldeperiode = forrigePeriode?.verdi,
                 ).also { println(it) }
-                if (unleashGateway.isEnabled(BehandlingsflytFeature.UnntakMeldepliktDesember)) {
+                if (input.unntakMeldepliktDesemberEnabled) {
                     forrigePeriode = nåværendeMeldeperiodeSegment
                 }
                 meldeperioderVurdert.kombiner(neste, StandardSammenslåere.xor())

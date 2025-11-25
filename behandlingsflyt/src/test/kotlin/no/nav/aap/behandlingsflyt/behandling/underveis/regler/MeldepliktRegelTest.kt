@@ -1312,7 +1312,7 @@ Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su
     ): Tidslinje<Vurdering> {
         val zone = ZoneId.systemDefault()
         val now = nå.atStartOfDay(zone).toInstant()
-        return MeldepliktRegel(clock = Clock.fixed(now, zone), FakeUnleash)
+        return MeldepliktRegel(clock = Clock.fixed(now, zone))
             .vurder(input, UtledMeldeperiodeRegel().vurder(input, vurderinger))
     }
 
