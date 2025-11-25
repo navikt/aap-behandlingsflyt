@@ -20,6 +20,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.august
 import no.nav.aap.behandlingsflyt.test.juli
 import no.nav.aap.behandlingsflyt.test.juni
@@ -74,7 +75,8 @@ class BeregnTilkjentYtelseServiceTest {
             barnetilleggGrunnlag,
             samordningsgrunnlag,
             samordningUføre,
-            samordningArbeidsgiver
+            samordningArbeidsgiver,
+            FakeUnleash
         ).beregnTilkjentYtelse()
 
         assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
@@ -157,7 +159,8 @@ class BeregnTilkjentYtelseServiceTest {
             barnetilleggGrunnlag,
             samordningsgrunnlag,
             samordningUføre,
-            samordningArbeidsgiver
+            samordningArbeidsgiver,
+            FakeUnleash
         ).beregnTilkjentYtelse()
 
         assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
@@ -224,7 +227,8 @@ class BeregnTilkjentYtelseServiceTest {
             barnetilleggGrunnlag,
             samordningsgrunnlag,
             samordningUføre,
-            samordningArbeidsgiver
+            samordningArbeidsgiver,
+            FakeUnleash
         ).beregnTilkjentYtelse()
 
         assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
@@ -300,7 +304,8 @@ class BeregnTilkjentYtelseServiceTest {
             barnetilleggGrunnlag,
             samordningsgrunnlag,
             samordningUføre,
-            samordningArbeidsgiver
+            samordningArbeidsgiver,
+            FakeUnleash
         ).beregnTilkjentYtelse()
 
         assertThat(beregnetTilkjentYtelse.segmenter()).containsExactly(
@@ -377,7 +382,8 @@ class BeregnTilkjentYtelseServiceTest {
             barnetilleggGrunnlag,
             samordningsgrunnlag,
             samordningUføre,
-            samordningArbeidsgiver
+            samordningArbeidsgiver,
+            FakeUnleash
         ).beregnTilkjentYtelse()
 
         assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
@@ -452,7 +458,8 @@ class BeregnTilkjentYtelseServiceTest {
             barnetilleggGrunnlag,
             samordningsgrunnlag,
             samordningUføre,
-            samordningArbeidsgiver
+            samordningArbeidsgiver,
+            FakeUnleash
         ).beregnTilkjentYtelse()
 
         assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
@@ -525,7 +532,8 @@ class BeregnTilkjentYtelseServiceTest {
             barnetilleggGrunnlag,
             samordningsgrunnlag,
             samordningUføre,
-            samordningArbeidsgiver
+            samordningArbeidsgiver,
+            FakeUnleash
         ).beregnTilkjentYtelse()
 
         // Forventer 30 prosent grunnlag først, deretter 100 prosent
@@ -638,7 +646,8 @@ class BeregnTilkjentYtelseServiceTest {
             barnetilleggGrunnlag,
             samordningsgrunnlag,
             samordningUføre,
-            samordningArbeidsgiver
+            samordningArbeidsgiver,
+            FakeUnleash
         ).beregnTilkjentYtelse()
 
         // Forventer 30 prosent grunnlag først, deretter 100 prosent
@@ -719,7 +728,8 @@ class BeregnTilkjentYtelseServiceTest {
             barnetilleggGrunnlag,
             samordningsgrunnlag,
             samordningUføre,
-            samordningArbeidsgiver
+            samordningArbeidsgiver,
+            FakeUnleash
         ).beregnTilkjentYtelse()
 
         assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
@@ -783,7 +793,8 @@ class BeregnTilkjentYtelseServiceTest {
             barnetilleggGrunnlag,
             samordningsgrunnlag,
             samordningUføre,
-            samordningArbeidsgiver
+            samordningArbeidsgiver,
+            FakeUnleash
         ).beregnTilkjentYtelse()
 
         assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
@@ -877,7 +888,8 @@ class BeregnTilkjentYtelseServiceTest {
             barnetilleggGrunnlag,
             samordningsgrunnlag,
             samordningUføre,
-            samordningArbeidsgiver
+            samordningArbeidsgiver,
+            FakeUnleash
         ).beregnTilkjentYtelse()
 
         assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
@@ -948,7 +960,8 @@ class BeregnTilkjentYtelseServiceTest {
             barnetilleggGrunnlag,
             samordningsgrunnlag,
             samordningUføre,
-            samordningArbeidsgiver
+            samordningArbeidsgiver,
+            FakeUnleash
         ).beregnTilkjentYtelse()
 
         assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
@@ -1044,7 +1057,8 @@ class BeregnTilkjentYtelseServiceTest {
             barnetilleggGrunnlag,
             samordningsgrunnlag,
             samordningUføre,
-            samordningArbeidsgiver
+            samordningArbeidsgiver,
+            FakeUnleash
         ).beregnTilkjentYtelse()
 
         assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
@@ -1109,7 +1123,8 @@ class BeregnTilkjentYtelseServiceTest {
             barnetilleggGrunnlag,
             samordningsgrunnlag,
             samordningUføre,
-            samordningArbeidsgiver
+            samordningArbeidsgiver,
+            FakeUnleash
         ).beregnTilkjentYtelse()
 
         val tilkjent = Tilkjent(

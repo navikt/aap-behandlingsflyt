@@ -37,7 +37,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -82,38 +81,38 @@ class UnderveisService(
 
     private val kvoteService = KvoteService()
 
-    companion object {
-        private val regelset = listOf(
-            AapEtterRegel(),
-            UtledMeldeperiodeRegel(),
-            InstitusjonRegel(),
-            OppholdskravRegel(),
-            SoningRegel(),
-            MeldepliktRegel(),
-            SammenstiltAktivitetspliktRegel(),
-            GraderingArbeidRegel(),
-            VarighetRegel(),
-        )
 
-        init {
-            fun sjekkAvhengighet(forventetFør: KClass<*>, forventetEtter: KClass<*>) {
-                val offset1 = regelset.indexOfFirst { it::class == forventetFør }
-                val offset2 = regelset.indexOfFirst { it::class == forventetEtter }
-                check(offset1 != -1) { "Regel ${forventetFør.qualifiedName} er ikke med" }
-                check(offset2 != -1) { "Regel ${forventetEtter.qualifiedName} er ikke med" }
-                check(offset1 < offset2) {
-                    "Regel ${forventetFør.qualifiedName} må ha kjørt før ${forventetEtter.qualifiedName}, men er kjørt etter"
-                }
+    private val regelset = listOf(
+        AapEtterRegel(),
+        UtledMeldeperiodeRegel(),
+        InstitusjonRegel(),
+        OppholdskravRegel(),
+        SoningRegel(),
+        MeldepliktRegel(unleashGateway = unleashGateway),
+        SammenstiltAktivitetspliktRegel(),
+        GraderingArbeidRegel(),
+        VarighetRegel(),
+    )
+
+    init {
+        fun sjekkAvhengighet(forventetFør: KClass<*>, forventetEtter: KClass<*>) {
+            val offset1 = regelset.indexOfFirst { it::class == forventetFør }
+            val offset2 = regelset.indexOfFirst { it::class == forventetEtter }
+            check(offset1 != -1) { "Regel ${forventetFør.qualifiedName} er ikke med" }
+            check(offset2 != -1) { "Regel ${forventetEtter.qualifiedName} er ikke med" }
+            check(offset1 < offset2) {
+                "Regel ${forventetFør.qualifiedName} må ha kjørt før ${forventetEtter.qualifiedName}, men er kjørt etter"
             }
-
-            sjekkAvhengighet(forventetFør = UtledMeldeperiodeRegel::class, forventetEtter = MeldepliktRegel::class)
-            sjekkAvhengighet(
-                forventetFør = UtledMeldeperiodeRegel::class,
-                forventetEtter = SammenstiltAktivitetspliktRegel::class
-            )
-            sjekkAvhengighet(forventetFør = UtledMeldeperiodeRegel::class, forventetEtter = GraderingArbeidRegel::class)
         }
+
+        sjekkAvhengighet(forventetFør = UtledMeldeperiodeRegel::class, forventetEtter = MeldepliktRegel::class)
+        sjekkAvhengighet(
+            forventetFør = UtledMeldeperiodeRegel::class,
+            forventetEtter = SammenstiltAktivitetspliktRegel::class
+        )
+        sjekkAvhengighet(forventetFør = UtledMeldeperiodeRegel::class, forventetEtter = GraderingArbeidRegel::class)
     }
+
 
     fun vurder(sakId: SakId, behandlingId: BehandlingId): Tidslinje<Vurdering> {
         val input = genererInput(sakId, behandlingId)
@@ -198,7 +197,7 @@ class UnderveisService(
             oppholdskravGrunnlag = oppholdskravGrunnlag,
             meldeperioder = meldeperioder,
             vedtaksdatoFørstegangsbehandling = vedtaksdatoFørstegangsbehandling?.toLocalDate(),
-            )
+        )
     }
 
     private fun utledPeriodeForUnderveisvurderinger(

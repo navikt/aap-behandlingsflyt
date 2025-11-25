@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Dagsatser
@@ -147,7 +148,8 @@ fun beregnForInput(input: BeregningInput, fødselsdato: Fødselsdato): Triple<Ye
         ),
         samordningGrunnlag = SamordningGrunnlag(emptySet()),
         samordningUføre = null,
-        samordningArbeidsgiver = null
+        samordningArbeidsgiver = null,
+        unleashGateway = FakeUnleash
     )
 
     val dagsats = tilkjent.beregnTilkjentYtelse().mapValue { it.dagsats }.komprimer().segmenter().first().verdi.verdi

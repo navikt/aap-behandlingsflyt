@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UnntakFastsattMeldedag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.tilTidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag
@@ -13,6 +14,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.filterNotNull
@@ -33,6 +36,7 @@ class BeregnTilkjentYtelseService(
     private val samordningGrunnlag: SamordningGrunnlag,
     private val samordningUføre: SamordningUføreGrunnlag?,
     private val samordningArbeidsgiver: SamordningArbeidsgiverGrunnlag?,
+    private val unleashGateway: UnleashGateway,
 ) {
 
     internal companion object {
@@ -130,15 +134,22 @@ class BeregnTilkjentYtelseService(
         val meldeperiode = underveisperiode.meldePeriode
         val opplysningerMottatt = underveisperiode.arbeidsgradering.opplysningerMottatt
 
+        val muligensUnntak = if (unleashGateway.isEnabled(BehandlingsflytFeature.UnntakMeldepliktDesember)) {
+            UnntakFastsattMeldedag.erSpesialPeriode(meldeperiode)
+        } else null
+
         val sisteMeldedagForMeldeperiode = meldeperiode.tom.plusDays(9)
         val førsteMeldedagForMeldeperiode = meldeperiode.tom.plusDays(1)
+
+        val prioritertFørstedag = muligensUnntak ?: førsteMeldedagForMeldeperiode
+
         val muligUtbetalingsdato = when {
             opplysningerMottatt != null -> opplysningerMottatt
-            underveisperiode.meldepliktStatus == MeldepliktStatus.FRITAK -> førsteMeldedagForMeldeperiode
+            underveisperiode.meldepliktStatus == MeldepliktStatus.FRITAK -> prioritertFørstedag
             else -> sisteMeldedagForMeldeperiode
         }
         val utbetalingsdato = muligUtbetalingsdato
-            .coerceIn(førsteMeldedagForMeldeperiode..sisteMeldedagForMeldeperiode)
+            .coerceIn(prioritertFørstedag..sisteMeldedagForMeldeperiode)
         return utbetalingsdato
     }
 
