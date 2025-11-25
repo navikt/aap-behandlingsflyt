@@ -2862,7 +2862,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsAvklaringsBehov(
                 AvklarForutgåendeMedlemskapLøsning(
                     manuellVurderingForForutgåendeMedlemskap = ManuellVurderingForForutgåendeMedlemskapDto(
-                        "begrunnelse", true, true, null
+                        "begrunnelse", false, true, null
                     ),
                     behovstype = AvklaringsbehovKode.`5020`
                 )
