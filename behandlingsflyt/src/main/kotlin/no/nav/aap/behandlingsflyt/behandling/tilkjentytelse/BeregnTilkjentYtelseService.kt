@@ -135,7 +135,9 @@ class BeregnTilkjentYtelseService(
         val opplysningerMottatt = underveisperiode.arbeidsgradering.opplysningerMottatt
 
         val muligensUnntak = if (unleashGateway.isEnabled(BehandlingsflytFeature.UnntakMeldepliktDesember)) {
-            UnntakFastsattMeldedag.erSpesialPeriode(meldeperiode)
+            // `meldeperiode` svarer til perioden det ble skrevet meldekort for (på dato `opplysningerMottatt`).
+            // For å finne unntakts-meldepliktperiode, må vi flytte denne to uker fram.
+            UnntakFastsattMeldedag.erSpesialPeriode(meldeperiode.flytt(14))
         } else null
 
         val sisteMeldedagForMeldeperiode = meldeperiode.tom.plusDays(9)
@@ -143,9 +145,12 @@ class BeregnTilkjentYtelseService(
 
         val prioritertFørstedag = muligensUnntak ?: førsteMeldedagForMeldeperiode
 
+        // Hvis fritak fra meldeplikt, betal ut så tidlig som mulig.
+        // Ellers, betal ut etter dato for levert meldekort.
+        // Fallback til siste meldedag for meldeperiode.
         val muligUtbetalingsdato = when {
-            opplysningerMottatt != null -> opplysningerMottatt
             underveisperiode.meldepliktStatus == MeldepliktStatus.FRITAK -> prioritertFørstedag
+            opplysningerMottatt != null -> opplysningerMottatt
             else -> sisteMeldedagForMeldeperiode
         }
         val utbetalingsdato = muligUtbetalingsdato
