@@ -193,13 +193,24 @@ class BeregnTilkjentYtelseService(
                 )
             })
 
-        val barnetilleggTidslinje = BARNETILLEGGSATS_TIDSLINJE.kombiner(
+        val barnetilleggSatsJustertPåVilkår = underveisTidslinje.kombiner(
+            BARNETILLEGGSATS_TIDSLINJE, JoinStyle.INNER_JOIN { periode, underveis, sats ->
+                val beløp = if (underveis.verdi.utfall == Utfall.IKKE_OPPFYLT) {
+                    Beløp(0)
+                } else {
+                    sats.verdi
+                }
+                Segment(periode, beløp)
+            })
+
+        val barnetilleggTidslinje = barnetilleggSatsJustertPåVilkår.kombiner(
             barnetilleggGrunnlagTidslinje,
             JoinStyle.INNER_JOIN { periode, venstre, høyre ->
+                val barnMedRett = høyre.verdi.barnMedRettTil()
                 Segment(
                     periode, Barnetillegg(
-                        barnetillegg = venstre.verdi.multiplisert(høyre.verdi.barnMedRettTil().size),
-                        antallBarn = høyre.verdi.barnMedRettTil().size,
+                        barnetillegg = venstre.verdi.multiplisert(barnMedRett.size),
+                        antallBarn = barnMedRett.size,
                         barnetilleggsats = venstre.verdi
                     )
                 )
