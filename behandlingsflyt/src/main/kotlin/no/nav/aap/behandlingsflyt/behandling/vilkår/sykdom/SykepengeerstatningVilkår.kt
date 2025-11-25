@@ -43,7 +43,7 @@ class SykepengeerstatningVilkår(vilkårsresultat: Vilkårsresultat) :
                 Vilkårsperiode(
                     periode = grunnlag.rettighetsperiode,
                     utfall = Utfall.OPPFYLT,
-                    begrunnelse = null,
+                    begrunnelse = sykepengeerstatningVurdering.begrunnelse,
                     innvilgelsesårsak = null,
                     avslagsårsak = null,
                     faktagrunnlag = grunnlag,
@@ -54,7 +54,7 @@ class SykepengeerstatningVilkår(vilkårsresultat: Vilkårsresultat) :
                 Vilkårsperiode(
                     periode = grunnlag.rettighetsperiode,
                     utfall = Utfall.IKKE_OPPFYLT,
-                    begrunnelse = null,
+                    begrunnelse = sykepengeerstatningVurdering?.begrunnelse,
                     innvilgelsesårsak = null,
                     avslagsårsak = Avslagsårsak.IKKE_RETT_PA_SYKEPENGEERSTATNING,
                     faktagrunnlag = grunnlag,
