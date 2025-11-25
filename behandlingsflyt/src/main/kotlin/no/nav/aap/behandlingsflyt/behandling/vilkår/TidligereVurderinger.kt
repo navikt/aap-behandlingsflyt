@@ -132,7 +132,8 @@ class TidligereVurderingerImpl(
                     if (sykdomsvurdering?.erFørsteVurdering(kontekst.rettighetsperiode.fom) == false) {
                         return@outerJoin UKJENT
                     }
-
+                    
+                    // TODO: Denne tar ikke høyde for sykepengeerstatning 
                     val sykdomDefinitivtAvslag =
                         sykdomsvurdering?.erOppfyltSettBortIfraVissVarighet() == false
                                 && !sykdomsvurdering.erOppfyltForYrkesskade(periode.fom)
