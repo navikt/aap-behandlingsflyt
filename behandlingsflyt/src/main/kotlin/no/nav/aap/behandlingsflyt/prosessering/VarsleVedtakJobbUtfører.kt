@@ -45,7 +45,11 @@ class VarsleVedtakJobbUtfører(
             virkTom = sak.rettighetsperiode.tom,
             fagomrade = "AAP",
             ytelseType = "AAP",
-            etterbetaling = vedtak.virkningstidspunkt?.let { vedtak.vedtakstidspunkt.toLocalDate() > it } ?: false,
+            etterbetaling = vedtak.virkningstidspunkt?.let {
+                val vedtaksTidspunkt =
+                    requireNotNull(vedtak.vedtakstidspunkt) { "Vedtakstidspunkt kan ikke være null. Men: virkningstidspunt: ${vedtak.virkningstidspunkt}" }
+                vedtaksTidspunkt.toLocalDate() > it
+            } ?: false,
             utvidetFrist = null,
         )
 
