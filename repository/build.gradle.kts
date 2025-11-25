@@ -14,6 +14,8 @@ dependencies {
     implementation(libs.httpklient)
     implementation(libs.infrastructure)
     implementation(libs.tidslinje)
+    implementation("no.nav.aap.api.intern:kontrakt:0.0.21")
+
     implementation(libs.caffeine)
     implementation("org.flywaydb:flyway-database-postgresql:11.17.1")
     implementation("io.getunleash:unleash-client-java:11.1.1")
