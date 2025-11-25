@@ -282,7 +282,7 @@ class GraderingArbeidRegelTest {
             input,
             UtledMeldeperiodeRegel().vurder(
                 input,
-                Tidslinje(input.rettighetsperiode, Vurdering(fårAapEtter = RettighetsType.BISTANDSBEHOV))
+                Tidslinje(input.periodeForVurdering, Vurdering(fårAapEtter = RettighetsType.BISTANDSBEHOV))
             )
         ).mapValue { it.copy(fårAapEtter = RettighetsType.BISTANDSBEHOV) }
     }

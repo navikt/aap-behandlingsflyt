@@ -11,7 +11,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.MottattDokumentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
-import no.nav.aap.behandlingsflyt.pip.PipRepository
+import no.nav.aap.behandlingsflyt.pip.PipService
 import no.nav.aap.behandlingsflyt.prosessering.DatadelingMeldePerioderOgSakStatusJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.DatadelingMeldekortJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.MeldeperiodeTilMeldekortBackendJobbUtfører
@@ -34,13 +34,13 @@ class BehandlingHendelseServiceImpl(
     private val flytJobbRepository: FlytJobbRepository,
     private val sakService: SakService,
     private val dokumentRepository: MottattDokumentRepository,
-    private val pipRepository: PipRepository
+    private val pipService: PipService
 ) : BehandlingHendelseService {
     constructor(repositoryProvider: RepositoryProvider) : this(
         flytJobbRepository = repositoryProvider.provide(),
         sakService = SakService(repositoryProvider),
         dokumentRepository = repositoryProvider.provide(),
-        pipRepository = repositoryProvider.provide()
+        pipService = PipService(repositoryProvider)
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -65,7 +65,7 @@ class BehandlingHendelseServiceImpl(
             vurderingsbehov = vurderingsbehov.map { it.type.name },
             årsakTilOpprettelse = behandling.årsakTilOpprettelse?.name ?: "Ukjent årsak",
             avklaringsbehov = sortererteAvklaringsbehov(behandling, avklaringsbehovene.alle()),
-            relevanteIdenterPåBehandling = pipRepository.finnIdenterPåBehandling(behandling.referanse).map { it.ident },
+            relevanteIdenterPåBehandling = pipService.finnIdenterPåBehandling(behandling.referanse).map { it.ident },
             erPåVent = erPåVent,
             mottattDokumenter = mottattDokumenter,
             reserverTil = hentReservertTil(behandling.id),

@@ -34,16 +34,17 @@ class DatadelingMeldekortService(
             return emptyList()
         }
 
-        val meldePeriodene = meldeperiodeRepository.hent(behandlingId)
-        if (meldePeriodene.isEmpty()) {
-            log.warn("Ingen meldeperioder funnet for behandlingId=${behandlingId.id}")
-            return emptyList()
-        }
-
         val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandlingId)
         if (underveisGrunnlag == null) {
             log.warn("Ingen UnderveisGrunnlag funnet for behandlingId=${behandlingId.id}")
             // hvis det ikke finnes UnderveisGrunnlag, finnes det heller ingen meldekort å rapportere
+            return emptyList()
+        }
+
+        val aktuellPeriode = underveisGrunnlag.somTidslinje().helePerioden()
+        val meldePeriodene = meldeperiodeRepository.hentMeldeperioder(behandlingId, aktuellPeriode)
+        if (meldePeriodene.isEmpty()) {
+            log.warn("Ingen meldeperioder funnet for behandlingId=${behandlingId.id}")
             return emptyList()
         }
 

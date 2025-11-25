@@ -6,6 +6,7 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
 import no.nav.aap.behandlingsflyt.BaseApiTest
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettMeldeperiodeSteg
@@ -42,20 +43,20 @@ class TilkjentYtelseAPITest : BaseApiTest() {
             }
             val rettighetsperiode = sak.rettighetsperiode
 
-            val perioder = FastsettMeldeperiodeSteg.utledMeldeperiode(
-                emptyList(),
+            val perioder = MeldeperiodeUtleder.utledMeldeperiode(
+                null,
                 rettighetsperiode
             ).take(3)
 
-            InMemoryMeldeperiodeRepository.lagre(
+            InMemoryMeldeperiodeRepository.lagreFørsteMeldeperiode(
                 behandling.id,
-                perioder
+                perioder.first()
             )
 
             val tilkjentYtelseVerdi = Tilkjent(
                 dagsats = Beløp(500),
-                gradering = TilkjentGradering(
-                    endeligGradering = Prosent(50),
+                gradering = Prosent(50),
+                graderingGrunnlag = GraderingGrunnlag(
                     samordningGradering = Prosent(50),
                     institusjonGradering = Prosent(50),
                     arbeidGradering = Prosent(50),

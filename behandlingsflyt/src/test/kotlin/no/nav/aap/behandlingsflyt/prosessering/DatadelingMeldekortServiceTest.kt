@@ -179,15 +179,12 @@ private fun lagreMeldeperioder(
     meldeperiodeRepository: MeldeperiodeRepositoryImpl,
     testBehandling: Behandling
 ): List<Periode> {
-    val meldeperioder = listOf(
-        Periode(periodeStart, periodeStart.plusDays(13)),
-        Periode(periodeStart.plusDays(14), periodeStart.plusDays(27)),
-        Periode(periodeStart.plusDays(28), periodeStart.plusDays(41)),
-    )
-    meldeperiodeRepository.lagre(testBehandling.id, meldeperioder)
-    val meldeperioderDb = meldeperiodeRepository.hent(testBehandling.id)
-    assertThat(meldeperioderDb).hasSize(meldeperioder.size)
-    return meldeperioder
+    val førsteMeldeperiode = Periode(periodeStart, periodeStart.plusDays(13))
+    val aktuellPeriode = Periode(periodeStart.plusDays(28), periodeStart.plusDays(41))
+    meldeperiodeRepository.lagreFørsteMeldeperiode(testBehandling.id, førsteMeldeperiode)
+    val meldeperioderDb = meldeperiodeRepository.hentMeldeperioder(testBehandling.id, aktuellPeriode)
+    assertThat(meldeperioderDb).hasSize(3)
+    return meldeperioderDb
 }
 
 private fun testUnderveisperiode(testPeriode: Periode, meldeperiode: Periode): Underveisperiode =

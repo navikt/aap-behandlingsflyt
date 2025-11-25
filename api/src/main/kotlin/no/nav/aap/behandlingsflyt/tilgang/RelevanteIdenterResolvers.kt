@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.pip.IdentPåSak
 import no.nav.aap.behandlingsflyt.pip.IdentPåSak.Companion.filterDistinctIdent
-import no.nav.aap.behandlingsflyt.pip.PipRepository
+import no.nav.aap.behandlingsflyt.pip.PipService
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.RelevanteIdenter
@@ -25,7 +25,7 @@ fun relevanteIdenterForBehandlingResolver(
 ): RelevanteIdenterResolver {
     return RelevanteIdenterResolver { referanse ->
         dataSource.transaction(readOnly = true) { connection ->
-            repositoryRegistry.provider(connection).provide<PipRepository>()
+            PipService(repositoryRegistry.provider(connection))
                 .finnIdenterPåBehandling(BehandlingReferanse(UUID.fromString(referanse)))
                 .tilRelevanteIdenter()
         }
@@ -38,7 +38,7 @@ fun relevanteIdenterForSakResolver(
 ): RelevanteIdenterResolver {
     return RelevanteIdenterResolver { referanse ->
         dataSource.transaction(readOnly = true) { connection ->
-            repositoryRegistry.provider(connection).provide<PipRepository>()
+            PipService(repositoryRegistry.provider(connection))
                 .finnIdenterPåSak(Saksnummer(referanse))
                 .tilRelevanteIdenter()
         }
