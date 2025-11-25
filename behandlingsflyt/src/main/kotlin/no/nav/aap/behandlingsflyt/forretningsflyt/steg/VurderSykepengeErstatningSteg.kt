@@ -7,7 +7,6 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykepengerErstatningFaktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykepengeerstatningVilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
@@ -16,10 +15,10 @@ import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
@@ -72,20 +71,25 @@ class VurderSykepengeErstatningSteg private constructor(
                 }
             }
         )
-        
-        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-        val avklarSykepengeerstatning = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
-        if (avklarSykepengeerstatning?.status() == Status.AVSLUTTET) { // TODO: Denne må egentlig lagres på nytt
-            val grunnlag = SykepengerErstatningFaktagrunnlag(
-                rettighetsperiode = kontekst.rettighetsperiode,
-                sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId),
-                sykepengeerstatningGrunnlag = sykepengerErstatningRepository.hentHvisEksisterer(kontekst.behandlingId)
-            )
-            SykepengeerstatningVilkår(vilkårsresultat).vurder(grunnlag = grunnlag)
-        } else {
-            vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.OVERGANGARBEIDVILKÅRET)
+
+        when (kontekst.vurderingType) {
+            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
+                val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
+                val grunnlag = SykepengerErstatningFaktagrunnlag(
+                    rettighetsperiode = kontekst.rettighetsperiode,
+                    sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId),
+                    sykepengeerstatningGrunnlag = sykepengerErstatningRepository.hentHvisEksisterer(kontekst.behandlingId)
+                )
+                SykepengeerstatningVilkår(vilkårsresultat).vurder(grunnlag = grunnlag)
+                vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+            }
+            VurderingType.MELDEKORT,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
+            VurderingType.IKKE_RELEVANT -> {
+                /* noop */
+            }
         }
-        vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
 
         return Fullført
     }
