@@ -61,6 +61,10 @@ class OppdagEndretInformasjonskravJobbUtfører(
                 emptyList() // TODO: Se om vi bør legge ved triggere
             )
         }
+        else
+        {
+            log.info("Lar være å opprette revurdering for sak $sakId med behov $vurderingsbehov da opplysningene er registrert fra før. ")
+        }
     }
 
 

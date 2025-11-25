@@ -237,11 +237,10 @@ class SamordningYtelseVurderingInformasjonskrav(
                 for (nyPeriode in ny.ytelsePerioder) {
                     val relevanteEksPerioder = eksisterendeForType
                         .flatMap { it.ytelsePerioder }
-                        .filter { it.gradering == nyPeriode.gradering || (it.gradering == Prosent.`100_PROSENT` && ny.ytelseType == Ytelse.SYKEPENGER)}
+                        .filter { it.gradering == nyPeriode.gradering || (it.gradering == Prosent.`100_PROSENT` && ny.ytelseType == Ytelse.SYKEPENGER) }
 
-                    secureLogger.info("Hentet samordningytelse eksisterende ${eksisterende.ytelser} med nye samordningsytelser ${nye.map { it.ytelsePerioder }}  ${nye.map { it.ytelseType.name }}")
                     secureLogger.info(
-                        "Overlapp grunnlag " + isPeriodeDekketAvEksisterendePerioder(
+                        "Hentet samordningytelse eksisterende ${eksisterende.ytelser} med nye samordningsytelser ${nye.map { it.ytelsePerioder }}  ${nye.map { it.ytelseType.name }} Overlapp grunnlag" + isPeriodeDekketAvEksisterendePerioder(
                             relevanteEksPerioder,
                             nyPeriode
                         )
@@ -270,12 +269,11 @@ class SamordningYtelseVurderingInformasjonskrav(
                         .flatMap { it.vurderingPerioder }
                         .filter { it.gradering == nyPeriode.gradering || (it.gradering == Prosent.`100_PROSENT` && ny.ytelseType == Ytelse.SYKEPENGER) }
 
-                    secureLogger.info("Hentet samordningvurdering eksisterende ${eksisterendeVurderinger.vurderinger} med nye samordningsytelser ${samordningYtelser.map { it.ytelsePerioder }}  ${samordningYtelser.map { it.ytelseType.name }}")
                     secureLogger.info(
-                        "Overlapp vurderinger " + isPeriodeDekketAvEksisterendePerioder(
-                            relevanteEksPerioder,
-                            nyPeriode
-                        )
+                        "Hentet samordningvurdering eksisterende ${eksisterendeVurderinger.vurderinger} med nye samordningsytelser ${samordningYtelser.map { it.ytelsePerioder }}  ${samordningYtelser.map { it.ytelseType.name }} Overlapp vurderinger" + isPeriodeDekketAvEksisterendePerioder(
+                        relevanteEksPerioder,
+                        nyPeriode
+                    )
                     )
 
                     if (!isPeriodeDekketAvEksisterendePerioder(relevanteEksPerioder, nyPeriode)) {
