@@ -1,20 +1,17 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerGrunn
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerVurdering
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
@@ -48,6 +45,7 @@ class SykdomsvilkårTest {
                 studentvurdering = null,
                 sykepengerErstatningFaktagrunnlag = null,
                 bistandvurderingFaktagrunnlag = bistandGrunnlag(LocalDate.now()),
+                sykepengeerstatningVilkår = Tidslinje()
             )
         )
         val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
@@ -66,6 +64,7 @@ class SykdomsvilkårTest {
                 studentvurdering = null,
                 sykepengerErstatningFaktagrunnlag = null,
                 bistandvurderingFaktagrunnlag = null,
+                sykepengeerstatningVilkår = Tidslinje()
             )
         )
 
@@ -95,6 +94,7 @@ class SykdomsvilkårTest {
                 studentvurdering = null,
                 sykepengerErstatningFaktagrunnlag = null,
                 bistandvurderingFaktagrunnlag = bistandGrunnlag(startDato),
+                sykepengeerstatningVilkår = Tidslinje()
             )
         )
 
@@ -152,6 +152,7 @@ class SykdomsvilkårTest {
                 studentvurdering = null,
                 sykepengerErstatningFaktagrunnlag = null,
                 bistandvurderingFaktagrunnlag = bistandGrunnlag(startDato),
+                sykepengeerstatningVilkår = Tidslinje()
             )
         )
 
@@ -188,7 +189,8 @@ class SykdomsvilkårTest {
                 ),
                 studentvurdering = null,
                 sykepengerErstatningFaktagrunnlag = null,
-                bistandvurderingFaktagrunnlag = bistandGrunnlag(startDato)
+                bistandvurderingFaktagrunnlag = bistandGrunnlag(startDato),
+                sykepengeerstatningVilkår = Tidslinje()
             )
         )
 
