@@ -358,7 +358,7 @@ class SamordningYtelseRepositoryImplTest {
                                 1 januar 2023,
                                 tom = 30 juni 2023
                             ),
-                            gradering = Prosent(100),
+                            gradering = Prosent.`100_PROSENT`,
                             kronesum = 15000
                         ),
                         SamordningYtelsePeriode(
@@ -366,7 +366,7 @@ class SamordningYtelseRepositoryImplTest {
                                 fom = 1 juli 2023,
                                 tom = 31 desember 2023
                             ),
-                            gradering = Prosent(100),
+                            gradering = Prosent.`100_PROSENT`,
                             kronesum = 30000
                         )
                     )
@@ -384,7 +384,7 @@ class SamordningYtelseRepositoryImplTest {
                         1 mai 2023,
                         31 desember 2023
                     ),
-                    gradering = Prosent(100),
+                    gradering = Prosent.`100_PROSENT`,
                     kronesum = 25000
                 )
             )
@@ -414,7 +414,7 @@ class SamordningYtelseRepositoryImplTest {
                                 fom = 1 januar 2023,
                                 tom = 30 juni 2023
                             ),
-                            gradering = Prosent(100),
+                            gradering = Prosent.`100_PROSENT`,
                             kronesum = 15000
                         ),
                         SamordningYtelsePeriode(
@@ -422,7 +422,7 @@ class SamordningYtelseRepositoryImplTest {
                                 1 juli 2023,
                                 31 desember 2023
                             ),
-                            gradering = Prosent(100),
+                            gradering = Prosent.`100_PROSENT`,
                             kronesum = 30000
                         )
                     )
@@ -440,7 +440,7 @@ class SamordningYtelseRepositoryImplTest {
                         1 mai 2023,
                         30 september 2023
                     ),
-                    gradering = Prosent(100),
+                    gradering = Prosent.`100_PROSENT`,
                     kronesum = 25000
                 )
             )
@@ -469,7 +469,7 @@ class SamordningYtelseRepositoryImplTest {
                                 1 januar 2023,
                                 30 juni 2023,
                             ),
-                            gradering = Prosent(100),
+                            gradering = Prosent.`100_PROSENT`,
                             kronesum = 15000
                         ),
                     )
@@ -487,7 +487,7 @@ class SamordningYtelseRepositoryImplTest {
                         1 januar 2023,
                         30 september 2024,
                     ),
-                    gradering = Prosent(100),
+                    gradering = Prosent.`100_PROSENT`,
                     kronesum = 25000
                 )
             )
@@ -516,7 +516,7 @@ class SamordningYtelseRepositoryImplTest {
                                 1 januar 2023,
                                 30 juni 2023,
                             ),
-                            gradering = Prosent(100),
+                            gradering = Prosent.`100_PROSENT`,
                             kronesum = 15000
                         ),
                     )
@@ -534,7 +534,7 @@ class SamordningYtelseRepositoryImplTest {
                         1 mai 2024,
                         30 september 2024,
                     ),
-                    gradering = Prosent(100),
+                    gradering = Prosent.`100_PROSENT`,
                     kronesum = 25000
                 )
             )
@@ -550,7 +550,7 @@ class SamordningYtelseRepositoryImplTest {
 
 
     @Test
-    fun `test ingen overlapp med eksisterende ytelser når den nye ytelsen har annen ytelsestype`() {
+    fun `ingen overlapp med eksisterende ytelser når den nye ytelsen har annen ytelsestype`() {
         val eksisterendeGrunnlag = SamordningYtelseGrunnlag(
             grunnlagId = 1L,
             ytelser = setOf(
@@ -564,7 +564,7 @@ class SamordningYtelseRepositoryImplTest {
                                 1 mai 2023,
                                 tom = 31 desember 2023
                             ),
-                            gradering = Prosent(100),
+                            gradering = Prosent.`100_PROSENT`,
                             kronesum = 15000
                         ),
                     )
@@ -582,7 +582,117 @@ class SamordningYtelseRepositoryImplTest {
                         1 mai 2023,
                         31 desember 2023
                     ),
-                    gradering = Prosent(100),
+                    gradering = Prosent.`100_PROSENT`,
+                    kronesum = 25000
+                )
+            )
+        )
+
+        assertTrue(
+            harEndringerIYtelserIkkeDekketAvEksisterendeGrunnlag(
+                eksisterendeGrunnlag,
+                setOf(nyYtelse)
+            )
+        )
+    }
+
+    @Test
+    fun `ignorerer nye opplysninger når gradering er 100 prosent og ytelse er sykeoenger`() {
+        val eksisterendeGrunnlag = SamordningYtelseGrunnlag(
+            grunnlagId = 1L,
+            ytelser = setOf(
+                SamordningYtelse(
+                    ytelseType = Ytelse.SYKEPENGER,
+                    kilde = "KildeA",
+                    saksRef = "SAK123",
+                    ytelsePerioder = setOf(
+                        SamordningYtelsePeriode(
+                            periode = Periode(
+                                1 mai 2023,
+                                tom = 31 mai 2023
+                            ),
+                            gradering = Prosent.`100_PROSENT`,
+                            kronesum = 15000
+                        ),
+                        SamordningYtelsePeriode(
+                            periode = Periode(
+                                1 juni 2023,
+                                tom = 30 juni 2023
+                            ),
+                            gradering = Prosent.`100_PROSENT`,
+                            kronesum = 15000
+                        ),
+                    )
+                )
+            )
+        )
+
+        val nyYtelse = SamordningYtelse(
+            ytelseType = Ytelse.SYKEPENGER,
+            kilde = "KildeB",
+            saksRef = null,
+            ytelsePerioder = setOf(
+                SamordningYtelsePeriode(
+                    periode = Periode(
+                        1 mai 2023,
+                        30 juni 2023
+                    ),
+                    gradering = Prosent(40),
+                    kronesum = 25000
+                )
+            )
+        )
+
+        assertFalse(
+            harEndringerIYtelserIkkeDekketAvEksisterendeGrunnlag(
+                eksisterendeGrunnlag,
+                setOf(nyYtelse)
+            )
+        )
+    }
+
+    @Test
+    fun `ønsker å lagre nye opplysninger når gradering er 100 prosent og ytelse er foreldrepenger`() {
+        val eksisterendeGrunnlag = SamordningYtelseGrunnlag(
+            grunnlagId = 1L,
+            ytelser = setOf(
+                SamordningYtelse(
+                    ytelseType = Ytelse.FORELDREPENGER,
+                    kilde = "KildeA",
+                    saksRef = "SAK123",
+                    ytelsePerioder = setOf(
+                        SamordningYtelsePeriode(
+                            periode = Periode(
+                                1 mai 2023,
+                                tom = 31 mai 2023
+                            ),
+                            gradering = Prosent.`100_PROSENT`,
+                            kronesum = 15000
+                        ),
+                        SamordningYtelsePeriode(
+                            periode = Periode(
+                                1 juni 2023,
+                                tom = 30 juni 2023
+                            ),
+                            gradering = Prosent.`100_PROSENT`,
+                            kronesum = 15000
+                        ),
+                    )
+                )
+            )
+        )
+
+        val nyYtelse = SamordningYtelse(
+            ytelseType = Ytelse.FORELDREPENGER,
+            kilde = "KildeB",
+            saksRef = null,
+            ytelsePerioder = setOf(
+                SamordningYtelsePeriode(
+                    periode = Periode(
+                        1 mai 2023,
+                        30 juni 2023
+                    ),
+                    gradering = Prosent(40),
                     kronesum = 25000
                 )
             )
@@ -677,7 +787,7 @@ class SamordningYtelseRepositoryImplTest {
     }
 
     @Test
-    fun `test endringer i ytelser som vi ikke har manuelle vurderinger for, men bare graderingen er endret`() {
+    fun `test endringer i sykepenger som vi ikke har manuelle vurderinger for, men bare graderingen er endret`() {
         val vurderingsGrunnlag = SamordningVurderingGrunnlag(
             begrunnelse = "",
             vurderinger = setOf(
@@ -717,7 +827,47 @@ class SamordningYtelseRepositoryImplTest {
     }
 
     @Test
-    fun `test endringer i ytelser som vi ikke har manuelle vurderinger for, men bare graderingen er endret, og vi har allerede 100 prosent`() {
+    fun `test endringer i foreldrepenger som vi ikke har manuelle vurderinger for, men bare graderingen er endret`() {
+        val vurderingsGrunnlag = SamordningVurderingGrunnlag(
+            begrunnelse = "",
+            vurderinger = setOf(
+                SamordningVurdering(
+                    Ytelse.FORELDREPENGER, setOf(
+                        SamordningVurderingPeriode(
+                            periode = Periode(
+                                1 mai 2023,
+                                31 oktober 2023
+                            ),
+                            gradering = Prosent.`50_PROSENT`,
+                            manuell = false,
+                        )
+                    )
+                )
+            ),
+            vurdertAv = "ident"
+        )
+
+        val nyYtelse = SamordningYtelse(
+            ytelseType = Ytelse.FORELDREPENGER,
+            kilde = "KildeB",
+            saksRef = null,
+            ytelsePerioder = setOf(
+                SamordningYtelsePeriode(
+                    periode = Periode(
+                        1 mai 2023,
+                        31 oktober 2023
+                    ),
+                    gradering = Prosent.`70_PROSENT`,
+                    kronesum = 25000
+                )
+            )
+        )
+
+        assertTrue(harEndringerIYtelserIkkeDekketAvManuelleVurderinger(vurderingsGrunnlag, setOf(nyYtelse)))
+    }
+
+    @Test
+    fun `test endringer i sykepenger som vi ikke har manuelle vurderinger for, men bare graderingen er endret, og vi har allerede 100 prosent`() {
         val vurderingsGrunnlag = SamordningVurderingGrunnlag(
             begrunnelse = "",
             vurderinger = setOf(
@@ -754,5 +904,45 @@ class SamordningYtelseRepositoryImplTest {
         )
 
         assertFalse(harEndringerIYtelserIkkeDekketAvManuelleVurderinger(vurderingsGrunnlag, setOf(nyYtelse)))
+    }
+
+    @Test
+    fun `test endringer i foreldrepenger som vi ikke har manuelle vurderinger for, men bare graderingen er endret, og vi har allerede 100 prosent`() {
+        val vurderingsGrunnlag = SamordningVurderingGrunnlag(
+            begrunnelse = "",
+            vurderinger = setOf(
+                SamordningVurdering(
+                    Ytelse.FORELDREPENGER, setOf(
+                        SamordningVurderingPeriode(
+                            periode = Periode(
+                                1 mai 2023,
+                                31 oktober 2023
+                            ),
+                            gradering = Prosent.`100_PROSENT`,
+                            manuell = false,
+                        )
+                    )
+                )
+            ),
+            vurdertAv = "ident"
+        )
+
+        val nyYtelse = SamordningYtelse(
+            ytelseType = Ytelse.FORELDREPENGER,
+            kilde = "KildeB",
+            saksRef = null,
+            ytelsePerioder = setOf(
+                SamordningYtelsePeriode(
+                    periode = Periode(
+                        1 mai 2023,
+                        31 oktober 2023
+                    ),
+                    gradering = Prosent.`50_PROSENT`,
+                    kronesum = 25000
+                )
+            )
+        )
+
+        assertTrue(harEndringerIYtelserIkkeDekketAvManuelleVurderinger(vurderingsGrunnlag, setOf(nyYtelse)))
     }
 }

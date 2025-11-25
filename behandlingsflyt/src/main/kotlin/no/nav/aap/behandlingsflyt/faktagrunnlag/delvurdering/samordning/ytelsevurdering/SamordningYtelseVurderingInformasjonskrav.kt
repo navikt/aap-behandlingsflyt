@@ -237,14 +237,14 @@ class SamordningYtelseVurderingInformasjonskrav(
                 for (nyPeriode in ny.ytelsePerioder) {
                     val relevanteEksPerioder = eksisterendeForType
                         .flatMap { it.ytelsePerioder }
-                        .filter { it.gradering == nyPeriode.gradering || it.gradering == Prosent.`100_PROSENT` }
+                        .filter { it.gradering == nyPeriode.gradering || (it.gradering == Prosent.`100_PROSENT` && ny.ytelseType == Ytelse.SYKEPENGER)}
 
-                    secureLogger.info("Hentet samordningytelse eksisterende ${eksisterende?.ytelser} med nye samordningsytelser ${nye.map { it.ytelsePerioder }}  ${nye.map { it.ytelseType.name }}")
+                    secureLogger.info("Hentet samordningytelse eksisterende ${eksisterende.ytelser} med nye samordningsytelser ${nye.map { it.ytelsePerioder }}  ${nye.map { it.ytelseType.name }}")
                     secureLogger.info(
                         "Overlapp " + isPeriodeDekketAvEksisterendePerioder(
                             relevanteEksPerioder,
                             nyPeriode
-                        ) + "YtelseneErLike " + (nye == eksisterende?.ytelser)
+                        ) + "YtelseneErLike " + (nye == eksisterende.ytelser)
                     )
 
                     if (!isPeriodeDekketAvEksisterendePerioder(relevanteEksPerioder, nyPeriode)) {
@@ -268,7 +268,7 @@ class SamordningYtelseVurderingInformasjonskrav(
                 for (nyPeriode in ny.ytelsePerioder) {
                     val relevanteEksPerioder = eksisterendeForType
                         .flatMap { it.vurderingPerioder }
-                        .filter { it.gradering == nyPeriode.gradering || it.gradering == Prosent.`100_PROSENT` }
+                        .filter { it.gradering == nyPeriode.gradering || (it.gradering == Prosent.`100_PROSENT` && ny.ytelseType == Ytelse.SYKEPENGER) }
 
                     secureLogger.info("Hentet samordningvurdering eksisterende ${eksisterendeVurderinger.vurderinger} med nye samordningsytelser ${samordningYtelser.map { it.ytelsePerioder }}  ${samordningYtelser.map { it.ytelseType.name }}")
                     secureLogger.info(
