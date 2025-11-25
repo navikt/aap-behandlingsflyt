@@ -1,6 +1,6 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
-val opentelemetryVersion = "2.21.0-alpha"
+val opentelemetryVersion = "2.22.0-alpha"
 
 repositories {
     mavenCentral()
@@ -88,7 +88,7 @@ dependencies {
     implementation(project(":behandlingsflyt"))
     implementation(project(":repository"))
     implementation("com.zaxxer:HikariCP:7.0.2")
-    implementation("org.flywaydb:flyway-database-postgresql:11.17.0")
+    implementation("org.flywaydb:flyway-database-postgresql:11.17.1")
 
     runtimeOnly("org.postgresql:postgresql") // låst versjon i root build.gradle.kts
 

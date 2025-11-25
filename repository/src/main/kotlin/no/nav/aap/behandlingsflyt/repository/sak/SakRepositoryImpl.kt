@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
 
@@ -31,7 +32,7 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
         val relevantesaker = finnSakerFor(person, periode)
 
         if (relevantesaker.isEmpty()) {
-            return opprett(person, periode)
+            return opprett(person, Periode(periode.fom, Tid.MAKS))
         }
 
         return relevantesaker.first()

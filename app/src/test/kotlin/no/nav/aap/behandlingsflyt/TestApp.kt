@@ -54,6 +54,7 @@ import no.nav.aap.behandlingsflyt.test.testGatewayProvider
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.testutil.ManuellMotorImpl
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -272,7 +273,7 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO): Sak {
     )
     val periode = Periode(
         LocalDate.now(),
-        LocalDate.now().plusYears(1).minusDays(1)
+        Tid.MAKS
     )
     val sak = datasource.transaction { connection ->
         val sakService = PersonOgSakService(
