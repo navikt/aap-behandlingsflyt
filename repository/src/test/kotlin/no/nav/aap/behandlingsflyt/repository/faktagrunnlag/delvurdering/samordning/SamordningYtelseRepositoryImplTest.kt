@@ -597,6 +597,67 @@ class SamordningYtelseRepositoryImplTest {
     }
 
     @Test
+    fun `har ikke endringer i ytelser når det ikke er nye ytelser`() {
+        val eksisterendeGrunnlag = SamordningYtelseGrunnlag(
+            grunnlagId = 1L,
+            ytelser = setOf(
+                SamordningYtelse(
+                    ytelseType = Ytelse.SYKEPENGER,
+                    kilde = "KildeA",
+                    saksRef = "SAK123",
+                    ytelsePerioder = setOf(
+                        SamordningYtelsePeriode(
+                            periode = Periode(
+                                1 mai 2023,
+                                tom = 31 desember 2023
+                            ),
+                            gradering = Prosent.`100_PROSENT`,
+                            kronesum = 15000
+                        ),
+                    )
+                )
+            )
+        )
+
+        assertFalse(
+            harEndringerIYtelserIkkeDekketAvEksisterendeGrunnlag(
+                eksisterendeGrunnlag,
+                emptySet()
+            )
+        )
+    }
+
+    @Test
+    fun ` ingen overlapp med eksisterende ytelser når det ikke finnes ytelser fra før`() {
+        val eksisterendeGrunnlag = SamordningYtelseGrunnlag(
+            grunnlagId = 1L,
+            ytelser = emptySet())
+
+        val nyYtelse = SamordningYtelse(
+            ytelseType = Ytelse.SYKEPENGER,
+            kilde = "KildeB",
+            saksRef = null,
+            ytelsePerioder = setOf(
+                SamordningYtelsePeriode(
+                    periode = Periode(
+                        1 mai 2023,
+                        31 desember 2023
+                    ),
+                    gradering = Prosent.`100_PROSENT`,
+                    kronesum = 25000
+                )
+            )
+        )
+
+        assertTrue(
+            harEndringerIYtelserIkkeDekketAvEksisterendeGrunnlag(
+                eksisterendeGrunnlag,
+                setOf(nyYtelse)
+            )
+        )
+    }
+
+    @Test
     fun `ignorerer nye opplysninger når gradering er 100 prosent og ytelse er sykeoenger`() {
         val eksisterendeGrunnlag = SamordningYtelseGrunnlag(
             grunnlagId = 1L,
@@ -944,5 +1005,56 @@ class SamordningYtelseRepositoryImplTest {
         )
 
         assertTrue(harEndringerIYtelserIkkeDekketAvManuelleVurderinger(vurderingsGrunnlag, setOf(nyYtelse)))
+    }
+
+    @Test
+    fun `er endringer når det ikke finnes vurderinger fra før`() {
+        val vurderingsGrunnlag = SamordningVurderingGrunnlag(
+            begrunnelse = "Test",
+            vurderinger = emptySet(),
+            vurdertAv = "ident"
+        )
+
+        val nyYtelse = SamordningYtelse(
+            ytelseType = Ytelse.FORELDREPENGER,
+            kilde = "KildeB",
+            saksRef = null,
+            ytelsePerioder = setOf(
+                SamordningYtelsePeriode(
+                    periode = Periode(
+                        1 mai 2023,
+                        31 oktober 2023
+                    ),
+                    gradering = Prosent.`50_PROSENT`,
+                    kronesum = 25000
+                )
+            )
+        )
+
+        assertTrue(harEndringerIYtelserIkkeDekketAvManuelleVurderinger(vurderingsGrunnlag, setOf(nyYtelse)))
+    }
+
+    @Test
+    fun `er ingen endringer når det ikke er nye ytelser`() {
+        val vurderingsGrunnlag = SamordningVurderingGrunnlag(
+            begrunnelse = "",
+            vurderinger = setOf(
+                SamordningVurdering(
+                    Ytelse.FORELDREPENGER, setOf(
+                        SamordningVurderingPeriode(
+                            periode = Periode(
+                                1 mai 2023,
+                                31 oktober 2023
+                            ),
+                            gradering = Prosent.`100_PROSENT`,
+                            manuell = false,
+                        )
+                    )
+                )
+            ),
+            vurdertAv = "ident"
+        )
+
+        assertFalse(harEndringerIYtelserIkkeDekketAvManuelleVurderinger(vurderingsGrunnlag, emptySet()))
     }
 }
