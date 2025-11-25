@@ -38,14 +38,15 @@ class InstitusjonsoppholdUtlederService(
 
     fun utled(
         behandlingId: BehandlingId,
-        basertPåVurderingerFørDenneBehandlingen: Boolean = false
+        basertPåVurderingerFørDenneBehandlingen: Boolean = false,
+        begrensetTilRettighetsperiode: Boolean? = true
     ): BehovForAvklaringer {
         val input = konstruerInput(behandlingId, basertPåVurderingerFørDenneBehandlingen)
 
-        return utledBehov(input)
+        return utledBehov(input, begrensetTilRettighetsperiode)
     }
 
-    internal fun utledBehov(input: InstitusjonsoppholdInput): BehovForAvklaringer {
+    internal fun utledBehov(input: InstitusjonsoppholdInput, begrensetTilRettighetsperiode: Boolean? = true): BehovForAvklaringer {
         val opphold = input.institusjonsOpphold
         val soningsOppgold = opphold.filter { segment -> segment.verdi.type == Institusjonstype.FO }
         val helseopphold = opphold.filter { segment -> segment.verdi.type == Institusjonstype.HS }
@@ -68,7 +69,7 @@ class InstitusjonsoppholdUtlederService(
                     Segment(periode, verdi)
                 })
 
-        val helseOpphold = opprettTidslinje(helseopphold).begrensetTil(input.rettighetsperiode)
+        val helseOpphold = opprettTidslinje(helseopphold).begrensetTil(Periode(Tid.MIN, input.rettighetsperiode.tom)) // Bare begrens en vei!
 
         val barnetilleggTidslinje = barnetillegg.tilTidslinje()
 
@@ -104,6 +105,9 @@ class InstitusjonsoppholdUtlederService(
             sammenslåer()
         ).komprimer()
 
+        if (begrensetTilRettighetsperiode == true) {
+            perioderSomTrengerVurdering = perioderSomTrengerVurdering.begrensetTil(input.rettighetsperiode)
+        }
         return BehovForAvklaringer(perioderSomTrengerVurdering)
     }
 
