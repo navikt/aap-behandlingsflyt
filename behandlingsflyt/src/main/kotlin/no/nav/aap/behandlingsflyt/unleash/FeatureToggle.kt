@@ -24,6 +24,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     InstFormaal,
     Arbeidsopptrapping,
     IkkeAntaNullTimerArbeidet,
+    NyBrevbyggerV3,
     LagreVedtakIFatteVedtak,
     ;
 

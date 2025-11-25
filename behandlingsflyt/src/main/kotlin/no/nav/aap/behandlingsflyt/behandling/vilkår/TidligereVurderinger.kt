@@ -40,7 +40,7 @@ interface TidligereVurderinger {
     fun harBehandlingsgrunnlag(kontekst: FlytKontekstMedPerioder, førSteg: StegType): Boolean {
         return !girIngenBehandlingsgrunnlag(kontekst, førSteg)
     }
-    
+
     fun muligMedRettTilAAP(kontekst: FlytKontekstMedPerioder, førSteg: StegType): Boolean {
         return !girAvslagEllerIngenBehandlingsgrunnlag(kontekst, førSteg)
     }
@@ -91,6 +91,7 @@ class TidligereVurderingerImpl(
                     )
                 }
             )
+
             TypeBehandling.Førstegangsbehandling -> listOf(
                 Sjekk(StegType.SØKNAD) { _, kontekst ->
                     Tidslinje(
@@ -102,6 +103,7 @@ class TidligereVurderingerImpl(
                     )
                 }
             )
+
             else -> emptyList()
         }
 
@@ -131,7 +133,8 @@ class TidligereVurderingerImpl(
                     }
 
                     val sykdomDefinitivtAvslag =
-                        sykdomsvurdering?.erOppfyltSettBortIfraVissVarighet() == false && !sykdomsvurdering.erOppfyltForYrkesskade()
+                        sykdomsvurdering?.erOppfyltSettBortIfraVissVarighet() == false
+                                && !sykdomsvurdering.erOppfyltForYrkesskade(periode.fom)
 
                     if (sykdomDefinitivtAvslag) {
                         return@outerJoin UUNGÅELIG_AVSLAG

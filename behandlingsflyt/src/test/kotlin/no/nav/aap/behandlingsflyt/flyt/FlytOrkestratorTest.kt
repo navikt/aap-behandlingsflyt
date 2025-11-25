@@ -215,7 +215,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                         begrunnelse = "...",
                         dokumenterBruktIVurdering = emptyList(),
                         harRettPå = true,
-                        grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR
+                        grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
+                        gjelderFra = sak.rettighetsperiode.fom
                     ),
                 )
             )
@@ -257,7 +258,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                         begrunnelse = "HAR IKKE RETT",
                         dokumenterBruktIVurdering = emptyList(),
                         harRettPå = false,
-                        grunn = null
+                        grunn = null,
+                        gjelderFra = sak.rettighetsperiode.fom
                     ),
                 )
             )
@@ -390,7 +392,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                         begrunnelse = "test",
                         dokumenterBruktIVurdering = emptyList(),
                         harRettPå = true,
-                        grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR
+                        grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
+                        gjelderFra = sak.rettighetsperiode.fom
                     ),
                     behovstype = Definisjon.AVKLAR_SYKEPENGEERSTATNING.kode
                 )
@@ -1488,7 +1491,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                         begrunnelse = "...",
                         dokumenterBruktIVurdering = emptyList(),
                         harRettPå = true,
-                        grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR
+                        grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
+                        gjelderFra = sak.rettighetsperiode.fom
                     ),
                 )
             )
@@ -1523,11 +1527,11 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
 
                 val vilkårsresultat = hentVilkårsresultat(behandlingId = behandling.id)
-                val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
+                val sykepengeerstatningvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKEPENGEERSTATNING)
 
-                assertThat(sykdomsvilkåret.vilkårsperioder()).hasSize(1).first()
+                assertThat(sykepengeerstatningvilkåret.vilkårsperioder()).hasSize(1).first()
                     .extracting(Vilkårsperiode::erOppfylt, Vilkårsperiode::innvilgelsesårsak)
-                    .containsExactly(true, Innvilgelsesårsak.SYKEPENGEERSTATNING)
+                    .containsExactly(true, null)
 
                 val resultat =
                     dataSource.transaction {
@@ -1724,7 +1728,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                         begrunnelse = "...",
                         dokumenterBruktIVurdering = emptyList(),
                         harRettPå = true,
-                        grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR
+                        grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
+                        gjelderFra = periode.fom
                     ),
                 )
             )
@@ -1757,12 +1762,11 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
 
         val vilkårsresultat = hentVilkårsresultat(behandlingId = behandling.id)
-        val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
+        val sykepeengeerstatningsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKEPENGEERSTATNING)
 
-        // Sjekker at sykdomsvilkåret ble oppfylt med innvilgelsesårsak satt til 11-13.
-        assertThat(sykdomsvilkåret.vilkårsperioder()).hasSize(1).first()
+        assertThat(sykepeengeerstatningsvilkåret.vilkårsperioder()).hasSize(1).first()
             .extracting(Vilkårsperiode::erOppfylt, Vilkårsperiode::innvilgelsesårsak)
-            .containsExactly(true, Innvilgelsesårsak.SYKEPENGEERSTATNING)
+            .containsExactly(true, null)
 
         resultat =
             dataSource.transaction { ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(behandling.id) }
@@ -1850,7 +1854,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                         begrunnelse = "...",
                         dokumenterBruktIVurdering = emptyList(),
                         harRettPå = false,
-                        grunn = null
+                        grunn = null,
+                        gjelderFra = LocalDate.now()
                     ),
                 )
             )
