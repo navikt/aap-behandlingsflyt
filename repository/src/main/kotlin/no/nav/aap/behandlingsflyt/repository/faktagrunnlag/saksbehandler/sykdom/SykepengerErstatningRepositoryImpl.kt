@@ -57,7 +57,7 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
                         setEnumName(3, vurdering.grunn)
                         setString(4, vurdering.vurdertAv)
                         setLocalDate(5, vurdering.gjelderFra)
-                        setLocalDate(6, vurdering.gjelderTil?.minusDays(1))
+                        setLocalDate(6, vurdering.gjelderTom)
                         setLong(7, vurderingerId)
                         setLong(8, vurdering.vurdertIBehandling.toLong())
                     }
@@ -142,7 +142,7 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
                     vurdertAv = row.getString("vurdert_av"),
                     vurdertTidspunkt = row.getLocalDateTime("opprettet_tid"),
                     gjelderFra = row.getLocalDate("gjelder_fra"),
-                    gjelderTil = row.getLocalDateOrNull("gjelder_tom")?.plusDays(1),
+                    gjelderTom = row.getLocalDateOrNull("gjelder_tom"),
                 )
             }
         }

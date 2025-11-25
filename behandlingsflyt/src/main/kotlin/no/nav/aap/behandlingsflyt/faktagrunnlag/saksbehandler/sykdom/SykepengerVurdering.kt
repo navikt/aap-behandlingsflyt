@@ -14,7 +14,7 @@ data class SykepengerVurdering(
     val vurdertAv: String,
     val vurdertTidspunkt: LocalDateTime? = null,
     val gjelderFra: LocalDate,
-    val gjelderTil: LocalDate? = null,
+    val gjelderTom: LocalDate? = null,
 )
 
 /**

@@ -52,7 +52,7 @@ class AvklarSykepengerErstatningLøser(
         vurdertIBehandling = behandlingId,
         vurdertAv = vurdertAv,
         gjelderFra = dto.fom,
-        gjelderTil = dto.tom,
+        gjelderTom = dto.tom,
     )
 
     override fun forBehov(): Definisjon {
