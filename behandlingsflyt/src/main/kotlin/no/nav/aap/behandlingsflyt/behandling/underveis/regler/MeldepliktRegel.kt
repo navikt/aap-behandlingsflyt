@@ -49,6 +49,7 @@ class MeldepliktRegel(
             "kan ikke vurdere utenfor rettighetsperioden fordi meldeperioden ikke er definert"
         }
 
+        // Bygg opp input-tidslinje
         val meldepliktDataTidslinje =
             Tidslinje(input.rettighetsperiode, MeldepliktData())
                 .outerJoin(meldekortTidslinje(input), MeldepliktData.Companion::merge)
@@ -59,7 +60,7 @@ class MeldepliktRegel(
                 .outerJoin(utenRettTidslinje(resultat), MeldepliktData.Companion::merge)
                 .splittOppIPerioder(resultat.segmenter().map { vurdering -> vurdering.verdi.meldeperiode() })
 
-
+        // Kjør meldeplikt-regel-logikk
         val meldepliktVurderinger = meldepliktDataTidslinje
             .segmenter()
             .fold(Tidslinje<MeldepliktVurdering>()) { meldeperioderVurdert, nåværendeMeldeperiodeSegment ->
@@ -217,7 +218,7 @@ class MeldepliktRegel(
         /* Meldeperioden er ikke historisk. Det kan være ting i fremtiden som endrer
          * utfallet av meldeperioden. For at fremtidige vurderinger skal bli realistiske,
          * antar vi at medlemmet fortsetter å melde seg hvis de meldte seg, og at de
-         * fortsetter å ikke melder seg hvis de ikke har meldt seg. */
+         * fortsetter å ikke melde seg hvis de ikke har meldt seg. */
 
         if (dagensDato < meldeperiode.fom) {
             return vanligVurdering.mapValue { vurdering ->
