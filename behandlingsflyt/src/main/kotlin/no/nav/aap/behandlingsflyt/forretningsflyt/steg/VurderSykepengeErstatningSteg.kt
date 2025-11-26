@@ -133,7 +133,7 @@ class VurderSykepengeErstatningSteg private constructor(
                             true
 
                         /* i dette caset oppfyller ikke medlemmet vilkåret for ordinær AAP, men SPE er mulig */
-                        sykdomsvurdering?.erOppfyltOrdinærtEllerMedYrkesskadeMenIkkeVissVarighet(kravDato, yrkesskadevurdering) == true ->
+                        sykdomsvurdering?.erOppfyltOrdinærtEllerMedYrkesskadeMenIkkeVissVarighet(yrkesskadevurdering) == true ->
                             true
 
                         else -> false

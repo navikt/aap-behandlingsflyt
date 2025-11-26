@@ -40,11 +40,11 @@ data class Sykdomsvurdering(
                 )
     }
 
-    fun erOppfyltOrdinærtEllerMedYrkesskadeMenIkkeVissVarighet(kravdato: LocalDate, yrkesskadevurdering: Yrkesskadevurdering?): Boolean {
+    fun erOppfyltOrdinærtEllerMedYrkesskadeMenIkkeVissVarighet(yrkesskadevurdering: Yrkesskadevurdering?): Boolean {
         return harSkadeSykdomEllerLyte
                 && erArbeidsevnenNedsatt == true
                 && erSkadeSykdomEllerLyteVesentligdel == true
-                && (if (erFørsteVurdering(kravdato)) erNedsettelseIArbeidsevneAvEnVissVarighet == false else true)
+                && erNedsettelseIArbeidsevneAvEnVissVarighet == false
                 && (
                 erNedsettelseIArbeidsevneMerEnnHalvparten == true ||
                         ((yrkesskadevurdering?.erÅrsakssammenheng ?: false) &&
