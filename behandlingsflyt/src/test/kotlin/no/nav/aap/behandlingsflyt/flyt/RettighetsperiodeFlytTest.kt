@@ -44,7 +44,7 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
         val sak = happyCaseFørstegangsbehandling(LocalDate.now())
         val nyStartDato = sak.rettighetsperiode.fom.plusDays(7)
         val revurdering = sak.opprettManuellRevurdering(
-            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.VURDER_RETTIGHETSPERIODE)
+            listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE)
         )
 
         val feil = assertThrows<UgyldigForespørselException> {
@@ -65,7 +65,7 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
          * Utvid rettighetsperioden
          */
         val avklaringsbehovManuellRevurdering =
-            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.VURDER_RETTIGHETSPERIODE)
+            listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE)
         sak.opprettManuellRevurdering(avklaringsbehovManuellRevurdering)
             .medKontekst {
                 assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
@@ -133,7 +133,7 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
         val ident = sak.person.aktivIdent()
         val nyStartDato = sak.rettighetsperiode.fom.minusDays(7)
         var revurdering = sak.opprettManuellRevurdering(
-            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.VURDER_RETTIGHETSPERIODE),
+            listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE),
         ).medKontekst {
             assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
             assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
@@ -201,7 +201,7 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
 
         val nyStartDato = sak.rettighetsperiode.fom.minusMonths(1)
         val revurdering = sak.opprettManuellRevurdering(
-            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.VURDER_RETTIGHETSPERIODE),
+            listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE),
         )
             .løsRettighetsperiode(nyStartDato)
             .medKontekst {
@@ -250,7 +250,7 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
             .isEqualTo(Definisjon.AVKLAR_SYKDOM)
 
         behandling = sak.opprettManuellRevurdering(
-            vurderingsbehov = listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.VURDER_RETTIGHETSPERIODE),
+            vurderingsbehov = listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE),
         )
 
         behandling.løsRettighetsperiode(nyStartDato)
@@ -283,7 +283,7 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
             .kvalitetssikreOk()
 
         var oppdatertBehandling = sak.opprettManuellRevurdering(
-            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.VURDER_RETTIGHETSPERIODE),
+            listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE),
         ).medKontekst {
             assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
             assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
@@ -350,7 +350,7 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
             .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
             .løsBeregningstidspunkt(startDato)
-            .løsForutgåendeMedlemskap()
+            .løsForutgåendeMedlemskap(startDato)
             .løsOppholdskrav(startDato)
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
