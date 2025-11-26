@@ -101,22 +101,22 @@ class VurderBistandsbehovSteg(
             kontekst = kontekst
         )
 
-        if (avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_BISTANDSBEHOV)?.status()
-                ?.erAvsluttet() == true
-        ) {
-            /* Dette skal på sikt ut av denne metoden, og samles i et eget fastsett-steg. */
-            val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-            vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.BISTANDSVILKÅRET)
-
-            val grunnlag = BistandFaktagrunnlag(
-                kontekst.rettighetsperiode.tom,
-                bistandRepository.hentHvisEksisterer(kontekst.behandlingId)
-            )
-            Bistandsvilkåret(vilkårsresultat).vurder(grunnlag = grunnlag)
-            vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
-        }
+            vurderBistandsvilkår(kontekst)
 
         return Fullført
+    }
+
+    private fun vurderBistandsvilkår(kontekst: FlytKontekstMedPerioder) {
+        /* Dette skal på sikt ut av denne metoden, og samles i et eget fastsett-steg. */
+        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
+        vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.BISTANDSVILKÅRET)
+
+        val grunnlag = BistandFaktagrunnlag(
+            kontekst.rettighetsperiode.tom,
+            bistandRepository.hentHvisEksisterer(kontekst.behandlingId)
+        )
+        Bistandsvilkåret(vilkårsresultat).vurder(grunnlag = grunnlag)
+        vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
     }
 
     private fun perioderHvorBistandsvilkåretErRelevant(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {

@@ -2,20 +2,33 @@ package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeriodisertLovvalgMedlemskapLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForLovvalgMedlemskapDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.SamordningVurderingData
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
+import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
+import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
@@ -309,6 +322,100 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
             )
         )
         assertThat(uthentetTilkjentYtelse.tilTidslinje().helePerioden().fom).isEqualTo(nyStartDato)
+    }
+
+    @Test
+    fun `Skal kunne utvide rettighetsperioden automatisk uten at vilkårene er begrenset i tidslengde`() {
+        val (sak, behandling) = sendInnFørsteSøknad()
+        val startDato = sak.rettighetsperiode.fom
+
+        /**
+         * Begrenser rettighetsperioden til 1 år for å simulere eksisterende behandlinger fra tidligere
+         */
+        val gammelRettighetsperiode = Periode(startDato, startDato.plusMonths(12).minusDays(1))
+        dataSource.transaction { connection ->
+            val sakRepository = SakRepositoryImpl(connection)
+            sakRepository.oppdaterRettighetsperiode(
+                sak.id,
+                gammelRettighetsperiode
+            )
+        }
+        behandling
+            .løsSykdom(startDato)
+            .løsBistand()
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .kvalitetssikreOk()
+            .løsBeregningstidspunkt(startDato)
+            .løsForutgåendeMedlemskap()
+            .løsOppholdskrav(startDato)
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev(TypeBrev.VEDTAK_INNVILGELSE)
+
+        val underveisGrunnlag: UnderveisGrunnlag =
+            dataSource.transaction { UnderveisRepositoryImpl(it).hent(behandling.id) }
+        val utfallTidslinje = underveisGrunnlag.perioder.somTidslinje { it.periode }.map { it.utfall }.komprimer()
+        assertTidslinje(
+            utfallTidslinje,
+            gammelRettighetsperiode to { assertThat(it).isEqualTo(Utfall.OPPFYLT) }
+        )
+
+        val oppdatertRettighetsperiode = Periode(startDato, Tid.MAKS)
+        dataSource.transaction { connection ->
+            val sakRepository = SakRepositoryImpl(connection)
+            sakRepository.oppdaterRettighetsperiode(
+                sak.id,
+                oppdatertRettighetsperiode
+            )
+        }
+
+        val oppdatertBehandling =
+            sak.opprettManuellRevurdering(Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER)
+        val startDatoRettTilYtelse = startDato.plusMonths(6)
+        oppdatertBehandling.løsAvklaringsBehov(
+            AvklarSamordningGraderingLøsning(
+                VurderingerForSamordning(
+                    begrunnelse = "Sykepengervurdering",
+                    maksDatoEndelig = true,
+                    fristNyRevurdering = null,
+                    vurderteSamordningerData = listOf(
+                        SamordningVurderingData(
+                            ytelseType = Ytelse.SYKEPENGER,
+                            periode = Periode(
+                                fom = startDato,
+                                tom = startDatoRettTilYtelse.minusDays(1),
+                            ),
+                            gradering = 100,
+                            manuell = true
+                        )
+                    ),
+                )
+            )
+
+        )
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev(TypeBrev.VEDTAK_ENDRING)
+
+
+        val sisteBehandling = hentSisteOpprettedeBehandlingForSak(sak.id)
+        val oppdatertUnderveisGrunnlag: UnderveisGrunnlag =
+            dataSource.transaction { UnderveisRepositoryImpl(it).hent(sisteBehandling.id) }
+        val oppdatertUtfallTidslinje =
+            oppdatertUnderveisGrunnlag.perioder.somTidslinje { it.periode }.map { it.utfall }.komprimer()
+        assertTidslinje(
+            oppdatertUtfallTidslinje,
+            Periode(
+                startDato,
+                startDatoRettTilYtelse.minusDays(1)
+            ) to { assertThat(it).isEqualTo(Utfall.IKKE_OPPFYLT) },
+            Periode(
+                startDatoRettTilYtelse,
+                startDatoRettTilYtelse.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
+            ) to { assertThat(it).isEqualTo(Utfall.OPPFYLT) },
+        )
     }
 
 }
