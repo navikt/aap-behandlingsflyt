@@ -17,41 +17,10 @@ import no.nav.aap.komponenter.type.Periode
 class ForutgåendeMedlemskapvilkåret(
     vilkårsresultat: Vilkårsresultat,
     private val rettighetsPeriode: Periode,
-    private val unleashGateway: UnleashGateway,
-
 ) : Vilkårsvurderer<ForutgåendeMedlemskapGrunnlag> {
     private val vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.MEDLEMSKAP)
 
     override fun vurder(grunnlag: ForutgåendeMedlemskapGrunnlag) {
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.ForutgaendeMedlemskapPeriodisert)) {
-            return vurderNy(grunnlag)
-        }
-
-        val manuellVurdering = grunnlag.medlemskapArbeidInntektGrunnlag?.vurderinger?.maxByOrNull { it.vurdertTidspunkt } // TODO må legge innn støtte for periodisering her
-
-        var vurdertManuelt = false
-        val vurderingsResultat = if (manuellVurdering != null) {
-            vurdertManuelt = true
-            if (!manuellVurdering.harForutgåendeMedlemskap
-                && (manuellVurdering.medlemMedUnntakAvMaksFemAar != true && manuellVurdering.varMedlemMedNedsattArbeidsevne != true)
-            ) {
-                VurderingsResultat(Utfall.IKKE_OPPFYLT, Avslagsårsak.IKKE_MEDLEM_FORUTGÅENDE, null)
-            } else {
-                VurderingsResultat(Utfall.OPPFYLT, null, null)
-            }
-        } else if (grunnlag.nyeSoknadGrunnlag == null)  {
-            VurderingsResultat(Utfall.IKKE_RELEVANT, null, null)
-        } else {
-            val kanBehandlesAutomatisk = ForutgåendeMedlemskapVurderingService().vurderTilhørighet(grunnlag, rettighetsPeriode).kanBehandlesAutomatisk
-
-            val utfall = if (kanBehandlesAutomatisk) Utfall.OPPFYLT else Utfall.IKKE_VURDERT
-            VurderingsResultat(utfall, null, null)
-        }
-
-        leggTilVurdering(grunnlag, vurderingsResultat, vurdertManuelt)
-    }
-
-    fun vurderNy(grunnlag: ForutgåendeMedlemskapGrunnlag) {
         val brukManuellVurderingForForutgåendeMedlemskap = grunnlag.medlemskapArbeidInntektGrunnlag?.vurderinger?.isNotEmpty() ?: false
 
         if (brukManuellVurderingForForutgåendeMedlemskap) {
@@ -82,12 +51,12 @@ class ForutgåendeMedlemskapvilkåret(
             vilkår.leggTilVurderinger(vilkårsvurderinger)
         } else if (grunnlag.nyeSoknadGrunnlag == null)  {
             val vurderingsResultat = VurderingsResultat(Utfall.IKKE_RELEVANT, null, null)
-            leggTilVurdering(grunnlag, vurderingsResultat, false)
+            leggTilVurdering(grunnlag, vurderingsResultat)
         } else {
             val kanBehandlesAutomatisk = ForutgåendeMedlemskapVurderingService().vurderTilhørighet(grunnlag, rettighetsPeriode).kanBehandlesAutomatisk
             val utfall = if (kanBehandlesAutomatisk) Utfall.OPPFYLT else Utfall.IKKE_VURDERT
             val vurderingsResultat = VurderingsResultat(utfall, null, null)
-            leggTilVurdering(grunnlag, vurderingsResultat, false)
+            leggTilVurdering(grunnlag, vurderingsResultat)
         }
     }
 
@@ -109,17 +78,16 @@ class ForutgåendeMedlemskapvilkåret(
     private fun leggTilVurdering(
         grunnlag: ForutgåendeMedlemskapGrunnlag,
         vurderingsResultat: VurderingsResultat,
-        vurdertManuelt: Boolean
     ) {
         vilkår.leggTilVurdering(
             Vilkårsperiode(
                 periode = rettighetsPeriode,
                 utfall = vurderingsResultat.utfall,
                 avslagsårsak = vurderingsResultat.avslagsårsak,
-                begrunnelse = grunnlag.medlemskapArbeidInntektGrunnlag?.vurderinger?.maxByOrNull { it.vurdertTidspunkt }?.begrunnelse, // TODO må legge innn støtte for periodisering her
+                begrunnelse = null,
                 faktagrunnlag = grunnlag,
                 versjon = vurderingsResultat.versjon(),
-                manuellVurdering = vurdertManuelt
+                manuellVurdering = false
             )
         )
     }

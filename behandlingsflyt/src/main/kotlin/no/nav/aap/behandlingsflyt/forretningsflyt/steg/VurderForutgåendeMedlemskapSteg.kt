@@ -218,7 +218,6 @@ class VurderForutgåendeMedlemskapSteg private constructor(
                 ForutgåendeMedlemskapvilkåret(
                     vilkårsresultat,
                     kontekst.rettighetsperiode,
-                    unleashGateway
                 ).leggTilYrkesskadeVurdering()
                 vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
 
@@ -235,7 +234,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
                             kontekst.sakId
                         )
 
-                ForutgåendeMedlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode, unleashGateway).vurder(
+                ForutgåendeMedlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode).vurder(
                     ForutgåendeMedlemskapGrunnlag(
                         forutgåendeMedlemskapArbeidInntektGrunnlag,
                         personopplysningForutgåendeGrunnlag,
@@ -334,10 +333,9 @@ class VurderForutgåendeMedlemskapSteg private constructor(
             ForutgåendeMedlemskapvilkåret(
                 vilkårsresultat,
                 kontekst.rettighetsperiode,
-                unleashGateway
             ).leggTilYrkesskadeVurdering()
         } else {
-            ForutgåendeMedlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode, unleashGateway)
+            ForutgåendeMedlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode)
                 .vurder(grunnlagUtenManuellVurdering)
         }
 
