@@ -3203,14 +3203,17 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                             AarsVurdering(
                                 ar = Year.now().minusYears(1).value,
                                 belop = BigDecimal(300000),
+                                eosBelop = null,
                             ),
                             AarsVurdering(
                                 ar = Year.now().minusYears(2).value,
                                 belop = BigDecimal(400000),
+                                eosBelop = null,
                             ),
                             AarsVurdering(
                                 ar = Year.now().minusYears(3).value,
                                 belop = BigDecimal(500000),
+                                eosBelop = null,
                             ),
                         )
                     )

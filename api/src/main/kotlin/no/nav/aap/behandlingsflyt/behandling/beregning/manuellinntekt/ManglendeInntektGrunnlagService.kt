@@ -37,7 +37,7 @@ class ManglendeInntektGrunnlagService(
             AarData(
                 ar = manuellInntekt.år.value,
                 belop = manuellInntekt.belop?.verdi,
-                eosBelop = manuellInntekt.belop?.verdi,
+                eosBelop = manuellInntekt.eosBelop?.verdi,
                 gverdi = gVerdi.verdi
             )
         }
