@@ -30,8 +30,8 @@ class SykdomsvurderingTest {
             vurdertIBehandling = BehandlingId(1L)
         )
 
-        assertThat(vurdering.erOppfylt(LocalDate.now())).isFalse
-        assertThat(vurdering.erOppfyltSettBortIfraVissVarighet()).isTrue
+        assertThat(vurdering.erOppfyltOrdinær(LocalDate.now())).isFalse
+        assertThat(vurdering.erOppfyltOrdinærSettBortIfraVissVarighet()).isTrue
     }
 
     @ParameterizedTest
@@ -59,7 +59,7 @@ class SykdomsvurderingTest {
             vurdertIBehandling = BehandlingId(1L)
         )
 
-        assertThat(vurdering.erOppfylt(kravdato)).isTrue
+        assertThat(vurdering.erOppfyltOrdinær(kravdato)).isTrue
     }
 
     @Test
@@ -82,7 +82,7 @@ class SykdomsvurderingTest {
             vurdertIBehandling = BehandlingId(1L)
         )
 
-        assertThat(vurdering.erOppfylt(gjelderFra)).isFalse
+        assertThat(vurdering.erOppfyltOrdinær(gjelderFra)).isFalse
     }
 
     companion object {

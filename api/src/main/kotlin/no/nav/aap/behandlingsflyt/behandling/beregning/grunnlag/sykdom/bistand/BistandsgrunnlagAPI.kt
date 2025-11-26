@@ -57,7 +57,7 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(
                         sykdomRepository.hentHvisEksisterer(behandling.id)?.gjeldendeSykdomsvurderinger().orEmpty()
                     val sisteSykdomsvurdering = gjeldendeSykdomsvurderinger.maxByOrNull { it.opprettet }
                     // TODO: Fjern denne når 11-17 er prodsatt. Ikke riktig for periodisering
-                    val erOppfylt11_5 = sisteSykdomsvurdering?.erOppfylt(sak.rettighetsperiode.fom)
+                    val erOppfylt11_5 = sisteSykdomsvurdering?.erOppfyltOrdinær(sak.rettighetsperiode.fom)
 
                     BistandGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),

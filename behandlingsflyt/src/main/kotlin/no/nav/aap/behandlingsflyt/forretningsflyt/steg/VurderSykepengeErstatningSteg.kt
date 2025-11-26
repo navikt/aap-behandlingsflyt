@@ -7,7 +7,6 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykepengeerstatningVilkår
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykepengerErstatningFaktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
@@ -129,7 +128,7 @@ class VurderSykepengeErstatningSteg private constructor(
                     when {
                         /* ikke nødvendig å vurdere SPE fordi medlemmet oppfyller vilkårene for ordinær aap */
                         // TODO: må sjekke kravdato opp mot perioden på segmentet vi er i, ikke opp mot fom til vurderingen
-                        sykdomsvurdering?.erOppfylt(kravDato) == true && bistandvurdering?.erBehovForBistand() != true ->
+                        sykdomsvurdering?.erOppfyltOrdinær(kravDato) == true && bistandvurdering?.erBehovForBistand() != true ->
                             /* TODO: Her burde vi også se på 11-17 og 11-18 før vi sier ja */
                             true
 

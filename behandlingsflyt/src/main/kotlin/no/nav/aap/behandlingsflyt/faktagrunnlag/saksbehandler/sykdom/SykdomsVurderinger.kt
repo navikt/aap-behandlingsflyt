@@ -51,21 +51,14 @@ data class Sykdomsvurdering(
                                erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true)
                 )
     }
-
-    /* Denne metoden må sannsynligvis generaliseres når vi skal implementere gjeninntreden etter opphør. */
-    fun erFørsteVurdering(kravdato: LocalDate): Boolean {
-        return vurderingenGjelderTil?.let {
-            vurderingenGjelderFra <= kravdato && kravdato <= vurderingenGjelderTil
-        } ?: (vurderingenGjelderFra <= kravdato)
-    }
-
-    fun erOppfylt(kravdato: LocalDate): Boolean {
-        return erOppfyltSettBortIfraVissVarighet() &&
+    
+    fun erOppfyltOrdinær(kravdato: LocalDate): Boolean {
+        return erOppfyltOrdinærSettBortIfraVissVarighet() &&
                 if (erFørsteVurdering(kravdato)) erNedsettelseIArbeidsevneAvEnVissVarighet == true
                 else true
     }
 
-    fun erOppfyltForYrkesskade(kravdato: LocalDate): Boolean {
+    fun erOppfyltForYrkesskadeSettBortIfraÅrsakssammenheng(kravdato: LocalDate): Boolean {
         val erTilstrekkeligNedsattArbeidsevne = erNedsettelseIArbeidsevneMerEnnHalvparten == true
                 || erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true
         
@@ -76,13 +69,31 @@ data class Sykdomsvurdering(
                 && erVissVarighetOmRelevant(kravdato)
     }
 
-    fun erVissVarighetOmRelevant(kravdato: LocalDate): Boolean {
+    fun erOppfyltForYrkesskadeSettBortIfraÅrsakssammenhengOgVissVarighet(kravdato: LocalDate): Boolean {
+        val erTilstrekkeligNedsattArbeidsevne = erNedsettelseIArbeidsevneMerEnnHalvparten == true
+                || erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true
+
+        return harSkadeSykdomEllerLyte
+                && erArbeidsevnenNedsatt == true
+                && erSkadeSykdomEllerLyteVesentligdel == true
+                && erTilstrekkeligNedsattArbeidsevne
+    }
+
+    /* Denne metoden må sannsynligvis generaliseres når vi skal implementere gjeninntreden etter opphør. */
+    fun erFørsteVurdering(kravdato: LocalDate): Boolean {
+        return vurderingenGjelderTil?.let {
+            vurderingenGjelderFra <= kravdato && kravdato <= vurderingenGjelderTil
+        } ?: (vurderingenGjelderFra <= kravdato)
+    }
+
+
+    private fun erVissVarighetOmRelevant(kravdato: LocalDate): Boolean {
         return if (erFørsteVurdering(kravdato))
             erNedsettelseIArbeidsevneAvEnVissVarighet == true
         else true
     }
 
-    fun erOppfyltSettBortIfraVissVarighet(): Boolean {
+    fun erOppfyltOrdinærSettBortIfraVissVarighet(): Boolean {
         return harSkadeSykdomEllerLyte
                 && erArbeidsevnenNedsatt == true
                 && erSkadeSykdomEllerLyteVesentligdel == true
