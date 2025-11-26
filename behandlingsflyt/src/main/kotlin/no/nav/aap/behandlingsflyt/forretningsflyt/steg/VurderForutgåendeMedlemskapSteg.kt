@@ -104,7 +104,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
             vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst) },
             erTilstrekkeligVurdert = {
                 val manuellVurdering =
-                    forutgåendeMedlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger?.firstOrNull() // TODO må legge innn støtte for periodisering her
+                    forutgåendeMedlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger?.maxByOrNull { it.vurdertTidspunkt } // TODO må legge innn støtte for periodisering her
                 manuellVurdering != null
             },
             tilbakestillGrunnlag = { tilbakestillGrunnlag(kontekst, grunnlag.value) },
@@ -131,14 +131,15 @@ class VurderForutgåendeMedlemskapSteg private constructor(
         kontekst: FlytKontekstMedPerioder,
         grunnlag: ForutgåendeMedlemskapArbeidInntektGrunnlag?
     ) {
-        val forrigeManuelleVurdering = kontekst.forrigeBehandlingId?.let { forrigeBehandlingId ->
+        val forrigeVurderinger = kontekst.forrigeBehandlingId?.let { forrigeBehandlingId ->
             forutgåendeMedlemskapArbeidInntektRepository.hentHvisEksisterer(forrigeBehandlingId)
-                ?.vurderinger?.firstOrNull() // TODO må legge innn støtte for periodisering her
-        }
-        if (forrigeManuelleVurdering != grunnlag?.vurderinger?.firstOrNull()) { // TODO må legge innn støtte for periodisering her
+                ?.vurderinger
+        } ?: emptyList()
+
+        if (forrigeVurderinger.toSet() != grunnlag?.vurderinger?.toSet()) {
             forutgåendeMedlemskapArbeidInntektRepository.lagreVurderinger(
                 kontekst.behandlingId,
-                listOfNotNull(forrigeManuelleVurdering)
+                forrigeVurderinger,
             )
         }
 
@@ -180,7 +181,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
     ): Boolean {
         val vurderingFraForrigeBehandling = kontekst.forrigeBehandlingId?.let { forrigeBehandlingId ->
             forutgåendeMedlemskapArbeidInntektRepository.hentHvisEksisterer(forrigeBehandlingId)
-                ?.vurderinger?.firstOrNull() // TODO må legge innn støtte for periodisering her
+                ?.vurderinger?.maxByOrNull { it.vurdertTidspunkt } // TODO må legge innn støtte for periodisering her
         }
 
         return when (kontekst.vurderingType) {

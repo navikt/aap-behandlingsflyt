@@ -27,7 +27,7 @@ class ForutgåendeMedlemskapvilkåret(
             return vurderNy(grunnlag)
         }
 
-        val manuellVurdering = grunnlag.medlemskapArbeidInntektGrunnlag?.vurderinger?.firstOrNull() // TODO må legge innn støtte for periodisering her
+        val manuellVurdering = grunnlag.medlemskapArbeidInntektGrunnlag?.vurderinger?.maxByOrNull { it.vurdertTidspunkt } // TODO må legge innn støtte for periodisering her
 
         var vurdertManuelt = false
         val vurderingsResultat = if (manuellVurdering != null) {
@@ -116,7 +116,7 @@ class ForutgåendeMedlemskapvilkåret(
                 periode = rettighetsPeriode,
                 utfall = vurderingsResultat.utfall,
                 avslagsårsak = vurderingsResultat.avslagsårsak,
-                begrunnelse = grunnlag.medlemskapArbeidInntektGrunnlag?.vurderinger?.firstOrNull()?.begrunnelse, // TODO må legge innn støtte for periodisering her
+                begrunnelse = grunnlag.medlemskapArbeidInntektGrunnlag?.vurderinger?.maxByOrNull { it.vurdertTidspunkt }?.begrunnelse, // TODO må legge innn støtte for periodisering her
                 faktagrunnlag = grunnlag,
                 versjon = vurderingsResultat.versjon(),
                 manuellVurdering = vurdertManuelt

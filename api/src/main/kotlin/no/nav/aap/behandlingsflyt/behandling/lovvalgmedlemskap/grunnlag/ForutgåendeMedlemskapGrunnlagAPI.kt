@@ -43,7 +43,8 @@ fun NormalOpenAPIRoute.forutgåendeMedlemskapAPI(
                         repositoryProvider.provide<MedlemskapArbeidInntektForutgåendeRepository>()
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
 
-                    val data = forutgåendeRepository.hentHvisEksisterer(behandling.id)?.vurderinger?.firstOrNull() // TODO må legge innn støtte for periodisering her
+                    val data =
+                        forutgåendeRepository.hentHvisEksisterer(behandling.id)?.vurderinger?.maxByOrNull { it.vurdertTidspunkt } // TODO må legge innn støtte for periodisering her
                     val historiskeManuelleVurderinger =
                         forutgåendeRepository.hentHistoriskeVurderinger(behandling.sakId, behandling.id)
                     val ansattNavnOgEnhet = data?.let { ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv) }
