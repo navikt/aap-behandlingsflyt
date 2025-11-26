@@ -406,7 +406,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                     ),
                 avklaringsbehovKode = Definisjon.SAMORDNING_ARBEIDSGIVER.kode.toString(),
             ) { behandlingReferanse ->
-                val (samordningArbeidsgiverVurdering,historskeSamordningArbeidsgiverVurdering) =
+                val (samordningArbeidsgiverVurdering, historskeSamordningArbeidsgiverVurderinger) =
                     dataSource.transaction { connection ->
                         val repositoryProvider = repositoryRegistry.provider(connection)
                         val samordningArbeidsgiverRepository =
@@ -421,14 +421,11 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                             TypeBehandling.ytelseBehandlingstyper()
                         ).filter { it.id != behandling.id }
 
-
-                        val historskeSamordningArbeidsgiverVurdering =
+                        val historskeSamordningArbeidsgiverVurderinger =
                             historiskeBehandlinger.mapNotNull { historiskeBehandling ->
                                 samordningArbeidsgiverRepository.hentHvisEksisterer(historiskeBehandling.id)?.vurdering
                             }
-
-                        Pair(vurdering, historskeSamordningArbeidsgiverVurdering)
-
+                        Pair(vurdering, historskeSamordningArbeidsgiverVurderinger)
                     }
 
                 val navnOgEnhet = samordningArbeidsgiverVurdering?.let {
@@ -436,7 +433,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                 }
 
 
-                val historiskeVurderinger = historskeSamordningArbeidsgiverVurdering.mapNotNull { vurdering ->
+                val historiskeVurderingererDTO = historskeSamordningArbeidsgiverVurderinger.map { vurdering ->
                     val navnOgEnhet = vurdering.let {
                         ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv)
                     }
@@ -474,7 +471,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                     SamordningArbeidsgiverGrunnlagDTO(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         vurdering = vurdering,
-                        historiskeVurderinger = historiskeVurderinger,
+                        historiskeVurderinger = historiskeVurderingererDTO,
                     )
                 )
             }
