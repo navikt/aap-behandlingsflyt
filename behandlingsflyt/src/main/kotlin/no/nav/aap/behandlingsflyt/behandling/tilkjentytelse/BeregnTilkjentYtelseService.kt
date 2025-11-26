@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 
+import no.nav.aap.behandlingsflyt.behandling.barnetillegg.RettTilBarnetillegg
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.tilTidslinje
@@ -93,22 +94,11 @@ class BeregnTilkjentYtelseService(
                 return@map6 null
             }
 
-            val antallBarnMedRett = rettTilBarnetillegg?.barnMedRettTil()?.size ?: 0
-            val harRettTilBarnetillegg = barnetilleggsats != null && underveisperiode.utfall != Utfall.IKKE_OPPFYLT
-
-            val barnetillegg = if (harRettTilBarnetillegg) {
-                Barnetillegg(
-                    barnetillegg = barnetilleggsats.multiplisert(antallBarnMedRett),
-                    antallBarn = antallBarnMedRett,
-                    barnetilleggsats = barnetilleggsats
-                )
-            } else {
-                Barnetillegg(
-                    barnetillegg = Beløp(0),
-                    antallBarn = 0,
-                    barnetilleggsats = Beløp(0)
-                )
-            }
+            val barnetillegg = utledBarnetillegg(
+                underveisperiode = underveisperiode,
+                barnetilleggsats = barnetilleggsats,
+                rettTilBarnetillegg = rettTilBarnetillegg
+            )
 
             Tilkjent(
                 dagsats = grunnbeløp.multiplisert(dagsatsG),
@@ -131,6 +121,29 @@ class BeregnTilkjentYtelseService(
             )
         }
             .filterNotNull()
+    }
+
+    private fun utledBarnetillegg(
+        underveisperiode: Underveisperiode,
+        barnetilleggsats: Beløp?,
+        rettTilBarnetillegg: RettTilBarnetillegg?
+    ): Barnetillegg {
+        val antallBarnMedRett = rettTilBarnetillegg?.barnMedRettTil()?.size ?: 0
+        val harRettTilBarnetillegg = barnetilleggsats != null && underveisperiode.utfall != Utfall.IKKE_OPPFYLT
+
+        return when {
+            harRettTilBarnetillegg -> Barnetillegg(
+                barnetillegg = barnetilleggsats.multiplisert(antallBarnMedRett),
+                antallBarn = antallBarnMedRett,
+                barnetilleggsats = barnetilleggsats
+            )
+
+            else -> Barnetillegg(
+                barnetillegg = Beløp(0),
+                antallBarn = 0,
+                barnetilleggsats = Beløp(0)
+            )
+        }
     }
 
     private fun utledUtbetalingsdato(underveisperiode: Underveisperiode): LocalDate {
