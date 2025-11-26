@@ -130,21 +130,25 @@ class VurderBistandsbehovSteg(
             ?.somTidslinje(kontekst.rettighetsperiode)
             .orEmpty()
 
-        return Tidslinje.zip3(tidligereVurderingsutfall, sykdomsvurderinger, studentvurderinger)
-            .mapValue { (behandlingsutfall, sykdomsvurdering, studentvurdering) ->
-                when (behandlingsutfall) {
-                    null -> false
-                    TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
-                    TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
-                    TidligereVurderinger.Behandlingsutfall.UKJENT -> {
-                        studentvurdering?.erOppfylt() != true &&
-                                (sykdomsvurdering?.erOppfyltOrdinær(kravdato = kontekst.rettighetsperiode.fom) == true 
-                                        || sykdomsvurdering?.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenheng(
-                                    kravdato = kontekst.rettighetsperiode.fom
-                                ) == true)
-                    }
+        return Tidslinje.map3(tidligereVurderingsutfall, sykdomsvurderinger, studentvurderinger)
+        { segmentPeriode, behandlingsutfall, sykdomsvurdering, studentvurdering ->
+            when (behandlingsutfall) {
+                null -> false
+                TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
+                TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
+                TidligereVurderinger.Behandlingsutfall.UKJENT -> {
+                    studentvurdering?.erOppfylt() != true &&
+                            (sykdomsvurdering?.erOppfyltOrdinær(
+                                kravdato = kontekst.rettighetsperiode.fom,
+                                segmentPeriode
+                            ) == true
+                                    || sykdomsvurdering?.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenheng(
+                                kravdato = kontekst.rettighetsperiode.fom, segmentPeriode
+                            ) == true)
+
                 }
             }
+        }
     }
 
 

@@ -2,7 +2,9 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
+import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -30,18 +32,25 @@ class SykdomsvurderingTest {
             vurdertIBehandling = BehandlingId(1L)
         )
 
-        assertThat(vurdering.erOppfyltOrdinær(LocalDate.now())).isFalse
+        assertThat(
+            vurdering.erOppfyltOrdinær(
+                LocalDate.now(),
+                Periode(vurdering.vurderingenGjelderFra, Tid.MAKS)
+            )
+        ).isFalse
         assertThat(vurdering.erOppfyltOrdinærSettBortIfraVissVarighet()).isTrue
     }
 
     @ParameterizedTest
     @MethodSource("trueFalseNullSource")
-    fun `skal ikke ta hensyn til viss varighet for vurderinger hvor kravdato er før gjelderFra`(erNedsettelseIArbeidsevneAvEnVissVarighet: Boolean?) {
+    fun `skal ikke ta hensyn til viss varighet for vurderinger hvor kravdato er før gjelderFra`(
+        erNedsettelseIArbeidsevneAvEnVissVarighet: Boolean?
+    ) {
         // Parameterisert test. Skal ignorere verdien av erNedsettelseIArbeidsevneAvEnVissVarighet
 
         val gjelderFra = LocalDate.now()
         val kravdato = gjelderFra.plusMonths(1)
-        
+
         val vurdering = Sykdomsvurdering(
             begrunnelse = "",
             dokumenterBruktIVurdering = emptyList(),
@@ -59,7 +68,7 @@ class SykdomsvurderingTest {
             vurdertIBehandling = BehandlingId(1L)
         )
 
-        assertThat(vurdering.erOppfyltOrdinær(kravdato)).isTrue
+        assertThat(vurdering.erOppfyltOrdinær(kravdato, Periode(vurdering.vurderingenGjelderFra, Tid.MAKS))).isTrue
     }
 
     @Test
@@ -82,7 +91,7 @@ class SykdomsvurderingTest {
             vurdertIBehandling = BehandlingId(1L)
         )
 
-        assertThat(vurdering.erOppfyltOrdinær(gjelderFra)).isFalse
+        assertThat(vurdering.erOppfyltOrdinær(gjelderFra, Periode(gjelderFra, Tid.MAKS))).isFalse
     }
 
     companion object {
