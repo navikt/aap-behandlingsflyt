@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykepengeerstatningV
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykepengerErstatningFaktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -32,7 +33,8 @@ class VurderSykepengeErstatningSteg private constructor(
     private val behandlingRepository: BehandlingRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val tidligereVurderinger: TidligereVurderinger,
-    private val avklaringsbehovService: AvklaringsbehovService
+    private val avklaringsbehovService: AvklaringsbehovService,
+    private val overgangUføreRepository: OvergangUføreRepository
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         vilkårsresultatRepository = repositoryProvider.provide(),
@@ -42,7 +44,8 @@ class VurderSykepengeErstatningSteg private constructor(
         behandlingRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
-        avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+        overgangUføreRepository = repositoryProvider.provide()
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -113,24 +116,25 @@ class VurderSykepengeErstatningSteg private constructor(
 
         val yrkesskadevurderinger = sykdomGrunnlag?.yrkesskadevurdringTidslinje(kontekst.rettighetsperiode).orEmpty()
 
-        return Tidslinje.map4(
+        val overgangUføreVurderinger = overgangUføreRepository.hentHvisEksisterer(kontekst.behandlingId)
+            ?.somOvergangUforevurderingstidslinje(kontekst.rettighetsperiode.fom).orEmpty()
+
+        return Tidslinje.map5(
             tidligereVurderingsutfall,
             sykdomsvurderinger,
             bistandvurderinger,
-            yrkesskadevurderinger
-        ) { segmentPeriode, behandlingsutfall, sykdomsvurdering, bistandvurdering, yrkesskadevurdering ->
+            yrkesskadevurderinger,
+            overgangUføreVurderinger
+        ) { segmentPeriode, behandlingsutfall, sykdomsvurdering, bistandvurdering, yrkesskadevurdering, overgangUføreVurdering ->
             when (behandlingsutfall) {
                 null -> false
                 TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
                 TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
                 TidligereVurderinger.Behandlingsutfall.UKJENT -> {
                     when {
-                        /* ikke nødvendig å vurdere SPE fordi medlemmet oppfyller vilkårene for ordinær aap */
-                        sykdomsvurdering?.erOppfyltOrdinær(
-                            kravDato,
-                            segmentPeriode
-                        ) == true && bistandvurdering?.erBehovForBistand() != true ->
-                            /* TODO: Her burde vi også se på 11-17 og 11-18 før vi sier ja */
+                        sykdomsvurdering?.erOppfyltOrdinær(kravDato, segmentPeriode) == true &&
+                                bistandvurdering?.erBehovForBistand() != true &&
+                                overgangUføreVurdering?.harRettPåAAPMedOvergangUføre() != true ->
                             true
 
                         /* i dette caset oppfyller ikke medlemmet vilkåret for ordinær AAP, men SPE er mulig */
