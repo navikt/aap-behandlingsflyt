@@ -138,7 +138,10 @@ class VurderBistandsbehovSteg(
                     TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
                     TidligereVurderinger.Behandlingsutfall.UKJENT -> {
                         studentvurdering?.erOppfylt() != true &&
-                                sykdomsvurdering?.erOppfyltOrdinær(kravdato = kontekst.rettighetsperiode.fom) == true
+                                (sykdomsvurdering?.erOppfyltOrdinær(kravdato = kontekst.rettighetsperiode.fom) == true 
+                                        || sykdomsvurdering?.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenheng(
+                                    kravdato = kontekst.rettighetsperiode.fom
+                                ) == true)
                     }
                 }
             }
