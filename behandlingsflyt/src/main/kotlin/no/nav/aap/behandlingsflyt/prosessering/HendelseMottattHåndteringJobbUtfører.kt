@@ -33,10 +33,7 @@ class HendelseMottattHåndteringJobbUtfører(
     private val låsRepository: TaSkriveLåsRepository,
     private val håndterMottattDokumentService: HåndterMottattDokumentService,
     private val mottaDokumentService: MottaDokumentService,
-    private val mottattDokumentRepository: MottattDokumentRepository
 ) : JobbUtfører {
-
-    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
         val sakId = SakId(input.sakId())
@@ -52,11 +49,6 @@ class HendelseMottattHåndteringJobbUtfører(
         } else null
 
         val referanse = DefaultJsonMapper.fromJson<InnsendingReferanse>(input.parameter(MOTTATT_DOKUMENT_REFERANSE))
-
-        if (kjennerTilDokumentFraFør(referanse, innsendingType, sakId)) {
-            log.warn("Allerede håndtert dokument med referanse {}", referanse)
-            return
-        }
 
         // DO WORK
         mottaDokumentService.mottattDokument(
@@ -112,16 +104,6 @@ class HendelseMottattHåndteringJobbUtfører(
         låsRepository.verifiserSkrivelås(sakSkrivelås)
     }
 
-    private fun kjennerTilDokumentFraFør(
-        innsendingReferanse: InnsendingReferanse,
-        innsendingType: InnsendingType,
-        sakId: SakId,
-    ): Boolean {
-        val innsendinger = mottattDokumentRepository.hentDokumenterAvType(sakId, innsendingType)
-
-        return innsendinger.any { dokument -> dokument.referanse == innsendingReferanse }
-    }
-
     companion object : ProvidersJobbSpesifikasjon {
         fun nyJobb(
             sakId: SakId,
@@ -146,7 +128,6 @@ class HendelseMottattHåndteringJobbUtfører(
                 låsRepository = repositoryProvider.provide(),
                 håndterMottattDokumentService = HåndterMottattDokumentService(repositoryProvider, gatewayProvider),
                 mottaDokumentService = MottaDokumentService(repositoryProvider),
-                mottattDokumentRepository = repositoryProvider.provide()
             )
         }
 
