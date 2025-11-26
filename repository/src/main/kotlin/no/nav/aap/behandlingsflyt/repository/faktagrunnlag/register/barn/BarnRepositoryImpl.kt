@@ -428,21 +428,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
             deaktiverEksisterende(behandlingId)
         }
 
-        val vurderteBarnId = if (vurderteBarn.isNotEmpty()) {
-            connection.executeReturnKey(
-                """
-                INSERT INTO BARN_VURDERINGER (VURDERT_AV)
-                VALUES (?)
-                """.trimIndent()
-            ) {
-                setParams {
-                    setString(1, vurdertAv)
-                }
-            }
-        } else {
-            null
-        }
-
+        val vurderteBarnId = opprettVurderteBarnId(vurdertAv, vurderteBarn)
         lagreVurderingerMedPerioder(vurderteBarnId, vurderteBarn)
 
         connection.execute(
@@ -457,6 +443,23 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
                 setLong(4, eksisterendeGrunnlag?.saksbehandlerOppgitteBarn?.id)
                 setLong(5, vurderteBarnId)
             }
+        }
+    }
+
+    private fun opprettVurderteBarnId(vurdertAv: String, vurderteBarn: List<VurdertBarn>): Long? {
+        return if (vurderteBarn.isNotEmpty()) {
+            connection.executeReturnKey(
+                """
+                INSERT INTO BARN_VURDERINGER (VURDERT_AV)
+                VALUES (?)
+                """.trimIndent()
+            ) {
+                setParams {
+                    setString(1, vurdertAv)
+                }
+            }
+        } else {
+            null
         }
     }
 
@@ -514,34 +517,6 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
             setParams {
                 setLong(1, tilBehandling.toLong())
                 setLong(2, fraBehandling.toLong())
-            }
-        }
-    }
-
-    fun kopierMedNyeBarn(
-        fraBehandling: BehandlingId,
-        tilBehandling: BehandlingId,
-        nyRegisterBarnId: Long?,
-        nyOppgittBarnId: Long?,
-    ) {
-        require(fraBehandling != tilBehandling)
-        val fraGrunnlag = hentHvisEksisterer(fraBehandling)
-
-        if (fraGrunnlag != null) {
-            connection.execute(
-                """
-            INSERT INTO BARNOPPLYSNING_GRUNNLAG
-                (behandling_id, register_barn_id, oppgitt_barn_id, vurderte_barn_id, saksbehandler_oppgitt_barn_id)
-            VALUES (?, ?, ?, ?, ?)
-            """.trimIndent()
-            ) {
-                setParams {
-                    setLong(1, tilBehandling.toLong())
-                    setLong(2, nyRegisterBarnId ?: fraGrunnlag.registerbarn?.id)
-                    setLong(3, nyOppgittBarnId ?: fraGrunnlag.oppgitteBarn?.id)
-                    setLong(4, fraGrunnlag.vurderteBarn?.id)
-                    setLong(5, fraGrunnlag.saksbehandlerOppgitteBarn?.id)
-                }
             }
         }
     }
@@ -660,72 +635,22 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
     }
 
     override fun tilbakestillGrunnlag(behandlingId: BehandlingId, forrigeBehandlingId: BehandlingId?) {
-        val barnGrunnlag = hentHvisEksisterer(behandlingId)
         val forrigeBarnGrunnlag = forrigeBehandlingId?.let { hentHvisEksisterer(it) }
 
-        if (forrigeBehandlingId == null) {
-            lagreVurderinger(behandlingId, SYSTEMBRUKER.ident, emptyList())
-            deaktiverAlleSaksbehandlerOppgitteBarn(behandlingId)
-            return
-        }
-
-        if (barnGrunnlag == null || forrigeBarnGrunnlag == null) {
-            return
-        }
-
-        val harNyeBarn = harNyeBarnISammenligningMedForrige(barnGrunnlag, forrigeBarnGrunnlag)
-
-        if (!harNyeBarn) {
-            deaktiverEksisterende(behandlingId)
-            kopier(forrigeBehandlingId, behandlingId)
-            return
-        }
-
-        tilbakestillMedNyeBarn(behandlingId, forrigeBehandlingId, barnGrunnlag, forrigeBarnGrunnlag)
-    }
-
-    private fun harNyeBarnISammenligningMedForrige(barnGrunnlag: BarnGrunnlag, forrigeBarnGrunnlag: BarnGrunnlag): Boolean {
-        val flereRegisterBarn = (barnGrunnlag.registerbarn?.barn?.size ?: 0) > (forrigeBarnGrunnlag.registerbarn?.barn?.size ?: 0)
-        val flereOppgitteBarn = (barnGrunnlag.oppgitteBarn?.oppgitteBarn?.size ?: 0) > (forrigeBarnGrunnlag.oppgitteBarn?.oppgitteBarn?.size ?: 0)
-        val flereVurderteBarn = (barnGrunnlag.vurderteBarn?.barn?.size ?: 0) > (forrigeBarnGrunnlag.vurderteBarn?.barn?.size ?: 0)
-
-        return flereRegisterBarn || flereOppgitteBarn || flereVurderteBarn
-    }
-
-    private fun tilbakestillMedNyeBarn(
-        behandlingId: BehandlingId,
-        forrigeBehandlingId: BehandlingId,
-        barnGrunnlag: BarnGrunnlag,
-        forrigeBarnGrunnlag: BarnGrunnlag
-    ) {
-        deaktiverEksisterende(behandlingId)
-
-        val nyRegisterBarnId = if ((barnGrunnlag.registerbarn?.barn?.size ?: 0) > (forrigeBarnGrunnlag.registerbarn?.barn?.size ?: 0)) {
-            barnGrunnlag.registerbarn?.id
-        } else null
-
-        val nyOppgittBarnId = if ((barnGrunnlag.oppgitteBarn?.oppgitteBarn?.size ?: 0) > (forrigeBarnGrunnlag.oppgitteBarn?.oppgitteBarn?.size ?: 0)) {
-            barnGrunnlag.oppgitteBarn?.id
-        } else null
-
-        kopierMedNyeBarn(forrigeBehandlingId, behandlingId, nyRegisterBarnId, nyOppgittBarnId)
-
-        // // Tilbakestill vurderte barn til forrige tilstand. Nye barn uten tidligere vurderinger (fra forrigeBarnGrunnlag)
-        // blir ikke lagret og forblir dermed uvurderte (nullstilt).
-        tilbakestillVurderteBarnetVedBehov(behandlingId, barnGrunnlag, forrigeBarnGrunnlag)
-    }
-
-    private fun tilbakestillVurderteBarnetVedBehov(behandlingId: BehandlingId, barnGrunnlag: BarnGrunnlag, forrigeBarnGrunnlag: BarnGrunnlag) {
-        val vurderteBarnNå = barnGrunnlag.vurderteBarn?.barn.orEmpty()
-        val vurderteBarnForrige = forrigeBarnGrunnlag.vurderteBarn?.barn.orEmpty()
-
-        if (vurderteBarnNå.size <= vurderteBarnForrige.size) return
+        val vurderteBarn = forrigeBarnGrunnlag?.vurderteBarn?.barn.orEmpty()
 
         lagreVurderinger(
             behandlingId = behandlingId,
-            vurdertAv = barnGrunnlag.vurderteBarn?.vurdertAv ?: "system",
-            vurderteBarn = vurderteBarnForrige
+            vurdertAv = forrigeBarnGrunnlag?.vurderteBarn?.vurdertAv ?: SYSTEMBRUKER.ident,
+            vurderteBarn = vurderteBarn
         )
+
+        if (forrigeBarnGrunnlag == null) {
+            deaktiverAlleSaksbehandlerOppgitteBarn(behandlingId)
+        }
+
+        val saksbehandlerOppgitteBarn = forrigeBarnGrunnlag?.saksbehandlerOppgitteBarn?.barn.orEmpty()
+        lagreSaksbehandlerOppgitteBarn(behandlingId, saksbehandlerOppgitteBarn)
     }
 
     /**
