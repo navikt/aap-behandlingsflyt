@@ -118,8 +118,7 @@ class VurderSykepengeErstatningSteg private constructor(
             sykdomsvurderinger,
             bistandvurderinger,
             yrkesskadevurderinger
-        ) { behandlingsutfall, sykdomsvurdering, bistandvurdering, yrkesskadevurdering ->
-            // TODO: implementer overload for map4 som også gir perioden man vurderer
+        ) { segmentPeriode, behandlingsutfall, sykdomsvurdering, bistandvurdering, yrkesskadevurdering ->
             when (behandlingsutfall) {
                 null -> false
                 TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
@@ -127,8 +126,10 @@ class VurderSykepengeErstatningSteg private constructor(
                 TidligereVurderinger.Behandlingsutfall.UKJENT -> {
                     when {
                         /* ikke nødvendig å vurdere SPE fordi medlemmet oppfyller vilkårene for ordinær aap */
-                        // TODO: må sjekke kravdato opp mot perioden på segmentet vi er i, ikke opp mot fom til vurderingen
-                        sykdomsvurdering?.erOppfyltOrdinær(kravDato) == true && bistandvurdering?.erBehovForBistand() != true ->
+                        sykdomsvurdering?.erOppfyltOrdinær(
+                            kravDato,
+                            segmentPeriode
+                        ) == true && bistandvurdering?.erBehovForBistand() != true ->
                             /* TODO: Her burde vi også se på 11-17 og 11-18 før vi sier ja */
                             true
 
