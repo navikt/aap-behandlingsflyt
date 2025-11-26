@@ -218,6 +218,21 @@ class BrevGateway : BrevbestillingGateway {
         )
     }
 
+    override fun gjenoppta(bestillingReferanse: BrevbestillingReferanse) {
+        val url = baseUri.resolve("/api/gjenoppta-bestilling")
+
+        val request = PostRequest(
+            body = AvbrytBrevbestillingRequest(bestillingReferanse.brevbestillingReferanse),
+            additionalHeaders = listOf(
+                Header("Accept", "application/json")
+            )
+        )
+        client.post<_, Unit>(
+            uri = url,
+            request = request
+        )
+    }
+
     override fun hentSignaturForhåndsvisning(
         signaturer: List<SignaturGrunnlag>,
         brukerIdent: String,

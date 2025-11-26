@@ -63,6 +63,10 @@ class FakeBrevbestillingGateway : BrevbestillingGateway {
         brevbestillingResponse = brevbestillingResponse!!.copy(status = Status.AVBRUTT)
     }
 
+    override fun gjenoppta(bestillingReferanse: BrevbestillingReferanse) {
+        brevbestillingResponse = brevbestillingResponse!!.copy(status = Status.UNDER_ARBEID)
+    }
+
     override fun kanDistribuereBrev(
         brukerIdent: String,
         mottakerIdentListe: List<String>,
