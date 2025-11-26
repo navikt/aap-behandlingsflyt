@@ -43,17 +43,17 @@ class TilbakekrevingKafkaKonsument(
             melding.offset(),
         )
         melding.topic()
-        håndter(melding.value())
+        håndter(melding.key(), melding.value())
     }
 
-    fun håndter(meldingVerdi: String) {
+    fun håndter(meldingKey: String, meldingVerdi: String) {
         val tilbakekrevingHendelse = DefaultJsonMapper.fromJson<TilbakekrevingHendelseKafkaMelding>(meldingVerdi)
         val saksnummer = Saksnummer(tilbakekrevingHendelse.eksternFagsakId)
         log.info("Mottatt tilbakekrevinghendelse for saksnummer: $saksnummer")
         dataSource.transaction { connection ->
             val repositoryProvider = repositoryRegistry.provider(connection)
             val hendelseService = MottattHendelseService(repositoryProvider)
-            hendelseService.registrerMottattHendelse(tilbakekrevingHendelse.tilInnsending(saksnummer))
+            hendelseService.registrerMottattHendelse(dto = tilbakekrevingHendelse.tilInnsending(meldingKey, saksnummer))
         }
 
     }

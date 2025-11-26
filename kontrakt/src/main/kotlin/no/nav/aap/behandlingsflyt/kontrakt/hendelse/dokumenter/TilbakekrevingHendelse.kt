@@ -34,10 +34,10 @@ public data class TilbakekrevingHendelseKafkaMelding(
             tilbakekreving = tilbakekreving,
         )
 
-    public fun tilInnsending(saksnummer: Saksnummer): Innsending {
+    public fun tilInnsending(meldingKey: String, saksnummer: Saksnummer): Innsending {
         return Innsending(
             saksnummer = saksnummer,
-            referanse = InnsendingReferanse(TilbakekrevingHendelseId.ny()), // TODO: Bør få inn hendelsesid
+            referanse = InnsendingReferanse(TilbakekrevingHendelseId.ny(meldingKey)),
             type = InnsendingType.TILBAKEKREVING_HENDELSE,
             kanal = Kanal.DIGITAL,
             mottattTidspunkt = LocalDateTime.now(),
