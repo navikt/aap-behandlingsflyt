@@ -69,7 +69,7 @@ class InstitusjonsoppholdUtlederService(
                     Segment(periode, verdi)
                 })
 
-        val helseOppholdTidslinje = opprettTidslinje(helseopphold).begrensetTil(Periode(Tid.MIN, input.rettighetsperiode.tom))
+        val helseOppholdTidslinje = opprettTidslinje(helseopphold)
 
         val barnetilleggTidslinje = barnetillegg.tilTidslinje()
 
