@@ -15,7 +15,7 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.LocalDate
 
 data class UnderveisInput(
-    val rettighetsperiode: Periode,
+    val periodeForVurdering: Periode,
     val vilkårsresultat: Vilkårsresultat,
     val opptrappingPerioder: List<Periode>,
     val meldekort: List<Meldekort>,
@@ -30,5 +30,5 @@ data class UnderveisInput(
     val overstyringMeldepliktGrunnlag: OverstyringMeldepliktGrunnlag,
     val meldeperioder: List<Periode>,
     val vedtaksdatoFørstegangsbehandling: LocalDate?,
-    val ikkeAntaNullTimerArbeidetFeature: Boolean,
+    val reduksjonArbeidOverGrenseEnabled: Boolean,
 ) : Faktagrunnlag

@@ -38,10 +38,10 @@ import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykepenge
 import no.nav.aap.behandlingsflyt.behandling.beregning.manuellinntekt.manglendeGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.tidspunkt.beregningVurderingAPI
 import no.nav.aap.behandlingsflyt.behandling.brev.sykdomsvurderingForBrevApi
-import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.institusjonAPI
 import no.nav.aap.behandlingsflyt.behandling.foreslåvedtak.foreslaaVedtakAPI
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.medlemskap.medlemskapsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.samordningGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.institusjonAPI
 import no.nav.aap.behandlingsflyt.behandling.klage.behandlendeenhet.behandlendeEnhetGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.klage.formkrav.formkravGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.klage.fullmektig.fullmektigGrunnlagApi
@@ -84,11 +84,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
 import no.nav.aap.behandlingsflyt.pip.behandlingsflytPip
 import no.nav.aap.behandlingsflyt.prosessering.BehandlingsflytLogInfoProvider
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektForutgåendeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -329,15 +327,11 @@ private fun utførMigreringer(
     val scheduler = Executors.newScheduledThreadPool(1)
     scheduler.schedule(Runnable {
         val unleashGateway: UnleashGateway = gatewayProvider.provide()
-        val forutgåendeMedlemskapMigreringEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.ForutgaendeMedlemskapMigrering)
         val isLeader = isLeader(log)
-        log.info("isLeader = $isLeader, ForutgaendeMedlemskapMigrering=$forutgåendeMedlemskapMigreringEnabled")
+        log.info("isLeader = $isLeader")
 
-        if (forutgåendeMedlemskapMigreringEnabled && isLeader) {
-            dataSource.transaction { connection ->
-                val repository = MedlemskapArbeidInntektForutgåendeRepositoryImpl(connection)
-                repository.migrerManuelleVurderingerPeriodisert()
-            }
+        if (isLeader) {
+            // Kjør migrering
         }
 
     }, 9, TimeUnit.MINUTES)

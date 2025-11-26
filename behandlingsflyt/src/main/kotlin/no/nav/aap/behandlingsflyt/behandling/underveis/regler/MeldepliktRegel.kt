@@ -14,7 +14,7 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.Clock
 import java.time.LocalDate
 
-/* Vurder meldeplikt, § 11-10. Basert på meldekort, fritak fra meldeplikt og at at det ikke er
+/** Vurder meldeplikt, § 11-10. Basert på meldekort, fritak fra meldeplikt og at at det ikke er
  * meldeplikt før vedtak er fattet.
  */
 class MeldepliktRegel(
@@ -45,12 +45,12 @@ class MeldepliktRegel(
     }
 
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
-        require(input.rettighetsperiode.inneholder(resultat.helePerioden())) {
+        require(input.periodeForVurdering.inneholder(resultat.helePerioden())) {
             "kan ikke vurdere utenfor rettighetsperioden fordi meldeperioden ikke er definert"
         }
 
         val meldepliktDataTidslinje =
-            Tidslinje(input.rettighetsperiode, MeldepliktData())
+            Tidslinje(input.periodeForVurdering, MeldepliktData())
                 .outerJoin(meldekortTidslinje(input), MeldepliktData.Companion::merge)
                 .outerJoin(fritaksvurderingTidslinje(input), MeldepliktData.Companion::merge)
                 .outerJoin(overstyringMeldepliktVurderingTidslinje(input), MeldepliktData.Companion::merge)
@@ -69,7 +69,7 @@ class MeldepliktRegel(
                     forrigeSegmentOppfylt = meldeperioderVurdert.segmenter().lastOrNull()?.verdi?.utfall == OPPFYLT
                 )
                 meldeperioderVurdert.kombiner(neste, StandardSammenslåere.xor())
-            }.begrensetTil(input.rettighetsperiode)
+            }.begrensetTil(input.periodeForVurdering)
 
         return resultat.leggTilVurderinger(meldepliktVurderinger, Vurdering::leggTilMeldepliktVurdering)
     }
@@ -147,19 +147,19 @@ class MeldepliktRegel(
     private fun førVedtakTidslinje(input: UnderveisInput): Tidslinje<MeldepliktData> {
         val meldepliktFraOgMed = meldepliktFraOgMed(input)
         return if (meldepliktFraOgMed == null) {
-            Tidslinje(input.rettighetsperiode, MeldepliktData(førVedtak = true))
-        } else if (meldepliktFraOgMed <= input.rettighetsperiode.fom) {
-            Tidslinje(input.rettighetsperiode, MeldepliktData(førVedtak = false))
+            Tidslinje(input.periodeForVurdering, MeldepliktData(førVedtak = true))
+        } else if (meldepliktFraOgMed <= input.periodeForVurdering.fom) {
+            Tidslinje(input.periodeForVurdering, MeldepliktData(førVedtak = false))
         }
         else {
             Tidslinje(
                 listOf(
                     Segment(
-                        periode = Periode(input.rettighetsperiode.fom, meldepliktFraOgMed.minusDays(1)),
+                        periode = Periode(input.periodeForVurdering.fom, meldepliktFraOgMed.minusDays(1)),
                         verdi = MeldepliktData(førVedtak = true)
                     ),
                     Segment(
-                        periode = Periode(meldepliktFraOgMed, input.rettighetsperiode.tom),
+                        periode = Periode(meldepliktFraOgMed, input.periodeForVurdering.tom),
                         verdi = MeldepliktData(førVedtak = false)
                     ),
                 )

@@ -140,7 +140,7 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
                     vurdertIBehandling = BehandlingId(row.getLong("vurdert_i_behandling")),
                     vurdertAv = row.getString("vurdert_av"),
                     vurdertTidspunkt = row.getLocalDateTime("opprettet_tid"),
-                    gjelderFra = row.getLocalDateOrNull("gjelder_fra")
+                    gjelderFra = row.getLocalDate("gjelder_fra")
                 )
             }
         }

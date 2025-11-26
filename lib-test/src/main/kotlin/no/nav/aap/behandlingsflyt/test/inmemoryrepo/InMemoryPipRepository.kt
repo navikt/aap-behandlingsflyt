@@ -7,6 +7,14 @@ import no.nav.aap.behandlingsflyt.pip.PipRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 
 object InMemoryPipRepository : PipRepository {
+    override fun sakEksisterer(saksnummer: Saksnummer): Boolean {
+        return true
+    }
+
+    override fun behandlingEksisterer(behandlingReferanse: BehandlingReferanse): Boolean {
+        return true
+    }
+
     override fun finnIdenterPåSak(saksnummer: Saksnummer): List<IdentPåSak> {
         return listOf(
             IdentPåSak(

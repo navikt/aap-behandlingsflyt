@@ -81,8 +81,8 @@ class BeregnTilkjentYtelseServiceTest {
             Segment(
                 periode = Periode(LocalDate.of(2023, 4, 30), LocalDate.of(2023, 4, 30)), verdi = Tilkjent(
                     dagsats = Beløp("1131.92"), //4*0.66*111477/260
-                    gradering = TilkjentGradering(
-                        Prosent.`100_PROSENT`,
+                    gradering = Prosent.`100_PROSENT`,
+                    graderingGrunnlag = GraderingGrunnlag(
                         Prosent.`0_PROSENT`,
                         Prosent.`0_PROSENT`,
                         Prosent.`100_PROSENT`,
@@ -99,8 +99,8 @@ class BeregnTilkjentYtelseServiceTest {
             ), Segment(
                 periode = Periode(LocalDate.of(2023, 5, 1), LocalDate.of(2023, 5, 1)), verdi = Tilkjent(
                     dagsats = Beløp("1204.45"), //4*0.66*118620/260
-                    gradering = TilkjentGradering(
-                        Prosent.`100_PROSENT`,
+                    gradering = Prosent.`100_PROSENT`,
+                    graderingGrunnlag = GraderingGrunnlag(
                         Prosent.`0_PROSENT`,
                         Prosent.`0_PROSENT`,
                         Prosent.`100_PROSENT`,
@@ -164,8 +164,8 @@ class BeregnTilkjentYtelseServiceTest {
             Segment(
                 periode = periode, verdi = Tilkjent(
                     dagsats = Beløp("1204.45"), //4*0.66*118620/260+36
-                    gradering = TilkjentGradering(
-                        Prosent.`100_PROSENT`,
+                    gradering = Prosent.`100_PROSENT`,
+                    graderingGrunnlag = GraderingGrunnlag(
                         Prosent.`0_PROSENT`,
                         Prosent.`0_PROSENT`,
                         Prosent.`100_PROSENT`,
@@ -231,8 +231,8 @@ class BeregnTilkjentYtelseServiceTest {
             Segment(
                 periode = Periode(LocalDate.of(2023, 12, 30), LocalDate.of(2023, 12, 31)), verdi = Tilkjent(
                     dagsats = Beløp("1204.45"), //4*0.66*118620/260+36
-                    gradering = TilkjentGradering(
-                        Prosent.`100_PROSENT`,
+                    gradering = Prosent.`100_PROSENT`,
+                    graderingGrunnlag = GraderingGrunnlag(
                         Prosent.`0_PROSENT`,
                         Prosent.`0_PROSENT`,
                         Prosent.`100_PROSENT`,
@@ -249,8 +249,8 @@ class BeregnTilkjentYtelseServiceTest {
             ), Segment(
                 periode = Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1)), verdi = Tilkjent(
                     dagsats = Beløp("1204.45"), //4*0.66*118620/260+36
-                    gradering = TilkjentGradering(
-                        Prosent.`100_PROSENT`,
+                    gradering = Prosent.`100_PROSENT`,
+                    graderingGrunnlag = GraderingGrunnlag(
                         Prosent.`0_PROSENT`,
                         Prosent.`0_PROSENT`,
                         Prosent.`100_PROSENT`,
@@ -307,8 +307,8 @@ class BeregnTilkjentYtelseServiceTest {
             Segment(
                 periode = Periode(LocalDate.of(2024, 6, 30), LocalDate.of(2024, 6, 30)), verdi = Tilkjent(
                     dagsats = Beløp("954.06"), //118620*2/260
-                    gradering = TilkjentGradering(
-                        Prosent.`100_PROSENT`,
+                    gradering = Prosent.`100_PROSENT`,
+                    graderingGrunnlag = GraderingGrunnlag(
                         Prosent.`0_PROSENT`,
                         Prosent.`0_PROSENT`,
                         Prosent.`100_PROSENT`,
@@ -326,8 +326,8 @@ class BeregnTilkjentYtelseServiceTest {
             ), Segment(
                 periode = Periode(LocalDate.of(2024, 7, 1), LocalDate.of(2024, 7, 1)), verdi = Tilkjent(
                     dagsats = Beløp("973.62"), // 124_028 * 2.041/260
-                    gradering = TilkjentGradering(
-                        Prosent.`100_PROSENT`,
+                    gradering = Prosent.`100_PROSENT`,
+                    graderingGrunnlag = GraderingGrunnlag(
                         Prosent.`0_PROSENT`,
                         Prosent.`0_PROSENT`,
                         Prosent.`100_PROSENT`,
@@ -384,8 +384,8 @@ class BeregnTilkjentYtelseServiceTest {
             Segment(
                 periode = Periode(LocalDate.of(2020, 3, 31), LocalDate.of(2020, 3, 31)), verdi = Tilkjent(
                     dagsats = Beløp("512.09"), //2*2/3*99858/260
-                    gradering = TilkjentGradering(
-                        Prosent.`100_PROSENT`,
+                    gradering = Prosent.`100_PROSENT`,
+                    graderingGrunnlag = GraderingGrunnlag(
                         Prosent.`0_PROSENT`,
                         Prosent.`0_PROSENT`,
                         Prosent.`100_PROSENT`,
@@ -403,8 +403,8 @@ class BeregnTilkjentYtelseServiceTest {
             ), Segment(
                 periode = Periode(LocalDate.of(2020, 4, 1), LocalDate.of(2020, 4, 1)), verdi = Tilkjent(
                     dagsats = Beløp("768.14"), //2*99858/260
-                    gradering = TilkjentGradering(
-                        Prosent.`100_PROSENT`,
+                    gradering = Prosent.`100_PROSENT`,
+                    graderingGrunnlag = GraderingGrunnlag(
                         Prosent.`0_PROSENT`,
                         Prosent.`0_PROSENT`,
                         Prosent.`100_PROSENT`,
@@ -459,8 +459,8 @@ class BeregnTilkjentYtelseServiceTest {
             Segment(
                 periode = Periode(1 juni 2023, 1 august 2023), verdi = Tilkjent(
                     dagsats = Beløp("1204.45"), //4*0.66*111477/260
-                    gradering = TilkjentGradering(
-                        endeligGradering = Prosent.`50_PROSENT`,
+                    gradering = Prosent.`50_PROSENT`,
+                    graderingGrunnlag = GraderingGrunnlag(
                         samordningGradering = Prosent.`0_PROSENT`,
                         institusjonGradering = Prosent.`50_PROSENT`,
                         arbeidGradering = Prosent.`100_PROSENT`,
@@ -530,7 +530,7 @@ class BeregnTilkjentYtelseServiceTest {
 
         // Forventer 30 prosent grunnlag først, deretter 100 prosent
         assertThat(
-            beregnTilkjentYtelseService.segmenter().map { it.verdi.gradering.endeligGradering }).containsExactly(
+            beregnTilkjentYtelseService.segmenter().map { it.verdi.gradering }).containsExactly(
             Prosent.`30_PROSENT`, Prosent.`0_PROSENT`, Prosent.`100_PROSENT`
         )
 
@@ -539,8 +539,8 @@ class BeregnTilkjentYtelseServiceTest {
             Segment(
                 periode = Periode(1 juni 2023, 30 juni 2023), verdi = Tilkjent(
                     dagsats = Beløp("1204.45"), //4*0.66*111477/260
-                    gradering = TilkjentGradering(
-                        Prosent.`30_PROSENT`,
+                    gradering = Prosent.`30_PROSENT`,
+                    graderingGrunnlag = GraderingGrunnlag(
                         Prosent.`70_PROSENT`,
                         Prosent.`0_PROSENT`,
                         Prosent.`100_PROSENT`,
@@ -558,8 +558,8 @@ class BeregnTilkjentYtelseServiceTest {
             Segment(
                 periode = Periode(1 juli 2023, 1 august 2023), verdi = Tilkjent(
                     dagsats = Beløp("1204.45"), //4*0.66*111477/260
-                    gradering = TilkjentGradering(
-                        Prosent.`0_PROSENT`,
+                    gradering = Prosent.`0_PROSENT`,
+                    graderingGrunnlag = GraderingGrunnlag(
                         Prosent.`70_PROSENT`,
                         Prosent.`0_PROSENT`,
                         Prosent.`100_PROSENT`,
@@ -576,8 +576,8 @@ class BeregnTilkjentYtelseServiceTest {
             ), Segment(
                 periode = Periode(2 august 2023, 1 september 2023), verdi = Tilkjent(
                     dagsats = Beløp("1204.45"), //4*0.66*118620/260
-                    gradering = TilkjentGradering(
-                        Prosent.`100_PROSENT`,
+                    gradering = Prosent.`100_PROSENT`,
+                    graderingGrunnlag = GraderingGrunnlag(
                         Prosent.`0_PROSENT`,
                         Prosent.`0_PROSENT`,
                         Prosent.`100_PROSENT`,
@@ -643,7 +643,7 @@ class BeregnTilkjentYtelseServiceTest {
 
         // Forventer 30 prosent grunnlag først, deretter 100 prosent
         assertThat(
-            beregnTilkjentYtelseService.segmenter().map { it.verdi.gradering.endeligGradering }).containsExactly(
+            beregnTilkjentYtelseService.segmenter().map { it.verdi.gradering }).containsExactly(
             Prosent.`50_PROSENT`, Prosent.`30_PROSENT`
         )
 
@@ -652,8 +652,8 @@ class BeregnTilkjentYtelseServiceTest {
             Segment(
                 periode = Periode(1 juni 2023, 30 juni 2023), verdi = Tilkjent(
                     dagsats = Beløp("1204.45"), //4*0.66*111477/260
-                    gradering = TilkjentGradering(
-                        Prosent.`50_PROSENT`,
+                    gradering = Prosent.`50_PROSENT`,
+                    graderingGrunnlag = GraderingGrunnlag(
                         Prosent.`0_PROSENT`,
                         Prosent.`0_PROSENT`,
                         Prosent.`100_PROSENT`,
@@ -670,8 +670,8 @@ class BeregnTilkjentYtelseServiceTest {
             ), Segment(
                 periode = Periode(1 juli 2023, 1 august 2023), verdi = Tilkjent(
                     dagsats = Beløp("1204.45"), //4*0.66*118620/260
-                    gradering = TilkjentGradering(
-                        Prosent.`30_PROSENT`,
+                    gradering = Prosent.`30_PROSENT`,
+                    graderingGrunnlag = GraderingGrunnlag(
                         Prosent.`0_PROSENT`,
                         Prosent.`0_PROSENT`,
                         Prosent.`100_PROSENT`,
@@ -727,8 +727,8 @@ class BeregnTilkjentYtelseServiceTest {
                 periode = Periode(1 juni 2023, 1 august 2023),
                 verdi = Tilkjent(
                     dagsats = Beløp("1204.45"), //4*0.66*111477/260
-                    gradering = TilkjentGradering(
-                        endeligGradering = Prosent.`70_PROSENT`,
+                    gradering = Prosent.`70_PROSENT`,
+                    graderingGrunnlag = GraderingGrunnlag(
                         samordningGradering = Prosent.`0_PROSENT`,
                         institusjonGradering = Prosent.`0_PROSENT`,
                         arbeidGradering = Prosent.`70_PROSENT`,
@@ -791,8 +791,8 @@ class BeregnTilkjentYtelseServiceTest {
                 periode = Periode(1 juni 2023, 1 august 2023),
                 verdi = Tilkjent(
                     dagsats = Beløp("1204.45"), //4*0.66*111477/260
-                    gradering = TilkjentGradering(
-                        Prosent(20),
+                    gradering = Prosent(20),
+                    graderingGrunnlag = GraderingGrunnlag(
                         Prosent.`50_PROSENT`,
                         Prosent.`0_PROSENT`,
                         Prosent.`70_PROSENT`,
@@ -885,8 +885,8 @@ class BeregnTilkjentYtelseServiceTest {
                 periode = Periode(1 juni 2023, 1 august 2023),
                 verdi = Tilkjent(
                     dagsats = Beløp("1204.45"), //4*0.66*111477/260
-                    gradering = TilkjentGradering(
-                        Prosent.`0_PROSENT`,
+                    gradering = Prosent.`0_PROSENT`,
+                    graderingGrunnlag = GraderingGrunnlag(
                         Prosent.`0_PROSENT`,
                         Prosent.`0_PROSENT`,
                         Prosent.`70_PROSENT`,
@@ -955,8 +955,8 @@ class BeregnTilkjentYtelseServiceTest {
             Segment(
                 periode = Periode(1 juni 2023, 1 august 2023), verdi = Tilkjent(
                     dagsats = Beløp("1204.45"), //4*0.66*111477/260
-                    gradering = TilkjentGradering(
-                        endeligGradering = Prosent.`30_PROSENT`,
+                    gradering = Prosent.`30_PROSENT`,
+                    graderingGrunnlag = GraderingGrunnlag(
                         samordningGradering = Prosent(10),
                         institusjonGradering = Prosent.`50_PROSENT`,
                         arbeidGradering = Prosent.`100_PROSENT`,
@@ -1051,8 +1051,8 @@ class BeregnTilkjentYtelseServiceTest {
             Segment(
                 periode = Periode(1 juni 2023, 1 august 2023), verdi = Tilkjent(
                     dagsats = Beløp("1204.45"), //4*0.66*111477/260
-                    gradering = TilkjentGradering(
-                        endeligGradering = Prosent(effektivGradering.toInt()),
+                    gradering = Prosent(effektivGradering.toInt()),
+                    graderingGrunnlag = GraderingGrunnlag(
                         samordningGradering = Prosent(sykepengegrad),
                         institusjonGradering = Prosent(institusjon),
                         arbeidGradering = Prosent(arbeidsgrad).komplement(),
@@ -1114,8 +1114,8 @@ class BeregnTilkjentYtelseServiceTest {
 
         val tilkjent = Tilkjent(
             dagsats = Beløp("1131.92"), //4*0.66*118620/260
-            gradering = TilkjentGradering(
-                Prosent.`100_PROSENT`,
+            gradering = Prosent.`100_PROSENT`,
+            graderingGrunnlag = GraderingGrunnlag(
                 Prosent.`0_PROSENT`,
                 Prosent.`0_PROSENT`,
                 Prosent.`100_PROSENT`,

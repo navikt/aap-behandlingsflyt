@@ -3,12 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UtledMeldeperiodeRegel.Companion.groupByMeldeperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneVurdering.Companion.tidslinje
-import no.nav.aap.komponenter.tidslinje.Segment
-import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -44,15 +39,6 @@ private val HVERDAGER_I_FULL_MELDEPERIODE = BigDecimal(10)
 private val ANTALL_TIMER_I_MELDEPERIODE =
     BigDecimal(ANTALL_TIMER_I_ARBEIDSUKE).multiply(BigDecimal.TWO)
 
-// § 11-23 fjerde ledd
-private const val HØYESTE_GRADERING_NORMAL = 60
-
-// § 11-23 fjerde ledd
-private const val HØYESTE_GRADERING_YRKESSKADE = 70
-
-// § 11-23 sjette ledd
-private const val HØYESTE_GRADERING_OPPTRAPPING = 80
-
 /** § 11-23. Reduksjon ved delvis nedsatt arbeidsevne
  *
  * Graderer arbeid der hvor det ikke er avslått pga en regel tidliger i løpet
@@ -61,16 +47,12 @@ private const val HØYESTE_GRADERING_OPPTRAPPING = 80
  */
 class GraderingArbeidRegel : UnderveisRegel {
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
-        require(input.rettighetsperiode.inneholder(resultat.helePerioden())) {
+        require(input.periodeForVurdering.inneholder(resultat.helePerioden())) {
             "kan ikke vurdere utenfor rettighetsperioden fordi meldeperioden ikke er definert"
         }
 
         val arbeidsTidslinje = graderingerTidslinje(resultat, input)
-        val graderingsgrenseverdier = graderingsgrenseverdier(input, resultat)
-
-        return resultat
-            .leggTilVurderinger(arbeidsTidslinje, Vurdering::leggTilGradering)
-            .leggTilVurderinger(graderingsgrenseverdier, Vurdering::leggTilGrenseverdi)
+        return resultat.leggTilVurderinger(arbeidsTidslinje, Vurdering::leggTilGradering)
     }
 
     /** § 11-23 tredje ledd */
@@ -81,6 +63,7 @@ class GraderingArbeidRegel : UnderveisRegel {
         val arbeidsevne: Prosent? = null,
         val opplysningerFørstMottatt: LocalDate? = null,
         val harRett: Boolean? = null,
+        val grenseverdi: Prosent? = null,
     ) {
         companion object {
             fun mergePrioriterHøyre(venstre: OpplysningerOmArbeid?, høyre: OpplysningerOmArbeid?) =
@@ -92,6 +75,7 @@ class GraderingArbeidRegel : UnderveisRegel {
                         høyre?.opplysningerFørstMottatt
                     ).minOrNull(),
                     harRett = høyre?.harRett ?: venstre?.harRett,
+                    grenseverdi = høyre?.grenseverdi ?: venstre?.grenseverdi,
                 )
         }
     }
@@ -100,22 +84,13 @@ class GraderingArbeidRegel : UnderveisRegel {
         resultat: Tidslinje<Vurdering>,
         input: UnderveisInput
     ): Tidslinje<ArbeidsGradering> {
-        var opplysninger = Tidslinje(input.rettighetsperiode, OpplysningerOmArbeid())
+        val opplysninger = Tidslinje(input.periodeForVurdering, OpplysningerOmArbeid())
             .outerJoin(arbeidsevnevurdering(input), OpplysningerOmArbeid::mergePrioriterHøyre)
             .outerJoin(nullTimerVedFritakFraMeldeplikt(input), OpplysningerOmArbeid::mergePrioriterHøyre)
             .outerJoin(opplysningerFraMeldekort(input), OpplysningerOmArbeid::mergePrioriterHøyre)
             .outerJoin(harRettTidslinje(resultat), OpplysningerOmArbeid::mergePrioriterHøyre)
+            .outerJoin(grenseverdi(resultat), OpplysningerOmArbeid::mergePrioriterHøyre)
 
-        if (!input.ikkeAntaNullTimerArbeidetFeature) {
-            if (skalAntaTimerArbeidet(resultat, opplysninger)) {
-                // anta null timer arbeidet hvis medlemmet har gitt alle opplysninger
-                opplysninger = Tidslinje(
-                    input.rettighetsperiode,
-                    OpplysningerOmArbeid(timerArbeid = TimerArbeid(BigDecimal.ZERO))
-                )
-                    .outerJoin(opplysninger, OpplysningerOmArbeid::mergePrioriterHøyre)
-            }
-        }
 
         return groupByMeldeperiode(resultat, opplysninger)
             .flatMap { meldeperiode ->
@@ -124,34 +99,8 @@ class GraderingArbeidRegel : UnderveisRegel {
             .komprimer()
     }
 
-    fun skalAntaTimerArbeidet(
-        underveisVurderinger: Tidslinje<Vurdering>,
-        opplysningerTidslinje: Tidslinje<OpplysningerOmArbeid>,
-        dagensDato: LocalDate = LocalDate.now(),
-    ): Boolean {
-
-        val skalHaOpplysningerTidslinje = underveisVurderinger.mapValue { underveisVurdering ->
-            /* uten rett skal vi ikke ha opplysninger */
-            if (underveisVurdering.fårAapEtter == null) {
-                return@mapValue false
-            }
-
-            val fastsattDag = underveisVurdering.meldeperiode().tom.plusDays(1)
-            val sisteFrist = fastsattDag.plusDays(7)
-
-            return@mapValue sisteFrist < dagensDato
-        }
-
-        val manglerOpplysninger =
-            skalHaOpplysningerTidslinje.outerJoin(opplysningerTidslinje) { skalHaOpplysninger, opplysninger ->
-                if (skalHaOpplysninger == true) {
-                    return@outerJoin opplysninger?.timerArbeid == null
-                } else {
-                    return@outerJoin false
-                }
-            }
-
-        return manglerOpplysninger.segmenter().none { it.verdi }
+    private fun grenseverdi(vurderinger: Tidslinje<Vurdering>): Tidslinje<OpplysningerOmArbeid> {
+        return vurderinger.map { OpplysningerOmArbeid(grenseverdi = it.grenseverdi()) }
     }
 
     private fun harRettTidslinje(vurderinger: Tidslinje<Vurdering>): Tidslinje<OpplysningerOmArbeid> {
@@ -263,40 +212,30 @@ class GraderingArbeidRegel : UnderveisRegel {
                 )
             )
         )
-
         return opplysningerOmArbeid.mapValue { arbeid ->
+            requireNotNull(arbeid.grenseverdi) {
+                "grenseverdi for hvor mye medlemmet har  lov til å jobbe må være satt for å kunne gradere basert på timer arbeidet"
+            }
             val fastsattArbeidsevne = arbeid.arbeidsevne ?: `0_PROSENT`
             ArbeidsGradering(
                 totaltAntallTimer = arbeid.timerArbeid ?: TimerArbeid(BigDecimal.ZERO),
                 andelArbeid = andelArbeid,
                 fastsattArbeidsevne = fastsattArbeidsevne,
-                gradering = Prosent.`100_PROSENT`.minus(
-                    Prosent.max(andelArbeid, fastsattArbeidsevne)
-                ),
+                gradering = when {
+                    arbeid.grenseverdi < andelArbeid ->
+                        `0_PROSENT`
+
+                    else ->
+                        Prosent.`100_PROSENT`.minus(
+                            Prosent.max(andelArbeid, fastsattArbeidsevne)
+                        )
+
+                },
                 opplysningerMottatt =
                     opplysningerOmArbeid.segmenter().mapNotNull { it.verdi.opplysningerFørstMottatt }
                         /* Høyeste dato er datoen første dato vi hadde opplysninger for *hele* meldeperioden. */
                         .maxOrNull()
             )
         }
-    }
-
-    private fun graderingsgrenseverdier(
-        input: UnderveisInput,
-        resultat: Tidslinje<Vurdering>
-    ): Tidslinje<Prosent> {
-        val opptrappingTidslinje =
-            Tidslinje(input.opptrappingPerioder.map { Segment(it, Prosent(HØYESTE_GRADERING_OPPTRAPPING)) })
-
-        val harYrkesskade = input.vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET).vilkårsperioder()
-            .any { it.utfall == Utfall.OPPFYLT && it.innvilgelsesårsak == Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG }
-
-        val øvreGrenseNormalt = if (harYrkesskade) {
-            Prosent(HØYESTE_GRADERING_YRKESSKADE)
-        } else {
-            Prosent(HØYESTE_GRADERING_NORMAL)
-        }
-        return resultat.mapValue { øvreGrenseNormalt }
-            .kombiner(opptrappingTidslinje, StandardSammenslåere.prioriterHøyreSideCrossJoin())
     }
 }

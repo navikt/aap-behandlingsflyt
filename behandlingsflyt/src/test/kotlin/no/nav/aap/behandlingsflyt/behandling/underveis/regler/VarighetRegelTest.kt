@@ -27,7 +27,7 @@ class VarighetRegelTest {
         val rettighetsperiode = Periode(18 november 2024, 22 november 2024)
         val vurderinger = regel.vurder(
             tomUnderveisInput.copy(
-                rettighetsperiode = rettighetsperiode,
+                periodeForVurdering = rettighetsperiode,
                 kvoter = Kvoter.create(4, 0, 0)
             ),
 
@@ -56,7 +56,7 @@ class VarighetRegelTest {
         val rettighetsperiode = Periode(18 november 2024, 25 november 2024)
         val vurderinger = regel.vurder(
             tomUnderveisInput.copy(
-                rettighetsperiode = rettighetsperiode,
+                periodeForVurdering = rettighetsperiode,
                 kvoter = Kvoter.create(5, 0, 0)
             ),
 
@@ -85,7 +85,7 @@ class VarighetRegelTest {
         val rettighetsperiode = Periode(22 november 2024, 26 november 2024)
         val vurderinger = regel.vurder(
             tomUnderveisInput.copy(
-                rettighetsperiode = rettighetsperiode,
+                periodeForVurdering = rettighetsperiode,
                 kvoter = Kvoter.create(2, 0, 0)
             ),
 
@@ -114,7 +114,7 @@ class VarighetRegelTest {
         val rettighetsperiode = Periode(18 november 2024, 26 januar 2025)
         val vurderinger = regel.vurder(
             tomUnderveisInput.copy(
-                rettighetsperiode = rettighetsperiode,
+                periodeForVurdering = rettighetsperiode,
                 kvoter = Kvoter.create(2, 0, 0)
             ),
 
@@ -144,7 +144,7 @@ class VarighetRegelTest {
         val rettighetsperiode = Periode(18 november 2024, 22 november 2024)
         val vurderinger = regel.vurder(
             tomUnderveisInput.copy(
-                rettighetsperiode = rettighetsperiode,
+                periodeForVurdering = rettighetsperiode,
                 kvoter = Kvoter.create(2, 0, 0)
             ),
 
@@ -197,7 +197,7 @@ class VarighetRegelTest {
         val rettighetsperiode = Periode(18 november 2024, 22 november 2024)
         val vurderinger = regel.vurder(
             tomUnderveisInput.copy(
-                rettighetsperiode = rettighetsperiode,
+                periodeForVurdering = rettighetsperiode,
                 kvoter = Kvoter.create(2, 0, 2)
             ),
 
@@ -244,7 +244,7 @@ class VarighetRegelTest {
         val rettighetsperiode = Periode(18 november 2024, 22 november 2024)
         val vurderinger = regel.vurder(
             tomUnderveisInput.copy(
-                rettighetsperiode = rettighetsperiode,
+                periodeForVurdering = rettighetsperiode,
                 kvoter = Kvoter.create(2, 0, 0)
             ),
 
@@ -291,7 +291,7 @@ class VarighetRegelTest {
         val rettighetsperiode = Periode(18 november 2024, 22 november 2024)
         val vurderinger = regel.vurder(
             tomUnderveisInput.copy(
-                rettighetsperiode = rettighetsperiode,
+                periodeForVurdering = rettighetsperiode,
                 kvoter = Kvoter.create(2, 0, 0)
             ),
             Tidslinje(
@@ -336,7 +336,7 @@ class VarighetRegelTest {
         val rettighetsperiode = Periode(18 november 2024, 22 november 2024)
         val vurderinger = regel.vurder(
             tomUnderveisInput.copy(
-                rettighetsperiode = rettighetsperiode,
+                periodeForVurdering = rettighetsperiode,
                 kvoter = Kvoter.create(3, 0, 0)
             ),
             Tidslinje(
@@ -380,7 +380,7 @@ class VarighetRegelTest {
         val rettighetsperiode = Periode(18 november 2024, 22 november 2024)
         val vurderinger = regel.vurder(
             tomUnderveisInput.copy(
-                rettighetsperiode = rettighetsperiode,
+                periodeForVurdering = rettighetsperiode,
                 kvoter = Kvoter.create(4, 0, 0)
             ),
             Tidslinje(
@@ -433,7 +433,7 @@ class VarighetRegelTest {
         val rettighetsperiode = Periode(18 november 2024, 26 november 2024)
         val vurderinger = regel.vurder(
             tomUnderveisInput.copy(
-                rettighetsperiode = rettighetsperiode,
+                periodeForVurdering = rettighetsperiode,
                 kvoter = Kvoter.create(4, 2, 0)
             ),
 
@@ -487,7 +487,7 @@ class VarighetRegelTest {
         val rettighetsperiode = Periode(18 november 2024, 26 november 2024)
         val vurderinger = regel.vurder(
             tomUnderveisInput.copy(
-                rettighetsperiode = rettighetsperiode,
+                periodeForVurdering = rettighetsperiode,
                 kvoter = Kvoter.create(2, 2, 0)
             ),
 
@@ -532,7 +532,7 @@ class VarighetRegelTest {
         val rettighetsperiode = Periode(8 november 2024, 10 november 2024)
         val vurderinger = regel.vurder(
             tomUnderveisInput.copy(
-                rettighetsperiode = rettighetsperiode,
+                periodeForVurdering = rettighetsperiode,
                 kvoter = Kvoter.create(ordinærkvote = 1, studentkvote = 0, 0)
             ),
             Tidslinje(
@@ -566,7 +566,7 @@ class VarighetRegelTest {
         Periode(rettighetsperiode.fom.plusDays(1), rettighetsperiode.tom).dager().forEach {
             val vurderinger = regel.vurder(
                 tomUnderveisInput.copy(
-                    rettighetsperiode = rettighetsperiode,
+                    periodeForVurdering = rettighetsperiode,
                     kvoter = Kvoter.create(4, 0, 0)
                 ),
 
@@ -614,7 +614,7 @@ class VarighetRegelTest {
         Periode(rettighetsperiode.fom.plusDays(1), rettighetsperiode.tom).dager().forEach {
             val vurderinger = regel.vurder(
                 tomUnderveisInput.copy(
-                    rettighetsperiode = rettighetsperiode,
+                    periodeForVurdering = rettighetsperiode,
                     kvoter = Kvoter.create(5, 0, 0)
                 ),
 
@@ -661,7 +661,7 @@ class VarighetRegelTest {
         val rettighetsperiode = Periode(11 november 2024, 26 november 2024)
         val vurderinger = regel.vurder(
             tomUnderveisInput.copy(
-                rettighetsperiode = rettighetsperiode,
+                periodeForVurdering = rettighetsperiode,
                 kvoter = Kvoter.create(ordinærkvote = 6, studentkvote = 3, 3)
             ),
             listOf(
