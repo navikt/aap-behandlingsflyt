@@ -69,13 +69,13 @@ class InstitusjonsoppholdUtlederService(
                     Segment(periode, verdi)
                 })
 
-        val helseOpphold = opprettTidslinje(helseopphold).begrensetTil(Periode(Tid.MIN, input.rettighetsperiode.tom))
+        val helseOppholdTidslinje = opprettTidslinje(helseopphold)
 
         val barnetilleggTidslinje = barnetillegg.tilTidslinje()
 
         //fjern perioder hvor bruker har barnetillegg gjennom hele helseinstitusjonsoppholdet
         val oppholdUtenBarnetillegg =
-            helseOpphold.disjoint(barnetilleggTidslinje) { p, v -> Segment(p, v.verdi) }
+            helseOppholdTidslinje.disjoint(barnetilleggTidslinje) { p, v -> Segment(p, v.verdi) }
 
         // Oppholdet må være lengre enn 3 måneder for å være aktuelt for avklaring og må ha vart i minimum 2 måneder for å være klar for avklaring
         val oppholdSomKanGiReduksjon = harOppholdSomKreverAvklaring(oppholdUtenBarnetillegg)
@@ -85,7 +85,7 @@ class InstitusjonsoppholdUtlederService(
         }, sammenslåer()).kombiner(helsevurderingerTidslinje, helsevurderingSammenslåer()).komprimer()
 
         // Hvis det er mindre en 3 måneder siden sist opphold og bruker er nå innlagt
-        val helseoppholdUtenBarnetillegg = helseOpphold.disjoint(
+        val helseoppholdUtenBarnetillegg = helseOppholdTidslinje.disjoint(
             barnetilleggTidslinje
         ) { p, v ->
             Segment(

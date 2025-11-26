@@ -111,7 +111,6 @@ class InstitusjonRegel : UnderveisRegel {
         if (skalgiUmiddelbarReduksjon) {
             return Periode(periode.fom.withDayOfMonth(1).plusMonths(1), periode.tom)
         }
-        // TODO hjelp! fom kan være før tom?
         return Periode(periode.fom.withDayOfMonth(1).plusMonths(1).plusMonths(3), periode.tom)
     }
 }
