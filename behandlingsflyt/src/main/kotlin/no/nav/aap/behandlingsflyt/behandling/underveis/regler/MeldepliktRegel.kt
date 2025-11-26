@@ -91,10 +91,6 @@ class MeldepliktRegel(
                 .outerJoin(førsteDagMedRettTidslinje(resultat), MeldepliktData.Companion::merge)
                 .outerJoin(utenRettTidslinje(resultat), MeldepliktData.Companion::merge)
                 .splittOppIPerioder(resultat.segmenter().map { vurdering -> vurdering.verdi.meldeperiode() })
-        // ^ returnerer liste av tidslinjer hvor hver tidslinje er begrenset til en meldeperiode
-
-        // |--|--|--|---|----|----|
-        // [--|--][---|---][--|---]
 
         // Kjør meldeplikt-regel-logikk
         var forrigePeriode: Segment<Tidslinje<MeldepliktData>>? = null
@@ -106,7 +102,7 @@ class MeldepliktRegel(
                     dataForMeldeperiode = nåværendeMeldeperiodeSegment.verdi,
                     forrigeSegmentOppfylt = meldeperioderVurdert.segmenter().lastOrNull()?.verdi?.utfall == OPPFYLT,
                     dataForForrigeMeldeperiode = forrigePeriode?.verdi,
-                ).also { println(it) }
+                )
                 if (input.unntakMeldepliktDesemberEnabled) {
                     forrigePeriode = nåværendeMeldeperiodeSegment
                 }
@@ -201,9 +197,6 @@ class MeldepliktRegel(
     ): Tidslinje<MeldepliktVurdering> {
         val meldefrist = meldeperiode.fom.plusDays(7)
         val dagensDato = LocalDate.now(clock)
-
-        println("MELDEPERIODE $meldeperiode")
-        println("FORRIGE: $dataForForrigeMeldeperiode")
 
         val potensieltTidligDokument = UnntakFastsattMeldedag.erSpesialPeriode(meldeperiode)?.let { nyTidligereFrist ->
             val begrensetForrigePeriode =

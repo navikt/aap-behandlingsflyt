@@ -155,7 +155,7 @@ class MeldepliktRegelTest {
      *  ```
      */
     @Test
-    fun `en eller annen test`() {
+    fun `skal kunne levere tidlig meldekort 17 desember, og oppfylle meldeplikt i perioden etter`() {
         /// få oppfylt også neste meldeperiode (3 ukers)
         val rettighetsperiode = Periode(29 november 2025, 19 januar 2026)
         val input = tomUnderveisInput(
@@ -213,15 +213,7 @@ class MeldepliktRegelTest {
      * ```
      */
     @Test
-    fun `sender inn 15de, men er ikke ajour med meldeplikt`() {
-        /*
-        Scenario: bruker sender inn 16de (en dag for sent), men har ikke allerede sendt inn
-        meldekort for perioden 8-21.
-
-        Ender opp med å oppfylle meldeplikten for sent, men skal oppfylle meldeplikten
-        for både 8-21 og 22 des-4 jan.
-         */
-
+    fun `sender inn 17de, men er ikke ajour med meldeplikt`() {
         val rettighetsperiode = Periode(24 november 2025, 19 januar 2026)
         val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
@@ -285,8 +277,7 @@ class MeldepliktRegelTest {
      * ```
      */
     @Test
-    fun `samme tester, men for ikke samme fase`() {
-        /// få oppfylt også neste meldeperiode (3 ukers)
+    fun `samme tester som over, men for ikke samme fase`() {
         val rettighetsperiode = Periode(23 november 2025, 19 januar 2026)
         val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,

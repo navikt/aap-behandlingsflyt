@@ -3,6 +3,9 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
 
+/**
+ * Enkelt-perioder hvor det skal være tidligere frist for å levere meldekort.
+ */
 object UnntakFastsattMeldedag {
     private val unntak: Map<Periode, LocalDate> = buildMap {
         put(
@@ -12,6 +15,9 @@ object UnntakFastsattMeldedag {
         )
     }
 
+    /**
+     * Gitt en meldeperiode, potensielt returner tidligere frist.
+     */
     fun erSpesialPeriode(periode: Periode): LocalDate? {
         return unntak[periode]
     }
