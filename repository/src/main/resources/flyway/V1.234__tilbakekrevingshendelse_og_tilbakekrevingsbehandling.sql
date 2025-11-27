@@ -1,0 +1,35 @@
+CREATE TABLE TILBAKEKREVINGSHENDELSE (
+    ID                                  BIGSERIAL               PRIMARY KEY,
+    SAK_ID                              BIGINT                  NOT NULL REFERENCES SAK(ID),
+    TILBAKEKREVING_BEHANDLING_ID        UUID                    NOT NULL,
+    EKSTERN_FAGSAK_ID                   VARCHAR(40)             NOT NULL,
+    HENDELSE_OPPRETTET                  TIMESTAMP(3)            NOT NULL,
+    EKSTERN_BEHANDLING_ID               VARCHAR(40),
+    SAK_OPPRETTET                       TIMESTAMP(3)            NOT NULL,
+    VARSEL_SENDT                        TIMESTAMP(3),
+    BEHANDLINGSSTATUS                   VARCHAR(40)             NOT NULL,
+    TOTALT_FEILUTBETALT_BELOP           NUMERIC(9, 2)           NOT NULL,
+    TILBAKEKREVING_SAKSBEHANDLING_URL   TEXT                    NOT NULL,
+    FULLSTENDIG_PERIODE                 DATERANGE               NOT NULL,
+    VERSJON                             BIGINT                  NOT NULL
+);
+
+CREATE INDEX IDX_SAK_ID_TILBAKEKREVINGSHENDELSE ON TILBAKEKREVINGSHENDELSE (SAK_ID);
+
+CREATE TABLE TILBAKEKREVINGSBEHANDLING (
+    ID                                  BIGSERIAL               PRIMARY KEY,
+    SAK_ID                              BIGINT                  NOT NULL REFERENCES SAK(ID),
+    TILBAKEKREVING_BEHANDLING_ID        UUID                    NOT NULL,
+    EKSTERN_FAGSAK_ID                   VARCHAR(40)             NOT NULL,
+    HENDELSE_OPPRETTET                  TIMESTAMP(3)            NOT NULL,
+    EKSTERN_BEHANDLING_ID               VARCHAR(40),
+    SAK_OPPRETTET                       TIMESTAMP(3)            NOT NULL,
+    VARSEL_SENDT                        TIMESTAMP(3),
+    BEHANDLINGSSTATUS                   VARCHAR(40)             NOT NULL,
+    TOTALT_FEILUTBETALT_BELOP           NUMERIC(9, 2)           NOT NULL,
+    TILBAKEKREVING_SAKSBEHANDLING_URL   TEXT                    NOT NULL,
+    FULLSTENDIG_PERIODE                 DATERANGE               NOT NULL
+);
+
+CREATE INDEX IDX_SAK_ID_TILBAKEKREVINGSBEHANDLING ON TILBAKEKREVINGSBEHANDLING (SAK_ID);
+CREATE UNIQUE INDEX UIDX_TILBAKEKREVING_BEHANDLING_ID ON TILBAKEKREVINGSBEHANDLING(TILBAKEKREVING_BEHANDLING_ID);

@@ -94,7 +94,7 @@ class BeregnTilkjentYtelseServiceTest {
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("111477"),
                     antallBarn = 0,
-                    barnetilleggsats = Beløp("0"),
+                    barnetilleggsats = Beløp("35.00"),
                     barnetillegg = Beløp("0"),
                     utbetalingsdato = periode.tom.plusDays(9)
                 )
@@ -112,7 +112,7 @@ class BeregnTilkjentYtelseServiceTest {
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620.00"),
                     antallBarn = 0,
-                    barnetilleggsats = Beløp("0"),
+                    barnetilleggsats = Beløp("35.00"),
                     barnetillegg = Beløp("0"),
                     utbetalingsdato = periode.tom.plusDays(9)
                 )
@@ -323,7 +323,7 @@ class BeregnTilkjentYtelseServiceTest {
                     grunnlagsfaktor = GUnit("0.0076923077"),
                     grunnbeløp = Beløp("124028"),
                     antallBarn = 0,
-                    barnetilleggsats = Beløp("0"),
+                    barnetilleggsats = Beløp("36.00"),
                     barnetillegg = Beløp("0"),
                     utbetalingsdato = periode.tom.plusDays(9)
 
@@ -342,7 +342,7 @@ class BeregnTilkjentYtelseServiceTest {
                     grunnlagsfaktor = GUnit("0.0078500000"),
                     grunnbeløp = Beløp("124028"),
                     antallBarn = 0,
-                    barnetilleggsats = Beløp("0"),
+                    barnetilleggsats = Beløp("36.00"),
                     barnetillegg = Beløp("0"),
                     utbetalingsdato = periode.tom.plusDays(9)
                 )
@@ -401,7 +401,7 @@ class BeregnTilkjentYtelseServiceTest {
                     grunnlagsfaktor = GUnit("0.0051282051"),
                     grunnbeløp = Beløp("99858"),
                     antallBarn = 0,
-                    barnetilleggsats = Beløp("0"),
+                    barnetilleggsats = Beløp("27.00"),
                     barnetillegg = Beløp("0"),
                     utbetalingsdato = periode.tom.plusDays(9)
 
@@ -420,7 +420,7 @@ class BeregnTilkjentYtelseServiceTest {
                     grunnlagsfaktor = GUnit("0.0076923077"),
                     grunnbeløp = Beløp("99858"),
                     antallBarn = 0,
-                    barnetilleggsats = Beløp("0"),
+                    barnetilleggsats = Beløp("27.00"),
                     barnetillegg = Beløp("0"),
                     utbetalingsdato = periode.tom.plusDays(9)
                 )
@@ -477,7 +477,7 @@ class BeregnTilkjentYtelseServiceTest {
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620"),
                     antallBarn = 0,
-                    barnetilleggsats = Beløp("0"),
+                    barnetilleggsats = Beløp("35.00"),
                     barnetillegg = Beløp("0"),
                     utbetalingsdato = periode.tom.plusDays(9),
                 )
@@ -558,7 +558,7 @@ class BeregnTilkjentYtelseServiceTest {
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620"),
                     antallBarn = 0,
-                    barnetilleggsats = Beløp("0"),
+                    barnetilleggsats = Beløp("35.00"),
                     barnetillegg = Beløp("0"),
                     utbetalingsdato = periode.tom.plusDays(9)
                 )
@@ -577,7 +577,7 @@ class BeregnTilkjentYtelseServiceTest {
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620"),
                     antallBarn = 0,
-                    barnetilleggsats = Beløp("0"),
+                    barnetilleggsats = Beløp("35.00"),
                     barnetillegg = Beløp("0"),
                     utbetalingsdato = periode.tom.plusDays(9)
                 )
@@ -595,7 +595,7 @@ class BeregnTilkjentYtelseServiceTest {
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620.00"),
                     antallBarn = 0,
-                    barnetilleggsats = Beløp("0"),
+                    barnetilleggsats = Beløp("35.00"),
                     barnetillegg = Beløp("0"),
                     utbetalingsdato = periode.tom.plusDays(9)
                 )
@@ -672,7 +672,7 @@ class BeregnTilkjentYtelseServiceTest {
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620"),
                     antallBarn = 0,
-                    barnetilleggsats = Beløp("0"),
+                    barnetilleggsats = Beløp("35.00"),
                     barnetillegg = Beløp("0"),
                     utbetalingsdato = periode.tom.plusDays(9)
                 )
@@ -690,7 +690,7 @@ class BeregnTilkjentYtelseServiceTest {
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620.00"),
                     antallBarn = 0,
-                    barnetilleggsats = Beløp("0"),
+                    barnetilleggsats = Beløp("35.00"),
                     barnetillegg = Beløp("0"),
                     utbetalingsdato = periode.tom.plusDays(9)
                 )
@@ -748,7 +748,7 @@ class BeregnTilkjentYtelseServiceTest {
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620"),
                     antallBarn = 0,
-                    barnetilleggsats = Beløp("0"),
+                    barnetilleggsats = Beløp("35.00"),
                     barnetillegg = Beløp("0"),
                     utbetalingsdato = periode.tom.plusDays(9)
                 )
@@ -813,7 +813,7 @@ class BeregnTilkjentYtelseServiceTest {
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620"),
                     antallBarn = 0,
-                    barnetilleggsats = Beløp("0"),
+                    barnetilleggsats = Beløp("35.00"),
                     barnetillegg = Beløp("0"),
                     utbetalingsdato = periode.tom.plusDays(9)
                 )
@@ -908,7 +908,7 @@ class BeregnTilkjentYtelseServiceTest {
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620"),
                     antallBarn = 0,
-                    barnetilleggsats = Beløp("0"),
+                    barnetilleggsats = Beløp("35.00"),
                     barnetillegg = Beløp("0"),
                     utbetalingsdato = periode.tom.plusDays(9)
                 )
@@ -979,7 +979,7 @@ class BeregnTilkjentYtelseServiceTest {
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620"),
                     antallBarn = 0,
-                    barnetilleggsats = Beløp("0"),
+                    barnetilleggsats = Beløp("35.00"),
                     barnetillegg = Beløp("0"),
                     utbetalingsdato = periode.tom.plusDays(9),
                 )
@@ -1076,7 +1076,7 @@ class BeregnTilkjentYtelseServiceTest {
                     grunnlagsfaktor = GUnit("0.0101538462"),
                     grunnbeløp = Beløp("118620"),
                     antallBarn = 0,
-                    barnetilleggsats = Beløp("0"),
+                    barnetilleggsats = Beløp("35.00"),
                     barnetillegg = Beløp("0"),
                     utbetalingsdato = periode.tom.plusDays(9),
                 )
@@ -1140,14 +1140,21 @@ class BeregnTilkjentYtelseServiceTest {
             grunnlagsfaktor = GUnit("0.0101538462"),
             grunnbeløp = Beløp("111477"),
             antallBarn = 0,
-            barnetilleggsats = Beløp("0"),
+            barnetilleggsats = Beløp("27.00"),
             barnetillegg = Beløp("0"),
             utbetalingsdato = LocalDate.now()
         )
         assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
             Segment(periode = periode1, verdi = tilkjent.copy(utbetalingsdato = periode1.tom.plusDays(9))),
             Segment(periode = periode2, verdi = tilkjent.copy(utbetalingsdato = periode2.tom.plusDays(1))),
-            Segment(periode = periode3, verdi = tilkjent.copy(utbetalingsdato = periode3.tom.plusDays(1))),
+            Segment(
+                periode = Periode(periode3.fom, LocalDate.of(2023, 1, 31)),
+                verdi = tilkjent.copy(utbetalingsdato = periode3.tom.plusDays(1))
+            ),
+            Segment(
+                periode = Periode(LocalDate.of(2023, 2, 1), periode3.tom),
+                verdi = tilkjent.copy(barnetilleggsats = Beløp("35.00"), utbetalingsdato = periode3.tom.plusDays(1))
+            ),
         )
     }
 

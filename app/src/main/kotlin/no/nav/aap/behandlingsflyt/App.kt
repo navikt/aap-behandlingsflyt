@@ -78,6 +78,8 @@ import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KABAL_EVENT_TOPIC
 import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KabalKafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PDL_HENDELSE_TOPIC
 import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PdlHendelseKafkaKonsument
+import no.nav.aap.behandlingsflyt.hendelse.kafka.tilbakekreving.TILBAKEKREVING_EVENT_TOPIC
+import no.nav.aap.behandlingsflyt.hendelse.kafka.tilbakekreving.TilbakekrevingKafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.mottattHendelseApi
 import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
@@ -214,10 +216,12 @@ internal fun Application.server(
 
     if (!Miljø.erLokal()) {
         startKabalKonsument(dataSource, repositoryRegistry)
-
     }
     if (!Miljø.erLokal()) {
         startPDLHendelseKonsument(dataSource, repositoryRegistry, gatewayProvider)
+    }
+    if (!Miljø.erDev() && !Miljø.erLokal() && !Miljø.erProd()) {
+        startTilbakekrevingEventKonsument(dataSource, repositoryRegistry, gatewayProvider)
     }
 
     monitor.subscribe(ApplicationStopPreparing) { environment ->
@@ -396,6 +400,31 @@ fun Application.startKabalKonsument(
         }
         t.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, e ->
             log.error("Konsumering av $KABAL_EVENT_TOPIC ble lukket pga uhåndtert feil", e)
+        }
+        t.start()
+    }
+    monitor.subscribe(ApplicationStopping) { env ->
+        // ktor sine eventer kjøres synkront, så vi må kjøre dette asynkront for ikke å blokkere nedstengings-sekvensen
+        env.launch(Dispatchers.IO) {
+            konsument.lukk()
+        }
+    }
+
+    return konsument
+}
+
+fun Application.startTilbakekrevingEventKonsument(
+    dataSource: DataSource, repositoryRegistry: RepositoryRegistry, gatewayProvider: GatewayProvider
+): KafkaKonsument<String, String> {
+    val konsument = TilbakekrevingKafkaKonsument(
+        config = KafkaConsumerConfig(), dataSource = dataSource, repositoryRegistry = repositoryRegistry, gatewayProvider = gatewayProvider
+    )
+    monitor.subscribe(ApplicationStarted) {
+        val t = Thread {
+            konsument.konsumer()
+        }
+        t.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, e ->
+            log.error("Konsumering av $TILBAKEKREVING_EVENT_TOPIC ble lukket pga uhåndtert feil", e)
         }
         t.start()
     }
