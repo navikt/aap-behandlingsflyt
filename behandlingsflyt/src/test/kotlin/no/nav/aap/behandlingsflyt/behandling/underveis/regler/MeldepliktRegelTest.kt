@@ -25,6 +25,8 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import java.time.Clock
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -276,14 +278,15 @@ class MeldepliktRegelTest {
      * 30
      * ```
      */
-    @Test
-    fun `samme tester som over, men for ikke samme fase`() {
+    @ParameterizedTest
+    @ValueSource(ints = [15, 16, 17])
+    fun `samme tester som over, men for ikke samme fase`(dag: Int) {
         val rettighetsperiode = Periode(23 november 2025, 19 januar 2026)
         val input = tomUnderveisInput(
             rettighetsperiode = rettighetsperiode,
             innsendingsTidspunkt = mapOf(
                 1 desember 2025 to JournalpostId("2"),
-                15 desember 2025 to JournalpostId("3"),
+                dag desember 2025 to JournalpostId("3"),
                 29 desember 2025 to JournalpostId("4"),
                 12 januar 2026 to JournalpostId("5"),
             ),
@@ -322,16 +325,16 @@ class MeldepliktRegelTest {
     }
 
     /**
-     ```
-               April                      May                       June
-         Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su
-                1  2  3  4  5                   1  2  3       1  2  3  4  5  6  7
-          6  7  8  9 10 11 12       4  5  6  7  8  9 10       8  9 10 11 12 13 14
-         13 14 15 16 17 18 19      11 12 13 14 15 16 17      15 16 17 18 19 20 21
-         20 21 22 23 24 25 26      18 19 20 21 22 23 24      22 23 24 25 26 27 28
-         27 28 29 30               25 26 27 28 29 30 31      29 30
-     ```
-         */
+    ```
+    April                      May                       June
+    Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su
+    1  2  3  4  5                   1  2  3       1  2  3  4  5  6  7
+    6  7  8  9 10 11 12       4  5  6  7  8  9 10       8  9 10 11 12 13 14
+    13 14 15 16 17 18 19      11 12 13 14 15 16 17      15 16 17 18 19 20 21
+    20 21 22 23 24 25 26      18 19 20 21 22 23 24      22 23 24 25 26 27 28
+    27 28 29 30               25 26 27 28 29 30 31      29 30
+    ```
+     */
     @Test
     fun `Skal starte med full utbetalingsplan`() {
         val rettighetsperiode = Periode(20 april 2020, 19 april 2021)

@@ -202,7 +202,13 @@ class MeldepliktRegel(
             val begrensetForrigePeriode =
                 dataForForrigeMeldeperiode?.begrensetTil(Periode(nyTidligereFrist, LocalDate.MAX)).orEmpty()
 
-            førsteDokumentForMeldepliktdataTidslinje(begrensetForrigePeriode)
+            begrensetForrigePeriode.segmenter().firstNotNullOfOrNull {
+                val innsending = it.verdi.meldekort
+                when {
+                    innsending != null -> Segment(it.periode, MeldepliktVurdering.MeldtSeg(innsending))
+                    else -> null
+                }
+            }
         }
 
         val førsteDokument = førsteDokumentForMeldepliktdataTidslinje(dataForMeldeperiode)

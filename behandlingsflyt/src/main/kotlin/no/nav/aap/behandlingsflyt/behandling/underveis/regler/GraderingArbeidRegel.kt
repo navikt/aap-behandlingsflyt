@@ -127,7 +127,8 @@ class GraderingArbeidRegel : UnderveisRegel {
             if (fritaksvurdering?.harFritak == true && harPassertMeldeperiodeITid) {
                 OpplysningerOmArbeid(
                     timerArbeid = TimerArbeid(BigDecimal.ZERO),
-                    opplysningerFørstMottatt = meldeperiode.tom.plusDays(3) // Settes til samme dag som fritak-jobbkjøringstidspunktet
+                    // TODO forklar hvorfor
+                    opplysningerFørstMottatt = null // meldeperiode.tom.plusDays(3) // Settes til samme dag som fritak-jobbkjøringstidspunktet
                 )
             } else {
                 OpplysningerOmArbeid()

@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UnntakFastsattMeldedag
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.unntakFritaksUtbetalingDato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.tilTidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag
@@ -148,9 +149,15 @@ class BeregnTilkjentYtelseService(
         // Hvis fritak fra meldeplikt, betal ut så tidlig som mulig.
         // Ellers, betal ut etter dato for levert meldekort.
         // Fallback til siste meldedag for meldeperiode.
+        // kanskje denne burde være min, ikke when
         val muligUtbetalingsdato = when {
-            underveisperiode.meldepliktStatus == MeldepliktStatus.FRITAK -> prioritertFørstedag
             opplysningerMottatt != null -> opplysningerMottatt
+            underveisperiode.meldepliktStatus == MeldepliktStatus.FRITAK -> {
+                val utbetalingsdatoForFritak = førsteMeldedagForMeldeperiode.plusDays(2)
+                unntakFritaksUtbetalingDato[utbetalingsdatoForFritak]
+                    ?: utbetalingsdatoForFritak
+            }
+
             else -> sisteMeldedagForMeldeperiode
         }
         val utbetalingsdato = muligUtbetalingsdato
