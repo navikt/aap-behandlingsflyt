@@ -53,13 +53,13 @@ data class Sykdomsvurdering(
                 )
     }
     
-    fun erOppfyltOrdinær(kravdato: LocalDate, segmentPeriode: Periode): Boolean {
+    fun erOppfyltOrdinær(kravdato: LocalDate, periodenVurderingenGjelderFor: Periode): Boolean {
         return erOppfyltOrdinærSettBortIfraVissVarighet() &&
-                if (erFørsteVurdering(kravdato, segmentPeriode)) erNedsettelseIArbeidsevneAvEnVissVarighet == true
+                if (erFørsteVurdering(kravdato, periodenVurderingenGjelderFor)) erNedsettelseIArbeidsevneAvEnVissVarighet == true
                 else true
     }
 
-    fun erOppfyltForYrkesskadeSettBortIfraÅrsakssammenheng(kravdato: LocalDate, segmentPeriode: Periode): Boolean {
+    fun erOppfyltForYrkesskadeSettBortIfraÅrsakssammenheng(kravdato: LocalDate, periodenVurderingenGjelderFor: Periode): Boolean {
         val erTilstrekkeligNedsattArbeidsevne = erNedsettelseIArbeidsevneMerEnnHalvparten == true
                 || erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true
         
@@ -67,7 +67,7 @@ data class Sykdomsvurdering(
                 && erArbeidsevnenNedsatt == true
                 && erSkadeSykdomEllerLyteVesentligdel == true
                 && erTilstrekkeligNedsattArbeidsevne
-                && erVissVarighetOmRelevant(kravdato, segmentPeriode)
+                && erVissVarighetOmRelevant(kravdato, periodenVurderingenGjelderFor)
     }
 
     fun erOppfyltForYrkesskadeSettBortIfraÅrsakssammenhengOgVissVarighet(): Boolean {
@@ -80,8 +80,8 @@ data class Sykdomsvurdering(
                 && erTilstrekkeligNedsattArbeidsevne
     }
 
-    private fun erVissVarighetOmRelevant(kravdato: LocalDate, segmentPeriode: Periode): Boolean {
-        return if (erFørsteVurdering(kravdato, segmentPeriode))
+    private fun erVissVarighetOmRelevant(kravdato: LocalDate, periodenVurderingenGjelderFor: Periode): Boolean {
+        return if (erFørsteVurdering(kravdato, periodenVurderingenGjelderFor))
             erNedsettelseIArbeidsevneAvEnVissVarighet == true
         else true
     }
@@ -114,8 +114,8 @@ data class Sykdomsvurdering(
     }
     
     companion object {
-        fun erFørsteVurdering(kravdato: LocalDate, segmentPeriode: Periode): Boolean {
-            return segmentPeriode.inneholder(kravdato)
+        fun erFørsteVurdering(kravdato: LocalDate, periodenVurderingenGjelderFor: Periode): Boolean {
+            return periodenVurderingenGjelderFor.inneholder(kravdato)
         }
 
     }
