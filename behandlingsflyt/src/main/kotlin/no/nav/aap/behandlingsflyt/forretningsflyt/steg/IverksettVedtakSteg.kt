@@ -31,6 +31,7 @@ import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 class IverksettVedtakSteg private constructor(
     private val sakRepository: SakRepository,
@@ -64,13 +65,21 @@ class IverksettVedtakSteg private constructor(
          * er forbi `FatteVedtakSteg` men som ikke har fullført `IverksettVedtakSteg`,
          * så vi lagrer her også til vi er sikre på at ingen behandlinger faller mellom to stoler.
          */
-        lagreVedtak(kontekst)
+
+        val stegHistorikk = behandlingRepository.hentStegHistorikk(kontekst.behandlingId)
+        val vedtakstidspunkt = stegHistorikk
+            .find { it.steg() == StegType.FATTE_VEDTAK && it.status() == StegStatus.AVSLUTTER }
+            ?.tidspunkt()
+            ?: error("Forventet å finne et avsluttet fatte vedtak steg")
+        lagreVedtak(kontekst ,vedtakstidspunkt )
+
+        val virkningstidspunkt = virkningstidspunktUtleder.utledVirkningsTidspunkt(kontekst.behandlingId)
+
 
         val tilkjentYtelseDto = utbetalingService.lagTilkjentYtelseForUtbetaling(kontekst.sakId, kontekst.behandlingId)
         if (tilkjentYtelseDto != null) {
             utbetal(kontekst)
         } else {
-            val virkningstidspunkt = virkningstidspunktUtleder.utledVirkningsTidspunkt(kontekst.behandlingId)
             log.info("Fant ikke tilkjent ytelse for behandingsref ${kontekst.behandlingId}. Virkningstidspunkt: $virkningstidspunkt.")
         }
         flytJobbRepository.leggTil(
@@ -80,35 +89,33 @@ class IverksettVedtakSteg private constructor(
 
         mellomlagretVurderingRepository.slett(kontekst.behandlingId)
 
-        opprettOppfølgingsoppgaveForNavkontorVedSosialRefusjon(kontekst, vedtakstidspunkt.toLocalDate(),virkningstidspunkt)
+        lagGysOppgaveHvisRelevant(kontekst, vedtaksDato = vedtakstidspunkt.toLocalDate(), virkningsDato = virkningstidspunkt)
 
         return Fullført
     }
 
-    private fun lagreVedtak(kontekst: FlytKontekstMedPerioder) {
+    private fun lagreVedtak(kontekst: FlytKontekstMedPerioder , vedtakstidspunkt: LocalDateTime) {
         if (vedtakRepository.hent(kontekst.behandlingId) != null) {
             /* Vedtak lagret i `FatteVedtakSteg`, så ikke noe å gjøre her. */
             return
         }
 
-        val stegHistorikk = behandlingRepository.hentStegHistorikk(kontekst.behandlingId)
-        val vedtakstidspunkt = stegHistorikk
-            .find { it.steg() == StegType.FATTE_VEDTAK && it.status() == StegStatus.AVSLUTTER }
-            ?.tidspunkt()
-            ?: error("Forventet å finne et avsluttet fatte vedtak steg")
-
         val virkningstidspunkt = virkningstidspunktUtleder.utledVirkningsTidspunkt(kontekst.behandlingId)
         vedtakService.lagreVedtak(kontekst.behandlingId, vedtakstidspunkt, virkningstidspunkt)
+
+
+
     }
 
-    private fun lagGysOppgaveHvisRelevant(kontekst: FlytKontekstMedPerioder) {
+    private fun lagGysOppgaveHvisRelevant(kontekst: FlytKontekstMedPerioder,vedtaksDato: LocalDate, virkningsDato: LocalDate?) {
         val behandling = behandlingRepository.hent(behandlingId = kontekst.behandlingId)
         if (!resultatUtleder.erRentAvslag(behandling)) {
-            opprettOppfølgingsoppgaveForNavkontorVedSosialRefusjon(kontekst)
+            opprettOppfølgingsoppgaveForNavkontorVedSosialRefusjon(kontekst, vedtaksDato, virkningsDato)
         } else {
             log.info("Oppretter ikke gosysoppgave for sak ${kontekst.sakId} og behandling ${kontekst.behandlingId} , da AAP ikke er innvliget ")
 
-
+        }
+    }
     private fun harInnvilgelseFraEnTidligereBehandling(behandling: Behandling): Boolean {
          val forrigeBehandlingId = behandling.forrigeBehandlingId
         if (forrigeBehandlingId == null) return false
