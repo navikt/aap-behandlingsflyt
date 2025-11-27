@@ -81,7 +81,6 @@ class TidligereVurderingerImpl(
     private fun definerteSjekker(typeBehandling: TypeBehandling): List<Sjekk> {
         val spesifikkeSjekker = when (typeBehandling) {
             TypeBehandling.Revurdering -> listOf(
-                // NB! Pass på hvis du utvide denne listen med noe som gjør avslag, at alle steg håndtere avslag i revurdering.
                 Sjekk(StegType.AVBRYT_REVURDERING) { _, kontekst ->
                     Tidslinje(
                         kontekst.rettighetsperiode,
