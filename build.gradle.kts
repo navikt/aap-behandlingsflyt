@@ -40,4 +40,15 @@ publishing {
             artifactId = "sbom"
         }
     }
+
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/navikt/aap-behandlingsflyt")
+            credentials {
+                username = "x-access-token"
+                password = System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
 }
