@@ -68,8 +68,9 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
                 sykepengeerstatningTidslinje,
                 bistandvurderingtidslinje
             )
-                .mapValue { (studentVurdering, yrkesskadeVurdering, sykdomVurdering, sykepengerVurdering, bistandVurdering) ->
+                .mapValue { (segmentPeriode, studentVurdering, yrkesskadeVurdering, sykdomVurdering, sykepengerVurdering, bistandVurdering) ->
                     opprettVilkårsvurdering(
+                        segmentPeriode,
                         grunnlag.sykepengeerstatningVilkår,
                         studentVurdering,
                         sykdomVurdering,
@@ -96,12 +97,13 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
             sykdomsvurderingTidslinje,
         )
 
-        return Tidslinje.zip3(
+        return Tidslinje.map3(
             zip3,
             sykepengerTidslinje,
             bistandvurderingTidslinje,
-        ).mapValue { (a, b, c) ->
+        ) { segmentPeriode, a, b, c ->
             LokaltSegment(
+                segmentPeriode,
                 studentVurdering = a?.first,
                 yrkesskadeVurdering = a?.second,
                 sykdomVurdering = a?.third,
@@ -112,6 +114,7 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
     }
 
     internal data class LokaltSegment(
+        val segmentPeriode: Periode,
         val studentVurdering: StudentVurdering?,
         val yrkesskadeVurdering: Yrkesskadevurdering?,
         val sykdomVurdering: Sykdomsvurdering?,
@@ -120,6 +123,7 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
     )
 
     private fun opprettVilkårsvurdering(
+        segmentPeriode: Periode,
         sykepengeerstatningVilkår: Tidslinje<Vilkårsvurdering>,
         studentVurdering: StudentVurdering?,
         sykdomVurdering: Sykdomsvurdering?,
@@ -135,10 +139,10 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
         if (studentVurdering?.erOppfylt() == true) {
             utfall = Utfall.OPPFYLT
             innvilgelsesårsak = Innvilgelsesårsak.STUDENT
-        } else if (sykdomVurdering?.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenheng(grunnlag.kravDato) == true && yrkesskadeVurdering?.erÅrsakssammenheng == true) {
+        } else if (sykdomVurdering?.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenheng(grunnlag.kravDato, segmentPeriode) == true && yrkesskadeVurdering?.erÅrsakssammenheng == true) {
             utfall = Utfall.OPPFYLT
             innvilgelsesårsak = Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG
-        } else if (sykdomVurdering?.erOppfyltOrdinær(grunnlag.kravDato) == true && bistandsvurdering?.erBehovForBistand() == true) {
+        } else if (sykdomVurdering?.erOppfyltOrdinær(grunnlag.kravDato, segmentPeriode) == true && bistandsvurdering?.erBehovForBistand() == true) {
             utfall = Utfall.OPPFYLT
             innvilgelsesårsak = null
         } else if (sykepengeerstatningVilkår.isEmpty() && sykepengerVurdering?.harRettPå == true && sykdomVurdering?.erOppfyltOrdinærSettBortIfraVissVarighet() == true) {
