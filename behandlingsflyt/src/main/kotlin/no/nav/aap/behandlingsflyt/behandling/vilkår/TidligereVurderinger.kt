@@ -133,8 +133,10 @@ class TidligereVurderingerImpl(
                     }
 
                     val sykdomDefinitivtAvslag =
-                        sykdomsvurdering?.erOppfyltSettBortIfraVissVarighet() == false
-                                && !sykdomsvurdering.erOppfyltForYrkesskade(periode.fom)
+                        sykdomsvurdering?.erOppfyltOrdinærSettBortIfraVissVarighet() == false
+                                && !sykdomsvurdering.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenhengOgVissVarighet(
+                            periode.fom
+                        )
 
                     if (sykdomDefinitivtAvslag) {
                         return@outerJoin UUNGÅELIG_AVSLAG
