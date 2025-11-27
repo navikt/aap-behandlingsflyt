@@ -160,7 +160,7 @@ class UnderveisService(
         val meldekort = meldekortGrunnlag?.meldekort().orEmpty()
         val innsendingsTidspunkt = meldekortGrunnlag?.innsendingsdatoPerMelding().orEmpty()
         val kvote = kvoteService.beregn(behandlingId)
-        val utlederResultat = institusjonsoppholdUtlederService.utled(behandlingId)
+        val utlederResultat = institusjonsoppholdUtlederService.utled(behandlingId, begrensetTilRettighetsperiode = false)
 
         val institusjonsopphold = MapInstitusjonoppholdTilRegel.map(utlederResultat)
 
