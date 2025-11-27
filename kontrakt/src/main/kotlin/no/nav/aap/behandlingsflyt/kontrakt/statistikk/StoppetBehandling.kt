@@ -30,6 +30,7 @@ public data class StoppetBehandling(
     val relatertBehandling: UUID? = null,
     val behandlingOpprettetTidspunkt: LocalDateTime,
     val mottattTid: LocalDateTime,
+    val tidspunktSisteEndring: LocalDateTime? = null,
     val behandlingStatus: BehandlingsFlytBehandlingStatus,
     val behandlingType: TypeBehandling,
     val soknadsFormat: Kanal = Kanal.DIGITAL,
