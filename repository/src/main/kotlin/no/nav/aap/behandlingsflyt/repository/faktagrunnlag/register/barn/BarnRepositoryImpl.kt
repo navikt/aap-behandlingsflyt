@@ -645,37 +645,8 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
             vurderteBarn = vurderteBarn
         )
 
-        if (forrigeBarnGrunnlag == null) {
-            deaktiverAlleSaksbehandlerOppgitteBarn(behandlingId)
-        }
-
         val saksbehandlerOppgitteBarn = forrigeBarnGrunnlag?.saksbehandlerOppgitteBarn?.barn.orEmpty()
         lagreSaksbehandlerOppgitteBarn(behandlingId, saksbehandlerOppgitteBarn)
     }
 
-    /**
-     * Deaktiver alle saksbehandleroppgitte barn for en behandling. Brukes når alle saksbehandleroppgitte barn skal fjernes.
-     */
-    private fun deaktiverAlleSaksbehandlerOppgitteBarn(behandlingId: BehandlingId) {
-        val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
-
-        if (eksisterendeGrunnlag?.saksbehandlerOppgitteBarn != null) {
-            deaktiverEksisterende(behandlingId)
-
-            connection.execute(
-                """
-                INSERT INTO BARNOPPLYSNING_GRUNNLAG (BEHANDLING_ID, register_barn_id, oppgitt_barn_id, vurderte_barn_id, saksbehandler_oppgitt_barn_id)
-                VALUES (?, ?, ?, ?, ?)
-                """.trimIndent()
-            ) {
-                setParams {
-                    setLong(1, behandlingId.toLong())
-                    setLong(2, eksisterendeGrunnlag.registerbarn?.id)
-                    setLong(3, eksisterendeGrunnlag.oppgitteBarn?.id)
-                    setLong(4, eksisterendeGrunnlag.vurderteBarn?.id)
-                    setLong(5, null)
-                }
-            }
-        }
-    }
 }
