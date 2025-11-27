@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 
+import no.nav.aap.behandlingsflyt.behandling.barnetillegg.RettTilBarnetillegg
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.tilTidslinje
@@ -61,17 +62,6 @@ class BeregnTilkjentYtelseService(
                 årligYtelse.dividert(ANTALL_ÅRLIGE_ARBEIDSDAGER)
             }
 
-        val barnetilleggGrunnlagTidslinje = barnetilleggGrunnlag.perioder.tilTidslinje()
-        val barnetilleggTidslinje =
-            BARNETILLEGGSATS_TIDSLINJE.innerJoin(barnetilleggGrunnlagTidslinje) { barnetilleggsats, rettTilBarnetillegg ->
-                val antallBarnMedRett = rettTilBarnetillegg.barnMedRettTil().size
-                Barnetillegg(
-                    barnetillegg = barnetilleggsats.multiplisert(antallBarnMedRett),
-                    antallBarn = antallBarnMedRett,
-                    barnetilleggsats = barnetilleggsats
-                )
-            }
-
             val graderingGrunnlagTidslinje = Tidslinje.map4(
                 underveisgrunnlag.somTidslinje(),
                 samordningUføre?.vurdering?.tilTidslinje().orEmpty(),
@@ -92,16 +82,23 @@ class BeregnTilkjentYtelseService(
         }
             .filterNotNull()
 
-        return Tidslinje.map5(
+        return Tidslinje.map6(
             underveisgrunnlag.somTidslinje(),
             dagsatsTidslinje,
             graderingGrunnlagTidslinje,
             Grunnbeløp.tilTidslinje(),
-            barnetilleggTidslinje,
-        ) { underveisperiode, dagsatsG, graderingGrunnlag, grunnbeløp, barnetillegg ->
+            BARNETILLEGGSATS_TIDSLINJE,
+            barnetilleggGrunnlag.perioder.tilTidslinje(),
+        ) { underveisperiode, dagsatsG, graderingGrunnlag, grunnbeløp, barnetilleggsats, rettTilBarnetillegg ->
             if (underveisperiode == null || dagsatsG == null || graderingGrunnlag == null || grunnbeløp == null) {
-                return@map5 null
+                return@map6 null
             }
+
+            val barnetillegg = utledBarnetillegg(
+                underveisperiode = underveisperiode,
+                barnetilleggsats = barnetilleggsats,
+                rettTilBarnetillegg = rettTilBarnetillegg
+            )
 
             Tilkjent(
                 dagsats = grunnbeløp.multiplisert(dagsatsG),
@@ -115,15 +112,38 @@ class BeregnTilkjentYtelseService(
                         .multiplisert(institusjonGradering.komplement())
                 },
                 graderingGrunnlag = graderingGrunnlag,
-                barnetillegg = barnetillegg?.barnetillegg ?: Beløp(0),
-                antallBarn = barnetillegg?.antallBarn ?: 0,
-                barnetilleggsats = barnetillegg?.barnetilleggsats ?: Beløp(0),
+                barnetillegg = barnetillegg.barnetillegg,
+                antallBarn = barnetillegg.antallBarn,
+                barnetilleggsats = barnetillegg.barnetilleggsats,
                 grunnlagsfaktor = dagsatsG,
                 grunnbeløp = grunnbeløp,
                 utbetalingsdato = utledUtbetalingsdato(underveisperiode),
             )
         }
             .filterNotNull()
+    }
+
+    private fun utledBarnetillegg(
+        underveisperiode: Underveisperiode,
+        barnetilleggsats: Beløp?,
+        rettTilBarnetillegg: RettTilBarnetillegg?
+    ): Barnetillegg {
+        val antallBarnMedRett = rettTilBarnetillegg?.barnMedRettTil()?.size ?: 0
+        val harRettTilBarnetillegg = barnetilleggsats != null && underveisperiode.utfall != Utfall.IKKE_OPPFYLT
+
+        return when {
+            harRettTilBarnetillegg -> Barnetillegg(
+                barnetillegg = barnetilleggsats.multiplisert(antallBarnMedRett),
+                antallBarn = antallBarnMedRett,
+                barnetilleggsats = barnetilleggsats
+            )
+
+            else -> Barnetillegg(
+                barnetillegg = Beløp(0),
+                antallBarn = 0,
+                barnetilleggsats = Beløp(0)
+            )
+        }
     }
 
     private fun utledUtbetalingsdato(underveisperiode: Underveisperiode): LocalDate {

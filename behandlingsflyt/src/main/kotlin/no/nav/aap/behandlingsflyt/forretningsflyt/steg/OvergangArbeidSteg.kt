@@ -123,7 +123,7 @@ class OvergangArbeidSteg internal constructor(
 
         val forutgåendeOrdinærAap =
             Tidslinje.map2(sykdomsvurderinger, bistandsvurderinger) { sykdomsvurdering, bistandsvurdering ->
-                sykdomsvurdering?.erOppfylt(kontekst.rettighetsperiode.fom) == true &&
+                sykdomsvurdering?.erOppfyltOrdinær(kontekst.rettighetsperiode.fom) == true &&
                         bistandsvurdering?.erBehovForBistand() == true
             }
                 .fold(
@@ -167,7 +167,7 @@ class OvergangArbeidSteg internal constructor(
                         return@map6 false
                     }
 
-                    sykdomsvurdering?.erOppfylt(kontekst.rettighetsperiode.fom) != true ||
+                    sykdomsvurdering?.erOppfyltOrdinær(kontekst.rettighetsperiode.fom) != true ||
                             bistandsvurdering?.erBehovForBistand() != true
                 }
             }

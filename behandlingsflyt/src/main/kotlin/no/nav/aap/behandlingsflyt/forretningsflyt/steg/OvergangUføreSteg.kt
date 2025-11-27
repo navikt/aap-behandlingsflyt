@@ -144,7 +144,7 @@ class OvergangUføreSteg private constructor(
                     TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
                     TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
                     TidligereVurderinger.Behandlingsutfall.UKJENT -> {
-                        sykdomsvurdering?.erOppfylt(kontekst.rettighetsperiode.fom) == true && bistandsvurdering != null && !bistandsvurdering.erBehovForBistand()
+                        sykdomsvurdering?.erOppfyltOrdinær(kontekst.rettighetsperiode.fom) == true && bistandsvurdering != null && !bistandsvurdering.erBehovForBistand()
                     }
                 }
             }
