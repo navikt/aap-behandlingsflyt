@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlagRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.AapEtterRegel
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FastsettGrenseverdiArbeidRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.GraderingArbeidRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.InstitusjonRegel
@@ -41,6 +42,7 @@ import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -91,6 +93,7 @@ class UnderveisService(
             SoningRegel(),
             MeldepliktRegel(),
             SammenstiltAktivitetspliktRegel(),
+            FastsettGrenseverdiArbeidRegel(),
             GraderingArbeidRegel(),
             VarighetRegel(),
         )
@@ -112,6 +115,7 @@ class UnderveisService(
                 forventetEtter = SammenstiltAktivitetspliktRegel::class
             )
             sjekkAvhengighet(forventetFør = UtledMeldeperiodeRegel::class, forventetEtter = GraderingArbeidRegel::class)
+            sjekkAvhengighet(forventetFør = FastsettGrenseverdiArbeidRegel::class, forventetEtter = GraderingArbeidRegel::class)
         }
     }
 
@@ -143,7 +147,7 @@ class UnderveisService(
     }
 
     internal fun vurderRegler(input: UnderveisInput): Tidslinje<Vurdering> {
-        return regelset.fold(Tidslinje()) { resultat, regel ->
+        return regelset.fold(tidslinjeOf(input.periodeForVurdering to Vurdering(reduksjonArbeidOverGrenseEnabled = input.reduksjonArbeidOverGrenseEnabled))) { resultat, regel ->
             regel.vurder(input, resultat).begrensetTil(input.periodeForVurdering)
         }
     }
@@ -198,7 +202,8 @@ class UnderveisService(
             oppholdskravGrunnlag = oppholdskravGrunnlag,
             meldeperioder = meldeperioder,
             vedtaksdatoFørstegangsbehandling = vedtaksdatoFørstegangsbehandling?.toLocalDate(),
-            )
+            reduksjonArbeidOverGrenseEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.ReduksjonArbeidOverGrense),
+        )
     }
 
     private fun utledPeriodeForUnderveisvurderinger(
