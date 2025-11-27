@@ -7,7 +7,7 @@ plugins {
     id("org.jetbrains.dokka")
 }
 
-group = "no.nav.aap"
+group = "no.nav.aap.behandlingsflyt"
 version = project.findProperty("version")?.toString() ?: "0.0.0"
 
 repositories {
