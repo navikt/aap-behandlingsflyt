@@ -4845,7 +4845,9 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
             .løsBeregningstidspunkt()
-            .løsForutgåendeMedlemskap()
+            .løsForutgåendeMedlemskap(
+                gjelderFra = LocalDate.now()
+            )
             .løsOppholdskrav(fom)
             .medKontekst {
                 assertThat(åpneAvklaringsbehov.map { it.definisjon }).contains(Definisjon.AVKLAR_HELSEINSTITUSJON)
