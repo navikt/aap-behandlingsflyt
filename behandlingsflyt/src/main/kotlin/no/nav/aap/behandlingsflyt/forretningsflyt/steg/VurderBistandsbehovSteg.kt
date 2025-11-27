@@ -101,7 +101,15 @@ class VurderBistandsbehovSteg(
             kontekst = kontekst
         )
 
-            vurderBistandsvilkår(kontekst)
+        when (kontekst.vurderingType) {
+            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> vurderBistandsvilkår(kontekst)
+            VurderingType.MELDEKORT,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
+            VurderingType.IKKE_RELEVANT -> {
+            /* noop */
+            }
+        }
 
         return Fullført
     }
