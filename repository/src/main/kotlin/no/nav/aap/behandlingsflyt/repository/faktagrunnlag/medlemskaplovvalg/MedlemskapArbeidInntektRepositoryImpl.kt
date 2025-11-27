@@ -112,7 +112,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 setLocalDate(1, manuellVurdering.fom)
                 setLocalDate(2, manuellVurdering.tom)
                 setString(3, manuellVurdering.lovvalg.begrunnelse)
-                setEnumName(4, manuellVurdering.lovvalg.lovvalgsEØSLandEllerLandMedAvtale)
+                setEnumName(4, manuellVurdering.lovvalg.lovvalgsEØSLand)
                 setString(5, manuellVurdering.medlemskap?.begrunnelse)
                 setBoolean(6, manuellVurdering.medlemskap?.varMedlemIFolketrygd)
                 setBoolean(7, overstyrt)
@@ -634,7 +634,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         ManuellVurderingForLovvalgMedlemskap(
             lovvalg = LovvalgDto(
                 begrunnelse = row.getString("tekstvurdering_lovvalg"),
-                lovvalgsEØSLandEllerLandMedAvtale = row.getEnum("lovvalgs_land")
+                lovvalgsEØSLand = row.getEnum("lovvalgs_land")
             ),
             medlemskap = row.getStringOrNull("tekstvurdering_medlemskap")?.let { tekstvurdering_medlemskap ->
                 MedlemskapDto(

@@ -7,9 +7,9 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVe
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
+import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LandMedAvtale
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
-import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
@@ -178,7 +178,7 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
                             fom = sak.rettighetsperiode.fom,
                             tom = null,
                             begrunnelse = "",
-                            lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
+                            lovvalg = LovvalgDto("begrunnelse", LandMedAvtale.NOR),
                             medlemskap = MedlemskapDto("begrunnelse", true)
                         )
                     )
@@ -215,7 +215,7 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
                             fom = nyStartDato,
                             tom = null,
                             begrunnelse = "",
-                            lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
+                            lovvalg = LovvalgDto("begrunnelse", LandMedAvtale.NOR),
                             medlemskap = MedlemskapDto("begrunnelse", true)
                         )
                     )
