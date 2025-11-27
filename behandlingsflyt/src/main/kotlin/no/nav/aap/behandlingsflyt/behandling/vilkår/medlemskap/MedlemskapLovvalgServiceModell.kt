@@ -99,14 +99,14 @@ enum class VurdertPeriode(val beskrivelse: String) {
     SISTE_5_ÅR("Siste 5 år")
 }
 
-enum class EØSLandEllerLandMedAvtale(val alpha2: String) {
+enum class EØSLand(override val alpha2: String) : EØSLandEllerLandMedAvtale{
     BEL("BE"), BGR("BG"), DNK("DK"), EST("EE"), FIN("FI"),
     FRA("FR"), GRC("GR"), IRL("IE"), ISL("IS"), ITA("IT"),
     HRV("HR"), CYP("CY"), LVA("LV"), LIE("LI"), LTU("LT"),
     LUX("LU"), MLT("MT"), NLD("NL"), NOR("NO"), POL("PL"),
     PRT("PT"), ROU("RO"), SVK("SK"), SVN("SI"), ESP("ES"),
     CHE("CH"), SWE("SE"), CZE("CZ"), DEU("DE"), HUN("HU"),
-    AUT("AT"), GBR("GB"), AUS("AU");
+    AUT("AT");
 
     companion object {
         fun erNorge(code: String?): Boolean {
@@ -114,4 +114,12 @@ enum class EØSLandEllerLandMedAvtale(val alpha2: String) {
             return NOR.name == code.uppercase() || NOR.alpha2 == code.uppercase()
         }
     }
+}
+
+enum class LandMedTrygdeAvtale(override val alpha2: String) : EØSLandEllerLandMedAvtale {
+    NOR("NO"), GBR("GB"), AUS("AU");
+}
+
+sealed interface EØSLandEllerLandMedAvtale {
+    val alpha2: String
 }

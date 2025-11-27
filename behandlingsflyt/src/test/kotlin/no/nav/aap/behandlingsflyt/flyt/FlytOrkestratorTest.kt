@@ -53,7 +53,8 @@ import no.nav.aap.behandlingsflyt.behandling.trekkklage.flate.TrekkKlageVurderin
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.flate.TrekkKlageÅrsakDto
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
-import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
+import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLand
+import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LandMedTrygdeAvtale
 import no.nav.aap.behandlingsflyt.drift.Driftfunksjoner
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
@@ -2073,7 +2074,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                             fom = sak.rettighetsperiode.fom,
                             tom = sak.rettighetsperiode.tom,
                             begrunnelse = "",
-                            lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.ESP),
+                            lovvalg = LovvalgDto("begrunnelse", EØSLand.ESP),
                             medlemskap = null,
                         )
                     )
@@ -2115,14 +2116,14 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                             fom = sak.rettighetsperiode.fom,
                             tom = sak.rettighetsperiode.fom.plusMonths(2),
                             begrunnelse = "",
-                            lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
+                            lovvalg = LovvalgDto("begrunnelse", LandMedTrygdeAvtale.NOR),
                             medlemskap = MedlemskapDto("begrunnelse", false)
                         ),
                         PeriodisertManuellVurderingForLovvalgMedlemskapDto(
                             fom = sak.rettighetsperiode.fom.plusMonths(2).plusDays(1),
                             tom = null,
                             begrunnelse = "",
-                            lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
+                            lovvalg = LovvalgDto("begrunnelse", LandMedTrygdeAvtale.NOR),
                             medlemskap = MedlemskapDto("begrunnelse", true)
                         )
                     )
@@ -2160,14 +2161,14 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                             fom = sak.rettighetsperiode.fom,
                             tom = sak.rettighetsperiode.fom.plusMonths(2),
                             begrunnelse = "",
-                            lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
+                            lovvalg = LovvalgDto("begrunnelse", LandMedTrygdeAvtale.NOR),
                             medlemskap = MedlemskapDto("begrunnelse", false)
                         ),
                         PeriodisertManuellVurderingForLovvalgMedlemskapDto(
                             fom = sak.rettighetsperiode.fom.plusMonths(2).plusDays(1),
                             tom = null,
                             begrunnelse = "",
-                            lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
+                            lovvalg = LovvalgDto("begrunnelse", LandMedTrygdeAvtale.NOR),
                             medlemskap = MedlemskapDto("begrunnelse", true)
                         )
                     )
@@ -2199,7 +2200,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                             fom = sak.rettighetsperiode.fom.plusMonths(1).plusDays(1),
                             tom = null,
                             begrunnelse = "",
-                            lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
+                            lovvalg = LovvalgDto("begrunnelse", LandMedTrygdeAvtale.NOR),
                             medlemskap = MedlemskapDto("begrunnelse", true)
                         )
                     )
@@ -3009,7 +3010,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                             fom = periode.fom,
                             tom = null,
                             begrunnelse = "",
-                            lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.DNK),
+                            lovvalg = LovvalgDto("begrunnelse", EØSLand.DNK),
                             medlemskap = null
                         )
                     )

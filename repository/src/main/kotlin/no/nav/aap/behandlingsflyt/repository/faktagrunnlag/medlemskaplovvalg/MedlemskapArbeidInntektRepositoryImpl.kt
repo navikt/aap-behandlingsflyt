@@ -4,6 +4,8 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.EnhetGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapArbeidInntektGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLand
+import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LandMedTrygdeAvtale
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
@@ -112,7 +114,15 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 setLocalDate(1, manuellVurdering.fom)
                 setLocalDate(2, manuellVurdering.tom)
                 setString(3, manuellVurdering.lovvalg.begrunnelse)
-                setEnumName(4, manuellVurdering.lovvalg.lovvalgsEØSLandEllerLandMedAvtale)
+                setEnumName(
+                    4,
+                    manuellVurdering.lovvalg.lovvalgsLandEllerLandMedTrygdeAvtale.let {
+                        when (it) {
+                            is EØSLand -> it
+                            is LandMedTrygdeAvtale -> it
+                        }
+                    }
+                )
                 setString(5, manuellVurdering.medlemskap?.begrunnelse)
                 setBoolean(6, manuellVurdering.medlemskap?.varMedlemIFolketrygd)
                 setBoolean(7, overstyrt)
@@ -634,7 +644,11 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         ManuellVurderingForLovvalgMedlemskap(
             lovvalg = LovvalgDto(
                 begrunnelse = row.getString("tekstvurdering_lovvalg"),
-                lovvalgsEØSLandEllerLandMedAvtale = row.getEnum("lovvalgs_land")
+                lovvalgsLandEllerLandMedTrygdeAvtale = row.getString("lovvalgs_land").let { code ->
+                    enumValues<EØSLand>().find { it.name == code }
+                        ?: enumValues<LandMedTrygdeAvtale>().find { it.name == code }
+                        ?: throw IllegalArgumentException("Ukjent landkode: $code")
+                }
             ),
             medlemskap = row.getStringOrNull("tekstvurdering_medlemskap")?.let { tekstvurdering_medlemskap ->
                 MedlemskapDto(

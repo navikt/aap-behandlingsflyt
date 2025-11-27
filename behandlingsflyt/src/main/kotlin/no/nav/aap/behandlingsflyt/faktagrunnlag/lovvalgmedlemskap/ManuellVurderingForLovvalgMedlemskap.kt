@@ -2,7 +2,9 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.LøsningForPeriode
+import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLand
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
+import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LandMedTrygdeAvtale
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -18,8 +20,8 @@ data class ManuellVurderingForLovvalgMedlemskap(
     val vurdertIBehandling: BehandlingId,
 ) {
     fun lovvalgslandErAnnetLandIEØSEllerLandMedAvtale(): Boolean {
-        val lovvalgsLand = lovvalg.lovvalgsEØSLandEllerLandMedAvtale
-        return lovvalgsLand != EØSLandEllerLandMedAvtale.NOR && lovvalgsLand in enumValues<EØSLandEllerLandMedAvtale>().map { it }
+        val lovvalgsLand = lovvalg.lovvalgsLandEllerLandMedTrygdeAvtale
+        return lovvalgsLand != LandMedTrygdeAvtale.NOR && (lovvalgsLand in enumValues<LandMedTrygdeAvtale>().map { it } || lovvalgsLand in enumValues<EØSLand>().map { it } )
     }
 
     fun medlemIFolketrygd(): Boolean {
@@ -51,7 +53,7 @@ data class PeriodisertManuellVurderingForLovvalgMedlemskapDto(
 
 data class LovvalgDto(
     val begrunnelse: String,
-    val lovvalgsEØSLandEllerLandMedAvtale: EØSLandEllerLandMedAvtale,
+    val lovvalgsLandEllerLandMedTrygdeAvtale: EØSLandEllerLandMedAvtale,
 )
 
 data class MedlemskapDto(
