@@ -35,7 +35,6 @@ class AvklarSykdomLøserTest {
     private val behandlingMock = mockk<BehandlingRepository>()
     private val sykdomMock = mockk<SykdomRepository>(relaxed = true)
     private val yrkesskadeMock = mockk<YrkesskadeRepository>()
-    private val sakMock = mockk<SakRepository>()
 
     @Test
     fun `Skal lagre iverksatte vurderinger + nye`() {
@@ -43,7 +42,6 @@ class AvklarSykdomLøserTest {
             every { id } returns BehandlingId(2L)
             every { forrigeBehandlingId } returns BehandlingId(1L)
             every { typeBehandling() } returns TypeBehandling.Revurdering
-            every { sakId } returns SakId(1L)
         }
 
         every { yrkesskadeMock.hentHvisEksisterer(any()) } returns null
@@ -63,12 +61,10 @@ class AvklarSykdomLøserTest {
                     )
                 )
 
-        every { sakMock.hent(SakId(1L)).rettighetsperiode } returns Periode(1 januar 2020, 1 januar 2021)
-
-        val sykdomLøser = AvklarSykdomLøser(behandlingMock, sykdomMock, yrkesskadeMock, sakMock)
+        val sykdomLøser = AvklarSykdomLøser(behandlingMock, sykdomMock, yrkesskadeMock)
         sykdomLøser.løs(
             lagAvklaringsbehovKontekst(), løsning = AvklarSykdomLøsning(
-                sykdomsvurderinger = listOf(
+                løsningerForPerioder = listOf(
                     SykdomsvurderingLøsningDto(
                         begrunnelse = "",
                         dokumenterBruktIVurdering = emptyList(),
@@ -79,7 +75,8 @@ class AvklarSykdomLøserTest {
                         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                         erArbeidsevnenNedsatt = null,
                         yrkesskadeBegrunnelse = null,
-                        vurderingenGjelderFra = 10 januar 2025,
+                        fom = 10 januar 2025,
+                        tom = null
                     )
                 )
             )

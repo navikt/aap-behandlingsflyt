@@ -1,15 +1,27 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangArbeidLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.flate.OvergangArbeidVurderingLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.april
+import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.behandlingsflyt.test.mars
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
+import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertDoesNotThrow
+import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertFailsWith
 
 class AvklaringsbehoveneTest {
@@ -195,4 +207,165 @@ class AvklaringsbehoveneTest {
             .isEqualTo(nyePerioder)
 
     }
+
+    @Test
+    fun `Periodisert løsning må dekke periodene avklaringsbehovet ber om`() {
+        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, BehandlingId(9))
+        val avklaringsbehov = Avklaringsbehov(
+            definisjon = Definisjon.AVKLAR_OVERGANG_ARBEID,
+            funnetISteg = StegType.OVERGANG_ARBEID,
+            id = 1L,
+            kreverToTrinn = null
+        )
+        avklaringsbehovene.leggTil(
+            perioderSomIkkeErTilstrekkeligVurdert =
+                setOf(Periode(1 januar 2021, 1 februar 2021), Periode(1 mars 2021, 1 april 2021)),
+            definisjoner = listOf(
+                avklaringsbehov.definisjon
+            ), funnetISteg = avklaringsbehov.funnetISteg
+        )
+
+
+        assertThat(avklaringsbehov.erÅpent()).isTrue
+
+        val exception = assertThrows<UgyldigForespørselException> {
+            avklaringsbehovene.validerPerioder(
+                løsning = AvklarOvergangArbeidLøsning(
+                    listOf(
+                        OvergangArbeidVurderingLøsningDto(
+                            fom = 1 januar 2021,
+                            tom = 1 februar 2021,
+                            begrunnelse = "begrunnelse",
+                            brukerRettPåAAP = false
+                        )
+                    )
+                ),
+            )
+        }
+
+        assertThat(exception.message).isEqualTo("Løsning mangler vurdering for perioder: [Periode(fom=2021-03-01, tom=2021-04-01)]")
+
+        assertDoesNotThrow {
+            avklaringsbehovene.validerPerioder(
+                løsning = AvklarOvergangArbeidLøsning(
+                    listOf(
+                        OvergangArbeidVurderingLøsningDto(
+                            fom = 1 januar 2021,
+                            tom = 1 januar 2022,
+                            begrunnelse = "begrunnelse",
+                            brukerRettPåAAP = false
+                        )
+                    )
+                ),
+            )
+        }
+    }
+
+    @Test
+    fun `Avklaringsbehov med tom mengde med perioder skal ikke bry seg om perioder`() {
+        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, BehandlingId(10))
+        val avklaringsbehov = Avklaringsbehov(
+            definisjon = Definisjon.AVKLAR_OVERGANG_ARBEID,
+            funnetISteg = StegType.OVERGANG_ARBEID,
+            id = 1L,
+            kreverToTrinn = null
+        )
+        avklaringsbehovene.leggTil(
+            perioderSomIkkeErTilstrekkeligVurdert =
+                setOf(),
+            definisjoner = listOf(
+                avklaringsbehov.definisjon
+            ), funnetISteg = avklaringsbehov.funnetISteg
+        )
+
+
+        assertThat(avklaringsbehov.erÅpent()).isTrue
+
+        assertDoesNotThrow {
+            avklaringsbehovene.validerPerioder(
+                løsning = AvklarOvergangArbeidLøsning(
+                    listOf(
+                        OvergangArbeidVurderingLøsningDto(
+                            fom = 1 januar 2021,
+                            tom = 1 januar 2022,
+                            begrunnelse = "begrunnelse",
+                            brukerRettPåAAP = false
+                        )
+                    )
+                ),
+            )
+        }
+    }
+
+    @Test
+    fun `Avklaringsbehov med null-perioder skal ikke bry seg om perioder`() {
+        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, BehandlingId(11))
+        val avklaringsbehov = Avklaringsbehov(
+            definisjon = Definisjon.AVKLAR_OVERGANG_ARBEID,
+            funnetISteg = StegType.OVERGANG_ARBEID,
+            id = 1L,
+            kreverToTrinn = null
+        )
+        avklaringsbehovene.leggTil(
+            perioderSomIkkeErTilstrekkeligVurdert = null,
+            definisjoner = listOf(
+                avklaringsbehov.definisjon
+            ), funnetISteg = avklaringsbehov.funnetISteg
+        )
+
+
+        assertThat(avklaringsbehov.erÅpent()).isTrue
+
+        assertDoesNotThrow {
+            avklaringsbehovene.validerPerioder(
+                løsning = AvklarOvergangArbeidLøsning(
+                    listOf(
+                        OvergangArbeidVurderingLøsningDto(
+                            fom = 1 januar 2021,
+                            tom = 1 januar 2022,
+                            begrunnelse = "begrunnelse",
+                            brukerRettPåAAP = false
+                        )
+                    )
+                ),
+            )
+        }
+    }
+
+    @Test
+    fun `Ikke-periodiserte løsninger skal ikke valideres mot avklaringsbehovperioder`() {
+        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, BehandlingId(12))
+        val avklaringsbehov = Avklaringsbehov(
+            definisjon = Definisjon.FATTE_VEDTAK,
+            funnetISteg = StegType.FATTE_VEDTAK,
+            id = 1L,
+            kreverToTrinn = null
+        )
+        avklaringsbehovene.leggTil(
+            perioderSomIkkeErTilstrekkeligVurdert = setOf(
+                Periode(1 mars 2021, 1 april 2021) // Ikke egentlig en reell case
+            ),
+            definisjoner = listOf(
+                avklaringsbehov.definisjon
+            ), funnetISteg = avklaringsbehov.funnetISteg
+        )
+
+        assertThat(avklaringsbehov.erÅpent()).isTrue
+
+        assertDoesNotThrow {
+            avklaringsbehovene.validerPerioder(
+                løsning = FatteVedtakLøsning(
+                    listOf(
+                        TotrinnsVurdering(
+                            godkjent = true,
+                            begrunnelse = "begrunnelse",
+                            definisjon = Definisjon.AVKLAR_SYKDOM.kode,
+                            grunner = null,
+                        )
+                    )
+                ),
+            )
+        }
+    }
+
 }

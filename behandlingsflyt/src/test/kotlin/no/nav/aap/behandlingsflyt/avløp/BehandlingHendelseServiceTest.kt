@@ -12,7 +12,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
-import no.nav.aap.behandlingsflyt.pip.PipRepository
+import no.nav.aap.behandlingsflyt.pip.PipService
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -40,7 +40,7 @@ class BehandlingHendelseServiceTest {
         val sakService = mockk<SakService>()
         val flytJobbRepository = mockk<FlytJobbRepository>()
         val mottattDokumentRepository = mockk<MottattDokumentRepository>()
-        val pipRepository = mockk<PipRepository>()
+        val pipRepository = mockk<PipService>()
 
         every { flytJobbRepository.leggTil(any()) } returns Unit
 

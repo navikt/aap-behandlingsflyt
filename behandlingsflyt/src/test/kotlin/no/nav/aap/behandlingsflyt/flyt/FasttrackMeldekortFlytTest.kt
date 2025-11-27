@@ -176,7 +176,7 @@ class FasttrackMeldekortFlytTest :
         åpenBehandling.løsSykdom(sak.rettighetsperiode.fom).løsBistand().løsSykdomsvurderingBrev()
 
         val (førsteMeldeperiode, andreMeldeperiode) = dataSource.transaction { connection ->
-            MeldeperiodeRepositoryImpl(connection).hent(åpenBehandling.id)
+            MeldeperiodeRepositoryImpl(connection).hentMeldeperioder(åpenBehandling.id, sak.rettighetsperiodeEttÅrFraStartDato())
         }
         sak.sendInnMeldekort(
             journalpostId = journalpostId(),
@@ -197,9 +197,11 @@ class FasttrackMeldekortFlytTest :
             assertThat(behandlinger).hasSize(4)
             val (førstegangsbehandling, førsteMeldekort, andreMeldekort, åpenBehandling) = behandlinger
 
+            val arbeidetTidslinjeFørstegangsbehandling = andelArbeidetTidslinje(connection, førstegangsbehandling)
+            val underveisPeriode = arbeidetTidslinjeFørstegangsbehandling.helePerioden()
             assertTidslinje(
-                andelArbeidetTidslinje(connection, førstegangsbehandling),
-                sak.rettighetsperiode to {
+                arbeidetTidslinjeFørstegangsbehandling,
+                underveisPeriode to {
                     assertThat(it).isEqualTo(`0_PROSENT`)
                 },
             )
@@ -211,7 +213,7 @@ class FasttrackMeldekortFlytTest :
                 førsteMeldeperiode to {
                     assertThat(it).isEqualTo(Prosent(18))
                 },
-                Periode(førsteMeldeperiode.tom.plusDays(1), sak.rettighetsperiode.tom) to {
+                Periode(førsteMeldeperiode.tom.plusDays(1), underveisPeriode.tom) to {
                     assertThat(it).isEqualTo(`0_PROSENT`)
                 },
             )
@@ -226,7 +228,7 @@ class FasttrackMeldekortFlytTest :
                 andreMeldeperiode to {
                     assertThat(it).isEqualTo(Prosent(37))
                 },
-                Periode(andreMeldeperiode.tom.plusDays(1), sak.rettighetsperiode.tom) to {
+                Periode(andreMeldeperiode.tom.plusDays(1), underveisPeriode.tom) to {
                     assertThat(it).isEqualTo(`0_PROSENT`)
                 },
             )
@@ -239,7 +241,7 @@ class FasttrackMeldekortFlytTest :
                 andreMeldeperiode to {
                     assertThat(it).isEqualTo(Prosent(37))
                 },
-                Periode(andreMeldeperiode.tom.plusDays(1), sak.rettighetsperiode.tom) to {
+                Periode(andreMeldeperiode.tom.plusDays(1), underveisPeriode.tom) to {
                     assertThat(it).isEqualTo(`0_PROSENT`)
                 },
             )

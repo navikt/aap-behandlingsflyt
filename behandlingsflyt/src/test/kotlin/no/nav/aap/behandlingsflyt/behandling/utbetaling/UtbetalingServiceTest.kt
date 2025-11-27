@@ -5,7 +5,7 @@ import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Reduksjon11_9Repository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentGradering
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.GraderingGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
@@ -156,8 +156,8 @@ class UtbetalingServiceTest {
     private fun tilkjentYtelseDto(utbetalingsdato: LocalDate): Tilkjent {
         return Tilkjent(
             dagsats = Beløp(100),
-            gradering = TilkjentGradering(
-                endeligGradering = Prosent.`100_PROSENT`,
+            gradering = Prosent.`100_PROSENT`,
+            graderingGrunnlag = GraderingGrunnlag(
                 samordningGradering = Prosent.`0_PROSENT`,
                 institusjonGradering = Prosent.`0_PROSENT`,
                 arbeidGradering = Prosent.`0_PROSENT`,
