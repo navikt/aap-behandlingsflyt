@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovServ
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.validerGyldigForRettighetsperiode
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.Medlemskapvilkåret
@@ -32,6 +31,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class VurderLovvalgSteg private constructor(
@@ -70,7 +71,7 @@ class VurderLovvalgSteg private constructor(
             definisjon = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP,
             tvingerAvklaringsbehov = vurderingsbehovSomTvingerAvklaringsbehov(),
             nårVurderingErRelevant = { nyKontekst -> perioderVurderingErRelevant(nyKontekst, grunnlag.value) },
-            erTilstrekkeligVurdert = { erTilstrekkeligVurdert(kontekst, grunnlag.value) },
+            nårVurderingErGyldig = { perioderVurderingErGyldig(kontekst, grunnlag.value) },
             tilbakestillGrunnlag = { tilbakestillVurderinger(kontekst, grunnlag.value) },
         )
 
@@ -100,34 +101,28 @@ class VurderLovvalgSteg private constructor(
             }
         }
 
+
         return Fullført
     }
 
-    /**
-     * Her har vi ulike scenarioer vi må ta høyde for
-     * - Hvis det finnes manuelle vurderinger - så må hele tidslinjen være vurdert manuelt
-     * - Hvis det er automatisk vurdering - så må lovvalgvilkåret være oppfylt for hele perioden
-     */
-    private fun erTilstrekkeligVurdert(
+    private fun perioderVurderingErGyldig(
         kontekst: FlytKontekstMedPerioder,
         grunnlag: MedlemskapLovvalgGrunnlag
-    ): Boolean {
-        val harManuelleVurderinger = grunnlag.medlemskapArbeidInntektGrunnlag?.vurderinger?.isNotEmpty() == true
-        if (harManuelleVurderinger) {
-            return grunnlag.medlemskapArbeidInntektGrunnlag
-                .gjeldendeVurderinger()
-                .validerGyldigForRettighetsperiode(kontekst.rettighetsperiode)
-                .isValid
-        } else {
-            val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-            Medlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode)
-                .vurder(grunnlag)
-            val lovvalgVilkåretOppfylt = !vilkårsresultat.finnVilkår(Vilkårtype.LOVVALG).harPerioderSomIkkeErOppfylt()
-            return lovvalgVilkåretOppfylt
+    ): Tidslinje<Boolean> {
+        val automatiskVilkårsvurderingLovvalg = vilkårsvurderingLovvalgUtenManuelleVurderinger(kontekst, grunnlag).mapValue { it.erOppfylt() }
+        val automatiskVurderingOppfylt = automatiskVilkårsvurderingLovvalg.filter { it.verdi }.isNotEmpty()
+        if (automatiskVurderingOppfylt) {
+            return automatiskVilkårsvurderingLovvalg
         }
+
+        // Automatisk vurdering er ikke oppfylt - trenger manuell vurdering
+        return grunnlag.medlemskapArbeidInntektGrunnlag?.gjeldendeVurderinger().orEmpty().mapValue { true }
     }
 
-    private fun perioderVurderingErRelevant(kontekst: FlytKontekstMedPerioder, grunnlag: MedlemskapLovvalgGrunnlag): Tidslinje<Boolean> {
+    private fun perioderVurderingErRelevant(
+        kontekst: FlytKontekstMedPerioder,
+        grunnlag: MedlemskapLovvalgGrunnlag
+    ): Tidslinje<Boolean> {
         val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
         val automatiskVilkårsvurderingLovvalg = vilkårsvurderingLovvalgUtenManuelleVurderinger(kontekst, grunnlag)
 
@@ -138,7 +133,8 @@ class VurderLovvalgSteg private constructor(
                     TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
                     TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
                     TidligereVurderinger.Behandlingsutfall.UKJENT -> {
-                        val automatiskVilkårsvurderinglovvalgIkkeOppfylt = automatiskVilkårsvurderingLovvalg?.erOppfylt() == false
+                        val automatiskVilkårsvurderinglovvalgIkkeOppfylt =
+                            automatiskVilkårsvurderingLovvalg?.erOppfylt() == false
 
                         // Må gjøres slik for å trigge overstyrt avklaringsbehov hvis allerede automatisk oppfylt
                         val tvingerAvklaringsbehov = kontekst.vurderingsbehovRelevanteForSteg.any {

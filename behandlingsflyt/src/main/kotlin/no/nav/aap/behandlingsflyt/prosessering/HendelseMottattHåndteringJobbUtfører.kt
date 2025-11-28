@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Klage
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -86,7 +87,16 @@ class HendelseMottattHåndteringJobbUtfører(
                     brevkategori = innsendingType,
                     melding = parsedMelding as Klage
                 )
+            }
 
+            InnsendingType.TILBAKEKREVING_HENDELSE -> {
+                håndterMottattDokumentService.håndterMottattTilbakekrevingHendelse(
+                    sakId = sakId,
+                    referanse = referanse,
+                    mottattTidspunkt = mottattTidspunkt,
+                    brevkategori = innsendingType,
+                    melding = parsedMelding as TilbakekrevingHendelse,
+                )
             }
             else -> {
                 håndterMottattDokumentService.håndterMottatteDokumenter(

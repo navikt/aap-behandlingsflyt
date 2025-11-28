@@ -102,24 +102,27 @@ class TestScenarioOrkestrator(
 
     fun løsSykdom(
         behandling: Behandling,
-        vurderingGjelderFra: LocalDate? = null,
+        vurderingGjelderFra: LocalDate,
         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean? = null
     ): Behandling {
         return løsAvklaringsBehov(
             behandling,
             AvklarSykdomLøsning(
-                sykdomsvurderinger = listOf(
+                løsningerForPerioder = listOf(
                     SykdomsvurderingLøsningDto(
                         begrunnelse = "Er syk nok",
                         dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                         harSkadeSykdomEllerLyte = true,
+                        kodeverk = "ICPC2",
+                        hoveddiagnose = "A03",
                         erSkadeSykdomEllerLyteVesentligdel = true,
                         erNedsettelseIArbeidsevneMerEnnHalvparten = true,
                         erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
                         erArbeidsevnenNedsatt = true,
                         yrkesskadeBegrunnelse = if (erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense != null) "test" else null,
-                        vurderingenGjelderFra = vurderingGjelderFra,
+                        fom = vurderingGjelderFra,
+                        tom = null
                     )
                 )
             )
@@ -358,8 +361,8 @@ class TestScenarioOrkestrator(
                 ManuellVurderingForForutgåendeMedlemskapDto(
                     begrunnelse = "Forutgående medlemskap ok",
                     harForutgåendeMedlemskap = true,
-                    varMedlemMedNedsattArbeidsevne = true,
-                    medlemMedUnntakAvMaksFemAar = null
+                    varMedlemMedNedsattArbeidsevne = false,
+                    medlemMedUnntakAvMaksFemAar = false
                 )
             )
         )

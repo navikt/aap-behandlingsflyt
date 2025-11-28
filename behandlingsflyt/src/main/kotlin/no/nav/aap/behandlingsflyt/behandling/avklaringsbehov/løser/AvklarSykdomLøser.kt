@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomEnkelLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
@@ -9,24 +10,40 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurd
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.utils.Validation
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
+import kotlin.collections.List
+
+class AvklarSykdomEnkelLøser(
+    val repositoryProvider: RepositoryProvider
+) : AvklaringsbehovsLøser<AvklarSykdomEnkelLøsning> {
+    override fun løs(
+        kontekst: AvklaringsbehovKontekst,
+        løsning: AvklarSykdomEnkelLøsning
+    ): LøsningsResultat {
+        return AvklarSykdomLøser(repositoryProvider).løs(
+            kontekst,
+            AvklarSykdomLøsning(løsning.sykdomsvurderinger.map { it.tilNyDto() })
+        )
+    }
+
+    override fun forBehov(): Definisjon {
+        return Definisjon.AVKLAR_SYKDOM
+    }
+}
 
 class AvklarSykdomLøser(
     private val behandlingRepository: BehandlingRepository,
     private val sykdomRepository: SykdomRepository,
     private val yrkersskadeRepository: YrkesskadeRepository,
-    private val sakRepository: SakRepository
 ) : AvklaringsbehovsLøser<AvklarSykdomLøsning> {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
         yrkersskadeRepository = repositoryProvider.provide(),
-        sakRepository = repositoryProvider.provide()
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -34,10 +51,8 @@ class AvklarSykdomLøser(
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: AvklarSykdomLøsning): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
 
-        val rettighetsperiode = sakRepository.hent(behandling.sakId).rettighetsperiode
-
-        val nyeSykdomsvurderinger = løsning.sykdomsvurderinger
-            .map { it.toSykdomsvurdering(kontekst.bruker, kontekst.behandlingId(), rettighetsperiode.fom) }
+        val nyeSykdomsvurderinger = løsning.løsningerForPerioder
+            .map { it.toSykdomsvurdering(kontekst.bruker, kontekst.behandlingId()) }
 
         val eksisterendeSykdomsvurderinger = behandling.forrigeBehandlingId
             ?.let { sykdomRepository.hentHvisEksisterer(it) }
@@ -66,10 +81,10 @@ class AvklarSykdomLøser(
     }
 
     private fun AvklarSykdomLøsning.valider(): Validation<AvklarSykdomLøsning> {
-        if (sykdomsvurderinger.isEmpty()) {
+        if (løsningerForPerioder.isEmpty()) {
             return Validation.Invalid(this, "Må sende inn minst én sykdomsvurdering")
         }
-        if (sykdomsvurderinger.map { it.vurderingenGjelderFra }.distinct().size != sykdomsvurderinger.size) {
+        if (løsningerForPerioder.map { it.fom }.distinct().size != løsningerForPerioder.size) {
             return Validation.Invalid(this, "Vurderingene må ha unik 'vurderingenGjelderFra'-dato")
         }
         // TODO: Bør ha validering på konsistente verdier

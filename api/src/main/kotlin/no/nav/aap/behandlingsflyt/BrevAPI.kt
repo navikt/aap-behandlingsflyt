@@ -29,10 +29,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.DokumentResponsDTO
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
-import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForSakResolver
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.brev.kontrakt.Brev
+import no.nav.aap.brev.kontrakt.BrevdataDto
 import no.nav.aap.brev.kontrakt.KanDistribuereBrevReponse
 import no.nav.aap.brev.kontrakt.KanDistribuereBrevRequest
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -172,6 +172,8 @@ fun NormalOpenAPIRoute.brevApi(
                                 avklaringsbehovKode = definisjon.kode,
                                 brevbestillingReferanse = brevbestillingResponse.referanse,
                                 brev = brevbestillingResponse.brev,
+                                brevmal = brevbestillingResponse.brevmal,
+                                brevdata = brevbestillingResponse.brevdata,
                                 opprettet = brevbestillingResponse.opprettet,
                                 oppdatert = brevbestillingResponse.oppdatert,
                                 brevtype = brevbestillingResponse.brevtype,
@@ -230,7 +232,7 @@ fun NormalOpenAPIRoute.brevApi(
 
                             val brevbestillingService = BrevbestillingService(repositoryProvider, gatewayProvider)
 
-                            brevbestillingService.bestillV2(
+                            brevbestillingService.bestill(
                                 behandlingId = behandling.id,
                                 brevBehov = VarselOmBestilling,
                                 unikReferanse = req.dialogmeldingUuid.toString(),
@@ -245,6 +247,12 @@ fun NormalOpenAPIRoute.brevApi(
             route("/{brevbestillingReferanse}/oppdater") {
                 authorizedPut<BrevbestillingReferanse, String, Brev>(authorizationParamPathConfig) { brevbestillingReferanse, brev ->
                     brevbestillingGateway.oppdater(brevbestillingReferanse, brev)
+                    respond("{}", HttpStatusCode.Accepted)
+                }
+            }
+            route("/{brevbestillingReferanse}/oppdater-brevdata") {
+                authorizedPut<BrevbestillingReferanse, String, BrevdataDto>(authorizationParamPathConfig) { brevbestillingReferanse, brev ->
+                    brevbestillingGateway.oppdaterV3(brevbestillingReferanse, brev)
                     respond("{}", HttpStatusCode.Accepted)
                 }
             }
@@ -268,18 +276,15 @@ fun NormalOpenAPIRoute.brevApi(
                 }
             }
         }
-        route("/distribusjon/kan-distribuere-brev") {
-            authorizedPost<Unit, KanDistribuereBrevReponse, KanDistribuereBrevRequest>(
-                AuthorizationBodyPathConfig(
-                    operasjon = Operasjon.SE,
-                    relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource)
-                )
-            ) { _, request ->
+        route("/{brevbestillingReferanse}/kan-distribuere-brev") {
+            authorizedPost<BrevbestillingReferanse, KanDistribuereBrevReponse, KanDistribuereBrevRequest>(
+                authorizationParamPathConfig
+            ) { brevbestillingReferanse, request ->
                 val response = KanDistribuereBrevReponse(
                     mottakereDistStatus = brevbestillingGateway.kanDistribuereBrev(
-                        request.behandlingsReferanse,
                         request.brukerIdent,
-                        request.mottakerIdentListe
+                        request.mottakerIdentListe,
+                        brevbestillingReferanse
                     )
                 )
                 respond(response, HttpStatusCode.Accepted)

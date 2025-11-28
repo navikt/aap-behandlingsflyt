@@ -3,7 +3,9 @@ package no.nav.aap.behandlingsflyt
 import com.papsign.ktor.openapigen.route.apiRouting
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
+import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
+import io.ktor.http.HttpStatusCode
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
@@ -23,9 +25,12 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Ident
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManueltOppgittBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppgitteBarn
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
@@ -35,10 +40,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SaksnummerParameter
 import no.nav.aap.behandlingsflyt.test.AzurePortHolder
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.FakeServers
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
@@ -48,20 +54,22 @@ import no.nav.aap.behandlingsflyt.test.testGatewayProvider
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.testutil.ManuellMotorImpl
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import org.slf4j.LoggerFactory
-import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
+import org.testcontainers.postgresql.PostgreSQLContainer
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
+import kotlin.random.Random
 
 private val log = LoggerFactory.getLogger("TestApp")
 lateinit var testScenarioOrkestrator: TestScenarioOrkestrator
@@ -104,16 +112,27 @@ fun main() {
             route("/test") {
                 route("/opprett") {
                     post<Unit, OpprettTestcaseDTO, OpprettTestcaseDTO> { _, dto ->
-                        sendInnSøknad(dto)
+                        opprettNySakOgBehandling(dto)
                         respond(dto)
                     }
                 }
 
-                route("/opprett-og-fullfoer") {
-                    post<Unit, OpprettTestcaseDTO, OpprettTestcaseDTO> { _, dto ->
-                        sendInnOgFullførFørstegangsbehandling(dto)
-                        respond(dto)
+                route("/endre/{saksnummer}/legg-til-institusjonsopphold") {
+                    post<SaksnummerParameter, Unit, LeggTilInstitusjonsoppholdDTO> { param, dto ->
+                        val ident = hentIdentForSak(Saksnummer(param.saksnummer))
+
+                        val oppdatertPerson = FakePersoner.hentPerson(ident)
+                            ?.medInstitusjonsopphold(listOf(genererInstitusjonsopphold(dto)))
+
+                        if (oppdatertPerson != null) {
+                            FakePersoner.oppdater(oppdatertPerson)
+                            respondWithStatus(HttpStatusCode.OK)
+                        } else {
+                            log.warn("Finner ikke person med ident $ident for å legge til institusjonsopphold")
+                            respondWithStatus(HttpStatusCode.BadRequest)
+                        }
                     }
+
                 }
             }
         }
@@ -136,6 +155,15 @@ private fun initDbConfig(): DbConfig {
         println("----\nDATABASE URL: \n${it.url}?user=${it.username}&password=${it.password}\n----")
     }
 }
+
+private fun genererInstitusjonsopphold(dto: LeggTilInstitusjonsoppholdDTO) = InstitusjonsoppholdJSON(
+    organisasjonsnummer = Random.nextInt(911111111, 999999999).toString(),
+    kategori = dto.oppholdstype.name,
+    institusjonstype = dto.institusjonstype.name,
+    forventetSluttdato = dto.oppholdTom,
+    startdato = dto.oppholdFom,
+    institusjonsnavn = "Test Institusjon"
+)
 
 private fun genererFengselsopphold() = InstitusjonsoppholdJSON(
     organisasjonsnummer = "12345",
@@ -165,7 +193,7 @@ private fun genererBarn(dto: TestBarn): TestPerson {
 }
 
 private fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPerson>): SøknadV0 {
-    val erStudent = if (dto.student) "JA" else "NEI"
+    val erStudent = if (dto.student) StudentStatus.Ja else StudentStatus.Nei
     val harYrkesskade = if (dto.yrkesskade) "JA" else "NEI"
 
     val oppgitteBarn = if (urelaterteBarn.isNotEmpty()) {
@@ -245,7 +273,7 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO): Sak {
     )
     val periode = Periode(
         LocalDate.now(),
-        LocalDate.now().plusYears(1).minusDays(1)
+        Tid.MAKS
     )
     val sak = datasource.transaction { connection ->
         val sakService = PersonOgSakService(
@@ -275,8 +303,11 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO): Sak {
     return sak
 }
 
-private fun sendInnOgFullførFørstegangsbehandling(dto: OpprettTestcaseDTO): Sak {
+private fun opprettNySakOgBehandling(dto: OpprettTestcaseDTO): Sak {
     val sak = sendInnSøknad(dto)
+
+    if (dto.steg in listOf(StegType.START_BEHANDLING, StegType.AVKLAR_STUDENT)) return sak
+
     motor.kjørJobber()
 
     // fullfør førstegangsbehandling
@@ -288,24 +319,35 @@ private fun sendInnOgFullførFørstegangsbehandling(dto: OpprettTestcaseDTO): Sa
         if (dto.student) {
             løsStudent(behandling)
         } else {
-            løsSykdom(behandling)
+            if (dto.steg == StegType.AVKLAR_SYKDOM) return sak
+            løsSykdom(behandling, sak.rettighetsperiode.fom)
+
+            if (dto.steg == StegType.VURDER_BISTANDSBEHOV) return sak
             løsBistand(behandling)
         }
 
         // Vurderinger i sykdom
+        if (dto.steg == StegType.REFUSJON_KRAV) return sak
         løsRefusjonskrav(behandling)
+
+        if (dto.steg == StegType.SYKDOMSVURDERING_BREV) return sak
         løsSykdomsvurderingBrev(behandling)
+
+        if (dto.steg == StegType.KVALITETSSIKRING) return sak
         kvalitetssikreOk(behandling)
 
         // Yrkesskade
         if (dto.yrkesskade) {
+            if (dto.steg == StegType.VURDER_YRKESSKADE) return sak
             løsYrkesSkade(behandling)
         }
 
         // Inntekt
+        if (dto.steg == StegType.FASTSETT_BEREGNINGSTIDSPUNKT) return sak
         løsBeregningstidspunkt(behandling)
 
         if (dto.inntekterPerAr == null || dto.inntekterPerAr.isEmpty()) {
+            if (dto.steg == StegType.MANGLENDE_LIGNING) return sak
             løsManuellInntektVurdering(behandling)
         }
 
@@ -313,42 +355,64 @@ private fun sendInnOgFullførFørstegangsbehandling(dto: OpprettTestcaseDTO): Sa
         if (dto.yrkesskade) {
             løsFastsettYrkesskadeInntekt(behandling)
         } else {
+            if (dto.steg == StegType.VURDER_MEDLEMSKAP) return sak
             løsForutgåendeMedlemskap(behandling)
         }
 
         // Oppholdskrav
+        if (dto.steg == StegType.VURDER_OPPHOLDSKRAV) return sak
         løsOppholdskrav(behandling)
 
         // Institusjonsopphold
+        if (dto.steg == StegType.DU_ER_ET_ANNET_STED) return sak
         if (dto.institusjoner.fengsel == true) {
             løsSoningsforhold(behandling)
         }
 
         // Barnetillegg
+        if (dto.steg == StegType.BARNETILLEGG) return sak
         if (dto.barn.isNotEmpty()) {
             løsBarnetillegg(behandling)
         }
 
         // Samordning
+        if (dto.steg == StegType.SAMORDNING_GRADERING) return sak
         if (dto.sykepenger.isEmpty()) {
             løsUtenSamordning(behandling)
         } else {
             løsSamordning(behandling, dto.sykepenger)
         }
 
+        if (dto.steg == StegType.SAMORDNING_ANDRE_STATLIGE_YTELSER) return sak
         løsSamordningAndreStatligeYtelser(behandling)
 
         if (dto.tjenestePensjon == true) {
+            if (dto.steg == StegType.SAMORDNING_TJENESTEPENSJON_REFUSJONSKRAV) return sak
             løsTjenestepensjonRefusjonskravVurdering(behandling)
         }
 
         // Vedtak
+        if (dto.steg == StegType.FORESLÅ_VEDTAK) return sak
         løsForeslåVedtakLøsning(behandling)
-        fattVedtakEllerSendRetur(behandling)
-        løsVedtaksbrev(behandling)
-    }
 
-    return sak
+        if (dto.steg == StegType.FATTE_VEDTAK) return sak
+        fattVedtakEllerSendRetur(behandling)
+
+        if (dto.steg == StegType.BREV) return sak
+        løsVedtaksbrev(behandling)
+
+        return sak
+    }
+}
+
+private fun hentIdentForSak(saksnummer: Saksnummer): String {
+    return datasource.transaction { connection ->
+        val repositoryProvider = postgresRepositoryRegistry.provider(connection)
+        val sakRepository = repositoryProvider.provide<SakRepository>()
+        val sak = sakRepository.hent(saksnummer)
+
+        sak.person.aktivIdent().identifikator
+    }
 }
 
 private fun hentSisteBehandlingForSak(sakId: SakId): Behandling {
@@ -365,13 +429,13 @@ private fun hentSisteBehandlingForSak(sakId: SakId): Behandling {
     }
 }
 
-internal fun postgreSQLContainer(): PostgreSQLContainer<Nothing> {
-    val postgres = PostgreSQLContainer<Nothing>("postgres:16")
+internal fun postgreSQLContainer(): PostgreSQLContainer {
+    val postgres = PostgreSQLContainer("postgres:16")
         .apply {
             val envPort = System.getenv("POSTGRES_PORT")?.toIntOrNull()
             if (envPort != null) {
                 withExposedPorts(5432)
-                setPortBindings(listOf("$envPort:5432"))
+                portBindings = listOf("$envPort:5432")
             }
             withLogConsumer(Slf4jLogConsumer(log))
             waitingFor(HostPortWaitStrategy().withStartupTimeout(Duration.of(60L, ChronoUnit.SECONDS)))

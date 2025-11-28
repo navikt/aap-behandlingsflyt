@@ -114,6 +114,13 @@ object InMemoryBarnRepository : BarnRepository {
         TODO("Not yet implemented")
     }
 
+    override fun tilbakestillGrunnlag(
+        behandlingId: BehandlingId,
+        forrigeBehandlingId: BehandlingId?
+    ) {
+        TODO("Not yet implemented")
+    }
+
     override fun hentBehandlingIdForSakSomFårBarnetilleggForBarn(ident: Ident): List<BehandlingId> {
         TODO("Not yet implemented")
     }

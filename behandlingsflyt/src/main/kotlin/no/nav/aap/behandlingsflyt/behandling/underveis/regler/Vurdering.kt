@@ -23,6 +23,7 @@ data class Vurdering(
     internal val soningsVurdering: SoningVurdering? = null,
     private val meldeperiode: Periode? = null,
     val varighetVurdering: VarighetVurdering? = null,
+    private val reduksjonArbeidOverGrenseEnabled: Boolean? = null,
 ) {
     fun leggTilRettighetstype(rettighetstype: RettighetsType): Vurdering {
         return copy(fårAapEtter = rettighetstype)
@@ -77,7 +78,7 @@ data class Vurdering(
     }
 
     private fun bryterOppholdskrav(): Boolean {
-        return opphørEtterOppholdskrav() || stansEtterOppholdskrav();
+        return opphørEtterOppholdskrav() || stansEtterOppholdskrav()
     }
 
     private fun opphørEtterOppholdskrav(): Boolean {
@@ -90,7 +91,10 @@ data class Vurdering(
 
     fun harRett(): Boolean {
         return fårAapEtter != null &&
-                arbeiderMindreEnnGrenseverdi() &&
+                (when (reduksjonArbeidOverGrenseEnabled) {
+                    null, false -> arbeiderMindreEnnGrenseverdi()
+                    true -> true
+                }) &&
                 harOverholdtMeldeplikten() &&
                 sonerIkke() &&
                 !bryterAktivitetsplikt11_7() &&
@@ -162,7 +166,7 @@ data class Vurdering(
             return UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT_11_7_OPPHØR
         } else if (stansEtterBruddPåAktivitetsplikt11_7()) {
             return UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT_11_7_STANS
-        } else if (!arbeiderMindreEnnGrenseverdi()) {
+        } else if (reduksjonArbeidOverGrenseEnabled != true && !arbeiderMindreEnnGrenseverdi()) {
             return UnderveisÅrsak.ARBEIDER_MER_ENN_GRENSEVERDI
         } else if (!harOverholdtMeldeplikten()) {
             return requireNotNull(meldepliktVurdering?.årsak)

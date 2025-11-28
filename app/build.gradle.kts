@@ -1,7 +1,6 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
-val opentelemetryVersion = "2.21.0-alpha"
-val testcontainersVersion = "2.0.1"
+val opentelemetryVersion = "2.22.0-alpha"
 
 repositories {
     mavenCentral()
@@ -68,7 +67,7 @@ dependencies {
     implementation(libs.ktorServerStatusPages)
 
     implementation("io.micrometer:micrometer-registry-prometheus:1.16.0")
-    implementation("ch.qos.logback:logback-classic:1.5.20")
+    implementation("ch.qos.logback:logback-classic:1.5.21")
     implementation("net.logstash.logback:logstash-logback-encoder:9.0")
     implementation("org.slf4j:jul-to-slf4j:2.0.17") // trengs for postgres-logging
 
@@ -89,11 +88,11 @@ dependencies {
     implementation(project(":behandlingsflyt"))
     implementation(project(":repository"))
     implementation("com.zaxxer:HikariCP:7.0.2")
-    implementation("org.flywaydb:flyway-database-postgresql:11.16.0")
+    implementation("org.flywaydb:flyway-database-postgresql:11.17.2")
 
     runtimeOnly("org.postgresql:postgresql") // låst versjon i root build.gradle.kts
 
-    implementation("ch.qos.logback:logback-classic:1.5.20")
+    implementation("ch.qos.logback:logback-classic:1.5.21")
     implementation("io.opentelemetry.instrumentation:opentelemetry-logback-mdc-1.0:${opentelemetryVersion}")
     implementation("io.opentelemetry.instrumentation:opentelemetry-ktor-3.0:${opentelemetryVersion}")
     implementation("org.apache.avro:avro:1.12.1")
@@ -104,9 +103,9 @@ dependencies {
     testImplementation(libs.bundles.junit)
     testImplementation(kotlin("test"))
 
-    testImplementation("org.apache.kafka:kafka-clients:4.1.0")
+    testImplementation("org.apache.kafka:kafka-clients:4.1.1")
 
-    testImplementation("org.testcontainers:testcontainers:$testcontainersVersion")
-    testImplementation("org.testcontainers:testcontainers-postgresql:${testcontainersVersion}")
-    testImplementation("org.testcontainers:testcontainers-kafka:${testcontainersVersion}")
+    testImplementation(libs.testcontainers)
+    testImplementation(libs.testcontainersPostgres)
+    testImplementation(libs.testcontainersKafka)
 }

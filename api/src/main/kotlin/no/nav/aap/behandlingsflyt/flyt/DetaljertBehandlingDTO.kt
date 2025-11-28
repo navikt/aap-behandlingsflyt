@@ -22,5 +22,6 @@ data class DetaljertBehandlingDTO(
     val vedtaksdato: LocalDate?,
     val kravMottatt: LocalDate?,
     val tilhørendeKlagebehandling: UUID?,
-    val vurderingsbehovOgÅrsaker: List<VurderingsbehovOgÅrsak>
+    val vurderingsbehovOgÅrsaker: List<VurderingsbehovOgÅrsak>,
+    val arenaStatus: ArenaStatusDTO?
 )

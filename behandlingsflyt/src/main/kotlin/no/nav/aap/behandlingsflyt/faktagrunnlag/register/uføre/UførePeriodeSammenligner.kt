@@ -8,16 +8,14 @@ import java.time.LocalDate
 data class UførePeriodeMedEndringStatus(
     val virkningstidspunkt: LocalDate,
     val uføregrad: Prosent,
-    val kilde: String = "PESYS",
     val endringStatus: EndringStatus,
 )
 
-fun List<Uføre>.medStatus(status: EndringStatus): List<UførePeriodeMedEndringStatus> {
+fun Collection<Uføre>.medStatus(status: EndringStatus): List<UførePeriodeMedEndringStatus> {
     return this.map {
         UførePeriodeMedEndringStatus(
             virkningstidspunkt = it.virkningstidspunkt,
             uføregrad = it.uføregrad,
-            kilde = it.kilde,
             endringStatus = status
         )
     }

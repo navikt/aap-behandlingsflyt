@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
 
@@ -64,12 +65,11 @@ class VurderRettighetsperiodeLøser(
         )
 
         if (løsning.rettighetsperiodeVurdering.harRettUtoverSøknadsdato && løsning.rettighetsperiodeVurdering.startDato != null) {
-            val sluttDato = utledNySluttdato(behandling, løsning.rettighetsperiodeVurdering.startDato, sak)
 
             sakOgBehandlingService.overstyrRettighetsperioden(
                 sakId = sak.id,
                 startDato = løsning.rettighetsperiodeVurdering.startDato,
-                sluttDato = sluttDato
+                sluttDato = Tid.MAKS
             )
         }
 
@@ -79,16 +79,6 @@ class VurderRettighetsperiodeLøser(
     private fun innskrenkerTilEtterSøknadstidspunkt(startDato: LocalDate?, sakId: SakId): Boolean {
         val søknadsdato = DatoFraDokumentUtleder(mottattDokumentRepository).utledSøknadsdatoForSak(sakId)?.toLocalDate()
         return startDato != null && søknadsdato != null && startDato.isAfter(søknadsdato)
-    }
-
-    private fun utledNySluttdato(
-        behandling: Behandling,
-        startDato: LocalDate,
-        sak: Sak
-    ): LocalDate = if (behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling) {
-        startDato.plusYears(1).minusDays(1)
-    } else {
-        sak.rettighetsperiode.tom
     }
 
     override fun forBehov(): Definisjon {

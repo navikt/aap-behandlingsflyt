@@ -18,6 +18,10 @@ class Sak(
         return status
     }
 
+    fun rettighetsperiodeEttÅrFraStartDato(): Periode {
+        return Periode(rettighetsperiode.fom, rettighetsperiode.fom.plusYears(1).minusDays(1))
+    }
+
     override fun toString(): String {
         return "Sak(id=$id, saksnummer=$saksnummer, person=$person, rettighetsperiode=$rettighetsperiode, status=$status, opprettetTidspunkt=$opprettetTidspunkt)"
     }

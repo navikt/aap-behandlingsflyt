@@ -17,8 +17,8 @@ class InnsendingTest {
         val input = """
         {
           "student" : {
-            "erStudent" : "ja",
-            "kommeTilbake" : "ja"
+            "erStudent" : "Ja",
+            "kommeTilbake" : "Vet ikke"
           },
           "yrkesskade" : "ja",
           "oppgitteBarn" : {
@@ -62,7 +62,7 @@ class InnsendingTest {
         {
           "student" : {
             "erStudent" : "Avbrutt",
-            "kommeTilbake" : "Ja"
+            "kommeTilbake" : "Vet ikke"
           },
           "yrkesskade" : "Nei",
           "oppgitteBarn" : {
@@ -78,6 +78,8 @@ class InnsendingTest {
         val fromJson = DefaultJsonMapper.fromJson<Melding>(json)
 
         assertThat(fromJson).isInstanceOf(Melding::class.java)
+        fromJson as SøknadV0
+        assertThat(fromJson.student?.kommeTilbake).isEqualTo(KommeTilbake.VetIkke)
     }
 
     @Test
@@ -102,7 +104,7 @@ class InnsendingTest {
     fun `serialisere og deserialisere søknad-dto`() {
         val søknad = SøknadV0(
             student = SøknadStudentDto(
-                erStudent = "ja", kommeTilbake = "ja"
+                erStudent = StudentStatus.Ja, kommeTilbake = KommeTilbake.VetIkke
             ),
             yrkesskade = "ja",
             oppgitteBarn = OppgitteBarn(
@@ -132,6 +134,8 @@ class InnsendingTest {
         )
 
         val somJSON = DefaultJsonMapper.toJson(søknad)
+        // Skal serialisere til "Vet ikke"
+        assertThat(somJSON).contains("Vet ikke")
         assertThat(DefaultJsonMapper.fromJson<Melding>(somJSON)).isEqualTo(søknad.copy())
     }
 
@@ -190,8 +194,8 @@ class InnsendingTest {
             {
     "meldingType" : "SøknadV0",
     "student" : {
-      "erStudent" : "ja",
-      "kommeTilbake" : "ja"
+      "erStudent" : "Ja",
+      "kommeTilbake" : "Ja"
     },
     "yrkesskade" : "ja",
     "oppgitteBarn" : null,

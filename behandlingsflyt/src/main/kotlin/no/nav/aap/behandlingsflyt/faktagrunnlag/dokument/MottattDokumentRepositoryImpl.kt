@@ -91,7 +91,7 @@ class MottattDokumentRepositoryImpl(private val connection: DBConnection) : Mott
             SELECT * FROM MOTTATT_DOKUMENT WHERE sak_id = ? AND status = ? AND type = ?
         """.trimIndent()
 
-        return connection.queryList(query) {
+        return connection.querySet(query) {
             setParams {
                 setLong(1, sakId.toLong())
                 setEnumName(2, Status.MOTTATT)
@@ -100,7 +100,7 @@ class MottattDokumentRepositoryImpl(private val connection: DBConnection) : Mott
             setRowMapper { row ->
                 mapMottattDokument(row)
             }
-        }.toSet()
+        }
     }
 
     override fun slett(behandlingId: BehandlingId) {
@@ -139,7 +139,7 @@ class MottattDokumentRepositoryImpl(private val connection: DBConnection) : Mott
             SELECT referanse, referanse_type, MOTTATT_TID FROM MOTTATT_DOKUMENT WHERE sak_id = ? AND status = ? AND type = ?
         """.trimIndent()
 
-        return connection.queryList(query) {
+        return connection.querySet(query) {
             setParams {
                 setLong(1, sakId.toLong())
                 setEnumName(2, Status.BEHANDLET)
@@ -151,7 +151,7 @@ class MottattDokumentRepositoryImpl(private val connection: DBConnection) : Mott
                     it.getLocalDateTime("mottatt_tid")
                 )
             }
-        }.toSet()
+        }
     }
 
     override fun hentDokumenterAvType(sakId: SakId, type: InnsendingType): Set<MottattDokument> {
@@ -159,7 +159,7 @@ class MottattDokumentRepositoryImpl(private val connection: DBConnection) : Mott
             SELECT * FROM MOTTATT_DOKUMENT WHERE sak_id = ? AND type = ?
         """.trimIndent()
 
-        return connection.queryList(query) {
+        return connection.querySet(query) {
             setParams {
                 setLong(1, sakId.toLong())
                 setEnumName(2, type)
@@ -167,7 +167,7 @@ class MottattDokumentRepositoryImpl(private val connection: DBConnection) : Mott
             setRowMapper { row ->
                 mapMottattDokument(row)
             }
-        }.toSet()
+        }
     }
 
     override fun hentDokumenterAvType(behandlingId: BehandlingId, type: InnsendingType): Set<MottattDokument> {
@@ -176,7 +176,7 @@ class MottattDokumentRepositoryImpl(private val connection: DBConnection) : Mott
             WHERE behandling_id = ? AND type = ?
         """.trimIndent()
 
-        return connection.queryList(query) {
+        return connection.querySet(query) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setEnumName(2, type)
@@ -184,7 +184,7 @@ class MottattDokumentRepositoryImpl(private val connection: DBConnection) : Mott
             setRowMapper { row ->
                 mapMottattDokument(row)
             }
-        }.toSet()
+        }
     }
 
     override fun hentDokumenterAvType(behandlingId: BehandlingId, typer: List<InnsendingType>): Set<MottattDokument> {
@@ -193,7 +193,7 @@ class MottattDokumentRepositoryImpl(private val connection: DBConnection) : Mott
             WHERE behandling_id = ? AND type = ANY(?::text[])
         """.trimIndent()
 
-        return connection.queryList(query) {
+        return connection.querySet(query) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setArray(2, typer.map { it.name })
@@ -201,7 +201,7 @@ class MottattDokumentRepositoryImpl(private val connection: DBConnection) : Mott
             setRowMapper { row ->
                 mapMottattDokument(row)
             }
-        }.toSet()
+        }
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {

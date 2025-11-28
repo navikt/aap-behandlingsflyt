@@ -35,7 +35,6 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource, repositoryRegis
                     val meldeperiodeRepository = repositoryFactory.provide<MeldeperiodeRepository>()
 
                     val behandling = behandlingRepository.hent(req)
-                    val meldeperioder = meldeperiodeRepository.hent(behandling.id)
                     val meldekortGrunnlag = meldekortRepository.hentHvisEksisterer(behandling.id)
 
                     val tilkjentYtelse = TilkjentYtelseService(
@@ -47,6 +46,11 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource, repositoryRegis
                     val meldekortene = meldekortGrunnlag?.meldekort().orEmpty()
 
                     val tilkjentYtelseTidslinje = tilkjentYtelse.tilTidslinje()
+                    val meldeperioder = if(tilkjentYtelseTidslinje.isNotEmpty()) {
+                        meldeperiodeRepository.hentMeldeperioder(behandling.id, tilkjentYtelseTidslinje.helePerioden())
+                    } else {
+                        emptyList()
+                    }
 
                     meldeperioder.map { meldeperiode ->
                         val begrensetTil = tilkjentYtelseTidslinje.begrensetTil(meldeperiode)
@@ -90,16 +94,13 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource, repositoryRegis
                                             barneTilleggsats = it.verdi.barnetilleggsats.verdi.toDouble(),
                                             barnetillegg = it.verdi.barnetillegg.verdi().toDouble(),
                                             arbeidGradering = 100.minus(
-                                                it.verdi.gradering.arbeidGradering?.prosentverdi() ?: 0
+                                                it.verdi.graderingGrunnlag.arbeidGradering.prosentverdi()
                                             ),
-                                            samordningGradering = it.verdi.gradering.samordningGradering?.prosentverdi()
-                                                ?.plus(
-                                                    it.verdi.gradering.samordningUføregradering?.prosentverdi()
-                                                        ?: 0
-                                                ),
-                                            institusjonGradering = it.verdi.gradering.institusjonGradering?.prosentverdi(),
-                                            arbeidsgiverGradering = it.verdi.gradering.samordningArbeidsgiverGradering?.prosentverdi(),
-                                            totalReduksjon = 100.minus(it.verdi.gradering.endeligGradering.prosentverdi()),
+                                            samordningGradering = it.verdi.graderingGrunnlag.samordningGradering.prosentverdi()
+                                                .plus(it.verdi.graderingGrunnlag.samordningUføregradering.prosentverdi()),
+                                            institusjonGradering = it.verdi.graderingGrunnlag.institusjonGradering.prosentverdi(),
+                                            arbeidsgiverGradering = it.verdi.graderingGrunnlag.samordningArbeidsgiverGradering.prosentverdi(),
+                                            totalReduksjon = 100.minus(it.verdi.gradering.prosentverdi()),
                                             effektivDagsats = it.verdi.redusertDagsats().verdi().toDouble()
                                         )
                                     )

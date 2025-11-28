@@ -1,20 +1,13 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.uføre
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
-import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.ident
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
@@ -25,7 +18,6 @@ import java.time.LocalDate
 
 class UføreRepositoryImplTest {
     companion object {
-        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
         private lateinit var dataSource: TestDataSource
 
         @BeforeAll
@@ -61,9 +53,9 @@ class UføreRepositoryImplTest {
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
             val uføreRepository = UføreRepositoryImpl(connection)
-            uføreRepository.lagre(behandling.id, listOf(Uføre(LocalDate.now(), Prosent(100))))
+            uføreRepository.lagre(behandling.id, setOf(Uføre(LocalDate.now(), Prosent(100))))
             val uføreGrunnlag = uføreRepository.hentHvisEksisterer(behandling.id)
-            assertThat(uføreGrunnlag?.vurderinger).isEqualTo(listOf(Uføre(LocalDate.now(), Prosent(100))))
+            assertThat(uføreGrunnlag?.vurderinger).isEqualTo(setOf(Uføre(LocalDate.now(), Prosent(100))))
 
             val eldsteGrunnlag = uføreRepository.hentEldsteGrunnlag(behandling.id)
             assertThat(eldsteGrunnlag).isNotNull
@@ -78,9 +70,9 @@ class UføreRepositoryImplTest {
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
             val uføreRepository = UføreRepositoryImpl(connection)
-            uføreRepository.lagre(behandling.id, listOf(Uføre(LocalDate.now(), Prosent(100))))
-            uføreRepository.lagre(behandling.id, listOf(Uføre(LocalDate.now(), Prosent(80))))
-            uføreRepository.lagre(behandling.id, listOf(Uføre(LocalDate.now(), Prosent(80))))
+            uføreRepository.lagre(behandling.id, setOf(Uføre(LocalDate.now(), Prosent(100))))
+            uføreRepository.lagre(behandling.id, setOf(Uføre(LocalDate.now(), Prosent(80))))
+            uføreRepository.lagre(behandling.id, setOf(Uføre(LocalDate.now(), Prosent(80))))
 
             val opplysninger = connection.queryList(
                 """
@@ -109,13 +101,13 @@ class UføreRepositoryImplTest {
             val sak = sak(connection)
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val uføreRepository = UføreRepositoryImpl(connection)
-            uføreRepository.lagre(behandling1.id, listOf(Uføre(LocalDate.now(), Prosent(100))))
+            uføreRepository.lagre(behandling1.id, setOf(Uføre(LocalDate.now(), Prosent(100))))
             BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling1.id, Status.AVSLUTTET)
 
             val behandling2 = finnEllerOpprettBehandling(connection, sak)
 
             val uføreGrunnlag = uføreRepository.hentHvisEksisterer(behandling2.id)
-            assertThat(uføreGrunnlag?.vurderinger).isEqualTo(listOf(Uføre(LocalDate.now(), Prosent(100))))
+            assertThat(uføreGrunnlag?.vurderinger).isEqualTo(setOf(Uføre(LocalDate.now(), Prosent(100))))
         }
     }
 
@@ -125,8 +117,8 @@ class UføreRepositoryImplTest {
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val uføreRepository = UføreRepositoryImpl(connection)
-            uføreRepository.lagre(behandling.id, listOf(Uføre(LocalDate.now(), Prosent(100))))
-            uføreRepository.lagre(behandling.id, listOf(Uføre(LocalDate.now(), Prosent(50))))
+            uføreRepository.lagre(behandling.id, setOf(Uføre(LocalDate.now(), Prosent(100))))
+            uføreRepository.lagre(behandling.id, setOf(Uføre(LocalDate.now(), Prosent(50))))
             assertDoesNotThrow { uføreRepository.slett(behandling.id) }
         }
     }
@@ -147,14 +139,14 @@ class UføreRepositoryImplTest {
             val sak = sak(connection)
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val uføreRepository = UføreRepositoryImpl(connection)
-            uføreRepository.lagre(behandling1.id, listOf(Uføre(LocalDate.now(), Prosent(100))))
-            uføreRepository.lagre(behandling1.id, listOf(Uføre(LocalDate.now(), Prosent(80))))
+            uføreRepository.lagre(behandling1.id, setOf(Uføre(LocalDate.now(), Prosent(100))))
+            uføreRepository.lagre(behandling1.id, setOf(Uføre(LocalDate.now(), Prosent(80))))
             BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling1.id, Status.AVSLUTTET)
 
             val behandling2 = finnEllerOpprettBehandling(connection, sak)
 
             val uføreGrunnlag = uføreRepository.hentHvisEksisterer(behandling2.id)
-            assertThat(uføreGrunnlag?.vurderinger).isEqualTo(listOf(Uføre(LocalDate.now(), Prosent(80))))
+            assertThat(uføreGrunnlag?.vurderinger).isEqualTo(setOf(Uføre(LocalDate.now(), Prosent(80))))
         }
     }
 
@@ -165,13 +157,13 @@ class UføreRepositoryImplTest {
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val uføreRepository = UføreRepositoryImpl(connection)
 
-            uføreRepository.lagre(behandling.id, listOf(Uføre(LocalDate.now(), Prosent(100))))
+            uføreRepository.lagre(behandling.id, setOf(Uføre(LocalDate.now(), Prosent(100))))
             val orginaltGrunnlag = uføreRepository.hentHvisEksisterer(behandling.id)
-            assertThat(orginaltGrunnlag?.vurderinger).isEqualTo(listOf(Uføre(LocalDate.now(), Prosent(100))))
+            assertThat(orginaltGrunnlag?.vurderinger).isEqualTo(setOf(Uføre(LocalDate.now(), Prosent(100))))
 
-            uføreRepository.lagre(behandling.id, listOf(Uføre(LocalDate.now(), Prosent(80))))
+            uføreRepository.lagre(behandling.id, setOf(Uføre(LocalDate.now(), Prosent(80))))
             val oppdatertGrunnlag = uføreRepository.hentHvisEksisterer(behandling.id)
-            assertThat(oppdatertGrunnlag?.vurderinger).isEqualTo(listOf(Uføre(LocalDate.now(), Prosent(80))))
+            assertThat(oppdatertGrunnlag?.vurderinger).isEqualTo(setOf(Uføre(LocalDate.now(), Prosent(80))))
 
             val eldsteGrunnlag = uføreRepository.hentEldsteGrunnlag(behandling.id)
             assertThat(eldsteGrunnlag).isEqualTo(orginaltGrunnlag)
@@ -215,13 +207,13 @@ class UføreRepositoryImplTest {
     }
 
     @Test
-    fun `Ved kopiering av uføreopplysninger fra en avsluttet behandling til en ny skal kun referansen kopieres, ikke hele raden`() {
+    fun `Ved kopiering av uføreopplysninger fra en avsluttet œbehandling til en ny skal kun referansen kopieres, ikke hele raden`() {
         dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val uføreRepository = UføreRepositoryImpl(connection)
-            uføreRepository.lagre(behandling1.id, listOf(Uføre(LocalDate.now(), Prosent(100))))
-            uføreRepository.lagre(behandling1.id, listOf(Uføre(LocalDate.now(), Prosent(80))))
+            uføreRepository.lagre(behandling1.id, setOf(Uføre(LocalDate.now(), Prosent(100))))
+            uføreRepository.lagre(behandling1.id, setOf(Uføre(LocalDate.now(), Prosent(80))))
             BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling1.id, Status.AVSLUTTET)
 
             val behandling2 = finnEllerOpprettBehandling(connection, sak)
@@ -281,14 +273,6 @@ class UføreRepositoryImplTest {
                     )
                 )
         }
-    }
-
-    private fun sak(connection: DBConnection): Sak {
-        return PersonOgSakService(
-            FakePdlGateway,
-            PersonRepositoryImpl(connection),
-            SakRepositoryImpl(connection)
-        ).finnEllerOpprett(ident(), periode)
     }
 }
 

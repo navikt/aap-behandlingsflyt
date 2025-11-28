@@ -90,7 +90,9 @@ class OvergangUføreSteg private constructor(
             VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
                 val perioderOvergangUføreErRelevant = perioderMedVurderingsbehov(kontekst)
 
-                if (perioderOvergangUføreErRelevant.segmenter().any { it.verdi } && vurderingsbehovTvingerVurdering(kontekst)) {
+                if (perioderOvergangUføreErRelevant.segmenter().any { it.verdi } && vurderingsbehovTvingerVurdering(
+                        kontekst
+                    )) {
                     return true
                 }
 
@@ -135,19 +137,22 @@ class OvergangUføreSteg private constructor(
         val sykdomsvurderinger = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)
             ?.somSykdomsvurderingstidslinje().orEmpty()
         val bistandsvurderinger = bistandRepository.hentHvisEksisterer(kontekst.behandlingId)
-            ?.somBistandsvurderingstidslinje(startDato = kontekst.rettighetsperiode.fom).orEmpty()
+            ?.somBistandsvurderingstidslinje().orEmpty()
 
-        return Tidslinje.zip3(utfall, sykdomsvurderinger, bistandsvurderinger)
-            .mapValue { (utfall, sykdomsvurdering, bistandsvurdering) ->
-                when (utfall) {
-                    null -> false
-                    TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
-                    TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
-                    TidligereVurderinger.Behandlingsutfall.UKJENT -> {
-                        sykdomsvurdering?.erOppfylt(kontekst.rettighetsperiode.fom) == true && bistandsvurdering != null && !bistandsvurdering.erBehovForBistand()
-                    }
+        return Tidslinje.map3(utfall, sykdomsvurderinger, bistandsvurderinger)
+        { segmentPeriode, utfall, sykdomsvurdering, bistandsvurdering ->
+            when (utfall) {
+                null -> false
+                TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
+                TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
+                TidligereVurderinger.Behandlingsutfall.UKJENT -> {
+                    sykdomsvurdering?.erOppfyltOrdinær(
+                        kontekst.rettighetsperiode.fom,
+                        segmentPeriode
+                    ) == true && bistandsvurdering != null && !bistandsvurdering.erBehovForBistand()
                 }
             }
+        }
     }
 
     companion object : FlytSteg {

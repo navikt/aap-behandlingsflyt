@@ -7,10 +7,9 @@ public enum class TypeBehandling(
      **/
     private var identifikator: String,
 ) {
-
     Førstegangsbehandling("ae0034"),
     Revurdering("ae0028"),
-    Tilbakekreving(""),
+    Tilbakekreving("ae0203"),
     Klage("ae0058"),
     SvarFraAndreinstans("svar-fra-andreinstans"),
     OppfølgingsBehandling("oppfølgingsbehandling"),
@@ -28,13 +27,10 @@ public enum class TypeBehandling(
 
         public fun ytelseBehandlingstyper(): List<TypeBehandling> =
             listOf(Førstegangsbehandling, Revurdering)
-
     }
 
     public fun erYtelsesbehandling(): Boolean {
         return this == Førstegangsbehandling || this == Revurdering
     }
-
-
 }
 

@@ -2,9 +2,10 @@ package no.nav.aap.behandlingsflyt
 
 import no.nav.aap.behandlingsflyt.behandling.beregning.Beregning
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelseService
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Input
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.BeregningInput
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
@@ -89,10 +90,10 @@ fun readCSV(inputStream: InputStream): List<CSVLine> {
         }.toList()
 }
 
-fun tilInput(csvLine: CSVLine): Pair<Input, Fødselsdato> {
+fun tilInput(csvLine: CSVLine): Pair<BeregningInput, Fødselsdato> {
 
     return Pair(
-        Input(
+        BeregningInput(
             nedsettelsesDato = LocalDate.of(csvLine.beregningsAar, 1, 1),
             inntekter = csvLine.let { (intSiste, intNestSiste, intTredjeSiste, _, inntektSisteAar, inntektNestSisteAar, inntektTredjeSisteAar) ->
                 setOf(
@@ -101,7 +102,7 @@ fun tilInput(csvLine: CSVLine): Pair<Input, Fødselsdato> {
                     InntektPerÅr(inntektTredjeSisteAar, Beløp(intTredjeSiste))
                 )
             },
-            uføregrad = emptyList(),
+            uføregrad = emptySet(),
             yrkesskadevurdering = null,
             registrerteYrkesskader = null,
             beregningGrunnlag = null
@@ -109,46 +110,47 @@ fun tilInput(csvLine: CSVLine): Pair<Input, Fødselsdato> {
     )
 }
 
-fun beregnForInput(input: Input, fødselsdato: Fødselsdato): Triple<Year, GUnit, Double> {
+fun beregnForInput(input: BeregningInput, fødselsdato: Fødselsdato): Triple<Year, GUnit, Double> {
     val beregnet = Beregning(Inntektsbehov((input))).beregneMedInput()
 
     val tilkjent = BeregnTilkjentYtelseService(
-        fødselsdato = fødselsdato,
-        beregningsgrunnlag = beregnet,
-        underveisgrunnlag = UnderveisGrunnlag(
-            id = 0,
-            perioder = listOf(
-                Underveisperiode(
-                    periode = Periode(LocalDate.now().withMonth(6), LocalDate.now().plusMonths(12)),
-                    meldePeriode = Periode(LocalDate.MIN, LocalDate.now().plusMonths(12)),
-                    utfall = Utfall.OPPFYLT,
-                    rettighetsType = RettighetsType.BISTANDSBEHOV,
-                    avslagsårsak = null,
-                    grenseverdi = Prosent.`100_PROSENT`,
-                    arbeidsgradering = ArbeidsGradering(
-                        totaltAntallTimer = TimerArbeid(
-                            antallTimer = BigDecimal(0)
+        TilkjentYtelseGrunnlag(
+            fødselsdato = fødselsdato,
+            beregningsgrunnlag = beregnet.grunnlaget(),
+            underveisgrunnlag = UnderveisGrunnlag(
+                id = 0,
+                perioder = listOf(
+                    Underveisperiode(
+                        periode = Periode(LocalDate.now().withMonth(6), LocalDate.now().plusMonths(12)),
+                        meldePeriode = Periode(LocalDate.MIN, LocalDate.now().plusMonths(12)),
+                        utfall = Utfall.OPPFYLT,
+                        rettighetsType = RettighetsType.BISTANDSBEHOV,
+                        avslagsårsak = null,
+                        grenseverdi = Prosent.`100_PROSENT`,
+                        arbeidsgradering = ArbeidsGradering(
+                            totaltAntallTimer = TimerArbeid(
+                                antallTimer = BigDecimal(0)
+                            ),
+                            andelArbeid = Prosent.`100_PROSENT`,
+                            fastsattArbeidsevne = Prosent.`100_PROSENT`, // TODO
+                            gradering = Prosent.`100_PROSENT`,
+                            opplysningerMottatt = null,
                         ),
-                        andelArbeid = Prosent.`100_PROSENT`,
-                        fastsattArbeidsevne = Prosent.`100_PROSENT`, // TODO
-                        gradering = Prosent.`100_PROSENT`,
-                        opplysningerMottatt = null,
-                    ),
-                    trekk = Dagsatser(0),
-                    brukerAvKvoter = emptySet(),
-                    id = UnderveisperiodeId(0),
-                    institusjonsoppholdReduksjon = Prosent(0),
-                    meldepliktStatus = null,
+                        trekk = Dagsatser(0),
+                        brukerAvKvoter = emptySet(),
+                        id = UnderveisperiodeId(0),
+                        institusjonsoppholdReduksjon = Prosent(0),
+                        meldepliktStatus = null,
+                    )
                 )
-            )
-        ),
-        barnetilleggGrunnlag = BarnetilleggGrunnlag(
-            id = 0,
-            perioder = emptyList()
-        ),
-        samordningGrunnlag = SamordningGrunnlag(0L, emptySet()),
-        samordningUføre = null,
-        samordningArbeidsgiver = null
+            ),
+            barnetilleggGrunnlag = BarnetilleggGrunnlag(
+                perioder = emptyList()
+            ),
+            samordningGrunnlag = SamordningGrunnlag(emptySet()),
+            samordningUføre = null,
+            samordningArbeidsgiver = null
+        )
     )
 
     val dagsats = tilkjent.beregnTilkjentYtelse().mapValue { it.dagsats }.komprimer().segmenter().first().verdi.verdi

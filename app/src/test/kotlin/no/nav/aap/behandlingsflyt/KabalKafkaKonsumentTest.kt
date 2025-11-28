@@ -2,8 +2,8 @@ package no.nav.aap.behandlingsflyt
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
-import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.SchemaRegistryConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KABAL_EVENT_TOPIC
@@ -21,14 +21,9 @@ import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtf
 import no.nav.aap.behandlingsflyt.prosessering.KafkaFeilJobbUtfører
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
-import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
-import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
@@ -77,11 +72,11 @@ class KabalKafkaKonsumentTest {
             // can lead to exceptions with root cause InitializationError.
             dataSource = TestDataSource()
             motor = ManuellMotorImpl(
-                    dataSource,
-                    jobber = listOf(HendelseMottattHåndteringJobbUtfører, KafkaFeilJobbUtfører),
-                    repositoryRegistry = repositoryRegistry,
-                    gatewayProvider = createGatewayProvider { register<FakeUnleash>() }
-                )
+                dataSource,
+                jobber = listOf(HendelseMottattHåndteringJobbUtfører, KafkaFeilJobbUtfører),
+                repositoryRegistry = repositoryRegistry,
+                gatewayProvider = createGatewayProvider { register<FakeUnleash>() }
+            )
             motor.start()
 
             kafka.start()
@@ -98,7 +93,7 @@ class KabalKafkaKonsumentTest {
 
     @Test
     fun `Kan motta og lagre ned hendelse fra Kabal`() {
-        val sak = dataSource.transaction { sak(it) }
+        val sak = dataSource.transaction { sak(it, periode) }
         dataSource.transaction { finnEllerOpprettBehandling(it, sak) }
         val klagebehandling = dataSource.transaction { connection ->
             finnEllerOpprettBehandling(connection, sak, Vurderingsbehov.MOTATT_KLAGE)
@@ -175,7 +170,7 @@ class KabalKafkaKonsumentTest {
             repositoryRegistry = repositoryRegistry,
             pollTimeout = Duration.ofMillis(50),
         )
-        
+
         val melding = """{"kilde": "KELVIN", "eventId": "123", "kildeReferanse": "123", "resten": "Noe tull"}"""
 
         konsument.håndter(melding)
@@ -234,14 +229,6 @@ class KabalKafkaKonsumentTest {
             password = "",
         )
     )
-
-    private fun sak(connection: DBConnection): Sak {
-        return PersonOgSakService(
-            FakePdlGateway,
-            PersonRepositoryImpl(connection),
-            SakRepositoryImpl(connection)
-        ).finnEllerOpprett(ident(), periode)
-    }
 
     private data class JobbInfo(
         val type: String,

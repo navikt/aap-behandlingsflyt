@@ -52,7 +52,7 @@ class UføreInformasjonskrav(
 
     data class UføreInput(val sak: Sak) : InformasjonskravInput
 
-    data class UføreRegisterdata(val innhentMedHistorikk: List<Uføre>) : InformasjonskravRegisterdata
+    data class UføreRegisterdata(val innhentMedHistorikk: Set<Uføre>) : InformasjonskravRegisterdata
 
     override fun klargjør(kontekst: FlytKontekstMedPerioder): UføreInput {
         return UføreInput(sakService.hentSakFor(kontekst.behandlingId))
@@ -84,7 +84,7 @@ class UføreInformasjonskrav(
         return IKKE_ENDRET
     }
 
-    private fun hentUføregrader(behandlingId: BehandlingId): List<Uføre> {
+    private fun hentUføregrader(behandlingId: BehandlingId): Set<Uføre> {
         val sak = sakService.hentSakFor(behandlingId)
         return uføreRegisterGateway.innhentMedHistorikk(sak.person, sak.rettighetsperiode.fom)
     }
@@ -115,12 +115,12 @@ class UføreInformasjonskrav(
 
         fun harEndringerUføre(
             eksisterende: UføreGrunnlag?,
-            uføregrader: List<Uføre>
+            uføregrader: Set<Uføre>
         ): Boolean {
             return if (eksisterende == null) {
                 uføregrader.isNotEmpty()
             } else {
-                uføregrader.toSet() != eksisterende.vurderinger.toSet()
+                uføregrader != eksisterende.vurderinger.toSet()
             }
         }
     }

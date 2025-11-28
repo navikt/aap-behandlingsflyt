@@ -17,6 +17,7 @@ import no.nav.aap.brev.kontrakt.BestillBrevResponse
 import no.nav.aap.brev.kontrakt.BestillBrevV2Request
 import no.nav.aap.brev.kontrakt.Brev
 import no.nav.aap.brev.kontrakt.BrevbestillingResponse
+import no.nav.aap.brev.kontrakt.BrevdataDto
 import no.nav.aap.brev.kontrakt.Brevtype
 import no.nav.aap.brev.kontrakt.Faktagrunnlag
 import no.nav.aap.brev.kontrakt.FerdigstillBrevRequest
@@ -71,7 +72,7 @@ class BrevGateway : BrevbestillingGateway {
         prometheus = prometheus
     )
 
-    override fun bestillBrevV2(
+    override fun bestillBrev(
         saksnummer: Saksnummer,
         brukerIdent: Ident,
         behandlingReferanse: BehandlingReferanse,
@@ -79,6 +80,7 @@ class BrevGateway : BrevbestillingGateway {
         brevBehov: BrevBehov,
         vedlegg: Vedlegg?,
         ferdigstillAutomatisk: Boolean,
+        brukApiV3: Boolean,
     ): BrevbestillingReferanse {
         val request = BestillBrevV2Request(
             saksnummer = saksnummer.toString(),
@@ -98,7 +100,13 @@ class BrevGateway : BrevbestillingGateway {
             )
         )
 
-        val url = baseUri.resolve("/api/v2/bestill")
+        val path = if (brukApiV3) {
+            "/api/v3/bestill"
+        } else {
+            "/api/v2/bestill"
+        }
+
+        val url = baseUri.resolve(path)
 
         val response: BestillBrevResponse = requireNotNull(
             client.post(
@@ -160,6 +168,14 @@ class BrevGateway : BrevbestillingGateway {
         val url = baseUri.resolve("/api/bestilling/$bestillingReferanse/oppdater")
 
         val request = PutRequest(body = brev)
+
+        client.put<_, Unit>(url, request)
+    }
+
+    override fun oppdaterV3(bestillingReferanse: BrevbestillingReferanse, brevdata: BrevdataDto) {
+        val url = baseUri.resolve("/api/bestilling/$bestillingReferanse/v3/oppdater")
+
+        val request = PutRequest(body = brevdata)
 
         client.put<_, Unit>(url, request)
     }
@@ -226,16 +242,16 @@ class BrevGateway : BrevbestillingGateway {
     }
 
     override fun kanDistribuereBrev(
-        saksnummer: String,
         brukerIdent: String,
-        mottakerIdentListe: List<String>
+        mottakerIdentListe: List<String>,
+        brevbestillingReferanse: BrevbestillingReferanse
     ): List<MottakerDistStatus> {
         val httpRequest = PostRequest(
-            body = KanDistribuereBrevRequest(saksnummer, brukerIdent, mottakerIdentListe)
+            body = KanDistribuereBrevRequest(brukerIdent = brukerIdent, mottakerIdentListe = mottakerIdentListe)
         )
         val response: KanDistribuereBrevReponse = requireNotNull(
             client.post(
-                uri = baseUri.resolve("/api/distribusjon/kan-distribuere-brev"),
+                uri = baseUri.resolve("/api/$brevbestillingReferanse/kan-distribuere-brev"),
                 request = httpRequest
             )
         )
@@ -257,6 +273,7 @@ class BrevGateway : BrevbestillingGateway {
         TypeBrev.VEDTAK_11_18 -> Brevtype.VEDTAK_11_18
         TypeBrev.VEDTAK_11_7 -> Brevtype.VEDTAK_11_7
         TypeBrev.VEDTAK_11_9 -> Brevtype.VEDTAK_11_9
+        TypeBrev.VEDTAK_11_23_SJETTE_LEDD -> Brevtype.VEDTAK_11_23_SJETTE_LEDD
     }
 
     private fun mapFaktagrunnlag(brevBehov: BrevBehov): Set<Faktagrunnlag> {
@@ -274,12 +291,16 @@ class BrevGateway : BrevbestillingGateway {
                                 gradertDagsatsInkludertBarnetillegg = brevBehov.tilkjentYtelse?.gradertDagsatsInkludertBarnetillegg?.verdi,
                                 barnetillegg = brevBehov.tilkjentYtelse?.barnetillegg?.verdi,
                                 antallBarn = brevBehov.tilkjentYtelse?.antallBarn,
+                                minsteÅrligYtelse = null,
+                                minsteÅrligYtelseUnder25 = null,
+                                årligYtelse = null,
                             )
                         )
                     }
                     if (brevBehov.grunnlagBeregning != null) {
                         add(
-                            grunnlagBeregningTilFaktagrunnlag(brevBehov.grunnlagBeregning!!)                        )
+                            grunnlagBeregningTilFaktagrunnlag(brevBehov.grunnlagBeregning!!)
+                        )
                     }
                 }
 

@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Input
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.BeregningInput
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
@@ -24,14 +24,14 @@ class BeregningsGrunnlagApiTest {
     @Test
     fun `hente ut beregningsgrunnlag fra API`() {
         val input = Inntektsbehov(
-            Input(
+            BeregningInput(
                 nedsettelsesDato = LocalDate.of(2023, 1, 1),
                 inntekter = setOf(
                     InntektPerÅr(2022, Beløp(500000)),
                     InntektPerÅr(2021, Beløp(400000)),
                     InntektPerÅr(2020, Beløp(300000))
                 ),
-                uføregrad = listOf(Uføre(LocalDate.now(), Prosent(30))),
+                uføregrad = setOf(Uføre(LocalDate.now(), Prosent(30))),
                 yrkesskadevurdering = Yrkesskadevurdering(
                     begrunnelse = "en begrunnelse",
                     andelAvNedsettelsen = Prosent(30),
@@ -93,14 +93,14 @@ class BeregningsGrunnlagApiTest {
     @Test
     fun `hente ut beregningsgrunnlag med svært høy yrkesskadeutbetaling fra API`() {
         val input = Inntektsbehov(
-            Input(
+            BeregningInput(
                 nedsettelsesDato = LocalDate.of(2023, 1, 1),
                 inntekter = setOf(
                     InntektPerÅr(2022, Beløp(500000)),
                     InntektPerÅr(2021, Beløp(400000)),
                     InntektPerÅr(2020, Beløp(300000))
                 ),
-                uføregrad = listOf(Uføre(LocalDate.now(), Prosent(30))),
+                uføregrad = setOf(Uføre(LocalDate.now(), Prosent(30))),
                 yrkesskadevurdering = Yrkesskadevurdering(
                     begrunnelse = "en begrunnelse",
                     andelAvNedsettelsen = Prosent(30),

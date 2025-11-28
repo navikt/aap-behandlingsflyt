@@ -23,7 +23,6 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
     override fun lagre(behandlingId: BehandlingId, oppgittStudent: OppgittStudent?) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         val nyttGrunnlag = StudentGrunnlag(
-            null,
             studentvurdering = eksisterendeGrunnlag?.studentvurdering,
             oppgittStudent = oppgittStudent
         )
@@ -59,7 +58,6 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
     override fun lagre(behandlingId: BehandlingId, studentvurdering: StudentVurdering?) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         val nyttGrunnlag = StudentGrunnlag(
-            null,
             studentvurdering = studentvurdering,
             oppgittStudent = eksisterendeGrunnlag?.oppgittStudent
         )
@@ -69,7 +67,7 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
                 deaktiverGrunnlag(behandlingId)
             }
 
-            val vurderingId = lagreVurdering(studentvurdering)
+            val vurderingId = studentvurdering?.let { lagreVurdering(it) }
             lagreGrunnlag(behandlingId, vurderingId, eksisterendeGrunnlag?.oppgittStudent?.id)
         }
     }
@@ -78,12 +76,14 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
 
         val studentIds = getStudentIds(behandlingId)
         val oppgittStudentIds = getOppgittStudentIds(behandlingId)
-        val deletedRows = connection.executeReturnUpdated("""
+        val deletedRows = connection.executeReturnUpdated(
+            """
             delete from STUDENT_GRUNNLAG where behandling_id = ?;
             delete from STUDENT_VURDERING where id = ANY(?::bigint[]);
             delete from OPPGITT_STUDENT where id = ANY(?::bigint[]);
          
-        """.trimIndent()) {
+        """.trimIndent()
+        ) {
             setParams {
                 setLong(1, behandlingId.id)
                 setLongArray(2, studentIds)
@@ -144,10 +144,7 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
         }
     }
 
-    private fun lagreVurdering(studentvurdering: StudentVurdering?): Long? {
-        if (studentvurdering == null) {
-            return null
-        }
+    private fun lagreVurdering(studentvurdering: StudentVurdering): Long {
         val query = """
                 INSERT INTO STUDENT_VURDERING (begrunnelse, avbrutt_studie, godkjent_studie_av_laanekassen, avbrutt_pga_sykdom_eller_skade, har_behov_for_behandling, avbrutt_dato, avbrudd_mer_enn_6_maaneder, vurdert_av)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -205,16 +202,12 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
 
     private fun mapGrunnlag(row: Row): StudentGrunnlag {
         return StudentGrunnlag(
-            row.getLong("id"),
-            mapStudentVurdering(row.getLongOrNull("student_id")),
-            mapOppgittStudent(row.getLongOrNull("oppgitt_student_id"))
+            row.getLongOrNull("student_id")?.let(::mapStudentVurdering),
+            row.getLongOrNull("oppgitt_student_id")?.let(::mapOppgittStudent)
         )
     }
 
-    private fun mapOppgittStudent(id: Long?): OppgittStudent? {
-        if (id == null) {
-            return null
-        }
+    private fun mapOppgittStudent(id: Long): OppgittStudent? {
         val query = """
             SELECT * FROM OPPGITT_STUDENT WHERE id = ?
         """.trimIndent()
@@ -235,10 +228,7 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
         }
     }
 
-    private fun mapStudentVurdering(studentId: Long?): StudentVurdering? {
-        if (studentId == null) {
-            return null
-        }
+    private fun mapStudentVurdering(studentId: Long): StudentVurdering? {
         val query = """
             SELECT * FROM STUDENT_VURDERING WHERE id = ?
         """.trimIndent()

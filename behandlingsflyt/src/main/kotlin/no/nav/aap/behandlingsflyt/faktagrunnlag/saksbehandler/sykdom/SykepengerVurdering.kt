@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom
 
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -8,10 +9,12 @@ data class SykepengerVurdering(
     val begrunnelse: String,
     val dokumenterBruktIVurdering: List<JournalpostId>,
     val harRettPå: Boolean,
+    val vurdertIBehandling: BehandlingId,
     val grunn: SykepengerGrunn? = null,
     val vurdertAv: String,
     val vurdertTidspunkt: LocalDateTime? = null,
-    val gjelderFra: LocalDate? = null,
+    val gjelderFra: LocalDate,
+    val gjelderTom: LocalDate? = null,
 )
 
 /**

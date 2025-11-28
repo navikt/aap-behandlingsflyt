@@ -1,41 +1,22 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.bistand
 
-import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingVurdering
-import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingÅrsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandVurdering
-import no.nav.aap.behandlingsflyt.help.FakePdlGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.avbrytrevurdering.AvbrytRevurderingRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.ident
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.recursive.comparison.RecursiveComparisonConfiguration
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
-import java.time.LocalDate
 
 internal class BistandRepositoryImplTest {
     companion object {
-        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
         private lateinit var dataSource: TestDataSource
 
@@ -75,7 +56,7 @@ internal class BistandRepositoryImplTest {
             bistandRepository.lagre(
                 behandling.id,
                 listOf(
-                    BistandVurdering(
+                    Bistandsvurdering(
                         begrunnelse = "begrunnelse",
                         erBehovForAktivBehandling = false,
                         erBehovForArbeidsrettetTiltak = false,
@@ -93,7 +74,7 @@ internal class BistandRepositoryImplTest {
                 .usingRecursiveComparison(sammenligner)
                 .isEqualTo(
                     listOf(
-                        BistandVurdering(
+                        Bistandsvurdering(
                             begrunnelse = "begrunnelse",
                             erBehovForAktivBehandling = false,
                             erBehovForArbeidsrettetTiltak = false,
@@ -119,7 +100,7 @@ internal class BistandRepositoryImplTest {
                 bistandRepository.lagre(
                     behandling.id,
                     listOf(
-                        BistandVurdering(
+                        Bistandsvurdering(
                             begrunnelse = "begrunnelse",
                             erBehovForAktivBehandling = false,
                             erBehovForArbeidsrettetTiltak = false,
@@ -135,7 +116,7 @@ internal class BistandRepositoryImplTest {
                 bistandRepository.lagre(
                     behandling.id,
                     listOf(
-                        BistandVurdering(
+                        Bistandsvurdering(
                             begrunnelse = "begrunnelse",
                             erBehovForAktivBehandling = true,
                             erBehovForArbeidsrettetTiltak = true,
@@ -164,7 +145,7 @@ internal class BistandRepositoryImplTest {
             bistandRepository.lagre(
                 behandling.id,
                 listOf(
-                    BistandVurdering(
+                    Bistandsvurdering(
                         begrunnelse = "en begrunnelse",
                         erBehovForAktivBehandling = false,
                         erBehovForArbeidsrettetTiltak = false,
@@ -180,7 +161,7 @@ internal class BistandRepositoryImplTest {
             bistandRepository.lagre(
                 behandling.id,
                 listOf(
-                    BistandVurdering(
+                    Bistandsvurdering(
                         begrunnelse = "annen begrunnelse",
                         erBehovForAktivBehandling = false,
                         erBehovForArbeidsrettetTiltak = false,
@@ -196,7 +177,7 @@ internal class BistandRepositoryImplTest {
             bistandRepository.lagre(
                 behandling.id,
                 listOf(
-                    BistandVurdering(
+                    Bistandsvurdering(
                         begrunnelse = "annen begrunnelse",
                         erBehovForAktivBehandling = false,
                         erBehovForArbeidsrettetTiltak = false,
@@ -240,7 +221,7 @@ internal class BistandRepositoryImplTest {
             bistandRepository.lagre(
                 behandling1.id,
                 listOf(
-                    BistandVurdering(
+                    Bistandsvurdering(
                         begrunnelse = "begrunnelse",
                         erBehovForAktivBehandling = false,
                         erBehovForArbeidsrettetTiltak = false,
@@ -262,7 +243,7 @@ internal class BistandRepositoryImplTest {
                 .usingRecursiveComparison(sammenligner)
                 .isEqualTo(
                     listOf(
-                        BistandVurdering(
+                        Bistandsvurdering(
                             begrunnelse = "begrunnelse",
                             erBehovForAktivBehandling = false,
                             erBehovForArbeidsrettetTiltak = false,
@@ -297,7 +278,7 @@ internal class BistandRepositoryImplTest {
             bistandRepository.lagre(
                 behandling1.id,
                 listOf(
-                    BistandVurdering(
+                    Bistandsvurdering(
                         begrunnelse = "en begrunnelse",
                         erBehovForAktivBehandling = false,
                         erBehovForArbeidsrettetTiltak = false,
@@ -313,7 +294,7 @@ internal class BistandRepositoryImplTest {
             bistandRepository.lagre(
                 behandling1.id,
                 listOf(
-                    BistandVurdering(
+                    Bistandsvurdering(
                         begrunnelse = "annen begrunnelse",
                         erBehovForAktivBehandling = false,
                         erBehovForArbeidsrettetTiltak = false,
@@ -336,7 +317,7 @@ internal class BistandRepositoryImplTest {
                 .usingRecursiveComparison(sammenligner)
                 .isEqualTo(
                     listOf(
-                        BistandVurdering(
+                        Bistandsvurdering(
                             begrunnelse = "annen begrunnelse",
                             erBehovForAktivBehandling = false,
                             erBehovForArbeidsrettetTiltak = false,
@@ -362,7 +343,7 @@ internal class BistandRepositoryImplTest {
             bistandRepository.lagre(
                 behandling.id,
                 listOf(
-                    BistandVurdering(
+                    Bistandsvurdering(
                         begrunnelse = "en begrunnelse",
                         erBehovForAktivBehandling = false,
                         erBehovForArbeidsrettetTiltak = false,
@@ -380,7 +361,7 @@ internal class BistandRepositoryImplTest {
                 .usingRecursiveComparison(sammenligner)
                 .isEqualTo(
                     listOf(
-                        BistandVurdering(
+                        Bistandsvurdering(
                             begrunnelse = "en begrunnelse",
                             erBehovForAktivBehandling = false,
                             erBehovForArbeidsrettetTiltak = false,
@@ -397,7 +378,7 @@ internal class BistandRepositoryImplTest {
             bistandRepository.lagre(
                 behandling.id,
                 listOf(
-                    BistandVurdering(
+                    Bistandsvurdering(
                         begrunnelse = "annen begrunnelse",
                         erBehovForAktivBehandling = false,
                         erBehovForArbeidsrettetTiltak = false,
@@ -415,7 +396,7 @@ internal class BistandRepositoryImplTest {
                 .usingRecursiveComparison(sammenligner)
                 .isEqualTo(
                     listOf(
-                        BistandVurdering(
+                        Bistandsvurdering(
                             begrunnelse = "annen begrunnelse",
                             erBehovForAktivBehandling = false,
                             erBehovForArbeidsrettetTiltak = false,
@@ -473,7 +454,7 @@ internal class BistandRepositoryImplTest {
             bistandRepository.lagre(
                 behandling1.id,
                 listOf(
-                    BistandVurdering(
+                    Bistandsvurdering(
                         begrunnelse = "en begrunnelse",
                         erBehovForAktivBehandling = false,
                         erBehovForArbeidsrettetTiltak = false,
@@ -489,7 +470,7 @@ internal class BistandRepositoryImplTest {
             bistandRepository.lagre(
                 behandling1.id,
                 listOf(
-                    BistandVurdering(
+                    Bistandsvurdering(
                         begrunnelse = "annen begrunnelse",
                         erBehovForAktivBehandling = false,
                         erBehovForArbeidsrettetTiltak = false,
@@ -563,168 +544,4 @@ internal class BistandRepositoryImplTest {
         }
     }
 
-    @Test
-    fun `Kan hente historiske vurderinger fra tidligere behandlinger`() {
-        val (førstegangsbehandling, sak, vurderinger) = dataSource.transaction { connection ->
-            val bistandRepo = BistandRepositoryImpl(connection)
-            val sak = sak(connection)
-            val førstegangsbehandling = finnEllerOpprettBehandling(connection, sak)
-
-            val bistandsvurdering1 = BistandVurdering(
-                begrunnelse = "Begrunnelse",
-                erBehovForAktivBehandling = true,
-                erBehovForArbeidsrettetTiltak = true,
-                erBehovForAnnenOppfølging = false,
-                vurderingenGjelderFra = sak.rettighetsperiode.fom,
-                vurdertAv = "Z00000",
-                skalVurdereAapIOvergangTilArbeid = null,
-                overgangBegrunnelse = null,
-                vurdertIBehandling = førstegangsbehandling.id
-            )
-            val bistandsvurdering2 = BistandVurdering(
-                begrunnelse = "Ny begrunnelse",
-                erBehovForAktivBehandling = true,
-                erBehovForArbeidsrettetTiltak = false,
-                erBehovForAnnenOppfølging = false,
-                vurderingenGjelderFra = sak.rettighetsperiode.fom,
-                vurdertAv = "Z00000",
-                skalVurdereAapIOvergangTilArbeid = null,
-                overgangBegrunnelse = null,
-                vurdertIBehandling = førstegangsbehandling.id
-            )
-
-
-            bistandRepo.lagre(førstegangsbehandling.id, listOf(bistandsvurdering1))
-            bistandRepo.lagre(førstegangsbehandling.id, listOf(bistandsvurdering2))
-            Triple(førstegangsbehandling, sak, listOf(bistandsvurdering1, bistandsvurdering2))
-        }
-
-        val revurderingUtenOppdatertBistandsvurdering = dataSource.transaction { connection ->
-            val bistandRepo = BistandRepositoryImpl(connection)
-            val revurdering = revurdering(connection, førstegangsbehandling, sak)
-            val historikk = bistandRepo.hentHistoriskeBistandsvurderinger(revurdering.sakId, revurdering.id)
-            assertThat(historikk).usingRecursiveComparison(sammenligner).isEqualTo(listOf(vurderinger[1]))
-            revurdering
-        }
-
-        dataSource.transaction { connection ->
-            val bistandRepo = BistandRepositoryImpl(connection)
-            val revurdering = revurdering(connection, revurderingUtenOppdatertBistandsvurdering, sak)
-            val bistandsvurdering3 = BistandVurdering(
-                begrunnelse = "Tredje begrunnelse",
-                erBehovForAktivBehandling = true,
-                erBehovForArbeidsrettetTiltak = false,
-                erBehovForAnnenOppfølging = false,
-                vurderingenGjelderFra = sak.rettighetsperiode.fom,
-                vurdertAv = "Z00000",
-                skalVurdereAapIOvergangTilArbeid = null,
-                overgangBegrunnelse = null,
-                vurdertIBehandling = revurdering.id
-            )
-            bistandRepo.lagre(revurdering.id, listOf(bistandsvurdering3))
-            val historikk = bistandRepo.hentHistoriskeBistandsvurderinger(revurdering.sakId, revurdering.id)
-            assertThat(historikk)
-                .usingRecursiveComparison(sammenligner)
-                .isEqualTo(listOf(vurderinger[1]))
-        }
-    }
-
-    @Test
-    fun `historikk viser kun vurderinger fra tidligere behandlinger og ikke inkluderer vurdering fra avbrutt revurdering`() {
-        val (sak, førstegangsbehandling, bistandvurdering1) = dataSource.transaction { connection ->
-            val bistandRepo = BistandRepositoryImpl(connection)
-            val sak = sak(connection)
-            val førstegangsbehandling = finnEllerOpprettBehandling(connection, sak)
-
-            val bistandsvurdering1 = BistandVurdering(
-                begrunnelse = "B1",
-                erBehovForAktivBehandling = false,
-                erBehovForArbeidsrettetTiltak = false,
-                erBehovForAnnenOppfølging = false,
-                vurderingenGjelderFra = sak.rettighetsperiode.fom,
-                vurdertAv = "Z00000",
-                skalVurdereAapIOvergangTilArbeid = null,
-                overgangBegrunnelse = null,
-                vurdertIBehandling = førstegangsbehandling.id
-            )
-
-            bistandRepo.lagre(førstegangsbehandling.id, listOf(bistandsvurdering1))
-            Triple(sak, førstegangsbehandling, bistandsvurdering1)
-        }
-
-        dataSource.transaction { connection ->
-            val bistandRepo = BistandRepositoryImpl(connection)
-            val avbrytRevurderingRepo = AvbrytRevurderingRepositoryImpl(connection)
-            val revurderingAvbrutt = revurderingSykdomArbeidsEvneBehovForBistand(connection, førstegangsbehandling)
-
-            // Marker revurderingen som avbrutt
-            avbrytRevurderingRepo.lagre(
-                revurderingAvbrutt.id, AvbrytRevurderingVurdering(
-                    AvbrytRevurderingÅrsak.REVURDERINGEN_BLE_OPPRETTET_VED_EN_FEIL, "avbryte pga. feil",
-                    Bruker("Z00000")
-                )
-            )
-            val bistandsvurdering2 = BistandVurdering(
-                begrunnelse = "B2",
-                erBehovForAktivBehandling = false,
-                erBehovForArbeidsrettetTiltak = true,
-                erBehovForAnnenOppfølging = false,
-                vurderingenGjelderFra = sak.rettighetsperiode.fom,
-                vurdertAv = "Z00001",
-                skalVurdereAapIOvergangTilArbeid = null,
-                overgangBegrunnelse = "o1",
-                vurdertIBehandling = revurderingAvbrutt.id
-            )
-            bistandRepo.lagre(revurderingAvbrutt.id, listOf(bistandsvurdering2))
-        }
-
-        dataSource.transaction { connection ->
-            val bistandRepo = BistandRepositoryImpl(connection)
-            val revurdering = revurderingSykdomArbeidsEvneBehovForBistand(connection, førstegangsbehandling)
-            val bistandsvurdering3 = BistandVurdering(
-                begrunnelse = "B3",
-                erBehovForAktivBehandling = false,
-                erBehovForArbeidsrettetTiltak = false,
-                erBehovForAnnenOppfølging = true,
-                vurderingenGjelderFra = sak.rettighetsperiode.fom,
-                vurdertAv = "Z00002",
-                skalVurdereAapIOvergangTilArbeid = null,
-                overgangBegrunnelse = "o2",
-                vurdertIBehandling = revurdering.id
-            )
-            bistandRepo.lagre(revurdering.id, listOf(bistandsvurdering3))
-
-            val historikk = bistandRepo.hentHistoriskeBistandsvurderinger(revurdering.sakId, revurdering.id)
-            assertThat(historikk).usingRecursiveComparison(sammenligner).isEqualTo(listOf(bistandvurdering1))
-        }
-    }
-
-    private fun sak(connection: DBConnection): Sak {
-        return PersonOgSakService(
-            FakePdlGateway,
-            PersonRepositoryImpl(connection),
-            SakRepositoryImpl(connection)
-        ).finnEllerOpprett(ident(), periode)
-    }
-
-    private fun revurdering(connection: DBConnection, behandling: Behandling, sak: Sak): Behandling {
-        BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
-
-        return finnEllerOpprettBehandling(connection, sak)
-    }
-
-    private fun revurderingSykdomArbeidsEvneBehovForBistand(
-        connection: DBConnection,
-        behandling: Behandling
-    ): Behandling {
-        return BehandlingRepositoryImpl(connection).opprettBehandling(
-            behandling.sakId,
-            typeBehandling = TypeBehandling.Revurdering,
-            forrigeBehandlingId = behandling.id,
-            vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
-                vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)),
-                årsak = ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
-            )
-        )
-    }
 }

@@ -44,7 +44,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårsPeriodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårsResultatDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype
-import no.nav.aap.behandlingsflyt.pip.PipRepository
+import no.nav.aap.behandlingsflyt.pip.PipService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
@@ -63,7 +63,7 @@ class StatistikkMetoder(
     private val sakService: SakService,
     private val tilkjentYtelseRepository: TilkjentYtelseRepository,
     private val beregningsgrunnlagRepository: BeregningsgrunnlagRepository,
-    private val pipRepository: PipRepository,
+    private val pipService: PipService,
     private val dokumentRepository: MottattDokumentRepository,
     private val sykdomRepository: SykdomRepository,
     private val underveisRepository: UnderveisRepository,
@@ -80,7 +80,7 @@ class StatistikkMetoder(
         sakService = SakService(repositoryProvider.provide(), repositoryProvider.provide()),
         tilkjentYtelseRepository = repositoryProvider.provide(),
         beregningsgrunnlagRepository = repositoryProvider.provide(),
-        pipRepository = repositoryProvider.provide(),
+        pipService = PipService(repositoryProvider),
         dokumentRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
         underveisRepository = repositoryProvider.provide(),
@@ -99,6 +99,7 @@ class StatistikkMetoder(
     fun oversettHendelseTilKontrakt(hendelse: BehandlingFlytStoppetHendelseTilStatistikk): StoppetBehandling {
         log.info("Oversetter hendelse for behandling ${hendelse.referanse} og saksnr ${hendelse.saksnummer}")
         val behandling = behandlingRepository.hent(hendelse.referanse)
+        val sisteEndring = behandlingRepository.hentStegHistorikk(behandling.id).lastOrNull()?.tidspunkt()
         val søknaderForSak = hentSøknaderForSak(behandling)
         val mottattTidspunkt = utledMottattTidspunkt(behandling, søknaderForSak)
         val søknadIder = søknaderForSak
@@ -127,6 +128,7 @@ class StatistikkMetoder(
             behandlingReferanse = hendelse.referanse.referanse,
             relatertBehandling = relatertBehandling(behandling),
             behandlingOpprettetTidspunkt = hendelse.opprettetTidspunkt,
+            tidspunktSisteEndring = sisteEndring ?: hendelse.hendelsesTidspunkt,
             soknadsFormat = kanal,
             versjon = hendelse.versjon,
             mottattTid = mottattTidspunkt,
@@ -221,7 +223,7 @@ class StatistikkMetoder(
         }.distinct()
 
     private fun hentIdenterPåSak(saksnummer: Saksnummer): List<String> {
-        return pipRepository.finnIdenterPåSak(saksnummer).map { it.ident }
+        return pipService.finnIdenterPåSak(saksnummer).map { it.ident }
     }
 
     private fun hentSøknadsKanal(behandling: Behandling, hentDokumenterAvType: Set<MottattDokument>): Kanal {
@@ -277,7 +279,7 @@ class StatistikkMetoder(
                         fraDato = it.periode.fom,
                         tilDato = it.periode.tom,
                         dagsats = verdi.dagsats.verdi().toDouble(),
-                        gradering = verdi.gradering.endeligGradering.prosentverdi().toDouble(),
+                        gradering = verdi.gradering.prosentverdi().toDouble(),
                         redusertDagsats = verdi.redusertDagsats().verdi().toDouble(),
                         antallBarn = verdi.antallBarn,
                         barnetilleggSats = verdi.barnetilleggsats.verdi().toDouble(),
@@ -372,7 +374,11 @@ class StatistikkMetoder(
                 }
             }
 
-            TypeBehandling.Tilbakekreving, TypeBehandling.SvarFraAndreinstans, TypeBehandling.OppfølgingsBehandling, TypeBehandling.Aktivitetsplikt, TypeBehandling.Aktivitetsplikt11_9 -> {
+            TypeBehandling.Tilbakekreving,
+            TypeBehandling.SvarFraAndreinstans,
+            TypeBehandling.OppfølgingsBehandling,
+            TypeBehandling.Aktivitetsplikt,
+            TypeBehandling.Aktivitetsplikt11_9 -> {
                 null
             }
         }

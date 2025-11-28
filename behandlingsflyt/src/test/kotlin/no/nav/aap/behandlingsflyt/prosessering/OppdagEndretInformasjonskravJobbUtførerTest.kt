@@ -24,19 +24,18 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fød
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningMedHistorikk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningInformasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningMedHistorikk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRegisterGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreInformasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRegisterGateway
 import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
-import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -45,12 +44,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
-import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.januar
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
@@ -74,9 +69,14 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
         var barnInnhentingRespons = BarnInnhentingRespons(
             registerBarn = emptyList(),
             oppgitteBarnFraPDL = emptyList(),
+            saksbehandlerOppgitteBarnPDL = emptyList()
         )
 
-        override fun hentBarn(person: Person, oppgitteBarnIdenter: List<Ident>) = barnInnhentingRespons
+        override fun hentBarn(
+            person: Person,
+            oppgitteBarnIdenter: List<Ident>,
+            saksbehandlerOppgitteBarn: List<Ident>
+        ) = barnInnhentingRespons
     }
 
     object FakeForeldrepengerGateway : ForeldrepengerGateway {
@@ -100,7 +100,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
     }
 
     object FakeUføreRegisterGateway : UføreRegisterGateway {
-        var response: List<Uføre> = emptyList()
+        var response: Set<Uføre> = emptySet()
         override fun innhentMedHistorikk(person: Person, fraDato: LocalDate) = response
     }
 
@@ -166,11 +166,10 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
                 )
             )
             FakeUføreRegisterGateway.response =
-                listOf(
+                setOf(
                     Uføre(
                         virkningstidspunkt = periode.fom,
                         uføregrad = Prosent.`100_PROSENT`,
-                        kilde = "",
                     )
                 )
             FakeInstitusjonsoppholdGateway.response = listOf(
@@ -234,7 +233,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
     private fun settOppFørstegangsvurdering(): Behandling {
         return dataSource.transaction { connection ->
             val repositoryProvider = postgresRepositoryRegistry.provider(connection)
-            val sak = sak(connection)
+            val sak = sak(connection, periode)
             val førstegangsbehandlingen = finnEllerOpprettBehandling(connection, sak)
 
             val kontekst = FlytKontekstMedPerioder(
@@ -270,14 +269,5 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
                 .oppdaterBehandlingStatus(førstegangsbehandlingen.id, Status.AVSLUTTET)
             førstegangsbehandlingen
         }
-    }
-
-
-    private fun sak(connection: DBConnection): Sak {
-        return PersonOgSakService(
-            FakePdlGateway,
-            PersonRepositoryImpl(connection),
-            SakRepositoryImpl(connection)
-        ).finnEllerOpprett(ident(), periode)
     }
 }

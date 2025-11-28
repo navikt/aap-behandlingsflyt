@@ -10,7 +10,7 @@ repositories {
 }
 
 val mockOAuth2ServerVersion = "3.0.1"
-val kafkaVersion = "4.1.0"
+val kafkaVersion = "4.1.1"
 
 dependencies {
     api(project(":behandlingsflyt"))
@@ -28,6 +28,7 @@ dependencies {
     compileOnly(libs.ktorHttpJvm)
 
     testImplementation(libs.httpklient)
+    testImplementation(libs.dbtest)
     testImplementation(libs.bundles.junit)
     testImplementation(libs.ktorServerTestHost)
     constraints {
@@ -37,4 +38,5 @@ dependencies {
     testImplementation("no.nav.security:mock-oauth2-server:$mockOAuth2ServerVersion")
     testImplementation(project(":lib-test"))
     testImplementation(project(":repository"))
+    testImplementation("io.mockk:mockk:1.14.6")
 }

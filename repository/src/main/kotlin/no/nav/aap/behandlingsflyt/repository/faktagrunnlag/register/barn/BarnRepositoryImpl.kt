@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.barn
 
+import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
@@ -79,9 +80,9 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         return requireNotNull(hentHvisEksisterer(behandlingId))
     }
 
-    override fun hentBehandlingIdForSakSomFårBarnetilleggForBarn(barneIdent: Ident): List<BehandlingId> {
-        log.info("Henter info for ident {}", barneIdent)
-        val registerBarnId = getRegisterBarnId(barneIdent)
+    override fun hentBehandlingIdForSakSomFårBarnetilleggForBarn(ident: Ident): List<BehandlingId> {
+        log.info("Henter info for ident {}", ident)
+        val registerBarnId = getRegisterBarnId(ident)
         log.info("Henter registerbarnid for registerBarnId {}", registerBarnId)
         if (registerBarnId != null) {
             val behandlingId = hentBehandlingIdForBarneId(registerBarnId)
@@ -427,7 +428,26 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
             deaktiverEksisterende(behandlingId)
         }
 
-        val vurderteBarnId = if (vurderteBarn.isNotEmpty()) {
+        val vurderteBarnId = opprettVurderteBarnId(vurdertAv, vurderteBarn)
+        lagreVurderingerMedPerioder(vurderteBarnId, vurderteBarn)
+
+        connection.execute(
+            """
+            INSERT INTO BARNOPPLYSNING_GRUNNLAG (BEHANDLING_ID, register_barn_id, oppgitt_barn_id, saksbehandler_oppgitt_barn_id, vurderte_barn_id) VALUES (?, ?, ?, ?, ?)
+        """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+                setLong(2, eksisterendeGrunnlag?.registerbarn?.id)
+                setLong(3, eksisterendeGrunnlag?.oppgitteBarn?.id)
+                setLong(4, eksisterendeGrunnlag?.saksbehandlerOppgitteBarn?.id)
+                setLong(5, vurderteBarnId)
+            }
+        }
+    }
+
+    private fun opprettVurderteBarnId(vurdertAv: String, vurderteBarn: List<VurdertBarn>): Long? {
+        return if (vurderteBarn.isNotEmpty()) {
             connection.executeReturnKey(
                 """
                 INSERT INTO BARN_VURDERINGER (VURDERT_AV)
@@ -441,7 +461,9 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         } else {
             null
         }
+    }
 
+    private fun lagreVurderingerMedPerioder(vurderteBarnId: Long?, vurderteBarn: List<VurdertBarn>) {
         for (barn in vurderteBarn) {
             val barnVurderingId =
                 connection.executeReturnKey(
@@ -477,20 +499,6 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
                     setBoolean(4, it.harForeldreAnsvar)
                     setBoolean(5, it.erFosterForelder)
                 }
-            }
-        }
-
-        connection.execute(
-            """
-                INSERT INTO BARNOPPLYSNING_GRUNNLAG (BEHANDLING_ID, register_barn_id, oppgitt_barn_id, saksbehandler_oppgitt_barn_id, vurderte_barn_id) VALUES (?, ?, ?, ?, ?)
-            """.trimIndent()
-        ) {
-            setParams {
-                setLong(1, behandlingId.toLong())
-                setLong(2, eksisterendeGrunnlag?.registerbarn?.id)
-                setLong(3, eksisterendeGrunnlag?.oppgitteBarn?.id)
-                setLong(4, eksisterendeGrunnlag?.saksbehandlerOppgitteBarn?.id)
-                setLong(5, vurderteBarnId)
             }
         }
     }
@@ -625,4 +633,20 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
             }
         }
     }
+
+    override fun tilbakestillGrunnlag(behandlingId: BehandlingId, forrigeBehandlingId: BehandlingId?) {
+        val forrigeBarnGrunnlag = forrigeBehandlingId?.let { hentHvisEksisterer(it) }
+
+        val vurderteBarn = forrigeBarnGrunnlag?.vurderteBarn?.barn.orEmpty()
+
+        lagreVurderinger(
+            behandlingId = behandlingId,
+            vurdertAv = forrigeBarnGrunnlag?.vurderteBarn?.vurdertAv ?: SYSTEMBRUKER.ident,
+            vurderteBarn = vurderteBarn
+        )
+
+        val saksbehandlerOppgitteBarn = forrigeBarnGrunnlag?.saksbehandlerOppgitteBarn?.barn.orEmpty()
+        lagreSaksbehandlerOppgitteBarn(behandlingId, saksbehandlerOppgitteBarn)
+    }
+
 }
