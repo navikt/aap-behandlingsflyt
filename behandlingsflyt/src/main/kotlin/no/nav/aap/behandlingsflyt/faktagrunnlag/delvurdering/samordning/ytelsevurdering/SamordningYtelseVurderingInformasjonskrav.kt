@@ -27,11 +27,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
-import java.time.LocalDate
 import kotlin.time.measureTimedValue
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Ytelse as ForeldrePengerYtelse
 
@@ -290,33 +291,54 @@ private fun <T : SamordningPeriode> isPeriodeDekketAvEksisterendePerioder(
     eksisterendePerioder: List<T>,
     target: T
 ): Boolean {
-    if (eksisterendePerioder.isEmpty()) return false
+    val tidslinje = eksisterendePerioder.tilTidslinje()
+    val overlapp = tidslinje.segmenterOverlapper(target.periode)
 
-    val intersections = eksisterendePerioder.mapNotNull { eks ->
-        val start = maxOf(eks.periode.fom, target.periode.fom)
-        val end = minOf(eks.periode.tom, target.periode.tom)
-        if (!start.isAfter(end)) start to end else null
-    }.sortedBy { it.first }
+    if (overlapp.isEmpty()) return false
 
-    if (intersections.isEmpty()) return false
-
-    val merged = mutableListOf<Pair<LocalDate, LocalDate>>()
-    for ((s, e) in intersections) {
-        if (merged.isEmpty()) {
-            merged.add(s to e)
-        } else {
-            val (curS, curE) = merged.last()
-            if (!s.isAfter(curE.plusDays(1))) {
-                val newEnd = if (e.isAfter(curE)) e else curE
-                merged[merged.lastIndex] = curS to newEnd
-            } else {
-                merged.add(s to e)
-            }
-        }
-    }
-
+    val merged = overlapp.sammmenslåttePerioder()
     if (merged.size != 1) return false
 
-    val (coverStart, coverEnd) = merged[0]
-    return !coverStart.isAfter(target.periode.fom) && !coverEnd.isBefore(target.periode.tom)
+    val cover = merged.first()
+    return !cover.fom.isAfter(target.periode.fom) &&
+            !cover.tom.isBefore(target.periode.tom)
+}
+
+fun <T : SamordningPeriode> List<T>.tilTidslinje(): Tidslinje<Boolean> =
+    Tidslinje(
+        this.map { p ->
+            Segment(
+                periode = Periode(p.periode.fom, p.periode.tom),
+                verdi = true
+            )
+        }
+    )
+
+fun <V> Tidslinje<V>.segmenterOverlapper(periode: Periode): List<Segment<V>> =
+    this.segmenter().filter { it.periode.overlapper(periode) }
+
+
+fun List<Segment<Boolean>>.sammmenslåttePerioder(): List<Periode> {
+    if (this.isEmpty()) return emptyList()
+
+    val sorted = this.sortedBy { it.periode.fom }
+    val result = mutableListOf<Periode>()
+
+    var current = sorted.first().periode
+
+    for (seg in sorted.drop(1)) {
+        val next = seg.periode
+        if (!next.fom.isAfter(current.tom.plusDays(1))) {
+            current = Periode(
+                fom = current.fom,
+                tom = maxOf(current.tom, next.tom)
+            )
+        } else {
+            result.add(current)
+            current = next
+        }
+    }
+    result.add(current)
+
+    return result
 }
