@@ -180,7 +180,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 assertThat(vilkårOppdatert.vilkårsperioder()).hasSize(1)
                     .extracting(Vilkårsperiode::utfall)
                     .containsExactly(tuple(Utfall.IKKE_OPPFYLT))
-            }
+            }.løsArbeidsgiver(listOf(Periode(LocalDate.now().minusMonths(1), LocalDate.now().plusMonths(1))))
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
 

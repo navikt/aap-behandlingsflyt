@@ -161,7 +161,6 @@ class BarnetilleggStegTest {
             forrigeBehandlingId = null,
             behandlingType = mockk(),
             vurderingType = vurderingType,
-            vurderingTypeRelevantForSteg = vurderingType,
             rettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusMonths(6)),
             vurderingsbehovRelevanteForSteg = vurderingsbehov.toSet()
         )

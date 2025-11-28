@@ -76,6 +76,7 @@ class Avklaringsbehovene(
         definisjoner: List<Definisjon>,
         funnetISteg: StegType,
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>? = null,
+        perioderVedtaketBehøverVurdering: Set<Periode>? = null,
         frist: LocalDate? = null,
         begrunnelse: String = "",
         grunn: ÅrsakTilSettPåVent? = null,
@@ -108,6 +109,7 @@ class Avklaringsbehovene(
                     begrunnelse = begrunnelse,
                     grunn = grunn,
                     perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
+                    perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
                     endretAv = bruker.ident
                 )
             }
@@ -202,9 +204,9 @@ class Avklaringsbehovene(
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
-    fun oppdaterPerioder(definisjon: Definisjon, perioder: Set<Periode>) {
+    fun oppdaterPerioder(definisjon: Definisjon, perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?, perioderVedtaketBehøverVurdering: Set<Periode>?) {
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
-        avklaringsbehov.oppdaterPerioder(perioder)
+        avklaringsbehov.oppdaterPerioder(perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert, perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering)
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
@@ -307,7 +309,7 @@ class Avklaringsbehovene(
 
             val behovForDefinisjon = this.hentBehovForDefinisjon(løsning.definisjon())
             if (behovForDefinisjon != null) {
-                val perioderSomSkalLøses = behovForDefinisjon.perioder().orEmpty().somTidslinje { it }
+                val perioderSomSkalLøses = behovForDefinisjon.perioderSomSkalLøses().orEmpty().somTidslinje { it }
 
                 val perioderSomManglerLøsning = perioderSomSkalLøses.leftJoin(perioderDekketAvLøsning) { _, periodeILøsning -> 
                     periodeILøsning != null

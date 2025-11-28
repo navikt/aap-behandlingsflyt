@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt
 
 import no.nav.aap.behandlingsflyt.behandling.beregning.Beregning
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelseService
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.BeregningInput
@@ -15,7 +16,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Dagsatser
@@ -114,42 +114,43 @@ fun beregnForInput(input: BeregningInput, fødselsdato: Fødselsdato): Triple<Ye
     val beregnet = Beregning(Inntektsbehov((input))).beregneMedInput()
 
     val tilkjent = BeregnTilkjentYtelseService(
-        fødselsdato = fødselsdato,
-        beregningsgrunnlag = beregnet,
-        underveisgrunnlag = UnderveisGrunnlag(
-            id = 0,
-            perioder = listOf(
-                Underveisperiode(
-                    periode = Periode(LocalDate.now().withMonth(6), LocalDate.now().plusMonths(12)),
-                    meldePeriode = Periode(LocalDate.MIN, LocalDate.now().plusMonths(12)),
-                    utfall = Utfall.OPPFYLT,
-                    rettighetsType = RettighetsType.BISTANDSBEHOV,
-                    avslagsårsak = null,
-                    grenseverdi = Prosent.`100_PROSENT`,
-                    arbeidsgradering = ArbeidsGradering(
-                        totaltAntallTimer = TimerArbeid(
-                            antallTimer = BigDecimal(0)
+        TilkjentYtelseGrunnlag(
+            fødselsdato = fødselsdato,
+            beregningsgrunnlag = beregnet.grunnlaget(),
+            underveisgrunnlag = UnderveisGrunnlag(
+                id = 0,
+                perioder = listOf(
+                    Underveisperiode(
+                        periode = Periode(LocalDate.now().withMonth(6), LocalDate.now().plusMonths(12)),
+                        meldePeriode = Periode(LocalDate.MIN, LocalDate.now().plusMonths(12)),
+                        utfall = Utfall.OPPFYLT,
+                        rettighetsType = RettighetsType.BISTANDSBEHOV,
+                        avslagsårsak = null,
+                        grenseverdi = Prosent.`100_PROSENT`,
+                        arbeidsgradering = ArbeidsGradering(
+                            totaltAntallTimer = TimerArbeid(
+                                antallTimer = BigDecimal(0)
+                            ),
+                            andelArbeid = Prosent.`100_PROSENT`,
+                            fastsattArbeidsevne = Prosent.`100_PROSENT`, // TODO
+                            gradering = Prosent.`100_PROSENT`,
+                            opplysningerMottatt = null,
                         ),
-                        andelArbeid = Prosent.`100_PROSENT`,
-                        fastsattArbeidsevne = Prosent.`100_PROSENT`, // TODO
-                        gradering = Prosent.`100_PROSENT`,
-                        opplysningerMottatt = null,
-                    ),
-                    trekk = Dagsatser(0),
-                    brukerAvKvoter = emptySet(),
-                    id = UnderveisperiodeId(0),
-                    institusjonsoppholdReduksjon = Prosent(0),
-                    meldepliktStatus = null,
+                        trekk = Dagsatser(0),
+                        brukerAvKvoter = emptySet(),
+                        id = UnderveisperiodeId(0),
+                        institusjonsoppholdReduksjon = Prosent(0),
+                        meldepliktStatus = null,
+                    )
                 )
-            )
-        ),
-        barnetilleggGrunnlag = BarnetilleggGrunnlag(
-            perioder = emptyList()
-        ),
-        samordningGrunnlag = SamordningGrunnlag(emptySet()),
-        samordningUføre = null,
-        samordningArbeidsgiver = null,
-        unleashGateway = FakeUnleash
+            ),
+            barnetilleggGrunnlag = BarnetilleggGrunnlag(
+                perioder = emptyList()
+            ),
+            samordningGrunnlag = SamordningGrunnlag(emptySet()),
+            samordningUføre = null,
+            samordningArbeidsgiver = null
+        )
     )
 
     val dagsats = tilkjent.beregnTilkjentYtelse().mapValue { it.dagsats }.komprimer().segmenter().first().verdi.verdi
