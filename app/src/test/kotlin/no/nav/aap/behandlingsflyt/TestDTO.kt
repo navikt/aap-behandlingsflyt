@@ -31,6 +31,8 @@ data class OpprettTestcaseDTO(
     val sykepenger: List<TestPerson.Sykepenger> = emptyList(),
     val søknadsdato: LocalDate? = null,
     val steg: StegType? = null,
+    val erArbeidsevnenNedsatt: Boolean = true,
+    val erNedsettelseIArbeidsevneMerEnnHalvparten: Boolean = true,
 )
 
 data class LeggTilInstitusjonsoppholdDTO(
