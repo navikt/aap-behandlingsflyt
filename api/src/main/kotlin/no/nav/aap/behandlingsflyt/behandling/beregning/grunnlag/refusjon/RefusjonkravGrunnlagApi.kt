@@ -45,8 +45,7 @@ fun NormalOpenAPIRoute.refusjonGrunnlagApi(
 
                         val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                         val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
-
-                        //TODO: Skal fikses etter prodsetting slik at det bare er gjeldendeVurderinger man skal forholde seg til
+                        
                         val gjeldendeVurderinger = refusjonkravRepository.hentHvisEksisterer(behandling.id)?.map {
                                 it.tilResponse(ansattInfoService)
                             }
