@@ -139,9 +139,6 @@ class PdlHendelseKafkaKonsument(
                         }
                     }
                 }
-
-            } else {
-                log.info("Ignorerer hendelse med ${personHendelse.opplysningstype} og ${personHendelse.endringstype}")
             }
         }
     }

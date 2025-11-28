@@ -359,8 +359,8 @@ class TestScenarioOrkestrator(
                 ManuellVurderingForForutgåendeMedlemskapDto(
                     begrunnelse = "Forutgående medlemskap ok",
                     harForutgåendeMedlemskap = true,
-                    varMedlemMedNedsattArbeidsevne = true,
-                    medlemMedUnntakAvMaksFemAar = null
+                    varMedlemMedNedsattArbeidsevne = false,
+                    medlemMedUnntakAvMaksFemAar = false
                 )
             )
         )

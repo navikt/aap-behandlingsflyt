@@ -99,6 +99,7 @@ class StatistikkMetoder(
     fun oversettHendelseTilKontrakt(hendelse: BehandlingFlytStoppetHendelseTilStatistikk): StoppetBehandling {
         log.info("Oversetter hendelse for behandling ${hendelse.referanse} og saksnr ${hendelse.saksnummer}")
         val behandling = behandlingRepository.hent(hendelse.referanse)
+        val sisteEndring = behandlingRepository.hentStegHistorikk(behandling.id).lastOrNull()?.tidspunkt()
         val søknaderForSak = hentSøknaderForSak(behandling)
         val mottattTidspunkt = utledMottattTidspunkt(behandling, søknaderForSak)
         val søknadIder = søknaderForSak
@@ -127,6 +128,7 @@ class StatistikkMetoder(
             behandlingReferanse = hendelse.referanse.referanse,
             relatertBehandling = relatertBehandling(behandling),
             behandlingOpprettetTidspunkt = hendelse.opprettetTidspunkt,
+            tidspunktSisteEndring = sisteEndring ?: hendelse.hendelsesTidspunkt,
             soknadsFormat = kanal,
             versjon = hendelse.versjon,
             mottattTid = mottattTidspunkt,

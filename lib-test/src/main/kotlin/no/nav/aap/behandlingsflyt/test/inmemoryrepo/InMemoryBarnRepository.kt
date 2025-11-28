@@ -114,13 +114,9 @@ object InMemoryBarnRepository : BarnRepository {
         TODO("Not yet implemented")
     }
 
-    override fun deaktiverAlleSaksbehandlerOppgitteBarn(behandlingId: BehandlingId) {
-        TODO("Not yet implemented")
-    }
-
     override fun tilbakestillGrunnlag(
         behandlingId: BehandlingId,
-        forrigeBehandling: BehandlingId?
+        forrigeBehandlingId: BehandlingId?
     ) {
         TODO("Not yet implemented")
     }
