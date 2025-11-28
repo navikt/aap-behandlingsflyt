@@ -221,7 +221,7 @@ class AvklaringsbehovService(
         nårVurderingErGyldig: () -> Tidslinje<Boolean>?,
         tilbakestillGrunnlag: () -> Unit,
     ) {
-        val perioderVedtaketBehøverVurdering = when (kontekst.vurderingType) {
+        val (behøverVurdering, perioderVedtaketBehøverVurdering) = when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
             VurderingType.REVURDERING -> {
                 val perioderVilkåretErRelevant = nårVurderingErRelevant(kontekst)
@@ -229,7 +229,9 @@ class AvklaringsbehovService(
                 if (perioderVilkåretErRelevant.segmenter()
                         .any { it.verdi } && kontekst.vurderingsbehovRelevanteForSteg.any { it in tvingerAvklaringsbehov }
                 ) {
-                    null // Tvinger til å stoppe, men bryr seg ikke om hvilke perioder som skal løses
+                    Pair(
+                        true, emptySet() // Vi behøver vurdering, men har ingen obligatoriske perioder
+                    )
                 } else {
 
                     val perioderVilkåretErVurdert = kontekst.forrigeBehandlingId
@@ -254,22 +256,24 @@ class AvklaringsbehovService(
                         }
                         .orEmpty()
 
-                    perioderVilkåretErRelevant.leftJoin(perioderVilkåretErVurdert) { erRelevant, erVurdert ->
-                        erRelevant && erVurdert != true
-                    }.filter { it.verdi }.komprimer().perioder().toSet()
+                    val perioderSomBehøverVurdering =
+                        perioderVilkåretErRelevant.leftJoin(perioderVilkåretErVurdert) { erRelevant, erVurdert ->
+                            erRelevant && erVurdert != true
+                        }.filter { it.verdi }.komprimer().perioder().toSet()
+                    Pair(perioderSomBehøverVurdering.isNotEmpty(), perioderSomBehøverVurdering)
                 }
             }
 
-            VurderingType.MELDEKORT -> emptySet()
-            VurderingType.EFFEKTUER_AKTIVITETSPLIKT -> emptySet()
-            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9 -> emptySet()
-            VurderingType.IKKE_RELEVANT -> emptySet()
+            VurderingType.MELDEKORT -> Pair(false, emptySet())
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT -> Pair(false, emptySet())
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9 -> Pair(false, emptySet())
+            VurderingType.IKKE_RELEVANT -> Pair(false, emptySet())
         }
 
         oppdaterAvklaringsbehov(
             avklaringsbehovene = avklaringsbehovene,
             definisjon = definisjon,
-            vedtakBehøverVurdering = { perioderVedtaketBehøverVurdering == null || perioderVedtaketBehøverVurdering.isNotEmpty() },
+            vedtakBehøverVurdering = { behøverVurdering },
             perioderVedtaketBehøverVurdering = { perioderVedtaketBehøverVurdering },
             perioderSomIkkeErTilstrekkeligVurdert =
                 {
