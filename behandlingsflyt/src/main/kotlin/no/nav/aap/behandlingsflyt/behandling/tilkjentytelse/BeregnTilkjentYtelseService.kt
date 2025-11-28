@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 
 import no.nav.aap.behandlingsflyt.behandling.barnetillegg.RettTilBarnetillegg
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UnntakFastsattMeldedag
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.unntakFastsattMeldedag
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.unntakFritaksUtbetalingDato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
@@ -16,7 +16,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.filterNotNull
@@ -155,16 +154,16 @@ class BeregnTilkjentYtelseService(val grunnlag: TilkjentYtelseGrunnlag) {
         val meldeperiode = underveisperiode.meldePeriode
         val opplysningerMottatt = underveisperiode.arbeidsgradering.opplysningerMottatt
 
-        val muligensUnntak = if (unntakMeldepliktDesemberEnabled) {
+        val unntakFastsattMeldedag = if (unntakMeldepliktDesemberEnabled) {
             // `meldeperiode` svarer til perioden det ble skrevet meldekort for (på dato `opplysningerMottatt`).
             // For å finne unntakts-meldepliktperiode, må vi flytte denne to uker fram.
-            UnntakFastsattMeldedag.erSpesialPeriode(meldeperiode.flytt(14))
+            unntakFastsattMeldedag[meldeperiode.flytt(14).fom]
         } else null
 
         val sisteMeldedagForMeldeperiode = meldeperiode.tom.plusDays(9)
         val førsteMeldedagForMeldeperiode = meldeperiode.tom.plusDays(1)
 
-        val prioritertFørstedag = muligensUnntak ?: førsteMeldedagForMeldeperiode
+        val prioritertFørstedag = unntakFastsattMeldedag ?: førsteMeldedagForMeldeperiode
 
         // Hvis fritak fra meldeplikt, betal ut så tidlig som mulig.
         // Ellers, betal ut etter dato for levert meldekort.
@@ -173,9 +172,8 @@ class BeregnTilkjentYtelseService(val grunnlag: TilkjentYtelseGrunnlag) {
         val muligUtbetalingsdato = when {
             opplysningerMottatt != null -> opplysningerMottatt
             underveisperiode.meldepliktStatus == MeldepliktStatus.FRITAK -> {
-                val utbetalingsdatoForFritak = førsteMeldedagForMeldeperiode.plusDays(2)
-                unntakFritaksUtbetalingDato[utbetalingsdatoForFritak]
-                    ?: utbetalingsdatoForFritak
+                unntakFritaksUtbetalingDato[førsteMeldedagForMeldeperiode]
+                    ?: førsteMeldedagForMeldeperiode
             }
 
             else -> sisteMeldedagForMeldeperiode

@@ -198,7 +198,7 @@ class MeldepliktRegel(
         val meldefrist = meldeperiode.fom.plusDays(7)
         val dagensDato = LocalDate.now(clock)
 
-        val potensieltTidligDokument = UnntakFastsattMeldedag.erSpesialPeriode(meldeperiode)?.let { nyTidligereFrist ->
+        val potensieltTidligDokument = unntakFastsattMeldedag[meldeperiode.fom]?.let { nyTidligereFrist ->
             val begrensetForrigePeriode =
                 dataForForrigeMeldeperiode?.begrensetTil(Periode(nyTidligereFrist, LocalDate.MAX)).orEmpty()
 
