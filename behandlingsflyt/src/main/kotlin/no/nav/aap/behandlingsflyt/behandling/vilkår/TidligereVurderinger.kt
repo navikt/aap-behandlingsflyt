@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Førstegangsbehandling
 import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Revurdering
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -125,18 +126,16 @@ class TidligereVurderingerImpl(
                 val studenttidslinje =
                     studentRepository.hentHvisEksisterer(kontekst.behandlingId)?.somTidslinje(periode).orEmpty()
 
-                sykdomstidslinje.outerJoin(studenttidslinje) { sykdomsvurdering, studentVurdering ->
+                sykdomstidslinje.outerJoin(studenttidslinje) { segmentPeriode, sykdomsvurdering, studentVurdering ->
                     if (studentVurdering != null && studentVurdering.erOppfylt()) return@outerJoin UKJENT
 
-                    if (sykdomsvurdering?.erFørsteVurdering(kontekst.rettighetsperiode.fom) == false) {
+                    if (!Sykdomsvurdering.erFørsteVurdering(kontekst.rettighetsperiode.fom, segmentPeriode)) {
                         return@outerJoin UKJENT
                     }
 
                     val sykdomDefinitivtAvslag =
                         sykdomsvurdering?.erOppfyltOrdinærSettBortIfraVissVarighet() == false
-                                && !sykdomsvurdering.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenhengOgVissVarighet(
-                            periode.fom
-                        )
+                                && !sykdomsvurdering.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenhengOgVissVarighet()
 
                     if (sykdomDefinitivtAvslag) {
                         return@outerJoin UUNGÅELIG_AVSLAG

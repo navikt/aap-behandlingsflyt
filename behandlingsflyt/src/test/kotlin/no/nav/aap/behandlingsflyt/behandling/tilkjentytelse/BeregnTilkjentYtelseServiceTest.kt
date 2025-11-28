@@ -63,18 +63,20 @@ class BeregnTilkjentYtelseServiceTest {
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
-                LocalDate.now(), LocalDate.now(), vurdertAv = "ident"
+                 listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
             )
         )
 
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
-            fødselsdato,
-            beregningsgrunnlag,
-            underveisgrunnlag,
-            barnetilleggGrunnlag,
-            samordningsgrunnlag,
-            samordningUføre,
-            samordningArbeidsgiver
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                barnetilleggGrunnlag,
+                samordningsgrunnlag,
+                samordningUføre,
+                samordningArbeidsgiver
+            )
         ).beregnTilkjentYtelse()
 
         assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
@@ -146,18 +148,20 @@ class BeregnTilkjentYtelseServiceTest {
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
-                LocalDate.now(), LocalDate.now(), vurdertAv = "ident"
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
             )
         )
 
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
-            fødselsdato,
-            beregningsgrunnlag,
-            underveisgrunnlag,
-            barnetilleggGrunnlag,
-            samordningsgrunnlag,
-            samordningUføre,
-            samordningArbeidsgiver
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                barnetilleggGrunnlag,
+                samordningsgrunnlag,
+                samordningUføre,
+                samordningArbeidsgiver
+            )
         ).beregnTilkjentYtelse()
 
         assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
@@ -213,18 +217,20 @@ class BeregnTilkjentYtelseServiceTest {
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
-                LocalDate.now(), LocalDate.now(), vurdertAv = "ident"
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
             )
         )
 
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
-            fødselsdato,
-            beregningsgrunnlag,
-            underveisgrunnlag,
-            barnetilleggGrunnlag,
-            samordningsgrunnlag,
-            samordningUføre,
-            samordningArbeidsgiver
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                barnetilleggGrunnlag,
+                samordningsgrunnlag,
+                samordningUføre,
+                samordningArbeidsgiver
+            )
         ).beregnTilkjentYtelse()
 
         assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
@@ -289,18 +295,20 @@ class BeregnTilkjentYtelseServiceTest {
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
-                LocalDate.now(), LocalDate.now(), vurdertAv = "ident"
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
             )
         )
 
         val beregnetTilkjentYtelse = BeregnTilkjentYtelseService(
-            fødeselsdato,
-            beregningsgrunnlag,
-            underveisgrunnlag,
-            barnetilleggGrunnlag,
-            samordningsgrunnlag,
-            samordningUføre,
-            samordningArbeidsgiver
+            TilkjentYtelseGrunnlag(
+                fødeselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                barnetilleggGrunnlag,
+                samordningsgrunnlag,
+                samordningUføre,
+                samordningArbeidsgiver
+            )
         ).beregnTilkjentYtelse()
 
         assertThat(beregnetTilkjentYtelse.segmenter()).containsExactly(
@@ -366,18 +374,20 @@ class BeregnTilkjentYtelseServiceTest {
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
-                LocalDate.now(), LocalDate.now(), vurdertAv = "ident"
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
             )
         )
 
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
-            fødselsdato,
-            beregningsgrunnlag,
-            underveisgrunnlag,
-            barnetilleggGrunnlag,
-            samordningsgrunnlag,
-            samordningUføre,
-            samordningArbeidsgiver
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                barnetilleggGrunnlag,
+                samordningsgrunnlag,
+                samordningUføre,
+                samordningArbeidsgiver
+            )
         ).beregnTilkjentYtelse()
 
         assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
@@ -441,18 +451,20 @@ class BeregnTilkjentYtelseServiceTest {
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
-                LocalDate.now(), LocalDate.now(), vurdertAv = "ident"
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
             )
         )
 
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
-            fødselsdato,
-            beregningsgrunnlag,
-            underveisgrunnlag,
-            barnetilleggGrunnlag,
-            samordningsgrunnlag,
-            samordningUføre,
-            samordningArbeidsgiver
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                barnetilleggGrunnlag,
+                samordningsgrunnlag,
+                samordningUføre,
+                samordningArbeidsgiver
+            )
         ).beregnTilkjentYtelse()
 
         assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
@@ -514,18 +526,20 @@ class BeregnTilkjentYtelseServiceTest {
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
-                LocalDate.now(), LocalDate.now(), vurdertAv = "ident"
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
             )
         )
 
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
-            fødselsdato,
-            beregningsgrunnlag,
-            underveisgrunnlag,
-            barnetilleggGrunnlag,
-            samordningsgrunnlag,
-            samordningUføre,
-            samordningArbeidsgiver
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                barnetilleggGrunnlag,
+                samordningsgrunnlag,
+                samordningUføre,
+                samordningArbeidsgiver
+            )
         ).beregnTilkjentYtelse()
 
         // Forventer 30 prosent grunnlag først, deretter 100 prosent
@@ -627,18 +641,20 @@ class BeregnTilkjentYtelseServiceTest {
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
-                LocalDate.now(), LocalDate.now(), vurdertAv = "ident"
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
             )
         )
 
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
-            fødselsdato,
-            beregningsgrunnlag,
-            underveisgrunnlag,
-            barnetilleggGrunnlag,
-            samordningsgrunnlag,
-            samordningUføre,
-            samordningArbeidsgiver
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                barnetilleggGrunnlag,
+                samordningsgrunnlag,
+                samordningUføre,
+                samordningArbeidsgiver
+            )
         ).beregnTilkjentYtelse()
 
         // Forventer 30 prosent grunnlag først, deretter 100 prosent
@@ -708,18 +724,20 @@ class BeregnTilkjentYtelseServiceTest {
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
-                LocalDate.now(), LocalDate.now(), vurdertAv = "ident"
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
             )
         )
 
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
-            fødselsdato,
-            beregningsgrunnlag,
-            underveisgrunnlag,
-            barnetilleggGrunnlag,
-            samordningsgrunnlag,
-            samordningUføre,
-            samordningArbeidsgiver
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                barnetilleggGrunnlag,
+                samordningsgrunnlag,
+                samordningUføre,
+                samordningArbeidsgiver
+            ),
         ).beregnTilkjentYtelse()
 
         assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
@@ -772,18 +790,20 @@ class BeregnTilkjentYtelseServiceTest {
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
-                LocalDate.now(), LocalDate.now(), vurdertAv = "ident"
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
             )
         )
 
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
-            fødselsdato,
-            beregningsgrunnlag,
-            underveisgrunnlag,
-            barnetilleggGrunnlag,
-            samordningsgrunnlag,
-            samordningUføre,
-            samordningArbeidsgiver
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                barnetilleggGrunnlag,
+                samordningsgrunnlag,
+                samordningUføre,
+                samordningArbeidsgiver
+            )
         ).beregnTilkjentYtelse()
 
         assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
@@ -866,18 +886,20 @@ class BeregnTilkjentYtelseServiceTest {
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "Har fått sluttpakke",
-                LocalDate.of(2023, 6, 1), LocalDate.of(2023, 8, 1), vurdertAv = "ident"
+                listOf(Periode(LocalDate.of(2023, 6, 1), LocalDate.of(2023, 8, 1))) , vurdertAv = "ident"
             )
         )
 
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
-            fødselsdato,
-            beregningsgrunnlag,
-            underveisgrunnlag,
-            barnetilleggGrunnlag,
-            samordningsgrunnlag,
-            samordningUføre,
-            samordningArbeidsgiver
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                barnetilleggGrunnlag,
+                samordningsgrunnlag,
+                samordningUføre,
+                samordningArbeidsgiver
+            )
         ).beregnTilkjentYtelse()
 
         assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
@@ -937,18 +959,20 @@ class BeregnTilkjentYtelseServiceTest {
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
-                LocalDate.now(), LocalDate.now(), vurdertAv = "ident"
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
             )
         )
 
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
-            fødselsdato,
-            beregningsgrunnlag,
-            underveisgrunnlag,
-            barnetilleggGrunnlag,
-            samordningsgrunnlag,
-            samordningUføre,
-            samordningArbeidsgiver
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                barnetilleggGrunnlag,
+                samordningsgrunnlag,
+                samordningUføre,
+                samordningArbeidsgiver
+            )
         ).beregnTilkjentYtelse()
 
         assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
@@ -1033,18 +1057,20 @@ class BeregnTilkjentYtelseServiceTest {
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
-                LocalDate.now(), LocalDate.now(), vurdertAv = "ident"
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
             )
         )
 
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
-            fødselsdato,
-            beregningsgrunnlag,
-            underveisgrunnlag,
-            barnetilleggGrunnlag,
-            samordningsgrunnlag,
-            samordningUføre,
-            samordningArbeidsgiver
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                barnetilleggGrunnlag,
+                samordningsgrunnlag,
+                samordningUføre,
+                samordningArbeidsgiver
+            )
         ).beregnTilkjentYtelse()
 
         assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
@@ -1098,18 +1124,20 @@ class BeregnTilkjentYtelseServiceTest {
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
-                LocalDate.now(), LocalDate.now(), vurdertAv = "ident"
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
             )
         )
 
         val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
-            fødselsdato,
-            beregningsgrunnlag,
-            underveisgrunnlag,
-            barnetilleggGrunnlag,
-            samordningsgrunnlag,
-            samordningUføre,
-            samordningArbeidsgiver
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                barnetilleggGrunnlag,
+                samordningsgrunnlag,
+                samordningUføre,
+                samordningArbeidsgiver
+            )
         ).beregnTilkjentYtelse()
 
         val tilkjent = Tilkjent(

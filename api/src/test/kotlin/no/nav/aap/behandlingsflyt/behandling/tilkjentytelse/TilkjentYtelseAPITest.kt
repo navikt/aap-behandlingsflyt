@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.Meldep
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettMeldeperiodeSteg
+import no.nav.aap.behandlingsflyt.help.tomtTilkjentYtelseGrunnlag
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.MockDataSource
@@ -83,8 +84,7 @@ class TilkjentYtelseAPITest : BaseApiTest() {
             }
 
             InMemoryTilkjentYtelseRepository.lagre(
-                behandling.id, tilkjent = tilkjentYtelsePerioder
-            )
+                behandling.id, tilkjent = tilkjentYtelsePerioder, faktagrunnlag = tomtTilkjentYtelseGrunnlag, versjon = "")
 
             InMemoryMeldekortRepository.lagre(
                 behandling.id, setOf(

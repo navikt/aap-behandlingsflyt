@@ -4,7 +4,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
-data class Fødselsdato(private val dato: LocalDate) {
+data class Fødselsdato(val dato: LocalDate) {
 
     init {
         if (dato.isAfter(LocalDate.now())) throw IllegalArgumentException("Kan ikke sette fødselsdato inn i fremtiden")
