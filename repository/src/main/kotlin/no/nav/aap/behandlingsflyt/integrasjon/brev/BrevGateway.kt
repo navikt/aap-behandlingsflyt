@@ -22,6 +22,7 @@ import no.nav.aap.brev.kontrakt.Brevtype
 import no.nav.aap.brev.kontrakt.Faktagrunnlag
 import no.nav.aap.brev.kontrakt.FerdigstillBrevRequest
 import no.nav.aap.brev.kontrakt.ForhandsvisBrevRequest
+import no.nav.aap.brev.kontrakt.GjenopptaBrevbestillingRequest
 import no.nav.aap.brev.kontrakt.HentSignaturerRequest
 import no.nav.aap.brev.kontrakt.HentSignaturerResponse
 import no.nav.aap.brev.kontrakt.KanDistribuereBrevReponse
@@ -222,7 +223,7 @@ class BrevGateway : BrevbestillingGateway {
         val url = baseUri.resolve("/api/gjenoppta-bestilling")
 
         val request = PostRequest(
-            body = AvbrytBrevbestillingRequest(bestillingReferanse.brevbestillingReferanse),
+            body = GjenopptaBrevbestillingRequest(bestillingReferanse.brevbestillingReferanse),
             additionalHeaders = listOf(
                 Header("Accept", "application/json")
             )
