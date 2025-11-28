@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom
 
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -29,21 +30,36 @@ data class Sykdomsvurdering(
     val opprettet: Instant,
     val vurdertAv: Bruker,
 ) {
-
-    /* Denne metoden må sannsynligvis generaliseres når vi skal implementere gjeninntreden etter opphør. */
-    fun erFørsteVurdering(kravdato: LocalDate): Boolean {
-        return vurderingenGjelderTil?.let {
-            vurderingenGjelderFra <= kravdato && kravdato <= vurderingenGjelderTil
-        } ?: (vurderingenGjelderFra <= kravdato)
+    fun erOppfyltOrdinærtEllerMedYrkesskadeSettBortFraVissVarighet(yrkesskadevurdering: Yrkesskadevurdering?): Boolean {
+        return harSkadeSykdomEllerLyte
+                && erArbeidsevnenNedsatt == true
+                && erSkadeSykdomEllerLyteVesentligdel == true
+                && (
+                erNedsettelseIArbeidsevneMerEnnHalvparten == true ||
+                        ((yrkesskadevurdering?.erÅrsakssammenheng ?: false) &&
+                                erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true)
+                )
     }
 
-    fun erOppfylt(kravdato: LocalDate): Boolean {
-        return erOppfyltSettBortIfraVissVarighet() &&
-                if (erFørsteVurdering(kravdato)) erNedsettelseIArbeidsevneAvEnVissVarighet == true
+    fun erOppfyltOrdinærtEllerMedYrkesskadeMenIkkeVissVarighet(yrkesskadevurdering: Yrkesskadevurdering?): Boolean {
+        return harSkadeSykdomEllerLyte
+                && erArbeidsevnenNedsatt == true
+                && erSkadeSykdomEllerLyteVesentligdel == true
+                && erNedsettelseIArbeidsevneAvEnVissVarighet == false
+                && (
+                erNedsettelseIArbeidsevneMerEnnHalvparten == true ||
+                        ((yrkesskadevurdering?.erÅrsakssammenheng ?: false) &&
+                               erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true)
+                )
+    }
+    
+    fun erOppfyltOrdinær(kravdato: LocalDate, periodenVurderingenGjelderFor: Periode): Boolean {
+        return erOppfyltOrdinærSettBortIfraVissVarighet() &&
+                if (erFørsteVurdering(kravdato, periodenVurderingenGjelderFor)) erNedsettelseIArbeidsevneAvEnVissVarighet == true
                 else true
     }
 
-    fun erOppfyltForYrkesskade(kravdato: LocalDate): Boolean {
+    fun erOppfyltForYrkesskadeSettBortIfraÅrsakssammenheng(kravdato: LocalDate, periodenVurderingenGjelderFor: Periode): Boolean {
         val erTilstrekkeligNedsattArbeidsevne = erNedsettelseIArbeidsevneMerEnnHalvparten == true
                 || erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true
         
@@ -51,16 +67,26 @@ data class Sykdomsvurdering(
                 && erArbeidsevnenNedsatt == true
                 && erSkadeSykdomEllerLyteVesentligdel == true
                 && erTilstrekkeligNedsattArbeidsevne
-                && erVissVarighetOmRelevant(kravdato)
+                && erVissVarighetOmRelevant(kravdato, periodenVurderingenGjelderFor)
     }
 
-    fun erVissVarighetOmRelevant(kravdato: LocalDate): Boolean {
-        return if (erFørsteVurdering(kravdato))
+    fun erOppfyltForYrkesskadeSettBortIfraÅrsakssammenhengOgVissVarighet(): Boolean {
+        val erTilstrekkeligNedsattArbeidsevne = erNedsettelseIArbeidsevneMerEnnHalvparten == true
+                || erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true
+
+        return harSkadeSykdomEllerLyte
+                && erArbeidsevnenNedsatt == true
+                && erSkadeSykdomEllerLyteVesentligdel == true
+                && erTilstrekkeligNedsattArbeidsevne
+    }
+
+    private fun erVissVarighetOmRelevant(kravdato: LocalDate, periodenVurderingenGjelderFor: Periode): Boolean {
+        return if (erFørsteVurdering(kravdato, periodenVurderingenGjelderFor))
             erNedsettelseIArbeidsevneAvEnVissVarighet == true
         else true
     }
 
-    fun erOppfyltSettBortIfraVissVarighet(): Boolean {
+    fun erOppfyltOrdinærSettBortIfraVissVarighet(): Boolean {
         return harSkadeSykdomEllerLyte
                 && erArbeidsevnenNedsatt == true
                 && erSkadeSykdomEllerLyteVesentligdel == true
@@ -85,6 +111,13 @@ data class Sykdomsvurdering(
             return false
         }
         return true
+    }
+    
+    companion object {
+        fun erFørsteVurdering(kravdato: LocalDate, periodenVurderingenGjelderFor: Periode): Boolean {
+            return periodenVurderingenGjelderFor.inneholder(kravdato)
+        }
+
     }
 }
 

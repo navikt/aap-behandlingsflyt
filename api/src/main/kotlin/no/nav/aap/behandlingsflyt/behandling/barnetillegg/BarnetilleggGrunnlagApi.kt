@@ -26,6 +26,7 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import org.slf4j.LoggerFactory
@@ -83,7 +84,7 @@ private fun opprettBarnetilleggDto(
     log.info("Fant ${folkeregister.size} folkeregister-barn for behandling ${behandling.referanse}.")
 
     val saksbehandlerOppgittBarn = barnGrunnlag?.saksbehandlerOppgitteBarn?.barn.orEmpty()
-    val uavklarteBarn = barnetilleggTidslinje.segmenter().map { it.verdi.barnTilAvklaring() }.flatten().toSet()
+    val uavklarteBarn = filtrerUavklarteBarn(barnetilleggTidslinje, saksbehandlerOppgittBarn)
     val vurderteBarn = barnRepository.hentVurderteBarnHvisEksisterer(behandling.id)
     val ansattNavnOgEnhet = vurderteBarn?.let { ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv) }
 
@@ -148,6 +149,21 @@ private fun filtrerSaksbehandlerOppgittBarn(
             erSlettbar = erNyttBarn
         )
     }
+}
+
+private fun filtrerUavklarteBarn(
+    barnetilleggTidslinje: Tidslinje<RettTilBarnetillegg>,
+    saksbehandlerOppgittBarn: List<SaksbehandlerOppgitteBarn>
+): List<BarnIdentifikator> {
+    return barnetilleggTidslinje.segmenter().flatMap { it.verdi.barnTilAvklaring() }.toSet()
+        .filter { ident ->
+            saksbehandlerOppgittBarn.none { sob ->
+                when (ident) {
+                    is BarnIdent -> sob.identifikator().let { it is BarnIdent && it.er(ident) }
+                    is BarnIdentifikator.NavnOgFødselsdato -> sob.navn == ident.navn && sob.fødselsdato == ident.fødselsdato
+                }
+            }
+        }
 }
 
 private fun hentNyeSaksbehandlerOppgitteBarnFor(

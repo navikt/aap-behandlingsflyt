@@ -4,9 +4,7 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettMeldeperiodeSteg
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
@@ -48,7 +46,11 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource, repositoryRegis
                     val meldekortene = meldekortGrunnlag?.meldekort().orEmpty()
 
                     val tilkjentYtelseTidslinje = tilkjentYtelse.tilTidslinje()
-                    val meldeperioder = meldeperiodeRepository.hentMeldeperioder(behandling.id, tilkjentYtelseTidslinje.helePerioden())
+                    val meldeperioder = if(tilkjentYtelseTidslinje.isNotEmpty()) {
+                        meldeperiodeRepository.hentMeldeperioder(behandling.id, tilkjentYtelseTidslinje.helePerioden())
+                    } else {
+                        emptyList()
+                    }
 
                     meldeperioder.map { meldeperiode ->
                         val begrensetTil = tilkjentYtelseTidslinje.begrensetTil(meldeperiode)
