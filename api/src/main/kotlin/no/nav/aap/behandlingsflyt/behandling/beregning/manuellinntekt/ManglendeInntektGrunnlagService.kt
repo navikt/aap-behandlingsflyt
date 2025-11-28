@@ -1,14 +1,10 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning.manuellinntekt
 
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.lookup.repository.RepositoryProvider
-import java.time.MonthDay
-import java.time.Year
-
 
 class ManglendeInntektGrunnlagService(
     private val manuellInntektGrunnlagRepository: ManuellInntektGrunnlagRepository,
@@ -28,17 +24,10 @@ class ManglendeInntektGrunnlagService(
         val manuelleInntekter = grunnlag.manuelleInntekter
 
         val årsVurderinger = manuelleInntekter.map { manuellInntekt ->
-            val gVerdi = Grunnbeløp.tilTidslinjeGjennomsnitt().segment(
-                Year.of(manuellInntekt.år.value).atMonthDay(
-                    MonthDay.of(1, 1)
-                )
-            )!!.verdi
-
-            AarData(
-                ar = manuellInntekt.år.value,
-                belop = manuellInntekt.belop?.verdi,
-                eosBelop = manuellInntekt.eosBelop?.verdi,
-                gverdi = gVerdi.verdi
+            ÅrData(
+                år = manuellInntekt.år.value,
+                beløp = manuellInntekt.belop?.verdi,
+                eøsBeløp = manuellInntekt.eøsBeløp?.verdi
             )
         }
 
@@ -48,7 +37,7 @@ class ManglendeInntektGrunnlagService(
                 manuelleInntekter.first().vurdertAv,
                 manuelleInntekter.first().opprettet.toLocalDate()
             ),
-            aarsVurderinger = årsVurderinger
+            årsVurderinger = årsVurderinger
         )
     }
 
@@ -61,18 +50,11 @@ class ManglendeInntektGrunnlagService(
         val mappedHistoriskeVurderinger = historiskeVurderinger.map { historiskManuellInntektSet ->
             historiskManuellInntektSet
 
-            val aarsVurderinger = historiskManuellInntektSet.map { historiskManuellInntekt ->
-                val gVerdi = Grunnbeløp.tilTidslinjeGjennomsnitt().segment(
-                    Year.of(historiskManuellInntekt.år.value).atMonthDay(
-                        MonthDay.of(1, 1)
-                    )
-                )!!.verdi
-
-                AarData(
-                    ar = historiskManuellInntekt.år.value,
-                    belop = historiskManuellInntekt.belop?.verdi,
-                    eosBelop = historiskManuellInntekt.eosBelop?.verdi,
-                    gverdi = gVerdi.verdi
+            val årsVurderinger = historiskManuellInntektSet.map { historiskManuellInntekt ->
+                ÅrData(
+                    år = historiskManuellInntekt.år.value,
+                    beløp = historiskManuellInntekt.belop?.verdi,
+                    eøsBeløp = historiskManuellInntekt.eøsBeløp?.verdi
                 )
             }
 
@@ -82,7 +64,7 @@ class ManglendeInntektGrunnlagService(
                     historiskManuellInntektSet.first().vurdertAv,
                     historiskManuellInntektSet.first().opprettet.toLocalDate()
                 ),
-                aarsVurderinger = aarsVurderinger
+                årsVurderinger = årsVurderinger
             )
         }
         return mappedHistoriskeVurderinger

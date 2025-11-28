@@ -10,5 +10,5 @@ data class ManuellInntektVurdering(
     val belop: Beløp? = null,
     val vurdertAv: String,
     val opprettet: LocalDateTime = LocalDateTime.now(),
-    val eosBelop: Beløp? = null,
+    val eøsBeløp: Beløp? = null,
 )

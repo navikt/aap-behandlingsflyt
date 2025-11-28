@@ -11,7 +11,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektG
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
@@ -19,7 +18,6 @@ import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
-import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import org.slf4j.LoggerFactory
@@ -58,10 +56,9 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(
                         val registrerteInntekterSisteTreÅr = inntektGrunnlag?.inntekter?.filter { inntekt ->
                             relevanteÅr.contains(inntekt.år)
                         }.orEmpty().map { inntekt ->
-                            AarData(
-                                ar = inntekt.år.value,
-                                belop = inntekt.beløp.verdi,
-                                gverdi = Grunnbeløp.finnGUnit(inntekt.år, inntekt.beløp).gUnit.verdi()
+                            ÅrData(
+                                år = inntekt.år.value,
+                                beløp = inntekt.beløp.verdi
                             )
                         }
 

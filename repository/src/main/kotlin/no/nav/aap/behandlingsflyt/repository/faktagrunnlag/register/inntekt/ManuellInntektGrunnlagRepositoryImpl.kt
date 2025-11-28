@@ -87,7 +87,7 @@ class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection)
                     begrunnelse = it.getString("begrunnelse"),
                     belop = it.getBigDecimalOrNull("belop")?.let { verdi -> Beløp(verdi) },
                     vurdertAv = it.getString("vurdert_av"),
-                    eosBelop = it.getBigDecimalOrNull("eos_belop")?.let { verdi -> Beløp(verdi)}
+                    eøsBeløp = it.getBigDecimalOrNull("eos_belop")?.let { verdi -> Beløp(verdi)}
                 )
             }
         }
@@ -143,7 +143,7 @@ class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection)
                 setBigDecimal(3, it.belop?.verdi)
                 setString(4, it.vurdertAv)
                 setLong(5, manuellInntektVurderingerId)
-                setBigDecimal(6, it.eosBelop?.verdi)
+                setBigDecimal(6, it.eøsBeløp?.verdi)
             }
         }
     }

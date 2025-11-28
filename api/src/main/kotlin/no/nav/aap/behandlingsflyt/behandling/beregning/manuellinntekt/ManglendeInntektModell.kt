@@ -21,19 +21,18 @@ data class ManuellInntektGrunnlagResponse(
     @Deprecated("Erstattes av vurderinger") val historiskeVurderinger: List<ManuellInntektVurderingGrunnlagResponse>,
     val manuelleVurderinger: ManuellInntektGrunnlagVurdering? = null,
     val historiskeManuelleVurderinger: List<ManuellInntektGrunnlagVurdering>? = emptyList(),
-    val registrerteInntekterSisteRelevanteAr: List<AarData> = emptyList(),
+    val registrerteInntekterSisteRelevanteAr: List<ÅrData> = emptyList(),
     val harTilgangTilÅSaksbehandle: Boolean,
 )
 
 data class ManuellInntektGrunnlagVurdering(
     val begrunnelse: String,
     val vurdertAv: VurdertAvResponse,
-    val aarsVurderinger: List<AarData>,
+    val årsVurderinger: List<ÅrData>,
 )
 
-data class AarData(
-    val ar: Int,
-    val belop: BigDecimal?,
-    val gverdi: BigDecimal,
-    val eosBelop: BigDecimal? = null,
+data class ÅrData(
+    val år: Int,
+    val beløp: BigDecimal?,
+    val eøsBeløp: BigDecimal? = null,
 )

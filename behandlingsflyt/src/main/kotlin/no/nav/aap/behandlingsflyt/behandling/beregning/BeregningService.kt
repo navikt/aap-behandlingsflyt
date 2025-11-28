@@ -101,8 +101,8 @@ class BeregningService(
             }
 
         val manuellEOSByÅr = manuelleInntekter
-            .filter { it.eosBelop != null }
-            .map { InntektPerÅr(it.år, it.eosBelop!!, it) }
+            .filter { it.eøsBeløp != null }
+            .map { InntektPerÅr(it.år, it.eøsBeløp!!, it) }
             .groupBy { it.år }
             .mapValues {
                 require(it.value.size == 1)

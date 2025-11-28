@@ -34,8 +34,8 @@ class AvklarManuellInntektVurderingLøser(
         val sisteRelevanteÅr = relevantePeriode.max()
 
         if (løsning.manuellVurderingForManglendeInntekt.belop < BigDecimal.ZERO
-            || løsning.manuellVurderingForManglendeInntekt.vurderinger?.any { it.belop != null && it.belop < BigDecimal.ZERO } == true
-            || løsning.manuellVurderingForManglendeInntekt.vurderinger?.any { it.eosBelop != null && it.eosBelop < BigDecimal.ZERO } == true
+            || løsning.manuellVurderingForManglendeInntekt.vurderinger?.any { it.beløp != null && it.beløp < BigDecimal.ZERO } == true
+            || løsning.manuellVurderingForManglendeInntekt.vurderinger?.any { it.eøsBeløp != null && it.eøsBeløp < BigDecimal.ZERO } == true
         ) {
             throw UgyldigForespørselException("Inntekt kan ikke være negativ")
         }
@@ -46,10 +46,10 @@ class AvklarManuellInntektVurderingLøser(
                 løsning.manuellVurderingForManglendeInntekt.vurderinger.map { vurdering ->
                     ManuellInntektVurdering(
                         begrunnelse = begrunnelse,
-                        belop = vurdering.belop?.let { Beløp(it) },
+                        belop = vurdering.beløp?.let { Beløp(it) },
                         vurdertAv = kontekst.bruker.ident,
-                        år = Year.of(vurdering.ar),
-                        eosBelop = vurdering.eosBelop?.let { Beløp(it) },
+                        år = Year.of(vurdering.år),
+                        eøsBeløp = vurdering.eøsBeløp?.let { Beløp(it) },
                     )
                 }.toSet()
             } else {
