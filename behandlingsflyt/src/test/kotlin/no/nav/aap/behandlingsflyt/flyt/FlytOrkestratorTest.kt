@@ -175,6 +175,7 @@ import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.Period
 import java.time.Year
 import java.util.*
 import kotlin.reflect.KClass
@@ -465,9 +466,15 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
 
         assertThat(barnErAtten.segmenter()).isNotEmpty
         // Verifiser at barnetillegg kun gis fram til barnet er 18 år
-        assertTidslinje(barnErAtten, periodeBarnUnderAtten to {
-            assertThat(it).isEqualTo(Beløp(37))
-        })
+        assertTidslinje(
+            barnErAtten,
+            Periode(fom = periodeBarnUnderAtten.fom, tom = LocalDate.of(2025, 12, 31)) to {
+                assertThat(it).isEqualTo(Beløp(37))
+            },
+            Periode(fom = LocalDate.of(2026, 1, 1), tom = periodeBarnUnderAtten.tom) to {
+                assertThat(it).isEqualTo(Beløp(38))
+            }
+        )
 
         val periodeBarnOverAtten = Periode(barnBlirAttenPå, periode.tom)
         val barnErOverAtten = barnetillegg.begrensetTil(periodeBarnOverAtten)
@@ -545,10 +552,16 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         assertThat(begrensetTilRettighetsperioden.helePerioden()).isEqualTo(periode)
 
         // Skal kun gi barnetillegg for det unge barnet
-        assertTidslinje(begrensetTilRettighetsperioden, periode to {
-            assertThat(it.barnetillegg).isEqualTo(Beløp(37))
-            assertThat(it.antallBarn).isEqualTo(1)
-        })
+        assertTidslinje(
+            begrensetTilRettighetsperioden,
+            Periode(fom = periode.fom, tom = LocalDate.of(2025, 12, 31)) to {
+                assertThat(it.barnetillegg).isEqualTo(Beløp(37))
+                assertThat(it.antallBarn).isEqualTo(1)
+            },
+            Periode(fom = LocalDate.of(2026, 1, 1), tom = periode.tom) to {
+                assertThat(it.barnetillegg).isEqualTo(Beløp(38))
+                assertThat(it.antallBarn).isEqualTo(1)
+            })
     }
 
     @Test
