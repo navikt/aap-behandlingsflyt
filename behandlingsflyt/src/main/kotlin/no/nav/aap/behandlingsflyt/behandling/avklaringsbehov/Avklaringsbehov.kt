@@ -251,11 +251,11 @@ class Avklaringsbehov(
     }
 
     fun perioderSomSkalLøses(): Set<Periode>? {
-        return historikk.last().perioderVedtaketBehøverVurdering
+        return historikk.filter { it.status.erÅpent() }.maxOfOrNull { it }?.perioderVedtaketBehøverVurdering
     }
 
     fun perioderSomIkkeErTilstrekkeligVurdert(): Set<Periode>? {
-        return historikk.last().perioderSomIkkeErTilstrekkeligVurdert
+        return historikk.filter { it.status.erÅpent() }.maxOfOrNull { it }?.perioderSomIkkeErTilstrekkeligVurdert
     }
 
 
