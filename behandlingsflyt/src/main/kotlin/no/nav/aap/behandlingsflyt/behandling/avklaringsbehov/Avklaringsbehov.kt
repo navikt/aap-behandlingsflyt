@@ -250,9 +250,14 @@ class Avklaringsbehov(
         return historikk.last().tidsstempel
     }
 
-    fun perioder(): Set<Periode>? {
+    fun perioderSomSkalLøses(): Set<Periode>? {
+        return historikk.last().perioderVedtaketBehøverVurdering
+    }
+
+    fun perioderSomIkkeErTilstrekkeligVurdert(): Set<Periode>? {
         return historikk.last().perioderSomIkkeErTilstrekkeligVurdert
     }
+
 
     override fun toString(): String {
         return "Avklaringsbehov(definisjon=$definisjon, status=${status()}, løsesISteg=${løsesISteg()})"

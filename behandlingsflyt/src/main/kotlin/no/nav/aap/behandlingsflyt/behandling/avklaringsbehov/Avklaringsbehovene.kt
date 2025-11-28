@@ -309,7 +309,7 @@ class Avklaringsbehovene(
 
             val behovForDefinisjon = this.hentBehovForDefinisjon(løsning.definisjon())
             if (behovForDefinisjon != null) {
-                val perioderSomSkalLøses = behovForDefinisjon.perioder().orEmpty().somTidslinje { it }
+                val perioderSomSkalLøses = behovForDefinisjon.perioderSomSkalLøses().orEmpty().somTidslinje { it }
 
                 val perioderSomManglerLøsning = perioderSomSkalLøses.leftJoin(perioderDekketAvLøsning) { _, periodeILøsning -> 
                     periodeILøsning != null

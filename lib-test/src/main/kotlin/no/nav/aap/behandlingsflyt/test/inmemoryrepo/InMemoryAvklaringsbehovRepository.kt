@@ -61,7 +61,8 @@ object InMemoryAvklaringsbehovRepository : AvklaringsbehovRepository,
                     begrunnelse,
                     grunn,
                     endretAv,
-                    perioderSomIkkeErTilstrekkeligVurdert
+                    perioderSomIkkeErTilstrekkeligVurdert,
+                    perioderVedtaketBehøverVurdering
                 )
             } else {
                 eksisterendeBehov.historikk.add(
@@ -168,7 +169,8 @@ object InMemoryAvklaringsbehovRepository : AvklaringsbehovRepository,
             begrunnelse: String,
             venteÅrsak: ÅrsakTilSettPåVent?,
             endretAv: String,
-            perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?
+            perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
+            perioderVedtaketBehøverVurdering: Set<Periode>?
         ) {
             val avklaringsbehov = Avklaringsbehov(
                 idSeq.andIncrement, definisjon,
@@ -179,7 +181,8 @@ object InMemoryAvklaringsbehovRepository : AvklaringsbehovRepository,
                         grunn = venteÅrsak,
                         endretAv = endretAv,
                         frist = frist,
-                        perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert
+                        perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
+                        perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering
                     )
                 ),
                 funnetISteg = funnetISteg,
