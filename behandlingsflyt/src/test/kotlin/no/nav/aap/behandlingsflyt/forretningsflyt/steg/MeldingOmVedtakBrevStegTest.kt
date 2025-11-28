@@ -20,6 +20,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
@@ -44,7 +45,7 @@ class MeldingOmVedtakBrevStegTest {
     fun setup() {
         every { trekkKlageService.klageErTrukket(any()) } returns false
         every { brevUtlederService.utledBehovForMeldingOmVedtak(any()) } returns VedtakAktivitetsplikt11_7
-        every { brevbestillingService.bestillV2(any(), any(), any(), any()) } returns UUID.randomUUID()
+        every { brevbestillingService.bestill(any(), any(), any(), any()) } returns UUID.randomUUID()
         every { brevbestillingService.erAlleBestillingerOmVedtakIEndeTilstand(any()) } returns true
         every { brevbestillingService.harBestillingOmVedtak(any()) } returns false
     }
@@ -99,7 +100,8 @@ class MeldingOmVedtakBrevStegTest {
             behandlingRepository = InMemoryBehandlingRepository,
             trekkKlageService = trekkKlageService,
             avklaringsbehovService = avklaringsbehovService,
-            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
+            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
+            unleashGateway = FakeUnleash,
         )
 
         // Runde-1
@@ -114,7 +116,7 @@ class MeldingOmVedtakBrevStegTest {
         assertThat(avklaringsbehov!!.historikk).hasSize(1)
         assertThat(avklaringsbehov.historikk.get(0).status).isEqualTo(Status.OPPRETTET)
 
-        verify(exactly = 1) { brevbestillingService.bestillV2(allAny(), allAny(), allAny(), allAny()) }
+        verify(exactly = 1) { brevbestillingService.bestill(allAny(), allAny(), allAny(), allAny()) }
 
         // Runde-2
 
@@ -139,7 +141,7 @@ class MeldingOmVedtakBrevStegTest {
         assertThat(avklaringsbehov2!!.historikk).hasSize(2)
         assertThat(avklaringsbehov2.historikk.last().status).isEqualTo(Status.AVSLUTTET)
         // brevBestilling har ikke kjørt i runde-2 da det allerede er bestilt
-        verify(exactly = 1) { brevbestillingService.bestillV2(allAny(), allAny(), allAny(), allAny()) }
+        verify(exactly = 1) { brevbestillingService.bestill(allAny(), allAny(), allAny(), allAny()) }
     }
 
     @Test
@@ -175,7 +177,8 @@ class MeldingOmVedtakBrevStegTest {
             behandlingRepository = InMemoryBehandlingRepository,
             trekkKlageService = trekkKlageService,
             avklaringsbehovService = avklaringsbehovService,
-            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
+            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
+            unleashGateway = FakeUnleash,
         )
         every { brevUtlederService.utledBehovForMeldingOmVedtak(any()) } returns null
 
@@ -184,7 +187,7 @@ class MeldingOmVedtakBrevStegTest {
         assertThat(resultat1).isEqualTo(Fullført)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         assertThat(avklaringsbehovene.alle()).isEmpty()
-        verify(exactly = 0) { brevbestillingService.bestillV2(allAny(), allAny(), allAny(), allAny()) }
+        verify(exactly = 0) { brevbestillingService.bestill(allAny(), allAny(), allAny(), allAny()) }
     }
 
     @Test
@@ -220,7 +223,8 @@ class MeldingOmVedtakBrevStegTest {
             behandlingRepository = InMemoryBehandlingRepository,
             trekkKlageService = trekkKlageService,
             avklaringsbehovService = avklaringsbehovService,
-            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
+            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
+            unleashGateway = FakeUnleash,
         )
         every { trekkKlageService.klageErTrukket(any()) } returns true
 
@@ -229,7 +233,7 @@ class MeldingOmVedtakBrevStegTest {
         assertThat(resultat1).isEqualTo(Fullført)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         assertThat(avklaringsbehovene.alle()).isEmpty()
-        verify(exactly = 0) { brevbestillingService.bestillV2(allAny(), allAny(), allAny(), allAny()) }
+        verify(exactly = 0) { brevbestillingService.bestill(allAny(), allAny(), allAny(), allAny()) }
     }
 
 }

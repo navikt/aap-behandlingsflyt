@@ -12,6 +12,7 @@ import no.nav.aap.brev.kontrakt.BrevbestillingResponse
 import no.nav.aap.brev.kontrakt.Brevtype
 import no.nav.aap.brev.kontrakt.MottakerDistStatus
 import no.nav.aap.brev.kontrakt.MottakerDto
+import no.nav.aap.brev.kontrakt.BrevdataDto
 import no.nav.aap.brev.kontrakt.Signatur
 import no.nav.aap.brev.kontrakt.SignaturGrunnlag
 import no.nav.aap.brev.kontrakt.Språk
@@ -26,14 +27,15 @@ import java.util.*
 class FakeBrevbestillingGateway : BrevbestillingGateway {
     var brevbestillingResponse: BrevbestillingResponse? = null
 
-    override fun bestillBrevV2(
+    override fun bestillBrev(
         saksnummer: Saksnummer,
         brukerIdent: Ident,
         behandlingReferanse: BehandlingReferanse,
         unikReferanse: String,
         brevBehov: BrevBehov,
         vedlegg: Vedlegg?,
-        ferdigstillAutomatisk: Boolean
+        ferdigstillAutomatisk: Boolean,
+        brukApiV3: Boolean,
     ): BrevbestillingReferanse {
         return BrevbestillingReferanse(UUID.randomUUID())
             .also {
@@ -77,6 +79,13 @@ class FakeBrevbestillingGateway : BrevbestillingGateway {
 
     override fun oppdater(bestillingReferanse: BrevbestillingReferanse, brev: Brev) {
         brevbestillingResponse = brevbestillingResponse!!.copy(brev = brev)
+    }
+
+    override fun oppdaterV3(
+        bestillingReferanse: BrevbestillingReferanse,
+        brevdata: BrevdataDto
+    ) {
+        brevbestillingResponse = brevbestillingResponse!!.copy(brevdata = brevdata)
     }
 
     override fun hentSignaturForhåndsvisning(
