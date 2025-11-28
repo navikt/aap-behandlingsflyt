@@ -38,7 +38,7 @@ interface BrevbestillingGateway : Gateway {
 
     fun avbryt(bestillingReferanse: BrevbestillingReferanse)
 
-    fun gjenoppta(referanse: BrevbestillingReferanse)
+    fun gjenoppta(bestillingReferanse: BrevbestillingReferanse)
 
     fun kanDistribuereBrev(brukerIdent: String, mottakerIdentListe: List<String>, brevbestillingReferanse: BrevbestillingReferanse): List<MottakerDistStatus>
 
