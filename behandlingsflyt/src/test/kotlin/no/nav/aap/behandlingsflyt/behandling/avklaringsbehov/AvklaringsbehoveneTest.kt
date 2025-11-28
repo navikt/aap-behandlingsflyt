@@ -2,10 +2,8 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangArbeidLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.flate.OvergangArbeidVurderingLøsningDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -17,7 +15,6 @@ import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
-import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
@@ -189,11 +186,12 @@ class AvklaringsbehoveneTest {
         avklaringsbehovene.leggTil(
             listOf(avklaringsbehov.definisjon),
             avklaringsbehov.funnetISteg,
-            perioderSomIkkeErTilstrekkeligVurdert = gamlePerioder
+            perioderSomIkkeErTilstrekkeligVurdert = gamlePerioder,
+            perioderVedtaketBehøverVurdering = gamlePerioder,
         )
 
         assertThat(avklaringsbehovene.åpne()).hasSize(1)
-        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)?.perioder())
+        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)?.perioderSomSkalLøses())
             .isEqualTo(gamlePerioder)
 
         val nyePerioder = setOf(
@@ -203,7 +201,9 @@ class AvklaringsbehoveneTest {
         avklaringsbehovene.oppdaterPerioder(Definisjon.AVKLAR_SYKDOM, nyePerioder, nyePerioder)
 
         assertThat(avklaringsbehovene.åpne()).hasSize(1)
-        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)?.perioder())
+        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)?.perioderSomSkalLøses())
+            .isEqualTo(nyePerioder)
+        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)?.perioderSomIkkeErTilstrekkeligVurdert())
             .isEqualTo(nyePerioder)
 
     }
@@ -218,8 +218,9 @@ class AvklaringsbehoveneTest {
             kreverToTrinn = null
         )
         avklaringsbehovene.leggTil(
-            perioderSomIkkeErTilstrekkeligVurdert =
+            perioderVedtaketBehøverVurdering =
                 setOf(Periode(1 januar 2021, 1 februar 2021), Periode(1 mars 2021, 1 april 2021)),
+            perioderSomIkkeErTilstrekkeligVurdert =  setOf(Periode(1 januar 2021, 1 februar 2021), Periode(1 mars 2021, 1 april 2021)),
             definisjoner = listOf(
                 avklaringsbehov.definisjon
             ), funnetISteg = avklaringsbehov.funnetISteg
