@@ -362,6 +362,11 @@ object Revurdering : BehandlingType {
                 vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.REVURDER_SAMORDNING_TJENESTEPENSJON)
             )
             .medSteg(
+                steg = SamordningArbeidsgiverSteg,
+                vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.REVURDER_SAMORDNING_ARBEIDSGIVER)
+            )
+            .medSteg(steg = SamordningAvslagSteg)
+            .medSteg(
                 steg = SamordningAndreStatligeYtelserSteg,
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
@@ -373,11 +378,6 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
                 )
             )
-            .medSteg(
-                steg = SamordningArbeidsgiverSteg,
-                vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.REVURDER_SAMORDNING_ARBEIDSGIVER)
-            )
-            .medSteg(steg = SamordningAvslagSteg)
             .medSteg(
                 steg = IkkeOppfyltMeldepliktSteg,
                 vurderingsbehovRelevanteForSteg = Vurderingsbehov.alleInklusivGRegulering(),

@@ -268,7 +268,8 @@ class AvventUtbetalingServiceTest {
                 SamordningArbeidsgiverGrunnlag(
                     vurdering = SamordningArbeidsgiverVurdering(
                         "Har fått sluttpakke",
-                        LocalDate.of(2025, 1, 4), LocalDate.of(2025, 1, 12), vurdertAv = "ident"
+                        listOf(Periode(LocalDate.of(2025, 1, 4), LocalDate.of(2025, 1, 12))),
+                         vurdertAv = "ident"
                     )
                 )
         val service = AvventUtbetalingService(

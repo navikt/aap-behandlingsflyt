@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.GraderingGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
+import no.nav.aap.behandlingsflyt.help.tomtTilkjentYtelseGrunnlag
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
@@ -91,7 +92,7 @@ class TilkjentYtelseRepositoryImplTest {
                     ),
                 )
 
-            tilkjentYtelseRepository.lagre(behandling.id, tilkjentYtelse)
+            tilkjentYtelseRepository.lagre(behandling.id, tilkjentYtelse, tomtTilkjentYtelseGrunnlag, "")
             val tilkjentYtelseHentet = tilkjentYtelseRepository.hentHvisEksisterer(behandling.id)
             assertNotNull(tilkjentYtelseHentet)
             assertThat(tilkjentYtelseHentet).isEqualTo(tilkjentYtelse)
@@ -167,8 +168,9 @@ class TilkjentYtelseRepositoryImplTest {
                             utbetalingsdato = LocalDate.now().plusDays(14)
                         )
                     ),
-                )
-
+                ),
+                tomtTilkjentYtelseGrunnlag,
+                ""
             )
             tilkjentYtelseRepository.lagre(
                 behandling.id, listOf(
@@ -218,7 +220,9 @@ class TilkjentYtelseRepositoryImplTest {
                             utbetalingsdato = LocalDate.now().plusDays(14)
                         )
                     ),
-                )
+                ),
+                tomtTilkjentYtelseGrunnlag,
+                ""
             )
             assertDoesNotThrow { tilkjentYtelseRepository.slett(behandling.id) }
         }
