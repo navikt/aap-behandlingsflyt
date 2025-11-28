@@ -117,20 +117,8 @@ enum class EØSLand(override val alpha2: String) : EØSLandEllerLandMedAvtale{
 }
 
 enum class LandMedAvtale(override val alpha2: String) : EØSLandEllerLandMedAvtale {
-    BEL("BE"), BGR("BG"), DNK("DK"), EST("EE"), FIN("FI"),
-    FRA("FR"), GRC("GR"), IRL("IE"), ISL("IS"), ITA("IT"),
-    HRV("HR"), CYP("CY"), LVA("LV"), LIE("LI"), LTU("LT"),
-    LUX("LU"), MLT("MT"), NLD("NL"), NOR("NO"), POL("PL"),
-    PRT("PT"), ROU("RO"), SVK("SK"), SVN("SI"), ESP("ES"),
-    CHE("CH"), SWE("SE"), CZE("CZ"), DEU("DE"), HUN("HU"),
-    AUT("AT"), GBR("GB"), AUS("AU");
+    GBR("GB"), AUS("AU");
 
-    companion object {
-        fun erNorge(code: String?): Boolean {
-            if (code == null) return false
-            return NOR.name == code.uppercase() || NOR.alpha2 == code.uppercase()
-        }
-    }
 }
 
 sealed interface EØSLandEllerLandMedAvtale {

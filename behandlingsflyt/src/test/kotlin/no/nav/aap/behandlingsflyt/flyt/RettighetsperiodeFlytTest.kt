@@ -178,7 +178,7 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
                             fom = sak.rettighetsperiode.fom,
                             tom = null,
                             begrunnelse = "",
-                            lovvalg = LovvalgDto("begrunnelse", LandMedAvtale.NOR),
+                            lovvalg = LovvalgDto("begrunnelse", EØSLand.NOR),
                             medlemskap = MedlemskapDto("begrunnelse", true)
                         )
                     )
@@ -215,7 +215,7 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
                             fom = nyStartDato,
                             tom = null,
                             begrunnelse = "",
-                            lovvalg = LovvalgDto("begrunnelse", LandMedAvtale.NOR),
+                            lovvalg = LovvalgDto("begrunnelse", EØSLand.NOR),
                             medlemskap = MedlemskapDto("begrunnelse", true)
                         )
                     )

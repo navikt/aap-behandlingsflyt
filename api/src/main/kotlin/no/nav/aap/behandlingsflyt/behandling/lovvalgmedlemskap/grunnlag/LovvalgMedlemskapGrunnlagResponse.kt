@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag
 import no.nav.aap.behandlingsflyt.PeriodiserteVurderingerDto
 import no.nav.aap.behandlingsflyt.VurderingDto
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLand
+import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LandMedAvtale
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
@@ -36,7 +37,7 @@ data class PeriodisertManuellVurderingForLovvalgMedlemskapResponse(
 
 data class LovvalgResponse(
     val begrunnelse: String,
-    val landMedAvtale: LandMedAvtale
+    val landMedAvtale: EØSLandEllerLandMedAvtale
 )
 
 data class MedlemskapResponse(

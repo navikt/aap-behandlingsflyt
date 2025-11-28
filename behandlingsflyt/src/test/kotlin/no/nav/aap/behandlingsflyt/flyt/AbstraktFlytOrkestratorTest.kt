@@ -41,6 +41,7 @@ import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.AvklarOppholdkravLøsn
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLand
+import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LandMedAvtale
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
@@ -1223,7 +1224,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                         fom = gjelderFra,
                         tom = null,
                         begrunnelse = "",
-                        lovvalg = LovvalgDto("begrunnelse", LandMedAvtale.NOR),
+                        lovvalg = LovvalgDto("begrunnelse", EØSLand.NOR),
                         medlemskap = MedlemskapDto("begrunnelse", medlem)
                     )
                 )
@@ -1240,7 +1241,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                         fom = gjelderFra,
                         tom = null,
                         begrunnelse = "",
-                        lovvalg = LovvalgDto("begrunnelse", LandMedAvtale.NOR),
+                        lovvalg = LovvalgDto("begrunnelse", EØSLand.NOR),
                         medlemskap = MedlemskapDto("begrunnelse", medlem)
                     )
                 )

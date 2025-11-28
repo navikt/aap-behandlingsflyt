@@ -328,7 +328,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
         ManuellVurderingForLovvalgMedlemskap(
             fom = fom,
             tom = tom,
-            lovvalg = LovvalgDto(begrunnelse, LandMedAvtale.NOR),
+            lovvalg = LovvalgDto(begrunnelse, EØSLand.NOR),
             medlemskap = MedlemskapDto(begrunnelse, true),
             vurdertAv = "SAKSBEHANDLER",
             vurdertDato = LocalDateTime.now(),
