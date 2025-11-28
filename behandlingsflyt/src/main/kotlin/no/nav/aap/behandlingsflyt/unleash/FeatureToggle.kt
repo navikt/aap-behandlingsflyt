@@ -28,6 +28,8 @@ enum class BehandlingsflytFeature : FeatureToggle {
     LagreVedtakIFatteVedtak,
     UnntakMeldepliktDesember,
     ReduksjonArbeidOverGrense,
+    ForutgaendeMedlemskapPeriodisert,
+    PeriodisertSykepengeErstatningNyAvklaringsbehovService,
     ReduksjonIkkeMeldtSeg,
     ;
 
