@@ -45,7 +45,8 @@ object InMemoryAvklaringsbehovRepository : AvklaringsbehovRepository,
         begrunnelse: String,
         grunn: ÅrsakTilSettPåVent?,
         endretAv: String,
-        perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?
+        perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
+        perioderVedtaketBehøverVurdering: Set<Periode>?
     ) {
         synchronized(lock) {
             ensureDefault(behandlingId)
@@ -70,7 +71,8 @@ object InMemoryAvklaringsbehovRepository : AvklaringsbehovRepository,
                         grunn = grunn,
                         endretAv = endretAv,
                         frist = frist,
-                        perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert
+                        perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
+                        perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering
                     )
                 )
             }

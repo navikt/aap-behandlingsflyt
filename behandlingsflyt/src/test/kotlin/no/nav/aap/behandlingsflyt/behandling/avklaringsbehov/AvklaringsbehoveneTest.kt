@@ -200,7 +200,7 @@ class AvklaringsbehoveneTest {
             Periode(1 januar 2021, 1 april 2022),
             Periode(10 april 2022, Tid.MAKS)
         )
-        avklaringsbehovene.oppdaterPerioder(Definisjon.AVKLAR_SYKDOM, nyePerioder)
+        avklaringsbehovene.oppdaterPerioder(Definisjon.AVKLAR_SYKDOM, nyePerioder, nyePerioder)
 
         assertThat(avklaringsbehovene.åpne()).hasSize(1)
         assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)?.perioder())
