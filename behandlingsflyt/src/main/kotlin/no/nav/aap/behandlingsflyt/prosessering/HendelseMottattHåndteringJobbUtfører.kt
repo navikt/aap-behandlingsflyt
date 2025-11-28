@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterMottattDokumentService
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.DialogMelding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Klage
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
@@ -98,6 +99,17 @@ class HendelseMottattHåndteringJobbUtfører(
                     brevkategori = innsendingType,
                     melding = parsedMelding as TilbakekrevingHendelse,
                 )
+            }
+
+            InnsendingType.DIALOGMELDING -> {
+                    håndterMottattDokumentService.håndterMottattDialogMelding(
+                        sakId = sakId,
+                        referanse = referanse,
+                        mottattTidspunkt = mottattTidspunkt,
+                        brevkategori = innsendingType,
+                        melding = parsedMelding as DialogMelding,
+                    )
+
             }
             else -> {
                 håndterMottattDokumentService.håndterMottatteDokumenter(

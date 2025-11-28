@@ -56,24 +56,21 @@ class MottattHendelseService(
             }
             return
         }
-        if (dokumentErDialogMelding(dto)) {
-            log.info("Innkommet dokument er dialogmelding {}", dto.referanse)
+
+        if (kjennerTilDokumentFraFør(dto, sak, mottattDokumentRepository)) {
+            log.warn("Allerede håndtert dokument med referanse {}", dto.referanse)
         } else {
-            if (kjennerTilDokumentFraFør(dto, sak, mottattDokumentRepository)) {
-                log.warn("Allerede håndtert dokument med referanse {}", dto.referanse)
-            } else {
-                prometheus.dokumentHendelse(dto.type).increment()
-                flytJobbRepository.leggTil(
-                    HendelseMottattHåndteringJobbUtfører.nyJobb(
-                        sakId = sak.id,
-                        dokumentReferanse = dto.referanse,
-                        brevkategori = dto.type,
-                        kanal = dto.kanal,
-                        melding = dto.melding,
-                        mottattTidspunkt = dto.mottattTidspunkt
-                    ),
-                )
-            }
+            prometheus.dokumentHendelse(dto.type).increment()
+            flytJobbRepository.leggTil(
+                HendelseMottattHåndteringJobbUtfører.nyJobb(
+                    sakId = sak.id,
+                    dokumentReferanse = dto.referanse,
+                    brevkategori = dto.type,
+                    kanal = dto.kanal,
+                    melding = dto.melding,
+                    mottattTidspunkt = dto.mottattTidspunkt
+                ),
+            )
         }
     }
 }
@@ -104,10 +101,4 @@ private fun kjennerTilDokumentFraFør(
 ): Boolean {
     val innsendinger = mottattDokumentRepository.hentDokumenterAvType(sak.id, innsending.type)
     return innsendinger.any { dokument -> dokument.referanse == innsending.referanse }
-}
-
-private fun dokumentErDialogMelding(
-    innsending: Innsending,
-): Boolean {
-    return innsending.type == InnsendingType.DIALOGMELDING
 }

@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Aktivitetskort
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AktivitetskortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AnnetRelevantDokumentV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.DialogMelding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KabalHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Klage
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlageV0
@@ -181,6 +182,21 @@ class HåndterMottattDokumentService(
         }
     }
 
+    fun håndterMottattDialogMelding(
+        sakId: SakId,
+        referanse: InnsendingReferanse,
+        mottattTidspunkt: LocalDateTime,
+        brevkategori: InnsendingType,
+        melding: DialogMelding
+    ) {
+        log.info("Mottok dokument på sak-id $sakId, og referanse $referanse, med brevkategori $brevkategori.")
+
+        val behandlingId = finnSisteIverksatteBehandling(sakId)
+        log.info("Mottatt dialogmelding for sakId $sakId og eksternBehandlingId")
+        mottaDokumentService.markerSomBehandlet(sakId, behandlingId, referanse)
+
+    }
+
     fun håndterMottattTilbakekrevingHendelse(
         sakId: SakId,
         referanse: InnsendingReferanse,
@@ -191,7 +207,8 @@ class HåndterMottattDokumentService(
         when (melding) {
             is TilbakekrevingHendelseV0 -> {
                 log.info("Mottatt tilbakekrevingHendelse for sakId $sakId og eksternBehandlingId ${melding.eksternBehandlingId}")
-                val behandlingsref = melding.eksternBehandlingId  ?: error("Kan ikke finne behandlingId i tilbakekrevinghendelse")
+                val behandlingsref =
+                    melding.eksternBehandlingId ?: error("Kan ikke finne behandlingId i tilbakekrevinghendelse")
                 tilbakekrevingService.håndter(sakId, melding.tilTilbakekrevingshendelse())
                 val behandlingId = try {
                     behandlingRepository.hent(referanse = BehandlingReferanse(UUID.fromString(behandlingsref))).id
@@ -217,10 +234,15 @@ class HåndterMottattDokumentService(
             eksternBehandlingId = this.eksternBehandlingId,
             sakOpprettet = this.tilbakekreving.sakOpprettet,
             varselSendt = this.tilbakekreving.varselSendt,
-            behandlingsstatus = no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingBehandlingsstatus.valueOf(this.tilbakekreving.behandlingsstatus.name),
+            behandlingsstatus = no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingBehandlingsstatus.valueOf(
+                this.tilbakekreving.behandlingsstatus.name
+            ),
             totaltFeilutbetaltBeløp = Beløp(this.tilbakekreving.totaltFeilutbetaltBeløp),
             tilbakekrevingSaksbehandlingUrl = URI.create(this.tilbakekreving.saksbehandlingURL),
-            fullstendigPeriode = Periode(fom = this.tilbakekreving.fullstendigPeriode.fom, tom = this.tilbakekreving.fullstendigPeriode.tom),
+            fullstendigPeriode = Periode(
+                fom = this.tilbakekreving.fullstendigPeriode.fom,
+                tom = this.tilbakekreving.fullstendigPeriode.tom
+            ),
             versjon = this.versjon,
         )
     }
