@@ -32,7 +32,6 @@ object FakeUnleash : FakeUnleashBase(
         BehandlingsflytFeature.BedreUttrekkAvSakerMedFritakMeldeplikt to false,
         BehandlingsflytFeature.LagreVedtakIFatteVedtak to true,
         BehandlingsflytFeature.ReduksjonArbeidOverGrense to true,
-        BehandlingsflytFeature.ForutgaendeMedlemskapPeriodisert to true,
     )
 )
 
@@ -53,6 +52,5 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.BedreUttrekkAvSakerMedFritakMeldeplikt to true,
         BehandlingsflytFeature.LagreVedtakIFatteVedtak to true,
         BehandlingsflytFeature.ReduksjonArbeidOverGrense to true,
-        BehandlingsflytFeature.ForutgaendeMedlemskapPeriodisert to true,
     )
 )
