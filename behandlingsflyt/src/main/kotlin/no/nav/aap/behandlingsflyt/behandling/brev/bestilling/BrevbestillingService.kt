@@ -49,16 +49,17 @@ class BrevbestillingService(
         return bestillinger
     }
 
-    fun bestillV2(
+    fun bestill(
         behandlingId: BehandlingId,
         brevBehov: BrevBehov,
         unikReferanse: String,
         ferdigstillAutomatisk: Boolean,
-        vedlegg: Vedlegg? = null
+        vedlegg: Vedlegg? = null,
+        brukApiV3: Boolean = false,
     ): UUID {
         val behandling = behandlingRepository.hent(behandlingId)
         val sak = sakRepository.hent(behandling.sakId)
-        val bestillingReferanse = brevbestillingGateway.bestillBrevV2(
+        val bestillingReferanse = brevbestillingGateway.bestillBrev(
             saksnummer = sak.saksnummer,
             brukerIdent = sak.person.aktivIdent(),
             behandlingReferanse = behandling.referanse,
@@ -66,6 +67,7 @@ class BrevbestillingService(
             brevBehov = brevBehov,
             vedlegg = vedlegg,
             ferdigstillAutomatisk = ferdigstillAutomatisk,
+            brukApiV3 = brukApiV3,
         )
 
         val status = if (ferdigstillAutomatisk) {

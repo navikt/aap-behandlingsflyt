@@ -35,7 +35,6 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource, repositoryRegis
                     val meldeperiodeRepository = repositoryFactory.provide<MeldeperiodeRepository>()
 
                     val behandling = behandlingRepository.hent(req)
-                    val meldeperioder = meldeperiodeRepository.hent(behandling.id)
                     val meldekortGrunnlag = meldekortRepository.hentHvisEksisterer(behandling.id)
 
                     val tilkjentYtelse = TilkjentYtelseService(
@@ -47,6 +46,11 @@ fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource, repositoryRegis
                     val meldekortene = meldekortGrunnlag?.meldekort().orEmpty()
 
                     val tilkjentYtelseTidslinje = tilkjentYtelse.tilTidslinje()
+                    val meldeperioder = if(tilkjentYtelseTidslinje.isNotEmpty()) {
+                        meldeperiodeRepository.hentMeldeperioder(behandling.id, tilkjentYtelseTidslinje.helePerioden())
+                    } else {
+                        emptyList()
+                    }
 
                     meldeperioder.map { meldeperiode ->
                         val begrensetTil = tilkjentYtelseTidslinje.begrensetTil(meldeperiode)

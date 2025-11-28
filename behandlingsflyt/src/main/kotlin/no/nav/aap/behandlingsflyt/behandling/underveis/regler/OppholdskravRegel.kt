@@ -11,7 +11,7 @@ import no.nav.aap.komponenter.type.Periode
  */
 class OppholdskravRegel : UnderveisRegel {
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
-        return resultat.leggTilVurderinger(input.oppholdskravGrunnlag.tilUnderveisTidslinje(input.rettighetsperiode), Vurdering::leggTilOppholdskravVurdering)
+        return resultat.leggTilVurderinger(input.oppholdskravGrunnlag.tilUnderveisTidslinje(input.periodeForVurdering), Vurdering::leggTilOppholdskravVurdering)
     }
 }
 
