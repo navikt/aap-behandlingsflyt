@@ -17,7 +17,7 @@ dependencies {
     implementation("no.nav.aap.api.intern:kontrakt:0.0.21")
 
     implementation(libs.caffeine)
-    implementation("org.flywaydb:flyway-database-postgresql:11.17.1")
+    implementation("org.flywaydb:flyway-database-postgresql:11.17.2")
     implementation("io.getunleash:unleash-client-java:11.1.1")
     runtimeOnly("org.postgresql:postgresql") // låst versjon i root build.gradle.kts
     implementation("no.bekk.bekkopen:nocommons:0.16.0")
