@@ -21,15 +21,9 @@ enum class AndreUtbetalingerYtelser {
     LÅN_FRA_LÅNEKASSEN,
     INGEN_AV_DISSE;
 
-    public companion object {
-        public fun fromDb(value: String): AndreUtbetalingerYtelser = value.uppercase().let {
-            try {
-                valueOf(it)
-            } catch (e: IllegalArgumentException) {
-                throw IllegalArgumentException("Unknown YtelseType: $value")
-            }
-        }
-    }
+     companion object {
+         fun fromDb(value: String): AndreUtbetalingerYtelser? =
+             runCatching { valueOf(value.uppercase()) }.getOrNull()}
 }
 
 

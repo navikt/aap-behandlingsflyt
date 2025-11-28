@@ -99,12 +99,8 @@ class IverksettVedtakSteg private constructor(
             /* Vedtak lagret i `FatteVedtakSteg`, så ikke noe å gjøre her. */
             return
         }
-
         val virkningstidspunkt = virkningstidspunktUtleder.utledVirkningsTidspunkt(kontekst.behandlingId)
         vedtakService.lagreVedtak(kontekst.behandlingId, vedtakstidspunkt, virkningstidspunkt)
-
-
-
     }
 
     private fun lagGysOppgaveHvisRelevant(kontekst: FlytKontekstMedPerioder,vedtaksDato: LocalDate, virkningsDato: LocalDate?) {

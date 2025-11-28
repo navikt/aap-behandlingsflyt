@@ -246,7 +246,7 @@ class AndreYtelserOppgittISøknadRepositoryImpl(private val connection: DBConnec
         val ekstraLønn = row.getBoolean("ekstraLonn")
         val afpKilder = row.getStringOrNull("afpKilder")
         val sqlArray = row.getArray("ytelsestyper", String::class)
-        val ytelser = sqlArray.map { AndreUtbetalingerYtelser.fromDb(it) }
+        val ytelser = sqlArray.mapNotNull { AndreUtbetalingerYtelser.fromDb(it) }
 
         return AndreYtelserSøknad(
             afpKilder = afpKilder,

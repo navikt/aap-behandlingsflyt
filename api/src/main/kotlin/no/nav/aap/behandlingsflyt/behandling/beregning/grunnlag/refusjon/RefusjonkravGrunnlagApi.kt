@@ -64,24 +64,19 @@ fun NormalOpenAPIRoute.refusjonGrunnlagApi(
                         val gjeldendeVurdering =
                             gjeldendeVurderinger?.firstOrNull()
 
-                        val virkningstidspunkt =
-                            runCatching {
-                                if (behandling.erYtelsesbehandling()) VirkningstidspunktUtleder(
+                        val virkningstidspunkt = try {
+                            if (behandling.erYtelsesbehandling()) {
+                                VirkningstidspunktUtleder(
                                     vilkårsresultatRepository = vilkårsresultatRepository
-                                ).utledVirkningsTidspunkt(
-                                    behandling.id
-                                ) else null
-                            }.getOrElse {
+                                ).utledVirkningsTidspunkt(behandling.id)
+                            } else {
                                 null
                             }
-                        val økonomiskSosialHjelp: Boolean? = if (andreUtbetalinger?.stønad == null) {
+                        } catch (e: Exception) {
                             null
-                        } else if (andreUtbetalinger.stønad?.contains(AndreUtbetalingerYtelser.ØKONOMISK_SOSIALHJELP) == true) {
-                            true
-                        } else {
-                            false
                         }
 
+                        val økonomiskSosialHjelp: Boolean? = andreUtbetalinger?.stønad?.contains(AndreUtbetalingerYtelser.ØKONOMISK_SOSIALHJELP)
 
                         RefusjonkravGrunnlagResponse(
                             nåværendeVirkningsTidspunkt = virkningstidspunkt,
