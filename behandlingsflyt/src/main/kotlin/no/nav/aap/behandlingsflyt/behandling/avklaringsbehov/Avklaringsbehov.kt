@@ -98,7 +98,9 @@ class Avklaringsbehov(
         frist: LocalDate? = null,
         begrunnelse: String = "",
         venteårsak: ÅrsakTilSettPåVent? = null,
-        bruker: Bruker = SYSTEMBRUKER
+        bruker: Bruker = SYSTEMBRUKER,
+        perioderSomSkalLøses: Set<Periode>?,
+        perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
     ) {
         require(historikk.last().status.erAvsluttet())
         if (definisjon.erVentebehov()) {
@@ -110,7 +112,9 @@ class Avklaringsbehov(
             begrunnelse = begrunnelse,
             grunn = venteårsak,
             frist = frist,
-            endretAv = bruker.ident
+            endretAv = bruker.ident,
+            perioderVedtaketBehøverVurdering = perioderSomSkalLøses,
+            perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert
         )
     }
 
@@ -257,11 +261,11 @@ class Avklaringsbehov(
     }
 
     fun perioderSomSkalLøses(): Set<Periode>? {
-        return historikk.filter { it.status.erÅpent() }.maxOfOrNull { it }?.perioderVedtaketBehøverVurdering
+        return aktivHistorikk.filter { it.status.erÅpent() }.maxOfOrNull { it }?.perioderVedtaketBehøverVurdering
     }
 
     fun perioderSomIkkeErTilstrekkeligVurdert(): Set<Periode>? {
-        return historikk.filter { it.status.erÅpent() }.maxOfOrNull { it }?.perioderSomIkkeErTilstrekkeligVurdert
+        return aktivHistorikk.filter { it.status.erÅpent() }.maxOfOrNull { it }?.perioderSomIkkeErTilstrekkeligVurdert
     }
 
 
