@@ -54,7 +54,7 @@ class Avklaringsbehovene(
         if (definisjon.erFrivillig()) {
             if (hentBehovForDefinisjon(definisjon) == null) {
                 // Legger til frivillig behov
-                leggTil(definisjoner = listOf(definisjon), funnetISteg = definisjon.løsesISteg, bruker = bruker)
+                leggTil(definisjoner = listOf(definisjon), funnetISteg = definisjon.løsesISteg, bruker = bruker, perioderVedtaketBehøverVurdering = null, perioderSomIkkeErTilstrekkeligVurdert = null)
             }
         }
     }
@@ -62,7 +62,7 @@ class Avklaringsbehovene(
     fun leggTilOverstyringHvisMangler(definisjon: Definisjon, bruker: Bruker) {
         if (definisjon.erOverstyring()) {
             if (hentBehovForDefinisjon(definisjon) == null) {
-                leggTil(definisjoner = listOf(definisjon), funnetISteg = definisjon.løsesISteg, bruker = bruker)
+                leggTil(definisjoner = listOf(definisjon), funnetISteg = definisjon.løsesISteg, bruker = bruker, perioderVedtaketBehøverVurdering = null, perioderSomIkkeErTilstrekkeligVurdert = null)
             }
         }
     }
@@ -75,8 +75,8 @@ class Avklaringsbehovene(
     fun leggTil(
         definisjoner: List<Definisjon>,
         funnetISteg: StegType,
-        perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>? = null,
-        perioderVedtaketBehøverVurdering: Set<Periode>? = null,
+        perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
+        perioderVedtaketBehøverVurdering: Set<Periode>?,
         frist: LocalDate? = null,
         begrunnelse: String = "",
         grunn: ÅrsakTilSettPåVent? = null,

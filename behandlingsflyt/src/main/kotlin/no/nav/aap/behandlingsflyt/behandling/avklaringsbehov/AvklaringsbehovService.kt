@@ -125,8 +125,8 @@ class AvklaringsbehovService(
                         /* ønsket tilstand er OPPRETTET */
                         avklaringsbehovene.oppdaterPerioder(
                             avklaringsbehov.definisjon,
-                            perioderSomIkkeErTilstrekkeligVurdert(),
-                            perioderVedtaketBehøverVurdering()
+                            perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
+                            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()
                         )
                     }
 
@@ -134,7 +134,8 @@ class AvklaringsbehovService(
                         avklaringsbehovene.leggTil(
                             listOf(definisjon),
                             definisjon.løsesISteg,
-                            perioderSomIkkeErTilstrekkeligVurdert()
+                            perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
+                            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()
                         )
 
                     TOTRINNS_VURDERT,
@@ -166,7 +167,7 @@ class AvklaringsbehovService(
                         avklaringsbehovene.oppdaterPerioder(
                             avklaringsbehov.definisjon,
                             perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
-                            perioderVedtaketBehøverVurdering()
+                            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()
                         )
 
                     }
@@ -180,7 +181,7 @@ class AvklaringsbehovService(
                         avklaringsbehovene.leggTil(
                             listOf(definisjon),
                             definisjon.løsesISteg,
-                            perioderSomIkkeErTilstrekkeligVurdert(),
+                            perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
                             perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()
                         )
                     }

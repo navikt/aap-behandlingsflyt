@@ -207,7 +207,7 @@ class StegOrkestrator(
                 resultat.avklaringsbehov()
             )
             val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekstMedPerioder.behandlingId)
-            avklaringsbehovene.leggTil(resultat.avklaringsbehov(), funnetISteg = aktivtSteg.type())
+            avklaringsbehovene.leggTil(resultat.avklaringsbehov(), funnetISteg = aktivtSteg.type(), null, null)
         } else if (resultat is FunnetVentebehov) {
             log.info(
                 "Fant ventebehov: {}",
@@ -219,7 +219,9 @@ class StegOrkestrator(
                     definisjoner = listOf(it.definisjon),
                     funnetISteg = aktivtSteg.type(),
                     frist = it.frist,
-                    grunn = it.grunn
+                    grunn = it.grunn,
+                    perioderVedtaketBehøverVurdering = null,
+                    perioderSomIkkeErTilstrekkeligVurdert = null,
                 )
             }
         }

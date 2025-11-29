@@ -36,9 +36,14 @@ class BehandlingHendelseServiceImplTest {
 
         val avklaringsbehovene = Avklaringsbehovene(InMemoryAvklaringsbehovRepository, behandling.id)
 
-        avklaringsbehovene.leggTil(listOf(Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP), StegType.VURDER_MEDLEMSKAP)
-        avklaringsbehovene.leggTil(listOf(Definisjon.AVKLAR_STUDENT), StegType.AVKLAR_STUDENT)
-        avklaringsbehovene.leggTil(listOf(Definisjon.AVKLAR_SYKDOM), StegType.AVKLAR_SYKDOM)
+        avklaringsbehovene.leggTil(
+            listOf(Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP),
+            StegType.VURDER_MEDLEMSKAP,
+            null,
+            null
+        )
+        avklaringsbehovene.leggTil(listOf(Definisjon.AVKLAR_STUDENT), StegType.AVKLAR_STUDENT, null, null)
+        avklaringsbehovene.leggTil(listOf(Definisjon.AVKLAR_SYKDOM), StegType.AVKLAR_SYKDOM, null, null)
 
         behandlingHendelseSerice.stoppet(behandling, avklaringsbehovene)
 
@@ -46,6 +51,10 @@ class BehandlingHendelseServiceImplTest {
             .single { it.type() == VarsleOppgaveOmHendelseJobbUtFører.type }
             .payload<BehandlingFlytStoppetHendelse>()
         assertThat(hendelse.avklaringsbehov.map { it.avklaringsbehovDefinisjon })
-            .containsExactly(Definisjon.AVKLAR_STUDENT, Definisjon.AVKLAR_SYKDOM, Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP)
+            .containsExactly(
+                Definisjon.AVKLAR_STUDENT,
+                Definisjon.AVKLAR_SYKDOM,
+                Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP
+            )
     }
 }
