@@ -120,7 +120,8 @@ class Avklaringsbehov(
         if (perioderSomIkkeErTilstrekkeligVurdert != siste.perioderSomIkkeErTilstrekkeligVurdert || perioderVedtaketBehøverVurdering != siste.perioderVedtaketBehøverVurdering) {
             historikk += siste.copy(
                 perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
-                perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering
+                perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
+                tidsstempel = LocalDateTime.now()
             )
         }
     }
