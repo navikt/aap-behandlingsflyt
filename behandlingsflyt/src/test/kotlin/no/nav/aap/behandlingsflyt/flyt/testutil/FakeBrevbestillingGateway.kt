@@ -10,7 +10,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.brev.kontrakt.Brev
 import no.nav.aap.brev.kontrakt.BrevbestillingResponse
 import no.nav.aap.brev.kontrakt.Brevtype
+import no.nav.aap.brev.kontrakt.MottakerDistStatus
 import no.nav.aap.brev.kontrakt.MottakerDto
+import no.nav.aap.brev.kontrakt.BrevdataDto
 import no.nav.aap.brev.kontrakt.Signatur
 import no.nav.aap.brev.kontrakt.SignaturGrunnlag
 import no.nav.aap.brev.kontrakt.Språk
@@ -25,20 +27,23 @@ import java.util.*
 class FakeBrevbestillingGateway : BrevbestillingGateway {
     var brevbestillingResponse: BrevbestillingResponse? = null
 
-    override fun bestillBrevV2(
+    override fun bestillBrev(
         saksnummer: Saksnummer,
         brukerIdent: Ident,
         behandlingReferanse: BehandlingReferanse,
         unikReferanse: String,
         brevBehov: BrevBehov,
         vedlegg: Vedlegg?,
-        ferdigstillAutomatisk: Boolean
+        ferdigstillAutomatisk: Boolean,
+        brukApiV3: Boolean,
     ): BrevbestillingReferanse {
         return BrevbestillingReferanse(UUID.randomUUID())
             .also {
                 brevbestillingResponse = BrevbestillingResponse(
                     referanse = it.brevbestillingReferanse,
                     brev = null,
+                    brevmal = null,
+                    brevdata = null,
                     opprettet = LocalDateTime.now(),
                     oppdatert = LocalDateTime.now(),
                     behandlingReferanse = behandlingReferanse.referanse,
@@ -58,12 +63,29 @@ class FakeBrevbestillingGateway : BrevbestillingGateway {
         brevbestillingResponse = brevbestillingResponse!!.copy(status = Status.AVBRUTT)
     }
 
+    override fun kanDistribuereBrev(
+        brukerIdent: String,
+        mottakerIdentListe: List<String>,
+        brevbestillingReferanse: BrevbestillingReferanse
+    ): List<MottakerDistStatus> {
+        val brevKanDistribueres = MottakerDistStatus("1234", true)
+        val brevKanIkkeDistribueres = MottakerDistStatus("5678", false)
+        return listOf(brevKanDistribueres, brevKanIkkeDistribueres)
+    }
+
     override fun hent(bestillingReferanse: BrevbestillingReferanse): BrevbestillingResponse {
         return brevbestillingResponse!!
     }
 
     override fun oppdater(bestillingReferanse: BrevbestillingReferanse, brev: Brev) {
         brevbestillingResponse = brevbestillingResponse!!.copy(brev = brev)
+    }
+
+    override fun oppdaterV3(
+        bestillingReferanse: BrevbestillingReferanse,
+        brevdata: BrevdataDto
+    ) {
+        brevbestillingResponse = brevbestillingResponse!!.copy(brevdata = brevdata)
     }
 
     override fun hentSignaturForhåndsvisning(

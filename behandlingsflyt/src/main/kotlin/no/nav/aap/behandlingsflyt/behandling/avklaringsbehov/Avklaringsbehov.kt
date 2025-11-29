@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegGruppe
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -113,6 +114,23 @@ class Avklaringsbehov(
         )
     }
 
+    internal fun oppdaterPerioder(
+        perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
+        perioderVedtaketBehøverVurdering: Set<Periode>?
+    ) {
+        val siste = historikk.last()
+        require(siste.status.erÅpent()) {
+            "Prøvde å oppdatere perioder på et lukket avklaringsbehov"
+        }
+        if (perioderSomIkkeErTilstrekkeligVurdert != siste.perioderSomIkkeErTilstrekkeligVurdert || perioderVedtaketBehøverVurdering != siste.perioderVedtaketBehøverVurdering) {
+            historikk += siste.copy(
+                perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
+                perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
+                tidsstempel = LocalDateTime.now()
+            )
+        }
+    }
+
     fun erÅpent(): Boolean {
         return status().erÅpent()
     }
@@ -163,7 +181,7 @@ class Avklaringsbehov(
     fun harAvsluttetStatusIHistorikken(): Boolean {
         return historikk.any { it.status == Status.AVSLUTTET }
     }
-    
+
     fun sistAvsluttet(): LocalDateTime {
         return historikk.filter { it.status == Status.AVSLUTTET }.maxOf { it.tidsstempel }
     }
@@ -189,7 +207,7 @@ class Avklaringsbehov(
     fun erForeslåttVedtak(): Boolean {
         return definisjon == Definisjon.FORESLÅ_VEDTAK
     }
-    
+
     fun erForeslåttUttak(): Boolean {
         return definisjon == Definisjon.FORESLÅ_UTTAK
     }
@@ -233,10 +251,19 @@ class Avklaringsbehov(
     fun erBrevVentebehov(): Boolean {
         return definisjon.erBrevVentebehov()
     }
-    
+
     fun sistEndret(): LocalDateTime {
         return historikk.last().tidsstempel
     }
+
+    fun perioderSomSkalLøses(): Set<Periode>? {
+        return historikk.filter { it.status.erÅpent() }.maxOfOrNull { it }?.perioderVedtaketBehøverVurdering
+    }
+
+    fun perioderSomIkkeErTilstrekkeligVurdert(): Set<Periode>? {
+        return historikk.filter { it.status.erÅpent() }.maxOfOrNull { it }?.perioderSomIkkeErTilstrekkeligVurdert
+    }
+
 
     override fun toString(): String {
         return "Avklaringsbehov(definisjon=$definisjon, status=${status()}, løsesISteg=${løsesISteg()})"

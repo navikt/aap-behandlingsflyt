@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.barnetillegg.BarnetilleggService
@@ -53,7 +52,7 @@ class BarnetilleggSteg(
             definisjon = Definisjon.AVKLAR_BARNETILLEGG,
             vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst) },
             erTilstrekkeligVurdert = { !harPerioderMedBarnTilAvklaring(barnetilgangTidslinje) },
-            tilbakestillGrunnlag = { tilbakestillBarnetillegg(kontekst)},
+            tilbakestillGrunnlag = { tilbakestillBarnetillegg(kontekst) },
             kontekst
         )
         return Fullført
@@ -69,11 +68,10 @@ class BarnetilleggSteg(
         return when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
             VurderingType.REVURDERING ->
-                (!tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())
+                (tidligereVurderinger.muligMedRettTilAAP(kontekst, type())
                         && (vurderingsbehovSomTvingerStopp.any { kontekst.vurderingsbehovRelevanteForSteg.contains(it) }
-                            || (kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty() && (harOppgittBarn(barneGrunnlag) || harGjortManuellVurderingIBehandlingen(kontekst)))
-                        )
-                )
+                        || (kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty() && (harOppgittBarn(barneGrunnlag)
+                        || harGjortManuellVurderingIBehandlingen(kontekst)))))
 
             VurderingType.MELDEKORT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
@@ -84,22 +82,14 @@ class BarnetilleggSteg(
     }
 
     private fun tilbakestillBarnetillegg(kontekst: FlytKontekstMedPerioder) {
-        val vedtatteBarnetillegg = kontekst.forrigeBehandlingId
+        val forrigeBehandlingId = kontekst.forrigeBehandlingId
+        val vedtatteBarnetillegg = forrigeBehandlingId
             ?.let { barnetilleggRepository.hentHvisEksisterer(it) }
             ?.perioder
             ?: emptyList()
         barnetilleggRepository.lagre(kontekst.behandlingId, vedtatteBarnetillegg)
 
-        val forrigeBarnGrunnlag = kontekst.forrigeBehandlingId
-            ?.let { barnRepository.hentHvisEksisterer(it) }
-
-        val vurderteBarn = forrigeBarnGrunnlag?.vurderteBarn?.barn.orEmpty()
-
-        barnRepository.lagreVurderinger(
-            behandlingId = kontekst.behandlingId,
-            vurdertAv = forrigeBarnGrunnlag?.vurderteBarn?.vurdertAv ?: SYSTEMBRUKER.ident,
-            vurderteBarn = vurderteBarn
-        )
+        barnRepository.tilbakestillGrunnlag(kontekst.behandlingId, forrigeBehandlingId)
 
         // Ting er nå helt tilbakestillt, vi må derfor beregne tidslinjen på nytt
         beregnOgOppdaterBarnetilleggTidslinje(kontekst)

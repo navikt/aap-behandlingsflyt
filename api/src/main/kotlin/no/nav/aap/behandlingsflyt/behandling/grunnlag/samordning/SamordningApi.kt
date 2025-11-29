@@ -10,7 +10,6 @@ import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.AndreStatligeYtelser
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonForhold
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonOrdning
@@ -57,8 +56,6 @@ data class SamordningYtelseVurderingGrunnlagDTO(
 
 data class SamordningYtelseVurderingDTO(
     val begrunnelse: String?,
-    val fristNyRevurdering: LocalDate?,
-    val maksDatoEndelig: Boolean?,
     val vurderinger: List<SamordningVurderingDTO>,
     val vurdertAv: VurdertAvResponse?
 )
@@ -124,13 +121,13 @@ data class SamordningAndreStatligeYtelserVurderingPeriodeDTO(
 
 data class SamordningArbeidsgiverGrunnlagDTO(
     val harTilgangTilÅSaksbehandle: Boolean,
-    val vurdering: SamordningArbeidsgiverVurderingDTO?
+    val vurdering: SamordningArbeidsgiverVurderingDTO?,
+    val historiskeVurderinger: List<SamordningArbeidsgiverVurderingDTO>? = emptyList(),
 )
 
 data class SamordningArbeidsgiverVurderingDTO(
     val begrunnelse: String,
-    val fom: LocalDate,
-    val tom: LocalDate,
+    val perioder: List<Periode>,
     val vurdertAv: VurdertAvResponse?
 )
 
@@ -409,20 +406,50 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                     ),
                 avklaringsbehovKode = Definisjon.SAMORDNING_ARBEIDSGIVER.kode.toString(),
             ) { behandlingReferanse ->
-                val samordningArbeidsgiverVurdering =
+                val (samordningArbeidsgiverVurdering, historskeSamordningArbeidsgiverVurderinger) =
                     dataSource.transaction { connection ->
                         val repositoryProvider = repositoryRegistry.provider(connection)
                         val samordningArbeidsgiverRepository =
                             repositoryProvider.provide<SamordningArbeidsgiverRepository>()
                         val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-
                         val behandling = behandlingRepository.hent(behandlingReferanse)
 
-                        samordningArbeidsgiverRepository.hentHvisEksisterer(behandling.id)?.vurdering
+                        val vurdering = samordningArbeidsgiverRepository.hentHvisEksisterer(behandling.id)?.vurdering
+
+                        val historiskeBehandlinger = behandlingRepository.hentAlleFor(
+                            behandling.sakId,
+                            TypeBehandling.ytelseBehandlingstyper()
+                        ).filter { it.id != behandling.id }
+
+                        val historskeSamordningArbeidsgiverVurderinger =
+                            historiskeBehandlinger.mapNotNull { historiskeBehandling ->
+                                samordningArbeidsgiverRepository.hentHvisEksisterer(historiskeBehandling.id)?.vurdering
+                            }
+                        Pair(vurdering, historskeSamordningArbeidsgiverVurderinger)
                     }
 
                 val navnOgEnhet = samordningArbeidsgiverVurdering?.let {
                     ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv)
+                }
+
+
+                val historiskeVurderingererDTO = historskeSamordningArbeidsgiverVurderinger.map { vurdering ->
+                    val navnOgEnhet = vurdering.let {
+                        ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv)
+                    }
+                    SamordningArbeidsgiverVurderingDTO(
+                        begrunnelse = vurdering.begrunnelse,
+                        perioder = vurdering.perioder,
+                        vurdertAv = VurdertAvResponse(
+                            ident = vurdering.vurdertAv,
+                            dato = requireNotNull(vurdering.vurdertTidspunkt?.toLocalDate()) {
+                                "Fant ikke vurdert tidspunkt for samordningArbeidsgiverVurdering"
+                            },
+                            ansattnavn = navnOgEnhet?.navn,
+                            enhetsnavn = navnOgEnhet?.enhet
+                        ),
+                    )
+
                 }
 
                 val vurdering = samordningArbeidsgiverVurdering?.let { vurdering ->
@@ -436,15 +463,15 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                             enhetsnavn = navnOgEnhet?.enhet
                         ),
                         begrunnelse = vurdering.begrunnelse,
-                        fom = vurdering.fom,
-                        tom = vurdering.tom
+                        perioder = vurdering.perioder
                     )
                 }
 
                 respond(
                     SamordningArbeidsgiverGrunnlagDTO(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
-                        vurdering = vurdering
+                        vurdering = vurdering,
+                        historiskeVurderinger = historiskeVurderingererDTO,
                     )
                 )
             }
@@ -460,8 +487,6 @@ private fun mapSamordningVurdering(
 
     return SamordningYtelseVurderingDTO(
         begrunnelse = samordning.begrunnelse,
-        fristNyRevurdering = samordning.fristNyRevurdering,
-        maksDatoEndelig = samordning.maksDatoEndelig,
         vurderinger = samordning.vurderinger.flatMap { vurdering ->
             vurdering.vurderingPerioder.map {
                 SamordningVurderingDTO(
@@ -518,7 +543,8 @@ private fun mapSamordningUføreGrunnlag(
         SamordningUføreGrunnlagDTO(
             virkningstidspunkt = it.virkningstidspunkt,
             uføregrad = it.uføregrad.prosentverdi(),
-            kilde = it.kilde,
+            // Alltid PESYS
+            kilde = "PESYS",
             endringStatus = it.endringStatus
         )
     }

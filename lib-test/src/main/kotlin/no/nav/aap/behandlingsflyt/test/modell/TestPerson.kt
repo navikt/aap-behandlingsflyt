@@ -93,4 +93,9 @@ class TestPerson(
         this.sykepenger = sykepenger
         return this
     }
+
+    fun medInstitusjonsopphold(opphold: List<InstitusjonsoppholdJSON>): TestPerson {
+        this.institusjonsopphold = opphold
+        return this
+    }
 }

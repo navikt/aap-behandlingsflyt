@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Førstegangsbehandling
 import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Revurdering
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -40,7 +41,7 @@ interface TidligereVurderinger {
     fun harBehandlingsgrunnlag(kontekst: FlytKontekstMedPerioder, førSteg: StegType): Boolean {
         return !girIngenBehandlingsgrunnlag(kontekst, førSteg)
     }
-    
+
     fun muligMedRettTilAAP(kontekst: FlytKontekstMedPerioder, førSteg: StegType): Boolean {
         return !girAvslagEllerIngenBehandlingsgrunnlag(kontekst, førSteg)
     }
@@ -78,110 +79,112 @@ class TidligereVurderingerImpl(
         val sjekk: (vilkårsresultat: Vilkårsresultat, kontekst: FlytKontekstMedPerioder) -> Tidslinje<TidligereVurderinger.Behandlingsutfall>
     )
 
-    private val definerteSjekkerForRevurdering = listOf(
-        // NB! Pass på hvis du utvide denne listen med noe som gjør avslag, at alle steg håndtere avslag i revurdering.
-        Sjekk(StegType.AVBRYT_REVURDERING) { _, kontekst ->
-            Tidslinje(
-                kontekst.rettighetsperiode,
-                if (avbrytRevurderingService.revurderingErAvbrutt(kontekst.behandlingId))
-                    IKKE_BEHANDLINGSGRUNNLAG
-                else
-                    UKJENT
+    private fun definerteSjekker(typeBehandling: TypeBehandling): List<Sjekk> {
+        val spesifikkeSjekker = when (typeBehandling) {
+            TypeBehandling.Revurdering -> listOf(
+                Sjekk(StegType.AVBRYT_REVURDERING) { _, kontekst ->
+                    Tidslinje(
+                        kontekst.rettighetsperiode,
+                        if (avbrytRevurderingService.revurderingErAvbrutt(kontekst.behandlingId))
+                            IKKE_BEHANDLINGSGRUNNLAG
+                        else
+                            UKJENT
+                    )
+                }
             )
-        },
-        Sjekk(StegType.VURDER_LOVVALG) { vilkårsresultat, _ ->
-            ikkeOppfyltFørerTilAvslag(Vilkårtype.LOVVALG, vilkårsresultat)
-        },
 
-        Sjekk(StegType.VURDER_ALDER) { vilkårsresultat, _ ->
-            ikkeOppfyltFørerTilAvslag(Vilkårtype.ALDERSVILKÅRET, vilkårsresultat)
-        },
-    )
-
-    private val definerteSjekkerFørstegangsbehandling = listOf(
-        Sjekk(StegType.SØKNAD) { _, kontekst ->
-            Tidslinje(
-                kontekst.rettighetsperiode,
-                if (trukketSøknadService.søknadErTrukket(kontekst.behandlingId))
-                    IKKE_BEHANDLINGSGRUNNLAG
-                else
-                    UKJENT
+            TypeBehandling.Førstegangsbehandling -> listOf(
+                Sjekk(StegType.SØKNAD) { _, kontekst ->
+                    Tidslinje(
+                        kontekst.rettighetsperiode,
+                        if (trukketSøknadService.søknadErTrukket(kontekst.behandlingId))
+                            IKKE_BEHANDLINGSGRUNNLAG
+                        else
+                            UKJENT
+                    )
+                }
             )
-        },
 
-        Sjekk(StegType.VURDER_LOVVALG) { vilkårsresultat, _ ->
-            ikkeOppfyltFørerTilAvslag(Vilkårtype.LOVVALG, vilkårsresultat)
-        },
+            else -> emptyList()
+        }
 
-        Sjekk(StegType.VURDER_ALDER) { vilkårsresultat, _ ->
-            ikkeOppfyltFørerTilAvslag(Vilkårtype.ALDERSVILKÅRET, vilkårsresultat)
-        },
+        val fellesSjekker = listOf(
+            Sjekk(StegType.VURDER_LOVVALG) { vilkårsresultat, _ ->
+                ikkeOppfyltFørerTilAvslag(Vilkårtype.LOVVALG, vilkårsresultat)
+            },
 
-        Sjekk(StegType.VURDER_BISTANDSBEHOV) { _, kontekst ->
-            /* TODO: Tror ikke dette er riktig. Sykdomsvilkåret er ikke satt når
-            *   man er i steget VURDER_BiSTANDSBEHOV. */
-            val periode = kontekst.rettighetsperiode
-            val sykdomstidslinje = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)
-                ?.somSykdomsvurderingstidslinje(periode.fom).orEmpty()
-            val studenttidslinje =
-                studentRepository.hentHvisEksisterer(kontekst.behandlingId)?.somTidslinje(periode).orEmpty()
+            Sjekk(StegType.VURDER_ALDER) { vilkårsresultat, _ ->
+                ikkeOppfyltFørerTilAvslag(Vilkårtype.ALDERSVILKÅRET, vilkårsresultat)
+            },
 
-            sykdomstidslinje.outerJoin(studenttidslinje) { sykdomsvurdering, studentVurdering ->
-                if (studentVurdering != null && studentVurdering.erOppfylt()) return@outerJoin UKJENT
+            Sjekk(StegType.VURDER_BISTANDSBEHOV) { _, kontekst ->
+                /* TODO: Tror ikke dette er riktig. Sykdomsvilkåret er ikke satt når
+                *   man er i steget VURDER_BiSTANDSBEHOV. */
+                val periode = kontekst.rettighetsperiode
+                val sykdomstidslinje = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)
+                    ?.somSykdomsvurderingstidslinje().orEmpty()
+                val studenttidslinje =
+                    studentRepository.hentHvisEksisterer(kontekst.behandlingId)?.somTidslinje(periode).orEmpty()
 
-                if (sykdomsvurdering?.erFørsteVurdering(kontekst.rettighetsperiode.fom) == false) {
+                sykdomstidslinje.outerJoin(studenttidslinje) { segmentPeriode, sykdomsvurdering, studentVurdering ->
+                    if (studentVurdering != null && studentVurdering.erOppfylt()) return@outerJoin UKJENT
+
+                    if (!Sykdomsvurdering.erFørsteVurdering(kontekst.rettighetsperiode.fom, segmentPeriode)) {
+                        return@outerJoin UKJENT
+                    }
+
+                    val sykdomDefinitivtAvslag =
+                        sykdomsvurdering?.erOppfyltOrdinærSettBortIfraVissVarighet() == false
+                                && !sykdomsvurdering.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenhengOgVissVarighet()
+
+                    if (sykdomDefinitivtAvslag) {
+                        return@outerJoin UUNGÅELIG_AVSLAG
+                    }
+
                     return@outerJoin UKJENT
                 }
+            },
 
-                val sykdomDefinitivtAvslag =
-                    sykdomsvurdering?.erOppfyltSettBortIfraVissVarighet() == false && !sykdomsvurdering.erOppfyltForYrkesskade()
+            Sjekk(StegType.FASTSETT_SYKDOMSVILKÅRET) { _, _ ->
+                /* Det finnes unntak til sykdomsvilkåret, så selv om vilkåret ikke er oppfylt, så
+                 * vet vi ikke her om det blir avslag eller ei. */
+                Tidslinje()
+            },
 
-                if (sykdomDefinitivtAvslag) {
-                    return@outerJoin UUNGÅELIG_AVSLAG
-                }
+            Sjekk(StegType.FASTSETT_GRUNNLAG) { vilkårsresultat, _ ->
+                ikkeOppfyltFørerTilAvslag(Vilkårtype.GRUNNLAGET, vilkårsresultat)
+            },
 
-                return@outerJoin UKJENT
-            }
-        },
+            Sjekk(StegType.VURDER_MEDLEMSKAP) { vilkårsresultat, _ ->
+                ikkeOppfyltFørerTilAvslag(Vilkårtype.MEDLEMSKAP, vilkårsresultat)
+            },
 
-        Sjekk(StegType.FASTSETT_SYKDOMSVILKÅRET) { _, _ ->
-            /* Det finnes unntak til sykdomsvilkåret, så selv om vilkåret ikke er oppfylt, så
-             * vet vi ikke her om det blir avslag eller ei. */
-            Tidslinje()
-        },
+            Sjekk(StegType.SAMORDNING_AVSLAG) { vilkårsresultat, _ ->
+                ikkeOppfyltFørerTilAvslag(Vilkårtype.SAMORDNING, vilkårsresultat)
+            },
+        )
 
-        Sjekk(StegType.FASTSETT_GRUNNLAG) { vilkårsresultat, _ ->
-            ikkeOppfyltFørerTilAvslag(Vilkårtype.GRUNNLAGET, vilkårsresultat)
-        },
-
-        Sjekk(StegType.VURDER_MEDLEMSKAP) { vilkårsresultat, _ ->
-            ikkeOppfyltFørerTilAvslag(Vilkårtype.MEDLEMSKAP, vilkårsresultat)
-        },
-
-        Sjekk(StegType.SAMORDNING_AVSLAG) { vilkårsresultat, _ ->
-            ikkeOppfyltFørerTilAvslag(Vilkårtype.SAMORDNING, vilkårsresultat)
-        },
-    )
-
+        return spesifikkeSjekker + fellesSjekker
+    }
 
     init {
         val førstegangsbehandling = Førstegangsbehandling.flyt()
-        definerteSjekkerFørstegangsbehandling.windowed(2).forEach { (sjekk1, sjekk2) ->
+        definerteSjekker(TypeBehandling.Førstegangsbehandling).windowed(2).forEach { (sjekk1, sjekk2) ->
             require(førstegangsbehandling.erStegFør(sjekk1.steg, sjekk2.steg)) {
                 "Avslag-logikk forutsetter at ${sjekk1.steg} kommer før ${sjekk2.steg} i førstegangsbehandling-flyten."
             }
         }
 
         var sjekkerRevurdering = Revurdering.flyt()
-        definerteSjekkerForRevurdering.windowed(2).forEach { (sjekk1, sjekk2) ->
+        definerteSjekker(TypeBehandling.Revurdering).windowed(2).forEach { (sjekk1, sjekk2) ->
             require(sjekkerRevurdering.erStegFør(sjekk1.steg, sjekk2.steg)) {
                 "Avslag-logikk forutsetter at ${sjekk1.steg} kommer før ${sjekk2.steg} i revurdering-flyten."
             }
         }
     }
 
-    private var sjekkerRevurdering = lagSjekker(definerteSjekkerForRevurdering)
-    private var sjekkerFørstegangsbehandling = lagSjekker(definerteSjekkerFørstegangsbehandling)
+    private var sjekkerRevurdering = lagSjekker(definerteSjekker(TypeBehandling.Revurdering))
+    private var sjekkerFørstegangsbehandling = lagSjekker(definerteSjekker(TypeBehandling.Førstegangsbehandling))
 
     private fun lagSjekker(definerteSjekker: List<Sjekk>) = buildList {
         val sjekker = definerteSjekker.iterator()

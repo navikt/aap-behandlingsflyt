@@ -26,4 +26,7 @@ interface SakRepository : Repository {
     fun oppdaterRettighetsperiode(sakId: SakId, periode: Periode)
 
     fun oppdaterSakStatus(sakId: SakId, status: Status)
+
+    fun finnSakerMedFritakMeldeplikt(): List<SakId>
+
 }

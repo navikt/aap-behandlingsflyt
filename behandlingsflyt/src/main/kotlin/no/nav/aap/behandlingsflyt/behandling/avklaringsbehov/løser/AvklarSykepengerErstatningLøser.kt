@@ -1,11 +1,12 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykepengerErstatningLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.PeriodisertAvklarSykepengerErstatningLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykepengerVurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.PeriodisertSykepengerVurderingDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -13,7 +14,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class AvklarSykepengerErstatningLøser(
     private val behandlingRepository: BehandlingRepository,
     private val sykepengerErstatningRepository: SykepengerErstatningRepository
-) : AvklaringsbehovsLøser<AvklarSykepengerErstatningLøsning> {
+) : AvklaringsbehovsLøser<PeriodisertAvklarSykepengerErstatningLøsning> {
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
@@ -22,39 +23,36 @@ class AvklarSykepengerErstatningLøser(
 
     override fun løs(
         kontekst: AvklaringsbehovKontekst,
-        løsning: AvklarSykepengerErstatningLøsning
+        løsning: PeriodisertAvklarSykepengerErstatningLøsning
     ): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
+        val tidligereVurderinger = behandling.forrigeBehandlingId?.let { sykepengerErstatningRepository.hentHvisEksisterer(it)?.vurderinger }.orEmpty()
 
-        val nyVurdering = tilVurdering(løsning.sykepengeerstatningVurdering, kontekst.bruker.ident)
-
-        val eksisterendeVurderinger =
-            behandling.forrigeBehandlingId
-                ?.let { sykepengerErstatningRepository.hentHvisEksisterer(it) }
-                ?.vurderinger.orEmpty()
-
-        val nyeVurderinger = eksisterendeVurderinger + nyVurdering
+        val nyeVurderinger = løsning.løsningerForPerioder.map { tilVurdering(it, behandling.id, kontekst.bruker.ident) }
 
         sykepengerErstatningRepository.lagre(
             behandlingId = behandling.id,
-            vurderinger = nyeVurderinger
+            vurderinger = tidligereVurderinger + nyeVurderinger
         )
 
         return LøsningsResultat(
-            begrunnelse = løsning.sykepengeerstatningVurdering.begrunnelse
+            begrunnelse = nyeVurderinger.joinToString("\n") { it.begrunnelse }
         )
     }
 
     private fun tilVurdering(
-        dto: SykepengerVurderingDto,
+        dto: PeriodisertSykepengerVurderingDto,
+        behandlingId: BehandlingId,
         vurdertAv: String
     ): SykepengerVurdering = SykepengerVurdering(
         begrunnelse = dto.begrunnelse,
         dokumenterBruktIVurdering = dto.dokumenterBruktIVurdering,
         harRettPå = dto.harRettPå,
         grunn = dto.grunn,
+        vurdertIBehandling = behandlingId,
         vurdertAv = vurdertAv,
-        gjelderFra = dto.gjelderFra
+        gjelderFra = dto.fom,
+        gjelderTom = dto.tom,
     )
 
     override fun forBehov(): Definisjon {

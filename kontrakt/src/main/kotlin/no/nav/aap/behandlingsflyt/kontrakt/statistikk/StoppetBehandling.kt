@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.kontrakt.statistikk
 
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.kontrakt.datadeling.ArbeidIPeriodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.AvklaringsbehovHendelseDto
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
@@ -15,12 +14,15 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Status as SakStatus
 
 
 /**
+ * Hendelse til statistikk-appen.
+ *
  * @param saksnummer Saksnummer.
  * @param behandlingReferanse Behandlingsreferanse
  * @param relatertBehandling Hvis behandlingen har oppsått med bakgrunn i en annen, skal den foregående behandlingen refereres til her. Dette er tolket som forrige behandling på samme sak.
  * @param mottattTid Dato for første søknad mottatt for behandlingen.
  * @param behandlingStatus Behandlingstatus. Ikke det samme som sakstatus.
  * @param identerForSak Identer på sak. Brukes for å filtrere kode 6-personer.
+ * @param tidspunktSisteEndring Brukes i statistikk-appen for å utlede avsluttet-tid for automatiske behandlinger.
  */
 public data class StoppetBehandling(
     val saksnummer: String,
@@ -29,6 +31,7 @@ public data class StoppetBehandling(
     val relatertBehandling: UUID? = null,
     val behandlingOpprettetTidspunkt: LocalDateTime,
     val mottattTid: LocalDateTime,
+    val tidspunktSisteEndring: LocalDateTime? = null,
     val behandlingStatus: BehandlingsFlytBehandlingStatus,
     val behandlingType: TypeBehandling,
     val soknadsFormat: Kanal = Kanal.DIGITAL,
@@ -121,8 +124,6 @@ public enum class RettighetsType(public val hjemmel: String) {
 
 public data class MeldekortDTO(
     public val journalpostId: String,
-    @Deprecated("Bruk arbeidIPeriode. For ikke å sende samme objekt til api-intern og statistikk.")
-    public val arbeidIPeriodeDTO: List<ArbeidIPeriodeDTO>,
     public val arbeidIPeriode: List<ArbeidIPeriode>,
 )
 

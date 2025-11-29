@@ -33,6 +33,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.Yrkesskade
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.AvklarOppholdkravLøsningForPeriodeDto
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.AndreStatligeYtelser
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurderingPeriodeDto
@@ -102,24 +103,29 @@ class TestScenarioOrkestrator(
 
     fun løsSykdom(
         behandling: Behandling,
-        vurderingGjelderFra: LocalDate? = null,
+        vurderingGjelderFra: LocalDate,
+        erArbeidsevnenNedsatt: Boolean,
+        erNedsettelseIArbeidsevneMerEnnHalvparten: Boolean,
         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean? = null
     ): Behandling {
         return løsAvklaringsBehov(
             behandling,
             AvklarSykdomLøsning(
-                sykdomsvurderinger = listOf(
+                løsningerForPerioder = listOf(
                     SykdomsvurderingLøsningDto(
                         begrunnelse = "Er syk nok",
                         dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                         harSkadeSykdomEllerLyte = true,
+                        kodeverk = "ICPC2",
+                        hoveddiagnose = "A03",
+                        erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
+                        erNedsettelseIArbeidsevneMerEnnHalvparten = erNedsettelseIArbeidsevneMerEnnHalvparten,
                         erSkadeSykdomEllerLyteVesentligdel = true,
-                        erNedsettelseIArbeidsevneMerEnnHalvparten = true,
                         erNedsettelseIArbeidsevneAvEnVissVarighet = true,
                         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
-                        erArbeidsevnenNedsatt = true,
                         yrkesskadeBegrunnelse = if (erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense != null) "test" else null,
-                        vurderingenGjelderFra = vurderingGjelderFra,
+                        fom = vurderingGjelderFra,
+                        tom = null
                     )
                 )
             )
@@ -157,7 +163,6 @@ class TestScenarioOrkestrator(
                     erBehovForAnnenOppfølging = null,
                     skalVurdereAapIOvergangTilArbeid = null,
                     overgangBegrunnelse = null,
-                    skalVurdereAapIOvergangTilUføre = null,
                 )
             )
         )
@@ -285,7 +290,8 @@ class TestScenarioOrkestrator(
             behandling,
             AvklarBarnetilleggLøsning(
                 vurderingerForBarnetillegg = VurderingerForBarnetillegg(
-                    vurderteBarn = vurderteBarnListe
+                    vurderteBarn = vurderteBarnListe,
+                    saksbehandlerOppgitteBarn = emptyList(),
                 )
             )
         )
@@ -358,8 +364,8 @@ class TestScenarioOrkestrator(
                 ManuellVurderingForForutgåendeMedlemskapDto(
                     begrunnelse = "Forutgående medlemskap ok",
                     harForutgåendeMedlemskap = true,
-                    varMedlemMedNedsattArbeidsevne = true,
-                    medlemMedUnntakAvMaksFemAar = null
+                    varMedlemMedNedsattArbeidsevne = false,
+                    medlemMedUnntakAvMaksFemAar = false
                 )
             )
         )

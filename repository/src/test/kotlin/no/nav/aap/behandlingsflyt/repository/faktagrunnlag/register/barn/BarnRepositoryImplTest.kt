@@ -3,24 +3,20 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Relasjon
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.SaksbehandlerOppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
-import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.ident
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -30,7 +26,6 @@ import java.time.LocalDate
 internal class BarnRepositoryImplTest {
 
     private companion object {
-        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
         private lateinit var dataSource: TestDataSource
 
         @BeforeAll
@@ -94,7 +89,7 @@ internal class BarnRepositoryImplTest {
             Ident("1"),
             "John Johnsen",
             Fødselsdato(LocalDate.now().minusYears(13)),
-            OppgitteBarn.Relasjon.FOSTERFORELDER
+            Relasjon.FOSTERFORELDER
         )
 
         val behandling = dataSource.transaction { connection ->
@@ -232,11 +227,29 @@ internal class BarnRepositoryImplTest {
         }
     }
 
-    private fun sak(connection: DBConnection): Sak {
-        return PersonOgSakService(
-            FakePdlGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection)
-        ).finnEllerOpprett(
-            ident(), periode
+    @Test
+    fun `Lagre kun saksbehandler oppgitte barn`() {
+        val behandling = dataSource.transaction { connection ->
+            val sak = sak(connection)
+            finnEllerOpprettBehandling(connection, sak)
+        }
+        val saksbehandlerOppgittBarn = SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn(
+            ident = Ident("123456"),
+            navn = "Mini Mus",
+            fødselsdato = Fødselsdato(LocalDate.now().minusYears(5)),
+            relasjon = Relasjon.FORELDER
         )
+
+        dataSource.transaction {
+            BarnRepositoryImpl(it).lagreSaksbehandlerOppgitteBarn(
+                behandling.id, listOf(saksbehandlerOppgittBarn)
+            )
+        }
+
+        val uthentet = dataSource.transaction {
+            BarnRepositoryImpl(it).hent(behandling.id)
+        }
+
+        assertThat(uthentet.saksbehandlerOppgitteBarn?.barn).containsExactly(saksbehandlerOppgittBarn)
     }
 }

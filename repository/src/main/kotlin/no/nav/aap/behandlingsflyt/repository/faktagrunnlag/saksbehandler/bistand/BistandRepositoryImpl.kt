@@ -2,16 +2,14 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.bistan
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
 
 class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepository {
-
     private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<BistandRepositoryImpl> {
@@ -39,7 +37,7 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
         }
     }
 
-    private fun mapBistandsvurderinger(bistandsvurderingerId: Long?): List<BistandVurdering> {
+    private fun mapBistandsvurderinger(bistandsvurderingerId: Long?): List<Bistandsvurdering> {
         return connection.queryList(
             """
                 SELECT * FROM bistand WHERE BISTAND_VURDERINGER_ID = ?
@@ -52,62 +50,23 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
         }
     }
 
-    private fun bistandvurderingRowMapper(row: Row): BistandVurdering {
-        return BistandVurdering(
+    private fun bistandvurderingRowMapper(row: Row): Bistandsvurdering {
+        return Bistandsvurdering(
+            id = row.getLong("ID"),
             begrunnelse = row.getString("BEGRUNNELSE"),
             erBehovForAktivBehandling = row.getBoolean("BEHOV_FOR_AKTIV_BEHANDLING"),
             erBehovForArbeidsrettetTiltak = row.getBoolean("BEHOV_FOR_ARBEIDSRETTET_TILTAK"),
             erBehovForAnnenOppfølging = row.getBooleanOrNull("BEHOV_FOR_ANNEN_OPPFOELGING"),
-            vurderingenGjelderFra = row.getLocalDateOrNull("VURDERINGEN_GJELDER_FRA"),
-            skalVurdereAapIOvergangTilUføre = row.getBooleanOrNull("OVERGANG_TIL_UFOERE"),
+            vurderingenGjelderFra = row.getLocalDate("VURDERINGEN_GJELDER_FRA"),
             skalVurdereAapIOvergangTilArbeid = row.getBooleanOrNull("OVERGANG_TIL_ARBEID"),
             overgangBegrunnelse = row.getStringOrNull("OVERGANG_BEGRUNNELSE"),
             vurdertAv = row.getString("VURDERT_AV"),
-            opprettet = row.getInstant("OPPRETTET_TID")
+            opprettet = row.getInstant("OPPRETTET_TID"),
+            vurdertIBehandling = row.getLong("VURDERT_I_BEHANDLING").let(::BehandlingId),
         )
     }
 
-    override fun hentHistoriskeBistandsvurderinger(sakId: SakId, behandlingId: BehandlingId): List<BistandVurdering> {
-        val query = """WITH vurderinger_historikk AS (
-            SELECT DISTINCT ON (
-                b.begrunnelse,
-                b.behov_for_aktiv_behandling,
-                b.behov_for_arbeidsrettet_tiltak,
-                b.behov_for_annen_oppfoelging,
-                b.vurderingen_gjelder_fra,
-                b.vurdert_av,
-                b.overgang_til_ufoere,
-                b.overgang_til_arbeid,
-                b.overgang_begrunnelse
-                )
-                b.*
-            FROM bistand_grunnlag g
-                     JOIN bistand_vurderinger v ON g.bistand_vurderinger_id = v.id
-                     JOIN bistand b ON b.bistand_vurderinger_id = v.id
-                     JOIN behandling beh ON g.behandling_id = beh.id
-                     LEFT JOIN avbryt_revurdering_grunnlag ar ON ar.behandling_id = beh.id
-            WHERE g.aktiv
-              AND beh.sak_id = ?
-              AND beh.opprettet_tid < (
-                SELECT opprettet_tid
-                FROM behandling
-                WHERE id = ?
-            )
-                AND ar.behandling_id IS NULL
-        )
-        SELECT * FROM vurderinger_historikk;
-        """.trimIndent()
-
-        return connection.queryList(query) {
-            setParams {
-                setLong(1, sakId.id)
-                setLong(2, behandlingId.id)
-            }
-            setRowMapper(::bistandvurderingRowMapper)
-        }
-    }
-
-    override fun lagre(behandlingId: BehandlingId, bistandsvurderinger: List<BistandVurdering>) {
+    override fun lagre(behandlingId: BehandlingId, bistandsvurderinger: List<Bistandsvurdering>) {
         val eksisterendeBistandGrunnlag = hentHvisEksisterer(behandlingId)
 
         val nyttGrunnlag = BistandGrunnlag(
@@ -115,8 +74,8 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
         )
 
         val eksisterendeVurderinger =
-            eksisterendeBistandGrunnlag?.vurderinger?.let { it.map { it.copy(opprettet = null) } }.orEmpty().toSet()
-        val nyeVurderinger = bistandsvurderinger.map { it.copy(opprettet = null) }.toSet()
+            eksisterendeBistandGrunnlag?.vurderinger?.let { it.map { it.copy(opprettet = null, id = null) } }.orEmpty().toSet()
+        val nyeVurderinger = bistandsvurderinger.map { it.copy(opprettet = null, id = null) }.toSet()
 
         if (eksisterendeVurderinger != nyeVurderinger) {
             eksisterendeBistandGrunnlag?.let {
@@ -172,11 +131,11 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
         }
     }
 
-    private fun lagreBistandsvurderinger(vurderinger: List<BistandVurdering>): Long {
+    private fun lagreBistandsvurderinger(vurderinger: List<Bistandsvurdering>): Long {
         val bistandvurderingerId = connection.executeReturnKey("""INSERT INTO BISTAND_VURDERINGER DEFAULT VALUES""")
 
         connection.executeBatch(
-            "INSERT INTO BISTAND (BEGRUNNELSE, BEHOV_FOR_AKTIV_BEHANDLING, BEHOV_FOR_ARBEIDSRETTET_TILTAK, BEHOV_FOR_ANNEN_OPPFOELGING, VURDERINGEN_GJELDER_FRA, VURDERT_AV, OVERGANG_BEGRUNNELSE, OVERGANG_TIL_UFOERE, OVERGANG_TIL_ARBEID, BISTAND_VURDERINGER_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO BISTAND (BEGRUNNELSE, BEHOV_FOR_AKTIV_BEHANDLING, BEHOV_FOR_ARBEIDSRETTET_TILTAK, BEHOV_FOR_ANNEN_OPPFOELGING, VURDERINGEN_GJELDER_FRA, VURDERT_AV, OVERGANG_BEGRUNNELSE, OVERGANG_TIL_ARBEID, BISTAND_VURDERINGER_ID, VURDERT_I_BEHANDLING) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             vurderinger
         ) {
             setParams { vurdering ->
@@ -187,9 +146,9 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
                 setLocalDate(5, vurdering.vurderingenGjelderFra)
                 setString(6, vurdering.vurdertAv)
                 setString(7, vurdering.overgangBegrunnelse)
-                setBoolean(8, vurdering.skalVurdereAapIOvergangTilUføre)
-                setBoolean(9, vurdering.skalVurdereAapIOvergangTilArbeid)
-                setLong(10, bistandvurderingerId)
+                setBoolean(8, vurdering.skalVurdereAapIOvergangTilArbeid)
+                setLong(9, bistandvurderingerId)
+                setLong(10, vurdering.vurdertIBehandling?.id)
             }
         }
 
@@ -222,4 +181,5 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
             }
         }
     }
+
 }

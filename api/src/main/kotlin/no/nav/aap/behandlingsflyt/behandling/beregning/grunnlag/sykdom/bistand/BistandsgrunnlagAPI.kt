@@ -8,8 +8,9 @@ import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.utils.til
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -21,6 +22,7 @@ import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import java.time.ZoneId
@@ -50,32 +52,32 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
 
-                    val historiskeVurderinger =
-                        bistandRepository.hentHistoriskeBistandsvurderinger(behandling.sakId, behandling.id)
                     val grunnlag = bistandRepository.hentHvisEksisterer(behandling.id)
-                    val nåTilstand = grunnlag?.vurderinger.orEmpty()
-                    val vedtatteBistandsvurderinger = behandling.forrigeBehandlingId
-                        ?.let { bistandRepository.hentHvisEksisterer(it) }
-                        ?.vurderinger.orEmpty()
-                    val vurdering = nåTilstand
-                        .filterNot { gjeldendeVurdering -> gjeldendeVurdering.copy(opprettet = null) in vedtatteBistandsvurderinger.map { it.copy(opprettet = null) } }
-                        .singleOrNull()
-
-                    val gjeldendeSykdomsvurderinger =
-                        sykdomRepository.hentHvisEksisterer(behandling.id)?.sykdomsvurderinger.orEmpty()
-
-                    val sisteSykdomsvurdering = gjeldendeSykdomsvurderinger.maxByOrNull { it.opprettet }
 
                     val sak = sakRepository.hent(behandling.sakId)
-                    val erOppfylt11_5 = sisteSykdomsvurdering?.erOppfylt(sak.rettighetsperiode.fom)
+                    val gjeldendeSykdomsvurderinger =
+                        sykdomRepository.hentHvisEksisterer(behandling.id)?.gjeldendeSykdomsvurderinger().orEmpty()
+                    val sisteSykdomsvurdering = gjeldendeSykdomsvurderinger.maxByOrNull { it.opprettet }
+                    // TODO: Fjern denne når 11-17 er prodsatt. Ikke riktig for periodisering
+                    val erOppfylt11_5 = sisteSykdomsvurdering?.erOppfyltOrdinær(
+                        sak.rettighetsperiode.fom,
+                        Periode(sisteSykdomsvurdering.vurderingenGjelderFra, sak.rettighetsperiode.tom)
+                    )
 
                     BistandGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
-                        vurdering = vurdering?.tilResponse(ansattInfoService = ansattInfoService),
-                        gjeldendeVedtatteVurderinger = vedtatteBistandsvurderinger.map {
-                            it.tilResponse(ansattInfoService = ansattInfoService)
-                        },
-                        historiskeVurderinger = historiskeVurderinger.map { it.tilResponse(ansattInfoService = ansattInfoService) },
+                        vurdering = grunnlag?.bistandsvurderingerVurdertIBehandling(behandling.id)
+                            ?.sortedBy { it.opprettet }?.lastOrNull()
+                            ?.tilResponse(ansattInfoService = ansattInfoService),
+                        vurderinger = grunnlag?.bistandsvurderingerVurdertIBehandling(behandling.id)
+                            .orEmpty()
+                            .map { it.tilResponse(ansattInfoService = ansattInfoService) },
+                        gjeldendeVedtatteVurderinger = grunnlag?.gjeldendeVedtatteBistandsvurderinger(behandling.id)
+                            .orEmpty()
+                            .map { it.tilResponse(ansattInfoService = ansattInfoService) },
+                        historiskeVurderinger = grunnlag?.historiskeBistandsvurderinger(behandling.id)
+                            .orEmpty()
+                            .map { it.tilResponse(ansattInfoService = ansattInfoService) },
                         gjeldendeSykdsomsvurderinger = gjeldendeSykdomsvurderinger.map {
                             it.tilResponse(ansattInfoService)
                         },
@@ -93,7 +95,7 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(
     }
 }
 
-private fun BistandVurdering.tilResponse(
+private fun Bistandsvurdering.tilResponse(
     erGjeldende: Boolean? = false,
     ansattInfoService: AnsattInfoService,
 ): BistandVurderingResponse {
@@ -105,7 +107,6 @@ private fun BistandVurdering.tilResponse(
         erBehovForAnnenOppfølging = erBehovForAnnenOppfølging,
         vurderingenGjelderFra = vurderingenGjelderFra,
         skalVurdereAapIOvergangTilArbeid = skalVurdereAapIOvergangTilArbeid,
-        skalVurdereAapIOvergangTilUføre = skalVurdereAapIOvergangTilUføre,
         vurdertAv = VurdertAvResponse(
             ident = vurdertAv,
             dato = opprettet?.atZone(ZoneId.of("Europe/Oslo"))?.toLocalDate()

@@ -24,13 +24,20 @@ class VilkårsresultatTest {
         }
 
         fun Vilkårsresultat.leggTilFellesVilkår(periode: Periode) {
-            for (vilkår in listOf(Vilkårtype.ALDERSVILKÅRET, Vilkårtype.LOVVALG, Vilkårtype.GRUNNLAGET, Vilkårtype.MEDLEMSKAP)) {
-               leggTilHvisIkkeEksisterer(vilkår).leggTilVurdering(Vilkårsperiode(
-                   periode = periode,
-                   utfall = Utfall.OPPFYLT,
-                   begrunnelse = null,
-                   innvilgelsesårsak = null,
-               ))
+            for (vilkår in listOf(
+                Vilkårtype.ALDERSVILKÅRET,
+                Vilkårtype.LOVVALG,
+                Vilkårtype.GRUNNLAGET,
+                Vilkårtype.MEDLEMSKAP
+            )) {
+                leggTilHvisIkkeEksisterer(vilkår).leggTilVurdering(
+                    Vilkårsperiode(
+                        periode = periode,
+                        utfall = Utfall.OPPFYLT,
+                        begrunnelse = null,
+                        innvilgelsesårsak = null,
+                    )
+                )
             }
         }
 
@@ -45,7 +52,7 @@ class VilkårsresultatTest {
                         periode,
                         utfall = Utfall.OPPFYLT,
                         begrunnelse = null,
-                        innvilgelsesårsak = if (it in listOf(BISTANDSVILKÅRET, SYKDOMSVILKÅRET)) Innvilgelsesårsak.STUDENT else null,
+                        innvilgelsesårsak = if (it in listOf(SYKDOMSVILKÅRET)) Innvilgelsesårsak.STUDENT else null,
                     )
                 )
             }
@@ -106,23 +113,15 @@ class VilkårsresultatTest {
                     førstePeriode, utfall = Utfall.IKKE_RELEVANT, begrunnelse = null
                 )
             )
-            v.leggTilHvisIkkeEksisterer(SYKDOMSVILKÅRET).leggTilVurdering(
+            v.leggTilHvisIkkeEksisterer(Vilkårtype.SYKEPENGEERSTATNING).leggTilVurdering(
                 Vilkårsperiode(
                     førstePeriode,
                     utfall = Utfall.OPPFYLT,
-                    innvilgelsesårsak = Innvilgelsesårsak.SYKEPENGEERSTATNING,
+                    innvilgelsesårsak = null,
                     begrunnelse = null,
                 )
             )
             val andrePeriode = Periode(dagensDato.plusDays(1), dagensDato.plusDays(15))
-            v.leggTilHvisIkkeEksisterer(BISTANDSVILKÅRET).leggTilVurdering(
-                Vilkårsperiode(
-                    andrePeriode,
-                    utfall = Utfall.OPPFYLT,
-                    innvilgelsesårsak = Innvilgelsesårsak.STUDENT,
-                    begrunnelse = null
-                )
-            )
             v.leggTilHvisIkkeEksisterer(SYKDOMSVILKÅRET).leggTilVurdering(
                 Vilkårsperiode(
                     andrePeriode,
@@ -206,8 +205,16 @@ class VilkårsresultatTest {
             v.leggTilHvisIkkeEksisterer(SYKDOMSVILKÅRET).leggTilVurdering(
                 Vilkårsperiode(
                     Periode(nå, sykepengerPeriode),
+                    utfall = Utfall.IKKE_OPPFYLT,
+                    avslagsårsak = Avslagsårsak.MANGLENDE_DOKUMENTASJON,
+                    begrunnelse = null
+                )
+            )
+            v.leggTilHvisIkkeEksisterer(Vilkårtype.SYKEPENGEERSTATNING).leggTilVurdering(
+                Vilkårsperiode(
+                    Periode(nå, sykepengerPeriode),
                     utfall = Utfall.OPPFYLT,
-                    innvilgelsesårsak = Innvilgelsesårsak.SYKEPENGEERSTATNING,
+                    innvilgelsesårsak = null,
                     begrunnelse = null
                 )
             )
@@ -253,45 +260,51 @@ class VilkårsresultatTest {
             val ordinærPeriode = Periode(nå, nå.plusMonths(1).minusDays(1))
             val arbeidssøkerPeriode = Periode(ordinærPeriode.tom.plusDays(1), nå.plusYears(1).minusDays(1))
 
-            v.leggTilHvisIkkeEksisterer(SYKDOMSVILKÅRET). leggTilVurderinger(tidslinjeOf(
-                ordinærPeriode to Vilkårsvurdering(
-                    utfall = Utfall.OPPFYLT,
-                    manuellVurdering = true,
-                    begrunnelse = "",
-                    faktagrunnlag = null,
-                ),
-                arbeidssøkerPeriode to Vilkårsvurdering(
-                    utfall = Utfall.IKKE_OPPFYLT,
-                    avslagsårsak = Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL,
-                    manuellVurdering = true,
-                    begrunnelse = "",
-                    faktagrunnlag = null,
+            v.leggTilHvisIkkeEksisterer(SYKDOMSVILKÅRET).leggTilVurderinger(
+                tidslinjeOf(
+                    ordinærPeriode to Vilkårsvurdering(
+                        utfall = Utfall.OPPFYLT,
+                        manuellVurdering = true,
+                        begrunnelse = "",
+                        faktagrunnlag = null,
+                    ),
+                    arbeidssøkerPeriode to Vilkårsvurdering(
+                        utfall = Utfall.IKKE_OPPFYLT,
+                        avslagsårsak = Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL,
+                        manuellVurdering = true,
+                        begrunnelse = "",
+                        faktagrunnlag = null,
+                    )
                 )
-            ))
+            )
 
-            v.leggTilHvisIkkeEksisterer(BISTANDSVILKÅRET).leggTilVurderinger(tidslinjeOf(
-                ordinærPeriode to Vilkårsvurdering(
-                    utfall = Utfall.OPPFYLT,
-                    manuellVurdering = true,
-                    begrunnelse = "",
-                    faktagrunnlag = null,
-                ),
-                arbeidssøkerPeriode to Vilkårsvurdering(
-                    utfall = Utfall.IKKE_OPPFYLT,
-                    avslagsårsak = Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING,
-                    manuellVurdering = true,
-                    begrunnelse = "",
-                    faktagrunnlag = null,
+            v.leggTilHvisIkkeEksisterer(BISTANDSVILKÅRET).leggTilVurderinger(
+                tidslinjeOf(
+                    ordinærPeriode to Vilkårsvurdering(
+                        utfall = Utfall.OPPFYLT,
+                        manuellVurdering = true,
+                        begrunnelse = "",
+                        faktagrunnlag = null,
+                    ),
+                    arbeidssøkerPeriode to Vilkårsvurdering(
+                        utfall = Utfall.IKKE_OPPFYLT,
+                        avslagsårsak = Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING,
+                        manuellVurdering = true,
+                        begrunnelse = "",
+                        faktagrunnlag = null,
+                    )
                 )
-            ))
-            v.leggTilHvisIkkeEksisterer(Vilkårtype.OVERGANGARBEIDVILKÅRET).leggTilVurderinger(tidslinjeOf(
-                arbeidssøkerPeriode to Vilkårsvurdering(
-                    utfall = Utfall.OPPFYLT,
-                    manuellVurdering = true,
-                    begrunnelse = "",
-                    faktagrunnlag = null,
-                ),
-            ))
+            )
+            v.leggTilHvisIkkeEksisterer(Vilkårtype.OVERGANGARBEIDVILKÅRET).leggTilVurderinger(
+                tidslinjeOf(
+                    arbeidssøkerPeriode to Vilkårsvurdering(
+                        utfall = Utfall.OPPFYLT,
+                        manuellVurdering = true,
+                        begrunnelse = "",
+                        faktagrunnlag = null,
+                    ),
+                )
+            )
             v.leggTilFellesVilkår(ordinærPeriode)
             v.leggTilFellesVilkår(arbeidssøkerPeriode)
 
@@ -373,7 +386,15 @@ class VilkårsresultatTest {
             v.leggTilHvisIkkeEksisterer(SYKDOMSVILKÅRET).leggTilVurdering(
                 Vilkårsperiode(
                     Periode(nå, sykepengerPeriode),
-                    innvilgelsesårsak = Innvilgelsesårsak.SYKEPENGEERSTATNING,
+                    utfall = Utfall.IKKE_OPPFYLT,
+                    avslagsårsak = Avslagsårsak.MANGLENDE_DOKUMENTASJON,
+                    begrunnelse = null,
+                )
+            )
+            v.leggTilHvisIkkeEksisterer(Vilkårtype.SYKEPENGEERSTATNING).leggTilVurdering(
+                Vilkårsperiode(
+                    Periode(nå, sykepengerPeriode),
+                    innvilgelsesårsak = null,
                     utfall = Utfall.OPPFYLT,
                     begrunnelse = null,
                 )

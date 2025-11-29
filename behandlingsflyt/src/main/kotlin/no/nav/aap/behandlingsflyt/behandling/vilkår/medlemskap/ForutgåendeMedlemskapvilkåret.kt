@@ -8,49 +8,56 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.In
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
 
 class ForutgåendeMedlemskapvilkåret(
     vilkårsresultat: Vilkårsresultat,
-    private val rettighetsPeriode: Periode
+    private val rettighetsPeriode: Periode,
 ) : Vilkårsvurderer<ForutgåendeMedlemskapGrunnlag> {
     private val vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.MEDLEMSKAP)
 
     override fun vurder(grunnlag: ForutgåendeMedlemskapGrunnlag) {
-        val manuellVurdering = grunnlag.medlemskapArbeidInntektGrunnlag?.manuellVurdering
+        val brukManuellVurderingForForutgåendeMedlemskap = grunnlag.medlemskapArbeidInntektGrunnlag?.vurderinger?.isNotEmpty() ?: false
 
-        var vurdertManuelt = false
-        val vurderingsResultat = if (manuellVurdering != null) {
-            vurdertManuelt = true
-            if (!manuellVurdering.harForutgåendeMedlemskap
-                && (manuellVurdering.medlemMedUnntakAvMaksFemAar != true && manuellVurdering.varMedlemMedNedsattArbeidsevne != true)
-            ) {
-                VurderingsResultat(Utfall.IKKE_OPPFYLT, Avslagsårsak.IKKE_MEDLEM_FORUTGÅENDE, null)
-            } else {
-                VurderingsResultat(Utfall.OPPFYLT, null, null)
-            }
+        if (brukManuellVurderingForForutgåendeMedlemskap) {
+            val gjeldendeVurderinger = grunnlag.medlemskapArbeidInntektGrunnlag.gjeldendeVurderinger()
+
+            val vilkårsvurderinger = gjeldendeVurderinger
+                .map { vurdering ->
+                    if (vurdering.oppfyllerForutgåendeMedlemskap()) {
+                        Vilkårsvurdering(
+                            utfall = Utfall.OPPFYLT,
+                            begrunnelse = null,
+                            faktagrunnlag = grunnlag,
+                            manuellVurdering = true
+                        )
+                    } else {
+                        Vilkårsvurdering(
+                            utfall = Utfall.IKKE_OPPFYLT,
+                            avslagsårsak = Avslagsårsak.IKKE_MEDLEM_FORUTGÅENDE,
+                            begrunnelse = null,
+                            faktagrunnlag = grunnlag,
+                            manuellVurdering = true
+                        )
+                    }
+                }
+                .komprimer()
+                .begrensetTil(rettighetsPeriode)
+
+            vilkår.leggTilVurderinger(vilkårsvurderinger)
         } else if (grunnlag.nyeSoknadGrunnlag == null)  {
-            VurderingsResultat(Utfall.IKKE_RELEVANT, null, null)
+            val vurderingsResultat = VurderingsResultat(Utfall.IKKE_RELEVANT, null, null)
+            leggTilVurdering(grunnlag, vurderingsResultat)
         } else {
             val kanBehandlesAutomatisk = ForutgåendeMedlemskapVurderingService().vurderTilhørighet(grunnlag, rettighetsPeriode).kanBehandlesAutomatisk
-
             val utfall = if (kanBehandlesAutomatisk) Utfall.OPPFYLT else Utfall.IKKE_VURDERT
-            VurderingsResultat(utfall, null, null)
+            val vurderingsResultat = VurderingsResultat(utfall, null, null)
+            leggTilVurdering(grunnlag, vurderingsResultat)
         }
-
-        leggTilVurdering(grunnlag, vurderingsResultat, vurdertManuelt)
-    }
-
-    fun vurderOverstyrt(grunnlag: ForutgåendeMedlemskapGrunnlag) {
-        val manuellVurdering = grunnlag.medlemskapArbeidInntektGrunnlag?.manuellVurdering
-        val vurderingsResultat = if (!manuellVurdering!!.harForutgåendeMedlemskap
-            && (manuellVurdering.medlemMedUnntakAvMaksFemAar != true && manuellVurdering.varMedlemMedNedsattArbeidsevne != true)) {
-                VurderingsResultat(Utfall.IKKE_OPPFYLT, Avslagsårsak.IKKE_MEDLEM_FORUTGÅENDE, null)
-            } else {
-                VurderingsResultat(Utfall.OPPFYLT, null, null)
-            }
-        leggTilVurdering(grunnlag, vurderingsResultat, true)
     }
 
     fun leggTilYrkesskadeVurdering() {
@@ -71,17 +78,16 @@ class ForutgåendeMedlemskapvilkåret(
     private fun leggTilVurdering(
         grunnlag: ForutgåendeMedlemskapGrunnlag,
         vurderingsResultat: VurderingsResultat,
-        vurdertManuelt: Boolean
     ) {
         vilkår.leggTilVurdering(
             Vilkårsperiode(
                 periode = rettighetsPeriode,
                 utfall = vurderingsResultat.utfall,
                 avslagsårsak = vurderingsResultat.avslagsårsak,
-                begrunnelse = grunnlag.medlemskapArbeidInntektGrunnlag?.manuellVurdering?.begrunnelse,
+                begrunnelse = null,
                 faktagrunnlag = grunnlag,
                 versjon = vurderingsResultat.versjon(),
-                manuellVurdering = vurdertManuelt
+                manuellVurdering = false
             )
         )
     }

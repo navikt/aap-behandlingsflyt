@@ -1,11 +1,24 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangArbeidLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.flate.OvergangArbeidVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.test.april
+import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.behandlingsflyt.test.mars
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertDoesNotThrow
+import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertFailsWith
 
 class AvklaringsbehoveneTest {
@@ -22,7 +35,7 @@ class AvklaringsbehoveneTest {
             kreverToTrinn = null
         )
         avklaringsbehovene.leggTil(
-            listOf(avklaringsbehov.definisjon), avklaringsbehov.funnetISteg
+            listOf(avklaringsbehov.definisjon), avklaringsbehov.funnetISteg, null, null
         )
 
         assertThat(avklaringsbehovene.alle()).hasSize(1)
@@ -38,7 +51,7 @@ class AvklaringsbehoveneTest {
             kreverToTrinn = null
         )
         avklaringsbehovene.leggTil(
-            listOf(avklaringsbehov.definisjon), avklaringsbehov.funnetISteg
+            listOf(avklaringsbehov.definisjon), avklaringsbehov.funnetISteg, null, null
         )
         val avklaringsbehov1 = Avklaringsbehov(
             definisjon = Definisjon.AVKLAR_SYKDOM,
@@ -47,7 +60,7 @@ class AvklaringsbehoveneTest {
             kreverToTrinn = null
         )
         avklaringsbehovene.leggTil(
-            listOf(avklaringsbehov1.definisjon), avklaringsbehov1.funnetISteg
+            listOf(avklaringsbehov1.definisjon), avklaringsbehov1.funnetISteg, null, null
         )
 
         assertThat(avklaringsbehovene.alle()).hasSize(1)
@@ -63,7 +76,7 @@ class AvklaringsbehoveneTest {
             kreverToTrinn = null
         )
         avklaringsbehovene.leggTil(
-            listOf(avklaringsbehov1.definisjon), avklaringsbehov1.funnetISteg
+            listOf(avklaringsbehov1.definisjon), avklaringsbehov1.funnetISteg, null, null
         )
 
         assertThat(avklaringsbehovene.alle()).hasSize(1)
@@ -79,7 +92,7 @@ class AvklaringsbehoveneTest {
             kreverToTrinn = null
         )
         avklaringsbehovene.leggTil(
-            listOf(avklaringsbehov2.definisjon), avklaringsbehov2.funnetISteg
+            listOf(avklaringsbehov2.definisjon), avklaringsbehov2.funnetISteg, null, null
         )
         assertThat(avklaringsbehovene.alle()).hasSize(1)
         assertThat(avklaringsbehovene.alle().first().definisjon).isEqualTo(Definisjon.SKRIV_BREV)
@@ -95,7 +108,7 @@ class AvklaringsbehoveneTest {
             id = 1L,
             kreverToTrinn = null
         )
-        avklaringsbehovene.leggTil(listOf(avklaringsbehov.definisjon), avklaringsbehov.funnetISteg)
+        avklaringsbehovene.leggTil(listOf(avklaringsbehov.definisjon), avklaringsbehov.funnetISteg, null, null)
 
         assertThat(avklaringsbehov.erÅpent()).isTrue
 
@@ -113,7 +126,7 @@ class AvklaringsbehoveneTest {
             id = 1L,
             kreverToTrinn = null
         )
-        avklaringsbehovene.leggTil(listOf(avklaringsbehov.definisjon), avklaringsbehov.funnetISteg)
+        avklaringsbehovene.leggTil(listOf(avklaringsbehov.definisjon), avklaringsbehov.funnetISteg, null, null)
 
         assertThat(avklaringsbehov.erÅpent()).isTrue
 
@@ -139,7 +152,7 @@ class AvklaringsbehoveneTest {
             kreverToTrinn = null
         )
         avklaringsbehovene.leggTil(
-            listOf(avklaringsbehov.definisjon), avklaringsbehov.funnetISteg
+            listOf(avklaringsbehov.definisjon), avklaringsbehov.funnetISteg, null, null
         )
         val avklaringsbehov1 = Avklaringsbehov(
             definisjon = Definisjon.FATTE_VEDTAK,
@@ -148,7 +161,7 @@ class AvklaringsbehoveneTest {
             kreverToTrinn = null
         )
         avklaringsbehovene.leggTil(
-            listOf(avklaringsbehov1.definisjon), avklaringsbehov1.funnetISteg
+            listOf(avklaringsbehov1.definisjon), avklaringsbehov1.funnetISteg, null, null
         )
 
         assertThat(avklaringsbehovene.åpne()).hasSize(2)
@@ -157,4 +170,213 @@ class AvklaringsbehoveneTest {
 
         assertThat(avklaringsbehovene.åpne()).hasSize(1)
     }
+
+    @Test
+    fun `skal kunne oppdatere perioder avklaringsbehovet gjelder`() {
+        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, BehandlingId(599))
+        val avklaringsbehov = Avklaringsbehov(
+            definisjon = Definisjon.AVKLAR_SYKDOM,
+            funnetISteg = StegType.AVKLAR_SYKDOM,
+            id = 1L,
+            kreverToTrinn = null,
+        )
+        val gamlePerioder = setOf(
+            Periode(1 januar 2021, Tid.MAKS),
+        )
+        avklaringsbehovene.leggTil(
+            listOf(avklaringsbehov.definisjon),
+            avklaringsbehov.funnetISteg,
+            perioderSomIkkeErTilstrekkeligVurdert = gamlePerioder,
+            perioderVedtaketBehøverVurdering = gamlePerioder,
+        )
+
+        assertThat(avklaringsbehovene.åpne()).hasSize(1)
+        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)?.perioderSomSkalLøses())
+            .isEqualTo(gamlePerioder)
+
+        val nyePerioder = setOf(
+            Periode(1 januar 2021, 1 april 2022),
+            Periode(10 april 2022, Tid.MAKS)
+        )
+        avklaringsbehovene.oppdaterPerioder(Definisjon.AVKLAR_SYKDOM, nyePerioder, nyePerioder)
+
+        assertThat(avklaringsbehovene.åpne()).hasSize(1)
+        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)?.perioderSomSkalLøses())
+            .isEqualTo(nyePerioder)
+        assertThat(
+            avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)?.perioderSomIkkeErTilstrekkeligVurdert()
+        )
+            .isEqualTo(nyePerioder)
+
+    }
+
+    @Test
+    fun `Periodisert løsning må dekke periodene avklaringsbehovet ber om`() {
+        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, BehandlingId(9))
+        val avklaringsbehov = Avklaringsbehov(
+            definisjon = Definisjon.AVKLAR_OVERGANG_ARBEID,
+            funnetISteg = StegType.OVERGANG_ARBEID,
+            id = 1L,
+            kreverToTrinn = null
+        )
+        avklaringsbehovene.leggTil(
+            perioderVedtaketBehøverVurdering =
+                setOf(Periode(1 januar 2021, 1 februar 2021), Periode(1 mars 2021, 1 april 2021)),
+            perioderSomIkkeErTilstrekkeligVurdert = setOf(
+                Periode(1 januar 2021, 1 februar 2021),
+                Periode(1 mars 2021, 1 april 2021)
+            ),
+            definisjoner = listOf(
+                avklaringsbehov.definisjon
+            ), funnetISteg = avklaringsbehov.funnetISteg
+        )
+
+
+        assertThat(avklaringsbehov.erÅpent()).isTrue
+
+        val exception = assertThrows<UgyldigForespørselException> {
+            avklaringsbehovene.validerPerioder(
+                løsning = AvklarOvergangArbeidLøsning(
+                    listOf(
+                        OvergangArbeidVurderingLøsningDto(
+                            fom = 1 januar 2021,
+                            tom = 1 februar 2021,
+                            begrunnelse = "begrunnelse",
+                            brukerRettPåAAP = false
+                        )
+                    )
+                ),
+            )
+        }
+
+        assertThat(exception.message).isEqualTo("Løsning mangler vurdering for perioder: [Periode(fom=2021-03-01, tom=2021-04-01)]")
+
+        assertDoesNotThrow {
+            avklaringsbehovene.validerPerioder(
+                løsning = AvklarOvergangArbeidLøsning(
+                    listOf(
+                        OvergangArbeidVurderingLøsningDto(
+                            fom = 1 januar 2021,
+                            tom = 1 januar 2022,
+                            begrunnelse = "begrunnelse",
+                            brukerRettPåAAP = false
+                        )
+                    )
+                ),
+            )
+        }
+    }
+
+    @Test
+    fun `Avklaringsbehov med tom mengde med perioder som skal vurderes skal ikke bry seg om perioder`() {
+        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, BehandlingId(10))
+        val avklaringsbehov = Avklaringsbehov(
+            definisjon = Definisjon.AVKLAR_OVERGANG_ARBEID,
+            funnetISteg = StegType.OVERGANG_ARBEID,
+            id = 1L,
+            kreverToTrinn = null
+        )
+        avklaringsbehovene.leggTil(
+            perioderVedtaketBehøverVurdering = emptySet(),
+            perioderSomIkkeErTilstrekkeligVurdert = null,
+            definisjoner = listOf(
+                avklaringsbehov.definisjon
+            ),
+            funnetISteg = avklaringsbehov.funnetISteg,
+        )
+
+
+        assertThat(avklaringsbehov.erÅpent()).isTrue
+
+        assertDoesNotThrow {
+            avklaringsbehovene.validerPerioder(
+                løsning = AvklarOvergangArbeidLøsning(
+                    listOf(
+                        OvergangArbeidVurderingLøsningDto(
+                            fom = 1 januar 2021,
+                            tom = 1 januar 2022,
+                            begrunnelse = "begrunnelse",
+                            brukerRettPåAAP = false
+                        )
+                    )
+                ),
+            )
+        }
+    }
+
+    @Test
+    fun `Avklaringsbehov med null-perioder som skal vurderes skal ikke bry seg om perioder`() {
+        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, BehandlingId(11))
+        val avklaringsbehov = Avklaringsbehov(
+            definisjon = Definisjon.AVKLAR_OVERGANG_ARBEID,
+            funnetISteg = StegType.OVERGANG_ARBEID,
+            id = 1L,
+            kreverToTrinn = null
+        )
+        avklaringsbehovene.leggTil(
+            perioderVedtaketBehøverVurdering = null,
+            perioderSomIkkeErTilstrekkeligVurdert = null,
+            definisjoner = listOf(
+                avklaringsbehov.definisjon
+            ), funnetISteg = avklaringsbehov.funnetISteg
+        )
+
+
+        assertThat(avklaringsbehov.erÅpent()).isTrue
+
+        assertDoesNotThrow {
+            avklaringsbehovene.validerPerioder(
+                løsning = AvklarOvergangArbeidLøsning(
+                    listOf(
+                        OvergangArbeidVurderingLøsningDto(
+                            fom = 1 januar 2021,
+                            tom = 1 januar 2022,
+                            begrunnelse = "begrunnelse",
+                            brukerRettPåAAP = false
+                        )
+                    )
+                ),
+            )
+        }
+    }
+
+    @Test
+    fun `Ikke-periodiserte løsninger skal ikke valideres mot avklaringsbehovperioder`() {
+        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, BehandlingId(12))
+        val avklaringsbehov = Avklaringsbehov(
+            definisjon = Definisjon.FATTE_VEDTAK,
+            funnetISteg = StegType.FATTE_VEDTAK,
+            id = 1L,
+            kreverToTrinn = null
+        )
+        avklaringsbehovene.leggTil(
+            perioderVedtaketBehøverVurdering = setOf(
+                Periode(1 mars 2021, 1 april 2021) // Ikke egentlig en reell case
+            ),
+            perioderSomIkkeErTilstrekkeligVurdert = setOf(
+                Periode(1 mars 2021, 1 april 2021) // Ikke egentlig en reell case
+            ),
+            definisjoner = listOf(
+                avklaringsbehov.definisjon
+            ), funnetISteg = avklaringsbehov.funnetISteg
+        )
+
+        assertThat(avklaringsbehov.erÅpent()).isTrue
+
+        assertDoesNotThrow {
+            avklaringsbehovene.validerPerioder(
+                løsning = FatteVedtakLøsning(
+                    listOf(
+                        TotrinnsVurdering(
+                            godkjent = true,
+                            begrunnelse = "begrunnelse",
+                            definisjon = Definisjon.AVKLAR_SYKDOM.kode,
+                            grunner = null,
+                        )
+                    )
+                ),
+            )
+        }
+    }
+
 }

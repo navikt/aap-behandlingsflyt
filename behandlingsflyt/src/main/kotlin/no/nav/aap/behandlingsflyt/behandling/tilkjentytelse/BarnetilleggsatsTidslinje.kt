@@ -4,6 +4,7 @@ import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.Tid
 import java.time.LocalDate
 
 val BARNETILLEGGSATS_TIDSLINJE = Tidslinje(
@@ -21,7 +22,7 @@ val BARNETILLEGGSATS_TIDSLINJE = Tidslinje(
             verdi = Beløp(36)
         ),
         Segment(
-            periode = Periode(LocalDate.of(2025, 1, 1), LocalDate.MAX),
+            periode = Periode(LocalDate.of(2025, 1, 1), Tid.MAKS),
             verdi = Beløp(37)
         )
     )

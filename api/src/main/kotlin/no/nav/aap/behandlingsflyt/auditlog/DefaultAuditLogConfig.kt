@@ -10,7 +10,7 @@ import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.auditlog.AuditLogPathParamConfig
 import no.nav.aap.tilgang.auditlog.PathBrukerIdentResolver
 import org.slf4j.LoggerFactory
-import java.util.*
+import java.util.UUID
 import javax.sql.DataSource
 
 class DefaultAuditLogConfig(

@@ -48,23 +48,28 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
         val behandlingId = BehandlingId(input.behandlingId())
         val sak = sakService.hent(sakId)
         val behandling = behandlingRepository.hent(behandlingId)
-        val meldeperioder = meldeperiodeRepository.hent(behandlingId)
 
         val opplysningerTilMeldekortBackend = when {
             trukketSøknadService.søknadErTrukket(behandling.id) ->
                 opplysningerVedTrukketSøknad(sak)
 
-            behandling.status().erAvsluttet() ->
+            behandling.status().erAvsluttet() -> {
+                val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling.id)
+                val underveisperiode = underveisGrunnlag?.somTidslinje()?.helePerioden() ?: error("Skal ha underveisperiode for avsluttet behandling ${behandling.id}")
+                val meldeperioder = meldeperiodeRepository.hentMeldeperioder(behandlingId, underveisperiode)
                 opplysningerVedVedtak(
                     sak = sak,
                     meldeperioder = meldeperioder,
                     vedtak = vedtakRepository.hent(behandling.id),
                     meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling.id),
-                    underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandling.id)
+                    underveisGrunnlag = underveisGrunnlag
                 )
+            }
 
-            behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling ->
+            behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling -> {
+                val meldeperioder = meldeperiodeRepository.hentMeldeperioder(behandlingId, sak.rettighetsperiodeEttÅrFraStartDato())
                 opplysningerFørVedtak(sak, meldeperioder)
+            }
 
             else -> null
         }

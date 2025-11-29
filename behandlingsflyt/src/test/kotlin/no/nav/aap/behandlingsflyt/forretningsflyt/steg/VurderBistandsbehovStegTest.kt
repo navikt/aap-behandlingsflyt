@@ -6,12 +6,13 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
@@ -35,8 +36,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.time.LocalDate
-import java.util.Random
-import java.util.UUID
+import java.util.*
 
 class VurderBistandsbehovStegTest {
     private val random = Random(1235123)
@@ -51,14 +51,14 @@ class VurderBistandsbehovStegTest {
         val bistandMock: BistandRepository = mockk(relaxed = true) {
             every { hentHvisEksisterer(any()) } returns BistandGrunnlag(
                 vurderinger = listOf(
-                    BistandVurdering(
+                    Bistandsvurdering(
+                        vurdertIBehandling = BehandlingId(1),
                         begrunnelse = "Begrunnelse",
                         erBehovForAktivBehandling = true,
                         erBehovForArbeidsrettetTiltak = true,
                         erBehovForAnnenOppfølging = false,
                         vurderingenGjelderFra = nyRettighetsperiode.fom.plusDays(10),
                         vurdertAv = "Z00000",
-                        skalVurdereAapIOvergangTilUføre = null,
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = null,
                     )

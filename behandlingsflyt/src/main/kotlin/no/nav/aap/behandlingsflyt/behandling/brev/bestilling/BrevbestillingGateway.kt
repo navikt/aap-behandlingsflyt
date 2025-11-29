@@ -6,6 +6,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.brev.kontrakt.Brev
 import no.nav.aap.brev.kontrakt.BrevbestillingResponse
+import no.nav.aap.brev.kontrakt.BrevdataDto
+import no.nav.aap.brev.kontrakt.MottakerDistStatus
 import no.nav.aap.brev.kontrakt.MottakerDto
 import no.nav.aap.brev.kontrakt.Signatur
 import no.nav.aap.brev.kontrakt.SignaturGrunnlag
@@ -15,7 +17,7 @@ import java.io.InputStream
 
 interface BrevbestillingGateway : Gateway {
 
-    fun bestillBrevV2(
+    fun bestillBrev(
         saksnummer: Saksnummer,
         brukerIdent: Ident,
         behandlingReferanse: BehandlingReferanse,
@@ -23,6 +25,7 @@ interface BrevbestillingGateway : Gateway {
         brevBehov: BrevBehov,
         vedlegg: Vedlegg?,
         ferdigstillAutomatisk: Boolean,
+        brukApiV3: Boolean,
     ): BrevbestillingReferanse
 
     fun ferdigstill(referanse: BrevbestillingReferanse, signaturer: List<SignaturGrunnlag>, mottakere: List<MottakerDto> =  emptyList()): Boolean
@@ -31,7 +34,11 @@ interface BrevbestillingGateway : Gateway {
 
     fun oppdater(bestillingReferanse: BrevbestillingReferanse, brev: Brev)
 
+    fun oppdaterV3(bestillingReferanse: BrevbestillingReferanse, brevdata: BrevdataDto)
+
     fun avbryt(bestillingReferanse: BrevbestillingReferanse)
+
+    fun kanDistribuereBrev(brukerIdent: String, mottakerIdentListe: List<String>, brevbestillingReferanse: BrevbestillingReferanse): List<MottakerDistStatus>
 
     fun hentSignaturForhåndsvisning(
         signaturer: List<SignaturGrunnlag>,

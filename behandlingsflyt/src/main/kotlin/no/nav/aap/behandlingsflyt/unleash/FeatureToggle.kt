@@ -14,15 +14,20 @@ enum class BehandlingsflytFeature : FeatureToggle {
     NyBrevtype11_18,
     Aktivitetsplikt11_9,
     OverforingsdatoNullForAvregning,
-    NyeSykdomVilkar,
     OvergangArbeid,
     AvklaringsbehovService,
-    AvklaringsbehovServiceFormkrav,
-    LovvalgMedlemskapPeriodisertMigrering,
-    LovvalgMedlemskapPeriodisert,
     KvalitetssikringsSteg,
     FatteVedtakAvklaringsbehovService,
-    SykdomPeriodisertMigrering,
+    BedreUttrekkAvSakerMedFritakMeldeplikt,
+    EOSBeregning,
+    NyeBarn,
+    InstFormaal,
+    Arbeidsopptrapping,
+    IkkeAntaNullTimerArbeidet,
+    NyBrevbyggerV3,
+    LagreVedtakIFatteVedtak,
+    ReduksjonArbeidOverGrense,
+    ForutgaendeMedlemskapPeriodisert
     ;
 
     override fun key(): String = name

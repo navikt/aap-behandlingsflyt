@@ -78,8 +78,9 @@ class StegOrkestrator(
 
 
                 while (true) {
-                    val statusSpan = tracer.spanBuilder("steg status ${gjeldendeStegStatus.name}. Steg: ${aktivtSteg.type().name}")
-                        .startSpan()
+                    val statusSpan =
+                        tracer.spanBuilder("steg status ${gjeldendeStegStatus.name}. Steg: ${aktivtSteg.type().name}")
+                            .startSpan()
                     try {
                         MDC.putCloseable("stegStatus", gjeldendeStegStatus.name).use {
                             val resultat = utførTilstandsEndring(
@@ -206,7 +207,7 @@ class StegOrkestrator(
                 resultat.avklaringsbehov()
             )
             val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekstMedPerioder.behandlingId)
-            avklaringsbehovene.leggTil(resultat.avklaringsbehov(), aktivtSteg.type())
+            avklaringsbehovene.leggTil(resultat.avklaringsbehov(), funnetISteg = aktivtSteg.type(), null, null)
         } else if (resultat is FunnetVentebehov) {
             log.info(
                 "Fant ventebehov: {}",
@@ -218,7 +219,9 @@ class StegOrkestrator(
                     definisjoner = listOf(it.definisjon),
                     funnetISteg = aktivtSteg.type(),
                     frist = it.frist,
-                    grunn = it.grunn
+                    grunn = it.grunn,
+                    perioderVedtaketBehøverVurdering = null,
+                    perioderSomIkkeErTilstrekkeligVurdert = null,
                 )
             }
         }

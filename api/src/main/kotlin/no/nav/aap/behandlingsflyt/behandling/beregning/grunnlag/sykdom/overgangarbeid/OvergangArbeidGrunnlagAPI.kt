@@ -69,8 +69,7 @@ fun NormalOpenAPIRoute.overgangArbeidGrunnlagApi(
                         behøverVurderinger = listOf(sak.rettighetsperiode),
 
                         gjeldendeSykdsomsvurderinger = sykdomRepository.hentHvisEksisterer(behandling.id)
-                            ?.sykdomsvurderinger.orEmpty()
-                            .map { it.tilResponse(ansattInfoService) },
+                            ?.gjeldendeSykdomsvurderinger().orEmpty().map { it.tilResponse(ansattInfoService) },
                     )
                 }
 

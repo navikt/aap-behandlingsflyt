@@ -54,14 +54,14 @@ data class ManglerStatsborgerskapGrunnlag(
 
 data class OppgittJobbetIUtlandGrunnlag(
     val land: String?,
-    val tilDato: LocalDate?,
     val fraDato: LocalDate?,
+    val tilDato: LocalDate?,
 )
 
 data class OppgittUtenlandsOppholdGrunnlag(
     val land: String?,
+    val fraDato: LocalDate?,
     val tilDato: LocalDate?,
-    val fraDato: LocalDate?
 )
 
 data class UtenlandsAdresserGrunnlag(
@@ -105,7 +105,8 @@ enum class EØSLandEllerLandMedAvtale(val alpha2: String) {
     HRV("HR"), CYP("CY"), LVA("LV"), LIE("LI"), LTU("LT"),
     LUX("LU"), MLT("MT"), NLD("NL"), NOR("NO"), POL("PL"),
     PRT("PT"), ROU("RO"), SVK("SK"), SVN("SI"), ESP("ES"),
-    CHE("CH"), SWE("SE"), CZE("CZ"), DEU("DE"), HUN("HU"), AUT("AT"), GBR("GB"), AUS("AU");
+    CHE("CH"), SWE("SE"), CZE("CZ"), DEU("DE"), HUN("HU"),
+    AUT("AT"), GBR("GB"), AUS("AU");
 
     companion object {
         fun erNorge(code: String?): Boolean {

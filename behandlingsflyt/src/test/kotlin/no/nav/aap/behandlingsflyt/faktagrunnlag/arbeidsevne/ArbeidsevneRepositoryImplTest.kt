@@ -1,18 +1,12 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.arbeidsevne
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneVurdering
-import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.ident
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
@@ -43,9 +37,36 @@ class ArbeidsevneRepositoryImplTest {
     }
 
     @Test
+    fun `Lagrer nye arbeidsevnevurderinger skal deaktivere forrige grunnlag selv om den ikke har noen vurderinger`() {
+        dataSource.transaction { connection ->
+            val sak = sak(connection, periode)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
+
+            val arbeidsevneVurdering = ArbeidsevneVurdering(
+                "begrunnelse", Prosent(34), LocalDate.now(), LocalDateTime.now(), "saksbehandler"
+            )
+
+            arbeidsevneRepository.lagre(
+                behandling.id,
+                emptyList()
+            )
+
+            arbeidsevneRepository.lagre(
+                behandling.id,
+                listOf(arbeidsevneVurdering)
+            )
+
+            val oppdatertGrunnlag = arbeidsevneRepository.hentHvisEksisterer(behandling.id)
+            assertThat(oppdatertGrunnlag?.vurderinger).hasSize(1)
+            assertThat(oppdatertGrunnlag?.vurderinger?.first()?.arbeidsevne).isEqualTo(Prosent(34))
+        }
+    }
+
+    @Test
     fun `Finner ikke arbeidsevne hvis ikke lagret`() {
         dataSource.transaction { connection ->
-            val sak = sak(connection)
+            val sak = sak(connection, periode)
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
             val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
@@ -57,7 +78,7 @@ class ArbeidsevneRepositoryImplTest {
     @Test
     fun `Lagrer og henter arbeidsevne`() {
         dataSource.transaction { connection ->
-            val sak = sak(connection)
+            val sak = sak(connection, periode)
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null, "vurdertAv")
 
@@ -72,7 +93,7 @@ class ArbeidsevneRepositoryImplTest {
     @Test
     fun `Kopierer arbeidsevne fra en behandling til en annen`() {
         dataSource.transaction { connection ->
-            val sak = sak(connection)
+            val sak = sak(connection, periode)
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
             val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null, "vurdertAv")
@@ -101,7 +122,7 @@ class ArbeidsevneRepositoryImplTest {
     @Test
     fun `Kopierer arbeidsevne fra en behandling til en annen der fraBehandlingen har to versjoner av opplysningene`() {
         dataSource.transaction { connection ->
-            val sak = sak(connection)
+            val sak = sak(connection, periode)
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
             val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null, "vurdertAv")
@@ -122,7 +143,7 @@ class ArbeidsevneRepositoryImplTest {
     @Test
     fun `Lagrer nye arbeidsevneopplysninger som ny rad og deaktiverer forrige versjon av opplysningene`() {
         dataSource.transaction { connection ->
-            val sak = sak(connection)
+            val sak = sak(connection, periode)
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
             val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null, "vurdertAv")
@@ -184,7 +205,7 @@ class ArbeidsevneRepositoryImplTest {
     fun `Ved kopiering av arbeidsevneopplysninger fra en avsluttet behandling til en ny skal kun referansen kopieres, ikke hele raden`() {
         dataSource.transaction { connection ->
 
-            val sak = sak(connection)
+            val sak = sak(connection, periode)
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
             val arbeidsevne =
@@ -257,13 +278,5 @@ class ArbeidsevneRepositoryImplTest {
                     )
                 )
         }
-    }
-
-    private fun sak(connection: DBConnection): Sak {
-        return PersonOgSakService(
-            FakePdlGateway,
-            PersonRepositoryImpl(connection),
-            SakRepositoryImpl(connection)
-        ).finnEllerOpprett(ident(), periode)
     }
 }

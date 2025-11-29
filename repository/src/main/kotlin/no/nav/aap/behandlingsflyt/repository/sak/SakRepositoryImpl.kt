@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
 
@@ -31,7 +32,7 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
         val relevantesaker = finnSakerFor(person, periode)
 
         if (relevantesaker.isEmpty()) {
-            return opprett(person, periode)
+            return opprett(person, Periode(periode.fom, Tid.MAKS))
         }
 
         return relevantesaker.first()
@@ -191,6 +192,30 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
             setParams {
                 setPeriode(1, periode)
                 setLong(2, sakId.toLong())
+            }
+        }
+    }
+
+    override fun finnSakerMedFritakMeldeplikt(): List<SakId> {
+        val sql = """
+            select s.id from sak s, behandling b where s.id = b.sak_id and  b.id in (
+                select g.behandling_id
+                from meldeplikt_fritak_grunnlag g, public.meldeplikt_fritak_vurdering v
+                where g.meldeplikt_id = v.meldeplikt_id and g.aktiv = true and g.id in (
+                    select id
+                    from meldeplikt_fritak_grunnlag
+                    where aktiv = true and behandling_id in (
+                        select id from behandling where id not in (
+                            select forrige_id from behandling where forrige_id is not null
+                        )
+                    )
+                )
+            )
+        """.trimIndent()
+
+        return connection.queryList(sql) {
+            setRowMapper {
+                SakId(it.getLong("id"))
             }
         }
     }

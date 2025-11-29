@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.hendelse.mottak
 
+import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingService
+import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.Tilbakekrevingshendelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -24,8 +26,11 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRe
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Omgjøringskilde
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Oppfølgingsoppgave
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppfølgingsoppgaveV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelseV0
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
@@ -37,8 +42,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
+import java.net.URI
 import java.time.LocalDateTime
 import java.util.*
 
@@ -49,6 +56,7 @@ class HåndterMottattDokumentService(
     private val prosesserBehandling: ProsesserBehandlingService,
     private val mottaDokumentService: MottaDokumentService,
     private val behandlingRepository: BehandlingRepository,
+    private val tilbakekrevingService: TilbakekrevingService,
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -60,8 +68,8 @@ class HåndterMottattDokumentService(
         prosesserBehandling = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
         mottaDokumentService = MottaDokumentService(repositoryProvider),
         behandlingRepository = repositoryProvider.provide<BehandlingRepository>(),
-
-        )
+        tilbakekrevingService = TilbakekrevingService(repositoryProvider),
+    )
 
     fun håndterMottatteKlage(
         sakId: SakId,
@@ -130,7 +138,7 @@ class HåndterMottattDokumentService(
                 årsak = årsakTilOpprettelse,
                 vurderingsbehov = vurderingsbehov,
                 opprettet = mottattTidspunkt,
-                beskrivelse =  when (melding) {
+                beskrivelse = when (melding) {
                     is ManuellRevurderingV0 -> melding.beskrivelse
                     is OmgjøringKlageRevurderingV0 -> melding.beskrivelse
                     else -> null
@@ -149,8 +157,17 @@ class HåndterMottattDokumentService(
             mottaDokumentService.markerSomBehandlet(sakId, opprettetBehandling.åpenBehandling.id, referanse)
         } else {
             when (opprettetBehandling) {
-                is SakOgBehandlingService.Ordinær -> mottaDokumentService.oppdaterMedBehandlingId(sakId, opprettetBehandling.åpenBehandling.id, referanse)
-                is SakOgBehandlingService.MåBehandlesAtomært -> mottaDokumentService.oppdaterMedBehandlingId(sakId, opprettetBehandling.nyBehandling.id, referanse)
+                is SakOgBehandlingService.Ordinær -> mottaDokumentService.oppdaterMedBehandlingId(
+                    sakId,
+                    opprettetBehandling.åpenBehandling.id,
+                    referanse
+                )
+
+                is SakOgBehandlingService.MåBehandlesAtomært -> mottaDokumentService.oppdaterMedBehandlingId(
+                    sakId,
+                    opprettetBehandling.nyBehandling.id,
+                    referanse
+                )
             }
         }
 
@@ -164,13 +181,57 @@ class HåndterMottattDokumentService(
         }
     }
 
+    fun håndterMottattTilbakekrevingHendelse(
+        sakId: SakId,
+        referanse: InnsendingReferanse,
+        mottattTidspunkt: LocalDateTime,
+        brevkategori: InnsendingType,
+        melding: TilbakekrevingHendelse
+    ) {
+        when (melding) {
+            is TilbakekrevingHendelseV0 -> {
+                log.info("Mottatt tilbakekrevingHendelse for sakId $sakId og eksternBehandlingId ${melding.eksternBehandlingId}")
+                val behandlingsref = melding.eksternBehandlingId  ?: error("Kan ikke finne behandlingId i tilbakekrevinghendelse")
+                tilbakekrevingService.håndter(sakId, melding.tilTilbakekrevingshendelse())
+                val behandlingId = try {
+                    behandlingRepository.hent(referanse = BehandlingReferanse(UUID.fromString(behandlingsref))).id
+                } catch (_: NoSuchElementException) {
+                    //Forsøker å finne behandlingId fra siste iverksatte behandling dersom vi ikke finner den utifra eksternBehandlingId.
+                    finnSisteIverksatteBehandling(sakId)
+                }
+                mottaDokumentService.markerSomBehandlet(sakId, behandlingId, referanse)
+            }
+        }
+    }
+
+    private fun finnSisteIverksatteBehandling(sakId: SakId): BehandlingId {
+        return behandlingRepository.hentAlleFor(sakId).firstOrNull { it.status().erAvsluttet() }?.id
+            ?: throw IllegalStateException("Kan ikke finne behandlingId for siste iverksatte behandling")
+    }
+
+    private fun TilbakekrevingHendelseV0.tilTilbakekrevingshendelse(): Tilbakekrevingshendelse {
+        return Tilbakekrevingshendelse(
+            tilbakekrevingBehandlingId = this.tilbakekreving.behandlingId,
+            eksternFagsakId = this.eksternFagsakId,
+            hendelseOpprettet = this.hendelseOpprettet,
+            eksternBehandlingId = this.eksternBehandlingId,
+            sakOpprettet = this.tilbakekreving.sakOpprettet,
+            varselSendt = this.tilbakekreving.varselSendt,
+            behandlingsstatus = no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingBehandlingsstatus.valueOf(this.tilbakekreving.behandlingsstatus.name),
+            totaltFeilutbetaltBeløp = Beløp(this.tilbakekreving.totaltFeilutbetaltBeløp),
+            tilbakekrevingSaksbehandlingUrl = URI.create(this.tilbakekreving.saksbehandlingURL),
+            fullstendigPeriode = Periode(fom = this.tilbakekreving.fullstendigPeriode.fom, tom = this.tilbakekreving.fullstendigPeriode.tom),
+            versjon = this.versjon,
+        )
+    }
+
     /**
      * Knytter klage og oppfølgingsbehandling direkte til behandlingen den opprettet, ikke via informasjonskrav.
      * Dette fordi det være flere åpne behandlinger av disse typene.
      * ManuellVurdering og NyÅrsakTilBehandling er knyttet eksplisitt til behandling og er ikke et informasjonskrav i flyten
      */
     private fun skalMarkereDokumentSomBehandlet(melding: Melding?): Boolean =
-        melding is KabalHendelse || melding is Oppfølgingsoppgave || melding is ManuellRevurdering || melding is NyÅrsakTilBehandling
+        melding is KabalHendelse || melding is Oppfølgingsoppgave || melding is ManuellRevurdering || melding is NyÅrsakTilBehandling || melding is TilbakekrevingHendelse
 
     fun oppdaterÅrsakerTilBehandlingPåEksisterendeÅpenBehandling(
         sakId: SakId,
@@ -179,13 +240,16 @@ class HåndterMottattDokumentService(
         melding: NyÅrsakTilBehandlingV0,
         referanse: InnsendingReferanse
     ) {
-        val behandling = sakOgBehandlingService.finnBehandling(behandlingsreferanse)
+        val behandling = behandlingRepository.hent(behandlingsreferanse)
         val årsakTilOpprettelse = utledÅrsakTilOpprettelse(innsendingType, melding)
 
         låsRepository.withLåstBehandling(behandling.id) {
             val vurderingsbehov =
                 melding.årsakerTilBehandling.map { VurderingsbehovMedPeriode(it.tilVurderingsbehov()) }
-            sakOgBehandlingService.oppdaterVurderingsbehovTilBehandling(behandling, VurderingsbehovOgÅrsak(vurderingsbehov, årsakTilOpprettelse))
+            sakOgBehandlingService.oppdaterVurderingsbehovTilBehandling(
+                behandling,
+                VurderingsbehovOgÅrsak(vurderingsbehov, årsakTilOpprettelse)
+            )
             mottaDokumentService.markerSomBehandlet(sakId, behandling.id, referanse)
             prosesserBehandling.triggProsesserBehandling(
                 sakId,
@@ -213,8 +277,10 @@ class HåndterMottattDokumentService(
             InnsendingType.PDL_HENDELSE_DODSFALL_BRUKER -> ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA
             InnsendingType.PDL_HENDELSE_DODSFALL_BARN -> ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA
             InnsendingType.OMGJØRING_KLAGE_REVURDERING -> utledÅrsakEtterOmgjøringAvKlage(melding)
+            InnsendingType.TILBAKEKREVING_HENDELSE -> ÅrsakTilOpprettelse.TILBAKEKREVING_HENDELSE
         }
     }
+
     private fun utledÅrsakTilOppfølgningsOppave(melding: Melding?): ÅrsakTilOpprettelse {
         require(melding is OppfølgingsoppgaveV0) { "Melding must be of type OppfølgingsoppgaveV0" }
         val kode = melding.opprinnelse?.avklaringsbehovKode
@@ -226,7 +292,7 @@ class HåndterMottattDokumentService(
     }
 
 
-    private fun finnStegType(avklaringsTypeKode:String): StegType {
+    private fun finnStegType(avklaringsTypeKode: String): StegType {
         return Definisjon.forKode(avklaringsTypeKode).løsesISteg
     }
 
@@ -291,6 +357,7 @@ class HåndterMottattDokumentService(
             InnsendingType.OPPFØLGINGSOPPGAVE -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.OPPFØLGINGSOPPGAVE))
             InnsendingType.PDL_HENDELSE_DODSFALL_BRUKER -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.DØDSFALL_BRUKER))
             InnsendingType.PDL_HENDELSE_DODSFALL_BARN -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.DØDSFALL_BARN))
+            InnsendingType.TILBAKEKREVING_HENDELSE -> emptyList()
         }
     }
 

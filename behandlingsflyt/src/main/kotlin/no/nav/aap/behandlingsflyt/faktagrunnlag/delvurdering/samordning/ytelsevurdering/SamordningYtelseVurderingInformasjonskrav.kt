@@ -31,9 +31,9 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
-import java.time.LocalDate
 import kotlin.time.measureTimedValue
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Ytelse as ForeldrePengerYtelse
+
 
 class SamordningYtelseVurderingInformasjonskrav(
     private val samordningYtelseRepository: SamordningYtelseRepository,
@@ -50,8 +50,7 @@ class SamordningYtelseVurderingInformasjonskrav(
         kontekst: FlytKontekstMedPerioder, steg: StegType, oppdatert: InformasjonskravOppdatert?
     ): Boolean {
         return kontekst.erFørstegangsbehandlingEllerRevurdering() && !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(
-            kontekst,
-            steg
+            kontekst, steg
         ) && (oppdatert.ikkeKjørtSisteKalenderdag() || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode)
     }
 
@@ -74,9 +73,11 @@ class SamordningYtelseVurderingInformasjonskrav(
     override fun hentData(input: SamordningInput): SamordningRegisterdata {
         val (person, rettighetsperiode) = input
         val personIdent = person.aktivIdent().identifikator
+        val oppslagsPeriode = Periode(rettighetsperiode.fom.minusWeeks(4), rettighetsperiode.tom)
+
         val (foreldrepenger, foreldrepengerDuration) = measureTimedValue {
             hentYtelseForeldrepenger(
-                personIdent, rettighetsperiode.fom.minusWeeks(4), rettighetsperiode.tom
+                personIdent, oppslagsPeriode
             )
         }
 
@@ -84,7 +85,7 @@ class SamordningYtelseVurderingInformasjonskrav(
 
         val (sykepenger, sykepengerDuration) = measureTimedValue {
             hentYtelseSykepenger(
-                personIdent, rettighetsperiode.fom.minusWeeks(4), rettighetsperiode.tom
+                personIdent, oppslagsPeriode
             )
         }
 
@@ -110,19 +111,28 @@ class SamordningYtelseVurderingInformasjonskrav(
     }
 
     private fun hentYtelseForeldrepenger(
-        personIdent: String, fom: LocalDate, tom: LocalDate
+        personIdent: String, oppslagsPeriode: Periode
     ): List<ForeldrePengerYtelse> {
         return fpGateway.hentVedtakYtelseForPerson(
             ForeldrepengerRequest(
-                Aktør(personIdent), Periode(fom, tom)
+                Aktør(personIdent), oppslagsPeriode
             )
-        ).ytelser
+        ).ytelser.mapNotNull { ytelse ->
+            val anvistInnenforPeriode = ytelse.anvist.filter {
+                oppslagsPeriode.inneholder(it.periode)
+            }
+            if (anvistInnenforPeriode.isNotEmpty()) {
+                ytelse.copy(anvist = anvistInnenforPeriode)
+            } else {
+                null
+            }
+        }
     }
 
-    private fun hentYtelseSykepenger(personIdent: String, fom: LocalDate, tom: LocalDate): List<UtbetaltePerioder> {
+    private fun hentYtelseSykepenger(personIdent: String, oppslagsPeriode: Periode): List<UtbetaltePerioder> {
         return spGateway.hentYtelseSykepenger(
-            setOf(personIdent), fom, tom
-        )
+            setOf(personIdent), oppslagsPeriode.fom, oppslagsPeriode.tom
+        ).filter { oppslagsPeriode.inneholder((Periode(it.fom, it.tom))) }
     }
 
     private fun mapTilSamordningYtelse(
@@ -185,7 +195,7 @@ class SamordningYtelseVurderingInformasjonskrav(
 
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.SAMORDNING_YTELSE
-
+        private val secureLogger = LoggerFactory.getLogger("secureLog")
         override fun konstruer(
             repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider
         ): SamordningYtelseVurderingInformasjonskrav {
@@ -201,7 +211,43 @@ class SamordningYtelseVurderingInformasjonskrav(
         fun harEndringerIYtelser(
             eksisterende: SamordningYtelseGrunnlag?, samordningYtelser: Set<SamordningYtelse>
         ): Boolean {
+            secureLogger.info("Hentet samordningytelse eksisterende ${eksisterende?.ytelser} med nye samordningsytelser ${samordningYtelser.map { it.ytelsePerioder }}  ${samordningYtelser.map { it.ytelseType.name }}")
+            secureLogger.info("Overlapp " + harFullstendigOverlapp(eksisterende, samordningYtelser) + "YtelseneErLike " + (samordningYtelser == eksisterende?.ytelser))
+            // TODO: return eksisterende == null || !harFullstendigOverlapp(eksisterende, samordningYtelser)
             return eksisterende == null || samordningYtelser != eksisterende.ytelser
+        }
+
+    }
+
+}
+
+fun harFullstendigOverlapp(
+    eksisterende: SamordningYtelseGrunnlag?,
+    nye: Set<SamordningYtelse>
+): Boolean {
+    if (eksisterende == null) return false
+    if (eksisterende.ytelser.size != nye.size) return false
+
+    return nye.all { nyYtelse ->
+        eksisterende.ytelser.any { eksisterendeYtelse ->
+            perioderErLike(eksisterendeYtelse.ytelsePerioder, nyYtelse.ytelsePerioder)
         }
     }
 }
+
+private fun perioderErLike(
+    eksisterende: Set<SamordningYtelsePeriode>,
+    nye: Set<SamordningYtelsePeriode>
+): Boolean {
+    if (eksisterende.size != nye.size) return false
+
+    return eksisterende.all { eks ->
+        nye.any { ny ->
+            eks.periode.fom.isEqual(ny.periode.fom) &&
+                    eks.periode.tom.isEqual(ny.periode.tom) &&
+                    eks.gradering == ny.gradering
+        }
+    }
+}
+
+

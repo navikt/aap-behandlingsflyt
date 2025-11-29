@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovServ
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.validerGyldigForRettighetsperiode
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.Medlemskapvilkåret
@@ -30,10 +29,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class VurderLovvalgSteg private constructor(
@@ -44,7 +43,6 @@ class VurderLovvalgSteg private constructor(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
-    private val unleashGateway: UnleashGateway
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         vilkårsresultatRepository = repositoryProvider.provide(),
@@ -54,14 +52,9 @@ class VurderLovvalgSteg private constructor(
         avklaringsbehovRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
-        unleashGateway = gatewayProvider.provide()
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (unleashGateway.isDisabled(BehandlingsflytFeature.LovvalgMedlemskapPeriodisert)) {
-            return gammelUfør(kontekst)
-        }
-
         var grunnlag = lazy { hentGrunnlag(kontekst.sakId, kontekst.behandlingId) }
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
@@ -78,7 +71,7 @@ class VurderLovvalgSteg private constructor(
             definisjon = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP,
             tvingerAvklaringsbehov = vurderingsbehovSomTvingerAvklaringsbehov(),
             nårVurderingErRelevant = { nyKontekst -> perioderVurderingErRelevant(nyKontekst, grunnlag.value) },
-            erTilstrekkeligVurdert = { erTilstrekkeligVurdert(kontekst, grunnlag.value) },
+            nårVurderingErGyldig = { perioderVurderingErGyldig(kontekst, grunnlag.value) },
             tilbakestillGrunnlag = { tilbakestillVurderinger(kontekst, grunnlag.value) },
         )
 
@@ -86,7 +79,7 @@ class VurderLovvalgSteg private constructor(
             VurderingType.FØRSTEGANGSBEHANDLING,
             VurderingType.REVURDERING -> {
                 val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-                Medlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode, brukPeriodisertManuellVurdering = true)
+                Medlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode)
                     .vurder(grunnlag.value)
                 vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
 
@@ -108,34 +101,28 @@ class VurderLovvalgSteg private constructor(
             }
         }
 
+
         return Fullført
     }
 
-    /**
-     * Her har vi ulike scenarioer vi må ta høyde for
-     * - Hvis det finnes manuelle vurderinger - så må hele tidslinjen være vurdert manuelt
-     * - Hvis det er automatisk vurdering - så må lovvalgvilkåret være oppfylt for hele perioden
-     */
-    private fun erTilstrekkeligVurdert(
+    private fun perioderVurderingErGyldig(
         kontekst: FlytKontekstMedPerioder,
         grunnlag: MedlemskapLovvalgGrunnlag
-    ): Boolean {
-        val harManuelleVurderinger = grunnlag.medlemskapArbeidInntektGrunnlag?.vurderinger?.isNotEmpty() == true
-        if (harManuelleVurderinger) {
-            return grunnlag.medlemskapArbeidInntektGrunnlag
-                .gjeldendeVurderinger()
-                .validerGyldigForRettighetsperiode(kontekst.rettighetsperiode)
-                .isValid
-        } else {
-            val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-            Medlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode, brukPeriodisertManuellVurdering = true)
-                .vurder(grunnlag)
-            val lovvalgVilkåretOppfylt = !vilkårsresultat.finnVilkår(Vilkårtype.LOVVALG).harPerioderSomIkkeErOppfylt()
-            return lovvalgVilkåretOppfylt
+    ): Tidslinje<Boolean> {
+        val automatiskVilkårsvurderingLovvalg = vilkårsvurderingLovvalgUtenManuelleVurderinger(kontekst, grunnlag).mapValue { it.erOppfylt() }
+        val automatiskVurderingOppfylt = automatiskVilkårsvurderingLovvalg.filter { it.verdi }.isNotEmpty()
+        if (automatiskVurderingOppfylt) {
+            return automatiskVilkårsvurderingLovvalg
         }
+
+        // Automatisk vurdering er ikke oppfylt - trenger manuell vurdering
+        return grunnlag.medlemskapArbeidInntektGrunnlag?.gjeldendeVurderinger().orEmpty().mapValue { true }
     }
 
-    private fun perioderVurderingErRelevant(kontekst: FlytKontekstMedPerioder, grunnlag: MedlemskapLovvalgGrunnlag): Tidslinje<Boolean> {
+    private fun perioderVurderingErRelevant(
+        kontekst: FlytKontekstMedPerioder,
+        grunnlag: MedlemskapLovvalgGrunnlag
+    ): Tidslinje<Boolean> {
         val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
         val automatiskVilkårsvurderingLovvalg = vilkårsvurderingLovvalgUtenManuelleVurderinger(kontekst, grunnlag)
 
@@ -146,7 +133,8 @@ class VurderLovvalgSteg private constructor(
                     TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
                     TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
                     TidligereVurderinger.Behandlingsutfall.UKJENT -> {
-                        val automatiskVilkårsvurderinglovvalgIkkeOppfylt = automatiskVilkårsvurderingLovvalg?.erOppfylt() == false
+                        val automatiskVilkårsvurderinglovvalgIkkeOppfylt =
+                            automatiskVilkårsvurderingLovvalg?.erOppfylt() == false
 
                         // Må gjøres slik for å trigge overstyrt avklaringsbehov hvis allerede automatisk oppfylt
                         val tvingerAvklaringsbehov = kontekst.vurderingsbehovRelevanteForSteg.any {
@@ -170,7 +158,7 @@ class VurderLovvalgSteg private constructor(
             )
         )
 
-        Medlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode, brukPeriodisertManuellVurdering = true)
+        Medlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode)
             .vurder(grunnlagUtenManuellVurdering)
 
         return vilkårsresultat.finnVilkår(Vilkårtype.LOVVALG).tidslinje()
@@ -196,124 +184,11 @@ class VurderLovvalgSteg private constructor(
     private fun vurderingsbehovSomTvingerAvklaringsbehov(): Set<Vurderingsbehov> =
         setOf(Vurderingsbehov.REVURDER_LOVVALG, Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP)
 
-
-    private fun gammelUfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        var grunnlag = lazy { hentGrunnlag(kontekst.sakId, kontekst.behandlingId) }
-        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-
-        if (utenlandsLovvalgslandTattAvVent(kontekst, avklaringsbehovene)) {
-            tilbakestillGrunnlag(kontekst, grunnlag.value)
-            grunnlag = lazy { hentGrunnlag(kontekst.sakId, kontekst.behandlingId) }
-        }
-
-        avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovene,
-            definisjon = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP,
-            vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst, grunnlag, avklaringsbehovene) },
-            erTilstrekkeligVurdert = { grunnlag.value.medlemskapArbeidInntektGrunnlag?.vurderinger?.isNotEmpty() ?: false },
-            tilbakestillGrunnlag = { tilbakestillGrunnlag(kontekst, grunnlag.value) },
-            kontekst
-        )
-
-        when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING,
-            VurderingType.REVURDERING -> {
-                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
-                    avklaringsbehovene.avbrytForSteg(type())
-                    return Fullført
-                }
-
-                val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-                Medlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode)
-                    .vurder(grunnlag.value)
-                vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
-
-                avbrytTidligereUnødvendigeBehov(kontekst, grunnlag.value)
-
-                if (norgeIkkeKompetentStat(kontekst)) {
-                    return FantVentebehov(
-                        Ventebehov(
-                            definisjon = Definisjon.VENTE_PÅ_UTENLANDSK_VIDEREFØRING_AVKLARING,
-                            grunn = ÅrsakTilSettPåVent.VENTER_PÅ_UTENLANDSK_VIDEREFORING_AVKLARING
-                        )
-                    )
-                }
-            }
-
-            VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
-            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
-            VurderingType.MELDEKORT,
-            VurderingType.IKKE_RELEVANT -> {
-                /* noop */
-            }
-        }
-
-        return Fullført
-    }
-
-    private fun tilbakestillGrunnlag(
-        kontekst: FlytKontekstMedPerioder,
-        grunnlag: MedlemskapLovvalgGrunnlag
-    ) {
-        val forrigeManuelleVurdering = kontekst.forrigeBehandlingId?.let { forrigeBehandlingId ->
-            medlemskapArbeidInntektRepository.hentHvisEksisterer(forrigeBehandlingId)
-                ?.vurderinger?.firstOrNull()
-        }
-        if (forrigeManuelleVurdering != grunnlag.medlemskapArbeidInntektGrunnlag?.vurderinger?.firstOrNull()) {
-            medlemskapArbeidInntektRepository.lagreVurderinger(
-                kontekst.behandlingId,
-                forrigeManuelleVurdering?.let { listOf(it) } ?: emptyList(),
-            )
-        }
-    }
-
     private fun norgeIkkeKompetentStat(kontekst: FlytKontekstMedPerioder): Boolean =
         vilkårsresultatRepository.hent(kontekst.behandlingId)
             .optionalVilkår(Vilkårtype.LOVVALG)
             ?.vilkårsperioder()
             ?.any { it.avslagsårsak == Avslagsårsak.NORGE_IKKE_KOMPETENT_STAT } == true
-
-    private fun vedtakBehøverVurdering(
-        kontekst: FlytKontekstMedPerioder,
-        grunnlag: Lazy<MedlemskapLovvalgGrunnlag>,
-        avklaringsbehovene: Avklaringsbehovene,
-    ): Boolean {
-        return when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING,
-            VurderingType.REVURDERING -> {
-                if (tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())) {
-                    return false
-                }
-
-                if (kontekst.vurderingsbehovRelevanteForSteg.isEmpty()) {
-                    return false
-                }
-
-                if (manueltTriggetVurderingsbehov(kontekst)) {
-                    return true
-                }
-
-                if (manueltTriggetLøsning(avklaringsbehovene)) {
-                    return true
-                }
-
-                val vilkårsresultat = Vilkårsresultat()
-                val grunnlagUtenManuellVurdering = grunnlag.value.copy(
-                    medlemskapArbeidInntektGrunnlag = grunnlag.value.medlemskapArbeidInntektGrunnlag?.copy(
-                        vurderinger = emptyList()
-                    )
-                )
-                Medlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode)
-                    .vurder(grunnlagUtenManuellVurdering)
-                vilkårsresultat.finnVilkår(Vilkårtype.LOVVALG).harPerioderSomIkkeErOppfylt()
-            }
-
-            VurderingType.MELDEKORT -> false
-            VurderingType.IKKE_RELEVANT -> false
-            VurderingType.EFFEKTUER_AKTIVITETSPLIKT -> false
-            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9 -> false
-        }
-    }
 
     private fun utenlandsLovvalgslandTattAvVent(
         kontekst: FlytKontekstMedPerioder,
@@ -330,31 +205,6 @@ class VurderLovvalgSteg private constructor(
                 ?.erÅpent() == true
 
         return norgeIkkeKompetentStat && !finnesÅpneVentebehov && !finnesÅpneAvklaringsbehov && !overstyrtBehov
-    }
-
-    private fun manueltTriggetLøsning(avklaringsbehovene: Avklaringsbehovene): Boolean {
-        val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
-        return avklaringsbehov != null
-    }
-
-    private fun manueltTriggetVurderingsbehov(kontekst: FlytKontekstMedPerioder): Boolean {
-        return kontekst.vurderingsbehovRelevanteForSteg
-            .any { it == Vurderingsbehov.REVURDER_LOVVALG || it == Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP }
-    }
-
-    private fun avbrytTidligereUnødvendigeBehov(
-        kontekst: FlytKontekstMedPerioder,
-        grunnlag: MedlemskapLovvalgGrunnlag
-    ) {
-        val alleVilkårOppfylt =
-            vilkårsresultatRepository.hent(kontekst.behandlingId).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
-                .all { it.erOppfylt() }
-        if (alleVilkårOppfylt
-            && grunnlag.medlemskapArbeidInntektGrunnlag?.vurderinger?.firstOrNull() == null
-            && !manueltTriggetVurderingsbehov(kontekst)
-        ) {
-            avklaringsbehovService.avbrytForSteg(kontekst.behandlingId, type())
-        }
     }
 
     private fun hentGrunnlag(sakId: SakId, behandlingId: BehandlingId): MedlemskapLovvalgGrunnlag {

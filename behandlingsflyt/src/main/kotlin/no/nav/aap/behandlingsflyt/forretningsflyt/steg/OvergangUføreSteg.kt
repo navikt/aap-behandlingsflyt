@@ -25,7 +25,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
-import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class OvergangUføreSteg private constructor(
@@ -91,7 +90,9 @@ class OvergangUføreSteg private constructor(
             VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
                 val perioderOvergangUføreErRelevant = perioderMedVurderingsbehov(kontekst)
 
-                if (perioderOvergangUføreErRelevant.segmenter().any { it.verdi } && vurderingsbehovTvingerVurdering(kontekst)) {
+                if (perioderOvergangUføreErRelevant.segmenter().any { it.verdi } && vurderingsbehovTvingerVurdering(
+                        kontekst
+                    )) {
                     return true
                 }
 
@@ -134,21 +135,24 @@ class OvergangUføreSteg private constructor(
     private fun perioderMedVurderingsbehov(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
         val utfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
         val sykdomsvurderinger = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)
-            ?.somSykdomsvurderingstidslinje(kontekst.rettighetsperiode.fom).orEmpty()
+            ?.somSykdomsvurderingstidslinje().orEmpty()
         val bistandsvurderinger = bistandRepository.hentHvisEksisterer(kontekst.behandlingId)
-            ?.somBistandsvurderingstidslinje(startDato = kontekst.rettighetsperiode.fom).orEmpty()
+            ?.somBistandsvurderingstidslinje().orEmpty()
 
-        return Tidslinje.zip3(utfall, sykdomsvurderinger, bistandsvurderinger)
-            .mapValue { (utfall, sykdomsvurdering, bistandsvurdering) ->
-                when (utfall) {
-                    null -> false
-                    TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
-                    TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
-                    TidligereVurderinger.Behandlingsutfall.UKJENT -> {
-                        sykdomsvurdering?.erOppfylt(kontekst.rettighetsperiode.fom) == true && bistandsvurdering != null && !bistandsvurdering.erBehovForBistand()
-                    }
+        return Tidslinje.map3(utfall, sykdomsvurderinger, bistandsvurderinger)
+        { segmentPeriode, utfall, sykdomsvurdering, bistandsvurdering ->
+            when (utfall) {
+                null -> false
+                TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
+                TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
+                TidligereVurderinger.Behandlingsutfall.UKJENT -> {
+                    sykdomsvurdering?.erOppfyltOrdinær(
+                        kontekst.rettighetsperiode.fom,
+                        segmentPeriode
+                    ) == true && bistandsvurdering != null && !bistandsvurdering.erBehovForBistand()
                 }
             }
+        }
     }
 
     companion object : FlytSteg {

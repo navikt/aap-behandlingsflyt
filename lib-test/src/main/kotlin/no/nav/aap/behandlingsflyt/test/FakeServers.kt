@@ -86,7 +86,6 @@ import no.nav.aap.behandlingsflyt.integrasjon.pdl.PersonStatus
 import no.nav.aap.behandlingsflyt.integrasjon.ufore.UføreHistorikkRespons
 import no.nav.aap.behandlingsflyt.integrasjon.ufore.UførePeriode
 import no.nav.aap.behandlingsflyt.integrasjon.ufore.UføreRequest
-import no.nav.aap.behandlingsflyt.integrasjon.ufore.UføreRespons
 import no.nav.aap.behandlingsflyt.integrasjon.util.GraphQLResponse
 import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeModell
 import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeRequest
@@ -108,6 +107,9 @@ import no.nav.aap.brev.kontrakt.FerdigstillBrevRequest
 import no.nav.aap.brev.kontrakt.HentSignaturerRequest
 import no.nav.aap.brev.kontrakt.HentSignaturerResponse
 import no.nav.aap.brev.kontrakt.Innhold
+import no.nav.aap.brev.kontrakt.KanDistribuereBrevReponse
+import no.nav.aap.brev.kontrakt.KanDistribuereBrevRequest
+import no.nav.aap.brev.kontrakt.MottakerDistStatus
 import no.nav.aap.brev.kontrakt.Signatur
 import no.nav.aap.brev.kontrakt.Språk
 import no.nav.aap.brev.kontrakt.Status
@@ -216,20 +218,6 @@ object FakeServers : AutoCloseable {
             }
         }
         routing() {
-            get("/api/uforetrygd/uforegrad") {
-                val ident = requireNotNull(call.request.header("fnr"))
-                val hentPerson = FakePersoner.hentPerson(ident)
-                if (hentPerson == null) {
-                    call.respond(HttpStatusCode.NotFound, "Fant ikke person med fnr $ident")
-                    return@get
-                }
-                val uføregrad = hentPerson.uføre?.prosentverdi()
-                if (uføregrad == null) {
-                    call.respond(HttpStatusCode.NotFound)
-                } else {
-                    call.respond(HttpStatusCode.OK, UføreRespons(uforegrad = uføregrad))
-                }
-            }
             post("/api/uforetrygd/uforehistorikk/perioder") {
                 val body = call.receive<UføreRequest>()
                 val hentPerson = FakePersoner.hentPerson(body.fnr)
@@ -247,7 +235,7 @@ object FakeServers : AutoCloseable {
                                 UførePeriode(
                                     uforegrad = uføregrad,
                                     uforegradTom = null,
-                                    uforegradFom = null,
+                                    uforegradFom = LocalDate.parse(body.dato),
                                     uforetidspunkt = null,
                                     virkningstidspunkt = LocalDate.parse(body.dato)
                                 )
@@ -282,7 +270,7 @@ object FakeServers : AutoCloseable {
             route("/api/vedtak") {
                 route("samordne") {
                     post {
-                        val req = call.receive<SamordneVedtakRequest>()
+                        call.receive<SamordneVedtakRequest>()
 
                         call.respond(
                             SamordneVedtakRespons(
@@ -292,7 +280,6 @@ object FakeServers : AutoCloseable {
                     }
                 }
                 get {
-                    val params = call.queryParameters
                     call.respond(
                         HttpStatusCode.OK, listOf(
                             HentSamIdResponse(
@@ -379,7 +366,7 @@ object FakeServers : AutoCloseable {
             route("/") {
                 get {
                     call.respond(
-                       mapOf("name" to "localhost")
+                        mapOf("name" to "localhost")
                     )
                 }
             }
@@ -1375,46 +1362,6 @@ object FakeServers : AutoCloseable {
                 } else {
                     call.respond<List<MedlemskapResponse>>(emptyList())
                 }
-
-                @Suppress("UnusedVariable")
-                @Language("JSON") val eksempelRespons =
-                    """[
-  {
-    "unntakId": 100087727,
-    "ident": "$ident",
-    "fraOgMed": "2021-07-08",
-    "tilOgMed": "2022-07-07",
-    "status": "GYLD",
-    "statusaarsak": null,
-    "medlem": true,
-    "grunnlag": "grunnlag",
-    "lovvalg": "lovvalg",
-    "lovvalgsland": "NOR"
-  },
-  {
-    "unntakId": 100087729,
-    "ident": "$ident",
-    "fraOgMed": "2014-07-10",
-    "tilOgMed": "2016-07-14",
-    "status": "GYLD",
-    "statusaarsak": null,
-    "medlem": false,
-    "grunnlag": "grunnlag",
-    "lovvalg": "lovvalg",
-    "lovvalgsland": "NOR",
-    "sporingsinformasjon": {
-      "versjon": 1073741824,
-      "registrert": "2025-04-25",
-      "besluttet": "2025-04-25",
-      "kilde": "TP",
-      "kildedokument": "string",
-      "opprettet": "2025-04-25T09:21:22.041Z",
-      "opprettetAv": "string",
-      "sistEndret": "2025-04-25T09:21:22.041Z",
-      "sistEndretAv": "string"
-    }
-  }
-]"""
             }
         }
     }
@@ -1914,6 +1861,8 @@ object FakeServers : AutoCloseable {
                     )
                 )
             ),
+            brevmal = null,
+            brevdata = null,
             opprettet = LocalDateTime.now(),
             oppdatert = LocalDateTime.now(),
             behandlingReferanse = UUID.randomUUID(),
@@ -1925,7 +1874,7 @@ object FakeServers : AutoCloseable {
 
         routing {
             route("/api") {
-                route("/v2") {
+                route("/*") {
                     post("/bestill") {
                         val request = call.receive<BestillBrevV2Request>()
                         val brevbestillingReferanse = UUID.randomUUID()
@@ -1998,6 +1947,11 @@ object FakeServers : AutoCloseable {
                     }
                     val response = HentSignaturerResponse(signaturer)
                     call.respond(response)
+                }
+                post("/{referanse}/kan-distribuere-brev") {
+                    val req = call.receive<KanDistribuereBrevRequest>()
+                    val mottakerDistStatus = req.mottakerIdentListe.map { MottakerDistStatus(it, true) }
+                    call.respond(HttpStatusCode.Accepted, KanDistribuereBrevReponse(mottakerDistStatus))
                 }
             }
         }

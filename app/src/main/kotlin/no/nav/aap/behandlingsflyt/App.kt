@@ -21,6 +21,7 @@ import no.nav.aap.behandlingsflyt.auditlog.auditlogApi
 import no.nav.aap.behandlingsflyt.behandling.aktivitetsplikt.brudd_11_7.aktivitetsplikt11_7GrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.aktivitetsplikt.brudd_11_9.aktivitetsplikt11_9GrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.arbeidsevne.arbeidsevneGrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.arbeidsopptrapping.arbeidsopptrappingGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.avklaringsbehovApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.fatteVedtakGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.utledSubtypesTilAvklaringsbehovLøsning
@@ -37,10 +38,10 @@ import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykepenge
 import no.nav.aap.behandlingsflyt.behandling.beregning.manuellinntekt.manglendeGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.tidspunkt.beregningVurderingAPI
 import no.nav.aap.behandlingsflyt.behandling.brev.sykdomsvurderingForBrevApi
-import no.nav.aap.behandlingsflyt.behandling.etannetsted.institusjonAPI
 import no.nav.aap.behandlingsflyt.behandling.foreslåvedtak.foreslaaVedtakAPI
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.medlemskap.medlemskapsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.samordningGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.institusjonAPI
 import no.nav.aap.behandlingsflyt.behandling.klage.behandlendeenhet.behandlendeEnhetGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.klage.formkrav.formkravGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.klage.fullmektig.fullmektigGrunnlagApi
@@ -77,18 +78,17 @@ import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KABAL_EVENT_TOPIC
 import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KabalKafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PDL_HENDELSE_TOPIC
 import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PdlHendelseKafkaKonsument
+import no.nav.aap.behandlingsflyt.hendelse.kafka.tilbakekreving.TILBAKEKREVING_EVENT_TOPIC
+import no.nav.aap.behandlingsflyt.hendelse.kafka.tilbakekreving.TilbakekrevingKafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.mottattHendelseApi
 import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
 import no.nav.aap.behandlingsflyt.pip.behandlingsflytPip
 import no.nav.aap.behandlingsflyt.prosessering.BehandlingsflytLogInfoProvider
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -216,10 +216,12 @@ internal fun Application.server(
 
     if (!Miljø.erLokal()) {
         startKabalKonsument(dataSource, repositoryRegistry)
-
     }
-    if (Miljø.erDev()) {
+    if (!Miljø.erLokal()) {
         startPDLHendelseKonsument(dataSource, repositoryRegistry, gatewayProvider)
+    }
+    if (!Miljø.erDev() && !Miljø.erLokal() && !Miljø.erProd()) {
+        startTilbakekrevingEventKonsument(dataSource, repositoryRegistry, gatewayProvider)
     }
 
     monitor.subscribe(ApplicationStopPreparing) { environment ->
@@ -255,6 +257,7 @@ internal fun Application.server(
                 meldepliktsgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 meldepliktOverstyringGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 arbeidsevneGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                arbeidsopptrappingGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 overgangUforeGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 medlemskapsgrunnlagApi(dataSource, repositoryRegistry)
                 studentgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
@@ -319,34 +322,22 @@ internal fun Application.server(
 
 }
 
-// Basert på tall ved lokal kjøring vil denne migreringen ta ca 2-3 sekunder å kjøre med antallet som ligger i prod.
 // Bruker leaderElector for å sikre at kun en pod kjører migreringen og spinner opp en egen tråd for å ikke blokkere.
-// Toggles av etter kjøring og fjernes i ny pr.
 private fun utførMigreringer(
     dataSource: HikariDataSource,
     gatewayProvider: GatewayProvider,
     log: io.ktor.util.logging.Logger
 ): ScheduledExecutorService {
     val scheduler = Executors.newScheduledThreadPool(1)
-
     scheduler.schedule(Runnable {
         val unleashGateway: UnleashGateway = gatewayProvider.provide()
-        val enabled = unleashGateway.isEnabled(BehandlingsflytFeature.LovvalgMedlemskapPeriodisertMigrering)
-        val sykdomEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.SykdomPeriodisertMigrering)
         val isLeader = isLeader(log)
-        log.info("isLeader = $isLeader, LovvalgMedlemskapPeriodisertMigrering = $enabled, SykdomPeriodisertMigrering = $sykdomEnabled")
-        if (enabled && isLeader) {
-            dataSource.transaction { connection ->
-                val repository = MedlemskapArbeidInntektRepositoryImpl(connection)
-                repository.migrerManuelleVurderingerPeriodisert()
-            }
+        log.info("isLeader = $isLeader")
+
+        if (isLeader) {
+            // Kjør migrering
         }
-        if (sykdomEnabled && isLeader) {
-            dataSource.transaction { connection ->
-                val repository = SykdomRepositoryImpl(connection)
-                repository.migrerSykdomsvurderinger()
-            }
-        }
+
     }, 9, TimeUnit.MINUTES)
     return scheduler
 }
@@ -409,6 +400,31 @@ fun Application.startKabalKonsument(
         }
         t.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, e ->
             log.error("Konsumering av $KABAL_EVENT_TOPIC ble lukket pga uhåndtert feil", e)
+        }
+        t.start()
+    }
+    monitor.subscribe(ApplicationStopping) { env ->
+        // ktor sine eventer kjøres synkront, så vi må kjøre dette asynkront for ikke å blokkere nedstengings-sekvensen
+        env.launch(Dispatchers.IO) {
+            konsument.lukk()
+        }
+    }
+
+    return konsument
+}
+
+fun Application.startTilbakekrevingEventKonsument(
+    dataSource: DataSource, repositoryRegistry: RepositoryRegistry, gatewayProvider: GatewayProvider
+): KafkaKonsument<String, String> {
+    val konsument = TilbakekrevingKafkaKonsument(
+        config = KafkaConsumerConfig(), dataSource = dataSource, repositoryRegistry = repositoryRegistry, gatewayProvider = gatewayProvider
+    )
+    monitor.subscribe(ApplicationStarted) {
+        val t = Thread {
+            konsument.konsumer()
+        }
+        t.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, e ->
+            log.error("Konsumering av $TILBAKEKREVING_EVENT_TOPIC ble lukket pga uhåndtert feil", e)
         }
         t.start()
     }

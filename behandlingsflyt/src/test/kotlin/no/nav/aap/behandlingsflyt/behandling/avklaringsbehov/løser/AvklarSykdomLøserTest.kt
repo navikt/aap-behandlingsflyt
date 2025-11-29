@@ -35,15 +35,13 @@ class AvklarSykdomLøserTest {
     private val behandlingMock = mockk<BehandlingRepository>()
     private val sykdomMock = mockk<SykdomRepository>(relaxed = true)
     private val yrkesskadeMock = mockk<YrkesskadeRepository>()
-    private val sakMock = mockk<SakRepository>()
 
     @Test
-    fun `Vurdering som overskriver flere segmenter skal kun lage ett nytt segment`() {
+    fun `Skal lagre iverksatte vurderinger + nye`() {
         every { behandlingMock.hent(BehandlingId(2L)) } returns mockk {
             every { id } returns BehandlingId(2L)
             every { forrigeBehandlingId } returns BehandlingId(1L)
             every { typeBehandling() } returns TypeBehandling.Revurdering
-            every { sakId } returns SakId(1L)
         }
 
         every { yrkesskadeMock.hentHvisEksisterer(any()) } returns null
@@ -63,12 +61,10 @@ class AvklarSykdomLøserTest {
                     )
                 )
 
-        every { sakMock.hent(SakId(1L)).rettighetsperiode } returns Periode(1 januar 2020, 1 januar 2021)
-
-        val sykdomLøser = AvklarSykdomLøser(behandlingMock, sykdomMock, yrkesskadeMock, sakMock)
+        val sykdomLøser = AvklarSykdomLøser(behandlingMock, sykdomMock, yrkesskadeMock)
         sykdomLøser.løs(
             lagAvklaringsbehovKontekst(), løsning = AvklarSykdomLøsning(
-                sykdomsvurderinger = listOf(
+                løsningerForPerioder = listOf(
                     SykdomsvurderingLøsningDto(
                         begrunnelse = "",
                         dokumenterBruktIVurdering = emptyList(),
@@ -79,7 +75,8 @@ class AvklarSykdomLøserTest {
                         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                         erArbeidsevnenNedsatt = null,
                         yrkesskadeBegrunnelse = null,
-                        vurderingenGjelderFra = 10 januar 2025,
+                        fom = 10 januar 2025,
+                        tom = null
                     )
                 )
             )
@@ -87,7 +84,7 @@ class AvklarSykdomLøserTest {
 
         verify {
             sykdomMock.lagre(any(), sykdomsvurderinger = withArg {
-                assertThat(it.size).isEqualTo(2)
+                assertThat(it.size).isEqualTo(3)
             })
         }
     }
@@ -100,7 +97,7 @@ private fun sykdomsvurdering(
     erNedsettelseIArbeidsevneAvEnVissVarighet: Boolean? = true,
     erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean = true,
     erArbeidsevnenNedsatt: Boolean = true,
-    vurderingenGjelderFra: LocalDate? = null,
+    vurderingenGjelderFra: LocalDate = 1 januar 2020,
     vurderingenGjelderTil: LocalDate? = null,
     opprettet: LocalDateTime = LocalDateTime.now(),
     vurdertIBehandling: BehandlingId

@@ -1,9 +1,11 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning
 
+import io.github.nchaugen.tabletest.junit.TableTest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Input
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.BeregningInput
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
@@ -19,6 +21,7 @@ import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.Year
 
@@ -27,14 +30,14 @@ class BeregningTest {
     @Test
     fun `beregn input med basic 11_19 uten yrkesskade eller uføre`() {
         val input = Inntektsbehov(
-            input = Input(
+            beregningInput = BeregningInput(
                 nedsettelsesDato = LocalDate.of(2023, 1, 1),
                 inntekter = setOf(
                     InntektPerÅr(2022, Beløp(500000)),
                     InntektPerÅr(2021, Beløp(400000)),
                     InntektPerÅr(2020, Beløp(300000))
                 ),
-                uføregrad = emptyList(),
+                uføregrad = emptySet(),
                 yrkesskadevurdering = null,
                 beregningGrunnlag = null,
                 registrerteYrkesskader = null
@@ -49,14 +52,14 @@ class BeregningTest {
     @Test
     fun `oppjusterer grunnlaget ved uføre`() {
         val input = Inntektsbehov(
-            Input(
+            BeregningInput(
                 nedsettelsesDato = LocalDate.of(2015, 1, 1),
                 inntekter = setOf(
                     InntektPerÅr(2022, Beløp(500000)),
                     InntektPerÅr(2021, Beløp(400000)),
                     InntektPerÅr(2020, Beløp(300000))
                 ),
-                uføregrad = listOf(Uføre(LocalDate.now(), Prosent(30))),
+                uføregrad = setOf(Uføre(LocalDate.now(), Prosent(30))),
                 yrkesskadevurdering = null,
                 beregningGrunnlag = BeregningGrunnlag(
                     tidspunktVurdering = BeregningstidspunktVurdering(
@@ -84,10 +87,10 @@ class BeregningTest {
             InntektPerÅr(Year.of(2020), Beløp(5 * 100_853))
         )
         val input = Inntektsbehov(
-            Input(
+            BeregningInput(
                 nedsettelsesDato = LocalDate.of(2023, 1, 1),
                 inntekter = inntekterPerÅr,
-                uføregrad = emptyList(),
+                uføregrad = emptySet(),
                 yrkesskadevurdering = Yrkesskadevurdering(
                     begrunnelse = "en begrunnelse",
                     andelAvNedsettelsen = Prosent(40),
@@ -137,14 +140,14 @@ class BeregningTest {
     @Test
     fun `Beregning med både uføre og yrkesskade`() {
         val input = Inntektsbehov(
-            Input(
+            BeregningInput(
                 nedsettelsesDato = LocalDate.of(2023, 1, 1),
                 inntekter = setOf(
                     InntektPerÅr(2022, Beløp(500000)),
                     InntektPerÅr(2021, Beløp(400000)),
                     InntektPerÅr(2020, Beløp(300000))
                 ),
-                uføregrad = listOf(Uføre(LocalDate.now(), Prosent(50))),
+                uføregrad = setOf(Uføre(LocalDate.now(), Prosent(50))),
                 yrkesskadevurdering = Yrkesskadevurdering(
                     begrunnelse = "en begrunnelse",
                     andelAvNedsettelsen = Prosent(30),
@@ -194,14 +197,14 @@ class BeregningTest {
     @Test
     fun `Hvis uføregraden er 0 prosent, endres ikke grunnlaget`() {
         val inputMedNullUføregrad = Inntektsbehov(
-            Input(
+            BeregningInput(
                 nedsettelsesDato = LocalDate.of(2023, 1, 1),
                 inntekter = setOf(
                     InntektPerÅr(2022, Beløp(500000)),
                     InntektPerÅr(2021, Beløp(400000)),
                     InntektPerÅr(2020, Beløp(300000))
                 ),
-                uføregrad = listOf(Uføre(LocalDate.now(), Prosent(0))),
+                uføregrad = setOf(Uføre(LocalDate.now(), Prosent(0))),
                 yrkesskadevurdering = null,
                 beregningGrunnlag = BeregningGrunnlag(
                     tidspunktVurdering = BeregningstidspunktVurdering(
@@ -218,14 +221,14 @@ class BeregningTest {
         )
 
         val inputMedUføreGradIkkeOppgitt = Inntektsbehov(
-            Input(
+            BeregningInput(
                 nedsettelsesDato = LocalDate.of(2023, 1, 1),
                 inntekter = setOf(
                     InntektPerÅr(2022, Beløp(500000)),
                     InntektPerÅr(2021, Beløp(400000)),
                     InntektPerÅr(2020, Beløp(300000))
                 ),
-                uføregrad = emptyList(),
+                uføregrad = setOf(),
                 yrkesskadevurdering = null,
                 beregningGrunnlag = BeregningGrunnlag(
                     tidspunktVurdering = BeregningstidspunktVurdering(
@@ -246,5 +249,49 @@ class BeregningTest {
         assertThat(beregning.grunnlaget()).isEqualTo(beregningUtenUføregrad.grunnlaget())
     }
 
+    @TableTest(
+        """    
+        Scenario                                   | nedsettelsesÅr | inntektPerÅr                 | ForventetG
+        Enkel 11-19                                | 2023           | [2020: 3, 2021: 4, 2022: 5]  | 5
+        Velg gjennomsnitt hvis høyere              | 2023           | [2020: 5, 2021: 5, 2022: 2]  | 4
+        Begrens til 6G om siste år er høyt         | 2023           | [2020: 3, 2021: 3, 2022: 10] | 6
+        Begrens til 6G om gjennomsnitt høyt        | 2023           | [2020: 7, 2021: 7, 2022: 7]  | 6
+        Om vi mangler inntekter, blir grunnlaget 0 | 2023           | [2024: 0]                    | 0
+        """
+    )
+    fun `11-19 tabelldrevet test`(nedsettelsesÅr: Year, inntektPerÅr: Set<InntektPerÅr>, forventetGrunnlag: GUnit) {
+        val nedsettelsesDato = nedsettelsesÅr.atDay(1)
+        val input = Inntektsbehov(
+            beregningInput = BeregningInput(
+                nedsettelsesDato = nedsettelsesDato,
+                inntekter = inntektPerÅr,
+                uføregrad = emptySet(),
+                yrkesskadevurdering = null,
+                beregningGrunnlag = null,
+                registrerteYrkesskader = null
+            )
+        )
+        val beregning = Beregning(input).beregneMedInput()
+        val actual = beregning.grunnlaget()
+
+        assertThat(actual).isEqualTo(forventetGrunnlag)
+    }
+
+    @Suppress("unused")
+    companion object {
+        @JvmStatic
+        fun parseInntektPerÅr(map: Map<String, Double>): Set<InntektPerÅr> {
+            return map.entries.map { (år, gVerdi) ->
+                val g = Grunnbeløp.tilTidslinjeGjennomsnitt().segment(Year.of(år.toInt()).atDay(250))?.verdi!!.multiplisert(
+                    GUnit(gVerdi.toString()))
+                InntektPerÅr(år.toInt(), g)
+            }.toSet()
+        }
+
+        @JvmStatic
+        fun parseGrunnlag(verdi: Double): GUnit {
+            return GUnit(BigDecimal(verdi.toString()))
+        }
+    }
 
 }

@@ -34,21 +34,32 @@ class BrevbestillingService(
         return brevbestillingRepository.hent(behandlingId).any { it.typeBrev.erVedtak() }
     }
 
+    fun erAlleBestillingerOmVedtakIEndeTilstand(behandlingId: BehandlingId): Boolean {
+        val vedtakBestillinger = brevbestillingRepository.hent(behandlingId).filter { it.typeBrev.erVedtak() }
+        return vedtakBestillinger.all { it.status.erEndeTilstand() }
+    }
+
+    fun hentTilbakestillbareBestillingerOmVedtak(behandlingId: BehandlingId): List<Brevbestilling> {
+        val vedtakBestillinger = brevbestillingRepository.hent(behandlingId).filter { it.typeBrev.erVedtak() }
+        return vedtakBestillinger.filter { !it.status.erEndeTilstand() }
+    }
+
     fun hentBestillinger(behandlingId: BehandlingId, typeBrev: TypeBrev): List<Brevbestilling> {
         val bestillinger = brevbestillingRepository.hent(behandlingId).filter { it.typeBrev == typeBrev }
         return bestillinger
     }
 
-    fun bestillV2(
+    fun bestill(
         behandlingId: BehandlingId,
         brevBehov: BrevBehov,
         unikReferanse: String,
         ferdigstillAutomatisk: Boolean,
-        vedlegg: Vedlegg? = null
+        vedlegg: Vedlegg? = null,
+        brukApiV3: Boolean = false,
     ): UUID {
         val behandling = behandlingRepository.hent(behandlingId)
         val sak = sakRepository.hent(behandling.sakId)
-        val bestillingReferanse = brevbestillingGateway.bestillBrevV2(
+        val bestillingReferanse = brevbestillingGateway.bestillBrev(
             saksnummer = sak.saksnummer,
             brukerIdent = sak.person.aktivIdent(),
             behandlingReferanse = behandling.referanse,
@@ -56,6 +67,7 @@ class BrevbestillingService(
             brevBehov = brevBehov,
             vedlegg = vedlegg,
             ferdigstillAutomatisk = ferdigstillAutomatisk,
+            brukApiV3 = brukApiV3,
         )
 
         val status = if (ferdigstillAutomatisk) {

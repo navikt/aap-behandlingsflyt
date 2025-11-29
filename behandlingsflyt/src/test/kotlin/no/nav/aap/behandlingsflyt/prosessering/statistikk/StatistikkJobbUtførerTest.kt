@@ -55,6 +55,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårsPeriodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårsResultatDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.pip.PipService
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
@@ -80,13 +81,13 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMeldekortRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMottattDokumentRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPipRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
+import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
@@ -398,7 +399,7 @@ class StatistikkJobbUtførerTest {
                         kodeverk = "KODEVERK",
                         hoveddiagnose = "PEST",
                         bidiagnoser = listOf("KOLERA"),
-                        vurderingenGjelderFra = null,
+                        vurderingenGjelderFra = 1 januar 2020,
                         vurderingenGjelderTil = null,
                         vurdertAv = Bruker("Z0000"),
                         opprettet = Instant.now(),
@@ -617,10 +618,6 @@ class StatistikkJobbUtførerTest {
             ): List<Sykdomsvurdering> {
                 TODO("Not yet implemented")
             }
-
-            override fun migrerSykdomsvurderinger() {
-                TODO("Not yet implemented")
-            }
         }
 
         val påklagetBehandlingRepository = mockk<PåklagetBehandlingRepository>()
@@ -634,7 +631,7 @@ class StatistikkJobbUtførerTest {
                     sakService = sakService,
                     tilkjentYtelseRepository = tilkjentYtelseRepository,
                     beregningsgrunnlagRepository = beregningsgrunnlagRepository,
-                    pipRepository = InMemoryPipRepository,
+                    pipService = PipService(inMemoryRepositoryProvider),
                     dokumentRepository = dokumentRepository,
                     sykdomRepository = sykdomRepository,
                     underveisRepository = InMemoryUnderveisRepository,
@@ -700,6 +697,7 @@ class StatistikkJobbUtførerTest {
                     saksnummer = Saksnummer.valueOf(sakId.id).toString(),
                     behandlingReferanse = referanse.referanse,
                     behandlingStatus = Status.UTREDES,
+                    tidspunktSisteEndring = hendelsesTidspunkt,
                     behandlingType = TypeBehandling.Klage,
                     ident = fødselsNummer,
                     avklaringsbehov = avklaringsbehov,

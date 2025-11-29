@@ -20,8 +20,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.Fakes
+import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
@@ -49,6 +52,107 @@ class SamordningYtelseVurderingServiceTest {
         fun tearDown() = dataSource.close()
     }
 
+    @Test
+    fun `fpabakus tar ikke med perioder utenfor oppslagsperioden`() {
+        val person = TestPerson(
+            foreldrepenger = listOf(
+                TestPerson.ForeldrePenger(
+                    50,
+                    Periode(LocalDate.now().minusYears(1), LocalDate.now())
+                ),
+                TestPerson.ForeldrePenger(
+                    60,
+                    Periode(LocalDate.now().minusYears(5), LocalDate.now().minusYears(4))
+                ),
+                TestPerson.ForeldrePenger(
+                    52,
+                    Periode(LocalDate.now().minusYears(5), LocalDate.now())
+                ),
+                TestPerson.ForeldrePenger(
+                    51,
+                    Periode(LocalDate.now().minusWeeks(5), LocalDate.now())
+                ),
+                TestPerson.ForeldrePenger(
+                    49,
+                    Periode(LocalDate.now().minusWeeks(3), LocalDate.now())
+                )
+            )
+        )
+        FakePersoner.leggTil(person)
+
+        dataSource.transaction { connection ->
+            val samordningYtelseVurderingInformasjonskrav = SamordningYtelseVurderingInformasjonskrav(
+                SamordningYtelseRepositoryImpl(connection),
+                FakeTidligereVurderinger(),
+                AbakusForeldrepengerGateway(),
+                AbakusSykepengerGateway(),
+                SakService(postgresRepositoryRegistry.provider(connection))
+            )
+            val foreldrePerson = PersonRepositoryImpl(connection).finnEllerOpprett(
+                listOf(
+                    Ident(
+                        person.identer.first().identifikator,
+                        true
+                    )
+                )
+            )
+            val kontekst =
+                opprettSakdata(connection, foreldrePerson, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+
+            val input = samordningYtelseVurderingInformasjonskrav.klargjør(kontekst)
+            val data = samordningYtelseVurderingInformasjonskrav.hentData(input)
+
+            val ytelsePerioder = data.samordningYtelser.flatMap { it.ytelsePerioder }
+            assertThat(ytelsePerioder.size).isEqualTo(1)
+        }
+    }
+
+    @Test
+    fun `k9 tar ikke med perioder utenfor oppslagsperioden`() {
+        val person = TestPerson(
+            sykepenger = listOf(
+                TestPerson.Sykepenger(
+                    52,
+                    Periode(LocalDate.now().minusYears(5), LocalDate.now())
+                ),
+                TestPerson.Sykepenger(
+                    51,
+                    Periode(LocalDate.now().minusWeeks(5), LocalDate.now())
+                ),
+                TestPerson.Sykepenger(
+                    49,
+                    Periode(LocalDate.now().minusWeeks(3), LocalDate.now())
+                )
+            )
+        )
+        FakePersoner.leggTil(person)
+
+        dataSource.transaction { connection ->
+            val samordningYtelseVurderingInformasjonskrav = SamordningYtelseVurderingInformasjonskrav(
+                SamordningYtelseRepositoryImpl(connection),
+                FakeTidligereVurderinger(),
+                AbakusForeldrepengerGateway(),
+                AbakusSykepengerGateway(),
+                SakService(postgresRepositoryRegistry.provider(connection))
+            )
+            val sykepengerPerson = PersonRepositoryImpl(connection).finnEllerOpprett(
+                listOf(
+                    Ident(
+                        person.identer.first().identifikator,
+                        true
+                    )
+                )
+            )
+            val kontekst =
+                opprettSakdata(connection, sykepengerPerson, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+
+            val input = samordningYtelseVurderingInformasjonskrav.klargjør(kontekst)
+            val data = samordningYtelseVurderingInformasjonskrav.hentData(input)
+
+            val ytelsePerioder = data.samordningYtelser.flatMap { it.ytelsePerioder }
+            assertThat(ytelsePerioder.size).isEqualTo(1)
+        }
+    }
 
     @Test
     fun `krever avklaring når endringer kommer`() {
@@ -175,8 +279,6 @@ class SamordningYtelseVurderingServiceTest {
             behandlingId,
             SamordningVurderingGrunnlag(
                 begrunnelse = "En god begrunnelse",
-                maksDatoEndelig = false,
-                fristNyRevurdering = LocalDate.now().plusYears(1),
                 vurderinger = setOf(
                     SamordningVurdering(
                         Ytelse.SYKEPENGER,
@@ -215,9 +317,13 @@ class SamordningYtelseVurderingServiceTest {
         )
     }
 
-    private fun opprettSakdata(connection: DBConnection): FlytKontekstMedPerioder {
-        val person = PersonRepositoryImpl(connection).finnEllerOpprett(listOf(Ident("ident", true)))
-        val rettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusDays(5))
+    private fun opprettSakdata(
+        connection: DBConnection,
+        foreldrePerson: Person? = null,
+        rettighetsPeriode: Periode? = null
+    ): FlytKontekstMedPerioder {
+        val person = foreldrePerson ?: PersonRepositoryImpl(connection).finnEllerOpprett(listOf(Ident("ident", true)))
+        val rettighetsperiode = rettighetsPeriode ?: Periode(LocalDate.now(), LocalDate.now().plusDays(5))
         val sakId = SakRepositoryImpl(connection).finnEllerOpprett(
             person,
             rettighetsperiode

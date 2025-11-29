@@ -19,11 +19,11 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 /**
+ * @param uforegradFom Fra-tidspunkt for [uforegrad].
  * @param uforegrad Uføregrad i prosent. `null` om personen er registrert i systemet, men ikke har uføregrad.
  */
-data class UføreRespons(val uforegrad: Int?)
 data class UførePeriode(
-    val uforegradFom: LocalDate? = null,
+    val uforegradFom: LocalDate,
     val uforegradTom: LocalDate? = null,
     val uforegrad: Int,
     val uforetidspunkt: LocalDate? = null,
@@ -66,7 +66,7 @@ object UføreGateway : UføreRegisterGateway {
         }
     }
 
-    override fun innhentMedHistorikk(person: Person, fraDato: LocalDate): List<Uføre> {
+    override fun innhentMedHistorikk(person: Person, fraDato: LocalDate): Set<Uføre> {
         val datoString = fraDato.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
         val request =
             UføreRequest(person.identer().filter { it.aktivIdent }.map { it.identifikator }.first(), datoString)
@@ -78,7 +78,7 @@ object UføreGateway : UføreRegisterGateway {
                 virkningstidspunkt = it.virkningstidspunkt,
                 uføregrad = Prosent(it.uforegrad)
             )
-        }
+        }.toSet()
 
     }
 }

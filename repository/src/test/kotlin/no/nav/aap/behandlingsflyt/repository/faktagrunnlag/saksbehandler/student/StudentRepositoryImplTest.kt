@@ -4,17 +4,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.ErStudentS
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.OppgittStudent
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.SkalGjenopptaStudieStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
-import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
-import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.februar
-import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.januar
-import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
@@ -41,13 +35,11 @@ class StudentRepositoryImplTest {
 
     @Test
     fun `lagre, hente ut, slette`() {
-        val sak = dataSource.transaction { sak(it) }
+        val sak = dataSource.transaction { sak(it, Periode(1 januar 2022, 31.desember(2023))) }
 
         val behandling = dataSource.transaction {
             finnEllerOpprettBehandling(it, sak)
         }
-
-        val periode = Periode(1 januar 2022, 31.desember(2023))
 
         val oppgittStudent = OppgittStudent(
             avbruttDato = 2 januar 2023,
@@ -90,14 +82,5 @@ class StudentRepositoryImplTest {
         dataSource.transaction {
             StudentRepositoryImpl(it).slett(behandling.id)
         }
-    }
-
-
-    private fun sak(connection: DBConnection): Sak {
-        return PersonOgSakService(
-            FakePdlGateway,
-            PersonRepositoryImpl(connection),
-            SakRepositoryImpl(connection)
-        ).finnEllerOpprett(ident(), Periode(1 januar 2022, 31.desember(2023)))
     }
 }

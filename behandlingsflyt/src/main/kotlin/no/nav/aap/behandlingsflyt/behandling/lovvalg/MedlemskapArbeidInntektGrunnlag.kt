@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.lovvalg
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForLovvalgMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
@@ -76,6 +77,20 @@ fun Tidslinje<ManuellVurderingForLovvalgMedlemskap>.validerGyldigForRettighetspe
 
     if(periodeForVurdering.tom < rettighetsperiode.tom) {
         return Validation.Invalid(this, "Det er ikke tatt stilling til hele rettighetsperioden. Rettighetsperioden for saken slutter ${rettighetsperiode.tom} mens vurderingens siste periode slutter ${periodeForVurdering.tom}. ")
+    }
+
+    return Validation.Valid(this)
+}
+
+fun List<PeriodisertManuellVurderingForLovvalgMedlemskapDto>.validerGyldigVurderinger(): Validation<List<PeriodisertManuellVurderingForLovvalgMedlemskapDto>> {
+    forEach {
+        val periode = if (it.tom != null) "${it.fom} - ${it.tom}" else "${it.fom}"
+        if (it.lovvalg.begrunnelse.isBlank()) {
+            return Validation.Invalid(this, "Det mangler begrunnelse for lovvalg [$periode]")
+        }
+        if (it.medlemskap != null && it.medlemskap.begrunnelse.isBlank()) {
+            return Validation.Invalid(this, "Det mangler begrunnelse for medlemskap [$periode]")
+        }
     }
 
     return Validation.Valid(this)

@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
@@ -13,27 +15,29 @@ import org.slf4j.LoggerFactory
 class OpprettJobbForFritakMeldepliktJobbUtfører(
     private val flytJobbRepository: FlytJobbRepository,
     private val sakRepository: SakRepository,
+    private val unleashGateway: UnleashGateway,
 ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
-        /* TODO: optimaliser slik at bare saker med fritak sjekkes. */
-        sakRepository
-            .finnAlleSakIder()
-            .also {
-                log.info("Oppretter jobber for alle saker som skal undersøkes for fritak meldeplikt. Antall = ${it.size}")
-            }
-            .forEach {
-                flytJobbRepository.leggTil(JobbInput(OpprettBehandlingFritakMeldepliktJobbUtfører).forSak(it.toLong()))
-            }
+        val saker = if (unleashGateway.isEnabled(BehandlingsflytFeature.BedreUttrekkAvSakerMedFritakMeldeplikt)) {
+            sakRepository.finnSakerMedFritakMeldeplikt()
+        } else {
+            sakRepository.finnAlleSakIder()
+        }
+        log.info("Oppretter jobber for alle saker som skal undersøkes for fritak meldeplikt. Antall = ${saker.size}")
+        saker.forEach {
+            flytJobbRepository.leggTil(JobbInput(OpprettBehandlingFritakMeldepliktJobbUtfører).forSak(it.toLong()))
+        }
     }
 
     companion object : ProvidersJobbSpesifikasjon {
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
             return OpprettJobbForFritakMeldepliktJobbUtfører(
                 flytJobbRepository = repositoryProvider.provide(),
-                sakRepository = repositoryProvider.provide()
+                sakRepository = repositoryProvider.provide(),
+                unleashGateway = gatewayProvider.provide(),
             )
         }
 

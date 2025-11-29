@@ -54,7 +54,7 @@ class SamordningRepositoryImpl(private val connection: DBConnection) : Samordnin
             }
         }.toSet()
 
-        return SamordningGrunnlag(row.getLong("id"), samordningPerioder)
+        return SamordningGrunnlag(samordningPerioder)
     }
 
     override fun lagre(behandlingId: BehandlingId, samordningPerioder: Set<SamordningPeriode>, input: Faktagrunnlag) {

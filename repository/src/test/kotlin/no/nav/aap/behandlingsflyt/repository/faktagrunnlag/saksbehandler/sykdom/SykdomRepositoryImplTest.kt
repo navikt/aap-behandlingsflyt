@@ -5,27 +5,21 @@ import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadeSak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
-import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
+import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.avbrytrevurdering.AvbrytRevurderingRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.ident
+import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -53,10 +47,9 @@ internal class SykdomRepositoryImplTest {
         fun tearDown() = dataSource.close()
 
         private val fom = LocalDate.of(2020, 1, 1)
-        private val periode = Periode(fom, fom.plusYears(3))
-        private fun sykdomsvurdering1(behandlingId: BehandlingId?) = Sykdomsvurdering(
+        private fun sykdomsvurdering1(behandlingId: BehandlingId = BehandlingId(1L)) = Sykdomsvurdering(
             begrunnelse = "b1",
-            vurderingenGjelderFra = null,
+            vurderingenGjelderFra = 1 januar 2020,
             vurderingenGjelderTil = null,
             dokumenterBruktIVurdering = listOf(JournalpostId("1")),
             harSkadeSykdomEllerLyte = true,
@@ -72,7 +65,7 @@ internal class SykdomRepositoryImplTest {
         )
 
         private fun sykdomsvurdering2(
-            behandlingId: BehandlingId?,
+            behandlingId: BehandlingId = BehandlingId(1L),
             vurderingenGjelderFra: LocalDate = LocalDate.of(2020, 1, 1)
         ) = Sykdomsvurdering(
             begrunnelse = "b2",
@@ -264,7 +257,7 @@ internal class SykdomRepositoryImplTest {
                     behandling.id, listOf(
                         Sykdomsvurdering(
                             begrunnelse = "b1",
-                            vurderingenGjelderFra = null,
+                            vurderingenGjelderFra = 1 januar 2020,
                             vurderingenGjelderTil = null,
                             dokumenterBruktIVurdering = listOf(JournalpostId("1")),
                             harSkadeSykdomEllerLyte = true,
@@ -287,12 +280,6 @@ internal class SykdomRepositoryImplTest {
         }
     }
 
-    private fun sak(connection: DBConnection): Sak {
-        return PersonOgSakService(
-            FakePdlGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection)
-        ).finnEllerOpprett(ident(), periode)
-    }
-
     private fun revurdering(connection: DBConnection, behandling: Behandling): Behandling {
         return BehandlingRepositoryImpl(connection).opprettBehandling(
             behandling.sakId,
@@ -303,45 +290,5 @@ internal class SykdomRepositoryImplTest {
                 årsak = ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
             )
         )
-    }
-
-    @Test
-    fun `migrer sykdomsvurderinger`() {
-        dataSource.transaction { connection ->
-            val sykdomRepo = SykdomRepositoryImpl(connection)
-            val sak = sak(connection)
-            val behandling = finnEllerOpprettBehandling(connection, sak)
-
-            val sykdomsvurderingUtenVurdertIBehandling = sykdomsvurdering1(null)
-            sykdomRepo.lagre(behandling.id, listOf(sykdomsvurderingUtenVurdertIBehandling))
-            BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
-
-            val behandling2 = finnEllerOpprettBehandling(connection, sak)
-            val vurdering2fom = sak.rettighetsperiode.fom.plusMonths(2)
-            val nyVurdering = sykdomsvurdering2(null, vurdering2fom)
-            sykdomRepo.lagre(behandling2.id, listOf(sykdomsvurderingUtenVurdertIBehandling, nyVurdering))
-
-            sykdomRepo.migrerSykdomsvurderinger()
-
-            assertThat(sykdomRepo.hent(behandling.id).sykdomsvurderinger).usingRecursiveComparison()
-                .ignoringFields("id", "opprettet").isEqualTo(
-                    listOf(
-                        sykdomsvurderingUtenVurdertIBehandling.copy(
-                            vurdertIBehandling = behandling.id,
-                            vurderingenGjelderFra = periode.fom
-                        )
-                    )
-                )
-            assertThat(sykdomRepo.hent(behandling2.id).sykdomsvurderinger).usingRecursiveComparison()
-                .ignoringFields("id", "opprettet").isEqualTo(
-                    listOf(
-                        sykdomsvurderingUtenVurdertIBehandling.copy(
-                            vurdertIBehandling = behandling.id,
-                            vurderingenGjelderFra = periode.fom
-                        ),
-                        nyVurdering.copy(vurdertIBehandling = behandling2.id)
-                    )
-                )
-        }
     }
 }

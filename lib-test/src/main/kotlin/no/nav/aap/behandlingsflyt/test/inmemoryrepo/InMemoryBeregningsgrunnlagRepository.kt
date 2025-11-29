@@ -3,11 +3,9 @@ package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import java.util.concurrent.atomic.AtomicLong
 
 object InMemoryBeregningsgrunnlagRepository : BeregningsgrunnlagRepository {
 
-    private val idSeq = AtomicLong(10000)
     private val memory = HashMap<BehandlingId, Beregningsgrunnlag>()
     private val lock = Object()
 

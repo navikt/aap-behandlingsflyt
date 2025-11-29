@@ -158,7 +158,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
         )
 
 
-        every { meldeperiodeRepositoryMock.hent(any())} returns listOf(
+        every { meldeperiodeRepositoryMock.hentMeldeperioder(any(), any())} returns listOf(
             Periode(fom = LocalDate.now().minusDays(10), tom = LocalDate.now()),
         )
 
@@ -179,7 +179,8 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
             meldeperiodeRepository = meldeperiodeRepositoryMock,
             meldepliktRepository = meldepliktRepositoryMock,
             sakOgBehandlingService = sakOgBehandlingServiceMock,
-            prosesserBehandlingService = mockk<ProsesserBehandlingService>(relaxed = true)
+            prosesserBehandlingService = mockk<ProsesserBehandlingService>(relaxed = true),
+            underveisRepository = mockk(relaxed = true),
         )
     }
 }

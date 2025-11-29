@@ -6,7 +6,6 @@ import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Hjemmel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.*
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
@@ -30,7 +29,7 @@ import java.time.LocalDate
 @MockKExtension.CheckUnnecessaryStub
 class FatteVedtakStegTest {
 
-    val klageresultatUtleder = mockk<KlageresultatUtleder>()
+    val klageresultatUtleder = mockk<KlageresultatUtleder>(relaxed = true)
     val tidligereVurderinger = mockk<TidligereVurderinger>()
     val trekkKlageService = mockk<TrekkKlageService>()
     val avklaringsbehovService = mockk<AvklaringsbehovService>()
@@ -64,7 +63,9 @@ class FatteVedtakStegTest {
         klageresultatUtleder = klageresultatUtleder,
         trekkKlageService = trekkKlageService,
         avklaringsbehovService = avklaringsbehovService,
-        unleashGateway = gatewayProvider.provide()
+        vedtakService = mockk(relaxed = true),
+        virkningstidspunktUtleder = mockk(relaxed = true),
+        unleashGateway = FakeUnleash,
     )
 
     @Test

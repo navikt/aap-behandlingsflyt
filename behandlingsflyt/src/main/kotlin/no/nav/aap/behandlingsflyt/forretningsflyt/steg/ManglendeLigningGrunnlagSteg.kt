@@ -24,6 +24,9 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Year
 
+/**
+ * Dette steget sjekker om vi mangler inntekt for året før nedsettelsesdatoen.
+ */
 class ManglendeLigningGrunnlagSteg internal constructor(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val inntektGrunnlagRepository: InntektGrunnlagRepository,

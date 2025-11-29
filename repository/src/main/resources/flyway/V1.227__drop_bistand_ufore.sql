@@ -1,0 +1,1 @@
+alter table bistand drop column overgang_til_ufoere;

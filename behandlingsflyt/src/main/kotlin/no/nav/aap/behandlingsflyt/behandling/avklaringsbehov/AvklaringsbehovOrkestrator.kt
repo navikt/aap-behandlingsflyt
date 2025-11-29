@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.PeriodisertAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
@@ -13,7 +14,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
@@ -28,7 +31,7 @@ class AvklaringsbehovOrkestrator(
     private val prosesserBehandling: ProsesserBehandlingService,
     private val gatewayProvider: GatewayProvider
 ) {
-    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         repositoryProvider = repositoryProvider,
         behandlingHendelseService = BehandlingHendelseServiceImpl(repositoryProvider),
         flytOrkestrator = FlytOrkestrator(repositoryProvider, gatewayProvider),
@@ -95,6 +98,10 @@ class AvklaringsbehovOrkestrator(
             behandling = behandling, avklaringsbehov = definisjoner
         )
 
+        avklaringsbehovene.validerPerioder(
+            avklaringsbehov
+        )
+
         // løses det behov som fremtvinger tilbakehopp?
         flytOrkestrator.forberedLøsingAvBehov(definisjoner, behandling, kontekst, bruker)
 
@@ -109,7 +116,8 @@ class AvklaringsbehovOrkestrator(
         avklaringsbehovLøsning: AvklaringsbehovLøsning,
         bruker: Bruker
     ) {
-        val løsningsResultat = avklaringsbehovLøsning.løs(repositoryProvider, AvklaringsbehovKontekst(bruker, kontekst), gatewayProvider)
+        val løsningsResultat =
+            avklaringsbehovLøsning.løs(repositoryProvider, AvklaringsbehovKontekst(bruker, kontekst), gatewayProvider)
 
         avklaringsbehovene.løsAvklaringsbehov(
             avklaringsbehovLøsning.definisjon(),
@@ -131,7 +139,9 @@ class AvklaringsbehovOrkestrator(
             frist = hendelse.frist,
             begrunnelse = hendelse.begrunnelse,
             grunn = hendelse.grunn,
-            bruker = hendelse.bruker
+            bruker = hendelse.bruker,
+            perioderVedtaketBehøverVurdering = null,
+            perioderSomIkkeErTilstrekkeligVurdert = null
         )
 
         avklaringsbehovene.validateTilstand(behandling = behandling)
@@ -151,6 +161,8 @@ class AvklaringsbehovOrkestrator(
             grunn = ÅrsakTilSettPåVent.VENTER_PÅ_MEDISINSKE_OPPLYSNINGER,
             bruker = bruker,
             frist = LocalDate.now() + Period.ofWeeks(4),
+            perioderVedtaketBehøverVurdering = null,
+            perioderSomIkkeErTilstrekkeligVurdert = null
         )
         avklaringsbehovene.validateTilstand(behandling = behandling)
         avklaringsbehovene.validerPlassering(behandling = behandling)

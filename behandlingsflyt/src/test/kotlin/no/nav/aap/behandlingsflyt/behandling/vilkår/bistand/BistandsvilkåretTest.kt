@@ -7,13 +7,14 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Av
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderBistandsbehovSteg
-import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -24,18 +25,15 @@ import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.bistand.BistandRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
-import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
-import no.nav.aap.behandlingsflyt.test.ident
+import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
@@ -77,10 +75,8 @@ class BistandsvilkåretTest {
 
         Bistandsvilkåret(vilkårsresultat).vurder(
             BistandFaktagrunnlag(
-                vurderingsdato = LocalDate.now(),
                 sisteDagMedMuligYtelse = LocalDate.now().plusYears(3),
-                vurderinger = listOf(bistandvurdering()),
-                studentvurdering = null
+                bistandGrunnlag = BistandGrunnlag(listOf(bistandvurdering())),
             )
         )
         val vilkår = vilkårsresultat.finnVilkår(Vilkårtype.BISTANDSVILKÅRET)
@@ -89,16 +85,14 @@ class BistandsvilkåretTest {
 
         Bistandsvilkåret(vilkårsresultat).vurder(
             BistandFaktagrunnlag(
-                vurderingsdato = LocalDate.now(),
                 sisteDagMedMuligYtelse = LocalDate.now().plusYears(3),
-                vurderinger = listOf(
+                bistandGrunnlag = BistandGrunnlag(listOf(
                     bistandvurdering(
                         erBehovForAktivBehandling = false,
                         erBehovForAnnenOppfølging = false,
                         erBehovForArbeidsrettetTiltak = false
                     )
-                ),
-                studentvurdering = null
+                )),
             )
         )
         assertThat(vilkår.vilkårsperioder()).hasSize(1).allMatch { periode -> periode.utfall == Utfall.IKKE_OPPFYLT }
@@ -112,17 +106,15 @@ class BistandsvilkåretTest {
         val iDag = LocalDate.now()
         Bistandsvilkåret(vilkårsresultat).vurder(
             BistandFaktagrunnlag(
-                vurderingsdato = iDag,
                 sisteDagMedMuligYtelse = LocalDate.now().plusYears(3),
-                vurderinger = listOf(
+                bistandGrunnlag = BistandGrunnlag(listOf(
                     bistandvurdering(), bistandvurdering(
                         vurderingenGjelderFra = iDag.plusDays(10),
                         erBehovForAktivBehandling = false,
                         erBehovForAnnenOppfølging = false,
                         erBehovForArbeidsrettetTiltak = false
                     )
-                ),
-                studentvurdering = null
+                )),
             )
         )
 
@@ -139,22 +131,22 @@ class BistandsvilkåretTest {
 
     @Test
     fun `Skal bygge tidslinje på tvers av behandlinger`() {
-        val bistandsvurdering1 = BistandVurdering(
-            begrunnelse = "Begrunnelse",
-            erBehovForAktivBehandling = true,
-            erBehovForArbeidsrettetTiltak = true,
-            erBehovForAnnenOppfølging = false,
-            vurderingenGjelderFra = null,
-            vurdertAv = "Z00000",
-            skalVurdereAapIOvergangTilUføre = null,
-            skalVurdereAapIOvergangTilArbeid = null,
-            overgangBegrunnelse = null,
-        )
-
         val (førstegangsbehandling, sak) = dataSource.transaction { connection ->
             val bistandRepo = BistandRepositoryImpl(connection)
-            val sak = sak(connection)
+            val sak = sak(connection, periode)
             val førstegangsbehandling = finnEllerOpprettBehandling(connection, sak)
+
+            val bistandsvurdering1 = Bistandsvurdering(
+                vurdertIBehandling = BehandlingId(1),
+                begrunnelse = "Begrunnelse",
+                erBehovForAktivBehandling = true,
+                erBehovForArbeidsrettetTiltak = true,
+                erBehovForAnnenOppfølging = false,
+                vurderingenGjelderFra = sak.rettighetsperiode.fom,
+                vurdertAv = "Z00000",
+                skalVurdereAapIOvergangTilArbeid = null,
+                overgangBegrunnelse = null,
+            )
 
             bistandRepo.lagre(førstegangsbehandling.id, listOf(bistandsvurdering1))
             Pair(førstegangsbehandling, sak)
@@ -214,7 +206,6 @@ class BistandsvilkåretTest {
                 erBehovForAktivBehandling = false,
                 erBehovForArbeidsrettetTiltak = false,
                 erBehovForAnnenOppfølging = false,
-                skalVurdereAapIOvergangTilUføre = false,
                 skalVurdereAapIOvergangTilArbeid = false,
                 overgangBegrunnelse = null,
             )
@@ -236,7 +227,7 @@ class BistandsvilkåretTest {
         dataSource.transaction { connection ->
             val avklaringsbehovene = AvklaringsbehovRepositoryImpl(connection).hentAvklaringsbehovene(revurdering.id)
             avklaringsbehovene.leggTil(
-                definisjoner = listOf(Definisjon.AVKLAR_BISTANDSBEHOV), funnetISteg = AVKLAR_SYKDOM
+                definisjoner = listOf(Definisjon.AVKLAR_BISTANDSBEHOV), funnetISteg = AVKLAR_SYKDOM, null, null
             )
             avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_BISTANDSBEHOV, "", "", false)
 
@@ -280,30 +271,22 @@ class BistandsvilkåretTest {
         erBehovForArbeidsrettetTiltak: Boolean = true,
         erBehovForAnnenOppfølging: Boolean = true,
         overgangBegrunnelse: String? = null,
-        skalVurdereAapIOvergangTilUføre: Boolean? = null,
         skalVurdereAapIOvergangTilArbeid: Boolean? = null,
         vurdertAv: String = "Z00000",
-        vurderingenGjelderFra: LocalDate = LocalDate.now()
+        vurderingenGjelderFra: LocalDate = LocalDate.now(),
+        vurdertIBehandling: BehandlingId = BehandlingId(1)
 
-    ) = BistandVurdering(
+    ) = Bistandsvurdering(
         begrunnelse = begrunnelse,
         erBehovForAktivBehandling = erBehovForAktivBehandling,
         erBehovForArbeidsrettetTiltak = erBehovForArbeidsrettetTiltak,
         erBehovForAnnenOppfølging = erBehovForAnnenOppfølging,
         overgangBegrunnelse = overgangBegrunnelse,
-        skalVurdereAapIOvergangTilUføre = skalVurdereAapIOvergangTilUføre,
         skalVurdereAapIOvergangTilArbeid = skalVurdereAapIOvergangTilArbeid,
         vurdertAv = vurdertAv,
-        vurderingenGjelderFra = vurderingenGjelderFra
+        vurderingenGjelderFra = vurderingenGjelderFra,
+        vurdertIBehandling = vurdertIBehandling
     )
-
-    private fun sak(connection: DBConnection): Sak {
-        return PersonOgSakService(
-            FakePdlGateway,
-            PersonRepositoryImpl(connection),
-            SakRepositoryImpl(connection)
-        ).finnEllerOpprett(ident(), periode)
-    }
 
     private fun revurdering(connection: DBConnection, behandling: Behandling, sak: Sak): Behandling {
         BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
@@ -318,7 +301,7 @@ class BistandsvilkåretTest {
         erNedsettelseIArbeidsevneAvEnVissVarighet: Boolean? = true,
         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean = true,
         erArbeidsevnenNedsatt: Boolean = true,
-        vurderingenGjelderFra: LocalDate? = null,
+        vurderingenGjelderFra: LocalDate = 1 januar 2020,
         vurderingenGjelderTil: LocalDate? = null,
         opprettet: Instant = Instant.now(),
         behandlingId: BehandlingId

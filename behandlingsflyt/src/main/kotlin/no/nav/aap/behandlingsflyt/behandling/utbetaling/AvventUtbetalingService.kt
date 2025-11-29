@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.utbetal.kodeverk.AvventÅrsak
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseAvventDto
 import java.time.LocalDate
@@ -25,7 +26,7 @@ class AvventUtbetalingService(
         val avventUtbetalingPgaSosialRefusjonskrav = overlapperMedSosialRefusjonskrav(behandlingId, førsteVedtaksdato, tilkjentYtelseHelePerioden)
         val avventUtbetalingPgaTjenestepensjonRefusjon = overlapperMedTjenestepensjonRefusjon(behandlingId, førsteVedtaksdato, tilkjentYtelseHelePerioden)
         val avventUtbetalingPgaSamordningAndreStatligeYtelser = overlapperMedSamordningAndreStatligeYtelser(behandlingId, førsteVedtaksdato)
-        val avventUtbetalingPgaSamordningArbeidsgiver = overlapperMedSamordningArbeidsgiver(behandlingId, førsteVedtaksdato)
+        val avventUtbetalingPgaSamordningArbeidsgiver = overlapperMedSamordningArbeidsgiver(behandlingId, førsteVedtaksdato,tilkjentYtelseHelePerioden )
 
         return avventUtbetalingPgaSosialRefusjonskrav
             ?: (avventUtbetalingPgaTjenestepensjonRefusjon
@@ -105,28 +106,49 @@ class AvventUtbetalingService(
         )
     }
 
-    private fun overlapperMedSamordningArbeidsgiver(behandlingId: BehandlingId, førsteVedtaksdato: LocalDate): TilkjentYtelseAvventDto? {
+    private fun overlapperMedSamordningArbeidsgiver(behandlingId: BehandlingId, førsteVedtaksdato: LocalDate, tilkjentYtelseHelePerioden: Periode): TilkjentYtelseAvventDto? {
         val samordningArbeidsgiverYtelser = samordningArbeidsgiverYtelserRepository.hentHvisEksisterer(behandlingId)
         if (samordningArbeidsgiverYtelser?.vurdering == null) {
             return null
         }
+        val perioder = samordningArbeidsgiverYtelser.vurdering.perioder
 
-        val overføres = if (unleashGateway.isEnabled(BehandlingsflytFeature.OverforingsdatoNullForAvregning)) {
-            null
-        } else {
-            førsteVedtaksdato.plusDays(42)
-        }
-        return TilkjentYtelseAvventDto(
-            fom = samordningArbeidsgiverYtelser.vurdering.fom,
-            tom = samordningArbeidsgiverYtelser.vurdering.tom
+        val harKrav = perioder.any{tilkjentYtelseHelePerioden.overlapper(tilPeriode(it.fom, it.tom))}
+
+        if (harKrav) {
+            val overføres = if (unleashGateway.isEnabled(BehandlingsflytFeature.OverforingsdatoNullForAvregning)) {
+                null
+            } else {
+                førsteVedtaksdato.plusDays(42)
+            }
+
+            val periodeMedKravFom = perioder
+                .map { it.fom }
+                .minOf { it }
+            val periodeMedKravTom = perioder
+                .map { it.tom }
+                .maxOf { it }
+            val tom = periodeMedKravTom
                 .coerceAtMost(førsteVedtaksdato.minusDays(1))
-                .coerceAtLeast(samordningArbeidsgiverYtelser.vurdering.fom),
-            overføres = overføres,
-            årsak = AvventÅrsak.AVVENT_AVREGNING,
-            feilregistrering = false
-        )
+                ?: førsteVedtaksdato.minusDays(1)
+                    .coerceAtLeast(periodeMedKravFom)
+
+
+            return TilkjentYtelseAvventDto(
+                fom = periodeMedKravFom,
+                tom = tom
+                    .coerceAtMost(førsteVedtaksdato.minusDays(1))
+                    .coerceAtLeast(periodeMedKravFom),
+                overføres = overføres,
+                årsak = AvventÅrsak.AVVENT_AVREGNING,
+                feilregistrering = false
+            )
+
+        }
+
+        return null
     }
 
-    private fun tilPeriode(fom: LocalDate?, tom: LocalDate?) = Periode(fom ?: LocalDate.MIN, tom ?: LocalDate.MAX)
+    private fun tilPeriode(fom: LocalDate?, tom: LocalDate?) = Periode(fom ?: LocalDate.MIN, tom ?: Tid.MAKS)
 
 }

@@ -33,7 +33,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 
-class OvergangArbeidSteg private constructor(
+class OvergangArbeidSteg internal constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val overgangArbeidRepository: OvergangArbeidRepository,
@@ -77,7 +77,10 @@ class OvergangArbeidSteg private constructor(
             ),
             nårVurderingErRelevant = ::perioderVurderingErRelevant,
             kontekst = kontekst,
-            erTilstrekkeligVurdert = { true },
+            nårVurderingErGyldig = {
+                overgangArbeidRepository.hentHvisEksisterer(kontekst.behandlingId)?.gjeldendeVurderinger().orEmpty()
+                    .mapValue { true }
+            },
             tilbakestillGrunnlag = { tilbakestillGrunnlag(kontekst) },
         )
 
@@ -103,11 +106,11 @@ class OvergangArbeidSteg private constructor(
         val utfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
 
         val sykdomsvurderinger = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)
-            ?.somSykdomsvurderingstidslinje(kontekst.rettighetsperiode.fom)
+            ?.somSykdomsvurderingstidslinje()
             .orEmpty()
 
         val bistandsvurderinger = bistandRepository.hentHvisEksisterer(kontekst.behandlingId)
-            ?.somBistandsvurderingstidslinje(kontekst.rettighetsperiode.fom)
+            ?.somBistandsvurderingstidslinje()
             .orEmpty()
 
         val studentVurderinger = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
@@ -119,8 +122,8 @@ class OvergangArbeidSteg private constructor(
             .orEmpty()
 
         val forutgåendeOrdinærAap =
-            Tidslinje.map2(sykdomsvurderinger, bistandsvurderinger) { sykdomsvurdering, bistandsvurdering ->
-                sykdomsvurdering?.erOppfylt(kontekst.rettighetsperiode.fom) == true &&
+            Tidslinje.map2(sykdomsvurderinger, bistandsvurderinger) { periode, sykdomsvurdering, bistandsvurdering ->
+                sykdomsvurdering?.erOppfyltOrdinær(kontekst.rettighetsperiode.fom, periode) == true &&
                         bistandsvurdering?.erBehovForBistand() == true
             }
                 .fold(
@@ -146,7 +149,7 @@ class OvergangArbeidSteg private constructor(
             studentVurderinger,
             overgangUføreVurderinger,
             forutgåendeOrdinærAap,
-        ) { utfall, sykdomsvurdering, bistandsvurdering, studentvurdering, uførevurdering, forutgåendeOrdinærAap ->
+        ) { segmentPeriode, utfall, sykdomsvurdering, bistandsvurdering, studentvurdering, uførevurdering, forutgåendeOrdinærAap ->
             when (utfall) {
                 null -> false
                 TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
@@ -164,7 +167,7 @@ class OvergangArbeidSteg private constructor(
                         return@map6 false
                     }
 
-                    sykdomsvurdering?.erOppfylt(kontekst.rettighetsperiode.fom) != true ||
+                    sykdomsvurdering?.erOppfyltOrdinær(kontekst.rettighetsperiode.fom, segmentPeriode) != true ||
                             bistandsvurdering?.erBehovForBistand() != true
                 }
             }

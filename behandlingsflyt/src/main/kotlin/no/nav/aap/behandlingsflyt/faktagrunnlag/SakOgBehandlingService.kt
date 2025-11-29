@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag
 
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
@@ -23,6 +22,7 @@ import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
 
@@ -45,10 +45,6 @@ class SakOgBehandlingService(
         unleashGateway = gatewayProvider.provide(),
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
     )
-
-    fun finnBehandling(behandlingReferanse: BehandlingReferanse): Behandling {
-        return behandlingRepository.hent(behandlingReferanse)
-    }
 
     /**
      * Ytelsesbehandling betyr førstegangsbehandling eller revurdering.
@@ -240,7 +236,6 @@ class SakOgBehandlingService(
             "Mottok klage, men det finnes ingen eksisterende behandling"
         }
 
-
         return behandlingRepository.opprettBehandling(
             sakId = sisteYtelsesbehandling.sakId,
             typeBehandling = TypeBehandling.Klage,
@@ -373,15 +368,10 @@ class SakOgBehandlingService(
             } else {
                 rettighetsperiode.fom
             }
-            val tom = if (mottattDato.plusYears(1).minusDays(1).isAfter(rettighetsperiode.tom)) {
-                mottattDato.plusYears(1).minusDays(1)
-            } else {
-                rettighetsperiode.tom
-            }
             val periode = Periode(
                 fom,
-                tom
-            ) // TODO: Usikker på om dette blir helt korrekt.. // Spør Peter
+                Tid.MAKS
+            )
             if (periode != rettighetsperiode) {
                 sakRepository.oppdaterRettighetsperiode(sakId, periode)
             }

@@ -32,7 +32,6 @@ class UføreRepositoryImpl(private val connection: DBConnection) : UføreReposit
             }
             setRowMapper { row ->
                 UføreGrunnlag(
-                    id = row.getLong("id"),
                     behandlingId = behandlingId,
                     vurderinger = hentVurderinger(row.getLong("ufore_id"))
                 )
@@ -55,7 +54,6 @@ class UføreRepositoryImpl(private val connection: DBConnection) : UføreReposit
             }
             setRowMapper { row ->
                 UføreGrunnlag(
-                    id = row.getLong("id"),
                     behandlingId = behandlingId,
                     vurderinger = hentVurderinger(row.getLong("ufore_id"))
                 )
@@ -67,13 +65,15 @@ class UføreRepositoryImpl(private val connection: DBConnection) : UføreReposit
 
         val uforeIds = getUforeIds(behandlingId)
 
-        val deletedRows = connection.executeReturnUpdated("""
+        val deletedRows = connection.executeReturnUpdated(
+            """
             delete from UFORE_GRUNNLAG where behandling_id = ?;
             delete from UFORE_GRADERING where ufore_id = ANY(?::bigint[]);
             delete from UFORE where id = ANY(?::bigint[]);
            
            
-        """.trimIndent()) {
+        """.trimIndent()
+        ) {
             setParams {
                 setLong(1, behandlingId.id)
                 setLongArray(2, uforeIds)
@@ -97,8 +97,8 @@ class UføreRepositoryImpl(private val connection: DBConnection) : UføreReposit
         }
     }
 
-    private fun hentVurderinger(uføreId: Long): List<Uføre> {
-        return connection.queryList(
+    private fun hentVurderinger(uføreId: Long): Set<Uføre> {
+        return connection.querySet(
             """
             SELECT * FROM UFORE_GRADERING WHERE UFORE_ID = ?
         """.trimIndent()
@@ -115,7 +115,7 @@ class UføreRepositoryImpl(private val connection: DBConnection) : UføreReposit
         }
     }
 
-    override fun lagre(behandlingId: BehandlingId, uføre: List<Uføre>) {
+    override fun lagre(behandlingId: BehandlingId, uføre: Set<Uføre>) {
         val eksisterendeUføreGrunnlag = hentHvisEksisterer(behandlingId)
 
         if (eksisterendeUføreGrunnlag?.vurderinger == uføre) return

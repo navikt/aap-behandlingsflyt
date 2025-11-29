@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
-import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.SamIdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
@@ -14,6 +13,7 @@ import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
+import org.slf4j.LoggerFactory
 
 class HentSamIdJobbUtfører(
     private val repositoryProvider: RepositoryProvider,
@@ -27,6 +27,9 @@ class HentSamIdJobbUtfører(
     private val tjenestepensjonRefusjonsKravVurderingRepository: TjenestepensjonRefusjonsKravVurderingRepository = repositoryProvider.provide(),
 
     ): JobbUtfører {
+
+    private val log = LoggerFactory.getLogger(javaClass)
+
     override fun utfør(input: JobbInput) {
         val behandlingId = input.payload<BehandlingId>()
         val behandling = behandlingRepository.hent(behandlingId)
@@ -38,7 +41,13 @@ class HentSamIdJobbUtfører(
         if (tpRefusjonskravVurdering != null && tpRefusjonskravVurdering.harKrav) {
             val samId = samGateway.hentSamId(sak.person.aktivIdent(), sak.id.id, vedtakId)
 
-            samIdRepository.lagre(behandlingId, samId.toString())
+            if (samId != null) {
+                // Får null tilbake hvis det ikke er en _aktiv_ TP-ytelse
+                // Se Slack-tråd her https://nav-it.slack.com/archives/CQ08JC3UG/p1764056287208599
+                samIdRepository.lagre(behandlingId, samId.toString())
+            } else {
+                log.warn("Fant ingen SAM-ID for behandling $behandlingId / vedtak $vedtakId.")
+            }
         }
 
         flytJobbRepository.leggTil(
