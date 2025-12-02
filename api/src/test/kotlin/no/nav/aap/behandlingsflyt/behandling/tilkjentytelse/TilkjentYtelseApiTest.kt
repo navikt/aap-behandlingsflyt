@@ -30,7 +30,7 @@ import java.time.LocalDate
 import java.util.*
 
 @Fakes
-class TilkjentYtelseAPITest : BaseApiTest() {
+class TilkjentYtelseApiTest : BaseApiTest() {
     @Test
     fun `teste v2`() {
         val ds = MockDataSource()
