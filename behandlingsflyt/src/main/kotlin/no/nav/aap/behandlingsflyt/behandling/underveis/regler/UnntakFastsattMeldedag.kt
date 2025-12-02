@@ -21,7 +21,7 @@ val unntakFastsattMeldedag = if (Miljø.erProd()) {
 val unntakFritaksUtbetalingDato = if (Miljø.erProd()) {
     mapOf(
         LocalDate.of(2025, 12, 17) to LocalDate.of(2025, 12, 15),
-        LocalDate.of(2025, 12, 25) to LocalDate.of(2025, 12, 22),
+        LocalDate.of(2025, 12, 24) to LocalDate.of(2025, 12, 22),
         LocalDate.of(2025, 12, 31) to LocalDate.of(2025, 12, 29),
         LocalDate.of(2026, 4, 1) to LocalDate.of(2025, 3, 30),
     )
