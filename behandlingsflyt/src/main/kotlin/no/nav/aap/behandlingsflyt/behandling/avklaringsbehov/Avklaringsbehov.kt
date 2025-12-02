@@ -99,7 +99,7 @@ class Avklaringsbehov(
         begrunnelse: String = "",
         venteårsak: ÅrsakTilSettPåVent? = null,
         bruker: Bruker = SYSTEMBRUKER,
-        perioderSomSkalLøses: Set<Periode>?,
+        perioderVedtaketBehøverVurdering: Set<Periode>?,
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
     ) {
         require(historikk.last().status.erAvsluttet())
@@ -113,7 +113,7 @@ class Avklaringsbehov(
             grunn = venteårsak,
             frist = frist,
             endretAv = bruker.ident,
-            perioderVedtaketBehøverVurdering = perioderSomSkalLøses,
+            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
             perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert
         )
     }
@@ -260,7 +260,7 @@ class Avklaringsbehov(
         return historikk.last().tidsstempel
     }
 
-    fun perioderSomSkalLøses(): Set<Periode>? {
+    fun perioderVedtaketBehøverVurdering(): Set<Periode>? {
         return aktivHistorikk.filter { it.status.erÅpent() }.maxOfOrNull { it }?.perioderVedtaketBehøverVurdering
     }
 

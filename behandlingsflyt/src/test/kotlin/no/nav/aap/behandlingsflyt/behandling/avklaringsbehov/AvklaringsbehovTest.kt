@@ -49,7 +49,7 @@ class AvklaringsbehovTest {
 
         org.junit.jupiter.api.assertThrows<IllegalArgumentException> {
             ab.reåpne(
-                perioderSomSkalLøses = null,
+                perioderVedtaketBehøverVurdering = null,
                 perioderSomIkkeErTilstrekkeligVurdert = null
             )
         }
@@ -73,36 +73,36 @@ class AvklaringsbehovTest {
                 )
             )
         )
-        assertThat(behov.perioderSomSkalLøses()).containsExactly(Periode(2 januar 2020, 1 februar 2020))
+        assertThat(behov.perioderVedtaketBehøverVurdering()).containsExactly(Periode(2 januar 2020, 1 februar 2020))
         assertThat(behov.perioderSomIkkeErTilstrekkeligVurdert()).isEmpty()
 
         behov.oppdaterPerioder(
             perioderVedtaketBehøverVurdering = setOf(Periode(1 januar 2020, 1 februar 2020)),
             perioderSomIkkeErTilstrekkeligVurdert = setOf(Periode(1 januar 2020, 2 januar 2020))
         )
-        assertThat(behov.perioderSomSkalLøses()).containsExactly(Periode(1 januar 2020, 1 februar 2020))
+        assertThat(behov.perioderVedtaketBehøverVurdering()).containsExactly(Periode(1 januar 2020, 1 februar 2020))
         assertThat(behov.perioderSomIkkeErTilstrekkeligVurdert()).containsExactly(Periode(1 januar 2020, 2 januar 2020))
 
         behov.løs("Løst", "test")
 
         behov.reåpne(
-            perioderSomSkalLøses = setOf(Periode(1 januar 2020, 1 februar 2020)),
+            perioderVedtaketBehøverVurdering = setOf(Periode(1 januar 2020, 1 februar 2020)),
             perioderSomIkkeErTilstrekkeligVurdert = null
         )
 
-        assertThat(behov.perioderSomSkalLøses()).containsExactly(Periode(1 januar 2020, 1 februar 2020))
+        assertThat(behov.perioderVedtaketBehøverVurdering()).containsExactly(Periode(1 januar 2020, 1 februar 2020))
         assertThat(behov.perioderSomIkkeErTilstrekkeligVurdert() == null)
 
         behov.avbryt()
 
-        assertThat(behov.perioderSomSkalLøses()).isNull()
+        assertThat(behov.perioderVedtaketBehøverVurdering()).isNull()
         assertThat(behov.perioderSomIkkeErTilstrekkeligVurdert()).isNull()
 
         behov.reåpne(
-            perioderSomSkalLøses = setOf(Periode(1 februar 2020, 2 februar 2020)),
+            perioderVedtaketBehøverVurdering = setOf(Periode(1 februar 2020, 2 februar 2020)),
             perioderSomIkkeErTilstrekkeligVurdert = setOf(Periode(1 februar 2020, 2 februar 2020))
         )
-        assertThat(behov.perioderSomSkalLøses()).containsExactly(Periode(1 februar 2020, 2 februar 2020))
+        assertThat(behov.perioderVedtaketBehøverVurdering()).containsExactly(Periode(1 februar 2020, 2 februar 2020))
         assertThat(behov.perioderSomIkkeErTilstrekkeligVurdert()).containsExactly(
             Periode(
                 1 februar 2020,

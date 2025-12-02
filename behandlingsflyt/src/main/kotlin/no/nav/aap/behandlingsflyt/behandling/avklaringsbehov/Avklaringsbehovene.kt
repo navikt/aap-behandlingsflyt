@@ -225,7 +225,7 @@ class Avklaringsbehovene(
             frist = frist,
             venteårsak = avklaringsbehov.venteårsak(),
             perioderSomIkkeErTilstrekkeligVurdert = null, // Kan ikke si noe om dette
-            perioderSomSkalLøses = avklaringsbehov.perioderSomIkkeErTilstrekkeligVurdert()
+            perioderVedtaketBehøverVurdering = avklaringsbehov.perioderVedtaketBehøverVurdering()
         )
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
@@ -343,7 +343,7 @@ class Avklaringsbehovene(
 
             val behovForDefinisjon = this.hentBehovForDefinisjon(løsning.definisjon())
             if (behovForDefinisjon != null) {
-                val perioderSomSkalLøses = behovForDefinisjon.perioderSomSkalLøses().orEmpty().somTidslinje { it }
+                val perioderSomSkalLøses = behovForDefinisjon.perioderVedtaketBehøverVurdering().orEmpty().somTidslinje { it }
 
                 val perioderSomManglerLøsning =
                     perioderSomSkalLøses.leftJoin(perioderDekketAvLøsning) { _, periodeILøsning ->
