@@ -52,8 +52,10 @@ import no.nav.aap.behandlingsflyt.behandling.trekkklage.flate.TrekkKlageVurderin
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.flate.TrekkKlageÅrsakDto
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
-import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLand
-import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LandMedAvtale
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plusHverdager
+import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
 import no.nav.aap.behandlingsflyt.drift.Driftfunksjoner
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
@@ -154,6 +156,7 @@ import no.nav.aap.behandlingsflyt.test.PersonNavn
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
+import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -231,13 +234,14 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 val underveisGrunnlag = dataSource.transaction { connection ->
                     UnderveisRepositoryImpl(connection).hent(this.behandling.id)
                 }
-
-                assertThat(underveisGrunnlag.perioder).isNotEmpty
-                assertThat(underveisGrunnlag.perioder).extracting<RettighetsType>(Underveisperiode::rettighetsType)
-                    .allSatisfy { rettighetsType ->
-                        assertThat(rettighetsType).isEqualTo(RettighetsType.SYKEPENGEERSTATNING)
-                    }
             }
+            .assertRettighetstype(
+                Periode(
+                    sak.rettighetsperiode.fom,
+                    sak.rettighetsperiode.fom.plusHverdager(Hverdager(130)).minusDays(1)
+                ) to
+                        RettighetsType.SYKEPENGEERSTATNING
+            )
     }
 
     @Test
@@ -286,7 +290,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
 
     @Test
     fun `innvilge som student`() {
-        val fom = LocalDate.now().minusMonths(3)
+        val fom = 24 november 2025
         val periode = Periode(fom, fom.plusYears(3))
 
         val person = TestPersoner.STANDARD_PERSON()
@@ -307,7 +311,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                         godkjentStudieAvLånekassen = true,
                         avbruttPgaSykdomEllerSkade = true,
                         harBehovForBehandling = true,
-                        avbruttStudieDato = LocalDate.now().minusMonths(3),
+                        avbruttStudieDato = fom,
                         avbruddMerEnn6Måneder = true
                     ),
                 )
@@ -322,14 +326,10 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 val vilkår = dataSource.transaction { VilkårsresultatRepositoryImpl(it).hent(behandling.id) }
                 val v = vilkår.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
                 assertThat(v.harPerioderSomErOppfylt()).isTrue
-
-                val underveisperioder =
-                    dataSource.transaction { UnderveisRepositoryImpl(it).hent(behandling.id).perioder }
-
-                assertThat(underveisperioder.map { it.rettighetsType }).allSatisfy { rettighetstype ->
-                    assertThat(rettighetstype).isEqualTo(RettighetsType.STUDENT)
-                }
             }
+            .assertRettighetstype(
+                Periode(fom, fom.plusHverdager(Hverdager(130)).minusDays(1)) to RettighetsType.STUDENT,
+            )
     }
 
     @Test
@@ -1593,6 +1593,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsVedtaksbrev(TypeBrev.VEDTAK_ENDRING)
 
         // Revurdering nr 2, innvilger sp-erstatning på nytt
+        val førstePeriodeSykepengeerstatning = Periode(periode.fom, periode.fom.plusMonths(1).minusDays(1))
         val revurdering2 = sak.opprettManuellRevurdering(
             listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
         )
@@ -1638,40 +1639,19 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     ),
                 )
             )
-            .medKontekst {
-                val underveisTidslinje = dataSource.transaction {
-                    UnderveisRepositoryImpl(it).hent(this.behandling.id).perioder
-                }.map { Segment(it.periode, it) }.let(::Tidslinje)
-
-                val oppfyltPeriode = underveisTidslinje.filter { it.verdi.rettighetsType != null }.helePerioden()
-                val vilkårsresultat = hentVilkårsresultat(behandlingId = this.behandling.id)
-
-                assertThat(
-                    underveisTidslinje.map { it.rettighetsType }.segmenter().map { it.verdi }).containsSubsequence(
-                    RettighetsType.SYKEPENGEERSTATNING, RettighetsType.BISTANDSBEHOV, RettighetsType.SYKEPENGEERSTATNING
-                )
-
-                assertThat(oppfyltPeriode.fom).isEqualTo(periode.fom)
-                // Oppfylt ut rettighetsperioden
-                assertThat(oppfyltPeriode.tom).isEqualTo(periode.fom.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR))
-
-                assertThat(underveisTidslinje.helePerioden().fom).isEqualTo(vilkårsresultat.rettighetstypeTidslinje().helePerioden().fom).describedAs {
-                    "Underveistidslinja og vilkårstidslinja må starte på samme sted"
-                }
-
-                assertTidslinje(
-                    vilkårsresultat.rettighetstypeTidslinje().begrensetTil(underveisTidslinje.helePerioden()),
-                    Periode(periode.fom, periode.fom.plusMonths(1).minusDays(1)) to {
-                        assertThat(it).isEqualTo(RettighetsType.SYKEPENGEERSTATNING)
-                    },
-                    Periode(periode.fom.plusMonths(1), periode.fom.plusMonths(2).minusDays(1)) to {
-                        assertThat(it).isEqualTo(RettighetsType.BISTANDSBEHOV)
-                    },
-                    Periode(periode.fom.plusMonths(2), oppfyltPeriode.tom) to {
-                        assertThat(it).isEqualTo(RettighetsType.SYKEPENGEERSTATNING)
-                    }
-                )
-            }
+            .assertRettighetstype(
+                førstePeriodeSykepengeerstatning to
+                        RettighetsType.SYKEPENGEERSTATNING,
+                Periode(periode.fom.plusMonths(1), periode.fom.plusMonths(2).minusDays(1)) to
+                        RettighetsType.BISTANDSBEHOV,
+                Periode(
+                    periode.fom.plusMonths(2),
+                    periode.fom.plusMonths(2).plusHverdager(
+                        Hverdager(130) - førstePeriodeSykepengeerstatning.antallHverdager()
+                    ).minusDays(1)
+                ) to
+                        RettighetsType.SYKEPENGEERSTATNING,
+            )
     }
 
     @Test
@@ -2071,7 +2051,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                             fom = sak.rettighetsperiode.fom,
                             tom = sak.rettighetsperiode.tom,
                             begrunnelse = "",
-                            lovvalg = LovvalgDto("begrunnelse", EØSLand.ESP),
+                            lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.ESP),
                             medlemskap = null,
                         )
                     )
@@ -2113,14 +2093,14 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                             fom = sak.rettighetsperiode.fom,
                             tom = sak.rettighetsperiode.fom.plusMonths(2),
                             begrunnelse = "",
-                            lovvalg = LovvalgDto("begrunnelse", EØSLand.NOR),
+                            lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
                             medlemskap = MedlemskapDto("begrunnelse", false)
                         ),
                         PeriodisertManuellVurderingForLovvalgMedlemskapDto(
                             fom = sak.rettighetsperiode.fom.plusMonths(2).plusDays(1),
                             tom = null,
                             begrunnelse = "",
-                            lovvalg = LovvalgDto("begrunnelse", EØSLand.NOR),
+                            lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
                             medlemskap = MedlemskapDto("begrunnelse", true)
                         )
                     )
@@ -2159,14 +2139,14 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                             fom = sak.rettighetsperiode.fom,
                             tom = sak.rettighetsperiode.fom.plusMonths(2),
                             begrunnelse = "",
-                            lovvalg = LovvalgDto("begrunnelse", EØSLand.NOR),
+                            lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
                             medlemskap = MedlemskapDto("begrunnelse", false)
                         ),
                         PeriodisertManuellVurderingForLovvalgMedlemskapDto(
                             fom = sak.rettighetsperiode.fom.plusMonths(2).plusDays(1),
                             tom = null,
                             begrunnelse = "",
-                            lovvalg = LovvalgDto("begrunnelse", EØSLand.NOR),
+                            lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
                             medlemskap = MedlemskapDto("begrunnelse", true)
                         )
                     )
@@ -2198,7 +2178,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                             fom = nyttTidspunktForOppfyltMedlemskap,
                             tom = null,
                             begrunnelse = "",
-                            lovvalg = LovvalgDto("begrunnelse", EØSLand.NOR),
+                            lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
                             medlemskap = MedlemskapDto("begrunnelse", true)
                         )
                     )
@@ -2765,7 +2745,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                             fom = periode.fom,
                             tom = null,
                             begrunnelse = "",
-                            lovvalg = LovvalgDto("begrunnelse", EØSLand.DNK),
+                            lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.DNK),
                             medlemskap = null
                         )
                     )

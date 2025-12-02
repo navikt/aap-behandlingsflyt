@@ -29,19 +29,19 @@ import no.nav.aap.behandlingsflyt.behandling.barnetillegg.barnetilleggApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.beregningsGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.alder.aldersGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.fritakmeldeplikt.meldepliktsgrunnlagApi
-import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.refusjon.refusjonGrunnlagAPI
+import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.refusjon.refusjonGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.bistand.bistandsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.overgangarbeid.overgangArbeidGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.overgangufore.overgangUforeGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykdom.sykdomsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykepengergrunnlag.sykepengerGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.manuellinntekt.manglendeGrunnlagApi
-import no.nav.aap.behandlingsflyt.behandling.beregning.tidspunkt.beregningVurderingAPI
+import no.nav.aap.behandlingsflyt.behandling.beregning.tidspunkt.beregningVurderingApi
 import no.nav.aap.behandlingsflyt.behandling.brev.sykdomsvurderingForBrevApi
-import no.nav.aap.behandlingsflyt.behandling.foreslåvedtak.foreslaaVedtakAPI
+import no.nav.aap.behandlingsflyt.behandling.foreslåvedtak.foreslaaVedtakApi
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.medlemskap.medlemskapsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.samordningGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.institusjonAPI
+import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.institusjonApi
 import no.nav.aap.behandlingsflyt.behandling.klage.behandlendeenhet.behandlendeEnhetGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.klage.formkrav.formkravGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.klage.fullmektig.fullmektigGrunnlagApi
@@ -49,26 +49,26 @@ import no.nav.aap.behandlingsflyt.behandling.klage.klagebehandling.klagebehandli
 import no.nav.aap.behandlingsflyt.behandling.klage.klagebehandling.klagebehandlingNayGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.klage.påklagetbehandling.påklagetBehandlingGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.klage.resultat.klageresultatApi
-import no.nav.aap.behandlingsflyt.behandling.klage.trekk.trekkKlageGrunnlagAPI
+import no.nav.aap.behandlingsflyt.behandling.klage.trekk.trekkKlageGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.kvalitetssikring.kvalitetssikringApi
-import no.nav.aap.behandlingsflyt.behandling.kvalitetssikring.kvalitetssikringTilgangAPI
-import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.forutgåendeMedlemskapAPI
-import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.lovvalgMedlemskapGrunnlagAPI
-import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.lovvalgMedlemskapAPI
+import no.nav.aap.behandlingsflyt.behandling.kvalitetssikring.kvalitetssikringTilgangApi
+import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.forutgåendeMedlemskapApi
+import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.lovvalgMedlemskapGrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.lovvalgMedlemskapApi
 import no.nav.aap.behandlingsflyt.behandling.mellomlagring.mellomlagretVurderingApi
 import no.nav.aap.behandlingsflyt.behandling.oppfolgingsbehandling.avklarOppfolgingsoppgaveGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.oppfolgingsbehandling.oppfølgingsOppgaveApi
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.oppholdskravGrunnlagApi
-import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.rettighetsperiodeGrunnlagAPI
-import no.nav.aap.behandlingsflyt.behandling.revurdering.avbrytRevurderingGrunnlagAPI
-import no.nav.aap.behandlingsflyt.behandling.simulering.simuleringAPI
+import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.rettighetsperiodeGrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.revurdering.avbrytRevurderingGrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.simulering.simuleringApi
 import no.nav.aap.behandlingsflyt.behandling.student.studentgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.svarfraandreinstans.svarfraandreinstans.svarFraAndreinstansGrunnlagApi
-import no.nav.aap.behandlingsflyt.behandling.søknad.trukketSøknadGrunnlagAPI
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilkjentYtelseAPI
+import no.nav.aap.behandlingsflyt.behandling.søknad.trukketSøknadGrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilkjentYtelseApi
 import no.nav.aap.behandlingsflyt.behandling.underveis.meldepliktOverstyringGrunnlagApi
-import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerAPI
-import no.nav.aap.behandlingsflyt.drift.driftAPI
+import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerApi
+import no.nav.aap.behandlingsflyt.drift.driftApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.flyt.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flytApi
@@ -83,7 +83,7 @@ import no.nav.aap.behandlingsflyt.hendelse.kafka.tilbakekreving.TilbakekrevingKa
 import no.nav.aap.behandlingsflyt.hendelse.mottattHendelseApi
 import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
-import no.nav.aap.behandlingsflyt.pip.behandlingsflytPip
+import no.nav.aap.behandlingsflyt.pip.behandlingsflytPipApi
 import no.nav.aap.behandlingsflyt.prosessering.BehandlingsflytLogInfoProvider
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
@@ -252,7 +252,7 @@ internal fun Application.server(
                 flytApi(dataSource, repositoryRegistry, gatewayProvider)
                 fatteVedtakGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 kvalitetssikringApi(dataSource, repositoryRegistry, gatewayProvider)
-                kvalitetssikringTilgangAPI(dataSource, repositoryRegistry)
+                kvalitetssikringTilgangApi(dataSource, repositoryRegistry)
                 bistandsgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 meldepliktsgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 meldepliktOverstyringGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
@@ -265,21 +265,21 @@ internal fun Application.server(
                 sykdomsvurderingForBrevApi(dataSource, repositoryRegistry, gatewayProvider)
                 sykepengerGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 oppholdskravGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                institusjonAPI(dataSource, repositoryRegistry, gatewayProvider)
+                institusjonApi(dataSource, repositoryRegistry, gatewayProvider)
                 avklaringsbehovApi(dataSource, repositoryRegistry, gatewayProvider)
-                tilkjentYtelseAPI(dataSource, repositoryRegistry)
-                foreslaaVedtakAPI(dataSource, repositoryRegistry)
-                trukketSøknadGrunnlagAPI(dataSource, repositoryRegistry)
-                avbrytRevurderingGrunnlagAPI(dataSource, repositoryRegistry)
-                rettighetsperiodeGrunnlagAPI(dataSource, repositoryRegistry, gatewayProvider)
-                beregningVurderingAPI(dataSource, repositoryRegistry, gatewayProvider)
+                tilkjentYtelseApi(dataSource, repositoryRegistry)
+                foreslaaVedtakApi(dataSource, repositoryRegistry)
+                trukketSøknadGrunnlagApi(dataSource, repositoryRegistry)
+                avbrytRevurderingGrunnlagApi(dataSource, repositoryRegistry)
+                rettighetsperiodeGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                beregningVurderingApi(dataSource, repositoryRegistry, gatewayProvider)
                 beregningsGrunnlagApi(dataSource, repositoryRegistry)
                 aldersGrunnlagApi(dataSource, repositoryRegistry)
                 barnetilleggApi(dataSource, repositoryRegistry, gatewayProvider)
                 motorApi(dataSource)
-                behandlingsflytPip(dataSource, repositoryRegistry)
+                behandlingsflytPipApi(dataSource, repositoryRegistry)
                 auditlogApi(dataSource, repositoryRegistry)
-                refusjonGrunnlagAPI(dataSource, repositoryRegistry, gatewayProvider)
+                refusjonGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 manglendeGrunnlagApi(dataSource, repositoryRegistry)
                 mellomlagretVurderingApi(dataSource, repositoryRegistry)
                 // Klage
@@ -290,7 +290,7 @@ internal fun Application.server(
                 klagebehandlingKontorGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 klagebehandlingNayGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 klageresultatApi(dataSource, repositoryRegistry)
-                trekkKlageGrunnlagAPI(dataSource, repositoryRegistry)
+                trekkKlageGrunnlagApi(dataSource, repositoryRegistry)
                 // Svar fra kabal
                 svarFraAndreinstansGrunnlagApi(dataSource, repositoryRegistry)
                 // Oppfølgingsbehandling
@@ -301,15 +301,15 @@ internal fun Application.server(
                 aktivitetsplikt11_9GrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 // Flytt
                 brevApi(dataSource, repositoryRegistry, gatewayProvider)
-                dokumentinnhentingAPI(dataSource, repositoryRegistry, gatewayProvider)
+                dokumentinnhentingApi(dataSource, repositoryRegistry, gatewayProvider)
                 mottattHendelseApi(dataSource, repositoryRegistry, gatewayProvider)
-                underveisVurderingerAPI(dataSource, repositoryRegistry)
-                lovvalgMedlemskapAPI(dataSource, repositoryRegistry)
-                lovvalgMedlemskapGrunnlagAPI(dataSource, repositoryRegistry, gatewayProvider)
+                underveisVurderingerApi(dataSource, repositoryRegistry)
+                lovvalgMedlemskapApi(dataSource, repositoryRegistry)
+                lovvalgMedlemskapGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 samordningGrunnlag(dataSource, repositoryRegistry, gatewayProvider)
-                forutgåendeMedlemskapAPI(dataSource, repositoryRegistry, gatewayProvider)
-                driftAPI(dataSource, repositoryRegistry, gatewayProvider)
-                simuleringAPI(dataSource, repositoryRegistry, gatewayProvider)
+                forutgåendeMedlemskapApi(dataSource, repositoryRegistry, gatewayProvider)
+                driftApi(dataSource, repositoryRegistry, gatewayProvider)
+                simuleringApi(dataSource, repositoryRegistry, gatewayProvider)
                 overgangArbeidGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 // Endepunkter kun tilgjengelig lokalt og i test
                 if (!Miljø.erProd()) {

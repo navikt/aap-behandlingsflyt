@@ -16,7 +16,7 @@ import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.authorizedGet
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.tilkjentYtelseAPI(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
+fun NormalOpenAPIRoute.tilkjentYtelseApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/behandling") {
         route("/tilkjentV2/{referanse}") {
             authorizedGet<BehandlingReferanse, TilkjentYtelse2Dto>(

@@ -22,7 +22,7 @@ import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagAPI(
+fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagApi(
     dataSource: DataSource,
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,
