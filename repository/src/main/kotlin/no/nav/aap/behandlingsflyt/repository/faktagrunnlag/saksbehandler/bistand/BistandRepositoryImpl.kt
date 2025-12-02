@@ -52,7 +52,6 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
 
     private fun bistandvurderingRowMapper(row: Row): Bistandsvurdering {
         return Bistandsvurdering(
-            id = row.getLong("ID"),
             begrunnelse = row.getString("BEGRUNNELSE"),
             erBehovForAktivBehandling = row.getBoolean("BEHOV_FOR_AKTIV_BEHANDLING"),
             erBehovForArbeidsrettetTiltak = row.getBoolean("BEHOV_FOR_ARBEIDSRETTET_TILTAK"),

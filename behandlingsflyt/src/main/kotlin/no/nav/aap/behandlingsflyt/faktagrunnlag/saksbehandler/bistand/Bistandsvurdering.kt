@@ -5,7 +5,6 @@ import java.time.Instant
 import java.time.LocalDate
 
 data class Bistandsvurdering(
-    val id: Long? = null,
     val begrunnelse: String,
     val erBehovForAktivBehandling: Boolean,
     val erBehovForArbeidsrettetTiltak: Boolean,
