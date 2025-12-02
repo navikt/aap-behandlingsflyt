@@ -47,6 +47,10 @@ class OpprettJobbForFritakMeldepliktJobbUtfører(
 
         override val beskrivelse = "Start jobb for å sjekke behov for revurdering pga fritak meldeplikt."
 
+        /**
+         * Kjøres på både mandag og onsdag for å fange opp tidlig utbetaling i helligdager. På sikt bør vi få en litt
+         * mindre sløsende løsning.
+         */
         override val cron = CronExpression.createWithoutSeconds("10 2 * * 1,3")
     }
 }
