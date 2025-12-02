@@ -37,6 +37,7 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
 
         val sykdomsvurderingTidslinje = grunnlag.sykdomsvurderinger
             .sortedBy { it.opprettet }
+            .filter {it.vurderingenGjelderFra <= grunnlag.sisteDagMedMuligYtelse } // Midlertidig fiks pga produksjonsfeil
             .map { vurdering ->
                 Tidslinje(
                     Periode(
