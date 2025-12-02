@@ -119,10 +119,30 @@ class KvalitetssikringsSteg private constructor(
             return false
         }
 
-        return avklaringsbehovene.alle()
+        val aktuelleAvklaringsbehovForKvalitetssikring = avklaringsbehovene.alle()
             .filter { it.kreverKvalitetssikring() }
             .filter { it.status() != Status.AVBRUTT }
-            .all { it.status() == Status.KVALITETSSIKRET }
+
+        /**
+         * Aldri tidligere blitt kvalitetssikret
+         */
+        if (!aktuelleAvklaringsbehovForKvalitetssikring.any { it.erKvalitetssikretTidligere() }) {
+            return false
+        }
+
+        /**
+         * Når kvalitetssikrer godkjenner, men beslutter underkjenner så skal steget sendes på nytt til kvalitetssikring
+         */
+        aktuelleAvklaringsbehovForKvalitetssikring.forEach { avklaringsbehov ->
+            val sistReturnertFraBeslutter = avklaringsbehov.historikk.lastOrNull { historikk -> historikk.status == Status.SENDT_TILBAKE_FRA_BESLUTTER }
+            val sistKvalitetssikret = avklaringsbehov.historikk.lastOrNull { historikk -> historikk.status == Status.KVALITETSSIKRET }
+
+            if (sistReturnertFraBeslutter != null && sistKvalitetssikret != null) {
+                return sistKvalitetssikret > sistReturnertFraBeslutter
+            }
+        }
+
+        return true
     }
 
     companion object : FlytSteg {
