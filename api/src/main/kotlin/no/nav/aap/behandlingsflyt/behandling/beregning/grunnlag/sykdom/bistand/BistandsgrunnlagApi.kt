@@ -74,7 +74,7 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(
 
                     val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
                     val perioderVedtaketBehøverVurdering =
-                        avklaringsbehov.hentBehovForDefinisjon(Definisjon.AVKLAR_BISTANDSBEHOV)?.perioderSomSkalLøses()
+                        avklaringsbehov.hentBehovForDefinisjon(Definisjon.AVKLAR_BISTANDSBEHOV)?.perioderVedtaketBehøverVurdering()
                             .orEmpty()
 
                     BistandGrunnlagResponse(
