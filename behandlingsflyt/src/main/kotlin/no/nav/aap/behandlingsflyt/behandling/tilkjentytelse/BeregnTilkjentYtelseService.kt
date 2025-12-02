@@ -25,6 +25,7 @@ import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`100_PROSENT`
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`66_PROSENT`
+import org.slf4j.LoggerFactory
 import java.time.LocalDate
 
 class TilkjentYtelseGrunnlag(
@@ -39,6 +40,8 @@ class TilkjentYtelseGrunnlag(
 ) : Faktagrunnlag
 
 class BeregnTilkjentYtelseService(val grunnlag: TilkjentYtelseGrunnlag) {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     internal companion object {
         private const val ANTALL_ÅRLIGE_ARBEIDSDAGER = 260
@@ -172,6 +175,7 @@ class BeregnTilkjentYtelseService(val grunnlag: TilkjentYtelseGrunnlag) {
         val muligUtbetalingsdato = when {
             opplysningerMottatt != null -> opplysningerMottatt
             underveisperiode.meldepliktStatus == MeldepliktStatus.FRITAK -> {
+                log.info("Traff sjekk for meldepliktstatus == FRITAK.")
                 unntakFritaksUtbetalingDato[førsteMeldedagForMeldeperiode]
                     ?: førsteMeldedagForMeldeperiode
             }
