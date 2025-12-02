@@ -4,8 +4,6 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.EnhetGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapArbeidInntektGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLand
-import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LandMedAvtale
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
@@ -114,7 +112,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
                 setLocalDate(1, manuellVurdering.fom)
                 setLocalDate(2, manuellVurdering.tom)
                 setString(3, manuellVurdering.lovvalg.begrunnelse)
-                setEnumName(4, manuellVurdering.lovvalg.lovvalgsEØSLand as Enum<*>?)
+                setEnumName(4, manuellVurdering.lovvalg.lovvalgsEØSLandEllerLandMedAvtale)
                 setString(5, manuellVurdering.medlemskap?.begrunnelse)
                 setBoolean(6, manuellVurdering.medlemskap?.varMedlemIFolketrygd)
                 setBoolean(7, overstyrt)
@@ -636,11 +634,7 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         ManuellVurderingForLovvalgMedlemskap(
             lovvalg = LovvalgDto(
                 begrunnelse = row.getString("tekstvurdering_lovvalg"),
-                lovvalgsEØSLand = row.getString("lovvalgs_land").let { code ->
-                    enumValues<EØSLand>().find { it.name == code }
-                        ?: enumValues<LandMedAvtale>().find { it.name == code }
-                        ?: throw IllegalArgumentException("Ukjent landkode: $code")
-                }
+                lovvalgsEØSLandEllerLandMedAvtale = row.getEnum("lovvalgs_land")
             ),
             medlemskap = row.getStringOrNull("tekstvurdering_medlemskap")?.let { tekstvurdering_medlemskap ->
                 MedlemskapDto(
