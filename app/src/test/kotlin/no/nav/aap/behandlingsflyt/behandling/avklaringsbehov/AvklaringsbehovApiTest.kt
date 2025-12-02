@@ -8,7 +8,7 @@ import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
 
-class AvklaringsbehovAPITest {
+class AvklaringsbehovApiTest {
     data class P(
         override val fom: LocalDate,
         override val tom: LocalDate?,

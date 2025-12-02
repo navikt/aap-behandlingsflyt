@@ -23,7 +23,7 @@ import no.nav.aap.tilgang.authorizedPost
 import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.refusjonGrunnlagAPI(
+fun NormalOpenAPIRoute.refusjonGrunnlagApi(
     dataSource: DataSource,
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,
