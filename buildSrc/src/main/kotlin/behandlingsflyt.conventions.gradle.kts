@@ -7,12 +7,12 @@ plugins {
     id("org.jetbrains.dokka")
 }
 
-group = "no.nav.aap"
+group = "no.nav.aap.behandlingsflyt"
 version = project.findProperty("version")?.toString() ?: "0.0.0"
 
 repositories {
-    mavenCentral()
     maven("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
+    mavenCentral()
     mavenLocal()
 }
 

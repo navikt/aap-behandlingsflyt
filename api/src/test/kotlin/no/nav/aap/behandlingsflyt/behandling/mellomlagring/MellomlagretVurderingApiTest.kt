@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
 @Fakes
-class MellomlagretVurderingAPITest : BaseApiTest() {
+class MellomlagretVurderingApiTest : BaseApiTest() {
     @Test
     fun `hente ut mellomlagret vurdering fra API`() {
         val ds = MockDataSource()

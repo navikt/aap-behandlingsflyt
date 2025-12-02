@@ -14,7 +14,7 @@ import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.behandlingsflytPip(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
+fun NormalOpenAPIRoute.behandlingsflytPipApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/pip/api") {
         route("/sak/{saksnummer}/identer") {
             authorizedGet<SakDTO, IdenterDTO>(

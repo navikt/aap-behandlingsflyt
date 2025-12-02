@@ -18,7 +18,7 @@ import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.utbetal.simulering.UtbetalingOgSimuleringDto
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.simuleringAPI(
+fun NormalOpenAPIRoute.simuleringApi(
     dataSource: DataSource,
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,

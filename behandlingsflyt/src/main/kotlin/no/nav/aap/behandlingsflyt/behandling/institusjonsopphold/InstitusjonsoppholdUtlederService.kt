@@ -286,7 +286,7 @@ class InstitusjonsoppholdUtlederService(
         }
         val førsteDagMedMuligReduksjon = fom.plusMonths(3)
         val justertPeriode = Periode(fom, segment.tom())
-        return justertPeriode.inneholder(førsteDagMedMuligReduksjon) && (fom.plusMonths(2) < LocalDate.now() || Miljø.er() == MiljøKode.DEV)
+        return justertPeriode.inneholder(førsteDagMedMuligReduksjon) && (fom.plusMonths(2) <= LocalDate.now() || Miljø.er() == MiljøKode.DEV)
     }
 
     private fun <T> opprettTidslinje(segmenter: List<Segment<T>>): Tidslinje<Boolean> {
