@@ -215,7 +215,9 @@ class MedlemskapLovvalgVurderingService {
         rettighetsPeriode: Periode
     ): TilhørighetVurdering {
         val manglerEØS =
-            grunnlag?.statsborgerskap?.none { it.land in enumValues<EØSLandEllerLandMedAvtale>().map { eøsLand -> eøsLand.name } }
+            grunnlag?.statsborgerskap
+                ?.none { it.land in EØSLandEllerLandMedAvtale.gyldigeEØSLand.map { eøsLand -> eøsLand.name } }
+
         val manglerStatsborgerskapGrunnlag = grunnlag?.statsborgerskap?.map {
             ManglerStatsborgerskapGrunnlag(
                 land = it.land,

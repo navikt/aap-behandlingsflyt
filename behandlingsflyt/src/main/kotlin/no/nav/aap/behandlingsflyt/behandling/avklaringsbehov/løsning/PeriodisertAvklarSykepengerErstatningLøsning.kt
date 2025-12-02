@@ -1,0 +1,66 @@
+package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonTypeName
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarSykepengerErstatningLøser
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.PeriodisertSykepengerVurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykepengerVurderingDto
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.VURDER_SYKEPENGEERSTATNING_KODE
+import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.lookup.repository.RepositoryProvider
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeName(value = VURDER_SYKEPENGEERSTATNING_KODE)
+@Deprecated("Bruk heller PeriodisertAvklarSykepengerErstatningLøsning")
+class AvklarSykepengerErstatningLøsning(
+    @param:JsonProperty(
+        "sykepengeerstatningVurdering",
+        required = true
+    ) val sykepengeerstatningVurdering: SykepengerVurderingDto,
+    @param:JsonProperty(
+        "behovstype",
+        required = true,
+        defaultValue = VURDER_SYKEPENGEERSTATNING_KODE
+    ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5007`
+) : EnkeltAvklaringsbehovLøsning {
+    override fun løs(
+        repositoryProvider: RepositoryProvider,
+        kontekst: AvklaringsbehovKontekst,
+        gatewayProvider: GatewayProvider
+    ): LøsningsResultat {
+        return AvklarSykepengerErstatningLøser(repositoryProvider, gatewayProvider).løs(kontekst, PeriodisertAvklarSykepengerErstatningLøsning(
+            behovstype = behovstype,
+            løsningerForPerioder = listOf(PeriodisertSykepengerVurderingDto(
+                begrunnelse = sykepengeerstatningVurdering.begrunnelse,
+                dokumenterBruktIVurdering = sykepengeerstatningVurdering.dokumenterBruktIVurdering,
+                harRettPå = sykepengeerstatningVurdering.harRettPå,
+                grunn = sykepengeerstatningVurdering.grunn,
+                fom = sykepengeerstatningVurdering.gjelderFra,
+                tom = null,
+            ))
+        ))
+    }
+}
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeName(value = VURDER_SYKEPENGEERSTATNING_KODE)
+class PeriodisertAvklarSykepengerErstatningLøsning(
+    @param:JsonProperty(
+        "behovstype",
+        required = true,
+        defaultValue = VURDER_SYKEPENGEERSTATNING_KODE
+    ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5007`,
+    override val løsningerForPerioder: List<PeriodisertSykepengerVurderingDto>,
+): PeriodisertAvklaringsbehovLøsning<PeriodisertSykepengerVurderingDto> {
+    override fun løs(
+        repositoryProvider: RepositoryProvider,
+        kontekst: AvklaringsbehovKontekst,
+        gatewayProvider: GatewayProvider
+    ): LøsningsResultat {
+        return AvklarSykepengerErstatningLøser(repositoryProvider, gatewayProvider).løs(kontekst, this)
+    }
+}

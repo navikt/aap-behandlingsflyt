@@ -357,8 +357,9 @@ private fun utledVurdertGruppe(
                 .filter { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
                 .filter { avklaringsbehov -> !avklaringsbehov.erKvalitetssikretTidligere() }
 
-            val skalTilStegForBehov = flyt.skalTilStegForBehov(relevanteBehov)
-            val stegType = requireNotNull(skalTilStegForBehov)
+            val stegType = requireNotNull(flyt.skalTilStegForBehov(relevanteBehov)) {
+                "Kunne ikke utlede skalTilStegForBehov med relevante behov: $relevanteBehov"
+            }
 
             return stegType.gruppe to stegType
         } else if (aktivtSteg == StegType.FATTE_VEDTAK) {
@@ -366,8 +367,9 @@ private fun utledVurdertGruppe(
                 .filter { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
                 .filter { avklaringsbehov -> !avklaringsbehov.erTotrinnsVurdert() }
 
-            val skalTilStegForBehov = flyt.skalTilStegForBehov(relevanteBehov)
-            val stegType = requireNotNull(skalTilStegForBehov)
+            val stegType = requireNotNull(flyt.skalTilStegForBehov(relevanteBehov)) {
+                "Kunne ikke utlede skalTilStegForBehov med relevante behov: $relevanteBehov"
+            }
 
             return stegType.gruppe to stegType
         }

@@ -50,9 +50,10 @@ class AvklaringsbehovService(
             definisjon,
             vedtakBehøverVurdering = vedtakBehøverVurdering,
             perioderSomIkkeErTilstrekkeligVurdert = { null },
+            perioderVedtaketBehøverVurdering = { null },
             erTilstrekkeligVurdert = erTilstrekkeligVurdert,
-            tilbakestillGrunnlag,
-            kontekst
+            tilbakestillGrunnlag = tilbakestillGrunnlag,
+            kontekst = kontekst
         )
 
     }
@@ -88,6 +89,7 @@ class AvklaringsbehovService(
          * en menneskelig vurdering av [definisjon].
          */
         vedtakBehøverVurdering: () -> Boolean,
+        perioderVedtaketBehøverVurdering: () -> Set<Periode>?,
 
         /** Er avklaringsbehovet [definisjon] tilstrekkelig vurdert for å fortsette behandlingen?
          *
@@ -121,19 +123,19 @@ class AvklaringsbehovService(
                 when (avklaringsbehov?.status()) {
                     OPPRETTET -> {
                         /* ønsket tilstand er OPPRETTET */
-                        perioderSomIkkeErTilstrekkeligVurdert()?.let {
-                            avklaringsbehovene.oppdaterPerioder(
-                                avklaringsbehov.definisjon,
-                                it
-                            )
-                        }
+                        avklaringsbehovene.oppdaterPerioder(
+                            avklaringsbehov.definisjon,
+                            perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
+                            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()
+                        )
                     }
 
                     null, AVBRUTT ->
                         avklaringsbehovene.leggTil(
                             listOf(definisjon),
                             definisjon.løsesISteg,
-                            perioderSomIkkeErTilstrekkeligVurdert()
+                            perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
+                            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()
                         )
 
                     TOTRINNS_VURDERT,
@@ -162,12 +164,12 @@ class AvklaringsbehovService(
                 when (avklaringsbehov.status()) {
                     OPPRETTET -> {
                         /* forbli OPPRETTET */
-                        perioderSomIkkeErTilstrekkeligVurdert()?.let {
-                            avklaringsbehovene.oppdaterPerioder(
-                                avklaringsbehov.definisjon,
-                                it
-                            )
-                        }
+                        avklaringsbehovene.oppdaterPerioder(
+                            avklaringsbehov.definisjon,
+                            perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
+                            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()
+                        )
+
                     }
 
                     AVSLUTTET,
@@ -179,7 +181,8 @@ class AvklaringsbehovService(
                         avklaringsbehovene.leggTil(
                             listOf(definisjon),
                             definisjon.løsesISteg,
-                            perioderSomIkkeErTilstrekkeligVurdert(),
+                            perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
+                            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()
                         )
                     }
                 }
@@ -206,7 +209,7 @@ class AvklaringsbehovService(
             }
         }
     }
-    
+
     private fun oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
         avklaringsbehovene: Avklaringsbehovene,
         behandlingRepository: BehandlingRepository,
@@ -219,68 +222,76 @@ class AvklaringsbehovService(
         nårVurderingErGyldig: () -> Tidslinje<Boolean>?,
         tilbakestillGrunnlag: () -> Unit,
     ) {
+        val (behøverVurdering, perioderVedtaketBehøverVurdering) = when (kontekst.vurderingType) {
+            VurderingType.FØRSTEGANGSBEHANDLING,
+            VurderingType.REVURDERING -> {
+                val perioderVilkåretErRelevant = nårVurderingErRelevant(kontekst)
+
+                if (perioderVilkåretErRelevant.segmenter()
+                        .any { it.verdi } && kontekst.vurderingsbehovRelevanteForSteg.any { it in tvingerAvklaringsbehov }
+                ) {
+                    Pair(
+                        true, emptySet() // Vi behøver vurdering, men har ingen obligatoriske perioder
+                    )
+                } else {
+
+                    val perioderVilkåretErVurdert = kontekst.forrigeBehandlingId
+                        ?.let { forrigeBehandlingId ->
+                            val forrigeBehandling = behandlingRepository.hent(forrigeBehandlingId)
+                            val forrigeRettighetsperiode =
+                                /* Lagrer vi ned rettighetsperioden som ble brukt for en behandling noe sted? */
+                                vilkårsresultatRepository.hent(forrigeBehandlingId)
+                                    .finnVilkår(Vilkårtype.ALDERSVILKÅRET)
+                                    .tidslinje()
+                                    .helePerioden()
+
+                            nårVurderingErRelevant(
+                                kontekst.copy(
+                                    /* TODO: hacky. Er faktisk bare behandlingId som brukes av sjekkene. */
+                                    behandlingId = forrigeBehandlingId,
+                                    forrigeBehandlingId = forrigeBehandling.forrigeBehandlingId,
+                                    rettighetsperiode = forrigeRettighetsperiode,
+                                    behandlingType = forrigeBehandling.typeBehandling(),
+                                )
+                            )
+                        }
+                        .orEmpty()
+
+                    val perioderSomBehøverVurdering =
+                        perioderVilkåretErRelevant.leftJoin(perioderVilkåretErVurdert) { erRelevant, erVurdert ->
+                            erRelevant && erVurdert != true
+                        }.filter { it.verdi }.komprimer().perioder().toSet()
+                    Pair(perioderSomBehøverVurdering.isNotEmpty(), perioderSomBehøverVurdering)
+                }
+            }
+
+            VurderingType.MELDEKORT -> Pair(false, emptySet())
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT -> Pair(false, emptySet())
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9 -> Pair(false, emptySet())
+            VurderingType.IKKE_RELEVANT -> Pair(false, emptySet())
+        }
+
         oppdaterAvklaringsbehov(
             avklaringsbehovene = avklaringsbehovene,
             definisjon = definisjon,
-            vedtakBehøverVurdering = {
-                when (kontekst.vurderingType) {
-                    VurderingType.FØRSTEGANGSBEHANDLING,
-                    VurderingType.REVURDERING -> {
-                        val perioderVilkåretErRelevant = nårVurderingErRelevant(kontekst)
-
-                        if (perioderVilkåretErRelevant.segmenter()
-                                .any { it.verdi } && kontekst.vurderingsbehovRelevanteForSteg.any { it in tvingerAvklaringsbehov }
-                        ) {
-                            return@oppdaterAvklaringsbehov true
-                        }
-
-                        val perioderVilkåretErVurdert = kontekst.forrigeBehandlingId
-                            ?.let { forrigeBehandlingId ->
-                                val forrigeBehandling = behandlingRepository.hent(forrigeBehandlingId)
-                                val forrigeRettighetsperiode =
-                                    /* Lagrer vi ned rettighetsperioden som ble brukt for en behandling noe sted? */
-                                    vilkårsresultatRepository.hent(forrigeBehandlingId)
-                                        .finnVilkår(Vilkårtype.ALDERSVILKÅRET)
-                                        .tidslinje()
-                                        .helePerioden()
-
-                                nårVurderingErRelevant(
-                                    kontekst.copy(
-                                        /* TODO: hacky. Er faktisk bare behandlingId som brukes av sjekkene. */
-                                        behandlingId = forrigeBehandlingId,
-                                        forrigeBehandlingId = forrigeBehandling.forrigeBehandlingId,
-                                        rettighetsperiode = forrigeRettighetsperiode,
-                                        behandlingType = forrigeBehandling.typeBehandling(),
-                                    )
-                                )
-                            }
-                            .orEmpty()
-
-                        perioderVilkåretErRelevant.leftJoin(perioderVilkåretErVurdert) { erRelevant, erVurdert ->
-                            erRelevant && erVurdert != true
-                        }.segmenter().any { it.verdi }
-                    }
-
-                    VurderingType.MELDEKORT -> false
-                    VurderingType.EFFEKTUER_AKTIVITETSPLIKT -> false
-                    VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9 -> false
-                    VurderingType.IKKE_RELEVANT -> false
-                }
-            },
-            perioderSomIkkeErTilstrekkeligVurdert = {
-                if (perioderSomIkkeErTilstrekkeligVurdert() != null) {
-                    perioderSomIkkeErTilstrekkeligVurdert()!!.toSet()
-                } else {
-                    if (nårVurderingErGyldig() == null) {
-                        null
+            vedtakBehøverVurdering = { behøverVurdering },
+            perioderVedtaketBehøverVurdering = { perioderVedtaketBehøverVurdering },
+            perioderSomIkkeErTilstrekkeligVurdert =
+                {
+                    if (perioderSomIkkeErTilstrekkeligVurdert() != null) {
+                        perioderSomIkkeErTilstrekkeligVurdert()!!.toSet()
                     } else {
-                        nårVurderingErRelevant(kontekst).leftJoin(nårVurderingErGyldig()!!) { erRelevant, erGyldig ->
-                            !erRelevant || erGyldig == true
-                        }.komprimer().filter { !it.verdi }.perioder().toSet()
+                        if (nårVurderingErGyldig() == null) {
+                            null
+                        } else {
+                            nårVurderingErRelevant(kontekst).leftJoin(nårVurderingErGyldig()!!) { erRelevant, erGyldig ->
+                                !erRelevant || erGyldig == true
+                            }.komprimer().filter { !it.verdi }.perioder().toSet()
+                        }
                     }
-                }
-            },
-            erTilstrekkeligVurdert = { false },
+                },
+            erTilstrekkeligVurdert =
+                { false },
             tilbakestillGrunnlag = tilbakestillGrunnlag,
             kontekst = kontekst
         )
