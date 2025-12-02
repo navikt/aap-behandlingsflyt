@@ -564,7 +564,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 assertThat(it.barnetillegg).isEqualTo(Beløp(37))
                 assertThat(it.antallBarn).isEqualTo(1)
             },
-            Periode(fom = LocalDate.of(2026, 1, 1), tom = periode.tom) to {
+            Periode(fom = LocalDate.of(2026, 1, 1), tom = tilkjentYtelsePeriode.tom) to {
                 assertThat(it.barnetillegg).isEqualTo(Beløp(38))
                 assertThat(it.antallBarn).isEqualTo(1)
             })
