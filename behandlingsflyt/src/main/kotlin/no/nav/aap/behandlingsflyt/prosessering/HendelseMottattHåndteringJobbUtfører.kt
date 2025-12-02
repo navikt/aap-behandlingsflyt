@@ -107,9 +107,8 @@ class HendelseMottattHåndteringJobbUtfører(
                         referanse = referanse,
                         mottattTidspunkt = mottattTidspunkt,
                         brevkategori = innsendingType,
-                        melding = parsedMelding as DialogMelding,
+                        melding = parsedMelding,
                     )
-
             }
             else -> {
                 håndterMottattDokumentService.håndterMottatteDokumenter(

@@ -187,13 +187,36 @@ class HåndterMottattDokumentService(
         referanse: InnsendingReferanse,
         mottattTidspunkt: LocalDateTime,
         brevkategori: InnsendingType,
-        melding: DialogMelding
+        melding: Melding?
     ) {
-        log.info("Mottok dokument på sak-id $sakId, og referanse $referanse, med brevkategori $brevkategori.")
+        val sak = sakService.hent(sakId)
+        val periode = utledPeriode(brevkategori, mottattTidspunkt, melding)
+        val vurderingsbehov = utledVurderingsbehov(brevkategori, melding, periode)
+        val årsakTilOpprettelse = utledÅrsakTilOpprettelse(brevkategori, melding)
 
-        val behandlingId = finnSisteIverksatteBehandling(sakId)
-        log.info("Mottatt dialogmelding for sakId $sakId og eksternBehandlingId")
-        mottaDokumentService.markerSomBehandlet(sakId, behandlingId, referanse)
+        val opprettetBehandling = sakOgBehandlingService.finnEllerOpprettBehandling(
+            sak.saksnummer,
+            VurderingsbehovOgÅrsak(
+                årsak = årsakTilOpprettelse,
+                vurderingsbehov = vurderingsbehov,
+                opprettet = mottattTidspunkt,
+                beskrivelse = when (melding) {
+                    is ManuellRevurderingV0 -> melding.beskrivelse
+                    is OmgjøringKlageRevurderingV0 -> melding.beskrivelse
+                    else -> null
+                }
+            )
+        )
+
+        require(opprettetBehandling is SakOgBehandlingService.Ordinær)
+        mottaDokumentService.markerSomBehandlet(sakId, opprettetBehandling.åpenBehandling.id, referanse)
+
+        prosesserBehandling.triggProsesserBehandling(
+            opprettetBehandling,
+            listOf("trigger" to DefaultJsonMapper.toJson(vurderingsbehov.filter { it.type == Vurderingsbehov.MOTTATT_DIALOGMELDING }
+                .map { it.type }))
+        )
+
 
     }
 
