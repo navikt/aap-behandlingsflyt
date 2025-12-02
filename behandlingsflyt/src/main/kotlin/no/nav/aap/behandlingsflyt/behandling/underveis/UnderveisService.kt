@@ -203,6 +203,7 @@ class UnderveisService(
             meldeperioder = meldeperioder,
             vedtaksdatoFørstegangsbehandling = vedtaksdatoFørstegangsbehandling?.toLocalDate(),
             reduksjonArbeidOverGrenseEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.ReduksjonArbeidOverGrense),
+            unntakMeldepliktDesemberEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.UnntakMeldepliktDesember),
         )
     }
 

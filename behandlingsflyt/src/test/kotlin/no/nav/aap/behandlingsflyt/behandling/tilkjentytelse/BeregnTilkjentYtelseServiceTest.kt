@@ -36,6 +36,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
+import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
 import java.time.LocalDate
 
@@ -63,7 +64,7 @@ class BeregnTilkjentYtelseServiceTest {
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
-                 listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
             )
         )
 
@@ -185,6 +186,116 @@ class BeregnTilkjentYtelseServiceTest {
                 )
             )
         )
+    }
+
+    // Sjekker at utbetalingsdato blir satt til samme dag som opplysninger mottatt for helligdagsunntak
+    @ValueSource(ints = [17, 22])
+    @ParameterizedTest
+    fun `utbetalingsdato i desember`(levererMeldekortPåDato: Int) {
+        val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
+        val beregningsgrunnlag = Grunnlag11_19(
+            grunnlaget = GUnit(BigDecimal(4)),
+            erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(0),
+            inntekter = emptyList()
+        )
+        // Periode det skrives timer for
+        val periode = Periode(LocalDate.of(2025, 12, 8), LocalDate.of(2025, 12, 21))
+
+        val underveisgrunnlag = UnderveisGrunnlag(
+            1L, perioder = listOf(
+                underveisperiode(
+                    periode = periode,
+                    gradering = Prosent.`100_PROSENT`,
+                    institusjonsOppholdReduksjon = Prosent.`0_PROSENT`,
+                    meldepliktStatus = MeldepliktStatus.MELDT_SEG,
+                    opplysningerMottatt = LocalDate.of(2025, 12, levererMeldekortPåDato),
+                ),
+            )
+        )
+
+
+        val barnetilleggGrunnlag = BarnetilleggGrunnlag(listOf())
+        val samordningsgrunnlag = SamordningGrunnlag(emptySet())
+        val samordningUføre = SamordningUføreGrunnlag(SamordningUføreVurdering("", emptyList(), "ident"))
+
+        val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
+            vurdering = SamordningArbeidsgiverVurdering(
+                "",
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+            )
+        )
+
+        val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                barnetilleggGrunnlag,
+                samordningsgrunnlag,
+                samordningUføre,
+                samordningArbeidsgiver,
+                unntakMeldepliktDesemberEnabled = true
+            )
+        ).beregnTilkjentYtelse()
+
+        assertThat(beregnTilkjentYtelseService.segmenter()).hasSize(1)
+        assertThat(beregnTilkjentYtelseService.segmenter().first().verdi.utbetalingsdato)
+            .isEqualTo(LocalDate.of(2025, 12, levererMeldekortPåDato))
+    }
+
+    @Test
+    fun `tidligere utbetalingsdato for fritak i desember`() {
+        val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
+        val beregningsgrunnlag = Grunnlag11_19(
+            grunnlaget = GUnit(BigDecimal(4)),
+            erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(0),
+            inntekter = emptyList()
+        )
+        // Periode det skrives timer for
+        val periode = Periode(LocalDate.of(2025, 12, 8), LocalDate.of(2025, 12, 21))
+
+        val underveisgrunnlag = UnderveisGrunnlag(
+            1L, perioder = listOf(
+                underveisperiode(
+                    periode = periode,
+                    gradering = Prosent.`100_PROSENT`,
+                    institusjonsOppholdReduksjon = Prosent.`0_PROSENT`,
+                    meldepliktStatus = MeldepliktStatus.FRITAK,
+                    opplysningerMottatt = null
+                ),
+            )
+        )
+
+
+        val barnetilleggGrunnlag = BarnetilleggGrunnlag(listOf())
+        val samordningsgrunnlag = SamordningGrunnlag(emptySet())
+        val samordningUføre = SamordningUføreGrunnlag(SamordningUføreVurdering("", emptyList(), "ident"))
+
+        val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
+            vurdering = SamordningArbeidsgiverVurdering(
+                "",
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+            )
+        )
+
+        val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                barnetilleggGrunnlag,
+                samordningsgrunnlag,
+                samordningUføre,
+                samordningArbeidsgiver,
+                unntakMeldepliktDesemberEnabled = true
+            )
+        ).beregnTilkjentYtelse()
+
+        assertThat(beregnTilkjentYtelseService.segmenter()).hasSize(1)
+        assertThat(beregnTilkjentYtelseService.segmenter().first().verdi.utbetalingsdato)
+            .isEqualTo(LocalDate.of(2025, 12, 22))
     }
 
     @Test
@@ -886,7 +997,7 @@ class BeregnTilkjentYtelseServiceTest {
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "Har fått sluttpakke",
-                listOf(Periode(LocalDate.of(2023, 6, 1), LocalDate.of(2023, 8, 1))) , vurdertAv = "ident"
+                listOf(Periode(LocalDate.of(2023, 6, 1), LocalDate.of(2023, 8, 1))), vurdertAv = "ident"
             )
         )
 
@@ -1106,7 +1217,7 @@ class BeregnTilkjentYtelseServiceTest {
             gjennomsnittligInntektIG = GUnit(0),
             inntekter = emptyList()
         )
-        val periode1 = Periode(LocalDate.of(2023, 1,1), LocalDate.of(2023, 1, 14))
+        val periode1 = Periode(LocalDate.of(2023, 1, 1), LocalDate.of(2023, 1, 14))
         val periode2 = Periode(LocalDate.of(2023, 1, 15), LocalDate.of(2023, 1, 29))
         val periode3 = Periode(LocalDate.of(2023, 1, 30), LocalDate.of(2023, 2, 13))
 
@@ -1114,7 +1225,13 @@ class BeregnTilkjentYtelseServiceTest {
             1L, perioder = listOf(
                 underveisperiode(periode1, Prosent.`100_PROSENT`, Prosent.`0_PROSENT`, MeldepliktStatus.FØR_VEDTAK),
                 underveisperiode(periode2, Prosent.`100_PROSENT`, Prosent.`0_PROSENT`, MeldepliktStatus.FRITAK),
-                underveisperiode(periode3, Prosent.`100_PROSENT`, Prosent.`0_PROSENT`, MeldepliktStatus.MELDT_SEG, opplysningerMottatt = periode3.tom.plusDays(1)),
+                underveisperiode(
+                    periode3,
+                    Prosent.`100_PROSENT`,
+                    Prosent.`0_PROSENT`,
+                    MeldepliktStatus.MELDT_SEG,
+                    opplysningerMottatt = periode3.tom.plusDays(1)
+                ),
             )
         )
 
@@ -1157,17 +1274,19 @@ class BeregnTilkjentYtelseServiceTest {
             barnetillegg = Beløp("0"),
             utbetalingsdato = LocalDate.now()
         )
-        assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
-            Segment(periode = periode1, verdi = tilkjent.copy(utbetalingsdato = periode1.tom.plusDays(9))),
-            Segment(periode = periode2, verdi = tilkjent.copy(utbetalingsdato = periode2.tom.plusDays(1))),
-            Segment(
-                periode = Periode(periode3.fom, LocalDate.of(2023, 1, 31)),
-                verdi = tilkjent.copy(utbetalingsdato = periode3.tom.plusDays(1))
-            ),
-            Segment(
-                periode = Periode(LocalDate.of(2023, 2, 1), periode3.tom),
-                verdi = tilkjent.copy(barnetilleggsats = Beløp("35.00"), utbetalingsdato = periode3.tom.plusDays(1))
-            ),
+        assertThat(beregnTilkjentYtelseService.segmenter()).usingRecursiveComparison().isEqualTo(
+            listOf(
+                Segment(periode = periode1, verdi = tilkjent.copy(utbetalingsdato = periode1.tom.plusDays(9))),
+                Segment(periode = periode2, verdi = tilkjent.copy(utbetalingsdato = periode2.tom.plusDays(1))),
+                Segment(
+                    periode = Periode(periode3.fom, LocalDate.of(2023, 1, 31)),
+                    verdi = tilkjent.copy(utbetalingsdato = periode3.tom.plusDays(1))
+                ),
+                Segment(
+                    periode = Periode(LocalDate.of(2023, 2, 1), periode3.tom),
+                    verdi = tilkjent.copy(barnetilleggsats = Beløp("35.00"), utbetalingsdato = periode3.tom.plusDays(1))
+                ),
+            )
         )
     }
 

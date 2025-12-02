@@ -26,6 +26,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     IkkeAntaNullTimerArbeidet,
     NyBrevbyggerV3,
     LagreVedtakIFatteVedtak,
+    UnntakMeldepliktDesember,
     ReduksjonArbeidOverGrense,
     ForutgaendeMedlemskapPeriodisert
     ;
