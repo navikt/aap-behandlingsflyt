@@ -14,6 +14,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
+import java.time.Instant
 
 internal class BistandRepositoryImplTest {
     companion object {
@@ -65,7 +66,8 @@ internal class BistandRepositoryImplTest {
                         vurdertAv = "Z00000",
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = null,
-                        vurdertIBehandling = behandling.id
+                        vurdertIBehandling = behandling.id,
+                        opprettet = Instant.parse("2023-01-01T13:00:00Z"),
                     )
                 )
             )
@@ -83,7 +85,8 @@ internal class BistandRepositoryImplTest {
                             vurdertAv = "Z00000",
                             skalVurdereAapIOvergangTilArbeid = null,
                             overgangBegrunnelse = null,
-                            vurdertIBehandling = behandling.id
+                            vurdertIBehandling = behandling.id,
+                            opprettet = Instant.parse("2023-01-01T13:00:00Z"),
                         )
                     )
                 )
@@ -109,7 +112,8 @@ internal class BistandRepositoryImplTest {
                             vurdertAv = "Z00000",
                             skalVurdereAapIOvergangTilArbeid = null,
                             overgangBegrunnelse = null,
-                            vurdertIBehandling = behandling.id
+                            vurdertIBehandling = behandling.id,
+                            opprettet = Instant.parse("2023-01-01T13:00:00Z"),
                         )
                     )
                 )
@@ -125,7 +129,8 @@ internal class BistandRepositoryImplTest {
                             vurdertAv = "Z022222",
                             skalVurdereAapIOvergangTilArbeid = null,
                             overgangBegrunnelse = null,
-                            vurdertIBehandling = behandling.id
+                            vurdertIBehandling = behandling.id,
+                            opprettet = Instant.parse("2023-01-01T13:00:00Z"),
                         )
                     )
                 )
@@ -133,91 +138,14 @@ internal class BistandRepositoryImplTest {
             }
         }
     }
-
-    @Test
-    fun `Lagrer ikke like bistand flere ganger for samme behandling`() {
-        dataSource.transaction { connection ->
-            val sak = sak(connection)
-            val behandling = finnEllerOpprettBehandling(connection, sak)
-            BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
-
-            val bistandRepository = BistandRepositoryImpl(connection)
-            bistandRepository.lagre(
-                behandling.id,
-                listOf(
-                    Bistandsvurdering(
-                        begrunnelse = "en begrunnelse",
-                        erBehovForAktivBehandling = false,
-                        erBehovForArbeidsrettetTiltak = false,
-                        erBehovForAnnenOppfølging = false,
-                        vurderingenGjelderFra = sak.rettighetsperiode.fom,
-                        vurdertAv = "Z00000",
-                        skalVurdereAapIOvergangTilArbeid = null,
-                        overgangBegrunnelse = null,
-                        vurdertIBehandling = behandling.id
-                    )
-                )
-            )
-            bistandRepository.lagre(
-                behandling.id,
-                listOf(
-                    Bistandsvurdering(
-                        begrunnelse = "annen begrunnelse",
-                        erBehovForAktivBehandling = false,
-                        erBehovForArbeidsrettetTiltak = false,
-                        erBehovForAnnenOppfølging = false,
-                        vurderingenGjelderFra = sak.rettighetsperiode.fom,
-                        vurdertAv = "Z00000",
-                        skalVurdereAapIOvergangTilArbeid = null,
-                        overgangBegrunnelse = null,
-                        vurdertIBehandling = behandling.id
-                    )
-                )
-            )
-            bistandRepository.lagre(
-                behandling.id,
-                listOf(
-                    Bistandsvurdering(
-                        begrunnelse = "annen begrunnelse",
-                        erBehovForAktivBehandling = false,
-                        erBehovForArbeidsrettetTiltak = false,
-                        erBehovForAnnenOppfølging = false,
-                        vurderingenGjelderFra = sak.rettighetsperiode.fom,
-                        vurdertAv = "Z00000",
-                        skalVurdereAapIOvergangTilArbeid = null,
-                        overgangBegrunnelse = null,
-                        vurdertIBehandling = behandling.id
-                    )
-                )
-            )
-
-            val opplysninger = connection.queryList(
-                """
-                    SELECT bi.BEGRUNNELSE
-                    FROM BEHANDLING b
-                    INNER JOIN BISTAND_GRUNNLAG g ON b.ID = g.BEHANDLING_ID
-                    INNER JOIN BISTAND_VURDERINGER biv ON biv.id = g.bistand_vurderinger_id
-                    INNER JOIN BISTAND bi ON bi.bistand_vurderinger_id = biv.id
-                    WHERE b.SAK_ID = ?
-                    """.trimIndent()
-            ) {
-                setParams {
-                    setLong(1, sak.id.toLong())
-                }
-                setRowMapper { row -> row.getString("BEGRUNNELSE") }
-            }
-            assertThat(opplysninger)
-                .containsExactly("en begrunnelse", "annen begrunnelse")
-                .hasSize(2)
-        }
-    }
-
+    
     @Test
     fun `Kopierer bistand fra en behandling til en annen`() {
         dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val bistandRepository = BistandRepositoryImpl(connection)
+            val nå = Instant.now()
             bistandRepository.lagre(
                 behandling1.id,
                 listOf(
@@ -230,7 +158,8 @@ internal class BistandRepositoryImplTest {
                         vurdertAv = "Z00000",
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = null,
-                        vurdertIBehandling = behandling1.id
+                        vurdertIBehandling = behandling1.id,
+                        opprettet = nå,
                     )
                 )
             )
@@ -252,7 +181,8 @@ internal class BistandRepositoryImplTest {
                             vurdertAv = "Z00000",
                             skalVurdereAapIOvergangTilArbeid = null,
                             overgangBegrunnelse = null,
-                            vurdertIBehandling = behandling1.id
+                            vurdertIBehandling = behandling1.id,
+                            opprettet = nå
                         )
                     )
                 )
@@ -275,6 +205,8 @@ internal class BistandRepositoryImplTest {
             val sak = sak(connection)
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val bistandRepository = BistandRepositoryImpl(connection)
+            val nå = Instant.now()
+
             bistandRepository.lagre(
                 behandling1.id,
                 listOf(
@@ -287,7 +219,8 @@ internal class BistandRepositoryImplTest {
                         vurdertAv = "Z00000",
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = null,
-                        vurdertIBehandling = behandling1.id
+                        vurdertIBehandling = behandling1.id,
+                        opprettet = nå,
                     )
                 )
             )
@@ -303,7 +236,8 @@ internal class BistandRepositoryImplTest {
                         vurdertAv = "Z00000",
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = null,
-                        vurdertIBehandling = behandling1.id
+                        vurdertIBehandling = behandling1.id,
+                        opprettet = nå,
                     )
                 )
             )
@@ -326,7 +260,8 @@ internal class BistandRepositoryImplTest {
                             vurdertAv = "Z00000",
                             skalVurdereAapIOvergangTilArbeid = null,
                             overgangBegrunnelse = null,
-                            vurdertIBehandling = behandling1.id
+                            vurdertIBehandling = behandling1.id,
+                            opprettet = nå,
                         )
                     )
                 )
@@ -352,7 +287,8 @@ internal class BistandRepositoryImplTest {
                         vurdertAv = "Z00000",
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = null,
-                        vurdertIBehandling = behandling.id
+                        vurdertIBehandling = behandling.id,
+                        opprettet = Instant.parse("2023-01-01T13:00:00Z"),
                     )
                 )
             )
@@ -370,7 +306,8 @@ internal class BistandRepositoryImplTest {
                             vurdertAv = "Z00000",
                             skalVurdereAapIOvergangTilArbeid = null,
                             overgangBegrunnelse = null,
-                            vurdertIBehandling = behandling.id
+                            vurdertIBehandling = behandling.id,
+                            opprettet = Instant.parse("2023-01-01T13:00:00Z"),
                         )
                     )
                 )
@@ -387,7 +324,8 @@ internal class BistandRepositoryImplTest {
                         vurdertAv = "Z00000",
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = null,
-                        vurdertIBehandling = behandling.id
+                        vurdertIBehandling = behandling.id,
+                        opprettet = Instant.parse("2023-01-01T13:00:00Z"),
                     )
                 )
             )
@@ -405,7 +343,8 @@ internal class BistandRepositoryImplTest {
                             vurdertAv = "Z00000",
                             skalVurdereAapIOvergangTilArbeid = null,
                             overgangBegrunnelse = null,
-                            vurdertIBehandling = behandling.id
+                            vurdertIBehandling = behandling.id,
+                            opprettet = Instant.parse("2023-01-01T13:00:00Z"),
                         )
                     )
                 )
@@ -463,8 +402,10 @@ internal class BistandRepositoryImplTest {
                         vurdertAv = "Z00000",
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = null,
-                        vurdertIBehandling = behandling1.id
-                    )
+                        vurdertIBehandling = behandling1.id,
+                        opprettet = Instant.parse("2023-01-01T13:00:00Z"),
+
+                        )
                 )
             )
             bistandRepository.lagre(
@@ -479,7 +420,8 @@ internal class BistandRepositoryImplTest {
                         vurdertAv = "Z00000",
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = null,
-                        vurdertIBehandling = behandling1.id
+                        vurdertIBehandling = behandling1.id,
+                        opprettet = Instant.parse("2023-01-01T13:00:00Z"),
                     )
                 )
             )

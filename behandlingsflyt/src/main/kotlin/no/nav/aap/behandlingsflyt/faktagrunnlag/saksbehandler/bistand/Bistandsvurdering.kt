@@ -5,7 +5,6 @@ import java.time.Instant
 import java.time.LocalDate
 
 data class Bistandsvurdering(
-    val id: Long? = null,
     val begrunnelse: String,
     val erBehovForAktivBehandling: Boolean,
     val erBehovForArbeidsrettetTiltak: Boolean,
@@ -14,7 +13,7 @@ data class Bistandsvurdering(
     val skalVurdereAapIOvergangTilArbeid: Boolean?,
     val vurdertAv: String,
     val vurderingenGjelderFra: LocalDate,
-    val opprettet: Instant? = null,
+    val opprettet: Instant,
     val vurdertIBehandling: BehandlingId
 ) {
     fun erBehovForBistand(): Boolean {
