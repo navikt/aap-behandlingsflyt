@@ -632,6 +632,19 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         )
     }
 
+    protected fun Behandling.løsRettighetsperiodeIngenEndring(): Behandling {
+        return this.løsAvklaringsBehov(
+            avklaringsBehovLøsning = VurderRettighetsperiodeLøsning(
+                rettighetsperiodeVurdering = RettighetsperiodeVurderingDTO(
+                    startDato = null,
+                    begrunnelse = "En begrunnelse",
+                    harRettUtoverSøknadsdato = false,
+                    harKravPåRenter = null,
+                )
+            )
+        )
+    }
+
     protected fun Behandling.løsFastsettManuellInntekt(): Behandling {
         return this.løsAvklaringsBehov(
             AvklarManuellInntektVurderingLøsning(
