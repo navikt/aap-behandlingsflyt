@@ -35,7 +35,7 @@ class AvklaringsbehoveneTest {
             kreverToTrinn = null
         )
         avklaringsbehovene.leggTil(
-            listOf(avklaringsbehov.definisjon), avklaringsbehov.funnetISteg
+            listOf(avklaringsbehov.definisjon), avklaringsbehov.funnetISteg, null, null
         )
 
         assertThat(avklaringsbehovene.alle()).hasSize(1)
@@ -51,7 +51,7 @@ class AvklaringsbehoveneTest {
             kreverToTrinn = null
         )
         avklaringsbehovene.leggTil(
-            listOf(avklaringsbehov.definisjon), avklaringsbehov.funnetISteg
+            listOf(avklaringsbehov.definisjon), avklaringsbehov.funnetISteg, null, null
         )
         val avklaringsbehov1 = Avklaringsbehov(
             definisjon = Definisjon.AVKLAR_SYKDOM,
@@ -60,7 +60,7 @@ class AvklaringsbehoveneTest {
             kreverToTrinn = null
         )
         avklaringsbehovene.leggTil(
-            listOf(avklaringsbehov1.definisjon), avklaringsbehov1.funnetISteg
+            listOf(avklaringsbehov1.definisjon), avklaringsbehov1.funnetISteg, null, null
         )
 
         assertThat(avklaringsbehovene.alle()).hasSize(1)
@@ -76,7 +76,7 @@ class AvklaringsbehoveneTest {
             kreverToTrinn = null
         )
         avklaringsbehovene.leggTil(
-            listOf(avklaringsbehov1.definisjon), avklaringsbehov1.funnetISteg
+            listOf(avklaringsbehov1.definisjon), avklaringsbehov1.funnetISteg, null, null
         )
 
         assertThat(avklaringsbehovene.alle()).hasSize(1)
@@ -92,7 +92,7 @@ class AvklaringsbehoveneTest {
             kreverToTrinn = null
         )
         avklaringsbehovene.leggTil(
-            listOf(avklaringsbehov2.definisjon), avklaringsbehov2.funnetISteg
+            listOf(avklaringsbehov2.definisjon), avklaringsbehov2.funnetISteg, null, null
         )
         assertThat(avklaringsbehovene.alle()).hasSize(1)
         assertThat(avklaringsbehovene.alle().first().definisjon).isEqualTo(Definisjon.SKRIV_BREV)
@@ -108,7 +108,7 @@ class AvklaringsbehoveneTest {
             id = 1L,
             kreverToTrinn = null
         )
-        avklaringsbehovene.leggTil(listOf(avklaringsbehov.definisjon), avklaringsbehov.funnetISteg)
+        avklaringsbehovene.leggTil(listOf(avklaringsbehov.definisjon), avklaringsbehov.funnetISteg, null, null)
 
         assertThat(avklaringsbehov.erÅpent()).isTrue
 
@@ -126,7 +126,7 @@ class AvklaringsbehoveneTest {
             id = 1L,
             kreverToTrinn = null
         )
-        avklaringsbehovene.leggTil(listOf(avklaringsbehov.definisjon), avklaringsbehov.funnetISteg)
+        avklaringsbehovene.leggTil(listOf(avklaringsbehov.definisjon), avklaringsbehov.funnetISteg, null, null)
 
         assertThat(avklaringsbehov.erÅpent()).isTrue
 
@@ -152,7 +152,7 @@ class AvklaringsbehoveneTest {
             kreverToTrinn = null
         )
         avklaringsbehovene.leggTil(
-            listOf(avklaringsbehov.definisjon), avklaringsbehov.funnetISteg
+            listOf(avklaringsbehov.definisjon), avklaringsbehov.funnetISteg, null, null
         )
         val avklaringsbehov1 = Avklaringsbehov(
             definisjon = Definisjon.FATTE_VEDTAK,
@@ -161,7 +161,7 @@ class AvklaringsbehoveneTest {
             kreverToTrinn = null
         )
         avklaringsbehovene.leggTil(
-            listOf(avklaringsbehov1.definisjon), avklaringsbehov1.funnetISteg
+            listOf(avklaringsbehov1.definisjon), avklaringsbehov1.funnetISteg, null, null
         )
 
         assertThat(avklaringsbehovene.åpne()).hasSize(2)
@@ -191,7 +191,7 @@ class AvklaringsbehoveneTest {
         )
 
         assertThat(avklaringsbehovene.åpne()).hasSize(1)
-        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)?.perioderSomSkalLøses())
+        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)?.perioderVedtaketBehøverVurdering())
             .isEqualTo(gamlePerioder)
 
         val nyePerioder = setOf(
@@ -201,9 +201,11 @@ class AvklaringsbehoveneTest {
         avklaringsbehovene.oppdaterPerioder(Definisjon.AVKLAR_SYKDOM, nyePerioder, nyePerioder)
 
         assertThat(avklaringsbehovene.åpne()).hasSize(1)
-        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)?.perioderSomSkalLøses())
+        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)?.perioderVedtaketBehøverVurdering())
             .isEqualTo(nyePerioder)
-        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)?.perioderSomIkkeErTilstrekkeligVurdert())
+        assertThat(
+            avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)?.perioderSomIkkeErTilstrekkeligVurdert()
+        )
             .isEqualTo(nyePerioder)
 
     }
@@ -220,7 +222,10 @@ class AvklaringsbehoveneTest {
         avklaringsbehovene.leggTil(
             perioderVedtaketBehøverVurdering =
                 setOf(Periode(1 januar 2021, 1 februar 2021), Periode(1 mars 2021, 1 april 2021)),
-            perioderSomIkkeErTilstrekkeligVurdert =  setOf(Periode(1 januar 2021, 1 februar 2021), Periode(1 mars 2021, 1 april 2021)),
+            perioderSomIkkeErTilstrekkeligVurdert = setOf(
+                Periode(1 januar 2021, 1 februar 2021),
+                Periode(1 mars 2021, 1 april 2021)
+            ),
             definisjoner = listOf(
                 avklaringsbehov.definisjon
             ), funnetISteg = avklaringsbehov.funnetISteg
@@ -263,7 +268,7 @@ class AvklaringsbehoveneTest {
     }
 
     @Test
-    fun `Avklaringsbehov med tom mengde med perioder skal ikke bry seg om perioder`() {
+    fun `Avklaringsbehov med tom mengde med perioder som skal vurderes skal ikke bry seg om perioder`() {
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, BehandlingId(10))
         val avklaringsbehov = Avklaringsbehov(
             definisjon = Definisjon.AVKLAR_OVERGANG_ARBEID,
@@ -272,11 +277,12 @@ class AvklaringsbehoveneTest {
             kreverToTrinn = null
         )
         avklaringsbehovene.leggTil(
-            perioderSomIkkeErTilstrekkeligVurdert =
-                setOf(),
+            perioderVedtaketBehøverVurdering = emptySet(),
+            perioderSomIkkeErTilstrekkeligVurdert = null,
             definisjoner = listOf(
                 avklaringsbehov.definisjon
-            ), funnetISteg = avklaringsbehov.funnetISteg
+            ),
+            funnetISteg = avklaringsbehov.funnetISteg,
         )
 
 
@@ -299,7 +305,7 @@ class AvklaringsbehoveneTest {
     }
 
     @Test
-    fun `Avklaringsbehov med null-perioder skal ikke bry seg om perioder`() {
+    fun `Avklaringsbehov med null-perioder som skal vurderes skal ikke bry seg om perioder`() {
         val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, BehandlingId(11))
         val avklaringsbehov = Avklaringsbehov(
             definisjon = Definisjon.AVKLAR_OVERGANG_ARBEID,
@@ -308,6 +314,7 @@ class AvklaringsbehoveneTest {
             kreverToTrinn = null
         )
         avklaringsbehovene.leggTil(
+            perioderVedtaketBehøverVurdering = null,
             perioderSomIkkeErTilstrekkeligVurdert = null,
             definisjoner = listOf(
                 avklaringsbehov.definisjon
@@ -343,6 +350,9 @@ class AvklaringsbehoveneTest {
             kreverToTrinn = null
         )
         avklaringsbehovene.leggTil(
+            perioderVedtaketBehøverVurdering = setOf(
+                Periode(1 mars 2021, 1 april 2021) // Ikke egentlig en reell case
+            ),
             perioderSomIkkeErTilstrekkeligVurdert = setOf(
                 Periode(1 mars 2021, 1 april 2021) // Ikke egentlig en reell case
             ),

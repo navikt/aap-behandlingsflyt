@@ -91,6 +91,7 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
             id = UnderveisperiodeId(it.getLong("id")),
             institusjonsoppholdReduksjon = Prosent(it.getInt("institusjonsoppholdreduksjon")),
             meldepliktStatus = it.getEnumOrNull("meldeplikt_status"),
+            meldepliktGradering = it.getIntOrNull("meldeplikt_gradering")?.let { Prosent(it) },
         )
     }
 
@@ -175,8 +176,8 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
             INSERT INTO UNDERVEIS_PERIODE (perioder_id, periode, utfall, rettighetstype, avslagsarsak,
                                            grenseverdi, timer_arbeid, gradering, meldeperiode, trekk_dagsatser,
                                            andel_arbeidsevne, bruker_av_kvoter, institusjonsoppholdreduksjon,
-                                           meldeplikt_status, meldekort_mottatt)
-            VALUES (?, ?::daterange, ?, ?, ?, ?, ?, ?, ?::daterange, ?, ?, ?, ?, ?, ?)
+                                           meldeplikt_status, meldekort_mottatt, meldeplikt_gradering)
+            VALUES (?, ?::daterange, ?, ?, ?, ?, ?, ?, ?::daterange, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent()
         connection.executeBatch(query, underveisperioder) {
             setParams { periode ->
@@ -195,6 +196,7 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
                 setInt(13, periode.institusjonsoppholdReduksjon.prosentverdi())
                 setEnumName(14, periode.meldepliktStatus)
                 setLocalDate(15, periode.arbeidsgradering.opplysningerMottatt)
+                setInt(16, periode.meldepliktGradering?.prosentverdi())
             }
         }
 

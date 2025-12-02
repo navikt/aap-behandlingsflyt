@@ -139,7 +139,9 @@ class AvklaringsbehovOrkestrator(
             frist = hendelse.frist,
             begrunnelse = hendelse.begrunnelse,
             grunn = hendelse.grunn,
-            bruker = hendelse.bruker
+            bruker = hendelse.bruker,
+            perioderVedtaketBehøverVurdering = null,
+            perioderSomIkkeErTilstrekkeligVurdert = null
         )
 
         avklaringsbehovene.validateTilstand(behandling = behandling)
@@ -159,6 +161,8 @@ class AvklaringsbehovOrkestrator(
             grunn = ÅrsakTilSettPåVent.VENTER_PÅ_MEDISINSKE_OPPLYSNINGER,
             bruker = bruker,
             frist = LocalDate.now() + Period.ofWeeks(4),
+            perioderVedtaketBehøverVurdering = null,
+            perioderSomIkkeErTilstrekkeligVurdert = null
         )
         avklaringsbehovene.validateTilstand(behandling = behandling)
         avklaringsbehovene.validerPlassering(behandling = behandling)
