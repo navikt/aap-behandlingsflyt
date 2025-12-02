@@ -121,7 +121,15 @@ object InMemoryBarnRepository : BarnRepository {
         TODO("Not yet implemented")
     }
 
-    override fun hentBehandlingIdForSakSomFårBarnetilleggForBarn(ident: Ident): List<BehandlingId> {
+    override fun hentBehandlingIdForSakSomFårBarnetilleggForRegisterBarn(ident: Ident): List<BehandlingId> {
+        TODO("Not yet implemented")
+    }
+
+    override fun hentBehandlingIdForSakSomFårBarnetilleggForOppgitteBarn(ident: Ident): List<BehandlingId> {
+        TODO("Not yet implemented")
+    }
+
+    override fun hentSaksbehandlerOppgitteBarn(ident: String): SaksbehandlerOppgitteBarn? {
         TODO("Not yet implemented")
     }
 
