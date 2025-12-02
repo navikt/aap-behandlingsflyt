@@ -4,6 +4,7 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -41,22 +42,21 @@ fun NormalOpenAPIRoute.oppholdskravGrunnlagApi(
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val oppholdskravRepository = repositoryProvider.provide<OppholdskravGrunnlagRepository>()
                     val sakRepository = repositoryProvider.provide<SakRepository>()
+                    val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
 
-                    val behandling: Behandling =
-                        BehandlingReferanseService(behandlingRepository).behandling(req)
-
+                    val behandling: Behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
                     val sak = sakRepository.hent(behandling.sakId)
-
                     val grunnlag = oppholdskravRepository.hentHvisEksisterer(behandling.id)
+                    val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+                    val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_OPPHOLDSKRAV)
 
                     val vurdering = grunnlag?.vurderinger?.firstOrNull { it.vurdertIBehandling == behandling.id }
                     val gjeldendeVedtatteVurderinger = grunnlag?.vurderinger?.filter { it.vurdertIBehandling != behandling.id }?.tilTidslinje().orEmpty()
-
-                    val perioderSomTrengerVurdering = if (gjeldendeVedtatteVurderinger.isEmpty()) listOf(sak.rettighetsperiode) else sak.rettighetsperiode.minus(gjeldendeVedtatteVurderinger.helePerioden())
+                    val perioderSomTrengerVurdering = avklaringsbehov?.perioderSomSkalLøses()?.toList() ?: emptyList()
 
                     OppholdskravGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
-                        behøverVurderinger = perioderSomTrengerVurdering.toList(),
+                        behøverVurderinger = perioderSomTrengerVurdering,
                         kanVurderes = listOf(sak.rettighetsperiode),
                         nyeVurderinger = vurdering?.tilDto(ansattInfoService) ?: emptyList(),
                         sisteVedtatteVurderinger = gjeldendeVedtatteVurderinger

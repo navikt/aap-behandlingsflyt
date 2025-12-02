@@ -87,7 +87,7 @@ class Avklaringsbehovene(
             val avklaringsbehov = hentBehovForDefinisjon(definisjon)
             if (avklaringsbehov != null) {
                 if (avklaringsbehov.erAvsluttet()) {
-                    avklaringsbehov.reåpne(utledFrist(definisjon, frist), begrunnelse, grunn, bruker)
+                    avklaringsbehov.reåpne(utledFrist(definisjon, frist), begrunnelse, grunn, perioderSomIkkeErTilstrekkeligVurdert, perioderVedtaketBehøverVurdering, bruker)
                     if (avklaringsbehov.erVentepunkt() || avklaringsbehov.erBrevVentebehov() || avklaringsbehov.erAutomatisk()) {
                         // TODO: Vurdere om funnet steg bør ligge på endringen...
                         repository.endreVentepunkt(avklaringsbehov.id, avklaringsbehov.historikk.last(), funnetISteg)
@@ -200,7 +200,12 @@ class Avklaringsbehovene(
         } else {
             null
         }
-        avklaringsbehov.reåpne(frist = frist, venteårsak = avklaringsbehov.venteårsak())
+        avklaringsbehov.reåpne(
+            frist = frist,
+            venteårsak = avklaringsbehov.venteårsak(),
+            perioderSomIkkeErTilstrekkeligVurdert = avklaringsbehov.perioderSomIkkeErTilstrekkeligVurdert(),
+            perioderVedtaketBehøverVurdering = avklaringsbehov.perioderSomSkalLøses()
+        )
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 

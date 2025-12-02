@@ -93,6 +93,8 @@ class Avklaringsbehov(
         frist: LocalDate? = null,
         begrunnelse: String = "",
         venteårsak: ÅrsakTilSettPåVent? = null,
+        perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
+        perioderVedtaketBehøverVurdering: Set<Periode>?,
         bruker: Bruker = SYSTEMBRUKER
     ) {
         require(historikk.last().status.erAvsluttet())
@@ -105,7 +107,10 @@ class Avklaringsbehov(
             begrunnelse = begrunnelse,
             grunn = venteårsak,
             frist = frist,
-            endretAv = bruker.ident
+            endretAv = bruker.ident,
+            perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
+            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering
+
         )
     }
 

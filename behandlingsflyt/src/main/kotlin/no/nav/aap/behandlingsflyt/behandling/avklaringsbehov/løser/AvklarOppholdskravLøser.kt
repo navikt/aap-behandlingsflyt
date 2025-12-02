@@ -15,14 +15,11 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 class AvklarOppholdskravLøser(
     private val behandlingRepository: BehandlingRepository,
-    private val sakRepository: SakRepository,
     private val oppholdskravGrunnlagRepository: OppholdskravGrunnlagRepository
 ) : AvklaringsbehovsLøser<AvklarOppholdskravLøsning> {
     constructor(repositoryProvider: RepositoryProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
-        sakRepository = repositoryProvider.provide(),
         oppholdskravGrunnlagRepository = repositoryProvider.provide()
-
     )
 
     override fun løs(
@@ -30,7 +27,6 @@ class AvklarOppholdskravLøser(
         løsning: AvklarOppholdskravLøsning
     ): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
-        val sak = sakRepository.hent(behandling.sakId)
 
         val vurdering = OppholdskravVurdering(
             vurdertAv = kontekst.bruker.ident,
@@ -38,18 +34,10 @@ class AvklarOppholdskravLøser(
             vurdertIBehandling = behandling.id
         )
 
-        val tidligereVurderinger = kontekst.kontekst.forrigeBehandlingId?.let { oppholdskravGrunnlagRepository.hentHvisEksisterer(it) }?.vurderinger ?: emptyList()
-        val komplettTidslinje = tidligereVurderinger.tilTidslinje().kombiner(vurdering.tilTidslinje(), StandardSammenslåere.prioriterHøyreSideCrossJoin())
-
-        komplettTidslinje.validerGyldigForRettighetsperiode(rettighetsperiode = sak.rettighetsperiode)
-            .throwOnInvalid { UgyldigForespørselException("Løsningen for oppholdskrav er ikke gyldig: ${it.errorMessage}") }
-            .onValid {
-                oppholdskravGrunnlagRepository.lagre(
-                    behandlingId = behandling.id,
-                    oppholdskravVurdering = vurdering
-                )
-            }
-
+        oppholdskravGrunnlagRepository.lagre(
+            behandlingId = behandling.id,
+            oppholdskravVurdering = vurdering
+        )
         return LøsningsResultat("Vurdert oppholdskrav")
     }
 

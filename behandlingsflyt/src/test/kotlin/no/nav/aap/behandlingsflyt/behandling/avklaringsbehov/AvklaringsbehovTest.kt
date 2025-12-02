@@ -42,6 +42,9 @@ class AvklaringsbehovTest {
             kreverToTrinn = false
         )
 
-        org.junit.jupiter.api.assertThrows<IllegalArgumentException> { ab.reåpne() }
+        org.junit.jupiter.api.assertThrows<IllegalArgumentException> { ab.reåpne(
+            perioderSomIkkeErTilstrekkeligVurdert = null,
+            perioderVedtaketBehøverVurdering = null
+        ) }
     }
 }
