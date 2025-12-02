@@ -342,6 +342,77 @@ internal class InstitusjonsoppholdServiceTest {
     }
 
     @Test
+    fun `opphold som startet før rettighetsperioden skal trigge vurdering når oppholdet totalt er lenger enn 3 mnd`() {
+        val innleggelsesperiode = Periode(
+            LocalDate.now().minusMonths(3),
+            LocalDate.now().plusMonths(5)
+        )
+        val rettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+        val input = InstitusjonsoppholdInput(
+            institusjonsOpphold = listOf(
+                Segment(
+                    innleggelsesperiode,
+                    Institusjon(
+                        Institusjonstype.HS,
+                        Oppholdstype.D,
+                        "123123123",
+                        "test"
+                    )
+                )
+            ),
+            soningsvurderinger = emptyList(),
+            barnetillegg = emptyList(),
+            helsevurderinger = emptyList(),
+            rettighetsperiode = rettighetsperiode
+        )
+
+        val res = utlederService.utledBehov(input)
+        assertThat(res.harBehovForAvklaring()).isTrue
+        assertThat(res.perioderTilVurdering.segmenter()).hasSize(1)
+    }
+
+    @Test
+    fun `skal ikke måtte vurdere periode av opphold før rettighetsperiode startet`() {
+        val innleggelsesperiode = Periode(
+            LocalDate.now().minusMonths(3),
+            LocalDate.now().plusMonths(5)
+        )
+        val rettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
+
+        val inputMedVurdering = InstitusjonsoppholdInput(
+            institusjonsOpphold = listOf(
+                Segment(
+                    innleggelsesperiode,
+                    Institusjon(
+                        Institusjonstype.HS,
+                        Oppholdstype.D,
+                        "123123123",
+                        "test"
+                    )
+                )
+            ),
+            soningsvurderinger = emptyList(),
+            barnetillegg = emptyList(),
+            helsevurderinger = listOf(
+                HelseinstitusjonVurdering(
+                    // vurdering kun for rettighetsperioden, ikke hele oppholdet
+                    periode = rettighetsperiode,
+                    begrunnelse = "vurder",
+                    faarFriKostOgLosji = false,
+                    forsoergerEktefelle = true,
+                    harFasteUtgifter = true
+                )
+            ),
+            rettighetsperiode = rettighetsperiode
+        )
+
+        // selv om vurdering ikke dekker hele oppholdet kreves ikke ny manuell vurdering
+        val res = utlederService.utledBehov(inputMedVurdering)
+        assertThat(res.harBehovForAvklaring()).isFalse
+        assertThat(res.perioderTilVurdering.segmenter()).hasSize(1)
+    }
+
+    @Test
     fun `ingen opphold trengs ingen avklaring`() {
         val input = InstitusjonsoppholdInput(
             institusjonsOpphold = emptyList(),

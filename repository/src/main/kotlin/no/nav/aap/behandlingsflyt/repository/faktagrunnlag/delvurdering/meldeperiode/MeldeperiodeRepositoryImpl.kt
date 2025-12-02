@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.meldeperiode
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeUtleder
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.type.Periode
@@ -13,26 +14,34 @@ class MeldeperiodeRepositoryImpl(private val connection: DBConnection) : Meldepe
         }
     }
 
-    override fun hent(behandlingId: BehandlingId): List<Periode> {
+    override fun hentFørsteMeldeperiode(behandlingId: BehandlingId): Periode? {
         val query = """
             SELECT periode FROM MELDEPERIODE 
             JOIN MELDEPERIODE_GRUNNLAG ON MELDEPERIODE.meldeperiodegrunnlag_id = MELDEPERIODE_GRUNNLAG.id
             WHERE behandling_id = ? AND aktiv = true
             order by periode
         """.trimIndent()
-        return connection.queryList(query) {
+        return connection.queryFirstOrNull<Periode>(query) {
             setParams {
                 setLong(1, behandlingId.toLong())
             }
             setRowMapper {
                 it.getPeriode("periode")
             }
-        }.toList()
+        }
     }
 
-    override fun lagre(
+    override fun hentMeldeperioder(
         behandlingId: BehandlingId,
-        meldeperioder: List<Periode>
+        periode: Periode
+    ): List<Periode> = MeldeperiodeUtleder.utledMeldeperiode(hentFørsteMeldeperiode(behandlingId)?.fom, periode)
+
+    /**
+     * Lagrer kun ned første meldeperioden - resten kan utledes
+     */
+    override fun lagreFørsteMeldeperiode(
+        behandlingId: BehandlingId,
+        meldeperiode: Periode?
     ) {
         val disableQuery = """
             UPDATE MELDEPERIODE_GRUNNLAG SET aktiv = false WHERE behandling_id = ?
@@ -57,12 +66,15 @@ class MeldeperiodeRepositoryImpl(private val connection: DBConnection) : Meldepe
             INSERT INTO MELDEPERIODE (meldeperiodegrunnlag_id, periode)
             VALUES (?, ?::daterange)
         """.trimIndent()
-        connection.executeBatch(query, meldeperioder) {
-            setParams {
-                setLong(1, key)
-                setPeriode(2, it)
+        meldeperiode?.let {
+            connection.execute(query) {
+                setParams {
+                    setLong(1, key)
+                    setPeriode(2, it)
+                }
             }
         }
+
     }
 
     override fun slett(behandlingId: BehandlingId) {
@@ -70,6 +82,6 @@ class MeldeperiodeRepositoryImpl(private val connection: DBConnection) : Meldepe
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
-        lagre(tilBehandling, hent(fraBehandling))
+        lagreFørsteMeldeperiode(tilBehandling, hentFørsteMeldeperiode(fraBehandling))
     }
 }

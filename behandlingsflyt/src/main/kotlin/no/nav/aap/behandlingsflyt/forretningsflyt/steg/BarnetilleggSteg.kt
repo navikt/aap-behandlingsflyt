@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.barnetillegg.BarnetilleggService
@@ -90,25 +89,7 @@ class BarnetilleggSteg(
             ?: emptyList()
         barnetilleggRepository.lagre(kontekst.behandlingId, vedtatteBarnetillegg)
 
-        val forrigeBarnGrunnlag = forrigeBehandlingId?.let { barnRepository.hentHvisEksisterer(it) }
-
-        val vurderteBarn = forrigeBarnGrunnlag?.vurderteBarn?.barn.orEmpty()
-
-        barnRepository.lagreVurderinger(
-            behandlingId = kontekst.behandlingId,
-            vurdertAv = forrigeBarnGrunnlag?.vurderteBarn?.vurdertAv ?: SYSTEMBRUKER.ident,
-            vurderteBarn = vurderteBarn
-        )
-
-        val saksbehandlerOppgitteBarn = forrigeBarnGrunnlag?.saksbehandlerOppgitteBarn?.barn.orEmpty()
-
-        if (forrigeBarnGrunnlag == null) {
-            barnRepository.deaktiverAlleSaksbehandlerOppgitteBarn(kontekst.behandlingId)
-        } else {
-            barnRepository.tilbakestillGrunnlag(forrigeBehandlingId, kontekst.behandlingId)
-        }
-
-        barnRepository.lagreSaksbehandlerOppgitteBarn(kontekst.behandlingId, saksbehandlerOppgitteBarn)
+        barnRepository.tilbakestillGrunnlag(kontekst.behandlingId, forrigeBehandlingId)
 
         // Ting er nå helt tilbakestillt, vi må derfor beregne tidslinjen på nytt
         beregnOgOppdaterBarnetilleggTidslinje(kontekst)

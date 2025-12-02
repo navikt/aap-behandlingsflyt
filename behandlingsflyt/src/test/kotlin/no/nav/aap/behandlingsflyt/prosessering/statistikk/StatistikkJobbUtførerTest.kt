@@ -697,6 +697,7 @@ class StatistikkJobbUtførerTest {
                     saksnummer = Saksnummer.valueOf(sakId.id).toString(),
                     behandlingReferanse = referanse.referanse,
                     behandlingStatus = Status.UTREDES,
+                    tidspunktSisteEndring = hendelsesTidspunkt,
                     behandlingType = TypeBehandling.Klage,
                     ident = fødselsNummer,
                     avklaringsbehov = avklaringsbehov,

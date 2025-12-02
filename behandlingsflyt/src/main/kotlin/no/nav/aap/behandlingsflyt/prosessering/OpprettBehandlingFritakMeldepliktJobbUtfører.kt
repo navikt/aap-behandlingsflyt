@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -26,6 +27,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtfører(
     private val meldepliktRepository: MeldepliktRepository,
     private val sakOgBehandlingService: SakOgBehandlingService,
     private val prosesserBehandlingService: ProsesserBehandlingService,
+    private val underveisRepository: UnderveisRepository,
 ) : JobbUtfører {
 
     override fun utfør(input: JobbInput) {
@@ -53,8 +55,12 @@ class OpprettBehandlingFritakMeldepliktJobbUtfører(
             return false
         }
         val sisteIverksatteBehandling = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sak.id) ?: return false
+        val underveisPerioder = underveisRepository.hentHvisEksisterer(sisteIverksatteBehandling.id) ?: return false
+        val aktuellPeriode = underveisPerioder.somTidslinje().helePerioden()
+
         // NB Sjekker 7 dager tilbake for å få med siste utbetaling som har fritak.
-        val sistePasserteMeldeperiode = meldeperiodeRepository.hent(sisteIverksatteBehandling.id).firstOrNull { it.inneholder(nå.minusDays(7)) } ?: return false
+        val sistePasserteMeldeperiode = meldeperiodeRepository.hentMeldeperioder(sisteIverksatteBehandling.id, aktuellPeriode).firstOrNull { it.inneholder(nå.minusDays(7)) } ?: return false
+
         val meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(sisteIverksatteBehandling.id) ?: return false
 
         return meldepliktGrunnlag.tilTidslinje().begrensetTil(sistePasserteMeldeperiode).segmenter().any { it.verdi.harFritak }
@@ -70,6 +76,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtfører(
                 meldepliktRepository = repositoryProvider.provide(),
                 sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
                 prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
+                underveisRepository = repositoryProvider.provide(),
             )
         }
 

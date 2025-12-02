@@ -45,8 +45,8 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
             }
 
             val insertQuery = """
-                INSERT INTO SYKEPENGE_VURDERING (begrunnelse, oppfylt, grunn, vurdert_av, gjelder_fra, vurderinger_id, vurdert_i_behandling)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO SYKEPENGE_VURDERING (begrunnelse, oppfylt, grunn, vurdert_av, gjelder_fra, gjelder_tom, vurderinger_id, vurdert_i_behandling)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent()
 
             vurderinger.forEach { vurdering ->
@@ -57,8 +57,9 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
                         setEnumName(3, vurdering.grunn)
                         setString(4, vurdering.vurdertAv)
                         setLocalDate(5, vurdering.gjelderFra)
-                        setLong(6, vurderingerId)
-                        setLong(7, vurdering.vurdertIBehandling.toLong())
+                        setLocalDate(6, vurdering.gjelderTom)
+                        setLong(7, vurderingerId)
+                        setLong(8, vurdering.vurdertIBehandling.toLong())
                     }
                 }
 
@@ -140,7 +141,8 @@ class SykepengerErstatningRepositoryImpl(private val connection: DBConnection) :
                     vurdertIBehandling = BehandlingId(row.getLong("vurdert_i_behandling")),
                     vurdertAv = row.getString("vurdert_av"),
                     vurdertTidspunkt = row.getLocalDateTime("opprettet_tid"),
-                    gjelderFra = row.getLocalDateOrNull("gjelder_fra")
+                    gjelderFra = row.getLocalDate("gjelder_fra"),
+                    gjelderTom = row.getLocalDateOrNull("gjelder_tom"),
                 )
             }
         }

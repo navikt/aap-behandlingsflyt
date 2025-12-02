@@ -11,6 +11,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
 
 internal class SykepengerErstatningRepositoryImplTest {
     companion object {
@@ -39,7 +40,7 @@ internal class SykepengerErstatningRepositoryImplTest {
             harRettPå = true,
             grunn = null,
             vurdertAv = "saksbehandler",
-            gjelderFra = null,
+            gjelderFra = LocalDate.now(),
             vurdertIBehandling = behandling.id
         )
 
@@ -49,7 +50,8 @@ internal class SykepengerErstatningRepositoryImplTest {
             harRettPå = false,
             grunn = SykepengerGrunn.SYKEPENGER_FORTSATT_ARBEIDSUFOR,
             vurdertAv = "saksbehandler!!",
-            vurdertIBehandling = behandling.id
+            vurdertIBehandling = behandling.id,
+            gjelderFra = LocalDate.now()
         )
 
         dataSource.transaction { connection ->

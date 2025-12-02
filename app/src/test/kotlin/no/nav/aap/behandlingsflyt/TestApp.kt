@@ -8,6 +8,7 @@ import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.YtelseTypeCode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.SamhandlerForholdDto
@@ -54,6 +55,7 @@ import no.nav.aap.behandlingsflyt.test.testGatewayProvider
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.testutil.ManuellMotorImpl
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -272,7 +274,7 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO): Sak {
     )
     val periode = Periode(
         LocalDate.now(),
-        LocalDate.now().plusYears(1).minusDays(1)
+        Tid.MAKS
     )
     val sak = datasource.transaction { connection ->
         val sakService = PersonOgSakService(
@@ -319,86 +321,98 @@ private fun opprettNySakOgBehandling(dto: OpprettTestcaseDTO): Sak {
             løsStudent(behandling)
         } else {
             if (dto.steg == StegType.AVKLAR_SYKDOM) return sak
-            løsSykdom(behandling, sak.rettighetsperiode.fom)
-
-            if (dto.steg == StegType.VURDER_BISTANDSBEHOV) return sak
-            løsBistand(behandling)
+            løsSykdom(
+                behandling = behandling,
+                vurderingGjelderFra = dto.søknadsdato ?: sak.rettighetsperiode.fom,
+                erArbeidsevnenNedsatt = dto.erArbeidsevnenNedsatt,
+                erNedsettelseIArbeidsevneMerEnnHalvparten = dto.erNedsettelseIArbeidsevneMerEnnHalvparten
+            )
         }
 
-        // Vurderinger i sykdom
-        if (dto.steg == StegType.REFUSJON_KRAV) return sak
-        løsRefusjonskrav(behandling)
+        val harBehandlingsgrunnlag = dto.erArbeidsevnenNedsatt && dto.erNedsettelseIArbeidsevneMerEnnHalvparten
+
+        if (harBehandlingsgrunnlag) {
+            if (dto.steg == StegType.VURDER_BISTANDSBEHOV) return sak
+            løsBistand(behandling)
+
+            // Vurderinger i sykdom
+            if (dto.steg == StegType.REFUSJON_KRAV) return sak
+            løsRefusjonskrav(behandling)
+        }
 
         if (dto.steg == StegType.SYKDOMSVURDERING_BREV) return sak
-        løsSykdomsvurderingBrev(behandling)
+        else if (!dto.student) løsSykdomsvurderingBrev(behandling)
 
         if (dto.steg == StegType.KVALITETSSIKRING) return sak
         kvalitetssikreOk(behandling)
 
-        // Yrkesskade
-        if (dto.yrkesskade) {
-            if (dto.steg == StegType.VURDER_YRKESSKADE) return sak
-            løsYrkesSkade(behandling)
+        if (harBehandlingsgrunnlag) {
+            // Yrkesskade
+            if (dto.yrkesskade) {
+                if (dto.steg == StegType.VURDER_YRKESSKADE) return sak
+                løsYrkesSkade(behandling)
+            }
+
+            // Inntekt
+            if (dto.steg == StegType.FASTSETT_BEREGNINGSTIDSPUNKT) return sak
+            løsBeregningstidspunkt(behandling)
+
+            if (dto.inntekterPerAr == null || dto.inntekterPerAr.isEmpty()) {
+                if (dto.steg == StegType.MANGLENDE_LIGNING) return sak
+                løsManuellInntektVurdering(behandling)
+            }
+
+            // Forutgående medlemskap
+            if (dto.yrkesskade) {
+                løsFastsettYrkesskadeInntekt(behandling)
+            } else {
+                if (dto.steg == StegType.VURDER_MEDLEMSKAP) return sak
+                løsForutgåendeMedlemskap(behandling)
+            }
+
+            // Oppholdskrav
+            if (dto.steg == StegType.VURDER_OPPHOLDSKRAV) return sak
+            løsOppholdskrav(behandling)
+
+            // Institusjonsopphold
+            if (dto.steg == StegType.DU_ER_ET_ANNET_STED) return sak
+            if (dto.institusjoner.fengsel == true) {
+                løsSoningsforhold(behandling)
+            }
+
+            // Barnetillegg
+            if (dto.steg == StegType.BARNETILLEGG) return sak
+            if (dto.barn.isNotEmpty()) {
+                løsBarnetillegg(behandling)
+            }
+
+            // Samordning
+            if (dto.steg == StegType.SAMORDNING_GRADERING) return sak
+            if (dto.sykepenger.isEmpty()) {
+                løsUtenSamordning(behandling)
+            } else {
+                løsSamordning(behandling, dto.sykepenger)
+            }
+
+            if (dto.steg == StegType.SAMORDNING_ANDRE_STATLIGE_YTELSER) return sak
+            løsSamordningAndreStatligeYtelser(behandling)
+
+            if (dto.tjenestePensjon == true) {
+                if (dto.steg == StegType.SAMORDNING_TJENESTEPENSJON_REFUSJONSKRAV) return sak
+                løsTjenestepensjonRefusjonskravVurdering(behandling)
+            }
+
+            // Vedtak
+            if (dto.steg == StegType.FORESLÅ_VEDTAK) return sak
+            løsForeslåVedtakLøsning(behandling)
         }
-
-        // Inntekt
-        if (dto.steg == StegType.FASTSETT_BEREGNINGSTIDSPUNKT) return sak
-        løsBeregningstidspunkt(behandling)
-
-        if (dto.inntekterPerAr == null || dto.inntekterPerAr.isEmpty()) {
-            if (dto.steg == StegType.MANGLENDE_LIGNING) return sak
-            løsManuellInntektVurdering(behandling)
-        }
-
-        // Forutgående medlemskap
-        if (dto.yrkesskade) {
-            løsFastsettYrkesskadeInntekt(behandling)
-        } else {
-            if (dto.steg == StegType.VURDER_MEDLEMSKAP) return sak
-            løsForutgåendeMedlemskap(behandling)
-        }
-
-        // Oppholdskrav
-        if (dto.steg == StegType.VURDER_OPPHOLDSKRAV) return sak
-        løsOppholdskrav(behandling)
-
-        // Institusjonsopphold
-        if (dto.steg == StegType.DU_ER_ET_ANNET_STED) return sak
-        if (dto.institusjoner.fengsel == true) {
-            løsSoningsforhold(behandling)
-        }
-
-        // Barnetillegg
-        if (dto.steg == StegType.BARNETILLEGG) return sak
-        if (dto.barn.isNotEmpty()) {
-            løsBarnetillegg(behandling)
-        }
-
-        // Samordning
-        if (dto.steg == StegType.SAMORDNING_GRADERING) return sak
-        if (dto.sykepenger.isEmpty()) {
-            løsUtenSamordning(behandling)
-        } else {
-            løsSamordning(behandling, dto.sykepenger)
-        }
-
-        if (dto.steg == StegType.SAMORDNING_ANDRE_STATLIGE_YTELSER) return sak
-        løsSamordningAndreStatligeYtelser(behandling)
-
-        if (dto.tjenestePensjon == true) {
-            if (dto.steg == StegType.SAMORDNING_TJENESTEPENSJON_REFUSJONSKRAV) return sak
-            løsTjenestepensjonRefusjonskravVurdering(behandling)
-        }
-
-        // Vedtak
-        if (dto.steg == StegType.FORESLÅ_VEDTAK) return sak
-        løsForeslåVedtakLøsning(behandling)
 
         if (dto.steg == StegType.FATTE_VEDTAK) return sak
         fattVedtakEllerSendRetur(behandling)
 
         if (dto.steg == StegType.BREV) return sak
-        løsVedtaksbrev(behandling)
+        else if (harBehandlingsgrunnlag) løsVedtaksbrev(behandling)
+        else løsVedtaksbrev(behandling, TypeBrev.VEDTAK_AVSLAG)
 
         return sak
     }

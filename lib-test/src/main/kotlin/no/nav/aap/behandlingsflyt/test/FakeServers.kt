@@ -366,7 +366,7 @@ object FakeServers : AutoCloseable {
             route("/") {
                 get {
                     call.respond(
-                       mapOf("name" to "localhost")
+                        mapOf("name" to "localhost")
                     )
                 }
             }
@@ -1362,46 +1362,6 @@ object FakeServers : AutoCloseable {
                 } else {
                     call.respond<List<MedlemskapResponse>>(emptyList())
                 }
-
-                @Suppress("UnusedVariable")
-                @Language("JSON") val eksempelRespons =
-                    """[
-  {
-    "unntakId": 100087727,
-    "ident": "$ident",
-    "fraOgMed": "2021-07-08",
-    "tilOgMed": "2022-07-07",
-    "status": "GYLD",
-    "statusaarsak": null,
-    "medlem": true,
-    "grunnlag": "grunnlag",
-    "lovvalg": "lovvalg",
-    "lovvalgsland": "NOR"
-  },
-  {
-    "unntakId": 100087729,
-    "ident": "$ident",
-    "fraOgMed": "2014-07-10",
-    "tilOgMed": "2016-07-14",
-    "status": "GYLD",
-    "statusaarsak": null,
-    "medlem": false,
-    "grunnlag": "grunnlag",
-    "lovvalg": "lovvalg",
-    "lovvalgsland": "NOR",
-    "sporingsinformasjon": {
-      "versjon": 1073741824,
-      "registrert": "2025-04-25",
-      "besluttet": "2025-04-25",
-      "kilde": "TP",
-      "kildedokument": "string",
-      "opprettet": "2025-04-25T09:21:22.041Z",
-      "opprettetAv": "string",
-      "sistEndret": "2025-04-25T09:21:22.041Z",
-      "sistEndretAv": "string"
-    }
-  }
-]"""
             }
         }
     }
@@ -1914,7 +1874,7 @@ object FakeServers : AutoCloseable {
 
         routing {
             route("/api") {
-                route("/v2") {
+                route("/*") {
                     post("/bestill") {
                         val request = call.receive<BestillBrevV2Request>()
                         val brevbestillingReferanse = UUID.randomUUID()

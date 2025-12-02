@@ -25,7 +25,7 @@ jobs:
                   gradle-version: wrapper
             - name: Bygg & test
               run: ./gradlew test --continue --stacktrace
-            - uses: dorny/test-reporter@v2.2.0
+            - uses: dorny/test-reporter@v2.3.0
               if: success() || failure()
               with:
                 name: test

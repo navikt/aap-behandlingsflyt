@@ -6,9 +6,11 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
 import no.nav.aap.behandlingsflyt.BaseApiTest
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettMeldeperiodeSteg
+import no.nav.aap.behandlingsflyt.help.tomtTilkjentYtelseGrunnlag
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.MockDataSource
@@ -42,14 +44,14 @@ class TilkjentYtelseAPITest : BaseApiTest() {
             }
             val rettighetsperiode = sak.rettighetsperiode
 
-            val perioder = FastsettMeldeperiodeSteg.utledMeldeperiode(
-                emptyList(),
+            val perioder = MeldeperiodeUtleder.utledMeldeperiode(
+                null,
                 rettighetsperiode
             ).take(3)
 
-            InMemoryMeldeperiodeRepository.lagre(
+            InMemoryMeldeperiodeRepository.lagreFørsteMeldeperiode(
                 behandling.id,
-                perioder
+                perioder.first()
             )
 
             val tilkjentYtelseVerdi = Tilkjent(
@@ -82,8 +84,7 @@ class TilkjentYtelseAPITest : BaseApiTest() {
             }
 
             InMemoryTilkjentYtelseRepository.lagre(
-                behandling.id, tilkjent = tilkjentYtelsePerioder
-            )
+                behandling.id, tilkjent = tilkjentYtelsePerioder, faktagrunnlag = tomtTilkjentYtelseGrunnlag, versjon = "")
 
             InMemoryMeldekortRepository.lagre(
                 behandling.id, setOf(
