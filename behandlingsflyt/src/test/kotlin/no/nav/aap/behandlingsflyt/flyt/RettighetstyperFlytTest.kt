@@ -4,9 +4,8 @@ import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykepengerErstatningLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plusHverdager
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerGrunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykepengerVurderingDto
@@ -37,7 +36,7 @@ class RettighetstyperFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) 
             assertThat(åpneAvklaringsbehov).isNotEmpty()
             assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         }
-            .løsSykdom(sak.rettighetsperiode.fom, vissVarighet = false)
+            .løsSykdom(sak.rettighetsperiode.fom, vissVarighet = false, erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true)
             .medKontekst {
                 assertThat(åpneAvklaringsbehov.map { it.definisjon }).describedAs(
                     "Bistandsbehov skal ikke vurderes hvis viss varighet er nei"
@@ -82,7 +81,7 @@ class RettighetstyperFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) 
             .assertRettighetstype(
                 Periode(
                     sak.rettighetsperiode.fom,
-                    sak.rettighetsperiode.fom.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR) // TODO: Rettighetstypen skal vare et halvt år
+                    sak.rettighetsperiode.fom.plusHverdager(Hverdager(130)).minusDays(1),
                 ) to RettighetsType.SYKEPENGEERSTATNING,
             )
             .medKontekst {

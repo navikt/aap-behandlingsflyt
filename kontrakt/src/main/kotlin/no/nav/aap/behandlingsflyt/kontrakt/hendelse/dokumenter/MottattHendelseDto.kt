@@ -89,6 +89,12 @@ public class Innsending(
                 require(melding is KabalHendelse)
             }
 
+            InnsendingType.TILBAKEKREVING_HENDELSE -> {
+                require(referanse.type == InnsendingReferanse.Type.TILBAKEKREING_HENDELSE_ID)
+                requireNotNull(melding) {"Melding fra tilbakekreving kan ikke være null"}
+                require(melding is TilbakekrevingHendelse)
+            }
+
             InnsendingType.OPPFØLGINGSOPPGAVE -> {
                 requireNotNull(melding)
             }

@@ -402,6 +402,7 @@ class BrevUtlederServiceTest {
             trekk = Dagsatser(0),
             brukerAvKvoter = emptySet(),
             meldepliktStatus = null,
+            meldepliktGradering = Prosent.`0_PROSENT`,
         )
     }
 }

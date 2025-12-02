@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.exception.KanIkkeVurdereEgneVurderingerExcepti
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FatteVedtakLøsning
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
@@ -65,7 +66,7 @@ class FatteVedtakLøser(
                 if (unntaksVurderinger.containsAll(vurderingerSomErSendtTilbake.map { it.definisjon })) {
                     emptyList()
                 } else {
-                    avklaringsbehovene.alleEkskludertVentebehov()
+                    avklaringsbehovene.alleEkskludertAvbruttOgVentebehov()
                         .filterNot { behov ->
                             behov.definisjon in setOf(
                                 Definisjon.FORESLÅ_VEDTAK,

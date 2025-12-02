@@ -21,7 +21,7 @@ data class AvbrytRevurderingGrunnlagDto(
     val vurdering: AvbrytRevurderingVurderingDto?
 )
 
-fun NormalOpenAPIRoute.avbrytRevurderingGrunnlagAPI(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
+fun NormalOpenAPIRoute.avbrytRevurderingGrunnlagApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/behandling/{referanse}/grunnlag/avbryt-revurdering").authorizedGet<BehandlingReferanse, AvbrytRevurderingGrunnlagDto>(
         AuthorizationParamPathConfig(
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
