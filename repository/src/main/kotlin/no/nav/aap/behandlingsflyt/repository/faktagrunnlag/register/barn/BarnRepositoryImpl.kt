@@ -104,28 +104,24 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         return emptyList()
     }
 
-    override fun hentSaksbehandlerOppgitteBarn(ident: String): SaksbehandlerOppgitteBarn {
-        return SaksbehandlerOppgitteBarn(
-            null, connection.queryList(
-                """
-                SELECT p.ident, p.navn, p.fodselsdato, p.relasjon
-                FROM BARN_SAKSBEHANDLER_OPPGITT p
-                WHERE p.ident = ?
-            """.trimIndent()
-            ) {
-                setParams {
-                    setString(1, ident)
-                }
-                setRowMapper { row ->
-                    SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn(
-                        ident = row.getStringOrNull("ident")?.let(::Ident),
-                        navn = row.getString("navn"),
-                        fødselsdato = Fødselsdato(row.getLocalDate("fodselsdato")),
-                        relasjon = row.getString("relasjon").let(Relasjon::valueOf),
-                    )
-                }
+    override fun finnOppgitteBarn(ident: String): SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn? {
+        return connection.queryFirstOrNull(
+            """
+        SELECT p.ident, p.navn, p.fodselsdato, p.relasjon
+        FROM BARN_SAKSBEHANDLER_OPPGITT p
+        WHERE p.ident = ?
+        """.trimIndent()
+        ) {
+            setParams { setString(1, ident) }
+            setRowMapper { row ->
+                SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn(
+                    ident = row.getStringOrNull("ident")?.let(::Ident),
+                    navn = row.getString("navn"),
+                    fødselsdato = Fødselsdato(row.getLocalDate("fodselsdato")),
+                    relasjon = row.getString("relasjon").let(Relasjon::valueOf)
+                )
             }
-        )
+        }
     }
 
     private fun hentBehandlingIdForRegisterBarnId(id: Long): List<BehandlingId> {

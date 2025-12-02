@@ -72,12 +72,12 @@ class PdlHendelseKafkaKonsument(
             if (personHendelse.opplysningstype == Opplysningstype.DOEDSFALL_V1 && personHendelse.endringstype == Endringstype.OPPRETTET) {
                 log.info("Håndterer hendelse med ${personHendelse.opplysningstype} og ${personHendelse.endringstype}")
                 var person: Person? = null
-                var oppgittBarn: SaksbehandlerOppgitteBarn? = null
+                var oppgittBarn: SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn? = null
                 var funnetIdent: Ident? = null
                 for (ident in personHendelse.personidenter) {
 
                     person = personRepository.finn(Ident(ident))
-                    oppgittBarn =  barnRepository.hentSaksbehandlerOppgitteBarn(ident)
+                    oppgittBarn =  barnRepository.finnOppgitteBarn(ident)
                     // Håndterer D-nummer og Fnr
                     if (person != null || oppgittBarn != null) {
                         secureLogger.info("Håndterer hendelse for ${ident}")

@@ -129,7 +129,7 @@ object InMemoryBarnRepository : BarnRepository {
         TODO("Not yet implemented")
     }
 
-    override fun hentSaksbehandlerOppgitteBarn(ident: String): SaksbehandlerOppgitteBarn? {
+    override fun finnOppgitteBarn(ident: String): SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn {
         TODO("Not yet implemented")
     }
 
