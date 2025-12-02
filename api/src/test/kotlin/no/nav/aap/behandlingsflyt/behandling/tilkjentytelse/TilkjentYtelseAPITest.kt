@@ -39,7 +39,7 @@ class TilkjentYtelseAPITest : BaseApiTest() {
 
         testApplication {
             installApplication {
-                tilkjentYtelseAPI(ds, inMemoryRepositoryRegistry)
+                tilkjentYtelseApi(ds, inMemoryRepositoryRegistry)
             }
             val rettighetsperiode = sak.rettighetsperiode
 
