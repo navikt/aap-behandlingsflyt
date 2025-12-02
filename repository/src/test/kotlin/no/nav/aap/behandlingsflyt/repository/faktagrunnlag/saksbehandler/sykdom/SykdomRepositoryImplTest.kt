@@ -7,9 +7,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadeS
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.avbrytrevurdering.AvbrytRevurderingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.bistand.BistandRepositoryImplTest
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
@@ -277,6 +279,41 @@ internal class SykdomRepositoryImplTest {
                     sykdomRepository.slett(behandling.id)
                 }
             }
+        }
+    }
+
+    @Test
+    fun `Lagrer ikke samme vurdering to ganger for samme behandling`() {
+        val (behandling, sak) = dataSource.transaction { connection ->
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
+
+            val sykdomRepository = SykdomRepositoryImpl(connection)
+            val sykdomsvurdering = sykdomsvurdering1(behandling.id)
+            sykdomRepository.lagre(behandling.id, listOf(sykdomsvurdering))
+            Pair(behandling, sak)
+        } 
+        dataSource.transaction {connection ->
+            val sykdomRepository = SykdomRepositoryImpl(connection)
+            val sykdomsvurdering = sykdomsvurdering1(behandling.id)
+
+            sykdomRepository.lagre(behandling.id, listOf(sykdomsvurdering))
+            val opplysninger = connection.queryList(
+                """
+                    select v.begrunnelse
+                    from behandling b 
+                    inner join sykdom_grunnlag g on b.id = g.behandling_id
+                    inner join sykdom_vurdering v on v.id = g.sykdom_vurderinger_id
+                    where b.sak_id = ?
+                """.trimIndent()
+            ) {
+                setParams {
+                    setLong(1, sak.id.toLong())
+                }
+                setRowMapper { row -> row.getString("begrunnelse") }
+            }
+            assertThat(opplysninger).hasSize(1)
         }
     }
 
