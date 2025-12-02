@@ -14,7 +14,7 @@ data class Bistandsvurdering(
     val skalVurdereAapIOvergangTilArbeid: Boolean?,
     val vurdertAv: String,
     val vurderingenGjelderFra: LocalDate,
-    val opprettet: Instant? = null,
+    val opprettet: Instant,
     val vurdertIBehandling: BehandlingId
 ) {
     fun erBehovForBistand(): Boolean {

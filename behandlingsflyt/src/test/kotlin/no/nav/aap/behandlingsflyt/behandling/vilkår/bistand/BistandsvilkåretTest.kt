@@ -146,6 +146,7 @@ class BistandsvilkåretTest {
                 vurdertAv = "Z00000",
                 skalVurdereAapIOvergangTilArbeid = null,
                 overgangBegrunnelse = null,
+                opprettet = Instant.now()
             )
 
             bistandRepo.lagre(førstegangsbehandling.id, listOf(bistandsvurdering1))
@@ -274,7 +275,8 @@ class BistandsvilkåretTest {
         skalVurdereAapIOvergangTilArbeid: Boolean? = null,
         vurdertAv: String = "Z00000",
         vurderingenGjelderFra: LocalDate = LocalDate.now(),
-        vurdertIBehandling: BehandlingId = BehandlingId(1)
+        vurdertIBehandling: BehandlingId = BehandlingId(1),
+        opprettet: Instant = Instant.now()
 
     ) = Bistandsvurdering(
         begrunnelse = begrunnelse,
@@ -285,7 +287,8 @@ class BistandsvilkåretTest {
         skalVurdereAapIOvergangTilArbeid = skalVurdereAapIOvergangTilArbeid,
         vurdertAv = vurdertAv,
         vurderingenGjelderFra = vurderingenGjelderFra,
-        vurdertIBehandling = vurdertIBehandling
+        vurdertIBehandling = vurdertIBehandling,
+        opprettet = opprettet
     )
 
     private fun revurdering(connection: DBConnection, behandling: Behandling, sak: Sak): Behandling {

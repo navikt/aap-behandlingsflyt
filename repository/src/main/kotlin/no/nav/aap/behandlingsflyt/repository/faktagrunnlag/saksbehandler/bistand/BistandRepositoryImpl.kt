@@ -73,11 +73,7 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
             vurderinger = bistandsvurderinger
         )
 
-        val eksisterendeVurderinger =
-            eksisterendeBistandGrunnlag?.vurderinger?.let { it.map { it.copy(opprettet = null, id = null) } }.orEmpty().toSet()
-        val nyeVurderinger = bistandsvurderinger.map { it.copy(opprettet = null, id = null) }.toSet()
-
-        if (eksisterendeVurderinger != nyeVurderinger) {
+        if (eksisterendeBistandGrunnlag != nyttGrunnlag) {
             eksisterendeBistandGrunnlag?.let {
                 deaktiverEksisterende(behandlingId)
             }
