@@ -81,6 +81,7 @@ public enum class Vilkårtype {
     GRUNNLAGET,
     OVERGANGARBEIDVILKÅRET,
     OVERGANGUFØREVILKÅRET,
+    STRAFFEGJENNOMFØRING,
 
     @Deprecated("Skal fases ut.")
     SYKEPENGEERSTATNING,

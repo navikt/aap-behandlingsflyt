@@ -24,7 +24,8 @@ enum class Avslagsårsak(
     IKKE_RETT_PA_AAP_UNDER_BEHANDLING_AV_UFORE(kode = "11-18", hjemmel = "§ 11-18", Avslagstype.OPPHØR),
     VARIGHET_OVERSKREDET_OVERGANG_UFORE(kode = "11-18", hjemmel = "§ 11-18 1. ledd", Avslagstype.OPPHØR),
     VARIGHET_OVERSKREDET_ARBEIDSSØKER(kode = "11-17", hjemmel = "§ 11-17", Avslagstype.OPPHØR),
-    IKKE_RETT_PA_AAP_I_PERIODE_SOM_ARBEIDSSOKER(kode = "11-17", hjemmel = "§ 11-17", Avslagstype.STANS)
+    IKKE_RETT_PA_AAP_I_PERIODE_SOM_ARBEIDSSOKER(kode = "11-17", hjemmel = "§ 11-17", Avslagstype.STANS),
+    IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING(kode = "11-26", hjemmel = "§ 11-26", Avslagstype.STANS),
 }
 
 /** [Avslagstype] sier hvordan en [Avslagsårsak] skal tolkes når
