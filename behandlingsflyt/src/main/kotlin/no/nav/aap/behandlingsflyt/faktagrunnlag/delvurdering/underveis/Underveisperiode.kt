@@ -25,6 +25,7 @@ data class Underveisperiode(
     val trekk: Dagsatser,
     val brukerAvKvoter: Set<Kvote>,
     val meldepliktStatus: MeldepliktStatus?,
+    val meldepliktGradering: Prosent?,
     val id: UnderveisperiodeId? = null,
 ) : Comparable<Underveisperiode> {
     init {

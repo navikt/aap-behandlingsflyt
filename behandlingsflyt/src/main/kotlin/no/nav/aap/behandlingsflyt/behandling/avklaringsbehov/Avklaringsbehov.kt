@@ -26,6 +26,11 @@ class Avklaringsbehov(
         }
     }
 
+    val aktivHistorikk: List<Endring>
+        get() = historikk.takeLastWhile {
+            it.status != Status.AVBRUTT
+        }
+
     fun erTotrinn(): Boolean {
         if (definisjon.kreverToTrinn) {
             return true
@@ -38,11 +43,11 @@ class Avklaringsbehov(
     }
 
     fun erTotrinnsVurdert(): Boolean {
-        return Status.TOTRINNS_VURDERT == historikk.maxOf { it }.status
+        return Status.TOTRINNS_VURDERT == aktivHistorikk.maxOf { it }.status
     }
 
     fun erKvalitetssikretTidligere(): Boolean {
-        return Status.KVALITETSSIKRET == historikk.filter {
+        return Status.KVALITETSSIKRET == aktivHistorikk.filter {
             it.status in setOf(
                 Status.KVALITETSSIKRET, Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER
             )
@@ -93,7 +98,9 @@ class Avklaringsbehov(
         frist: LocalDate? = null,
         begrunnelse: String = "",
         venteårsak: ÅrsakTilSettPåVent? = null,
-        bruker: Bruker = SYSTEMBRUKER
+        bruker: Bruker = SYSTEMBRUKER,
+        perioderVedtaketBehøverVurdering: Set<Periode>?,
+        perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
     ) {
         require(historikk.last().status.erAvsluttet())
         if (definisjon.erVentebehov()) {
@@ -105,7 +112,9 @@ class Avklaringsbehov(
             begrunnelse = begrunnelse,
             grunn = venteårsak,
             frist = frist,
-            endretAv = bruker.ident
+            endretAv = bruker.ident,
+            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
+            perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert
         )
     }
 
@@ -208,11 +217,11 @@ class Avklaringsbehov(
     }
 
     fun harVærtSendtTilbakeFraBeslutterTidligere(): Boolean {
-        return historikk.any { it.status == Status.SENDT_TILBAKE_FRA_BESLUTTER }
+        return aktivHistorikk.any { it.status == Status.SENDT_TILBAKE_FRA_BESLUTTER }
     }
 
     fun harVærtSendtTilbakeFraKvalitetssikrerTidligere(): Boolean {
-        return historikk.any { it.status == Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER }
+        return aktivHistorikk.any { it.status == Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER }
     }
 
     fun løsesISteg(): StegType {
@@ -251,12 +260,12 @@ class Avklaringsbehov(
         return historikk.last().tidsstempel
     }
 
-    fun perioderSomSkalLøses(): Set<Periode>? {
-        return historikk.filter { it.status.erÅpent() }.maxOfOrNull { it }?.perioderVedtaketBehøverVurdering
+    fun perioderVedtaketBehøverVurdering(): Set<Periode>? {
+        return aktivHistorikk.filter { it.status.erÅpent() }.maxOfOrNull { it }?.perioderVedtaketBehøverVurdering
     }
 
     fun perioderSomIkkeErTilstrekkeligVurdert(): Set<Periode>? {
-        return historikk.filter { it.status.erÅpent() }.maxOfOrNull { it }?.perioderSomIkkeErTilstrekkeligVurdert
+        return aktivHistorikk.filter { it.status.erÅpent() }.maxOfOrNull { it }?.perioderSomIkkeErTilstrekkeligVurdert
     }
 
 

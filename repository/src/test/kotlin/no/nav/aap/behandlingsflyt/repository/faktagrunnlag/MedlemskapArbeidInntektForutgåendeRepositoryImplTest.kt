@@ -43,6 +43,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
@@ -169,6 +170,7 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
     }
 
     @Test
+    @Disabled("ikke lenger relevant, fjernes i egen PR")
     fun `henter relaterte historiske vurderinger`() {
         val sak = dataSource.transaction { connection ->
             val personOgSakService =

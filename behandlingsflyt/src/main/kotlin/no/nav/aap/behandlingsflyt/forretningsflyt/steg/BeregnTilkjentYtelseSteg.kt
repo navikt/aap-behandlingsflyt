@@ -28,6 +28,8 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.verdityper.Beløp
@@ -47,10 +49,11 @@ class BeregnTilkjentYtelseSteg private constructor(
     private val tidligereVurderinger: TidligereVurderinger,
     private val reduksjon11_9Repository: Reduksjon11_9Repository,
     private val aktivitetsplikt11_9repository: Aktivitetsplikt11_9Repository,
+    private val unleashGateway: UnleashGateway,
 
     ) : BehandlingSteg {
 
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         underveisRepository = repositoryProvider.provide(),
         beregningsgrunnlagRepository = repositoryProvider.provide(),
         personopplysningRepository = repositoryProvider.provide(),
@@ -62,6 +65,7 @@ class BeregnTilkjentYtelseSteg private constructor(
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
         reduksjon11_9Repository = repositoryProvider.provide(),
         aktivitetsplikt11_9repository = repositoryProvider.provide(),
+        unleashGateway = gatewayProvider.provide(),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -92,7 +96,8 @@ class BeregnTilkjentYtelseSteg private constructor(
             barnetilleggGrunnlag,
             samordningGrunnlag,
             samordningUføre,
-            samordningArbeidsgiver
+            samordningArbeidsgiver,
+            unleashGateway.isEnabled(BehandlingsflytFeature.UnntakMeldepliktDesember)
         )
         val beregnetTilkjentYtelse = BeregnTilkjentYtelseService(grunnlag).beregnTilkjentYtelse()
 
@@ -141,7 +146,7 @@ class BeregnTilkjentYtelseSteg private constructor(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
         ): BehandlingSteg {
-            return BeregnTilkjentYtelseSteg(repositoryProvider)
+            return BeregnTilkjentYtelseSteg(repositoryProvider, gatewayProvider)
         }
 
         override fun type(): StegType {

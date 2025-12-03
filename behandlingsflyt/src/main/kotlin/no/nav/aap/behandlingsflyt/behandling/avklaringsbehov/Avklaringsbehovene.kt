@@ -54,7 +54,13 @@ class Avklaringsbehovene(
         if (definisjon.erFrivillig()) {
             if (hentBehovForDefinisjon(definisjon) == null) {
                 // Legger til frivillig behov
-                leggTil(definisjoner = listOf(definisjon), funnetISteg = definisjon.løsesISteg, bruker = bruker, perioderVedtaketBehøverVurdering = null, perioderSomIkkeErTilstrekkeligVurdert = null)
+                leggTil(
+                    definisjoner = listOf(definisjon),
+                    funnetISteg = definisjon.løsesISteg,
+                    bruker = bruker,
+                    perioderVedtaketBehøverVurdering = null,
+                    perioderSomIkkeErTilstrekkeligVurdert = null
+                )
             }
         }
     }
@@ -62,7 +68,13 @@ class Avklaringsbehovene(
     fun leggTilOverstyringHvisMangler(definisjon: Definisjon, bruker: Bruker) {
         if (definisjon.erOverstyring()) {
             if (hentBehovForDefinisjon(definisjon) == null) {
-                leggTil(definisjoner = listOf(definisjon), funnetISteg = definisjon.løsesISteg, bruker = bruker, perioderVedtaketBehøverVurdering = null, perioderSomIkkeErTilstrekkeligVurdert = null)
+                leggTil(
+                    definisjoner = listOf(definisjon),
+                    funnetISteg = definisjon.løsesISteg,
+                    bruker = bruker,
+                    perioderVedtaketBehøverVurdering = null,
+                    perioderSomIkkeErTilstrekkeligVurdert = null
+                )
             }
         }
     }
@@ -87,7 +99,14 @@ class Avklaringsbehovene(
             val avklaringsbehov = hentBehovForDefinisjon(definisjon)
             if (avklaringsbehov != null) {
                 if (avklaringsbehov.erAvsluttet()) {
-                    avklaringsbehov.reåpne(utledFrist(definisjon, frist), begrunnelse, grunn, bruker)
+                    avklaringsbehov.reåpne(
+                        utledFrist(definisjon, frist),
+                        begrunnelse,
+                        grunn,
+                        bruker,
+                        perioderVedtaketBehøverVurdering,
+                        perioderSomIkkeErTilstrekkeligVurdert
+                    )
                     if (avklaringsbehov.erVentepunkt() || avklaringsbehov.erBrevVentebehov() || avklaringsbehov.erAutomatisk()) {
                         // TODO: Vurdere om funnet steg bør ligge på endringen...
                         repository.endreVentepunkt(avklaringsbehov.id, avklaringsbehov.historikk.last(), funnetISteg)
@@ -193,20 +212,34 @@ class Avklaringsbehovene(
     }
 
 
-    fun reåpne(definisjon: Definisjon) {
+    fun reåpne(
+        definisjon: Definisjon
+    ) {
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
         val frist = if (definisjon.erVentebehov()) {
             avklaringsbehov.frist()
         } else {
             null
         }
-        avklaringsbehov.reåpne(frist = frist, venteårsak = avklaringsbehov.venteårsak())
+        avklaringsbehov.reåpne(
+            frist = frist,
+            venteårsak = avklaringsbehov.venteårsak(),
+            perioderSomIkkeErTilstrekkeligVurdert = null, // Kan ikke si noe om dette
+            perioderVedtaketBehøverVurdering = avklaringsbehov.perioderVedtaketBehøverVurdering()
+        )
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
-    fun oppdaterPerioder(definisjon: Definisjon, perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?, perioderVedtaketBehøverVurdering: Set<Periode>?) {
+    fun oppdaterPerioder(
+        definisjon: Definisjon,
+        perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
+        perioderVedtaketBehøverVurdering: Set<Periode>?
+    ) {
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
-        avklaringsbehov.oppdaterPerioder(perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert, perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering)
+        avklaringsbehov.oppdaterPerioder(
+            perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
+            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering
+        )
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
@@ -215,8 +248,9 @@ class Avklaringsbehovene(
         return avklaringsbehovene
     }
 
-    override fun alleEkskludertVentebehov(): List<Avklaringsbehov> {
-        return avklaringsbehovene.filterNot { it.definisjon.erVentebehov() }
+    override fun alleEkskludertAvbruttOgVentebehov(): List<Avklaringsbehov> {
+        return avklaringsbehovene
+            .filterNot { it.status() == Status.AVBRUTT || it.definisjon.erVentebehov() }
     }
 
     fun åpne(): List<Avklaringsbehov> {
@@ -309,12 +343,13 @@ class Avklaringsbehovene(
 
             val behovForDefinisjon = this.hentBehovForDefinisjon(løsning.definisjon())
             if (behovForDefinisjon != null) {
-                val perioderSomSkalLøses = behovForDefinisjon.perioderSomSkalLøses().orEmpty().somTidslinje { it }
+                val perioderSomSkalLøses = behovForDefinisjon.perioderVedtaketBehøverVurdering().orEmpty().somTidslinje { it }
 
-                val perioderSomManglerLøsning = perioderSomSkalLøses.leftJoin(perioderDekketAvLøsning) { _, periodeILøsning -> 
-                    periodeILøsning != null
-                }.filter{!it.verdi}.perioder().toSet()
-                
+                val perioderSomManglerLøsning =
+                    perioderSomSkalLøses.leftJoin(perioderDekketAvLøsning) { _, periodeILøsning ->
+                        periodeILøsning != null
+                    }.filter { !it.verdi }.perioder().toSet()
+
                 if (perioderSomManglerLøsning.isNotEmpty()) {
                     throw UgyldigForespørselException("Løsning mangler vurdering for perioder: $perioderSomManglerLøsning")
                 }

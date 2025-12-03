@@ -21,7 +21,7 @@ class TrekkKlageGrunnlagDto(
     val vurdering: TrekkKlageVurderingDto?
 )
 
-fun NormalOpenAPIRoute.trekkKlageGrunnlagAPI(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
+fun NormalOpenAPIRoute.trekkKlageGrunnlagApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/klage/{referanse}/grunnlag/trekk-klage").authorizedGet<BehandlingReferanse, TrekkKlageGrunnlagDto>(
         AuthorizationParamPathConfig(
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
