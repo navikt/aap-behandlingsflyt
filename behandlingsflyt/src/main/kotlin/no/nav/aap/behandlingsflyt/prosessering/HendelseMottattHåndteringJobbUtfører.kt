@@ -98,6 +98,16 @@ class HendelseMottattHåndteringJobbUtfører(
                     melding = parsedMelding as TilbakekrevingHendelse,
                 )
             }
+
+            InnsendingType.DIALOGMELDING -> {
+                    håndterMottattDokumentService.håndterMottattDialogMelding(
+                        sakId = sakId,
+                        referanse = referanse,
+                        mottattTidspunkt = mottattTidspunkt,
+                        brevkategori = innsendingType,
+                        melding = parsedMelding,
+                    )
+            }
             else -> {
                 håndterMottattDokumentService.håndterMottatteDokumenter(
                     sakId,
