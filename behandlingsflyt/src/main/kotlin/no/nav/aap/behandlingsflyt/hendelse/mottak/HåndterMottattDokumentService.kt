@@ -192,32 +192,24 @@ class HåndterMottattDokumentService(
         val sak = sakService.hent(sakId)
         val periode = utledPeriode(brevkategori, mottattTidspunkt, melding)
         val vurderingsbehov = utledVurderingsbehov(brevkategori, melding, periode)
-        val årsakTilOpprettelse = utledÅrsakTilOpprettelse(brevkategori, melding)
 
-        val opprettetBehandling = sakOgBehandlingService.finnEllerOpprettBehandling(
-            sak.saksnummer,
-            VurderingsbehovOgÅrsak(
-                årsak = årsakTilOpprettelse,
-                vurderingsbehov = vurderingsbehov,
-                opprettet = mottattTidspunkt,
-                beskrivelse = when (melding) {
-                    is ManuellRevurderingV0 -> melding.beskrivelse
-                    is OmgjøringKlageRevurderingV0 -> melding.beskrivelse
-                    else -> null
-                }
-            )
-        )
+        val sisteYtelsesBehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
 
-        require(opprettetBehandling is SakOgBehandlingService.Ordinær)
-        mottaDokumentService.markerSomBehandlet(sakId, opprettetBehandling.åpenBehandling.id, referanse)
+        if (sisteYtelsesBehandling != null)
+        {
+            mottaDokumentService.markerSomBehandlet(sakId, sisteYtelsesBehandling.id, referanse)
+            log.info("Markerer dialogmelding som behandlet $sisteYtelsesBehandling.id")
+            if (sisteYtelsesBehandling.status().erÅpen())
+            {
+                prosesserBehandling.triggProsesserBehandling(
+                    sisteYtelsesBehandling,
+                    listOf("trigger" to DefaultJsonMapper.toJson(vurderingsbehov.filter { it.type == Vurderingsbehov.MOTTATT_DIALOGMELDING }
+                        .map { it.type }))
+                )
+                log.info("Prosessert behandling etter mottatt dialogmelding $sisteYtelsesBehandling.id")
+            }
 
-        prosesserBehandling.triggProsesserBehandling(
-            opprettetBehandling,
-            listOf("trigger" to DefaultJsonMapper.toJson(vurderingsbehov.filter { it.type == Vurderingsbehov.MOTTATT_DIALOGMELDING }
-                .map { it.type }))
-        )
-
-
+        }
     }
 
     fun håndterMottattTilbakekrevingHendelse(
