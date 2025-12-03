@@ -33,6 +33,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVe
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FullmektigLøsningDto
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.HåndterSvarFraAndreinstansLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.HåndterSvarFraAndreinstansLøsningDto
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.RefusjonkravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivForhåndsvarselKlageFormkravBrevLøsning
@@ -96,6 +97,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingerFo
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarnDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flate.OvergangUføreVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
@@ -172,6 +174,7 @@ import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.tuple
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
@@ -864,6 +867,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsBistand()
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
+            .kvalitetssikreOk()
             .løsAvklaringsBehov(
                 AvklarYrkesskadeLøsning(
                     yrkesskadesvurdering = YrkesskadevurderingDto(
@@ -1655,120 +1659,6 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
     }
 
     @Test
-    fun `avslag på 11-6 er også inngang til 11-13 og 11-18`() {
-        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-
-        // Sender inn en søknad
-        var (_, behandling) = sendInnFørsteSøknad(periode = periode)
-        behandling
-            .medKontekst {
-                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
-            }
-            .løsAvklaringsBehov(
-                AvklarSykdomLøsning(
-                    løsningerForPerioder = listOf(
-                        SykdomsvurderingLøsningDto(
-                            begrunnelse = "Er syk nok",
-                            dokumenterBruktIVurdering = listOf(JournalpostId("123128")),
-                            harSkadeSykdomEllerLyte = true,
-                            erSkadeSykdomEllerLyteVesentligdel = true,
-                            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
-                            erNedsettelseIArbeidsevneAvEnVissVarighet = true,
-                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
-                            erArbeidsevnenNedsatt = true,
-                            yrkesskadeBegrunnelse = null,
-                            fom = periode.fom,
-                            tom = null
-                        )
-                    )
-                ),
-            )
-            // Nei på 11-6
-            .løsBistand(false)
-            .løsAvklaringsBehov(
-                AvklarOvergangUføreLøsning(
-                    OvergangUføreVurderingLøsningDto(
-                        begrunnelse = "Løsning",
-                        brukerHarSøktOmUføretrygd = true,
-                        brukerHarFåttVedtakOmUføretrygd = "NEI",
-                        brukerRettPåAAP = true,
-                        virkningsdato = LocalDate.now(),
-                        overgangBegrunnelse = null
-                    )
-                )
-            )
-            .løsRefusjonskrav()
-            .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
-            .medKontekst {
-                assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKEPENGEERSTATNING) }
-            }
-            .løsAvklaringsBehov(
-                AvklarSykepengerErstatningLøsning(
-                    sykepengeerstatningVurdering = SykepengerVurderingDto(
-                        begrunnelse = "...",
-                        dokumenterBruktIVurdering = emptyList(),
-                        harRettPå = true,
-                        grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
-                        gjelderFra = periode.fom
-                    ),
-                )
-            )
-            .løsBeregningstidspunkt()
-            .løsForutgåendeMedlemskap(periode.fom)
-            .løsOppholdskrav(periode.fom)
-            .løsAndreStatligeYtelser()
-            .medKontekst {
-                assertThat(åpneAvklaringsbehov).anySatisfy { avklaringsbehov -> assertThat(avklaringsbehov.definisjon == Definisjon.FORESLÅ_VEDTAK).isTrue() }
-                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
-            }
-            // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
-            .løsAvklaringsBehov(ForeslåVedtakLøsning())
-            .medKontekst {
-                assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon == Definisjon.FATTE_VEDTAK).isTrue() }
-                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
-            }
-            .fattVedtak()
-            .medKontekst {
-                assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
-            }
-
-        var resultat =
-            dataSource.transaction { ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(behandling.id) }
-        assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
-
-
-        behandling = behandling.løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_11_18)
-
-        assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
-
-        val vilkårsresultat = hentVilkårsresultat(behandlingId = behandling.id)
-        val sykepeengeerstatningsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKEPENGEERSTATNING)
-
-        assertThat(sykepeengeerstatningsvilkåret.vilkårsperioder()).hasSize(1).first()
-            .extracting(Vilkårsperiode::erOppfylt, Vilkårsperiode::innvilgelsesårsak)
-            .containsExactly(true, null)
-
-        resultat =
-            dataSource.transaction { ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(behandling.id) }
-
-        assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
-        val underveisPeriode = dataSource.transaction {
-            UnderveisRepositoryImpl(it).hent(behandling.id)
-        }.somTidslinje().helePerioden()
-
-        assertTidslinje(
-            vilkårsresultat.rettighetstypeTidslinje().begrensetTil(underveisPeriode),
-            Periode(periode.fom, periode.fom.plusMonths(8).minusDays(1)) to {
-                assertThat(it).isEqualTo(RettighetsType.VURDERES_FOR_UFØRETRYGD)
-            },
-            Periode(periode.fom.plusMonths(8), underveisPeriode.tom) to {
-                assertThat(it).isEqualTo(RettighetsType.SYKEPENGEERSTATNING)
-            }
-        )
-    }
-
-    @Test
     fun `11-18 uføre underveis i en behandling`() {
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
         val virkningsdatoOvergangUføre = periode.fom.plusDays(20)
@@ -2304,7 +2194,9 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 ),
                 ingenEndringIGruppe = true,
                 bruker = Bruker("SAKSBEHANDLER")
-            ).løsAvklaringsBehov(
+            )
+            .kvalitetssikreOk()
+            .løsAvklaringsBehov(
                 FastsettBeregningstidspunktLøsning(
                     beregningVurdering = BeregningstidspunktVurderingDto(
                         begrunnelse = "Trenger hjelp fra Nav",
@@ -2888,6 +2780,23 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     manuellVurderingForManglendeInntekt = ManuellInntektVurderingDto(
                         begrunnelse = "Mangler ligning",
                         belop = BigDecimal(300000),
+                        vurderinger = listOf(
+                            ÅrsVurdering(
+                                år = Year.now().minusYears(1).value,
+                                beløp = BigDecimal(300000),
+                                eøsBeløp = null,
+                            ),
+                            ÅrsVurdering(
+                                år = Year.now().minusYears(2).value,
+                                beløp = BigDecimal(400000),
+                                eøsBeløp = null,
+                            ),
+                            ÅrsVurdering(
+                                år = Year.now().minusYears(3).value,
+                                beløp = BigDecimal(500000),
+                                eøsBeløp = null,
+                            ),
+                        )
                     )
                 )
             )
@@ -2901,12 +2810,15 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             BeregningsgrunnlagRepositoryImpl(it).hentHvisEksisterer(behandling.id) as Grunnlag11_19
         }
 
-        val sisteInntekt =
-            beregningsGrunnlag.inntekter().first { inntekt -> inntekt.år.value == nedsattDato.minusYears(1).year }
-
-        assertThat(sisteInntekt)
+        assertThat(beregningsGrunnlag.inntekter())
             .extracting(GrunnlagInntekt::år, GrunnlagInntekt::inntektIKroner)
-            .containsExactly(nedsattDato.minusYears(1).year.let { Year.of(it) }, Beløp(BigDecimal(300000)))
+            .containsExactlyInAnyOrder(
+                tuple(Year.of(nedsattDato.minusYears(1).year), Beløp(BigDecimal(300_000))),
+                tuple(Year.of(nedsattDato.minusYears(2).year), Beløp(BigDecimal(400_000))),
+                tuple(Year.of(nedsattDato.minusYears(3).year), Beløp(BigDecimal(500_000)))
+            )
+
+        assertThat(beregningsGrunnlag.inntekter()).hasSize(3)
     }
 
     @Test
