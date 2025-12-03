@@ -97,6 +97,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingerFo
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarnDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flate.OvergangUføreVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
@@ -173,6 +174,7 @@ import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.tuple
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
@@ -2776,6 +2778,23 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     manuellVurderingForManglendeInntekt = ManuellInntektVurderingDto(
                         begrunnelse = "Mangler ligning",
                         belop = BigDecimal(300000),
+                        vurderinger = listOf(
+                            ÅrsVurdering(
+                                år = Year.now().minusYears(1).value,
+                                beløp = BigDecimal(300000),
+                                eøsBeløp = null,
+                            ),
+                            ÅrsVurdering(
+                                år = Year.now().minusYears(2).value,
+                                beløp = BigDecimal(400000),
+                                eøsBeløp = null,
+                            ),
+                            ÅrsVurdering(
+                                år = Year.now().minusYears(3).value,
+                                beløp = BigDecimal(500000),
+                                eøsBeløp = null,
+                            ),
+                        )
                     )
                 )
             )
@@ -2789,12 +2808,15 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             BeregningsgrunnlagRepositoryImpl(it).hentHvisEksisterer(behandling.id) as Grunnlag11_19
         }
 
-        val sisteInntekt =
-            beregningsGrunnlag.inntekter().first { inntekt -> inntekt.år.value == nedsattDato.minusYears(1).year }
-
-        assertThat(sisteInntekt)
+        assertThat(beregningsGrunnlag.inntekter())
             .extracting(GrunnlagInntekt::år, GrunnlagInntekt::inntektIKroner)
-            .containsExactly(nedsattDato.minusYears(1).year.let { Year.of(it) }, Beløp(BigDecimal(300000)))
+            .containsExactlyInAnyOrder(
+                tuple(Year.of(nedsattDato.minusYears(1).year), Beløp(BigDecimal(300_000))),
+                tuple(Year.of(nedsattDato.minusYears(2).year), Beløp(BigDecimal(400_000))),
+                tuple(Year.of(nedsattDato.minusYears(3).year), Beløp(BigDecimal(500_000)))
+            )
+
+        assertThat(beregningsGrunnlag.inntekter()).hasSize(3)
     }
 
     @Test
