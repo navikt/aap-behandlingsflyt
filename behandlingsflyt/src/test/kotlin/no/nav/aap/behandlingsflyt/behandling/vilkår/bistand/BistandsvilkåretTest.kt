@@ -2,14 +2,14 @@ package no.nav.aap.behandlingsflyt.behandling.vilkår.bistand
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarBistandLøser
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovEnkelLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingGammelLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderBistandsbehovSteg
@@ -202,16 +202,18 @@ class BistandsvilkåretTest {
             postgresRepositoryRegistry.provider(connection).provide<SykdomRepository>()
                 .lagre(revurdering.id, listOf(sykdomsvurdering))
 
-            val bistandsvurdering2 = BistandVurderingGammelLøsningDto(
+            val bistandsvurdering2 = BistandLøsningDto(
                 begrunnelse = "Begrunnelse 2",
                 erBehovForAktivBehandling = false,
                 erBehovForArbeidsrettetTiltak = false,
                 erBehovForAnnenOppfølging = false,
                 skalVurdereAapIOvergangTilArbeid = false,
                 overgangBegrunnelse = null,
+                fom = sykdomsvurdering.vurderingenGjelderFra,
+                tom = null
             )
 
-            AvklarBistandLøser(postgresRepositoryRegistry.provider(connection), gatewayProvider).løs(
+            AvklarBistandLøser(postgresRepositoryRegistry.provider(connection)).løs(
                 AvklaringsbehovKontekst(
                     bruker = Bruker(sak.person.aktivIdent().identifikator),
                     kontekst = FlytKontekst(
@@ -220,7 +222,7 @@ class BistandsvilkåretTest {
                         sakId = sak.id,
                         behandlingType = TypeBehandling.Revurdering
                     ),
-                ), løsning = AvklarBistandsbehovEnkelLøsning(bistandsVurdering = bistandsvurdering2)
+                ), løsning = AvklarBistandsbehovLøsning(løsningerForPerioder = listOf(bistandsvurdering2))
             )
         }
 

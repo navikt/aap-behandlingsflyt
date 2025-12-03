@@ -82,7 +82,7 @@ class FasttrackMeldekortFlytTest :
         val revurderingGjelderFra = sak.rettighetsperiode.fom.plusWeeks(2)
         var åpenBehandling = revurdereFramTilOgMedSykdom(sak, revurderingGjelderFra)
 
-        åpenBehandling = åpenBehandling.løsBistand()
+        åpenBehandling = åpenBehandling.løsBistand(revurderingGjelderFra)
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
@@ -172,11 +172,15 @@ class FasttrackMeldekortFlytTest :
     @Test
     fun `sender inn to meldekort, resultat reflektert i åpen behandling`() {
         val sak = happyCaseFørstegangsbehandling(fom = 25 august 2025)
-        val åpenBehandling = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom.plusWeeks(2))
-        åpenBehandling.løsSykdom(sak.rettighetsperiode.fom).løsBistand().løsSykdomsvurderingBrev()
+        val fom = sak.rettighetsperiode.fom.plusWeeks(2)
+        val åpenBehandling = revurdereFramTilOgMedSykdom(sak, fom)
+        åpenBehandling.løsSykdom(sak.rettighetsperiode.fom).løsBistand(fom).løsSykdomsvurderingBrev()
 
         val (førsteMeldeperiode, andreMeldeperiode) = dataSource.transaction { connection ->
-            MeldeperiodeRepositoryImpl(connection).hentMeldeperioder(åpenBehandling.id, sak.rettighetsperiodeEttÅrFraStartDato())
+            MeldeperiodeRepositoryImpl(connection).hentMeldeperioder(
+                åpenBehandling.id,
+                sak.rettighetsperiodeEttÅrFraStartDato()
+            )
         }
         sak.sendInnMeldekort(
             journalpostId = journalpostId(),
@@ -255,7 +259,7 @@ class FasttrackMeldekortFlytTest :
             .let { Tidslinje(it) }
     }
 
-    private class BehandlingCompare(behandlinger: List<Behandling>): Comparator<Behandling> {
+    private class BehandlingCompare(behandlinger: List<Behandling>) : Comparator<Behandling> {
         private val behandlinger = behandlinger.associateBy { it.id }
 
         override fun compare(o1: Behandling, o2: Behandling): Int {

@@ -62,7 +62,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurderingDTO
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingGammelLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.FritaksvurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.flate.OvergangArbeidVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flate.OvergangUføreVurderingLøsningDto
@@ -340,7 +340,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
             assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         }
             .løsSykdom(sak.rettighetsperiode.fom)
-            .løsBistand()
+            .løsBistand(fom = sak.rettighetsperiode.fom)
             .løsAvklaringsBehov(
                 RefusjonkravLøsning(
                     listOf(
@@ -477,13 +477,15 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
             .løsSykdom(rettighetsPeriodeFrom)
             .løsAvklaringsBehov(
                 AvklarBistandsbehovEnkelLøsning(
-                    bistandsVurdering = BistandVurderingGammelLøsningDto(
+                    bistandsVurdering = BistandLøsningDto(
                         begrunnelse = "Trenger hjelp fra nav",
                         erBehovForAktivBehandling = true,
                         erBehovForArbeidsrettetTiltak = false,
                         erBehovForAnnenOppfølging = null,
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = null,
+                        fom = rettighetsPeriodeFrom,
+                        tom = null
                     ),
                 ),
             )
@@ -551,16 +553,18 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         )
     }
 
-    protected fun Behandling.løsBistand(erOppfylt: Boolean = true): Behandling {
+    protected fun Behandling.løsBistand(fom: LocalDate, erOppfylt: Boolean = true): Behandling {
         return this.løsAvklaringsBehov(
             AvklarBistandsbehovEnkelLøsning(
-                BistandVurderingGammelLøsningDto(
+                BistandLøsningDto(
                     begrunnelse = "Trenger hjelp fra nav",
                     erBehovForAktivBehandling = erOppfylt,
                     erBehovForArbeidsrettetTiltak = false,
                     erBehovForAnnenOppfølging = false.takeUnless { erOppfylt },
                     skalVurdereAapIOvergangTilArbeid = null,
                     overgangBegrunnelse = null,
+                    fom = fom,
+                    tom = null
                 )
             )
         )
@@ -1130,7 +1134,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
     ): Behandling {
         var behandling = behandling
         behandling = løsSykdom(behandling, vurderingerGjelderFra)
-            .løsBistand()
+            .løsBistand(vurderingerGjelderFra)
             .løsAvklaringsBehov(
                 RefusjonkravLøsning(
                     listOf(

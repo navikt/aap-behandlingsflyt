@@ -78,7 +78,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 assertThat(behandling.status()).isEqualTo(Status.UTREDES)
             }
             .løsSykdom(periode.fom)
-            .løsBistand()
+            .løsBistand(periode.fom)
             .løsRefusjonskrav()
             .løsAvklaringsBehov(
                 FritakMeldepliktLøsning(
@@ -359,7 +359,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         assertThat(alleAvklaringsbehov).isNotEmpty()
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
 
-        behandling = behandling.løsSykdom(periode.fom).løsBistand().løsAvklaringsBehov(
+        behandling = behandling.løsSykdom(periode.fom).løsBistand(periode.fom).løsAvklaringsBehov(
             RefusjonkravLøsning(
                 listOf(
                     RefusjonkravVurderingDto(
