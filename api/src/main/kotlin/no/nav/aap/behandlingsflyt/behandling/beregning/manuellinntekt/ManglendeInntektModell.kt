@@ -19,6 +19,7 @@ data class ManuellInntektGrunnlagResponse(
     @Deprecated("Erstattes av vurderinger") val gverdi: BigDecimal,
     @Deprecated("Erstattes av vurderinger") val vurdering: ManuellInntektVurderingGrunnlagResponse?,
     @Deprecated("Erstattes av vurderinger") val historiskeVurderinger: List<ManuellInntektVurderingGrunnlagResponse>,
+    val sisteRelevanteÅr: Int,
     val manuelleVurderinger: ManuellInntektGrunnlagVurdering? = null,
     val historiskeManuelleVurderinger: List<ManuellInntektGrunnlagVurdering>? = emptyList(),
     val registrerteInntekterSisteRelevanteAr: List<ÅrData> = emptyList(),

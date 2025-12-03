@@ -114,6 +114,7 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(
                             manuelleVurderinger = mappedVurdering,
                             historiskeManuelleVurderinger = mappedNyHistorikk,
                             registrerteInntekterSisteRelevanteAr = registrerteInntekterSisteTreÅr,
+                            sisteRelevanteÅr = år.value
                         )
                     }
 
@@ -161,6 +162,7 @@ fun NormalOpenAPIRoute.manglendeGrunnlagApi(
                     respond(
                         ManuellInntektGrunnlagResponse(
                             ar = år.value,
+                            sisteRelevanteÅr = år.value,
                             gverdi = gVerdi.verdi,
                             harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                             vurdering = manuellInntekt?.let {
