@@ -81,7 +81,6 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
     }
 
     override fun hentBehandlingIdForSakSomFårBarnetilleggForRegisterBarn(ident: Ident): List<BehandlingId> {
-        log.info("Henter info for ident {}", ident)
         val registerBarnId = getRegisterBarnId(ident)
         log.info("Henter registerbarnid for registerBarnId {}", registerBarnId)
         if (registerBarnId != null) {
@@ -93,7 +92,6 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
     }
 
     override fun hentBehandlingIdForSakSomFårBarnetilleggForOppgitteBarn(ident: Ident): List<BehandlingId> {
-        log.info("Henter info for ident {}", ident)
         val oppgittBarnId = getOppgitteBarnId(ident)
         log.info("Henter oppgitte for registerBarnId {}", oppgittBarnId)
         if (oppgittBarnId != null) {
