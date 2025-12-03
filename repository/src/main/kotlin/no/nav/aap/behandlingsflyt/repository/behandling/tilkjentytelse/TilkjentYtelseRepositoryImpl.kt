@@ -52,6 +52,8 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
                                 ?.let { result -> Prosent(result) } ?: `0_PROSENT`,
                             arbeidGradering = it.getIntOrNull("ARBEID_GRADERING")?.let { result -> Prosent(result) }
                                 ?: `0_PROSENT`,
+                            meldepliktGradering = it.getIntOrNull("MELDEPLIKT_GRADERING")?.let { result -> Prosent(result) }
+                                ?: `0_PROSENT`,
                         ),
                         barnetillegg = Beløp(it.getInt("BARNETILLEGG")),
                         grunnlagsfaktor = GUnit(it.getBigDecimal("GRUNNLAGSFAKTOR")),
@@ -143,8 +145,10 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
             """
             INSERT INTO TILKJENT_PERIODE (TILKJENT_YTELSE_ID, PERIODE, DAGSATS, GRADERING, BARNETILLEGG,
                                           GRUNNLAGSFAKTOR, GRUNNLAG, ANTALL_BARN, BARNETILLEGGSATS, GRUNNBELOP, 
-                                          UTBETALINGSDATO, SAMORDNING_GRADERING, INSTITUSJON_GRADERING, ARBEID_GRADERING, SAMORDNING_UFORE_GRADERING, SAMORDNING_ARBEIDSGIVER_GRADERING )
-            VALUES (?, ?::daterange, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                          UTBETALINGSDATO, SAMORDNING_GRADERING, INSTITUSJON_GRADERING, ARBEID_GRADERING,
+                                           SAMORDNING_UFORE_GRADERING, SAMORDNING_ARBEIDSGIVER_GRADERING, 
+                                           MELDEPLIKT_GRADERING)
+            VALUES (?, ?::daterange, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """.trimIndent()
         ) {
             setParams {
@@ -164,6 +168,7 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
                 setInt(14, tilkjent.graderingGrunnlag.arbeidGradering.prosentverdi())
                 setInt(15, tilkjent.graderingGrunnlag.samordningUføregradering.prosentverdi())
                 setInt(16, tilkjent.graderingGrunnlag.samordningArbeidsgiverGradering.prosentverdi())
+                setInt(17, tilkjent.graderingGrunnlag.meldepliktGradering.prosentverdi())
             }
         }
     }

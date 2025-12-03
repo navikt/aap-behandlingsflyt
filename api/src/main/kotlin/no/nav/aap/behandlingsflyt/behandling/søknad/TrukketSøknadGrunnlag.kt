@@ -29,7 +29,7 @@ class TrukketSøknadVurderingDto(
     val vurdertAv: String,
 )
 
-fun NormalOpenAPIRoute.trukketSøknadGrunnlagAPI(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
+fun NormalOpenAPIRoute.trukketSøknadGrunnlagApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/behandling/{referanse}/grunnlag/trukket-søknad").authorizedGet<BehandlingReferanse, TrukketSøknadGrunnlagDto>(
         AuthorizationParamPathConfig(
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),

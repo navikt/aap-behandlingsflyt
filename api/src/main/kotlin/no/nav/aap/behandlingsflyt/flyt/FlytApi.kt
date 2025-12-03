@@ -355,7 +355,6 @@ private fun utledVurdertGruppe(
         if (aktivtSteg == StegType.KVALITETSSIKRING) {
             val relevanteBehov = avklaringsbehovene.alle().filter { it.kreverKvalitetssikring() }
                 .filter { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
-                .filter { avklaringsbehov -> !avklaringsbehov.erKvalitetssikretTidligere() }
 
             val stegType = requireNotNull(flyt.skalTilStegForBehov(relevanteBehov)) {
                 "Kunne ikke utlede skalTilStegForBehov med relevante behov: $relevanteBehov"

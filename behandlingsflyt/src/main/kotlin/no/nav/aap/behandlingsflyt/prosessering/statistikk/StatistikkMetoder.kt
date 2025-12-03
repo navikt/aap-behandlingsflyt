@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
+import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
@@ -69,6 +70,7 @@ class StatistikkMetoder(
     private val underveisRepository: UnderveisRepository,
     private val meldekortRepository: MeldekortRepository,
     private val påklagetBehandlingRepository: PåklagetBehandlingRepository,
+    private val vedtakService: VedtakService,
     trukketSøknadService: TrukketSøknadService,
     private val klageresultatUtleder: IKlageresultatUtleder,
     avbrytRevurderingService: AvbrytRevurderingService
@@ -86,6 +88,7 @@ class StatistikkMetoder(
         underveisRepository = repositoryProvider.provide(),
         meldekortRepository = repositoryProvider.provide(),
         påklagetBehandlingRepository = repositoryProvider.provide(),
+        vedtakService = VedtakService(repositoryProvider),
         trukketSøknadService = TrukketSøknadService(repositoryProvider.provide()),
         klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider)
@@ -117,6 +120,7 @@ class StatistikkMetoder(
         val nyeMeldekort =
             meldekort?.meldekort().orEmpty().toSet().minus(forrigeBehandlingMeldekort?.meldekort().orEmpty().toSet())
                 .toList()
+
 
         val vurderingsbehovForBehandling = utledVurderingsbehovForBehandling(behandling)
         val statistikkHendelse = StoppetBehandling(
@@ -271,6 +275,8 @@ class StatistikkMetoder(
             log.warn("Kjører statistikkjobb for behandling som ikke er avsluttet. Behandling-ref: ${behandling.referanse.referanse}. Sak: ${sak.saksnummer}")
         }
 
+        val vedtakTidspunkt = vedtakService.vedtakstidspunkt(behandling)
+
         val tilkjentYtelse =
             tilkjentYtelseRepository.hentHvisEksisterer(behandling.id)?.map { Segment(it.periode, it.tilkjent) }
                 ?.let(::Tidslinje)?.mapValue { it }?.komprimer()?.segmenter()?.map {
@@ -325,8 +331,8 @@ class StatistikkMetoder(
                                 tilDato = periode.periode.tom,
                                 utfall = Utfall.valueOf(periode.utfall.toString()),
                                 manuellVurdering = periode.manuellVurdering,
-                                innvilgelsesårsak = periode.innvilgelsesårsak.toString(),
-                                avslagsårsak = periode.avslagsårsak.toString()
+                                innvilgelsesårsak = periode.innvilgelsesårsak?.toString(),
+                                avslagsårsak = periode.avslagsårsak?.toString()
                             )
                         })
                 }),
@@ -334,7 +340,8 @@ class StatistikkMetoder(
             beregningsGrunnlag = beregningsGrunnlagDTO,
             diagnoser = hentDiagnose(behandling),
             rettighetstypePerioder = rettighetstypePerioder,
-            resultat = hentResultat(behandling)
+            resultat = hentResultat(behandling),
+            vedtakstidspunkt = vedtakTidspunkt,
         )
         return avsluttetBehandlingDTO
     }

@@ -7,6 +7,8 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykd
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykepengerErstatningLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plusHverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
@@ -98,7 +100,7 @@ class SykepengeerstatningFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::cla
             .assertRettighetstype(
                 Periode(
                     sak.rettighetsperiode.fom,
-                    sak.rettighetsperiode.fom.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR) // TODO: Rettighetstypen skal vare et halvt år
+                    sak.rettighetsperiode.fom.plusHverdager(Hverdager(130)).minusDays(1),
                 ) to RettighetsType.SYKEPENGEERSTATNING,
             )
             .medKontekst {
@@ -164,7 +166,7 @@ class SykepengeerstatningFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::cla
                 val avklaringsbehov =
                     åpneAvklaringsbehov.first { it.definisjon == Definisjon.AVKLAR_SYKEPENGEERSTATNING }
                 assertThat(
-                    avklaringsbehov.perioderSomSkalLøses()
+                    avklaringsbehov.perioderVedtaketBehøverVurdering()
                         ?.map { it.fom }).describedAs("SPE må vurderes etter varighetsslutt for overganguføre")
                     .containsExactly(periode.fom.plusMonths(8))
             }

@@ -23,7 +23,7 @@ import javax.sql.DataSource
  * */
 
 // TODO: Denne resetter en behandling til start, men trenger å fikses til å kunne sette behandlingen i gang igjen.
-fun NormalOpenAPIRoute.driftAPI(
+fun NormalOpenAPIRoute.driftApi(
     dataSource: DataSource,
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,

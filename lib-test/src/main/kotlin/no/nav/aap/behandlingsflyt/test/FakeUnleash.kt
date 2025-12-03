@@ -15,6 +15,7 @@ open class FakeUnleashBase(
 }
 
 
+/** Devlik unleash. */
 object FakeUnleash : FakeUnleashBase(
     mapOf(
         BehandlingsflytFeature.IngenValidering to false,
@@ -31,8 +32,36 @@ object FakeUnleash : FakeUnleashBase(
         BehandlingsflytFeature.NyBrevbyggerV3 to false,
         BehandlingsflytFeature.BedreUttrekkAvSakerMedFritakMeldeplikt to false,
         BehandlingsflytFeature.LagreVedtakIFatteVedtak to true,
+        BehandlingsflytFeature.UnntakMeldepliktDesember to true,
         BehandlingsflytFeature.ReduksjonArbeidOverGrense to true,
         BehandlingsflytFeature.ForutgaendeMedlemskapPeriodisert to true,
+        BehandlingsflytFeature.ReduksjonIkkeMeldtSeg to true,
+    )
+)
+
+/** Før du merger så kan det være lurt å sjekke om feature-togglene
+ * under matcher prod og hvis du flipper "din" feature toggle, så er testene
+ * fortsatt grønne. */
+object ProdlikUnleash : FakeUnleashBase(
+    mapOf(
+        BehandlingsflytFeature.IngenValidering to false,
+        BehandlingsflytFeature.NyBrevtype11_17 to false,
+        BehandlingsflytFeature.NyBrevtype11_18 to true,
+        BehandlingsflytFeature.Aktivitetsplikt11_9 to true,
+        BehandlingsflytFeature.OverforingsdatoNullForAvregning to false,
+        BehandlingsflytFeature.OvergangArbeid to false,
+        BehandlingsflytFeature.KvalitetssikringsSteg to false,
+        BehandlingsflytFeature.FatteVedtakAvklaringsbehovService to true,
+        BehandlingsflytFeature.EOSBeregning to false,
+        BehandlingsflytFeature.NyeBarn to false,
+        BehandlingsflytFeature.Arbeidsopptrapping to false,
+        BehandlingsflytFeature.NyBrevbyggerV3 to false,
+        BehandlingsflytFeature.BedreUttrekkAvSakerMedFritakMeldeplikt to false,
+        BehandlingsflytFeature.LagreVedtakIFatteVedtak to false,
+        BehandlingsflytFeature.ReduksjonArbeidOverGrense to false,
+        BehandlingsflytFeature.ForutgaendeMedlemskapPeriodisert to false,
+        BehandlingsflytFeature.ReduksjonIkkeMeldtSeg to false,
+        BehandlingsflytFeature.UnntakMeldepliktDesember to false,
     )
 )
 
@@ -52,7 +81,9 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.NyBrevbyggerV3 to false,
         BehandlingsflytFeature.BedreUttrekkAvSakerMedFritakMeldeplikt to true,
         BehandlingsflytFeature.LagreVedtakIFatteVedtak to true,
+        BehandlingsflytFeature.UnntakMeldepliktDesember to true,
         BehandlingsflytFeature.ReduksjonArbeidOverGrense to true,
         BehandlingsflytFeature.ForutgaendeMedlemskapPeriodisert to true,
+        BehandlingsflytFeature.ReduksjonIkkeMeldtSeg to true,
     )
 )

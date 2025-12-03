@@ -155,7 +155,8 @@ class OvergangArbeidStegTest {
 
     private fun bistand(
         vurderingenGjelderFra: LocalDate,
-        erBehov: Boolean
+        erBehov: Boolean,
+        opprettet: Instant = Instant.now()
     ) = Bistandsvurdering(
         begrunnelse = "Begrunnelse",
         erBehovForAktivBehandling = erBehov,
@@ -165,7 +166,8 @@ class OvergangArbeidStegTest {
         vurdertAv = "Z00000",
         skalVurdereAapIOvergangTilArbeid = null,
         overgangBegrunnelse = null,
-        vurdertIBehandling = BehandlingId(1)
+        vurdertIBehandling = BehandlingId(1),
+        opprettet = opprettet
     )
 
     private fun sykdom(erSyk: Boolean, vurderingenGjelderFra: LocalDate) = Sykdomsvurdering(

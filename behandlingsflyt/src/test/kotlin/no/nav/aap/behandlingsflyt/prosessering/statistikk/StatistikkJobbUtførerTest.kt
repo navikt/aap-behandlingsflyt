@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurdering
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
+import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
@@ -135,8 +136,7 @@ class StatistikkJobbUtførerTest {
             val behandlingRepository = BehandlingRepositoryImpl(connection)
 
             val ident = Ident(
-                identifikator = "456",
-                aktivIdent = true
+                identifikator = "456", aktivIdent = true
             )
             val identGateway = object : IdentGateway {
                 override fun hentAlleIdenterForPerson(ident: Ident): List<Ident> {
@@ -144,9 +144,7 @@ class StatistikkJobbUtførerTest {
                 }
             }
             val sak = PersonOgSakService(
-                identGateway,
-                PersonRepositoryImpl(connection),
-                SakRepositoryImpl(connection)
+                identGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection)
             ).finnEllerOpprett(
                 ident, periode = Periode(LocalDate.now().minusDays(10), LocalDate.now().plusDays(1))
             )
@@ -160,8 +158,7 @@ class StatistikkJobbUtførerTest {
                         VurderingsbehovMedPeriode(
                             no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_SØKNAD
                         )
-                    ),
-                    årsak = ÅrsakTilOpprettelse.SØKNAD
+                    ), årsak = ÅrsakTilOpprettelse.SØKNAD
                 )
             )
 
@@ -176,8 +173,7 @@ class StatistikkJobbUtførerTest {
                         VurderingsbehovMedPeriode(
                             no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_SØKNAD
                         )
-                    ),
-                    årsak = ÅrsakTilOpprettelse.SØKNAD
+                    ), årsak = ÅrsakTilOpprettelse.SØKNAD
                 )
             )
 
@@ -244,10 +240,7 @@ class StatistikkJobbUtførerTest {
     }
 
     private fun sendInnMeldekort(
-        connection: DBConnection,
-        sak: Sak,
-        opprettetBehandling: Behandling,
-        journalpostId: String
+        connection: DBConnection, sak: Sak, opprettetBehandling: Behandling, journalpostId: String
     ) {
         MottattDokumentRepositoryImpl(connection).lagre(
             MottattDokument(
@@ -259,8 +252,7 @@ class StatistikkJobbUtførerTest {
                 kanal = Kanal.DIGITAL,
                 strukturertDokument = StrukturertDokument(
                     MeldekortV0(
-                        harDuArbeidet = true,
-                        timerArbeidPerPeriode = listOf(
+                        harDuArbeidet = true, timerArbeidPerPeriode = listOf(
                             ArbeidIPeriodeV0(
                                 fraOgMedDato = LocalDate.now().minusDays(10),
                                 tilOgMedDato = LocalDate.now().plusDays(1),
@@ -273,8 +265,7 @@ class StatistikkJobbUtførerTest {
         )
         MottattDokumentRepositoryImpl(connection).oppdaterStatus(
             InnsendingReferanse(
-                InnsendingReferanse.Type.JOURNALPOST,
-                journalpostId
+                InnsendingReferanse.Type.JOURNALPOST, journalpostId
             ),
             opprettetBehandling.id,
             opprettetBehandling.sakId,
@@ -300,9 +291,9 @@ class StatistikkJobbUtførerTest {
     @Test
     fun `statistikk-jobb avgir avsluttet behandling-data korrekt`(hendelser: List<StoppetBehandling>) {
         val periode = Periode(
-            fom = LocalDate.now().minusDays(1),
-            tom = LocalDate.now().plusDays(1)
+            fom = LocalDate.now().minusDays(1), tom = LocalDate.now().plusDays(1)
         )
+        val vedtakstidspunkt = LocalDateTime.now()
         val (behandling, sak, ident) = dataSource.transaction { connection ->
             val vilkårsResultatRepository = VilkårsresultatRepositoryImpl(connection = connection)
             val behandlingRepository = BehandlingRepositoryImpl(connection)
@@ -310,8 +301,7 @@ class StatistikkJobbUtførerTest {
             val beregningsgrunnlagRepository = BeregningsgrunnlagRepositoryImpl(connection)
 
             val ident = Ident(
-                identifikator = "123",
-                aktivIdent = true
+                identifikator = "123", aktivIdent = true
             )
             val identGateway = object : IdentGateway {
                 override fun hentAlleIdenterForPerson(ident: Ident): List<Ident> {
@@ -320,9 +310,7 @@ class StatistikkJobbUtførerTest {
             }
 
             val sak = PersonOgSakService(
-                identGateway,
-                PersonRepositoryImpl(connection),
-                SakRepositoryImpl(connection)
+                identGateway, PersonRepositoryImpl(connection), SakRepositoryImpl(connection)
             ).finnEllerOpprett(
                 ident, periode = Periode(LocalDate.now().minusDays(10), LocalDate.now().plusDays(1))
             )
@@ -340,9 +328,11 @@ class StatistikkJobbUtførerTest {
                     ),
                 ),
             )
+            VedtakService(postgresRepositoryRegistry.provider(connection)).lagreVedtak(
+                opprettetBehandling.id, vedtakstidspunkt, LocalDate.now()
+            )
             beregningsgrunnlagRepository.lagre(
-                behandlingId = opprettetBehandling.id,
-                Grunnlag11_19(
+                behandlingId = opprettetBehandling.id, Grunnlag11_19(
                     grunnlaget = GUnit(7),
                     erGjennomsnitt = false,
                     gjennomsnittligInntektIG = GUnit(0),
@@ -409,8 +399,7 @@ class StatistikkJobbUtførerTest {
             )
 
             UnderveisRepositoryImpl(connection).lagre(
-                behandlingId = opprettetBehandling.id,
-                underveisperioder = listOf(
+                behandlingId = opprettetBehandling.id, underveisperioder = listOf(
                     Underveisperiode(
                         periode = periode,
                         meldePeriode = periode,
@@ -429,10 +418,9 @@ class StatistikkJobbUtførerTest {
                         avslagsårsak = null,
                         institusjonsoppholdReduksjon = Prosent.`0_PROSENT`,
                         meldepliktStatus = MeldepliktStatus.MELDT_SEG,
+                        meldepliktGradering = Prosent.`0_PROSENT`,
                     )
-                ),
-                input = object : Faktagrunnlag {}
-            )
+                ), input = object : Faktagrunnlag {})
 
             behandlingRepository.oppdaterBehandlingStatus(opprettetBehandling.id, Status.AVSLUTTET)
 
@@ -477,7 +465,9 @@ class StatistikkJobbUtførerTest {
         // Assert
 
         assertThat(hendelser).isNotEmpty()
-        assertThat(hendelser.first().avsluttetBehandling.toString()).isEqualTo(
+        assertThat(hendelser.first().avsluttetBehandling).usingRecursiveComparison().withComparatorForType({ a, b ->
+            a.truncatedTo(ChronoUnit.SECONDS).compareTo(b.truncatedTo(ChronoUnit.SECONDS))
+        }, LocalDateTime::class.java).isEqualTo(
             AvsluttetBehandlingDTO(
                 tilkjentYtelse = TilkjentYtelseDTO(perioder = emptyList()),
                 beregningsGrunnlag = BeregningsgrunnlagDTO(
@@ -488,27 +478,24 @@ class StatistikkJobbUtførerTest {
                         erGjennomsnitt = false,
                     )
                 ),
-                vilkårsResultat =
-                    VilkårsResultatDTO(
-                        typeBehandling = TypeBehandling.Førstegangsbehandling,
-                        vilkår = listOf(
-                            VilkårDTO(
-                                vilkårType = no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype.valueOf(
-                                    Vilkårtype.MEDLEMSKAP.toString()
-                                ),
-                                perioder = listOf(
-                                    VilkårsPeriodeDTO(
-                                        fraDato = LocalDate.now().minusDays(1),
-                                        tilDato = LocalDate.now().plusDays(1),
-                                        utfall = no.nav.aap.behandlingsflyt.kontrakt.statistikk.Utfall.valueOf(Utfall.OPPFYLT.toString()),
-                                        manuellVurdering = false,
-                                        avslagsårsak = null,
-                                        innvilgelsesårsak = "null",
-                                    )
+                vilkårsResultat = VilkårsResultatDTO(
+                    typeBehandling = TypeBehandling.Førstegangsbehandling, vilkår = listOf(
+                        VilkårDTO(
+                            vilkårType = no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype.valueOf(
+                                Vilkårtype.MEDLEMSKAP.toString()
+                            ), perioder = listOf(
+                                VilkårsPeriodeDTO(
+                                    fraDato = LocalDate.now().minusDays(1),
+                                    tilDato = LocalDate.now().plusDays(1),
+                                    utfall = no.nav.aap.behandlingsflyt.kontrakt.statistikk.Utfall.valueOf(Utfall.OPPFYLT.toString()),
+                                    manuellVurdering = false,
+                                    avslagsårsak = null,
+                                    innvilgelsesårsak = null,
                                 )
                             )
                         )
-                    ),
+                    )
+                ),
                 diagnoser = Diagnoser(kodeverk = "KODEVERK", diagnosekode = "PEST", bidiagnoser = listOf("KOLERA")),
                 rettighetstypePerioder = listOf(
                     RettighetstypePeriode(
@@ -518,7 +505,8 @@ class StatistikkJobbUtførerTest {
                     )
                 ),
                 resultat = ResultatKode.INNVILGET,
-            ).toString()
+                vedtakstidspunkt = vedtakstidspunkt,
+            )
         )
     }
 
@@ -529,11 +517,9 @@ class StatistikkJobbUtførerTest {
 
         val sak = InMemorySakRepository.finnEllerOpprett(
             Person(
-                identifikator = UUID.randomUUID(),
-                identer = listOf(
+                identifikator = UUID.randomUUID(), identer = listOf(
                     Ident(
-                        identifikator = "1234",
-                        aktivIdent = true
+                        identifikator = "1234", aktivIdent = true
                     )
                 )
             ), Periode(LocalDate.now(), LocalDate.now().plusDays(1))
@@ -550,8 +536,7 @@ class StatistikkJobbUtførerTest {
                         type = no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_SØKNAD,
                         periode = Periode(LocalDate.now(), LocalDate.now().plusDays(1))
                     )
-                ),
-                årsak = ÅrsakTilOpprettelse.SØKNAD
+                ), årsak = ÅrsakTilOpprettelse.SØKNAD
             )
         )
         val referanse = behandling.referanse
@@ -613,8 +598,7 @@ class StatistikkJobbUtførerTest {
             }
 
             override fun hentHistoriskeSykdomsvurderinger(
-                sakId: SakId,
-                behandlingId: BehandlingId
+                sakId: SakId, behandlingId: BehandlingId
             ): List<Sykdomsvurdering> {
                 TODO("Not yet implemented")
             }
@@ -622,28 +606,27 @@ class StatistikkJobbUtførerTest {
 
         val påklagetBehandlingRepository = mockk<PåklagetBehandlingRepository>()
         every { påklagetBehandlingRepository.hentGjeldendeVurderingMedReferanse(any()) } returns null
-        val utfører =
-            StatistikkJobbUtfører(
-                statistikkGateway = StatistikkGatewayImpl(),
-                statistikkMetoder = StatistikkMetoder(
-                    vilkårsresultatRepository = vilkårsResultatRepository,
-                    behandlingRepository = behandlingRepository,
-                    sakService = sakService,
-                    tilkjentYtelseRepository = tilkjentYtelseRepository,
-                    beregningsgrunnlagRepository = beregningsgrunnlagRepository,
-                    pipService = PipService(inMemoryRepositoryProvider),
-                    dokumentRepository = dokumentRepository,
-                    sykdomRepository = sykdomRepository,
-                    underveisRepository = InMemoryUnderveisRepository,
-                    trukketSøknadService = TrukketSøknadService(
-                        trukketSøknadRepository = InMemoryTrukketSøknadRepository
-                    ),
-                    påklagetBehandlingRepository = påklagetBehandlingRepository,
-                    klageresultatUtleder = DummyKlageresultatUtleder(),
-                    avbrytRevurderingService = AvbrytRevurderingService(inMemoryRepositoryProvider),
-                    meldekortRepository = InMemoryMeldekortRepository,
-                )
+        val utfører = StatistikkJobbUtfører(
+            statistikkGateway = StatistikkGatewayImpl(), statistikkMetoder = StatistikkMetoder(
+                vilkårsresultatRepository = vilkårsResultatRepository,
+                behandlingRepository = behandlingRepository,
+                sakService = sakService,
+                tilkjentYtelseRepository = tilkjentYtelseRepository,
+                beregningsgrunnlagRepository = beregningsgrunnlagRepository,
+                pipService = PipService(inMemoryRepositoryProvider),
+                dokumentRepository = dokumentRepository,
+                sykdomRepository = sykdomRepository,
+                underveisRepository = InMemoryUnderveisRepository,
+                trukketSøknadService = TrukketSøknadService(
+                    trukketSøknadRepository = InMemoryTrukketSøknadRepository
+                ),
+                påklagetBehandlingRepository = påklagetBehandlingRepository,
+                klageresultatUtleder = DummyKlageresultatUtleder(),
+                avbrytRevurderingService = AvbrytRevurderingService(inMemoryRepositoryProvider),
+                meldekortRepository = InMemoryMeldekortRepository,
+                vedtakService = VedtakService(inMemoryRepositoryProvider),
             )
+        )
 
         val avklaringsbehov = listOf(
             AvklaringsbehovHendelseDto(
@@ -690,28 +673,26 @@ class StatistikkJobbUtførerTest {
         assertThat(hendelser).isNotEmpty()
         assertThat(hendelser.size).isEqualTo(1)
 
-        assertThat(hendelser.first())
-            .usingRecursiveComparison()
-            .isEqualTo(
-                StoppetBehandling(
-                    saksnummer = Saksnummer.valueOf(sakId.id).toString(),
-                    behandlingReferanse = referanse.referanse,
-                    behandlingStatus = Status.UTREDES,
-                    tidspunktSisteEndring = hendelsesTidspunkt,
-                    behandlingType = TypeBehandling.Klage,
-                    ident = fødselsNummer,
-                    avklaringsbehov = avklaringsbehov,
-                    behandlingOpprettetTidspunkt = payload.opprettetTidspunkt,
-                    versjon = ApplikasjonsVersjon.versjon,
-                    soknadsFormat = Kanal.PAPIR,
-                    mottattTid = tidligsteMottattTid,
-                    sakStatus = UTREDES,
-                    hendelsesTidspunkt = hendelsesTidspunkt,
-                    identerForSak = listOf("1234"),
-                    vurderingsbehov = listOf(Vurderingsbehov.SØKNAD),
-                    søknadIder = listOf(JournalpostId("xxx"), JournalpostId("xxx2"))
-                )
+        assertThat(hendelser.first()).usingRecursiveComparison().isEqualTo(
+            StoppetBehandling(
+                saksnummer = Saksnummer.valueOf(sakId.id).toString(),
+                behandlingReferanse = referanse.referanse,
+                behandlingStatus = Status.UTREDES,
+                tidspunktSisteEndring = hendelsesTidspunkt,
+                behandlingType = TypeBehandling.Klage,
+                ident = fødselsNummer,
+                avklaringsbehov = avklaringsbehov,
+                behandlingOpprettetTidspunkt = payload.opprettetTidspunkt,
+                versjon = ApplikasjonsVersjon.versjon,
+                soknadsFormat = Kanal.PAPIR,
+                mottattTid = tidligsteMottattTid,
+                sakStatus = UTREDES,
+                hendelsesTidspunkt = hendelsesTidspunkt,
+                identerForSak = listOf("1234"),
+                vurderingsbehov = listOf(Vurderingsbehov.SØKNAD),
+                søknadIder = listOf(JournalpostId("xxx"), JournalpostId("xxx2"))
             )
+        )
     }
 }
 
