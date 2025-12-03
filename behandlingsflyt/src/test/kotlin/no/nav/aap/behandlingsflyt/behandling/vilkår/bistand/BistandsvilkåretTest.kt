@@ -2,14 +2,14 @@ package no.nav.aap.behandlingsflyt.behandling.vilkår.bistand
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarBistandLøser
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovEnkelLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingGammelLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderBistandsbehovSteg
@@ -202,7 +202,7 @@ class BistandsvilkåretTest {
             postgresRepositoryRegistry.provider(connection).provide<SykdomRepository>()
                 .lagre(revurdering.id, listOf(sykdomsvurdering))
 
-            val bistandsvurdering2 = BistandVurderingLøsningDto(
+            val bistandsvurdering2 = BistandVurderingGammelLøsningDto(
                 begrunnelse = "Begrunnelse 2",
                 erBehovForAktivBehandling = false,
                 erBehovForArbeidsrettetTiltak = false,
@@ -220,7 +220,7 @@ class BistandsvilkåretTest {
                         sakId = sak.id,
                         behandlingType = TypeBehandling.Revurdering
                     ),
-                ), løsning = AvklarBistandsbehovLøsning(bistandsVurdering = bistandsvurdering2)
+                ), løsning = AvklarBistandsbehovEnkelLøsning(bistandsVurdering = bistandsvurdering2)
             )
         }
 
