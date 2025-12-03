@@ -49,6 +49,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.concurrent.thread
+import kotlin.time.Duration.Companion.milliseconds
 
 class KabalKafkaKonsumentTest {
     companion object {
@@ -109,7 +110,7 @@ class KabalKafkaKonsumentTest {
             testConfig(kafka.bootstrapServers),
             dataSource = dataSource,
             repositoryRegistry = repositoryRegistry,
-            pollTimeout = Duration.ofMillis(50),
+            pollTimeout = 50.milliseconds,
         )
 
         val thread = thread(start = true) {
@@ -168,7 +169,7 @@ class KabalKafkaKonsumentTest {
             testConfig(kafka.bootstrapServers),
             dataSource = dataSource,
             repositoryRegistry = repositoryRegistry,
-            pollTimeout = Duration.ofMillis(50),
+            pollTimeout = 50.milliseconds,
         )
 
         val melding = """{"kilde": "KELVIN", "eventId": "123", "kildeReferanse": "123", "resten": "Noe tull"}"""

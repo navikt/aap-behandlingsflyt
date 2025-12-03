@@ -31,14 +31,16 @@ import no.nav.person.pdl.leesah.Personhendelse
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.slf4j.LoggerFactory
-import java.time.Duration
 import javax.sql.DataSource
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 const val PDL_HENDELSE_TOPIC = "pdl.leesah-v1"
 
 class PdlHendelseKafkaKonsument(
     config: KafkaConsumerConfig<String, Personhendelse>,
-    pollTimeout: Duration = Duration.ofSeconds(10L),
+    pollTimeout: Duration = 10.seconds,
+    closeTimeout: Duration = 30.seconds,
     private val dataSource: DataSource,
     private val repositoryRegistry: RepositoryRegistry,
     private val gatewayProvider: GatewayProvider,
@@ -47,6 +49,7 @@ class PdlHendelseKafkaKonsument(
     topic = PDL_HENDELSE_TOPIC,
     config = config,
     pollTimeout = pollTimeout,
+    closeTimeout = closeTimeout,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
     private val secureLogger = LoggerFactory.getLogger("secureLog")
