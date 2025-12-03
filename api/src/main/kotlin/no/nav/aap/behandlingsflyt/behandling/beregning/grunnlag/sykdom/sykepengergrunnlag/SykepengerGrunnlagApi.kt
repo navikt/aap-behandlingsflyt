@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykepeng
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerVurdering
@@ -21,6 +22,7 @@ import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
+import kotlin.collections.orEmpty
 
 
 fun NormalOpenAPIRoute.sykepengerGrunnlagApi(
@@ -39,6 +41,7 @@ fun NormalOpenAPIRoute.sykepengerGrunnlagApi(
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val sykepengerErstatningRepository = repositoryProvider.provide<SykepengerErstatningRepository>()
+                    val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
                     val sakRepository = repositoryProvider.provide<SakRepository>()
                     val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
                     val behandling: Behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
@@ -48,9 +51,9 @@ fun NormalOpenAPIRoute.sykepengerGrunnlagApi(
                     val vedtatteVurderinger = grunnlag?.vurderinger?.filter { it.vurdertIBehandling != behandling.id }.orEmpty()
                     val nyeVurderinger = grunnlag?.vurderinger?.filter { it.vurdertIBehandling == behandling.id }.orEmpty()
 
-                    // TODO: Disse burde nok utledes smartere når mer i sykdom er periodisert. Hente det fra avklaringsbehovet?
-                    val perioderSomTrengerVurdering = if (vedtatteVurderinger.isEmpty()) listOf(sak.rettighetsperiode) else sak.rettighetsperiode.minus(vedtatteVurderinger.somTidslinje().helePerioden())
+                    val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
                     val kanVurderes = listOf(sak.rettighetsperiode)
+                    val perioderSomTrengerVurdering = avklaringsbehov.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKEPENGEERSTATNING)?.perioderVedtaketBehøverVurdering().orEmpty()
 
                     val sisteVedtatteVurderinger = vedtatteVurderinger
                         .somTidslinje()
