@@ -32,7 +32,7 @@ class TrekkKlageLøser(
             "kan kun trekke klager som utredes"
         }
 
-        if(løsning.vurdering.skalTrekkes && løsning.vurdering.hvorforTrekkes == null)(
+        if (løsning.vurdering.skalTrekkes && løsning.vurdering.hvorforTrekkes == null) (
             throw UgyldigForespørselException("Må ha valgt hvorfor klage trekkes om den skal trekkes")
         )
 
@@ -57,5 +57,4 @@ class TrekkKlageLøser(
     override fun forBehov(): Definisjon {
         return Definisjon.VURDER_TREKK_AV_KLAGE
     }
-
 }
