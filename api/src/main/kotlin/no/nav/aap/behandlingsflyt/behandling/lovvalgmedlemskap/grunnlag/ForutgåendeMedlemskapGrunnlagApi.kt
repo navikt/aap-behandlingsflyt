@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.tilTidslinje
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektForutgåendeRepository
@@ -28,37 +27,7 @@ fun NormalOpenAPIRoute.forutgåendeMedlemskapApi(
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,
 ) {
-    val ansattInfoService = AnsattInfoService(gatewayProvider)
     route("/api/behandling") {
-        route("/{referanse}/grunnlag/forutgaaendemedlemskap") {
-            getGrunnlag<BehandlingReferanse, ForutgåendeMedlemskapGrunnlagResponse>(
-                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
-                behandlingPathParam = BehandlingPathParam("referanse"),
-                avklaringsbehovKode =  Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP.kode.toString()
-            ) { req ->
-                val grunnlag = dataSource.transaction { connection ->
-                    val repositoryProvider = repositoryRegistry.provider(connection)
-                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                    val forutgåendeRepository =
-                        repositoryProvider.provide<MedlemskapArbeidInntektForutgåendeRepository>()
-                    val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
-
-                    val data =
-                        forutgåendeRepository.hentHvisEksisterer(behandling.id)?.vurderinger?.maxByOrNull { it.vurdertTidspunkt } // TODO må legge innn støtte for periodisering her
-                    val historiskeManuelleVurderinger =
-                        forutgåendeRepository.hentHistoriskeVurderinger(behandling.sakId, behandling.id)
-                    val ansattNavnOgEnhet = data?.let { ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv) }
-
-                    ForutgåendeMedlemskapGrunnlagResponse(
-                        harTilgangTilÅSaksbehandle = kanSaksbehandle(),
-                        vurdering = data?.toResponse(ansattNavnOgEnhet = ansattNavnOgEnhet),
-                        historiskeManuelleVurderinger = historiskeManuelleVurderinger.map { it.toResponse() }
-                    )
-                }
-                respond(grunnlag)
-            }
-        }
-
         route("/{referanse}/grunnlag/forutgaaendemedlemskap-v2") {
             getGrunnlag<BehandlingReferanse, PeriodisertForutgåendeMedlemskapGrunnlagResponse>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
