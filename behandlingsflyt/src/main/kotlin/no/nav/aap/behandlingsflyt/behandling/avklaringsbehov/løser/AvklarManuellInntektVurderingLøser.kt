@@ -33,7 +33,7 @@ class AvklarManuellInntektVurderingLøser(
         val relevantePeriode = beregningService.utledRelevanteBeregningsÅr(kontekst.behandlingId())
         val sisteRelevanteÅr = relevantePeriode.max()
 
-        if (løsning.manuellVurderingForManglendeInntekt.belop!! < BigDecimal.ZERO
+        if ((løsning.manuellVurderingForManglendeInntekt.belop != null && løsning.manuellVurderingForManglendeInntekt.belop < BigDecimal.ZERO)
             || løsning.manuellVurderingForManglendeInntekt.vurderinger?.any { it.beløp != null && it.beløp < BigDecimal.ZERO } == true
             || løsning.manuellVurderingForManglendeInntekt.vurderinger?.any { it.eøsBeløp != null && it.eøsBeløp < BigDecimal.ZERO } == true
         ) {
@@ -56,7 +56,7 @@ class AvklarManuellInntektVurderingLøser(
                 setOf(
                     ManuellInntektVurdering(
                         begrunnelse = løsning.manuellVurderingForManglendeInntekt.begrunnelse,
-                        belop = løsning.manuellVurderingForManglendeInntekt.belop.let(::Beløp),
+                        belop = Beløp(løsning.manuellVurderingForManglendeInntekt.belop!!),
                         vurdertAv = kontekst.bruker.ident,
                         år = sisteRelevanteÅr
                     )
