@@ -59,6 +59,7 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
         grunn: ÅrsakTilSettPåVent?,
         endretAv: String,
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
+        perioderVedtaketBehøverVurdering: Set<Periode>?
     ) {
         var avklaringsbehovId = hentRelevantAvklaringsbehov(behandlingId, definisjon)
 
@@ -74,7 +75,8 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
                 grunn = grunn,
                 endretAv = endretAv,
                 frist = frist,
-                perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert
+                perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
+                perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering
             )
         )
     }
@@ -168,8 +170,8 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
         endring: Endring
     ) {
         val query = """
-            INSERT INTO AVKLARINGSBEHOV_ENDRING (avklaringsbehov_id, status, begrunnelse, frist, opprettet_av, opprettet_tid, venteaarsak, perioder) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO AVKLARINGSBEHOV_ENDRING (avklaringsbehov_id, status, begrunnelse, frist, opprettet_av, opprettet_tid, venteaarsak, perioder_ugyldig_vurdering, perioder_krever_vurdering) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent()
 
         val opprettetAv = endring.endretAv
@@ -184,6 +186,7 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
                 setLocalDateTime(6, LocalDateTime.now())
                 setEnumName(7, endring.grunn)
                 setPeriodeArray(8, endring.perioderSomIkkeErTilstrekkeligVurdert?.toList())
+                setPeriodeArray(9, endring.perioderVedtaketBehøverVurdering?.toList())
             }
         }
         val queryPeriode = """
@@ -343,7 +346,8 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
             frist = endring.frist,
             endretAv = endring.endretAv,
             årsakTilRetur = relevanteÅrsaker,
-            perioderSomIkkeErTilstrekkeligVurdert = endring.perioderSomIkkeErTilstrekkeligVurdert
+            perioderSomIkkeErTilstrekkeligVurdert = endring.perioderSomIkkeErTilstrekkeligVurdert,
+            perioderVedtaketBehøverVurdering = endring.perioderVedtaketBehøverVurdering
         )
     }
 
@@ -371,7 +375,9 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
             endretAv = row.getString("opprettet_av"),
             frist = row.getLocalDateOrNull("frist"),
             grunn = row.getEnumOrNull("venteaarsak"),
-            perioderSomIkkeErTilstrekkeligVurdert = row.getPeriodeArrayOrNull("perioder")?.toSet()
+            perioderSomIkkeErTilstrekkeligVurdert = row.getPeriodeArrayOrNull("perioder")?.toSet() // TODO: Fjern etter renaming
+                ?: row.getPeriodeArrayOrNull("perioder_ugyldig_vurdering")?.toSet(),
+            perioderVedtaketBehøverVurdering = row.getPeriodeArrayOrNull("perioder_krever_vurdering")?.toSet()
         )
     }
 
@@ -400,7 +406,8 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
         val endretAv: String,
         val frist: LocalDate?,
         val grunn: ÅrsakTilSettPåVent?,
-        val perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?
+        val perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
+        val perioderVedtaketBehøverVurdering: Set<Periode>?
     )
 
     internal class ÅrsakInternal(val endringId: Long, val årsak: ÅrsakTilReturKode, val årsakFritekst: String?)

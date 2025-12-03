@@ -21,7 +21,7 @@ import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.foreslaaVedtakAPI(
+fun NormalOpenAPIRoute.foreslaaVedtakApi(
     dataSource: DataSource,
     repositoryRegistry: RepositoryRegistry
 ) {

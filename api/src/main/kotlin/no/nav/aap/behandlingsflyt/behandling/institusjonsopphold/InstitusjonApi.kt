@@ -26,7 +26,7 @@ import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.institusjonAPI(
+fun NormalOpenAPIRoute.institusjonApi(
     dataSource: DataSource,
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,
