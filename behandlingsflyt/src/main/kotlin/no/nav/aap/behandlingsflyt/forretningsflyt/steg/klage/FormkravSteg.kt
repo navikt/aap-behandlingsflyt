@@ -187,7 +187,7 @@ class FormkravSteg (
             )
             formkravRepository.lagreVarsel(behandlingId, BrevbestillingReferanse(brevReferanse))
         } else if (brevbestilling.status == Status.AVBRUTT) {
-            brevbestillingService.oppdaterStatus(behandlingId, brevbestilling.referanse, Status.FORHÅNDSVISNING_KLAR)
+            brevbestillingService.gjenopptaBestilling(behandlingId, brevbestilling.referanse)
         }
     }
 
