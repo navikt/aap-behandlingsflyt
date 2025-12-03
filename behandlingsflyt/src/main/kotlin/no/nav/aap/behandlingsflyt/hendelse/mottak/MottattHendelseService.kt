@@ -100,6 +100,5 @@ private fun kjennerTilDokumentFraFør(
     mottattDokumentRepository: MottattDokumentRepository
 ): Boolean {
     val innsendinger = mottattDokumentRepository.hentDokumenterAvType(sak.id, innsending.type)
-
     return innsendinger.any { dokument -> dokument.referanse == innsending.referanse }
 }
