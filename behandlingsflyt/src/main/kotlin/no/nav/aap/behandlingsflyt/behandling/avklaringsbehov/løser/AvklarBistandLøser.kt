@@ -35,7 +35,7 @@ class AvklarBistandLøser(
             .sykdomsvurderinger.maxBy { it.opprettet }
         val bistandsVurdering = løsning.bistandsVurdering.tilBistandVurdering(
             kontekst.bruker,
-            defaultVurderingenGjelderFra = nyesteSykdomsvurdering.vurderingenGjelderFra, // TODO: Gjør uavhengig fra sykdom
+            defaultVurderingenGjelderFra = løsning.bistandsVurdering.fom ?: nyesteSykdomsvurdering.vurderingenGjelderFra, // TODO: Gjør uavhengig fra sykdom
             kontekst.behandlingId()
         )
 
