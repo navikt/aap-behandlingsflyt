@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat
 import no.nav.aap.behandlingsflyt.behandling.rettighetstype.vurderRettighetsType
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
+import no.nav.aap.komponenter.tidslinje.outerJoinNotNull
 
 class Vilkårsresultat(
     internal var id: Long? = null,
@@ -33,6 +34,12 @@ class Vilkårsresultat(
 
     fun alle(): List<Vilkår> {
         return vilkår.toList()
+    }
+
+    fun somTidslinje(): Tidslinje<Map<Vilkårtype, Vilkårsvurdering>> {
+        return alle()
+            .map { vilkår -> vilkår.tidslinje().mapValue { vurdering -> vilkår.type to vurdering } }
+            .outerJoinNotNull { it.toMap() }
     }
 
     fun rettighetstypeTidslinje(): Tidslinje<RettighetsType> {

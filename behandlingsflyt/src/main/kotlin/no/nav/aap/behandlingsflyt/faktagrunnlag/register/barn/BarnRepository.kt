@@ -30,12 +30,9 @@ interface BarnRepository : Repository {
      * Lagre vurderinger på barn. Gjøres i løseren, [no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarBarnetilleggLøser].
      */
     fun lagreVurderinger(behandlingId: BehandlingId, vurdertAv: String, vurderteBarn: List<VurdertBarn>)
-    fun hentBehandlingIdForSakSomFårBarnetilleggForBarn(ident: Ident): List<BehandlingId>
+    fun hentBehandlingIdForSakSomFårBarnetilleggForRegisterBarn(ident: Ident): List<BehandlingId>
+    fun hentBehandlingIdForSakSomFårBarnetilleggForOppgitteBarn(ident: Ident): List<BehandlingId>
+    fun finnOppgitteBarn(ident: String):  SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn?
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
-
-    /**
-     * Deaktiver alle saksbehandleroppgitte barn for en behandling. Brukes når alle saksbehandleroppgitte barn skal fjernes.
-     */
-    fun deaktiverAlleSaksbehandlerOppgitteBarn(behandlingId: BehandlingId)
-    fun tilbakestillGrunnlag(behandlingId: BehandlingId, forrigeBehandling: BehandlingId?)
+    fun tilbakestillGrunnlag(behandlingId: BehandlingId, forrigeBehandlingId: BehandlingId?)
 }

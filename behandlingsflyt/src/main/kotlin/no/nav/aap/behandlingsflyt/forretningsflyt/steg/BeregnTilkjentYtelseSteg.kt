@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelse
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Reduksjon11_9
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Reduksjon11_9Repository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
@@ -19,6 +20,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.Samordni
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -26,7 +28,8 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.verdityper.Beløp
@@ -46,10 +49,11 @@ class BeregnTilkjentYtelseSteg private constructor(
     private val tidligereVurderinger: TidligereVurderinger,
     private val reduksjon11_9Repository: Reduksjon11_9Repository,
     private val aktivitetsplikt11_9repository: Aktivitetsplikt11_9Repository,
+    private val unleashGateway: UnleashGateway,
 
     ) : BehandlingSteg {
 
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         underveisRepository = repositoryProvider.provide(),
         beregningsgrunnlagRepository = repositoryProvider.provide(),
         personopplysningRepository = repositoryProvider.provide(),
@@ -61,20 +65,13 @@ class BeregnTilkjentYtelseSteg private constructor(
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
         reduksjon11_9Repository = repositoryProvider.provide(),
         aktivitetsplikt11_9repository = repositoryProvider.provide(),
+        unleashGateway = gatewayProvider.provide(),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if ((kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING && tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(
-                kontekst,
-                type()
-            ))
-            || (kontekst.vurderingType == VurderingType.REVURDERING && tidligereVurderinger.girIngenBehandlingsgrunnlag(
-                kontekst,
-                type()
-            ))
-        ) {
+        if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
             return Fullført
         }
 
@@ -92,15 +89,17 @@ class BeregnTilkjentYtelseSteg private constructor(
         val samordningUføre = samordningUføreRepository.hentHvisEksisterer(kontekst.behandlingId)
         val samordningArbeidsgiver = samordningArbeidsgiverRepository.hentHvisEksisterer(kontekst.behandlingId)
 
-        val beregnetTilkjentYtelse = BeregnTilkjentYtelseService(
+        val grunnlag = TilkjentYtelseGrunnlag(
             fødselsdato,
-            beregningsgrunnlag,
+            beregningsgrunnlag?.grunnlaget(),
             underveisgrunnlag,
             barnetilleggGrunnlag,
             samordningGrunnlag,
             samordningUføre,
-            samordningArbeidsgiver
-        ).beregnTilkjentYtelse()
+            samordningArbeidsgiver,
+            unleashGateway.isEnabled(BehandlingsflytFeature.UnntakMeldepliktDesember)
+        )
+        val beregnetTilkjentYtelse = BeregnTilkjentYtelseService(grunnlag).beregnTilkjentYtelse()
 
         val aktivitetsplikt11_9Grunnlag = aktivitetsplikt11_9repository.hentHvisEksisterer(kontekst.behandlingId)
         val reduksjoner11_9 = (aktivitetsplikt11_9Grunnlag?.gjeldendeVurderinger() ?: emptyList())
@@ -108,7 +107,10 @@ class BeregnTilkjentYtelseSteg private constructor(
 
         tilkjentYtelseRepository.lagre(
             behandlingId = kontekst.behandlingId,
-            tilkjent = beregnetTilkjentYtelse.segmenter().map { TilkjentYtelsePeriode(it.periode, it.verdi) })
+            tilkjent = beregnetTilkjentYtelse.segmenter().map { TilkjentYtelsePeriode(it.periode, it.verdi) },
+            faktagrunnlag = grunnlag,
+            versjon = ApplikasjonsVersjon.versjon,
+        )
         log.info("Beregnet tilkjent ytelse: $beregnetTilkjentYtelse")
 
         log.info("Lagrer ned reduksjoner pga aktivitetsplikt 11-9: [${reduksjoner11_9.size}]")
@@ -144,7 +146,7 @@ class BeregnTilkjentYtelseSteg private constructor(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
         ): BehandlingSteg {
-            return BeregnTilkjentYtelseSteg(repositoryProvider)
+            return BeregnTilkjentYtelseSteg(repositoryProvider, gatewayProvider)
         }
 
         override fun type(): StegType {

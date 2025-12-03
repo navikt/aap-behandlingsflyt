@@ -267,7 +267,7 @@ class EnklereFlytOrkestratorTest {
             )
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
         avklaringsbehovene.leggTil(
-            definisjoner = listOf(Definisjon.AVKLAR_SYKDOM), funnetISteg = AVKLAR_SYKDOM
+            definisjoner = listOf(Definisjon.AVKLAR_SYKDOM), funnetISteg = AVKLAR_SYKDOM, null, null
         )
 
         val flytKontekst = flytOrkestrator.opprettKontekst(behandling.sakId, behandling.id)
@@ -352,11 +352,11 @@ class EnklereFlytOrkestratorTest {
             )
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
         avklaringsbehovene.leggTil(
-            definisjoner = listOf(Definisjon.AVKLAR_STUDENT), funnetISteg = AVKLAR_STUDENT
+            definisjoner = listOf(Definisjon.AVKLAR_STUDENT), funnetISteg = AVKLAR_STUDENT, null, null
         )
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_STUDENT, "asdf", "TESTEN")
         avklaringsbehovene.leggTil(
-            definisjoner = listOf(Definisjon.AVKLAR_SYKDOM), funnetISteg = AVKLAR_SYKDOM
+            definisjoner = listOf(Definisjon.AVKLAR_SYKDOM), funnetISteg = AVKLAR_SYKDOM, null, null
         )
 
         val flytKontekst = flytOrkestrator.opprettKontekst(behandling.sakId, behandling.id)
@@ -744,14 +744,14 @@ class EnklereFlytOrkestratorTest {
 
         /* Plasser flyten i steget FASTSETT_ARBEIDSEVNE. */
         avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-            .leggTil(listOf(Definisjon.FASTSETT_ARBEIDSEVNE), Definisjon.FASTSETT_ARBEIDSEVNE.løsesISteg)
+            .leggTil(listOf(Definisjon.FASTSETT_ARBEIDSEVNE), Definisjon.FASTSETT_ARBEIDSEVNE.løsesISteg, null, null)
         flytOrkestrator.forberedOgProsesserBehandling(flytOrkestrator.opprettKontekst(behandling.sakId, behandling.id))
         behandlingRepository.hent(behandling.id).also {
             assertThat(it.aktivtSteg()).isEqualTo(Definisjon.FASTSETT_ARBEIDSEVNE.løsesISteg)
         }
 
         avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-            .leggTil(listOf(Definisjon.AVKLAR_BISTANDSBEHOV), Definisjon.AVKLAR_BISTANDSBEHOV.løsesISteg)
+            .leggTil(listOf(Definisjon.AVKLAR_BISTANDSBEHOV), Definisjon.AVKLAR_BISTANDSBEHOV.løsesISteg, null, null)
 
         flytOrkestrator.forberedOgProsesserBehandling(flytOrkestrator.opprettKontekst(behandling.sakId, behandling.id))
 

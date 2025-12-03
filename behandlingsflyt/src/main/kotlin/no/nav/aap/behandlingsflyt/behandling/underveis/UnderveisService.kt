@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt1
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneGrunnlag
@@ -131,7 +132,7 @@ class UnderveisService(
                         periode = it.periode,
                         meldePeriode = it.verdi.meldeperiode(),
                         utfall = it.verdi.utfall(),
-                        rettighetsType = it.verdi.rettighetsType(),
+                        rettighetsType = it.verdi.endeligRettighetsType(),
                         avslagsårsak = it.verdi.avslagsårsak(),
                         grenseverdi = it.verdi.grenseverdi(),
                         arbeidsgradering = it.verdi.arbeidsgradering(),
@@ -139,6 +140,10 @@ class UnderveisService(
                         brukerAvKvoter = it.verdi.varighetVurdering?.brukerAvKvoter.orEmpty(),
                         institusjonsoppholdReduksjon = if (it.verdi.institusjonVurdering?.skalReduseres == true) Prosent.`50_PROSENT` else Prosent.`0_PROSENT`,
                         meldepliktStatus = it.verdi.meldepliktVurdering?.status,
+                        meldepliktGradering = if (it.verdi.meldepliktVurdering?.utfall == Utfall.OPPFYLT)
+                            Prosent.`0_PROSENT`
+                        else
+                            Prosent.`100_PROSENT`
                     )
                 },
             input
@@ -147,8 +152,12 @@ class UnderveisService(
     }
 
     internal fun vurderRegler(input: UnderveisInput): Tidslinje<Vurdering> {
-        return regelset.fold(tidslinjeOf(input.periodeForVurdering to Vurdering(reduksjonArbeidOverGrenseEnabled = input.reduksjonArbeidOverGrenseEnabled))) { resultat, regel ->
-            regel.vurder(input, resultat).begrensetTil(input.periodeForVurdering)
+        val startvurdering = Vurdering(
+            reduksjonArbeidOverGrenseEnabled = input.reduksjonArbeidOverGrenseEnabled,
+            reduksjonMeldepliktEnabled = input.reduksjonIkkeMeldtSegEnabled,
+        )
+        return regelset.fold(tidslinjeOf(input.periodeForVurdering to startvurdering)) { resultat, regel ->
+             regel.vurder(input, resultat).begrensetTil(input.periodeForVurdering)
         }
     }
 
@@ -160,7 +169,7 @@ class UnderveisService(
         val meldekort = meldekortGrunnlag?.meldekort().orEmpty()
         val innsendingsTidspunkt = meldekortGrunnlag?.innsendingsdatoPerMelding().orEmpty()
         val kvote = kvoteService.beregn(behandlingId)
-        val utlederResultat = institusjonsoppholdUtlederService.utled(behandlingId)
+        val utlederResultat = institusjonsoppholdUtlederService.utled(behandlingId, begrensetTilRettighetsperiode = false)
 
         val institusjonsopphold = MapInstitusjonoppholdTilRegel.map(utlederResultat)
 
@@ -203,6 +212,8 @@ class UnderveisService(
             meldeperioder = meldeperioder,
             vedtaksdatoFørstegangsbehandling = vedtaksdatoFørstegangsbehandling?.toLocalDate(),
             reduksjonArbeidOverGrenseEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.ReduksjonArbeidOverGrense),
+            unntakMeldepliktDesemberEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.UnntakMeldepliktDesember),
+            reduksjonIkkeMeldtSegEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.ReduksjonIkkeMeldtSeg),
         )
     }
 
