@@ -8,7 +8,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 data class ManuellVurderingForForutgåendeMedlemskap(
-    val id: Long? = null,
     val begrunnelse: String,
     val harForutgåendeMedlemskap: Boolean,
     val varMedlemMedNedsattArbeidsevne: Boolean?,
