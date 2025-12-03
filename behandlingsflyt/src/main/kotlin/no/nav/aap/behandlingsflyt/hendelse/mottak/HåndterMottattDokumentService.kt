@@ -12,7 +12,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Aktivitetskort
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AktivitetskortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AnnetRelevantDokumentV0
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.DialogMelding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KabalHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Klage
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlageV0
@@ -192,7 +191,7 @@ class HåndterMottattDokumentService(
         val sak = sakService.hent(sakId)
         val periode = utledPeriode(brevkategori, mottattTidspunkt, melding)
         val vurderingsbehov = utledVurderingsbehov(brevkategori, melding, periode)
-
+        log.info("Håndterer dialogmelding for $sak.id")
         val sisteYtelsesBehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
 
         if (sisteYtelsesBehandling != null)
