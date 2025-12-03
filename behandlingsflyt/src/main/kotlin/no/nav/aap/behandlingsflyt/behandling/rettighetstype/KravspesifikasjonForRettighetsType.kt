@@ -93,6 +93,15 @@ interface KravspesifikasjonForRettighetsType {
                 && kravBistand.oppfyllesAv(vilkårsresultat[Vilkårtype.BISTANDSVILKÅRET])
                 && MåVæreOppfylt().oppfyllesAv(vilkårsresultat[Vilkårtype.GRUNNLAGET])
                 && SkalIkkeGiAvslag.oppfyllesAv(vilkårsresultat[Vilkårtype.SAMORDNING])
+                /* Straffegjennomføringsvilkåret blir alltid satt, så kan egentlig være "MåVæreOppfylt",
+                  * men siden ikke alle åpne behandlinger har kjørt gjennom  dette steget, så
+                  * brukes det svakere kravet `SkalIkkeGiAvslag`.
+                  *
+                  * Betingelse for å bytte til "MåVæreOppfylt": alle åpne behandlinger har vurdering
+                  * for vilkåret `STRAFFEGJENNOMFØRING` hvor det er en periode med OPPFYLT
+                  * eller IKKE_OPPFYLT.
+                 */
+                && SkalIkkeGiAvslag.oppfyllesAv(vilkårsresultat[Vilkårtype.STRAFFEGJENNOMFØRING])
                 && kravForutgåendeMedlemskap.oppfyllesAv(vilkårsresultat[Vilkårtype.MEDLEMSKAP])
                 && MåVæreOppfylt().oppfyllesAv(vilkårsresultat[Vilkårtype.LOVVALG])
                 && kravSykdom.oppfyllesAv(vilkårsresultat[Vilkårtype.SYKDOMSVILKÅRET])
@@ -108,6 +117,7 @@ interface KravspesifikasjonForRettighetsType {
                 kravBistand.avslagsårsaker(vilkårsresultat[Vilkårtype.BISTANDSVILKÅRET]) +
                 MåVæreOppfylt().avslagsårsaker(vilkårsresultat[Vilkårtype.GRUNNLAGET]) +
                 SkalIkkeGiAvslag.avslagsårsaker(vilkårsresultat[Vilkårtype.SAMORDNING]) +
+                SkalIkkeGiAvslag.avslagsårsaker(vilkårsresultat[Vilkårtype.STRAFFEGJENNOMFØRING]) +
                 kravForutgåendeMedlemskap.avslagsårsaker(vilkårsresultat[Vilkårtype.MEDLEMSKAP]) +
                 MåVæreOppfylt().avslagsårsaker(vilkårsresultat[Vilkårtype.LOVVALG]) +
                 kravSykdom.avslagsårsaker(vilkårsresultat[Vilkårtype.SYKDOMSVILKÅRET]) +

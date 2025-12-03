@@ -119,4 +119,13 @@ enum class Vilkårtype(
         hjemmel = "§ 11-13",
         obligatorisk = false
     ),
+    STRAFFEGJENNOMFØRING(
+        kode = "AAP-26",
+        spesielleInnvilgelsesÅrsaker = emptyList(),
+        avslagsårsaker = listOf(
+            Avslagsårsak.IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING
+        ),
+        hjemmel = "§ 11-26",
+        obligatorisk = false,
+    )
 }
