@@ -190,7 +190,7 @@ class PdlHendelseKafkaKonsument(
                     Dødsfalltype.DODSFALL_BARN -> {
                         log.info("Registrerer mottatt hendelse fordi dødsfall på barn. Bruker har iverksatte vedtak der minst en fremtidig periode er oppfylt ${sak.saksnummer}")
                         hendelseService.registrerMottattHendelse(
-                            personHendelse.tilInnsendingDødsfallBarn(sak.saksnummer)
+                            personHendelse.tilInnsendingDødsfallBarn(sak.saksnummer, personHendelse.navn, personHendelse.personidenter)
                         )
                     }
                 }
@@ -207,7 +207,7 @@ class PdlHendelseKafkaKonsument(
                 Dødsfalltype.DODSFALL_BARN -> {
                     log.info("Registrerer mottatt hendelse fordi dødsfall på barn. Bruker har ingen iverksatte vedtak ${sak.saksnummer}")
                     hendelseService.registrerMottattHendelse(
-                        personHendelse.tilInnsendingDødsfallBarn(sak.saksnummer)
+                        personHendelse.tilInnsendingDødsfallBarn(sak.saksnummer, personHendelse.navn, personHendelse.personidenter)
                     )
                 }
             }
