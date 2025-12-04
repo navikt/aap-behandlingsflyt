@@ -91,7 +91,7 @@ public fun PdlPersonHendelse.tilInnsendingDødsfallBarn(saksnummer: Saksnummer, 
     type = InnsendingType.PDL_HENDELSE_DODSFALL_BARN,
     kanal = Kanal.DIGITAL,
     mottattTidspunkt = LocalDateTime.now(),
-    melding = tilPdlHendelseDodsfallBarnV0(navn, identer.filter { it.length == 9 && it.all { character -> character.isDigit() }})
+    melding = tilPdlHendelseDodsfallBarnV0(navn, identer.filter { it.length == 11 && it.all { character -> character.isDigit() }})
 )
 
 
