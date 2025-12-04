@@ -29,7 +29,8 @@ class AvklarOvergangUføreLøser(
 
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
 
-        val overgangUføreVurdering = løsning.overgangUføreVurdering.tilOvergangUføreVurdering(kontekst.bruker)
+        val overgangUføreVurdering =
+            løsning.overgangUføreVurdering.tilOvergangUføreVurdering(kontekst.bruker, kontekst.behandlingId())
 
         val eksisterendeOverganguforevurderinger = behandling.forrigeBehandlingId
             ?.let { overgangUforeRepository.hentHvisEksisterer(it) }

@@ -60,12 +60,16 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
             brukerHarFåttVedtakOmUføretrygd = row.getStringOrNull("BRUKER_VEDTAK_UFORETRYGD"),
             brukerRettPåAAP = row.getBooleanOrNull("BRUKER_RETT_PAA_AAP"),
             virkningsdato = row.getLocalDateOrNull("VIRKNINGSDATO"),
+            vurdertIBehandling = row.getLongOrNull("VURDERT_I_BEHANDLING")?.let(::BehandlingId),
             vurdertAv = row.getString("VURDERT_AV"),
             opprettet = row.getInstant("OPPRETTET_TID")
         )
     }
 
-    override fun hentHistoriskeOvergangUforeVurderinger(sakId: SakId, behandlingId: BehandlingId): List<OvergangUføreVurdering> {
+    override fun hentHistoriskeOvergangUforeVurderinger(
+        sakId: SakId,
+        behandlingId: BehandlingId
+    ): List<OvergangUføreVurdering> {
         val query = """
             SELECT DISTINCT overgang_ufore_vurdering.*
             FROM overgang_ufore_grunnlag grunnlag
@@ -108,12 +112,14 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
 
         val overgangUforeVurderingerIds = getOvergangUforeVurderingerIds(behandlingId)
 
-        val deletedRows = connection.executeReturnUpdated("""
+        val deletedRows = connection.executeReturnUpdated(
+            """
             delete from overgang_ufore_grunnlag where behandling_id = ?; 
             delete from overgang_ufore_vurdering where vurderinger_id = ANY(?::bigint[]);
             delete from overgang_ufore_vurderinger where id = ANY(?::bigint[]);
            
-        """.trimIndent()) {
+        """.trimIndent()
+        ) {
             setParams {
                 setLong(1, behandlingId.id)
                 setLongArray(2, overgangUforeVurderingerIds)
@@ -149,10 +155,11 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
     }
 
     private fun lagreOvergangUforevurderinger(vurderinger: List<OvergangUføreVurdering>): Long {
-        val overganguforevurderingerId = connection.executeReturnKey("""INSERT INTO OVERGANG_UFORE_VURDERINGER DEFAULT VALUES""")
+        val overganguforevurderingerId =
+            connection.executeReturnKey("""INSERT INTO OVERGANG_UFORE_VURDERINGER DEFAULT VALUES""")
 
         connection.executeBatch(
-            "INSERT INTO OVERGANG_UFORE_VURDERING (BEGRUNNELSE, BRUKER_SOKT_UFORETRYGD, BRUKER_VEDTAK_UFORETRYGD, BRUKER_RETT_PAA_AAP, VIRKNINGSDATO, VURDERT_AV, VURDERINGER_ID) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO OVERGANG_UFORE_VURDERING (BEGRUNNELSE, BRUKER_SOKT_UFORETRYGD, BRUKER_VEDTAK_UFORETRYGD, BRUKER_RETT_PAA_AAP, VIRKNINGSDATO, VURDERT_AV, VURDERINGER_ID, VURDERT_I_BEHANDLING) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             vurderinger
         ) {
             setParams { vurdering ->
@@ -163,6 +170,7 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
                 setLocalDate(5, vurdering.virkningsdato)
                 setString(6, vurdering.vurdertAv)
                 setLong(7, overganguforevurderingerId)
+                setLong(8, vurdering.vurdertIBehandling?.toLong())
             }
         }
 
