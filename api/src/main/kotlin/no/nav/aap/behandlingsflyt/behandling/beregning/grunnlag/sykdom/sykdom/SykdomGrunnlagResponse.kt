@@ -67,7 +67,7 @@ data class SykdomsvurderingResponse(
                         vurdertAvService = vurdertAvService,
                         fom = segment.fom(),
                         tom = if (index == segmenter.size - 1)
-                            Tid.MAKS
+                            segment.verdi.vurderingenGjelderTil
                         else
                             segment.tom(),
                     )
