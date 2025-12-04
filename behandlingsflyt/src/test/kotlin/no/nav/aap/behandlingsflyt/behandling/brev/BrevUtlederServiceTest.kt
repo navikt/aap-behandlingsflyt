@@ -83,7 +83,6 @@ class BrevUtlederServiceTest {
     fun `skal feile ved utleding av brevtype dersom det aktivitetsplikt mangler`() {
         every { behandlingRepository.hent(any<BehandlingId>()) } returns aktivitetspliktBehandling
         every { aktivitetspliktRepository.hentHvisEksisterer(aktivitetspliktBehandling.id) } returns null
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.Arbeidsopptrapping) } returns false
         assertThrows<IllegalStateException> {
             brevUtlederService.utledBehovForMeldingOmVedtak(aktivitetspliktBehandling.id)
         }
@@ -95,7 +94,6 @@ class BrevUtlederServiceTest {
         every { aktivitetspliktRepository.hentHvisEksisterer(aktivitetspliktBehandling.id) } returns Aktivitetsplikt11_7Grunnlag(
             vurderinger = listOf(aktivitetspliktBrudd(aktivitetspliktBehandling.id))
         )
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.Arbeidsopptrapping) } returns false
 
         assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(aktivitetspliktBehandling.id)).isEqualTo(
             VedtakAktivitetsplikt11_7
@@ -108,7 +106,6 @@ class BrevUtlederServiceTest {
         every { aktivitetspliktRepository.hentHvisEksisterer(aktivitetspliktBehandling.id) } returns Aktivitetsplikt11_7Grunnlag(
             vurderinger = listOf(aktivitetspliktBruddOppfylt(aktivitetspliktBehandling.id))
         )
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.Arbeidsopptrapping) } returns false
 
         assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(aktivitetspliktBehandling.id)).isEqualTo(
             VedtakEndring
@@ -118,7 +115,6 @@ class BrevUtlederServiceTest {
     @Test
     fun `skal utlede brevtype VedtakEndring når nyeste aktivitetsplikt brudd omgjøres`() {
         every { behandlingRepository.hent(any<BehandlingId>()) } returns aktivitetspliktBehandling
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.Arbeidsopptrapping) } returns false
 
         val gammelBruddDato = LocalDate.now().minusDays(100)
         every { aktivitetspliktRepository.hentHvisEksisterer(aktivitetspliktBehandling.id) } returns Aktivitetsplikt11_7Grunnlag(
@@ -138,7 +134,6 @@ class BrevUtlederServiceTest {
     @Test
     fun `skal utlede brevtype Aktivitetspliktbrudd når nyeste aktivitetsplikt brudd er stans`() {
         every { behandlingRepository.hent(any<BehandlingId>()) } returns aktivitetspliktBehandling
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.Arbeidsopptrapping) } returns false
 
         val gammelBruddDato = LocalDate.now().minusDays(100)
         every { aktivitetspliktRepository.hentHvisEksisterer(aktivitetspliktBehandling.id) } returns Aktivitetsplikt11_7Grunnlag(
@@ -181,7 +176,6 @@ class BrevUtlederServiceTest {
                 utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.OPPFYLT,
             )
         )
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.Arbeidsopptrapping) } returns false
 
         assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)).isEqualTo(Arbeidssøker)
     }
@@ -212,7 +206,6 @@ class BrevUtlederServiceTest {
                 utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.OPPFYLT,
             )
         )
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.Arbeidsopptrapping) } returns false
 
         assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)).isEqualTo(VedtakEndring)
     }
@@ -262,7 +255,6 @@ class BrevUtlederServiceTest {
                 vurdertAv = ""
             ), null
         )
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.Arbeidsopptrapping) } returns false
 
         assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)).isEqualTo(
             VurderesForUføretrygd(
@@ -306,7 +298,6 @@ class BrevUtlederServiceTest {
                 utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.OPPFYLT,
             )
         )
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.Arbeidsopptrapping) } returns false
 
         assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)).isEqualTo(
             VedtakEndring
