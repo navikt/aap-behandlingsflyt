@@ -69,6 +69,7 @@ internal class OvergangUføreRepositoryImplTest {
                 brukerHarFåttVedtakOmUføretrygd = "NEI",
                 brukerRettPåAAP = true,
                 fom = testDate,
+                tom = null,
                 vurdertAv = "Saks behandler",
                 vurdertIBehandling = behandling.id
             )
@@ -99,6 +100,7 @@ internal class OvergangUføreRepositoryImplTest {
                             brukerHarFåttVedtakOmUføretrygd = "NEI",
                             brukerRettPåAAP = true,
                             fom = LocalDate.now(),
+                            tom = null,
                             vurdertAv = "Saks behandler",
                             vurdertIBehandling = behandling.id
 
@@ -114,6 +116,7 @@ internal class OvergangUføreRepositoryImplTest {
                             brukerHarFåttVedtakOmUføretrygd = "NEI",
                             brukerRettPåAAP = true,
                             fom = LocalDate.now(),
+                            tom = null,
                             vurdertAv = "Saks behandler",
                             vurdertIBehandling = behandling.id
                         )
@@ -133,6 +136,7 @@ internal class OvergangUføreRepositoryImplTest {
                 brukerHarFåttVedtakOmUføretrygd = "NEI",
                 brukerRettPåAAP = true,
                 fom = LocalDate.of(2024, 5, 22),
+                tom = null,
                 vurdertAv = "Z00000",
             )
         }
@@ -143,6 +147,7 @@ internal class OvergangUføreRepositoryImplTest {
                 brukerHarFåttVedtakOmUføretrygd = "JA",
                 brukerRettPåAAP = true,
                 fom = LocalDate.of(2024, 5, 1),
+                tom = null,
                 vurdertAv = "Z00001",
             )
         }
@@ -153,6 +158,7 @@ internal class OvergangUføreRepositoryImplTest {
                 brukerHarFåttVedtakOmUføretrygd = "NEI",
                 brukerRettPåAAP = true,
                 fom = LocalDate.of(2024, 4, 15),
+                tom = null,
                 vurdertAv = "Z00002",
                 vurdertIBehandling = vurdertIBehandling
             )

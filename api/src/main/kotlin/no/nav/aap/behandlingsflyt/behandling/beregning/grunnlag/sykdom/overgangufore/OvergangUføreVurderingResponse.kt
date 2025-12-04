@@ -11,6 +11,7 @@ data class OvergangUføreVurderingResponse(
     @Deprecated("Bruk fom")
     val virkningsdato: LocalDate?,
     val fom: LocalDate?,
+    val tom: LocalDate?,
     val vurdertAv: VurdertAvResponse,
     val erGjeldende: Boolean?
 )

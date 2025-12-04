@@ -62,7 +62,8 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
             vurdertIBehandling = row.getLongOrNull("VURDERT_I_BEHANDLING")?.let(::BehandlingId),
             fom = row.getLocalDateOrNull("VIRKNINGSDATO"), // Virkningsdato er 'vurderingen gjelder fra'
             vurdertAv = row.getString("VURDERT_AV"),
-            opprettet = row.getInstant("OPPRETTET_TID")
+            opprettet = row.getInstant("OPPRETTET_TID"),
+            tom = row.getLocalDateOrNull("TOM")
         )
     }
 
@@ -159,7 +160,7 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
             connection.executeReturnKey("""INSERT INTO OVERGANG_UFORE_VURDERINGER DEFAULT VALUES""")
 
         connection.executeBatch(
-            "INSERT INTO OVERGANG_UFORE_VURDERING (BEGRUNNELSE, BRUKER_SOKT_UFORETRYGD, BRUKER_VEDTAK_UFORETRYGD, BRUKER_RETT_PAA_AAP, VIRKNINGSDATO, VURDERT_AV, VURDERINGER_ID, VURDERT_I_BEHANDLING) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO OVERGANG_UFORE_VURDERING (BEGRUNNELSE, BRUKER_SOKT_UFORETRYGD, BRUKER_VEDTAK_UFORETRYGD, BRUKER_RETT_PAA_AAP, VIRKNINGSDATO, VURDERT_AV, VURDERINGER_ID, VURDERT_I_BEHANDLING, TOM) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             vurderinger
         ) {
             setParams { vurdering ->
@@ -171,6 +172,7 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
                 setString(6, vurdering.vurdertAv)
                 setLong(7, overganguforevurderingerId)
                 setLong(8, vurdering.vurdertIBehandling?.toLong())
+                setLocalDate(9, vurdering.tom)
             }
         }
 

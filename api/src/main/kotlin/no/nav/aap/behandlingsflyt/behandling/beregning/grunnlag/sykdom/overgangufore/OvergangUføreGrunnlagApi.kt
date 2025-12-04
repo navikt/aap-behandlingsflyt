@@ -86,6 +86,7 @@ private fun OvergangUføreVurdering.tilResponse(erGjeldende: Boolean? = false, a
         brukerRettPåAAP = brukerRettPåAAP,
         virkningsdato = fom,
         fom = fom,
+        tom = tom,
         vurdertAv = VurdertAvResponse(
             ident = vurdertAv,
             dato = opprettet?.atZone(ZoneId.of("Europe/Oslo"))?.toLocalDate()

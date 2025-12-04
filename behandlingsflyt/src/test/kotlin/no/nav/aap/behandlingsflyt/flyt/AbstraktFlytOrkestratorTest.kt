@@ -588,6 +588,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                         brukerRettPåAAP = false,
                         virkningsdato = null,
                         fom = null,
+                        tom = null,
                         overgangBegrunnelse = null
                     )
                 )

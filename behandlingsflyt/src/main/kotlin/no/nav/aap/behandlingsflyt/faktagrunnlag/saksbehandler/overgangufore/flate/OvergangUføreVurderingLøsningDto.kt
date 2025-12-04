@@ -13,6 +13,7 @@ data class OvergangUføreVurderingLøsningDto(
     @Deprecated("Bruk fom")
     val virkningsdato: LocalDate?,
     val fom: LocalDate?, // TODO: Gjør required etter at frontend alltid sender med
+    val tom: LocalDate?,
     val overgangBegrunnelse: String?,
 ) {
     fun tilOvergangUføreVurdering(bruker: Bruker, defaultFom: LocalDate, vurdertIBehandling: BehandlingId) =
@@ -23,6 +24,7 @@ data class OvergangUføreVurderingLøsningDto(
             brukerRettPåAAP = brukerRettPåAAP,
             vurdertIBehandling = vurdertIBehandling,
             fom = fom ?: virkningsdato ?: defaultFom,
+            tom = tom,
             vurdertAv = bruker.ident
         )
 }

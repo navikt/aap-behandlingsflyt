@@ -11,6 +11,7 @@ data class OvergangUføreVurdering(
     val brukerHarFåttVedtakOmUføretrygd: String?,
     val brukerRettPåAAP: Boolean?,
     val fom: LocalDate?,
+    val tom: LocalDate?,
     val vurdertAv: String,
     val vurdertIBehandling: BehandlingId? = null, // TODO: Gjør required etter migrering
     val opprettet: Instant? = null

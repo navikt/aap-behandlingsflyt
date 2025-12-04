@@ -1721,6 +1721,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                         brukerRettPåAAP = true,
                         virkningsdato = virkningsdatoOvergangUføre,
                         fom = virkningsdatoOvergangUføre,
+                        tom = null,
                         overgangBegrunnelse = null
                     )
                 )

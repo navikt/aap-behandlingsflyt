@@ -156,6 +156,7 @@ class SykepengeerstatningFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::cla
                         brukerRettPåAAP = true,
                         virkningsdato = nå,
                         fom = nå,
+                        tom = null,
                         overgangBegrunnelse = null
                     )
                 )
