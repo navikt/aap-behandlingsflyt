@@ -220,7 +220,10 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
         var migrerteVurderingerCount = 0
 
         kandidaterGruppertPåSak.forEach { (sakId, kandidaterForSak) ->
-            log.info("Migrerer sykdomsvurderinger for sak ${sakId.id} med ${kandidaterForSak.size} kandidater")
+            if (sakId != SakId(6568)) {
+                return@forEach
+            }
+            log.info("Migrerer overgang uføre for sak ${sakId.id} med ${kandidaterForSak.size} kandidater")
             val sorterteKandidater = kandidaterForSak.sortedBy { it.grunnlagOpprettetTid }
             val vurderingerMedVurderingerId =
                 hentVurderinger(kandidaterForSak.map { it.vurderingerId }.toSet().toList())
