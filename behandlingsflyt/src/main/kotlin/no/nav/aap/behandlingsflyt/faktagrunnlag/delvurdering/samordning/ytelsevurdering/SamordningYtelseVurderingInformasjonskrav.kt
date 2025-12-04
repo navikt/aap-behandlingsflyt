@@ -290,19 +290,13 @@ class SamordningYtelseVurderingInformasjonskrav(
 private fun <T : SamordningPeriode> isPeriodeDekketAvEksisterendePerioder(
     eksisterendePerioder: List<T>,
     target: T
-): Boolean {
-    val tidslinje = eksisterendePerioder.tilTidslinje()
-    val overlapp = tidslinje.segmenterOverlapper(target.periode)
+): Boolean =
+    eksisterendePerioder
+        .tilTidslinje()
+        .komprimer()
+        .perioder()
+        .any { it.inneholder(target.periode) }
 
-    if (overlapp.isEmpty()) return false
-
-    val merged = overlapp.sammmenslåttePerioder()
-    if (merged.size != 1) return false
-
-    val cover = merged.first()
-    return !cover.fom.isAfter(target.periode.fom) &&
-            !cover.tom.isBefore(target.periode.tom)
-}
 
 fun <T : SamordningPeriode> List<T>.tilTidslinje(): Tidslinje<Boolean> =
     Tidslinje(
@@ -314,31 +308,3 @@ fun <T : SamordningPeriode> List<T>.tilTidslinje(): Tidslinje<Boolean> =
         }
     )
 
-fun <V> Tidslinje<V>.segmenterOverlapper(periode: Periode): List<Segment<V>> =
-    this.segmenter().filter { it.periode.overlapper(periode) }
-
-
-fun List<Segment<Boolean>>.sammmenslåttePerioder(): List<Periode> {
-    if (this.isEmpty()) return emptyList()
-
-    val sorted = this.sortedBy { it.periode.fom }
-    val result = mutableListOf<Periode>()
-
-    var current = sorted.first().periode
-
-    for (seg in sorted.drop(1)) {
-        val next = seg.periode
-        if (!next.fom.isAfter(current.tom.plusDays(1))) {
-            current = Periode(
-                fom = current.fom,
-                tom = maxOf(current.tom, next.tom)
-            )
-        } else {
-            result.add(current)
-            current = next
-        }
-    }
-    result.add(current)
-
-    return result
-}
