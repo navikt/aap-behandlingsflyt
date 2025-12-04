@@ -91,7 +91,7 @@ class PdlHendelseKafkaKonsument(
                     val behandlingIdsForRegisterBarn =
                         barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForRegisterBarn(funnetIdent!!)
                     val behandlingIdsForOppgitteBarn =
-                        barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForRegisterBarn(funnetIdent)
+                        barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForOppgitteBarn(funnetIdent)
                     val alleBehandlingIds = behandlingIdsForRegisterBarn + behandlingIdsForOppgitteBarn
 
                     if (alleBehandlingIds.isNotEmpty()) {
