@@ -15,13 +15,14 @@ data class OvergangUføreVurderingLøsningDto(
     val fom: LocalDate?, // TODO: Gjør required etter at frontend alltid sender med
     val overgangBegrunnelse: String?,
 ) {
-    fun tilOvergangUføreVurdering(bruker: Bruker, vurdertIBehandling: BehandlingId) = OvergangUføreVurdering(
-        begrunnelse = begrunnelse,
-        brukerHarSøktOmUføretrygd = brukerHarSøktOmUføretrygd,
-        brukerHarFåttVedtakOmUføretrygd = brukerHarFåttVedtakOmUføretrygd,
-        brukerRettPåAAP = brukerRettPåAAP,
-        vurdertIBehandling = vurdertIBehandling,
-        fom = fom ?: virkningsdato,
-        vurdertAv = bruker.ident
-    )
+    fun tilOvergangUføreVurdering(bruker: Bruker, defaultFom: LocalDate, vurdertIBehandling: BehandlingId) =
+        OvergangUføreVurdering(
+            begrunnelse = begrunnelse,
+            brukerHarSøktOmUføretrygd = brukerHarSøktOmUføretrygd,
+            brukerHarFåttVedtakOmUføretrygd = brukerHarFåttVedtakOmUføretrygd,
+            brukerRettPåAAP = brukerRettPåAAP,
+            vurdertIBehandling = vurdertIBehandling,
+            fom = fom ?: virkningsdato ?: defaultFom,
+            vurdertAv = bruker.ident
+        )
 }
