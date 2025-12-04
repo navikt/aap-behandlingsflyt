@@ -12,19 +12,30 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = AVKLAR_BISTANDSBEHOV_KODE)
-class AvklarBistandsbehovLøsning(
-    @param:JsonProperty("løsningerForPerioder", required = true)
-    override val løsningerForPerioder: List<BistandLøsningDto>,
+class AvklarBistandsbehovEnkelLøsning(
+    @param:JsonProperty("bistandsVurdering", required = true)
+    val bistandsVurdering: BistandLøsningDto,
     @param:JsonProperty(
         "behovstype",
         required = true,
         defaultValue = AVKLAR_BISTANDSBEHOV_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5006`
-) : PeriodisertAvklaringsbehovLøsning<BistandLøsningDto> {
-    override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
-        return AvklarBistandLøser(repositoryProvider).løs(kontekst, this)
+) : EnkeltAvklaringsbehovLøsning {
+    override fun løs(
+        repositoryProvider: RepositoryProvider,
+        kontekst: AvklaringsbehovKontekst,
+        gatewayProvider: GatewayProvider
+    ): LøsningsResultat {
+        return AvklarBistandLøser(repositoryProvider).løs(kontekst, this.tilNyLøsning())
+    }
+
+    fun tilNyLøsning(): AvklarBistandsbehovLøsning {
+        return AvklarBistandsbehovLøsning(
+            løsningerForPerioder = listOf(this.bistandsVurdering)
+        )
     }
 }
 

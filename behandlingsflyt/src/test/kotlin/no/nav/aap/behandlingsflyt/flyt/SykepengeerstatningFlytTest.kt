@@ -145,7 +145,7 @@ class SykepengeerstatningFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::cla
                 ),
             )
             // Nei på 11-6
-            .løsBistand(false)
+            .løsBistand(periode.fom, false)
             .løsAvklaringsBehov(
                 AvklarOvergangUføreLøsning(
                     OvergangUføreVurderingLøsningDto(
