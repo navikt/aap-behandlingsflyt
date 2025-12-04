@@ -118,6 +118,7 @@ import java.util.logging.Level
 import java.util.logging.Logger
 import javax.sql.DataSource
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.toJavaDuration
 
 
 fun utledSubtypesTilMottattHendelseDTO(): List<Class<*>> {
@@ -385,7 +386,8 @@ fun Application.startKabalKonsument(
     dataSource: DataSource, repositoryRegistry: RepositoryRegistry
 ): KafkaKonsument<String, String> {
     val konsument = KabalKafkaKonsument(
-        config = KafkaConsumerConfig(), dataSource = dataSource, repositoryRegistry = repositoryRegistry
+        config = KafkaConsumerConfig(), dataSource = dataSource, repositoryRegistry = repositoryRegistry,
+        closeTimeout = AppConfig.stansArbeidTimeout
     )
     monitor.subscribe(ApplicationStarted) {
         val t = Thread {
@@ -410,7 +412,8 @@ fun Application.startTilbakekrevingEventKonsument(
     dataSource: DataSource, repositoryRegistry: RepositoryRegistry, gatewayProvider: GatewayProvider
 ): KafkaKonsument<String, String> {
     val konsument = TilbakekrevingKafkaKonsument(
-        config = KafkaConsumerConfig(), dataSource = dataSource, repositoryRegistry = repositoryRegistry, gatewayProvider = gatewayProvider
+        config = KafkaConsumerConfig(), dataSource = dataSource, repositoryRegistry = repositoryRegistry,
+        closeTimeout = AppConfig.stansArbeidTimeout
     )
     monitor.subscribe(ApplicationStarted) {
         val t = Thread {
@@ -441,12 +444,13 @@ fun Application.startPDLHendelseKonsument(
             keyDeserializer = org.apache.kafka.common.serialization.StringDeserializer::class.java,
             valueDeserializer = io.confluent.kafka.serializers.KafkaAvroDeserializer::class.java
         ),
+        closeTimeout = AppConfig.stansArbeidTimeout,
         dataSource = dataSource,
         repositoryRegistry = repositoryRegistry,
         gatewayProvider = gatewayProvider
     )
     monitor.subscribe(ApplicationStarted) {
-        val t = Thread() {
+        val t = Thread {
             konsument.konsumer()
         }
         t.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, e ->
