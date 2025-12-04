@@ -143,6 +143,7 @@ class HåndterMottattDokumentService(
                 beskrivelse = when (melding) {
                     is ManuellRevurderingV0 -> melding.beskrivelse
                     is OmgjøringKlageRevurderingV0 -> melding.beskrivelse
+                    is PdlHendelseV0 -> melding.beskrivelse
                     else -> null
                 }
             )
@@ -210,67 +211,6 @@ class HåndterMottattDokumentService(
                 log.info("Prosessert behandling etter mottatt dialogmelding $sisteYtelsesBehandling.id")
             }
 
-        }
-    }
-
-    fun håndterPdlHendelseDødsfallBarn(
-        sakId: SakId,
-        referanse: InnsendingReferanse,
-        mottattTidspunkt: LocalDateTime,
-        brevkategori: InnsendingType,
-        melding: Melding?
-    ) {
-        log.info("Mottok dokument på sak-id $sakId, og referanse $referanse, med brevkategori $brevkategori.")
-        val sak = sakService.hent(sakId)
-        val periode = utledPeriode(brevkategori, mottattTidspunkt, melding)
-        val vurderingsbehov = utledVurderingsbehov(brevkategori, melding, periode)
-        val årsakTilOpprettelse = utledÅrsakTilOpprettelse(brevkategori, melding)
-
-        val opprettetBehandling = sakOgBehandlingService.finnEllerOpprettBehandling(
-            sak.saksnummer,
-            VurderingsbehovOgÅrsak(
-                årsak = årsakTilOpprettelse,
-                vurderingsbehov = vurderingsbehov,
-                opprettet = mottattTidspunkt,
-                beskrivelse = when (melding) {
-                    is PdlHendelseV0 -> melding.beskrivelse
-                    else -> null
-                }
-            )
-        )
-
-        val behandlingSkrivelås = opprettetBehandling.åpenBehandling?.let {
-            låsRepository.låsBehandling(it.id)
-        }
-
-        sakOgBehandlingService.oppdaterRettighetsperioden(sakId, brevkategori, mottattTidspunkt.toLocalDate())
-
-        if (skalMarkereDokumentSomBehandlet(melding)) {
-            require(opprettetBehandling is SakOgBehandlingService.Ordinær)
-            mottaDokumentService.markerSomBehandlet(sakId, opprettetBehandling.åpenBehandling.id, referanse)
-        } else {
-            when (opprettetBehandling) {
-                is SakOgBehandlingService.Ordinær -> mottaDokumentService.oppdaterMedBehandlingId(
-                    sakId,
-                    opprettetBehandling.åpenBehandling.id,
-                    referanse
-                )
-
-                is SakOgBehandlingService.MåBehandlesAtomært -> mottaDokumentService.oppdaterMedBehandlingId(
-                    sakId,
-                    opprettetBehandling.nyBehandling.id,
-                    referanse
-                )
-            }
-        }
-
-        prosesserBehandling.triggProsesserBehandling(
-            opprettetBehandling,
-            listOf("trigger" to DefaultJsonMapper.toJson(vurderingsbehov.map { it.type }))
-        )
-
-        if (behandlingSkrivelås != null) {
-            låsRepository.verifiserSkrivelås(behandlingSkrivelås)
         }
     }
 

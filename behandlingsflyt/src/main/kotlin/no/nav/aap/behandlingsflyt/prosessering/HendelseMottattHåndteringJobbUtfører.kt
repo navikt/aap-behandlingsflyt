@@ -109,15 +109,6 @@ class HendelseMottattHåndteringJobbUtfører(
                         melding = parsedMelding,
                     )
             }
-            InnsendingType.PDL_HENDELSE_DODSFALL_BARN -> {
-                håndterMottattDokumentService.håndterPdlHendelseDødsfallBarn(
-                    sakId = sakId,
-                    referanse = referanse,
-                    mottattTidspunkt = mottattTidspunkt,
-                    brevkategori = innsendingType,
-                    melding = parsedMelding as PdlHendelse,
-                )
-            }
             else -> {
                 håndterMottattDokumentService.håndterMottatteDokumenter(
                     sakId,
