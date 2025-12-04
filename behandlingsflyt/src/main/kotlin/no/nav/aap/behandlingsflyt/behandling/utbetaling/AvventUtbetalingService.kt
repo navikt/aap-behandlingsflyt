@@ -1,10 +1,14 @@
 package no.nav.aap.behandlingsflyt.behandling.utbetaling
 
+import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
+import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
@@ -18,15 +22,20 @@ class AvventUtbetalingService(
     private val tjenestepensjonRefusjonsKravVurderingRepository: TjenestepensjonRefusjonsKravVurderingRepository,
     private val samordningAndreStatligeYtelserRepository: SamordningAndreStatligeYtelserRepository,
     private val samordningArbeidsgiverYtelserRepository: SamordningArbeidsgiverRepository,
+    private val vedtakService: VedtakService,
+    private val behandlingRepository: BehandlingRepository,
     private val unleashGateway: UnleashGateway,
 ) {
 
-    fun finnEventuellAvventUtbetaling(behandlingId: BehandlingId, førsteVedtaksdato: LocalDate, tilkjentYtelseHelePerioden: Periode): TilkjentYtelseAvventDto? {
+    fun finnEventuellAvventUtbetaling(behandling: Behandling,  førsteVedtak: Vedtak?, tilkjentYtelseHelePerioden: Periode): TilkjentYtelseAvventDto? {
 
-        val avventUtbetalingPgaSosialRefusjonskrav = overlapperMedSosialRefusjonskrav(behandlingId, førsteVedtaksdato, tilkjentYtelseHelePerioden)
-        val avventUtbetalingPgaTjenestepensjonRefusjon = overlapperMedTjenestepensjonRefusjon(behandlingId, førsteVedtaksdato, tilkjentYtelseHelePerioden)
-        val avventUtbetalingPgaSamordningAndreStatligeYtelser = overlapperMedSamordningAndreStatligeYtelser(behandlingId, førsteVedtaksdato)
-        val avventUtbetalingPgaSamordningArbeidsgiver = overlapperMedSamordningArbeidsgiver(behandlingId, førsteVedtaksdato,tilkjentYtelseHelePerioden )
+        val førsteVedtaksdato = førsteVedtak?.vedtakstidspunkt?.toLocalDate() ?: LocalDate.now()
+        val vedtak = vedtakService.hentVedtakForYtelsesbehandling(behandling.id) ?:return null
+
+        val avventUtbetalingPgaSosialRefusjonskrav = overlapperMedSosialRefusjonskrav(behandling, vedtak, førsteVedtak, tilkjentYtelseHelePerioden)
+        val avventUtbetalingPgaTjenestepensjonRefusjon = overlapperMedTjenestepensjonRefusjon(behandling.id, førsteVedtaksdato, tilkjentYtelseHelePerioden)
+        val avventUtbetalingPgaSamordningAndreStatligeYtelser = overlapperMedSamordningAndreStatligeYtelser(behandling.id, førsteVedtaksdato)
+        val avventUtbetalingPgaSamordningArbeidsgiver = overlapperMedSamordningArbeidsgiver(behandling.id, førsteVedtaksdato,tilkjentYtelseHelePerioden )
 
         return avventUtbetalingPgaSosialRefusjonskrav
             ?: (avventUtbetalingPgaTjenestepensjonRefusjon
@@ -34,26 +43,44 @@ class AvventUtbetalingService(
                 ?: avventUtbetalingPgaSamordningArbeidsgiver)
     }
 
-    private fun overlapperMedSosialRefusjonskrav(behandlingId: BehandlingId, førsteVedtaksdato: LocalDate, tilkjentYtelseHelePerioden: Periode): TilkjentYtelseAvventDto? {
-        val sosialRefusjonskrav = refusjonskravRepository.hentHvisEksisterer(behandlingId)
-        val perioderMedKrav = sosialRefusjonskrav?.filter {it.harKrav && it.fom != null}.orEmpty()
-        val harKrav = perioderMedKrav.any { tilkjentYtelseHelePerioden.overlapper(tilPeriode(it.fom, it.tom)) }
-        if (harKrav) {
 
-            val periodeMedKravFom = perioderMedKrav
-                .map { it.fom }
-                .filter { it != null }
-                .minOfOrNull { it!! }
-            val periodeMedKravTom = perioderMedKrav
-                .map { it.tom }
-                .filter { it != null }
-                .maxOfOrNull { it!! }
-            val fom = periodeMedKravFom!!
-            val tom = (periodeMedKravTom?.coerceAtMost(førsteVedtaksdato.minusDays(1)) ?: førsteVedtaksdato.minusDays(1)).coerceAtLeast(fom)
+    fun finnTidligesteVirkningstidspunktFraTidligereBehandlinger(behandling: Behandling, virkningsTidspunkt: LocalDate): LocalDate {
+
+        val forrigeBehandlingId = behandling.forrigeBehandlingId
+            ?: return virkningsTidspunkt
+
+        val vedtak = vedtakService.hentVedtakForYtelsesbehandling(forrigeBehandlingId)
+        val forrigeVirkningstidspunkt = vedtak?.virkningstidspunkt
+        val nyTidligsteVirkingsTidspunkt =  if(vedtak?.virkningstidspunkt != null) {
+            minOf(forrigeVirkningstidspunkt, virkningsTidspunkt)
+        } else virkningsTidspunkt
+        val forrigeBehandling = behandlingRepository.hent(behandlingId = forrigeBehandlingId)
+        return finnTidligesteVirkningstidspunktFraTidligereBehandlinger(forrigeBehandling,nyTidligsteVirkingsTidspunkt)
+    }
+
+
+    private fun overlapperMedSosialRefusjonskrav(behandling: Behandling, vedtakDenneBehandligen: Vedtak, førsteVedtak: Vedtak?, tilkjentYtelseHelePerioden: Periode): TilkjentYtelseAvventDto? {
+        val sosialRefusjonskrav = refusjonskravRepository.hentHvisEksisterer(vedtakDenneBehandligen.behandlingId)
+        val perioderMedKrav = sosialRefusjonskrav?.filter {it.harKrav }.orEmpty()
+        val harKrav = perioderMedKrav.any { tilkjentYtelseHelePerioden.overlapper(tilPeriode(it.fom, it.tom)) }
+
+
+       // For simulering i førstegangsbehandling, finnes ikke vedtak enda.
+
+        if (harKrav && førsteVedtak != null) {
+
+            val førsteVedtaksdato = førsteVedtak.vedtakstidspunkt.toLocalDate()
+            val detteVirkingstidspunkt = vedtakDenneBehandligen.virkningstidspunkt ?: error("Mangler virkningstidspunkt på vedtak for behandling ${vedtakDenneBehandligen.behandlingId}")
+
+            val tidligsteVirkingsTidspunkt = finnTidligesteVirkningstidspunktFraTidligereBehandlinger(behandling, vedtakDenneBehandligen.virkningstidspunkt)
+
+
+            val nyVirkingstidspunkt =   minOf(detteVirkingstidspunkt, tidligsteVirkingsTidspunkt)
+
             return TilkjentYtelseAvventDto(
-                fom = fom,
-                tom = tom,
-                overføres = førsteVedtaksdato.plusDays(21),
+                fom = nyVirkingstidspunkt,
+                tom = førsteVedtaksdato.minusDays(1),
+                overføres = førsteVedtak.vedtakstidspunkt.toLocalDate().plusDays(21),
                 årsak = AvventÅrsak.AVVENT_REFUSJONSKRAV,
                 feilregistrering = false
             )

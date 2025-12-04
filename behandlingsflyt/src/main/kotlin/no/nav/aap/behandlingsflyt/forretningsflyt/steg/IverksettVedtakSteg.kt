@@ -32,6 +32,7 @@ import no.nav.aap.motor.JobbInput
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
+import kotlin.math.min
 
 class IverksettVedtakSteg private constructor(
     private val sakRepository: SakRepository,
@@ -106,17 +107,19 @@ class IverksettVedtakSteg private constructor(
     private fun lagGysOppgaveHvisRelevant(kontekst: FlytKontekstMedPerioder,vedtaksDato: LocalDate, virkningsDato: LocalDate?) {
         val behandling = behandlingRepository.hent(behandlingId = kontekst.behandlingId)
         if (!resultatUtleder.erRentAvslag(behandling)) {
-            opprettOppfølgingsoppgaveForNavkontorVedSosialRefusjon(kontekst, vedtaksDato, virkningsDato)
+            opprettOppfølgingsoppgaveForNavkontorVedSosialRefusjon(kontekst, behandling , vedtaksDato, virkningsDato)
         } else {
             log.info("Oppretter ikke gosysoppgave for sak ${kontekst.sakId} og behandling ${kontekst.behandlingId} , da AAP ikke er innvliget ")
 
         }
     }
-    private fun harInnvilgelseFraEnTidligereBehandling(behandling: Behandling): Boolean {
+
+
+    private fun harInnvilgelseFraEnTidligereBehandling(behandling: Behandling, ): Boolean {
          val forrigeBehandlingId = behandling.forrigeBehandlingId
         if (forrigeBehandlingId == null) return false
         val vedtak = vedtakService.hentVedtakForYtelsesbehandling(forrigeBehandlingId) ?: error("Skal eksistere vedtak for behandling ${forrigeBehandlingId}")
-        if (vedtak.virkningstidspunkt != null) return true
+        if (vedtak.virkningstidspunkt != null ) return true
         else {
             val forrigeBehandling = behandlingRepository.hent(behandlingId = forrigeBehandlingId)
             return harInnvilgelseFraEnTidligereBehandling(forrigeBehandling)
@@ -126,23 +129,76 @@ class IverksettVedtakSteg private constructor(
 
 
 
-     fun opprettOppfølgingsoppgaveForNavkontorVedSosialRefusjon(kontekst: FlytKontekstMedPerioder, vedtaksDato: LocalDate, virkningsDato: LocalDate?) {
-        val denneBehandling = behandlingRepository.hent(behandlingId = kontekst.behandlingId)
+    private fun finnTidligesteVedtakstidspunktFraTidligereBehandlinger(behandling: Behandling, vedtakstidspunkt: LocalDate): LocalDate {
+        val forrigeBehandlingId = behandling.forrigeBehandlingId
+            ?: return vedtakstidspunkt
+
+        val vedtak = vedtakService.hentVedtakForYtelsesbehandling(forrigeBehandlingId)
+        val forrigeVedtakstidspunkt = vedtak?.vedtakstidspunkt
+        val nyTidligsteedtakstidspunkt =  if(vedtak?.vedtakstidspunkt != null) {
+            minOf(forrigeVedtakstidspunkt.toLocalDate(), vedtakstidspunkt)
+        } else vedtakstidspunkt
+        val forrigeBehandling = behandlingRepository.hent(behandlingId = forrigeBehandlingId)
+        return finnTidligesteVirkningstidspunktFraTidligereBehandlinger(forrigeBehandling,nyTidligsteedtakstidspunkt)
+    }
+
+
+
+
+
+
+    private fun finnTidligesteVirkningstidspunktFraTidligereBehandlinger(behandling: Behandling, virkningsTidspunkt: LocalDate): LocalDate {
+
+        val forrigeBehandlingId = behandling.forrigeBehandlingId
+            ?: return virkningsTidspunkt
+
+        val vedtak = vedtakService.hentVedtakForYtelsesbehandling(forrigeBehandlingId)
+        val forrigeVirkningstidspunkt = vedtak?.virkningstidspunkt
+        val nyTidligsteVirkingsTidspunkt =  if(vedtak?.virkningstidspunkt != null) {
+            minOf(forrigeVirkningstidspunkt, virkningsTidspunkt)
+        } else virkningsTidspunkt
+        val forrigeBehandling = behandlingRepository.hent(behandlingId = forrigeBehandlingId)
+        return finnTidligesteVirkningstidspunktFraTidligereBehandlinger(forrigeBehandling,nyTidligsteVirkingsTidspunkt)
+    }
+
+     fun opprettOppfølgingsoppgaveForNavkontorVedSosialRefusjon(kontekst: FlytKontekstMedPerioder,behandling: Behandling , vedtaksDato: LocalDate, virkningsDato: LocalDate?) {
 
         val navkontorSosialRefusjon = refusjonkravRepository.hentHvisEksisterer(kontekst.behandlingId) ?: emptyList()
 
         if (navkontorSosialRefusjon.isNotEmpty()) {
+            /**
+             * Sjekk om det er vedtaksdato er etter virkningsdato, hvis ikke return
+             * Sjekk om det er en tidligere vedtatt virkningsdato en nåværende, hvis ikke, bruk nåværende
+             * Hvis ingen
+             *
+             * Hvis førstegangs invilgelse med etterbetaling, opprett oppgave
+             * Hvis ikke førstegangs invilgelse, sjekk om det er en tidligere invilgelse med refusjonskrav, hvis ja og virkningstidspunkted er tidligere enn det forrige, opprett oppgave
+             * Bruk vedtakstidspunkt som er på første invilgelse
+             */
+
+
             val erInnvilgetMedEtterbetaling = virkningsDato != null && virkningsDato < vedtaksDato
-            val tidligereInnvilgelse = harInnvilgelseFraEnTidligereBehandling(denneBehandling)
-            if (!erInnvilgetMedEtterbetaling || tidligereInnvilgelse){
-                log.info("Er allerede $tidligereInnvilgelse")
+
+            if (!erInnvilgetMedEtterbetaling) {
+                log.info("")
+                return
+
+            }
+
+            val tidligsteVirkingsTidspunkt = finnTidligesteVirkningstidspunktFraTidligereBehandlinger(behandling, virkningsDato)
+            val nyttTidligereVirkingsTidspunkt = tidligsteVirkingsTidspunkt < virkningsDato
+
+            if (harInnvilgelseFraEnTidligereBehandling(behandling) && !nyttTidligereVirkingsTidspunkt) {
+                log.info("Har tidligere innvilgelse, og virkningsdato er ikke endret, så oppretter ikke oppgave for sak ${kontekst.sakId} og behandling ${kontekst.behandlingId} ")
                 return
             }
 
 
+            val tidligsteVedtaksTidspunkt = minOf( finnTidligesteVedtakstidspunktFraTidligereBehandlinger(behandling, vedtaksDato),vedtaksDato )
+
             val gjeldendeSosialRefusjonDtoer = navkontorSosialRefusjon
                 .filter { it.harKrav && it.navKontor != null }
-                .map { it.tilNavKontorPeriodeDto(virkningsdato = virkningsDato, vedtaksdato = vedtaksDato) }
+                .map { it.tilNavKontorPeriodeDto(virkningsdato = tidligsteVirkingsTidspunkt, vedtaksdato = tidligsteVedtaksTidspunkt) }
                 .toSet()
 
             log.info("Fant ${gjeldendeSosialRefusjonDtoer.size} refusjonskrav som skal få oppgave")

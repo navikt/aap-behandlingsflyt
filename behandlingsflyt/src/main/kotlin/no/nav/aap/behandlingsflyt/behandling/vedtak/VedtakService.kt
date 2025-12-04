@@ -33,6 +33,7 @@ class VedtakService(
     }
 
     fun hentVedtakForYtelsesbehandling(behandlingId: BehandlingId): Vedtak? {
+        // Hvorfor egen metode
         return vedtakRepository.hent(behandlingId)
     }
 
