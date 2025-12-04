@@ -33,6 +33,7 @@ object FakeUnleash : FakeUnleashBase(
         BehandlingsflytFeature.LagreVedtakIFatteVedtak to true,
         BehandlingsflytFeature.UnntakMeldepliktDesember to true,
         BehandlingsflytFeature.ReduksjonArbeidOverGrense to true,
+        BehandlingsflytFeature.PeriodisertSykepengeErstatningNyAvklaringsbehovService to true,
         BehandlingsflytFeature.ReduksjonIkkeMeldtSeg to true,
     )
 )
@@ -57,6 +58,7 @@ object ProdlikUnleash : FakeUnleashBase(
         BehandlingsflytFeature.LagreVedtakIFatteVedtak to false,
         BehandlingsflytFeature.ReduksjonArbeidOverGrense to false,
         BehandlingsflytFeature.ReduksjonIkkeMeldtSeg to false,
+        BehandlingsflytFeature.PeriodisertSykepengeErstatningNyAvklaringsbehovService to false,
         BehandlingsflytFeature.UnntakMeldepliktDesember to false,
     )
 )
@@ -78,6 +80,7 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.LagreVedtakIFatteVedtak to true,
         BehandlingsflytFeature.UnntakMeldepliktDesember to true,
         BehandlingsflytFeature.ReduksjonArbeidOverGrense to true,
+        BehandlingsflytFeature.PeriodisertSykepengeErstatningNyAvklaringsbehovService to true,
         BehandlingsflytFeature.ReduksjonIkkeMeldtSeg to true,
     )
 )

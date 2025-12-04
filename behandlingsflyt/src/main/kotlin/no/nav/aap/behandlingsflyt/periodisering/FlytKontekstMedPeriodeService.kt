@@ -91,6 +91,7 @@ class FlytKontekstMedPeriodeService(
             Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
             Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP,
             Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
+            Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING,
             Vurderingsbehov.BARNETILLEGG,
             Vurderingsbehov.INSTITUSJONSOPPHOLD,
             Vurderingsbehov.SAMORDNING_OG_AVREGNING,
