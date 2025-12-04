@@ -7,8 +7,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
+import java.time.LocalDateTime
 
 class OvergangUføreRepositoryImpl(private val connection: DBConnection) : OvergangUføreRepository {
 
@@ -205,4 +208,165 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
             }
         }
     }
+
+    override fun migrerOvergangUføre() {
+        log.info("Starter migrering av overgang uføre")
+        val start = System.currentTimeMillis()
+
+        // Hent alle koblingstabeller
+        val kandidater = hentKandidater()
+        val kandidaterGruppertPåSak = kandidater.groupBy { it.sakId }
+
+        var migrerteVurderingerCount = 0
+
+        kandidaterGruppertPåSak.forEach { (sakId, kandidaterForSak) ->
+            if (sakId != SakId(6568)) {
+                return@forEach
+            }
+            log.info("Migrerer overgang uføre for sak ${sakId.id} med ${kandidaterForSak.size} kandidater")
+            val sorterteKandidater = kandidaterForSak.sortedBy { it.grunnlagOpprettetTid }
+            val vurderingerMedVurderingerId =
+                hentVurderinger(kandidaterForSak.map { it.vurderingerId }.toSet().toList())
+
+            // Kan skippe grunnlag som peker på vurderinger som allerede er migrert
+            val migrerteVurderingerId = mutableSetOf<Long>()
+
+            // Dette dekker en eksisterende vurdering som er lagret som en del av et nytt grunnlag; 
+            // disse har ikke samme id som den originale.
+            // Antar at like vurderinger innenfor samme sak er samme vurdering
+            val nyeVerdierForVurdering =
+                mutableMapOf<SammenlignbarOvergangUføreVurdering, Pair<BehandlingId, LocalDate>>()
+
+            sorterteKandidater.forEach { kandidat ->
+                if (kandidat.vurderingerId in migrerteVurderingerId) {
+                    // Dette er et kopiert grunnlag som allerede er migrert
+                    return@forEach
+                }
+                val vurderingerForGrunnlag =
+                    vurderingerMedVurderingerId.filter { it.vurderingerId == kandidat.vurderingerId }
+
+                vurderingerForGrunnlag.forEach { vurderingMedIder ->
+                    val vurdering = vurderingMedIder.vurdering
+                    val vurderingId = vurderingMedIder.vurderingId
+                    val sammenlignbarVurdering = vurdering.tilSammenlignbar()
+                    val nyeVerdier = if (nyeVerdierForVurdering.containsKey(sammenlignbarVurdering)) {
+                        // Bruk den migrerte versjonen
+                        nyeVerdierForVurdering[sammenlignbarVurdering]!!
+                    } else {
+                        val nyeVerdier = Pair(
+                            kandidat.behandlingId,
+                            vurdering.fom ?: kandidat.rettighetsperiode.fom
+                        )
+                        nyeVerdierForVurdering.put(sammenlignbarVurdering, nyeVerdier)
+                        nyeVerdier
+                    }
+
+                    connection.execute(
+                        """
+                        UPDATE OVERGANG_UFORE_VURDERING
+                        SET VURDERT_I_BEHANDLING = ?, virkningsdato = ?
+                        WHERE ID = ?
+                        """.trimIndent()
+                    ) {
+                        setParams {
+                            setLong(1, nyeVerdier.first.id)
+                            setLocalDate(2, nyeVerdier.second)
+                            setLong(3, vurderingId)
+                        }
+                    }
+                    migrerteVurderingerCount = migrerteVurderingerCount + 1
+
+                    migrerteVurderingerId.add(kandidat.vurderingerId)
+                }
+            }
+        }
+
+        val totalTid = System.currentTimeMillis() - start
+
+        log.info("DRY-RUN: Fullført migrering av overgang uføre. Migrerte ${kandidater.size} grunnlag og ${migrerteVurderingerCount} vurderinger på $totalTid ms.")
+    }
+
+
+    // Vurdering minus opprettet, tom, vurdertIBehandling
+    data class SammenlignbarOvergangUføreVurdering(
+        val begrunnelse: String,
+        val brukerHarSøktOmUføretrygd: Boolean,
+        val brukerHarFåttVedtakOmUføretrygd: String?,
+        val brukerRettPåAAP: Boolean?,
+        val fom: LocalDate?,
+        val vurdertAv: String,
+    )
+
+    private fun OvergangUføreVurdering.tilSammenlignbar(): SammenlignbarOvergangUføreVurdering {
+        return SammenlignbarOvergangUføreVurdering(
+            begrunnelse = this.begrunnelse,
+            brukerHarSøktOmUføretrygd = this.brukerHarSøktOmUføretrygd,
+            brukerHarFåttVedtakOmUføretrygd = this.brukerHarFåttVedtakOmUføretrygd,
+            brukerRettPåAAP = this.brukerRettPåAAP,
+            fom = this.fom,
+            vurdertAv = this.vurdertAv,
+        )
+    }
+
+    private data class VurderingMedVurderingerId(
+        val vurderingerId: Long,
+        val vurderingId: Long,
+        val vurdering: OvergangUføreVurdering
+    )
+
+    private fun hentVurderinger(vurderingerIds: List<Long>): List<VurderingMedVurderingerId> {
+        val query = """
+            select  * from overgang_ufore_vurdering
+            where vurderinger_id = ANY(?::bigint[])
+        """.trimIndent()
+        return connection.queryList(query) {
+            setParams {
+                setLongArray(1, vurderingerIds)
+            }
+            setRowMapper {
+                VurderingMedVurderingerId(
+                    vurderingerId = it.getLong("vurderinger_id"),
+                    vurderingId = it.getLong("id"),
+                    vurdering = overgangUforevurderingRowMapper(it)
+                )
+            }
+        }
+    }
+
+    private fun hentKandidater(): List<Kandidat> {
+        val kandidaterQuery = """
+            select g.id as grunnlag_id,
+                     b.id as behandling_id,
+                     s.id as sak_id,
+                     s.rettighetsperiode,
+                     g.vurderinger_id,
+                     g.opprettet_tid as grunnlag_opprettet_tid
+            
+            from overgang_ufore_grunnlag g 
+            inner join behandling b on g.behandling_id = b.id
+            inner join sak s on b.sak_id = s.id
+        """.trimIndent()
+
+        return connection.queryList(kandidaterQuery) {
+            setRowMapper {
+                Kandidat(
+                    sakId = SakId(it.getLong("sak_id")),
+                    grunnlagId = it.getLong("grunnlag_id"),
+                    behandlingId = BehandlingId(it.getLong("behandling_id")),
+                    rettighetsperiode = it.getPeriode("rettighetsperiode"), // Denne er teknisk sett feil, men kanskje godt nok. Hvis ikke: join på rettighetsperiode_grunnlag
+                    vurderingerId = it.getLong("vurderinger_id"),
+                    grunnlagOpprettetTid = it.getLocalDateTime("grunnlag_opprettet_tid"),
+                )
+            }
+        }
+    }
+
+    private data class Kandidat(
+        val sakId: SakId,
+        val grunnlagId: Long,
+        val behandlingId: BehandlingId,
+        val rettighetsperiode: Periode,
+        val vurderingerId: Long,
+        val grunnlagOpprettetTid: LocalDateTime,
+    )
 }
