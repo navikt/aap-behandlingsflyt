@@ -80,20 +80,49 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         return requireNotNull(hentHvisEksisterer(behandlingId))
     }
 
-    override fun hentBehandlingIdForSakSomFårBarnetilleggForBarn(ident: Ident): List<BehandlingId> {
-        log.info("Henter info for ident {}", ident)
+    override fun hentBehandlingIdForSakSomFårBarnetilleggForRegisterBarn(ident: Ident): List<BehandlingId> {
         val registerBarnId = getRegisterBarnId(ident)
         log.info("Henter registerbarnid for registerBarnId {}", registerBarnId)
         if (registerBarnId != null) {
-            val behandlingId = hentBehandlingIdForBarneId(registerBarnId)
+            val behandlingId = hentBehandlingIdForRegisterBarnId(registerBarnId)
             log.info("Henter behandling for behandlingId {}", behandlingId)
             return behandlingId
         }
         return emptyList()
     }
 
+    override fun hentBehandlingIdForSakSomFårBarnetilleggForOppgitteBarn(ident: Ident): List<BehandlingId> {
+        val oppgittBarnId = getOppgitteBarnId(ident)
+        log.info("Henter oppgitte for registerBarnId {}", oppgittBarnId)
+        if (oppgittBarnId != null) {
+            val behandlingId = hentBehandlingIdForOppgitteBarneId(oppgittBarnId)
+            log.info("Henter behandling for behandlingId {}", behandlingId)
+            return behandlingId
+        }
+        return emptyList()
+    }
 
-    private fun hentBehandlingIdForBarneId(id: Long): List<BehandlingId> {
+    override fun finnOppgitteBarn(ident: String): SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn? {
+        return connection.queryFirstOrNull(
+            """
+        SELECT p.ident, p.navn, p.fodselsdato, p.relasjon
+        FROM BARN_SAKSBEHANDLER_OPPGITT p
+        WHERE p.ident = ?
+        """.trimIndent()
+        ) {
+            setParams { setString(1, ident) }
+            setRowMapper { row ->
+                SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn(
+                    ident = row.getStringOrNull("ident")?.let(::Ident),
+                    navn = row.getString("navn"),
+                    fødselsdato = Fødselsdato(row.getLocalDate("fodselsdato")),
+                    relasjon = row.getString("relasjon").let(Relasjon::valueOf)
+                )
+            }
+        }
+    }
+
+    private fun hentBehandlingIdForRegisterBarnId(id: Long): List<BehandlingId> {
 
 
         val behandlingIds = connection.queryList(
@@ -101,6 +130,29 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
             SELECT BEHANDLING_ID 
             FROM BARNOPPLYSNING_GRUNNLAG g 
             WHERE g.AKTIV AND g.REGISTER_BARN_ID = ?
+        """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, id)
+            }
+            setRowMapper {
+                BehandlingId(
+                    id = it.getLong("behandling_id"),
+                )
+            }
+        }
+
+        return behandlingIds
+    }
+
+    private fun hentBehandlingIdForOppgitteBarneId(id: Long): List<BehandlingId> {
+
+
+        val behandlingIds = connection.queryList(
+            """
+            SELECT BEHANDLING_ID 
+            FROM BARNOPPLYSNING_GRUNNLAG g 
+            WHERE g.AKTIV AND g.saksbehandler_oppgitt_barn_id = ?
         """.trimIndent()
         ) {
             setParams {
@@ -131,6 +183,20 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         }
     }
 
+    private fun getOppgitteBarnId(ident: Ident): Long? = connection.queryFirstOrNull(
+        """
+                    SELECT saksbehandler_oppgitt_barn_id
+                    FROM barn_saksbehandler_oppgitt
+                    WHERE ident = ? AND ident is not null
+                 
+                """.trimIndent()
+    ) {
+        setParams { setString(1, ident.identifikator) }
+        setRowMapper { row ->
+            row.getLong("saksbehandler_oppgitt_barn_id")
+        }
+    }
+
     private fun hentSaksbehandlerOppgitteBarn(id: Long): SaksbehandlerOppgitteBarn {
         return SaksbehandlerOppgitteBarn(
             id, connection.queryList(
@@ -153,6 +219,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
                 }
             }
         )
+
     }
 
     private fun hentOppgittBarn(id: Long): OppgitteBarn {

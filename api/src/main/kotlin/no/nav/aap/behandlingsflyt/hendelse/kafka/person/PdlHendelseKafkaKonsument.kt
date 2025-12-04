@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.hendelse.kafka.person
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.SaksbehandlerOppgitteBarn
 import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
@@ -71,12 +72,14 @@ class PdlHendelseKafkaKonsument(
             if (personHendelse.opplysningstype == Opplysningstype.DOEDSFALL_V1 && personHendelse.endringstype == Endringstype.OPPRETTET) {
                 log.info("Håndterer hendelse med ${personHendelse.opplysningstype} og ${personHendelse.endringstype}")
                 var person: Person? = null
+                var oppgittBarn: SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn? = null
                 var funnetIdent: Ident? = null
                 for (ident in personHendelse.personidenter) {
 
                     person = personRepository.finn(Ident(ident))
+                    oppgittBarn =  barnRepository.finnOppgitteBarn(ident)
                     // Håndterer D-nummer og Fnr
-                    if (person != null) {
+                    if (person != null || oppgittBarn != null) {
                         secureLogger.info("Håndterer hendelse for ${ident}")
                         funnetIdent = Ident(ident)
                         break
@@ -85,13 +88,15 @@ class PdlHendelseKafkaKonsument(
 
                 person?.let { personIKelvin ->
                     // Først: finn ut om dette identet tilhører en bruker eller et barn
-                    val behandlingIdsForBarn =
-                        barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForBarn(funnetIdent!!)
-                    val erBarn = behandlingIdsForBarn.isNotEmpty()
+                    val behandlingIdsForRegisterBarn =
+                        barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForRegisterBarn(funnetIdent!!)
+                    val behandlingIdsForOppgitteBarn =
+                        barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForRegisterBarn(funnetIdent)
+                    val alleBehandlingIds = behandlingIdsForRegisterBarn + behandlingIdsForOppgitteBarn
 
-                    if (erBarn) {
-                        log.info("Sjekker mottatt hendelse for barn $behandlingIdsForBarn")
-                        behandlingIdsForBarn
+                    if (alleBehandlingIds.isNotEmpty()) {
+                        log.info("Sjekker mottatt hendelse for barn $behandlingIdsForRegisterBarn")
+                        alleBehandlingIds
                             .map { behandlingRepository.hent(it) }
                             .map { it.sakId }
                             .distinct()
