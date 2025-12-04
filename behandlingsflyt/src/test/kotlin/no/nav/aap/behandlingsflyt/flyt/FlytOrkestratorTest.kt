@@ -3547,15 +3547,17 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         val revurdering = hentSisteOpprettedeBehandlingForSak(klagebehandling.sakId, listOf(TypeBehandling.Revurdering))
         assertThat(revurdering.vurderingsbehov()).containsExactly(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND))
 
+        // MeldingOmVedtakBrevSteg
+        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
+        assertThat(åpneAvklaringsbehov).hasSize(1)
+        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.SKRIV_VEDTAKSBREV)
+
         // OpprettholdelseSteg
         val steghistorikk = hentStegHistorikk(klagebehandling.id)
         assertThat(steghistorikk)
             .anySatisfy { assertThat(it.steg() == StegType.OPPRETTHOLDELSE && it.status() == StegStatus.AVSLUTTER).isTrue }
 
-        // MeldingOmVedtakBrevSteg
-        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
-        assertThat(åpneAvklaringsbehov).hasSize(1)
-        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.SKRIV_VEDTAKSBREV)
+
     }
 
     @Test
