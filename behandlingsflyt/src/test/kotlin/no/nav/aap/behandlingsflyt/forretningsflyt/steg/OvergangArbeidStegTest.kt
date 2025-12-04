@@ -167,7 +167,8 @@ class OvergangArbeidStegTest {
         skalVurdereAapIOvergangTilArbeid = null,
         overgangBegrunnelse = null,
         vurdertIBehandling = BehandlingId(1),
-        opprettet = opprettet
+        opprettet = opprettet,
+        tom = null
     )
 
     private fun sykdom(erSyk: Boolean, vurderingenGjelderFra: LocalDate) = Sykdomsvurdering(
