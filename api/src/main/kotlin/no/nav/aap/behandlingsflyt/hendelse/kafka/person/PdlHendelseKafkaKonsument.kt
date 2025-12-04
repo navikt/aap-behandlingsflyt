@@ -79,10 +79,10 @@ class PdlHendelseKafkaKonsument(
                 for (ident in personHendelse.personidenter) {
 
                     person = personRepository.finn(Ident(ident))
-                    oppgittBarn =  barnRepository.finnSaksbehandlerOppgitteBarn(ident)
+                    oppgittBarn = barnRepository.finnSaksbehandlerOppgitteBarn(ident)
                     søknadsBarn = barnRepository.finnSøknadsBarn(ident)
                     // Håndterer D-nummer og Fnr
-                    if (person != null || oppgittBarn != null  || søknadsBarn != null) {
+                    if (person != null || oppgittBarn != null || søknadsBarn != null) {
                         secureLogger.info("Håndterer hendelse for ${ident}")
                         funnetIdent = Ident(ident)
                         break
@@ -90,18 +90,19 @@ class PdlHendelseKafkaKonsument(
                 }
 
                 person?.let { personIKelvin ->
-                    // Først: finn ut om dette identet tilhører en bruker eller et barn
+                    // Først: finn ut om denne identen tilhører en bruker eller et barn
                     val behandlingIdsForRegisterBarn =
                         barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForRegisterBarn(funnetIdent!!)
                     val behandlingIdsForOppgitteBarn =
                         barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForOppgitteBarn(funnetIdent)
                     val behandlingIdsForSøknadsBarn =
                         barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForSøknadsBarn(funnetIdent)
-                    val alleBehandlingIds = behandlingIdsForRegisterBarn + behandlingIdsForOppgitteBarn + behandlingIdsForSøknadsBarn
+                    val alleBarneBehandlingIds =
+                        behandlingIdsForRegisterBarn + behandlingIdsForOppgitteBarn + behandlingIdsForSøknadsBarn
 
-                    if (alleBehandlingIds.isNotEmpty()) {
+                    if (alleBarneBehandlingIds.isNotEmpty()) {
                         log.info("Sjekker mottatt hendelse for barn $behandlingIdsForRegisterBarn")
-                        alleBehandlingIds
+                        alleBarneBehandlingIds
                             .map { behandlingRepository.hent(it) }
                             .map { it.sakId }
                             .distinct()
@@ -126,27 +127,27 @@ class PdlHendelseKafkaKonsument(
                             }
 
 
-                    } else {
-                        sakRepository.finnSakerFor(personIKelvin).forEach { sak ->
-                            log.info("Registrerer mottatt hendelse på ${sak.saksnummer}")
-                            val sisteOpprettedeBehandling = behandlingRepository.finnSisteOpprettedeBehandlingFor(
-                                sak.id,
-                                listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)
-                            )
+                    }
+                    // Finn sak på person
+                    sakRepository.finnSakerFor(personIKelvin).forEach { sak ->
+                        log.info("Registrerer mottatt hendelse på ${sak.saksnummer}")
+                        val sisteOpprettedeBehandling = behandlingRepository.finnSisteOpprettedeBehandlingFor(
+                            sak.id,
+                            listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)
+                        )
 
-                            val behandlingMedSistFattedeVedtak =
-                                sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId = sak.id)
+                        val behandlingMedSistFattedeVedtak =
+                            sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId = sak.id)
 
-                            sendDødsHendelseHvisRelevant(
-                                behandlingMedSistFattedeVedtak,
-                                underveisRepository,
-                                personHendelse,
-                                sak,
-                                hendelseService,
-                                sisteOpprettedeBehandling,
-                                Dødsfalltype.DODSFALL_BRUKER
-                            )
-                        }
+                        sendDødsHendelseHvisRelevant(
+                            behandlingMedSistFattedeVedtak,
+                            underveisRepository,
+                            personHendelse,
+                            sak,
+                            hendelseService,
+                            sisteOpprettedeBehandling,
+                            Dødsfalltype.DODSFALL_BRUKER
+                        )
                     }
                 }
             }

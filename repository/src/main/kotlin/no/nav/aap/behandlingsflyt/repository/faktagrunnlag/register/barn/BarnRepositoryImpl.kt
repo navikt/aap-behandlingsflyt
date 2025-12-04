@@ -81,7 +81,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
     }
 
     override fun hentBehandlingIdForSakSomFårBarnetilleggForRegisterBarn(ident: Ident) =
-        hentBehandlingIdGeneric(
+        hentBehandlingIdGenerisk(
             ident,
             ::getRegisterBarnId,
             ::hentBehandlingIdForRegisterBarnId,
@@ -89,7 +89,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         )
 
     override fun hentBehandlingIdForSakSomFårBarnetilleggForOppgitteBarn(ident: Ident) =
-        hentBehandlingIdGeneric(
+        hentBehandlingIdGenerisk(
             ident,
             ::getOppgitteBarnId,
             ::hentBehandlingIdForSaksbehandlerOppgitteBarneId,
@@ -97,7 +97,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         )
 
     override fun hentBehandlingIdForSakSomFårBarnetilleggForSøknadsBarn(ident: Ident) =
-        hentBehandlingIdGeneric(
+        hentBehandlingIdGenerisk(
             ident,
             ::getSøknadBarnId,
             ::hentBehandlingIdForSøknadBarneId,
@@ -571,6 +571,59 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         }
     }
 
+    override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
+        require(fraBehandling != tilBehandling)
+        val query = """
+            INSERT INTO BARNOPPLYSNING_GRUNNLAG
+                (behandling_id, register_barn_id, oppgitt_barn_id, vurderte_barn_id, saksbehandler_oppgitt_barn_id)
+            SELECT ?, register_barn_id, oppgitt_barn_id, vurderte_barn_id, saksbehandler_oppgitt_barn_id
+                from BARNOPPLYSNING_GRUNNLAG
+                where behandling_id = ? and aktiv
+        """.trimIndent()
+
+        connection.execute(query) {
+            setParams {
+                setLong(1, tilBehandling.toLong())
+                setLong(2, fraBehandling.toLong())
+            }
+        }
+    }
+
+    override fun slett(behandlingId: BehandlingId) {
+
+        val oppgittBarnIds = getOppgittBarnIds(behandlingId)
+        val registerBarnIds = getRegisterBarnIds(behandlingId)
+        val vurderteBarnIds = getVurderteBarnIds(behandlingId)
+        val barnVurderingIds = getBarnVurderingIds(vurderteBarnIds)
+        val barnOpplysningIds = getBarnOpplysningIds(registerBarnIds)
+
+        val deletedRows = connection.executeReturnUpdated(
+            """
+            delete from barnopplysning_grunnlag where behandling_id = ?;
+            delete from barn_vurdering_periode where barn_vurdering_id = ANY(?::bigint[]);
+            delete from barn_vurdering where id = ANY(?::bigint[]);
+            delete from barn_vurderinger where id = ANY(?::bigint[]);
+            delete from barnopplysning where id = ANY(?::bigint[]);
+            delete from barnopplysning_grunnlag_barnopplysning where id = ANY(?::bigint[]);
+            delete from oppgitt_barn where oppgitt_barn_id = ANY(?::bigint[]);   
+            delete from oppgitt_barnopplysning where id = ANY(?::bigint[]);          
+        """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, behandlingId.id)
+                setLongArray(2, barnVurderingIds)
+                setLongArray(3, barnVurderingIds)
+                setLongArray(4, vurderteBarnIds)
+                setLongArray(5, barnOpplysningIds)
+                setLongArray(6, registerBarnIds)
+                setLongArray(7, oppgittBarnIds)
+                setLongArray(8, oppgittBarnIds)
+
+            }
+        }
+        log.info("Slettet $deletedRows rader fra barnopplysning_grunnlag")
+    }
+
     private fun opprettVurderteBarnId(vurdertAv: String, vurderteBarn: List<VurdertBarn>): Long? {
         return if (vurderteBarn.isNotEmpty()) {
             connection.executeReturnKey(
@@ -628,58 +681,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         }
     }
 
-    override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
-        require(fraBehandling != tilBehandling)
-        val query = """
-            INSERT INTO BARNOPPLYSNING_GRUNNLAG
-                (behandling_id, register_barn_id, oppgitt_barn_id, vurderte_barn_id, saksbehandler_oppgitt_barn_id)
-            SELECT ?, register_barn_id, oppgitt_barn_id, vurderte_barn_id, saksbehandler_oppgitt_barn_id
-                from BARNOPPLYSNING_GRUNNLAG
-                where behandling_id = ? and aktiv
-        """.trimIndent()
 
-        connection.execute(query) {
-            setParams {
-                setLong(1, tilBehandling.toLong())
-                setLong(2, fraBehandling.toLong())
-            }
-        }
-    }
-
-    override fun slett(behandlingId: BehandlingId) {
-
-        val oppgittBarnIds = getOppgittBarnIds(behandlingId)
-        val registerBarnIds = getRegisterBarnIds(behandlingId)
-        val vurderteBarnIds = getVurderteBarnIds(behandlingId)
-        val barnVurderingIds = getBarnVurderingIds(vurderteBarnIds)
-        val barnOpplysningIds = getBarnOpplysningIds(registerBarnIds)
-
-        val deletedRows = connection.executeReturnUpdated(
-            """
-            delete from barnopplysning_grunnlag where behandling_id = ?;
-            delete from barn_vurdering_periode where barn_vurdering_id = ANY(?::bigint[]);
-            delete from barn_vurdering where id = ANY(?::bigint[]);
-            delete from barn_vurderinger where id = ANY(?::bigint[]);
-            delete from barnopplysning where id = ANY(?::bigint[]);
-            delete from barnopplysning_grunnlag_barnopplysning where id = ANY(?::bigint[]);
-            delete from oppgitt_barn where oppgitt_barn_id = ANY(?::bigint[]);   
-            delete from oppgitt_barnopplysning where id = ANY(?::bigint[]);          
-        """.trimIndent()
-        ) {
-            setParams {
-                setLong(1, behandlingId.id)
-                setLongArray(2, barnVurderingIds)
-                setLongArray(3, barnVurderingIds)
-                setLongArray(4, vurderteBarnIds)
-                setLongArray(5, barnOpplysningIds)
-                setLongArray(6, registerBarnIds)
-                setLongArray(7, oppgittBarnIds)
-                setLongArray(8, oppgittBarnIds)
-
-            }
-        }
-        log.info("Slettet $deletedRows rader fra barnopplysning_grunnlag")
-    }
 
     private fun getOppgittBarnIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
         """
@@ -759,7 +761,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         }
     }
 
-    private fun hentBehandlingIdGeneric(
+    private fun hentBehandlingIdGenerisk(
         ident: Ident,
         hentBarnId: (Ident) -> Long?,
         hentBehandling: (Long) -> List<BehandlingId>,
