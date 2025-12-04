@@ -80,29 +80,31 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         return requireNotNull(hentHvisEksisterer(behandlingId))
     }
 
-    override fun hentBehandlingIdForSakSomFårBarnetilleggForRegisterBarn(ident: Ident): List<BehandlingId> {
-        val registerBarnId = getRegisterBarnId(ident)
-        log.info("Henter registerbarnid for registerBarnId {}", registerBarnId)
-        if (registerBarnId != null) {
-            val behandlingId = hentBehandlingIdForRegisterBarnId(registerBarnId)
-            log.info("Henter behandling for behandlingId {}", behandlingId)
-            return behandlingId
-        }
-        return emptyList()
-    }
+    override fun hentBehandlingIdForSakSomFårBarnetilleggForRegisterBarn(ident: Ident) =
+        hentBehandlingIdGeneric(
+            ident,
+            ::getRegisterBarnId,
+            ::hentBehandlingIdForRegisterBarnId,
+            "Registerbarn"
+        )
 
-    override fun hentBehandlingIdForSakSomFårBarnetilleggForOppgitteBarn(ident: Ident): List<BehandlingId> {
-        val oppgittBarnId = getOppgitteBarnId(ident)
-        log.info("Henter oppgitte for registerBarnId {}", oppgittBarnId)
-        if (oppgittBarnId != null) {
-            val behandlingId = hentBehandlingIdForOppgitteBarneId(oppgittBarnId)
-            log.info("Henter behandling for behandlingId {}", behandlingId)
-            return behandlingId
-        }
-        return emptyList()
-    }
+    override fun hentBehandlingIdForSakSomFårBarnetilleggForOppgitteBarn(ident: Ident) =
+        hentBehandlingIdGeneric(
+            ident,
+            ::getOppgitteBarnId,
+            ::hentBehandlingIdForSaksbehandlerOppgitteBarneId,
+            "Oppgitt barn"
+        )
 
-    override fun finnOppgitteBarn(ident: String): SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn? {
+    override fun hentBehandlingIdForSakSomFårBarnetilleggForSøknadsBarn(ident: Ident) =
+        hentBehandlingIdGeneric(
+            ident,
+            ::getSøknadBarnId,
+            ::hentBehandlingIdForSøknadBarneId,
+            "Søknadsbarn"
+        )
+
+    override fun finnSaksbehandlerOppgitteBarn(ident: String): SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn? {
         return connection.queryFirstOrNull(
             """
         SELECT p.ident, p.navn, p.fodselsdato, p.relasjon
@@ -113,6 +115,26 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
             setParams { setString(1, ident) }
             setRowMapper { row ->
                 SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn(
+                    ident = row.getStringOrNull("ident")?.let(::Ident),
+                    navn = row.getString("navn"),
+                    fødselsdato = Fødselsdato(row.getLocalDate("fodselsdato")),
+                    relasjon = row.getString("relasjon").let(Relasjon::valueOf)
+                )
+            }
+        }
+    }
+
+    override fun finnSøknadsBarn(ident: String): OppgitteBarn.OppgittBarn? {
+        return connection.queryFirstOrNull(
+            """
+        SELECT p.ident, p.navn, p.fodselsdato, p.relasjon
+        FROM OPPGITT_BARN p
+        WHERE p.ident = ?
+        """.trimIndent()
+        ) {
+            setParams { setString(1, ident) }
+            setRowMapper { row ->
+                OppgitteBarn.OppgittBarn(
                     ident = row.getStringOrNull("ident")?.let(::Ident),
                     navn = row.getString("navn"),
                     fødselsdato = Fødselsdato(row.getLocalDate("fodselsdato")),
@@ -145,7 +167,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         return behandlingIds
     }
 
-    private fun hentBehandlingIdForOppgitteBarneId(id: Long): List<BehandlingId> {
+    private fun hentBehandlingIdForSaksbehandlerOppgitteBarneId(id: Long): List<BehandlingId> {
 
 
         val behandlingIds = connection.queryList(
@@ -153,6 +175,28 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
             SELECT BEHANDLING_ID 
             FROM BARNOPPLYSNING_GRUNNLAG g 
             WHERE g.AKTIV AND g.saksbehandler_oppgitt_barn_id = ?
+        """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, id)
+            }
+            setRowMapper {
+                BehandlingId(
+                    id = it.getLong("behandling_id"),
+                )
+            }
+        }
+
+        return behandlingIds
+    }
+
+    private fun hentBehandlingIdForSøknadBarneId(id: Long): List<BehandlingId> {
+
+        val behandlingIds = connection.queryList(
+            """
+            SELECT BEHANDLING_ID 
+            FROM BARNOPPLYSNING_GRUNNLAG g 
+            WHERE g.AKTIV AND g.oppgitt_barn_id = ?
         """.trimIndent()
         ) {
             setParams {
@@ -194,6 +238,20 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         setParams { setString(1, ident.identifikator) }
         setRowMapper { row ->
             row.getLong("saksbehandler_oppgitt_barn_id")
+        }
+    }
+
+    private fun getSøknadBarnId(ident: Ident): Long? = connection.queryFirstOrNull(
+        """
+                    SELECT oppgitt_barn_id
+                    FROM oppgitt_barn
+                    WHERE ident = ? AND ident is not null
+                 
+                """.trimIndent()
+    ) {
+        setParams { setString(1, ident.identifikator) }
+        setRowMapper { row ->
+            row.getLong("oppgitt_barn_id")
         }
     }
 
@@ -699,6 +757,22 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
                 setLong(1, behandlingId.toLong())
             }
         }
+    }
+
+    private fun hentBehandlingIdGeneric(
+        ident: Ident,
+        hentBarnId: (Ident) -> Long?,
+        hentBehandling: (Long) -> List<BehandlingId>,
+        logPrefix: String
+    ): List<BehandlingId> {
+        val barnId = hentBarnId(ident)
+        log.info("Henter {} for barnId {}", logPrefix, barnId)
+
+        return barnId?.let {
+            val behandlingId = hentBehandling(it)
+            log.info("Henter behandling for behandlingId {}", behandlingId)
+            behandlingId
+        } ?: emptyList()
     }
 
     override fun tilbakestillGrunnlag(behandlingId: BehandlingId, forrigeBehandlingId: BehandlingId?) {

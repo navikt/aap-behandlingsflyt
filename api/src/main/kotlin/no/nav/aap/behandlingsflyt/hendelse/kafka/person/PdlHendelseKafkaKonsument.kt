@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.hendelse.kafka.person
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.SaksbehandlerOppgitteBarn
 import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
@@ -72,14 +73,16 @@ class PdlHendelseKafkaKonsument(
             if (personHendelse.opplysningstype == Opplysningstype.DOEDSFALL_V1 && personHendelse.endringstype == Endringstype.OPPRETTET) {
                 log.info("Håndterer hendelse med ${personHendelse.opplysningstype} og ${personHendelse.endringstype}")
                 var person: Person? = null
-                var oppgittBarn: SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn? = null
+                var oppgittBarn: SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn?
+                var søknadsBarn: OppgitteBarn.OppgittBarn?
                 var funnetIdent: Ident? = null
                 for (ident in personHendelse.personidenter) {
 
                     person = personRepository.finn(Ident(ident))
-                    oppgittBarn =  barnRepository.finnOppgitteBarn(ident)
+                    oppgittBarn =  barnRepository.finnSaksbehandlerOppgitteBarn(ident)
+                    søknadsBarn = barnRepository.finnSøknadsBarn(ident)
                     // Håndterer D-nummer og Fnr
-                    if (person != null || oppgittBarn != null) {
+                    if (person != null || oppgittBarn != null  || søknadsBarn != null) {
                         secureLogger.info("Håndterer hendelse for ${ident}")
                         funnetIdent = Ident(ident)
                         break
@@ -92,7 +95,9 @@ class PdlHendelseKafkaKonsument(
                         barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForRegisterBarn(funnetIdent!!)
                     val behandlingIdsForOppgitteBarn =
                         barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForOppgitteBarn(funnetIdent)
-                    val alleBehandlingIds = behandlingIdsForRegisterBarn + behandlingIdsForOppgitteBarn
+                    val behandlingIdsForSøknadsBarn =
+                        barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForSøknadsBarn(funnetIdent)
+                    val alleBehandlingIds = behandlingIdsForRegisterBarn + behandlingIdsForOppgitteBarn + behandlingIdsForSøknadsBarn
 
                     if (alleBehandlingIds.isNotEmpty()) {
                         log.info("Sjekker mottatt hendelse for barn $behandlingIdsForRegisterBarn")
