@@ -8,7 +8,8 @@ data class OvergangUføreVurderingResponse(
     val brukerHarSøktUføretrygd: Boolean,
     val brukerHarFåttVedtakOmUføretrygd: String?,
     val brukerRettPåAAP: Boolean?,
-    val virkningsdato: LocalDate?, @Deprecated("Bruk fom")
+    @Deprecated("Bruk fom")
+    val virkningsdato: LocalDate?,
     val fom: LocalDate?,
     val vurdertAv: VurdertAvResponse,
     val erGjeldende: Boolean?
