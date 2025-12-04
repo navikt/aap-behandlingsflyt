@@ -28,13 +28,14 @@ object FakeUnleash : FakeUnleashBase(
         BehandlingsflytFeature.FatteVedtakAvklaringsbehovService to true,
         BehandlingsflytFeature.EOSBeregning to true,
         BehandlingsflytFeature.NyeBarn to true,
-        BehandlingsflytFeature.Arbeidsopptrapping to true,
         BehandlingsflytFeature.NyBrevbyggerV3 to false,
         BehandlingsflytFeature.BedreUttrekkAvSakerMedFritakMeldeplikt to false,
         BehandlingsflytFeature.LagreVedtakIFatteVedtak to true,
         BehandlingsflytFeature.UnntakMeldepliktDesember to true,
         BehandlingsflytFeature.ReduksjonArbeidOverGrense to true,
+        BehandlingsflytFeature.PeriodisertSykepengeErstatningNyAvklaringsbehovService to true,
         BehandlingsflytFeature.ReduksjonIkkeMeldtSeg to true,
+        BehandlingsflytFeature.MigrerOvergangUfore to false,
     )
 )
 
@@ -53,14 +54,16 @@ object ProdlikUnleash : FakeUnleashBase(
         BehandlingsflytFeature.FatteVedtakAvklaringsbehovService to true,
         BehandlingsflytFeature.EOSBeregning to false,
         BehandlingsflytFeature.NyeBarn to false,
-        BehandlingsflytFeature.Arbeidsopptrapping to false,
         BehandlingsflytFeature.NyBrevbyggerV3 to false,
         BehandlingsflytFeature.BedreUttrekkAvSakerMedFritakMeldeplikt to false,
         BehandlingsflytFeature.LagreVedtakIFatteVedtak to false,
         BehandlingsflytFeature.ReduksjonArbeidOverGrense to false,
         BehandlingsflytFeature.ReduksjonIkkeMeldtSeg to false,
+        BehandlingsflytFeature.PeriodisertSykepengeErstatningNyAvklaringsbehovService to false,
         BehandlingsflytFeature.UnntakMeldepliktDesember to false,
-    )
+        BehandlingsflytFeature.MigrerOvergangUfore to false,
+
+        )
 )
 
 object LokalUnleash : FakeUnleashBase(
@@ -75,12 +78,13 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.FatteVedtakAvklaringsbehovService to true,
         BehandlingsflytFeature.EOSBeregning to true,
         BehandlingsflytFeature.NyeBarn to true,
-        BehandlingsflytFeature.Arbeidsopptrapping to true,
         BehandlingsflytFeature.NyBrevbyggerV3 to false,
         BehandlingsflytFeature.BedreUttrekkAvSakerMedFritakMeldeplikt to true,
         BehandlingsflytFeature.LagreVedtakIFatteVedtak to true,
         BehandlingsflytFeature.UnntakMeldepliktDesember to true,
         BehandlingsflytFeature.ReduksjonArbeidOverGrense to true,
+        BehandlingsflytFeature.PeriodisertSykepengeErstatningNyAvklaringsbehovService to true,
         BehandlingsflytFeature.ReduksjonIkkeMeldtSeg to true,
-    )
+        BehandlingsflytFeature.MigrerOvergangUfore to false,
+        )
 )

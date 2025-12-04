@@ -112,7 +112,7 @@ class SykdomsvilkårTest {
         )
     }
 
-    private fun bistandGrunnlag(startDato: LocalDate): BistandGrunnlag = BistandGrunnlag(
+    private fun bistandGrunnlag(startDato: LocalDate, sluttDato: LocalDate? = null): BistandGrunnlag = BistandGrunnlag(
         vurderinger = listOf(
             Bistandsvurdering(
                 vurdertIBehandling = BehandlingId(1),
@@ -124,7 +124,8 @@ class SykdomsvilkårTest {
                 skalVurdereAapIOvergangTilArbeid = null,
                 vurdertAv = "Foffer",
                 vurderingenGjelderFra = startDato,
-                opprettet = Instant.now()
+                opprettet = Instant.now(),
+                tom = sluttDato
             )
         )
     )

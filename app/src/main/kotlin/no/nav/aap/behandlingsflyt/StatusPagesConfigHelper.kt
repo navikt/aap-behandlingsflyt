@@ -23,10 +23,11 @@ import java.net.http.HttpTimeoutException
 import java.sql.SQLException
 
 object StatusPagesConfigHelper {
+    private val logger = LoggerFactory.getLogger(javaClass)
+    private val secureLogger = LoggerFactory.getLogger("secureLog")
+
     fun setup(): StatusPagesConfig.() -> Unit = {
         exception<Throwable> { call, cause ->
-            val logger = LoggerFactory.getLogger(javaClass)
-            val secureLogger = LoggerFactory.getLogger("secureLog")
             val uri = call.request.local.uri
 
             when (cause) {
@@ -104,12 +105,13 @@ object StatusPagesConfigHelper {
         }
 
         status(HttpStatusCode.NotFound) { call, _ ->
-            call.application.log.error("Fikk kall mot endepunkt som ikke finnes: ${call.request.local.uri}")
+            val req = call.request.local
+            logger.error("Fikk kall mot endepunkt som ikke finnes (${req.method}: ${req.uri})")
 
             call.respondWithError(
                 ApiException(
                     status = HttpStatusCode.NotFound,
-                    message = "Kunne ikke nå endepunkt: ${call.request.local.uri}",
+                    message = "Kunne ikke nå endepunkt: ${req.uri}",
                     code = ApiErrorCode.ENDEPUNKT_IKKE_FUNNET
                 )
             )

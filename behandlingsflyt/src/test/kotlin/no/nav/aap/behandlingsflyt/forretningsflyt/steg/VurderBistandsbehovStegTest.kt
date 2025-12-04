@@ -61,7 +61,8 @@ class VurderBistandsbehovStegTest {
                         vurdertAv = "Z00000",
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = null,
-                        opprettet = Instant.now()
+                        opprettet = Instant.now(),
+                        tom = null
                     )
                 )
             )

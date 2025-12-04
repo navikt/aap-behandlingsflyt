@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.Over
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -14,11 +15,13 @@ import java.time.LocalDate
 class AvklarOvergangUføreLøser(
     private val behandlingRepository: BehandlingRepository,
     private val overgangUforeRepository: OvergangUføreRepository,
+    private val sakRepository: SakRepository,
 ) : AvklaringsbehovsLøser<AvklarOvergangUføreLøsning> {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
         overgangUforeRepository = repositoryProvider.provide(),
+        sakRepository = repositoryProvider.provide(),
     )
 
 
@@ -28,8 +31,11 @@ class AvklarOvergangUføreLøser(
     ): LøsningsResultat {
 
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
-
-        val overgangUføreVurdering = løsning.overgangUføreVurdering.tilOvergangUføreVurdering(kontekst.bruker)
+        
+        val rettighetsperiode = sakRepository.hent(behandling.sakId).rettighetsperiode
+        
+        val overgangUføreVurdering =
+            løsning.overgangUføreVurdering.tilOvergangUføreVurdering(kontekst.bruker, rettighetsperiode.fom, kontekst.behandlingId())
 
         val eksisterendeOverganguforevurderinger = behandling.forrigeBehandlingId
             ?.let { overgangUforeRepository.hentHvisEksisterer(it) }

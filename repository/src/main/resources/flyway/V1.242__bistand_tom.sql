@@ -1,0 +1,2 @@
+ALTER TABLE bistand 
+    ADD COLUMN TOM DATE;
