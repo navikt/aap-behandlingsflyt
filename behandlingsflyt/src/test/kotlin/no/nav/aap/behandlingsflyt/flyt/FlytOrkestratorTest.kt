@@ -1720,6 +1720,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                         brukerHarFåttVedtakOmUføretrygd = "NEI",
                         brukerRettPåAAP = true,
                         virkningsdato = virkningsdatoOvergangUføre,
+                        fom = virkningsdatoOvergangUføre,
                         overgangBegrunnelse = null
                     )
                 )

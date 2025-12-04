@@ -119,6 +119,7 @@ class SykepengeerstatningFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::cla
     fun `avslag på 11-6 og 11-18 er også inngang til 11-13 og 11-18`() {
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
+        val nå = LocalDate.now()
         // Sender inn en søknad
         var (_, behandling) = sendInnFørsteSøknad(periode = periode)
         behandling
@@ -153,11 +154,12 @@ class SykepengeerstatningFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::cla
                         brukerHarSøktOmUføretrygd = true,
                         brukerHarFåttVedtakOmUføretrygd = "NEI",
                         brukerRettPåAAP = true,
-                        virkningsdato = LocalDate.now(),
+                        virkningsdato = nå,
+                        fom = nå,
                         overgangBegrunnelse = null
                     )
                 )
-            )
+        )
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()

@@ -10,7 +10,9 @@ data class OvergangUføreVurderingLøsningDto(
     val brukerHarSøktOmUføretrygd: Boolean,
     val brukerHarFåttVedtakOmUføretrygd: String?,
     val brukerRettPåAAP: Boolean?,
+    @Deprecated("Bruk fom")
     val virkningsdato: LocalDate?,
+    val fom: LocalDate?, // TODO: Gjør required etter at frontend alltid sender med
     val overgangBegrunnelse: String?,
 ) {
     fun tilOvergangUføreVurdering(bruker: Bruker, vurdertIBehandling: BehandlingId) = OvergangUføreVurdering(
@@ -18,8 +20,8 @@ data class OvergangUføreVurderingLøsningDto(
         brukerHarSøktOmUføretrygd = brukerHarSøktOmUføretrygd,
         brukerHarFåttVedtakOmUføretrygd = brukerHarFåttVedtakOmUføretrygd,
         brukerRettPåAAP = brukerRettPåAAP,
-        virkningsdato = virkningsdato,
-        vurdertAv = bruker.ident,
-        vurdertIBehandling = vurdertIBehandling
+        vurdertIBehandling = vurdertIBehandling,
+        fom = fom ?: virkningsdato,
+        vurdertAv = bruker.ident
     )
 }

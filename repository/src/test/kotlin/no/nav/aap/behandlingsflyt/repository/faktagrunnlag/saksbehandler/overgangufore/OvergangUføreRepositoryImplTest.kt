@@ -68,7 +68,7 @@ internal class OvergangUføreRepositoryImplTest {
                 brukerHarSøktOmUføretrygd = true,
                 brukerHarFåttVedtakOmUføretrygd = "NEI",
                 brukerRettPåAAP = true,
-                virkningsdato = testDate,
+                fom = testDate,
                 vurdertAv = "Saks behandler",
                 vurdertIBehandling = behandling.id
             )
@@ -98,7 +98,7 @@ internal class OvergangUføreRepositoryImplTest {
                             brukerHarSøktOmUføretrygd = true,
                             brukerHarFåttVedtakOmUføretrygd = "NEI",
                             brukerRettPåAAP = true,
-                            virkningsdato = LocalDate.now(),
+                            fom = LocalDate.now(),
                             vurdertAv = "Saks behandler",
                             vurdertIBehandling = behandling.id
 
@@ -113,7 +113,7 @@ internal class OvergangUføreRepositoryImplTest {
                             brukerHarSøktOmUføretrygd = true,
                             brukerHarFåttVedtakOmUføretrygd = "NEI",
                             brukerRettPåAAP = true,
-                            virkningsdato = LocalDate.now(),
+                            fom = LocalDate.now(),
                             vurdertAv = "Saks behandler",
                             vurdertIBehandling = behandling.id
                         )
@@ -132,7 +132,7 @@ internal class OvergangUføreRepositoryImplTest {
                 brukerHarSøktOmUføretrygd = true,
                 brukerHarFåttVedtakOmUføretrygd = "NEI",
                 brukerRettPåAAP = true,
-                virkningsdato = LocalDate.of(2024, 5, 22),
+                fom = LocalDate.of(2024, 5, 22),
                 vurdertAv = "Z00000",
             )
         }
@@ -142,7 +142,7 @@ internal class OvergangUføreRepositoryImplTest {
                 brukerHarSøktOmUføretrygd = true,
                 brukerHarFåttVedtakOmUføretrygd = "JA",
                 brukerRettPåAAP = true,
-                virkningsdato = LocalDate.of(2024, 5, 1),
+                fom = LocalDate.of(2024, 5, 1),
                 vurdertAv = "Z00001",
             )
         }
@@ -152,7 +152,7 @@ internal class OvergangUføreRepositoryImplTest {
                 brukerHarSøktOmUføretrygd = true,
                 brukerHarFåttVedtakOmUføretrygd = "NEI",
                 brukerRettPåAAP = true,
-                virkningsdato = LocalDate.of(2024, 4, 15),
+                fom = LocalDate.of(2024, 4, 15),
                 vurdertAv = "Z00002",
                 vurdertIBehandling = vurdertIBehandling
             )
