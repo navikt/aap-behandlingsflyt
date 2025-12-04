@@ -9,7 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderBistandsbehovSteg
@@ -146,6 +146,7 @@ class BistandsvilkåretTest {
                 vurdertAv = "Z00000",
                 skalVurdereAapIOvergangTilArbeid = null,
                 overgangBegrunnelse = null,
+                opprettet = Instant.now()
             )
 
             bistandRepo.lagre(førstegangsbehandling.id, listOf(bistandsvurdering1))
@@ -201,16 +202,18 @@ class BistandsvilkåretTest {
             postgresRepositoryRegistry.provider(connection).provide<SykdomRepository>()
                 .lagre(revurdering.id, listOf(sykdomsvurdering))
 
-            val bistandsvurdering2 = BistandVurderingLøsningDto(
+            val bistandsvurdering2 = BistandLøsningDto(
                 begrunnelse = "Begrunnelse 2",
                 erBehovForAktivBehandling = false,
                 erBehovForArbeidsrettetTiltak = false,
                 erBehovForAnnenOppfølging = false,
                 skalVurdereAapIOvergangTilArbeid = false,
                 overgangBegrunnelse = null,
+                fom = sykdomsvurdering.vurderingenGjelderFra,
+                tom = null
             )
 
-            AvklarBistandLøser(postgresRepositoryRegistry.provider(connection), gatewayProvider).løs(
+            AvklarBistandLøser(postgresRepositoryRegistry.provider(connection)).løs(
                 AvklaringsbehovKontekst(
                     bruker = Bruker(sak.person.aktivIdent().identifikator),
                     kontekst = FlytKontekst(
@@ -219,7 +222,7 @@ class BistandsvilkåretTest {
                         sakId = sak.id,
                         behandlingType = TypeBehandling.Revurdering
                     ),
-                ), løsning = AvklarBistandsbehovLøsning(bistandsVurdering = bistandsvurdering2)
+                ), løsning = AvklarBistandsbehovLøsning(løsningerForPerioder = listOf(bistandsvurdering2))
             )
         }
 
@@ -274,7 +277,8 @@ class BistandsvilkåretTest {
         skalVurdereAapIOvergangTilArbeid: Boolean? = null,
         vurdertAv: String = "Z00000",
         vurderingenGjelderFra: LocalDate = LocalDate.now(),
-        vurdertIBehandling: BehandlingId = BehandlingId(1)
+        vurdertIBehandling: BehandlingId = BehandlingId(1),
+        opprettet: Instant = Instant.now()
 
     ) = Bistandsvurdering(
         begrunnelse = begrunnelse,
@@ -285,7 +289,8 @@ class BistandsvilkåretTest {
         skalVurdereAapIOvergangTilArbeid = skalVurdereAapIOvergangTilArbeid,
         vurdertAv = vurdertAv,
         vurderingenGjelderFra = vurderingenGjelderFra,
-        vurdertIBehandling = vurdertIBehandling
+        vurdertIBehandling = vurdertIBehandling,
+        opprettet = opprettet
     )
 
     private fun revurdering(connection: DBConnection, behandling: Behandling, sak: Sak): Behandling {

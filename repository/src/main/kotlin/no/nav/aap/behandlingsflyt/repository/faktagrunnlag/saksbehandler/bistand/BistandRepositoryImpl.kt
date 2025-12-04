@@ -52,7 +52,6 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
 
     private fun bistandvurderingRowMapper(row: Row): Bistandsvurdering {
         return Bistandsvurdering(
-            id = row.getLong("ID"),
             begrunnelse = row.getString("BEGRUNNELSE"),
             erBehovForAktivBehandling = row.getBoolean("BEHOV_FOR_AKTIV_BEHANDLING"),
             erBehovForArbeidsrettetTiltak = row.getBoolean("BEHOV_FOR_ARBEIDSRETTET_TILTAK"),
@@ -73,11 +72,7 @@ class BistandRepositoryImpl(private val connection: DBConnection) : BistandRepos
             vurderinger = bistandsvurderinger
         )
 
-        val eksisterendeVurderinger =
-            eksisterendeBistandGrunnlag?.vurderinger?.let { it.map { it.copy(opprettet = null, id = null) } }.orEmpty().toSet()
-        val nyeVurderinger = bistandsvurderinger.map { it.copy(opprettet = null, id = null) }.toSet()
-
-        if (eksisterendeVurderinger != nyeVurderinger) {
+        if (eksisterendeBistandGrunnlag != nyttGrunnlag) {
             eksisterendeBistandGrunnlag?.let {
                 deaktiverEksisterende(behandlingId)
             }

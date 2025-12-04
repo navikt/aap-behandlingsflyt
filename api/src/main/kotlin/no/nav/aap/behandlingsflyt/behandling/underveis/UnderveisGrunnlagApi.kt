@@ -16,7 +16,7 @@ import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.underveisVurderingerAPI(datasource: DataSource, repositoryRegistry: RepositoryRegistry) {
+fun NormalOpenAPIRoute.underveisVurderingerApi(datasource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/behandling/underveis/{referanse}").authorizedGet<BehandlingReferanse, List<UnderveisperiodeDto>>(
         AuthorizationParamPathConfig(
             behandlingPathParam = BehandlingPathParam("referanse"),

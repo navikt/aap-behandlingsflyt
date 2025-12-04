@@ -22,7 +22,7 @@ import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.authorizedGet
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.kvalitetssikringTilgangAPI(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
+fun NormalOpenAPIRoute.kvalitetssikringTilgangApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/behandling/{referanse}/kvalitetssikring-tilgang").tag(Tags.Behandling) {
         authorizedGet<BehandlingReferanse, KvalitetssikringTilgangDto>(
             AuthorizationParamPathConfig(

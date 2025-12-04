@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.avbrytrevurdering.AvbrytRevurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.overganguføre.OvergangUføreRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
@@ -69,6 +70,7 @@ internal class OvergangUføreRepositoryImplTest {
                 brukerRettPåAAP = true,
                 virkningsdato = testDate,
                 vurdertAv = "Saks behandler",
+                vurdertIBehandling = behandling.id
             )
 
             overgangUføreRepository.lagre(behandling.id, listOf(expected))
@@ -98,6 +100,8 @@ internal class OvergangUføreRepositoryImplTest {
                             brukerRettPåAAP = true,
                             virkningsdato = LocalDate.now(),
                             vurdertAv = "Saks behandler",
+                            vurdertIBehandling = behandling.id
+
                         )
                     )
                 )
@@ -111,6 +115,7 @@ internal class OvergangUføreRepositoryImplTest {
                             brukerRettPåAAP = true,
                             virkningsdato = LocalDate.now(),
                             vurdertAv = "Saks behandler",
+                            vurdertIBehandling = behandling.id
                         )
                     )
                 )
@@ -121,37 +126,44 @@ internal class OvergangUføreRepositoryImplTest {
 
     @Test
     fun `historikk viser kun vurderinger fra tidligere behandlinger og ikke inkluderer vurdering fra avbrutt revurdering`() {
-        val overgangUføreVurdering1 = OvergangUføreVurdering(
-            begrunnelse = "B1",
-            brukerHarSøktOmUføretrygd = true,
-            brukerHarFåttVedtakOmUføretrygd = "NEI",
-            brukerRettPåAAP = true,
-            virkningsdato = LocalDate.of(2024, 5, 22),
-            vurdertAv = "Z00000",
-        )
-        val overgangUføreVurdering2 = OvergangUføreVurdering(
-            begrunnelse = "B2",
-            brukerHarSøktOmUføretrygd = true,
-            brukerHarFåttVedtakOmUføretrygd = "JA",
-            brukerRettPåAAP = true,
-            virkningsdato = LocalDate.of(2024, 5, 1),
-            vurdertAv = "Z00001",
-        )
-        val overgangUføreVurdering3 = OvergangUføreVurdering(
-            begrunnelse = "B3",
-            brukerHarSøktOmUføretrygd = true,
-            brukerHarFåttVedtakOmUføretrygd = "NEI",
-            brukerRettPåAAP = true,
-            virkningsdato = LocalDate.of(2024, 4, 15),
-            vurdertAv = "Z00002",
-        )
+        val overgangUføreVurdering1 = { vurdertIBehandling: BehandlingId ->
+            OvergangUføreVurdering(
+                begrunnelse = "B1",
+                brukerHarSøktOmUføretrygd = true,
+                brukerHarFåttVedtakOmUføretrygd = "NEI",
+                brukerRettPåAAP = true,
+                virkningsdato = LocalDate.of(2024, 5, 22),
+                vurdertAv = "Z00000",
+            )
+        }
+        val overgangUføreVurdering2 = { vurdertIBehandling: BehandlingId ->
+            OvergangUføreVurdering(
+                begrunnelse = "B2",
+                brukerHarSøktOmUføretrygd = true,
+                brukerHarFåttVedtakOmUføretrygd = "JA",
+                brukerRettPåAAP = true,
+                virkningsdato = LocalDate.of(2024, 5, 1),
+                vurdertAv = "Z00001",
+            )
+        }
+        val overgangUføreVurdering3 = { vurdertIBehandling: BehandlingId ->
+            OvergangUføreVurdering(
+                begrunnelse = "B3",
+                brukerHarSøktOmUføretrygd = true,
+                brukerHarFåttVedtakOmUføretrygd = "NEI",
+                brukerRettPåAAP = true,
+                virkningsdato = LocalDate.of(2024, 4, 15),
+                vurdertAv = "Z00002",
+                vurdertIBehandling = vurdertIBehandling
+            )
+        }
 
         val førstegangsbehandling = dataSource.transaction { connection ->
             val overgangUføreRepo = OvergangUføreRepositoryImpl(connection)
             val sak = sak(connection)
             val førstegangsbehandling = finnEllerOpprettBehandling(connection, sak)
 
-            overgangUføreRepo.lagre(førstegangsbehandling.id, listOf(overgangUføreVurdering1))
+            overgangUføreRepo.lagre(førstegangsbehandling.id, listOf(overgangUføreVurdering1(førstegangsbehandling.id)))
             førstegangsbehandling
         }
 
@@ -167,20 +179,20 @@ internal class OvergangUføreRepositoryImplTest {
                     Bruker("Z00000")
                 )
             )
-            overgangUføreRepo.lagre(revurderingAvbrutt.id, listOf(overgangUføreVurdering2))
+            overgangUføreRepo.lagre(revurderingAvbrutt.id, listOf(overgangUføreVurdering2(revurderingAvbrutt.id)))
         }
 
         dataSource.transaction { connection ->
             val overgangUføreRepo = OvergangUføreRepositoryImpl(connection)
             val revurdering = revurderingOvergangUføre(connection, førstegangsbehandling)
 
-            overgangUføreRepo.lagre(revurdering.id, listOf(overgangUføreVurdering3))
+            overgangUføreRepo.lagre(revurdering.id, listOf(overgangUføreVurdering3(revurdering.id)))
 
             val historikk = overgangUføreRepo.hentHistoriskeOvergangUforeVurderinger(revurdering.sakId, revurdering.id)
             assertThat(historikk)
                 .usingRecursiveComparison()
                 .ignoringFields("opprettet")
-                .isEqualTo(listOf(overgangUføreVurdering1))
+                .isEqualTo(listOf(overgangUføreVurdering1(førstegangsbehandling.id)))
         }
     }
 

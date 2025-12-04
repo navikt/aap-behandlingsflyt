@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBe
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FritakMeldepliktLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.RefusjonkravLøsning
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
@@ -42,6 +43,7 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.tuple
@@ -78,7 +80,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 assertThat(behandling.status()).isEqualTo(Status.UTREDES)
             }
             .løsSykdom(periode.fom)
-            .løsBistand()
+            .løsBistand(periode.fom)
             .løsRefusjonskrav()
             .løsAvklaringsBehov(
                 FritakMeldepliktLøsning(
@@ -233,7 +235,8 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         val tilkjentYtelse =
             requireNotNull(dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(revurdering.id) }) { "Tilkjent ytelse skal være beregnet her." }
 
-        assertTidslinje(tilkjentYtelse.tilTidslinje(),
+        assertTidslinje(
+            tilkjentYtelse.tilTidslinje(),
             sykePengerPeriode.overlapp(periode)!! to {
                 assertThat(it.graderingGrunnlag.samordningGradering).isEqualTo(Prosent.`100_PROSENT`)
                 assertThat(it.redusertDagsats()).isEqualTo(Beløp(0))
@@ -359,7 +362,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         assertThat(alleAvklaringsbehov).isNotEmpty()
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
 
-        behandling = behandling.løsSykdom(periode.fom).løsBistand().løsAvklaringsBehov(
+        behandling = behandling.løsSykdom(periode.fom).løsBistand(periode.fom).løsAvklaringsBehov(
             RefusjonkravLøsning(
                 listOf(
                     RefusjonkravVurderingDto(
@@ -438,7 +441,12 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 .filter { it.verdi == Prosent.`100_PROSENT` }.helePerioden()
 
         // Verifiser at samordningen ble fanget opp
-        assertThat(periodeMedFullSamordning).isEqualTo(Periode(fom=sykePengerPeriode.fom, tom = minOf(sykePengerPeriode.tom, uthentetTilkjentYtelse.maxOf { it.periode.tom })))
+        assertThat(periodeMedFullSamordning).isEqualTo(
+            Periode(
+                fom = sykePengerPeriode.fom,
+                tom = minOf(sykePengerPeriode.tom, uthentetTilkjentYtelse.maxOf { it.periode.tom })
+            )
+        )
         behandling = behandling.løsVedtaksbrev()
 
         val nyesteBehandling = hentSisteOpprettedeBehandlingForSak(behandling.sakId)
@@ -449,5 +457,63 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
 
         motor.kjørJobber()
         return nyesteBehandling
+    }
+
+    @Test
+    fun `Godkjent vedtak med meldekort og revurdering med samordning skal sette riktig utbetalingsdato selv om revurderingen skjer etter at meldekort er sendt inn og før meldeplikten har utløpt`() {
+
+        val fom = LocalDate.now().minusDays(15)
+        val periode = Periode(fom, Tid.MAKS)
+        val sykePengerPeriode = Periode(fom, fom.plusMonths(1))
+
+        // Sender inn en søknad
+        val (sak, behandling) = sendInnFørsteSøknad(periode = periode)
+
+
+        behandling
+            .løsSykdom(periode.fom)
+            .løsBistand(periode.fom)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .kvalitetssikreOk()
+            .løsBeregningstidspunkt()
+            .løsForutgåendeMedlemskap(fom)
+            .løsOppholdskrav(fom)
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev()
+
+
+        val meldekortInnsendingsdato = LocalDate.now().atStartOfDay()
+        sak.sendInnMeldekort(timerArbeidet =Periode(periode.fom, periode.fom.plusDays(14)).dager().associateWith { 0.0 }, mottattTidspunkt = meldekortInnsendingsdato)
+        val revurdering = sak.opprettManuellRevurdering(
+            vurderingsbehov = listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER),
+        )
+        revurdering.løsAvklaringsBehov(
+            AvklarSamordningGraderingLøsning(
+                vurderingerForSamordning = VurderingerForSamordning(
+                    vurderteSamordningerData = listOf(
+                        SamordningVurderingData(
+                            ytelseType = Ytelse.SYKEPENGER,
+                            periode = sykePengerPeriode,
+                            gradering = 100,
+                            kronesum = null,
+                        )
+                    ),
+                    begrunnelse = "",
+                    maksDatoEndelig = true,
+                    fristNyRevurdering = null,
+                ),
+            ),
+        )
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .løsVedtaksbrev(TypeBrev.VEDTAK_ENDRING)
+
+        val tilkjentYtelse = dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(revurdering.id) }
+
+        assertThat(tilkjentYtelse?.first()?.tilkjent?.utbetalingsdato).isEqualTo(meldekortInnsendingsdato.toLocalDate())
+
     }
 }

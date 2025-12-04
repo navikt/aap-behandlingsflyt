@@ -20,6 +20,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Year
@@ -33,15 +35,17 @@ class ManglendeLigningGrunnlagSteg internal constructor(
     private val manuellInntektGrunnlagRepository: ManuellInntektGrunnlagRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val beregningService: BeregningService,
-    private val avklaringsbehovService: AvklaringsbehovService
+    private val avklaringsbehovService: AvklaringsbehovService,
+    private val unleashGateway: UnleashGateway,
 ) : BehandlingSteg {
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         avklaringsbehovRepository = repositoryProvider.provide(),
         inntektGrunnlagRepository = repositoryProvider.provide(),
         manuellInntektGrunnlagRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
         beregningService = BeregningService(repositoryProvider),
-        avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+        unleashGateway = gatewayProvider.provide(),
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -62,10 +66,23 @@ class ManglendeLigningGrunnlagSteg internal constructor(
                             manueltTriggetVurderingsbehov(kontekst) -> true
                             else -> {
                                 val sisteRelevanteÅr = hentSisteRelevanteÅr(kontekst)
-                                val sisteÅrInntektGrunnlag = hentInntektGrunnlag(inntektGrunnlag, sisteRelevanteÅr)
+                                if (unleashGateway.isEnabled(BehandlingsflytFeature.EOSBeregning)) {
+                                    val sisteRelevanteÅr = hentSisteRelevanteÅr(kontekst)
+                                    val harInntektIAlleRelevantÅrFraRegister =
+                                        sisteRelevanteÅr.all { relevantÅr ->
+                                            inntektGrunnlag?.inntekter?.map { it.år }
+                                                ?.contains(relevantÅr) == true
+                                        }
 
-                                // Behøver vurdering dersom inntekt for siste år mangler fra register
-                                sisteÅrInntektGrunnlag == null
+                                    // Behøver vurdering dersom en inntekt for siste tre år mangler fra register
+                                    !harInntektIAlleRelevantÅrFraRegister
+                                } else {
+                                    val sisteÅrInntektGrunnlag =
+                                        hentInntektGrunnlag(inntektGrunnlag, sisteRelevanteÅr.first())
+
+                                    // Behøver vurdering dersom inntekt for siste år mangler fra register
+                                    sisteÅrInntektGrunnlag == null
+                                }
                             }
                         }
                     }
@@ -79,12 +96,24 @@ class ManglendeLigningGrunnlagSteg internal constructor(
             },
             erTilstrekkeligVurdert = {
                 val sisteRelevanteÅr = hentSisteRelevanteÅr(kontekst)
-                val inntektGrunnlagSisteRelevanteÅr = hentInntektGrunnlag(inntektGrunnlag, sisteRelevanteÅr)
-                val manuellInntektVurderingSisteRelevanteÅr =
-                    hentManuellInntektVurdering(manuellInntektGrunnlag, sisteRelevanteÅr)
+                if (unleashGateway.isEnabled(BehandlingsflytFeature.EOSBeregning)) {
+                    val inntektGrunnlagSisteRelevanteÅr = hentInntekterGrunnlag(inntektGrunnlag, sisteRelevanteÅr)
+                    val manuelleInntekterRelevanteÅr =
+                        hentManuellInntekterVurdering(manuellInntektGrunnlag, sisteRelevanteÅr)
+                    val kombinerteÅr =
+                        (inntektGrunnlagSisteRelevanteÅr.map { it.år } + manuelleInntekterRelevanteÅr.orEmpty()
+                            .map { it.år }).toSet()
 
-                // Har enten inntekt fra register eller manuelt satt inntekt for siste relevante år
-                inntektGrunnlagSisteRelevanteÅr != null || manuellInntektVurderingSisteRelevanteÅr != null
+                    // Har enten inntekt fra register eller manuelt satt inntekt for tre siste relevante år
+                    sisteRelevanteÅr.all { it in kombinerteÅr }
+                } else {
+                    val inntektGrunnlagSisteRelevanteÅr = hentInntektGrunnlag(inntektGrunnlag, sisteRelevanteÅr.first())
+                    val manuellInntektVurderingSisteRelevanteÅr =
+                        hentManuellInntektVurdering(manuellInntektGrunnlag, sisteRelevanteÅr.first())
+
+                    // Har enten inntekt fra register eller manuelt satt inntekt for siste relevante år
+                    inntektGrunnlagSisteRelevanteÅr != null || manuellInntektVurderingSisteRelevanteÅr != null
+                }
             },
             tilbakestillGrunnlag = {
                 val forrigeManuelleInntekter = kontekst.forrigeBehandlingId?.let { forrigeBehandlingId ->
@@ -113,15 +142,38 @@ class ManglendeLigningGrunnlagSteg internal constructor(
         return manuellInntektGrunnlag?.manuelleInntekter?.firstOrNull { it.år == sisteRelevanteÅr }
     }
 
+    private fun hentManuellInntekterVurdering(
+        manuellInntektGrunnlag: ManuellInntektGrunnlag?,
+        sisteRelevanteÅr: Set<Year>
+    ): List<ManuellInntektVurdering>? {
+        return manuellInntektGrunnlag?.manuelleInntekter?.filter { it.år in sisteRelevanteÅr }
+    }
+
     private fun hentInntektGrunnlag(inntektGrunnlag: InntektGrunnlag?, sisteRelevanteÅr: Year): InntektPerÅr? {
         checkNotNull(inntektGrunnlag) { "Forventet å finne inntektsgrunnlag siden dette lagres i informasjonskravet." }
 
         return inntektGrunnlag.inntekter.firstOrNull { it.år == sisteRelevanteÅr }
     }
 
-    private fun hentSisteRelevanteÅr(kontekst: FlytKontekstMedPerioder): Year {
+    private fun hentInntekterGrunnlag(
+        inntektGrunnlag: InntektGrunnlag?,
+        sisteRelevanteÅr: Set<Year>
+    ): List<InntektPerÅr> {
+        checkNotNull(inntektGrunnlag) { "Forventet å finne inntektsgrunnlag siden dette lagres i informasjonskravet." }
+
+        return inntektGrunnlag.inntekter.filter { it.år in sisteRelevanteÅr }
+    }
+
+    private fun hentSisteRelevanteÅr(kontekst: FlytKontekstMedPerioder): Set<Year> {
         val relevantBeregningsPeriode = beregningService.utledRelevanteBeregningsÅr(kontekst.behandlingId)
-        return relevantBeregningsPeriode.max()
+        val sisteÅr = relevantBeregningsPeriode.max()
+
+        val relevanteÅr = if (unleashGateway.isEnabled(BehandlingsflytFeature.EOSBeregning)) {
+            (0L..2L).map { sisteÅr.minusYears(it) }.toSet()
+        } else {
+            setOf(sisteÅr)
+        }
+        return relevanteÅr
     }
 
     companion object : FlytSteg {
@@ -129,7 +181,7 @@ class ManglendeLigningGrunnlagSteg internal constructor(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
         ): BehandlingSteg {
-            return ManglendeLigningGrunnlagSteg(repositoryProvider)
+            return ManglendeLigningGrunnlagSteg(repositoryProvider, gatewayProvider)
         }
 
         override fun type(): StegType {
