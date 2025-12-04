@@ -22,7 +22,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     EOSBeregning,
     NyeBarn,
     InstFormaal,
-    Arbeidsopptrapping,
     IkkeAntaNullTimerArbeidet,
     NyBrevbyggerV3,
     LagreVedtakIFatteVedtak,
@@ -33,5 +32,3 @@ enum class BehandlingsflytFeature : FeatureToggle {
 
     override fun key(): String = name
 }
-
-
