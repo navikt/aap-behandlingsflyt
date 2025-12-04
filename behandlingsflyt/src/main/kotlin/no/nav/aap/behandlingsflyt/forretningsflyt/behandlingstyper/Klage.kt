@@ -39,8 +39,8 @@ object Klage : BehandlingType {
             .sluttÅOppdatereFaktagrunnlag()
             .medSteg(steg = FatteVedtakSteg)
             .medSteg(steg = OmgjøringSteg)
-            .medSteg(steg = OpprettholdelseSteg)
             .medSteg(steg = MeldingOmVedtakBrevSteg)
+            .medSteg(steg = OpprettholdelseSteg)
             .build()
     }
 }

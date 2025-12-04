@@ -49,10 +49,10 @@ class AndreinstansService(
         val sak = sakRepository.hent(klageBehandling.sakId)
         val klageresultat = klageresultatUtleder.utledKlagebehandlingResultat(klageBehandlingId)
         val avklarinsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(klageBehandlingId)
+
         val sisteSaksbehandlersEnhet = utledEnhetForSisteSaksbehandler(avklarinsbehovene)
-        requireNotNull(sisteSaksbehandlersEnhet) {
-            "Fant ikke beslutters enhet"
-        }
+            ?: throw IllegalStateException("Greier ikke å utlede siste saksbehandler enhet på klagebehandling id $klageBehandlingId ")
+
 
         val kravdato = klagedokumentInformasjonUtleder.utledKravMottattDatoForKlageBehandling(klageBehandlingId)
             ?: throw IllegalStateException("Kravdato for klagebehandling $klageBehandlingId er ikke definert")
