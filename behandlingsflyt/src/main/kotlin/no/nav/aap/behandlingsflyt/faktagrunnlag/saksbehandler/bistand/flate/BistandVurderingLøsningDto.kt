@@ -10,7 +10,7 @@ import java.time.LocalDate
 
 data class BistandLøsningDto(
     override val fom: LocalDate,
-    override val tom: LocalDate?, // TODO: Støtt tom? Ignoreres enn så lenge
+    override val tom: LocalDate?,
     override val begrunnelse: String,
     val erBehovForAktivBehandling: Boolean,
     val erBehovForArbeidsrettetTiltak: Boolean,
@@ -30,6 +30,7 @@ data class BistandLøsningDto(
             vurdertAv = bruker.ident,
             vurdertIBehandling = vurdertIBehandling,
             opprettet = Instant.now(),
+            tom = tom
         )
 
     fun valider() {
