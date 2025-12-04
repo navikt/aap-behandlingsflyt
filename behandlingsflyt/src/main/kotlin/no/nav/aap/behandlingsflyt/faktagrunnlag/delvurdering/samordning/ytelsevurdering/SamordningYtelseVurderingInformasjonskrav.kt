@@ -238,6 +238,7 @@ class SamordningYtelseVurderingInformasjonskrav(
                 for (nyPeriode in ny.ytelsePerioder) {
                     val relevanteEksPerioder = eksisterendeForType
                         .flatMap { it.ytelsePerioder }
+                        // Vi er interessert i graderingsendringer på foreldrepenger, men om det er sykepenger, er vi bare interessert dersom vi ikke allerede har registrert en 100% gradering. Da regnes det om at "vi kjenner til" Sykepenger
                         .filter { it.gradering == nyPeriode.gradering || (it.gradering == Prosent.`100_PROSENT` && ny.ytelseType == Ytelse.SYKEPENGER) }
 
                     secureLogger.info(
@@ -268,6 +269,7 @@ class SamordningYtelseVurderingInformasjonskrav(
                 for (nyPeriode in ny.ytelsePerioder) {
                     val relevanteEksPerioder = eksisterendeForType
                         .flatMap { it.vurderingPerioder }
+                        // Vi er interessert i graderingsendringer på foreldrepenger, men om det er sykepenger, er vi bare interessert dersom vi ikke allerede har registrert en 100% gradering. Da regnes det om at "vi kjenner til" Sykepenger
                         .filter { it.gradering == nyPeriode.gradering || (it.gradering == Prosent.`100_PROSENT` && ny.ytelseType == Ytelse.SYKEPENGER) }
 
                     secureLogger.info(
