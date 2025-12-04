@@ -52,7 +52,7 @@ fun NormalOpenAPIRoute.oppholdskravGrunnlagApi(
 
                     val vurdering = grunnlag?.vurderinger?.firstOrNull { it.vurdertIBehandling == behandling.id }
                     val gjeldendeVedtatteVurderinger = grunnlag?.vurderinger?.filter { it.vurdertIBehandling != behandling.id }?.tilTidslinje().orEmpty()
-                    val perioderSomTrengerVurdering = avklaringsbehov?.perioderSomSkalLøses()?.toList() ?: emptyList()
+                    val perioderSomTrengerVurdering = avklaringsbehov?.perioderVedtaketBehøverVurdering()?.toList() ?: emptyList()
 
                     OppholdskravGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
