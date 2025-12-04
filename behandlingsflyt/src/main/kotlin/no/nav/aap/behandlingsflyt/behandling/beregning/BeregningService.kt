@@ -19,7 +19,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVur
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.math.BigDecimal
 import java.time.Year
 
 class BeregningService(
@@ -89,8 +91,18 @@ class BeregningService(
         inntekter: Set<InntektPerÅr>,
         manuelleInntekter: Set<ManuellInntektVurdering>
     ): Set<InntektPerÅr> {
-        val manuelleByÅr = manuelleInntekter
-            .map { InntektPerÅr(it.år, it.belop, it) }
+        val manuellePGIByÅr = manuelleInntekter
+            .filter { it.belop != null }
+            .map { InntektPerÅr(it.år, it.belop!!, it) }
+            .groupBy { it.år }
+            .mapValues {
+                require(it.value.size == 1)
+                it.value.first()
+            }
+
+        val manuellEOSByÅr = manuelleInntekter
+            .filter { it.eøsBeløp != null }
+            .map { InntektPerÅr(it.år, it.eøsBeløp!!, it) }
             .groupBy { it.år }
             .mapValues {
                 require(it.value.size == 1)
@@ -104,8 +116,11 @@ class BeregningService(
                 it.value.first()
             }
 
-        // Hvis begge deler finnes for samme år, foretrekkes verdien fra register
-        val kombinerteInntekter = (manuelleByÅr + inntekterByÅr).values.toSet()
+        val kombinerteInntekter =
+            (manuellePGIByÅr + inntekterByÅr).mapValues { (år, inntektPerÅr) ->
+                val eos = manuellEOSByÅr[år]?.beløp ?: Beløp(BigDecimal.ZERO)
+                inntektPerÅr.copy(beløp = inntektPerÅr.beløp.pluss(eos))
+            }.values.toSet()
 
         return kombinerteInntekter
     }

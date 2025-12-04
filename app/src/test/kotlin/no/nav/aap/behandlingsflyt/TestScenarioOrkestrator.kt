@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrke
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehovHendelse
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBarnetilleggLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovEnkelLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarForutgåendeMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarManuellInntektVurderingLøsning
@@ -33,7 +34,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.Yrkesskade
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.AvklarOppholdkravLøsningForPeriodeDto
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
-import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.AndreStatligeYtelser
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurderingPeriodeDto
@@ -48,7 +48,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurderingDTO
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.SoningsvurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.SoningsvurderingerDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
@@ -152,17 +152,21 @@ class TestScenarioOrkestrator(
         )
     }
 
-    fun løsBistand(behandling: Behandling): Behandling {
+    fun løsBistand(behandling: Behandling, fom: LocalDate): Behandling {
         return løsAvklaringsBehov(
             behandling,
             AvklarBistandsbehovLøsning(
-                BistandVurderingLøsningDto(
-                    begrunnelse = "Trenger hjelp fra nav",
-                    erBehovForAktivBehandling = true,
-                    erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = null,
-                    skalVurdereAapIOvergangTilArbeid = null,
-                    overgangBegrunnelse = null,
+                listOf(
+                    BistandLøsningDto(
+                        fom = fom,
+                        begrunnelse = "Trenger hjelp fra nav",
+                        erBehovForAktivBehandling = true,
+                        erBehovForArbeidsrettetTiltak = false,
+                        erBehovForAnnenOppfølging = null,
+                        skalVurdereAapIOvergangTilArbeid = null,
+                        overgangBegrunnelse = null,
+                        tom = null
+                    ),
                 )
             )
         )
@@ -312,10 +316,12 @@ class TestScenarioOrkestrator(
             AvklarSamordningAndreStatligeYtelserLøsning(
                 SamordningAndreStatligeYtelserVurderingDto(
                     "Samordning statlige ytelser ok",
-                    listOf(SamordningAndreStatligeYtelserVurderingPeriodeDto(
-                        AndreStatligeYtelser.BARNEPENSJON,
-                        Periode(LocalDate.now().minusMonths(3), LocalDate.now().minusMonths(2))
-                    ))
+                    listOf(
+                        SamordningAndreStatligeYtelserVurderingPeriodeDto(
+                            AndreStatligeYtelser.BARNEPENSJON,
+                            Periode(LocalDate.now().minusMonths(3), LocalDate.now().minusMonths(2))
+                        )
+                    )
                 )
             )
         )
