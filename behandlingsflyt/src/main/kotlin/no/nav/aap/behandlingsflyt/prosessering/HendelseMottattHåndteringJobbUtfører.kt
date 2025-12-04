@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Klage
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.PdlHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -107,6 +108,15 @@ class HendelseMottattHåndteringJobbUtfører(
                         brevkategori = innsendingType,
                         melding = parsedMelding,
                     )
+            }
+            InnsendingType.PDL_HENDELSE_DODSFALL_BARN -> {
+                håndterMottattDokumentService.håndterPdlHendelseDødsfallBarn(
+                    sakId = sakId,
+                    referanse = referanse,
+                    mottattTidspunkt = mottattTidspunkt,
+                    brevkategori = innsendingType,
+                    melding = parsedMelding as PdlHendelse,
+                )
             }
             else -> {
                 håndterMottattDokumentService.håndterMottatteDokumenter(
