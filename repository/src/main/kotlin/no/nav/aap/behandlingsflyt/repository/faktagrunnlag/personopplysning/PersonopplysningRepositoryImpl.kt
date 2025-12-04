@@ -250,10 +250,10 @@ class PersonopplysningRepositoryImpl(
         val deletedRows = connection.executeReturnUpdated(
             """
             delete from personopplysning_grunnlag where behandling_id = ?; 
-            delete from bruker_personopplysning where id = ANY(?::bigint[]);
             delete from bruker_utenlandsadresse where utenlandsadresser_id = ANY(?::bigint[]);
             delete from personopplysning where personopplysninger_id = ANY(?::bigint[]);
             delete from personopplysninger where id = ANY(?::bigint[]);
+            delete from bruker_personopplysning where id = ANY(?::bigint[]);
             
         """.trimIndent()
         ) {
