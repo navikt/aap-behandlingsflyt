@@ -117,4 +117,49 @@ class SykepengerErstatningGrunnlagTest {
             },
         )
     }
+
+    @Test
+    fun `somTidslinje skal håndtere at vurderingene kommer i feil rekkefølge`() {
+        val startDato = 1 januar 2020
+        val sluttDato = 1 januar 2021
+
+        val vurdertTidspunkt = (1 januar 2020).atStartOfDay()
+
+        val vurderinger = listOf(
+            SykepengerVurdering(
+                begrunnelse = "vurdering2",
+                dokumenterBruktIVurdering = emptyList(),
+                harRettPå = false,
+                vurdertIBehandling = BehandlingId(1L),
+                grunn = null,
+                vurdertAv = "ident",
+                vurdertTidspunkt = vurdertTidspunkt,
+                gjelderFra = 1 februar 2020,
+                gjelderTom = null,
+            ),
+            SykepengerVurdering(
+                begrunnelse = "vurdering1",
+                dokumenterBruktIVurdering = emptyList(),
+                harRettPå = true,
+                vurdertIBehandling = BehandlingId(1L),
+                grunn = SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR,
+                vurdertAv = "ident",
+                vurdertTidspunkt = vurdertTidspunkt,
+                gjelderFra = 1 januar 2020,
+                gjelderTom = 31 januar 2020,
+            )
+        )
+
+        val tidslinje = SykepengerErstatningGrunnlag(vurderinger).somTidslinje(kravDato = startDato, sisteMuligDagMedYtelse = sluttDato)
+
+        assertTidslinje(tidslinje,
+            Periode(fom = startDato, tom = 31 januar 2020) to {
+                assertThat(it.harRettPå).isTrue
+                assertThat(it.grunn).isEqualTo(SykepengerGrunn.SYKEPENGER_IGJEN_ARBEIDSUFOR)
+            },
+            Periode(fom = 1 februar  2020, tom = sluttDato) to {
+                assertThat(it.harRettPå).isFalse
+            },
+        )
+    }
 }
