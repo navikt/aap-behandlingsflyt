@@ -46,8 +46,7 @@ class SamordningYtelseRepositoryImplTest {
         fun tearDown() = dataSource.close()
 
     }
-
-
+    
     @Test
     fun `sette inn flere ytelser, skal hente ut nyeste`() {
         val behandling = dataSource.transaction { finnEllerOpprettBehandling(it, sak(it)) }
@@ -290,6 +289,57 @@ class SamordningYtelseRepositoryImplTest {
             SamordningYtelseRepositoryImpl(it).kopier(behandling1.id, nyBehandling.id)
         }
     }
+
+    @Test
+    fun `test sletting`() {
+        SamordningYtelseVurderingInformasjonskravTest.Companion.dataSource.transaction { connection ->
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            val samordningYtelseRepository = SamordningYtelseRepositoryImpl(connection)
+            samordningYtelseRepository.lagre(
+                behandling.id, setOf(
+                    SamordningYtelse(
+                        ytelseType = Ytelse.SYKEPENGER,
+                        ytelsePerioder = setOf(
+                            SamordningYtelsePeriode(
+                                periode = Periode(
+                                    fom = LocalDate.of(2023, 1, 1),
+                                    tom = LocalDate.of(2023, 12, 31)
+                                ),
+                                gradering = null,
+                                kronesum = 1000
+                            )
+                        ),
+                        kilde = "TEST1",
+                        saksRef = "REF1"
+                    )
+                )
+            )
+            samordningYtelseRepository.lagre(
+                behandling.id, setOf(
+                    SamordningYtelse(
+                        ytelseType = Ytelse.SYKEPENGER,
+                        ytelsePerioder = setOf(
+                            SamordningYtelsePeriode(
+                                periode = Periode(
+                                    fom = LocalDate.of(2024, 1, 1),
+                                    tom = LocalDate.of(2024, 12, 31)
+                                ),
+                                gradering = null,
+                                kronesum = 1000
+                            )
+                        ),
+                        kilde = "TEST1",
+                        saksRef = "REF1"
+                    )
+                )
+            )
+            assertDoesNotThrow {
+                samordningYtelseRepository.slett(behandling.id)
+            }
+        }
+    }
+
 
 
 }

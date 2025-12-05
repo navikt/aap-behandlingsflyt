@@ -48,57 +48,6 @@ class SamordningYtelseVurderingInformasjonskravTest {
     }
 
     @Test
-    fun `test sletting`() {
-        dataSource.transaction { connection ->
-            val sak = sak(connection)
-            val behandling = finnEllerOpprettBehandling(connection, sak)
-            val samordningYtelseRepository = SamordningYtelseRepositoryImpl(connection)
-            samordningYtelseRepository.lagre(
-                behandling.id, setOf(
-                    SamordningYtelse(
-                        ytelseType = Ytelse.SYKEPENGER,
-                        ytelsePerioder = setOf(
-                            SamordningYtelsePeriode(
-                                periode = Periode(
-                                    fom = LocalDate.of(2023, 1, 1),
-                                    tom = LocalDate.of(2023, 12, 31)
-                                ),
-                                gradering = null,
-                                kronesum = 1000
-                            )
-                        ),
-                        kilde = "TEST1",
-                        saksRef = "REF1"
-                    )
-                )
-            )
-            samordningYtelseRepository.lagre(
-                behandling.id, setOf(
-                    SamordningYtelse(
-                        ytelseType = Ytelse.SYKEPENGER,
-                        ytelsePerioder = setOf(
-                            SamordningYtelsePeriode(
-                                periode = Periode(
-                                    fom = LocalDate.of(2024, 1, 1),
-                                    tom = LocalDate.of(2024, 12, 31)
-                                ),
-                                gradering = null,
-                                kronesum = 1000
-                            )
-                        ),
-                        kilde = "TEST1",
-                        saksRef = "REF1"
-                    )
-                )
-            )
-            assertDoesNotThrow {
-                samordningYtelseRepository.slett(behandling.id)
-            }
-        }
-    }
-
-
-    @Test
     fun `full overlapping med eksisterende ytelser med nye ytelser`() {
 
         val eksisterendeGrunnlag = SamordningYtelseGrunnlag(
