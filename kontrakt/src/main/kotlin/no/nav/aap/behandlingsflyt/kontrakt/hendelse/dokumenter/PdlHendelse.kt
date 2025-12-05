@@ -64,9 +64,11 @@ public data class PdlHendelseV0(
     val beskrivelse: String?,
 ) : PdlHendelse
 
-public fun tilPdlHendelseDodsfallBrukerV0(): PdlHendelse = PdlHendelseV0(
+public fun tilPdlHendelseDodsfallBrukerV0(navn: Navn?, identer: List<String>): PdlHendelse = PdlHendelseV0(
     innsendingstype = InnsendingType.PDL_HENDELSE_DODSFALL_BRUKER,
-    beskrivelse = ""
+    beskrivelse = "Navn: ${listOfNotNull(navn?.fornavn, navn?.mellomnavn, navn?.etternavn)
+        .joinToString(" ")
+        .takeIf { it.isNotBlank() } ?: "(Ukjent navn)"} PersonId: ${identer.takeIf { it.isNotEmpty() } ?: "(Ukjent navn)"}"
 )
 
 public fun tilPdlHendelseDodsfallBarnV0(navn: Navn?, identer: List<String>): PdlHendelse = PdlHendelseV0(
@@ -76,13 +78,13 @@ public fun tilPdlHendelseDodsfallBarnV0(navn: Navn?, identer: List<String>): Pdl
         .takeIf { it.isNotBlank() } ?: "(Ukjent navn)"} PersonId: ${identer.takeIf { it.isNotEmpty() } ?: "(Ukjent navn)"}"
 )
 
-public fun PdlPersonHendelse.tilInnsendingDødsfallBruker(saksnummer: Saksnummer): Innsending = Innsending(
+public fun PdlPersonHendelse.tilInnsendingDødsfallBruker(saksnummer: Saksnummer, navn: Navn?, identer: List<String>): Innsending = Innsending(
     saksnummer = saksnummer,
     referanse = InnsendingReferanse(PdlHendelseId(value = this.hendelseId)),
     type = InnsendingType.PDL_HENDELSE_DODSFALL_BRUKER,
     kanal = Kanal.DIGITAL,
     mottattTidspunkt = LocalDateTime.now(),
-    melding = tilPdlHendelseDodsfallBrukerV0()
+    melding = tilPdlHendelseDodsfallBrukerV0(navn, identer.filter { it.length == 11 && it.all { character -> character.isDigit() }})
 )
 
 public fun PdlPersonHendelse.tilInnsendingDødsfallBarn(saksnummer: Saksnummer, navn: Navn?, identer: List<String>): Innsending = Innsending(

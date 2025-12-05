@@ -86,7 +86,7 @@ class PdlHendelseKafkaKonsument(
                     søknadsBarn = barnRepository.finnSøknadsBarn(ident)
                     // Håndterer D-nummer og Fnr
                     if (person != null || oppgittBarn != null || søknadsBarn != null) {
-                        secureLogger.info("Håndterer hendelse for ${ident}")
+                        secureLogger.info("Håndterer hendelse for ident ${ident} og navn ${personHendelse.navn?.etternavn} ")
                         funnetIdent = Ident(ident)
                         break
                     }
@@ -183,7 +183,7 @@ class PdlHendelseKafkaKonsument(
                     Dødsfalltype.DODSFALL_BRUKER -> {
                         log.info("Registrerer mottatt hendelse fordi dødsfall på bruker. Bruker har iverksatte vedtak der minst en fremtidig periode er oppfylt ${sak.saksnummer}")
                         hendelseService.registrerMottattHendelse(
-                            personHendelse.tilInnsendingDødsfallBruker(sak.saksnummer)
+                            personHendelse.tilInnsendingDødsfallBruker(sak.saksnummer, personHendelse.navn, personHendelse.personidenter)
                         )
                     }
 
@@ -200,7 +200,7 @@ class PdlHendelseKafkaKonsument(
                 Dødsfalltype.DODSFALL_BRUKER -> {
                     log.info("Registrerer mottatt hendelse fordi dødsfall på bruker. Bruker har ingen iverksatte vedtak ${sak.saksnummer}")
                     hendelseService.registrerMottattHendelse(
-                        personHendelse.tilInnsendingDødsfallBruker(sak.saksnummer)
+                        personHendelse.tilInnsendingDødsfallBruker(sak.saksnummer, personHendelse.navn, personHendelse.personidenter)
                     )
                 }
 
