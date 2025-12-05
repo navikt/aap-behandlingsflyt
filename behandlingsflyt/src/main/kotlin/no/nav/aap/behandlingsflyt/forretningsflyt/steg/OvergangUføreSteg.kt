@@ -9,8 +9,10 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.overganguføre.OvergangUfø
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -20,12 +22,13 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.time.LocalDate
 
 class OvergangUføreSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
@@ -50,12 +53,18 @@ class OvergangUføreSteg private constructor(
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
-        avklaringsbehovService.oppdaterAvklaringsbehov(
+        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
+            behandlingRepository = behandlingRepository,
+            vilkårsresultatRepository = vilkårsresultatRepository,
             kontekst = kontekst,
             avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.AVKLAR_OVERGANG_UFORE,
-            vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst) },
-            erTilstrekkeligVurdert = { true },
+            tvingerAvklaringsbehov = setOf(
+                Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
+                Vurderingsbehov.MOTTATT_SØKNAD // Denne stemmer vel ikke?
+            ),
+            nårVurderingErRelevant = { perioderOvergangUføreErRelevant(kontekst) },
+            perioderSomIkkeErTilstrekkeligVurdert = { perioderSomIkkeErTilstrekkeligVurdert(kontekst) },
             tilbakestillGrunnlag = {
                 val vedtatteVurderinger = kontekst.forrigeBehandlingId
                     ?.let { overgangUføreRepository.hentHvisEksisterer(it) }
@@ -85,54 +94,7 @@ class OvergangUføreSteg private constructor(
         return Fullført
     }
 
-    private fun vedtakBehøverVurdering(kontekst: FlytKontekstMedPerioder): Boolean {
-        return when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
-                val perioderOvergangUføreErRelevant = perioderMedVurderingsbehov(kontekst)
-
-                if (perioderOvergangUføreErRelevant.segmenter().any { it.verdi } && vurderingsbehovTvingerVurdering(
-                        kontekst
-                    )) {
-                    return true
-                }
-
-                val perioderOvergangUføreErVurdert = kontekst.forrigeBehandlingId?.let { forrigeBehandlingId ->
-                    val forrigeBehandling = behandlingRepository.hent(forrigeBehandlingId)
-                    val forrigeRettighetsperiode =
-                        /* Lagrer vi ned rettighetsperioden som ble brukt for en behandling noe sted? */
-                        vilkårsresultatRepository.hent(forrigeBehandlingId).finnVilkår(Vilkårtype.ALDERSVILKÅRET)
-                            .tidslinje().helePerioden()
-
-                    perioderMedVurderingsbehov(
-                        kontekst.copy(
-                            /* TODO: hacky. Er faktisk bare behandlingId som brukes av sjekkene. */
-                            behandlingId = forrigeBehandlingId,
-                            forrigeBehandlingId = forrigeBehandling.forrigeBehandlingId,
-                            rettighetsperiode = forrigeRettighetsperiode,
-                            behandlingType = forrigeBehandling.typeBehandling(),
-                        )
-                    )
-                }.orEmpty()
-
-                perioderOvergangUføreErRelevant.leftJoin(perioderOvergangUføreErVurdert) { erRelevant, erVurdert ->
-                    erRelevant && erVurdert != true
-                }.segmenter().any { it.verdi }
-            }
-
-            VurderingType.MELDEKORT -> false
-            VurderingType.EFFEKTUER_AKTIVITETSPLIKT -> false
-            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9 -> false
-            VurderingType.IKKE_RELEVANT -> false
-        }
-    }
-
-    private fun vurderingsbehovTvingerVurdering(kontekst: FlytKontekstMedPerioder): Boolean {
-        return kontekst.vurderingsbehovRelevanteForSteg.any {
-            it in listOf(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND, Vurderingsbehov.MOTTATT_SØKNAD)
-        }
-    }
-
-    private fun perioderMedVurderingsbehov(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
+    private fun perioderOvergangUføreErRelevant(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
         val utfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
         val sykdomsvurderinger = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)
             ?.somSykdomsvurderingstidslinje().orEmpty()
@@ -146,13 +108,46 @@ class OvergangUføreSteg private constructor(
                 TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
                 TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
                 TidligereVurderinger.Behandlingsutfall.UKJENT -> {
-                    sykdomsvurdering?.erOppfyltOrdinær(
+                    sykdomErOppfyltOgBistandErIkkeOppfylt(
                         kontekst.rettighetsperiode.fom,
-                        segmentPeriode
-                    ) == true && bistandsvurdering != null && !bistandsvurdering.erBehovForBistand()
+                        segmentPeriode,
+                        sykdomsvurdering,
+                        bistandsvurdering
+                    )
                 }
             }
         }
+    }
+
+    private fun perioderSomIkkeErTilstrekkeligVurdert(kontekst: FlytKontekstMedPerioder): Set<Periode> {
+        val overgangUføreTidslinje = overgangUføreRepository.hentHvisEksisterer(kontekst.behandlingId)
+            ?.somOvergangUforevurderingstidslinje(kontekst.rettighetsperiode.fom).orEmpty()
+
+        // Hele tidslinjen må dekke perioderSomErRelevante
+        // Ingen vurderinger med oppfylt 11-18 kan vurderes utenfor perioden der 11-5 er oppfylt og 11-6 ikke er oppfylt
+
+        return Tidslinje.map2(
+            perioderOvergangUføreErRelevant(kontekst),
+            overgangUføreTidslinje
+        )
+        { erRelevant, overgangUføreVurdering ->
+            when {
+                erRelevant == true -> overgangUføreVurdering != null
+                else -> overgangUføreVurdering == null || overgangUføreVurdering.brukerRettPåAAP == false
+            }
+        }.filter { erKonsistent -> !erKonsistent.verdi }.komprimer().perioder().toSet()
+    }
+    
+    private fun sykdomErOppfyltOgBistandErIkkeOppfylt(
+        kravdato: LocalDate,
+        segmentPeriode: Periode,
+        sykdomsvurdering: Sykdomsvurdering?,
+        bistandsvurdering: Bistandsvurdering?
+    ): Boolean {
+        return sykdomsvurdering?.erOppfyltOrdinær(
+            kravdato,
+            segmentPeriode
+        ) == true && bistandsvurdering != null && !bistandsvurdering.erBehovForBistand()
     }
 
     companion object : FlytSteg {
