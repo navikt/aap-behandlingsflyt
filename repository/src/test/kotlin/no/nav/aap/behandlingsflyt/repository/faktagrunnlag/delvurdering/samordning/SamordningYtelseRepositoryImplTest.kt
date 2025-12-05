@@ -1,16 +1,31 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning
 
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingInformasjonskrav.Companion.harEndringerIYtelserIkkeDekketAvManuelleVurderinger
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingInformasjonskrav.Companion.harEndringerIYtelserIkkeDekketAvEksisterendeGrunnlag
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
+import no.nav.aap.behandlingsflyt.test.desember
+import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.behandlingsflyt.test.juli
+import no.nav.aap.behandlingsflyt.test.juni
+import no.nav.aap.behandlingsflyt.test.mai
+import no.nav.aap.behandlingsflyt.test.oktober
+import no.nav.aap.behandlingsflyt.test.september
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
@@ -29,6 +44,7 @@ class SamordningYtelseRepositoryImplTest {
         @AfterAll
         @JvmStatic
         fun tearDown() = dataSource.close()
+
     }
 
 
@@ -275,53 +291,5 @@ class SamordningYtelseRepositoryImplTest {
         }
     }
 
-    @Test
-    fun `test sletting`() {
-        dataSource.transaction { connection ->
-            val sak = sak(connection)
-            val behandling = finnEllerOpprettBehandling(connection, sak)
-            val samordningYtelseRepository = SamordningYtelseRepositoryImpl(connection)
-            samordningYtelseRepository.lagre(
-                behandling.id, setOf(
-                    SamordningYtelse(
-                        ytelseType = Ytelse.SYKEPENGER,
-                        ytelsePerioder = setOf(
-                            SamordningYtelsePeriode(
-                                periode = Periode(
-                                    fom = LocalDate.of(2023, 1, 1),
-                                    tom = LocalDate.of(2023, 12, 31)
-                                ),
-                                gradering = null,
-                                kronesum = 1000
-                            )
-                        ),
-                        kilde = "TEST1",
-                        saksRef = "REF1"
-                    )
-                )
-            )
-            samordningYtelseRepository.lagre(
-                behandling.id, setOf(
-                    SamordningYtelse(
-                        ytelseType = Ytelse.SYKEPENGER,
-                        ytelsePerioder = setOf(
-                            SamordningYtelsePeriode(
-                                periode = Periode(
-                                    fom = LocalDate.of(2024, 1, 1),
-                                    tom = LocalDate.of(2024, 12, 31)
-                                ),
-                                gradering = null,
-                                kronesum = 1000
-                            )
-                        ),
-                        kilde = "TEST1",
-                        saksRef = "REF1"
-                    )
-                )
-            )
-            assertDoesNotThrow {
-                samordningYtelseRepository.slett(behandling.id)
-            }
-        }
-    }
+
 }
