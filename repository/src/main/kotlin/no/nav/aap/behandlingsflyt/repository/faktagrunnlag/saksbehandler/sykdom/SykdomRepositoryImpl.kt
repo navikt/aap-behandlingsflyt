@@ -345,7 +345,6 @@ class SykdomRepositoryImpl(private val connection: DBConnection) : SykdomReposit
     private fun sykdomsvurderingRowmapper(row: Row): Sykdomsvurdering {
         val sykdomsvurderingId = row.getLong("id")
         return Sykdomsvurdering(
-            id = sykdomsvurderingId,
             begrunnelse = row.getString("BEGRUNNELSE"),
             vurderingenGjelderFra = row.getLocalDate("VURDERINGEN_GJELDER_FRA"),
             dokumenterBruktIVurdering = hentSykdomsDokumenter(sykdomsvurderingId),

@@ -143,6 +143,7 @@ class BistandsvilkåretTest {
                 erBehovForArbeidsrettetTiltak = true,
                 erBehovForAnnenOppfølging = false,
                 vurderingenGjelderFra = sak.rettighetsperiode.fom,
+                tom = null,
                 vurdertAv = "Z00000",
                 skalVurdereAapIOvergangTilArbeid = null,
                 overgangBegrunnelse = null,
@@ -289,6 +290,7 @@ class BistandsvilkåretTest {
         skalVurdereAapIOvergangTilArbeid = skalVurdereAapIOvergangTilArbeid,
         vurdertAv = vurdertAv,
         vurderingenGjelderFra = vurderingenGjelderFra,
+        tom = null,
         vurdertIBehandling = vurdertIBehandling,
         opprettet = opprettet
     )

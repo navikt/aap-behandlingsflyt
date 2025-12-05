@@ -1720,6 +1720,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                         brukerHarFåttVedtakOmUføretrygd = "NEI",
                         brukerRettPåAAP = true,
                         virkningsdato = virkningsdatoOvergangUføre,
+                        fom = virkningsdatoOvergangUføre,
+                        tom = null,
                         overgangBegrunnelse = null
                     )
                 )
@@ -2757,7 +2759,6 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
     }
 
     @Test
-    @Disabled("reaktiveres når tilhørende frontend er ute")
     fun `kan hente inn manuell inntektsdata i grunnlag og benytte i beregning`() {
         val ident = nyPerson(harYrkesskade = false, harUtenlandskOpphold = false, inntekter = mutableListOf())
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))

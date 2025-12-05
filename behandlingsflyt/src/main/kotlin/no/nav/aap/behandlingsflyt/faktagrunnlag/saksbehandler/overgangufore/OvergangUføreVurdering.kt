@@ -10,13 +10,14 @@ data class OvergangUføreVurdering(
     val brukerHarSøktOmUføretrygd: Boolean,
     val brukerHarFåttVedtakOmUføretrygd: String?,
     val brukerRettPåAAP: Boolean?,
-    val virkningsdato: LocalDate?,
+    val fom: LocalDate?,
+    val tom: LocalDate?,
     val vurdertAv: String,
     val vurdertIBehandling: BehandlingId? = null, // TODO: Gjør required etter migrering
     val opprettet: Instant? = null
 ) {
     fun harRettPåAAPMedOvergangUføre(): Boolean {
-        return virkningsdato != null
+        return fom != null // TODO: Fjern denne - fom skal også settes for nei-svar
                 && brukerHarSøktOmUføretrygd
                 && brukerHarFåttVedtakOmUføretrygd == UføreSøknadVedtak.NEI.verdi
                 && brukerRettPåAAP == true
