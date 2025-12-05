@@ -157,7 +157,9 @@ class ManglendeLigningGrunnlagStegTest {
         every { avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id) } returns avklaringsbehovene
         every { inntektGrunnlagRepository.hentHvisEksisterer(behandling.id) } returns InntektGrunnlag(
             setOf(
+                InntektPerÅr(sisteÅr.minusYears(1), Beløp(250_000)),
                 InntektPerÅr(sisteÅr.minusYears(2), Beløp(250_000)),
+                InntektPerÅr(sisteÅr.minusYears(5), Beløp(250_000)),
                 InntektPerÅr(sisteÅr, Beløp(300_000)),
             ), emptySet()
         )

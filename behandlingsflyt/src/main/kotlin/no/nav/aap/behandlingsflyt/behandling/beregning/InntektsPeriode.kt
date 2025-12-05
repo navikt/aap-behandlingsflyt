@@ -8,7 +8,3 @@ data class InntektsPeriode(
     val beløp: Beløp
 )
 
-data class InntektData(
-    val beløp: Double,
-)
-
