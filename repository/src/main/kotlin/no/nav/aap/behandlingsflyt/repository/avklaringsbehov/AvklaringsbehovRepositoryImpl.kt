@@ -375,8 +375,7 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
             endretAv = row.getString("opprettet_av"),
             frist = row.getLocalDateOrNull("frist"),
             grunn = row.getEnumOrNull("venteaarsak"),
-            perioderSomIkkeErTilstrekkeligVurdert = row.getPeriodeArrayOrNull("perioder")?.toSet() // TODO: Fjern etter renaming
-                ?: row.getPeriodeArrayOrNull("perioder_ugyldig_vurdering")?.toSet(),
+            perioderSomIkkeErTilstrekkeligVurdert = row.getPeriodeArrayOrNull("perioder_ugyldig_vurdering")?.toSet(),
             perioderVedtaketBehøverVurdering = row.getPeriodeArrayOrNull("perioder_krever_vurdering")?.toSet()
         )
     }
