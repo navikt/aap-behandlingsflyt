@@ -35,7 +35,6 @@ object FakeUnleash : FakeUnleashBase(
         BehandlingsflytFeature.ReduksjonArbeidOverGrense to true,
         BehandlingsflytFeature.PeriodisertSykepengeErstatningNyAvklaringsbehovService to true,
         BehandlingsflytFeature.ReduksjonIkkeMeldtSeg to true,
-        BehandlingsflytFeature.MigrerOvergangUfore to false,
     )
 )
 
@@ -61,9 +60,7 @@ object ProdlikUnleash : FakeUnleashBase(
         BehandlingsflytFeature.ReduksjonIkkeMeldtSeg to false,
         BehandlingsflytFeature.PeriodisertSykepengeErstatningNyAvklaringsbehovService to false,
         BehandlingsflytFeature.UnntakMeldepliktDesember to false,
-        BehandlingsflytFeature.MigrerOvergangUfore to false,
-
-        )
+    )
 )
 
 object LokalUnleash : FakeUnleashBase(
@@ -85,6 +82,5 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.ReduksjonArbeidOverGrense to true,
         BehandlingsflytFeature.PeriodisertSykepengeErstatningNyAvklaringsbehovService to true,
         BehandlingsflytFeature.ReduksjonIkkeMeldtSeg to true,
-        BehandlingsflytFeature.MigrerOvergangUfore to false,
-        )
+    )
 )
