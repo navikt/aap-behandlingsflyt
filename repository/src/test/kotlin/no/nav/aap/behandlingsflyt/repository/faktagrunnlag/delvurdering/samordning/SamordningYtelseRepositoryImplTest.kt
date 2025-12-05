@@ -46,7 +46,8 @@ class SamordningYtelseRepositoryImplTest {
         fun tearDown() = dataSource.close()
 
     }
-    
+
+
     @Test
     fun `sette inn flere ytelser, skal hente ut nyeste`() {
         val behandling = dataSource.transaction { finnEllerOpprettBehandling(it, sak(it)) }
@@ -292,7 +293,7 @@ class SamordningYtelseRepositoryImplTest {
 
     @Test
     fun `test sletting`() {
-        SamordningYtelseVurderingInformasjonskravTest.Companion.dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             val sak = sak(connection)
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val samordningYtelseRepository = SamordningYtelseRepositoryImpl(connection)
@@ -339,7 +340,6 @@ class SamordningYtelseRepositoryImplTest {
             }
         }
     }
-
 
 
 }
