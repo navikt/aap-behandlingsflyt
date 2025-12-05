@@ -9,5 +9,4 @@ interface OvergangUføreRepository : Repository {
     fun hentHistoriskeOvergangUforeVurderinger(sakId: SakId, behandlingId: BehandlingId): List<OvergangUføreVurdering>
     fun lagre(behandlingId: BehandlingId, overgangUføreVurderinger: List<OvergangUføreVurdering>)
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
-    fun migrerOvergangUføre()
 }
