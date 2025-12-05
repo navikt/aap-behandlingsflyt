@@ -2034,6 +2034,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
     @Test
     fun `skal kunne gjennomføre førstegangsbehandling og revurdering hvor oppfylt lovvalg og medlemskap flyttes en mnd`() {
         var (sak, førstegangsbehandling) = sendInnFørsteSøknad(søknad = TestSøknader.SØKNAD_INGEN_MEDLEMSKAP)
+        val nyttTidspunktForOppfyltMedlemskap = sak.rettighetsperiode.fom.plusMonths(1).plusDays(1)
 
         førstegangsbehandling = førstegangsbehandling
             .løsAvklaringsBehov(
@@ -2079,7 +2080,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     løsningerForPerioder = listOf(
                         // Skulle oppfylles en mnd tidligere
                         PeriodisertManuellVurderingForLovvalgMedlemskapDto(
-                            fom = sak.rettighetsperiode.fom.plusMonths(1).plusDays(1),
+                            fom = nyttTidspunktForOppfyltMedlemskap,
                             tom = null,
                             begrunnelse = "",
                             lovvalg = LovvalgDto("begrunnelse", EØSLandEllerLandMedAvtale.NOR),
@@ -2093,6 +2094,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsSykdomsvurderingBrev()
             .løsBeregningstidspunkt()
             .løsForutgåendeMedlemskap(sak.rettighetsperiode.fom)
+            .løsOppholdskrav(nyttTidspunktForOppfyltMedlemskap)
             .løsUtenSamordning()
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
