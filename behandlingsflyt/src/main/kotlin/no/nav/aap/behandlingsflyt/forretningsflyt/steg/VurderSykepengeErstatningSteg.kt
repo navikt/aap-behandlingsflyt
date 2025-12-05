@@ -141,7 +141,7 @@ class VurderSykepengeErstatningSteg private constructor(
         val yrkesskadevurderinger = sykdomGrunnlag?.yrkesskadevurdringTidslinje(kontekst.rettighetsperiode).orEmpty()
 
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-        val overganguføreVilkår = vilkårsresultat.finnVilkår(Vilkårtype.OVERGANGUFØREVILKÅRET).tidslinje()
+        val overganguføreVilkår = vilkårsresultat.optionalVilkår(Vilkårtype.OVERGANGUFØREVILKÅRET)?.tidslinje().orEmpty()
 
         return Tidslinje.map5(
             tidligereVurderingsutfall,
