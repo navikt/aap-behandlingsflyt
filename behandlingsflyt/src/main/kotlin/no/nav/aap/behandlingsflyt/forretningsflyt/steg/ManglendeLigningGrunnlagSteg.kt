@@ -68,6 +68,12 @@ class ManglendeLigningGrunnlagSteg internal constructor(
                                 val sisteRelevanteÅr = hentSisteRelevanteÅr(kontekst)
                                 if (unleashGateway.isEnabled(BehandlingsflytFeature.EOSBeregning)) {
                                     val sisteRelevanteÅr = hentSisteRelevanteÅr(kontekst)
+
+                                    val erVurdertManueltTidligere = hentManuellInntekterVurdering(
+                                        manuellInntektGrunnlag,
+                                        sisteRelevanteÅr
+                                    )?.isNotEmpty() == true
+
                                     val harInntektIAlleRelevantÅrFraRegister =
                                         sisteRelevanteÅr.all { relevantÅr ->
                                             inntektGrunnlag?.inntekter?.map { it.år }
@@ -75,7 +81,7 @@ class ManglendeLigningGrunnlagSteg internal constructor(
                                         }
 
                                     // Behøver vurdering dersom en inntekt for siste tre år mangler fra register
-                                    !harInntektIAlleRelevantÅrFraRegister
+                                    !harInntektIAlleRelevantÅrFraRegister || erVurdertManueltTidligere
                                 } else {
                                     val sisteÅrInntektGrunnlag =
                                         hentInntektGrunnlag(inntektGrunnlag, sisteRelevanteÅr.first())
