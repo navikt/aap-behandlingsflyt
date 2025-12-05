@@ -190,10 +190,6 @@ class SamordningYtelseVurderingInformasjonskrav(
 
         // Sjekker på vurderinger
         val samordningVurderinger = samordningVurderingRepository.hentHvisEksisterer(behandlingId)
-        if (samordningVurderinger != null) {
-            samordningVurderinger.vurderinger
-                .map { vurdering -> vurdering.vurderingPerioder }
-        }
         harEndringerIYtelserIkkeDekketAvManuelleVurderinger(samordningVurderinger, samordningYtelser)
 
         return if (!gikkFraNullTilTomtGrunnlag
