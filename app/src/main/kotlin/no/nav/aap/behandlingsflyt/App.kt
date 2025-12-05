@@ -5,12 +5,10 @@ import com.papsign.ktor.openapigen.model.info.InfoModel
 import com.papsign.ktor.openapigen.route.apiRouting
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.routing.*
 import kotlinx.coroutines.Dispatchers
@@ -120,6 +118,7 @@ import java.util.logging.Level
 import java.util.logging.Logger
 import javax.sql.DataSource
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.toJavaDuration
 
 
 fun utledSubtypesTilMottattHendelseDTO(): List<Class<*>> {
@@ -202,11 +201,6 @@ internal fun Application.server(
 
     install(StatusPages, StatusPagesConfigHelper.setup())
 
-    install(CORS) {
-        anyHost()
-        allowHeader(HttpHeaders.ContentType)
-    }
-
     val dataSource = initDatasource(dbConfig)
     Migrering.migrate(dataSource)
 
@@ -280,7 +274,7 @@ internal fun Application.server(
                 behandlingsflytPipApi(dataSource, repositoryRegistry)
                 auditlogApi(dataSource, repositoryRegistry)
                 refusjonGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                manglendeGrunnlagApi(dataSource, repositoryRegistry)
+                manglendeGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 mellomlagretVurderingApi(dataSource, repositoryRegistry)
                 // Klage
                 påklagetBehandlingGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
@@ -392,7 +386,8 @@ fun Application.startKabalKonsument(
     dataSource: DataSource, repositoryRegistry: RepositoryRegistry
 ): KafkaKonsument<String, String> {
     val konsument = KabalKafkaKonsument(
-        config = KafkaConsumerConfig(), dataSource = dataSource, repositoryRegistry = repositoryRegistry
+        config = KafkaConsumerConfig(), dataSource = dataSource, repositoryRegistry = repositoryRegistry,
+        closeTimeout = AppConfig.stansArbeidTimeout
     )
     monitor.subscribe(ApplicationStarted) {
         val t = Thread {
@@ -417,7 +412,8 @@ fun Application.startTilbakekrevingEventKonsument(
     dataSource: DataSource, repositoryRegistry: RepositoryRegistry, gatewayProvider: GatewayProvider
 ): KafkaKonsument<String, String> {
     val konsument = TilbakekrevingKafkaKonsument(
-        config = KafkaConsumerConfig(), dataSource = dataSource, repositoryRegistry = repositoryRegistry, gatewayProvider = gatewayProvider
+        config = KafkaConsumerConfig(), dataSource = dataSource, repositoryRegistry = repositoryRegistry,
+        closeTimeout = AppConfig.stansArbeidTimeout
     )
     monitor.subscribe(ApplicationStarted) {
         val t = Thread {
@@ -448,12 +444,13 @@ fun Application.startPDLHendelseKonsument(
             keyDeserializer = org.apache.kafka.common.serialization.StringDeserializer::class.java,
             valueDeserializer = io.confluent.kafka.serializers.KafkaAvroDeserializer::class.java
         ),
+        closeTimeout = AppConfig.stansArbeidTimeout,
         dataSource = dataSource,
         repositoryRegistry = repositoryRegistry,
         gatewayProvider = gatewayProvider
     )
     monitor.subscribe(ApplicationStarted) {
-        val t = Thread() {
+        val t = Thread {
             konsument.konsumer()
         }
         t.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, e ->

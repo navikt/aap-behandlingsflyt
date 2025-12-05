@@ -129,4 +129,13 @@ class BrevbestillingService(
             status = Status.AVBRUTT
         )
     }
+
+    fun gjenopptaBestilling(behandlingId: BehandlingId, referanse: BrevbestillingReferanse) {
+        brevbestillingGateway.gjenoppta(referanse)
+        brevbestillingRepository.oppdaterStatus(
+            behandlingId = behandlingId,
+            referanse = referanse,
+            status = Status.FORHÅNDSVISNING_KLAR
+        )
+    }
 }

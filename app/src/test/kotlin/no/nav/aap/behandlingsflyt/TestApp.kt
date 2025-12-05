@@ -333,7 +333,7 @@ private fun opprettNySakOgBehandling(dto: OpprettTestcaseDTO): Sak {
 
         if (harBehandlingsgrunnlag) {
             if (dto.steg == StegType.VURDER_BISTANDSBEHOV) return sak
-            løsBistand(behandling)
+            løsBistand(behandling, dto.søknadsdato ?: sak.rettighetsperiode.fom)
 
             // Vurderinger i sykdom
             if (dto.steg == StegType.REFUSJON_KRAV) return sak

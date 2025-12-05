@@ -4,11 +4,11 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.InnhentetSykdomsOpplysninger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.RegistrertYrkesskade
@@ -17,14 +17,15 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
-import java.time.ZoneId
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
@@ -48,15 +49,33 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
                     val sykdomRepository = repositoryProvider.provide<SykdomRepository>()
                     val yrkesskadeRepository = repositoryProvider.provide<YrkesskadeRepository>()
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
+                    val sakRepository = repositoryProvider.provide<SakRepository>()
+                    val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
 
                     val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandlingId = behandling.id)
                     val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId = behandling.id)
-                    
+
                     val sistVedtatteSykdomGrunnlag =
                         behandling.forrigeBehandlingId?.let { sykdomRepository.hentHvisEksisterer(behandlingId = it) }
 
                     val innhentedeYrkesskader = yrkesskadeGrunnlag?.yrkesskader?.yrkesskader.orEmpty()
                         .map { yrkesskade -> RegistrertYrkesskade(yrkesskade) }
+
+                    val nyeVurderinger = sykdomGrunnlag
+                        ?.sykdomsvurderingerVurdertIBehandling(behandlingId = behandling.id).orEmpty()
+                        .sortedBy { it.vurderingenGjelderFra }
+                        .map { SykdomsvurderingResponse.fraDomene(it, vurdertAvService) }
+
+                    val sisteVedtatte = SykdomsvurderingResponse.fraDomene(
+                        sykdomGrunnlag
+                            ?.vedtattSykdomstidslinje(behandling.id).orEmpty(), vurdertAvService
+                    )
+
+                    val sak = sakRepository.hent(behandling.sakId)
+
+                    val avklaringsbehov = avklaringsbehovRepository
+                        .hentAvklaringsbehovene(behandling.id)
+                        .hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)
 
                     SykdomGrunnlagResponse(
                         opplysninger = InnhentetSykdomsOpplysninger(
@@ -66,22 +85,23 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
                         skalVurdereYrkesskade = innhentedeYrkesskader.isNotEmpty(),
                         erÅrsakssammenhengYrkesskade = sistVedtatteSykdomGrunnlag?.yrkesskadevurdering?.erÅrsakssammenheng
                             ?: false,
-                        sykdomsvurderinger = sykdomGrunnlag
-                            ?.sykdomsvurderingerVurdertIBehandling(behandlingId = behandling.id).orEmpty()
-                            .sortedBy { it.vurderingenGjelderFra }
-                            .map { it.toDto(ansattInfoService) },
+                        sykdomsvurderinger = nyeVurderinger, // TODO: Fjern
+                        nyeVurderinger = nyeVurderinger,
                         historikkSykdomsvurderinger = sykdomGrunnlag
                             ?.historiskeSykdomsvurderinger(behandling.id).orEmpty()
                             .sortedBy { it.opprettet }
-                            .map { it.toDto(ansattInfoService) },
-                        gjeldendeVedtatteSykdomsvurderinger = sykdomGrunnlag
-                            ?.gjeldendeVedtatteSykdomsvurderinger(behandling.id).orEmpty()
-                            .map { it.toDto(ansattInfoService) },
+                            .map { SykdomsvurderingResponse.fraDomene(it, vurdertAvService) },
+                        gjeldendeVedtatteSykdomsvurderinger = sisteVedtatte, // TODO: Fjern
+                        sisteVedtatteVurderinger = sisteVedtatte,
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
                             definisjon = Definisjon.AVKLAR_SYKDOM,
                             behandlingId = behandling.id,
-                        )
+                        ),
+                        kanVurderes = listOf(sak.rettighetsperiode),
+                        behøverVurderinger = avklaringsbehov?.perioderVedtaketBehøverVurdering().orEmpty().toList(),
+                        perioderSomIkkeErTilstrekkeligVurdert = avklaringsbehov?.perioderSomIkkeErTilstrekkeligVurdert()
+                            .orEmpty().toList()
                     )
                 }
 
@@ -137,31 +157,6 @@ private fun Yrkesskadevurdering.toResponse(ansattInfoService: AnsattInfoService)
         vurdertAv = VurdertAvResponse(
             ident = vurdertAv,
             dato = requireNotNull(vurdertTidspunkt?.toLocalDate()) { "Fant ikke vurderingstidspunkt for yrkesskadevurdering" },
-            ansattnavn = navnOgEnhet?.navn,
-            enhetsnavn = navnOgEnhet?.enhet,
-        )
-    )
-}
-
-private fun Sykdomsvurdering.toDto(ansattInfoService: AnsattInfoService): SykdomsvurderingResponse {
-    val navnOgEnhet = ansattInfoService.hentAnsattNavnOgEnhet(vurdertAv.ident)
-    return SykdomsvurderingResponse(
-        begrunnelse = begrunnelse,
-        vurderingenGjelderFra = vurderingenGjelderFra,
-        dokumenterBruktIVurdering = dokumenterBruktIVurdering,
-        erArbeidsevnenNedsatt = erArbeidsevnenNedsatt,
-        harSkadeSykdomEllerLyte = harSkadeSykdomEllerLyte,
-        erSkadeSykdomEllerLyteVesentligdel = erSkadeSykdomEllerLyteVesentligdel,
-        erNedsettelseIArbeidsevneAvEnVissVarighet = erNedsettelseIArbeidsevneAvEnVissVarighet,
-        erNedsettelseIArbeidsevneMerEnnHalvparten = erNedsettelseIArbeidsevneMerEnnHalvparten,
-        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
-        yrkesskadeBegrunnelse = yrkesskadeBegrunnelse,
-        kodeverk = kodeverk,
-        hoveddiagnose = hoveddiagnose,
-        bidiagnoser = bidiagnoser,
-        vurdertAv = VurdertAvResponse(
-            ident = vurdertAv.ident,
-            dato = opprettet.atZone(ZoneId.of("Europe/Oslo")).toLocalDate(),
             ansattnavn = navnOgEnhet?.navn,
             enhetsnavn = navnOgEnhet?.enhet,
         )

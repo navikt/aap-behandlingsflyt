@@ -27,7 +27,7 @@ class KvalitetssikringFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::clas
         )
         behandling
             .løsSykdom(fom)
-            .løsBistand()
+            .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
 
@@ -62,7 +62,7 @@ class KvalitetssikringFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::clas
 
         behandling
             .løsSykdom(fom)
-            .løsBistand()
+            .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
@@ -107,7 +107,7 @@ class KvalitetssikringFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::clas
         behandling
             .løsRettighetsperiodeIngenEndring()
             .løsSykdom(fom)
-            .løsBistand()
+            .løsBistand(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()

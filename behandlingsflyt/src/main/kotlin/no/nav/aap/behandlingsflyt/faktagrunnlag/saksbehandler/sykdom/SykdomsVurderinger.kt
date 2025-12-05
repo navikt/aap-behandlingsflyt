@@ -11,7 +11,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 data class Sykdomsvurdering(
-    val id: Long? = null,
     val begrunnelse: String,
     val vurderingenGjelderFra: LocalDate,
     val vurderingenGjelderTil: LocalDate?,

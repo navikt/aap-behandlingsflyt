@@ -100,12 +100,12 @@ class Avklaringsbehovene(
             if (avklaringsbehov != null) {
                 if (avklaringsbehov.erAvsluttet()) {
                     avklaringsbehov.reåpne(
-                        utledFrist(definisjon, frist),
-                        begrunnelse,
-                        grunn,
-                        bruker,
-                        perioderVedtaketBehøverVurdering,
-                        perioderSomIkkeErTilstrekkeligVurdert
+                        frist = utledFrist(definisjon, frist),
+                        begrunnelse = begrunnelse,
+                        venteårsak = grunn,
+                        bruker = bruker,
+                        perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
+                        perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert
                     )
                     if (avklaringsbehov.erVentepunkt() || avklaringsbehov.erBrevVentebehov() || avklaringsbehov.erAutomatisk()) {
                         // TODO: Vurdere om funnet steg bør ligge på endringen...

@@ -32,6 +32,7 @@ import java.time.Instant
 import java.util.Properties
 import kotlin.concurrent.thread
 import kotlin.test.Test
+import kotlin.time.Duration.Companion.milliseconds
 
 class
 PdlHendelseKafkaKonsumentTest {
@@ -67,7 +68,7 @@ PdlHendelseKafkaKonsumentTest {
         dataSource = dataSource,
         repositoryRegistry = repositoryRegistry,
         gatewayProvider = createGatewayProvider { register<FakeUnleash>() },
-        pollTimeout = Duration.ofMillis(50),
+        pollTimeout = 50.milliseconds,
     )
 
     @Test

@@ -22,7 +22,7 @@ class OvergangUføreVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurder
             .sortedBy { it.opprettet }
             .map { vurdering ->
                 val fom = listOfNotNull(
-                    vurdering.virkningsdato,
+                    vurdering.fom,
                     grunnlag.rettighetsperiode.fom,
                 ).max()
                 Tidslinje(Periode(fom, Tid.MAKS), vurdering)
