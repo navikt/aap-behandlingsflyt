@@ -13,4 +13,8 @@ enum class Status {
             AVBRUTT
         ).contains(this)
     }
+
+    fun kanGjenopptas(): Boolean {
+        return AVBRUTT == this
+    }
 }

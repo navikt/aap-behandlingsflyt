@@ -39,9 +39,43 @@ class BrevbestillingService(
         return vedtakBestillinger.all { it.status.erEndeTilstand() }
     }
 
-    fun hentTilbakestillbareBestillingerOmVedtak(behandlingId: BehandlingId): List<Brevbestilling> {
-        val vedtakBestillinger = brevbestillingRepository.hent(behandlingId).filter { it.typeBrev.erVedtak() }
-        return vedtakBestillinger.filter { !it.status.erEndeTilstand() }
+    /**
+     * Brevbestillinger som ikke har ferdigstillAutomatisk lik True vil kunne tilbakestilles mellom status
+     * AVBRUTT og FORHÅNDSVISNING_KLAR gitt et framtidig scenario hvor selve BrevSteg kan tilbakestilles.
+     *
+     * Brevbestillinger med status FULLFØRT kan ikke tilbakestilles.
+     *
+     * Tilstand SENDT benyttes ikke lenger og start-status for vedtaksbrev i BrevSteg er FORHÅNDSVISNING_KLAR.
+     *
+     * Normalt vil en brevberstilling ha en endring av status-tilstand som går noe slik
+     *   Ny brevbestilling : null -> FORHÅNDSVISNING_KLAR
+     *   Avbryt brevbestilling: FORHÅNDSVISNING_KLAR -> AVBRUTT
+     *   Gjenoppta brevbestilling : AVBRUTT -> FORHÅNDSVISNING_KLAR
+     *   Evt. flere repetisjoner av avbryt og gjenoppta
+     *
+     *  Tilbakestill medføre en av to status-endringer for brevbestillingene:
+     *   1. Nye/gjenopptatt bestilling avbrytes
+     *   2. Avbrutt bestilling gjenopptas
+     *  Avhengig av hva bestillingstatus var før tilbakestill intraff.
+     */
+    fun tilbakestillVedtakBrevBestillinger(behandlingId: BehandlingId) {
+        val bestillinger = brevbestillingRepository.hent(behandlingId).filter { it.typeBrev.erVedtak() }
+        for (bestilling in bestillinger) {
+            if (bestilling.status == Status.AVBRUTT) {
+                gjenopptaBestilling(behandlingId, bestilling.referanse)
+            } else if (bestilling.status == Status.FORHÅNDSVISNING_KLAR) {
+                avbryt(behandlingId, bestilling.referanse)
+            }
+        }
+    }
+
+    fun gjenopptaVedtakBrevBestillinger(behandlingId: BehandlingId)  {
+        val bestillinger = brevbestillingRepository.hent(behandlingId).filter { it.typeBrev.erVedtak() }
+        bestillinger
+            .filter { it.status.kanGjenopptas() }
+            .forEach {
+                gjenopptaBestilling(it.behandlingId, it.referanse)
+            }
     }
 
     fun hentBestillinger(behandlingId: BehandlingId, typeBrev: TypeBrev): List<Brevbestilling> {
@@ -94,6 +128,10 @@ class BrevbestillingService(
         return brevbestillingRepository.hent(behandling.id)
     }
 
+    fun hentBrevbestillinger(behandlingId: BehandlingId): List<Brevbestilling> {
+        return brevbestillingRepository.hent(behandlingId)
+    }
+
     fun oppdaterStatus(behandlingId: BehandlingId, referanse: BrevbestillingReferanse, status: Status) {
         brevbestillingRepository.oppdaterStatus(behandlingId, referanse, status)
     }
@@ -131,6 +169,10 @@ class BrevbestillingService(
     }
 
     fun gjenopptaBestilling(behandlingId: BehandlingId, referanse: BrevbestillingReferanse) {
+        val brevbestilling = brevbestillingRepository.hent(referanse)
+        if (!brevbestilling.status.kanGjenopptas()) {
+            throw IllegalStateException("Gjenoppta bestilling er ikke mulig for brevbestillinger med status ${brevbestilling.status}.")
+        }
         brevbestillingGateway.gjenoppta(referanse)
         brevbestillingRepository.oppdaterStatus(
             behandlingId = behandlingId,

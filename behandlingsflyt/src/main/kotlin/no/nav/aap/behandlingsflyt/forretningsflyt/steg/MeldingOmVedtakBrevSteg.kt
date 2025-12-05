@@ -44,21 +44,10 @@ class MeldingOmVedtakBrevSteg(
         unleashGateway = gatewayProvider.provide(),
     )
 
-    /**
-     * TODO: AAP-1676 : vurder å gjøre teoretisk tilbakestillGrunnlag() fullt funksjonell
-     *
-     * En behandling kan kun ha ett vedtaksbrev og ny brevbestilling per i dag er ikke mulig hvis det finnes et avbrutt
-     * vedtaksbrev. Da må avbrutt vedtaksbrev isteden endre status fra AVBRUTT til FORHÅNDSVISNING_KLAR slik at det
-     * kan sparkes igang igjen med nytt kall til fremtidig API-endepunkt brevbestilling/gjenoppta-bestilling i aap-brev.
-     * Først da vil brevet kunne behandles videre igjen. Hvis brev-steg plutselig blir mulig å tilbakestille med nåværende
-     * tilbakestillGrunnlag() logikk, så vil utfør() feile når ny runde i BrevSteg.utfør() trigges da vedtaksbrev med
-     * status AVBRUTT må kunne gjenopptas og settes tilbake til FORHÅNDSVISNING_KLAR i aap-behandlingsflyt og aap-brev
-     * må motta API-kall /gjenoppta-bestilling slik at brevet igjen får status UNDER_ARBEID i aap-brev
-     */
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val klageErTrukket = trekkKlageService.klageErTrukket(kontekst.behandlingId)
         val brevBehov = brevUtlederService.utledBehovForMeldingOmVedtak(kontekst.behandlingId)
-        val harBestillingOmVedtakBrev = brevbestillingService.harBestillingOmVedtak(kontekst.behandlingId)
+        val erBrevBestilt = brevbestillingService.harBestillingOmVedtak(kontekst.behandlingId)
         avklaringsbehovService.oppdaterAvklaringsbehov(
             avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId),
             Definisjon.SKRIV_VEDTAKSBREV,
@@ -67,28 +56,29 @@ class MeldingOmVedtakBrevSteg(
             tilbakestillGrunnlag = { tilbakestillGrunnlag(kontekst.behandlingId) },
             kontekst
         )
-        if (brevBehov != null && !klageErTrukket && !harBestillingOmVedtakBrev) {
-            bestillBrev(kontekst, brevBehov)
+        if (brevBehov != null && !klageErTrukket) {
+            if (erBrevBestilt) {
+                gjenopptaBrevBestilling(kontekst)
+            } else {
+                bestillBrev(kontekst, brevBehov)
+            }
         }
         return Fullført
     }
 
+    private fun gjenopptaBrevBestilling(kontekst: FlytKontekstMedPerioder) {
+        brevbestillingService.gjenopptaVedtakBrevBestillinger(kontekst.behandlingId)
+    }
+
     /**
-     * Brevbestillinger i endeTilstand (FULLFØRT, AVBRUTT) kan per i dag ikke tilbakestilles i aap-behandlingsflyt.
+     * Brevbestillinger i endeTilstand FULLFØRT kan per i dag ikke tilbakestilles aap-behandlingsflyt.
      * Hvis dette endres i fremtiden må også tilbakestillGrunnlag() logikken her tilpasses.
      *
-     * BrevBestillinger i tilstand FORHÅNDSVISNING_KLAR og SENDT kan i teorien tilbakestilles. Den praktiske
-     * begrensningen per i dag er at selve brev steget ikke kan tilbakestilles (ingen fremtidige scenarior for dette foreløpig)
-     * og i tillegg at funsjonalitet for å gjenoppta-brevbestilling via aap-brev må implementeres (AAP-1676)
+     * BrevBestillinger i tilstand AVBRUTT, FORHÅNDSVISNING_KLAR (og SENDT) kan i teorien tilbakestilles. Den praktiske
+     * begrensningen per i dag er at selve brevsteget ikke kan tilbakestilles (ingen fremtidige scenarior for dette foreløpig)
      */
     private fun tilbakestillGrunnlag(behandlingId: BehandlingId) {
-        if (!brevbestillingService.erAlleBestillingerOmVedtakIEndeTilstand(behandlingId)) {
-            val brevBestillingerOmVedtakSomKanTilbakestilles =
-                brevbestillingService.hentTilbakestillbareBestillingerOmVedtak(behandlingId)
-            for (brevBestilling in brevBestillingerOmVedtakSomKanTilbakestilles) {
-                brevbestillingService.avbryt(brevBestilling.behandlingId, brevBestilling.referanse)
-            }
-        }
+        brevbestillingService.tilbakestillVedtakBrevBestillinger(behandlingId)
     }
 
     private fun vedtakBehøverVurdering(klageErTrukket: Boolean, brevBehov: BrevBehov?): Boolean {
