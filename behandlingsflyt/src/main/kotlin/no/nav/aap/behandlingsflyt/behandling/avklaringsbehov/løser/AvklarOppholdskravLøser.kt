@@ -4,13 +4,8 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOppholdskravLøsning
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlagRepository
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravVurdering
-import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.tilTidslinje
-import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.validerGyldigForRettighetsperiode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
-import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class AvklarOppholdskravLøser(
