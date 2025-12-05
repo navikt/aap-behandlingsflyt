@@ -1,7 +1,7 @@
 [versions]
 ktor = "3.3.3"
 komponenter = "1.0.453"
-tilgang = "1.0.167"
+tilgang = "1.0.168"
 utbetaling = "0.0.68"
 junit = "6.0.1"
 testcontainers = "2.0.2"
@@ -12,7 +12,6 @@ ktorServerContentNegotation = { module = "io.ktor:ktor-server-content-negotiatio
 ktorHttpJvm = { module = "io.ktor:ktor-http-jvm", version.ref = "ktor" }
 ktorServerNetty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }
 ktorServerTestHost = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor" }
-ktorServerCors = { module = "io.ktor:ktor-server-cors", version.ref = "ktor" }
 ktorServerStatusPages = { module = "io.ktor:ktor-server-status-pages", version.ref = "ktor" }
 ktorSerializationJackson = { module = "io.ktor:ktor-serialization-jackson", version.ref = "ktor" }
 json = { module = "no.nav.aap.kelvin:json", version.ref = "komponenter" }

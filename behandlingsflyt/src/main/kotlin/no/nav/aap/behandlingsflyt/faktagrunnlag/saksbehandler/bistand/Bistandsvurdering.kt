@@ -13,6 +13,7 @@ data class Bistandsvurdering(
     val skalVurdereAapIOvergangTilArbeid: Boolean?,
     val vurdertAv: String,
     val vurderingenGjelderFra: LocalDate,
+    val tom: LocalDate?,
     val opprettet: Instant,
     val vurdertIBehandling: BehandlingId
 ) {

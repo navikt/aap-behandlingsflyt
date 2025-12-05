@@ -26,6 +26,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRe
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Omgjøringskilde
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Oppfølgingsoppgave
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppfølgingsoppgaveV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.PdlHendelse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.PdlHendelseV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelseV0
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -141,6 +143,7 @@ class HåndterMottattDokumentService(
                 beskrivelse = when (melding) {
                     is ManuellRevurderingV0 -> melding.beskrivelse
                     is OmgjøringKlageRevurderingV0 -> melding.beskrivelse
+                    is PdlHendelseV0 -> melding.beskrivelse
                     else -> null
                 }
             )
@@ -181,6 +184,36 @@ class HåndterMottattDokumentService(
         }
     }
 
+    fun håndterMottattDialogMelding(
+        sakId: SakId,
+        referanse: InnsendingReferanse,
+        mottattTidspunkt: LocalDateTime,
+        brevkategori: InnsendingType,
+        melding: Melding?
+    ) {
+        val sak = sakService.hent(sakId)
+        val periode = utledPeriode(brevkategori, mottattTidspunkt, melding)
+        val vurderingsbehov = utledVurderingsbehov(brevkategori, melding, periode)
+        log.info("Håndterer dialogmelding for $sak.id")
+        val sisteYtelsesBehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
+
+        if (sisteYtelsesBehandling != null)
+        {
+            mottaDokumentService.markerSomBehandlet(sakId, sisteYtelsesBehandling.id, referanse)
+            log.info("Markerer dialogmelding som behandlet $sisteYtelsesBehandling.id")
+            if (sisteYtelsesBehandling.status().erÅpen())
+            {
+                prosesserBehandling.triggProsesserBehandling(
+                    sisteYtelsesBehandling,
+                    listOf("trigger" to DefaultJsonMapper.toJson(vurderingsbehov.filter { it.type == Vurderingsbehov.MOTTATT_DIALOGMELDING }
+                        .map { it.type }))
+                )
+                log.info("Prosessert behandling etter mottatt dialogmelding $sisteYtelsesBehandling.id")
+            }
+
+        }
+    }
+
     fun håndterMottattTilbakekrevingHendelse(
         sakId: SakId,
         referanse: InnsendingReferanse,
@@ -191,7 +224,8 @@ class HåndterMottattDokumentService(
         when (melding) {
             is TilbakekrevingHendelseV0 -> {
                 log.info("Mottatt tilbakekrevingHendelse for sakId $sakId og eksternBehandlingId ${melding.eksternBehandlingId}")
-                val behandlingsref = melding.eksternBehandlingId  ?: error("Kan ikke finne behandlingId i tilbakekrevinghendelse")
+                val behandlingsref =
+                    melding.eksternBehandlingId ?: error("Kan ikke finne behandlingId i tilbakekrevinghendelse")
                 tilbakekrevingService.håndter(sakId, melding.tilTilbakekrevingshendelse())
                 val behandlingId = try {
                     behandlingRepository.hent(referanse = BehandlingReferanse(UUID.fromString(behandlingsref))).id
@@ -217,10 +251,15 @@ class HåndterMottattDokumentService(
             eksternBehandlingId = this.eksternBehandlingId,
             sakOpprettet = this.tilbakekreving.sakOpprettet,
             varselSendt = this.tilbakekreving.varselSendt,
-            behandlingsstatus = no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingBehandlingsstatus.valueOf(this.tilbakekreving.behandlingsstatus.name),
+            behandlingsstatus = no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingBehandlingsstatus.valueOf(
+                this.tilbakekreving.behandlingsstatus.name
+            ),
             totaltFeilutbetaltBeløp = Beløp(this.tilbakekreving.totaltFeilutbetaltBeløp),
             tilbakekrevingSaksbehandlingUrl = URI.create(this.tilbakekreving.saksbehandlingURL),
-            fullstendigPeriode = Periode(fom = this.tilbakekreving.fullstendigPeriode.fom, tom = this.tilbakekreving.fullstendigPeriode.tom),
+            fullstendigPeriode = Periode(
+                fom = this.tilbakekreving.fullstendigPeriode.fom,
+                tom = this.tilbakekreving.fullstendigPeriode.tom
+            ),
             versjon = this.versjon,
         )
     }

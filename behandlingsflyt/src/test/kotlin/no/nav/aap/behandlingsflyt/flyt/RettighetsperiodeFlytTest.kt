@@ -72,7 +72,7 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }.løsRettighetsperiode(førsteOverstyring)
             .løsSykdom(førsteOverstyring)
-            .løsBistand()
+            .løsBistand(førsteOverstyring)
             .løsSykdomsvurderingBrev()
             .løsBeregningstidspunkt(LocalDate.now())
             .løsForutgåendeMedlemskap(førsteOverstyring)
@@ -100,7 +100,7 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
             }
             .løsRettighetsperiode(andreOverstyring)
             .løsSykdom(sak.rettighetsperiode.fom)
-            .løsBistand()
+            .løsBistand(sak.rettighetsperiode.fom)
             .løsSykdomsvurderingBrev()
             .løsBeregningstidspunkt(LocalDate.now())
             .løsUtenSamordning()
@@ -142,7 +142,7 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
         revurdering = revurdering
             .løsRettighetsperiode(nyStartDato)
             .løsSykdom(nyStartDato)
-            .løsBistand()
+            .løsBistand(nyStartDato)
             .løsSykdomsvurderingBrev()
             .løsBeregningstidspunkt(nyStartDato)
             .løsForutgåendeMedlemskap(nyStartDato)
@@ -185,7 +185,7 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
                 )
             )
             .løsSykdom(sak.rettighetsperiode.fom)
-            .løsBistand()
+            .løsBistand(sak.rettighetsperiode.fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
@@ -222,7 +222,7 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
                 )
             )
             .løsSykdom(nyStartDato)
-            .løsBistand()
+            .løsBistand(nyStartDato)
             .løsSykdomsvurderingBrev()
             .løsBeregningstidspunkt()
             .løsForutgåendeMedlemskap(nyStartDato)
@@ -277,7 +277,7 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
         val nyStartDato = sak.rettighetsperiode.fom.minusDays(7)
         behandling
             .løsSykdom(sak.rettighetsperiode.fom)
-            .løsBistand()
+            .løsBistand(sak.rettighetsperiode.fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
@@ -298,7 +298,7 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
 
             }
             .løsSykdom(nyStartDato)
-            .løsBistand()
+            .løsBistand(nyStartDato)
             .løsBeregningstidspunkt(nyStartDato)
             .løsForutgåendeMedlemskap(nyStartDato)
             .løsOppholdskrav(nyStartDato)
@@ -345,7 +345,7 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
         }
         behandling
             .løsSykdom(startDato)
-            .løsBistand()
+            .løsBistand(startDato)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()

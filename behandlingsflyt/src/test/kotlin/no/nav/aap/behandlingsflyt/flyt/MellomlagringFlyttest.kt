@@ -37,7 +37,7 @@ class MellomlagringFlyttest() : AbstraktFlytOrkestratorTest(FakeUnleash::class) 
                 val mellomlagretVerdi = hentMellomlagretVerdi()
                 assertThat(mellomlagretVerdi).isNull()
             }
-            .løsBistand()
+            .løsBistand(periode.fom)
             .mellomlagreSykdom()
             .løsRefusjonskrav()
             .medKontekst {
