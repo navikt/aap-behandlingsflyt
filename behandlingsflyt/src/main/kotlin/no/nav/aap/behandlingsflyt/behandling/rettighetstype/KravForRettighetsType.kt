@@ -35,7 +35,7 @@ data class RettighetstypeVurdering(
     val vilkårsvurderinger: Map<Vilkårtype, Vilkårsvurdering>,
 )
 
-/* her er det en del rom for forbedringer:
+/** Her er det en del rom for forbedringer:
  * 1. regn ut alle rettighetstyper som er mulige, ikke bare en
  *
  * 2. bygg opp en konkret begrunnelse:
