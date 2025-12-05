@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.tilTidslinje
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektForutgåendeRepository
@@ -28,6 +29,60 @@ fun NormalOpenAPIRoute.forutgåendeMedlemskapApi(
     gatewayProvider: GatewayProvider,
 ) {
     route("/api/behandling") {
+        route("/{referanse}/grunnlag/forutgaaendemedlemskap") {
+            getGrunnlag<BehandlingReferanse, PeriodisertForutgåendeMedlemskapGrunnlagResponse>(
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                behandlingPathParam = BehandlingPathParam("referanse"),
+                avklaringsbehovKode =  Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP.kode.toString()
+            ) { req ->
+                val grunnlag = dataSource.transaction { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val medlemskapRepository =
+                        repositoryProvider
+                            .provide<MedlemskapArbeidInntektForutgåendeRepository>()
+                    val sakRepository = repositoryProvider.provide<SakRepository>()
+                    val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
+
+                    val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
+                    val sak = sakRepository.hent(behandling.sakId)
+                    val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
+
+                    val grunnlag = medlemskapRepository.hentHvisEksisterer(behandling.id)
+                    val nyeVurderinger = grunnlag?.vurderinger?.filter { it.vurdertIBehandling == behandling.id }
+                    val gjeldendeVedtatteVurderinger =
+                        grunnlag?.vurderinger?.filter { it.vurdertIBehandling != behandling.id }?.tilTidslinje() ?: Tidslinje()
+
+                    val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+                    val behøverVurderinger =
+                        avklaringsbehov.hentBehovForDefinisjon(Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP)
+                            ?.perioderVedtaketBehøverVurdering()
+                            .orEmpty()
+
+                    PeriodisertForutgåendeMedlemskapGrunnlagResponse(
+                        harTilgangTilÅSaksbehandle = kanSaksbehandle(),
+                        overstyrt = (nyeVurderinger)?.any { it.overstyrt } ?: false,
+                        behøverVurderinger = behøverVurderinger.toList(),
+                        kanVurderes = listOf(sak.rettighetsperiode),
+                        nyeVurderinger = nyeVurderinger?.map { it.toResponse(vurdertAvService) } ?: emptyList(),
+                        sisteVedtatteVurderinger = gjeldendeVedtatteVurderinger
+                            .komprimer()
+                            .segmenter()
+                            .map { segment ->
+                                val verdi = segment.verdi
+                                verdi.toResponse(
+                                    vurdertAvService = vurdertAvService,
+                                    fom = segment.fom(),
+                                    tom = if (segment.tom().isEqual(Tid.MAKS)) null else segment.tom()
+                                )
+                            }
+                    )
+                }
+
+                respond(grunnlag)
+            }
+        }
+
         route("/{referanse}/grunnlag/forutgaaendemedlemskap-v2") {
             getGrunnlag<BehandlingReferanse, PeriodisertForutgåendeMedlemskapGrunnlagResponse>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
@@ -41,6 +96,8 @@ fun NormalOpenAPIRoute.forutgåendeMedlemskapApi(
                         repositoryProvider
                             .provide<MedlemskapArbeidInntektForutgåendeRepository>()
                     val sakRepository = repositoryProvider.provide<SakRepository>()
+                    val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
+
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
                     val sak = sakRepository.hent(behandling.sakId)
                     val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
@@ -50,10 +107,11 @@ fun NormalOpenAPIRoute.forutgåendeMedlemskapApi(
                     val gjeldendeVedtatteVurderinger =
                         grunnlag?.vurderinger?.filter { it.vurdertIBehandling != behandling.id }?.tilTidslinje() ?: Tidslinje()
 
-                    // TODO skal denne ta utgangspunkt i avklaringsbehov?
+                    val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
                     val behøverVurderinger =
-                        if (gjeldendeVedtatteVurderinger.isEmpty()) listOf(sak.rettighetsperiode)
-                        else sak.rettighetsperiode.minus(gjeldendeVedtatteVurderinger.helePerioden())
+                        avklaringsbehov.hentBehovForDefinisjon(Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP)
+                            ?.perioderVedtaketBehøverVurdering()
+                            .orEmpty()
 
                     PeriodisertForutgåendeMedlemskapGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
