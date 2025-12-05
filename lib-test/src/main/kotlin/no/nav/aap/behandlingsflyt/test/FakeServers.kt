@@ -39,7 +39,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.Lege
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.MeldingStatusType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektResponse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.SumPi
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektForÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.integrasjon.ident.IDENT_QUERY
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoGateway
@@ -316,7 +316,7 @@ object FakeServers : AutoCloseable {
 
                 call.respond(
                     InntektResponse(person.inntekter().map { inntekt ->
-                        SumPi(
+                        InntektForÅr(
                             inntektAr = inntekt.år.value,
                             belop = inntekt.beløp.verdi().toLong()
                         )
@@ -345,7 +345,7 @@ object FakeServers : AutoCloseable {
         routing {
             route("/api/v1/oppgaver") {
                 post {
-                    val req = call.receive<OpprettOppgaveRequest>()
+                    call.receive<OpprettOppgaveRequest>()
 
                     call.respond(
                         OpprettOppgaveResponse(
@@ -423,8 +423,6 @@ object FakeServers : AutoCloseable {
         //create route
         routing {
             get("/api/tjenestepensjon/getActiveForholdMedActiveYtelser") {
-                val fomDate = call.request.queryParameters["fomDate"]
-                val tomDate = call.request.queryParameters["tomDate"]
                 val ident = call.request.headers["fnr"] ?: ""
                 val fakePerson = FakePersoner.hentPerson(ident)
 
@@ -669,8 +667,8 @@ object FakeServers : AutoCloseable {
                             )
                         ))
 
-                    @Suppress("UnusedVariable")
                     @Language("JSON")
+                    @Suppress("UnusedVariable", "unused")
                     val foreldrepengerOgSvangerskapspengerResponse = """
            [{
             "aktor": {
@@ -1432,10 +1430,7 @@ object FakeServers : AutoCloseable {
     }
 
     private fun mapIdentBolk(it: String): HentPersonBolkResult? {
-        val person = FakePersoner.hentPerson(it)
-        if (person == null) {
-            return null
-        }
+        val person = FakePersoner.hentPerson(it) ?: return null
         return HentPersonBolkResult(
             ident = person.identer.first().identifikator,
             person = PdlPersoninfo(
