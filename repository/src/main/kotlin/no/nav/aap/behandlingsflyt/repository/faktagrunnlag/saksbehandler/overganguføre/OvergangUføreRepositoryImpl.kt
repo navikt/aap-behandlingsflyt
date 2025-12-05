@@ -280,7 +280,7 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
 
         val totalTid = System.currentTimeMillis() - start
 
-        log.info("DRY-RUN: Fullført migrering av overgang uføre. Migrerte ${kandidater.size} grunnlag og ${migrerteVurderingerCount} vurderinger på $totalTid ms.")
+        log.info("Fullført migrering av overgang uføre. Migrerte ${kandidater.size} grunnlag og ${migrerteVurderingerCount} vurderinger på $totalTid ms.")
     }
 
 
