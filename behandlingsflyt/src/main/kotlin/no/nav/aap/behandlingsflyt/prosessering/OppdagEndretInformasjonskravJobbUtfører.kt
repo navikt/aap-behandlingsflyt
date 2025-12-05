@@ -36,7 +36,6 @@ class OppdagEndretInformasjonskravJobbUtfører(
         val relevanteInformasjonskrav: List<KanTriggeRevurdering> = listOf(
             //BarnService.konstruer(repositoryProvider, gatewayProvider), Vente på avklaring fra departementet
             SamordningYtelseVurderingInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
-            TjenestePensjonInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
             UføreInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
             InstitusjonsoppholdInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
             PersonopplysningInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
