@@ -218,7 +218,6 @@ internal class OvergangUføreRepositoryImplTest {
 
 
     @Test
-    @Disabled("Whitelister sakid")
     fun `migrer overgang uføre-vurderinger`() {
         dataSource.transaction { connection ->
             val overgangUføreRepo = OvergangUføreRepositoryImpl(connection)
