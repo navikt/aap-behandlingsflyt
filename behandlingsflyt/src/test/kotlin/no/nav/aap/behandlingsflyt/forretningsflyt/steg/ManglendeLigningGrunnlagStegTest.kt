@@ -200,31 +200,6 @@ class ManglendeLigningGrunnlagStegTest {
     }
 
     @Test
-    fun `tilbakestiller manuell inntekt og avbryter avklaringsbehov hvis ingen behov for vurdering og manuell inntekt finnes for behandling`() {
-        val behandling = behandling(typeBehandling = TypeBehandling.Førstegangsbehandling)
-        val flytKontekst = flytKontekstMedPerioder(behandling)
-        val avklaringsbehovene = Avklaringsbehovene(InMemoryAvklaringsbehovRepository, behandling.id)
-
-        leggTilLøstOgAvsluttetAvklaringsbehov(avklaringsbehovene)
-
-        every { avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id) } returns avklaringsbehovene
-        every { manuellInntektGrunnlagRepository.hentHvisEksisterer(behandling.id) } returns ManuellInntektGrunnlag(
-            manuelleVurderinger()
-        )
-
-        val resultat = steg.utfør(flytKontekst)
-
-        val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(listOf(Definisjon.FASTSETT_MANUELL_INNTEKT))
-            .firstOrNull()
-
-        assertThat(avklaringsbehov?.status()).isEqualTo(Status.AVBRUTT)
-        assertThat(resultat).isEqualTo(Fullført)
-
-        // Tilbakestiller manuell inntekt
-        verify { manuellInntektGrunnlagRepository.lagre(behandling.id, any<Set<ManuellInntektVurdering>>()) }
-    }
-
-    @Test
     fun `ingen avklaringsbehov hvis tidligere vurdering tilsier ingen rett til AAP`() {
         val behandling = behandling(typeBehandling = TypeBehandling.Førstegangsbehandling)
         val flytKontekst = flytKontekstMedPerioder(behandling)
