@@ -122,22 +122,39 @@ class OvergangUføreSteg private constructor(
     private fun perioderSomIkkeErTilstrekkeligVurdert(kontekst: FlytKontekstMedPerioder): Set<Periode> {
         val overgangUføreTidslinje = overgangUføreRepository.hentHvisEksisterer(kontekst.behandlingId)
             ?.somOvergangUforevurderingstidslinje(kontekst.rettighetsperiode.fom).orEmpty()
+        val sykdomsdtidslinje = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)
+            ?.somSykdomsvurderingstidslinje()
+            .orEmpty()
+        val bistandstidslinje = bistandRepository.hentHvisEksisterer(kontekst.behandlingId)
+            ?.somBistandsvurderingstidslinje()
+            .orEmpty()
 
-        // Hele tidslinjen må dekke perioderSomErRelevante
-        // Ingen vurderinger med oppfylt 11-18 kan vurderes utenfor perioden der 11-5 er oppfylt og 11-6 ikke er oppfylt
+        // 1. Det må finnes en vurdering for alle relevante perioder
+        // 2. Ingen vurderinger med oppfylt 11-18 utenfor perioden der 11-5 er oppfylt og 11-6 ikke er oppfylt
 
-        return Tidslinje.map2(
+        return Tidslinje.map4(
             perioderOvergangUføreErRelevant(kontekst),
+            sykdomsdtidslinje,
+            bistandstidslinje,
             overgangUføreTidslinje
         )
-        { erRelevant, overgangUføreVurdering ->
+        { segmentPeriode, erRelevant, sykdomstidslinje, bistandstidslinje, overgangUføreVurdering ->
             when {
                 erRelevant == true -> overgangUføreVurdering != null
-                else -> overgangUføreVurdering == null || overgangUføreVurdering.brukerRettPåAAP == false
+                overgangUføreVurdering?.brukerRettPåAAP == true ->
+                    sykdomErOppfyltOgBistandErIkkeOppfylt(
+                        kontekst.rettighetsperiode.fom,
+                        segmentPeriode,
+                        sykdomstidslinje,
+                        bistandstidslinje
+                    )
+
+                else -> false
+
             }
         }.filter { erKonsistent -> !erKonsistent.verdi }.komprimer().perioder().toSet()
     }
-    
+
     private fun sykdomErOppfyltOgBistandErIkkeOppfylt(
         kravdato: LocalDate,
         segmentPeriode: Periode,
