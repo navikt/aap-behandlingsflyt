@@ -36,7 +36,7 @@ open class VurdertBarnDto(
         val identifikator = if (ident == null) {
             BarnIdentifikator.NavnOgFødselsdato(navn!!, Fødselsdato(fødselsdato!!))
         } else {
-            BarnIdentifikator.BarnIdent(Ident(ident))
+            BarnIdentifikator.BarnIdent(Ident(ident), navn, fødselsdato?.let { Fødselsdato(it) })
         }
         return VurdertBarn(
             identifikator,

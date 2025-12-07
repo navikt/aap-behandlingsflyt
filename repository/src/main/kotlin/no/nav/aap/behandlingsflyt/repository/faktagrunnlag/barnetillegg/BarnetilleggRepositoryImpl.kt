@@ -131,8 +131,8 @@ class BarnetilleggRepositoryImpl(private val connection: DBConnection) : Barneti
                         is BarnIdentifikator.BarnIdent -> {
                             setString(1, ident.ident.identifikator)
                             setLong(2, periodeId)
-                            setString(3, null)
-                            setLocalDate(4, null)
+                            setString(3, ident.navn)
+                            setLocalDate(4, ident.fødselsdato?.toLocalDate())
                         }
 
                         is BarnIdentifikator.NavnOgFødselsdato -> {
@@ -220,7 +220,10 @@ class BarnetilleggRepositoryImpl(private val connection: DBConnection) : Barneti
                         it.getLocalDate("fodselsdato").let(::Fødselsdato)
                     )
                 } else {
-                    BarnIdentifikator.BarnIdent(Ident(identifikator))
+                    BarnIdentifikator.BarnIdent(
+                        Ident(identifikator), it.getStringOrNull("navn"),
+                        it.getLocalDateOrNull("fodselsdato")?.let(::Fødselsdato)
+                    )
                 }
             }
         }

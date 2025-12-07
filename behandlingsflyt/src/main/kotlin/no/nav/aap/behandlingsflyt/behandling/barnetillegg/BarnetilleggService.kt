@@ -28,10 +28,13 @@ class BarnetilleggService(
 
     fun beregn(behandlingId: BehandlingId): Tidslinje<RettTilBarnetillegg> {
         val sak = sakService.hentSakFor(behandlingId)
-        val barnGrunnlag = barnRepository.hent(behandlingId)
-
+        val barnGrunnlag = barnRepository.hentHvisEksisterer(behandlingId)
         var resultat: Tidslinje<RettTilBarnetillegg> =
             Tidslinje(listOf(Segment(sak.rettighetsperiode, RettTilBarnetillegg())))
+
+        if (barnGrunnlag == null) {
+            return resultat
+        }
 
         resultat = kombinerFolkeregisterBarn(resultat, barnGrunnlag)
         resultat = kombinerOppgitteBarn(resultat, barnGrunnlag)
@@ -66,8 +69,9 @@ class BarnetilleggService(
         val oppgittBarnSomIkkeErVurdert =
             barnGrunnlag.oppgitteBarn?.oppgitteBarn
                 ?.filterNot { oppgittBarn ->
-                    vurderteBarnIdenter.contains(oppgittBarn.identifikator()) ||
-                            folkeregisterBarn.any { it.ident.er(oppgittBarn.identifikator()) }
+                    vurderteBarnIdenter.any { vurdertIdent ->
+                        oppgittBarn.identifikator().er(vurdertIdent)
+                    } || folkeregisterBarn.any { it.ident.er(oppgittBarn.identifikator()) }
                 }
                 .orEmpty()
 
