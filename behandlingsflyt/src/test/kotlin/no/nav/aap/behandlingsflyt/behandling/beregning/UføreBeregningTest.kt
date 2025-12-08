@@ -192,8 +192,8 @@ class UføreBeregningTest {
         inntekter = emptyList()
     )
 
-    private fun genererInntektsPerioder(vararg inntekter: Pair<Int, Number>): Set<InntektsPeriode> {
-        return inntekter.toList().map { (år, beløp) -> oppsplittetInntekt(år, Beløp(beløp.toDouble().toBigDecimal())) }
+    private fun genererInntektsPerioder(vararg månedsInntektPerÅr: Pair<Int, Number>): Set<InntektsPeriode> {
+        return månedsInntektPerÅr.toList().map { (år, beløp) -> oppsplittetInntekt(år, Beløp(beløp.toDouble().toBigDecimal())) }
             .flatten().toSet()
     }
 

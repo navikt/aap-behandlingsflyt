@@ -16,6 +16,8 @@ class Beregning(
         val beregningMedEllerUtenUføre = if (input.finnesUføreData()) {
             val inntekterFørYtterligereNedsattDato = input.utledForYtterligereNedsatt()
 
+            input.validerSummertInntekt()
+
             val uføreberegning = UføreBeregning(
                 grunnlag = grunnlag11_19,
                 uføregrader = input.uføregrad(),

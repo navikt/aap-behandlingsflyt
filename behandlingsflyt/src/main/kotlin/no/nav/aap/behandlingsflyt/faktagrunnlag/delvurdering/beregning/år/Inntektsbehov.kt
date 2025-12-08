@@ -12,6 +12,7 @@ import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.slf4j.LoggerFactory
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.Year
 import java.util.*
@@ -44,6 +45,17 @@ class Inntektsbehov(private val beregningInput: BeregningInput) {
 
     fun inntektsPerioder(): Set<InntektsPeriode> {
         return beregningInput.inntektsPerioder
+    }
+
+    fun validerSummertInntekt() {
+        val inntektPerÅrFraPerioder: Map<Year, Beløp> = beregningInput.inntektsPerioder
+            .groupBy { Year.of(it.periode.fom.year) }
+            .mapValues { (_, value) -> value.sumOf { it.beløp.verdi }.let(::Beløp) }
+
+        inntektPerÅrFraPerioder.forEach { (år, sum) ->
+            require(beregningInput.årsInntekter.first { it.år == år }.beløp == sum)
+            { "Håndterer ikke å støtte forskjellig inntekt fra A-Inntekt og PESYS. Fikk $sum for år $år, men fant ${beregningInput.årsInntekter.filter { it.år == år }}" }
+        }
     }
 
     fun utledForYtterligereNedsatt(): Set<Year> {
