@@ -13,7 +13,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.Inntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.InntektkomponentenGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.InntektskomponentData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -23,8 +25,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Year
+import java.time.YearMonth
 
 class InntektInformasjonskrav(
     private val sakService: SakService,
@@ -72,23 +76,28 @@ class InntektInformasjonskrav(
         val tom = relevanteÅr.maxOf { it.atMonth(12) }
         val inntekter = inntektkomponentenGateway.hentAInntekt(person.aktivIdent().identifikator, fom, tom)
 
+        val inntektPerMåned = summerArbeidsinntektPerMåned(inntekter)
+
+        return InntektRegisterdata(oppdaterteInntekter, inntektPerMåned)
+    }
+
+    private fun summerArbeidsinntektPerMåned(inntekter: InntektskomponentData): Set<InntektsPeriode> {
         val inntektPerMåned = inntekter.arbeidsInntektMaaned.map {
             Pair(
                 it.arbeidsInntektInformasjon.inntektListe,
                 it.aarMaaned
             )
         }
-            .groupBy { it.second }
+            .groupBy { (_, year) -> year }
             .mapValues { (_, value) -> value.flatMap { it.first }.sumOf { it.beloep } }
             .map { (årMåned, beløp) ->
                 InntektsPeriode(
                     Periode(fom = årMåned.atDay(1), tom = årMåned.atEndOfMonth()),
-                    beløp
+                    Beløp(beløp.toBigDecimal())
                 )
             }
             .toSet()
-
-        return InntektRegisterdata(oppdaterteInntekter, inntektPerMåned)
+        return inntektPerMåned
     }
 
     override fun oppdater(

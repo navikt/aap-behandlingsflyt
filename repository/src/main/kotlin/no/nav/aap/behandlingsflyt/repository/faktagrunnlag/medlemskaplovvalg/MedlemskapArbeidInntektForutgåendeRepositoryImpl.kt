@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.EnhetGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapArbeidInntektGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.HistoriskManuellVurderingForForutgåendeMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMaaned
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemKode
@@ -13,14 +12,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapAr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.Unntak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
-import java.time.LocalDateTime
 
 class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: DBConnection) :
     MedlemskapArbeidInntektForutgåendeRepository {
@@ -68,44 +65,6 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
         }
     }
 
-
-    override fun hentHistoriskeVurderinger(
-        sakId: SakId,
-        behandlingId: BehandlingId
-    ): List<HistoriskManuellVurderingForForutgåendeMedlemskap> {
-        val query = """
-            SELECT vurdering.*
-            FROM FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG grunnlag
-            INNER JOIN FORUTGAAENDE_MEDLEMSKAP_MANUELL_VURDERING vurdering ON grunnlag.MANUELL_VURDERING_ID = vurdering.ID
-            JOIN BEHANDLING behandling ON grunnlag.BEHANDLING_ID = behandling.ID
-            LEFT JOIN AVBRYT_REVURDERING_GRUNNLAG ar ON ar.BEHANDLING_ID = behandling.ID
-            WHERE grunnlag.AKTIV AND behandling.SAK_ID = ?
-                AND behandling.opprettet_tid < (SELECT a.opprettet_tid from behandling a where a.id = ?)
-                AND ar.BEHANDLING_ID IS NULL
-        """.trimIndent()
-
-        val vurderinger = connection.queryList(query) {
-            setParams {
-                setLong(1, sakId.id)
-                setLong(2, behandlingId.id)
-            }
-            setRowMapper {
-                InternalHistoriskManuellVurderingForForutgåendeMedlemskap(
-                    manuellVurdering = mapManuellVurderingForForutgåendeMedlemskap(it),
-                    vurdertDato = it.getLocalDateTime("opprettet_tid")
-                )
-            }
-        }.sortedBy { it.manuellVurdering.vurdertTidspunkt }
-
-        return vurderinger.map {
-            HistoriskManuellVurderingForForutgåendeMedlemskap(
-                manuellVurdering = it.manuellVurdering,
-                opprettet = it.vurdertDato,
-                erGjeldendeVurdering = it == vurderinger.last(),
-            )
-        }
-    }
-
     override fun lagreVurderinger(
         behandlingId: BehandlingId,
         vurderinger: List<ManuellVurderingForForutgåendeMedlemskap>
@@ -115,17 +74,10 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
             deaktiverGrunnlag(behandlingId)
         }
 
-        var vurderingerId: Long? = null
-        var manuellVurderingId: Long? = null
-
-        if (vurderinger.isNotEmpty()) {
-            vurderingerId = lagreVurderinger(vurderinger)
-            // TODO henter ut manuell id for lagring i grunnlag inntil vi har kjørt migrering - gir kun mening hvis det er én vurdering
-            manuellVurderingId = if (vurderinger.size == 1) hentVurderinger(vurderingerId).first().id else null
-        }
+        val vurderingerId = if (vurderinger.isNotEmpty()) lagreVurderinger(vurderinger) else null
 
         val grunnlagQuery = """
-            INSERT INTO FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG (behandling_id, arbeider_id, inntekter_i_norge_id, medlemskap_unntak_person_id, manuell_vurdering_id, vurderinger_id) VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG (behandling_id, arbeider_id, inntekter_i_norge_id, medlemskap_unntak_person_id, vurderinger_id) VALUES (?, ?, ?, ?, ?)
         """.trimIndent()
 
         connection.execute(grunnlagQuery) {
@@ -134,8 +86,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
                 setLong(2, grunnlagOppslag?.arbeiderId)
                 setLong(3, grunnlagOppslag?.inntektINorgeId)
                 setLong(4, grunnlagOppslag?.medlId)
-                setLong(5, manuellVurderingId ?: grunnlagOppslag?.manuellVurderingId) // TODO
-                setLong(6, vurderingerId)
+                setLong(5, vurderingerId)
             }
             setResultValidator { require(it == 1) }
         }
@@ -193,7 +144,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
         val inntekterINorgeId = lagreArbeidsInntektGrunnlag(inntektGrunnlag, enhetGrunnlag)
 
         val grunnlagQuery = """
-            INSERT INTO FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG (behandling_id, arbeider_id, inntekter_i_norge_id, medlemskap_unntak_person_id, manuell_vurdering_id, vurderinger_id) VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG (behandling_id, arbeider_id, inntekter_i_norge_id, medlemskap_unntak_person_id, vurderinger_id) VALUES (?, ?, ?, ?, ?)
         """.trimIndent()
         connection.execute(grunnlagQuery) {
             setParams {
@@ -201,8 +152,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
                 setLong(2, arbeiderId)
                 setLong(3, inntekterINorgeId)
                 setLong(4, medlId)
-                setLong(5, grunnlagOppslag?.manuellVurderingId)
-                setLong(6, grunnlagOppslag?.vurderingerId)
+                setLong(5, grunnlagOppslag?.vurderingerId)
             }
         }
     }
@@ -353,23 +303,8 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
         return inntekterINorgeId
     }
 
-    private fun hentManuellVurdering(vurderingId: Long?): ManuellVurderingForForutgåendeMedlemskap? {
-        if (vurderingId == null) return null
-        val query = """
-            SELECT * FROM FORUTGAAENDE_MEDLEMSKAP_MANUELL_VURDERING WHERE ID = ?
-        """.trimIndent()
-
-        return connection.queryFirst(query) {
-            setParams {
-                setLong(1, vurderingId)
-            }
-            setRowMapper(::mapManuellVurderingForForutgåendeMedlemskap)
-        }
-    }
-
     private fun mapManuellVurderingForForutgåendeMedlemskap(row: Row): ManuellVurderingForForutgåendeMedlemskap =
         ManuellVurderingForForutgåendeMedlemskap(
-            id = row.getLong("id"),
             begrunnelse = row.getString("begrunnelse"),
             harForutgåendeMedlemskap = row.getBoolean("har_forutgaaende_medlemskap"),
             varMedlemMedNedsattArbeidsevne = row.getBooleanOrNull("var_medlem_med_nedsatt_arbeidsevne"),
@@ -479,7 +414,6 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
                     it.getLongOrNull("medlemskap_unntak_person_id"),
                     it.getLongOrNull("inntekter_i_norge_id"),
                     it.getLongOrNull("arbeider_id"),
-                    it.getLongOrNull("manuell_vurdering_id"),
                     it.getLongOrNull("vurderinger_id")
                 )
             }
@@ -500,8 +434,8 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
 
         val query = """
             INSERT INTO FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG 
-                (behandling_id, medlemskap_unntak_person_id, inntekter_i_norge_id, arbeider_id, manuell_vurdering_id, vurderinger_id) 
-            SELECT ?, medlemskap_unntak_person_id, inntekter_i_norge_id, arbeider_id, manuell_vurdering_id, vurderinger_id
+                (behandling_id, medlemskap_unntak_person_id, inntekter_i_norge_id, arbeider_id, vurderinger_id) 
+            SELECT ?, medlemskap_unntak_person_id, inntekter_i_norge_id, arbeider_id, vurderinger_id
                 from FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG 
                 where behandling_id = ? and aktiv
         """.trimIndent()
@@ -518,12 +452,6 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
         val medlId: Long?,
         val inntektINorgeId: Long?,
         val arbeiderId: Long?,
-        val manuellVurderingId: Long?,
         val vurderingerId: Long?
-    )
-
-    internal data class InternalHistoriskManuellVurderingForForutgåendeMedlemskap(
-        val manuellVurdering: ManuellVurderingForForutgåendeMedlemskap,
-        val vurdertDato: LocalDateTime
     )
 }

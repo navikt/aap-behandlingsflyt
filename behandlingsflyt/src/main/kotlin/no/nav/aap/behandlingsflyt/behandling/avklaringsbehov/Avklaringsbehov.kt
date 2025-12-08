@@ -26,6 +26,11 @@ class Avklaringsbehov(
         }
     }
 
+    val aktivHistorikk: List<Endring>
+        get() = historikk.takeLastWhile {
+            it.status != Status.AVBRUTT
+        }
+
     fun erTotrinn(): Boolean {
         if (definisjon.kreverToTrinn) {
             return true
@@ -38,11 +43,11 @@ class Avklaringsbehov(
     }
 
     fun erTotrinnsVurdert(): Boolean {
-        return Status.TOTRINNS_VURDERT == historikk.maxOf { it }.status
+        return Status.TOTRINNS_VURDERT == aktivHistorikk.maxOf { it }.status
     }
 
     fun erKvalitetssikretTidligere(): Boolean {
-        return Status.KVALITETSSIKRET == historikk.filter {
+        return Status.KVALITETSSIKRET == aktivHistorikk.filter {
             it.status in setOf(
                 Status.KVALITETSSIKRET, Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER
             )
@@ -93,7 +98,9 @@ class Avklaringsbehov(
         frist: LocalDate? = null,
         begrunnelse: String = "",
         venteårsak: ÅrsakTilSettPåVent? = null,
-        bruker: Bruker = SYSTEMBRUKER
+        bruker: Bruker = SYSTEMBRUKER,
+        perioderVedtaketBehøverVurdering: Set<Periode>?,
+        perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
     ) {
         require(historikk.last().status.erAvsluttet())
         if (definisjon.erVentebehov()) {
@@ -105,18 +112,25 @@ class Avklaringsbehov(
             begrunnelse = begrunnelse,
             grunn = venteårsak,
             frist = frist,
-            endretAv = bruker.ident
+            endretAv = bruker.ident,
+            perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
+            perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert
         )
     }
-    
-    internal fun oppdaterPerioder(perioder: Set<Periode>) {
+
+    internal fun oppdaterPerioder(
+        perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
+        perioderVedtaketBehøverVurdering: Set<Periode>?
+    ) {
         val siste = historikk.last()
         require(siste.status.erÅpent()) {
             "Prøvde å oppdatere perioder på et lukket avklaringsbehov"
         }
-        if (perioder != siste.perioderSomIkkeErTilstrekkeligVurdert) {
+        if (perioderSomIkkeErTilstrekkeligVurdert != siste.perioderSomIkkeErTilstrekkeligVurdert || perioderVedtaketBehøverVurdering != siste.perioderVedtaketBehøverVurdering) {
             historikk += siste.copy(
-                perioderSomIkkeErTilstrekkeligVurdert = perioder
+                perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
+                perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
+                tidsstempel = LocalDateTime.now()
             )
         }
     }
@@ -171,7 +185,7 @@ class Avklaringsbehov(
     fun harAvsluttetStatusIHistorikken(): Boolean {
         return historikk.any { it.status == Status.AVSLUTTET }
     }
-    
+
     fun sistAvsluttet(): LocalDateTime {
         return historikk.filter { it.status == Status.AVSLUTTET }.maxOf { it.tidsstempel }
     }
@@ -197,17 +211,17 @@ class Avklaringsbehov(
     fun erForeslåttVedtak(): Boolean {
         return definisjon == Definisjon.FORESLÅ_VEDTAK
     }
-    
+
     fun erForeslåttUttak(): Boolean {
         return definisjon == Definisjon.FORESLÅ_UTTAK
     }
 
     fun harVærtSendtTilbakeFraBeslutterTidligere(): Boolean {
-        return historikk.any { it.status == Status.SENDT_TILBAKE_FRA_BESLUTTER }
+        return aktivHistorikk.any { it.status == Status.SENDT_TILBAKE_FRA_BESLUTTER }
     }
 
     fun harVærtSendtTilbakeFraKvalitetssikrerTidligere(): Boolean {
-        return historikk.any { it.status == Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER }
+        return aktivHistorikk.any { it.status == Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER }
     }
 
     fun løsesISteg(): StegType {
@@ -241,14 +255,19 @@ class Avklaringsbehov(
     fun erBrevVentebehov(): Boolean {
         return definisjon.erBrevVentebehov()
     }
-    
+
     fun sistEndret(): LocalDateTime {
         return historikk.last().tidsstempel
     }
-    
-    fun perioder(): Set<Periode>? {
-        return historikk.last().perioderSomIkkeErTilstrekkeligVurdert
+
+    fun perioderVedtaketBehøverVurdering(): Set<Periode>? {
+        return aktivHistorikk.filter { it.status.erÅpent() }.maxOfOrNull { it }?.perioderVedtaketBehøverVurdering
     }
+
+    fun perioderSomIkkeErTilstrekkeligVurdert(): Set<Periode>? {
+        return aktivHistorikk.filter { it.status.erÅpent() }.maxOfOrNull { it }?.perioderSomIkkeErTilstrekkeligVurdert
+    }
+
 
     override fun toString(): String {
         return "Avklaringsbehov(definisjon=$definisjon, status=${status()}, løsesISteg=${løsesISteg()})"

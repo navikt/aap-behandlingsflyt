@@ -18,8 +18,6 @@ dependencies {
     testImplementation(libs.json)
 }
 
-group = "no.nav.aap.behandlingsflyt"
-
 apply(plugin = "maven-publish")
 apply(plugin = "java-library")
 

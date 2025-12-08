@@ -8,11 +8,21 @@ Behandlingsflyt for Arbeidsavklaringspenger (AAP). Definerer flyten for ulike be
 > Repoet kan inneholde regelverksendringer som ikke enda er vedtatt.
 > Vi har derfor valgt å holde dette repoet lukket.
 
-### API-dokumentasjon
+## API-dokumentasjon
 
 APIene er dokumentert med Swagger: https://aap-behandlingsflyt.intern.dev.nav.no/swagger-ui/index.html
 
-### Lokalt utviklingsmiljø:
+## Publiserte artefakter
+Gjennom Gradle sin publish task produserer prosjektets Github Workflow artefakter som lastes opp til Github Packages.
+
+### kontrakt/kontrakt.jar
+Inneholder domeneobjekter som brukes i kommunikasjon med Behandlingsflyt sine tjenester. 
+
+### sbom/sbom.xml
+Dependency-liste (software bill of materials, sbom). 
+Filen viser avhengigheter til tredjeparts- og NAV-artefakter for hver modul i dette prosjektet. 
+
+## Lokalt utviklingsmiljø:
 
 AAP-Behandlingsflyt benytter test containers for integrasjonstester med databasen så et verktøy for å kjøre Docker
 containers er nødvendig.<br>
@@ -23,7 +33,7 @@ For macOS og Linux anbefaler vi Colima. Det kan være nødvendig med et par tilp
 - `export DOCKER_HOST=unix://$TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE`
 - `export TESTCONTAINERS_RYUK_DISABLED=true`
 
-## Laste ned private pakker
+### Laste ned private pakker
 
 For at Gradle skal finne private pakker på Github, legg dette i `~/.gradle/gradle.properties`
 
@@ -34,13 +44,13 @@ githubPassword=<github-token>
 
 Token må ha rettighet til å lese pakker. Husk å logg inn token med SSO for NAVIKT-organisasjonen.œ
 
-## Kjøre lokalt
+### Kjøre lokalt
 
 Appen har ulike run-konfigurasjoner i IntelliJ for å kjøre mot "fake" data eller mot dev-gcp.
 
 Konfigurasjonsfilene finner du i mappen `.run/`
 
-### TestApp (med fake data)
+#### TestApp (med fake data)
 
 I IntelliJ skal det være plug-n-play med to ulike run-konfigurasjoner for TestApp.
 
@@ -68,7 +78,7 @@ curl -s -XPOST http://localhost:8081/token  | jq -r '.access_token' | pbcopy
 Nå kan API-kall gjøres i Swagger UI ved å trykke på "Authorize"-knappen og lime inn token. For å gjøre API-kall i Swagger i dev kan man generere [maskin-til-maskin-token](http://azure-token-generator.intern.dev.nav.no/api/m2m?aud=dev-gcp:aap:behandlingsflyt)
 eller [obo-token](http://azure-token-generator.intern.dev.nav.no/api/obo?aud=dev-gcp:aap:behandlingsflyt) vha. azure-token-generator.
 
-### Mot dev-gcp
+#### Testapp mot dev-gcp
 
 > ️⚠️ **_Bruk med omhu siden det potensielt kan ødelegge koblinger mellom oppgave og behandling i dev!_**
 > 
@@ -91,3 +101,4 @@ Etter dette vil appen kjøre mot reelle data. Her kan du velge om du vil koble d
 f.eks. gyldig token med cURL e.l.
 
 OBS: Krever at du har `EnvFile`-plugin i IntelliJ. 
+

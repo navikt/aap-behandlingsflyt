@@ -63,7 +63,6 @@ tasks.register<JavaExec>("beregnCSV") {
 }
 
 dependencies {
-    implementation(libs.ktorServerCors)
     implementation(libs.ktorServerStatusPages)
 
     implementation("io.micrometer:micrometer-registry-prometheus:1.16.0")
@@ -88,7 +87,7 @@ dependencies {
     implementation(project(":behandlingsflyt"))
     implementation(project(":repository"))
     implementation("com.zaxxer:HikariCP:7.0.2")
-    implementation("org.flywaydb:flyway-database-postgresql:11.17.1")
+    implementation("org.flywaydb:flyway-database-postgresql:11.17.2")
 
     runtimeOnly("org.postgresql:postgresql") // låst versjon i root build.gradle.kts
 

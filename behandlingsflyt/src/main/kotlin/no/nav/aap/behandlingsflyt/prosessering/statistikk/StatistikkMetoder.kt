@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
+import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
@@ -69,6 +70,7 @@ class StatistikkMetoder(
     private val underveisRepository: UnderveisRepository,
     private val meldekortRepository: MeldekortRepository,
     private val påklagetBehandlingRepository: PåklagetBehandlingRepository,
+    private val vedtakService: VedtakService,
     trukketSøknadService: TrukketSøknadService,
     private val klageresultatUtleder: IKlageresultatUtleder,
     avbrytRevurderingService: AvbrytRevurderingService
@@ -86,6 +88,7 @@ class StatistikkMetoder(
         underveisRepository = repositoryProvider.provide(),
         meldekortRepository = repositoryProvider.provide(),
         påklagetBehandlingRepository = repositoryProvider.provide(),
+        vedtakService = VedtakService(repositoryProvider),
         trukketSøknadService = TrukketSøknadService(repositoryProvider.provide()),
         klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider)
@@ -99,6 +102,7 @@ class StatistikkMetoder(
     fun oversettHendelseTilKontrakt(hendelse: BehandlingFlytStoppetHendelseTilStatistikk): StoppetBehandling {
         log.info("Oversetter hendelse for behandling ${hendelse.referanse} og saksnr ${hendelse.saksnummer}")
         val behandling = behandlingRepository.hent(hendelse.referanse)
+        val sisteEndring = behandlingRepository.hentStegHistorikk(behandling.id).lastOrNull()?.tidspunkt()
         val søknaderForSak = hentSøknaderForSak(behandling)
         val mottattTidspunkt = utledMottattTidspunkt(behandling, søknaderForSak)
         val søknadIder = søknaderForSak
@@ -117,6 +121,7 @@ class StatistikkMetoder(
             meldekort?.meldekort().orEmpty().toSet().minus(forrigeBehandlingMeldekort?.meldekort().orEmpty().toSet())
                 .toList()
 
+
         val vurderingsbehovForBehandling = utledVurderingsbehovForBehandling(behandling)
         val statistikkHendelse = StoppetBehandling(
             saksnummer = hendelse.saksnummer.toString(),
@@ -127,6 +132,7 @@ class StatistikkMetoder(
             behandlingReferanse = hendelse.referanse.referanse,
             relatertBehandling = relatertBehandling(behandling),
             behandlingOpprettetTidspunkt = hendelse.opprettetTidspunkt,
+            tidspunktSisteEndring = sisteEndring ?: hendelse.hendelsesTidspunkt,
             soknadsFormat = kanal,
             versjon = hendelse.versjon,
             mottattTid = mottattTidspunkt,
@@ -187,6 +193,7 @@ class StatistikkMetoder(
                 Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP
                 Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP
                 Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
+                Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING
                 Vurderingsbehov.BARNETILLEGG -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.BARNETILLEGG
                 Vurderingsbehov.INSTITUSJONSOPPHOLD -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.INSTITUSJONSOPPHOLD
                 Vurderingsbehov.SAMORDNING_OG_AVREGNING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SAMORDNING_OG_AVREGNING
@@ -269,8 +276,11 @@ class StatistikkMetoder(
             log.warn("Kjører statistikkjobb for behandling som ikke er avsluttet. Behandling-ref: ${behandling.referanse.referanse}. Sak: ${sak.saksnummer}")
         }
 
+        val vedtakTidspunkt = vedtakService.vedtakstidspunkt(behandling)
+
         val tilkjentYtelse =
-            tilkjentYtelseRepository.hentHvisEksisterer(behandling.id)?.map { Segment(it.periode, it.tilkjent) }
+            tilkjentYtelseRepository.hentHvisEksisterer(behandling.id)
+                ?.map { Segment(it.periode, it.tilkjent) }
                 ?.let(::Tidslinje)?.mapValue { it }?.komprimer()?.segmenter()?.map {
                     val verdi = it.verdi
                     TilkjentYtelsePeriodeDTO(
@@ -282,6 +292,7 @@ class StatistikkMetoder(
                         antallBarn = verdi.antallBarn,
                         barnetilleggSats = verdi.barnetilleggsats.verdi().toDouble(),
                         barnetillegg = verdi.barnetillegg.verdi().toDouble(),
+                        utbetalingsdato = verdi.utbetalingsdato
                     )
                 }
 
@@ -323,8 +334,8 @@ class StatistikkMetoder(
                                 tilDato = periode.periode.tom,
                                 utfall = Utfall.valueOf(periode.utfall.toString()),
                                 manuellVurdering = periode.manuellVurdering,
-                                innvilgelsesårsak = periode.innvilgelsesårsak.toString(),
-                                avslagsårsak = periode.avslagsårsak.toString()
+                                innvilgelsesårsak = periode.innvilgelsesårsak?.toString(),
+                                avslagsårsak = periode.avslagsårsak?.toString()
                             )
                         })
                 }),
@@ -332,7 +343,8 @@ class StatistikkMetoder(
             beregningsGrunnlag = beregningsGrunnlagDTO,
             diagnoser = hentDiagnose(behandling),
             rettighetstypePerioder = rettighetstypePerioder,
-            resultat = hentResultat(behandling)
+            resultat = hentResultat(behandling),
+            vedtakstidspunkt = vedtakTidspunkt,
         )
         return avsluttetBehandlingDTO
     }

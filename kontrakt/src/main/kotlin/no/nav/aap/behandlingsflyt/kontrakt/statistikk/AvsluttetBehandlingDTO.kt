@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.kontrakt.statistikk
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 /**
  * @param beregningsGrunnlag Beregningsgrunnlag. Kan være null om behandlingen avsluttes før inntekt hentes inn.
@@ -14,6 +15,7 @@ public data class AvsluttetBehandlingDTO(
     val diagnoser: Diagnoser? = null,
     val rettighetstypePerioder: List<RettighetstypePeriode>,
     val resultat: ResultatKode?,
+    val vedtakstidspunkt: LocalDateTime?
 )
 
 public enum class ResultatKode {
@@ -56,7 +58,8 @@ public data class TilkjentYtelsePeriodeDTO(
     val redusertDagsats: Double,
     val antallBarn: Int,
     val barnetilleggSats: Double,
-    val barnetillegg: Double
+    val barnetillegg: Double,
+    val utbetalingsdato: LocalDate
 )
 
 public data class VilkårsResultatDTO(
@@ -100,7 +103,7 @@ public data class VilkårsPeriodeDTO(
  * er alltid med. Minst én av grunnlag11_19dto, grunnlagYrkesskade, grunnlagUføre er ikke-null.
  */
 public data class BeregningsgrunnlagDTO(
-    val grunnlag11_19dto: Grunnlag11_19DTO? = null,
+    @Suppress("PropertyName") val grunnlag11_19dto: Grunnlag11_19DTO? = null,
     val grunnlagYrkesskade: GrunnlagYrkesskadeDTO? = null,
     val grunnlagUføre: GrunnlagUføreDTO? = null
 ) {

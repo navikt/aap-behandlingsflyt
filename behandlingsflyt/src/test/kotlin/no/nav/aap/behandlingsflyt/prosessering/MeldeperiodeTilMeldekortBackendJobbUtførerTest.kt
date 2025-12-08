@@ -184,6 +184,7 @@ class MeldeperiodeTilMeldekortBackendJobbUtførerTest {
         brukerAvKvoter = emptySet(),
         meldepliktStatus = meldepliktStatus,
         id = UnderveisperiodeId(id.also { id += 1 }),
+        meldepliktGradering = Prosent.`0_PROSENT`,
     )
 
     private fun parse(periode: String): Periode {

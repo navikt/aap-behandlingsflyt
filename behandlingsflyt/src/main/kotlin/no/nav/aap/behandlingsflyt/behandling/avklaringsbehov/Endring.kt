@@ -14,7 +14,16 @@ data class Endring(
     val frist: LocalDate? = null,
     val endretAv: String,
     val årsakTilRetur: List<ÅrsakTilRetur> = emptyList(),
-    val perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>? = null
+    /**
+     * Perioder som vurderingene minst må dekke
+     */
+    val perioderVedtaketBehøverVurdering: Set<Periode>? = null,
+    /**
+     * Perioder som mangler gyldige vurderinger; 
+     * Enten fordi det ikke finnes en vurdering, 
+     * eller fordi vurderingen av andre årsaker ikke er god nok
+     */
+    val perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>? = null,
 ) : Comparable<Endring> {
 
     override fun compareTo(other: Endring): Int {

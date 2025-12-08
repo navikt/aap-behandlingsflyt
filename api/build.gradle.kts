@@ -28,6 +28,7 @@ dependencies {
     compileOnly(libs.ktorHttpJvm)
 
     testImplementation(libs.httpklient)
+    testImplementation(libs.dbtest)
     testImplementation(libs.bundles.junit)
     testImplementation(libs.ktorServerTestHost)
     constraints {

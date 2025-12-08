@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 interface AvklaringsbehoveneDecorator {
 
     fun alle(): List<Avklaringsbehov>
-    fun alleEkskludertVentebehov(): List<Avklaringsbehov>
+    fun alleEkskludertAvbruttOgVentebehov(): List<Avklaringsbehov>
 
     fun erSattPåVent(): Boolean
     fun hentBehovForDefinisjon(definisjon: Definisjon): Avklaringsbehov?

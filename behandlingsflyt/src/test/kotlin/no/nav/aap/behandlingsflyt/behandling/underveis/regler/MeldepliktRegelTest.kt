@@ -8,12 +8,15 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Oversty
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktVurderingPeriode
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.april
+import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.behandlingsflyt.test.mars
+import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.komponenter.tidslinje.JoinStyle
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -22,6 +25,8 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import java.time.Clock
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -140,15 +145,196 @@ class MeldepliktRegelTest {
         )
     }
 
-    /*
-               April                      May                       June
-         Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su
-                1  2  3  4  5                   1  2  3       1  2  3  4  5  6  7
-          6  7  8  9 10 11 12       4  5  6  7  8  9 10       8  9 10 11 12 13 14
-         13 14 15 16 17 18 19      11 12 13 14 15 16 17      15 16 17 18 19 20 21
-         20 21 22 23 24 25 26      18 19 20 21 22 23 24      22 23 24 25 26 27 28
-         27 28 29 30               25 26 27 28 29 30 31      29 30
-         */
+    /**
+     * ```
+     *     December 2025              January 2026
+     *  Su Mo Tu We Th Fr Sa     Su Mo Tu We Th Fr Sa
+     *      1  2  3  4  5  6                  1  2  3
+     *   7  8  9 10 11 12 13      4  5  6  7  8  9 10
+     *  14 15 16 17 18 19 20     11 12 13 14 15 16 17
+     *  21 22 23 24 25 26 27     18 19 20 21 22 23 24
+     *  28 29 30 31              25 26 27 28 29 30 31
+     *  ```
+     */
+    @Test
+    fun `skal kunne levere tidlig meldekort 17 desember, og oppfylle meldeplikt i perioden etter`() {
+        /// få oppfylt også neste meldeperiode (3 ukers)
+        val rettighetsperiode = Periode(29 november 2025, 19 januar 2026)
+        val input = tomUnderveisInput(
+            rettighetsperiode = rettighetsperiode,
+            innsendingsTidspunkt = mapOf(
+                8 desember 2025 to JournalpostId("2"),
+                17 desember 2025 to JournalpostId("3"), // meldekort blir sendt inn
+                5 januar 2026 to JournalpostId("4"),
+                19 januar 2026 to JournalpostId("5"),
+            ),
+        )
+        // behandling kjøres på `nå`
+        val vurdertTidslinje = vurder(input, nå = 19 januar 2026)
+
+        assertVurdering(
+            vurdertTidslinje, rettighetsperiode,
+            Forventer(
+                fom = 29 november 2025,
+                tom = 7 desember 2025,
+                vurdering = MeldepliktVurdering.FørVedtak,
+            ),
+            Forventer(
+                fom = 8 desember 2025,
+                tom = 21 desember 2025,
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("2")),
+            ),
+            Forventer(
+                fom = 22 desember 2025,
+                tom = 4 januar 2026,
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("3")), // MeldepliktVurdering.IkkeMeldtSeg //
+            ),
+            Forventer(
+                fom = 5 januar 2026,
+                tom = 18 januar 2026,
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("4")), //MeldepliktVurdering.MeldtSeg(JournalpostId("4")),
+            ),
+            Forventer(
+                fom = 19 januar 2026,
+                tom = 19 januar 2026,
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("5")),
+            ),
+        )
+    }
+
+    /**
+     * ```
+     *    November 2025           December 2025              January 2026
+     * Su Mo Tu We Th Fr Sa    Su Mo Tu We Th Fr Sa     Su Mo Tu We Th Fr Sa
+     *                    1        1  2  3  4  5  6                  1  2  3
+     *  2  3  4  5  6  7  8     7  8  9 10 11 12 13      4  5  6  7  8  9 10
+     *  9 10 11 12 13 14 15    14 15 16 17 18 19 20     11 12 13 14 15 16 17
+     * 16 17 18 19 20 21 22    21 22 23 24 25 26 27     18 19 20 21 22 23 24
+     * 23 24 25 26 27 28 29    28 29 30 31              25 26 27 28 29 30 31
+     * 30
+     * ```
+     */
+    @Test
+    fun `sender inn 17de, men er ikke ajour med meldeplikt`() {
+        val rettighetsperiode = Periode(24 november 2025, 19 januar 2026)
+        val input = tomUnderveisInput(
+            rettighetsperiode = rettighetsperiode,
+            innsendingsTidspunkt = mapOf(
+                17 desember 2025 to JournalpostId("3"),
+                5 januar 2026 to JournalpostId("5"),
+                19 januar 2026 to JournalpostId("6"),
+            ),
+        )
+        // behandling kjøres på `nå`
+        val vurdertTidslinje = vurder(input, nå = 19 januar 2026)
+
+        assertVurdering(
+            vurdertTidslinje, rettighetsperiode,
+            // oppfylt pga søknad
+            Forventer(
+                fom = 24 november 2025,
+                tom = 7 desember 2025,
+                vurdering = MeldepliktVurdering.FørVedtak,
+            ),
+            // ikke meldt seg for en uke
+            Forventer(
+                fom = 8 desember 2025,
+                tom = 16 desember 2025,
+                vurdering = MeldepliktVurdering.IkkeMeldtSeg,
+            ),
+            // ok for resten av perioden
+            Forventer(
+                fom = 17 desember 2025,
+                tom = 21 desember 2025,
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("3")),
+            ),
+            Forventer(
+                fom = 22 desember 2025,
+                tom = 4 januar 2026,
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("3")),
+            ),
+            Forventer(
+                fom = 5 januar 2026,
+                tom = 18 januar 2026,
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("5")),
+            ),
+            Forventer(
+                fom = 19 januar 2026,
+                tom = 19 januar 2026,
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("6")),
+            ),
+        )
+    }
+
+    /**
+     * ```
+     *    November 2025           December 2025              January 2026
+     * Su Mo Tu We Th Fr Sa    Su Mo Tu We Th Fr Sa     Su Mo Tu We Th Fr Sa
+     *                    1        1  2  3  4  5  6                  1  2  3
+     *  2  3  4  5  6  7  8     7  8  9 10 11 12 13      4  5  6  7  8  9 10
+     *  9 10 11 12 13 14 15    14 15 16 17 18 19 20     11 12 13 14 15 16 17
+     * 16 17 18 19 20 21 22    21 22 23 24 25 26 27     18 19 20 21 22 23 24
+     * 23 24 25 26 27 28 29    28 29 30 31              25 26 27 28 29 30 31
+     * 30
+     * ```
+     */
+    @ParameterizedTest
+    @ValueSource(ints = [15, 16, 17])
+    fun `samme tester som over, men for ikke samme fase`(dag: Int) {
+        val rettighetsperiode = Periode(23 november 2025, 19 januar 2026)
+        val input = tomUnderveisInput(
+            rettighetsperiode = rettighetsperiode,
+            innsendingsTidspunkt = mapOf(
+                1 desember 2025 to JournalpostId("2"),
+                dag desember 2025 to JournalpostId("3"),
+                29 desember 2025 to JournalpostId("4"),
+                12 januar 2026 to JournalpostId("5"),
+            ),
+        )
+        // behandling kjøres på `nå`
+        val vurdertTidslinje = vurder(input, nå = 19 januar 2026)
+
+        assertVurdering(
+            vurdertTidslinje, rettighetsperiode,
+            Forventer(
+                fom = 23 november 2025,
+                tom = 30 november 2025,
+                vurdering = MeldepliktVurdering.FørVedtak,
+            ),
+            Forventer(
+                fom = 1 desember 2025,
+                tom = 7 desember 2025,
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("2")),
+            ),
+            Forventer(
+                fom = 15 desember 2025,
+                tom = 28 desember 2025,
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("3")),
+            ),
+            Forventer(
+                fom = 29 desember 2025,
+                tom = 11 januar 2026,
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("4")),
+            ),
+            Forventer(
+                fom = 12 januar 2026,
+                tom = 19 januar 2026,
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("5")),
+            ),
+        )
+    }
+
+    /**
+    ```
+    April                      May                       June
+    Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su
+    1  2  3  4  5                   1  2  3       1  2  3  4  5  6  7
+    6  7  8  9 10 11 12       4  5  6  7  8  9 10       8  9 10 11 12 13 14
+    13 14 15 16 17 18 19      11 12 13 14 15 16 17      15 16 17 18 19 20 21
+    20 21 22 23 24 25 26      18 19 20 21 22 23 24      22 23 24 25 26 27 28
+    27 28 29 30               25 26 27 28 29 30 31      29 30
+    ```
+     */
     @Test
     fun `Skal starte med full utbetalingsplan`() {
         val rettighetsperiode = Periode(20 april 2020, 19 april 2021)
@@ -1136,6 +1322,7 @@ Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su
         assertThat(vurdertTidslinje.erSammenhengende()).isTrue()
         assertThat(vurdertTidslinje.helePerioden()).isEqualTo(rettighetsperiode)
         assertThat(forventetTidslinje.helePerioden()).isEqualTo(rettighetsperiode)
+            .`as`("Skal asserte på hele perioden.")
 
         vurdertTidslinje.kombiner<_, Nothing>(
             forventetTidslinje,

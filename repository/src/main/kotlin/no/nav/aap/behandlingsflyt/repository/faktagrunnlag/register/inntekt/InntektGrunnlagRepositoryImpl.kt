@@ -90,7 +90,7 @@ class InntektGrunnlagRepositoryImpl(private val connection: DBConnection) :
             setParams { inntektPerMåned ->
                 setLong(1, inntekterId)
                 setPeriode(2, inntektPerMåned.periode)
-                setBigDecimal(3, inntektPerMåned.beløp.toBigDecimal())
+                setBigDecimal(3, inntektPerMåned.beløp.verdi)
             }
         }
 
@@ -171,7 +171,7 @@ class InntektGrunnlagRepositoryImpl(private val connection: DBConnection) :
             setRowMapper {
                 InntektsPeriode(
                     periode = it.getPeriode("periode"),
-                    beløp = it.getDouble("belop")
+                    beløp = it.getBigDecimal("belop").let(::Beløp)
                 )
             }
         }

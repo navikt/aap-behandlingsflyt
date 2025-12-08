@@ -1,7 +1,9 @@
 package no.nav.aap.behandlingsflyt.behandling.brev.bestilling
 
+import io.mockk.every
 import kotlin.random.Random
 import io.mockk.mockk
+import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.brev.SignaturService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -25,6 +27,7 @@ class BrevbestillingServiceTest {
 
     @BeforeEach
     fun setUp() {
+        every { brevbestillingGateway.gjenoppta(any()) } returns Unit
         InMemoryBrevbestillingRepository.clearMemory()
         // Populer BrevbestillingRepo med ett bestillings-innslag for hver brevtype med start-status FORHÅNDSVISNING_KLAR
         val ikkeEndeTilstand = Status.FORHÅNDSVISNING_KLAR
@@ -365,6 +368,31 @@ class BrevbestillingServiceTest {
 
         assertFalse(TypeBrev.FORVALTNINGSMELDING.erVedtak())
         assertTrue(resultat)
+    }
+
+    @Test
+    fun `gjenoppta tidligere avbrutt brevbestilling tilbakestiller status og kaller gjenoppta() i brevGateway mot aap-brev api`() {
+        val brevbestllingService = BrevbestillingService(
+            signaturService,
+            brevbestillingGateway,
+            brevbestillingRepository = InMemoryBrevbestillingRepository,
+            behandlingRepository,
+            sakRepository
+        )
+        InMemoryBrevbestillingRepository.clearMemory()
+        val referanse = BrevbestillingReferanse(UUID.randomUUID())
+        InMemoryBrevbestillingRepository.lagre(
+            behandlingId = behandlingId,
+            typeBrev = TypeBrev.FORHÅNDSVARSEL_KLAGE_FORMKRAV,
+            bestillingReferanse = referanse,
+            status = Status.AVBRUTT
+        )
+
+        brevbestllingService.gjenopptaBestilling(behandlingId, referanse)
+
+        val resultat = InMemoryBrevbestillingRepository.hent(referanse)
+        assertTrue(resultat.status.equals(Status.FORHÅNDSVISNING_KLAR))
+        verify { brevbestillingGateway.gjenoppta(referanse)}
     }
 
 }

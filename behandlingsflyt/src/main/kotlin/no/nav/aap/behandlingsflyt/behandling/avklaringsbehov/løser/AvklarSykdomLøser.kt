@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomEnkelLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
@@ -15,24 +14,6 @@ import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import kotlin.collections.List
-
-class AvklarSykdomEnkelLøser(
-    val repositoryProvider: RepositoryProvider
-) : AvklaringsbehovsLøser<AvklarSykdomEnkelLøsning> {
-    override fun løs(
-        kontekst: AvklaringsbehovKontekst,
-        løsning: AvklarSykdomEnkelLøsning
-    ): LøsningsResultat {
-        return AvklarSykdomLøser(repositoryProvider).løs(
-            kontekst,
-            AvklarSykdomLøsning(løsning.sykdomsvurderinger.map { it.tilNyDto() })
-        )
-    }
-
-    override fun forBehov(): Definisjon {
-        return Definisjon.AVKLAR_SYKDOM
-    }
-}
 
 class AvklarSykdomLøser(
     private val behandlingRepository: BehandlingRepository,

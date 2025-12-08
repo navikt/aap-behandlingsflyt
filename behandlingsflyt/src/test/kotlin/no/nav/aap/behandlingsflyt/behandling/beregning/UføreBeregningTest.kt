@@ -46,15 +46,15 @@ class UføreBeregningTest {
             inntektsPerioder = setOf(
                 InntektsPeriode(
                     periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
-                    beløp = BigDecimal(5 * 109_784).multiply(BigDecimal("0.7")).toDouble(), // // 548 920
+                    beløp = BigDecimal(5 * 109_784).multiply(BigDecimal("0.7")).let(::Beløp), // // 548 920
                 ),
                 InntektsPeriode(
                     periode = Periode(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 12, 31)),
-                    beløp = BigDecimal(5 * 104_716).multiply(BigDecimal("0.7")).toDouble(),  // 209 432
+                    beløp = BigDecimal(5 * 104_716).multiply(BigDecimal("0.7")).let(::Beløp),  // 209 432
                 ),
                 InntektsPeriode(
                     periode = Periode(LocalDate.of(2020, 1, 1), LocalDate.of(2020, 12, 31)),
-                    beløp = BigDecimal(5 * 100_853).multiply(BigDecimal("0.7")).toDouble(), // 201 706
+                    beløp = BigDecimal(5 * 100_853).multiply(BigDecimal("0.7")).let(::Beløp), // 201 706
                 )
             )
         )
@@ -91,15 +91,15 @@ class UføreBeregningTest {
             inntektsPerioder = setOf(
                 InntektsPeriode(
                     periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
-                    beløp = BigDecimal(5 * 109_784).multiply(BigDecimal("0.7")).toDouble(), // // 548 920
+                    beløp = BigDecimal(5 * 109_784).multiply(BigDecimal("0.7")).let(::Beløp), // // 548 920
                 ),
                 InntektsPeriode(
                     periode = Periode(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 12, 31)),
-                    beløp = BigDecimal(5 * 104_716).multiply(BigDecimal("0.7")).toDouble(),  // 209 432
+                    beløp = BigDecimal(5 * 104_716).multiply(BigDecimal("0.7")).let(::Beløp),  // 209 432
                 ),
                 InntektsPeriode(
                     periode = Periode(LocalDate.of(2020, 1, 1), LocalDate.of(2020, 12, 31)),
-                    beløp = BigDecimal(5 * 100_853).multiply(BigDecimal("0.7")).toDouble(), // 201 706
+                    beløp = BigDecimal(5 * 100_853).multiply(BigDecimal("0.7")).let(::Beløp), // 201 706
                 )
             )
         )
@@ -126,32 +126,18 @@ class UføreBeregningTest {
                 )
             ),
             relevanteÅr = listOf(2020, 2021, 2022).map(Year::of).toSet(),
-//            inntekterForegåendeÅr = setOf(
-//                InntektPerÅr(
-//                    Year.of(2022),
-//                    Beløp(BigDecimal(4 * 109_784).multiply(BigDecimal("0.7"))) // 448 920
-//                ),
-//                InntektPerÅr(
-//                    Year.of(2021),
-//                    Beløp(BigDecimal(4 * 104_716).multiply(BigDecimal("0.7"))) // 209 432
-//                ),
-//                InntektPerÅr(
-//                    Year.of(2020),
-//                    Beløp(BigDecimal(4 * 100_853).multiply(BigDecimal("0.7"))) // 201 706
-//                )
-//            ),
             inntektsPerioder = setOf(
                 InntektsPeriode(
                     periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
-                    beløp = 500000.toDouble(),
+                    beløp = 500000.toBigDecimal().let(::Beløp),
                 ),
                 InntektsPeriode(
                     periode = Periode(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 12, 31)),
-                    beløp = 400000.toDouble(),
+                    beløp = 400000.toBigDecimal().let(::Beløp),
                 ),
                 InntektsPeriode(
                     periode = Periode(LocalDate.of(2020, 1, 1), LocalDate.of(2020, 12, 31)),
-                    beløp = 300000.toDouble(),
+                    beløp = 300000.toBigDecimal().let(::Beløp),
                 )
             )
         )
@@ -179,9 +165,9 @@ class UføreBeregningTest {
             ),
             relevanteÅr = listOf(2020, 2021, 2022).map(Year::of).toSet(),
             inntektsPerioder = listOf(
-                oppsplittetInntekt(2022, 20000.toDouble()),
-                oppsplittetInntekt(2021, 20000.toDouble()),
-                oppsplittetInntekt(2020, 20000.toDouble())
+                oppsplittetInntekt(2022, 20000.toBigDecimal().let(::Beløp)),
+                oppsplittetInntekt(2021, 20000.toBigDecimal().let(::Beløp)),
+                oppsplittetInntekt(2020, 20000.toBigDecimal().let(::Beløp))
             ).flatten().toSet()
         )
 
@@ -218,9 +204,9 @@ class UføreBeregningTest {
             ),
             relevanteÅr = listOf(2020, 2021, 2022).map(Year::of).toSet(),
             inntektsPerioder = listOf(
-                oppsplittetInntekt(2022, 10_000.toDouble()),
-                oppsplittetInntekt(2021, 5000.toDouble()),
-                oppsplittetInntekt(2020, 20_000.toDouble())
+                oppsplittetInntekt(2022, 10_000.toBigDecimal().let(::Beløp)),
+                oppsplittetInntekt(2021, 5000.toBigDecimal().let(::Beløp)),
+                oppsplittetInntekt(2020, 20_000.toBigDecimal().let(::Beløp))
             ).flatten().toSet()
         )
 
@@ -262,9 +248,9 @@ class UføreBeregningTest {
             ),
             relevanteÅr = listOf(2020, 2021, 2022).map(Year::of).toSet(),
             inntektsPerioder = listOf(
-                oppsplittetInntekt(2022, 10_000.toDouble()),
-                oppsplittetInntekt(2021, 15_000.toDouble()),
-                oppsplittetInntekt(2020, 20_000.toDouble())
+                oppsplittetInntekt(2022, 10_000.toBigDecimal().let(::Beløp)),
+                oppsplittetInntekt(2021, 15_000.toBigDecimal().let(::Beløp)),
+                oppsplittetInntekt(2020, 20_000.toBigDecimal().let(::Beløp))
             ).flatten().toSet()
         )
 
@@ -277,7 +263,7 @@ class UføreBeregningTest {
 
     }
 
-    private fun oppsplittetInntekt(år: Int, månedsInntekt: Double): List<InntektsPeriode> {
+    private fun oppsplittetInntekt(år: Int, månedsInntekt: Beløp): List<InntektsPeriode> {
         return (1..12).toList().map {
             InntektsPeriode(
                 periode = Periode(YearMonth.of(år, it).atDay(1), YearMonth.of(år, it).atEndOfMonth()),

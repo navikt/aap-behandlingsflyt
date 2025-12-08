@@ -72,15 +72,15 @@ class BeregningsGrunnlagApiTest {
                 inntektsPerioder = setOf(
                     InntektsPeriode(
                         Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
-                        beløp = 500000.toDouble(),
+                        beløp = 500000.toBigDecimal().toBeløp(),
                     ),
                     InntektsPeriode(
                         Periode(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 12, 31)),
-                        beløp = 400000.toDouble(),
+                        beløp = 400000.toBigDecimal().toBeløp(),
                     ),
                     InntektsPeriode(
                         Periode(LocalDate.of(2020, 1, 1), LocalDate.of(2020, 12, 31)),
-                        beløp = 300000.toDouble(),
+                        beløp = 300000.toBigDecimal().toBeløp(),
                     )
                 )
             )
@@ -154,15 +154,15 @@ class BeregningsGrunnlagApiTest {
                 inntektsPerioder = setOf(
                     InntektsPeriode(
                         Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
-                        beløp = 500000.toDouble(),
+                        beløp = 500000.toBigDecimal().toBeløp(),
                     ),
                     InntektsPeriode(
                         Periode(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 12, 31)),
-                        beløp = 400000.toDouble(),
+                        beløp = 400000.toBigDecimal().toBeløp(),
                     ),
                     InntektsPeriode(
                         Periode(LocalDate.of(2020, 1, 1), LocalDate.of(2020, 12, 31)),
-                        beløp = 300000.toDouble(),
+                        beløp = 300000.toBigDecimal().toBeløp(),
                     )
                 )
 
@@ -181,4 +181,8 @@ class BeregningsGrunnlagApiTest {
             BigDecimal(6)
         )
     }
+}
+
+private fun BigDecimal.toBeløp(): Beløp {
+    return Beløp(this)
 }

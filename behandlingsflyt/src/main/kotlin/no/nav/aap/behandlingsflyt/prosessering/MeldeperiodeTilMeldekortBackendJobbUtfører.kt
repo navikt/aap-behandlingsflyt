@@ -158,7 +158,7 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
                     .segmenter()
                     .map { it.periode }
                     .somKontraktperioder,
-                meldeplikt = MeldepliktRegel().fastsatteDagerMedMeldeplikt(
+                meldeplikt = MeldepliktRegel.fastsatteDagerMedMeldeplikt(
                     vedtaksdatoFørstegangsbehandling = vedtak?.virkningstidspunkt,
                     fritak = fritaksvurderinger,
                     meldeperioder = meldeperioder,

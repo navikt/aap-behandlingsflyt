@@ -13,10 +13,10 @@ data class OvergangUføreGrunnlag(
 
     fun somOvergangUforevurderingstidslinje(startDato: LocalDate): Tidslinje<OvergangUføreVurdering> {
         return vurderinger
-            .sortedBy { it.virkningsdato ?: startDato }
+            .sortedBy { it.fom ?: startDato }
             .fold(Tidslinje()) { tidslinje, vurdering ->
                 tidslinje.kombiner(
-                    Tidslinje(Periode(vurdering.virkningsdato ?: startDato, Tid.MAKS), vurdering),
+                    Tidslinje(Periode(vurdering.fom ?: startDato, Tid.MAKS), vurdering),
                     StandardSammenslåere.prioriterHøyreSideCrossJoin()
                 )
             }

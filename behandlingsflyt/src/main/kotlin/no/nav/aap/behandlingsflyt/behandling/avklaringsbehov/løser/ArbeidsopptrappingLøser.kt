@@ -12,32 +12,28 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 class ArbeidsopptrappingLøser(
     private val arbeidsopptrappingRepositiory: ArbeidsopptrappingRepository,
-    private val behandlingRepository: BehandlingRepository,
-    private val unleashGateway: UnleashGateway
+    private val behandlingRepository: BehandlingRepository
 ) : AvklaringsbehovsLøser<ArbeidsopptrappingLøsning> {
 
-    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider) : this(
         arbeidsopptrappingRepositiory = repositoryProvider.provide(),
-        behandlingRepository = repositoryProvider.provide(),
-        unleashGateway = gatewayProvider.provide()
+        behandlingRepository = repositoryProvider.provide()
     )
 
     override fun løs(
         kontekst: AvklaringsbehovKontekst,
         løsning: ArbeidsopptrappingLøsning
     ): LøsningsResultat {
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.Arbeidsopptrapping)) {
-            val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
+        val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
 
-            val nyeVurderinger = løsning.løsningerForPerioder.map { it.toArbeidsopptrappingVurdering(kontekst) }
-            val gamleVurderinger =
-                behandling.forrigeBehandlingId?.let { arbeidsopptrappingRepositiory.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
+        val nyeVurderinger = løsning.løsningerForPerioder.map { it.toArbeidsopptrappingVurdering(kontekst) }
+        val gamleVurderinger =
+            behandling.forrigeBehandlingId?.let { arbeidsopptrappingRepositiory.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
 
-            arbeidsopptrappingRepositiory.lagre(
-                behandlingId = behandling.id,
-                arbeidsopptrappingVurderinger = gamleVurderinger + nyeVurderinger
-            )
-        }
+        arbeidsopptrappingRepositiory.lagre(
+            behandlingId = behandling.id,
+            arbeidsopptrappingVurderinger = gamleVurderinger + nyeVurderinger
+        )
         return LøsningsResultat(begrunnelse = "Vurdert arbeidsopptrapping")
     }
 

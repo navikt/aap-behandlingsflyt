@@ -101,22 +101,30 @@ class VurderBistandsbehovSteg(
             kontekst = kontekst
         )
 
-        if (avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_BISTANDSBEHOV)?.status()
-                ?.erAvsluttet() == true
-        ) {
-            /* Dette skal på sikt ut av denne metoden, og samles i et eget fastsett-steg. */
-            val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-            vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.BISTANDSVILKÅRET)
-
-            val grunnlag = BistandFaktagrunnlag(
-                kontekst.rettighetsperiode.tom,
-                bistandRepository.hentHvisEksisterer(kontekst.behandlingId)
-            )
-            Bistandsvilkåret(vilkårsresultat).vurder(grunnlag = grunnlag)
-            vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+        when (kontekst.vurderingType) {
+            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> vurderBistandsvilkår(kontekst)
+            VurderingType.MELDEKORT,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
+            VurderingType.IKKE_RELEVANT -> {
+            /* noop */
+            }
         }
 
         return Fullført
+    }
+
+    private fun vurderBistandsvilkår(kontekst: FlytKontekstMedPerioder) {
+        /* Dette skal på sikt ut av denne metoden, og samles i et eget fastsett-steg. */
+        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
+        vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.BISTANDSVILKÅRET)
+
+        val grunnlag = BistandFaktagrunnlag(
+            kontekst.rettighetsperiode.tom,
+            bistandRepository.hentHvisEksisterer(kontekst.behandlingId)
+        )
+        Bistandsvilkåret(vilkårsresultat).vurder(grunnlag = grunnlag)
+        vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
     }
 
     private fun perioderHvorBistandsvilkåretErRelevant(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
@@ -131,18 +139,25 @@ class VurderBistandsbehovSteg(
             ?.somTidslinje(kontekst.rettighetsperiode)
             .orEmpty()
 
-        return Tidslinje.zip3(tidligereVurderingsutfall, sykdomsvurderinger, studentvurderinger)
-            .mapValue { (behandlingsutfall, sykdomsvurdering, studentvurdering) ->
-                when (behandlingsutfall) {
-                    null -> false
-                    TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
-                    TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
-                    TidligereVurderinger.Behandlingsutfall.UKJENT -> {
-                        studentvurdering?.erOppfylt() != true &&
-                                sykdomsvurdering?.erOppfylt(kravdato = kontekst.rettighetsperiode.fom) == true
-                    }
+        return Tidslinje.map3(tidligereVurderingsutfall, sykdomsvurderinger, studentvurderinger)
+        { segmentPeriode, behandlingsutfall, sykdomsvurdering, studentvurdering ->
+            when (behandlingsutfall) {
+                null -> false
+                TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
+                TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
+                TidligereVurderinger.Behandlingsutfall.UKJENT -> {
+                    studentvurdering?.erOppfylt() != true &&
+                            (sykdomsvurdering?.erOppfyltOrdinær(
+                                kravdato = kontekst.rettighetsperiode.fom,
+                                segmentPeriode
+                            ) == true
+                                    || sykdomsvurdering?.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenheng(
+                                kravdato = kontekst.rettighetsperiode.fom, segmentPeriode
+                            ) == true)
+
                 }
             }
+        }
     }
 
 

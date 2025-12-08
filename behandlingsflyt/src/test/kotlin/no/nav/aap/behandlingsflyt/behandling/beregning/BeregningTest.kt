@@ -45,15 +45,15 @@ class BeregningTest {
                 inntektsPerioder = setOf(
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
-                        beløp = 500000.toDouble(),
+                        beløp = Beløp(500000.toBigDecimal()),
                     ),
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 12, 31)),
-                        beløp = 400000.toDouble(),
+                        beløp = Beløp(400000.toBigDecimal()),
                     ),
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2020, 1, 1), LocalDate.of(2020, 12, 31)),
-                        beløp = 300000.toDouble(),
+                        beløp = Beløp(300000.toBigDecimal()),
                     ),
                 )
             )
@@ -89,15 +89,15 @@ class BeregningTest {
                 inntektsPerioder = setOf(
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
-                        beløp = 500000.toDouble(),
+                        beløp = 500000.toBeløp(),
                     ),
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 12, 31)),
-                        beløp = 400000.toDouble(),
+                        beløp = 400000.toBeløp(),
                     ),
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2020, 1, 1), LocalDate.of(2020, 12, 31)),
-                        beløp = 300000.toDouble(),
+                        beløp = 300000.toBeløp(),
                     ),
                 )
             )
@@ -158,15 +158,15 @@ class BeregningTest {
                 inntektsPerioder = setOf(
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
-                        beløp = 500000.toDouble(),
+                        beløp = 500000.toBeløp(),
                     ),
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 12, 31)),
-                        beløp = 400000.toDouble(),
+                        beløp = 400000.toBeløp(),
                     ),
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2020, 1, 1), LocalDate.of(2020, 12, 31)),
-                        beløp = 300000.toDouble(),
+                        beløp = 300000.toBeløp(),
                     )
                 )
             )
@@ -229,15 +229,15 @@ class BeregningTest {
                 inntektsPerioder = setOf(
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
-                        beløp = 500000.toDouble(),
+                        beløp = 500000.toBeløp(),
                     ),
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 12, 31)),
-                        beløp = 400000.toDouble(),
+                        beløp = 400000.toBeløp(),
                     ),
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2020, 1, 1), LocalDate.of(2020, 12, 31)),
-                        beløp = 300000.toDouble(),
+                        beløp = 300000.toBeløp(),
                     ),
                 )
             )
@@ -276,15 +276,15 @@ class BeregningTest {
                 inntektsPerioder = setOf(
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
-                        beløp = 500000.toDouble(),
+                        beløp = 500000.toBeløp(),
                     ),
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 12, 31)),
-                        beløp = 400000.toDouble(),
+                        beløp = 400000.toBeløp(),
                     ),
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2020, 1, 1), LocalDate.of(2020, 12, 31)),
-                        beløp = 300000.toDouble(),
+                        beløp = 300000.toBeløp(),
                     ),
 
                     )
@@ -314,15 +314,15 @@ class BeregningTest {
                 inntektsPerioder = setOf(
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
-                        beløp = 500000.toDouble(),
+                        beløp = 500000.toBeløp(),
                     ),
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 12, 31)),
-                        beløp = 400000.toDouble(),
+                        beløp = 400000.toBeløp(),
                     ),
                     InntektsPeriode(
                         periode = Periode(LocalDate.of(2020, 1, 1), LocalDate.of(2020, 12, 31)),
-                        beløp = 300000.toDouble(),
+                        beløp = 300000.toBeløp(),
                     )
                 )
             )
@@ -382,4 +382,8 @@ class BeregningTest {
         }
     }
 
+}
+
+private fun Int.toBeløp(): Beløp {
+    return Beløp(this.toBigDecimal())
 }

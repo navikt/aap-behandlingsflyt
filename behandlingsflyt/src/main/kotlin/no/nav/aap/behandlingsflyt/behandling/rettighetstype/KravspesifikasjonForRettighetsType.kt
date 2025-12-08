@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.rettighetstype
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
@@ -8,6 +9,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 
 interface KravspesifikasjonForRettighetsType {
+    val rettighetstype: RettighetsType
+
     val kravBistand: Krav
     val kravForutgåendeMedlemskap: Krav
     val kravSykdom: Krav
@@ -20,6 +23,7 @@ interface KravspesifikasjonForRettighetsType {
     /** Krav som gjelder for perioden som vurderes. */
     sealed interface Krav {
         fun oppfyllesAv(vilkårsvurdering: Vilkårsvurdering?): Boolean
+        fun avslagsårsaker(vilkårsvurdering: Vilkårsvurdering?): Set<Avslagsårsak>
     }
 
     data class MåVæreOppfylt(val akseptableInnvilgelsesårsaker: List<Innvilgelsesårsak?>) : Krav {
@@ -32,15 +36,30 @@ interface KravspesifikasjonForRettighetsType {
             vilkårsvurdering != null
                     && vilkårsvurdering.erOppfylt()
                     && vilkårsvurdering.innvilgelsesårsak in akseptableInnvilgelsesårsaker
+
+        override fun avslagsårsaker(vilkårsvurdering: Vilkårsvurdering?) =
+            setOfNotNull(vilkårsvurdering?.avslagsårsak)
     }
 
+    /** Det er ikke et krav om at vilkåret er markert som oppfylt, men det sjekkes
+     * at vilkåret ikke er [Utfall.IKKE_OPPFYLT].
+     *
+     * Hvis vi eksplisitt setter relevante vilkår som
+     * [Utfall.OPPFYLT] i stede for å ikke vurdere dem,
+     * så kan vi bruke [MåVæreOppfylt]  i stedet for dette kravet.
+     */
     data object SkalIkkeGiAvslag : Krav {
         override fun oppfyllesAv(vilkårsvurdering: Vilkårsvurdering?) =
             vilkårsvurdering?.utfall != Utfall.IKKE_OPPFYLT
+
+        override fun avslagsårsaker(vilkårsvurdering: Vilkårsvurdering?) =
+            setOfNotNull(vilkårsvurdering?.avslagsårsak)
     }
 
     data object IngenKrav : Krav {
         override fun oppfyllesAv(vilkårsvurdering: Vilkårsvurdering?) = true
+        override fun avslagsårsaker(vilkårsvurdering: Vilkårsvurdering?) =
+            emptySet<Avslagsårsak>()
     }
 
     interface ForutgåendeKrav {
@@ -81,5 +100,18 @@ interface KravspesifikasjonForRettighetsType {
                 && kravOvergangUfør.oppfyllesAv(vilkårsresultat[Vilkårtype.OVERGANGUFØREVILKÅRET])
                 && kravSykepengeerstatning.oppfyllesAv(vilkårsresultat[Vilkårtype.SYKEPENGEERSTATNING])
                 && forutgåendeAap.oppfyllesAv(forutgåendeRettighetstyper)
+    }
+
+    /** Her mangler  stans/opphør fra underveis. */
+    fun avslagsårsaker(vilkårsresultat: Map<Vilkårtype, Vilkårsvurdering>): Set<Avslagsårsak> {
+        return MåVæreOppfylt().avslagsårsaker(vilkårsresultat[Vilkårtype.ALDERSVILKÅRET]) +
+                kravBistand.avslagsårsaker(vilkårsresultat[Vilkårtype.BISTANDSVILKÅRET]) +
+                MåVæreOppfylt().avslagsårsaker(vilkårsresultat[Vilkårtype.GRUNNLAGET]) +
+                SkalIkkeGiAvslag.avslagsårsaker(vilkårsresultat[Vilkårtype.SAMORDNING]) +
+                kravForutgåendeMedlemskap.avslagsårsaker(vilkårsresultat[Vilkårtype.MEDLEMSKAP]) +
+                MåVæreOppfylt().avslagsårsaker(vilkårsresultat[Vilkårtype.LOVVALG]) +
+                kravSykdom.avslagsårsaker(vilkårsresultat[Vilkårtype.SYKDOMSVILKÅRET]) +
+                kravOvergangArbeid.avslagsårsaker(vilkårsresultat[Vilkårtype.OVERGANGARBEIDVILKÅRET]) +
+                kravOvergangUfør.avslagsårsaker(vilkårsresultat[Vilkårtype.OVERGANGUFØREVILKÅRET])
     }
 }

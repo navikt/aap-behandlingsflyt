@@ -37,7 +37,6 @@ class FlytKontekstMedPeriodeService(
                 forrigeBehandlingId = kontekst.forrigeBehandlingId,
                 behandlingType = kontekst.behandlingType,
                 vurderingType = FØRSTEGANGSBEHANDLING,
-                vurderingTypeRelevantForSteg = FØRSTEGANGSBEHANDLING,
                 rettighetsperiode = sak.rettighetsperiode,
                 vurderingsbehovRelevanteForSteg = behandling.vurderingsbehov().map { it.type }.toSet()
             )
@@ -56,7 +55,6 @@ class FlytKontekstMedPeriodeService(
             forrigeBehandlingId = kontekst.forrigeBehandlingId,
             behandlingType = kontekst.behandlingType,
             vurderingType = prioritertType(behandling.vurderingsbehov().map { vurderingsbehovTilType(it.type) }.toSet()),
-            vurderingTypeRelevantForSteg = prioritertType(relevanteVurderingsbehov.map { vurderingsbehovTilType(it) }.toSet()),
             rettighetsperiode = sak.rettighetsperiode,
             vurderingsbehovRelevanteForSteg = relevanteVurderingsbehov
         )
@@ -93,6 +91,7 @@ class FlytKontekstMedPeriodeService(
             Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
             Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP,
             Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
+            Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING,
             Vurderingsbehov.BARNETILLEGG,
             Vurderingsbehov.INSTITUSJONSOPPHOLD,
             Vurderingsbehov.SAMORDNING_OG_AVREGNING,

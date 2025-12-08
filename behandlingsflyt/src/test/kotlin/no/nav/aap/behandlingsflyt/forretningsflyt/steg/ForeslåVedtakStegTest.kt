@@ -87,7 +87,7 @@ class ForeslåVedtakStegTest {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
         avklaringsbehovene.leggTil(
             definisjoner = listOf(Definisjon.AVKLAR_SYKDOM),
-            funnetISteg = StegType.AVKLAR_SYKDOM
+            funnetISteg = StegType.AVKLAR_SYKDOM, null, null
         )
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_SYKDOM, "ja", "TESTEN")
         val kontekstMedPerioder = FlytKontekstMedPerioder(
@@ -121,7 +121,7 @@ class ForeslåVedtakStegTest {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
         avklaringsbehovene.leggTil(
             definisjoner = listOf(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP),
-            funnetISteg = StegType.VURDER_LOVVALG
+            funnetISteg = StegType.VURDER_LOVVALG, null, null
         )
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP, "ja", "TESTEN")
         val kontekstMedPerioder = FlytKontekstMedPerioder(
@@ -156,14 +156,16 @@ class ForeslåVedtakStegTest {
         var avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
         avklaringsbehovene.leggTil(
             definisjoner = listOf(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP),
-            funnetISteg = StegType.VURDER_LOVVALG
+            funnetISteg = StegType.VURDER_LOVVALG,
+            null, null
         )
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP, "ja", "TESTEN")
         avklaringsbehovene.leggTil(
             definisjoner = listOf(Definisjon.FORESLÅ_VEDTAK),
-            funnetISteg = StegType.FORESLÅ_VEDTAK
+            funnetISteg = StegType.FORESLÅ_VEDTAK,
+            null, null
         )
-        
+
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.FORESLÅ_VEDTAK, "ja", "TESTEN")
         val kontekstMedPerioder = FlytKontekstMedPerioder(
             sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling(),
@@ -179,7 +181,7 @@ class ForeslåVedtakStegTest {
 
         // Gjør om på et NAY-avklaringsbehov
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP, "gjorde om på noe", "TESTEN")
-        
+
         val resultatEtterTilbakehopp = steg.utfør(kontekstMedPerioder)
         assertThat(resultatEtterTilbakehopp).isEqualTo(Fullført)
         avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)

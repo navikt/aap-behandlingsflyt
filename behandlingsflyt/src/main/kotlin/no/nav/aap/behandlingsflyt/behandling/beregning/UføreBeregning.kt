@@ -62,7 +62,7 @@ class UføreBeregning(
     ): List<UføreInntekt> {
         val oppjusterteInntekterTidslinje =
             inntektTidslinje.kombiner(uføreTidslinje, JoinStyle.LEFT_JOIN { periode, venstre, høyre ->
-                val inntektIPeriode = Beløp(venstre.verdi.beløp.toBigDecimal())
+                val inntektIPeriode = venstre.verdi.beløp
 
                 val uføregrad = høyre?.verdi ?: Prosent.`0_PROSENT`
                 val arbeidsgrad = uføregrad.komplement()
