@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreVurdering
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.avbrytrevurdering.AvbrytRevurderingRepositoryImpl
@@ -23,7 +22,6 @@ import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
@@ -214,66 +212,6 @@ internal class OvergangUføreRepositoryImplTest {
                 årsak = ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
             )
         )
-    }
-
-
-    @Test
-    fun `migrer overgang uføre-vurderinger`() {
-        dataSource.transaction { connection ->
-            val overgangUføreRepo = OvergangUføreRepositoryImpl(connection)
-            val sak = sak(connection)
-            val behandling = finnEllerOpprettBehandling(connection, sak)
-
-            val overgangUføreVurderingerUtenVurdertIBehandling = OvergangUføreVurdering(
-                begrunnelse = "Vurdering 1",
-                brukerHarSøktOmUføretrygd = true,
-                brukerHarFåttVedtakOmUføretrygd = "NEI",
-                brukerRettPåAAP = false,
-                fom = null,
-                tom = null,
-                vurdertAv = "Z99999",
-                vurdertIBehandling = null
-
-            )
-            overgangUføreRepo.lagre(behandling.id, listOf(overgangUføreVurderingerUtenVurdertIBehandling))
-            BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
-
-            val behandling2 = finnEllerOpprettBehandling(connection, sak)
-            val vurdering2fom = sak.rettighetsperiode.fom.plusMonths(2)
-            val nyVurdering = OvergangUføreVurdering(
-                begrunnelse = "Vurdering 2",
-                brukerHarSøktOmUføretrygd = false,
-                brukerHarFåttVedtakOmUføretrygd = "JA",
-                brukerRettPåAAP = true,
-                fom = vurdering2fom,
-                tom = null,
-                vurdertAv = "Z88888",
-                vurdertIBehandling = null
-            )
-            overgangUføreRepo.lagre(behandling2.id, listOf(overgangUføreVurderingerUtenVurdertIBehandling, nyVurdering))
-
-            overgangUføreRepo.migrerOvergangUføre()
-
-            assertThat(overgangUføreRepo.hentHvisEksisterer(behandling.id)?.vurderinger).usingRecursiveComparison()
-                .ignoringFields("opprettet").isEqualTo(
-                    listOf(
-                        overgangUføreVurderingerUtenVurdertIBehandling.copy(
-                            vurdertIBehandling = behandling.id,
-                            fom = sak.rettighetsperiode.fom
-                        )
-                    )
-                )
-            assertThat(overgangUføreRepo.hentHvisEksisterer(behandling2.id)?.vurderinger).usingRecursiveComparison()
-                .ignoringFields("opprettet").isEqualTo(
-                    listOf(
-                        overgangUføreVurderingerUtenVurdertIBehandling.copy(
-                            vurdertIBehandling = behandling.id,
-                            fom = sak.rettighetsperiode.fom
-                        ),
-                        nyVurdering.copy(vurdertIBehandling = behandling2.id)
-                    )
-                )
-        }
     }
 
 }

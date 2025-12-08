@@ -19,7 +19,7 @@ class ManglendeInntektGrunnlagService(
         val behandling = behandlingRepository.hent(behandlingsreferanse.referanse.let(::BehandlingReferanse))
 
         val grunnlag = manuellInntektGrunnlagRepository.hentHvisEksisterer(behandling.id)
-        if (grunnlag == null) return null
+        if (grunnlag == null || grunnlag.manuelleInntekter.isEmpty()) return null
 
         val manuelleInntekter = grunnlag.manuelleInntekter
 

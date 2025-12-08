@@ -367,7 +367,7 @@ private fun opprettNySakOgBehandling(dto: OpprettTestcaseDTO): Sak {
                 løsFastsettYrkesskadeInntekt(behandling)
             } else {
                 if (dto.steg == StegType.VURDER_MEDLEMSKAP) return sak
-                løsForutgåendeMedlemskap(behandling)
+                løsForutgåendeMedlemskap(behandling, sak)
             }
 
             // Oppholdskrav
