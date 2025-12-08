@@ -58,6 +58,10 @@ class DatadelingBehandlingJobbUtfører(
             .mapNotNull { if (it.rettighetsType != null) Segment(it.periode, it.rettighetsType) else null }
             .let(::Tidslinje)
 
+        if (vilkårsresultatTidslinje.isEmpty()){
+            return
+        }
+
         val vedtakId = vedtakRepository.hentId(behandling.id)
         val samId = samIdRepository.hentHvisEksisterer(behandling.id)
 
