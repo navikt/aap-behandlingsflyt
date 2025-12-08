@@ -56,28 +56,23 @@ class DatadelingBehandlingJobbUtfører(
 
         val underveis = underveisRepository.hentHvisEksisterer(behandling.id)
 
-        val oppfylt = underveis?.perioder?.any { it.utfall == Utfall.OPPFYLT }?:false
-
         val vilkårsresultatTidslinje = underveis?.perioder.orEmpty()
             .mapNotNull { if (it.rettighetsType != null) Segment(it.periode, it.rettighetsType) else null }
             .let(::Tidslinje)
 
-        if (vilkårsresultatTidslinje.isEmpty() or !oppfylt) {
-            return
-        }
 
         val vedtakId = vedtakRepository.hentId(behandling.id)
         val samId = samIdRepository.hentHvisEksisterer(behandling.id)
 
         val beregningsgrunnlagGUnit =
-            requireNotNull(beregningsgrunnlagRepository.hentHvisEksisterer(behandling.id)) { "Fant ikke beregningsgrunnlag for behandling $behandlingId" }.grunnlaget()
+            beregningsgrunnlagRepository.hentHvisEksisterer(behandling.id)?.grunnlaget()
 
         val startPåRettighetsperiode = sak.rettighetsperiode.fom
         val grunnbeløpVedSakensStart = requireNotNull(
             Grunnbeløp.tilTidslinje().begrensetTil(sak.rettighetsperiode).segment(startPåRettighetsperiode)
         ) { "Fant ikke grunnbeløp på tidspunkt $startPåRettighetsperiode" }
 
-        val beregningsgrunnlagIKroner = grunnbeløpVedSakensStart.verdi.multiplisert(beregningsgrunnlagGUnit).verdi
+        val beregningsgrunnlagIKroner = beregningsgrunnlagGUnit?.multiplisert(grunnbeløpVedSakensStart.verdi)?.verdi
 
         apiInternGateway.sendBehandling(
             sak,
