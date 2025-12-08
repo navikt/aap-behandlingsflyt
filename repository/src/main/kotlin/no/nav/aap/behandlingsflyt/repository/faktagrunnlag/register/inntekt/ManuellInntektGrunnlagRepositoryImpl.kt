@@ -49,7 +49,7 @@ class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection)
     override fun hentHistoriskeVurderinger(
         sakId: SakId,
         behandlingId: BehandlingId
-    ): List<ManuellInntektVurdering> {
+    ): Set<Set<ManuellInntektVurdering>> {
         val query = """
             SELECT MANUELL_INNTEKT_VURDERINGER_ID
             FROM MANUELL_INNTEKT_VURDERING_GRUNNLAG GRUNNLAG
@@ -69,7 +69,7 @@ class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection)
             setRowMapper {
                 hentManuellInntektVurderinger(it.getLong("MANUELL_INNTEKT_VURDERINGER_ID"))
             }
-        }.flatten()
+        }
     }
 
     private fun hentManuellInntektVurderinger(vurderingerId: Long): Set<ManuellInntektVurdering> {
@@ -85,8 +85,9 @@ class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection)
                 ManuellInntektVurdering(
                     år = Year.of(it.getInt("ar")),
                     begrunnelse = it.getString("begrunnelse"),
-                    belop = it.getBigDecimal("belop").let(::Beløp),
-                    vurdertAv = it.getString("vurdert_av")
+                    belop = it.getBigDecimalOrNull("belop")?.let { verdi -> Beløp(verdi) },
+                    vurdertAv = it.getString("vurdert_av"),
+                    eøsBeløp = it.getBigDecimalOrNull("eos_belop")?.let { verdi -> Beløp(verdi)}
                 )
             }
         }
@@ -132,16 +133,17 @@ class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection)
         manuellInntektVurderingerId: Long
     ) {
         val query = """
-            INSERT INTO MANUELL_INNTEKT_VURDERING (AR, BEGRUNNELSE, BELOP, VURDERT_AV, MANUELL_INNTEKT_VURDERINGER_ID) VALUES (?, ?, ?, ?, ?)
+            INSERT INTO MANUELL_INNTEKT_VURDERING (AR, BEGRUNNELSE, BELOP, VURDERT_AV, MANUELL_INNTEKT_VURDERINGER_ID, EOS_BELOP) VALUES (?, ?, ?, ?, ?, ?)
         """.trimIndent()
 
         connection.executeBatch(query, manuellVurderinger) {
             setParams {
                 setInt(1, it.år.value)
                 setString(2, it.begrunnelse)
-                setBigDecimal(3, it.belop.verdi)
+                setBigDecimal(3, it.belop?.verdi)
                 setString(4, it.vurdertAv)
                 setLong(5, manuellInntektVurderingerId)
+                setBigDecimal(6, it.eøsBeløp?.verdi)
             }
         }
     }

@@ -162,7 +162,7 @@ class BrevUtlederServiceTest {
     fun `skal feile ved utleding av brevtype dersom det aktivitetsplikt mangler`() {
         every { behandlingRepository.hent(any<BehandlingId>()) } returns aktivitetspliktBehandling
         every { aktivitetspliktRepository.hentHvisEksisterer(aktivitetspliktBehandling.id) } returns null
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.Arbeidsopptrapping) } returns false
+        every { arbeidsopptrappingRepository.hentPerioder(aktivitetspliktBehandling.id) } returns emptyList()
         assertThrows<IllegalStateException> {
             brevUtlederService.utledBehovForMeldingOmVedtak(aktivitetspliktBehandling.id)
         }
@@ -174,7 +174,7 @@ class BrevUtlederServiceTest {
         every { aktivitetspliktRepository.hentHvisEksisterer(aktivitetspliktBehandling.id) } returns Aktivitetsplikt11_7Grunnlag(
             vurderinger = listOf(aktivitetspliktBrudd(aktivitetspliktBehandling.id))
         )
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.Arbeidsopptrapping) } returns false
+        every { arbeidsopptrappingRepository.hentPerioder(aktivitetspliktBehandling.id) } returns emptyList()
 
         assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(aktivitetspliktBehandling.id)).isEqualTo(
             VedtakAktivitetsplikt11_7
@@ -187,7 +187,7 @@ class BrevUtlederServiceTest {
         every { aktivitetspliktRepository.hentHvisEksisterer(aktivitetspliktBehandling.id) } returns Aktivitetsplikt11_7Grunnlag(
             vurderinger = listOf(aktivitetspliktBruddOppfylt(aktivitetspliktBehandling.id))
         )
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.Arbeidsopptrapping) } returns false
+        every { arbeidsopptrappingRepository.hentPerioder(aktivitetspliktBehandling.id) } returns emptyList()
 
         assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(aktivitetspliktBehandling.id)).isEqualTo(
             VedtakEndring
@@ -197,7 +197,6 @@ class BrevUtlederServiceTest {
     @Test
     fun `skal utlede brevtype VedtakEndring når nyeste aktivitetsplikt brudd omgjøres`() {
         every { behandlingRepository.hent(any<BehandlingId>()) } returns aktivitetspliktBehandling
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.Arbeidsopptrapping) } returns false
 
         val gammelBruddDato = LocalDate.now().minusDays(100)
         every { aktivitetspliktRepository.hentHvisEksisterer(aktivitetspliktBehandling.id) } returns Aktivitetsplikt11_7Grunnlag(
@@ -208,6 +207,7 @@ class BrevUtlederServiceTest {
                 aktivitetspliktBruddOppfylt(aktivitetspliktBehandling.id)
             )
         )
+        every { arbeidsopptrappingRepository.hentPerioder(aktivitetspliktBehandling.id) } returns emptyList()
 
         assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(aktivitetspliktBehandling.id)).isEqualTo(
             VedtakEndring
@@ -217,7 +217,6 @@ class BrevUtlederServiceTest {
     @Test
     fun `skal utlede brevtype Aktivitetspliktbrudd når nyeste aktivitetsplikt brudd er stans`() {
         every { behandlingRepository.hent(any<BehandlingId>()) } returns aktivitetspliktBehandling
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.Arbeidsopptrapping) } returns false
 
         val gammelBruddDato = LocalDate.now().minusDays(100)
         every { aktivitetspliktRepository.hentHvisEksisterer(aktivitetspliktBehandling.id) } returns Aktivitetsplikt11_7Grunnlag(
@@ -228,6 +227,7 @@ class BrevUtlederServiceTest {
                 aktivitetspliktBrudd(aktivitetspliktBehandling.id)
             )
         )
+        every { arbeidsopptrappingRepository.hentPerioder(aktivitetspliktBehandling.id) } returns emptyList()
 
         assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(aktivitetspliktBehandling.id)).isEqualTo(
             VedtakAktivitetsplikt11_7
@@ -253,6 +253,7 @@ class BrevUtlederServiceTest {
         )
         every { behandlingRepository.hent(revurdering.id) } returns revurdering
         every { avbrytRevurderingService.revurderingErAvbrutt(revurdering.id) } returns false
+        every { arbeidsopptrappingRepository.hentPerioder(revurdering.id) } returns emptyList()
         every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns underveisGrunnlag(
             underveisperiode(
                 periode = Periode(1 januar 2023, 31 desember 2023),
@@ -260,7 +261,6 @@ class BrevUtlederServiceTest {
                 utfall = Utfall.OPPFYLT,
             )
         )
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.Arbeidsopptrapping) } returns false
 
         assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)).isEqualTo(Arbeidssøker)
     }
@@ -284,6 +284,7 @@ class BrevUtlederServiceTest {
         )
         every { behandlingRepository.hent(revurdering.id) } returns revurdering
         every { avbrytRevurderingService.revurderingErAvbrutt(revurdering.id) } returns false
+        every { arbeidsopptrappingRepository.hentPerioder(revurdering.id) } returns emptyList()
         every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns underveisGrunnlag(
             underveisperiode(
                 periode = Periode(1 januar 2023, 31 desember 2023),
@@ -291,7 +292,6 @@ class BrevUtlederServiceTest {
                 utfall = Utfall.OPPFYLT,
             )
         )
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.Arbeidsopptrapping) } returns false
 
         assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)).isEqualTo(VedtakEndring)
     }
@@ -314,6 +314,7 @@ class BrevUtlederServiceTest {
             )
         )
         every { behandlingRepository.hent(revurdering.id) } returns revurdering
+        every { arbeidsopptrappingRepository.hentPerioder(revurdering.id) } returns emptyList()
         every { avbrytRevurderingService.revurderingErAvbrutt(revurdering.id) } returns false
         every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns underveisGrunnlag(
             underveisperiode(
@@ -341,7 +342,6 @@ class BrevUtlederServiceTest {
                 vurdertAv = ""
             ), null
         )
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.Arbeidsopptrapping) } returns false
 
         assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)).isEqualTo(
             VurderesForUføretrygd(
@@ -378,6 +378,7 @@ class BrevUtlederServiceTest {
         )
         every { behandlingRepository.hent(revurdering.id) } returns revurdering
         every { avbrytRevurderingService.revurderingErAvbrutt(revurdering.id) } returns false
+        every { arbeidsopptrappingRepository.hentPerioder(revurdering.id) } returns emptyList()
         every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns underveisGrunnlag(
             underveisperiode(
                 periode = Periode(1 januar 2023, 31 desember 2023),
@@ -385,7 +386,6 @@ class BrevUtlederServiceTest {
                 utfall = Utfall.OPPFYLT,
             )
         )
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.Arbeidsopptrapping) } returns false
 
         assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)).isEqualTo(
             VedtakEndring
@@ -481,6 +481,7 @@ class BrevUtlederServiceTest {
             trekk = Dagsatser(0),
             brukerAvKvoter = emptySet(),
             meldepliktStatus = null,
+            meldepliktGradering = Prosent.`0_PROSENT`,
         )
     }
 

@@ -44,9 +44,8 @@ class SamGatewayImpl : SamGateway {
         )
     }
 
-    override fun hentSamId(ident: Ident, sakId: Long, vedtakId: Long): Long {
-        return requireNotNull(
-            restClient.get(
+    override fun hentSamId(ident: Ident, sakId: Long, vedtakId: Long): Long? {
+        return restClient.get(
             uri = uri.resolve("/api/vedtak?sakId=$sakId&vedtakId=$vedtakId&fagomrade=AAP"),
             request = GetRequest(
                 additionalHeaders = listOf(Header("pid", ident.identifikator))
@@ -57,7 +56,7 @@ class SamGatewayImpl : SamGateway {
                 require(respons.samordningsmeldinger.size < 2 && respons.samordningsmeldinger.isNotEmpty()) { "for mangen eller for få samordningsmeldinger i responsen fra SAM ved henting av samId. Antall samordningsmeldinger: ${respons.samordningsmeldinger.size}" }
                 respons.samordningsmeldinger.first().samId
             }
-        ))
+        )
     }
 
     // https://github.com/navikt/sam/blob/656cc706c16bcdba7ce626525f8777bc2a2e35d3/provider/nav-provider-stotte-sam-app/src/main/java/no/nav/provider/stotte/sam/app/SamordneVedtakController.kt

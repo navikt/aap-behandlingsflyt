@@ -1,10 +1,14 @@
 package no.nav.aap.behandlingsflyt.integrasjon.datadeling
 
+import com.github.benmanes.caffeine.cache.Caffeine
+import no.nav.aap.api.intern.PersonEksistererIAAPArena
+import no.nav.aap.api.intern.SakerRequest
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.datadeling.SakStatus
 import no.nav.aap.behandlingsflyt.datadeling.SakStatusDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
+import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaStatusResponse
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.MeldekortPerioderDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DatadelingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DetaljertMeldekortDTO
@@ -22,10 +26,12 @@ import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import java.math.BigDecimal
 import java.net.URI
+import java.time.Duration
 import java.time.LocalDate
 
 class ApiInternGatewayImpl() : ApiInternGateway {
@@ -151,5 +157,28 @@ class ApiInternGatewayImpl() : ApiInternGateway {
             throw e
         }
 
+    }
+
+    private val arenaStatusCache = Caffeine.newBuilder()
+        .expireAfterWrite(Duration.ofHours(1))
+        .maximumSize(10_000)
+        .build<SakerRequest, ArenaStatusResponse>()
+
+    override fun hentArenaStatus(personidentifikatorer: List<String>): ArenaStatusResponse {
+        val key = SakerRequest(personidentifikatorer = personidentifikatorer)
+        // Kalles ofte fra saksbehandling, så cache den
+        return arenaStatusCache.get(key, {
+            doHentArenaStatus(key)
+        })
+    }
+
+    private fun doHentArenaStatus(sakerRequest: SakerRequest): ArenaStatusResponse {
+        val remoteResponse: PersonEksistererIAAPArena? = restClient.post(
+            uri.resolve("/arena/person/aap/eksisterer"),
+            PostRequest(body = sakerRequest),
+            mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }
+        )
+        requireNotNull(remoteResponse) { "Fikk ikke gyldig svar på om personen eksisterer i AAP Arena" }
+        return ArenaStatusResponse(remoteResponse.eksisterer)
     }
 }

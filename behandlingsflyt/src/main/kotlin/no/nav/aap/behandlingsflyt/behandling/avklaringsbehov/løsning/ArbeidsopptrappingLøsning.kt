@@ -30,6 +30,6 @@ class ArbeidsopptrappingLøsning(
         kontekst: AvklaringsbehovKontekst,
         gatewayProvider: GatewayProvider
     ): LøsningsResultat {
-        return ArbeidsopptrappingLøser(repositoryProvider, gatewayProvider).løs(kontekst, this)
+        return ArbeidsopptrappingLøser(repositoryProvider).løs(kontekst, this)
     }
 }

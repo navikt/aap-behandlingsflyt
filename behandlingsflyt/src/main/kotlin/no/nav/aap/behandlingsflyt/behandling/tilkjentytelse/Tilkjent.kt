@@ -47,11 +47,13 @@ data class GraderingGrunnlag(
     val institusjonGradering: Prosent,
     val arbeidGradering: Prosent,
     val samordningUføregradering: Prosent,
-    val samordningArbeidsgiverGradering: Prosent
+    val samordningArbeidsgiverGradering: Prosent,
+    val meldepliktGradering: Prosent,
 ) {
     fun graderingForDagsats11_9Reduksjon() = `100_PROSENT`
         .minus(samordningGradering)
         .minus(samordningArbeidsgiverGradering)
         .minus(institusjonGradering)
         .minus(samordningUføregradering)
+        .minus(meldepliktGradering)
 }

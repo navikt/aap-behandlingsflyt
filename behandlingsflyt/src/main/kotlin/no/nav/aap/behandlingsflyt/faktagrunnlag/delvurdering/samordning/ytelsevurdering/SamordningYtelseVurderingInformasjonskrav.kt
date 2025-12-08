@@ -27,6 +27,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -37,6 +39,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 
 class SamordningYtelseVurderingInformasjonskrav(
     private val samordningYtelseRepository: SamordningYtelseRepository,
+    private val samordningVurderingRepository: SamordningVurderingRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val fpGateway: ForeldrepengerGateway,
     private val spGateway: SykepengerGateway,
@@ -101,7 +104,7 @@ class SamordningYtelseVurderingInformasjonskrav(
 
         val (samordningYtelser) = registerdata
 
-        if (harEndringerIYtelser(eksisterendeData, samordningYtelser)) {
+        if (harEndringerIYtelserIkkeDekketAvEksisterendeGrunnlag(eksisterendeData, samordningYtelser)) {
             log.info("Oppdaterer samordning ytelser for behandling ${kontekst.behandlingId}. Ytelser funnet: ${samordningYtelser.map { it.ytelseType }}")
             samordningYtelseRepository.lagre(kontekst.behandlingId, samordningYtelser)
             return Informasjonskrav.Endret.ENDRET
@@ -182,11 +185,19 @@ class SamordningYtelseVurderingInformasjonskrav(
         val eksisterendeData = samordningYtelseRepository.hentHvisEksisterer(behandlingId)
         val sak = sakService.hentSakFor(behandlingId)
         val samordningYtelser = hentData(SamordningInput(sak.person, sak.rettighetsperiode)).samordningYtelser
-
         // Ønsker ikke trigge revurdering automatisk i dette tilfellet enn så lenge
         val gikkFraNullTilTomtGrunnlag = samordningYtelser.isEmpty() && eksisterendeData == null
 
-        return if (!gikkFraNullTilTomtGrunnlag && harEndringerIYtelser(eksisterendeData, samordningYtelser)) listOf(
+        // Sjekker på vurderinger
+        val samordningVurderinger = samordningVurderingRepository.hentHvisEksisterer(behandlingId)
+        harEndringerIYtelserIkkeDekketAvManuelleVurderinger(samordningVurderinger, samordningYtelser)
+
+        return if (!gikkFraNullTilTomtGrunnlag
+            && harEndringerIYtelserIkkeDekketAvEksisterendeGrunnlag(
+                eksisterendeData,
+                samordningYtelser
+            ) && harEndringerIYtelserIkkeDekketAvManuelleVurderinger(samordningVurderinger, samordningYtelser)
+        ) listOf(
             VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER)
         )
         else emptyList()
@@ -201,6 +212,7 @@ class SamordningYtelseVurderingInformasjonskrav(
         ): SamordningYtelseVurderingInformasjonskrav {
             return SamordningYtelseVurderingInformasjonskrav(
                 repositoryProvider.provide(),
+                repositoryProvider.provide(),
                 TidligereVurderingerImpl(repositoryProvider),
                 gatewayProvider.provide(),
                 gatewayProvider.provide(),
@@ -208,46 +220,89 @@ class SamordningYtelseVurderingInformasjonskrav(
             )
         }
 
-        fun harEndringerIYtelser(
-            eksisterende: SamordningYtelseGrunnlag?, samordningYtelser: Set<SamordningYtelse>
+        fun harEndringerIYtelserIkkeDekketAvEksisterendeGrunnlag(
+            eksisterende: SamordningYtelseGrunnlag?,
+            nye: Set<SamordningYtelse>
         ): Boolean {
-            secureLogger.info("Hentet samordningytelse eksisterende ${eksisterende?.ytelser} med nye samordningsytelser ${samordningYtelser.map { it.ytelsePerioder }}  ${samordningYtelser.map { it.ytelseType.name }}")
-            secureLogger.info("Overlapp " + harFullstendigOverlapp(eksisterende, samordningYtelser) + "YtelseneErLike " + (samordningYtelser == eksisterende?.ytelser))
-            // TODO: return eksisterende == null || !harFullstendigOverlapp(eksisterende, samordningYtelser)
-            return eksisterende == null || samordningYtelser != eksisterende.ytelser
+            if (eksisterende == null) return true
+
+            for (ny in nye) {
+                val eksisterendeForType = eksisterende.ytelser.filter { it.ytelseType == ny.ytelseType }
+
+                if (eksisterendeForType.isEmpty()) return true
+
+                for (nyPeriode in ny.ytelsePerioder) {
+                    val relevanteEksPerioder = eksisterendeForType
+                        .flatMap { it.ytelsePerioder }
+                        // Vi er interessert i graderingsendringer på foreldrepenger, men om det er sykepenger, er vi bare interessert dersom vi ikke allerede har registrert en 100% gradering. Da regnes det om at "vi kjenner til" Sykepenger
+                        .filter { it.gradering == nyPeriode.gradering || (it.gradering == Prosent.`100_PROSENT` && ny.ytelseType == Ytelse.SYKEPENGER) }
+
+                    secureLogger.info(
+                        "Hentet samordningytelse eksisterende ${eksisterende.ytelser} med nye samordningsytelser ${nye.map { it.ytelsePerioder }}  ${nye.map { it.ytelseType.name }} Overlapp grunnlag" + isPeriodeDekketAvEksisterendePerioder(
+                            relevanteEksPerioder,
+                            nyPeriode
+                        )
+                    )
+
+                    if (!isPeriodeDekketAvEksisterendePerioder(relevanteEksPerioder, nyPeriode)) {
+                        return true
+                    }
+                }
+            }
+            return false
         }
 
-    }
+        fun harEndringerIYtelserIkkeDekketAvManuelleVurderinger(
+            eksisterendeVurderinger: SamordningVurderingGrunnlag?, samordningYtelser: Set<SamordningYtelse>
+        ): Boolean {
+            if (eksisterendeVurderinger == null) return true
 
-}
+            for (ny in samordningYtelser) {
+                val eksisterendeForType = eksisterendeVurderinger.vurderinger.filter { it.ytelseType == ny.ytelseType }
 
-fun harFullstendigOverlapp(
-    eksisterende: SamordningYtelseGrunnlag?,
-    nye: Set<SamordningYtelse>
-): Boolean {
-    if (eksisterende == null) return false
-    if (eksisterende.ytelser.size != nye.size) return false
+                if (eksisterendeForType.isEmpty()) return true
 
-    return nye.all { nyYtelse ->
-        eksisterende.ytelser.any { eksisterendeYtelse ->
-            perioderErLike(eksisterendeYtelse.ytelsePerioder, nyYtelse.ytelsePerioder)
+                for (nyPeriode in ny.ytelsePerioder) {
+                    val relevanteEksPerioder = eksisterendeForType
+                        .flatMap { it.vurderingPerioder }
+                        // Vi er interessert i graderingsendringer på foreldrepenger, men om det er sykepenger, er vi bare interessert dersom vi ikke allerede har registrert en 100% gradering. Da regnes det om at "vi kjenner til" Sykepenger
+                        .filter { it.gradering == nyPeriode.gradering || (it.gradering == Prosent.`100_PROSENT` && ny.ytelseType == Ytelse.SYKEPENGER) }
+
+                    secureLogger.info(
+                        "Hentet samordningvurdering eksisterende ${eksisterendeVurderinger.vurderinger} med nye samordningsytelser ${samordningYtelser.map { it.ytelsePerioder }}  ${samordningYtelser.map { it.ytelseType.name }} Overlapp vurderinger" + isPeriodeDekketAvEksisterendePerioder(
+                        relevanteEksPerioder,
+                        nyPeriode
+                    )
+                    )
+
+                    if (!isPeriodeDekketAvEksisterendePerioder(relevanteEksPerioder, nyPeriode)) {
+                        return true
+                    }
+                }
+            }
+            return false
         }
     }
 }
 
-private fun perioderErLike(
-    eksisterende: Set<SamordningYtelsePeriode>,
-    nye: Set<SamordningYtelsePeriode>
-): Boolean {
-    if (eksisterende.size != nye.size) return false
+private fun <T : SamordningPeriode> isPeriodeDekketAvEksisterendePerioder(
+    eksisterendePerioder: List<T>,
+    target: T
+): Boolean =
+    eksisterendePerioder
+        .tilTidslinje()
+        .komprimer()
+        .perioder()
+        .any { it.inneholder(target.periode) }
 
-    return eksisterende.all { eks ->
-        nye.any { ny ->
-            eks.periode.fom.isEqual(ny.periode.fom) &&
-                    eks.periode.tom.isEqual(ny.periode.tom) &&
-                    eks.gradering == ny.gradering
+
+fun <T : SamordningPeriode> List<T>.tilTidslinje(): Tidslinje<Boolean> =
+    Tidslinje(
+        this.map { p ->
+            Segment(
+                periode = Periode(p.periode.fom, p.periode.tom),
+                verdi = true
+            )
         }
-    }
-}
-
+    )
 

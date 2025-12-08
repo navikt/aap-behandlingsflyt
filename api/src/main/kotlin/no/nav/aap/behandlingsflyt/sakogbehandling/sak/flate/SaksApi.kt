@@ -1,0 +1,445 @@
+package no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate
+
+import com.papsign.ktor.openapigen.route.TagModule
+import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
+import com.papsign.ktor.openapigen.route.path.normal.get
+import com.papsign.ktor.openapigen.route.path.normal.post
+import com.papsign.ktor.openapigen.route.response.respond
+import com.papsign.ktor.openapigen.route.route
+import com.papsign.ktor.openapigen.route.tag
+import no.nav.aap.behandlingsflyt.Azp
+import no.nav.aap.behandlingsflyt.Tags
+import no.nav.aap.behandlingsflyt.behandling.Resultat
+import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
+import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ResultatKode
+import no.nav.aap.behandlingsflyt.medAzureTokenGen
+import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
+import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForSakResolver
+import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.httpklient.exception.VerdiIkkeFunnetException
+import no.nav.aap.komponenter.miljo.Miljø
+import no.nav.aap.komponenter.miljo.MiljøKode
+import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.server.auth.token
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.tilgang.AuthorizationBodyPathConfig
+import no.nav.aap.tilgang.AuthorizationMachineToMachineConfig
+import no.nav.aap.tilgang.AuthorizationParamPathConfig
+import no.nav.aap.tilgang.Operasjon
+import no.nav.aap.tilgang.SakPathParam
+import no.nav.aap.tilgang.authorizedGet
+import no.nav.aap.tilgang.authorizedPost
+import org.slf4j.LoggerFactory
+import javax.sql.DataSource
+
+private val log = LoggerFactory.getLogger("api.sak")
+
+fun NormalOpenAPIRoute.saksApi(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
+) {
+    val tilgangGateway = gatewayProvider.provide<TilgangGateway>()
+    val identGateway = gatewayProvider.provide(IdentGateway::class)
+    val personinfoGateway = gatewayProvider.provide(PersoninfoGateway::class)
+    val ansattInfoService = AnsattInfoService(gatewayProvider)
+
+    route("/api/sak").tag(Tags.Sak) {
+        route("/ekstern/finn").authorizedPost<Unit, List<SaksinfoDTO>, FinnSakForIdentDTO>(
+            AuthorizationMachineToMachineConfig(authorizedRoles = listOf("finn-sak"))
+        ) { _, dto ->
+            val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
+                val repositoryProvider = repositoryRegistry.provider(connection)
+                val ident = Ident(dto.ident)
+                val person = repositoryProvider.provide<PersonRepository>().finn(ident)
+                val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                val resultatUtleder = ResultatUtleder(repositoryProvider)
+
+                if (person == null) {
+                    emptyList()
+                } else {
+                    repositoryProvider.provide<SakRepository>().finnSakerFor(person).map { sak ->
+                        val førstegangsbehandling = if (sak.status() == Status.AVSLUTTET) {
+                            behandlingRepository.hentAlleFor(sak.id).first {
+                                it.typeBehandling() == TypeBehandling.Førstegangsbehandling
+                            }
+                        } else null
+
+                        val resultat = if (førstegangsbehandling != null) {
+                            resultatUtleder.utledResultatFørstegangsBehandling(førstegangsbehandling)
+                        } else null
+
+                        SaksinfoDTO(
+                            saksnummer = sak.saksnummer.toString(),
+                            opprettetTidspunkt = sak.opprettetTidspunkt,
+                            periode = sak.rettighetsperiode,
+                            ident = sak.person.aktivIdent().identifikator,
+                            resultat = resultat.let {
+                                when (it) {
+                                    Resultat.INNVILGELSE -> ResultatKode.INNVILGET
+                                    Resultat.AVSLAG -> ResultatKode.AVSLAG
+                                    Resultat.TRUKKET -> ResultatKode.TRUKKET
+                                    Resultat.AVBRUTT -> ResultatKode.AVBRUTT
+                                    null -> null
+                                }
+                            })
+                    }
+                }
+
+            }
+            respond(saker)
+        }
+        route("/{saksnummer}/opprettAktivitetspliktBehandling")
+            .authorizedPost<SaksnummerParameter, BehandlingAvTypeDTO, OpprettAktivitetspliktBehandlingDto>(
+                routeConfig = AuthorizationParamPathConfig(
+                    relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
+                    sakPathParam = SakPathParam("saksnummer"),
+                    operasjon = Operasjon.SE, // TODO: Skriveoperasjon krever behandlingsreferanse - bruker 'SE' enn så lenge
+                )
+            ) { req, body ->
+                val dto = dataSource.transaction { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+
+                    val sakRepository = repositoryProvider.provide<SakRepository>()
+                    val sakId = sakRepository.hent(Saksnummer(req.saksnummer)).id
+
+                    val sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider)
+
+                    val behandling = sakOgBehandlingService.opprettAktivitetspliktBehandling(
+                        sakId, body.vurderingsbehov.tilVurderingsbehov()
+                    )
+
+                    ProsesserBehandlingService(repositoryProvider, gatewayProvider).triggProsesserBehandling(behandling)
+
+                    BehandlingAvTypeDTO(
+                        behandlingsReferanse = behandling.referanse.referanse,
+                        opprettetDato = behandling.opprettetTidspunkt
+                    )
+                }
+                respond(dto)
+            }
+
+
+        @Suppress("UnauthorizedPost") route("/finn").post<Unit, List<SaksinfoDTO>, FinnSakForIdentDTO> { _, dto ->
+            val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
+                val repositoryProvider = repositoryRegistry.provider(connection)
+                val ident = Ident(dto.ident)
+                val person = repositoryProvider.provide<PersonRepository>().finn(ident)
+                val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                val resultatUtleder = ResultatUtleder(repositoryProvider)
+
+                if (person == null) {
+                    emptyList()
+                } else {
+                    // Her skal vi strengt tatt bare ha én sak?
+                    val saker = repositoryProvider.provide<SakRepository>().finnSakerFor(person)
+
+                    saker.map { sak ->
+                        val førstegangsbehandling = if (sak.status() == Status.AVSLUTTET) {
+                            behandlingRepository.hentAlleFor(sak.id).first {
+                                it.typeBehandling() == TypeBehandling.Førstegangsbehandling
+                            }
+                        } else null
+
+                        val resultat = if (førstegangsbehandling != null) {
+                            resultatUtleder.utledResultatFørstegangsBehandling(førstegangsbehandling)
+                        } else null
+
+                        SaksinfoDTO(
+                            saksnummer = sak.saksnummer.toString(),
+                            opprettetTidspunkt = sak.opprettetTidspunkt,
+                            periode = sak.rettighetsperiode,
+                            ident = sak.person.aktivIdent().identifikator,
+                            resultat = resultat.let {
+                                when (it) {
+                                    Resultat.INNVILGELSE -> ResultatKode.INNVILGET
+                                    Resultat.AVSLAG -> ResultatKode.AVSLAG
+                                    Resultat.TRUKKET -> ResultatKode.TRUKKET
+                                    Resultat.AVBRUTT -> ResultatKode.AVBRUTT
+                                    null -> null
+                                }
+                            })
+                    }
+                }
+
+            }
+            // Midlertidig fiks for ikke å brekke postmottak
+            val token = token()
+            if (token.isClientCredentials()) {
+                respond(saker)
+            } else {
+                val sakerMedTilgang = saker.filter { sak ->
+                    tilgangGateway.sjekkTilgangTilSak(
+                        Saksnummer(sak.saksnummer), token, Operasjon.SE
+                    )
+                }
+
+                if (sakerMedTilgang.isNotEmpty()) {
+                    respond(sakerMedTilgang)
+                } else {
+                    // TODO:
+                    //  Bedre skille på om sak faktisk ikke finnes eller om sb mangler tilgang (unntak på gradering)
+                    throw VerdiIkkeFunnetException("Fant ikke sak for ident")
+                }
+            }
+        }
+
+        route("/finnSisteBehandlinger") {
+            authorizedPost<Unit, NullableSakOgBehandlingDTO, FinnBehandlingForIdentDTO>(
+                modules = arrayOf(TagModule(listOf(Tags.Sak))), routeConfig = AuthorizationBodyPathConfig(
+                    operasjon = Operasjon.SAKSBEHANDLE,
+                    applicationsOnly = true,
+                    applicationRole = "finn-siste-behandlinger",
+                )
+            ) { _, dto ->
+                val behandlinger: SakOgBehandlingDTO? = dataSource.transaction(readOnly = true) { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider)
+                    val ident = Ident(dto.ident)
+                    val person = repositoryProvider.provide<PersonRepository>().finn(ident)
+
+                    if (person == null) {
+                        null
+                    } else {
+                        val sakerForPerson = repositoryProvider.provide<SakRepository>().finnSakerFor(person)
+
+                        log.info("Fant ${sakerForPerson.size} saker for person. Mottattidspunkt: ${dto.mottattTidspunkt}")
+
+                        val sak = sakerForPerson.filter { sak ->
+                            sak.rettighetsperiode.inneholder(dto.mottattTidspunkt) && sak.status() != Status.AVSLUTTET
+                        }.minByOrNull { it.opprettetTidspunkt }
+
+                        if (sak == null) {
+                            log.info("Fant ingen aktive saker for person. Rettighetsperioder: ${sakerForPerson.map { it.rettighetsperiode }}")
+                            null
+                        } else {
+                            val behandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
+
+                            SakOgBehandlingDTO(
+                                personIdent = sak.person.aktivIdent().toString(),
+                                saksnummer = sak.saksnummer.toString(),
+                                status = sak.status().toString(),
+                                sisteBehandlingStatus = behandling?.status().toString()
+                            )
+                        }
+                    }
+                }
+                respond(NullableSakOgBehandlingDTO(behandlinger))
+            }
+        }
+
+
+
+        route("/finnEllerOpprett") {
+            authorizedPost<Unit, SaksinfoDTO, FinnEllerOpprettSakDTO>(
+                modules = arrayOf(TagModule(listOf(Tags.Sak))), routeConfig = AuthorizationBodyPathConfig(
+                    operasjon = Operasjon.SAKSBEHANDLE,
+                    applicationsOnly = true,
+                    applicationRole = "opprett-sak",
+                )
+            ) { _, dto ->
+                val saken: SaksinfoDTO = dataSource.transaction { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val ident = Ident(dto.ident)
+                    val periode = Periode(
+                        dto.søknadsdato, dto.søknadsdato.plusYears(1).minusDays(1)
+                    ) // Setter til fra og med dagens dato, til og med et år frem i tid minus en dag som er tilsvarende "vedtakslengde" i forskriften
+                    val sak = PersonOgSakService(
+                        pdlGateway = identGateway,
+                        personRepository = repositoryProvider.provide<PersonRepository>(),
+                        sakRepository = repositoryProvider.provide<SakRepository>()
+                    ).finnEllerOpprett(ident = ident, periode = periode)
+
+                    SaksinfoDTO(
+                        saksnummer = sak.saksnummer.toString(),
+                        opprettetTidspunkt = sak.opprettetTidspunkt,
+                        periode = periode,
+                        ident = sak.person.aktivIdent().identifikator
+                    )
+                }
+                respond(saken)
+            }
+        }
+
+        route("/siste/{antall}").get<HentAntallSakerDTO, List<SaksinfoDTO>>(TagModule(listOf(Tags.Sak))) { req ->
+            if (Miljø.er() == MiljøKode.DEV || Miljø.er() == MiljøKode.LOKALT) {
+                val saker: List<SaksinfoDTO> = dataSource.transaction(readOnly = true) { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    repositoryProvider.provide<SakRepository>()
+                        .finnSiste(req.antall)
+                        .map { sak ->
+                            SaksinfoDTO(
+                                saksnummer = sak.saksnummer.toString(),
+                                opprettetTidspunkt = sak.opprettetTidspunkt,
+                                periode = sak.rettighetsperiode,
+                                ident = sak.person.aktivIdent().identifikator
+                            )
+                        }
+                }
+                respond(saker)
+            } else {
+                throw VerdiIkkeFunnetException("Fant ingen saker")
+            }
+        }
+
+        route("/{saksnummer}") {
+            authorizedGet<HentSakDTO, UtvidetSaksinfoDTO>(
+                AuthorizationParamPathConfig(
+                    relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
+                    sakPathParam = SakPathParam("saksnummer")
+                ),
+                null,
+                modules = arrayOf(TagModule(listOf(Tags.Sak))),
+            ) { req ->
+                val saksnummer = req.saksnummer
+                val (sak, behandlinger, søknadErTrukket) = dataSource.transaction(readOnly = true) { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    SakOgBehandlingService(repositoryProvider).finnSakOgBehandlinger(Saksnummer(saksnummer))
+                }
+
+                respond(
+                    UtvidetSaksinfoDTO(
+                        saksnummer = sak.saksnummer.toString(),
+                        opprettetTidspunkt = sak.opprettetTidspunkt,
+                        periode = sak.rettighetsperiode,
+                        ident = sak.person.aktivIdent().identifikator,
+                        behandlinger = behandlinger,
+                        status = sak.status(),
+                        søknadErTrukket = søknadErTrukket
+                    )
+                )
+            }
+        }
+
+        @Suppress("UnauthorizedPost") // Søkeresultat skal vises uansett tilgang
+        route("/sok").post<Unit, List<SøkPåSakDTO>, SøkDto> { _, søkDto ->
+            val pdlGateway = gatewayProvider.provide<PersoninfoGateway>()
+            val tilgangGateway = gatewayProvider.provide<TilgangGateway>()
+
+            val saker = dataSource.transaction(readOnly = true) { connection ->
+                val repositoryProvider = repositoryRegistry.provider(connection)
+                SøkPåSakService(repositoryProvider).søkEtterSaker(søkDto.søketekst.trim())
+            }
+
+            if (saker.isNotEmpty()) {
+                respond(
+                    saker.map { sak ->
+                        SøkPåSakDTO(
+                            ident = sak.person.aktivIdent().identifikator,
+                            navn = pdlGateway.hentPersoninfoForIdent(sak.person.aktivIdent(), token()).fulltNavn(),
+                            saksnummer = sak.saksnummer,
+                            opprettetTidspunkt = sak.opprettetTidspunkt.toLocalDate(),
+                            harTilgang = tilgangGateway.sjekkTilgangTilSak(
+                                saksnummer = sak.saksnummer,
+                                token(),
+                                Operasjon.SE
+                            )
+                        )
+                    }
+                )
+            } else {
+                throw VerdiIkkeFunnetException("Fant ingen saker knyttet til søketeksten.")
+            }
+        }
+
+        route("/{saksnummer}/finnBehandlingerAvType") {
+            authorizedPost<SaksnummerParameter, List<BehandlingAvTypeDTO>, TypeBehandling>(
+                routeConfig = AuthorizationMachineToMachineConfig(
+                    authorizedAzps = listOf(Azp.Postmottak.uuid)
+                ).medAzureTokenGen()
+            ) { saksnummer, body ->
+                val behandlinger = dataSource.transaction { connection ->
+                    val sakRepository = repositoryRegistry.provider(connection).provide<SakRepository>()
+                    val behandlingRepository = repositoryRegistry.provider(connection).provide<BehandlingRepository>()
+                    val sakId = sakRepository.hent(Saksnummer(saksnummer.saksnummer)).id
+
+                    val behandlinger = behandlingRepository.hentAlleFor(sakId)
+
+                    behandlinger.filter { it.typeBehandling() == body }.map {
+                        BehandlingAvTypeDTO(
+                            it.referanse.referanse, it.opprettetTidspunkt
+                        )
+                    }
+
+
+                }
+                respond(behandlinger)
+            }
+        }
+
+        route("/{saksnummer}/personinformasjon") {
+            authorizedGet<HentSakDTO, SakPersoninfoDTO>(
+                AuthorizationParamPathConfig(
+                    relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
+                    sakPathParam = SakPathParam("saksnummer"), applicationRole = "hent-personinfo"
+                )
+            ) { req ->
+
+                val saksnummer = req.saksnummer
+
+                val ident = dataSource.transaction(readOnly = true) { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val sak = repositoryProvider.provide<SakRepository>().hent(saksnummer = Saksnummer(saksnummer))
+                    sak.person.aktivIdent()
+                }
+
+                val personinfo = personinfoGateway.hentPersoninfoForIdent(ident, token())
+
+                respond(
+                    SakPersoninfoDTO(
+                        fnr = personinfo.ident.identifikator,
+                        navn = personinfo.fulltNavn(),
+                        fødselsdato = personinfo.fødselsdato,
+                        dødsdato = personinfo.dødsdato,
+                    )
+                )
+            }
+        }
+
+        route("{saksnummer}/historikk").authorizedGet<HentSakDTO, List<BehandlingHistorikkDTO>>(
+            AuthorizationParamPathConfig(
+                relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
+                sakPathParam = SakPathParam("saksnummer")
+            ),
+            null,
+            modules = arrayOf(TagModule(listOf(Tags.Sak))),
+        ) { req ->
+            val saksnummer = req.saksnummer
+
+            val historikk = dataSource.transaction(readOnly = true) { connection ->
+                val repositoryProvider = repositoryRegistry.provider(connection)
+                val sakRepository = repositoryProvider.provide<SakRepository>()
+
+                val sakId = sakRepository.hent(Saksnummer(saksnummer)).id
+                val saksHistorikkService = SaksHistorikkService(repositoryProvider)
+
+                saksHistorikkService.utledSaksHistorikk(sakId)
+            }
+            val navidenterIHistorikk = historikk.flatMap { it.hendelser.mapNotNull{ it.utførtAv} }
+            val visningsnavn = ansattInfoService.hentAnsatteVisningsnavn(navidenterIHistorikk).mapNotNull { it }
+            val visningsnavnMap = visningsnavn.associateBy( { it.navident }, {it.visningsnavn })
+            val historikkMedVisningsnavn = historikk.map{
+                val nyeHendelser = it.hendelser.map{
+                    val navn = visningsnavnMap[it.utførtAv] ?: it.utførtAv
+                    it.copy(utførtAv = navn)
+                }
+                it.copy(hendelser = nyeHendelser)
+            }
+            respond(historikkMedVisningsnavn)
+        }
+    }
+}

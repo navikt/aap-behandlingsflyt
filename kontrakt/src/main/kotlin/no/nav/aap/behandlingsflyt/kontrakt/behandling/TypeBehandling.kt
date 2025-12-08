@@ -9,7 +9,7 @@ public enum class TypeBehandling(
 ) {
     Førstegangsbehandling("ae0034"),
     Revurdering("ae0028"),
-    Tilbakekreving(""),
+    Tilbakekreving("ae0203"),
     Klage("ae0058"),
     SvarFraAndreinstans("svar-fra-andreinstans"),
     OppfølgingsBehandling("oppfølgingsbehandling"),

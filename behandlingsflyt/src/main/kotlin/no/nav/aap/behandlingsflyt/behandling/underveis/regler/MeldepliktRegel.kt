@@ -9,6 +9,7 @@ import no.nav.aap.komponenter.tidslinje.JoinStyle
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.Clock
@@ -44,11 +45,43 @@ class MeldepliktRegel(
         }
     }
 
+    companion object {
+        fun fastsatteDagerMedMeldeplikt(
+            vedtaksdatoFørstegangsbehandling: LocalDate?,
+            fritak: Tidslinje<Fritaksvurdering.FritaksvurderingData>,
+            meldeperioder: List<Periode>,
+            underveis: Tidslinje<Underveisperiode>,
+        ): List<Periode> {
+            /* TODO: uheldig at periodene vi sender til meldekort-backend ikke deler implementasjon
+             * med vilkårsprøvingen.
+             */
+            val meldepliktFraOgMed = vedtaksdatoFørstegangsbehandling?.plusDays(1)
+                ?: return emptyList()
+
+            val harRett = underveis.mapValue {
+                it.rettighetsType != null
+            }
+
+            return meldeperioder
+                .asSequence()
+                .map { Periode(it.fom, it.fom.plusDays(7)) }
+                .filter { fastsatteDager -> meldepliktFraOgMed <= fastsatteDager.fom }
+                .filter { fastsatteDager ->
+                    fritak.begrensetTil(fastsatteDager).segmenter().none { it.verdi.harFritak }
+                }
+                .filter { fastsatteDager ->
+                    harRett.begrensetTil(fastsatteDager).segmenter().any { harRett -> harRett.verdi }
+                }
+                .toList()
+        }
+    }
+
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
         require(input.periodeForVurdering.inneholder(resultat.helePerioden())) {
             "kan ikke vurdere utenfor rettighetsperioden fordi meldeperioden ikke er definert"
         }
 
+        // Bygg opp input-tidslinje
         val meldepliktDataTidslinje =
             Tidslinje(input.periodeForVurdering, MeldepliktData())
                 .outerJoin(meldekortTidslinje(input), MeldepliktData.Companion::merge)
@@ -59,15 +92,20 @@ class MeldepliktRegel(
                 .outerJoin(utenRettTidslinje(resultat), MeldepliktData.Companion::merge)
                 .splittOppIPerioder(resultat.segmenter().map { vurdering -> vurdering.verdi.meldeperiode() })
 
-
+        // Kjør meldeplikt-regel-logikk
+        var forrigePeriode: Segment<Tidslinje<MeldepliktData>>? = null
         val meldepliktVurderinger = meldepliktDataTidslinje
             .segmenter()
-            .fold(Tidslinje<MeldepliktVurdering>()) { meldeperioderVurdert, nåværendeMeldeperiodeSegment ->
+            .fold(Tidslinje<MeldepliktVurdering>()) { meldeperioderVurdert, nåværendeMeldeperiodeSegment: Segment<Tidslinje<MeldepliktData>> ->
                 val neste = vurderMeldeperiode(
                     meldeperiode = nåværendeMeldeperiodeSegment.periode,
                     dataForMeldeperiode = nåværendeMeldeperiodeSegment.verdi,
-                    forrigeSegmentOppfylt = meldeperioderVurdert.segmenter().lastOrNull()?.verdi?.utfall == OPPFYLT
+                    forrigeSegmentOppfylt = meldeperioderVurdert.segmenter().lastOrNull()?.verdi?.utfall == OPPFYLT,
+                    dataForForrigeMeldeperiode = forrigePeriode?.verdi,
                 )
+                if (input.unntakMeldepliktDesemberEnabled) {
+                    forrigePeriode = nåværendeMeldeperiodeSegment
+                }
                 meldeperioderVurdert.kombiner(neste, StandardSammenslåere.xor())
             }.begrensetTil(input.periodeForVurdering)
 
@@ -79,7 +117,8 @@ class MeldepliktRegel(
     }
 
     private fun førsteDagMedRettTidslinje(vurderinger: Tidslinje<Vurdering>): Tidslinje<MeldepliktData> {
-        val dagenFørVurderinger = vurderinger.segmenter().firstOrNull()?.periode?.fom?.minusDays(1) ?: return Tidslinje()
+        val dagenFørVurderinger =
+            vurderinger.segmenter().firstOrNull()?.periode?.fom?.minusDays(1) ?: return Tidslinje()
         val virtuellPrefixUtenRett = listOf(Segment(Periode(dagenFørVurderinger, dagenFørVurderinger), null))
 
         return (virtuellPrefixUtenRett + vurderinger.mapValue { it.fårAapEtter }.komprimer().segmenter())
@@ -104,31 +143,6 @@ class MeldepliktRegel(
     }
 
 
-    fun fastsatteDagerMedMeldeplikt(
-        vedtaksdatoFørstegangsbehandling: LocalDate?,
-        fritak: Tidslinje<Fritaksvurdering.FritaksvurderingData>,
-        meldeperioder: List<Periode>,
-        underveis: Tidslinje<Underveisperiode>,
-    ): List<Periode> {
-        /* TODO: uheldig at periodene vi sender til meldekort-backend ikke deler implementasjon
-         * med vilkårsprøvingen.
-         */
-        val meldepliktFraOgMed = vedtaksdatoFørstegangsbehandling?.plusDays(1)
-            ?: return emptyList()
-
-        val harRett = underveis.mapValue {
-            it.rettighetsType != null
-        }
-
-        return meldeperioder
-            .asSequence()
-            .map { Periode(it.fom, it.fom.plusDays(7)) }
-            .filter { fastsatteDager -> meldepliktFraOgMed <= fastsatteDager.fom }
-            .filter { fastsatteDager -> fritak.begrensetTil(fastsatteDager).segmenter().none { it.verdi.harFritak } }
-            .filter { fastsatteDager -> harRett.begrensetTil(fastsatteDager).segmenter().any { harRett -> harRett.verdi } }
-            .toList()
-    }
-
     fun meldepliktFraOgMed(input: UnderveisInput): LocalDate? {
         return input.vedtaksdatoFørstegangsbehandling?.plusDays(1)
     }
@@ -137,7 +151,7 @@ class MeldepliktRegel(
     private fun fritaksvurderingTidslinje(input: UnderveisInput): Tidslinje<MeldepliktData> {
         return input.meldepliktGrunnlag.tilTidslinje().mapValue { MeldepliktData(fritaksvurdering = it) }
     }
-    
+
     private fun overstyringMeldepliktVurderingTidslinje(input: UnderveisInput): Tidslinje<MeldepliktData> {
         return input.overstyringMeldepliktGrunnlag.tilTidslinje().mapValue {
             MeldepliktData(overstyringMeldeplikt = it)
@@ -150,8 +164,7 @@ class MeldepliktRegel(
             Tidslinje(input.periodeForVurdering, MeldepliktData(førVedtak = true))
         } else if (meldepliktFraOgMed <= input.periodeForVurdering.fom) {
             Tidslinje(input.periodeForVurdering, MeldepliktData(førVedtak = false))
-        }
-        else {
+        } else {
             Tidslinje(
                 listOf(
                     Segment(
@@ -173,40 +186,36 @@ class MeldepliktRegel(
                 Periode(dato, dato),
                 MeldepliktData(meldekort = journalpostId)
             )
-        }.let { Tidslinje(it) }
+        }.let(::Tidslinje)
     }
-
 
     private fun vurderMeldeperiode(
         meldeperiode: Periode,
         dataForMeldeperiode: Tidslinje<MeldepliktData>,
         forrigeSegmentOppfylt: Boolean,
+        dataForForrigeMeldeperiode: Tidslinje<MeldepliktData>?,
     ): Tidslinje<MeldepliktVurdering> {
         val meldefrist = meldeperiode.fom.plusDays(7)
         val dagensDato = LocalDate.now(clock)
 
-        val førsteDokument = dataForMeldeperiode.segmenter().firstNotNullOfOrNull {
-            val innsending = it.verdi.meldekort
-            when {
-                it.verdi.førVedtak -> Segment(it.periode, MeldepliktVurdering.FørVedtak)
-                it.verdi.utenRett ->
-                    Segment(it.periode, MeldepliktVurdering.UtenRett)
-                it.verdi.førsteDagMedRettForPerioden -> Segment(
-                    it.periode,
-                    MeldepliktVurdering.FørsteMeldeperiodeMedRett
-                )
+        val potensieltTidligDokument = unntakFastsattMeldedag[meldeperiode.fom]?.let { nyTidligereFrist ->
+            val begrensetForrigePeriode =
+                dataForForrigeMeldeperiode?.begrensetTil(Periode(nyTidligereFrist, LocalDate.MAX)).orEmpty()
 
-                it.verdi.fritaksvurdering?.harFritak == true -> Segment(it.periode, MeldepliktVurdering.Fritak)
-                it.verdi.overstyringMeldeplikt?.meldepliktOverstyringStatus == MeldepliktOverstyringStatus.RIMELIG_GRUNN ->
-                    Segment(it.periode, MeldepliktVurdering.RimeligGrunnOverstyring)
-                it.verdi.overstyringMeldeplikt?.meldepliktOverstyringStatus == MeldepliktOverstyringStatus.HAR_MELDT_SEG ->
-                    Segment(it.periode, MeldepliktVurdering.MeldtSegOverstyring)
-                innsending != null -> Segment(it.periode, MeldepliktVurdering.MeldtSeg(innsending))
-                else -> null
+            begrensetForrigePeriode.segmenter().firstNotNullOfOrNull {
+                val innsending = it.verdi.meldekort
+                when {
+                    innsending != null -> Segment(it.periode, MeldepliktVurdering.MeldtSeg(innsending))
+                    else -> null
+                }
             }
         }
 
-        val vanligVurdering = vurderMeldeperiodeIsolert(meldeperiode, førsteDokument)
+        val førsteDokument = førsteDokumentForMeldepliktdataTidslinje(dataForMeldeperiode)
+
+        val prioritertDokument = potensieltTidligDokument ?: førsteDokument
+
+        val vanligVurdering = vurderMeldeperiodeIsolert(meldeperiode, prioritertDokument)
 
         if (meldeperiode.tom < dagensDato) {
             /* Meldeperioden er i helhet historisk, så vurderingen av meldeperioden
@@ -217,7 +226,7 @@ class MeldepliktRegel(
         /* Meldeperioden er ikke historisk. Det kan være ting i fremtiden som endrer
          * utfallet av meldeperioden. For at fremtidige vurderinger skal bli realistiske,
          * antar vi at medlemmet fortsetter å melde seg hvis de meldte seg, og at de
-         * fortsetter å ikke melder seg hvis de ikke har meldt seg. */
+         * fortsetter å ikke melde seg hvis de ikke har meldt seg. */
 
         if (dagensDato < meldeperiode.fom) {
             return vanligVurdering.mapValue { vurdering ->
@@ -245,7 +254,7 @@ class MeldepliktRegel(
                     else
                         MeldepliktVurdering.FremtidigIkkeOppfylt,
                 )
-            }.let { Tidslinje(it) }
+            }.let(::Tidslinje)
         }
 
         if (meldefrist < dagensDato) {
@@ -266,6 +275,31 @@ class MeldepliktRegel(
 
         error("skal ikke skje: uhåndtert case")
     }
+
+    private fun førsteDokumentForMeldepliktdataTidslinje(dataForMeldeperiode: Tidslinje<MeldepliktData>): Segment<out MeldepliktVurdering>? =
+        dataForMeldeperiode.segmenter().firstNotNullOfOrNull {
+            val innsending = it.verdi.meldekort
+            when {
+                it.verdi.førVedtak -> Segment(it.periode, MeldepliktVurdering.FørVedtak)
+                it.verdi.utenRett ->
+                    Segment(it.periode, MeldepliktVurdering.UtenRett)
+
+                it.verdi.førsteDagMedRettForPerioden -> Segment(
+                    it.periode,
+                    MeldepliktVurdering.FørsteMeldeperiodeMedRett
+                )
+
+                it.verdi.fritaksvurdering?.harFritak == true -> Segment(it.periode, MeldepliktVurdering.Fritak)
+                it.verdi.overstyringMeldeplikt?.meldepliktOverstyringStatus == MeldepliktOverstyringStatus.RIMELIG_GRUNN ->
+                    Segment(it.periode, MeldepliktVurdering.RimeligGrunnOverstyring)
+
+                it.verdi.overstyringMeldeplikt?.meldepliktOverstyringStatus == MeldepliktOverstyringStatus.HAR_MELDT_SEG ->
+                    Segment(it.periode, MeldepliktVurdering.MeldtSegOverstyring)
+
+                innsending != null -> Segment(it.periode, MeldepliktVurdering.MeldtSeg(innsending))
+                else -> null
+            }
+        }
 
     private fun vurderMeldeperiodeIsolert(
         meldeperiode: Periode,

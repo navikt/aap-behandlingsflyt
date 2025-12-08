@@ -10,11 +10,6 @@ data class InntektPerÅr(
     val manuellInntektVurdering: ManuellInntektVurdering? = null
 ) : Comparable<InntektPerÅr> {
     constructor(år: Int, beløp: Beløp) : this(Year.of(år), beløp)
-    constructor(år: Int, beløp: Beløp, manuellInntektVurdering: ManuellInntektVurdering) : this(
-        Year.of(år),
-        beløp,
-        manuellInntektVurdering
-    )
 
     fun gUnit(): Grunnbeløp.BenyttetGjennomsnittsbeløp =
         Grunnbeløp.finnGUnit(år, beløp)

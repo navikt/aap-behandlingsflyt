@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.integrasjon.oppgave
 
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelseKafkaMelding
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
@@ -24,4 +25,9 @@ object OppgavestyringGatewayImpl : OppgavestyringGateway {
     override fun varsleHendelse(hendelse: BehandlingFlytStoppetHendelse) {
         client.post<_, Unit>(url.resolve("/oppdater-oppgaver"), PostRequest(body = hendelse))
     }
+
+    override fun varsleTilbakekrevingHendelse(hendelse: TilbakekrevingHendelseKafkaMelding) {
+        client.post<_, Unit>(url.resolve("/oppdater-tilbakekreving-oppgaver"), PostRequest(body = hendelse))
+    }
+
 }

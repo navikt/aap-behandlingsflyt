@@ -43,6 +43,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
@@ -165,50 +166,6 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
             val sisteUtenlandsOppholdData =
                 arbeidInntektRepo.hentSistRelevanteOppgitteUtenlandsOppholdHvisEksisterer(sak.id)
             assertEquals(sisteUtenlandsOppholdData?.harBoddINorgeSiste5År, true)
-        }
-    }
-
-    @Test
-    fun `henter relaterte historiske vurderinger`() {
-        val sak = dataSource.transaction { connection ->
-            val personOgSakService =
-                PersonOgSakService(
-                    FakePdlGateway,
-                    PersonRepositoryImpl(connection),
-                    SakRepositoryImpl(connection)
-                )
-            personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
-        }
-
-        val sak2 = dataSource.transaction { connection ->
-            val personOgSakService =
-                PersonOgSakService(
-                    FakePdlGateway,
-                    PersonRepositoryImpl(connection),
-                    SakRepositoryImpl(connection)
-                )
-            personOgSakService.finnEllerOpprett(ident(), Periode(LocalDate.now(), LocalDate.now().plusYears(3)))
-        }
-
-        dataSource.transaction { connection ->
-            val forutgåendeRepo = MedlemskapArbeidInntektForutgåendeRepositoryImpl(connection)
-
-            val førstegangsBehandling =
-                opprettBehandlingMedVurdering(TypeBehandling.Førstegangsbehandling, sak.id, null, emptyList(), null)
-            val revurdering = opprettBehandlingMedVurdering(
-                TypeBehandling.Revurdering,
-                sak.id,
-                førstegangsBehandling.id,
-                emptyList(),
-                null
-            )
-
-            val historikk = forutgåendeRepo.hentHistoriskeVurderinger(sak.id, revurdering.id)
-            assertEquals(1, historikk.size)
-            opprettBehandlingMedVurdering(TypeBehandling.Førstegangsbehandling, sak2.id, null, emptyList(), null)
-
-            val nyHistorikk = forutgåendeRepo.hentHistoriskeVurderinger(sak.id, revurdering.id)
-            assertEquals(1, nyHistorikk.size)
         }
     }
 

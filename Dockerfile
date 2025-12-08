@@ -1,6 +1,6 @@
 # Bruker Chainguard secure base image, https://sikkerhet.nav.no/docs/sikker-utvikling/baseimages
 
-FROM europe-north1-docker.pkg.dev/cgr-nav/pull-through/nav.no/jdk:openjdk-21
+FROM europe-north1-docker.pkg.dev/cgr-nav/pull-through/nav.no/jdk:openjdk-25
 
 WORKDIR /app
 COPY /app/build/libs/app-all.jar /app/app.jar

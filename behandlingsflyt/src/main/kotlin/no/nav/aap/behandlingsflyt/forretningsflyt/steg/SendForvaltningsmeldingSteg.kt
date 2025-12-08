@@ -30,7 +30,7 @@ class SendForvaltningsmeldingSteg(
                     !harAlleredeBestiltForvaltningsmeldingForBehandling(behandling)
                 ) {
                     val brevBehov = Forvaltningsmelding
-                    brevbestillingService.bestillV2(
+                    brevbestillingService.bestill(
                         behandlingId = behandlingId,
                         brevBehov = brevBehov,
                         unikReferanse = "${behandling.referanse}-${brevBehov.typeBrev}",

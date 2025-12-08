@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.datadeling.SakStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
+import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaStatusResponse
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DetaljertMeldekortDTO
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -21,13 +22,15 @@ class FakeApiInternGateway : ApiInternGateway {
         override fun konstruer(): ApiInternGateway {
             return FakeApiInternGateway()
         }
-
+        // No-op
     }
 
     override fun sendPerioder(ident: String, perioder: List<Periode>) {
+        // No-op
     }
 
     override fun sendSakStatus(ident: String, sakStatus: SakStatus) {
+        // No-op
     }
 
     override fun sendBehandling(
@@ -41,6 +44,7 @@ class FakeApiInternGateway : ApiInternGateway {
         vedtaksDato: LocalDate,
         rettighetsTypeTidslinje: Tidslinje<RettighetsType>
     ) {
+        // No-op
     }
 
     override fun sendDetaljertMeldekortListe(
@@ -48,5 +52,10 @@ class FakeApiInternGateway : ApiInternGateway {
         sakId: SakId,
         behandlingId: BehandlingId
     ){
+        // No-op
+    }
+
+    override fun hentArenaStatus(personidentifikatorer: List<String>): ArenaStatusResponse {
+        return ArenaStatusResponse(false)
     }
 }

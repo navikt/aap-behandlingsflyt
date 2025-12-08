@@ -101,6 +101,7 @@ class VurderLovvalgSteg private constructor(
             }
         }
 
+
         return Fullført
     }
 

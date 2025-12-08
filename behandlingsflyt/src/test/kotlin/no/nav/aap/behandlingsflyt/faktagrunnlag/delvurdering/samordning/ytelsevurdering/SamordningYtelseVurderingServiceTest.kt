@@ -83,6 +83,7 @@ class SamordningYtelseVurderingServiceTest {
         dataSource.transaction { connection ->
             val samordningYtelseVurderingInformasjonskrav = SamordningYtelseVurderingInformasjonskrav(
                 SamordningYtelseRepositoryImpl(connection),
+                SamordningVurderingRepositoryImpl(connection),
                 FakeTidligereVurderinger(),
                 AbakusForeldrepengerGateway(),
                 AbakusSykepengerGateway(),
@@ -130,6 +131,7 @@ class SamordningYtelseVurderingServiceTest {
         dataSource.transaction { connection ->
             val samordningYtelseVurderingInformasjonskrav = SamordningYtelseVurderingInformasjonskrav(
                 SamordningYtelseRepositoryImpl(connection),
+                SamordningVurderingRepositoryImpl(connection),
                 FakeTidligereVurderinger(),
                 AbakusForeldrepengerGateway(),
                 AbakusSykepengerGateway(),
@@ -161,6 +163,7 @@ class SamordningYtelseVurderingServiceTest {
             val repo = SamordningVurderingRepositoryImpl(connection)
             val samordningYtelseVurderingInformasjonskrav = SamordningYtelseVurderingInformasjonskrav(
                 SamordningYtelseRepositoryImpl(connection),
+                SamordningVurderingRepositoryImpl(connection),
                 FakeTidligereVurderinger(),
                 AbakusForeldrepengerGateway(),
                 AbakusSykepengerGateway(),
@@ -180,7 +183,7 @@ class SamordningYtelseVurderingServiceTest {
             opprettYtelseData(ytelseRepo, kontekst.behandlingId)
             opprettVurderingData(repo, kontekst.behandlingId)
             val nyData = klargjørOgOppdater(samordningYtelseVurderingInformasjonskrav, kontekst)
-            assertThat(nyData).isEqualTo(Informasjonskrav.Endret.ENDRET)
+            assertThat(nyData).isEqualTo(Informasjonskrav.Endret.IKKE_ENDRET)
         }
     }
 
@@ -265,7 +268,7 @@ class SamordningYtelseVurderingServiceTest {
         )
 
         assertThat(
-            SamordningYtelseVurderingInformasjonskrav.harEndringerIYtelser(
+            SamordningYtelseVurderingInformasjonskrav.harEndringerIYtelserIkkeDekketAvEksisterendeGrunnlag(
                 eksisterendeGrunnlag, ny
             )
         ).isFalse()

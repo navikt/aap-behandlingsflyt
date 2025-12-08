@@ -256,7 +256,7 @@ class FormkravStegTest {
         )
 
         every { brevbestillingServiceMock.hentBestillinger(any(), any()) } returns emptyList()
-        every { brevbestillingServiceMock.bestillV2(any(),any(),any(),any(),) } returns UUID.randomUUID()
+        every { brevbestillingServiceMock.bestill(any(),any(),any(),any(),) } returns UUID.randomUUID()
 
         val resultat = steg.utfør(kontekst)
 
@@ -266,7 +266,7 @@ class FormkravStegTest {
     @Test
     fun `FormkravSteg-utfører skal gi avklaringsbehov SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV og bestille brev om man har lagret en vurdering med ikke-oppfylte formkrav`() {
         every { behandlingRepositoryMock.hent(any<BehandlingId>()) } returns tomBehandling(BehandlingId(1L))
-        every { brevbestillingServiceMock.bestillV2(any(), any(), any(), any()) } returns UUID.randomUUID()
+        every { brevbestillingServiceMock.bestill(any(), any(), any(), any()) } returns UUID.randomUUID()
         every { formkravRepositoryMock.lagreVarsel(any(), any()) } returns Unit
 
         val kontekst = FlytKontekstMedPerioder(
@@ -332,7 +332,7 @@ class FormkravStegTest {
         val avklaringsbehovene = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(BehandlingId(1))
         assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV)?.definisjon).isEqualTo(Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV)
 
-        verify { brevbestillingServiceMock.bestillV2(BehandlingId(1L), any(), any(), any()) }
+        verify { brevbestillingServiceMock.bestill(BehandlingId(1L), any(), any(), any()) }
     }
 
     @Test

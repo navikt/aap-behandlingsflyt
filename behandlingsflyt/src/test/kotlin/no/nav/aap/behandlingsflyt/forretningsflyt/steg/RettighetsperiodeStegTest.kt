@@ -204,7 +204,7 @@ class RettighetsperiodeStegTest {
         val avklaringsbehovene = Avklaringsbehovene(InMemoryAvklaringsbehovRepository, behandling.id)
 
         // Dette er nok litt søkt scenario, men legger til et tidligere avklaringsbehov med status OPPRETTET
-        avklaringsbehovene.leggTil(listOf(Definisjon.VURDER_RETTIGHETSPERIODE), StegType.VURDER_RETTIGHETSPERIODE)
+        avklaringsbehovene.leggTil(listOf(Definisjon.VURDER_RETTIGHETSPERIODE), StegType.VURDER_RETTIGHETSPERIODE, null, null)
 
         every { avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id) } returns avklaringsbehovene
         every { rettighetsperiodeRepository.hentVurdering(forrigeBehandling.id) } returns null
@@ -216,7 +216,7 @@ class RettighetsperiodeStegTest {
     }
 
     private fun leggTilLøstOgAvsluttetAvklaringsbehov(avklaringsbehovene: Avklaringsbehovene) {
-        avklaringsbehovene.leggTil(listOf(Definisjon.VURDER_RETTIGHETSPERIODE), StegType.VURDER_RETTIGHETSPERIODE)
+        avklaringsbehovene.leggTil(listOf(Definisjon.VURDER_RETTIGHETSPERIODE), StegType.VURDER_RETTIGHETSPERIODE, null, null)
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.VURDER_RETTIGHETSPERIODE, "begrunnelse", "saksbehandler")
         avklaringsbehovene.avslutt(Definisjon.VURDER_RETTIGHETSPERIODE)
     }

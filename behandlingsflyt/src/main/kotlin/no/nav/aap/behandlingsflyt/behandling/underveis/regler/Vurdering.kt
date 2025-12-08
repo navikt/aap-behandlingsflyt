@@ -23,6 +23,8 @@ data class Vurdering(
     internal val soningsVurdering: SoningVurdering? = null,
     private val meldeperiode: Periode? = null,
     val varighetVurdering: VarighetVurdering? = null,
+    private val reduksjonArbeidOverGrenseEnabled: Boolean? = null,
+    private val reduksjonMeldepliktEnabled: Boolean? = null,
 ) {
     fun leggTilRettighetstype(rettighetstype: RettighetsType): Vurdering {
         return copy(fårAapEtter = rettighetstype)
@@ -77,7 +79,7 @@ data class Vurdering(
     }
 
     private fun bryterOppholdskrav(): Boolean {
-        return opphørEtterOppholdskrav() || stansEtterOppholdskrav();
+        return opphørEtterOppholdskrav() || stansEtterOppholdskrav()
     }
 
     private fun opphørEtterOppholdskrav(): Boolean {
@@ -90,8 +92,14 @@ data class Vurdering(
 
     fun harRett(): Boolean {
         return fårAapEtter != null &&
-                arbeiderMindreEnnGrenseverdi() &&
-                harOverholdtMeldeplikten() &&
+                (when (reduksjonArbeidOverGrenseEnabled) {
+                    null, false -> arbeiderMindreEnnGrenseverdi()
+                    true -> true
+                }) &&
+                (when (reduksjonMeldepliktEnabled) {
+                    false, null -> harOverholdtMeldeplikten()
+                    true -> true
+                }) &&
                 sonerIkke() &&
                 !bryterAktivitetsplikt11_7() &&
                 !bryterOppholdskrav() &&
@@ -118,8 +126,14 @@ data class Vurdering(
         return gradering == null || grenseverdi == null || grenseverdi() >= gradering.andelArbeid
     }
 
-    fun rettighetsType(): RettighetsType? {
+    /** Rettighetstype før vi har kjørt underveissteget. */
+    fun preliminærRettighetsType(): RettighetsType? {
         return fårAapEtter
+    }
+
+    /** Rettighetstype etter vi har kjørt underveissteget. */
+    fun endeligRettighetsType(): RettighetsType? {
+        return if (harRett()) preliminærRettighetsType() else null
     }
 
     fun grenseverdi(): Prosent {
@@ -162,9 +176,9 @@ data class Vurdering(
             return UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT_11_7_OPPHØR
         } else if (stansEtterBruddPåAktivitetsplikt11_7()) {
             return UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT_11_7_STANS
-        } else if (!arbeiderMindreEnnGrenseverdi()) {
+        } else if (reduksjonArbeidOverGrenseEnabled != true && !arbeiderMindreEnnGrenseverdi()) {
             return UnderveisÅrsak.ARBEIDER_MER_ENN_GRENSEVERDI
-        } else if (!harOverholdtMeldeplikten()) {
+        } else if (reduksjonMeldepliktEnabled != true && !harOverholdtMeldeplikten()) {
             return requireNotNull(meldepliktVurdering?.årsak)
         } else if (!varighetsvurderingOppfylt()) {
             return UnderveisÅrsak.VARIGHETSKVOTE_BRUKT_OPP

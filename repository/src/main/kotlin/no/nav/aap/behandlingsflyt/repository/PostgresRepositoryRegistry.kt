@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.brev.bestilling.BrevbestillingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.mellomlagring.MellomlagretVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.oppfølgingsbehandling.OppfølgingsBehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.behandling.tilbakekrevingsbehandling.TilbakekrevingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.Reduksjon11_9RepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.vedtak.VedtakRepositoryImpl
@@ -16,7 +17,6 @@ import no.nav.aap.behandlingsflyt.repository.behandling.vedtak.samid.SamIdReposi
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.InformasjonskravRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7RepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_9RepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomsvurderingForBrevRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.barnetillegg.BarnetilleggRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningAndreStatligeYtelserRepositoryImpl
@@ -51,6 +51,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.uføre.Ufør
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.yrkesskade.YrkesskadeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsgiver.SamordningArbeidsgiverRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.avbrytrevurdering.AvbrytRevurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.bistand.BistandRepositoryImpl
@@ -61,8 +62,8 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.refusjo
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.rettighetsperiode.VurderRettighetsperiodeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.student.StudentRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomsvurderingForBrevRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.avbrytrevurdering.AvbrytRevurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.søknad.TrukketSøknadRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.svarfraanadreinstans.SvarFraAndreinstansRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.log.ContextRepositoryImpl
@@ -145,4 +146,5 @@ val postgresRepositoryRegistry = RepositoryRegistry()
     .register<AvbrytRevurderingRepositoryImpl>()
     .register<Aktivitetsplikt11_9RepositoryImpl>()
     .register<Reduksjon11_9RepositoryImpl>()
+    .register<TilbakekrevingRepositoryImpl>()
 

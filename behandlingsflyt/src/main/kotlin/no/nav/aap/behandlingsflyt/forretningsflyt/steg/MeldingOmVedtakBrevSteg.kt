@@ -17,6 +17,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -30,6 +32,7 @@ class MeldingOmVedtakBrevSteg(
     private val trekkKlageService: TrekkKlageService,
     private val avklaringsbehovService: AvklaringsbehovService,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val unleashGateway: UnleashGateway,
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         brevUtlederService = BrevUtlederService(repositoryProvider, gatewayProvider),
@@ -37,7 +40,8 @@ class MeldingOmVedtakBrevSteg(
         behandlingRepository = repositoryProvider.provide(),
         trekkKlageService = TrekkKlageService(repositoryProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
-        avklaringsbehovRepository = repositoryProvider.provide()
+        avklaringsbehovRepository = repositoryProvider.provide(),
+        unleashGateway = gatewayProvider.provide(),
     )
 
     /**
@@ -95,12 +99,20 @@ class MeldingOmVedtakBrevSteg(
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
         log.info("Bestiller brev for sak ${kontekst.sakId}.")
         val unikReferanse = "${behandling.referanse}-${brevBehov.typeBrev}"
-        brevbestillingService.bestillV2(
+        brevbestillingService.bestill(
             behandlingId = kontekst.behandlingId,
             brevBehov = brevBehov,
             unikReferanse = unikReferanse,
             ferdigstillAutomatisk = false,
+            brukApiV3 = brukApiV3(kontekst.behandlingId)
         )
+    }
+
+    private fun brukApiV3(behandlingId: BehandlingId): Boolean {
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
+        val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.FATTE_VEDTAK) ?: return false
+        val endretAv = avklaringsbehov.endretAv()
+        return unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevbyggerV3, endretAv)
     }
 
     companion object : FlytSteg {

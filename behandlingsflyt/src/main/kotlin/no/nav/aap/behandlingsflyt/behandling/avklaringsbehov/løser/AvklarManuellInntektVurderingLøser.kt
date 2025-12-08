@@ -6,39 +6,66 @@ import no.nav.aap.behandlingsflyt.behandling.beregning.BeregningService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.math.BigDecimal
+import java.time.Year
 
 class AvklarManuellInntektVurderingLøser(
     private val manuellInntektGrunnlagRepository: ManuellInntektGrunnlagRepository,
-    private val beregningService: BeregningService
+    private val beregningService: BeregningService,
+    private val unleashGateway: UnleashGateway
 ) : AvklaringsbehovsLøser<AvklarManuellInntektVurderingLøsning> {
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         manuellInntektGrunnlagRepository = repositoryProvider.provide(),
-        beregningService = BeregningService(repositoryProvider)
+        beregningService = BeregningService(repositoryProvider),
+        unleashGateway = gatewayProvider.provide()
     )
 
     override fun løs(
         kontekst: AvklaringsbehovKontekst,
         løsning: AvklarManuellInntektVurderingLøsning
     ): LøsningsResultat {
-        val relevanteÅr = beregningService.utledRelevanteBeregningsÅr(kontekst.behandlingId())
-        val sisteRelevanteÅr = relevanteÅr.max()
+        val relevantePeriode = beregningService.utledRelevanteBeregningsÅr(kontekst.behandlingId())
+        val sisteRelevanteÅr = relevantePeriode.max()
 
-        if (løsning.manuellVurderingForManglendeInntekt.belop < BigDecimal.ZERO) {
+        if ((løsning.manuellVurderingForManglendeInntekt.belop != null && løsning.manuellVurderingForManglendeInntekt.belop < BigDecimal.ZERO)
+            || løsning.manuellVurderingForManglendeInntekt.vurderinger?.any { it.beløp != null && it.beløp < BigDecimal.ZERO } == true
+            || løsning.manuellVurderingForManglendeInntekt.vurderinger?.any { it.eøsBeløp != null && it.eøsBeløp < BigDecimal.ZERO } == true
+        ) {
             throw UgyldigForespørselException("Inntekt kan ikke være negativ")
         }
 
+        val vurderinger =
+            if (unleashGateway.isEnabled(BehandlingsflytFeature.EOSBeregning) && løsning.manuellVurderingForManglendeInntekt.vurderinger != null) {
+                val begrunnelse = løsning.manuellVurderingForManglendeInntekt.begrunnelse
+                løsning.manuellVurderingForManglendeInntekt.vurderinger.map { vurdering ->
+                    ManuellInntektVurdering(
+                        begrunnelse = begrunnelse,
+                        belop = vurdering.beløp?.let { Beløp(it) },
+                        vurdertAv = kontekst.bruker.ident,
+                        år = Year.of(vurdering.år),
+                        eøsBeløp = vurdering.eøsBeløp?.let { Beløp(it) },
+                    )
+                }.toSet()
+            } else {
+                setOf(
+                    ManuellInntektVurdering(
+                        begrunnelse = løsning.manuellVurderingForManglendeInntekt.begrunnelse,
+                        belop = Beløp(løsning.manuellVurderingForManglendeInntekt.belop!!),
+                        vurdertAv = kontekst.bruker.ident,
+                        år = sisteRelevanteÅr
+                    )
+                )
+            }
+
         manuellInntektGrunnlagRepository.lagre(
             behandlingId = kontekst.behandlingId(),
-            manuellVurdering = ManuellInntektVurdering(
-                begrunnelse = løsning.manuellVurderingForManglendeInntekt.begrunnelse,
-                belop = løsning.manuellVurderingForManglendeInntekt.belop.let(::Beløp),
-                vurdertAv = kontekst.bruker.ident,
-                år = sisteRelevanteÅr
-            )
+            manuellVurderinger = vurderinger
         )
         return LøsningsResultat("Vurdert manuell inntekt i inntektsgrunnlag.")
     }

@@ -179,7 +179,7 @@ class FormkravSteg (
             val behandling = behandlingRepository.hent(behandlingId)
             val vårReferanse = "${behandling.referanse}-${brevBehov.typeBrev}"
 
-            val brevReferanse = brevbestillingService.bestillV2(
+            val brevReferanse = brevbestillingService.bestill(
                 behandlingId,
                 brevBehov = brevBehov,
                 unikReferanse = vårReferanse,
@@ -187,7 +187,7 @@ class FormkravSteg (
             )
             formkravRepository.lagreVarsel(behandlingId, BrevbestillingReferanse(brevReferanse))
         } else if (brevbestilling.status == Status.AVBRUTT) {
-            brevbestillingService.oppdaterStatus(behandlingId, brevbestilling.referanse, Status.FORHÅNDSVISNING_KLAR)
+            brevbestillingService.gjenopptaBestilling(behandlingId, brevbestilling.referanse)
         }
     }
 

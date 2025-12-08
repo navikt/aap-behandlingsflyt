@@ -19,6 +19,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class FastsettSykdomsvilkåretSteg private constructor(
@@ -85,7 +86,8 @@ class FastsettSykdomsvilkåretSteg private constructor(
             sykepengerErstatningGrunnlag,
             sykdomsGrunnlag?.sykdomsvurderinger.orEmpty(),
             bistandGrunnlag,
-            studentGrunnlag?.studentvurdering
+            studentGrunnlag?.studentvurdering,
+            vilkårResultat.optionalVilkår(Vilkårtype.SYKEPENGEERSTATNING)?.tidslinje().orEmpty()
         )
         Sykdomsvilkår(vilkårResultat).vurder(faktagrunnlag)
 

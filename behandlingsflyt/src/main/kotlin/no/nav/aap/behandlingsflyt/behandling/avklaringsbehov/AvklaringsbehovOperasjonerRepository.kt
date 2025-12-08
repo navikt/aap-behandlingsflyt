@@ -24,6 +24,7 @@ interface AvklaringsbehovOperasjonerRepository : Repository {
         grunn: ÅrsakTilSettPåVent? = null,
         endretAv: String = SYSTEMBRUKER.ident,
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>? = null,
+        perioderVedtaketBehøverVurdering: Set<Periode>? = null,
     )
 
     fun kreverToTrinn(avklaringsbehovId: Long, kreverToTrinn: Boolean)

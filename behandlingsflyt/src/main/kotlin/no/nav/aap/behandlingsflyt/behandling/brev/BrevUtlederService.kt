@@ -75,8 +75,7 @@ class BrevUtlederService(
 
     fun utledBehovForMeldingOmVedtak(behandlingId: BehandlingId): BrevBehov? {
         val behandling = behandlingRepository.hent(behandlingId)
-        var harArbeidsopptrapping = unleashGateway.isEnabled(BehandlingsflytFeature.Arbeidsopptrapping)
-                && arbeidsopptrappingRepository.hentPerioder(behandlingId).isNotEmpty()
+        var harArbeidsopptrapping = arbeidsopptrappingRepository.hentPerioder(behandlingId).isNotEmpty()
 
         when (behandling.typeBehandling()) {
             TypeBehandling.Førstegangsbehandling -> {
