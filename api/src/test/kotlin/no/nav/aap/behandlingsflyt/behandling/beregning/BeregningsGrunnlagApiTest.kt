@@ -19,19 +19,21 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.time.MonthDay
 
 class BeregningsGrunnlagApiTest {
 
     @Test
     fun `hente ut beregningsgrunnlag fra API`() {
+        val årsInntekter = setOf(
+            InntektPerÅr(2022, Beløp(500000)),
+            InntektPerÅr(2021, Beløp(400000)),
+            InntektPerÅr(2020, Beløp(300000))
+        )
         val input = Inntektsbehov(
             BeregningInput(
                 nedsettelsesDato = LocalDate.of(2023, 1, 1),
-                årsInntekter = setOf(
-                    InntektPerÅr(2022, Beløp(500000)),
-                    InntektPerÅr(2021, Beløp(400000)),
-                    InntektPerÅr(2020, Beløp(300000))
-                ),
+                årsInntekter = årsInntekter,
                 uføregrad = setOf(Uføre(LocalDate.now(), Prosent(30))),
                 yrkesskadevurdering = Yrkesskadevurdering(
                     begrunnelse = "en begrunnelse",
@@ -69,20 +71,7 @@ class BeregningsGrunnlagApiTest {
                         )
                     )
                 ),
-                inntektsPerioder = setOf(
-                    InntektsPeriode(
-                        Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
-                        beløp = 500000.toBigDecimal().toBeløp(),
-                    ),
-                    InntektsPeriode(
-                        Periode(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 12, 31)),
-                        beløp = 400000.toBigDecimal().toBeløp(),
-                    ),
-                    InntektsPeriode(
-                        Periode(LocalDate.of(2020, 1, 1), LocalDate.of(2020, 12, 31)),
-                        beløp = 300000.toBigDecimal().toBeløp(),
-                    )
-                )
+                inntektsPerioder = inntektsPerioder(årsInntekter)
             )
         )
 
@@ -106,14 +95,15 @@ class BeregningsGrunnlagApiTest {
 
     @Test
     fun `hente ut beregningsgrunnlag med svært høy yrkesskadeutbetaling fra API`() {
+        val årsInntekter = setOf(
+            InntektPerÅr(2022, Beløp(500000)),
+            InntektPerÅr(2021, Beløp(400000)),
+            InntektPerÅr(2020, Beløp(300000))
+        )
         val input = Inntektsbehov(
             BeregningInput(
                 nedsettelsesDato = LocalDate.of(2023, 1, 1),
-                årsInntekter = setOf(
-                    InntektPerÅr(2022, Beløp(500000)),
-                    InntektPerÅr(2021, Beløp(400000)),
-                    InntektPerÅr(2020, Beløp(300000))
-                ),
+                årsInntekter = årsInntekter,
                 uføregrad = setOf(Uføre(LocalDate.of(2021, 1, 1), Prosent(30))),
                 yrkesskadevurdering = Yrkesskadevurdering(
                     begrunnelse = "en begrunnelse",
@@ -151,21 +141,7 @@ class BeregningsGrunnlagApiTest {
                         )
                     )
                 ),
-                inntektsPerioder = setOf(
-                    InntektsPeriode(
-                        Periode(LocalDate.of(2022, 1, 1), LocalDate.of(2022, 12, 31)),
-                        beløp = 500000.toBigDecimal().toBeløp(),
-                    ),
-                    InntektsPeriode(
-                        Periode(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 12, 31)),
-                        beløp = 400000.toBigDecimal().toBeløp(),
-                    ),
-                    InntektsPeriode(
-                        Periode(LocalDate.of(2020, 1, 1), LocalDate.of(2020, 12, 31)),
-                        beløp = 300000.toBigDecimal().toBeløp(),
-                    )
-                )
-
+                inntektsPerioder = inntektsPerioder(årsInntekter)
             )
         )
 
@@ -181,8 +157,16 @@ class BeregningsGrunnlagApiTest {
             BigDecimal(6)
         )
     }
+
+    private fun inntektsPerioder(inntektPerÅr: Set<InntektPerÅr>): Set<InntektsPeriode> {
+        return inntektPerÅr.map {
+            InntektsPeriode(
+                Periode(
+                    it.år.atMonthDay(MonthDay.of(1, 1)),
+                    it.år.plusYears(1).atMonth(1).atDay(1).minusDays(1)
+                ), it.beløp
+            )
+        }.toSet()
+    }
 }
 
-private fun BigDecimal.toBeløp(): Beløp {
-    return Beløp(this)
-}
