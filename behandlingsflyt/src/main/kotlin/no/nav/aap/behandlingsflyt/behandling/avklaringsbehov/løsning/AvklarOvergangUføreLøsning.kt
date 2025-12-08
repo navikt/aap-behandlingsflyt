@@ -16,8 +16,11 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = AVKLAR_OVERGANG_UFORE)
 class AvklarOvergangUføreLøsning(
+    @Deprecated("Bruk løsninger for perioder")
     @param:JsonProperty("overgangUføreVurdering", required = true)
     val overgangUføreVurdering: OvergangUføreVurderingLøsningDto,
+    @param:JsonProperty("løsningerForPerioder")
+    val løsningerForPerioder: List<OvergangUføreVurderingLøsningDto>? = null,
     @param:JsonProperty(
         "behovstype",
         required = true,
