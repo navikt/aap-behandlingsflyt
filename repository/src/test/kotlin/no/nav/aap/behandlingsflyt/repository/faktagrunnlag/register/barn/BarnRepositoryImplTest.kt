@@ -54,15 +54,18 @@ internal class BarnRepositoryImplTest {
 
     @Test
     fun `Lagrer og henter barn`() {
+        val fødselsdato1 = Fødselsdato(LocalDate.now().minusYears(8))
+        val fødselsdato2 = Fødselsdato(LocalDate.now().minusYears(10))
+        val navn = "Gorgo Grog"
         val vurderteBarn = listOf(
             VurdertBarn(
-                ident = BarnIdentifikator.BarnIdent("12345"), vurderinger = listOf(
+                ident = BarnIdentifikator.BarnIdent(Ident("12345"), navn, fødselsdato2), vurderinger = listOf(
                     VurderingAvForeldreAnsvar(
                         fraDato = LocalDate.now(), harForeldreAnsvar = true, begrunnelse = "fsdf"
                     )
                 )
             ), VurdertBarn(
-                ident = BarnIdentifikator.NavnOgFødselsdato("Olof Olof", Fødselsdato(LocalDate.now().minusYears(10))),
+                ident = BarnIdentifikator.NavnOgFødselsdato("Olof Olof", fødselsdato1),
                 vurderinger = listOf(
                     VurderingAvForeldreAnsvar(
                         fraDato = LocalDate.now(), harForeldreAnsvar = true, begrunnelse = "fsdf"
@@ -71,16 +74,17 @@ internal class BarnRepositoryImplTest {
             )
         )
         val barnListe = listOf(
-            BarnIdentifikator.BarnIdent("12345678910"), BarnIdentifikator.BarnIdent("12345"),
+            BarnIdentifikator.BarnIdent(ident = Ident("12345678910"), fødselsdato = fødselsdato1),
+            BarnIdentifikator.BarnIdent(ident = Ident("12345"), fødselsdato = fødselsdato1),
         ).map {
             Barn(
-                it, Fødselsdato(LocalDate.now().minusYears(10)), Dødsdato(LocalDate.now().minusYears(5))
+                it, fødselsdato1, Dødsdato(LocalDate.now().minusYears(5))
             )
         } + listOf(
             Barn(
-                BarnIdentifikator.NavnOgFødselsdato("Gorgo Grog", Fødselsdato(LocalDate.now().minusYears(10))),
+                BarnIdentifikator.NavnOgFødselsdato(navn, fødselsdato2),
                 Fødselsdato(LocalDate.now().minusYears(10)),
-                navn = "Gorgo Grog",
+                navn = navn,
             )
         )
 
@@ -140,11 +144,12 @@ internal class BarnRepositoryImplTest {
             val sak = sak(connection)
             finnEllerOpprettBehandling(connection, sak)
         }
+        val fødselsdato = Fødselsdato(LocalDate.now().minusYears(10))
         val barnListe =
             listOf(Ident("12"), Ident("32323")).map {
                 Barn(
-                    BarnIdentifikator.BarnIdent(it),
-                    Fødselsdato(LocalDate.now().minusYears(10))
+                    BarnIdentifikator.BarnIdent(ident = it, fødselsdato = fødselsdato),
+                    fødselsdato
                 )
             }
         dataSource.transaction { connection ->

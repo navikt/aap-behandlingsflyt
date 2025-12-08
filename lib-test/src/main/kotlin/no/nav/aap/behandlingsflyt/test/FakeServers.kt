@@ -1434,6 +1434,13 @@ object FakeServers : AutoCloseable {
         return HentPersonBolkResult(
             ident = person.identer.first().identifikator,
             person = PdlPersoninfo(
+                navn = listOf(
+                    PdlNavn(
+                        fornavn = person.navn.fornavn,
+                        mellomnavn = null,
+                        etternavn = person.navn.etternavn
+                    )
+                ),
                 foedselsdato = listOf(
                     PdlFoedsel(
                         person.fødselsdato.toFormattedString(),
