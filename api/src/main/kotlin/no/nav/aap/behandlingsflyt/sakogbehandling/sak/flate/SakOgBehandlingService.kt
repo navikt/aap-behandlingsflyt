@@ -12,7 +12,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.repository.RepositoryProvider
-import java.util.*
 
 class SakOgBehandlingService(private val repositoryProvider: RepositoryProvider) {
 
@@ -40,9 +39,8 @@ class SakOgBehandlingService(private val repositoryProvider: RepositoryProvider)
             }
 
         val tilbakekrevingsbehandlinger = repositoryProvider.provide<TilbakekrevingRepository>().hent(sak.id).map { tilbakekrevingBehandling ->
-            val behandlingsrefString = tilbakekrevingBehandling.eksternBehandlingId ?: throw IllegalStateException("TilbakekrevingBehandling skal ha eksternBehandlingId")
             BehandlinginfoDTO(
-                referanse = UUID.fromString(behandlingsrefString),
+                referanse = tilbakekrevingBehandling.tilbakekrevingBehandlingId,
                 type = "Tilbakekreving",
                 status = when (tilbakekrevingBehandling.behandlingsstatus) {
                     TilbakekrevingBehandlingsstatus.OPPRETTET -> no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.OPPRETTET
