@@ -15,6 +15,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.Tid
+import org.slf4j.LoggerFactory
 import java.time.Year
 
 class UføreBeregning(
@@ -23,6 +24,14 @@ class UføreBeregning(
     private val relevanteÅr: Set<Year>,
     private val inntektsPerioder: Set<InntektsPeriode>,
 ) {
+
+    private val log = LoggerFactory.getLogger(javaClass)
+
+    init {
+        if (inntektsPerioder.map { it.periode.fom.year }.toSet() != relevanteÅr) {
+            log.warn("Ikke overenstemelse med relevanteÅr ($relevanteÅr) og inntektsPerioder (${inntektsPerioder.map { it.periode.fom.year }}).")
+        }
+    }
 
     fun beregnUføre(ytterligereNedsattÅr: Year): GrunnlagUføre {
         // tidslinjelogikken er basert på antagelsen om at uføre alltid har virkningstidspunkt på den første i måneden

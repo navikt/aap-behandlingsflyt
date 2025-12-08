@@ -20,6 +20,10 @@ class Inntektsbehov(private val beregningInput: BeregningInput) {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
+    /**
+     * Returnerer en mengde av de tre foregående årene fra nedsettelsesdatoen og
+     * dato for ytterligere nedsatt arbeidsevne.
+     */
     fun utledAlleRelevanteÅr(): Set<Year> {
         val ytterligereNedsattArbeidsevneDato =
             beregningInput.beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
@@ -31,6 +35,9 @@ class Inntektsbehov(private val beregningInput: BeregningInput) {
         return beregningInput.beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
     }
 
+    /**
+     * Mengde med inntekt per år i de tre foregående årene fra nedsettelsesdatoen.
+     */
     fun utledForOrdinær(): Set<InntektPerÅr> {
         return filtrerInntekter(beregningInput.nedsettelsesDato, beregningInput.årsInntekter)
     }
@@ -94,10 +101,16 @@ class Inntektsbehov(private val beregningInput: BeregningInput) {
         return requireNotNull(beregningInput.uføregrad)
     }
 
+    /**
+     * Velg det yrkesskadetidspunktet med høyest antatt inntekt.
+     */
     fun skadetidspunkt(): LocalDate {
         return samleOpplysningerOmYrkesskade().max().skadedato
     }
 
+    /**
+     * Returner høyeste inntekt blant yrkesskadeopplysningene.
+     */
     fun antattÅrligInntekt(): Beløp {
         return requireNotNull(samleOpplysningerOmYrkesskade().max().antattÅrligInntekt)
     }

@@ -95,21 +95,11 @@ class BeregningService(
     ): Set<InntektPerÅr> {
         val manuellePGIByÅr = manuelleInntekter
             .filter { it.belop != null }
-            .map { InntektPerÅr(it.år, it.belop!!, it) }
-            .groupBy { it.år }
-            .mapValues {
-                require(it.value.size == 1)
-                it.value.first()
-            }
+            .tilÅrInntekt()
 
         val manuellEOSByÅr = manuelleInntekter
             .filter { it.eøsBeløp != null }
-            .map { InntektPerÅr(it.år, it.eøsBeløp!!, it) }
-            .groupBy { it.år }
-            .mapValues {
-                require(it.value.size == 1)
-                it.value.first()
-            }
+            .tilÅrInntekt()
 
         val inntekterByÅr = inntekter
             .groupBy { it.år }
@@ -125,6 +115,15 @@ class BeregningService(
             }.values.toSet()
 
         return kombinerteInntekter
+    }
+
+    private fun Collection<ManuellInntektVurdering>.tilÅrInntekt(): Map<Year, InntektPerÅr> {
+        return this.map { InntektPerÅr(it.år, it.eøsBeløp!!, it) }
+            .groupBy { it.år }
+            .mapValues {
+                require(it.value.size == 1)
+                it.value.first()
+            }
     }
 
     private fun utledInput(
