@@ -6,8 +6,11 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 
 /**
- * Vurder om medlemmet oppfyller den generelle aktivitetsplikten. Implementasjon av:
- * - [Folketrygdloven § 11-7](https://lovdata.no/lov/1997-02-28-19/§11-7)
+ * Denne regelen er ikke lenger nødvendig. Det er et eget vilkår [AKTIVITETSPLIKT][no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype.AKTIVITETSPLIKT] som settes
+ * i [Effektuer11_7Steg][no.nav.aap.behandlingsflyt.forretningsflyt.steg.Effektuer11_7Steg].
+ *
+ * Kan ikke fjernes før alle åpne behandlinger med 11-7-brudd enten har kjørt Effektuer11_7-steget eller har
+ * passert fatte-vedtak-steget.
  */
 class Aktivitetsplikt11_7Regel : UnderveisRegel {
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
