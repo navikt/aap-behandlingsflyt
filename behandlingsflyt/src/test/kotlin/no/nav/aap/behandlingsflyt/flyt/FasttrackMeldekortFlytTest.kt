@@ -215,7 +215,8 @@ class FasttrackMeldekortFlytTest :
             assertTidslinje(
                 andelArbeidetTidslinje(connection, førsteMeldekort),
                 førsteMeldeperiode to {
-                    assertThat(it).isEqualTo(Prosent(18))
+                    /*  14 timer / (2 * 37,5 t) = 18.666666 ~= 19 */
+                    assertThat(it).isEqualTo(Prosent(19))
                 },
                 Periode(førsteMeldeperiode.tom.plusDays(1), underveisPeriode.tom) to {
                     assertThat(it).isEqualTo(`0_PROSENT`)
@@ -227,9 +228,10 @@ class FasttrackMeldekortFlytTest :
             assertTidslinje(
                 andelArbeidetTidslinje(connection, andreMeldekort),
                 førsteMeldeperiode to {
-                    assertThat(it).isEqualTo(Prosent(18))
+                    assertThat(it).isEqualTo(Prosent(19))
                 },
                 andreMeldeperiode to {
+                    /*  28 timer / (2 * 37,5 t) = 37.3333333 ~= 37 */
                     assertThat(it).isEqualTo(Prosent(37))
                 },
                 Periode(andreMeldeperiode.tom.plusDays(1), underveisPeriode.tom) to {
@@ -240,7 +242,7 @@ class FasttrackMeldekortFlytTest :
             assertTidslinje(
                 andelArbeidetTidslinje(connection, åpenBehandling),
                 førsteMeldeperiode to {
-                    assertThat(it).isEqualTo(Prosent(18))
+                    assertThat(it).isEqualTo(Prosent(19))
                 },
                 andreMeldeperiode to {
                     assertThat(it).isEqualTo(Prosent(37))
