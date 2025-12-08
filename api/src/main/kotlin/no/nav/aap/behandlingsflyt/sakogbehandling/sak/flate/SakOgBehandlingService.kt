@@ -41,7 +41,7 @@ class SakOgBehandlingService(private val repositoryProvider: RepositoryProvider)
         val tilbakekrevingsbehandlinger = repositoryProvider.provide<TilbakekrevingRepository>().hent(sak.id).map { tilbakekrevingBehandling ->
             BehandlinginfoDTO(
                 referanse = tilbakekrevingBehandling.tilbakekrevingBehandlingId,
-                type = "Tilbakekreving",
+                type = TypeBehandling.Tilbakekreving.identifikator(),
                 status = when (tilbakekrevingBehandling.behandlingsstatus) {
                     TilbakekrevingBehandlingsstatus.OPPRETTET -> no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.OPPRETTET
                     TilbakekrevingBehandlingsstatus.TIL_BEHANDLING -> no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.UTREDES
