@@ -179,7 +179,7 @@ public enum class Definisjon(
     ),
     FASTSETT_MANUELL_INNTEKT(
         kode = AvklaringsbehovKode.`7001`,
-        type = BehovType.MANUELT_PÅKREVD,
+        type = BehovType.OVERSTYR,
         løsesISteg = StegType.MANGLENDE_LIGNING,
         kreverToTrinn = true,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)

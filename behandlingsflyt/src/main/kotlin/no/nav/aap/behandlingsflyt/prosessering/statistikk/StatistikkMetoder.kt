@@ -193,6 +193,7 @@ class StatistikkMetoder(
                 Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP
                 Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP
                 Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
+                Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING
                 Vurderingsbehov.BARNETILLEGG -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.BARNETILLEGG
                 Vurderingsbehov.INSTITUSJONSOPPHOLD -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.INSTITUSJONSOPPHOLD
                 Vurderingsbehov.SAMORDNING_OG_AVREGNING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SAMORDNING_OG_AVREGNING
@@ -278,7 +279,8 @@ class StatistikkMetoder(
         val vedtakTidspunkt = vedtakService.vedtakstidspunkt(behandling)
 
         val tilkjentYtelse =
-            tilkjentYtelseRepository.hentHvisEksisterer(behandling.id)?.map { Segment(it.periode, it.tilkjent) }
+            tilkjentYtelseRepository.hentHvisEksisterer(behandling.id)
+                ?.map { Segment(it.periode, it.tilkjent) }
                 ?.let(::Tidslinje)?.mapValue { it }?.komprimer()?.segmenter()?.map {
                     val verdi = it.verdi
                     TilkjentYtelsePeriodeDTO(
@@ -290,6 +292,7 @@ class StatistikkMetoder(
                         antallBarn = verdi.antallBarn,
                         barnetilleggSats = verdi.barnetilleggsats.verdi().toDouble(),
                         barnetillegg = verdi.barnetillegg.verdi().toDouble(),
+                        utbetalingsdato = verdi.utbetalingsdato
                     )
                 }
 

@@ -18,8 +18,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -38,15 +36,13 @@ fun NormalOpenAPIRoute.arbeidsopptrappingGrunnlagApi(
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,
 ) {
-    val unleashGateway = gatewayProvider.provide<UnleashGateway>()
-
     route("/api/behandling/{referanse}/grunnlag/arbeidsopptrapping") {
         getGrunnlag<BehandlingReferanse, ArbeidsopptrappingGrunnlagResponse>(
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
             behandlingPathParam = BehandlingPathParam("referanse"),
             avklaringsbehovKode = Definisjon.ARBEIDSOPPTRAPPING.kode.toString()
         ) { behandlingReferanse ->
-            val response = if (unleashGateway.isEnabled(BehandlingsflytFeature.Arbeidsopptrapping)) {
+            val response =
                 dataSource.transaction { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
@@ -84,12 +80,6 @@ fun NormalOpenAPIRoute.arbeidsopptrappingGrunnlagApi(
                         ikkeVurderbarePerioder = ikkeVurderbarePerioder
                     )
                 }
-
-            } else {
-                ArbeidsopptrappingGrunnlagResponse(
-                    kanSaksbehandle(), emptyList(), emptyList(), emptyList(), emptyList(), emptyList()
-                )
-            }
 
             respond(
                 response

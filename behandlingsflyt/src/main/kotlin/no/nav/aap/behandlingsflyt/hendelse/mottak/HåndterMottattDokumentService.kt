@@ -26,6 +26,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRe
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Omgjøringskilde
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Oppfølgingsoppgave
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppfølgingsoppgaveV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.PdlHendelse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.PdlHendelseV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelseV0
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -141,6 +143,7 @@ class HåndterMottattDokumentService(
                 beskrivelse = when (melding) {
                     is ManuellRevurderingV0 -> melding.beskrivelse
                     is OmgjøringKlageRevurderingV0 -> melding.beskrivelse
+                    is PdlHendelseV0 -> melding.beskrivelse
                     else -> null
                 }
             )
@@ -220,16 +223,9 @@ class HåndterMottattDokumentService(
     ) {
         when (melding) {
             is TilbakekrevingHendelseV0 -> {
-                log.info("Mottatt tilbakekrevingHendelse for sakId $sakId og eksternBehandlingId ${melding.eksternBehandlingId}")
-                val behandlingsref =
-                    melding.eksternBehandlingId ?: error("Kan ikke finne behandlingId i tilbakekrevinghendelse")
+                val behandlingId = finnSisteIverksatteBehandling(sakId)
+                log.info("Mottatt tilbakekrevingHendelse for sakId $sakId og behandlingId $behandlingId")
                 tilbakekrevingService.håndter(sakId, melding.tilTilbakekrevingshendelse())
-                val behandlingId = try {
-                    behandlingRepository.hent(referanse = BehandlingReferanse(UUID.fromString(behandlingsref))).id
-                } catch (_: NoSuchElementException) {
-                    //Forsøker å finne behandlingId fra siste iverksatte behandling dersom vi ikke finner den utifra eksternBehandlingId.
-                    finnSisteIverksatteBehandling(sakId)
-                }
                 mottaDokumentService.markerSomBehandlet(sakId, behandlingId, referanse)
             }
         }

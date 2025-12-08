@@ -32,6 +32,7 @@ enum class Vurderingsbehov {
     FORUTGAENDE_MEDLEMSKAP,     // Forutgående medlemskap
     OPPHOLDSKRAV,
     SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND, // Sykdom, arbeidsevne og behov for bistand
+    REVURDER_SYKEPENGEERSTATNING, // Sykdomstegene, men de som ligger på på NAY og ikke kontor
     BARNETILLEGG,               // Barnetillegg
     INSTITUSJONSOPPHOLD,        // Institusjonsopphold
     SAMORDNING_OG_AVREGNING,    // Samordning og avregning
@@ -97,6 +98,7 @@ fun EksponertÅrsak.tilVurderingsbehov() =
         EksponertÅrsak.LOVVALG_OG_MEDLEMSKAP -> Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP
         EksponertÅrsak.FORUTGAENDE_MEDLEMSKAP -> Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP
         EksponertÅrsak.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND -> Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
+        EksponertÅrsak.REVURDER_SYKEPENGEERSTATNING -> Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING
         EksponertÅrsak.BARNETILLEGG -> Vurderingsbehov.BARNETILLEGG
         EksponertÅrsak.INSTITUSJONSOPPHOLD -> Vurderingsbehov.INSTITUSJONSOPPHOLD
         EksponertÅrsak.SAMORDNING_OG_AVREGNING -> Vurderingsbehov.SAMORDNING_OG_AVREGNING
