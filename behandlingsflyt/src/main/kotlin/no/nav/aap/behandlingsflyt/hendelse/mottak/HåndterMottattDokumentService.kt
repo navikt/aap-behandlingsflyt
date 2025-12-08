@@ -280,7 +280,7 @@ class HåndterMottattDokumentService(
                 melding.årsakerTilBehandling.map { VurderingsbehovMedPeriode(it.tilVurderingsbehov()) }
             sakOgBehandlingService.oppdaterVurderingsbehovTilBehandling(
                 behandling,
-                VurderingsbehovOgÅrsak(vurderingsbehov, årsakTilOpprettelse)
+                VurderingsbehovOgÅrsak(vurderingsbehov, årsakTilOpprettelse, beskrivelse = melding.beskrivelse)
             )
             mottaDokumentService.markerSomBehandlet(sakId, behandling.id, referanse)
             prosesserBehandling.triggProsesserBehandling(
