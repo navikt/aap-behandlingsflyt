@@ -59,8 +59,8 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
             brukerHarSøktOmUføretrygd = row.getBoolean("BRUKER_SOKT_UFORETRYGD"),
             brukerHarFåttVedtakOmUføretrygd = row.getStringOrNull("BRUKER_VEDTAK_UFORETRYGD"),
             brukerRettPåAAP = row.getBooleanOrNull("BRUKER_RETT_PAA_AAP"),
-            vurdertIBehandling = row.getLongOrNull("VURDERT_I_BEHANDLING")?.let(::BehandlingId),
-            fom = row.getLocalDateOrNull("VIRKNINGSDATO"), // Virkningsdato er 'vurderingen gjelder fra'
+            vurdertIBehandling = row.getLong("VURDERT_I_BEHANDLING").let(::BehandlingId),
+            fom = row.getLocalDate("VIRKNINGSDATO"), // Virkningsdato er 'vurderingen gjelder fra'
             vurdertAv = row.getString("VURDERT_AV"),
             opprettet = row.getInstant("OPPRETTET_TID"),
             tom = row.getLocalDateOrNull("TOM")
