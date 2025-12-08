@@ -72,26 +72,24 @@ class GraderingArbeidRegelTest {
     }
 
     @Test
-    @Disabled /* Vi har ikke nok presisjon i Prosent for at denne testen blir grønn. Må den være grønn? */
     fun `Kan ikke jobbe minste inkrement (0,5 timer) over 60 prosent uten arbeidsopptrapping`() {
         assertMeldekortutregning(
             fastsattArbeidsevne = null,
             opptrapping = false,
             timerArbeidet = List(4) { 10.0 } + listOf(5.5) + List(9) { 0.0 }, // 45.5 timer
             forventetGradering = Prosent(0),
-            forventetAndelArbeid = Prosent.fraDesimal(BigDecimal("0.60666666666")), /* Hvor presist skal vi regne? */
+            forventetAndelArbeid = Prosent(61),
         )
     }
 
     @Test
-    @Disabled /* Vi har ikke nok presisjon i Prosent for at denne testen blir grønn. Må den være grønn? */
     fun `Kan ikke jobbe minste inkrement (0,5 timer) over 80 prosent med arbeidsopptrapping`() {
         assertMeldekortutregning(
             fastsattArbeidsevne = null,
             opptrapping = true,
             timerArbeidet = List(6) { 10.0 } + listOf(0.5) + List(7) { 0.0 }, // 60.5 timer
             forventetGradering = Prosent(0),
-            forventetAndelArbeid = Prosent.fraDesimal(BigDecimal("0.80666666666")), /* Hvor presist skal vi regne? */
+            forventetAndelArbeid = Prosent(81),
         )
     }
 
