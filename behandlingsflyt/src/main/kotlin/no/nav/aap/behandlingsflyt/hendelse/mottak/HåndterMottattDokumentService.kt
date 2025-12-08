@@ -26,7 +26,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRe
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Omgjøringskilde
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Oppfølgingsoppgave
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppfølgingsoppgaveV0
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.PdlHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.PdlHendelseV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelseV0
@@ -144,6 +143,7 @@ class HåndterMottattDokumentService(
                     is ManuellRevurderingV0 -> melding.beskrivelse
                     is OmgjøringKlageRevurderingV0 -> melding.beskrivelse
                     is PdlHendelseV0 -> melding.beskrivelse
+                    is NyÅrsakTilBehandlingV0 -> melding.årsakerTilBehandling.toString()
                     else -> null
                 }
             )

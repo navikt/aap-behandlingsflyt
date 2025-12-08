@@ -19,7 +19,7 @@ public data class InnsendingReferanse(
         SAKSBEHANDLER_KELVIN_REFERANSE,
         MANUELL_OPPRETTELSE,
         KABAL_HENDELSE_ID,
-        TILBAKEKREING_HENDELSE_ID,
+        TILBAKEKREVING_HENDELSE_ID,
         PDL_HENDELSE_ID
     }
 
@@ -51,7 +51,7 @@ public data class InnsendingReferanse(
     public constructor(id: JournalpostId) : this(Type.JOURNALPOST, id.identifikator)
     public constructor(id: AvvistLegeerklæringId) : this(Type.AVVIST_LEGEERKLÆRING_ID, id.asString)
     public constructor(id: KabalHendelseId) : this(Type.KABAL_HENDELSE_ID, id.asString)
-    public constructor(id: TilbakekrevingHendelseId) : this(Type.TILBAKEKREING_HENDELSE_ID, id.asString)
+    public constructor(id: TilbakekrevingHendelseId) : this(Type.TILBAKEKREVING_HENDELSE_ID, id.asString)
     public constructor(id: PdlHendelseId) : this(Type.PDL_HENDELSE_ID, id.asString)
 }
 

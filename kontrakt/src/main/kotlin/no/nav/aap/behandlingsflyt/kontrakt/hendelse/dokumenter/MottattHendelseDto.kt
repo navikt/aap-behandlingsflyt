@@ -90,7 +90,7 @@ public class Innsending(
             }
 
             InnsendingType.TILBAKEKREVING_HENDELSE -> {
-                require(referanse.type == InnsendingReferanse.Type.TILBAKEKREING_HENDELSE_ID)
+                require(referanse.type == InnsendingReferanse.Type.TILBAKEKREVING_HENDELSE_ID)
                 requireNotNull(melding) {"Melding fra tilbakekreving kan ikke være null"}
                 require(melding is TilbakekrevingHendelse)
             }

@@ -99,7 +99,6 @@ class HendelseMottattHåndteringJobbUtfører(
                     melding = parsedMelding as TilbakekrevingHendelse,
                 )
             }
-
             InnsendingType.DIALOGMELDING -> {
                     håndterMottattDokumentService.håndterMottattDialogMelding(
                         sakId = sakId,
