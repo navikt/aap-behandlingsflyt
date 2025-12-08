@@ -104,7 +104,6 @@ class AvklarOppfølgingStegTest {
         }
 
         avklaringsbehovService = AvklaringsbehovService(
-            avklaringsbehovRepository = avklaringsbehovRepository,
             avbrytRevurderingService = avbrytRevurderingService
         )
     }
