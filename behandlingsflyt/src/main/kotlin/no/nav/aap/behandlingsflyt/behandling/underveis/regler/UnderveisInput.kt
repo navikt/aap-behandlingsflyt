@@ -33,4 +33,5 @@ data class UnderveisInput(
     val reduksjonArbeidOverGrenseEnabled: Boolean,
     val unntakMeldepliktDesemberEnabled: Boolean,
     val reduksjonIkkeMeldtSegEnabled: Boolean,
+    val timerArbeidetPeriodisertSubMeldeperiodeEnabled: Boolean,
 ) : Faktagrunnlag

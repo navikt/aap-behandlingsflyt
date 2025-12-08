@@ -65,6 +65,7 @@ fun tomUnderveisInput(
         reduksjonArbeidOverGrenseEnabled = false,
         reduksjonIkkeMeldtSegEnabled = false,
         unntakMeldepliktDesemberEnabled = true,
+        timerArbeidetPeriodisertSubMeldeperiodeEnabled = true,
     )
 }
 
