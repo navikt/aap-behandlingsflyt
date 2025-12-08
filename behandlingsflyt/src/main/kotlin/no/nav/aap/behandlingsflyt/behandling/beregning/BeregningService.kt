@@ -94,12 +94,10 @@ class BeregningService(
         manuelleInntekter: Set<ManuellInntektVurdering>
     ): Set<InntektPerÅr> {
         val manuellePGIByÅr = manuelleInntekter
-            .filter { it.belop != null }
-            .tilÅrInntekt()
+            .tilÅrInntekt { it.belop }
 
         val manuellEOSByÅr = manuelleInntekter
-            .filter { it.eøsBeløp != null }
-            .tilÅrInntekt()
+            .tilÅrInntekt { it.eøsBeløp }
 
         val inntekterByÅr = inntekter
             .groupBy { it.år }
@@ -117,8 +115,9 @@ class BeregningService(
         return kombinerteInntekter
     }
 
-    private fun Collection<ManuellInntektVurdering>.tilÅrInntekt(): Map<Year, InntektPerÅr> {
-        return this.map { InntektPerÅr(it.år, it.eøsBeløp!!, it) }
+    private fun Collection<ManuellInntektVurdering>.tilÅrInntekt(selector: (ManuellInntektVurdering) -> Beløp?): Map<Year, InntektPerÅr> {
+        return this.filter { selector(it) != null }
+            .map { InntektPerÅr(it.år, selector(it)!!, it) }
             .groupBy { it.år }
             .mapValues {
                 require(it.value.size == 1)
