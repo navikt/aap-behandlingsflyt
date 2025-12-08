@@ -146,7 +146,6 @@ class BrevUtlederServiceTest {
         // Gitt tilkjent dagsats på 1000.00 NOK, så skal årligYtelse være dagsats x 260 dager for fullt år
         val forventetÅrligYtelse = dagsats.multiplisert(260)
         assertEquals(forventetÅrligYtelse, resultat.tilkjentYtelse.årligYtelse)
-        println("Forventet årlig ytelse: $forventetÅrligYtelse")
 
         val minsteÅrligeYtelseGUnit: GUnit = MINSTE_ÅRLIG_YTELSE_TIDSLINJE.segment(virkningstidspunkt)?.verdi!!
         // MinsteÅrligYtelse som faktagrunnlag til brevforhåndsvisning er et statisk beløp og sammenfaller kun med
@@ -154,11 +153,9 @@ class BrevUtlederServiceTest {
         val grunnbeløp = Grunnbeløp.tilTidslinje().segment(virkningstidspunkt)?.verdi
         val forventetMinsteÅrligYtelse = grunnbeløp?.multiplisert(minsteÅrligeYtelseGUnit)
         assertEquals(forventetMinsteÅrligYtelse, resultat.tilkjentYtelse.minsteÅrligYtelse)
-        println("Forventet minste årlig ytelse: $forventetMinsteÅrligYtelse")
 
         val forventetMinsteÅrligYtelseUnder25 = grunnbeløp?.multiplisert(minsteÅrligeYtelseGUnit.toTredjedeler())
         assertEquals(forventetMinsteÅrligYtelseUnder25, resultat.tilkjentYtelse.minsteÅrligYtelseUnder25)
-        println("Forventet minste  årlig ytelse under 25år: $forventetMinsteÅrligYtelseUnder25")
     }
 
     @Test
