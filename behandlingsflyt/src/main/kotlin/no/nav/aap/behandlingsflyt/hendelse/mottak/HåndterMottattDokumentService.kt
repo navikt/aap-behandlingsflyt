@@ -223,16 +223,9 @@ class HåndterMottattDokumentService(
     ) {
         when (melding) {
             is TilbakekrevingHendelseV0 -> {
-                log.info("Mottatt tilbakekrevingHendelse for sakId $sakId og eksternBehandlingId ${melding.eksternBehandlingId}")
-                val behandlingsref =
-                    melding.eksternBehandlingId ?: error("Kan ikke finne behandlingId i tilbakekrevinghendelse")
+                val behandlingId = finnSisteIverksatteBehandling(sakId)
+                log.info("Mottatt tilbakekrevingHendelse for sakId $sakId og behandlingId $behandlingId")
                 tilbakekrevingService.håndter(sakId, melding.tilTilbakekrevingshendelse())
-                val behandlingId = try {
-                    behandlingRepository.hent(referanse = BehandlingReferanse(UUID.fromString(behandlingsref))).id
-                } catch (_: NoSuchElementException) {
-                    //Forsøker å finne behandlingId fra siste iverksatte behandling dersom vi ikke finner den utifra eksternBehandlingId.
-                    finnSisteIverksatteBehandling(sakId)
-                }
                 mottaDokumentService.markerSomBehandlet(sakId, behandlingId, referanse)
             }
         }

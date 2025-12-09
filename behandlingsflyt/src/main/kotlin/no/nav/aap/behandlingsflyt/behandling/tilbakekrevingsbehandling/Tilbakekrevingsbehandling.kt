@@ -4,8 +4,10 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import java.net.URI
 import java.time.LocalDateTime
+import java.util.UUID
 
 data class Tilbakekrevingsbehandling(
+    val tilbakekrevingBehandlingId: UUID,
     val eksternFagsakId: String,
     val hendelseOpprettet: LocalDateTime,
     val eksternBehandlingId: String?,

@@ -44,7 +44,7 @@ class BeregnTilkjentYtelseService(val grunnlag: TilkjentYtelseGrunnlag) {
     private val log = LoggerFactory.getLogger(javaClass)
 
     internal companion object {
-        private const val ANTALL_ÅRLIGE_ARBEIDSDAGER = 260
+        const val ANTALL_ÅRLIGE_ARBEIDSDAGER = 260
     }
 
     fun beregnTilkjentYtelse(): Tidslinje<Tilkjent> {

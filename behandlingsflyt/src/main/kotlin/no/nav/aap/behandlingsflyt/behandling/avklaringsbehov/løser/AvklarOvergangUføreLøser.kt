@@ -39,14 +39,14 @@ class AvklarOvergangUføreLøser(
 
         val eksisterendeOverganguforevurderinger = behandling.forrigeBehandlingId
             ?.let { overgangUforeRepository.hentHvisEksisterer(it) }
-            ?.somOvergangUforevurderingstidslinje(LocalDate.MIN)
+            ?.somOvergangUforevurderingstidslinje()
             .orEmpty()
 
         val ny = overgangUføreVurdering.let {
             OvergangUføreGrunnlag(
                 id = null,
                 vurderinger = listOf(it),
-            ).somOvergangUforevurderingstidslinje(LocalDate.MIN)
+            ).somOvergangUforevurderingstidslinje()
         }
 
         val gjeldende = eksisterendeOverganguforevurderinger

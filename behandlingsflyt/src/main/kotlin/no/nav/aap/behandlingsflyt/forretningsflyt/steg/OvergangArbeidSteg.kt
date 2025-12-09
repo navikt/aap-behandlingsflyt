@@ -118,7 +118,7 @@ class OvergangArbeidSteg internal constructor(
             .orEmpty()
 
         val overgangUføreVurderinger = overgangUføreRepository.hentHvisEksisterer(kontekst.behandlingId)
-            ?.somOvergangUforevurderingstidslinje(kontekst.rettighetsperiode.fom)
+            ?.somOvergangUforevurderingstidslinje()
             .orEmpty()
 
         val forutgåendeOrdinærAap =
