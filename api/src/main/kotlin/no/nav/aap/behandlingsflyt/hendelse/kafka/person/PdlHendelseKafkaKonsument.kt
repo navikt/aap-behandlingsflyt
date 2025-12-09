@@ -86,8 +86,8 @@ class PdlHendelseKafkaKonsument(
                     søknadsBarn = barnRepository.finnSøknadsBarn(ident)
                     // Håndterer D-nummer og Fnr
                     if (person != null || oppgittBarn != null || søknadsBarn != null) {
-                        secureLogger.info("Håndterer hendelse for ident ${ident} og navn ${personHendelse.navn?.etternavn} ")
                         funnetIdent = Ident(ident)
+                        secureLogger.info("Håndterer hendelse for ident ${funnetIdent.identifikator} og navn ${personHendelse.navn?.etternavn} ")
                         break
                     }
                 }
@@ -96,12 +96,12 @@ class PdlHendelseKafkaKonsument(
                     // Først: finn ut om denne identen tilhører en bruker eller et barn
                     val behandlingIdsForRegisterBarn =
                         barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForRegisterBarn(funnetIdent!!)
-                    val behandlingIdsForOppgitteBarn =
-                        barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForOppgitteBarn(funnetIdent)
+                    val behandlingIdsForSaksbehandlerOppgitteBarn =
+                        barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForSaksbehandlerOppgitteBarn(funnetIdent)
                     val behandlingIdsForSøknadsBarn =
                         barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForSøknadsBarn(funnetIdent)
                     val alleBarneBehandlingIds =
-                        behandlingIdsForRegisterBarn + behandlingIdsForOppgitteBarn + behandlingIdsForSøknadsBarn
+                        behandlingIdsForRegisterBarn + behandlingIdsForSaksbehandlerOppgitteBarn + behandlingIdsForSøknadsBarn
 
                     if (alleBarneBehandlingIds.isNotEmpty()) {
                         log.info("Sjekker mottatt hendelse for barn $alleBarneBehandlingIds")

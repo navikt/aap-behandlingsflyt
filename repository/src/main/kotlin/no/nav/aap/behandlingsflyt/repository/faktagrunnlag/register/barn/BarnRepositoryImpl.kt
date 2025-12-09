@@ -88,7 +88,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
             "Registerbarn"
         )
 
-    override fun hentBehandlingIdForSakSomFårBarnetilleggForOppgitteBarn(ident: Ident) =
+    override fun hentBehandlingIdForSakSomFårBarnetilleggForSaksbehandlerOppgitteBarn(ident: Ident) =
         hentBehandlingIdGenerisk(
             ident,
             ::getOppgitteBarnId,
