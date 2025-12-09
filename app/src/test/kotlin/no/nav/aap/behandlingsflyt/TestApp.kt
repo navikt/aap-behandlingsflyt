@@ -357,9 +357,10 @@ private fun opprettNySakOgBehandling(dto: OpprettTestcaseDTO): Sak {
             if (dto.steg == StegType.FASTSETT_BEREGNINGSTIDSPUNKT) return sak
             løsBeregningstidspunkt(behandling)
 
-            if (dto.inntekterPerAr == null || dto.inntekterPerAr.isEmpty()) {
+            val manglendeInntektsÅr = manglendeInntektsår(dto)
+            if (manglendeInntektsÅr.isNotEmpty()) {
                 if (dto.steg == StegType.MANGLENDE_LIGNING) return sak
-                løsManuellInntektVurdering(behandling)
+                løsManuellInntektVurdering(behandling, manglendeInntektsÅr)
             }
 
             // Forutgående medlemskap
@@ -416,6 +417,16 @@ private fun opprettNySakOgBehandling(dto: OpprettTestcaseDTO): Sak {
 
         return sak
     }
+}
+
+private fun manglendeInntektsår(dto: OpprettTestcaseDTO): List<Int> {
+    val søknadsdato = dto.søknadsdato ?: LocalDate.now()
+    val nåværendeÅr = søknadsdato.year
+    val siste3År = listOf(nåværendeÅr - 1, nåværendeÅr - 2, nåværendeÅr - 3)
+
+    val registrerteÅr = dto.inntekterPerAr?.map { it.år }?.toSet() ?: emptySet()
+
+    return siste3År.filter { år -> år !in registrerteÅr }
 }
 
 private fun hentIdentForSak(saksnummer: Saksnummer): String {

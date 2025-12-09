@@ -7,7 +7,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrke
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehovHendelse
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBarnetilleggLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovEnkelLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarManuellInntektVurderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOppholdskravLøsning
@@ -48,6 +47,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurderingDTO
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.SoningsvurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.SoningsvurderingerDto
@@ -229,13 +229,20 @@ class TestScenarioOrkestrator(
         )
     }
 
-    fun løsManuellInntektVurdering(behandling: Behandling): Behandling {
+    fun løsManuellInntektVurdering(behandling: Behandling, manglendeInntektsÅr: List<Int>): Behandling {
         return løsAvklaringsBehov(
             behandling,
             AvklarManuellInntektVurderingLøsning(
                 manuellVurderingForManglendeInntekt = ManuellInntektVurderingDto(
                     begrunnelse = "Manuell inntekt vurdering ok",
-                    belop = BigDecimal(400000.00)
+                    belop = null,
+                    vurderinger = manglendeInntektsÅr.mapIndexed { index, år ->
+                        ÅrsVurdering(
+                            beløp = BigDecimal(500000.00 + (index * 10000)),
+                            eøsBeløp = null,
+                            år = år
+                        )
+                    }
                 )
             )
         )
