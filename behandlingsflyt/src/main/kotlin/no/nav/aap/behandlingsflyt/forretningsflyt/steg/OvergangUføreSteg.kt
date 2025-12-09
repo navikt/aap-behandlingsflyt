@@ -129,9 +129,11 @@ class OvergangUføreSteg private constructor(
             ?.somBistandsvurderingstidslinje()
             .orEmpty()
 
-        // 1. Det må finnes en vurdering for alle relevante perioder
-        // 2. Ingen vurderinger med oppfylt 11-18 utenfor perioden der 11-5 er oppfylt og 11-6 ikke er oppfylt
-
+        /**
+         * 1. Det må finnes en vurdering for alle relevante perioder
+         *      Selv om man har samordning i starten av perioden så skal ikke 8-mnd perioden endres - skal derfor ha en vurdering i alle perioder det kan være en vurdering 
+         * 2. Ingen vurderinger med oppfylt 11-18 utenfor perioden der 11-5 er oppfylt og 11-6 ikke er oppfylt
+         */
         return Tidslinje.map4(
             perioderOvergangUføreErRelevant(kontekst),
             sykdomsdtidslinje,
