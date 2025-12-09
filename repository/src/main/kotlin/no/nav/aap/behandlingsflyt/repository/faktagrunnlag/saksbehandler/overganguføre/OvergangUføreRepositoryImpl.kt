@@ -23,7 +23,7 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
     override fun hentHvisEksisterer(behandlingId: BehandlingId): OvergangUføreGrunnlag? {
         return connection.queryFirstOrNull(
             """
-            SELECT ID, VURDERINGER_ID
+            SELECT VURDERINGER_ID
             FROM OVERGANG_UFORE_GRUNNLAG
             WHERE AKTIV AND BEHANDLING_ID = ?
             """.trimIndent()
@@ -33,7 +33,6 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
             }
             setRowMapper { row ->
                 OvergangUføreGrunnlag(
-                    id = row.getLong("ID"),
                     vurderinger = mapOvergangUforevurderinger(row.getLongOrNull("VURDERINGER_ID"))
                 )
             }
@@ -97,7 +96,6 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
         val overgangUforeGrunnlag = hentHvisEksisterer(behandlingId)
 
         val nyttGrunnlag = OvergangUføreGrunnlag(
-            id = null,
             vurderinger = overgangUføreVurderinger
         )
 

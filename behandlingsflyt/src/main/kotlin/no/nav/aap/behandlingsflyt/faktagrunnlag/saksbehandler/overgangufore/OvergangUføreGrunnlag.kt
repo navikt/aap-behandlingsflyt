@@ -8,33 +8,35 @@ import no.nav.aap.komponenter.verdityper.Tid
 import java.time.LocalDate
 
 data class OvergangUføreGrunnlag(
-    val id: Long?,
+    /**
+     * Nye vurderinger for inneværende behandling + vedtatte vurderinger
+     */
     val vurderinger: List<OvergangUføreVurdering>,
 ) {
 
     fun somOvergangUforevurderingstidslinje(maksdato: LocalDate = Tid.MAKS): Tidslinje<OvergangUføreVurdering> {
         return filtrertOvergangUføreTidslinje(maksdato) { true }
     }
-    
+
     fun gjeldendeOvergangUførevurderinger(maksDato: LocalDate = Tid.MAKS): List<OvergangUføreVurdering> {
         return somOvergangUforevurderingstidslinje(maksDato).segmenter().map { it.verdi }
     }
-    
+
     fun overgangUføreVurderingerVurdertIBehandling(behandlingId: BehandlingId): List<OvergangUføreVurdering> {
         return vurderinger.filter { it.vurdertIBehandling == behandlingId }
     }
-    
+
     fun historiskeOvergangUføreVurderinger(behandlingIdForGrunnlag: BehandlingId): List<OvergangUføreVurdering> {
         return vurderinger.filterNot { it.vurdertIBehandling == behandlingIdForGrunnlag }
     }
-    
+
     fun vedtattOvergangUførevurderingstidslinje(
         behandlingId: BehandlingId,
         maksDato: LocalDate = Tid.MAKS
     ): Tidslinje<OvergangUføreVurdering> {
         return filtrertOvergangUføreTidslinje(maksDato) { it.vurdertIBehandling != behandlingId }
     }
-    
+
     fun gjeldendeVedtatteOvergangUførevurderinger(
         behandlingId: BehandlingId,
         maksDato: LocalDate = Tid.MAKS
