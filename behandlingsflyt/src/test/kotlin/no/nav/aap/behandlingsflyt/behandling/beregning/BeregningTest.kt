@@ -26,6 +26,7 @@ import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.MonthDay
 import java.time.Year
+import java.time.YearMonth
 
 class BeregningTest {
 
@@ -305,13 +306,11 @@ class BeregningTest {
         }
     }
 
-    private fun inntektsPerioder(inntektPerÅr: Set<InntektPerÅr>): Set<InntektsPeriode> {
+    private fun inntektsPerioder(inntektPerÅr: Set<InntektPerÅr>): Set<Månedsinntekt> {
         return inntektPerÅr.map {
-            InntektsPeriode(
-                Periode(
-                    it.år.atMonthDay(MonthDay.of(1, 1)),
-                    it.år.plusYears(1).atMonth(1).atDay(1).minusDays(1)
-                ), it.beløp
+            Månedsinntekt(
+                // TODO
+                YearMonth.of(it.år.value, 1), it.beløp
             )
         }.toSet()
     }

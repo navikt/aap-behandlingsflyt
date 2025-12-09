@@ -129,7 +129,7 @@ class BeregningService(
         yrkesskadevurdering: Yrkesskadevurdering?,
         vurdering: BeregningGrunnlag?,
         årsInntekter: Set<InntektPerÅr>,
-        inntektsPerioder: Set<InntektsPeriode>,
+        inntektsPerioder: Set<Månedsinntekt>,
         uføregrad: Set<Uføre>,
         registrerteYrkesskader: Yrkesskader?
     ): Inntektsbehov {

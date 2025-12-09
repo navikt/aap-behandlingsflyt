@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år
 
-import no.nav.aap.behandlingsflyt.behandling.beregning.InntektsPeriode
+import no.nav.aap.behandlingsflyt.behandling.beregning.Månedsinntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
@@ -12,7 +12,7 @@ import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.slf4j.LoggerFactory
-import java.math.BigDecimal
+import java.math.RoundingMode
 import java.time.LocalDate
 import java.time.Year
 import java.util.*
@@ -43,17 +43,22 @@ class Inntektsbehov(private val beregningInput: BeregningInput) {
         return filtrerInntekter(beregningInput.nedsettelsesDato, beregningInput.årsInntekter)
     }
 
-    fun inntektsPerioder(): Set<InntektsPeriode> {
+    fun inntektsPerioder(): Set<Månedsinntekt> {
         return beregningInput.inntektsPerioder
     }
 
     fun validerSummertInntekt() {
         val inntektPerÅrFraPerioder: Map<Year, Beløp> = beregningInput.inntektsPerioder
-            .groupBy { Year.of(it.periode.fom.year) }
+            .groupBy { Year.of(it.årMåned.year) }
             .mapValues { (_, value) -> value.sumOf { it.beløp.verdi }.let(::Beløp) }
 
         inntektPerÅrFraPerioder.forEach { (år, sum) ->
-            require(beregningInput.årsInntekter.first { it.år == år }.beløp == sum)
+            require(
+                beregningInput.årsInntekter.first { it.år == år }.beløp.verdi.stripTrailingZeros().setScale(
+                    0,
+                    RoundingMode.HALF_UP
+                ) == sum.verdi.stripTrailingZeros().setScale(0, RoundingMode.HALF_UP)
+            )
             { "Håndterer ikke å støtte forskjellig inntekt fra A-Inntekt og PESYS. Fikk $sum for år $år, men fant ${beregningInput.årsInntekter.filter { it.år == år }}" }
         }
     }

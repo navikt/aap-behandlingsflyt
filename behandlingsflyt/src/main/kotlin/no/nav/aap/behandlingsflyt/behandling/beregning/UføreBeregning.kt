@@ -21,14 +21,14 @@ class UføreBeregning(
     private val grunnlag: Grunnlag11_19,
     private val uføregrader: Set<Uføre>,
     private val relevanteÅr: Set<Year>,
-    private val inntektsPerioder: Set<InntektsPeriode>,
+    private val inntektsPerioder: Set<Månedsinntekt>,
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
     init {
-        if (inntektsPerioder.map { it.periode.fom.year }.toSet() != relevanteÅr) {
-            log.warn("Ikke overenstemelse med relevanteÅr ($relevanteÅr) og inntektsPerioder (${inntektsPerioder.map { it.periode.fom.year }}).")
+        if (inntektsPerioder.map { Year.of(it.årMåned.year) }.toSet() != relevanteÅr) {
+            log.warn("Ikke overenstemmelse med relevanteÅr ($relevanteÅr) og inntektsPerioder (${inntektsPerioder.map { it.årMåned.year }}).")
         }
     }
 
@@ -48,9 +48,9 @@ class UføreBeregning(
         val ytterligereNedsattGrunnlag = beregn11_19Grunnlag(oppjusterteInntekter)
 
         val type =
-            if (grunnlag.grunnlaget() >= ytterligereNedsattGrunnlag.grunnlaget()) {
+            if (grunnlag.grunnlaget() >= ytterligereNedsattGrunnlag.grunnlaget())
                 GrunnlagUføre.Type.STANDARD
-            } else GrunnlagUføre.Type.YTTERLIGERE_NEDSATT
+            else GrunnlagUføre.Type.YTTERLIGERE_NEDSATT
 
         val grunnlaget = when (type) {
             GrunnlagUføre.Type.STANDARD -> grunnlag.grunnlaget()
@@ -133,8 +133,10 @@ class UføreBeregning(
         return GrunnlagetForBeregningen(oppjusterteInntekterPerÅr).beregnGrunnlaget()
     }
 
-    private fun inntektTidslinje(inntektsPerioder: Set<InntektsPeriode>): Tidslinje<Inntekt> {
-        return inntektsPerioder.somTidslinje({ it.periode }, { Inntekt(it.beløp) })
+    private fun inntektTidslinje(inntektsPerioder: Set<Månedsinntekt>): Tidslinje<Inntekt> {
+        return inntektsPerioder.somTidslinje(
+            { Periode(it.årMåned.atDay(1), it.årMåned.atEndOfMonth()) },
+            { Inntekt(it.beløp) })
     }
 
     private fun lagUføreTidslinje(uføregrader: Set<Uføre>): Tidslinje<Prosent> {

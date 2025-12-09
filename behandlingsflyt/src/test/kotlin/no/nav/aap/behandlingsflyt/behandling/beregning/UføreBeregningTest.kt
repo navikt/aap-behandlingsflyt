@@ -6,7 +6,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag1
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.test.januar
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -192,15 +191,15 @@ class UføreBeregningTest {
         inntekter = emptyList()
     )
 
-    private fun genererInntektsPerioder(vararg månedsInntektPerÅr: Pair<Int, Number>): Set<InntektsPeriode> {
+    private fun genererInntektsPerioder(vararg månedsInntektPerÅr: Pair<Int, Number>): Set<Månedsinntekt> {
         return månedsInntektPerÅr.toList().map { (år, beløp) -> oppsplittetInntekt(år, Beløp(beløp.toDouble().toBigDecimal())) }
             .flatten().toSet()
     }
 
-    private fun oppsplittetInntekt(år: Int, månedsInntekt: Beløp): List<InntektsPeriode> {
+    private fun oppsplittetInntekt(år: Int, månedsInntekt: Beløp): List<Månedsinntekt> {
         return (1..12).toList().map {
-            InntektsPeriode(
-                periode = Periode(YearMonth.of(år, it).atDay(1), YearMonth.of(år, it).atEndOfMonth()),
+            Månedsinntekt(
+                årMåned = YearMonth.of(år, it),
                 beløp = månedsInntekt,
             )
         }

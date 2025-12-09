@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning.år
 
-import no.nav.aap.behandlingsflyt.behandling.beregning.InntektsPeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
+import no.nav.aap.behandlingsflyt.behandling.beregning.Månedsinntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.BeregningInput
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
@@ -16,14 +16,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVur
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadeSak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.test.januar
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import java.time.MonthDay
 import java.time.Year
+import java.time.YearMonth
 
 class InntektsbehovTest {
     @Test
@@ -269,13 +268,11 @@ class InntektsbehovTest {
     }
 
 
-    private fun inntektsPerioder(inntektPerÅr: Set<InntektPerÅr>): Set<InntektsPeriode> {
+    private fun inntektsPerioder(inntektPerÅr: Set<InntektPerÅr>): Set<Månedsinntekt> {
         return inntektPerÅr.map {
-            InntektsPeriode(
-                Periode(
-                    it.år.atMonthDay(MonthDay.of(1, 1)),
-                    it.år.plusYears(1).atMonth(1).atDay(1).minusDays(1)
-                ), it.beløp
+            Månedsinntekt(
+                // TODO
+                YearMonth.of(it.år.value, 1), it.beløp
             )
         }.toSet()
     }
