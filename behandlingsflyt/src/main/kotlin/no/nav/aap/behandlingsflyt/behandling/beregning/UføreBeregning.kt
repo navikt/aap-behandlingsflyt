@@ -7,9 +7,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.UføreInn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
-import no.nav.aap.komponenter.tidslinje.JoinStyle
-import no.nav.aap.komponenter.tidslinje.Segment
-import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -74,7 +71,7 @@ class UføreBeregning(
 
     private fun oppjusterMhpUføregradPeriodisertInntekt(
         relevanteÅr: Set<Year>,
-        inntektTidslinje: Tidslinje<InntektData>,
+        inntektTidslinje: Tidslinje<Inntekt>,
         uføreTidslinje: Tidslinje<Prosent>
     ): List<UføreInntekt> {
         val oppjusterteInntekterTidslinje =
@@ -136,8 +133,8 @@ class UføreBeregning(
         return GrunnlagetForBeregningen(oppjusterteInntekterPerÅr).beregnGrunnlaget()
     }
 
-    private fun inntektTidslinje(inntektsPerioder: Set<InntektsPeriode>): Tidslinje<InntektData> {
-        return inntektsPerioder.somTidslinje({ it.periode }, { InntektData(it.beløp) })
+    private fun inntektTidslinje(inntektsPerioder: Set<InntektsPeriode>): Tidslinje<Inntekt> {
+        return inntektsPerioder.somTidslinje({ it.periode }, { Inntekt(it.beløp) })
     }
 
     private fun lagUføreTidslinje(uføregrader: Set<Uføre>): Tidslinje<Prosent> {
@@ -148,5 +145,10 @@ class UføreBeregning(
 
     private fun gUnit(år: Year, beløp: Beløp): Grunnbeløp.BenyttetGjennomsnittsbeløp =
         Grunnbeløp.finnGUnit(år, beløp)
+
+
+    private data class Inntekt(
+        val beløp: Beløp,
+    )
 
 }
