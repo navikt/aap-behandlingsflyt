@@ -10,7 +10,7 @@ repositories {
 plugins {
     id("behandlingsflyt.conventions")
     alias(libs.plugins.ktor)
-    id("com.gradleup.shadow") version "9.2.2"
+    id("com.gradleup.shadow") version "9.3.0"
 }
 
 application {
