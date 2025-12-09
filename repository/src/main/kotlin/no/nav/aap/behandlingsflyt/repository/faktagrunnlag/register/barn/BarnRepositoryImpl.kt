@@ -91,7 +91,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
     override fun hentBehandlingIdForSakSomFårBarnetilleggForSaksbehandlerOppgitteBarn(ident: Ident) =
         hentBehandlingIdGenerisk(
             ident,
-            ::getOppgitteBarnId,
+            ::getSaksbehandlerOppgitteBarnId,
             ::hentBehandlingIdForSaksbehandlerOppgitteBarneId,
             "Oppgitt barn"
         )
@@ -227,7 +227,7 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
         }
     }
 
-    private fun getOppgitteBarnId(ident: Ident): Long? = connection.queryFirstOrNull(
+    private fun getSaksbehandlerOppgitteBarnId(ident: Ident): Long? = connection.queryFirstOrNull(
         """
                     SELECT saksbehandler_oppgitt_barn_id
                     FROM barn_saksbehandler_oppgitt

@@ -102,9 +102,8 @@ class PdlHendelseKafkaKonsument(
                         barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForSøknadsBarn(funnetIdent)
                     val alleBarneBehandlingIds =
                         behandlingIdsForRegisterBarn + behandlingIdsForSaksbehandlerOppgitteBarn + behandlingIdsForSøknadsBarn
-
+                    log.info("Sjekker mottatt hendelse for barn $alleBarneBehandlingIds")
                     if (alleBarneBehandlingIds.isNotEmpty()) {
-                        log.info("Sjekker mottatt hendelse for barn $alleBarneBehandlingIds")
                         alleBarneBehandlingIds
                             .map { behandlingRepository.hent(it) }
                             .map { it.sakId }
