@@ -37,7 +37,7 @@ data class BistandVurderingResponse(
                         vurdertAvService = vurdertAvService,
                         fom = segment.fom(),
                         tom = if (index == segmenter.size - 1)
-                            Tid.MAKS
+                            segment.verdi.tom
                         else
                             segment.tom(),
                     )

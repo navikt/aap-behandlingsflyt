@@ -198,7 +198,7 @@ class AktivitetspliktFlytTest :
             .isEqualTo(aktivtStegFørEffektueringsbehandling)
 
         åpenBehandling
-            .løsBistand()
+            .løsBistand(sak.rettighetsperiode.fom)
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
@@ -243,7 +243,7 @@ class AktivitetspliktFlytTest :
         val sak = happyCaseFørstegangsbehandling(person = person)
         var åpenBehandling = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom, vissVarighet = true)
 
-        åpenBehandling = åpenBehandling.løsBistand()
+        åpenBehandling = åpenBehandling.løsBistand(sak.rettighetsperiode.fom)
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
@@ -389,7 +389,7 @@ class AktivitetspliktFlytTest :
         )
         var åpenBehandlingForbiTilkjentYtelse =
             revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom, vissVarighet = true)
-                .løsBistand()
+                .løsBistand(sak.rettighetsperiode.fom)
                 .medKontekst {
                     assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                         .containsExactlyInAnyOrder(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)

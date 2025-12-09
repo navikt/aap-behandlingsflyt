@@ -4,7 +4,7 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
-import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.utils.tilResponse
+import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykdom.SykdomsvurderingResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidRepository
@@ -69,7 +69,8 @@ fun NormalOpenAPIRoute.overgangArbeidGrunnlagApi(
                         behøverVurderinger = listOf(sak.rettighetsperiode),
 
                         gjeldendeSykdsomsvurderinger = sykdomRepository.hentHvisEksisterer(behandling.id)
-                            ?.gjeldendeSykdomsvurderinger().orEmpty().map { it.tilResponse(ansattInfoService) },
+                            ?.gjeldendeSykdomsvurderinger().orEmpty()
+                            .map { SykdomsvurderingResponse.fraDomene(it, vurdertAvService) },
                     )
                 }
 

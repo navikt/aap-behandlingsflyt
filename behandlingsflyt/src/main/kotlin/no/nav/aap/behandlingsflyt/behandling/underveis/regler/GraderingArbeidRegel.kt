@@ -191,7 +191,9 @@ class GraderingArbeidRegel : UnderveisRegel {
                     andelArbeid = `0_PROSENT`,
                     fastsattArbeidsevne = it.arbeidsevne ?: `0_PROSENT`,
                     gradering = `0_PROSENT`,
-                    opplysningerMottatt = null,
+                    opplysningerMottatt = opplysningerOmArbeid.segmenter().mapNotNull { it.verdi.opplysningerFørstMottatt }
+                        /* Høyeste dato er datoen første dato vi hadde opplysninger for *hele* meldeperioden. */
+                        .maxOrNull(),
                 )
             }
         }

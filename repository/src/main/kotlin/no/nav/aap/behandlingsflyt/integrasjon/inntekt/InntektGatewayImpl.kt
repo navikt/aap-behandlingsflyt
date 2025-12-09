@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.integrasjon.inntekt
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅrFraRegister
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektRegisterGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektResponse
@@ -46,7 +46,7 @@ object InntektGatewayImpl : InntektRegisterGateway {
         return inntektResponse
     }
 
-    override fun innhent(person: Person, år: Set<Year>): Set<InntektPerÅr> {
+    override fun innhent(person: Person, år: Set<Year>): Set<InntektPerÅrFraRegister> {
         return person.identer().map { ident ->
             val request = InntektRequest(
                 ident.identifikator,
@@ -57,7 +57,7 @@ object InntektGatewayImpl : InntektRegisterGateway {
         }
             .flatMap { it.inntekter }
             .map { inntekt ->
-                InntektPerÅr(
+                InntektPerÅrFraRegister(
                     Year.of(inntekt.inntektAr),
                     Beløp(inntekt.belop)
                 )

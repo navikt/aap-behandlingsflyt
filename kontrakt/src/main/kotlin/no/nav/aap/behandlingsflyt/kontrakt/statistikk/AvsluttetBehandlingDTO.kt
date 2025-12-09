@@ -58,7 +58,8 @@ public data class TilkjentYtelsePeriodeDTO(
     val redusertDagsats: Double,
     val antallBarn: Int,
     val barnetilleggSats: Double,
-    val barnetillegg: Double
+    val barnetillegg: Double,
+    val utbetalingsdato: LocalDate
 )
 
 public data class VilkårsResultatDTO(
@@ -81,6 +82,7 @@ public enum class Vilkårtype {
     GRUNNLAGET,
     OVERGANGARBEIDVILKÅRET,
     OVERGANGUFØREVILKÅRET,
+    STRAFFEGJENNOMFØRING,
 
     @Deprecated("Skal fases ut.")
     SYKEPENGEERSTATNING,
@@ -102,7 +104,7 @@ public data class VilkårsPeriodeDTO(
  * er alltid med. Minst én av grunnlag11_19dto, grunnlagYrkesskade, grunnlagUføre er ikke-null.
  */
 public data class BeregningsgrunnlagDTO(
-    val grunnlag11_19dto: Grunnlag11_19DTO? = null,
+    @Suppress("PropertyName") val grunnlag11_19dto: Grunnlag11_19DTO? = null,
     val grunnlagYrkesskade: GrunnlagYrkesskadeDTO? = null,
     val grunnlagUføre: GrunnlagUføreDTO? = null
 ) {

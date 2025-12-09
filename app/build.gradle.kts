@@ -63,7 +63,6 @@ tasks.register<JavaExec>("beregnCSV") {
 }
 
 dependencies {
-    implementation(libs.ktorServerCors)
     implementation(libs.ktorServerStatusPages)
 
     implementation("io.micrometer:micrometer-registry-prometheus:1.16.0")

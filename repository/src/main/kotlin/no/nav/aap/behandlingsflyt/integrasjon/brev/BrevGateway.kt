@@ -22,6 +22,7 @@ import no.nav.aap.brev.kontrakt.Brevtype
 import no.nav.aap.brev.kontrakt.Faktagrunnlag
 import no.nav.aap.brev.kontrakt.FerdigstillBrevRequest
 import no.nav.aap.brev.kontrakt.ForhandsvisBrevRequest
+import no.nav.aap.brev.kontrakt.GjenopptaBrevbestillingRequest
 import no.nav.aap.brev.kontrakt.HentSignaturerRequest
 import no.nav.aap.brev.kontrakt.HentSignaturerResponse
 import no.nav.aap.brev.kontrakt.KanDistribuereBrevReponse
@@ -218,6 +219,21 @@ class BrevGateway : BrevbestillingGateway {
         )
     }
 
+    override fun gjenoppta(bestillingReferanse: BrevbestillingReferanse) {
+        val url = baseUri.resolve("/api/gjenoppta-bestilling")
+
+        val request = PostRequest(
+            body = GjenopptaBrevbestillingRequest(bestillingReferanse.brevbestillingReferanse),
+            additionalHeaders = listOf(
+                Header("Accept", "application/json")
+            )
+        )
+        client.post<_, Unit>(
+            uri = url,
+            request = request
+        )
+    }
+
     override fun hentSignaturForhåndsvisning(
         signaturer: List<SignaturGrunnlag>,
         brukerIdent: String,
@@ -291,9 +307,9 @@ class BrevGateway : BrevbestillingGateway {
                                 gradertDagsatsInkludertBarnetillegg = brevBehov.tilkjentYtelse?.gradertDagsatsInkludertBarnetillegg?.verdi,
                                 barnetillegg = brevBehov.tilkjentYtelse?.barnetillegg?.verdi,
                                 antallBarn = brevBehov.tilkjentYtelse?.antallBarn,
-                                minsteÅrligYtelse = null,
-                                minsteÅrligYtelseUnder25 = null,
-                                årligYtelse = null,
+                                minsteÅrligYtelse = brevBehov.tilkjentYtelse?.minsteÅrligYtelse?.verdi,
+                                minsteÅrligYtelseUnder25 = brevBehov.tilkjentYtelse?.minsteÅrligYtelseUnder25?.verdi,
+                                årligYtelse = brevBehov.tilkjentYtelse?.årligYtelse?.verdi
                             )
                         )
                     }

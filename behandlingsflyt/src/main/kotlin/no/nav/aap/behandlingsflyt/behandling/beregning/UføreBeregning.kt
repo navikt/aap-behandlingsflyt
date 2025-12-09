@@ -24,27 +24,20 @@ class UføreBeregning(
         // 6G-begrensning ligger her samt gjennomsnitt
         val ytterligereNedsattGrunnlag = beregn11_19Grunnlag(oppjusterteInntekter)
 
-        if (grunnlag.grunnlaget() >= ytterligereNedsattGrunnlag.grunnlaget()) {
-            return GrunnlagUføre(
-                grunnlaget = grunnlag.grunnlaget(),
-                type = GrunnlagUføre.Type.STANDARD,
-                grunnlag = grunnlag,
-                grunnlagYtterligereNedsatt = ytterligereNedsattGrunnlag,
-                uføregrad = uføregrad,
-                uføreInntekterFraForegåendeÅr = oppjusterteInntekter,
-                uføreYtterligereNedsattArbeidsevneÅr = ytterligereNedsattÅr
-            )
-        } else {
-            return GrunnlagUføre(
-                grunnlaget = ytterligereNedsattGrunnlag.grunnlaget(),
-                type = GrunnlagUføre.Type.YTTERLIGERE_NEDSATT,
-                grunnlag = grunnlag,
-                grunnlagYtterligereNedsatt = ytterligereNedsattGrunnlag,
-                uføregrad = uføregrad,
-                uføreInntekterFraForegåendeÅr = oppjusterteInntekter,
-                uføreYtterligereNedsattArbeidsevneÅr = ytterligereNedsattÅr
-            )
-        }
+        val (grunnlaget, type) =
+            if (grunnlag.grunnlaget() >= ytterligereNedsattGrunnlag.grunnlaget()) {
+                Pair(grunnlag.grunnlaget(), GrunnlagUføre.Type.STANDARD)
+            } else Pair(ytterligereNedsattGrunnlag.grunnlaget(), GrunnlagUføre.Type.YTTERLIGERE_NEDSATT)
+
+        return GrunnlagUføre(
+            grunnlaget = grunnlaget,
+            type = type,
+            grunnlag = grunnlag,
+            grunnlagYtterligereNedsatt = ytterligereNedsattGrunnlag,
+            uføregrad = uføregrad,
+            uføreInntekterFraForegåendeÅr = oppjusterteInntekter,
+            uføreYtterligereNedsattArbeidsevneÅr = ytterligereNedsattÅr
+        )
     }
 
     private fun oppjusterMhpUføregrad(ikkeOppjusterteInntekter: Set<InntektPerÅr>): List<UføreInntekt> {

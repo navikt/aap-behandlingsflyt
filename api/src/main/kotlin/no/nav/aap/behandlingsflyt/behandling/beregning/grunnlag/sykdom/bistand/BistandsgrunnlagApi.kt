@@ -3,9 +3,8 @@ package no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.bistand
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.utils.tilResponse
+import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykdom.SykdomsvurderingResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
@@ -31,7 +30,6 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,
 ) {
-    val ansattInfoService = AnsattInfoService(gatewayProvider)
     route("/api/behandling") {
         route("/{referanse}/grunnlag/bistand") {
             getGrunnlag<BehandlingReferanse, BistandGrunnlagResponse>(
@@ -74,7 +72,8 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(
 
                     val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
                     val perioderVedtaketBehøverVurdering =
-                        avklaringsbehov.hentBehovForDefinisjon(Definisjon.AVKLAR_BISTANDSBEHOV)?.perioderVedtaketBehøverVurdering()
+                        avklaringsbehov.hentBehovForDefinisjon(Definisjon.AVKLAR_BISTANDSBEHOV)
+                            ?.perioderVedtaketBehøverVurdering()
                             .orEmpty()
 
                     BistandGrunnlagResponse(
@@ -93,8 +92,8 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(
                             .orEmpty()
                             .map { BistandVurderingResponse.fraDomene(it, vurdertAvService = vurdertAvService) },
                         gjeldendeSykdsomsvurderinger = gjeldendeSykdomsvurderinger.map {
-                            it.tilResponse(ansattInfoService)
-                        },
+                            SykdomsvurderingResponse.fraDomene(it, vurdertAvService)
+                        }, // Denne brukes bare til å finne siste vurdering sin gjelder fra
                         harOppfylt11_5 = erOppfylt11_5,
                         kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
                             definisjon = Definisjon.AVKLAR_BISTANDSBEHOV,

@@ -78,6 +78,7 @@ public enum class Vurderingsbehov {
     LOVVALG_OG_MEDLEMSKAP,      // Lovvalg og medlemskap
     FORUTGAENDE_MEDLEMSKAP,     // Forutgående medlemskap
     SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND, // Sykdom, arbeidsevne og behov for bistand
+    REVURDER_SYKEPENGEERSTATNING,
     BARNETILLEGG,               // Barnetillegg
     INSTITUSJONSOPPHOLD,        // Institusjonsopphold
     SAMORDNING_OG_AVREGNING,    // Samordning og avregning

@@ -6,30 +6,32 @@ import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelseKafkaMelding
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.slf4j.LoggerFactory
-import java.time.Duration
 import javax.sql.DataSource
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 const val TILBAKEKREVING_EVENT_TOPIC = "tilbake.privat-tilbakekreving-arbeidsavklaringspenger"
 
 class TilbakekrevingKafkaKonsument(
     config: KafkaConsumerConfig<String, String>,
-    pollTimeout: Duration = Duration.ofSeconds(10L),
+    pollTimeout: Duration = 10.seconds,
+    closeTimeout: Duration = 30.seconds,
     private val dataSource: DataSource,
     private val repositoryRegistry: RepositoryRegistry,
-    private val gatewayProvider: GatewayProvider,
 ) : KafkaKonsument<String, String>(
     topic = TILBAKEKREVING_EVENT_TOPIC,
     config = config,
     pollTimeout = pollTimeout,
+    closeTimeout = closeTimeout,
     consumerName = "AapBehandlingsflytTilbakekrevingHendelse",
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
+    private val secureLogger = LoggerFactory.getLogger("secureLog")
 
     override fun håndter(meldinger: ConsumerRecords<String, String>) {
         meldinger.forEach(::håndter)
@@ -47,7 +49,12 @@ class TilbakekrevingKafkaKonsument(
     }
 
     fun håndter(meldingKey: String, meldingVerdi: String) {
-        val tilbakekrevingHendelse = DefaultJsonMapper.fromJson<TilbakekrevingHendelseKafkaMelding>(meldingVerdi)
+        val tilbakekrevingHendelse = try {
+            DefaultJsonMapper.fromJson<TilbakekrevingHendelseKafkaMelding>(meldingVerdi)
+        } catch (exception: Exception) {
+            secureLogger.error("Kunne ikke parse melding fra tilbakekreving: $meldingKey")
+            throw exception
+        }
         val saksnummer = Saksnummer(tilbakekrevingHendelse.eksternFagsakId)
         log.info("Mottatt tilbakekrevinghendelse for saksnummer: $saksnummer")
         dataSource.transaction { connection ->

@@ -1,0 +1,4 @@
+ALTER TABLE overgang_ufore_vurdering
+    ADD COLUMN VURDERT_I_BEHANDLING BIGINT REFERENCES BEHANDLING (ID);
+ALTER TABLE overgang_ufore_vurdering
+    ADD COLUMN TOM DATE;

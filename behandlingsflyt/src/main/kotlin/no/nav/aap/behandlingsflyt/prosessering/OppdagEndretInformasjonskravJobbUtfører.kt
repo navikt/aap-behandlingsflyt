@@ -36,7 +36,6 @@ class OppdagEndretInformasjonskravJobbUtfører(
         val relevanteInformasjonskrav: List<KanTriggeRevurdering> = listOf(
             //BarnService.konstruer(repositoryProvider, gatewayProvider), Vente på avklaring fra departementet
             SamordningYtelseVurderingInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
-            TjenestePensjonInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
             UføreInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
             InstitusjonsoppholdInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
             PersonopplysningInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
@@ -60,6 +59,10 @@ class OppdagEndretInformasjonskravJobbUtfører(
                 revurdering,
                 emptyList() // TODO: Se om vi bør legge ved triggere
             )
+        }
+        else
+        {
+            log.info("Lar være å opprette revurdering for sak $sakId med behov $vurderingsbehov da opplysningene er registrert fra før. ")
         }
     }
 

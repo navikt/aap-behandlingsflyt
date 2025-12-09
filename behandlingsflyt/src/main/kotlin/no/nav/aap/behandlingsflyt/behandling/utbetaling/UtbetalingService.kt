@@ -146,7 +146,7 @@ class UtbetalingService(
 
         log.info("Utleder ny meldeperiode for tilkjent ytelse med vedtaksdato: $vedtaksdatoGjeldendeBehandling")
         val alleredeUtbetaltPeriode = forrigeTilkjentYtelse?.filter {
-            it.tilkjent.utbetalingsdato <= vedtaksdatoForrigeBehandling && it.periode.tom <= vedtaksdatoForrigeBehandling && it.tilkjent.redusertDagsats().verdi() > BigDecimal.ZERO
+            it.tilkjent.utbetalingsdato <= vedtaksdatoForrigeBehandling && it.tilkjent.redusertDagsats().verdi() > BigDecimal.ZERO
         }?.let {
             if (it.isNotEmpty()) {
                 it.tilTidslinje().helePerioden()
@@ -158,7 +158,7 @@ class UtbetalingService(
         log.info("Allerede utbetalt periode: $alleredeUtbetaltPeriode")
 
         val perioderSomKanUtbetales =
-            tilkjentYtelse.filter { it.tilkjent.utbetalingsdato <= vedtaksdatoGjeldendeBehandling && it.periode.tom <= vedtaksdatoGjeldendeBehandling && it.tilkjent.redusertDagsats().verdi() > BigDecimal.ZERO }
+            tilkjentYtelse.filter { it.tilkjent.utbetalingsdato <= vedtaksdatoGjeldendeBehandling && it.tilkjent.redusertDagsats().verdi() > BigDecimal.ZERO }
 
         log.info("Antall perioder som kan utbetales: ${perioderSomKanUtbetales.size}")
 
