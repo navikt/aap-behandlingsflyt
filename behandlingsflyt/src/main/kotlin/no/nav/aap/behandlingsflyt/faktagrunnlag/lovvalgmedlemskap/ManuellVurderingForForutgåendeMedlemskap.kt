@@ -27,13 +27,6 @@ data class ManuellVurderingForForutgåendeMedlemskap(
     }
 }
 
-data class ManuellVurderingForForutgåendeMedlemskapDto(
-    val begrunnelse: String,
-    val harForutgåendeMedlemskap: Boolean,
-    val varMedlemMedNedsattArbeidsevne: Boolean?,
-    val medlemMedUnntakAvMaksFemAar: Boolean?
-)
-
 data class PeriodisertManuellVurderingForForutgåendeMedlemskapDto(
     override val fom: LocalDate,
     override val tom: LocalDate?,
@@ -58,12 +51,6 @@ data class PeriodisertManuellVurderingForForutgåendeMedlemskapDto(
         overstyrt = overstyrt
     )
 }
-
-data class HistoriskManuellVurderingForForutgåendeMedlemskap(
-    val manuellVurdering: ManuellVurderingForForutgåendeMedlemskap,
-    val opprettet: LocalDateTime,
-    val erGjeldendeVurdering: Boolean
-)
 
 fun List<PeriodisertManuellVurderingForForutgåendeMedlemskapDto>.validerGyldigVurderinger(): Validation<List<PeriodisertManuellVurderingForForutgåendeMedlemskapDto>> {
     forEach {

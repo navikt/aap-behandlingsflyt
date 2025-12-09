@@ -113,10 +113,39 @@ enum class Vilkårtype(
         kode = "AAP-13",
         spesielleInnvilgelsesÅrsaker = emptyList(),
         avslagsårsaker = listOf(
-            Avslagsårsak.MANGLENDE_DOKUMENTASJON, 
+            Avslagsårsak.MANGLENDE_DOKUMENTASJON,
             Avslagsårsak.IKKE_RETT_PA_SYKEPENGEERSTATNING
         ),
         hjemmel = "§ 11-13",
         obligatorisk = false
+    ),
+    STRAFFEGJENNOMFØRING(
+        kode = "AAP-26",
+        spesielleInnvilgelsesÅrsaker = emptyList(),
+        avslagsårsaker = listOf(
+            Avslagsårsak.IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING
+        ),
+        hjemmel = "§ 11-26",
+        obligatorisk = false,
+    ),
+    AKTIVITETSPLIKT(
+        kode = "AAP-7",
+        spesielleInnvilgelsesÅrsaker = emptyList(),
+        avslagsårsaker = listOf(
+            Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_STANS,
+            Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_OPPHØR,
+        ),
+        hjemmel = "§ 11-7",
+        obligatorisk = false,
+    ),
+    OPPHOLDSKRAV(
+        kode = "AAP-3",
+        spesielleInnvilgelsesÅrsaker = emptyList(),
+        avslagsårsaker = listOf(
+            Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_STANS,
+            Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_OPPHØR,
+        ),
+        hjemmel = "§ 11-3",
+        obligatorisk = false,
     ),
 }

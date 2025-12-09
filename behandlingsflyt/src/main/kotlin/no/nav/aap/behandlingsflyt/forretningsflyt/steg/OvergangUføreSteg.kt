@@ -83,7 +83,7 @@ class OvergangUføreSteg private constructor(
         ) {
             val grunnlag = OvergangUføreFaktagrunnlag(
                 rettighetsperiode = kontekst.rettighetsperiode,
-                vurderinger = overgangUføreRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger.orEmpty(),
+                overgangUføreGrunnlag = overgangUføreRepository.hentHvisEksisterer(kontekst.behandlingId),
             )
             OvergangUføreVilkår(vilkårsresultat).vurder(grunnlag = grunnlag)
         } else {

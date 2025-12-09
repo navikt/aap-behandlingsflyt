@@ -13,7 +13,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvbrytRevu
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBarnetilleggLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarManuellInntektVurderingLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreEnkelLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeriodisertLovvalgMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningUføreLøsning
@@ -172,7 +172,6 @@ import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.tuple
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
@@ -414,10 +413,12 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         val barnfødseldato = fom.minusYears(17).minusMonths(2)
 
         val barnIdent = genererIdent(barnfødseldato)
+        val barnNavn = PersonNavn("Lille", "Larsson")
         val person = TestPersoner.STANDARD_PERSON().medBarn(
             listOf(
                 TestPerson(
                     identer = setOf(barnIdent),
+                    navn = barnNavn,
                     fødselsdato = Fødselsdato(barnfødseldato),
                 ),
             )
@@ -452,7 +453,17 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 BarnGrunnlag(
                     registerbarn = RegisterBarn(
                         id = -1,
-                        barn = listOf(Barn(BarnIdentifikator.BarnIdent(barnIdent), Fødselsdato(barnfødseldato)))
+                        barn = listOf(
+                            Barn(
+                                BarnIdentifikator.BarnIdent(
+                                    ident = barnIdent,
+                                    navn = barnNavn.fornavn + " " + barnNavn.etternavn,
+                                    fødselsdato = Fødselsdato(barnfødseldato)
+                                ),
+                                navn = barnNavn.fornavn + " " + barnNavn.etternavn,
+                                fødselsdato = Fødselsdato(barnfødseldato)
+                            )
+                        )
                     ),
                     oppgitteBarn = null,
                     vurderteBarn = null,
@@ -498,10 +509,12 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             listOf(
                 TestPerson(
                     identer = setOf(Ident("aaa")),
+                    navn = PersonNavn("Lille", "Larsson"),
                     fødselsdato = Fødselsdato(ungtBarnFødselsdato),
                 ),
                 TestPerson(
                     identer = setOf(Ident("ccc")),
+                    navn = PersonNavn("Gammel", "Gustavsson"),
                     fødselsdato = Fødselsdato(gammeltBarnFødselsdato),
                 ),
             )
@@ -535,7 +548,17 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 BarnGrunnlag(
                     registerbarn = RegisterBarn(
                         id = -1,
-                        barn = person.barn.map { Barn(BarnIdentifikator.BarnIdent(it.aktivIdent()), it.fødselsdato) }),
+                        barn = person.barn.map {
+                            Barn(
+                                BarnIdentifikator.BarnIdent(
+                                    ident = it.aktivIdent(),
+                                    navn = "${it.navn.fornavn} ${it.navn.etternavn}",
+                                    fødselsdato = it.fødselsdato
+                                ),
+                                fødselsdato = it.fødselsdato,
+                                navn = "${it.navn.fornavn} ${it.navn.etternavn}"
+                            )
+                        }),
                     oppgitteBarn = null,
                     vurderteBarn = null,
                     saksbehandlerOppgitteBarn = null
@@ -1603,7 +1626,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
 
         // Revurdering nr 2, innvilger sp-erstatning på nytt
         val førstePeriodeSykepengeerstatning = Periode(periode.fom, periode.fom.plusMonths(1).minusDays(1))
-        
+
         val revurdering2Fom = LocalDate.now().plusMonths(2)
         val revurdering2 = sak.opprettManuellRevurdering(
             listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
@@ -1713,7 +1736,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 ),
             )
             .løsAvklaringsBehov(
-                AvklarOvergangUføreLøsning(
+                AvklarOvergangUføreEnkelLøsning(
                     OvergangUføreVurderingLøsningDto(
                         begrunnelse = "Løsning",
                         brukerHarSøktOmUføretrygd = true,

@@ -138,6 +138,7 @@ internal class OvergangUføreRepositoryImplTest {
                 fom = LocalDate.of(2024, 5, 22),
                 tom = null,
                 vurdertAv = "Z00000",
+                vurdertIBehandling = vurdertIBehandling
             )
         }
         val overgangUføreVurdering2 = { vurdertIBehandling: BehandlingId ->
@@ -149,6 +150,7 @@ internal class OvergangUføreRepositoryImplTest {
                 fom = LocalDate.of(2024, 5, 1),
                 tom = null,
                 vurdertAv = "Z00001",
+                vurdertIBehandling = vurdertIBehandling
             )
         }
         val overgangUføreVurdering3 = { vurdertIBehandling: BehandlingId ->

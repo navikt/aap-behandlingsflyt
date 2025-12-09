@@ -214,7 +214,7 @@ internal fun Application.server(
     if (!Miljø.erLokal()) {
         startPDLHendelseKonsument(dataSource, repositoryRegistry, gatewayProvider)
     }
-    if (!Miljø.erDev() && !Miljø.erLokal() && !Miljø.erProd()) {
+    if (!Miljø.erLokal() && !Miljø.erProd()) {
         startTilbakekrevingEventKonsument(dataSource, repositoryRegistry, gatewayProvider)
     }
 

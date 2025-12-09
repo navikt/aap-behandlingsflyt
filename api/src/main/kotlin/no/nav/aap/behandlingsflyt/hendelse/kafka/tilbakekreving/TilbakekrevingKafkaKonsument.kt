@@ -31,6 +31,7 @@ class TilbakekrevingKafkaKonsument(
     consumerName = "AapBehandlingsflytTilbakekrevingHendelse",
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
+    private val secureLogger = LoggerFactory.getLogger("secureLog")
 
     override fun håndter(meldinger: ConsumerRecords<String, String>) {
         meldinger.forEach(::håndter)
@@ -48,7 +49,12 @@ class TilbakekrevingKafkaKonsument(
     }
 
     fun håndter(meldingKey: String, meldingVerdi: String) {
-        val tilbakekrevingHendelse = DefaultJsonMapper.fromJson<TilbakekrevingHendelseKafkaMelding>(meldingVerdi)
+        val tilbakekrevingHendelse = try {
+            DefaultJsonMapper.fromJson<TilbakekrevingHendelseKafkaMelding>(meldingVerdi)
+        } catch (exception: Exception) {
+            secureLogger.error("Kunne ikke parse melding fra tilbakekreving: $meldingKey")
+            throw exception
+        }
         val saksnummer = Saksnummer(tilbakekrevingHendelse.eksternFagsakId)
         log.info("Mottatt tilbakekrevinghendelse for saksnummer: $saksnummer")
         dataSource.transaction { connection ->
