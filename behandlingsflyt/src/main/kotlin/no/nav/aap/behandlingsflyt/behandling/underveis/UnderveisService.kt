@@ -214,6 +214,7 @@ class UnderveisService(
             reduksjonArbeidOverGrenseEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.ReduksjonArbeidOverGrense),
             unntakMeldepliktDesemberEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.UnntakMeldepliktDesember),
             reduksjonIkkeMeldtSegEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.ReduksjonIkkeMeldtSeg),
+            timerArbeidetPeriodisertSubMeldeperiodeEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.TimerArbeidetPeriodisertSubMeldeperiode),
         )
     }
 
