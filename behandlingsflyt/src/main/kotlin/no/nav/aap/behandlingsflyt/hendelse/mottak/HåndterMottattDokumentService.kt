@@ -62,6 +62,7 @@ class HåndterMottattDokumentService(
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
+    private val secureLogger = LoggerFactory.getLogger("secureLog")
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         sakService = SakService(repositoryProvider),
@@ -274,7 +275,8 @@ class HåndterMottattDokumentService(
     ) {
         val behandling = behandlingRepository.hent(behandlingsreferanse)
         val årsakTilOpprettelse = utledÅrsakTilOpprettelse(innsendingType, melding)
-        log.info("Melding sin beskrivelse er " + melding.beskrivelse)
+
+        secureLogger.info("Melding sin beskrivelse er " + melding.beskrivelse)
         låsRepository.withLåstBehandling(behandling.id) {
             val vurderingsbehov =
                 melding.årsakerTilBehandling.map { VurderingsbehovMedPeriode(it.tilVurderingsbehov()) }
