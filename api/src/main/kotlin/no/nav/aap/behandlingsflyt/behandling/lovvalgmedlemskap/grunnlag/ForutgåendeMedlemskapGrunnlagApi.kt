@@ -82,59 +82,5 @@ fun NormalOpenAPIRoute.forutgåendeMedlemskapApi(
                 respond(grunnlag)
             }
         }
-
-        route("/{referanse}/grunnlag/forutgaaendemedlemskap-v2") {
-            getGrunnlag<BehandlingReferanse, PeriodisertForutgåendeMedlemskapGrunnlagResponse>(
-                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
-                behandlingPathParam = BehandlingPathParam("referanse"),
-                avklaringsbehovKode =  Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP.kode.toString()
-            ) { req ->
-                val grunnlag = dataSource.transaction { connection ->
-                    val repositoryProvider = repositoryRegistry.provider(connection)
-                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                    val medlemskapRepository =
-                        repositoryProvider
-                            .provide<MedlemskapArbeidInntektForutgåendeRepository>()
-                    val sakRepository = repositoryProvider.provide<SakRepository>()
-                    val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
-
-                    val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
-                    val sak = sakRepository.hent(behandling.sakId)
-                    val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
-
-                    val grunnlag = medlemskapRepository.hentHvisEksisterer(behandling.id)
-                    val nyeVurderinger = grunnlag?.vurderinger?.filter { it.vurdertIBehandling == behandling.id }
-                    val gjeldendeVedtatteVurderinger =
-                        grunnlag?.vurderinger?.filter { it.vurdertIBehandling != behandling.id }?.tilTidslinje() ?: Tidslinje()
-
-                    val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-                    val behøverVurderinger =
-                        avklaringsbehov.hentBehovForDefinisjon(Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP)
-                            ?.perioderVedtaketBehøverVurdering()
-                            .orEmpty()
-
-                    PeriodisertForutgåendeMedlemskapGrunnlagResponse(
-                        harTilgangTilÅSaksbehandle = kanSaksbehandle(),
-                        overstyrt = (nyeVurderinger)?.any { it.overstyrt } ?: false,
-                        behøverVurderinger = behøverVurderinger.toList(),
-                        kanVurderes = listOf(sak.rettighetsperiode),
-                        nyeVurderinger = nyeVurderinger?.map { it.toResponse(vurdertAvService) } ?: emptyList(),
-                        sisteVedtatteVurderinger = gjeldendeVedtatteVurderinger
-                            .komprimer()
-                            .segmenter()
-                            .map { segment ->
-                                val verdi = segment.verdi
-                                verdi.toResponse(
-                                    vurdertAvService = vurdertAvService,
-                                    fom = segment.fom(),
-                                    tom = if (segment.tom().isEqual(Tid.MAKS)) null else segment.tom()
-                                )
-                            }
-                    )
-                }
-
-                respond(grunnlag)
-            }
-        }
     }
 }

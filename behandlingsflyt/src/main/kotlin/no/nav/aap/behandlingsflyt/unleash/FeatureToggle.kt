@@ -30,6 +30,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     PeriodisertSykepengeErstatningNyAvklaringsbehovService,
     ReduksjonIkkeMeldtSeg,
     TimerArbeidetPeriodisertSubMeldeperiode,
+    MidlertidigStopp11_4
     ;
 
     override fun key(): String = name

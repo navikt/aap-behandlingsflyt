@@ -93,9 +93,7 @@ class ManglendeLigningGrunnlagStegTest {
             every { revurderingErAvbrutt(any()) } returns false
         }
 
-        avklaringsbehovService = AvklaringsbehovService(
-            avklaringsbehovRepository, avbrytRevurderingService
-        )
+        avklaringsbehovService = AvklaringsbehovService(avbrytRevurderingService)
 
         steg = ManglendeLigningGrunnlagSteg(
             avklaringsbehovRepository,
