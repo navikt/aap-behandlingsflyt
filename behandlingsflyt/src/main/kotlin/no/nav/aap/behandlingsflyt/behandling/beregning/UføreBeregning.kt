@@ -16,6 +16,7 @@ import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.Tid
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
 import java.time.Year
 
 class UføreBeregning(
@@ -65,7 +66,7 @@ class UføreBeregning(
     }
 
     private fun oppjusterMhpUføregradPeriodisertInntekt(
-        ikkeOppjusterteInntekter: Set<Year>,
+        relevanteÅr: Set<Year>,
         inntektTidslinje: Tidslinje<InntektData>,
         uføreTidslinje: Tidslinje<Prosent>
     ): List<UføreInntekt> {
@@ -81,7 +82,7 @@ class UføreBeregning(
                         periode = periode,
                         inntektIKroner = inntektIPeriode,
                         uføregrad = uføregrad,
-                        inntektJustertForUføregrad = if (arbeidsgrad.prosentverdi() == 0) {
+                        inntektJustertForUføregrad = if (arbeidsgrad == Prosent.`0_PROSENT`) {
                             Beløp(0)
                         } else {
                             inntektIPeriode.dividert(arbeidsgrad)
@@ -90,8 +91,13 @@ class UføreBeregning(
                 )
             })
 
-        return ikkeOppjusterteInntekter.map {
-            oppjusterteInntekterTidslinje.begrensetTil(Periode(it.atDay(1), it.plusYears(1).atDay(1).minusDays(1)))
+        return relevanteÅr.map {
+            oppjusterteInntekterTidslinje.begrensetTil(
+                Periode(
+                    LocalDate.of(it.value, 1, 1),
+                    LocalDate.of(it.value, 12, 31),
+                )
+            )
         }.map {
             val summertInntektJustertForUføre = it.segmenter().sumOf { it.verdi.inntektJustertForUføregrad.verdi }
             val summertInntekt = it.segmenter().sumOf { it.verdi.inntektIKroner.verdi }
