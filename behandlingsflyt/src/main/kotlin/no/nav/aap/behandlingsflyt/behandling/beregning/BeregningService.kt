@@ -120,8 +120,7 @@ class BeregningService(
             .map { InntektPerÅr(it.år, selector(it)!!, it) }
             .groupBy { it.år }
             .mapValues {
-                require(it.value.size == 1)
-                it.value.first()
+                it.value.single()
             }
     }
 

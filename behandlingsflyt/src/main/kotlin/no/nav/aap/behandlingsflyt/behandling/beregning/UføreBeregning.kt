@@ -11,6 +11,7 @@ import no.nav.aap.komponenter.tidslinje.JoinStyle
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -49,10 +50,16 @@ class UføreBeregning(
         // 6G-begrensning ligger her samt gjennomsnitt
         val ytterligereNedsattGrunnlag = beregn11_19Grunnlag(oppjusterteInntekter)
 
-        val (grunnlaget, type) =
+        val type =
             if (grunnlag.grunnlaget() >= ytterligereNedsattGrunnlag.grunnlaget()) {
-                Pair(grunnlag.grunnlaget(), GrunnlagUføre.Type.STANDARD)
-            } else Pair(ytterligereNedsattGrunnlag.grunnlaget(), GrunnlagUføre.Type.YTTERLIGERE_NEDSATT)
+                GrunnlagUføre.Type.STANDARD
+            } else GrunnlagUføre.Type.YTTERLIGERE_NEDSATT
+
+        val grunnlaget = when (type) {
+            GrunnlagUføre.Type.STANDARD -> grunnlag.grunnlaget()
+            GrunnlagUføre.Type.YTTERLIGERE_NEDSATT -> ytterligereNedsattGrunnlag.grunnlaget()
+        }
+
 
         return GrunnlagUføre(
             grunnlaget = grunnlaget,
@@ -71,25 +78,23 @@ class UføreBeregning(
         uføreTidslinje: Tidslinje<Prosent>
     ): List<UføreInntekt> {
         val oppjusterteInntekterTidslinje =
-            inntektTidslinje.kombiner(uføreTidslinje, JoinStyle.LEFT_JOIN { periode, venstre, høyre ->
-                val inntektIPeriode = venstre.verdi.beløp
+            inntektTidslinje.leftJoin(uføreTidslinje) { periode, inntekt, uføregrad ->
+                val inntektIPeriode = inntekt.beløp
 
-                val uføregrad = høyre?.verdi ?: Prosent.`0_PROSENT`
+                val uføregrad = uføregrad ?: Prosent.`0_PROSENT`
                 val arbeidsgrad = uføregrad.komplement()
 
-                Segment(
-                    periode, UføreInntektPeriodisert(
-                        periode = periode,
-                        inntektIKroner = inntektIPeriode,
-                        uføregrad = uføregrad,
-                        inntektJustertForUføregrad = if (arbeidsgrad == Prosent.`0_PROSENT`) {
-                            Beløp(0)
-                        } else {
-                            inntektIPeriode.dividert(arbeidsgrad)
-                        }
-                    )
+                UføreInntektPeriodisert(
+                    periode = periode,
+                    inntektIKroner = inntektIPeriode,
+                    uføregrad = uføregrad,
+                    inntektJustertForUføregrad = if (arbeidsgrad == Prosent.`0_PROSENT`) {
+                        Beløp(0)
+                    } else {
+                        inntektIPeriode.dividert(arbeidsgrad)
+                    }
                 )
-            })
+            }
 
         return relevanteÅr.map {
             oppjusterteInntekterTidslinje.begrensetTil(
@@ -99,6 +104,7 @@ class UføreBeregning(
                 )
             )
         }.map {
+            // vurder å iterere over år+mnd, ikke anta viss segmenetering
             val summertInntektJustertForUføre = it.segmenter().sumOf { it.verdi.inntektJustertForUføregrad.verdi }
             val summertInntekt = it.segmenter().sumOf { it.verdi.inntektIKroner.verdi }
             val år = Year.of(it.helePerioden().fom.year)
@@ -131,24 +137,13 @@ class UføreBeregning(
     }
 
     private fun inntektTidslinje(inntektsPerioder: Set<InntektsPeriode>): Tidslinje<InntektData> {
-        val inntektstidslinje = Tidslinje(inntektsPerioder.map {
-            Segment(it.periode, InntektData(it.beløp))
-        })
-        return inntektstidslinje
+        return inntektsPerioder.somTidslinje({ it.periode }, { InntektData(it.beløp) })
     }
 
     private fun lagUføreTidslinje(uføregrader: Set<Uføre>): Tidslinje<Prosent> {
-        return uføregrader.sortedBy { it.virkningstidspunkt }
-            .map { vurdering ->
-                Tidslinje(
-                    Periode(
-                        fom = vurdering.virkningstidspunkt,
-                        tom = Tid.MAKS
-                    ), vurdering.uføregrad
-                )
-            }.fold(Tidslinje()) { acc, curr ->
-                acc.kombiner(curr, StandardSammenslåere.prioriterHøyreSideCrossJoin())
-            }
+        return uføregrader
+            .sortedBy { it.virkningstidspunkt }
+            .somTidslinje({ Periode(it.virkningstidspunkt, Tid.MAKS) }, { it.uføregrad })
     }
 
     private fun gUnit(år: Year, beløp: Beløp): Grunnbeløp.BenyttetGjennomsnittsbeløp =
