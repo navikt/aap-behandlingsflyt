@@ -274,7 +274,7 @@ class HåndterMottattDokumentService(
     ) {
         val behandling = behandlingRepository.hent(behandlingsreferanse)
         val årsakTilOpprettelse = utledÅrsakTilOpprettelse(innsendingType, melding)
-
+        log.info("Melding sin beskrivelse er " + melding.beskrivelse)
         låsRepository.withLåstBehandling(behandling.id) {
             val vurderingsbehov =
                 melding.årsakerTilBehandling.map { VurderingsbehovMedPeriode(it.tilVurderingsbehov()) }
