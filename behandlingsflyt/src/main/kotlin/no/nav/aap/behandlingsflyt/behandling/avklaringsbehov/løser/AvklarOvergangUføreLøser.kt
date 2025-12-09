@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreEnkelLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -13,7 +13,7 @@ class AvklarOvergangUføreLøser(
     private val behandlingRepository: BehandlingRepository,
     private val overgangUforeRepository: OvergangUføreRepository,
     private val sakRepository: SakRepository,
-) : AvklaringsbehovsLøser<AvklarOvergangUføreLøsning> {
+) : AvklaringsbehovsLøser<AvklarOvergangUføreEnkelLøsning> {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
@@ -24,7 +24,7 @@ class AvklarOvergangUføreLøser(
 
     override fun løs(
         kontekst: AvklaringsbehovKontekst,
-        løsning: AvklarOvergangUføreLøsning
+        løsning: AvklarOvergangUføreEnkelLøsning
     ): LøsningsResultat {
         val løsninger = løsning.løsningerForPerioder ?: listOf(løsning.overgangUføreVurdering)
         val (behandlingId, sakId, forrigeBehandlingId) = kontekst.kontekst.let {
