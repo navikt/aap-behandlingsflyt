@@ -26,7 +26,8 @@ class AvklarOvergangUføreLøser(
         kontekst: AvklaringsbehovKontekst,
         løsning: AvklarOvergangUføreEnkelLøsning
     ): LøsningsResultat {
-        val løsninger = løsning.løsningerForPerioder ?: listOf(løsning.overgangUføreVurdering)
+        val løsninger = løsning.løsningerForPerioder ?: listOf(requireNotNull(løsning.overgangUføreVurdering))
+        
         val (behandlingId, sakId, forrigeBehandlingId) = kontekst.kontekst.let {
             Triple(
                 it.behandlingId,
