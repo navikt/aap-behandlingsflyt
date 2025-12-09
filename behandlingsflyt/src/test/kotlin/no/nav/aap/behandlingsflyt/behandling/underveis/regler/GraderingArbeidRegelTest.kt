@@ -291,14 +291,20 @@ class GraderingArbeidRegelTest {
     fun `opptrapping midt i meldeperiode, eksempel 1`() {
         assertMeldekortutregning(
             opptrapping = false,
-            timerArbeidet = List(2) { 11.0 } + List(5) { 0.0 } + List(3) { 10.0 } + List(4) { 0.0 },
+            timerArbeidet = listOf(
+                11.0, 11.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                10.0, 10.0, 10.0, 0.0, 0.0, 0.0, 0.0,
+            ),
             forventetGradering = Prosent(0),
             forventetAndelArbeid = Prosent(69),
         )
 
         assertMeldekortutregning(
             opptrapping = List(7) { false } + List(7) { true },
-            timerArbeidet = List(2) { 11.0 } + List(5) { 0.0 } + List(3) { 10.0 } + List(4) { 0.0 },
+            timerArbeidet = listOf(
+                11.0, 11.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                10.0, 10.0, 10.0, 0.0, 0.0, 0.0, 0.0,
+            ),
             forventetGradering = List(7) { Prosent(41) } + List(7) { Prosent(20) },
             forventetAndelArbeid = List(7) { Prosent(59) } + List(7) { Prosent(80) },
         )
@@ -311,13 +317,19 @@ class GraderingArbeidRegelTest {
     fun `opptrapping midt i meldeperiode, eksempel 2`() {
         assertMeldekortutregning(
             opptrapping = false,
-            timerArbeidet = List(5) { 4.5 } + List(2) { 0.0 } + List(1) { 4.5 } + List(4) { 6.0 } + List(2) { 0.0 },
+            timerArbeidet = listOf(
+                4.5, 4.5, 4.5, 4.5, 4.5, 0.0, 0.0,
+                4.5, 6.0, 6.0, 6.0, 6.0, 0.0, 0.0,
+            ),
             forventetGradering = Prosent(0),
             forventetAndelArbeid = Prosent(68),
         )
         assertMeldekortutregning(
             opptrapping = List(8) { false } + List(6) { true },
-            timerArbeidet = List(5) { 4.5 } + List(2) { 0.0 } + List(1) { 4.5 } + List(4) { 6.0 } + List(2) { 0.0 },
+            timerArbeidet = listOf(
+                4.5, 4.5, 4.5, 4.5, 4.5, 0.0, 0.0,
+                4.5, 6.0, 6.0, 6.0, 6.0, 0.0, 0.0,
+            ),
             forventetGradering = List(8) { Prosent(40) } + List(6) { Prosent(20) },
             forventetAndelArbeid = List(8) { Prosent(60) } + List(6) { Prosent(80) },
         )
