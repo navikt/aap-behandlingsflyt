@@ -54,18 +54,13 @@ class BrevbestillingService(
      *   Evt. flere repetisjoner av avbryt og gjenoppta
      *
      *  Tilbakestill medføre en av to status-endringer for brevbestillingene:
-     *   1. Nye/gjenopptatt bestilling avbrytes
-     *   2. Avbrutt bestilling gjenopptas
-     *  Avhengig av hva bestillingstatus var før tilbakestill intraff.
+     *   1. Nye/gjenopptatt bestilling avbrytes og får tilstand AVBRUTT
+     *   2. Avbrutt bestilling forblir i tilstand AVBRUTT
      */
     fun tilbakestillVedtakBrevBestillinger(behandlingId: BehandlingId) {
         val bestillinger = brevbestillingRepository.hent(behandlingId).filter { it.typeBrev.erVedtak() }
         for (bestilling in bestillinger) {
-            if (bestilling.status == Status.AVBRUTT) {
-                gjenopptaBestilling(behandlingId, bestilling.referanse)
-            } else if (bestilling.status == Status.FORHÅNDSVISNING_KLAR) {
-                avbryt(behandlingId, bestilling.referanse)
-            }
+            avbryt(behandlingId, bestilling.referanse)
         }
     }
 

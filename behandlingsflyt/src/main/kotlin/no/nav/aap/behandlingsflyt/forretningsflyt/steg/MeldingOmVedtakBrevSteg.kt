@@ -48,6 +48,13 @@ class MeldingOmVedtakBrevSteg(
         val klageErTrukket = trekkKlageService.klageErTrukket(kontekst.behandlingId)
         val brevBehov = brevUtlederService.utledBehovForMeldingOmVedtak(kontekst.behandlingId)
         val erBrevBestilt = brevbestillingService.harBestillingOmVedtak(kontekst.behandlingId)
+        if (brevBehov != null && !klageErTrukket) {
+            if (erBrevBestilt) {
+                gjenopptaBrevBestilling(kontekst)
+            } else {
+                bestillBrev(kontekst, brevBehov)
+            }
+        }
         avklaringsbehovService.oppdaterAvklaringsbehov(
             avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId),
             Definisjon.SKRIV_VEDTAKSBREV,
@@ -56,13 +63,6 @@ class MeldingOmVedtakBrevSteg(
             tilbakestillGrunnlag = { tilbakestillGrunnlag(kontekst.behandlingId) },
             kontekst
         )
-        if (brevBehov != null && !klageErTrukket) {
-            if (erBrevBestilt) {
-                gjenopptaBrevBestilling(kontekst)
-            } else {
-                bestillBrev(kontekst, brevBehov)
-            }
-        }
         return Fullført
     }
 
