@@ -77,26 +77,6 @@ class VurderBistandsbehovSteg(
                 if (forrigeVurderinger.toSet() != nåværendeVurderinger.toSet()) {
                     bistandRepository.lagre(kontekst.behandlingId, forrigeVurderinger)
                 }
-
-                val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-                val nyttVilkår = vilkårsresultat.optionalVilkår(Vilkårtype.BISTANDSVILKÅRET)
-
-                if (nyttVilkår != null) {
-                    val forrigeVilkårTidslinje =
-                        kontekst.forrigeBehandlingId?.let { vilkårsresultatRepository.hent(it) }
-                            ?.optionalVilkår(Vilkårtype.BISTANDSVILKÅRET)
-                            ?.tidslinje()
-                            .orEmpty()
-
-                    if (nyttVilkår.tidslinje() != forrigeVilkårTidslinje) {
-                        nyttVilkår.nullstillTidslinje()
-                            .leggTilVurderinger(forrigeVilkårTidslinje)
-
-                        vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
-                    }
-                } else {
-                    log.info("Vilkår for bistandsbehov finnes ikke i vilkårsresultat for behandling ${kontekst.behandlingId}, ingen tilbakestilling utført.")
-                }
             },
             kontekst = kontekst
         )

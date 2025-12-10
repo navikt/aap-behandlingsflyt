@@ -29,6 +29,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     ReduksjonArbeidOverGrense,
     PeriodisertSykepengeErstatningNyAvklaringsbehovService,
     ReduksjonIkkeMeldtSeg,
+    TimerArbeidetPeriodisertSubMeldeperiode,
     MidlertidigStopp11_4
     ;
 

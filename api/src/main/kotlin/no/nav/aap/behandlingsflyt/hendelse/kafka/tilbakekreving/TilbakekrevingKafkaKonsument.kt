@@ -45,7 +45,8 @@ class TilbakekrevingKafkaKonsument(
             melding.offset(),
         )
         melding.topic()
-        håndter(melding.key(), melding.value())
+        val meldingKey = "${melding.partition()}-${melding.offset()}"
+        håndter(meldingKey, melding.value())
     }
 
     fun håndter(meldingKey: String, meldingVerdi: String) {
