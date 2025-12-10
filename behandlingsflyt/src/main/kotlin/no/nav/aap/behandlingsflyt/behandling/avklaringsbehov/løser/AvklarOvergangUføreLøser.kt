@@ -2,34 +2,42 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreEnkelLøsning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreValidering.Companion.nårVurderingErKonsistentMedSykdomOgBistand
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
+import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.time.LocalDate
 import kotlin.collections.orEmpty
 
 class AvklarOvergangUføreLøser(
-    private val behandlingRepository: BehandlingRepository,
     private val overgangUforeRepository: OvergangUføreRepository,
     private val sakRepository: SakRepository,
+    private val sykdomRepository: SykdomRepository,
+    private val bistandRepository: BistandRepository,
 ) : AvklaringsbehovsLøser<AvklarOvergangUføreEnkelLøsning> {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
-        behandlingRepository = repositoryProvider.provide(),
         overgangUforeRepository = repositoryProvider.provide(),
         sakRepository = repositoryProvider.provide(),
+        sykdomRepository = repositoryProvider.provide(),
+        bistandRepository = repositoryProvider.provide(),
     )
-
 
     override fun løs(
         kontekst: AvklaringsbehovKontekst,
         løsning: AvklarOvergangUføreEnkelLøsning
     ): LøsningsResultat {
         val løsninger = løsning.løsningerForPerioder ?: listOf(requireNotNull(løsning.overgangUføreVurdering))
-        
-        
-        
+
         val (behandlingId, sakId, forrigeBehandlingId) = kontekst.kontekst.let {
             Triple(
                 it.behandlingId,
@@ -53,6 +61,11 @@ class AvklarOvergangUføreLøser(
             )
         }
 
+        val nyTidslinje = OvergangUføreGrunnlag(
+            vurderinger = nyeVurderinger + vedtatteVurderinger
+        ).somOvergangUforevurderingstidslinje()
+        valider(behandlingId, rettighetsperiode.fom, nyTidslinje)
+
         overgangUforeRepository.lagre(
             behandlingId = behandlingId,
             overgangUføreVurderinger = nyeVurderinger + vedtatteVurderinger
@@ -65,5 +78,33 @@ class AvklarOvergangUføreLøser(
 
     override fun forBehov(): Definisjon {
         return Definisjon.AVKLAR_OVERGANG_UFORE
+    }
+
+    private fun valider(
+        behandlingId: BehandlingId,
+        kravdato: LocalDate,
+        nyTidslinje: Tidslinje<OvergangUføreVurdering>
+    ) {
+        val sykdomTidslinje = sykdomRepository.hentHvisEksisterer(behandlingId)
+            ?.somSykdomsvurderingstidslinje()
+            .orEmpty()
+        val bistandTidslinje = bistandRepository.hentHvisEksisterer(behandlingId)
+            ?.somBistandsvurderingstidslinje()
+            .orEmpty()
+        val inkonsistentePerioder = nårVurderingErKonsistentMedSykdomOgBistand(
+            overgangUføreTidslinje = nyTidslinje,
+            sykdomstidslinje = sykdomTidslinje,
+            bistandstidslinje = bistandTidslinje,
+            kravdato = kravdato
+        ).filter { !it.verdi }.perioder().toSet()
+        if (inkonsistentePerioder.isNotEmpty()) {
+            throw UgyldigForespørselException(
+                "Følgende perioder er inkonsekvente med vurderinger av sykdom og bistand: ${
+                    inkonsistentePerioder.joinToString(
+                        ","
+                    )
+                }}"
+            )
+        }
     }
 }

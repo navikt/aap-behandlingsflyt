@@ -137,6 +137,7 @@ import no.nav.aap.behandlingsflyt.test.testGatewayProvider
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
@@ -252,7 +253,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                             ident = "",
                             fraOgMed = LocalDate.now().minusYears(20).toString(),
                             tilOgMed = LocalDate.now().toString(),
-                            status =  "GYLD",
+                            status = "GYLD",
                             statusaarsak = null,
                             medlem = true,
                             grunnlag = "grunnlag",
@@ -357,7 +358,8 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
 
         if (sendMeldekort) {
             // Kan ikke bruke Tid.MAKS som finnes i rettighetsperioden - da blir det uendelig kjøretid på testene..?
-            val periodeForInnsendteMeldekort = Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.fom.plusYears(1))
+            val periodeForInnsendteMeldekort =
+                Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.fom.plusYears(1))
             sak.sendInnMeldekort(
                 journalpostId = JournalpostId("220"),
                 mottattTidspunkt = fom.atStartOfDay(),
@@ -448,6 +450,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                     ingenEndringIGruppe = ingenEndringIGruppe
                 )
             )
+
         }
         motor.kjørJobber()
         return hentBehandling(behandling.referanse)
@@ -465,6 +468,30 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
             bruker = bruker,
             ingenEndringIGruppe = ingenEndringIGruppe
         )
+    }
+
+    @JvmName("assertThrowsExt")
+    protected fun Behandling.assertThrows(
+        expectedException: KClass<out Throwable>,
+        message: String? = null,
+        block: (Behandling) -> Unit
+    ): Behandling {
+        try {
+            block(this)
+            throw AssertionError("Forventet at blokk skulle kaste ${expectedException.simpleName}, men den kastet ingenting.")
+        } catch (e: Throwable) {
+            if (!expectedException.isInstance(e)) {
+                throw AssertionError(
+                    "Forventet at blokk skulle kaste ${expectedException.simpleName}, men den kastet ${e::class.simpleName}.",
+                )
+            }
+            if (message != null && e.message != message) {
+                throw AssertionError(
+                    "Forventet at blokk skulle kaste \"${message}\", men fikk \"${e.message}\".",
+                )
+            }
+        }
+        return this
     }
 
     @JvmName("løsFramTilGrunnlagExt")
@@ -536,7 +563,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                         dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                         harSkadeSykdomEllerLyte = erOppfylt,
                         erSkadeSykdomEllerLyteVesentligdel = true.takeIf { erOppfylt },
-                        erNedsettelseIArbeidsevneMerEnnHalvparten =  when {
+                        erNedsettelseIArbeidsevneMerEnnHalvparten = when {
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense != null -> false
                             erOppfylt -> true
                             else -> null
@@ -1125,7 +1152,10 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
     }
 
     @JvmName("løsFramTilForutgåendeMedlemskapExt")
-    protected fun Behandling.løsFramTilForutgåendeMedlemskap(vurderingerGjelderFra: LocalDate, harYrkesskade: Boolean = false): Behandling {
+    protected fun Behandling.løsFramTilForutgåendeMedlemskap(
+        vurderingerGjelderFra: LocalDate,
+        harYrkesskade: Boolean = false
+    ): Behandling {
         return løsFramTilForutgåendeMedlemskap(this, vurderingerGjelderFra, harYrkesskade)
     }
 
@@ -1194,7 +1224,10 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         )
     }
 
-    protected fun Behandling.løsYrkesskadeVurdering(yrkesskader: List<TestYrkesskade>, erÅrsakssammenheng: Boolean = true): Behandling {
+    protected fun Behandling.løsYrkesskadeVurdering(
+        yrkesskader: List<TestYrkesskade>,
+        erÅrsakssammenheng: Boolean = true
+    ): Behandling {
         return løsAvklaringsBehov(
             this,
             AvklarYrkesskadeLøsning(
@@ -1300,14 +1333,19 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                     }),
             Bruker("BESLUTTER")
         )
+
     protected fun Behandling.løsFritakMeldeplikt(fom: LocalDate): Behandling {
-        return løsAvklaringsBehov(this, FritakMeldepliktLøsning(
-            fritaksvurderinger = listOf(FritaksvurderingDto(
-                harFritak = true,
-                fraDato = fom,
-                begrunnelse = "har fritak",
-            ))
-        ))
+        return løsAvklaringsBehov(
+            this, FritakMeldepliktLøsning(
+                fritaksvurderinger = listOf(
+                    FritaksvurderingDto(
+                        harFritak = true,
+                        fraDato = fom,
+                        begrunnelse = "har fritak",
+                    )
+                )
+            )
+        )
     }
 
     protected fun Behandling.løsForeslåVedtak(): Behandling =
@@ -1328,7 +1366,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
             )
         )
     }
-    
+
     protected fun Behandling.løsYrkesskade(person: TestPerson): Behandling {
         require(person.yrkesskade.isNotEmpty()) { "Testperson må ha yrkesskade for å bruke denne metoden" }
         return løsAvklaringsBehov(
@@ -1476,10 +1514,11 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
     }
 
     protected fun Behandling.assertRettighetstype(vararg rettighetstyper: Pair<Periode, RettighetsType>): Behandling {
-        val faktiskeRettighetsTyper = dataSource.transaction(readOnly = true) { UnderveisRepositoryImpl(it).hent(this.id) }
-            .somTidslinje()
-            .mapNotNull { it.rettighetsType }
-            .komprimer()
+        val faktiskeRettighetsTyper =
+            dataSource.transaction(readOnly = true) { UnderveisRepositoryImpl(it).hent(this.id) }
+                .somTidslinje()
+                .mapNotNull { it.rettighetsType }
+                .komprimer()
 
         val assertions = tidslinjeOf(*rettighetstyper)
             .map<(RettighetsType) -> Unit> { ønsketRettighetsType ->

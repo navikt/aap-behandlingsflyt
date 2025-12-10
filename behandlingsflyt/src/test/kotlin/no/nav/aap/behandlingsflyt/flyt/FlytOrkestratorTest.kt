@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBarn
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarManuellInntektVurderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreEnkelLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeriodisertLovvalgMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningUføreLøsning
@@ -95,6 +96,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flate.OvergangUføreLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flate.OvergangUføreVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.SamordningVurderingData
@@ -1736,29 +1738,31 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     ),
                 ),
             )
-            .løsAvklaringsBehov(
-                AvklarOvergangUføreEnkelLøsning(
-                    OvergangUføreVurderingLøsningDto(
-                        begrunnelse = "Løsning",
-                        brukerHarSøktOmUføretrygd = true,
-                        brukerHarFåttVedtakOmUføretrygd = "NEI",
-                        brukerRettPåAAP = true,
-                        virkningsdato = virkningsdatoAndreLøsningOvergangUføre,
-                        fom = virkningsdatoFørsteLøsningOvertgangUføre,
-                        tom = null,
-                        overgangBegrunnelse = null
+            .assertThrows(
+                UgyldigForespørselException::class,
+                "Løsning mangler vurdering for perioder: [Periode(fom=2025-12-10, tom=2025-12-11)]"
+            ) { behandling ->
+                behandling.løsAvklaringsBehov(
+                    AvklarOvergangUføreLøsning(
+                        listOf(
+                            OvergangUføreLøsningDto(
+                                begrunnelse = "Løsning",
+                                brukerHarSøktOmUføretrygd = true,
+                                brukerHarFåttVedtakOmUføretrygd = "NEI",
+                                brukerRettPåAAP = true,
+                                fom = virkningsdatoFørsteLøsningOvertgangUføre,
+                                tom = null,
+                                overgangBegrunnelse = null
+                            )
+                        )
                     )
                 )
-            )
+            }
             .medKontekst {
                 assertThat(åpneAvklaringsbehov)
                     .describedAs("Krever 11-18-løsning for perioder med 11-5 ja, 11-6 nei")
                     .anySatisfy {
                         assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_OVERGANG_UFORE)
-                        assertThat(it.perioderSomIkkeErTilstrekkeligVurdert()).isEqualTo(
-                            setOf(Periode(
-                                periode.fom, virkningsdatoFørsteLøsningOvertgangUføre.minusDays(1)))
-                        )
                     }
             }
             .løsAvklaringsBehov(
@@ -1780,7 +1784,10 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 val overgangUføreVilkår = vilkårsresultat.finnVilkår(Vilkårtype.OVERGANGUFØREVILKÅRET)
                 assertTidslinje(
                     overgangUføreVilkår.tidslinje(),
-                    Periode(virkningsdatoAndreLøsningOvergangUføre, virkningsdatoAndreLøsningOvergangUføre.plusMonths(8).minusDays(1)) to {
+                    Periode(
+                        virkningsdatoAndreLøsningOvergangUføre,
+                        virkningsdatoAndreLøsningOvergangUføre.plusMonths(8).minusDays(1)
+                    ) to {
                         assertThat(it.utfall).isEqualTo(Utfall.OPPFYLT)
                     },
                     // 8 måneder gjelder fra virkningsdato, selv om virkningsdato er før rettighetsperiode start

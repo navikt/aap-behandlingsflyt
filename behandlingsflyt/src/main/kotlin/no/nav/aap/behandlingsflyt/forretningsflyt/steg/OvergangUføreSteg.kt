@@ -9,11 +9,10 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.overganguføre.OvergangUfø
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreValidering.Companion.nårVurderingErKonsistentMedSykdomOgBistand
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreValidering.Companion.sykdomErOppfyltOgBistandErIkkeOppfylt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -145,33 +144,6 @@ class OvergangUføreSteg private constructor(
         return Tidslinje.map2(nårPåkrevdVurderingMangler, nårVurderingErKonsistent) { vurderingMangler, erKonsistent ->
             vurderingMangler == true || erKonsistent == false
         }.komprimer().filter { erUtilstrekkelig -> erUtilstrekkelig.verdi }.perioder().toSet()
-    }
-
-    private fun nårVurderingErKonsistentMedSykdomOgBistand(
-        overgangUføreTidslinje: Tidslinje<OvergangUføreVurdering>,
-        sykdomstidslinje: Tidslinje<Sykdomsvurdering>,
-        bistandstidslinje: Tidslinje<Bistandsvurdering>,
-        kravdato: LocalDate
-    ): Tidslinje<Boolean> {
-        return Tidslinje.map3(
-            overgangUføreTidslinje, sykdomstidslinje, bistandstidslinje
-        ) { segmentPeriode, overgangUføreVurdering, sykdomsvurdering, bistandsvurdering ->
-            overgangUføreVurdering == null 
-                    || Periode(kravdato.minusMonths(8), kravdato).inneholder(segmentPeriode) // Det er tillatt å vurdere 11-18 før kravdato
-                    || overgangUføreVurdering.brukerRettPåAAP == false // Nei-vurdering er uavhengig av bistand og sykdom
-                    || sykdomErOppfyltOgBistandErIkkeOppfylt(kravdato, segmentPeriode, sykdomsvurdering, bistandsvurdering)
-        }.komprimer()
-    }
-
-    private fun sykdomErOppfyltOgBistandErIkkeOppfylt(
-        kravdato: LocalDate,
-        segmentPeriode: Periode,
-        sykdomsvurdering: Sykdomsvurdering?,
-        bistandsvurdering: Bistandsvurdering?
-    ): Boolean {
-        return sykdomsvurdering?.erOppfyltOrdinær(
-            kravdato, segmentPeriode
-        ) == true && bistandsvurdering != null && !bistandsvurdering.erBehovForBistand()
     }
 
     companion object : FlytSteg {
