@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.alder.Aldersvilkåret
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.AlderMedMåneder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -15,6 +16,8 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
@@ -23,13 +26,15 @@ class VurderAlderSteg private constructor(
     private val vilkårService: VilkårService,
     private val personopplysningRepository: PersonopplysningRepository,
     private val tidligereVurderinger: TidligereVurderinger,
+    private val unleashGateway: UnleashGateway
 ) : BehandlingSteg {
 
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         vilkårsresultatRepository = repositoryProvider.provide(),
         vilkårService = VilkårService(repositoryProvider),
         personopplysningRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+        unleashGateway = gatewayProvider.provide()
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -64,10 +69,17 @@ class VurderAlderSteg private constructor(
                 ?: throw IllegalStateException("Forventet å finne personopplysninger")
 
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
+
+        val øvreGrenseForAutomatiskAvslag = if (unleashGateway.isEnabled(BehandlingsflytFeature.Under18)) {
+            AlderMedMåneder(år = 18, måneder = 0)
+        } else {
+            AlderMedMåneder(år = 18, måneder = 0)
+        }
         val aldersgrunnlag =
             Aldersgrunnlag(
                 kontekst.rettighetsperiode,
-                brukerPersonopplysning.fødselsdato
+                brukerPersonopplysning.fødselsdato,
+                øvreGrenseForAutomatiskAvslag
             )
         Aldersvilkåret(vilkårsresultat).vurder(aldersgrunnlag)
         vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
@@ -78,7 +90,7 @@ class VurderAlderSteg private constructor(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
         ): BehandlingSteg {
-            return VurderAlderSteg(repositoryProvider)
+            return VurderAlderSteg(repositoryProvider, gatewayProvider)
         }
 
         override fun type(): StegType {
