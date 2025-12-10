@@ -189,7 +189,7 @@ object Grunnbeløp {
                 return BenyttetGjennomsnittsbeløp(
                     år = Year.of(dato.year),
                     beløp = grunnbeløp.gjennomsnittBeløp,
-                    gUnit = GUnit(beløp.dividert(grunnbeløp.gjennomsnittBeløp, GUnit.SCALE))
+                    gUnit = GUnit(beløp.dividert(grunnbeløp.gjennomsnittBeløp, GUnit.ANTALL_DESIMALER))
                 )
             }
 
