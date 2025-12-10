@@ -96,6 +96,13 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
             "Oppgitt barn"
         )
 
+    override fun hentBehandlingIdForSakSomFårBarnetilleggForSøknadsBarn(ident: Ident) =
+        hentBehandlingIdGenerisk(
+            ident,
+            ::getSøknadBarnId,
+            ::hentBehandlingIdForSøknadBarneId,
+            "Søknadsbarn"
+        )
 
     override fun finnSaksbehandlerOppgitteBarn(ident: String): SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn? {
         return connection.queryFirstOrNull(
