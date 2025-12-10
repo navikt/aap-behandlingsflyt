@@ -61,7 +61,7 @@ class InntektsbortfallSteg private constructor(
 
     fun erTilstrekkeligVurdert(): Boolean {
         //TODO: Implement AAP-1406
-        return true
+        return false
     }
 
     fun erUnder62PåVirkningsTidspunktet(kontekst: FlytKontekstMedPerioder): Boolean {
