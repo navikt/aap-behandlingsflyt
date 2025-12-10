@@ -65,12 +65,10 @@ class AvventUtbetalingService(
         val harKrav = perioderMedKrav.any { tilkjentYtelseHelePerioden.overlapper(tilPeriode(it.fom, it.tom)) }
 
 
-       // For simulering i førstegangsbehandling, finnes ikke vedtak enda.
-
-        if (harKrav && førsteVedtak != null) {
+        if (harKrav && førsteVedtak != null && vedtakDenneBehandligen.virkningstidspunkt != null) {
 
             val førsteVedtaksdato = førsteVedtak.vedtakstidspunkt.toLocalDate()
-            val detteVirkingstidspunkt = vedtakDenneBehandligen.virkningstidspunkt ?: error("Mangler virkningstidspunkt på vedtak for behandling ${vedtakDenneBehandligen.behandlingId}")
+            val detteVirkingstidspunkt = vedtakDenneBehandligen.virkningstidspunkt
 
             val tidligsteVirkingsTidspunkt = finnTidligesteVirkningstidspunktFraTidligereBehandlinger(behandling, vedtakDenneBehandligen.virkningstidspunkt)
 
