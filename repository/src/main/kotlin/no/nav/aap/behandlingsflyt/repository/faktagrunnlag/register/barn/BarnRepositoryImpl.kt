@@ -88,13 +88,15 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
             "Registerbarn"
         )
 
-    override fun hentBehandlingIdForSakSomFårBarnetilleggForSaksbehandlerOppgitteBarn(ident: Ident) =
-        hentBehandlingIdGenerisk(
+    override fun hentBehandlingIdForSakSomFårBarnetilleggForSaksbehandlerOppgitteBarn(ident: Ident): List<BehandlingId> {
+        log.info("Henter behandlinger for saksbehandlers oppgitte barn")
+        return hentBehandlingIdGenerisk(
             ident,
             ::getSaksbehandlerOppgitteBarnId,
             ::hentBehandlingIdForSaksbehandlerOppgitteBarneId,
-            "Oppgitt barn"
+            "Oppgittbarn"
         )
+    }
 
     override fun hentBehandlingIdForSakSomFårBarnetilleggForSøknadsBarn(ident: Ident) =
         hentBehandlingIdGenerisk(
@@ -780,7 +782,6 @@ class BarnRepositoryImpl(private val connection: DBConnection) : BarnRepository 
     ): List<BehandlingId> {
         val barnId = hentBarnId(ident)
         log.info("Henter {} for barnId {}", logPrefix, barnId)
-
         return barnId?.let {
             val behandlingId = hentBehandling(it)
             log.info("Henter behandling for behandlingId {}", behandlingId)
