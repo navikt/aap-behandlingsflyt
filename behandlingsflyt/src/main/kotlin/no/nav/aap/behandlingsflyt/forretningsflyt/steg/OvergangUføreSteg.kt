@@ -157,7 +157,7 @@ class OvergangUføreSteg private constructor(
             overgangUføreTidslinje, sykdomstidslinje, bistandstidslinje
         ) { segmentPeriode, overgangUføreVurdering, sykdomsvurdering, bistandsvurdering ->
             overgangUføreVurdering == null 
-                    || segmentPeriode.tom.isBefore(kravdato) // Det er tillatt å vurdere 11-18 før kravdato
+                    || Periode(kravdato.minusMonths(8), kravdato).inneholder(segmentPeriode) // Det er tillatt å vurdere 11-18 før kravdato
                     || overgangUføreVurdering.brukerRettPåAAP == false // Nei-vurdering er uavhengig av bistand og sykdom
                     || sykdomErOppfyltOgBistandErIkkeOppfylt(kravdato, segmentPeriode, sykdomsvurdering, bistandsvurdering)
         }.komprimer()
