@@ -28,6 +28,8 @@ class AvklarOvergangUføreLøser(
     ): LøsningsResultat {
         val løsninger = løsning.løsningerForPerioder ?: listOf(requireNotNull(løsning.overgangUføreVurdering))
         
+        
+        
         val (behandlingId, sakId, forrigeBehandlingId) = kontekst.kontekst.let {
             Triple(
                 it.behandlingId,

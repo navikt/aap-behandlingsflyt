@@ -1691,7 +1691,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
     @Test
     fun `11-18 uføre underveis i en behandling`() {
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-        val virkningsdatoOvergangUføre = periode.fom.plusDays(20)
+        val virkningsdatoFørsteLøsningOvertgangUføre = periode.fom.plusDays(2)
+        val virkningsdatoAndreLøsningOvergangUføre = periode.fom.minusDays(20)
 
         // Sender inn en søknad
         var (_, behandling) = sendInnFørsteSøknad(periode = periode)
@@ -1742,13 +1743,51 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                         brukerHarSøktOmUføretrygd = true,
                         brukerHarFåttVedtakOmUføretrygd = "NEI",
                         brukerRettPåAAP = true,
-                        virkningsdato = virkningsdatoOvergangUføre,
-                        fom = virkningsdatoOvergangUføre,
+                        virkningsdato = virkningsdatoAndreLøsningOvergangUføre,
+                        fom = virkningsdatoFørsteLøsningOvertgangUføre,
                         tom = null,
                         overgangBegrunnelse = null
                     )
                 )
             )
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov)
+                    .describedAs("Krever 11-18-løsning for perioder med 11-5 ja, 11-6 nei")
+                    .anySatisfy {
+                        assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_OVERGANG_UFORE)
+                        assertThat(it.perioderSomIkkeErTilstrekkeligVurdert()).isEqualTo(
+                            setOf(Periode(
+                                periode.fom, virkningsdatoFørsteLøsningOvertgangUføre.minusDays(1)))
+                        )
+                    }
+            }
+            .løsAvklaringsBehov(
+                AvklarOvergangUføreEnkelLøsning(
+                    OvergangUføreVurderingLøsningDto(
+                        begrunnelse = "Løsning",
+                        brukerHarSøktOmUføretrygd = true,
+                        brukerHarFåttVedtakOmUføretrygd = "NEI",
+                        brukerRettPåAAP = true,
+                        virkningsdato = virkningsdatoAndreLøsningOvergangUføre,
+                        fom = virkningsdatoAndreLøsningOvergangUføre,
+                        tom = null,
+                        overgangBegrunnelse = null
+                    )
+                )
+            )
+            .medKontekst {
+                val vilkårsresultat = hentVilkårsresultat(behandlingId = behandling.id)
+                val overgangUføreVilkår = vilkårsresultat.finnVilkår(Vilkårtype.OVERGANGUFØREVILKÅRET)
+                assertTidslinje(
+                    overgangUføreVilkår.tidslinje(),
+                    Periode(virkningsdatoAndreLøsningOvergangUføre, virkningsdatoAndreLøsningOvergangUføre.plusMonths(8).minusDays(1)) to {
+                        assertThat(it.utfall).isEqualTo(Utfall.OPPFYLT)
+                    },
+                    // 8 måneder gjelder fra virkningsdato, selv om virkningsdato er før rettighetsperiode start
+                    Periode(virkningsdatoAndreLøsningOvergangUføre.plusMonths(8), Tid.MAKS) to {
+                        assertThat(it.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
+                    })
+            }
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
@@ -1802,13 +1841,10 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         // Sjekker at overgangUføreVilkår ble oppfylt med innvilgelsesårsak satt til 11-13.
         assertTidslinje(
             overgangUføreVilkår.tidslinje().begrensetTil(underveisPeriode),
-            Periode(periode.fom, virkningsdatoOvergangUføre.minusDays(1)) to {
-                assertThat(it.utfall).isEqualTo(Utfall.IKKE_VURDERT)
-            },
-            Periode(virkningsdatoOvergangUføre, virkningsdatoOvergangUføre.plusMonths(8).minusDays(1)) to {
+            Periode(periode.fom, virkningsdatoAndreLøsningOvergangUføre.plusMonths(8).minusDays(1)) to {
                 assertThat(it.utfall).isEqualTo(Utfall.OPPFYLT)
             },
-            Periode(virkningsdatoOvergangUføre.plusMonths(8), underveisPeriode.tom) to {
+            Periode(virkningsdatoAndreLøsningOvergangUføre.plusMonths(8), underveisPeriode.tom) to {
                 assertThat(it.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
             })
 
@@ -1819,7 +1855,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
 
         assertTidslinje(
             vilkårsresultat.rettighetstypeTidslinje().begrensetTil(underveisPeriode),
-            Periode(virkningsdatoOvergangUføre, virkningsdatoOvergangUføre.plusMonths(8).minusDays(1)) to {
+            Periode(periode.fom, virkningsdatoAndreLøsningOvergangUføre.plusMonths(8).minusDays(1)) to {
                 assertThat(it).isEqualTo(RettighetsType.VURDERES_FOR_UFØRETRYGD)
             },
         )
