@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagI
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.UføreInntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.UføreInntektPeriodisert
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -140,7 +141,7 @@ internal class BeregningsgrunnlagRepositoryImplTest {
             type = GrunnlagUføre.Type.YTTERLIGERE_NEDSATT,
             grunnlag = grunnlag11_19Standard,
             grunnlagYtterligereNedsatt = grunnlag11_19Ytterligere,
-            uføregrad = Prosent(50),
+            uføregrader = setOf(Uføre(LocalDate.of(2022,4,1), Prosent.`50_PROSENT`)),
             uføreInntekterFraForegåendeÅr = inntektPerÅrUføre.map(InntekterForUføre::uføreInntekt),
             uføreYtterligereNedsattArbeidsevneÅr = Year.of(2022)
         )
@@ -276,7 +277,7 @@ internal class BeregningsgrunnlagRepositoryImplTest {
             type = GrunnlagUføre.Type.STANDARD,
             grunnlag = grunnlag11_19Standard,
             grunnlagYtterligereNedsatt = grunnlag11_19Ytterligere,
-            uføregrad = Prosent(50),
+            uføregrader = setOf(Uføre(LocalDate.of(2022,4,1), Prosent.`50_PROSENT`)),
             uføreInntekterFraForegåendeÅr = inntektPerÅrUføre.map(InntekterForUføre::uføreInntekt),
             uføreYtterligereNedsattArbeidsevneÅr = Year.of(2022)
         )
@@ -437,7 +438,7 @@ internal class BeregningsgrunnlagRepositoryImplTest {
             type = GrunnlagUføre.Type.YTTERLIGERE_NEDSATT,
             grunnlag = grunnlag11_19Standard_2,
             grunnlagYtterligereNedsatt = grunnlag11_19Ytterligere,
-            uføregrad = Prosent(50),
+            uføregrader = setOf(Uføre(LocalDate.of(2022,4,1), Prosent.`50_PROSENT`)),
             uføreInntekterFraForegåendeÅr = inntektPerÅrUføre.map(InntekterForUføre::uføreInntekt),
             uføreYtterligereNedsattArbeidsevneÅr = Year.of(2022)
         )

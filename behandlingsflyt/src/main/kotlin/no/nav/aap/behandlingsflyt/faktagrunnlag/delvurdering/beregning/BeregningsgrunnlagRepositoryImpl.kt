@@ -1,7 +1,9 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -39,6 +41,7 @@ class BeregningsgrunnlagRepositoryImpl(private val connection: DBConnection) : B
         val deletedRows = connection.executeReturnUpdated(
             """
             delete from beregning_ufore_tidsperiode where BEREGNING_UFORE_INNTEKT_ID = ANY(?::BIGINT[]);
+            delete from beregning_ufore_uforegrader where BEREGNING_UFORE_ID = ANY(?::BIGINT[]);
             delete from beregning_inntekt where beregning_hoved_id = ANY(?::BIGINT[]);
             delete from beregning_ufore_inntekt where beregning_ufore_id = ANY(?::BIGINT[]);
             delete from beregning_ufore where beregning_id = ANY(?::BIGINT[]);
@@ -50,13 +53,14 @@ class BeregningsgrunnlagRepositoryImpl(private val connection: DBConnection) : B
         ) {
             setParams {
                 setLongArray(1, beregningInntektIds)
-                setLongArray(2, beregningHovedIds)
-                setLongArray(3, beregningUforeIds)
-                setLongArray(4, beregningIds)
+                setLongArray(2, beregningUforeIds)
+                setLongArray(3, beregningHovedIds)
+                setLongArray(4, beregningUforeIds)
                 setLongArray(5, beregningIds)
                 setLongArray(6, beregningIds)
-                setLong(7, behandlingId.id)
-                setLongArray(8, beregningIds)
+                setLongArray(7, beregningIds)
+                setLong(8, behandlingId.id)
+                setLongArray(9, beregningIds)
             }
         }
         log.info("Slettet $deletedRows rader fra beregning_hoved")
@@ -183,16 +187,24 @@ class BeregningsgrunnlagRepositoryImpl(private val connection: DBConnection) : B
         }
 
         return connection.queryFirst(
-            """
-            SELECT ID,
-                   TYPE,
-                   G_UNIT,
-                   BEREGNING_HOVED_ID,
-                   BEREGNING_HOVED_YTTERLIGERE_ID,
-                   UFOREGRAD,
-                   UFORE_YTTERLIGERE_NEDSATT_ARBEIDSEVNE_AR
-            FROM BEREGNING_UFORE
-            WHERE BEREGNING_ID = ?
+            """SELECT ID,
+       TYPE,
+       G_UNIT,
+       BEREGNING_HOVED_ID,
+       BEREGNING_HOVED_YTTERLIGERE_ID,
+       UFOREGRAD,
+       uforegrader,
+       UFORE_YTTERLIGERE_NEDSATT_ARBEIDSEVNE_AR
+FROM BEREGNING_UFORE bu
+         left JOIN lateral (select buu.beregning_ufore_id                 as bu_id,
+                                   json_agg(json_build_object('virkningstidspunkt',
+                                                              virkningstidspunkt, 'uføregrad',
+                                                              uforegrad)) as uforegrader
+                            from beregning_ufore_uforegrader buu
+                            where bu.id = buu.BEREGNING_UFORE_ID
+                            group by buu.beregning_ufore_id) buu on bu.id = buu.bu_id
+WHERE BEREGNING_ID = ?
+
             """
         ) {
             setParams { setLong(1, beregningsId) }
@@ -202,7 +214,7 @@ class BeregningsgrunnlagRepositoryImpl(private val connection: DBConnection) : B
                     type = row.getEnum<GrunnlagUføre.Type>("TYPE"),
                     grunnlag = beregningsHoved.first { it.first == row.getLong("BEREGNING_HOVED_ID") }.second,
                     grunnlagYtterligereNedsatt = beregningsHoved.first { it.first == row.getLong("BEREGNING_HOVED_YTTERLIGERE_ID") }.second,
-                    uføregrad = Prosent(row.getInt("UFOREGRAD")),
+                    uføregrader = row.getStringOrNull("uforegrader")?.let { DefaultJsonMapper.fromJson<List<Uføre>>(it) }.orEmpty().toSet(),
                     uføreInntekterFraForegåendeÅr = hentUføreInntekt(row.getLong("ID")),
                     uføreYtterligereNedsattArbeidsevneÅr = Year.of(row.getInt("UFORE_YTTERLIGERE_NEDSATT_ARBEIDSEVNE_AR"))
                 )
@@ -364,7 +376,7 @@ class BeregningsgrunnlagRepositoryImpl(private val connection: DBConnection) : B
         return beregningId
     }
 
-    private fun lagre(beregningsId: Long, inntekter: List<GrunnlagInntekt>) {
+    private fun lagreGrunnlagInntekter(beregningsId: Long, inntekter: List<GrunnlagInntekt>) {
         connection.executeBatch(
             """
             INSERT INTO BEREGNING_INNTEKT
@@ -389,11 +401,11 @@ class BeregningsgrunnlagRepositoryImpl(private val connection: DBConnection) : B
         val beregningstype = Beregningstype.STANDARD
         val beregningsId = opprettBeregningId(behandlingId, beregningstype)
 
-        val key11_19 = lagre(beregningsId, beregningsgrunnlag)
-        lagre(key11_19, beregningsgrunnlag.inntekter())
+        val key11_19 = lagreElleveNittenGrunnlag(beregningsId, beregningsgrunnlag)
+        lagreGrunnlagInntekter(key11_19, beregningsgrunnlag.inntekter())
     }
 
-    private fun lagre(beregningsId: Long, beregningsgrunnlag: Grunnlag11_19): Long {
+    private fun lagreElleveNittenGrunnlag(beregningsId: Long, beregningsgrunnlag: Grunnlag11_19): Long {
         return connection.executeReturnKey(
             """
             INSERT INTO BEREGNING_HOVED (BEREGNING_ID, GRUNNLAG, ER_GJENNOMSNITT, GJENNOMSNITTLIG_INNTEKT_I_G)
@@ -408,15 +420,20 @@ class BeregningsgrunnlagRepositoryImpl(private val connection: DBConnection) : B
         }
     }
 
-    private fun lagre(behandlingId: BehandlingId, beregningsgrunnlag: GrunnlagUføre, beregningsIdparam: Long?): Long {
+    private fun lagreGrunnlagUføre(
+        behandlingId: BehandlingId,
+        beregningsgrunnlag: GrunnlagUføre,
+        beregningsIdparam: Long?
+    ): Long {
         val beregningstype = Beregningstype.UFØRE
         val beregningsId = beregningsIdparam ?: opprettBeregningId(behandlingId, beregningstype)
 
-        val grunnlagId = lagre(beregningsId, beregningsgrunnlag.underliggende())
-        lagre(grunnlagId, beregningsgrunnlag.underliggende().inntekter())
+        val grunnlagId = lagreElleveNittenGrunnlag(beregningsId, beregningsgrunnlag.underliggende())
+        lagreGrunnlagInntekter(grunnlagId, beregningsgrunnlag.underliggende().inntekter())
 
-        val ytterligereNedsattId = lagre(beregningsId, beregningsgrunnlag.underliggendeYtterligereNedsatt())
-        lagre(ytterligereNedsattId, beregningsgrunnlag.underliggendeYtterligereNedsatt().inntekter())
+        val ytterligereNedsattId =
+            lagreElleveNittenGrunnlag(beregningsId, beregningsgrunnlag.underliggendeYtterligereNedsatt())
+        lagreGrunnlagInntekter(ytterligereNedsattId, beregningsgrunnlag.underliggendeYtterligereNedsatt().inntekter())
 
         val uføreId = connection.executeReturnKey(
             """
@@ -435,8 +452,19 @@ VALUES (?, ?, ?, ?, ?, ?, ?)"""
                 setLong(3, ytterligereNedsattId)
                 setEnumName(4, beregningsgrunnlag.type())
                 setBigDecimal(5, beregningsgrunnlag.grunnlaget().verdi())
-                setInt(6, beregningsgrunnlag.uføregrad().prosentverdi())
+                setInt(6, beregningsgrunnlag.uføregrader().maxBy { it.virkningstidspunkt }.uføregrad.prosentverdi())
                 setInt(7, beregningsgrunnlag.uføreYtterligereNedsattArbeidsevneÅr().value)
+            }
+        }
+
+        connection.executeBatch("""
+            INSERT INTO beregning_ufore_uforegrader (beregning_ufore_id, uforegrad, virkningstidspunkt)
+            values  (?, ?, ?)
+        """.trimIndent(), beregningsgrunnlag.uføregrader()) {
+            setParams {
+                setLong(1, uføreId)
+                setInt(2, it.uføregrad.prosentverdi())
+                setLocalDate(3, it.virkningstidspunkt)
             }
         }
 
@@ -495,13 +523,13 @@ VALUES (?, ?, ?, ?, ?, ?, ?)"""
         }
     }
 
-    private fun lagre(behandlingId: BehandlingId, beregningsgrunnlag: GrunnlagYrkesskade) {
+    private fun lagreYrkesskadeGrunnlag(behandlingId: BehandlingId, beregningsgrunnlag: GrunnlagYrkesskade) {
         val beregningstype = Beregningstype.YRKESSKADE
         val beregningsId = opprettBeregningId(behandlingId, beregningstype)
 
         val underliggendeBeregningsgrunnlag = beregningsgrunnlag.underliggende() as Grunnlag11_19
-        val grunnlagId = lagre(beregningsId, underliggendeBeregningsgrunnlag)
-        lagre(grunnlagId, underliggendeBeregningsgrunnlag.inntekter())
+        val grunnlagId = lagreElleveNittenGrunnlag(beregningsId, underliggendeBeregningsgrunnlag)
+        lagreGrunnlagInntekter(grunnlagId, underliggendeBeregningsgrunnlag.inntekter())
 
         connection.execute(
             """INSERT INTO BEREGNING_YRKESSKADE (BEREGNING_ID,
@@ -537,10 +565,11 @@ VALUES (?, ?, ?, ?, ?, ?, ?)"""
         }
     }
 
-    private fun lagreMedUføre(behandlingId: BehandlingId, beregningsgrunnlag: GrunnlagYrkesskade) {
+    private fun lagreYrkesskadeGrunnlagMedUføre(behandlingId: BehandlingId, beregningsgrunnlag: GrunnlagYrkesskade) {
         val beregningstype = Beregningstype.YRKESSKADE_UFØRE
         val beregningId = opprettBeregningId(behandlingId, beregningstype)
-        val beregningUføreId = lagre(behandlingId, beregningsgrunnlag.underliggende() as GrunnlagUføre, beregningId)
+        val beregningUføreId =
+            lagreGrunnlagUføre(behandlingId, beregningsgrunnlag.underliggende() as GrunnlagUføre, beregningId)
 
         connection.execute(
             """INSERT INTO BEREGNING_YRKESSKADE (BEREGNING_ID,
@@ -587,12 +616,12 @@ VALUES (?, ?, ?, ?, ?, ?, ?)"""
 
         when (beregningsgrunnlag) {
             is Grunnlag11_19 -> lagre(behandlingId, beregningsgrunnlag)
-            is GrunnlagUføre -> lagre(behandlingId, beregningsgrunnlag, null)
+            is GrunnlagUføre -> lagreGrunnlagUføre(behandlingId, beregningsgrunnlag, null)
             is GrunnlagYrkesskade -> {
                 if (beregningsgrunnlag.underliggende() is GrunnlagUføre) {
-                    lagreMedUføre(behandlingId, beregningsgrunnlag)
+                    lagreYrkesskadeGrunnlagMedUføre(behandlingId, beregningsgrunnlag)
                 } else {
-                    lagre(behandlingId, beregningsgrunnlag)
+                    lagreYrkesskadeGrunnlag(behandlingId, beregningsgrunnlag)
                 }
             }
         }

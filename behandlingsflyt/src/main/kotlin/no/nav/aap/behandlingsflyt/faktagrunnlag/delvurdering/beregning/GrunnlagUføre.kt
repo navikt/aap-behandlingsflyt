@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import java.math.BigDecimal
@@ -12,7 +13,7 @@ import java.time.Year
  * ga høyere grunnlag.
  * @param grunnlag Originalt beregningsgrunnlag, etter §11-19.
  * @param grunnlagYtterligereNedsatt Beregningsgrunnlag, oppjustert etter uføregrad.
- * @param uføregrad Uføregrad i prosent.
+ * @param uføregrader Uføregrad i prosent, sammen med virkningstidspunkt.
  * @param uføreInntekterFraForegåendeÅr Inntekter de siste 3 år før [uføreYtterligereNedsattArbeidsevneÅr].
  * @param uføreYtterligereNedsattArbeidsevneÅr Hvilket år arbeidsevnen ble ytterligere nedsatt.
  */
@@ -21,9 +22,9 @@ data class GrunnlagUføre(
     private val type: Type,
     private val grunnlag: Grunnlag11_19,
     private val grunnlagYtterligereNedsatt: Grunnlag11_19,
-    private val uføregrad: Prosent,
     private val uføreInntekterFraForegåendeÅr: List<UføreInntekt>,
-    private val uføreYtterligereNedsattArbeidsevneÅr: Year
+    private val uføreYtterligereNedsattArbeidsevneÅr: Year,
+    private val uføregrader: Set<Uføre>
 ) : Beregningsgrunnlag {
 
     enum class Type {
@@ -42,11 +43,8 @@ data class GrunnlagUføre(
         )
     }
 
-    /**
-     * Returner nyeste uføregraden. Ønskes periodisert, bruk [uføreInntekterFraForegåendeÅr].
-     */
-    fun uføregrad(): Prosent {
-        return uføregrad
+    fun uføregrader(): Set<Uføre> {
+        return uføregrader
     }
 
     fun uføreInntekterFraForegåendeÅr(): List<UføreInntekt> {

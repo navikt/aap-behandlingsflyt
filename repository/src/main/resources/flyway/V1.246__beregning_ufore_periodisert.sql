@@ -7,4 +7,12 @@ create table beregning_ufore_tidsperiode
     INNTEKT_I_KRONER              numeric(19, 2),
     INNTEKT_JUSTERT_FOR_UFOREGRAD numeric(19, 2),
     UFOREGRAD                     smallint
-)
+);
+
+create table beregning_ufore_uforegrader
+(
+    ID                 bigserial primary key,
+    BEREGNING_UFORE_ID bigint references beregning_ufore (id),
+    UFOREGRAD          smallint,
+    virkningstidspunkt date
+);

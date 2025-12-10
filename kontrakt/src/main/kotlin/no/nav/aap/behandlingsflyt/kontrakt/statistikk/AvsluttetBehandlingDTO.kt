@@ -148,10 +148,14 @@ public data class GrunnlagUføreDTO(
     val type: UføreType,
     val grunnlag: Grunnlag11_19DTO,
     val grunnlagYtterligereNedsatt: Grunnlag11_19DTO,
+    @Deprecated("Bruk uføregrader.")
     val uføregrad: Int,
+    val uføregrader: List<Uføre>,
     val uføreInntekterFraForegåendeÅr: Map<String, Double>,
     val uføreYtterligereNedsattArbeidsevneÅr: Int,
 )
+
+public data class Uføre(val grad: Int, val virkningstidspunkt: LocalDate)
 
 public enum class UføreType {
     STANDARD, YTTERLIGERE_NEDSATT
