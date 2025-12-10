@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.mellomlagring.MellomlagretVurdering
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingService
+import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.NavKontorPeriodeDto
@@ -15,6 +16,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.IverksettUtbetalingJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.VarsleVedtakJobbUtfører
@@ -139,24 +141,47 @@ class IverksettVedtakSteg private constructor(
             minOf(forrigeVedtakstidspunkt.toLocalDate(), vedtakstidspunkt)
         } else vedtakstidspunkt
         val forrigeBehandling = behandlingRepository.hent(behandlingId = forrigeBehandlingId)
-        return finnTidligesteVirkningstidspunktFraTidligereBehandlinger(forrigeBehandling,nyTidligsteedtakstidspunkt)
+        return finnTidligesteVedtakstidspunktFraTidligereBehandlinger(forrigeBehandling,nyTidligsteedtakstidspunkt)
     }
 
 
 
 
+    private fun finnVedtakMedTidligsteVirkningstidspunkt(behandling: Behandling): Vedtak? {
+        val alleBehandling = behandlingRepository.hentAlleFor(behandling.sakId, TypeBehandling.ytelseBehandlingstyper())
+        val vedtakPåBehandling = alleBehandling.mapNotNull {
+            vedtakService.hentVedtakForYtelsesbehandling(it.id)
+        }
+
+        val vedtakMedVirkningstidspunkt = vedtakPåBehandling
+            .filter { it.virkningstidspunkt != null }
+
+        val tidligsteVirkningstidspunkt = vedtakMedVirkningstidspunkt
+            .minByOrNull { it.virkningstidspunkt!!}?.virkningstidspunkt ?: error("Ingen vedtak med virkningstidspunkt funnet")
+
+        val alleVedtakMedTidligsteVirkningstidspunkt = vedtakPåBehandling
+            .filter { it.virkningstidspunkt == tidligsteVirkningstidspunkt }
+
+        if (alleVedtakMedTidligsteVirkningstidspunkt.size == 1 && alleVedtakMedTidligsteVirkningstidspunkt.first().behandlingId == behandling.id) {
+            return alleVedtakMedTidligsteVirkningstidspunkt.first()
+        }
+
+        return null
+
+    }
 
 
-    private fun finnTidligesteVirkningstidspunktFraTidligereBehandlinger(behandling: Behandling, virkningsTidspunkt: LocalDate): LocalDate {
+
+    private fun finnTidligesteVirkningstidspunktFraTidligereBehandlinger(behandling: Behandling, VedtakMedTidligsteVirkningstidspunkt: Vedtak): Vedtak? {
 
         val forrigeBehandlingId = behandling.forrigeBehandlingId
-            ?: return virkningsTidspunkt
+            ?: return VedtakMedTidligsteVirkningstidspunkt
 
-        val vedtak = vedtakService.hentVedtakForYtelsesbehandling(forrigeBehandlingId)
-        val forrigeVirkningstidspunkt = vedtak?.virkningstidspunkt
-        val nyTidligsteVirkingsTidspunkt =  if(vedtak?.virkningstidspunkt != null) {
-            minOf(forrigeVirkningstidspunkt, virkningsTidspunkt)
-        } else virkningsTidspunkt
+        val forrigevedtak = vedtakService.hentVedtakForYtelsesbehandling(forrigeBehandlingId)
+        val nyTidligsteVirkingsTidspunkt = listOfNotNull(forrigevedtak, VedtakMedTidligsteVirkningstidspunkt)
+            .filter { it.virkningstidspunkt != null }
+            .minByOrNull { it.virkningstidspunkt!! }
+            ?: VedtakMedTidligsteVirkningstidspunkt
         val forrigeBehandling = behandlingRepository.hent(behandlingId = forrigeBehandlingId)
         return finnTidligesteVirkningstidspunktFraTidligereBehandlinger(forrigeBehandling,nyTidligsteVirkingsTidspunkt)
     }
@@ -185,11 +210,15 @@ class IverksettVedtakSteg private constructor(
 
             }
 
-            val tidligsteVirkingsTidspunkt = finnTidligesteVirkningstidspunktFraTidligereBehandlinger(behandling, virkningsDato)
-            val nyttTidligereVirkingsTidspunkt = tidligsteVirkingsTidspunkt < virkningsDato
+           //hvis det tidligste virkingstidpunktet i denne behandlignen, så må den lage refusjonskrav
 
-            if (harInnvilgelseFraEnTidligereBehandling(behandling) && !nyttTidligereVirkingsTidspunkt) {
-                log.info("Har tidligere innvilgelse, og virkningsdato er ikke endret, så oppretter ikke oppgave for sak ${kontekst.sakId} og behandling ${kontekst.behandlingId} ")
+
+            val vedtakMedTidligsteVirkingsdato = finnVedtakMedTidligsteVirkningstidspunkt(behandling)
+
+
+            if (vedtakMedTidligsteVirkingsdato?.virkningstidspunkt == null)
+            {
+                log.info("Tidligste virkningsdato er i en tidligere eller sametiding behandling enn ${kontekst.behandlingId}, så ingen oppgave opprettes")
                 return
             }
 
@@ -198,7 +227,7 @@ class IverksettVedtakSteg private constructor(
 
             val gjeldendeSosialRefusjonDtoer = navkontorSosialRefusjon
                 .filter { it.harKrav && it.navKontor != null }
-                .map { it.tilNavKontorPeriodeDto(virkningsdato = tidligsteVirkingsTidspunkt, vedtaksdato = tidligsteVedtaksTidspunkt) }
+                .map { it.tilNavKontorPeriodeDto(virkningsdato = vedtakMedTidligsteVirkingsdato.virkningstidspunkt, vedtaksdato = tidligsteVedtaksTidspunkt) }
                 .toSet()
 
             log.info("Fant ${gjeldendeSosialRefusjonDtoer.size} refusjonskrav som skal få oppgave")
