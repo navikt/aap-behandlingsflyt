@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.KanTriggeRevurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreInformasjonskrav.UføreRegisterdata
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -56,16 +57,19 @@ class UføreInformasjonskrav(
         // TODO: endring i ytterligereNedsettelsesDato bør trigge ny innhenting?
     }
 
-    data class UføreInput(val sak: Sak, val behandlingId: BehandlingId) : InformasjonskravInput
+    data class UføreInput(val sak: Sak, val behandlingId: BehandlingId, val beregningVurdering: BeregningGrunnlag?) :
+        InformasjonskravInput
 
     data class UføreRegisterdata(val innhentMedHistorikk: Set<Uføre>) : InformasjonskravRegisterdata
 
     override fun klargjør(kontekst: FlytKontekstMedPerioder): UføreInput {
-        return UføreInput(sakService.hentSakFor(kontekst.behandlingId), kontekst.behandlingId)
+        val behandlingId = kontekst.behandlingId
+        val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
+        return UføreInput(sakService.hentSakFor(behandlingId), behandlingId, beregningVurdering)
     }
 
     override fun hentData(input: UføreInput): UføreRegisterdata {
-        return UføreRegisterdata(hentUføregrader(input.behandlingId))
+        return UføreRegisterdata(hentUføregrader(input))
     }
 
     override fun oppdater(
@@ -88,9 +92,9 @@ class UføreInformasjonskrav(
         return IKKE_ENDRET
     }
 
-    private fun hentUføregrader(behandlingId: BehandlingId): Set<Uføre> {
-        val sak = sakService.hentSakFor(behandlingId)
-        val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
+    private fun hentUføregrader(uføreInput: UføreInput): Set<Uføre> {
+        val sak = uføreInput.sak
+        val beregningVurdering = uføreInput.beregningVurdering
         // prøver å sette fraDato riktig hvis den finnes
         val fraDato = beregningVurdering?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
             ?: beregningVurdering?.tidspunktVurdering?.nedsattArbeidsevneDato
@@ -103,7 +107,9 @@ class UføreInformasjonskrav(
     }
 
     override fun behovForRevurdering(behandlingId: BehandlingId): List<VurderingsbehovMedPeriode> {
-        val uføregrader = hentUføregrader(behandlingId)
+        val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
+        val uføregrader =
+            hentUføregrader(UføreInput(sakService.hentSakFor(behandlingId), behandlingId, beregningVurdering))
         val eksisterendeGrunnlag = uføreRepository.hentHvisEksisterer(behandlingId)
 
         // Ønsker ikke trigge revurdering automatisk i dette tilfellet enn så lenge
