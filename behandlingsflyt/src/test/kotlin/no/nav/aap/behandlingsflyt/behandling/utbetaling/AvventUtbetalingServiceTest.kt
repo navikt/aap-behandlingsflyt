@@ -130,6 +130,74 @@ class AvventUtbetalingServiceTest {
         assertNull(avventUtbetaling)
     }
 
+
+    @Test
+    fun `Refusjonskrav i revrudering setter riktig refusjons datoer`(){
+
+        /**
+         * Skal ha refusjonskrav i perioden virking og vedtak i førstegang behandling
+         */
+
+        val førstegangBehandling = Behandling(
+            BehandlingId(1L),
+            sakId = SakId(1),
+            typeBehandling = TypeBehandling.Førstegangsbehandling,
+            årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
+            forrigeBehandlingId = null,
+            versjon = 1
+        )
+
+        val førstegangVedtak = Vedtak(
+            behandlingId = BehandlingId(1L),
+            vedtakstidspunkt = LocalDate.parse("2025-01-15").atStartOfDay(),
+            virkningstidspunkt = LocalDate.parse("2025-01-10"),
+        )
+
+        val revurderingVedtak = Vedtak(
+            behandlingId = BehandlingId(2L),
+            vedtakstidspunkt = LocalDate.parse("2025-01-20").atStartOfDay(),
+            virkningstidspunkt = LocalDate.parse("2025-01-16"),
+        )
+
+        val revurderingBehandling = Behandling(
+            BehandlingId(2L),
+            sakId = SakId(1),
+            typeBehandling = TypeBehandling.Revurdering,
+            årsakTilOpprettelse = ÅrsakTilOpprettelse.KLAGE,
+            forrigeBehandlingId = BehandlingId(1L),
+            versjon = 1
+        )
+
+
+        every { behandlingRepositoryMock.hent(BehandlingId(1L)) } returns førstegangBehandling
+        every { vedtakServiceMock.hentVedtakForYtelsesbehandling(any()) } returns vedtak
+        every { refusjonkravRepositoryMock.hentHvisEksisterer(any()) } returns
+            listOf(RefusjonkravVurdering(true, null, null, "Nav Løten", "saksbehandler"))
+        every { tjenestepensjonRefusjonsKravVurderingRepositoryMock.hentHvisEksisterer(any()) } returns null
+        every { samordningAndreStatligeYtelserRepositoryMock.hentHvisEksisterer(any()) } returns null
+        every { samordningArbeidsgiverRepositoryMock.hentHvisEksisterer(any()) } returns null
+
+
+
+        val avventUtbetaling = service.finnEventuellAvventUtbetaling(
+            førsteVedtak = førstegangVedtak,
+            behandling = revurderingBehandling,
+            tilkjentYtelseHelePerioden = Periode(LocalDate.parse("2025-01-01"), LocalDate.parse("2025-01-31"))
+        )
+
+        assertNotNull(avventUtbetaling)
+        assertThat(avventUtbetaling?.fom).isEqualTo(LocalDate.parse("2025-01-10"))
+        assertThat(avventUtbetaling?.tom).isEqualTo(LocalDate.parse("2025-01-14"))
+        assertThat(avventUtbetaling?.overføres).isEqualTo(LocalDate.parse("2025-01-15").plusDays(21))
+        assertThat(avventUtbetaling?.årsak).isEqualTo(AvventÅrsak.AVVENT_REFUSJONSKRAV)
+        assertThat(avventUtbetaling?.feilregistrering).isFalse()
+
+
+    }
+
+
+
+
     @Test
     fun `Refusjonskrav med åpen tom overlapper med tilkjent ytelse skal føre til avvent utbetaling`() {
 
