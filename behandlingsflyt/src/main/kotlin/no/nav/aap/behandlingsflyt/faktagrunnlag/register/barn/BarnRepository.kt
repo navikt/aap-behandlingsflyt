@@ -32,7 +32,6 @@ interface BarnRepository : Repository {
     fun lagreVurderinger(behandlingId: BehandlingId, vurdertAv: String, vurderteBarn: List<VurdertBarn>)
     fun hentBehandlingIdForSakSomFårBarnetilleggForRegisterBarn(ident: Ident): List<BehandlingId>
     fun hentBehandlingIdForSakSomFårBarnetilleggForSaksbehandlerOppgitteBarn(ident: Ident): List<BehandlingId>
-    fun hentBehandlingIdForSakSomFårBarnetilleggForSøknadsBarn(ident: Ident): List<BehandlingId>
     fun finnSaksbehandlerOppgitteBarn(ident: String):  SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn?
     fun finnSøknadsBarn(ident: String):  OppgitteBarn.OppgittBarn?
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
