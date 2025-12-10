@@ -1,22 +1,19 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreLøsning
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreEnkelLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
-import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
-import java.time.LocalDate
+import kotlin.collections.orEmpty
 
 class AvklarOvergangUføreLøser(
     private val behandlingRepository: BehandlingRepository,
     private val overgangUforeRepository: OvergangUføreRepository,
     private val sakRepository: SakRepository,
-) : AvklaringsbehovsLøser<AvklarOvergangUføreLøsning> {
+) : AvklaringsbehovsLøser<AvklarOvergangUføreEnkelLøsning> {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
@@ -27,39 +24,40 @@ class AvklarOvergangUføreLøser(
 
     override fun løs(
         kontekst: AvklaringsbehovKontekst,
-        løsning: AvklarOvergangUføreLøsning
+        løsning: AvklarOvergangUføreEnkelLøsning
     ): LøsningsResultat {
-
-        val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
+        val løsninger = løsning.løsningerForPerioder ?: listOf(requireNotNull(løsning.overgangUføreVurdering))
         
-        val rettighetsperiode = sakRepository.hent(behandling.sakId).rettighetsperiode
-        
-        val overgangUføreVurdering =
-            løsning.overgangUføreVurdering.tilOvergangUføreVurdering(kontekst.bruker, rettighetsperiode.fom, kontekst.behandlingId())
-
-        val eksisterendeOverganguforevurderinger = behandling.forrigeBehandlingId
-            ?.let { overgangUforeRepository.hentHvisEksisterer(it) }
-            ?.somOvergangUforevurderingstidslinje()
-            .orEmpty()
-
-        val ny = overgangUføreVurdering.let {
-            OvergangUføreGrunnlag(
-                id = null,
-                vurderinger = listOf(it),
-            ).somOvergangUforevurderingstidslinje()
+        val (behandlingId, sakId, forrigeBehandlingId) = kontekst.kontekst.let {
+            Triple(
+                it.behandlingId,
+                it.sakId,
+                it.forrigeBehandlingId
+            )
         }
 
-        val gjeldende = eksisterendeOverganguforevurderinger
-            .kombiner(ny, StandardSammenslåere.prioriterHøyreSideCrossJoin())
-            .segmenter().map { it.verdi }
+        val rettighetsperiode = sakRepository.hent(sakId).rettighetsperiode
+
+        val vedtatteVurderinger = forrigeBehandlingId
+            ?.let { overgangUforeRepository.hentHvisEksisterer(it) }
+            ?.vurderinger
+            .orEmpty()
+
+        val nyeVurderinger = løsninger.map {
+            it.tilOvergangUføreVurdering(
+                kontekst.bruker,
+                rettighetsperiode.fom,
+                behandlingId
+            )
+        }
 
         overgangUforeRepository.lagre(
-            behandlingId = behandling.id,
-            overgangUføreVurderinger = gjeldende
+            behandlingId = behandlingId,
+            overgangUføreVurderinger = nyeVurderinger + vedtatteVurderinger
         )
 
         return LøsningsResultat(
-            begrunnelse = overgangUføreVurdering.begrunnelse
+            begrunnelse = nyeVurderinger.joinToString("\n") { it.begrunnelse }
         )
     }
 

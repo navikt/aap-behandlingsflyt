@@ -78,7 +78,7 @@ class SamordningStegTest {
         vilkårsresultatRepository = InMemoryVilkårsresultatRepository,
         behandlingRepository = InMemoryBehandlingRepository,
         avklaringsbehovService = AvklaringsbehovService(
-            InMemoryAvklaringsbehovRepository, AvbrytRevurderingService(
+            AvbrytRevurderingService(
                 avbrytRevurderingRepository
             )
         ),

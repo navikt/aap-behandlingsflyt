@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.hendelse.kafka.person
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.SaksbehandlerOppgitteBarn
 import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
@@ -76,72 +75,83 @@ class PdlHendelseKafkaKonsument(
             if (personHendelse.opplysningstype == Opplysningstype.DOEDSFALL_V1 && personHendelse.endringstype == Endringstype.OPPRETTET) {
                 log.info("Håndterer hendelse med ${personHendelse.opplysningstype} og ${personHendelse.endringstype}")
                 var person: Person? = null
-                var oppgittBarn: SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn?
-                var søknadsBarn: OppgitteBarn.OppgittBarn?
+                var saksbehandlersOppgitteBarn: SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn? = null
                 var funnetIdent: Ident? = null
                 for (ident in personHendelse.personidenter) {
-
                     person = personRepository.finn(Ident(ident))
-                    oppgittBarn = barnRepository.finnSaksbehandlerOppgitteBarn(ident)
-                    søknadsBarn = barnRepository.finnSøknadsBarn(ident)
+                    saksbehandlersOppgitteBarn = barnRepository.finnSaksbehandlerOppgitteBarn(ident)
                     // Håndterer D-nummer og Fnr
-                    if (person != null || oppgittBarn != null || søknadsBarn != null) {
-                        secureLogger.info("Håndterer hendelse for ident ${ident} og navn ${personHendelse.navn?.etternavn} ")
+                    if (person != null || saksbehandlersOppgitteBarn != null) {
                         funnetIdent = Ident(ident)
+                        secureLogger.info("Håndterer hendelse for ident ${funnetIdent.identifikator} og navn ${personHendelse.navn?.etternavn} ")
                         break
                     }
                 }
 
-                person?.let { personIKelvin ->
-                    // Først: finn ut om denne identen tilhører en bruker eller et barn
-                    val behandlingIdsForRegisterBarn =
-                        barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForRegisterBarn(funnetIdent!!)
-                    val behandlingIdsForOppgitteBarn =
-                        barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForOppgitteBarn(funnetIdent)
-                    val behandlingIdsForSøknadsBarn =
-                        barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForSøknadsBarn(funnetIdent)
-                    val alleBarneBehandlingIds =
-                        behandlingIdsForRegisterBarn + behandlingIdsForOppgitteBarn + behandlingIdsForSøknadsBarn
+                // Sjekk om personen er et barn fr apersontabellen eller aap-mottaker
+                håndterDødPersonSomBrukerEllerBarn(
+                    person,
+                    barnRepository,
+                    funnetIdent,
+                    behandlingRepository,
+                    sakRepository,
+                    sakOgBehandlingService,
+                    underveisRepository,
+                    personHendelse,
+                    hendelseService
+                )
 
-                    if (alleBarneBehandlingIds.isNotEmpty()) {
-                        log.info("Sjekker mottatt hendelse for barn $behandlingIdsForRegisterBarn")
-                        alleBarneBehandlingIds
-                            .map { behandlingRepository.hent(it) }
-                            .map { it.sakId }
-                            .distinct()
-                            .map { sakRepository.hent(it) }
-                            .forEach { sak ->
-                                val behandlingMedSistFattedeVedtak =
-                                    sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId = sak.id)
-                                val sisteOpprettedeBehandling = behandlingRepository.finnSisteOpprettedeBehandlingFor(
-                                    sak.id,
-                                    listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)
-                                )
-                                log.info("Registrerer mottatt hendelse på barn for ${sak.saksnummer}")
-                                sendDødsHendelseHvisRelevant(
-                                    behandlingMedSistFattedeVedtak,
-                                    underveisRepository,
-                                    personHendelse,
-                                    sak,
-                                    hendelseService,
-                                    sisteOpprettedeBehandling,
-                                    Dødsfalltype.DODSFALL_BARN
-                                )
-                            }
+                // Sjekk om personen er et barn oppgitt av saksbehandler
+                håndterDødPersonSomEtBarnOppgittAvSaksbehandler(
+                    saksbehandlersOppgitteBarn,
+                    barnRepository,
+                    funnetIdent,
+                    behandlingRepository,
+                    sakRepository,
+                    sakOgBehandlingService,
+                    underveisRepository,
+                    personHendelse,
+                    hendelseService
+                )
+            }
 
 
-                    }
-                    // Finn sak på person
-                    sakRepository.finnSakerFor(personIKelvin).forEach { sak ->
-                        log.info("Registrerer mottatt hendelse på ${sak.saksnummer}")
+        }
+    }
+
+    private fun håndterDødPersonSomBrukerEllerBarn(
+        person: Person?,
+        barnRepository: BarnRepository,
+        funnetIdent: Ident?,
+        behandlingRepository: BehandlingRepository,
+        sakRepository: SakRepository,
+        sakOgBehandlingService: SakOgBehandlingService,
+        underveisRepository: UnderveisRepository,
+        personHendelse: PdlPersonHendelse,
+        hendelseService: MottattHendelseService
+    ) {
+        person?.let { personIKelvin ->
+            val behandlingIdsForRegisterBarn =
+                barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForRegisterBarn(funnetIdent!!)
+            val behandlingIdsForSøknadsBarn =
+                barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForSøknadsBarn(funnetIdent)
+            val alleBarneBehandlingIds =
+                behandlingIdsForRegisterBarn + behandlingIdsForSøknadsBarn
+            log.info("Sjekker mottatt hendelse for barn $alleBarneBehandlingIds")
+            if (alleBarneBehandlingIds.isNotEmpty()) {
+                alleBarneBehandlingIds
+                    .map { behandlingRepository.hent(it) }
+                    .map { it.sakId }
+                    .distinct()
+                    .map { sakRepository.hent(it) }
+                    .forEach { sak ->
+                        val behandlingMedSistFattedeVedtak =
+                            sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId = sak.id)
                         val sisteOpprettedeBehandling = behandlingRepository.finnSisteOpprettedeBehandlingFor(
                             sak.id,
                             listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)
                         )
-
-                        val behandlingMedSistFattedeVedtak =
-                            sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId = sak.id)
-
+                        log.info("Registrerer mottatt hendelse på barn for ${sak.saksnummer}")
                         sendDødsHendelseHvisRelevant(
                             behandlingMedSistFattedeVedtak,
                             underveisRepository,
@@ -149,10 +159,79 @@ class PdlHendelseKafkaKonsument(
                             sak,
                             hendelseService,
                             sisteOpprettedeBehandling,
-                            Dødsfalltype.DODSFALL_BRUKER
+                            Dødsfalltype.DODSFALL_BARN
                         )
                     }
-                }
+
+
+            }
+
+            // Finn sak på person
+            sakRepository.finnSakerFor(personIKelvin).forEach { sak ->
+                log.info("Registrerer mottatt hendelse på ${sak.saksnummer}")
+                val sisteOpprettedeBehandling = behandlingRepository.finnSisteOpprettedeBehandlingFor(
+                    sak.id,
+                    listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)
+                )
+
+                val behandlingMedSistFattedeVedtak =
+                    sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId = sak.id)
+
+                sendDødsHendelseHvisRelevant(
+                    behandlingMedSistFattedeVedtak,
+                    underveisRepository,
+                    personHendelse,
+                    sak,
+                    hendelseService,
+                    sisteOpprettedeBehandling,
+                    Dødsfalltype.DODSFALL_BRUKER
+                )
+            }
+        }
+    }
+
+    private fun håndterDødPersonSomEtBarnOppgittAvSaksbehandler(
+        saksbehandlersOppgitteBarn: SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn?,
+        barnRepository: BarnRepository,
+        funnetIdent: Ident?,
+        behandlingRepository: BehandlingRepository,
+        sakRepository: SakRepository,
+        sakOgBehandlingService: SakOgBehandlingService,
+        underveisRepository: UnderveisRepository,
+        personHendelse: PdlPersonHendelse,
+        hendelseService: MottattHendelseService
+    ) {
+        saksbehandlersOppgitteBarn?.let { barn ->
+            val behandlingIdsForSaksbehandlerOppgitteBarn =
+                barnRepository.hentBehandlingIdForSakSomFårBarnetilleggForSaksbehandlerOppgitteBarn(
+                    funnetIdent!!
+                )
+            if (behandlingIdsForSaksbehandlerOppgitteBarn.isNotEmpty()) {
+                behandlingIdsForSaksbehandlerOppgitteBarn
+                    .map { behandlingRepository.hent(it) }
+                    .map { it.sakId }
+                    .distinct()
+                    .map { sakRepository.hent(it) }
+                    .forEach { sak ->
+                        val behandlingMedSistFattedeVedtak =
+                            sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId = sak.id)
+                        val sisteOpprettedeBehandling =
+                            behandlingRepository.finnSisteOpprettedeBehandlingFor(
+                                sak.id,
+                                listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)
+                            )
+                        log.info("Registrerer mottatt hendelse på barn oppgitt av saksbehandler for ${sak.saksnummer}")
+                        sendDødsHendelseHvisRelevant(
+                            behandlingMedSistFattedeVedtak,
+                            underveisRepository,
+                            personHendelse,
+                            sak,
+                            hendelseService,
+                            sisteOpprettedeBehandling,
+                            Dødsfalltype.DODSFALL_BARN
+                        )
+                    }
+
             }
         }
     }
@@ -183,14 +262,22 @@ class PdlHendelseKafkaKonsument(
                     Dødsfalltype.DODSFALL_BRUKER -> {
                         log.info("Registrerer mottatt hendelse fordi dødsfall på bruker. Bruker har iverksatte vedtak der minst en fremtidig periode er oppfylt ${sak.saksnummer}")
                         hendelseService.registrerMottattHendelse(
-                            personHendelse.tilInnsendingDødsfallBruker(sak.saksnummer, personHendelse.navn, personHendelse.personidenter)
+                            personHendelse.tilInnsendingDødsfallBruker(
+                                sak.saksnummer,
+                                personHendelse.navn,
+                                personHendelse.personidenter
+                            )
                         )
                     }
 
                     Dødsfalltype.DODSFALL_BARN -> {
                         log.info("Registrerer mottatt hendelse fordi dødsfall på barn. Bruker har iverksatte vedtak der minst en fremtidig periode er oppfylt ${sak.saksnummer}")
                         hendelseService.registrerMottattHendelse(
-                            personHendelse.tilInnsendingDødsfallBarn(sak.saksnummer, personHendelse.navn, personHendelse.personidenter)
+                            personHendelse.tilInnsendingDødsfallBarn(
+                                sak.saksnummer,
+                                personHendelse.navn,
+                                personHendelse.personidenter
+                            )
                         )
                     }
                 }
@@ -200,14 +287,22 @@ class PdlHendelseKafkaKonsument(
                 Dødsfalltype.DODSFALL_BRUKER -> {
                     log.info("Registrerer mottatt hendelse fordi dødsfall på bruker. Bruker har ingen iverksatte vedtak ${sak.saksnummer}")
                     hendelseService.registrerMottattHendelse(
-                        personHendelse.tilInnsendingDødsfallBruker(sak.saksnummer, personHendelse.navn, personHendelse.personidenter)
+                        personHendelse.tilInnsendingDødsfallBruker(
+                            sak.saksnummer,
+                            personHendelse.navn,
+                            personHendelse.personidenter
+                        )
                     )
                 }
 
                 Dødsfalltype.DODSFALL_BARN -> {
                     log.info("Registrerer mottatt hendelse fordi dødsfall på barn. Bruker har ingen iverksatte vedtak ${sak.saksnummer}")
                     hendelseService.registrerMottattHendelse(
-                        personHendelse.tilInnsendingDødsfallBarn(sak.saksnummer, personHendelse.navn, personHendelse.personidenter)
+                        personHendelse.tilInnsendingDødsfallBarn(
+                            sak.saksnummer,
+                            personHendelse.navn,
+                            personHendelse.personidenter
+                        )
                     )
                 }
             }

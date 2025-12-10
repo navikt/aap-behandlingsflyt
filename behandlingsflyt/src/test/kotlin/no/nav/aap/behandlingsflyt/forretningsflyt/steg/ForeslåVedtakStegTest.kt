@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import io.mockk.every
 import io.mockk.mockk
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -31,7 +32,7 @@ class ForeslåVedtakStegTest {
     private val random = Random(1235123)
 
     private val avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
-    private val avklaringsbehovService = AvklaringsbehovService(avklaringsbehovRepository, mockk {
+    private val avklaringsbehovService = AvklaringsbehovService(mockk<AvbrytRevurderingService> {
         every { revurderingErAvbrutt(any()) } returns false
     })
     private val steg = ForeslåVedtakSteg(avklaringsbehovRepository, FakeTidligereVurderinger(), avklaringsbehovService)
