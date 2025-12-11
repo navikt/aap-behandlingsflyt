@@ -22,7 +22,8 @@ enum class Vurderingsbehov {
     REVURDER_STUDENT,
     REVURDER_MANUELL_INNTEKT,   // Manuell inntekt
     REVURDER_MELDEPLIKT_RIMELIG_GRUNN,
-    REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER,  // Samordning andre folketrygdytelser
+    REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER,// Samordning andre folketrygdytelser
+    SAMORDNING_BARNEPENSJON,                    // Samordning uføre
     REVURDER_SAMORDNING_UFØRE,                    // Samordning uføre
     REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER,   // Samordning andre statlige ytelser
     REVURDER_SAMORDNING_ARBEIDSGIVER,             // Samordning arbeidsgiver
@@ -89,6 +90,7 @@ fun EksponertÅrsak.tilVurderingsbehov() =
         EksponertÅrsak.REVURDER_LOVVALG -> Vurderingsbehov.REVURDER_LOVVALG
         EksponertÅrsak.REVURDER_SAMORDNING -> Vurderingsbehov.REVURDER_SAMORDNING
         EksponertÅrsak.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER -> Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER
+        EksponertÅrsak.SAMORDNING_BARNEPENSJON -> Vurderingsbehov.SAMORDNING_BARNEPENSJON
         EksponertÅrsak.REVURDER_SAMORDNING_UFØRE -> Vurderingsbehov.REVURDER_SAMORDNING_UFØRE
         EksponertÅrsak.REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER -> Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER
         EksponertÅrsak.REVURDER_SAMORDNING_ARBEIDSGIVER -> Vurderingsbehov.REVURDER_SAMORDNING_ARBEIDSGIVER

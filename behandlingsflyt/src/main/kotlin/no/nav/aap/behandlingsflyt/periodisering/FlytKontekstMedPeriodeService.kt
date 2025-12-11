@@ -54,7 +54,8 @@ class FlytKontekstMedPeriodeService(
             behandlingId = kontekst.behandlingId,
             forrigeBehandlingId = kontekst.forrigeBehandlingId,
             behandlingType = kontekst.behandlingType,
-            vurderingType = prioritertType(behandling.vurderingsbehov().map { vurderingsbehovTilType(it.type) }.toSet()),
+            vurderingType = prioritertType(behandling.vurderingsbehov().map { vurderingsbehovTilType(it.type) }
+                .toSet()),
             rettighetsperiode = sak.rettighetsperiode,
             vurderingsbehovRelevanteForSteg = relevanteVurderingsbehov
         )
@@ -95,6 +96,7 @@ class FlytKontekstMedPeriodeService(
             Vurderingsbehov.BARNETILLEGG,
             Vurderingsbehov.INSTITUSJONSOPPHOLD,
             Vurderingsbehov.SAMORDNING_OG_AVREGNING,
+            Vurderingsbehov.SAMORDNING_BARNEPENSJON,
             Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER,
             Vurderingsbehov.REVURDER_SAMORDNING_UFØRE,
             Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER,
@@ -121,7 +123,8 @@ class FlytKontekstMedPeriodeService(
             Vurderingsbehov.FRITAK_MELDEPLIKT -> MELDEKORT
 
             Vurderingsbehov.MOTATT_KLAGE,
-            Vurderingsbehov.KLAGE_TRUKKET, Vurderingsbehov.MOTTATT_KABAL_HENDELSE,  ->
+            Vurderingsbehov.KLAGE_TRUKKET, Vurderingsbehov.MOTTATT_KABAL_HENDELSE,
+                ->
                 IKKE_RELEVANT // TODO: Verifiser at dette er korrekt.
             Vurderingsbehov.OPPFØLGINGSOPPGAVE -> IKKE_RELEVANT
             Vurderingsbehov.AKTIVITETSPLIKT_11_7, Vurderingsbehov.AKTIVITETSPLIKT_11_9 -> IKKE_RELEVANT

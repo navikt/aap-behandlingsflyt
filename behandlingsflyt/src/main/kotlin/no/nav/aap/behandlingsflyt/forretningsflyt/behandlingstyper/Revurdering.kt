@@ -50,6 +50,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.RettighetsperiodeSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningAndreStatligeYtelserSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningArbeidsgiverSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningAvslagSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningBarnepensjonSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningUføreSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SendForvaltningsmeldingSteg
@@ -359,6 +360,14 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.REVURDER_LOVVALG,
                     Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP,
                 ),
+            )
+            .medSteg(
+                steg = SamordningBarnepensjonSteg,
+                vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
+                    Vurderingsbehov.HELHETLIG_VURDERING,
+                )
             )
             .medSteg(
                 steg = SamordningUføreSteg,

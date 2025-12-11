@@ -271,6 +271,12 @@ public enum class Definisjon(
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
         kreverToTrinn = true,
     ),
+    SAMORDNING_BARNEPENSJON(
+        kode = AvklaringsbehovKode.`5058`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.SAMORDNING_BARNEPENSJON,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+    ),
 
     @Deprecated("Ikke lenger i bruk, erstattet av oppfølgingsoppgave")
     SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT(

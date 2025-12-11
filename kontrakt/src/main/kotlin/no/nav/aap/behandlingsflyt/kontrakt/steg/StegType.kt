@@ -127,6 +127,10 @@ public enum class StegType(
         gruppe = StegGruppe.SAMORDNING,
         status = Status.UTREDES
     ),
+    SAMORDNING_BARNEPENSJON(
+        gruppe = StegGruppe.SAMORDNING,
+        status = Status.UTREDES
+    ),
     SAMORDNING_GRADERING(
         gruppe = StegGruppe.SAMORDNING,
         status = Status.UTREDES

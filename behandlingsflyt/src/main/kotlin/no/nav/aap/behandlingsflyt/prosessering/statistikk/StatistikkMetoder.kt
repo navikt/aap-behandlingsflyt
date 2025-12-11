@@ -202,6 +202,7 @@ class StatistikkMetoder(
                 Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER
                 Vurderingsbehov.REVURDER_SAMORDNING_ARBEIDSGIVER -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_SAMORDNING_ARBEIDSGIVER
                 Vurderingsbehov.REVURDER_SAMORDNING_TJENESTEPENSJON -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_SAMORDNING_TJENESTEPENSJON
+                Vurderingsbehov.SAMORDNING_BARNEPENSJON -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SAMORDNING_BARNEPENSJON
                 Vurderingsbehov.REFUSJONSKRAV -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REFUSJONSKRAV
                 Vurderingsbehov.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.UTENLANDSOPPHOLD_FOR_SOKNADSTIDSPUNKT
                 Vurderingsbehov.FASTSATT_PERIODE_PASSERT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.MELDEKORT /* TODO: mer spesifikk? er pga fravær av meldekort */

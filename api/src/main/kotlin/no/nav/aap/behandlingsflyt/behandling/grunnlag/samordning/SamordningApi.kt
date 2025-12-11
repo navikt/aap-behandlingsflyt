@@ -4,6 +4,7 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.VurderRettighetsperiodeRepository
 import no.nav.aap.behandlingsflyt.behandling.samordning.EndringStatus
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningPeriodeSammenligner
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
@@ -20,6 +21,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UførePeriodeMedEndringStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UførePeriodeSammenligner
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
@@ -82,6 +84,11 @@ data class SamordningUføreVurderingGrunnlagDTO(
     val harTilgangTilÅSaksbehandle: Boolean,
     val vurdering: SamordningUføreVurderingDTO?,
     val grunnlag: List<SamordningUføreGrunnlagDTO>
+)
+
+data class SamordningBarnepensjonDTO(
+    val harTilgangTilÅSaksbehandle: Boolean,
+    val kvalfisererTilBarnepensjon: Boolean? = null
 )
 
 data class SamordningUføreGrunnlagDTO(
@@ -152,6 +159,8 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
     val ansattInfoService = AnsattInfoService(gatewayProvider)
 
     route("/api/behandling") {
+
+
         route("/{referanse}/grunnlag/samordning-ufore") {
             getGrunnlag<BehandlingReferanse, SamordningUføreVurderingGrunnlagDTO>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
@@ -212,6 +221,8 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                             )
                         Pair(tp, vurdering)
                     }
+
+
 
                 respond(
                     TjenestepensjonGrunnlagDTO(
@@ -478,6 +489,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
         }
     }
 }
+
 
 private fun mapSamordningVurdering(
     samordning: SamordningVurderingGrunnlag,
