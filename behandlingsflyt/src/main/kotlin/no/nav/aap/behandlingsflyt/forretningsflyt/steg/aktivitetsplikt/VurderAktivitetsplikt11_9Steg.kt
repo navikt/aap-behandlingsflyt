@@ -11,24 +11,16 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class VurderAktivitetsplikt11_9Steg(
-    private val unleashGateway: UnleashGateway,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val aktivitetsplikt11_9Repository: Aktivitetsplikt11_9Repository,
     private val avklaringsbehovService: AvklaringsbehovService,
 ) : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (unleashGateway.isDisabled(BehandlingsflytFeature.Aktivitetsplikt11_9)) {
-            throw IllegalStateException(
-                "Steg ${StegType.VURDER_AKTIVITETSPLIKT_11_9} er deaktivert i unleash, kan ikke utføre steg."
-            )
-        }
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         avklaringsbehovService.oppdaterAvklaringsbehov(
             kontekst = kontekst,
@@ -64,7 +56,6 @@ class VurderAktivitetsplikt11_9Steg(
             repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider
         ): BehandlingSteg {
             return VurderAktivitetsplikt11_9Steg(
-                gatewayProvider.provide(),
                 repositoryProvider.provide(),
                 aktivitetsplikt11_9Repository = repositoryProvider.provide(),
                 AvklaringsbehovService(repositoryProvider),
