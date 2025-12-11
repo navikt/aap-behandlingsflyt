@@ -121,6 +121,81 @@ class ForeslåVedtakStegTest {
             )
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
         avklaringsbehovene.leggTil(
+            definisjoner = listOf(Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT),
+            funnetISteg = StegType.FASTSETT_BEREGNINGSTIDSPUNKT, null, null
+        )
+        avklaringsbehovene.løsAvklaringsbehov(Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT, "ja", "TESTEN")
+        val kontekstMedPerioder = FlytKontekstMedPerioder(
+            sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling(),
+            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
+            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
+            rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
+        )
+
+        val resultat = steg.utfør(kontekstMedPerioder)
+
+        assertThat(resultat).isEqualTo(Fullført)
+        assertThat(avklaringsbehovene.åpne().map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
+    }
+
+    @Test
+    fun `hvis NAY kun har behandlet lovvalg og behandling går mot avslag på lokalkontor, ikke gå innom foreslå vedtak`() {
+        val person =
+            Person(PersonId(random.nextLong()), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
+
+        val sak = sakRepository.finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+        val behandling =
+            behandlingRepository.opprettBehandling(
+                sakId = sak.id,
+                typeBehandling = TypeBehandling.Førstegangsbehandling,
+                forrigeBehandlingId = null,
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
+                    årsak = ÅrsakTilOpprettelse.SØKNAD
+                )
+            )
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+        avklaringsbehovene.leggTil(
+            definisjoner = listOf(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP),
+            funnetISteg = StegType.VURDER_LOVVALG, null, null
+        )
+        avklaringsbehovene.leggTil(
+            definisjoner = listOf(Definisjon.AVKLAR_SYKDOM),
+            funnetISteg = StegType.AVKLAR_SYKDOM, null, null
+        )
+        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP, "ja", "TESTEN")
+        avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_SYKDOM, "ja", "TESTEN")
+        val kontekstMedPerioder = FlytKontekstMedPerioder(
+            sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling(),
+            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
+            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
+            rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
+        )
+
+        val resultat = steg.utfør(kontekstMedPerioder)
+
+        assertThat(resultat).isEqualTo(Fullført)
+        assertThat(avklaringsbehovene.åpne().map { it.definisjon }).doesNotContain(Definisjon.FORESLÅ_VEDTAK)
+    }
+
+    @Test
+    fun `hvis NAY har behandlet lovvalg og medlemskap til avslag, gå innom foreslå vedtak`() {
+        val person =
+            Person(PersonId(random.nextLong()), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
+
+        val sak = sakRepository.finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+        val behandling =
+            behandlingRepository.opprettBehandling(
+                sakId = sak.id,
+                typeBehandling = TypeBehandling.Førstegangsbehandling,
+                forrigeBehandlingId = null,
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
+                    årsak = ÅrsakTilOpprettelse.SØKNAD
+                )
+            )
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+        avklaringsbehovene.leggTil(
             definisjoner = listOf(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP),
             funnetISteg = StegType.VURDER_LOVVALG, null, null
         )

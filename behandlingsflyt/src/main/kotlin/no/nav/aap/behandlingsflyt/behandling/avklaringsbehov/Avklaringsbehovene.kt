@@ -17,6 +17,7 @@ import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.tilgang.Rolle
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
+import kotlin.collections.filter
 
 class Avklaringsbehovene(
     private val repository: AvklaringsbehovOperasjonerRepository,
@@ -279,6 +280,22 @@ class Avklaringsbehovene(
 
     fun hentBehovForDefinisjon(definisjoner: List<Definisjon>): List<Avklaringsbehov> {
         return alle().filter { it.definisjon in definisjoner }.toList()
+    }
+
+    fun harVærtHosLokalkontor(): Boolean {
+        return alle().filter { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
+            .any { it.definisjon.løsesAv == listOf(Rolle.SAKSBEHANDLER_OPPFOLGING) }
+    }
+
+    fun skalInnomForeslåVedtak(): Boolean {
+        val harAvklaringsbehovLøstAvNay = avklaringsbehovLøstAvNay().isNotEmpty()
+
+        val nayHarBareLøstLovvalgEllerVentepunkt = harAvklaringsbehovLøstAvNay
+                && avklaringsbehovLøstAvNay().filterNot { it.erLovvalgOgMedlemskap() }.filterNot { it.erVentepunkt() }.isEmpty()
+        if (!nayHarBareLøstLovvalgEllerVentepunkt) {
+            return harAvklaringsbehovLøstAvNay
+        }
+        return !harVærtHosLokalkontor()
     }
 
     fun avklaringsbehovLøstAvNay(): List<Avklaringsbehov> {

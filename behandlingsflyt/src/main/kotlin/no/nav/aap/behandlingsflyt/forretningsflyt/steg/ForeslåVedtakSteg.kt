@@ -50,7 +50,7 @@ class ForeslåVedtakSteg internal constructor(
         avklaringsbehovene: Avklaringsbehovene
     ): Boolean {
         return tidligereVurderinger.harBehandlingsgrunnlag(kontekst, type())
-                && avklaringsbehovene.avklaringsbehovLøstAvNay().isNotEmpty()
+                && avklaringsbehovene.skalInnomForeslåVedtak()
     }
 
     private fun erTilstrekkeligVurdert(
