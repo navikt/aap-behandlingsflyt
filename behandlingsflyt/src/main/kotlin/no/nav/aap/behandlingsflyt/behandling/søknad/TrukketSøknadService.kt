@@ -9,6 +9,6 @@ class TrukketSøknadService(
     constructor(repositoryProvider: RepositoryProvider) : this(repositoryProvider.provide())
 
     fun søknadErTrukket(behandlingId: BehandlingId): Boolean {
-        return trukketSøknadRepository.hentTrukketSøknadVurderinger(behandlingId).isNotEmpty()
+        return trukketSøknadRepository.hentTrukketSøknadVurderinger(behandlingId).any { it.skalTrekkes }
     }
 }
