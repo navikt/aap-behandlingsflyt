@@ -4495,4 +4495,54 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 assertThat(åpneAvklaringsbehov.map { it.definisjon }).contains(Definisjon.AVKLAR_HELSEINSTITUSJON)
             }
     }
+
+    @Test
+    fun `stopper opp når søker er over 62 år`() {
+        val fom = LocalDate.now()
+        val periode = Periode(fom, fom.plusYears(3))
+        val person = TestPersoner.PERSON_62()
+
+        val (sak, behandling) = sendInnFørsteSøknad(
+            person = person,
+            mottattTidspunkt = fom.atStartOfDay(),
+            periode = periode,
+        )
+
+        behandling
+            .medKontekst {
+                assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
+                assertThat(åpneAvklaringsbehov).isNotEmpty()
+                assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+            }
+            .løsFramTilGrunnlag(sak.rettighetsperiode.fom)
+            .løsBeregningstidspunkt()
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).contains(Definisjon.VURDER_INNTEKTSBORTFALL)
+            }
+    }
+
+    @Test
+    fun `stopper ikke opp når søker er rett under 62 år gammel`() {
+        val fom = LocalDate.now()
+        val person = TestPersoner.PERSON_61()
+        val periode = Periode(fom, fom.plusYears(3))
+
+        val (sak, behandling) = sendInnFørsteSøknad(
+            person = person,
+            mottattTidspunkt = fom.atStartOfDay(),
+            periode = periode
+        )
+
+        behandling
+            .medKontekst {
+                assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
+                assertThat(åpneAvklaringsbehov).isNotEmpty()
+                assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+            }
+            behandling.løsFramTilGrunnlag(sak.rettighetsperiode.fom)
+            .løsBeregningstidspunkt()
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).noneMatch { it == Definisjon.VURDER_INNTEKTSBORTFALL }
+            }
+    }
 }

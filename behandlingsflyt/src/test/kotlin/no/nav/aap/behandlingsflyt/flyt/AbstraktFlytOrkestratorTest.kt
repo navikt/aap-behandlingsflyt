@@ -240,6 +240,22 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
             )
         }
 
+        val PERSON_62 = {
+            FakePersoner.leggTil(
+                TestPerson(
+                    fødselsdato = Fødselsdato(LocalDate.now().minusYears(62))
+                )
+            )
+        }
+
+        val PERSON_61 = {
+            FakePersoner.leggTil(
+                TestPerson(
+                    fødselsdato = Fødselsdato(LocalDate.now().minusYears(61))
+                )
+            )
+        }
+
         val PERSON_MED_FORUTGÅENDE_MEDLEMSKAP = {
             FakePersoner.leggTil(
                 TestPerson(
