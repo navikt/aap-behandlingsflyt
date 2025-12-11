@@ -48,7 +48,7 @@ class SaksHistorikkService(
         )
 
         val avklaringsbehovene = behandlingerMedBehov.flatMap { it.avklaringsbehov }
-        val erVedtatt = avklaringsbehovene.filter { it.erTotrinn() }.all { it.erTotrinnsVurdert() }
+        val erVedtatt = avklaringsbehovene.filter { it.erIkkeAvbrutt() && it.erTotrinn() }.all { it.erTotrinnsVurdert() }
 
         return behandlingerMedBehov.mapNotNull { behandling ->
             val hendelser = behandling.avklaringsbehov
