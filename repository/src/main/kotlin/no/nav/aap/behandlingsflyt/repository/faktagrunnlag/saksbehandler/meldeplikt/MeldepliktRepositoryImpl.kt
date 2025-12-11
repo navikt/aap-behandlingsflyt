@@ -253,7 +253,7 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
 
         val totalTid = System.currentTimeMillis() - start
 
-        log.info("DRY-RUN: Fullført migrering av fritak meldeplikt. Migrerte ${kandidater.size} grunnlag og ${migrerteVurderingerCount} vurderinger på $totalTid ms.")
+        log.info("Fullført migrering av fritak meldeplikt. Migrerte ${kandidater.size} grunnlag og ${migrerteVurderingerCount} vurderinger på $totalTid ms.")
     }
 
 
