@@ -220,6 +220,23 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
         }
     }
 
+    override fun finnSakerMedBarnetillegg(): List<SakId> {
+        val sql = """
+select distinct s.id
+from sak s
+         join behandling b on s.id = b.sak_id
+         join tilkjent_ytelse ty on b.id = ty.behandling_id
+         join tilkjent_periode tp on tp.tilkjent_ytelse_id = ty.id
+where ty.aktiv = true
+  and tp.barnetillegg > 0
+  and tp.periode @> '2026-01-01'::date
+        """.trimIndent()
+
+        return connection.queryList(sql) {
+            setRowMapper { SakId(it.getLong("id")) }
+        }
+    }
+
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         // Denne trengs ikke implementeres
     }

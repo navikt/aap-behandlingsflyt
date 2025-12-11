@@ -51,6 +51,7 @@ enum class Vurderingsbehov {
     OVERGANG_ARBEID,
     DØDSFALL_BRUKER,
     DØDSFALL_BARN,
+    BARNETILLEGG_SATS_REGULERING
     ;
 
     companion object {
