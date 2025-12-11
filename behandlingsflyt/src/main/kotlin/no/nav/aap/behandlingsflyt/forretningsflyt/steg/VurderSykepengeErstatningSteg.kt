@@ -82,7 +82,7 @@ class VurderSykepengeErstatningSteg private constructor(
                 },
             )
         } else {
-            avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårGammel(
+            avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
                 avklaringsbehovene = avklaringsbehovene,
                 behandlingRepository = behandlingRepository,
                 vilkårsresultatRepository = vilkårsresultatRepository,
