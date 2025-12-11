@@ -210,7 +210,6 @@ class UnderveisService(
             oppholdskravGrunnlag = oppholdskravGrunnlag,
             meldeperioder = meldeperioder,
             vedtaksdatoFørstegangsbehandling = vedtaksdatoFørstegangsbehandling?.toLocalDate(),
-            timerArbeidetPeriodisertSubMeldeperiodeEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.TimerArbeidetPeriodisertSubMeldeperiode),
         )
     }
 

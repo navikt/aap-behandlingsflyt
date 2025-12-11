@@ -34,34 +34,7 @@ object FakeUnleash : FakeUnleashBase(
         BehandlingsflytFeature.PeriodisertSykepengeErstatningNyAvklaringsbehovService to true,
         BehandlingsflytFeature.MidlertidigStopp11_4 to true,
         BehandlingsflytFeature.ValiderOvergangUfore to true,
-        BehandlingsflytFeature.TimerArbeidetPeriodisertSubMeldeperiode to true,
         BehandlingsflytFeature.KravOmInntektsbortfall to true
-    )
-)
-
-/** Før du merger så kan det være lurt å sjekke om feature-togglene
- * under matcher prod og hvis du flipper "din" feature toggle, så er testene
- * fortsatt grønne. */
-object ProdlikUnleash : FakeUnleashBase(
-    mapOf(
-        BehandlingsflytFeature.IngenValidering to false,
-        BehandlingsflytFeature.NyBrevtype11_17 to false,
-        BehandlingsflytFeature.NyBrevtype11_18 to true,
-        BehandlingsflytFeature.Aktivitetsplikt11_9 to true,
-        BehandlingsflytFeature.OverforingsdatoNullForAvregning to false,
-        BehandlingsflytFeature.OvergangArbeid to false,
-        BehandlingsflytFeature.KvalitetssikringsSteg to false,
-        BehandlingsflytFeature.FatteVedtakAvklaringsbehovService to true,
-        BehandlingsflytFeature.EOSBeregning to false,
-        BehandlingsflytFeature.NyeBarn to false,
-        BehandlingsflytFeature.NyBrevbyggerV3 to false,
-        BehandlingsflytFeature.BedreUttrekkAvSakerMedFritakMeldeplikt to false,
-        BehandlingsflytFeature.LagreVedtakIFatteVedtak to false,
-        BehandlingsflytFeature.PeriodisertSykepengeErstatningNyAvklaringsbehovService to false,
-        BehandlingsflytFeature.MidlertidigStopp11_4 to false,
-        BehandlingsflytFeature.ValiderOvergangUfore to false,
-        BehandlingsflytFeature.TimerArbeidetPeriodisertSubMeldeperiode to false,
-        BehandlingsflytFeature.KravOmInntektsbortfall to false
     )
 )
 
@@ -83,7 +56,6 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.PeriodisertSykepengeErstatningNyAvklaringsbehovService to true,
         BehandlingsflytFeature.MidlertidigStopp11_4 to true,
         BehandlingsflytFeature.ValiderOvergangUfore to true,
-        BehandlingsflytFeature.TimerArbeidetPeriodisertSubMeldeperiode to true,
         BehandlingsflytFeature.KravOmInntektsbortfall to true
     )
 )

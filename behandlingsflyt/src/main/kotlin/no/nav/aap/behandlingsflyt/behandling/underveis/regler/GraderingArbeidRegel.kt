@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UtledMeldeperiodeRegel.Companion.groupByMeldeperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneVurdering.Companion.tidslinje
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -95,12 +94,7 @@ class GraderingArbeidRegel : UnderveisRegel {
             .leftJoin(harRettTidslinje(resultat), OpplysningerOmArbeid::mergePrioriterHøyre)
             .leftJoin(grenseverdi(resultat), OpplysningerOmArbeid::mergePrioriterHøyre)
 
-        return (
-                if (input.timerArbeidetPeriodisertSubMeldeperiodeEnabled)
-                    opplysninger.splittOppIPerioderBasertPå { Pair(it.meldeperiode, it.grenseverdi) }
-                else
-                    groupByMeldeperiode(resultat, opplysninger)
-                )
+        return opplysninger.splittOppIPerioderBasertPå { Pair(it.meldeperiode, it.grenseverdi) }
             .flatMap { periode -> regnUtGradering(periode.verdi) }
             .komprimer()
     }
