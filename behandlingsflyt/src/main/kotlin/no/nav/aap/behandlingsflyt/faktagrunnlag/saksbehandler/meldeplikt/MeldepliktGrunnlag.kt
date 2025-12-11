@@ -16,4 +16,9 @@ data class MeldepliktGrunnlag(
 }
 
 fun List<Fritaksvurdering>.tilTidslinje(maksDato: LocalDate = Tid.MAKS): Tidslinje<Fritaksvurdering> =
-    sortedBy { it.opprettetTid }.somTidslinje { Periode(it.fraDato, it.tilDato ?: maksDato) }
+    groupBy { it.vurdertIBehandling }
+        .values
+        .sortedBy { it[0].opprettetTid }
+        .flatMap { vurderingerForBehandling -> vurderingerForBehandling.sortedBy { it.fraDato } }
+        .somTidslinje { Periode(it.fraDato, it.tilDato ?: maksDato) }
+        .komprimer()

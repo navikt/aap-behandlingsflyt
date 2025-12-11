@@ -67,7 +67,7 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(
                     val historikk =
                         meldepliktRepository.hentAlleVurderinger(behandling.sakId, behandling.id)
 
-                    val nyeVurderinger = nåTilstand?.filter { it.vurdertIBehandling == behandling.id }
+                    val nyeVurderinger = nåTilstand?.filter { it.vurdertIBehandling == behandling.id } ?: emptyList()
                     val gjeldendeVedtatteVurderinger =
                         nåTilstand?.filter { it.vurdertIBehandling != behandling.id }?.tilTidslinje() ?: Tidslinje()
 
@@ -90,18 +90,8 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(
                                 .orEmpty(),
                         kanVurderes = listOf(sak.rettighetsperiode),
                         behøverVurderinger = emptyList(),
-                        nyeVurderinger = nyeVurderinger?.map { it.toResponse(vurdertAvService) } ?: emptyList(),
-                        sisteVedtatteVurderinger = gjeldendeVedtatteVurderinger
-                            .komprimer()
-                            .segmenter()
-                            .map { segment ->
-                                val verdi = segment.verdi
-                                verdi.toResponse(
-                                    vurdertAvService = vurdertAvService,
-                                    fom = segment.fom(),
-                                    tom = if (segment.tom().isEqual(Tid.MAKS)) null else segment.tom()
-                                )
-                            }
+                        nyeVurderinger = nyeVurderinger.map { it.toResponse(vurdertAvService) },
+                        sisteVedtatteVurderinger = gjeldendeVedtatteVurderinger.toResponse(vurdertAvService)
                     )
                 }
 
