@@ -40,11 +40,6 @@ data class Fødselsdato(val dato: LocalDate) {
 }
 
 data class AlderMedMåneder(val år: Int, val måneder: Int): Comparable<AlderMedMåneder> {
-    init {
-        if (år < 0) throw IllegalArgumentException("Alder i år kan ikke være negativ")
-        if (måneder < 0 || måneder > 11) throw IllegalArgumentException("Måneder må være mellom 0 og 11")
-    }
-    
     override fun toString(): String {
         return "$år år og $måneder måneder"
     }
