@@ -29,7 +29,8 @@ enum class BehandlingsflytFeature : FeatureToggle {
     ReduksjonArbeidOverGrense,
     PeriodisertSykepengeErstatningNyAvklaringsbehovService,
     ReduksjonIkkeMeldtSeg,
-    MidlertidigStopp11_4
+    MidlertidigStopp11_4,
+    ValiderOvergangUfore
     ;
 
     override fun key(): String = name

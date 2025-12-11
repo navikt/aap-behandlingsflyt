@@ -1740,7 +1740,14 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             )
             .assertThrows(
                 UgyldigForespørselException::class,
-                "Løsning mangler vurdering for perioder: [Periode(fom=2025-12-10, tom=2025-12-11)]"
+                "Løsning mangler vurdering for perioder: ${
+                    listOf(
+                        Periode(
+                            periode.fom,
+                            virkningsdatoFørsteLøsningOvertgangUføre.minusDays(1)
+                        )
+                    )
+                }"
             ) { behandling ->
                 behandling.løsAvklaringsBehov(
                     AvklarOvergangUføreLøsning(

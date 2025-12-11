@@ -11,6 +11,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepos
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
@@ -23,13 +26,15 @@ class AvklarOvergangUføreLøser(
     private val sakRepository: SakRepository,
     private val sykdomRepository: SykdomRepository,
     private val bistandRepository: BistandRepository,
+    private val unleashGateway: UnleashGateway
 ) : AvklaringsbehovsLøser<AvklarOvergangUføreEnkelLøsning> {
 
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         overgangUforeRepository = repositoryProvider.provide(),
         sakRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
         bistandRepository = repositoryProvider.provide(),
+        unleashGateway = gatewayProvider.provide()
     )
 
     override fun løs(
@@ -60,12 +65,14 @@ class AvklarOvergangUføreLøser(
                 behandlingId
             )
         }
-
-        val nyTidslinje = OvergangUføreGrunnlag(
-            vurderinger = nyeVurderinger + vedtatteVurderinger
-        ).somOvergangUforevurderingstidslinje()
-        valider(behandlingId, rettighetsperiode.fom, nyTidslinje)
-
+        
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.ValiderOvergangUfore)) {
+            val nyTidslinje = OvergangUføreGrunnlag(
+                vurderinger = nyeVurderinger + vedtatteVurderinger
+            ).somOvergangUforevurderingstidslinje()
+            valider(behandlingId, rettighetsperiode.fom, nyTidslinje)
+        }
+        
         overgangUforeRepository.lagre(
             behandlingId = behandlingId,
             overgangUføreVurderinger = nyeVurderinger + vedtatteVurderinger

@@ -23,12 +23,13 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
-import java.time.LocalDate
 
 class OvergangUføreSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
@@ -39,6 +40,7 @@ class OvergangUføreSteg private constructor(
     private val bistandRepository: BistandRepository,
     private val behandlingRepository: BehandlingRepository,
     private val avklaringsbehovService: AvklaringsbehovService,
+    private val unleashGateway: UnleashGateway,
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         vilkårsresultatRepository = repositoryProvider.provide(),
@@ -49,9 +51,17 @@ class OvergangUføreSteg private constructor(
         bistandRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+        unleashGateway = gatewayProvider.provide(),
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        val perioderSomIkkeErTilstrekkeligVurdert: () -> Set<Periode> =
+            if (unleashGateway.isEnabled(BehandlingsflytFeature.ValiderOvergangUfore)) {
+                { perioderSomIkkeErTilstrekkeligVurdert(kontekst) }
+            } else {
+                { emptySet() }
+            }
+
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
             behandlingRepository = behandlingRepository,
@@ -63,7 +73,7 @@ class OvergangUføreSteg private constructor(
                 Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
             ),
             nårVurderingErRelevant = { perioderOvergangUføreErRelevant(kontekst) },
-            perioderSomIkkeErTilstrekkeligVurdert = { perioderSomIkkeErTilstrekkeligVurdert(kontekst) },
+            perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
             tilbakestillGrunnlag = {
                 val vedtatteVurderinger =
                     kontekst.forrigeBehandlingId?.let { overgangUføreRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
