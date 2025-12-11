@@ -129,7 +129,7 @@ class HåndterMottattDokumentService(
         brevkategori: InnsendingType,
         melding: Melding?,
     ) {
-        log.info("Mottok dokument på sak-id $sakId, og referanse $referanse, med brevkategori $brevkategori.")
+        log.info("Mottok dokument på sak-id $sakId, og referanse $referanse, med brevkategori $brevkategori. med beskrivelse fra melding: $melding")
         val sak = sakService.hent(sakId)
         val periode = utledPeriode(brevkategori, mottattTidspunkt, melding)
         val vurderingsbehov = utledVurderingsbehov(brevkategori, melding, periode)
@@ -145,6 +145,7 @@ class HåndterMottattDokumentService(
                     is ManuellRevurderingV0 -> melding.beskrivelse
                     is OmgjøringKlageRevurderingV0 -> melding.beskrivelse
                     is PdlHendelseV0 -> melding.beskrivelse
+                    is NyÅrsakTilBehandlingV0 -> melding.beskrivelse
                     else -> null
                 }
             )

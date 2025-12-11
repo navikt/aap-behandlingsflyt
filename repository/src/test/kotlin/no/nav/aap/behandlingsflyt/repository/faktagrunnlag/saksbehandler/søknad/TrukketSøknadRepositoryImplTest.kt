@@ -45,6 +45,7 @@ class TrukketSøknadRepositoryImplTest {
             journalpostId = JournalpostId("111"),
             begrunnelse = "en grunn",
             vurdertAv = Bruker("Z00000"),
+            skalTrekkes = false,
             vurdert = Instant.parse("2020-01-01T12:12:12Z"),
         )
 
@@ -53,6 +54,7 @@ class TrukketSøknadRepositoryImplTest {
             journalpostId = JournalpostId("222"),
             begrunnelse = "en annen grunn",
             vurdertAv = Bruker("Z00001"),
+            skalTrekkes = true,
             vurdert = Instant.parse("2020-01-01T12:12:19Z"),
         )
 

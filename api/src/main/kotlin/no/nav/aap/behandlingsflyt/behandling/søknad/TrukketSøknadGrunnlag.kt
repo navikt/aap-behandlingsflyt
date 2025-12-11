@@ -26,6 +26,7 @@ class TrukketSøknadVurderingDto(
     val journalpostId: String,
     val begrunnelse: String,
     val vurdertDato: LocalDate,
+    val skalTrekkes: Boolean,
     val vurdertAv: String,
 )
 
@@ -50,6 +51,7 @@ fun NormalOpenAPIRoute.trukketSøknadGrunnlagApi(dataSource: DataSource, reposit
                             journalpostId = it.journalpostId.identifikator,
                             begrunnelse = it.begrunnelse,
                             vurdertAv = it.vurdertAv.ident,
+                            skalTrekkes = it.skalTrekkes,
                             vurdertDato = it.vurdert.atZone(ZoneId.of("Europe/Oslo")).toLocalDate(),
                         )
                     }

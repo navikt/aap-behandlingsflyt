@@ -4,7 +4,10 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.PeriodisertManuellVurderingForForutgåendeMedlemskapResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -12,6 +15,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -19,6 +23,7 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
+import java.time.LocalDate
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
@@ -40,9 +45,11 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val meldepliktRepository = repositoryProvider.provide<MeldepliktRepository>()
+                    val sakRepository = repositoryProvider.provide<SakRepository>()
 
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
+                    val sak = sakRepository.hent(behandling.sakId)
 
                     val nåTilstand = meldepliktRepository.hentHvisEksisterer(behandling.id)?.vurderinger
 
@@ -53,7 +60,6 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(
 
                     val historikk =
                         meldepliktRepository.hentAlleVurderinger(behandling.sakId, behandling.id)
-
 
                     FritakMeldepliktGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
@@ -71,7 +77,11 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(
                                 ?.filterNot { vedtatteVerdier.contains(it) }
                                 ?.map { tilResponse(it, ansattInfoService) }
                                 ?.sortedBy { it.fraDato }
-                                .orEmpty()
+                                .orEmpty(),
+                        sisteVedtatteVurderinger = emptyList(),
+                        kanVurderes = listOf(sak.rettighetsperiode),
+                        nyeVurderinger = emptyList(),
+                        behøverVurderinger = emptyList(),
                     )
                 }
 

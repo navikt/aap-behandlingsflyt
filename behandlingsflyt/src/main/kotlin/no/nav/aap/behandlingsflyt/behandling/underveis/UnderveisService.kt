@@ -118,6 +118,28 @@ class UnderveisService(
             sjekkAvhengighet(forventetFør = UtledMeldeperiodeRegel::class, forventetEtter = GraderingArbeidRegel::class)
             sjekkAvhengighet(forventetFør = FastsettGrenseverdiArbeidRegel::class, forventetEtter = GraderingArbeidRegel::class)
         }
+
+        fun tilUnderveisperioder(vurderRegler: Tidslinje<Vurdering>): List<Underveisperiode> = vurderRegler.segmenter()
+            .map {
+                Underveisperiode(
+                    periode = it.periode,
+                    meldePeriode = it.verdi.meldeperiode(),
+                    utfall = it.verdi.utfall(),
+                    rettighetsType = it.verdi.endeligRettighetsType(),
+                    avslagsårsak = it.verdi.avslagsårsak(),
+                    grenseverdi = it.verdi.grenseverdi(),
+                    arbeidsgradering = it.verdi.arbeidsgradering(),
+                    trekk = if (it.verdi.skalReduseresDagsatser()) Dagsatser(1) else Dagsatser(0),
+                    brukerAvKvoter = it.verdi.varighetVurdering?.brukerAvKvoter.orEmpty(),
+                    institusjonsoppholdReduksjon = if (it.verdi.institusjonVurdering?.skalReduseres == true) Prosent.`50_PROSENT` else Prosent.`0_PROSENT`,
+                    meldepliktStatus = it.verdi.meldepliktVurdering?.status,
+                    meldepliktGradering = if (it.verdi.meldepliktVurdering?.utfall == Utfall.OPPFYLT)
+                        Prosent.`0_PROSENT`
+                    else
+                        Prosent.`100_PROSENT`
+                )
+            }
+
     }
 
     fun vurder(sakId: SakId, behandlingId: BehandlingId): Tidslinje<Vurdering> {
@@ -126,26 +148,7 @@ class UnderveisService(
         val vurderRegler = vurderRegler(input)
         underveisRepository.lagre(
             behandlingId,
-            vurderRegler.segmenter()
-                .map {
-                    Underveisperiode(
-                        periode = it.periode,
-                        meldePeriode = it.verdi.meldeperiode(),
-                        utfall = it.verdi.utfall(),
-                        rettighetsType = it.verdi.endeligRettighetsType(),
-                        avslagsårsak = it.verdi.avslagsårsak(),
-                        grenseverdi = it.verdi.grenseverdi(),
-                        arbeidsgradering = it.verdi.arbeidsgradering(),
-                        trekk = if (it.verdi.skalReduseresDagsatser()) Dagsatser(1) else Dagsatser(0),
-                        brukerAvKvoter = it.verdi.varighetVurdering?.brukerAvKvoter.orEmpty(),
-                        institusjonsoppholdReduksjon = if (it.verdi.institusjonVurdering?.skalReduseres == true) Prosent.`50_PROSENT` else Prosent.`0_PROSENT`,
-                        meldepliktStatus = it.verdi.meldepliktVurdering?.status,
-                        meldepliktGradering = if (it.verdi.meldepliktVurdering?.utfall == Utfall.OPPFYLT)
-                            Prosent.`0_PROSENT`
-                        else
-                            Prosent.`100_PROSENT`
-                    )
-                },
+            tilUnderveisperioder(vurderRegler),
             input
         )
         return vurderRegler
@@ -212,7 +215,6 @@ class UnderveisService(
             meldeperioder = meldeperioder,
             vedtaksdatoFørstegangsbehandling = vedtaksdatoFørstegangsbehandling?.toLocalDate(),
             reduksjonArbeidOverGrenseEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.ReduksjonArbeidOverGrense),
-            unntakMeldepliktDesemberEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.UnntakMeldepliktDesember),
             reduksjonIkkeMeldtSegEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.ReduksjonIkkeMeldtSeg),
             timerArbeidetPeriodisertSubMeldeperiodeEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.TimerArbeidetPeriodisertSubMeldeperiode),
         )

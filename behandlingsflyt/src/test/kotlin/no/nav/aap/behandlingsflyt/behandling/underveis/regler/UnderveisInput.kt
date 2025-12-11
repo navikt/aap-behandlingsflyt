@@ -64,7 +64,6 @@ fun tomUnderveisInput(
         oppholdskravGrunnlag = oppholdskravGrunnlag,
         reduksjonArbeidOverGrenseEnabled = false,
         reduksjonIkkeMeldtSegEnabled = false,
-        unntakMeldepliktDesemberEnabled = true,
         timerArbeidetPeriodisertSubMeldeperiodeEnabled = true,
     )
 }
