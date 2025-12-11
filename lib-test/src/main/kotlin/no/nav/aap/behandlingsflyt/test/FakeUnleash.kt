@@ -35,8 +35,9 @@ object FakeUnleash : FakeUnleashBase(
         BehandlingsflytFeature.ReduksjonArbeidOverGrense to true,
         BehandlingsflytFeature.PeriodisertSykepengeErstatningNyAvklaringsbehovService to true,
         BehandlingsflytFeature.ReduksjonIkkeMeldtSeg to true,
+        BehandlingsflytFeature.MidlertidigStopp11_4 to true,
+        BehandlingsflytFeature.ValiderOvergangUfore to true,
         BehandlingsflytFeature.TimerArbeidetPeriodisertSubMeldeperiode to true,
-        BehandlingsflytFeature.MidlertidigStopp11_4 to true
     )
 )
 
@@ -62,8 +63,9 @@ object ProdlikUnleash : FakeUnleashBase(
         BehandlingsflytFeature.ReduksjonIkkeMeldtSeg to false,
         BehandlingsflytFeature.PeriodisertSykepengeErstatningNyAvklaringsbehovService to false,
         BehandlingsflytFeature.UnntakMeldepliktDesember to false,
+        BehandlingsflytFeature.MidlertidigStopp11_4 to false,
+        BehandlingsflytFeature.ValiderOvergangUfore to false,
         BehandlingsflytFeature.TimerArbeidetPeriodisertSubMeldeperiode to false,
-        BehandlingsflytFeature.MidlertidigStopp11_4 to false
     )
 )
 
@@ -86,7 +88,8 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.ReduksjonArbeidOverGrense to true,
         BehandlingsflytFeature.PeriodisertSykepengeErstatningNyAvklaringsbehovService to true,
         BehandlingsflytFeature.ReduksjonIkkeMeldtSeg to true,
+        BehandlingsflytFeature.MidlertidigStopp11_4 to true,
+        BehandlingsflytFeature.ValiderOvergangUfore to true,
         BehandlingsflytFeature.TimerArbeidetPeriodisertSubMeldeperiode to true,
-        BehandlingsflytFeature.MidlertidigStopp11_4 to true
     )
 )
