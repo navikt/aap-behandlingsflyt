@@ -16,15 +16,16 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadeSak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.within
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
+import java.math.MathContext
+import java.math.RoundingMode
 import java.time.LocalDate
-import java.time.MonthDay
 import java.time.Year
 import java.time.YearMonth
 
@@ -199,7 +200,11 @@ class BeregningTest {
         val beregning = Beregning(input).beregneMedInput()
         beregning as GrunnlagYrkesskade
         beregning.underliggende() as GrunnlagUføre
-        assertThat(beregning.grunnlaget()).isEqualTo(GUnit("4.6205242620"))
+
+        assertThat(beregning.grunnlaget().verdi()).isCloseTo(
+            GUnit("4.6205242620").verdi(),
+            within(0.0001.toBigDecimal())
+        )
     }
 
 
@@ -255,7 +260,10 @@ class BeregningTest {
         val beregning = Beregning(inputMedNullUføregrad).beregneMedInput()
         val beregningUtenUføregrad = Beregning(inputMedUføreGradIkkeOppgitt).beregneMedInput()
 
-        assertThat(beregning.grunnlaget()).isEqualTo(beregningUtenUføregrad.grunnlaget())
+        assertThat(beregning.grunnlaget().verdi()).isCloseTo(
+            beregningUtenUføregrad.grunnlaget().verdi(),
+            within(0.0001.toBigDecimal())
+        )
     }
 
     @TableTest(
@@ -307,11 +315,13 @@ class BeregningTest {
     }
 
     private fun inntektsPerioder(inntektPerÅr: Set<InntektPerÅr>): Set<Månedsinntekt> {
-        return inntektPerÅr.map {
-            Månedsinntekt(
-                // TODO
-                YearMonth.of(it.år.value, 1), it.beløp
-            )
+        return inntektPerÅr.flatMap {
+            (1..12).map { mnd ->
+                Månedsinntekt(
+                    YearMonth.of(it.år.value, mnd),
+                    Beløp(it.beløp.verdi.divide(12.toBigDecimal(), MathContext(10, RoundingMode.HALF_UP)))
+                )
+            }
         }.toSet()
     }
 

@@ -37,6 +37,11 @@ class UføreBeregning(
         // og at vi får inntekt fra inntektskomponenten per måned
         val uføreTidslinje = lagUføreTidslinje(uføregrader)
 
+        require(inntektsPerioder
+            .filter { Year.of(it.årMåned.year) in relevanteÅr }
+            .groupingBy { it.årMåned.year }
+            .eachCount().values.all { it == 12 }) { "Krever inntekter for alle månender i relevante år." }
+
         val inntektPerMåned = inntektsPerioder
             .filter { Year.of(it.årMåned.year) in relevanteÅr }
             .groupingBy { it.årMåned }
@@ -95,7 +100,8 @@ class UføreBeregning(
             )
         }.entries.groupBy { it.key.year }
             .mapValues { (år, månedsinntekter) ->
-                val summertInntektJustertForUføre = Beløp(månedsinntekter.sumOf { it.value.inntektJustertForUføregrad.verdi })
+                val summertInntektJustertForUføre =
+                    Beløp(månedsinntekter.sumOf { it.value.inntektJustertForUføregrad.verdi })
 
                 val summertInntekt = Beløp(månedsinntekter.sumOf { it.value.inntektIKroner.verdi })
                 val år = Year.of(år)
