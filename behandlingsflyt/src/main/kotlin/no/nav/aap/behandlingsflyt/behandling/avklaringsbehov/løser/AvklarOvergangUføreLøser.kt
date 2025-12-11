@@ -110,7 +110,7 @@ class AvklarOvergangUføreLøser(
                     inkonsistentePerioder.joinToString(
                         ","
                     )
-                }}"
+                }"
             )
         }
     }
