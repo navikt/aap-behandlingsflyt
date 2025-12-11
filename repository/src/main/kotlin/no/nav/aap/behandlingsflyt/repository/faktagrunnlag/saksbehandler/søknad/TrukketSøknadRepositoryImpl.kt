@@ -60,7 +60,7 @@ class TrukketSøknadRepositoryImpl(
             insert into trukket_soknad_vurdering
                 (vurderinger_id, journalpost_id, begrunnelse, skal_trekkes, vurdert_av, vurdert)
             values
-                (?, ?, ?, ?, ?, ?, ?)
+                (?, ?, ?, ?, ?, ?)
         """.trimIndent(), grunnlag.vurderinger
         ) {
             setParams { vurdering ->
