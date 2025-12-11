@@ -12,6 +12,7 @@ import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
+import kotlin.system.measureTimeMillis
 
 class MeldepliktRepositoryImpl(private val connection: DBConnection) : MeldepliktRepository {
 
@@ -185,76 +186,66 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
 
     override fun migrerMeldepliktFritak() {
         log.info("Starter migrering av meldeplikt fritak")
-        val start = System.currentTimeMillis()
-
         // Hent alle koblingstabeller
         val kandidater = hentKandidater()
         val kandidaterGruppertPåSak = kandidater.groupBy { it.sakId }
 
         var migrerteVurderingerCount = 0
+        val totalTid = measureTimeMillis {
+            kandidaterGruppertPåSak.forEach { (sakId, kandidaterForSak) ->
+                log.info("Migrerer meldeplikt fritak for sak ${sakId.id} med ${kandidaterForSak.size} kandidater")
+                val sorterteKandidater = kandidaterForSak.sortedBy { it.grunnlagOpprettetTid }
+                val vurderingerMedVurderingerId =
+                    hentVurderinger(kandidaterForSak.map { it.meldepliktId }.toSet().toList())
 
-        kandidaterGruppertPåSak.forEach { (sakId, kandidaterForSak) ->
-            /*if (sakId != SakId(6568)) {
-                return@forEach
-            }*/
-            log.info("Migrerer meldeplikt fritak for sak ${sakId.id} med ${kandidaterForSak.size} kandidater")
-            val sorterteKandidater = kandidaterForSak.sortedBy { it.grunnlagOpprettetTid }
-            val vurderingerMedVurderingerId =
-                hentVurderinger(kandidaterForSak.map { it.meldepliktId }.toSet().toList())
+                // Kan skippe grunnlag som peker på vurderinger som allerede er migrert
+                val migrerteVurderingerId = mutableSetOf<Long>()
 
-            // Kan skippe grunnlag som peker på vurderinger som allerede er migrert
-            val migrerteVurderingerId = mutableSetOf<Long>()
+                // Dette dekker en eksisterende vurdering som er lagret som en del av et nytt grunnlag;
+                // disse har ikke samme id som den originale.
+                // Antar at like vurderinger innenfor samme sak er samme vurdering
+                val nyeVerdierForVurdering =
+                    mutableMapOf<SammenlignbarFritaksvurdering, BehandlingId>()
 
-            // Dette dekker en eksisterende vurdering som er lagret som en del av et nytt grunnlag;
-            // disse har ikke samme id som den originale.
-            // Antar at like vurderinger innenfor samme sak er samme vurdering
-            val nyeVerdierForVurdering =
-                mutableMapOf<SammenlignbarFritaksvurdering, BehandlingId>()
+                sorterteKandidater.filterNot { it.meldepliktId in migrerteVurderingerId }.forEach { kandidat ->
+                    val vurderingerForGrunnlag =
+                        vurderingerMedVurderingerId.filter { it.vurderingerId == kandidat.meldepliktId }
 
-            sorterteKandidater.forEach { kandidat ->
-                if (kandidat.meldepliktId in migrerteVurderingerId) {
-                    // Dette er et kopiert grunnlag som allerede er migrert
-                    return@forEach
-                }
-                val vurderingerForGrunnlag =
-                    vurderingerMedVurderingerId.filter { it.vurderingerId == kandidat.meldepliktId }
+                    vurderingerForGrunnlag.forEach { vurderingMedIder ->
+                        val vurdering = vurderingMedIder.vurdering
+                        val vurderingId = vurderingMedIder.vurderingId
+                        val sammenlignbarVurdering = vurdering.tilSammenlignbar()
+                        val nyeVerdier = if (nyeVerdierForVurdering.containsKey(sammenlignbarVurdering)) {
+                            // Bruk den migrerte versjonen
+                            nyeVerdierForVurdering[sammenlignbarVurdering]!!
+                        } else {
+                            val vurdertIBehandling = kandidat.behandlingId
+                            nyeVerdierForVurdering.put(sammenlignbarVurdering, vurdertIBehandling)
+                            vurdertIBehandling
+                        }
 
-                vurderingerForGrunnlag.forEach { vurderingMedIder ->
-                    val vurdering = vurderingMedIder.vurdering
-                    val vurderingId = vurderingMedIder.vurderingId
-                    val sammenlignbarVurdering = vurdering.tilSammenlignbar()
-                    val nyeVerdier = if (nyeVerdierForVurdering.containsKey(sammenlignbarVurdering)) {
-                        // Bruk den migrerte versjonen
-                        nyeVerdierForVurdering[sammenlignbarVurdering]!!
-                    } else {
-                        val vurdertIBehandling = kandidat.behandlingId
-                        nyeVerdierForVurdering.put(sammenlignbarVurdering, vurdertIBehandling)
-                        vurdertIBehandling
-                    }
-
-                    connection.execute(
-                        """
+                        connection.execute(
+                            """
                         UPDATE MELDEPLIKT_FRITAK_VURDERING
                         SET VURDERT_I_BEHANDLING = ?
                         WHERE ID = ?
                         """.trimIndent()
-                    ) {
-                        setParams {
-                            setLong(1, nyeVerdier.id)
-                            setLong(2, vurderingId)
+                        ) {
+                            setParams {
+                                setLong(1, nyeVerdier.id)
+                                setLong(2, vurderingId)
+                            }
                         }
-                    }
-                    migrerteVurderingerCount = migrerteVurderingerCount + 1
+                        migrerteVurderingerCount = migrerteVurderingerCount + 1
 
-                    migrerteVurderingerId.add(kandidat.meldepliktId)
+                        migrerteVurderingerId.add(kandidat.meldepliktId)
+                    }
                 }
             }
         }
-
-        val totalTid = System.currentTimeMillis() - start
-
         log.info("Fullført migrering av fritak meldeplikt. Migrerte ${kandidater.size} grunnlag og ${migrerteVurderingerCount} vurderinger på $totalTid ms.")
     }
+
 
 
     // Vurdering minus opprettet, tom, vurdertIBehandling
