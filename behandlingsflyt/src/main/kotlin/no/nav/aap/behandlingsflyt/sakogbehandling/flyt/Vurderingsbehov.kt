@@ -28,6 +28,7 @@ enum class Vurderingsbehov {
     REVURDER_SAMORDNING_ARBEIDSGIVER,             // Samordning arbeidsgiver
     REVURDER_SAMORDNING_TJENESTEPENSJON,          // Samordning tjenestepensjon
     G_REGULERING,
+    AUTOMATISK_OPPDATER_VILKÅR, // Skal kjøre igjennom behandlinger uten å trigge avklaringsbehov
     LOVVALG_OG_MEDLEMSKAP,      // Lovvalg og medlemskap
     FORUTGAENDE_MEDLEMSKAP,     // Forutgående medlemskap
     OPPHOLDSKRAV,
@@ -123,4 +124,5 @@ fun EksponertÅrsak.tilVurderingsbehov() =
         EksponertÅrsak.OVERGANG_ARBEID -> Vurderingsbehov.OVERGANG_ARBEID
         EksponertÅrsak.DØDSFALL_BRUKER -> Vurderingsbehov.DØDSFALL_BRUKER
         EksponertÅrsak.DØDSFALL_BARN -> Vurderingsbehov.DØDSFALL_BARN
+        EksponertÅrsak.AUTOMATISK_OPPDATER_VILKÅR -> Vurderingsbehov.AUTOMATISK_OPPDATER_VILKÅR
     }

@@ -103,7 +103,8 @@ class InstitusjonsoppholdSteg(
 
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
-            VurderingType.REVURDERING -> {
+            VurderingType.AUTOMATISK_OPPDATER_VILKÅR,
+            VurderingType.REVURDERING,  -> {
                 val utlederResultat = institusjonsoppholdUtlederService.utled(kontekst.behandlingId, begrensetTilRettighetsperiode = false)
 
                 val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)

@@ -60,7 +60,7 @@ class UnderveisSteg(
             VurderingType.REVURDERING -> {
                 Vurderingsbehov.REVURDER_MELDEPLIKT_RIMELIG_GRUNN in kontekst.vurderingsbehovRelevanteForSteg
             }
-
+            VurderingType.AUTOMATISK_OPPDATER_VILKÅR,
             VurderingType.MELDEKORT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,

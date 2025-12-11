@@ -63,7 +63,7 @@ class VurderSykdomSteg private constructor(
                         studentGrunnlag.vilkårIkkeOppfylt() &&
                         kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty()
             }
-
+            VurderingType.AUTOMATISK_OPPDATER_VILKÅR,
             VurderingType.MELDEKORT -> false
             VurderingType.IKKE_RELEVANT -> false
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT -> false

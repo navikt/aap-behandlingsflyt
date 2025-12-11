@@ -48,6 +48,7 @@ class VurderStudentSteg private constructor(
                         tidligereVurderinger.muligMedRettTilAAP(kontekst, type()) &&
                                 Vurderingsbehov.REVURDER_STUDENT in kontekst.vurderingsbehovRelevanteForSteg
 
+                    VurderingType.AUTOMATISK_OPPDATER_VILKÅR,
                     VurderingType.MELDEKORT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,

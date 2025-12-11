@@ -119,6 +119,7 @@ class OvergangUføreSteg private constructor(
                 }.segmenter().any { it.verdi }
             }
 
+            VurderingType.AUTOMATISK_OPPDATER_VILKÅR -> false
             VurderingType.MELDEKORT -> false
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT -> false
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9 -> false

@@ -44,7 +44,7 @@ class FastsettSykdomsvilkåretSteg private constructor(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
 
         when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
+            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING, VurderingType.AUTOMATISK_OPPDATER_VILKÅR -> {
                 if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
                     vilkårService.ingenNyeVurderinger(
                         kontekst,

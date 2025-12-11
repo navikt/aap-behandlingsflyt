@@ -10,8 +10,11 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
+import no.nav.aap.behandlingsflyt.drift.Driftfunksjoner
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForLovvalgMedlemskapDto
@@ -22,9 +25,13 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
@@ -332,20 +339,15 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
 
     @Test
     fun `Skal kunne utvide rettighetsperioden automatisk uten at vilkårene er begrenset i tidslengde`() {
-        val (sak, behandling) = sendInnFørsteSøknad()
-        val startDato = sak.rettighetsperiode.fom
-
         /**
          * Begrenser rettighetsperioden til 1 år for å simulere eksisterende behandlinger fra tidligere
          */
-        val gammelRettighetsperiode = Periode(startDato, startDato.plusMonths(12).minusDays(1))
-        dataSource.transaction { connection ->
-            val sakRepository = SakRepositoryImpl(connection)
-            sakRepository.oppdaterRettighetsperiode(
-                sak.id,
-                gammelRettighetsperiode
-            )
-        }
+        val gammelRettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusMonths(12).minusDays(1))
+        val (midlertidigSak, behandling) = sendInnFørsteSøknad()
+        settRettighetsperiodeOgRekjørFraStart(midlertidigSak, gammelRettighetsperiode, behandling)
+        val sak = hentSak(behandling)
+        val startDato = sak.rettighetsperiode.fom
+
         behandling
             .løsSykdom(startDato)
             .løsBistand(startDato)
@@ -360,57 +362,88 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
             .fattVedtak()
             .løsVedtaksbrev(TypeBrev.VEDTAK_INNVILGELSE)
 
-        val underveisGrunnlag: UnderveisGrunnlag =
-            dataSource.transaction { UnderveisRepositoryImpl(it).hent(behandling.id) }
-        val utfallTidslinje = underveisGrunnlag.perioder.somTidslinje { it.periode }.map { it.utfall }.komprimer()
+        val utfallTidslinje = dataSource.transaction {
+            UnderveisRepositoryImpl(it).hent(behandling.id)
+        }.perioder.somTidslinje { it.periode }.map { it.utfall }.komprimer()
+
         assertTidslinje(
             utfallTidslinje,
             gammelRettighetsperiode to { assertThat(it).isEqualTo(Utfall.OPPFYLT) }
         )
 
-        val oppdatertRettighetsperiode = Periode(startDato, Tid.MAKS)
-        dataSource.transaction { connection ->
-            val sakRepository = SakRepositoryImpl(connection)
-            sakRepository.oppdaterRettighetsperiode(
-                sak.id,
-                oppdatertRettighetsperiode
-            )
-        }
+        migrerRettighetsperiodeTilTidMaks(startDato, sak)
 
         val oppdatertBehandling =
-            sak.opprettManuellRevurdering(Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER)
-        val startDatoRettTilYtelse = startDato.plusMonths(6)
-        oppdatertBehandling.løsAvklaringsBehov(
-            AvklarSamordningGraderingLøsning(
-                VurderingerForSamordning(
-                    begrunnelse = "Sykepengervurdering",
-                    maksDatoEndelig = true,
-                    fristNyRevurdering = null,
-                    vurderteSamordningerData = listOf(
-                        SamordningVurderingData(
-                            ytelseType = Ytelse.SYKEPENGER,
-                            periode = Periode(
-                                fom = startDato,
-                                tom = startDatoRettTilYtelse.minusDays(1),
-                            ),
-                            gradering = 100,
-                            manuell = true
-                        )
-                    ),
-                )
-            )
+            sak.opprettManuellRevurdering(Vurderingsbehov.AUTOMATISK_OPPDATER_VILKÅR)
 
+        val utfallTidslinjeOppdatert = dataSource.transaction {
+            UnderveisRepositoryImpl(it).hent(oppdatertBehandling.id)
+        }.perioder.somTidslinje { it.periode }.map { it.utfall }.komprimer()
+
+        assertTidslinje(
+            utfallTidslinjeOppdatert,
+            Periode(startDato, startDato.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)) to {
+                assertThat(it).isEqualTo(Utfall.OPPFYLT)
+            }
         )
+        val vilkårsresultat = dataSource.transaction { VilkårsresultatRepositoryImpl(it).hent(oppdatertBehandling.id) }
+        vilkårsresultat.alle().filter { it.tidslinje().isNotEmpty() }.forEach {
+            vilkår -> val vilkårSluttdato = vilkår.tidslinje().perioder().max().tom
+            assertThat(vilkårSluttdato)
+                .withFailMessage{"til-dato for vilkår ${vilkår.type} er ikke Tid.MAKS men $vilkårSluttdato"}
+                .isEqualTo(Tid.MAKS)
+        }
+    }
+
+    @Test
+    fun `skal kunne migrere rettighetsperioder og få utvidet vedtakslengden ved innsending av meldekort`() {
+        /**
+         * Begrenser rettighetsperioden til 1 år for å simulere eksisterende behandlinger fra tidligere
+         */
+        val gammelRettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusMonths(12).minusDays(1))
+        val (midlertidigSak, behandling) = sendInnFørsteSøknad()
+        settRettighetsperiodeOgRekjørFraStart(midlertidigSak, gammelRettighetsperiode, behandling)
+        val sak = hentSak(behandling)
+        val startDato = sak.rettighetsperiode.fom
+        val startDatoRettTilYtelse = sak.rettighetsperiode.fom.plusMonths(2)
+
+        behandling
+            .løsSykdom(startDato)
+            .løsBistand(startDato)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .kvalitetssikreOk()
+            .løsBeregningstidspunkt(startDato)
+            .løsForutgåendeMedlemskap(startDato)
+            .løsOppholdskrav(startDato)
+            .løsAvklaringsBehov(medSamordningSykepenger(startDato, startDatoRettTilYtelse))
+            .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
-            .løsVedtaksbrev(TypeBrev.VEDTAK_ENDRING)
+            .løsVedtaksbrev(TypeBrev.VEDTAK_INNVILGELSE)
 
+        val underveisGrunnlag: UnderveisGrunnlag =
+            dataSource.transaction { UnderveisRepositoryImpl(it).hent(behandling.id) }
+        val utfallTidslinje = underveisGrunnlag.perioder.somTidslinje { it.periode }.map { it.utfall }.komprimer()
+        assertTidslinje(
+            utfallTidslinje,
+            Periode(startDato, startDatoRettTilYtelse.minusDays(1)) to { assertThat(it).isEqualTo(Utfall.IKKE_OPPFYLT)},
+            Periode(startDatoRettTilYtelse, gammelRettighetsperiode.tom) to { assertThat(it).isEqualTo(Utfall.OPPFYLT) }
+        )
 
+        migrerRettighetsperiodeTilTidMaks(startDato, sak)
+        sak.opprettManuellRevurdering(Vurderingsbehov.AUTOMATISK_OPPDATER_VILKÅR)
+        sak.sendInnMeldekort(
+            journalpostId = journalpostId(),
+            timerArbeidet = mapOf(startDato to 5.0),
+        )
         val sisteBehandling = hentSisteOpprettedeBehandlingForSak(sak.id)
-        val oppdatertUnderveisGrunnlag: UnderveisGrunnlag =
-            dataSource.transaction { UnderveisRepositoryImpl(it).hent(sisteBehandling.id) }
+        val vilkårsResultat = dataSource.transaction { VilkårsresultatRepositoryImpl(it).hent(sisteBehandling.id) }
+        assertThat(vilkårsResultat).isNotNull
+
         val oppdatertUtfallTidslinje =
-            oppdatertUnderveisGrunnlag.perioder.somTidslinje { it.periode }.map { it.utfall }.komprimer()
+            dataSource.transaction { UnderveisRepositoryImpl(it).hent(sisteBehandling.id) }
+                .perioder.somTidslinje { it.periode }.map { it.utfall }.komprimer()
         assertTidslinje(
             oppdatertUtfallTidslinje,
             Periode(
@@ -422,6 +455,68 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
                 startDatoRettTilYtelse.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
             ) to { assertThat(it).isEqualTo(Utfall.OPPFYLT) },
         )
+        val vilkårsresultat = dataSource.transaction { VilkårsresultatRepositoryImpl(it).hent(sisteBehandling.id) }
+        vilkårsresultat.alle().filter { it.tidslinje().isNotEmpty() }.forEach { vilkår ->
+            val vilkårSluttdato = vilkår.tidslinje().perioder().max().tom
+            assertThat(vilkårSluttdato)
+                .withFailMessage{"til-dato for vilkår ${vilkår.type} er ikke Tid.MAKS men $vilkårSluttdato"}
+                .isEqualTo(Tid.MAKS)
+        }
+
     }
+
+    private fun settRettighetsperiodeOgRekjørFraStart(
+        midlertidigSak: Sak,
+        rettighetsperiode: Periode,
+        behandling: Behandling
+    ) {
+        settRettighetsperiode(midlertidigSak, rettighetsperiode)
+
+        // Må nullstille vilkår og rekjøre fra start
+        dataSource.transaction { connection ->
+            val vilkårsresultat = Vilkårsresultat()
+            Vilkårtype
+                .entries
+                .filter { it.obligatorisk }
+                .forEach { vilkårstype ->
+                    vilkårsresultat
+                        .leggTilHvisIkkeEksisterer(vilkårstype)
+                        .leggTilIkkeVurdertPeriode(rettighetsperiode)
+                }
+
+            VilkårsresultatRepositoryImpl(connection).lagre(behandling.id, vilkårsresultat)
+            Driftfunksjoner(postgresRepositoryRegistry.provider(connection), gatewayProvider).kjørFraSteg(
+                behandling,
+                StegType.VURDER_LOVVALG
+            )
+        }
+    }
+
+    private fun migrerRettighetsperiodeTilTidMaks(startDato: LocalDate, sak: Sak) {
+        val oppdatertRettighetsperiode = Periode(startDato, Tid.MAKS)
+        settRettighetsperiode(sak, oppdatertRettighetsperiode)
+    }
+
+    private fun medSamordningSykepenger(
+        startDato: LocalDate,
+        startDatoRettTilYtelse: LocalDate
+    ): AvklarSamordningGraderingLøsning = AvklarSamordningGraderingLøsning(
+        VurderingerForSamordning(
+            begrunnelse = "Sykepengervurdering",
+            maksDatoEndelig = true,
+            fristNyRevurdering = null,
+            vurderteSamordningerData = listOf(
+                SamordningVurderingData(
+                    ytelseType = Ytelse.SYKEPENGER,
+                    periode = Periode(
+                        fom = startDato,
+                        tom = startDatoRettTilYtelse.minusDays(1),
+                    ),
+                    gradering = 100,
+                    manuell = true
+                )
+            ),
+        )
+    )
 
 }
