@@ -38,7 +38,7 @@ class AvklarOvergangUføreEnkelLøsning(
                 throw IllegalArgumentException("Enten overgangUføreVurdering eller løsningerForPerioder må være satt")
             }
         }
-        return AvklarOvergangUføreLøser(repositoryProvider).løs(kontekst, this)
+        return AvklarOvergangUføreLøser(repositoryProvider, gatewayProvider).løs(kontekst, this)
     }
 }
 
@@ -58,7 +58,7 @@ class AvklarOvergangUføreLøsning(
         kontekst: AvklaringsbehovKontekst,
         gatewayProvider: GatewayProvider
     ): LøsningsResultat {
-        return AvklarOvergangUføreLøser(repositoryProvider).løs(
+        return AvklarOvergangUføreLøser(repositoryProvider, gatewayProvider).løs(
             kontekst,
             this.tilGammelLøsning()
         )

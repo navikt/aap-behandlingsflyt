@@ -162,7 +162,7 @@ private fun lagreUnderveisGrunnlag(
     meldeperioder: List<Periode>,
     testPeriode: Periode,
 ): UnderveisGrunnlag {
-    val testGrunnlag = Aldersgrunnlag(testPeriode, Fødselsdato(LocalDate.now().minusYears(20)))
+    val testGrunnlag = Aldersgrunnlag(testPeriode, Fødselsdato(LocalDate.now().minusYears(20)), grenseForAntallMånederFørFylte18 = 3)
     underveisRepository.lagre(
         testBehandling.id,
         listOf(testUnderveisperiode(testPeriode, meldeperioder.first())),

@@ -23,6 +23,7 @@ import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.tidslinje.orEmpty
+import no.nav.aap.komponenter.type.Periode
 import kotlin.collections.orEmpty
 
 fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(
@@ -85,7 +86,12 @@ fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(
                                 vurdertAvService
                             )
                         },
-                        kanVurderes = listOf(sak.rettighetsperiode),
+                        kanVurderes = listOf(
+                            Periode(
+                                sak.rettighetsperiode.fom.minusMonths(8),
+                                sak.rettighetsperiode.tom
+                            )
+                        ),
                         behøverVurderinger = avklaringsbehov?.perioderVedtaketBehøverVurdering().orEmpty().toList(),
                         perioderSomIkkeErTilstrekkeligVurdert = avklaringsbehov?.perioderSomIkkeErTilstrekkeligVurdert()
                             .orEmpty().toList()
