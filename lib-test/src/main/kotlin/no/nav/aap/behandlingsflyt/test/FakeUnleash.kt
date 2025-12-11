@@ -31,7 +31,6 @@ object FakeUnleash : FakeUnleashBase(
         BehandlingsflytFeature.NyBrevbyggerV3 to false,
         BehandlingsflytFeature.BedreUttrekkAvSakerMedFritakMeldeplikt to false,
         BehandlingsflytFeature.LagreVedtakIFatteVedtak to true,
-        BehandlingsflytFeature.UnntakMeldepliktDesember to true,
         BehandlingsflytFeature.ReduksjonArbeidOverGrense to true,
         BehandlingsflytFeature.PeriodisertSykepengeErstatningNyAvklaringsbehovService to true,
         BehandlingsflytFeature.ReduksjonIkkeMeldtSeg to true,
@@ -39,6 +38,7 @@ object FakeUnleash : FakeUnleashBase(
         BehandlingsflytFeature.TimerArbeidetPeriodisertSubMeldeperiode to true,
         BehandlingsflytFeature.MidlertidigStopp11_4 to true,
         BehandlingsflytFeature.Under18 to true,
+        BehandlingsflytFeature.KravOmInntektsbortfall to true
     )
 )
 
@@ -63,11 +63,11 @@ object ProdlikUnleash : FakeUnleashBase(
         BehandlingsflytFeature.ReduksjonArbeidOverGrense to false,
         BehandlingsflytFeature.ReduksjonIkkeMeldtSeg to false,
         BehandlingsflytFeature.PeriodisertSykepengeErstatningNyAvklaringsbehovService to false,
-        BehandlingsflytFeature.UnntakMeldepliktDesember to false,
         BehandlingsflytFeature.ValiderOvergangUfore to false,
         BehandlingsflytFeature.TimerArbeidetPeriodisertSubMeldeperiode to false,
         BehandlingsflytFeature.MidlertidigStopp11_4 to false,
         BehandlingsflytFeature.Under18 to false,
+        BehandlingsflytFeature.KravOmInntektsbortfall to false,
     )
 )
 
@@ -86,7 +86,6 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.NyBrevbyggerV3 to false,
         BehandlingsflytFeature.BedreUttrekkAvSakerMedFritakMeldeplikt to true,
         BehandlingsflytFeature.LagreVedtakIFatteVedtak to true,
-        BehandlingsflytFeature.UnntakMeldepliktDesember to true,
         BehandlingsflytFeature.ReduksjonArbeidOverGrense to true,
         BehandlingsflytFeature.PeriodisertSykepengeErstatningNyAvklaringsbehovService to true,
         BehandlingsflytFeature.ReduksjonIkkeMeldtSeg to true,
@@ -94,5 +93,6 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.TimerArbeidetPeriodisertSubMeldeperiode to true,
         BehandlingsflytFeature.MidlertidigStopp11_4 to true,
         BehandlingsflytFeature.Under18 to true,
+        BehandlingsflytFeature.KravOmInntektsbortfall to true,
     )
 )

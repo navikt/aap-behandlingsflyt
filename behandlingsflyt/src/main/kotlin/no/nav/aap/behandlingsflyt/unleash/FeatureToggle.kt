@@ -25,7 +25,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     IkkeAntaNullTimerArbeidet,
     NyBrevbyggerV3,
     LagreVedtakIFatteVedtak,
-    UnntakMeldepliktDesember,
     ReduksjonArbeidOverGrense,
     PeriodisertSykepengeErstatningNyAvklaringsbehovService,
     ReduksjonIkkeMeldtSeg,
@@ -33,6 +32,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     MidlertidigStopp11_4,
     Under18,
     ValiderOvergangUfore,
+    KravOmInntektsbortfall
     ;
 
     override fun key(): String = name
