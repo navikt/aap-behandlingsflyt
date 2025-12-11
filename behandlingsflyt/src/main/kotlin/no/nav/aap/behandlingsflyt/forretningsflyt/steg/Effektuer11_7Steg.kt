@@ -21,6 +21,7 @@ class Effektuer11_7Steg(
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         when (kontekst.vurderingType) {
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
             VurderingType.FØRSTEGANGSBEHANDLING,
             VurderingType.REVURDERING -> {
                 val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
@@ -35,7 +36,6 @@ class Effektuer11_7Steg(
             }
 
             VurderingType.MELDEKORT,
-            VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
             VurderingType.IKKE_RELEVANT -> {
                 /* noop */
