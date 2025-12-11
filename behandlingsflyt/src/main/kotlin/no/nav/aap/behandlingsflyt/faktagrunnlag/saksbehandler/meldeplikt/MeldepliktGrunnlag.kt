@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering.Companion.tidslinje
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.somTidslinje
@@ -15,3 +14,6 @@ data class MeldepliktGrunnlag(
         return vurderinger.tidslinje()
     }
 }
+
+fun List<Fritaksvurdering>.tilTidslinje(maksDato: LocalDate = Tid.MAKS): Tidslinje<Fritaksvurdering> =
+    sortedBy { it.opprettetTid }.somTidslinje { Periode(it.fraDato, it.tilDato ?: maksDato) }

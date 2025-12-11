@@ -2,7 +2,12 @@ package no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.fritakmeldeplik
 
 import no.nav.aap.behandlingsflyt.PeriodiserteVurderingerDto
 import no.nav.aap.behandlingsflyt.VurderingDto
+import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.PeriodisertManuellVurderingForForutgåendeMedlemskapResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskap
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -36,3 +41,26 @@ data class PeriodisertFritakMeldepliktVurderingResponse(
     val begrunnelse: String,
     val harFritak: Boolean,
 ): VurderingDto
+
+fun Fritaksvurdering.toResponse(
+    vurdertAvService: VurdertAvService,
+    fom: LocalDate = this.fraDato,
+    tom: LocalDate? = this.tilDato,
+) =
+    PeriodisertFritakMeldepliktVurderingResponse(
+        fom = fom,
+        tom = tom,
+        vurdertAv = vurdertAvService.medNavnOgEnhet(vurdertAv, opprettetTid.toLocalDate()),
+        besluttetAv = vurdertIBehandling?.let { vurdertAvService.besluttetAv( // TODO fjerne sjekk når vurdertIBehandling alltid settes
+            definisjon = Definisjon.FRITAK_MELDEPLIKT,
+            behandlingId = it
+        ) },
+        kvalitetssikretAv = vurdertIBehandling?.let {  // TODO fjerne sjekk når vurdertIBehandling alltid settes
+            vurdertAvService.besluttetAv(
+                definisjon = Definisjon.FRITAK_MELDEPLIKT,
+                behandlingId = it
+            )
+        },
+        begrunnelse = begrunnelse,
+        harFritak = harFritak,
+    )
