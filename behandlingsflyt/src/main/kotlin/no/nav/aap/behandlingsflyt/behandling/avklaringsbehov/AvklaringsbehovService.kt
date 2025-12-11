@@ -286,8 +286,12 @@ class AvklaringsbehovService(
         )
     }
 
-    @Deprecated("Bruk nårVurderingErGyldig i stedet for perioderSomIkkeErTilstrekkeligVurdert")
-    fun oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårGammel(
+    /**
+     * Her sender man inn eksplistte perioderSomIkkeErTilstrekkeligVurdert.
+     * Dette kan være nyttig dersom man må se på perioder som befinner seg utenfor perioder som behøver vurdering;
+     * for eksempel hvis man ikke skal tillate vurderinger utenfor nårVurderingErRelevant
+     */
+    fun oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
         avklaringsbehovene: Avklaringsbehovene,
         behandlingRepository: BehandlingRepository,
         vilkårsresultatRepository: VilkårsresultatRepository,
