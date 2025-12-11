@@ -82,9 +82,6 @@ class MeldingOmVedtakBrevSteg(
     }
 
     /**
-     * Brevbestillinger i endeTilstand FULLFØRT kan per i dag ikke tilbakestilles aap-behandlingsflyt.
-     * Hvis dette endres i fremtiden må også tilbakestillGrunnlag() logikken her tilpasses.
-     *
      * BrevBestillinger i tilstand AVBRUTT, FORHÅNDSVISNING_KLAR (og SENDT) kan i teorien tilbakestilles. Den praktiske
      * begrensningen per i dag er at selve brevsteget ikke kan tilbakestilles (ingen fremtidige scenarior for dette foreløpig)
      */
