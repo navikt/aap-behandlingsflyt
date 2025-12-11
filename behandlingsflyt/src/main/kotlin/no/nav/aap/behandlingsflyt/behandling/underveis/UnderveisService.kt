@@ -155,11 +155,7 @@ class UnderveisService(
     }
 
     internal fun vurderRegler(input: UnderveisInput): Tidslinje<Vurdering> {
-        val startvurdering = Vurdering(
-            reduksjonArbeidOverGrenseEnabled = input.reduksjonArbeidOverGrenseEnabled,
-            reduksjonMeldepliktEnabled = input.reduksjonIkkeMeldtSegEnabled,
-        )
-        return regelset.fold(tidslinjeOf(input.periodeForVurdering to startvurdering)) { resultat, regel ->
+        return regelset.fold(tidslinjeOf(input.periodeForVurdering to Vurdering())) { resultat, regel ->
              regel.vurder(input, resultat).begrensetTil(input.periodeForVurdering)
         }
     }
@@ -214,8 +210,6 @@ class UnderveisService(
             oppholdskravGrunnlag = oppholdskravGrunnlag,
             meldeperioder = meldeperioder,
             vedtaksdatoFørstegangsbehandling = vedtaksdatoFørstegangsbehandling?.toLocalDate(),
-            reduksjonArbeidOverGrenseEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.ReduksjonArbeidOverGrense),
-            reduksjonIkkeMeldtSegEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.ReduksjonIkkeMeldtSeg),
             timerArbeidetPeriodisertSubMeldeperiodeEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.TimerArbeidetPeriodisertSubMeldeperiode),
         )
     }
