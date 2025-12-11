@@ -240,7 +240,6 @@ class BeregnTilkjentYtelseServiceTest {
                 samordningsgrunnlag,
                 samordningUføre,
                 samordningArbeidsgiver,
-                unntakMeldepliktDesemberEnabled = true
             )
         ).beregnTilkjentYtelse()
 
@@ -298,7 +297,6 @@ class BeregnTilkjentYtelseServiceTest {
                 samordningsgrunnlag,
                 samordningUføre,
                 samordningArbeidsgiver,
-                unntakMeldepliktDesemberEnabled = true
             )
         ).beregnTilkjentYtelse()
 
