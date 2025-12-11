@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
 import java.time.Instant
 import java.time.LocalDate
@@ -10,6 +11,7 @@ class InformasjonskravOppdatert(
     val behandlingId: BehandlingId,
     val navn: InformasjonskravNavn,
     val oppdatert: Instant,
+    val forrigeInput: String?,
 
     /** Rettighetsperioden på tidspunktet informasjonskravet kjørte sist.
      *
@@ -22,6 +24,10 @@ class InformasjonskravOppdatert(
 ) {
     val datoOppdatert: LocalDate
         get() = oppdatert.atZone(ZoneId.of("Europe/Oslo")).toLocalDate()
+
+    inline fun <reified E> forrigeInput(): E? {
+        return forrigeInput?.let { DefaultJsonMapper.fromJson<E>(forrigeInput) }
+    }
 }
 
 fun InformasjonskravOppdatert?.ikkeKjørtSisteKalenderdag(): Boolean =
