@@ -17,9 +17,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
-import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
@@ -31,18 +28,15 @@ class SakOgBehandlingService(
     private val sakRepository: SakRepository,
     private val behandlingRepository: BehandlingRepository,
     private val trukketSøknadService: TrukketSøknadService,
-    private val unleashGateway: UnleashGateway,
     private val avbrytRevurderingService: AvbrytRevurderingService,
 ) {
     constructor(
         repositoryProvider: RepositoryProvider,
-        gatewayProvider: GatewayProvider,
     ) : this(
         grunnlagKopierer = GrunnlagKopiererImpl(repositoryProvider),
         sakRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         trukketSøknadService = TrukketSøknadService(repositoryProvider),
-        unleashGateway = gatewayProvider.provide(),
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
     )
 
@@ -186,13 +180,7 @@ class SakOgBehandlingService(
     ): Behandling {
         val behandlingstype = when (vurderingsbehov) {
             Vurderingsbehov.AKTIVITETSPLIKT_11_7 -> TypeBehandling.Aktivitetsplikt
-            Vurderingsbehov.AKTIVITETSPLIKT_11_9 -> {
-                if (unleashGateway.isDisabled(BehandlingsflytFeature.Aktivitetsplikt11_9)) {
-                    throw IllegalStateException("Kan ikke opprette aktivitetsplikt 11-9 behandling når funksjonaliteten er deaktivert")
-                }
-                TypeBehandling.Aktivitetsplikt11_9
-            }
-
+            Vurderingsbehov.AKTIVITETSPLIKT_11_9 -> TypeBehandling.Aktivitetsplikt11_9
             else -> throw UgyldigForespørselException("Kan kun opprette behandling for aktivitetsplikt")
         }
 
