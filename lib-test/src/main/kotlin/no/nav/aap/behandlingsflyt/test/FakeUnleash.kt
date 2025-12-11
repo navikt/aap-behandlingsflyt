@@ -20,7 +20,6 @@ object FakeUnleash : FakeUnleashBase(
     mapOf(
         BehandlingsflytFeature.IngenValidering to false,
         BehandlingsflytFeature.NyBrevtype11_17 to true,
-        BehandlingsflytFeature.NyBrevtype11_18 to true,
         BehandlingsflytFeature.Aktivitetsplikt11_9 to true,
         BehandlingsflytFeature.OverforingsdatoNullForAvregning to true,
         BehandlingsflytFeature.OvergangArbeid to false,
@@ -49,7 +48,6 @@ object ProdlikUnleash : FakeUnleashBase(
     mapOf(
         BehandlingsflytFeature.IngenValidering to false,
         BehandlingsflytFeature.NyBrevtype11_17 to false,
-        BehandlingsflytFeature.NyBrevtype11_18 to true,
         BehandlingsflytFeature.Aktivitetsplikt11_9 to true,
         BehandlingsflytFeature.OverforingsdatoNullForAvregning to false,
         BehandlingsflytFeature.OvergangArbeid to false,
@@ -75,7 +73,6 @@ object LokalUnleash : FakeUnleashBase(
     mapOf(
         BehandlingsflytFeature.IngenValidering to true,
         BehandlingsflytFeature.NyBrevtype11_17 to true,
-        BehandlingsflytFeature.NyBrevtype11_18 to true,
         BehandlingsflytFeature.Aktivitetsplikt11_9 to true,
         BehandlingsflytFeature.OverforingsdatoNullForAvregning to true,
         BehandlingsflytFeature.OvergangArbeid to true,
