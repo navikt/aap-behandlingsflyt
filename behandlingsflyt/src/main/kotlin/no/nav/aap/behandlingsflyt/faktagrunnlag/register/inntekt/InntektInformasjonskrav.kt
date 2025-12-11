@@ -60,20 +60,25 @@ class InntektInformasjonskrav(
         val inntektsperioder: Set<InntektsPeriode>
     ) : InformasjonskravRegisterdata
 
-    data class InntektInput(val person: Person, val relevanteÅr: Set<Year>) : InformasjonskravInput
+    data class InntektInput(
+        val person: Person,
+        val relevanteÅr: Set<Year>,
+        val relevanteÅrUføre: Set<Year>
+    ) :
+        InformasjonskravInput
 
     override fun klargjør(kontekst: FlytKontekstMedPerioder): InntektInput {
         val sak = sakService.hent(kontekst.sakId)
-        val relevanteÅr = utledAlleRelevanteÅr(kontekst.behandlingId)
-        return InntektInput(sak.person, relevanteÅr)
+        val (relevanteÅr, relevanteUføreInntektÅr) = utledAlleRelevanteÅr(kontekst.behandlingId)
+        return InntektInput(sak.person, relevanteÅr, relevanteUføreInntektÅr)
     }
 
     override fun hentData(input: InntektInput): InntektRegisterdata {
-        val (person, relevanteÅr) = input
+        val (person, relevanteÅr, relevanteÅrUføre) = input
         val oppdaterteInntekter = inntektRegisterGateway.innhent(person, relevanteÅr)
 
-        val fom = relevanteÅr.minOf { it.atMonth(1) }
-        val tom = relevanteÅr.maxOf { it.atMonth(12) }
+        val fom = relevanteÅrUføre.minOf { it.atMonth(1) }
+        val tom = relevanteÅrUføre.maxOf { it.atMonth(12) }
         val inntekter = inntektkomponentenGateway.hentAInntekt(person.aktivIdent().identifikator, fom, tom)
 
         val inntektPerMåned = summerArbeidsinntektPerMåned(inntekter)
@@ -136,18 +141,25 @@ class InntektInformasjonskrav(
     }
 
     private fun relevanteÅrErEndret(kontekst: FlytKontekstMedPerioder): Boolean {
+        val inntektGrunnlag = inntektGrunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
         val relevanteÅrEksisterendeGrunnlag =
-            inntektGrunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)?.inntekter.orEmpty().map { it.år }
+            inntektGrunnlag?.inntekter.orEmpty().map { it.år }
                 .toSet()
-        val relevanteÅrFraGjeldendeInntektsbehov = utledAlleRelevanteÅr(kontekst.behandlingId)
+        val (relevanteÅrFraGjeldendeInntektsbehov, relevanteUføreInntektÅr) = utledAlleRelevanteÅr(kontekst.behandlingId)
 
-        return relevanteÅrEksisterendeGrunnlag != relevanteÅrFraGjeldendeInntektsbehov
+        val inntektsÅrUføre = inntektGrunnlag?.inntektPerMåned.orEmpty().map { Year.of(it.periode.fom.year) }.toSet()
+
+        return (relevanteÅrEksisterendeGrunnlag != relevanteÅrFraGjeldendeInntektsbehov) || (inntektsÅrUføre != relevanteUføreInntektÅr)
     }
 
-    private fun utledAlleRelevanteÅr(behandlingId: BehandlingId): Set<Year> {
+    private fun utledAlleRelevanteÅr(behandlingId: BehandlingId): Pair<Set<Year>, Set<Year>> {
         val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId)
         val beregningGrunnlag = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
-        return Inntektsbehov.utledAlleRelevanteÅr(beregningGrunnlag, studentGrunnlag)
+
+
+        val relevanteUføreInntektÅr = Inntektsbehov.utledRelevanteYtterligereNedsattÅr(beregningGrunnlag)
+
+        return Pair(Inntektsbehov.utledAlleRelevanteÅr(beregningGrunnlag, studentGrunnlag), relevanteUføreInntektÅr)
     }
 
     companion object : Informasjonskravkonstruktør {
