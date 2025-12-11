@@ -119,7 +119,7 @@ public enum class StegType(
         gruppe = StegGruppe.GRUNNLAG,
         status = Status.UTREDES
     ),
-    INNTEKTSBORTFALL(
+    VURDER_INNTEKTSBORTFALL(
         gruppe = StegGruppe.GRUNNLAG,
         status = Status.UTREDES
     ),

@@ -4517,7 +4517,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsFramTilGrunnlag(sak.rettighetsperiode.fom)
             .løsBeregningstidspunkt()
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).contains(Definisjon.INNTEKTSBORTFALL)
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).contains(Definisjon.VURDER_INNTEKTSBORTFALL)
             }
     }
 
@@ -4542,7 +4542,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             behandling.løsFramTilGrunnlag(sak.rettighetsperiode.fom)
             .løsBeregningstidspunkt()
             .medKontekst {
-                assertThat(åpneAvklaringsbehov.map { it.definisjon }).noneMatch { it == Definisjon.INNTEKTSBORTFALL }
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).noneMatch { it == Definisjon.VURDER_INNTEKTSBORTFALL }
             }
     }
 }

@@ -32,7 +32,7 @@ class InntektsbortfallSteg private constructor(
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
             avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId),
-            definisjon = Definisjon.INNTEKTSBORTFALL,
+            definisjon = Definisjon.VURDER_INNTEKTSBORTFALL,
             vedtakBehøverVurdering = {
                 when (kontekst.vurderingType) {
                     VurderingType.FØRSTEGANGSBEHANDLING,
@@ -40,7 +40,7 @@ class InntektsbortfallSteg private constructor(
                         when {
                             tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
                             kontekst.vurderingsbehovRelevanteForSteg.isEmpty() -> false
-                            erUnder62PåVirkningsTidspunktet(kontekst) -> false
+                            erUnder62PåRettighetsperioden(kontekst) -> false
                             else -> true
                         }
                     }
@@ -64,15 +64,15 @@ class InntektsbortfallSteg private constructor(
         return false
     }
 
-    fun erUnder62PåVirkningsTidspunktet(kontekst: FlytKontekstMedPerioder): Boolean {
+    fun erUnder62PåRettighetsperioden(kontekst: FlytKontekstMedPerioder): Boolean {
         val brukerPersonopplysning =
             personopplysningRepository.hentBrukerPersonOpplysningHvisEksisterer(kontekst.behandlingId)
                 ?: throw IllegalStateException("Forventet å finne personopplysninger")
 
-        val erUnder62PåVirkningsTidspunktet =
+        val erUnder62PåRettighetsperioden =
             brukerPersonopplysning.fødselsdato.alderPåDato(kontekst.rettighetsperiode.fom) < 62
 
-        return erUnder62PåVirkningsTidspunktet
+        return erUnder62PåRettighetsperioden
     }
 
     companion object : FlytSteg {
@@ -90,7 +90,7 @@ class InntektsbortfallSteg private constructor(
         }
 
         override fun type(): StegType {
-            return StegType.INNTEKTSBORTFALL
+            return StegType.VURDER_INNTEKTSBORTFALL
         }
     }
 }

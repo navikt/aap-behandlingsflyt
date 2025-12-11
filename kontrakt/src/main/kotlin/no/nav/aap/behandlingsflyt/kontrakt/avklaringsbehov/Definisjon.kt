@@ -167,10 +167,10 @@ public enum class Definisjon(
         kreverToTrinn = true,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
     ),
-    INNTEKTSBORTFALL(
+    VURDER_INNTEKTSBORTFALL(
         kode = AvklaringsbehovKode.`5040`,
         type = BehovType.MANUELT_PÅKREVD,
-        løsesISteg = StegType.INNTEKTSBORTFALL,
+        løsesISteg = StegType.VURDER_INNTEKTSBORTFALL,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
     ),
     SKRIV_SYKDOMSVURDERING_BREV(
