@@ -96,25 +96,21 @@ class BrevbestillingServiceTest {
     }
 
     @Test
-    fun `tilbakestillVedtakBrevBestillinger gjenopptar alle vedtaksbrev med status AVBRUTT`() {
+    fun `tilbakestillVedtakBrevBestillinger endrer ikke vedtaksbrev med status AVBRUTT`() {
         val brevbestillinger = opprettNyBrevbestillingForHverBrevTypeIRepo()
         for (brevbestilling in brevbestillinger.filter { it.typeBrev.erVedtak() }) {
             InMemoryBrevbestillingRepository.oppdaterStatus(behandlingId, brevbestilling.referanse, Status.AVBRUTT)
         }
         brevbestillingService.tilbakestillVedtakBrevBestillinger(behandlingId)
 
-        val antallVedtakBrev = TypeBrev.entries.filter { it.erVedtak() }.size
-        verify(exactly = antallVedtakBrev) { brevbestillingGateway.gjenoppta(any()) }
+        verify(exactly = 0) { brevbestillingGateway.gjenoppta(any()) }
         brevbestillingService.hentBrevbestillinger(behandlingId)
             .filter { it.typeBrev.erVedtak() }
-            .forEach { assertEquals(Status.FORHÅNDSVISNING_KLAR, it.status) }
-        brevbestillingService.hentBrevbestillinger(behandlingId)
-            .filter { !it.typeBrev.erVedtak() }
-            .forEach { assertEquals(Status.FORHÅNDSVISNING_KLAR, it.status) }
+            .forEach { assertEquals(Status.AVBRUTT, it.status) }
     }
 
     @Test
-    fun `tilbakestillVedtakBrevBestillinger gjenopptar og avbryter kun vedtaksbrev med status AVBRUTT eller FORHÅNDSVISNING_KLAR`() {
+    fun `tilbakestillVedtakBrevBestillinger avbryter kun vedtaksbrev med status AVBRUTT eller FORHÅNDSVISNING_KLAR`() {
         val nyReferanse = BrevbestillingReferanse(UUID.randomUUID())
         InMemoryBrevbestillingRepository.lagre(
             behandlingId = behandlingId,
@@ -140,11 +136,10 @@ class BrevbestillingServiceTest {
         brevbestillingService.tilbakestillVedtakBrevBestillinger(behandlingId)
 
         verify(exactly = 1) { brevbestillingGateway.avbryt(any()) }
-        verify(exactly = 1) { brevbestillingGateway.gjenoppta(any()) }
 
         val brevbestillinger = brevbestillingService.hentBrevbestillinger(behandlingId)
         assertEquals(Status.AVBRUTT, brevbestillinger.first { it.referanse == nyReferanse }.status)
-        assertEquals(Status.FORHÅNDSVISNING_KLAR, brevbestillinger.first { it.referanse == avbruttReferanse }.status)
+        assertEquals(Status.AVBRUTT, brevbestillinger.first { it.referanse == avbruttReferanse }.status)
         assertEquals(Status.FULLFØRT, brevbestillinger.first { it.referanse == fullførtReferanse}.status)
     }
 

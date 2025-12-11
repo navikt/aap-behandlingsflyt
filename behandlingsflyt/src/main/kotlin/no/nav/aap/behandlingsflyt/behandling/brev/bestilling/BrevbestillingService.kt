@@ -60,7 +60,9 @@ class BrevbestillingService(
     fun tilbakestillVedtakBrevBestillinger(behandlingId: BehandlingId) {
         val bestillinger = brevbestillingRepository.hent(behandlingId).filter { it.typeBrev.erVedtak() }
         for (bestilling in bestillinger) {
-            avbryt(behandlingId, bestilling.referanse)
+            if (bestilling.status == Status.FORHÅNDSVISNING_KLAR) {
+                avbryt(behandlingId, bestilling.referanse)
+            }
         }
     }
 
