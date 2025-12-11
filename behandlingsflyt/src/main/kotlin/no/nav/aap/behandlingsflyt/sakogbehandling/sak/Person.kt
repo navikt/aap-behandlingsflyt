@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import java.util.*
 
@@ -18,6 +19,7 @@ class Person(val id: PersonId, val identifikator: UUID, private var identer: Lis
         return identer().first { it.aktivIdent }
     }
 
+    @JsonProperty("identer")
     fun identer(): List<Ident> {
         return identer.toList()
     }
