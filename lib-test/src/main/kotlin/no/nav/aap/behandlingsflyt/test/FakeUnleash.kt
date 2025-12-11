@@ -93,6 +93,6 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.ValiderOvergangUfore to true,
         BehandlingsflytFeature.TimerArbeidetPeriodisertSubMeldeperiode to true,
         BehandlingsflytFeature.MidlertidigStopp11_4 to true,
-        BehandlingsflytFeature.Under18 to true
+        BehandlingsflytFeature.Under18 to true,
     )
 )
