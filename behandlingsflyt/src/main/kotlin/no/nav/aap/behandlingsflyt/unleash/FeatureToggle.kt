@@ -30,6 +30,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     ReduksjonIkkeMeldtSeg,
     TimerArbeidetPeriodisertSubMeldeperiode,
     MidlertidigStopp11_4,
+    Under18,
     ValiderOvergangUfore,
     KravOmInntektsbortfall
     ;
