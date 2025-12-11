@@ -35,7 +35,8 @@ class Inntektsbehov(private val beregningInput: BeregningInput) {
     }
 
     fun utledForYtterligereNedsatt(): Set<InntektPerÅr> {
-        val ytterligereNedsettelsesDato = beregningInput.beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
+        val ytterligereNedsettelsesDato =
+            beregningInput.beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
         requireNotNull(ytterligereNedsettelsesDato)
         return filtrerInntekter(ytterligereNedsettelsesDato, beregningInput.inntekter)
     }
@@ -107,7 +108,7 @@ class Inntektsbehov(private val beregningInput: BeregningInput) {
                 ?: beregningInput.yrkesskadevurdering?.relevanteSaker?.firstOrNull { it.referanse == sak.ref }?.manuellYrkesskadeDato
             YrkesskadeBeregning(
                 sak.ref,
-                requireNotNull(skadedato) { "Ulovlig tilstand. skadedato er null, og mangler manuell yrkesskade dato."},
+                requireNotNull(skadedato) { "Ulovlig tilstand. skadedato er null, og mangler manuell yrkesskade dato." },
                 beregningInput.beregningGrunnlag?.yrkesskadeBeløpVurdering?.vurderinger?.firstOrNull { it.referanse == sak.ref }?.antattÅrligInntekt!!
             )
         }
@@ -118,7 +119,10 @@ class Inntektsbehov(private val beregningInput: BeregningInput) {
     }
 
     companion object {
-        fun utledAlleRelevanteÅr(nedsettelsesDato: LocalDate, ytterligereNedsattArbeidsevneDato: LocalDate?): Set<Year> {
+        fun utledAlleRelevanteÅr(
+            nedsettelsesDato: LocalDate,
+            ytterligereNedsattArbeidsevneDato: LocalDate?
+        ): Set<Year> {
             val datoerForInnhenting = setOfNotNull(nedsettelsesDato, ytterligereNedsattArbeidsevneDato)
             return datoerForInnhenting.flatMap(::treÅrForutFor).toSortedSet()
         }
@@ -130,6 +134,10 @@ class Inntektsbehov(private val beregningInput: BeregningInput) {
                 beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
 
             return utledAlleRelevanteÅr(nedsettelsesDato, ytterligereNedsattArbeidsevneDato)
+        }
+
+        fun utledRelevanteYtterligereNedsattÅr(beregningGrunnlag: BeregningGrunnlag?): Set<Year> {
+            return beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato?.let(::treÅrForutFor).orEmpty()
         }
 
         fun utledNedsettelsesdato(
