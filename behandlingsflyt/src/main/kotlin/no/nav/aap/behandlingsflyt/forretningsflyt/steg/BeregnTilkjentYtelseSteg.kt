@@ -97,7 +97,6 @@ class BeregnTilkjentYtelseSteg private constructor(
             samordningGrunnlag,
             samordningUføre,
             samordningArbeidsgiver,
-            unleashGateway.isEnabled(BehandlingsflytFeature.UnntakMeldepliktDesember)
         )
         val beregnetTilkjentYtelse = BeregnTilkjentYtelseService(grunnlag).beregnTilkjentYtelse()
 

@@ -46,6 +46,7 @@ class TrekkSøknadLøser(
                     journalpostId = søknad.referanse.asJournalpostId,
                     begrunnelse = løsning.begrunnelse,
                     vurdertAv = kontekst.bruker,
+                    skalTrekkes = løsning.skalTrekkes,
                     vurdert = Instant.now(),
                 )
             )
