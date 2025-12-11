@@ -1,18 +1,19 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FritakMeldepliktLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.PeriodisertFritakMeldepliktLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktFritaksperioder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.PeriodisertFritaksvurderingDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.time.LocalDateTime
 
 class FritakFraMeldepliktLøser(
     private val behandlingRepository: BehandlingRepository,
     private val meldepliktRepository: MeldepliktRepository,
-) : AvklaringsbehovsLøser<FritakMeldepliktLøsning> {
+) : AvklaringsbehovsLøser<PeriodisertFritakMeldepliktLøsning> {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
@@ -21,34 +22,38 @@ class FritakFraMeldepliktLøser(
 
     override fun løs(
         kontekst: AvklaringsbehovKontekst,
-        løsning: FritakMeldepliktLøsning
+        løsning: PeriodisertFritakMeldepliktLøsning
     ): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.kontekst.behandlingId)
-        val fritaksvurderinger =
-            løsning.fritaksvurderinger.map { Fritaksvurdering(
-                harFritak = it.harFritak,
-                fraDato = it.fraDato,
-                begrunnelse = it.begrunnelse,
-                vurdertAv = kontekst.bruker.ident,
-                opprettetTid = null,
-            ) }
-        val eksisterendeFritaksperioder = MeldepliktFritaksperioder(
-            behandling.forrigeBehandlingId?.let { meldepliktRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
-        )
 
-        val nyeFritaksperioder =
-            eksisterendeFritaksperioder.leggTil(MeldepliktFritaksperioder(fritaksvurderinger))
+        val nyeVurderinger =
+            løsning.løsningerForPerioder.map { toFritaksvurdering(it, kontekst) }
+
+        val vedtatteVurderinger = behandling.forrigeBehandlingId?.let { meldepliktRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
 
         meldepliktRepository.lagre(
             behandlingId = behandling.id,
-            vurderinger = nyeFritaksperioder.gjeldendeFritaksvurderinger()
+            vurderinger = vedtatteVurderinger + nyeVurderinger,
         )
 
         return LøsningsResultat(
             begrunnelse = "Vurdert fritak meldeplikt",
-            kreverToTrinn = fritaksvurderinger.minstEttFritak()
+            kreverToTrinn = nyeVurderinger.minstEttFritak()
         )
     }
+
+    private fun toFritaksvurdering(
+        dto: PeriodisertFritaksvurderingDto,
+        kontekst: AvklaringsbehovKontekst
+    ): Fritaksvurdering = Fritaksvurdering(
+        harFritak = dto.harFritak,
+        fraDato = dto.fom,
+        tilDato = dto.tom,
+        begrunnelse = dto.begrunnelse,
+        vurdertAv = kontekst.bruker.ident,
+        vurdertIBehandling = kontekst.behandlingId(),
+        opprettetTid = LocalDateTime.now()
+    )
 
     override fun forBehov(): Definisjon {
         return Definisjon.FRITAK_MELDEPLIKT
