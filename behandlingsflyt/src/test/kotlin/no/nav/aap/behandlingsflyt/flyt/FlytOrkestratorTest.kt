@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBarn
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarManuellInntektVurderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreEnkelLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeriodisertLovvalgMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningUføreLøsning
@@ -95,6 +96,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flate.OvergangUføreLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flate.OvergangUføreVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.SamordningVurderingData
@@ -1691,7 +1693,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
     @Test
     fun `11-18 uføre underveis i en behandling`() {
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-        val virkningsdatoOvergangUføre = periode.fom.plusDays(20)
+        val virkningsdatoFørsteLøsningOvertgangUføre = periode.fom.plusDays(2)
+        val virkningsdatoAndreLøsningOvergangUføre = periode.fom.minusDays(20)
 
         // Sender inn en søknad
         var (_, behandling) = sendInnFørsteSøknad(periode = periode)
@@ -1735,6 +1738,40 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     ),
                 ),
             )
+            .assertThrows(
+                UgyldigForespørselException::class,
+                "Løsning mangler vurdering for perioder: ${
+                    listOf(
+                        Periode(
+                            periode.fom,
+                            virkningsdatoFørsteLøsningOvertgangUføre.minusDays(1)
+                        )
+                    )
+                }"
+            ) { behandling ->
+                behandling.løsAvklaringsBehov(
+                    AvklarOvergangUføreLøsning(
+                        listOf(
+                            OvergangUføreLøsningDto(
+                                begrunnelse = "Løsning",
+                                brukerHarSøktOmUføretrygd = true,
+                                brukerHarFåttVedtakOmUføretrygd = "NEI",
+                                brukerRettPåAAP = true,
+                                fom = virkningsdatoFørsteLøsningOvertgangUføre,
+                                tom = null,
+                                overgangBegrunnelse = null
+                            )
+                        )
+                    )
+                )
+            }
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov)
+                    .describedAs("Krever 11-18-løsning for perioder med 11-5 ja, 11-6 nei")
+                    .anySatisfy {
+                        assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_OVERGANG_UFORE)
+                    }
+            }
             .løsAvklaringsBehov(
                 AvklarOvergangUføreEnkelLøsning(
                     OvergangUføreVurderingLøsningDto(
@@ -1742,13 +1779,29 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                         brukerHarSøktOmUføretrygd = true,
                         brukerHarFåttVedtakOmUføretrygd = "NEI",
                         brukerRettPåAAP = true,
-                        virkningsdato = virkningsdatoOvergangUføre,
-                        fom = virkningsdatoOvergangUføre,
+                        virkningsdato = virkningsdatoAndreLøsningOvergangUføre,
+                        fom = virkningsdatoAndreLøsningOvergangUføre,
                         tom = null,
                         overgangBegrunnelse = null
                     )
                 )
             )
+            .medKontekst {
+                val vilkårsresultat = hentVilkårsresultat(behandlingId = behandling.id)
+                val overgangUføreVilkår = vilkårsresultat.finnVilkår(Vilkårtype.OVERGANGUFØREVILKÅRET)
+                assertTidslinje(
+                    overgangUføreVilkår.tidslinje(),
+                    Periode(
+                        virkningsdatoAndreLøsningOvergangUføre,
+                        virkningsdatoAndreLøsningOvergangUføre.plusMonths(8).minusDays(1)
+                    ) to {
+                        assertThat(it.utfall).isEqualTo(Utfall.OPPFYLT)
+                    },
+                    // 8 måneder gjelder fra virkningsdato, selv om virkningsdato er før rettighetsperiode start
+                    Periode(virkningsdatoAndreLøsningOvergangUføre.plusMonths(8), Tid.MAKS) to {
+                        assertThat(it.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
+                    })
+            }
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
@@ -1802,13 +1855,10 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         // Sjekker at overgangUføreVilkår ble oppfylt med innvilgelsesårsak satt til 11-13.
         assertTidslinje(
             overgangUføreVilkår.tidslinje().begrensetTil(underveisPeriode),
-            Periode(periode.fom, virkningsdatoOvergangUføre.minusDays(1)) to {
-                assertThat(it.utfall).isEqualTo(Utfall.IKKE_VURDERT)
-            },
-            Periode(virkningsdatoOvergangUføre, virkningsdatoOvergangUføre.plusMonths(8).minusDays(1)) to {
+            Periode(periode.fom, virkningsdatoAndreLøsningOvergangUføre.plusMonths(8).minusDays(1)) to {
                 assertThat(it.utfall).isEqualTo(Utfall.OPPFYLT)
             },
-            Periode(virkningsdatoOvergangUføre.plusMonths(8), underveisPeriode.tom) to {
+            Periode(virkningsdatoAndreLøsningOvergangUføre.plusMonths(8), underveisPeriode.tom) to {
                 assertThat(it.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
             })
 
@@ -1819,7 +1869,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
 
         assertTidslinje(
             vilkårsresultat.rettighetstypeTidslinje().begrensetTil(underveisPeriode),
-            Periode(virkningsdatoOvergangUføre, virkningsdatoOvergangUføre.plusMonths(8).minusDays(1)) to {
+            Periode(periode.fom, virkningsdatoAndreLøsningOvergangUføre.plusMonths(8).minusDays(1)) to {
                 assertThat(it).isEqualTo(RettighetsType.VURDERES_FOR_UFØRETRYGD)
             },
         )
@@ -3898,9 +3948,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
     @Test
     fun `Teste TrekkKlageFlyt`() {
         val person = TestPersoner.PERSON_FOR_UNG()
-
         val ident = person.aktivIdent()
-
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
         // Avslås pga. alder
@@ -4065,8 +4113,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             )
         )
 
-        val avsluttetBehandling = hentBehandling(klagebehandling.referanse)
-        assertThat(avsluttetBehandling.status()).isEqualTo(Status.AVSLUTTET)
+        val behandling = hentBehandling(klagebehandling.referanse)
+        assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
     }
 
     @Test
@@ -4493,6 +4541,56 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsOppholdskrav(fom)
             .medKontekst {
                 assertThat(åpneAvklaringsbehov.map { it.definisjon }).contains(Definisjon.AVKLAR_HELSEINSTITUSJON)
+            }
+    }
+
+    @Test
+    fun `stopper opp når søker er over 62 år`() {
+        val fom = LocalDate.now()
+        val periode = Periode(fom, fom.plusYears(3))
+        val person = TestPersoner.PERSON_62()
+
+        val (sak, behandling) = sendInnFørsteSøknad(
+            person = person,
+            mottattTidspunkt = fom.atStartOfDay(),
+            periode = periode,
+        )
+
+        behandling
+            .medKontekst {
+                assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
+                assertThat(åpneAvklaringsbehov).isNotEmpty()
+                assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+            }
+            .løsFramTilGrunnlag(sak.rettighetsperiode.fom)
+            .løsBeregningstidspunkt()
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).contains(Definisjon.VURDER_INNTEKTSBORTFALL)
+            }
+    }
+
+    @Test
+    fun `stopper ikke opp når søker er rett under 62 år gammel`() {
+        val fom = LocalDate.now()
+        val person = TestPersoner.PERSON_61()
+        val periode = Periode(fom, fom.plusYears(3))
+
+        val (sak, behandling) = sendInnFørsteSøknad(
+            person = person,
+            mottattTidspunkt = fom.atStartOfDay(),
+            periode = periode
+        )
+
+        behandling
+            .medKontekst {
+                assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
+                assertThat(åpneAvklaringsbehov).isNotEmpty()
+                assertThat(behandling.status()).isEqualTo(Status.UTREDES)
+            }
+            behandling.løsFramTilGrunnlag(sak.rettighetsperiode.fom)
+            .løsBeregningstidspunkt()
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).noneMatch { it == Definisjon.VURDER_INNTEKTSBORTFALL }
             }
     }
 }

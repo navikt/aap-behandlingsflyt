@@ -42,11 +42,11 @@ class InformasjonskravGrunnlagImpl(
         val oppdateringer = informasjonskravRepository.hentOppdateringer(
             kontekst.sakId,
             informasjonskravene.map { (konstruktør, _, _) -> konstruktør.navn },
-        )
+        ).associateBy { it.navn }
 
         val relevanteInformasjonskrav = informasjonskravene
             .filter { (_, krav, steg) ->
-                val sisteOppdatering = oppdateringer.firstOrNull { it.navn == krav.navn }
+                val sisteOppdatering = oppdateringer[krav.navn]
                 krav.erRelevant(kontekst, steg, sisteOppdatering)
             }
 
@@ -108,7 +108,7 @@ class InformasjonskravGrunnlagImpl(
             .map { it.join() }
             .map { (konstruktør, krav, registerdata) ->
                 val input = krav.klargjør(kontekst)
-                Pair(konstruktør, krav.oppdater(input, registerdata, kontekst))
+                Triple(konstruktør, krav.oppdater(input, registerdata, kontekst), input)
             }
 
 
@@ -123,11 +123,14 @@ class InformasjonskravGrunnlagImpl(
                 endredeAsyncInformasjonskrav
             }
 
+        val informasjonskravMedInput = sekvensiellKlargjøring.associate { (_, krav, input) -> krav.navn to input } +
+                mapOf(SøknadInformasjonskrav.navn to IngenInput)
+
         log.info("Registrerer oppdateringer fra informasjonskrav")
         informasjonskravRepository.registrerOppdateringer(
             kontekst.sakId,
             kontekst.behandlingId,
-            relevanteInformasjonskrav.map { (_, krav, _) -> krav.navn },
+            informasjonskravMedInput,
             Instant.now(),
             kontekst.rettighetsperiode,
         )

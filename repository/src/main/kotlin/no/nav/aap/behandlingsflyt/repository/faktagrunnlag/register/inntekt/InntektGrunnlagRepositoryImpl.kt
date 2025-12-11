@@ -197,6 +197,6 @@ class InntektGrunnlagRepositoryImpl(private val connection: DBConnection) :
     }
 
     override fun hent(behandlingId: BehandlingId): InntektGrunnlag {
-        return requireNotNull(hentHvisEksisterer(behandlingId))
+        return requireNotNull(hentHvisEksisterer(behandlingId)) { "Fant ikke inntektgrunnlag for behandlingId=$behandlingId." }
     }
 }
