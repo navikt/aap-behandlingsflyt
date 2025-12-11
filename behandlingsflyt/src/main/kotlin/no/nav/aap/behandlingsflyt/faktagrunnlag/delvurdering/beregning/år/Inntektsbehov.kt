@@ -171,6 +171,10 @@ class Inntektsbehov(private val beregningInput: BeregningInput) {
             return utledAlleRelevanteÅr(nedsettelsesDato, ytterligereNedsattArbeidsevneDato)
         }
 
+        fun utledRelevanteYtterligereNedsattÅr(beregningGrunnlag: BeregningGrunnlag?): Set<Year> {
+            return beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato?.let(::treÅrForutFor).orEmpty()
+        }
+
         fun utledNedsettelsesdato(
             beregningVurdering: BeregningstidspunktVurdering?,
             studentVurdering: StudentVurdering?

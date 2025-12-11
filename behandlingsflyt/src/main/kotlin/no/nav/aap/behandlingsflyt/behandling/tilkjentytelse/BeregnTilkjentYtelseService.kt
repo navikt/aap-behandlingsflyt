@@ -36,7 +36,7 @@ class TilkjentYtelseGrunnlag(
     val samordningGrunnlag: SamordningGrunnlag,
     val samordningUføre: SamordningUføreGrunnlag?,
     val samordningArbeidsgiver: SamordningArbeidsgiverGrunnlag?,
-    val unntakMeldepliktDesemberEnabled: Boolean = false
+    val minsteÅrligeYtelse: Tidslinje<GUnit> = MINSTE_ÅRLIG_YTELSE_TIDSLINJE,
 ) : Faktagrunnlag
 
 class BeregnTilkjentYtelseService(val grunnlag: TilkjentYtelseGrunnlag) {
@@ -52,7 +52,7 @@ class BeregnTilkjentYtelseService(val grunnlag: TilkjentYtelseGrunnlag) {
         val grunnlagsfaktor = grunnlag.beregningsgrunnlag ?: GUnit(0)
 
         val dagsatsTidslinje = aldersjusteringAvMinsteÅrligeYtelse(grunnlag.fødselsdato)
-            .innerJoin(MINSTE_ÅRLIG_YTELSE_TIDSLINJE) { aldersjustering, minsteYtelse ->
+            .innerJoin(grunnlag.minsteÅrligeYtelse) { aldersjustering, minsteYtelse ->
                 /** § 11-20 første avsnitt:
                  * > Arbeidsavklaringspenger gis med 66 prosent av grunnlaget, se § 11-19.
                  * > Minste årlige ytelse er 2,041 ganger grunnbeløpet.
@@ -126,7 +126,7 @@ class BeregnTilkjentYtelseService(val grunnlag: TilkjentYtelseGrunnlag) {
                 barnetilleggsats = barnetillegg.barnetilleggsats,
                 grunnlagsfaktor = dagsatsG,
                 grunnbeløp = grunnbeløp,
-                utbetalingsdato = utledUtbetalingsdato(underveisperiode, grunnlag.unntakMeldepliktDesemberEnabled),
+                utbetalingsdato = utledUtbetalingsdato(underveisperiode),
             )
         }
             .filterNotNull()
@@ -155,15 +155,14 @@ class BeregnTilkjentYtelseService(val grunnlag: TilkjentYtelseGrunnlag) {
         }
     }
 
-    private fun utledUtbetalingsdato(underveisperiode: Underveisperiode, unntakMeldepliktDesemberEnabled: Boolean): LocalDate {
+    private fun utledUtbetalingsdato(underveisperiode: Underveisperiode): LocalDate {
         val meldeperiode = underveisperiode.meldePeriode
         val opplysningerMottatt = underveisperiode.arbeidsgradering.opplysningerMottatt
 
-        val unntakFastsattMeldedag = if (unntakMeldepliktDesemberEnabled) {
-            // `meldeperiode` svarer til perioden det ble skrevet meldekort for (på dato `opplysningerMottatt`).
-            // For å finne unntakts-meldepliktperiode, må vi flytte denne to uker fram.
+        val unntakFastsattMeldedag =
+        // `meldeperiode` svarer til perioden det ble skrevet meldekort for (på dato `opplysningerMottatt`).
+        // For å finne unntakts-meldepliktperiode, må vi flytte denne to uker fram.
             unntakFastsattMeldedag[meldeperiode.flytt(14).fom]
-        } else null
 
         val sisteMeldedagForMeldeperiode = meldeperiode.tom.plusDays(9)
         val førsteMeldedagForMeldeperiode = meldeperiode.tom.plusDays(1)

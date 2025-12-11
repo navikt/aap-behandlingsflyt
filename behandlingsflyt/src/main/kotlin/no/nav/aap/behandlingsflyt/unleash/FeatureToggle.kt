@@ -11,7 +11,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     IngenValidering,
     InnhentEnhetsregisterData,
     NyBrevtype11_17,
-    NyBrevtype11_18,
     Aktivitetsplikt11_9,
     OverforingsdatoNullForAvregning,
     OvergangArbeid,
@@ -25,12 +24,12 @@ enum class BehandlingsflytFeature : FeatureToggle {
     IkkeAntaNullTimerArbeidet,
     NyBrevbyggerV3,
     LagreVedtakIFatteVedtak,
-    UnntakMeldepliktDesember,
     ReduksjonArbeidOverGrense,
     PeriodisertSykepengeErstatningNyAvklaringsbehovService,
     ReduksjonIkkeMeldtSeg,
     TimerArbeidetPeriodisertSubMeldeperiode,
     MidlertidigStopp11_4,
+    Under18,
     ValiderOvergangUfore,
     KravOmInntektsbortfall
     ;
