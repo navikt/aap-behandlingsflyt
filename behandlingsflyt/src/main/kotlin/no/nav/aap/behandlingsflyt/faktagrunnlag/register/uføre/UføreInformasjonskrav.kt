@@ -51,10 +51,18 @@ class UføreInformasjonskrav(
         steg: StegType,
         oppdatert: InformasjonskravOppdatert?
     ): Boolean {
+        val forrigeInput = oppdatert?.forrigeInput<UføreInput>()
+        val nyInput = klargjør(kontekst)
+
+        val forrigeFraDato = forrigeInput?.let { utledFraDato(forrigeInput.beregningVurdering, forrigeInput.sak) }
+        val nyFraDato = utledFraDato(nyInput.beregningVurdering, nyInput.sak)
+
+        val inputHarEndretSeg = forrigeFraDato != nyFraDato
+
         return kontekst.erFørstegangsbehandlingEllerRevurdering()
                 && !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
                 && (oppdatert.ikkeKjørtSisteKalenderdag() || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode)
-        // TODO: endring i ytterligereNedsettelsesDato bør trigge ny innhenting?
+                && inputHarEndretSeg
     }
 
     data class UføreInput(val sak: Sak, val behandlingId: BehandlingId, val beregningVurdering: BeregningGrunnlag?) :
@@ -96,10 +104,18 @@ class UføreInformasjonskrav(
         val sak = uføreInput.sak
         val beregningVurdering = uføreInput.beregningVurdering
         // prøver å sette fraDato riktig hvis den finnes
+        val fraDato = utledFraDato(beregningVurdering, sak)
+        return uføreRegisterGateway.innhentMedHistorikk(sak.person, treÅrFør(fraDato))
+    }
+
+    private fun utledFraDato(
+        beregningVurdering: BeregningGrunnlag?,
+        sak: Sak
+    ): LocalDate {
         val fraDato = beregningVurdering?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
             ?: beregningVurdering?.tidspunktVurdering?.nedsattArbeidsevneDato
             ?: sak.rettighetsperiode.fom
-        return uføreRegisterGateway.innhentMedHistorikk(sak.person, treÅrFør(fraDato))
+        return fraDato
     }
 
     private fun treÅrFør(fraOgMed: LocalDate): LocalDate {
