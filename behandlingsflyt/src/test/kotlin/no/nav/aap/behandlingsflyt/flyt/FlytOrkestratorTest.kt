@@ -3948,9 +3948,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
     @Test
     fun `Teste TrekkKlageFlyt`() {
         val person = TestPersoner.PERSON_FOR_UNG()
-
         val ident = person.aktivIdent()
-
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
         // Avslås pga. alder
@@ -4115,8 +4113,8 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             )
         )
 
-        val avsluttetBehandling = hentBehandling(klagebehandling.referanse)
-        assertThat(avsluttetBehandling.status()).isEqualTo(Status.AVSLUTTET)
+        val behandling = hentBehandling(klagebehandling.referanse)
+        assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
     }
 
     @Test
