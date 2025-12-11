@@ -86,11 +86,6 @@ data class SamordningUføreVurderingGrunnlagDTO(
     val grunnlag: List<SamordningUføreGrunnlagDTO>
 )
 
-data class SamordningBarnepensjonDTO(
-    val harTilgangTilÅSaksbehandle: Boolean,
-    val kvalfisererTilBarnepensjon: Boolean? = null
-)
-
 data class SamordningUføreGrunnlagDTO(
     val virkningstidspunkt: LocalDate,
     val uføregrad: Int,
@@ -157,10 +152,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
     gatewayProvider: GatewayProvider,
 ) {
     val ansattInfoService = AnsattInfoService(gatewayProvider)
-
     route("/api/behandling") {
-
-
         route("/{referanse}/grunnlag/samordning-ufore") {
             getGrunnlag<BehandlingReferanse, SamordningUføreVurderingGrunnlagDTO>(
                 relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
@@ -221,9 +213,6 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                             )
                         Pair(tp, vurdering)
                     }
-
-
-
                 respond(
                     TjenestepensjonGrunnlagDTO(
                         kanSaksbehandle(),
