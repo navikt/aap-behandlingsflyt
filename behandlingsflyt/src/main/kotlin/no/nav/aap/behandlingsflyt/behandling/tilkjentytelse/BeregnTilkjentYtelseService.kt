@@ -36,6 +36,7 @@ class TilkjentYtelseGrunnlag(
     val samordningGrunnlag: SamordningGrunnlag,
     val samordningUføre: SamordningUføreGrunnlag?,
     val samordningArbeidsgiver: SamordningArbeidsgiverGrunnlag?,
+    val minsteÅrligeYtelse: Tidslinje<GUnit> = MINSTE_ÅRLIG_YTELSE_TIDSLINJE,
 ) : Faktagrunnlag
 
 class BeregnTilkjentYtelseService(val grunnlag: TilkjentYtelseGrunnlag) {
@@ -51,7 +52,7 @@ class BeregnTilkjentYtelseService(val grunnlag: TilkjentYtelseGrunnlag) {
         val grunnlagsfaktor = grunnlag.beregningsgrunnlag ?: GUnit(0)
 
         val dagsatsTidslinje = aldersjusteringAvMinsteÅrligeYtelse(grunnlag.fødselsdato)
-            .innerJoin(MINSTE_ÅRLIG_YTELSE_TIDSLINJE) { aldersjustering, minsteYtelse ->
+            .innerJoin(grunnlag.minsteÅrligeYtelse) { aldersjustering, minsteYtelse ->
                 /** § 11-20 første avsnitt:
                  * > Arbeidsavklaringspenger gis med 66 prosent av grunnlaget, se § 11-19.
                  * > Minste årlige ytelse er 2,041 ganger grunnbeløpet.
