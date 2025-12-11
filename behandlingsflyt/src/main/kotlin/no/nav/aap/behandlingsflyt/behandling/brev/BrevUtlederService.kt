@@ -75,7 +75,7 @@ class BrevUtlederService(
 
     fun utledBehovForMeldingOmVedtak(behandlingId: BehandlingId): BrevBehov? {
         val behandling = behandlingRepository.hent(behandlingId)
-        var harArbeidsopptrapping = arbeidsopptrappingRepository.hentPerioder(behandlingId).isNotEmpty()
+        val harArbeidsopptrapping = arbeidsopptrappingRepository.hentPerioder(behandlingId).isNotEmpty()
 
         when (behandling.typeBehandling()) {
             TypeBehandling.Førstegangsbehandling -> {
@@ -87,8 +87,7 @@ class BrevUtlederService(
 
                 return when (resultat) {
                     Resultat.INNVILGELSE -> {
-                        if (unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_18) &&
-                            harRettighetsType(behandling.id, RettighetsType.VURDERES_FOR_UFØRETRYGD)
+                        if (harRettighetsType(behandling.id, RettighetsType.VURDERES_FOR_UFØRETRYGD)
                         ) {
                             brevBehovVurderesForUføretrygd(behandling)
                         } else {
@@ -124,10 +123,13 @@ class BrevUtlederService(
                 if (resultat == Resultat.AVBRUTT) {
                     return null
                 }
-                if (unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_18) &&
-                    harRettighetsType(behandling.id, RettighetsType.VURDERES_FOR_UFØRETRYGD) &&
-                    behandling.forrigeBehandlingId != null &&
-                    !harRettighetsType(behandling.forrigeBehandlingId, RettighetsType.VURDERES_FOR_UFØRETRYGD)
+                if (harRettighetsType(
+                        behandling.id,
+                        RettighetsType.VURDERES_FOR_UFØRETRYGD
+                    ) && behandling.forrigeBehandlingId != null && !harRettighetsType(
+                        behandling.forrigeBehandlingId,
+                        RettighetsType.VURDERES_FOR_UFØRETRYGD
+                    )
                 ) {
                     return brevBehovVurderesForUføretrygd(behandling)
                 }

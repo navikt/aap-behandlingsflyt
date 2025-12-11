@@ -1,15 +1,13 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
-import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -24,33 +22,26 @@ class TrekkKlageSteg private constructor(
     private val repositoryProvider: RepositoryProvider,
 ): BehandlingSteg {
     private val log = LoggerFactory.getLogger(javaClass)
+    private val avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if(erIkkeRelevant(kontekst)) {
-            return Fullført
-        }
-
         val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val trekkKlageGrunnlag = trekkKlageRepository.hentTrekkKlageGrunnlag(kontekst.behandlingId)
 
-        if (avklaringsbehov.harIkkeBlittLøst(Definisjon.VURDER_TREKK_AV_KLAGE)) {
-            return FantAvklaringsbehov(Definisjon.VURDER_TREKK_AV_KLAGE)
-        }
+        avklaringsbehovService.oppdaterAvklaringsbehov(
+            avklaringsbehovene = avklaringsbehov,
+            definisjon = Definisjon.VURDER_TREKK_AV_KLAGE,
+            vedtakBehøverVurdering = { Vurderingsbehov.KLAGE_TRUKKET in kontekst.vurderingsbehovRelevanteForSteg },
+            erTilstrekkeligVurdert = { trekkKlageGrunnlag != null },
+            tilbakestillGrunnlag = {},
+            kontekst
+        )
 
-        checkNotNull(trekkKlageGrunnlag) {
-            "Vurder trekk av klage har blitt satt som løst, men ingen grunnlag har blitt lagret på behandlingen."
-        }
-
-        if(trekkKlageGrunnlag.vurdering.skalTrekkes) {
+        if (trekkKlageGrunnlag != null && trekkKlageGrunnlag.vurdering.skalTrekkes) {
             slettVurderingerOgRegisterdata(kontekst.behandlingId)
-            avklaringsbehov.avbrytÅpneAvklaringsbehov()
         }
 
         return Fullført
-    }
-
-    private fun erIkkeRelevant(kontekst: FlytKontekstMedPerioder): Boolean {
-        return Vurderingsbehov.KLAGE_TRUKKET !in kontekst.vurderingsbehovRelevanteForSteg
     }
 
     private fun slettVurderingerOgRegisterdata(behandlingId: BehandlingId) {
@@ -61,10 +52,10 @@ class TrekkKlageSteg private constructor(
             }
         }
     }
-    
+
     companion object : FlytSteg {
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): BehandlingSteg {
-            return TrekkKlageSteg(
+            return TrekkKlageSteg (
                 avklaringsbehovRepository = repositoryProvider.provide(),
                 trekkKlageRepository = repositoryProvider.provide(),
                 repositoryProvider = repositoryProvider
@@ -74,11 +65,5 @@ class TrekkKlageSteg private constructor(
         override fun type(): StegType {
             return StegType.TREKK_KLAGE
         }
-    }
-
-    private fun Avklaringsbehovene.harIkkeBlittLøst(definisjon: Definisjon): Boolean {
-        return this.alle()
-            .filter { it.definisjon == definisjon }
-            .none { it.status() == Status.AVSLUTTET }
     }
 }

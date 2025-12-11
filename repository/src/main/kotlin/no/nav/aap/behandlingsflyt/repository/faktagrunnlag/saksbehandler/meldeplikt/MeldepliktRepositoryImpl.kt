@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Meldepl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
@@ -23,7 +24,7 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): MeldepliktGrunnlag? {
         val query = """
-            SELECT f.ID AS MELDEPLIKT_ID, v.HAR_FRITAK, v.FRA_DATO, v.BEGRUNNELSE, v.OPPRETTET_TID, v.VURDERT_AV
+            SELECT f.ID AS MELDEPLIKT_ID, v.HAR_FRITAK, v.FRA_DATO, v.TIL_DATO, v.BEGRUNNELSE, v.OPPRETTET_TID, v.VURDERT_AV, v.VURDERT_I_BEHANDLING 
             FROM MELDEPLIKT_FRITAK_GRUNNLAG g
             INNER JOIN MELDEPLIKT_FRITAK f ON g.MELDEPLIKT_ID = f.ID
             INNER JOIN MELDEPLIKT_FRITAK_VURDERING v ON f.ID = v.MELDEPLIKT_ID
@@ -32,22 +33,13 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
 
         return connection.queryList(query) {
             setParams { setLong(1, behandlingId.toLong()) }
-            setRowMapper { row ->
-                MeldepliktInternal(
-                    meldepliktId = row.getLong("MELDEPLIKT_ID"),
-                    harFritak = row.getBoolean("HAR_FRITAK"),
-                    fraDato = row.getLocalDate("FRA_DATO"),
-                    begrunnelse = row.getString("BEGRUNNELSE"),
-                    vurdertAv = row.getString("VURDERT_AV"),
-                    vurderingOpprettet = row.getLocalDateTime("OPPRETTET_TID"),
-                )
-            }
+            setRowMapper(::toMeldepliktInternal)
         }.grupperOgMapTilGrunnlag().firstOrNull()
     }
 
     override fun hentAlleVurderinger(sakId: SakId, behandlingId: BehandlingId): Set<Fritaksvurdering> {
         val query = """
-            SELECT f.ID AS MELDEPLIKT_ID, v.HAR_FRITAK, v.FRA_DATO, v.BEGRUNNELSE, v.OPPRETTET_TID, v.VURDERT_AV
+            SELECT f.ID AS MELDEPLIKT_ID, v.HAR_FRITAK, v.FRA_DATO, v.TIL_DATO, v.BEGRUNNELSE, v.OPPRETTET_TID, v.VURDERT_AV, v.VURDERT_I_BEHANDLING
             FROM MELDEPLIKT_FRITAK_GRUNNLAG g
             INNER JOIN MELDEPLIKT_FRITAK f ON g.MELDEPLIKT_ID = f.ID
             INNER JOIN MELDEPLIKT_FRITAK_VURDERING v ON f.ID = v.MELDEPLIKT_ID
@@ -60,35 +52,41 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
                 setLong(1, sakId.toLong())
                 setLong(2, behandlingId.toLong())
             }
-            setRowMapper { row ->
-                MeldepliktInternal(
-                    meldepliktId = row.getLong("MELDEPLIKT_ID"),
-                    harFritak = row.getBoolean("HAR_FRITAK"),
-                    fraDato = row.getLocalDate("FRA_DATO"),
-                    begrunnelse = row.getString("BEGRUNNELSE"),
-                    vurdertAv = row.getString("VURDERT_AV"),
-                    vurderingOpprettet = row.getLocalDateTime("OPPRETTET_TID")
-                )
-            }
+            setRowMapper(::toMeldepliktInternal)
         }.map { it.toFritaksvurdering() }.toSet()
     }
+
+    private fun toMeldepliktInternal(row: Row): MeldepliktInternal = MeldepliktInternal(
+        meldepliktId = row.getLong("MELDEPLIKT_ID"),
+        harFritak = row.getBoolean("HAR_FRITAK"),
+        fraDato = row.getLocalDate("FRA_DATO"),
+        tilDato = row.getLocalDateOrNull("TIL_DATO"),
+        begrunnelse = row.getString("BEGRUNNELSE"),
+        vurdertAv = row.getString("VURDERT_AV"),
+        vurderingOpprettet = row.getLocalDateTime("OPPRETTET_TID"),
+        vurdertIBehandling = row.getLongOrNull("VURDERT_I_BEHANDLING")?.let { BehandlingId(it) }
+    )
 
 
     private data class MeldepliktInternal(
         val meldepliktId: Long,
         val harFritak: Boolean,
         val fraDato: LocalDate,
+        val tilDato: LocalDate?,
         val begrunnelse: String,
         val vurdertAv: String,
         val vurderingOpprettet: LocalDateTime,
+        val vurdertIBehandling: BehandlingId? = null,
     ) {
         fun toFritaksvurdering(): Fritaksvurdering {
             return Fritaksvurdering(
                 harFritak = harFritak,
                 fraDato = fraDato,
+                tilDato = tilDato,
                 begrunnelse = begrunnelse,
                 vurdertAv = vurdertAv,
-                opprettetTid = vurderingOpprettet
+                opprettetTid = vurderingOpprettet,
+                vurdertIBehandling = vurdertIBehandling
             )
         }
     }
@@ -111,38 +109,22 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
             }
         }
 
-        val nyeVurderinger = vurderinger.filter { it.opprettetTid == null }
-
         connection.executeBatch(
             """
             INSERT INTO MELDEPLIKT_FRITAK_VURDERING 
-            (MELDEPLIKT_ID, BEGRUNNELSE, HAR_FRITAK, FRA_DATO, VURDERT_AV) VALUES (?, ?, ?, ?, ?)
+            (MELDEPLIKT_ID, BEGRUNNELSE, HAR_FRITAK, FRA_DATO, TIL_DATO, VURDERT_AV, OPPRETTET_TID, VURDERT_I_BEHANDLING) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent(),
-            nyeVurderinger
+            vurderinger
         ) {
             setParams {
                 setLong(1, meldepliktId)
                 setString(2, it.begrunnelse)
                 setBoolean(3, it.harFritak)
                 setLocalDate(4, it.fraDato)
-                setString(5, it.vurdertAv)
-            }
-        }
-
-        connection.executeBatch(
-            """
-            INSERT INTO MELDEPLIKT_FRITAK_VURDERING 
-            (MELDEPLIKT_ID, BEGRUNNELSE, HAR_FRITAK, FRA_DATO, VURDERT_AV, OPPRETTET_TID) VALUES (?, ?, ?, ?, ?, ?)
-            """.trimIndent(),
-            vurderinger.filter { it.opprettetTid != null }
-        ) {
-            setParams {
-                setLong(1, meldepliktId)
-                setString(2, it.begrunnelse)
-                setBoolean(3, it.harFritak)
-                setLocalDate(4, it.fraDato)
-                setString(5, it.vurdertAv)
-                setLocalDateTime(6, it.opprettetTid)
+                setLocalDate(5, it.tilDato)
+                setString(6, it.vurdertAv)
+                setLocalDateTime(7, it.opprettetTid)
+                setLong(8, it.vurdertIBehandling?.id)
             }
         }
     }

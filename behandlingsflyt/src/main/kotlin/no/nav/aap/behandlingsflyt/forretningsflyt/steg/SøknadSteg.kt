@@ -38,7 +38,9 @@ class SøknadSteg(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val erTilstrekkeligVurdert = trukketSøknadRepository.hentTrukketSøknadVurderinger(kontekst.behandlingId).isNotEmpty()
+        val vurderinger = trukketSøknadRepository.hentTrukketSøknadVurderinger(kontekst.behandlingId)
+        val erTilstrekkeligVurdert = vurderinger.isNotEmpty()
+        val harTrukketSøknad = vurderinger.any { it.skalTrekkes }
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
             avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId),
@@ -56,7 +58,7 @@ class SøknadSteg(
             kontekst = kontekst,
         )
 
-        if (erTilstrekkeligVurdert) {
+        if (erTilstrekkeligVurdert && harTrukketSøknad) {
             val rettighetsperiode = kontekst.rettighetsperiode
             // Setter ny rettighetsperiode til én dag lang
             val nyRettighetsPeriode = Periode(rettighetsperiode.fom, rettighetsperiode.fom)

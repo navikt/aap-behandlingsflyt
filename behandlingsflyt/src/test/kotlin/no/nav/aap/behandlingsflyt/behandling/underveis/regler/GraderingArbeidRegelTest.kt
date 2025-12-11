@@ -7,6 +7,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.Arbeid
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
+import no.nav.aap.behandlingsflyt.help.assertTidslinjeEquals
+import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -17,7 +19,6 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -283,6 +284,57 @@ class GraderingArbeidRegelTest {
         )
     }
 
+    /** Eksempel 1 fra slack:
+     * https://nav-it.slack.com/archives/C08RRLQBXC6/p1764769347860619?thread_ts=1764583707.537469&cid=C08RRLQBXC6
+     **/
+    @Test
+    fun `opptrapping midt i meldeperiode, eksempel 1`() {
+        assertMeldekortutregning(
+            opptrapping = false,
+            timerArbeidet = listOf(
+                11.0, 11.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                10.0, 10.0, 10.0, 0.0, 0.0, 0.0, 0.0,
+            ),
+            forventetGradering = Prosent(0),
+            forventetAndelArbeid = Prosent(69),
+        )
+
+        assertMeldekortutregning(
+            opptrapping = List(7) { false } + List(7) { true },
+            timerArbeidet = listOf(
+                11.0, 11.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                10.0, 10.0, 10.0, 0.0, 0.0, 0.0, 0.0,
+            ),
+            forventetGradering = List(7) { Prosent(41) } + List(7) { Prosent(20) },
+            forventetAndelArbeid = List(7) { Prosent(59) } + List(7) { Prosent(80) },
+        )
+    }
+
+    /** Eksempel 2 fra slack:
+     * https://nav-it.slack.com/archives/C08RRLQBXC6/p1764769347860619?thread_ts=1764583707.537469&cid=C08RRLQBXC6
+     **/
+    @Test
+    fun `opptrapping midt i meldeperiode, eksempel 2`() {
+        assertMeldekortutregning(
+            opptrapping = false,
+            timerArbeidet = listOf(
+                4.5, 4.5, 4.5, 4.5, 4.5, 0.0, 0.0,
+                4.5, 6.0, 6.0, 6.0, 6.0, 0.0, 0.0,
+            ),
+            forventetGradering = Prosent(0),
+            forventetAndelArbeid = Prosent(68),
+        )
+        assertMeldekortutregning(
+            opptrapping = List(8) { false } + List(6) { true },
+            timerArbeidet = listOf(
+                4.5, 4.5, 4.5, 4.5, 4.5, 0.0, 0.0,
+                4.5, 6.0, 6.0, 6.0, 6.0, 0.0, 0.0,
+            ),
+            forventetGradering = List(8) { Prosent(40) } + List(6) { Prosent(20) },
+            forventetAndelArbeid = List(8) { Prosent(60) } + List(6) { Prosent(80) },
+        )
+    }
+
     private fun underveisInput(
         rettighetsperiode: Periode,
         fastsattArbeidsevne: Prosent?,
@@ -343,30 +395,58 @@ class GraderingArbeidRegelTest {
         forventetAndelArbeid: Prosent,
         godtaTimerMangler: Boolean = false,
     ) {
+        assertMeldekortutregning(
+            fastsattArbeidsevne = fastsattArbeidsevne,
+            opptrapping = List(14) { opptrapping },
+            timerArbeidet = timerArbeidet,
+            forventetGradering = List(14) { forventetGradering },
+            forventetAndelArbeid = List(14) { forventetAndelArbeid },
+            godtaTimerMangler = godtaTimerMangler,
+        )
+    }
+
+    fun assertMeldekortutregning(
+        fastsattArbeidsevne: Prosent? = null,
+        opptrapping: List<Boolean> = List(14) { false },
+        timerArbeidet: List<Double>,
+        forventetGradering: List<Prosent>,
+        forventetAndelArbeid: List<Prosent>,
+        godtaTimerMangler: Boolean = false,
+    ) {
         if (!godtaTimerMangler) {
             check(timerArbeidet.size == 14) {
                 "mangler timer i meldeperioden"
             }
         }
         val fom = LocalDate.parse("2025-11-24")
+        fun <T> tilTidslinje(xs: List<T>): Tidslinje<T> =
+            Tidslinje(xs.mapIndexed { i, x ->
+                val dag = fom.plusDays(i.toLong())
+                Segment(Periode(dag, dag), x)
+            })
+
         val rettighetsperiode = Periode(fom, fom.plusDays(13))
         val input = underveisInput(
             rettighetsperiode = rettighetsperiode,
             fastsattArbeidsevne = fastsattArbeidsevne,
-            opptrappingPerioder = if (opptrapping) listOf(rettighetsperiode) else emptyList(),
+            opptrappingPerioder = tilTidslinje(opptrapping)
+                .filter { it.verdi }
+                .komprimer()
+                .perioder()
+                .toList(),
             meldekort = meldekort(fom to timerArbeidet)
         )
         val vurdering = vurder(input)
 
-        assertEquals(
-            forventetGradering,
-            vurdering.segment(fom)?.verdi?.arbeidsgradering()?.gradering,
-            "forventet gradering",
+        assertTidslinjeEquals(
+            tilTidslinje(forventetGradering),
+            vurdering.map { it.arbeidsgradering().gradering },
+            "forventet gradering arbeid",
         )
 
-        assertEquals(
-            forventetAndelArbeid,
-            vurdering.segment(fom)?.verdi?.arbeidsgradering()?.andelArbeid,
+        assertTidslinjeEquals(
+            tilTidslinje(forventetAndelArbeid),
+            vurdering.map { it.arbeidsgradering().andelArbeid },
             "forventet andel arbeid",
         )
     }

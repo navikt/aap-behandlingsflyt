@@ -103,9 +103,7 @@ class MeldepliktRegel(
                     forrigeSegmentOppfylt = meldeperioderVurdert.segmenter().lastOrNull()?.verdi?.utfall == OPPFYLT,
                     dataForForrigeMeldeperiode = forrigePeriode?.verdi,
                 )
-                if (input.unntakMeldepliktDesemberEnabled) {
-                    forrigePeriode = nåværendeMeldeperiodeSegment
-                }
+                forrigePeriode = nåværendeMeldeperiodeSegment
                 meldeperioderVurdert.kombiner(neste, StandardSammenslåere.xor())
             }.begrensetTil(input.periodeForVurdering)
 

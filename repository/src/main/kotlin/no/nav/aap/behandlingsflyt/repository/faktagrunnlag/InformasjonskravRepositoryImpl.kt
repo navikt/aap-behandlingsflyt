@@ -1,11 +1,13 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravInput
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
@@ -13,17 +15,19 @@ import java.time.Instant
 
 class InformasjonskravRepositoryImpl(
     private val connection: DBConnection,
-): InformasjonskravRepository {
+) : InformasjonskravRepository {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun hentOppdateringer(sakId: SakId, krav: List<InformasjonskravNavn>): List<InformasjonskravOppdatert> {
-        return connection.queryList("""
-            select distinct on (informasjonskrav) behandling_id, oppdatert, informasjonskrav, rettighetsperiode
+        return connection.queryList(
+            """
+            select distinct on (informasjonskrav) behandling_id, oppdatert, informasjonskrav, rettighetsperiode, informasjonskrav_input
             from informasjonskrav_oppdatert
             where sak_id = ? and informasjonskrav = any(?::text[])
             order by informasjonskrav, oppdatert desc
-        """) {
+        """
+        ) {
             setParams {
                 setLong(1, sakId.toLong())
                 setArray(2, krav.map { it.name })
@@ -34,6 +38,7 @@ class InformasjonskravRepositoryImpl(
                     navn = it.getEnum("informasjonskrav"),
                     oppdatert = it.getInstant("oppdatert"),
                     rettighetsperiode = it.getPeriodeOrNull("rettighetsperiode"),
+                    forrigeInput = it.getStringOrNull("informasjonskrav_input")
                 )
             }
         }
@@ -42,40 +47,45 @@ class InformasjonskravRepositoryImpl(
     override fun registrerOppdateringer(
         sakId: SakId,
         behandlingId: BehandlingId,
-        informasjonskrav: List<InformasjonskravNavn>,
+        informasjonskrav: Map<InformasjonskravNavn, InformasjonskravInput?>,
         oppdatert: Instant,
         rettighetsperiode: Periode,
     ) {
-        connection.executeBatch("""
-            insert into informasjonskrav_oppdatert (sak_id, behandling_id, informasjonskrav, oppdatert, rettighetsperiode)
-            values (?, ?, ?, ?, ?::daterange)
-        """.trimIndent(), informasjonskrav) {
+        connection.executeBatch(
+            """
+            insert into informasjonskrav_oppdatert (sak_id, behandling_id, informasjonskrav, oppdatert, rettighetsperiode, informasjonskrav_input)
+            values (?, ?, ?, ?, ?::daterange, ?::jsonb)
+        """.trimIndent(), informasjonskrav.keys
+        ) {
             setParams { krav ->
                 setLong(1, sakId.toLong())
                 setLong(2, behandlingId.toLong())
                 setEnumName(3, krav)
                 setInstant(4, oppdatert)
                 setPeriode(5, rettighetsperiode)
+                setString(6, informasjonskrav[krav]?.let(DefaultJsonMapper::toJson))
             }
         }
     }
 
     override fun slett(behandlingId: BehandlingId) {
-        val deletedRows = connection.executeReturnUpdated("""
+        val deletedRows = connection.executeReturnUpdated(
+            """
             delete from informasjonskrav_oppdatert where behandling_id = ? 
-        """.trimIndent()) {
+        """.trimIndent()
+        ) {
             setParams {
                 setLong(1, behandlingId.id)
             }
         }
-        log.info("Slettet $deletedRows rader fra mottatt_dokument")
+        log.info("Slettet $deletedRows rader fra informasjonskrav_oppdatert")
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         // Denne trengs ikke implementeres
     }
 
-    companion object: Factory<InformasjonskravRepositoryImpl> {
+    companion object : Factory<InformasjonskravRepositoryImpl> {
         override fun konstruer(connection: DBConnection): InformasjonskravRepositoryImpl {
             return InformasjonskravRepositoryImpl(connection)
         }

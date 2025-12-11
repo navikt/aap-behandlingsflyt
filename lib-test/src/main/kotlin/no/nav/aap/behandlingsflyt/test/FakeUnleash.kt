@@ -20,10 +20,9 @@ object FakeUnleash : FakeUnleashBase(
     mapOf(
         BehandlingsflytFeature.IngenValidering to false,
         BehandlingsflytFeature.NyBrevtype11_17 to true,
-        BehandlingsflytFeature.NyBrevtype11_18 to true,
         BehandlingsflytFeature.Aktivitetsplikt11_9 to true,
         BehandlingsflytFeature.OverforingsdatoNullForAvregning to true,
-        BehandlingsflytFeature.OvergangArbeid to false,
+        BehandlingsflytFeature.OvergangArbeid to true,
         BehandlingsflytFeature.KvalitetssikringsSteg to true,
         BehandlingsflytFeature.FatteVedtakAvklaringsbehovService to true,
         BehandlingsflytFeature.EOSBeregning to true,
@@ -31,11 +30,14 @@ object FakeUnleash : FakeUnleashBase(
         BehandlingsflytFeature.NyBrevbyggerV3 to false,
         BehandlingsflytFeature.BedreUttrekkAvSakerMedFritakMeldeplikt to false,
         BehandlingsflytFeature.LagreVedtakIFatteVedtak to true,
-        BehandlingsflytFeature.UnntakMeldepliktDesember to true,
         BehandlingsflytFeature.ReduksjonArbeidOverGrense to true,
         BehandlingsflytFeature.PeriodisertSykepengeErstatningNyAvklaringsbehovService to true,
         BehandlingsflytFeature.ReduksjonIkkeMeldtSeg to true,
-        BehandlingsflytFeature.MidlertidigStopp11_4 to true
+        BehandlingsflytFeature.MidlertidigStopp11_4 to true,
+        BehandlingsflytFeature.ValiderOvergangUfore to true,
+        BehandlingsflytFeature.TimerArbeidetPeriodisertSubMeldeperiode to true,
+        BehandlingsflytFeature.KravOmInntektsbortfall to true,
+        BehandlingsflytFeature.Under18 to true,
     )
 )
 
@@ -46,7 +48,6 @@ object ProdlikUnleash : FakeUnleashBase(
     mapOf(
         BehandlingsflytFeature.IngenValidering to false,
         BehandlingsflytFeature.NyBrevtype11_17 to false,
-        BehandlingsflytFeature.NyBrevtype11_18 to true,
         BehandlingsflytFeature.Aktivitetsplikt11_9 to true,
         BehandlingsflytFeature.OverforingsdatoNullForAvregning to false,
         BehandlingsflytFeature.OvergangArbeid to false,
@@ -60,8 +61,11 @@ object ProdlikUnleash : FakeUnleashBase(
         BehandlingsflytFeature.ReduksjonArbeidOverGrense to false,
         BehandlingsflytFeature.ReduksjonIkkeMeldtSeg to false,
         BehandlingsflytFeature.PeriodisertSykepengeErstatningNyAvklaringsbehovService to false,
-        BehandlingsflytFeature.UnntakMeldepliktDesember to false,
-        BehandlingsflytFeature.MidlertidigStopp11_4 to false
+        BehandlingsflytFeature.MidlertidigStopp11_4 to false,
+        BehandlingsflytFeature.ValiderOvergangUfore to false,
+        BehandlingsflytFeature.TimerArbeidetPeriodisertSubMeldeperiode to false,
+        BehandlingsflytFeature.KravOmInntektsbortfall to false,
+        BehandlingsflytFeature.Under18 to false,
     )
 )
 
@@ -69,7 +73,6 @@ object LokalUnleash : FakeUnleashBase(
     mapOf(
         BehandlingsflytFeature.IngenValidering to true,
         BehandlingsflytFeature.NyBrevtype11_17 to true,
-        BehandlingsflytFeature.NyBrevtype11_18 to true,
         BehandlingsflytFeature.Aktivitetsplikt11_9 to true,
         BehandlingsflytFeature.OverforingsdatoNullForAvregning to true,
         BehandlingsflytFeature.OvergangArbeid to true,
@@ -80,10 +83,13 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.NyBrevbyggerV3 to false,
         BehandlingsflytFeature.BedreUttrekkAvSakerMedFritakMeldeplikt to true,
         BehandlingsflytFeature.LagreVedtakIFatteVedtak to true,
-        BehandlingsflytFeature.UnntakMeldepliktDesember to true,
         BehandlingsflytFeature.ReduksjonArbeidOverGrense to true,
         BehandlingsflytFeature.PeriodisertSykepengeErstatningNyAvklaringsbehovService to true,
         BehandlingsflytFeature.ReduksjonIkkeMeldtSeg to true,
-        BehandlingsflytFeature.MidlertidigStopp11_4 to true
+        BehandlingsflytFeature.MidlertidigStopp11_4 to true,
+        BehandlingsflytFeature.ValiderOvergangUfore to true,
+        BehandlingsflytFeature.TimerArbeidetPeriodisertSubMeldeperiode to true,
+        BehandlingsflytFeature.KravOmInntektsbortfall to true,
+        BehandlingsflytFeature.Under18 to true,
     )
 )
