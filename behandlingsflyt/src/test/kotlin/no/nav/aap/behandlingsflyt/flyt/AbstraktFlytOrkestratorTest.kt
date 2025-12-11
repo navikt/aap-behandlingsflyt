@@ -1076,7 +1076,8 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
             melding = NyÅrsakTilBehandlingV0(
                 årsakerTilBehandling = vurderingsbehov,
                 behandlingReferanse = behandlingReferanse.toString(),
-                null
+                reserverTilBruker = null,
+                beskrivelse = null
             ),
         )
     }

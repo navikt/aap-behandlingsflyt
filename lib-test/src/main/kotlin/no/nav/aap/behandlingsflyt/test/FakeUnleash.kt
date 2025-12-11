@@ -37,6 +37,7 @@ object FakeUnleash : FakeUnleashBase(
         BehandlingsflytFeature.ReduksjonIkkeMeldtSeg to true,
         BehandlingsflytFeature.MidlertidigStopp11_4 to true,
         BehandlingsflytFeature.ValiderOvergangUfore to true,
+        BehandlingsflytFeature.TimerArbeidetPeriodisertSubMeldeperiode to true,
     )
 )
 
@@ -64,6 +65,7 @@ object ProdlikUnleash : FakeUnleashBase(
         BehandlingsflytFeature.UnntakMeldepliktDesember to false,
         BehandlingsflytFeature.MidlertidigStopp11_4 to false,
         BehandlingsflytFeature.ValiderOvergangUfore to false,
+        BehandlingsflytFeature.TimerArbeidetPeriodisertSubMeldeperiode to false,
     )
 )
 
@@ -88,5 +90,6 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.ReduksjonIkkeMeldtSeg to true,
         BehandlingsflytFeature.MidlertidigStopp11_4 to true,
         BehandlingsflytFeature.ValiderOvergangUfore to true,
+        BehandlingsflytFeature.TimerArbeidetPeriodisertSubMeldeperiode to true,
     )
 )
