@@ -1304,7 +1304,6 @@ Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su
             Vurdering(fårAapEtter = BISTANDSBEHOV)
         ),
     ): Tidslinje<Vurdering> {
-//        val zone = ZoneId.systemDefault()
         val zone = ZoneId.of("Europe/Oslo")
         val now = nå.atStartOfDay(zone).toInstant()
         return MeldepliktRegel(clock = Clock.fixed(now, zone))
