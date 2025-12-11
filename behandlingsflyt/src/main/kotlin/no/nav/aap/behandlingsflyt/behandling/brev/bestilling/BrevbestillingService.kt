@@ -34,9 +34,9 @@ class BrevbestillingService(
         return brevbestillingRepository.hent(behandlingId).any { it.typeBrev.erVedtak() }
     }
 
-    fun erAlleBestillingerOmVedtakIEndeTilstand(behandlingId: BehandlingId): Boolean {
-        val vedtakBestillinger = brevbestillingRepository.hent(behandlingId).filter { it.typeBrev.erVedtak() }
-        return vedtakBestillinger.all { it.status.erEndeTilstand() }
+    fun erNyesteBestillingOmVedtakIEndeTilstand(behandlingId: BehandlingId, typeBrev: TypeBrev): Boolean {
+        val bestilling = hentNyesteBestilling(behandlingId, typeBrev)
+        return bestilling != null && bestilling.status.erEndeTilstand()
     }
 
     /**
@@ -78,6 +78,16 @@ class BrevbestillingService(
     fun hentBestillinger(behandlingId: BehandlingId, typeBrev: TypeBrev): List<Brevbestilling> {
         val bestillinger = brevbestillingRepository.hent(behandlingId).filter { it.typeBrev == typeBrev }
         return bestillinger
+    }
+
+    /**
+     * I dagens løsning for brevbestilling er det alltid 1-1 forhold mellom behandlingId og typeBrev
+     * Dvs. det eksisterer til en hver tid kun 1 bestilling per brevtype for en behandling.
+     * Eks. det kan være ett Innvilgelsesbrev og ett Forvaltningsbrev tilhørende samme behandlingId
+     * Men ikke 2 Innvilgelsesbrev for samme behandlingId
+     */
+    fun hentNyesteBestilling(behandlingId: BehandlingId, typeBrev: TypeBrev): Brevbestilling? {
+        return brevbestillingRepository.hent(behandlingId).filter { it.typeBrev == typeBrev }.maxByOrNull { it.opprettet }
     }
 
     fun bestill(

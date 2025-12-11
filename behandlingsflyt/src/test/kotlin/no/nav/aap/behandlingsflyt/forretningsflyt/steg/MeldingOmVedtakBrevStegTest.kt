@@ -7,7 +7,10 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovServ
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Endring
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevUtlederService
 import no.nav.aap.behandlingsflyt.behandling.brev.VedtakAktivitetsplikt11_7
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Brevbestilling
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -31,6 +34,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
+import java.util.UUID.randomUUID
 
 class MeldingOmVedtakBrevStegTest {
 
@@ -45,8 +49,7 @@ class MeldingOmVedtakBrevStegTest {
     fun setup() {
         every { trekkKlageService.klageErTrukket(any()) } returns false
         every { brevUtlederService.utledBehovForMeldingOmVedtak(any()) } returns VedtakAktivitetsplikt11_7
-        every { brevbestillingService.bestill(any(), any(), any(), any()) } returns UUID.randomUUID()
-        every { brevbestillingService.erAlleBestillingerOmVedtakIEndeTilstand(any()) } returns true
+        every { brevbestillingService.bestill(any(), any(), any(), any()) } returns randomUUID()
         every { brevbestillingService.harBestillingOmVedtak(any()) } returns false
         every { brevbestillingService.gjenopptaVedtakBrevBestillinger(any()) } returns Unit
     }
@@ -104,10 +107,19 @@ class MeldingOmVedtakBrevStegTest {
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
             unleashGateway = FakeUnleash,
         )
+        val brevbestilling = Brevbestilling(
+            id = 1L,
+            behandlingId = behandling.id,
+            typeBrev = TypeBrev.VEDTAK_AVSLAG,
+            referanse = BrevbestillingReferanse(UUID.randomUUID()),
+            status = no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status.FORHÅNDSVISNING_KLAR,
+            opprettet = LocalDateTime.now()
+        )
 
         // Runde-1
 
         every { brevbestillingService.harBestillingOmVedtak(any()) } returns false
+        every { brevbestillingService.hentNyesteBestilling(any(), any()) } returns null
 
         val resultat1 = steg.utfør(kontekst)
 
@@ -118,6 +130,7 @@ class MeldingOmVedtakBrevStegTest {
         assertThat(avklaringsbehov.historikk.get(0).status).isEqualTo(Status.OPPRETTET)
 
         verify(exactly = 1) { brevbestillingService.bestill(allAny(), allAny(), allAny(), allAny()) }
+        verify(exactly = 0) { brevbestillingService.gjenopptaBestilling(allAny(), allAny()) }
 
         // Runde-2
 
@@ -132,7 +145,8 @@ class MeldingOmVedtakBrevStegTest {
         )
         // vedtak løst av saksbehandler - da skal harBestillingOmVedtak() returnere true i BrevSteg utfør()
         every { brevbestillingService.harBestillingOmVedtak(any()) } returns true
-        every { brevbestillingService.erAlleBestillingerOmVedtakIEndeTilstand(any()) } returns true
+        every { brevbestillingService.erNyesteBestillingOmVedtakIEndeTilstand(any(), any()) } returns true
+        every { brevbestillingService.hentNyesteBestilling(any(), any()) } returns brevbestilling
 
         val resultat2 = steg.utfør(kontekst)
 
@@ -143,6 +157,7 @@ class MeldingOmVedtakBrevStegTest {
         assertThat(avklaringsbehov2.historikk.last().status).isEqualTo(Status.AVSLUTTET)
         // brevBestilling har ikke kjørt i runde-2 da det allerede er bestilt
         verify(exactly = 1) { brevbestillingService.bestill(allAny(), allAny(), allAny(), allAny()) }
+        verify(exactly = 0) { brevbestillingService.gjenopptaBestilling(allAny(), allAny()) }
     }
 
     @Test

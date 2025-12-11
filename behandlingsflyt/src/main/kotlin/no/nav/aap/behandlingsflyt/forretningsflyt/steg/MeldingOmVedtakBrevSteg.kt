@@ -47,23 +47,34 @@ class MeldingOmVedtakBrevSteg(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val klageErTrukket = trekkKlageService.klageErTrukket(kontekst.behandlingId)
         val brevBehov = brevUtlederService.utledBehovForMeldingOmVedtak(kontekst.behandlingId)
-        val erBrevBestilt = brevbestillingService.harBestillingOmVedtak(kontekst.behandlingId)
+
         if (brevBehov != null && !klageErTrukket) {
-            if (erBrevBestilt) {
-                gjenopptaBrevBestilling(kontekst)
-            } else {
+            val eksisterendeBestilling = brevbestillingService.hentNyesteBestilling(kontekst.behandlingId, brevBehov.typeBrev)
+            if (eksisterendeBestilling == null) {
                 bestillBrev(kontekst, brevBehov)
+            } else if (eksisterendeBestilling != null && eksisterendeBestilling.status.kanGjenopptas()) {
+                gjenopptaBrevBestilling(kontekst)
             }
         }
+
         avklaringsbehovService.oppdaterAvklaringsbehov(
             avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId),
             Definisjon.SKRIV_VEDTAKSBREV,
             vedtakBehøverVurdering = { vedtakBehøverVurdering(klageErTrukket, brevBehov) },
-            erTilstrekkeligVurdert = { brevbestillingService.erAlleBestillingerOmVedtakIEndeTilstand(kontekst.behandlingId) },
+            erTilstrekkeligVurdert = { erTilstrekkeligVurdert(kontekst.behandlingId, brevBehov) },
             tilbakestillGrunnlag = { tilbakestillGrunnlag(kontekst.behandlingId) },
             kontekst
         )
+
         return Fullført
+    }
+
+    private fun erTilstrekkeligVurdert(behandlingId: BehandlingId, brevBehov: BrevBehov?): Boolean {
+        // gitt brevbehov=null er erTilstrekkeligVurdert input til oppdaterAvklaringsbehov() irrelevant og settes her til false
+        if (brevBehov == null)  {
+            return false
+        }
+        return brevbestillingService.erNyesteBestillingOmVedtakIEndeTilstand(behandlingId, brevBehov.typeBrev)
     }
 
     private fun gjenopptaBrevBestilling(kontekst: FlytKontekstMedPerioder) {
