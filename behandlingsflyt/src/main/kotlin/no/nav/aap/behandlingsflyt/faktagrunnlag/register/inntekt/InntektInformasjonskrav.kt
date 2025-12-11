@@ -77,9 +77,13 @@ class InntektInformasjonskrav(
         val (person, relevanteÅr, relevanteÅrUføre) = input
         val oppdaterteInntekter = inntektRegisterGateway.innhent(person, relevanteÅr)
 
-        val fom = relevanteÅrUføre.minOf { it.atMonth(1) }
-        val tom = relevanteÅrUføre.maxOf { it.atMonth(12) }
-        val inntekter = inntektkomponentenGateway.hentAInntekt(person.aktivIdent().identifikator, fom, tom)
+        val fom = relevanteÅrUføre.minOfOrNull { it.atMonth(1) }
+        val tom = relevanteÅrUføre.maxOfOrNull { it.atMonth(12) }
+        val inntekter = if (fom != null && tom != null) inntektkomponentenGateway.hentAInntekt(
+            person.aktivIdent().identifikator,
+            fom,
+            tom
+        ) else InntektskomponentData(emptyList())
 
         val inntektPerMåned = summerArbeidsinntektPerMåned(inntekter)
 
