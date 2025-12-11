@@ -15,7 +15,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReposito
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.AlderMedMåneder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -163,11 +162,7 @@ private fun lagreUnderveisGrunnlag(
     meldeperioder: List<Periode>,
     testPeriode: Periode,
 ): UnderveisGrunnlag {
-    val testGrunnlag = Aldersgrunnlag(
-        testPeriode,
-        Fødselsdato(LocalDate.now().minusYears(20)),
-        øvreGrenseForAutomatiskAvslag = AlderMedMåneder(17, 9)
-    )
+    val testGrunnlag = Aldersgrunnlag(testPeriode, Fødselsdato(LocalDate.now().minusYears(20)))
     underveisRepository.lagre(
         testBehandling.id,
         listOf(testUnderveisperiode(testPeriode, meldeperioder.first())),

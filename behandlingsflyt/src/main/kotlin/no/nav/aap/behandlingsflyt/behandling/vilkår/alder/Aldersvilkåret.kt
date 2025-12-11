@@ -17,7 +17,7 @@ class Aldersvilkåret(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<Ald
     private val vilkår: Vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.ALDERSVILKÅRET)
 
     override fun vurder(grunnlag: Aldersgrunnlag) {
-        if (grunnlag.alderMedMånederPåSøknadsdato() < grunnlag.øvreGrenseForAutomatiskAvslag) {
+        if (grunnlag.alderPåSøknadsdato() < 18) {
             vilkår.leggTilVurdering(
                 Vilkårsperiode(
                     periode = grunnlag.periode,
