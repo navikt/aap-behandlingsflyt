@@ -38,6 +38,7 @@ object FakeUnleash : FakeUnleashBase(
         BehandlingsflytFeature.MidlertidigStopp11_4 to true,
         BehandlingsflytFeature.ValiderOvergangUfore to true,
         BehandlingsflytFeature.TimerArbeidetPeriodisertSubMeldeperiode to true,
+        BehandlingsflytFeature.KravOmInntektsbortfall to true
     )
 )
 
@@ -66,6 +67,7 @@ object ProdlikUnleash : FakeUnleashBase(
         BehandlingsflytFeature.MidlertidigStopp11_4 to false,
         BehandlingsflytFeature.ValiderOvergangUfore to false,
         BehandlingsflytFeature.TimerArbeidetPeriodisertSubMeldeperiode to false,
+        BehandlingsflytFeature.KravOmInntektsbortfall to false
     )
 )
 
@@ -91,5 +93,6 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.MidlertidigStopp11_4 to true,
         BehandlingsflytFeature.ValiderOvergangUfore to true,
         BehandlingsflytFeature.TimerArbeidetPeriodisertSubMeldeperiode to true,
+        BehandlingsflytFeature.KravOmInntektsbortfall to true
     )
 )
