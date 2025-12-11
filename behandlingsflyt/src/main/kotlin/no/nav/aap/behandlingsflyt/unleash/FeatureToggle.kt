@@ -31,7 +31,8 @@ enum class BehandlingsflytFeature : FeatureToggle {
     MidlertidigStopp11_4,
     Under18,
     ValiderOvergangUfore,
-    KravOmInntektsbortfall
+    KravOmInntektsbortfall,
+    Barnepensjon_under23
     ;
 
     override fun key(): String = name

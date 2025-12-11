@@ -20,6 +20,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
@@ -27,11 +29,18 @@ class SamordningBarnepensjonSteg private constructor(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
+    private val unleashGateway: UnleashGateway,
     private val personopplysningRepository: PersonopplysningRepository,
 
     ) : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+
+
+        if (unleashGateway.isDisabled(BehandlingsflytFeature.Barnepensjon_under23)) {
+            return Fullført
+        }
+
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         avklaringsbehovService.oppdaterAvklaringsbehov(
             avklaringsbehovene = avklaringsbehovene,
@@ -92,6 +101,7 @@ class SamordningBarnepensjonSteg private constructor(
             return SamordningBarnepensjonSteg(  avklaringsbehovRepository = repositoryProvider.provide(),
                 avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
                 tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
+                unleashGateway = gatewayProvider.provide(),
                 personopplysningRepository = repositoryProvider.provide(),)
         }
 
