@@ -42,11 +42,11 @@ class InformasjonskravGrunnlagImpl(
         val oppdateringer = informasjonskravRepository.hentOppdateringer(
             kontekst.sakId,
             informasjonskravene.map { (konstruktør, _, _) -> konstruktør.navn },
-        )
+        ).associateBy { it.navn }
 
         val relevanteInformasjonskrav = informasjonskravene
             .filter { (_, krav, steg) ->
-                val sisteOppdatering = oppdateringer.firstOrNull { it.navn == krav.navn }
+                val sisteOppdatering = oppdateringer[krav.navn]
                 krav.erRelevant(kontekst, steg, sisteOppdatering)
             }
 
