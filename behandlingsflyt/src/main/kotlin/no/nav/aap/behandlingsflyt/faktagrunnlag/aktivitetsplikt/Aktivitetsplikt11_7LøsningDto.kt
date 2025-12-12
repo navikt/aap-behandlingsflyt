@@ -18,7 +18,7 @@ data class Aktivitetsplikt11_7LøsningDto(
         erOppfylt = erOppfylt,
         utfall = utfall,
         vurdertAv = bruker.ident,
-        gjelderFra = gjelderFra,
+        fom = gjelderFra,
         opprettet = dato.atZone(ZoneId.of("Europe/Oslo")).toInstant(),
         vurdertIBehandling = vurdertIBehandling,
         skalIgnorereVarselFrist = skalIgnorereVarselFrist

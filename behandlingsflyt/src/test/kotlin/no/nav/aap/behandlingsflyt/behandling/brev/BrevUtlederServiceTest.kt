@@ -412,7 +412,7 @@ class BrevUtlederServiceTest {
             erOppfylt = false,
             utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Utfall.STANS,
             vurdertAv = "",
-            gjelderFra = fra,
+            fom = fra,
             opprettet = Instant.now(),
             vurdertIBehandling = id,
             skalIgnorereVarselFrist = false

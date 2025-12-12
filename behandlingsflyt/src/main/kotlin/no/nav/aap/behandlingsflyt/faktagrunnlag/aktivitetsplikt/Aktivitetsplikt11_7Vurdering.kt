@@ -10,7 +10,7 @@ data class Aktivitetsplikt11_7Vurdering(
     val erOppfylt: Boolean,
     val utfall: Utfall? = null,
     val vurdertAv: String,
-    val gjelderFra: LocalDate,
+    val fom: LocalDate,
     val opprettet: Instant,
     val vurdertIBehandling: BehandlingId,
     val skalIgnorereVarselFrist: Boolean

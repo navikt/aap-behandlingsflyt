@@ -171,7 +171,7 @@ class Aktivitetsplikt11_7RepositoryImpl(private val connection: DBConnection) : 
                 setBoolean(2, vurdering.erOppfylt)
                 setEnumName(3, vurdering.utfall)
                 setString(4, vurdering.vurdertAv)
-                setLocalDate(5, vurdering.gjelderFra)
+                setLocalDate(5, vurdering.fom)
                 setInstant(6, vurdering.opprettet)
                 setLong(7, vurderingerId)
                 setLong(8, vurdering.vurdertIBehandling.toLong())
@@ -199,7 +199,7 @@ class Aktivitetsplikt11_7RepositoryImpl(private val connection: DBConnection) : 
             erOppfylt = row.getBoolean("er_oppfylt"),
             utfall = row.getStringOrNull("utfall")?.let { Utfall.valueOf(it) },
             vurdertAv = row.getString("vurdert_av"),
-            gjelderFra = row.getLocalDate("vurderingen_gjelder_fra"),
+            fom = row.getLocalDate("vurderingen_gjelder_fra"),
             opprettet = row.getInstant("opprettet_tid"),
             vurdertIBehandling = BehandlingId(row.getLong("vurdert_i_behandling")),
             skalIgnorereVarselFrist = row.getBoolean("skal_ignorere_varsel_frist"),
