@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.KanTriggeRevurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonInformasjonskrav.TjenestePensjonRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TjenestePensjonGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
@@ -28,6 +29,7 @@ class TjenestePensjonInformasjonskrav(
     private val tidligereVurderinger: TidligereVurderinger,
     private val tpGateway: TjenestePensjonGateway,
     private val sakService: SakService,
+    private val sakOgBehandlingService: SakOgBehandlingService,
 ) : Informasjonskrav<TjenestePensjonInformasjonskrav.TjenestePensjonInput, TjenestePensjonRegisterdata>,
     KanTriggeRevurdering {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -44,6 +46,7 @@ class TjenestePensjonInformasjonskrav(
                 tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
                 tpGateway = gatewayProvider.provide(),
                 sakService = SakService(repositoryProvider),
+                sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
             )
         }
 
@@ -130,11 +133,13 @@ class TjenestePensjonInformasjonskrav(
     override fun behovForRevurdering(behandlingId: BehandlingId): List<VurderingsbehovMedPeriode> {
         val tjenestePensjon = hentTjenestePensjon(behandlingId)
         val eksisterendeData = tjenestePensjonRepository.hentHvisEksisterer(behandlingId)
-
+        val sak = sakService.hentSakFor(behandlingId)
+        val behandlingMedSistFattedeVedtak = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sak.id)
+        val erFørstegangsBehandling = behandlingMedSistFattedeVedtak == null
         // Ønsker ikke trigge revurdering automatisk i dette tilfellet enn så lenge
         val gikkFraNullTilTomtGrunnlag = tjenestePensjon.isEmpty() && eksisterendeData == null
 
-        return if (!gikkFraNullTilTomtGrunnlag && harEndringerITjenestePensjon(eksisterendeData, tjenestePensjon)) {
+        return if (!gikkFraNullTilTomtGrunnlag && erFørstegangsBehandling && harEndringerITjenestePensjon(eksisterendeData, tjenestePensjon)) {
             listOf(VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING_TJENESTEPENSJON))
         } else {
             emptyList()
