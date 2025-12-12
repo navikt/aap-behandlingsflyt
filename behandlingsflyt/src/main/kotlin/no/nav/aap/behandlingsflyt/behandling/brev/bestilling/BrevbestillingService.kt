@@ -66,6 +66,15 @@ class BrevbestillingService(
         }
     }
 
+    fun tilbakestillNyesteVedtakBrevBestilling(behandlingId: BehandlingId) {
+        val bestilling = brevbestillingRepository.hent(behandlingId)
+            .filter { it.typeBrev.erVedtak() }
+            .maxByOrNull { it.opprettet }
+        if (bestilling?.status == Status.FORHÅNDSVISNING_KLAR) {
+            avbryt(behandlingId, bestilling.referanse)
+        }
+    }
+
     fun gjenopptaVedtakBrevBestillinger(behandlingId: BehandlingId)  {
         val bestillinger = brevbestillingRepository.hent(behandlingId).filter { it.typeBrev.erVedtak() }
         bestillinger

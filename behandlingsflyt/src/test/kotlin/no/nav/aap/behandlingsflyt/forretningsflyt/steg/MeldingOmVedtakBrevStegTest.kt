@@ -252,4 +252,115 @@ class MeldingOmVedtakBrevStegTest {
         verify(exactly = 0) { brevbestillingService.bestill(allAny(), allAny(), allAny(), allAny()) }
     }
 
+    @Test
+    fun `Teoretisk tilbakestill i BrevSteg ved førstegangsbehandling resulterer i opprettet, avbrutt og avsluttet avklaringsbehov samt brevbestilling`() {
+        val behandling = InMemoryBehandlingRepository.opprettBehandling(
+            sakId = SakId(1L),
+            typeBehandling = TypeBehandling.Førstegangsbehandling,
+            forrigeBehandlingId = null,
+            vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                vurderingsbehov = listOf(
+                    VurderingsbehovMedPeriode(
+                        Vurderingsbehov.MOTTATT_SØKNAD,
+                        Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1))
+                    )
+                ),
+                årsak = ÅrsakTilOpprettelse.SØKNAD,
+                opprettet = LocalDateTime.now(),
+                beskrivelse = "unit-test"
+            )
+        )
+        val kontekst = FlytKontekstMedPerioder(
+            sakId = behandling.sakId,
+            behandlingId = behandling.id,
+            behandlingType = behandling.typeBehandling(),
+            forrigeBehandlingId = behandling.forrigeBehandlingId,
+            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
+            rettighetsperiode = Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1)),
+            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD)
+        )
+        val steg = MeldingOmVedtakBrevSteg(
+            brevUtlederService = brevUtlederService,
+            brevbestillingService = brevbestillingService,
+            behandlingRepository = InMemoryBehandlingRepository,
+            trekkKlageService = trekkKlageService,
+            avklaringsbehovService = avklaringsbehovService,
+            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
+            unleashGateway = FakeUnleash,
+        )
+        val brevbestilling = Brevbestilling(
+            id = 1L,
+            behandlingId = behandling.id,
+            typeBrev = TypeBrev.VEDTAK_AVSLAG,
+            referanse = BrevbestillingReferanse(UUID.randomUUID()),
+            status = no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status.FORHÅNDSVISNING_KLAR,
+            opprettet = LocalDateTime.now()
+        )
+
+        // Runde-1
+
+        every { brevbestillingService.harBestillingOmVedtak(any()) } returns false
+        every { brevbestillingService.hentNyesteBestilling(any(), any()) } returns null
+
+        val resultat1 = steg.utfør(kontekst)
+
+        assertThat(resultat1).isEqualTo(Fullført)
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+        val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.SKRIV_VEDTAKSBREV)
+        assertThat(avklaringsbehov!!.historikk).hasSize(1)
+        assertThat(avklaringsbehov.historikk.get(0).status).isEqualTo(Status.OPPRETTET)
+
+        verify(exactly = 1) { brevbestillingService.bestill(allAny(), allAny(), allAny(), allAny()) }
+        verify(exactly = 0) { brevbestillingService.gjenopptaBestilling(allAny(), allAny()) }
+
+        // Tilbakestill-runde-1.5
+
+        every { brevbestillingService.harBestillingOmVedtak(any()) } returns true
+        every { brevbestillingService.erNyesteBestillingOmVedtakIEndeTilstand(any(), any()) } returns false
+        every { brevbestillingService.hentNyesteBestilling(any(), any()) } returns brevbestilling
+        every { brevUtlederService.utledBehovForMeldingOmVedtak(any()) } returns null
+        every { brevbestillingService.tilbakestillNyesteVedtakBrevBestilling(any()) } returns Unit // mye mocking..
+
+        val resultatTilbakestill = steg.utfør(kontekst)
+
+        assertThat(resultatTilbakestill).isEqualTo(Fullført)
+        val avklaringsbehoveneTilbakestillt = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+        val avklaringsbehovTilbakestilt = avklaringsbehoveneTilbakestillt.hentBehovForDefinisjon(Definisjon.SKRIV_VEDTAKSBREV)
+        assertThat(avklaringsbehovTilbakestilt!!.historikk.size > 1)
+        assertThat(avklaringsbehovTilbakestilt.historikk.last().status).isEqualTo(Status.AVBRUTT)
+        // brevBestilling kall har ikke økt i tilbakestill-runde-1.5, men nytt kall til tilbakestill er nå utført
+        verify(exactly = 1) { brevbestillingService.bestill(allAny(), allAny(), allAny(), allAny()) }
+        verify(exactly = 0) { brevbestillingService.gjenopptaBestilling(allAny(), allAny()) }
+        verify(exactly = 1) { brevbestillingService.tilbakestillNyesteVedtakBrevBestilling(allAny()) }
+
+        // Runde-2
+
+        // Saksbehandler avklarer vedtaksbrev og status på SKRIV_VEDTAKSBREV avklaringsbehov settes til AVSLUTTET
+        InMemoryAvklaringsbehovRepository.endre(
+            avklaringsbehovId = avklaringsbehov.id,
+            endring = Endring(
+                status = Status.AVSLUTTET,
+                endretAv = "SAKSBEHANDLER",
+                begrunnelse = "Brev ferdig"
+            )
+        )
+        // vedtak løst av saksbehandler - da skal harBestillingOmVedtak() returnere true i BrevSteg utfør()
+        every { brevbestillingService.harBestillingOmVedtak(any()) } returns true
+        every { brevbestillingService.erNyesteBestillingOmVedtakIEndeTilstand(any(), any()) } returns true
+        every { brevbestillingService.hentNyesteBestilling(any(), any()) } returns brevbestilling
+        every { brevUtlederService.utledBehovForMeldingOmVedtak(any()) } returns VedtakAktivitetsplikt11_7
+
+        val resultat2 = steg.utfør(kontekst)
+
+        assertThat(resultat2).isEqualTo(Fullført)
+        val avklaringsbehovene2 = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+        val avklaringsbehov2 = avklaringsbehovene2.hentBehovForDefinisjon(Definisjon.SKRIV_VEDTAKSBREV)
+        assertThat(avklaringsbehov2!!.historikk.size > 1)
+        assertThat(avklaringsbehov2.historikk.last().status).isEqualTo(Status.AVSLUTTET)
+        // brevBestilling har ikke kjørt i runde-2 da det allerede er bestilt
+        verify(exactly = 1) { brevbestillingService.bestill(allAny(), allAny(), allAny(), allAny()) }
+        verify(exactly = 0) { brevbestillingService.gjenopptaBestilling(allAny(), allAny()) }
+        verify(exactly = 1) { brevbestillingService.tilbakestillNyesteVedtakBrevBestilling(allAny()) }
+    }
+
 }

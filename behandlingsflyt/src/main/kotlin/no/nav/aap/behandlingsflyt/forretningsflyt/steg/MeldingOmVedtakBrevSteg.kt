@@ -86,7 +86,7 @@ class MeldingOmVedtakBrevSteg(
      * begrensningen per i dag er at selve brevsteget ikke kan tilbakestilles (ingen fremtidige scenarior for dette foreløpig)
      */
     private fun tilbakestillGrunnlag(behandlingId: BehandlingId) {
-        brevbestillingService.tilbakestillVedtakBrevBestillinger(behandlingId)
+        brevbestillingService.tilbakestillNyesteVedtakBrevBestilling(behandlingId)
     }
 
     private fun vedtakBehøverVurdering(klageErTrukket: Boolean, brevBehov: BrevBehov?): Boolean {
