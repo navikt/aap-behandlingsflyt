@@ -44,7 +44,7 @@ class ArbeidsevneRepositoryImplTest {
             val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
 
             val arbeidsevneVurdering = ArbeidsevneVurdering(
-                "begrunnelse", Prosent(34), LocalDate.now(), LocalDateTime.now(), "saksbehandler"
+                "begrunnelse", Prosent(34), LocalDate.now(), null, behandling.id, LocalDateTime.now(), "saksbehandler"
             )
 
             arbeidsevneRepository.lagre(
@@ -80,7 +80,7 @@ class ArbeidsevneRepositoryImplTest {
         dataSource.transaction { connection ->
             val sak = sak(connection, periode)
             val behandling = finnEllerOpprettBehandling(connection, sak)
-            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null, "vurdertAv")
+            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null, behandling.id, LocalDateTime.now(), "vurdertAv")
 
             val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
             arbeidsevneRepository.lagre(behandling.id, listOf(arbeidsevne))
@@ -96,7 +96,7 @@ class ArbeidsevneRepositoryImplTest {
             val sak = sak(connection, periode)
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
-            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null, "vurdertAv")
+            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null, behandling1.id, LocalDateTime.now(),"vurdertAv")
 
             arbeidsevneRepository.lagre(behandling1.id, listOf(arbeidsevne))
             BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling1.id, Status.AVSLUTTET)
@@ -125,7 +125,7 @@ class ArbeidsevneRepositoryImplTest {
             val sak = sak(connection, periode)
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
-            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null, "vurdertAv")
+            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null, behandling1.id, LocalDateTime.now(), "vurdertAv")
             val arbeidsevne2 = arbeidsevne.copy(begrunnelse = "annen begrunnelse")
 
             arbeidsevneRepository.lagre(behandling1.id, listOf(arbeidsevne))
@@ -146,7 +146,7 @@ class ArbeidsevneRepositoryImplTest {
             val sak = sak(connection, periode)
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
-            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null, "vurdertAv")
+            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null, behandling.id, LocalDateTime.now(), "vurdertAv")
             val arbeidsevne2 = arbeidsevne.copy("annen begrunnelse")
 
             arbeidsevneRepository.lagre(behandling.id, listOf(arbeidsevne))
@@ -209,7 +209,7 @@ class ArbeidsevneRepositoryImplTest {
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
             val arbeidsevne =
-                ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), LocalDateTime.now(), "vurdertAv")
+                ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null, behandling1.id, LocalDateTime.now(), "vurdertAv")
             val arbeidsevne2 = arbeidsevne.copy("annen begrunnelse")
 
             arbeidsevneRepository.lagre(behandling1.id, listOf(arbeidsevne))

@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne
 
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -13,7 +15,9 @@ data class ArbeidsevneVurdering(
     val begrunnelse: String,
     val arbeidsevne: Prosent,
     val fraDato: LocalDate,
-    val opprettetTid: LocalDateTime? = null,
+    val tilDato: LocalDate? = null,
+    val vurdertIBehandling: BehandlingId? = null,
+    val opprettetTid: LocalDateTime,
     val vurdertAv: String,
 ) {
     fun tidslinje(): Tidslinje<ArbeidsevneVurderingData> {
@@ -30,7 +34,7 @@ data class ArbeidsevneVurdering(
     data class ArbeidsevneVurderingData(
         val begrunnelse: String,
         val arbeidsevne: Prosent,
-        val opprettetTid: LocalDateTime?,
+        val opprettetTid: LocalDateTime,
         val vurdertAv: String,
     ) {
         fun toArbeidsevneVurdering(fraDato: LocalDate): ArbeidsevneVurdering {

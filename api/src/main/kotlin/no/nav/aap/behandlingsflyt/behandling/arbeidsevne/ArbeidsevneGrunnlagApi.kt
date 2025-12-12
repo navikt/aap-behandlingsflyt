@@ -4,24 +4,29 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevnePerioder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.tilTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedPost
 import no.nav.aap.tilgang.getGrunnlag
+import java.time.LocalDateTime
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.arbeidsevneGrunnlagApi(
@@ -61,15 +66,23 @@ private fun arbeidsevneGrunnlag(
     return dataSource.transaction { connection ->
         val repositoryProvider = repositoryRegistry.provider(connection)
         val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+        val sakRepository = repositoryProvider.provide<SakRepository>()
+        val arbeidsevneRepository = repositoryProvider.provide<ArbeidsevneRepository>()
+        val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
+
         val behandling: Behandling =
             BehandlingReferanseService(behandlingRepository).behandling(behandlingReferanse)
-        val arbeidsevneRepository = repositoryProvider.provide<ArbeidsevneRepository>()
+        val sak = sakRepository.hent(behandling.sakId)
 
         val nåTilstand = arbeidsevneRepository.hentHvisEksisterer(behandling.id)?.vurderinger
 
         val vedtatteVerdier =
             behandling.forrigeBehandlingId?.let { arbeidsevneRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
         val historikk = arbeidsevneRepository.hentAlleVurderinger(behandling.sakId, behandling.id)
+
+        val nyeVurderinger = nåTilstand?.filter { it.vurdertIBehandling == behandling.id } ?: emptyList()
+        val gjeldendeVedtatteVurderinger =
+            nåTilstand?.filter { it.vurdertIBehandling != behandling.id }?.tilTidslinje() ?: Tidslinje()
 
         ArbeidsevneGrunnlagDto(
             harTilgangTilÅSaksbehandle = kanSaksbehandle,
@@ -83,7 +96,11 @@ private fun arbeidsevneGrunnlag(
             gjeldendeVedtatteVurderinger =
                 vedtatteVerdier
                     .map { it.toDto() }
-                    .sortedBy { it.fraDato }
+                    .sortedBy { it.fraDato },
+            kanVurderes = listOf(sak.rettighetsperiode),
+            behøverVurderinger = emptyList(),
+            nyeVurderinger = nyeVurderinger.map { it.toResponse(vurdertAvService) },
+            sisteVedtatteVurderinger = gjeldendeVedtatteVurderinger.toResponse(vurdertAvService)
         )
     }
 }
@@ -111,6 +128,7 @@ private fun simuleringsresulat(
                         begrunnelse = it.begrunnelse,
                         arbeidsevne = Prosent(it.arbeidsevne),
                         fraDato = it.fraDato,
+                        opprettetTid = LocalDateTime.now(),
                         vurdertAv = "simulering"
                     )
                 }
