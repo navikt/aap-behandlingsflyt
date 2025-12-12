@@ -13,9 +13,9 @@ enum class Hjemmel(val hjemmel: String) {
     FOLKETRYGDLOVEN_11_5("§ 11-5"),
     FOLKETRYGDLOVEN_11_6("§ 11-6"),
 
-    FOLKETRYGDLOVEN_11_7("§ 11-7"), // TODO: Iverksett sanksjon / Tors hammer - Mangler steg
-    FOLKETRYGDLOVEN_11_8("§ 11-8"), // TODO: Iverksett sanksjon / Tors hammer - Mangler steg
-    FOLKETRYGDLOVEN_11_9("§ 11-9"), // TODO: Iverksett sanksjon / Tors hammer - Mangler steg
+    FOLKETRYGDLOVEN_11_7("§ 11-7"), 
+    FOLKETRYGDLOVEN_11_8("§ 11-8"), // TODO: Mangler
+    FOLKETRYGDLOVEN_11_9("§ 11-9"),
     FOLKETRYGDLOVEN_11_10_FRITAK("§ 11-10 Fritak meldeplikt"),
 
     FOLKETRYGDLOVEN_11_10_MELDEPLIKT("§ 11-10 Meldeplikt"), // TODO: Underveis - Mangler mulighet til å korrigere meldedato
@@ -57,6 +57,11 @@ enum class Hjemmel(val hjemmel: String) {
 
     fun tilVurderingsbehov(): List<Vurderingsbehov> {
         return when (this) {
+            // Aktivitetspliktbehandling
+            FOLKETRYGDLOVEN_11_7 -> listOf(Vurderingsbehov.AKTIVITETSPLIKT_11_7)
+            FOLKETRYGDLOVEN_11_9 -> listOf(Vurderingsbehov.AKTIVITETSPLIKT_11_9)
+            
+            // Førstegangsbehandling / Revurdering
             FOLKETRYGDLOVEN_11_2 -> listOf(Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP)
             FOLKETRYGDLOVEN_11_3 -> listOf(Vurderingsbehov.OPPHOLDSKRAV)
 
