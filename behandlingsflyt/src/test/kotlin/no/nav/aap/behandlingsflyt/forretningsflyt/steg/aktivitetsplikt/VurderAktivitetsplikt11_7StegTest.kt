@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Vurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Utfall
-import no.nav.aap.behandlingsflyt.flyt.steg.FantAvklaringsbehov
 import no.nav.aap.behandlingsflyt.flyt.steg.FantVentebehov
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.testutil.FakeBrevbestillingGateway
@@ -87,7 +86,7 @@ class VurderAktivitetsplikt11_7StegTest {
                     erOppfylt = true,
                     utfall = null,
                     vurdertAv = "A987652",
-                    gjelderFra = kontekst.rettighetsperiode.fom.plusDays(10),
+                    fom = kontekst.rettighetsperiode.fom.plusDays(10),
                     opprettet = Instant.now(),
                     vurdertIBehandling = kontekst.behandlingId,
                     skalIgnorereVarselFrist = false
@@ -218,7 +217,7 @@ class VurderAktivitetsplikt11_7StegTest {
                     erOppfylt = false,
                     utfall = Utfall.STANS,
                     vurdertAv = "A987652",
-                    gjelderFra = kontekst.rettighetsperiode.fom.plusDays(10),
+                    fom = kontekst.rettighetsperiode.fom.plusDays(10),
                     opprettet = Instant.now(),
                     vurdertIBehandling = kontekst.behandlingId,
                     skalIgnorereVarselFrist = false

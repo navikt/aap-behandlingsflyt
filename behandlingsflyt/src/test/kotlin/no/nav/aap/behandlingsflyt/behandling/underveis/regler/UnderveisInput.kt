@@ -62,7 +62,6 @@ fun tomUnderveisInput(
         meldeperioder = meldeperioder,
         vedtaksdatoFørstegangsbehandling = vedtaksdatoFørstegangsbehandling,
         oppholdskravGrunnlag = oppholdskravGrunnlag,
-        timerArbeidetPeriodisertSubMeldeperiodeEnabled = true,
     )
 }
 

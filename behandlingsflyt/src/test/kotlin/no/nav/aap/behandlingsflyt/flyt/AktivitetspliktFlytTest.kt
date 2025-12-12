@@ -281,7 +281,7 @@ class AktivitetspliktFlytTest :
                 begrunnelse = "Brudd",
                 erOppfylt = false,
                 utfall = Utfall.STANS,
-                gjelderFra = bruddFom,
+                fom = bruddFom,
                 vurdertAv = "Saksbehandler",
                 opprettet = sak.rettighetsperiode.fom.plusWeeks(20).atStartOfDay().toInstant(ZoneOffset.UTC),
                 vurdertIBehandling = behandlingId,

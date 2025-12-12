@@ -23,7 +23,6 @@ object FakeUnleash : FakeUnleashBase(
         BehandlingsflytFeature.OverforingsdatoNullForAvregning to true,
         BehandlingsflytFeature.OvergangArbeid to true,
         BehandlingsflytFeature.KvalitetssikringsSteg to true,
-        BehandlingsflytFeature.FatteVedtakAvklaringsbehovService to true,
         BehandlingsflytFeature.EOSBeregning to true,
         BehandlingsflytFeature.NyeBarn to true,
         BehandlingsflytFeature.NyBrevbyggerV3 to false,
@@ -32,36 +31,9 @@ object FakeUnleash : FakeUnleashBase(
         BehandlingsflytFeature.PeriodisertSykepengeErstatningNyAvklaringsbehovService to true,
         BehandlingsflytFeature.MidlertidigStopp11_4 to true,
         BehandlingsflytFeature.ValiderOvergangUfore to true,
-        BehandlingsflytFeature.TimerArbeidetPeriodisertSubMeldeperiode to true,
         BehandlingsflytFeature.KravOmInntektsbortfall to true,
         BehandlingsflytFeature.Under18 to true,
         BehandlingsflytFeature.MigrerMeldepliktFritak to true,
-    )
-)
-
-/** Før du merger så kan det være lurt å sjekke om feature-togglene
- * under matcher prod og hvis du flipper "din" feature toggle, så er testene
- * fortsatt grønne. */
-object ProdlikUnleash : FakeUnleashBase(
-    mapOf(
-        BehandlingsflytFeature.IngenValidering to false,
-        BehandlingsflytFeature.NyBrevtype11_17 to false,
-        BehandlingsflytFeature.OverforingsdatoNullForAvregning to false,
-        BehandlingsflytFeature.OvergangArbeid to false,
-        BehandlingsflytFeature.KvalitetssikringsSteg to false,
-        BehandlingsflytFeature.FatteVedtakAvklaringsbehovService to true,
-        BehandlingsflytFeature.EOSBeregning to false,
-        BehandlingsflytFeature.NyeBarn to false,
-        BehandlingsflytFeature.NyBrevbyggerV3 to false,
-        BehandlingsflytFeature.BedreUttrekkAvSakerMedFritakMeldeplikt to false,
-        BehandlingsflytFeature.LagreVedtakIFatteVedtak to false,
-        BehandlingsflytFeature.PeriodisertSykepengeErstatningNyAvklaringsbehovService to false,
-        BehandlingsflytFeature.MidlertidigStopp11_4 to false,
-        BehandlingsflytFeature.ValiderOvergangUfore to false,
-        BehandlingsflytFeature.TimerArbeidetPeriodisertSubMeldeperiode to false,
-        BehandlingsflytFeature.KravOmInntektsbortfall to false,
-        BehandlingsflytFeature.Under18 to false,
-        BehandlingsflytFeature.MigrerMeldepliktFritak to false,
     )
 )
 
@@ -72,7 +44,6 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.OverforingsdatoNullForAvregning to true,
         BehandlingsflytFeature.OvergangArbeid to true,
         BehandlingsflytFeature.KvalitetssikringsSteg to true,
-        BehandlingsflytFeature.FatteVedtakAvklaringsbehovService to true,
         BehandlingsflytFeature.EOSBeregning to true,
         BehandlingsflytFeature.NyeBarn to true,
         BehandlingsflytFeature.NyBrevbyggerV3 to false,
@@ -81,7 +52,6 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.PeriodisertSykepengeErstatningNyAvklaringsbehovService to true,
         BehandlingsflytFeature.MidlertidigStopp11_4 to true,
         BehandlingsflytFeature.ValiderOvergangUfore to true,
-        BehandlingsflytFeature.TimerArbeidetPeriodisertSubMeldeperiode to true,
         BehandlingsflytFeature.KravOmInntektsbortfall to true,
         BehandlingsflytFeature.Under18 to true,
         BehandlingsflytFeature.MigrerMeldepliktFritak to true,
