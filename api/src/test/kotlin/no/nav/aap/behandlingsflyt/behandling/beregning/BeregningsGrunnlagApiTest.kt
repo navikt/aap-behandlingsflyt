@@ -12,25 +12,31 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadeSak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
+import java.math.MathContext
+import java.math.RoundingMode
 import java.time.LocalDate
+import java.time.MonthDay
+import java.time.YearMonth
 
 class BeregningsGrunnlagApiTest {
 
     @Test
     fun `hente ut beregningsgrunnlag fra API`() {
+        val årsInntekter = setOf(
+            InntektPerÅr(2022, Beløp(500000)),
+            InntektPerÅr(2021, Beløp(400000)),
+            InntektPerÅr(2020, Beløp(300000))
+        )
         val input = Inntektsbehov(
             BeregningInput(
                 nedsettelsesDato = LocalDate.of(2023, 1, 1),
-                inntekter = setOf(
-                    InntektPerÅr(2022, Beløp(500000)),
-                    InntektPerÅr(2021, Beløp(400000)),
-                    InntektPerÅr(2020, Beløp(300000))
-                ),
+                årsInntekter = årsInntekter,
                 uføregrad = setOf(Uføre(LocalDate.now(), Prosent(30))),
                 yrkesskadevurdering = Yrkesskadevurdering(
                     begrunnelse = "en begrunnelse",
@@ -67,8 +73,8 @@ class BeregningsGrunnlagApiTest {
                             skadedato = LocalDate.of(2021, 1, 1)
                         )
                     )
-                )
-
+                ),
+                inntektsPerioder = inntektsPerioder(årsInntekter)
             )
         )
 
@@ -92,15 +98,16 @@ class BeregningsGrunnlagApiTest {
 
     @Test
     fun `hente ut beregningsgrunnlag med svært høy yrkesskadeutbetaling fra API`() {
+        val årsInntekter = setOf(
+            InntektPerÅr(2022, Beløp(500000)),
+            InntektPerÅr(2021, Beløp(400000)),
+            InntektPerÅr(2020, Beløp(300000))
+        )
         val input = Inntektsbehov(
             BeregningInput(
                 nedsettelsesDato = LocalDate.of(2023, 1, 1),
-                inntekter = setOf(
-                    InntektPerÅr(2022, Beløp(500000)),
-                    InntektPerÅr(2021, Beløp(400000)),
-                    InntektPerÅr(2020, Beløp(300000))
-                ),
-                uføregrad = setOf(Uføre(LocalDate.now(), Prosent(30))),
+                årsInntekter = årsInntekter,
+                uføregrad = setOf(Uføre(LocalDate.of(2021, 1, 1), Prosent(30))),
                 yrkesskadevurdering = Yrkesskadevurdering(
                     begrunnelse = "en begrunnelse",
                     andelAvNedsettelsen = Prosent(30),
@@ -136,8 +143,8 @@ class BeregningsGrunnlagApiTest {
                             skadedato = LocalDate.of(2021, 1, 1)
                         )
                     )
-                )
-
+                ),
+                inntektsPerioder = inntektsPerioder(årsInntekter)
             )
         )
 
@@ -152,6 +159,18 @@ class BeregningsGrunnlagApiTest {
         assertThat(grunnlagYrkesskadeUføre.yrkesskadeGrunnlag.grunnlag).isEqualByComparingTo(
             BigDecimal(6)
         )
+    }
 
+    private fun inntektsPerioder(inntektPerÅr: Set<InntektPerÅr>): Set<Månedsinntekt> {
+        return inntektPerÅr.flatMap { inntektPerÅr ->
+            val år = inntektPerÅr.år
+            (1..12).map { mnd ->
+                Månedsinntekt(
+                    YearMonth.of(år.value, mnd),
+                    Beløp(inntektPerÅr.beløp.verdi.divide(12.toBigDecimal(), MathContext(10, RoundingMode.HALF_UP))),
+                )
+            }
+        }.toSet()
     }
 }
+

@@ -43,7 +43,7 @@ class Avklaringsbehov(
     }
 
     fun erTotrinnsVurdert(): Boolean {
-        return Status.TOTRINNS_VURDERT == aktivHistorikk.maxOf { it }.status
+        return Status.TOTRINNS_VURDERT == aktivHistorikk.maxOfOrNull { it }?.status
     }
 
     fun erKvalitetssikretTidligere(): Boolean {

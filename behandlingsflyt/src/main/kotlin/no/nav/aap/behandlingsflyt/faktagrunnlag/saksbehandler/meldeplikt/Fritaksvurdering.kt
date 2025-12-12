@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt
 
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -11,9 +12,11 @@ import java.time.LocalDateTime
 data class Fritaksvurdering(
     val harFritak: Boolean,
     val fraDato: LocalDate,
+    val tilDato: LocalDate? = null,
     val begrunnelse: String,
     val vurdertAv: String,
-    val opprettetTid: LocalDateTime?
+    val opprettetTid: LocalDateTime,
+    val vurdertIBehandling: BehandlingId? = null,
 ) {
 
     fun tidslinje(): Tidslinje<FritaksvurderingData> {
@@ -26,7 +29,7 @@ data class Fritaksvurdering(
         val harFritak: Boolean,
         val begrunnelse: String,
         val vurdertAv: String,
-        val opprettetTid: LocalDateTime?,
+        val opprettetTid: LocalDateTime,
     )
 
     companion object {

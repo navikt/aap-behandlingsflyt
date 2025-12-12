@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år
 
+import no.nav.aap.behandlingsflyt.behandling.beregning.Månedsinntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
@@ -11,6 +12,7 @@ import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.slf4j.LoggerFactory
+import java.math.RoundingMode
 import java.time.LocalDate
 import java.time.Year
 import java.util.*
@@ -19,6 +21,10 @@ class Inntektsbehov(private val beregningInput: BeregningInput) {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
+    /**
+     * Returnerer en mengde av de tre foregående årene fra nedsettelsesdatoen og
+     * dato for ytterligere nedsatt arbeidsevne.
+     */
     fun utledAlleRelevanteÅr(): Set<Year> {
         val ytterligereNedsattArbeidsevneDato =
             beregningInput.beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
@@ -30,14 +36,38 @@ class Inntektsbehov(private val beregningInput: BeregningInput) {
         return beregningInput.beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
     }
 
+    /**
+     * Mengde med inntekt per år i de tre foregående årene fra nedsettelsesdatoen.
+     */
     fun utledForOrdinær(): Set<InntektPerÅr> {
-        return filtrerInntekter(beregningInput.nedsettelsesDato, beregningInput.inntekter)
+        return filtrerInntekter(beregningInput.nedsettelsesDato, beregningInput.årsInntekter)
     }
 
-    fun utledForYtterligereNedsatt(): Set<InntektPerÅr> {
-        val ytterligereNedsettelsesDato = beregningInput.beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
-        requireNotNull(ytterligereNedsettelsesDato)
-        return filtrerInntekter(ytterligereNedsettelsesDato, beregningInput.inntekter)
+    fun inntektsPerioder(): Set<Månedsinntekt> {
+        return beregningInput.inntektsPerioder
+    }
+
+    fun validerSummertInntekt() {
+        val inntektPerÅrFraPerioder: Map<Year, Beløp> = beregningInput.inntektsPerioder
+            .groupBy { Year.of(it.årMåned.year) }
+            .mapValues { (_, value) -> value.sumOf { it.beløp.verdi }.let(::Beløp) }
+
+        inntektPerÅrFraPerioder.forEach { (år, sum) ->
+            require(
+                beregningInput.årsInntekter.first { it.år == år }.beløp.verdi.stripTrailingZeros().setScale(
+                    0,
+                    RoundingMode.HALF_UP
+                ) == sum.verdi.stripTrailingZeros().setScale(0, RoundingMode.HALF_UP)
+            )
+            { "Håndterer ikke å støtte forskjellig inntekt fra A-Inntekt og PESYS. Fikk $sum for år $år, men fant ${beregningInput.årsInntekter.filter { it.år == år }}" }
+        }
+    }
+
+    fun utledForYtterligereNedsatt(): Set<Year> {
+        val ytterligereNedsettelsesDato =
+            requireNotNull(beregningInput.beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato)
+
+        return treÅrForutFor(ytterligereNedsettelsesDato)
     }
 
     /**
@@ -88,10 +118,16 @@ class Inntektsbehov(private val beregningInput: BeregningInput) {
         return requireNotNull(beregningInput.uføregrad)
     }
 
+    /**
+     * Velg det yrkesskadetidspunktet med høyest antatt inntekt.
+     */
     fun skadetidspunkt(): LocalDate {
         return samleOpplysningerOmYrkesskade().max().skadedato
     }
 
+    /**
+     * Returner høyeste inntekt blant yrkesskadeopplysningene.
+     */
     fun antattÅrligInntekt(): Beløp {
         return requireNotNull(samleOpplysningerOmYrkesskade().max().antattÅrligInntekt)
     }
@@ -107,7 +143,7 @@ class Inntektsbehov(private val beregningInput: BeregningInput) {
                 ?: beregningInput.yrkesskadevurdering?.relevanteSaker?.firstOrNull { it.referanse == sak.ref }?.manuellYrkesskadeDato
             YrkesskadeBeregning(
                 sak.ref,
-                requireNotNull(skadedato) { "Ulovlig tilstand. skadedato er null, og mangler manuell yrkesskade dato."},
+                requireNotNull(skadedato) { "Ulovlig tilstand. skadedato er null, og mangler manuell yrkesskade dato." },
                 beregningInput.beregningGrunnlag?.yrkesskadeBeløpVurdering?.vurderinger?.firstOrNull { it.referanse == sak.ref }?.antattÅrligInntekt!!
             )
         }
@@ -118,7 +154,10 @@ class Inntektsbehov(private val beregningInput: BeregningInput) {
     }
 
     companion object {
-        fun utledAlleRelevanteÅr(nedsettelsesDato: LocalDate, ytterligereNedsattArbeidsevneDato: LocalDate?): Set<Year> {
+        fun utledAlleRelevanteÅr(
+            nedsettelsesDato: LocalDate,
+            ytterligereNedsattArbeidsevneDato: LocalDate?
+        ): Set<Year> {
             val datoerForInnhenting = setOfNotNull(nedsettelsesDato, ytterligereNedsattArbeidsevneDato)
             return datoerForInnhenting.flatMap(::treÅrForutFor).toSortedSet()
         }
@@ -130,6 +169,10 @@ class Inntektsbehov(private val beregningInput: BeregningInput) {
                 beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
 
             return utledAlleRelevanteÅr(nedsettelsesDato, ytterligereNedsattArbeidsevneDato)
+        }
+
+        fun utledRelevanteYtterligereNedsattÅr(beregningGrunnlag: BeregningGrunnlag?): Set<Year> {
+            return beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato?.let(::treÅrForutFor).orEmpty()
         }
 
         fun utledNedsettelsesdato(

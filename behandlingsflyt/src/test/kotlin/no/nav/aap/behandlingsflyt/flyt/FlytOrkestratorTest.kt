@@ -876,7 +876,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                         begrunnelse = "Samordnet med uføre",
                         vurderingPerioder = listOf(
                             SamordningUføreVurderingPeriodeDto(
-                                virkningstidspunkt = sak.rettighetsperiode.fom, uføregradTilSamordning = 45
+                                virkningstidspunkt = LocalDate.of(2022, 1, 1), uføregradTilSamordning = 50
                             )
                         )
                     )
@@ -915,7 +915,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                         begrunnelse = "Samordnet med uføre",
                         vurderingPerioder = listOf(
                             SamordningUføreVurderingPeriodeDto(
-                                virkningstidspunkt = sak.rettighetsperiode.fom, uføregradTilSamordning = 45
+                                virkningstidspunkt = LocalDate.of(2022, 1, 1), uføregradTilSamordning = 50
                             )
                         )
                     )
@@ -1660,7 +1660,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsOvergangUføre()
             .apply {
                 if (gatewayProvider.provide<UnleashGateway>().isEnabled(BehandlingsflytFeature.OvergangArbeid)) {
-                    løsOvergangArbeid(Utfall.IKKE_OPPFYLT)
+                    løsOvergangArbeid(Utfall.IKKE_OPPFYLT, periode.fom)
                 }
             }
             .løsSykdomsvurderingBrev()
@@ -4356,6 +4356,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         }
 
         val sak = happyCaseFørstegangsbehandling(LocalDate.now())
+        val periodeEttAar = Periode(fom = sak.rettighetsperiode.fom, tom = sak.rettighetsperiode.fom.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR))
 
         /* Gir AAP som arbeidssøker. */
         val endringsdato = sak.rettighetsperiode.fom.plusDays(7)
@@ -4373,7 +4374,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 assertThat(it.status()).isEqualTo(Status.IVERKSETTES)
             }
             .assertRettighetstype(
-                sak.rettighetsperiode to RettighetsType.BISTANDSBEHOV,
+                periodeEttAar to RettighetsType.BISTANDSBEHOV,
             )
             .assertVilkårsutfall(
                 Vilkårtype.OVERGANGARBEIDVILKÅRET,

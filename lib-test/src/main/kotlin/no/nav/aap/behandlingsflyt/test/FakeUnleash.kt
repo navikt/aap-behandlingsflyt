@@ -20,10 +20,8 @@ object FakeUnleash : FakeUnleashBase(
     mapOf(
         BehandlingsflytFeature.IngenValidering to false,
         BehandlingsflytFeature.NyBrevtype11_17 to true,
-        BehandlingsflytFeature.NyBrevtype11_18 to true,
-        BehandlingsflytFeature.Aktivitetsplikt11_9 to true,
         BehandlingsflytFeature.OverforingsdatoNullForAvregning to true,
-        BehandlingsflytFeature.OvergangArbeid to false,
+        BehandlingsflytFeature.OvergangArbeid to true,
         BehandlingsflytFeature.KvalitetssikringsSteg to true,
         BehandlingsflytFeature.FatteVedtakAvklaringsbehovService to true,
         BehandlingsflytFeature.EOSBeregning to true,
@@ -34,7 +32,9 @@ object FakeUnleash : FakeUnleashBase(
         BehandlingsflytFeature.PeriodisertSykepengeErstatningNyAvklaringsbehovService to true,
         BehandlingsflytFeature.MidlertidigStopp11_4 to true,
         BehandlingsflytFeature.ValiderOvergangUfore to true,
-        BehandlingsflytFeature.KravOmInntektsbortfall to true
+        BehandlingsflytFeature.KravOmInntektsbortfall to true,
+        BehandlingsflytFeature.Under18 to true,
+        BehandlingsflytFeature.MigrerMeldepliktFritak to true,
     )
 )
 
@@ -42,8 +42,6 @@ object LokalUnleash : FakeUnleashBase(
     mapOf(
         BehandlingsflytFeature.IngenValidering to true,
         BehandlingsflytFeature.NyBrevtype11_17 to true,
-        BehandlingsflytFeature.NyBrevtype11_18 to true,
-        BehandlingsflytFeature.Aktivitetsplikt11_9 to true,
         BehandlingsflytFeature.OverforingsdatoNullForAvregning to true,
         BehandlingsflytFeature.OvergangArbeid to true,
         BehandlingsflytFeature.KvalitetssikringsSteg to true,
@@ -56,6 +54,8 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.PeriodisertSykepengeErstatningNyAvklaringsbehovService to true,
         BehandlingsflytFeature.MidlertidigStopp11_4 to true,
         BehandlingsflytFeature.ValiderOvergangUfore to true,
-        BehandlingsflytFeature.KravOmInntektsbortfall to true
+        BehandlingsflytFeature.KravOmInntektsbortfall to true,
+        BehandlingsflytFeature.Under18 to true,
+        BehandlingsflytFeature.MigrerMeldepliktFritak to true,
     )
 )
