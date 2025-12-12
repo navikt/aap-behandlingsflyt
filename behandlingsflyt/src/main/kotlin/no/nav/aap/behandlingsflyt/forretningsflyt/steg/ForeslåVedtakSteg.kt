@@ -71,12 +71,16 @@ class ForeslåVedtakSteg internal constructor(
 
     private fun skalInnomForeslåVedtak(avklaringsbehovene: Avklaringsbehovene): Boolean {
         val harAvklaringsbehovLøstAvNay = avklaringsbehovene.avklaringsbehovLøstAvNay().isNotEmpty()
-
-        val nayHarBareLøstLovvalgEllerVentepunkt = harAvklaringsbehovLøstAvNay
-                && avklaringsbehovene.avklaringsbehovLøstAvNay().filterNot { it.erLovvalgOgMedlemskap() }.filterNot { it.erVentepunkt() }.isEmpty()
-        if (!nayHarBareLøstLovvalgEllerVentepunkt) {
-            return harAvklaringsbehovLøstAvNay
+        if (!harAvklaringsbehovLøstAvNay) {
+            return false
         }
+
+        val nayHarBareLøstLovvalgEllerVentepunkt = avklaringsbehovene.avklaringsbehovLøstAvNay().filterNot { it.erLovvalgOgMedlemskap() }.filterNot { it.erVentepunkt() }.isEmpty()
+        if (!nayHarBareLøstLovvalgEllerVentepunkt) {
+            return true
+        }
+        // Hvis behandling har vært innom sykdom, men behandlingen har ingen andre Nay-avklaringsbehov enn lovvalg
+        // så har lokal vurdert avslag. Skal returnere false
         return !avklaringsbehovene.harVærtInnomSykdom()
     }
 
