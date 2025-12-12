@@ -4,9 +4,15 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.Arbeid
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.test.august
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
@@ -275,6 +281,59 @@ class ArbeidsevneRepositoryImplTest {
                         aktiv = true,
                         begrunnelse = arbeidsevne2.begrunnelse,
                         andelArbeidsevne = Prosent(100)
+                    )
+                )
+        }
+    }
+
+    @Test
+    fun `migrer vurdert i behandling for arbeidsevne`() {
+        val arbeidsevnevurderingFørstegangsbehandling =
+            ArbeidsevneVurdering("begrunnelse", Prosent(50), 13 august 2023, null, null, LocalDateTime.now(), "saksbehandler")
+        val arbeidsevnevurderingRevurdering =
+            ArbeidsevneVurdering("begrunnelse", Prosent(0), 10 august 2024, null, null, LocalDateTime.now(), "saksbehandler")
+
+        val behandling = dataSource.transaction { connection ->
+            val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+
+            arbeidsevneRepository.lagre(behandling.id, listOf(arbeidsevnevurderingFørstegangsbehandling))
+            BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
+            behandling
+        }
+
+        // Revurdering
+        dataSource.transaction { connection ->
+            val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
+            val behandlingRepo = BehandlingRepositoryImpl(connection)
+
+            val revurdering =
+                behandlingRepo.opprettBehandling(
+                    behandling.sakId,
+                    TypeBehandling.Revurdering,
+                    behandling.id,
+                    VurderingsbehovOgÅrsak(
+                        listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
+                        ÅrsakTilOpprettelse.SØKNAD
+                    )
+                )
+
+            arbeidsevneRepository.kopier(behandling.id, revurdering.id)
+
+            arbeidsevneRepository.lagre(revurdering.id, listOf(arbeidsevnevurderingFørstegangsbehandling, arbeidsevnevurderingRevurdering))
+
+            arbeidsevneRepository.migrerArbeidsevne()
+
+            assertThat(arbeidsevneRepository.hentHvisEksisterer(revurdering.id)?.vurderinger).usingRecursiveComparison()
+                .ignoringFields("opprettetTid").isEqualTo(
+                    listOf(
+                        arbeidsevnevurderingFørstegangsbehandling.copy(
+                            vurdertIBehandling = behandling.id,
+                        ),
+                        arbeidsevnevurderingRevurdering.copy(
+                            vurdertIBehandling = revurdering.id,
+                        )
                     )
                 )
         }
