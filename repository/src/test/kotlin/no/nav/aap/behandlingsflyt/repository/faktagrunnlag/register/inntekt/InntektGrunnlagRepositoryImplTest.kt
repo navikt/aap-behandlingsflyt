@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.inntekt
 
-import no.nav.aap.behandlingsflyt.behandling.beregning.InntektsPeriode
+import no.nav.aap.behandlingsflyt.behandling.beregning.Månedsinntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
@@ -15,6 +15,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.Year
+import java.time.YearMonth
 
 class InntektGrunnlagRepositoryImplTest {
     private lateinit var dataSource: TestDataSource
@@ -47,13 +48,13 @@ class InntektGrunnlagRepositoryImplTest {
                 beløp = Beløp("271828.1828")
             ),
         )
-        val månedligeInntekter: Set<InntektsPeriode> = setOf(
-            InntektsPeriode(
-                periode = Periode(1 januar 2024, 30 januar 2024),
+        val månedligeInntekter: Set<Månedsinntekt> = setOf(
+            Månedsinntekt(
+                årMåned = YearMonth.of(2024, 1),
                 beløp = Beløp("123456.789")
             ),
-            InntektsPeriode(
-                periode = Periode(10 januar 2024, 30 januar 2026),
+            Månedsinntekt(
+                årMåned = YearMonth.of(2024, 2),
                 beløp = Beløp("13376.789")
             ),
         )

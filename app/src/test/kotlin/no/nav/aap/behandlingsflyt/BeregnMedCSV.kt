@@ -95,7 +95,7 @@ fun tilInput(csvLine: CSVLine): Pair<BeregningInput, Fødselsdato> {
     return Pair(
         BeregningInput(
             nedsettelsesDato = LocalDate.of(csvLine.beregningsAar, 1, 1),
-            inntekter = csvLine.let { (intSiste, intNestSiste, intTredjeSiste, _, inntektSisteAar, inntektNestSisteAar, inntektTredjeSisteAar) ->
+            årsInntekter = csvLine.let { (intSiste, intNestSiste, intTredjeSiste, _, inntektSisteAar, inntektNestSisteAar, inntektTredjeSisteAar) ->
                 setOf(
                     InntektPerÅr(inntektSisteAar, Beløp(intSiste)),
                     InntektPerÅr(inntektNestSisteAar, Beløp(intNestSiste)),
@@ -105,7 +105,8 @@ fun tilInput(csvLine: CSVLine): Pair<BeregningInput, Fødselsdato> {
             uføregrad = emptySet(),
             yrkesskadevurdering = null,
             registrerteYrkesskader = null,
-            beregningGrunnlag = null
+            beregningGrunnlag = null,
+            inntektsPerioder = emptySet()
         ), csvLine.fødselsdato
     )
 }
