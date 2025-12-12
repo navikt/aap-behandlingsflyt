@@ -484,7 +484,6 @@ VALUES (?, ?, ?, ?, ?, ?, ?)"""
     }
 
     private fun lagreUføreInntekt(uføreId: Long, inntekter: List<UføreInntekt>) {
-        val nyesteUføre = inntekter.flatMap { it.inntektsPerioder }.maxBy { it.periode.fom }
         val ids = inntekter.map {
             connection.executeReturnKey(
                 """INSERT INTO BEREGNING_UFORE_INNTEKT
@@ -493,6 +492,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?)"""
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """
             ) {
+                val nyesteUføre = it.inntektsPerioder.maxBy { it.periode.fom }
                 // drop not null constraint på uføregrad og arbeidsgrad
                 setParams {
                     setLong(1, uføreId)
