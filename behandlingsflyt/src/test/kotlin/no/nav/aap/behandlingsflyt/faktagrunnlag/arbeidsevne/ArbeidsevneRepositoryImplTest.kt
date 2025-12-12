@@ -86,7 +86,7 @@ class ArbeidsevneRepositoryImplTest {
             arbeidsevneRepository.lagre(behandling.id, listOf(arbeidsevne))
             val vurderinger = arbeidsevneRepository.hentHvisEksisterer(behandling.id)?.vurderinger
             assertThat(vurderinger).hasSize(1)
-            assertThat(vurderinger).containsExactly(arbeidsevne.copy(opprettetTid = vurderinger?.first()?.opprettetTid))
+            assertThat(vurderinger).containsExactly(arbeidsevne.copy(opprettetTid = vurderinger?.first()?.opprettetTid!!))
         }
     }
 
@@ -105,7 +105,7 @@ class ArbeidsevneRepositoryImplTest {
 
             val vurderinger = arbeidsevneRepository.hentHvisEksisterer(behandling2.id)?.vurderinger
             assertThat(vurderinger).hasSize(1)
-            assertThat(vurderinger).containsExactly(arbeidsevne.copy(opprettetTid = vurderinger?.first()?.opprettetTid))
+            assertThat(vurderinger).containsExactly(arbeidsevne.copy(opprettetTid = vurderinger?.first()?.opprettetTid!!))
         }
     }
 
@@ -136,7 +136,7 @@ class ArbeidsevneRepositoryImplTest {
 
             val vurderinger = arbeidsevneRepository.hentHvisEksisterer(behandling2.id)?.vurderinger
             assertThat(vurderinger).hasSize(1)
-            assertThat(vurderinger).containsExactly(arbeidsevne2.copy(opprettetTid = vurderinger?.first()?.opprettetTid))
+            assertThat(vurderinger).containsExactly(arbeidsevne2.copy(opprettetTid = vurderinger?.first()?.opprettetTid!!))
         }
     }
 
@@ -154,14 +154,14 @@ class ArbeidsevneRepositoryImplTest {
 
             assertThat(originaleVurderinger).hasSize(1)
             assertThat(originaleVurderinger).containsExactly(
-                arbeidsevne.copy(opprettetTid = originaleVurderinger?.first()?.opprettetTid)
+                arbeidsevne.copy(opprettetTid = originaleVurderinger?.first()?.opprettetTid!!)
             )
 
             arbeidsevneRepository.lagre(behandling.id, listOf(arbeidsevne2))
             val oppdaterteVurderinger = arbeidsevneRepository.hentHvisEksisterer(behandling.id)?.vurderinger
             assertThat(oppdaterteVurderinger).hasSize(1)
             assertThat(oppdaterteVurderinger).containsExactly(
-                arbeidsevne2.copy(opprettetTid = oppdaterteVurderinger?.first()?.opprettetTid)
+                arbeidsevne2.copy(opprettetTid = oppdaterteVurderinger?.first()?.opprettetTid!!)
             )
 
             data class Opplysning(
