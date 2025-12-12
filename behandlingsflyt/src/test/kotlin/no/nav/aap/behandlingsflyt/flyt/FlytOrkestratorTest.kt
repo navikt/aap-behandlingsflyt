@@ -4356,7 +4356,7 @@ class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         }
 
         val sak = happyCaseFørstegangsbehandling(LocalDate.now())
-        val periodeEttAar = Periode(fom = sak.rettighetsperiode.fom, tom= sak.rettighetsperiode.fom.plusYears(1))
+        val periodeEttAar = Periode(fom = sak.rettighetsperiode.fom, tom = sak.rettighetsperiode.fom.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR))
 
         /* Gir AAP som arbeidssøker. */
         val endringsdato = sak.rettighetsperiode.fom.plusDays(7)
