@@ -222,14 +222,27 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
 
     override fun finnSakerMedBarnetillegg(): List<SakId> {
         val sql = """
-select distinct s.id
-from sak s
-         join behandling b on s.id = b.sak_id
-         join tilkjent_ytelse ty on b.id = ty.behandling_id
-         join tilkjent_periode tp on tp.tilkjent_ytelse_id = ty.id
-where ty.aktiv = true
+with gjeldende_behandlinger as (SELECT *
+                                FROM (SELECT s.saksnummer,
+                                             s.id as                                                       sak_id,
+                                             s.rettighetsperiode,
+                                             s.status,
+                                             ROW_NUMBER()
+                                             OVER (PARTITION BY b.sak_id ORDER BY v.vedtakstidspunkt DESC) rn,
+                                             b.*
+                                      FROM behandling b
+                                               JOIN sak s ON b.sak_id = s.id
+                                               join vedtak v on b.id = v.behandling_id
+                                      WHERE b.status in ('AVSLUTTET', 'IVERKSETTES')) q
+                                WHERE rn = 1)
+select count(distinct saksnummer)
+from tilkjent_ytelse ty
+         join gjeldende_behandlinger b on ty.behandling_id = b.id
+         join public.tilkjent_periode tp on ty.id = tp.tilkjent_ytelse_id
+where aktiv = true
   and tp.barnetillegg > 0
-  and tp.periode @> '2026-01-01'::date
+  and upper(tp.periode) - interval '1' >= '2026-01-01'::date;
+
         """.trimIndent()
 
         return connection.queryList(sql) {
