@@ -23,8 +23,6 @@ data class Vurdering(
     internal val soningsVurdering: SoningVurdering? = null,
     private val meldeperiode: Periode? = null,
     val varighetVurdering: VarighetVurdering? = null,
-    private val reduksjonArbeidOverGrenseEnabled: Boolean? = null,
-    private val reduksjonMeldepliktEnabled: Boolean? = null,
 ) {
     fun leggTilRettighetstype(rettighetstype: RettighetsType): Vurdering {
         return copy(fårAapEtter = rettighetstype)
@@ -92,14 +90,6 @@ data class Vurdering(
 
     fun harRett(): Boolean {
         return fårAapEtter != null &&
-                (when (reduksjonArbeidOverGrenseEnabled) {
-                    null, false -> arbeiderMindreEnnGrenseverdi()
-                    true -> true
-                }) &&
-                (when (reduksjonMeldepliktEnabled) {
-                    false, null -> harOverholdtMeldeplikten()
-                    true -> true
-                }) &&
                 sonerIkke() &&
                 !bryterAktivitetsplikt11_7() &&
                 !bryterOppholdskrav() &&
@@ -115,15 +105,6 @@ data class Vurdering(
             return true
         }
         return !soningsVurdering.girOpphør
-    }
-
-    private fun harOverholdtMeldeplikten(): Boolean {
-        val utfall = meldepliktVurdering?.utfall
-        return utfall == null || utfall == OPPFYLT
-    }
-
-    private fun arbeiderMindreEnnGrenseverdi(): Boolean {
-        return gradering == null || grenseverdi == null || grenseverdi() >= gradering.andelArbeid
     }
 
     /** Rettighetstype før vi har kjørt underveissteget. */
@@ -176,10 +157,6 @@ data class Vurdering(
             return UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT_11_7_OPPHØR
         } else if (stansEtterBruddPåAktivitetsplikt11_7()) {
             return UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT_11_7_STANS
-        } else if (reduksjonArbeidOverGrenseEnabled != true && !arbeiderMindreEnnGrenseverdi()) {
-            return UnderveisÅrsak.ARBEIDER_MER_ENN_GRENSEVERDI
-        } else if (reduksjonMeldepliktEnabled != true && !harOverholdtMeldeplikten()) {
-            return requireNotNull(meldepliktVurdering?.årsak)
         } else if (!varighetsvurderingOppfylt()) {
             return UnderveisÅrsak.VARIGHETSKVOTE_BRUKT_OPP
         }

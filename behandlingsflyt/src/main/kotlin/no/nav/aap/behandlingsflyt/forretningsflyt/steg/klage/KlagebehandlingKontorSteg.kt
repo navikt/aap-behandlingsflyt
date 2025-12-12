@@ -43,7 +43,9 @@ class KlagebehandlingKontorSteg private constructor(
             },
             erTilstrekkeligVurdert = { kontorRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurdering != null },
             tilbakestillGrunnlag = {
-                kontorRepository.deaktiverEksisterende(kontekst.behandlingId)
+                if (kontorRepository.hentHvisEksisterer(kontekst.behandlingId) != null) {
+                    kontorRepository.deaktiverEksisterende(kontekst.behandlingId)
+                }
             },
             kontekst = kontekst,
         )

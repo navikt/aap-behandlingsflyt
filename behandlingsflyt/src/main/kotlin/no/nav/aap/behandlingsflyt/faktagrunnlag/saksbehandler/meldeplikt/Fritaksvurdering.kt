@@ -15,7 +15,7 @@ data class Fritaksvurdering(
     val tilDato: LocalDate? = null,
     val begrunnelse: String,
     val vurdertAv: String,
-    val opprettetTid: LocalDateTime?,
+    val opprettetTid: LocalDateTime,
     val vurdertIBehandling: BehandlingId? = null,
 ) {
 
@@ -29,7 +29,7 @@ data class Fritaksvurdering(
         val harFritak: Boolean,
         val begrunnelse: String,
         val vurdertAv: String,
-        val opprettetTid: LocalDateTime?,
+        val opprettetTid: LocalDateTime,
     )
 
     companion object {

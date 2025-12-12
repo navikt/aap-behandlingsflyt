@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt
 
-import no.nav.aap.behandlingsflyt.behandling.beregning.InntektsPeriode
+import no.nav.aap.behandlingsflyt.behandling.beregning.Månedsinntekt
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
@@ -13,7 +13,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.Inntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.InntektkomponentenGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.InntektskomponentData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
@@ -24,11 +23,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Year
-import java.time.YearMonth
 
 class InntektInformasjonskrav(
     private val sakService: SakService,
@@ -57,7 +54,7 @@ class InntektInformasjonskrav(
 
     data class InntektRegisterdata(
         val inntekter: Set<InntektPerÅrFraRegister>,
-        val inntektsperioder: Set<InntektsPeriode>
+        val inntektsperioder: Set<Månedsinntekt>
     ) : InformasjonskravRegisterdata
 
     data class InntektInput(
@@ -90,23 +87,22 @@ class InntektInformasjonskrav(
         return InntektRegisterdata(oppdaterteInntekter, inntektPerMåned)
     }
 
-    private fun summerArbeidsinntektPerMåned(inntekter: InntektskomponentData): Set<InntektsPeriode> {
-        val inntektPerMåned = inntekter.arbeidsInntektMaaned.map {
+    private fun summerArbeidsinntektPerMåned(inntekter: InntektskomponentData): Set<Månedsinntekt> {
+        return inntekter.arbeidsInntektMaaned.map {
             Pair(
                 it.arbeidsInntektInformasjon.inntektListe,
                 it.aarMaaned
             )
         }
-            .groupBy { (_, year) -> year }
+            .groupBy { (_, årMåned) -> årMåned }
             .mapValues { (_, value) -> value.flatMap { it.first }.sumOf { it.beloep } }
             .map { (årMåned, beløp) ->
-                InntektsPeriode(
-                    Periode(fom = årMåned.atDay(1), tom = årMåned.atEndOfMonth()),
-                    Beløp(beløp.toBigDecimal())
+                Månedsinntekt(
+                    årMåned = årMåned,
+                    beløp = Beløp(beløp.toBigDecimal())
                 )
             }
             .toSet()
-        return inntektPerMåned
     }
 
     override fun oppdater(
@@ -151,7 +147,7 @@ class InntektInformasjonskrav(
                 .toSet()
         val (relevanteÅrFraGjeldendeInntektsbehov, relevanteUføreInntektÅr) = utledAlleRelevanteÅr(kontekst.behandlingId)
 
-        val inntektsÅrUføre = inntektGrunnlag?.inntektPerMåned.orEmpty().map { Year.of(it.periode.fom.year) }.toSet()
+        val inntektsÅrUføre = inntektGrunnlag?.inntektPerMåned.orEmpty().map { Year.of(it.årMåned.year) }.toSet()
 
         return (relevanteÅrEksisterendeGrunnlag != relevanteÅrFraGjeldendeInntektsbehov) || (inntektsÅrUføre != relevanteUføreInntektÅr)
     }

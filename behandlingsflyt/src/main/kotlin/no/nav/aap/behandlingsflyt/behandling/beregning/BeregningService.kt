@@ -43,7 +43,7 @@ class BeregningService(
         beregningsgrunnlagRepository = repositoryProvider.provide(),
         beregningVurderingRepository = repositoryProvider.provide(),
         yrkesskadeRepository = repositoryProvider.provide(),
-        manuellInntektGrunnlagRepository = repositoryProvider.provide()
+        manuellInntektGrunnlagRepository = repositoryProvider.provide(),
     )
 
     fun beregnGrunnlag(behandlingId: BehandlingId): Beregningsgrunnlag {
@@ -65,9 +65,11 @@ class BeregningService(
             studentVurdering = student?.studentvurdering,
             yrkesskadevurdering = sykdomGrunnlag?.yrkesskadevurdering,
             vurdering = beregningVurdering,
-            inntekter = kombinertInntekt,
+            årsInntekter = kombinertInntekt,
+            // TODO: Hvor langt tilbake i tid skal man hente uføregrader?
             uføregrad = uføre?.vurderinger.orEmpty(),
-            registrerteYrkesskader = yrkesskadeGrunnlag?.yrkesskader
+            registrerteYrkesskader = yrkesskadeGrunnlag?.yrkesskader,
+            inntektsPerioder = inntektGrunnlag.inntektPerMåned
         )
 
         val beregning = Beregning(input)
@@ -92,22 +94,10 @@ class BeregningService(
         manuelleInntekter: Set<ManuellInntektVurdering>
     ): Set<InntektPerÅr> {
         val manuellePGIByÅr = manuelleInntekter
-            .filter { it.belop != null }
-            .map { InntektPerÅr(it.år, it.belop!!, it) }
-            .groupBy { it.år }
-            .mapValues {
-                require(it.value.size == 1)
-                it.value.first()
-            }
+            .tilÅrInntekt { it.belop }
 
         val manuellEOSByÅr = manuelleInntekter
-            .filter { it.eøsBeløp != null }
-            .map { InntektPerÅr(it.år, it.eøsBeløp!!, it) }
-            .groupBy { it.år }
-            .mapValues {
-                require(it.value.size == 1)
-                it.value.first()
-            }
+            .tilÅrInntekt { it.eøsBeløp }
 
         val inntekterByÅr = inntekter
             .groupBy { it.år }
@@ -125,22 +115,33 @@ class BeregningService(
         return kombinerteInntekter
     }
 
+    private fun Collection<ManuellInntektVurdering>.tilÅrInntekt(selector: (ManuellInntektVurdering) -> Beløp?): Map<Year, InntektPerÅr> {
+        return this.filter { selector(it) != null }
+            .map { InntektPerÅr(it.år, selector(it)!!, it) }
+            .groupBy { it.år }
+            .mapValues {
+                it.value.single()
+            }
+    }
+
     private fun utledInput(
         studentVurdering: StudentVurdering?,
         yrkesskadevurdering: Yrkesskadevurdering?,
         vurdering: BeregningGrunnlag?,
-        inntekter: Set<InntektPerÅr>,
+        årsInntekter: Set<InntektPerÅr>,
+        inntektsPerioder: Set<Månedsinntekt>,
         uføregrad: Set<Uføre>,
         registrerteYrkesskader: Yrkesskader?
     ): Inntektsbehov {
         return Inntektsbehov(
             BeregningInput(
                 nedsettelsesDato = Inntektsbehov.utledNedsettelsesdato(vurdering?.tidspunktVurdering, studentVurdering),
-                inntekter = inntekter,
+                årsInntekter = årsInntekter,
                 uføregrad = uføregrad,
                 yrkesskadevurdering = yrkesskadevurdering,
                 beregningGrunnlag = vurdering,
-                registrerteYrkesskader = registrerteYrkesskader
+                registrerteYrkesskader = registrerteYrkesskader,
+                inntektsPerioder = inntektsPerioder,
             )
         )
     }
