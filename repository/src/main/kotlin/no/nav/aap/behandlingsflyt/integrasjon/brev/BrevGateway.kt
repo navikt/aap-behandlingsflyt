@@ -29,6 +29,7 @@ import no.nav.aap.brev.kontrakt.KanDistribuereBrevReponse
 import no.nav.aap.brev.kontrakt.KanDistribuereBrevRequest
 import no.nav.aap.brev.kontrakt.MottakerDistStatus
 import no.nav.aap.brev.kontrakt.MottakerDto
+import no.nav.aap.brev.kontrakt.OppdaterBrevmalRequest
 import no.nav.aap.brev.kontrakt.Signatur
 import no.nav.aap.brev.kontrakt.SignaturGrunnlag
 import no.nav.aap.brev.kontrakt.Språk
@@ -177,6 +178,14 @@ class BrevGateway : BrevbestillingGateway {
         val url = baseUri.resolve("/api/bestilling/$bestillingReferanse/v3/oppdater")
 
         val request = PutRequest(body = brevdata)
+
+        client.put<_, Unit>(url, request)
+    }
+
+    override fun oppdaterBrevmal(bestillingReferanse: BrevbestillingReferanse) {
+        val url = baseUri.resolve("/api/oppdater-brevmal")
+
+        val request = PutRequest(body = OppdaterBrevmalRequest(bestillingReferanse.brevbestillingReferanse))
 
         client.put<_, Unit>(url, request)
     }
