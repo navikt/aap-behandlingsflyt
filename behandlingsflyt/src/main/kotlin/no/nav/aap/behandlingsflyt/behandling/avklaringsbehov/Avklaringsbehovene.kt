@@ -282,20 +282,9 @@ class Avklaringsbehovene(
         return alle().filter { it.definisjon in definisjoner }.toList()
     }
 
-    fun harVærtHosLokalkontor(): Boolean {
+    fun harVærtInnomSykdom(): Boolean {
         return alle().filter { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
-            .any { it.definisjon.løsesAv == listOf(Rolle.SAKSBEHANDLER_OPPFOLGING) }
-    }
-
-    fun skalInnomForeslåVedtak(): Boolean {
-        val harAvklaringsbehovLøstAvNay = avklaringsbehovLøstAvNay().isNotEmpty()
-
-        val nayHarBareLøstLovvalgEllerVentepunkt = harAvklaringsbehovLøstAvNay
-                && avklaringsbehovLøstAvNay().filterNot { it.erLovvalgOgMedlemskap() }.filterNot { it.erVentepunkt() }.isEmpty()
-        if (!nayHarBareLøstLovvalgEllerVentepunkt) {
-            return harAvklaringsbehovLøstAvNay
-        }
-        return !harVærtHosLokalkontor()
+            .any { it.definisjon == Definisjon.AVKLAR_SYKDOM }
     }
 
     fun avklaringsbehovLøstAvNay(): List<Avklaringsbehov> {

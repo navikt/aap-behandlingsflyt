@@ -50,7 +50,7 @@ class ForeslåVedtakSteg internal constructor(
         avklaringsbehovene: Avklaringsbehovene
     ): Boolean {
         return tidligereVurderinger.harBehandlingsgrunnlag(kontekst, type())
-                && avklaringsbehovene.skalInnomForeslåVedtak()
+                && skalInnomForeslåVedtak(avklaringsbehovene)
     }
 
     private fun erTilstrekkeligVurdert(
@@ -67,6 +67,17 @@ class ForeslåVedtakSteg internal constructor(
         }
 
         return avklaringsbehovLøstAvNay.all { it.sistEndret().isBefore(sistForeslåttVedtak) }
+    }
+
+    private fun skalInnomForeslåVedtak(avklaringsbehovene: Avklaringsbehovene): Boolean {
+        val harAvklaringsbehovLøstAvNay = avklaringsbehovene.avklaringsbehovLøstAvNay().isNotEmpty()
+
+        val nayHarBareLøstLovvalgEllerVentepunkt = harAvklaringsbehovLøstAvNay
+                && avklaringsbehovene.avklaringsbehovLøstAvNay().filterNot { it.erLovvalgOgMedlemskap() }.filterNot { it.erVentepunkt() }.isEmpty()
+        if (!nayHarBareLøstLovvalgEllerVentepunkt) {
+            return harAvklaringsbehovLøstAvNay
+        }
+        return !avklaringsbehovene.harVærtInnomSykdom()
     }
 
     companion object : FlytSteg {
