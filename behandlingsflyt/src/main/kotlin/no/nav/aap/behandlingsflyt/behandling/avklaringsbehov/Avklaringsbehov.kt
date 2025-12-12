@@ -212,6 +212,10 @@ class Avklaringsbehov(
         return definisjon == Definisjon.FORESLÅ_VEDTAK
     }
 
+    fun erLovvalgOgMedlemskap(): Boolean {
+        return definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP
+    }
+
     fun erForeslåttUttak(): Boolean {
         return definisjon == Definisjon.FORESLÅ_UTTAK
     }
