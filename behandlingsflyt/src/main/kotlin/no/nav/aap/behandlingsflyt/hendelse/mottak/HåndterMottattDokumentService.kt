@@ -145,7 +145,7 @@ class HåndterMottattDokumentService(
                     is ManuellRevurderingV0 -> melding.beskrivelse
                     is OmgjøringKlageRevurderingV0 -> melding.beskrivelse
                     is PdlHendelseV0 -> melding.beskrivelse
-                    is NyÅrsakTilBehandlingV0 -> melding.beskrivelse
+                    is NyÅrsakTilBehandlingV0 -> melding.årsakerTilBehandling.joinToString(", ")
                     else -> null
                 }
             )
