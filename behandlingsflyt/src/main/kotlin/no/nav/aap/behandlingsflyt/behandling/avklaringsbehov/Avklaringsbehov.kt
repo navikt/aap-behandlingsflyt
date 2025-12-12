@@ -43,7 +43,7 @@ class Avklaringsbehov(
     }
 
     fun erTotrinnsVurdert(): Boolean {
-        return Status.TOTRINNS_VURDERT == aktivHistorikk.maxOf { it }.status
+        return Status.TOTRINNS_VURDERT == aktivHistorikk.maxOfOrNull { it }?.status
     }
 
     fun erKvalitetssikretTidligere(): Boolean {
@@ -210,6 +210,10 @@ class Avklaringsbehov(
 
     fun erForeslåttVedtak(): Boolean {
         return definisjon == Definisjon.FORESLÅ_VEDTAK
+    }
+
+    fun erLovvalgOgMedlemskap(): Boolean {
+        return definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP
     }
 
     fun erForeslåttUttak(): Boolean {

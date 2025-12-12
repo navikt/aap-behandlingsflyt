@@ -1,7 +1,10 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -10,6 +13,7 @@ class InformasjonskravOppdatert(
     val behandlingId: BehandlingId,
     val navn: InformasjonskravNavn,
     val oppdatert: Instant,
+    val forrigeInput: String?,
 
     /** Rettighetsperioden på tidspunktet informasjonskravet kjørte sist.
      *
@@ -20,8 +24,19 @@ class InformasjonskravOppdatert(
      */
     val rettighetsperiode: Periode?,
 ) {
+    val log: Logger = LoggerFactory.getLogger(javaClass)
+
     val datoOppdatert: LocalDate
         get() = oppdatert.atZone(ZoneId.of("Europe/Oslo")).toLocalDate()
+
+    inline fun <reified E> forrigeInput(): E? {
+        return forrigeInput
+            ?.runCatching { DefaultJsonMapper.fromJson<E>(forrigeInput) }
+            ?.onFailure {
+                log.info("Klarte ikke deserialisere forrige input.", it)
+            }
+            ?.getOrNull()
+    }
 }
 
 fun InformasjonskravOppdatert?.ikkeKjørtSisteKalenderdag(): Boolean =

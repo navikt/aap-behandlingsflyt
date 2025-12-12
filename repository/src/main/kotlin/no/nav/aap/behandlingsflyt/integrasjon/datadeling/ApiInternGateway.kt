@@ -74,7 +74,7 @@ class ApiInternGatewayImpl() : ApiInternGateway {
         vedtakId: Long,
         samId: String?,
         tilkjent: List<TilkjentYtelsePeriode>,
-        beregningsgrunnlag: BigDecimal,
+        beregningsgrunnlag: BigDecimal?,
         underveis: List<Underveisperiode>,
         vedtaksDato: LocalDate,
         rettighetsTypeTidslinje: Tidslinje<no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType>

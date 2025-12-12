@@ -23,7 +23,7 @@ class Aktivitetsplikt11_7RegelTest {
         val grunnlag = Aktivitetsplikt11_7Grunnlag(
             vurderinger = listOf(
                 Aktivitetsplikt11_7Vurdering(
-                    gjelderFra = 1 februar 2020,
+                    fom = 1 februar 2020,
                     begrunnelse = "Stans",
                     erOppfylt = false,
                     utfall = Utfall.STANS,
@@ -33,7 +33,7 @@ class Aktivitetsplikt11_7RegelTest {
                     vurdertIBehandling = behandlingId
                 ),
                 Aktivitetsplikt11_7Vurdering(
-                    gjelderFra = 14 februar 2020,
+                    fom = 14 februar 2020,
                     begrunnelse = "Oppfylt",
                     erOppfylt = true,
                     vurdertAv = "1234",
@@ -42,7 +42,7 @@ class Aktivitetsplikt11_7RegelTest {
                     vurdertIBehandling = behandlingId
                 ),
                 Aktivitetsplikt11_7Vurdering(
-                    gjelderFra = 1 juni 2021,
+                    fom = 1 juni 2021,
                     begrunnelse = "Opphør",
                     erOppfylt = false,
                     utfall = Utfall.OPPHØR,

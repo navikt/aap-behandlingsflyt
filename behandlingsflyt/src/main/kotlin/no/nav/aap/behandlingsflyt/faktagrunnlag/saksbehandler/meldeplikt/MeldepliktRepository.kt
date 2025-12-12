@@ -9,4 +9,5 @@ interface MeldepliktRepository : Repository {
     fun hentAlleVurderinger(sakId: SakId, behandlingId: BehandlingId): Set<Fritaksvurdering>
     fun lagre(behandlingId: BehandlingId, vurderinger: List<Fritaksvurdering>)
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
+    fun migrerMeldepliktFritak()
 }

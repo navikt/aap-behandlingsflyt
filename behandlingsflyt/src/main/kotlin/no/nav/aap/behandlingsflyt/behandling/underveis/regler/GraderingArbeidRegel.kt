@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UtledMeldeperiodeRegel.Companion.groupByMeldeperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneVurdering.Companion.tidslinje
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -95,12 +94,7 @@ class GraderingArbeidRegel : UnderveisRegel {
             .leftJoin(harRettTidslinje(resultat), OpplysningerOmArbeid::mergePrioriterHøyre)
             .leftJoin(grenseverdi(resultat), OpplysningerOmArbeid::mergePrioriterHøyre)
 
-        return (
-                if (input.timerArbeidetPeriodisertSubMeldeperiodeEnabled)
-                    opplysninger.splittOppIPerioderBasertPå { Pair(it.meldeperiode, it.grenseverdi) }
-                else
-                    groupByMeldeperiode(resultat, opplysninger)
-                )
+        return opplysninger.splittOppIPerioderBasertPå { Pair(it.meldeperiode, it.grenseverdi) }
             .flatMap { periode -> regnUtGradering(periode.verdi) }
             .komprimer()
     }
@@ -135,17 +129,11 @@ class GraderingArbeidRegel : UnderveisRegel {
         ) { meldeperiode, fritaksvurdering ->
             val harPassertMeldeperiodeITid = meldeperiode?.let { dagensDato >= meldeperiode.tom.plusDays(1) } ?: false
             if (fritaksvurdering?.harFritak == true && harPassertMeldeperiodeITid) {
-                if (input.unntakMeldepliktDesemberEnabled) {
-                    OpplysningerOmArbeid(
-                        timerArbeid = TimerArbeid(BigDecimal.ZERO),
-                        opplysningerFørstMottatt = unntakFritaksUtbetalingDato[meldeperiode.tom.plusDays(3)] ?: meldeperiode.tom.plusDays(3)
-                    )
-                } else {
-                    OpplysningerOmArbeid(
-                        timerArbeid = TimerArbeid(BigDecimal.ZERO),
-                        opplysningerFørstMottatt = meldeperiode.tom.plusDays(3) // Settes til samme dag som fritak-jobbkjøringstidspunktet
-                    )
-                }
+                OpplysningerOmArbeid(
+                    timerArbeid = TimerArbeid(BigDecimal.ZERO),
+                    opplysningerFørstMottatt = unntakFritaksUtbetalingDato[meldeperiode.tom.plusDays(3)]
+                        ?: meldeperiode.tom.plusDays(3)
+                )
             } else {
                 OpplysningerOmArbeid()
             }
@@ -201,7 +189,8 @@ class GraderingArbeidRegel : UnderveisRegel {
                     andelArbeid = `0_PROSENT`,
                     fastsattArbeidsevne = it.arbeidsevne ?: `0_PROSENT`,
                     gradering = `0_PROSENT`,
-                    opplysningerMottatt = opplysningerOmArbeid.segmenter().mapNotNull { it.verdi.opplysningerFørstMottatt }
+                    opplysningerMottatt = opplysningerOmArbeid.segmenter()
+                        .mapNotNull { it.verdi.opplysningerFørstMottatt }
                         /* Høyeste dato er datoen første dato vi hadde opplysninger for *hele* meldeperioden. */
                         .maxOrNull(),
                 )

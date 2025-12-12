@@ -25,8 +25,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
@@ -131,7 +131,6 @@ class BrevUtlederServiceTest {
         every { behandlingRepository.hent(any<BehandlingId>()) } returns førstegangsbehandling
         every { trukketSøknadService.søknadErTrukket(any<BehandlingId>()) } returns false
         every { underveisRepository.hent(førstegangsbehandling.id) } returns underveisGrunnlag()
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_18) } returns true
         every { arbeidsopptrappingRepository.hentPerioder(any<BehandlingId>()) } returns emptyList()
 
         val dagsats = Beløp("1000.00")
@@ -243,7 +242,6 @@ class BrevUtlederServiceTest {
             vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_ARBEID)
         )
         every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_18) } returns true
         every { underveisRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns underveisGrunnlag(
             underveisperiode(
                 periode = Periode(1 januar 2023, 31 desember 2023),
@@ -274,7 +272,6 @@ class BrevUtlederServiceTest {
             vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_ARBEID)
         )
         every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_18) } returns true
         every { underveisRepository.hentHvisEksisterer(forrigeBehandling.id) } returns underveisGrunnlag(
             underveisperiode(
                 periode = Periode(1 januar 2023, 31 desember 2023),
@@ -305,7 +302,6 @@ class BrevUtlederServiceTest {
             forrigeBehandlingId = førstegangsbehandling.id,
             vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_UFORE)
         )
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_18) } returns true
         every { underveisRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns underveisGrunnlag(
             underveisperiode(
                 periode = Periode(1 januar 2023, 31 desember 2023),
@@ -368,7 +364,6 @@ class BrevUtlederServiceTest {
             vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_UFORE)
         )
         every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_18) } returns true
         every { underveisRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns underveisGrunnlag(
             underveisperiode(
                 periode = Periode(1 januar 2023, 31 desember 2023),
@@ -417,7 +412,7 @@ class BrevUtlederServiceTest {
             erOppfylt = false,
             utfall = no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Utfall.STANS,
             vurdertAv = "",
-            gjelderFra = fra,
+            fom = fra,
             opprettet = Instant.now(),
             vurdertIBehandling = id,
             skalIgnorereVarselFrist = false

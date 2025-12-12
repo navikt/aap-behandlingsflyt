@@ -1,16 +1,18 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.inntekt
 
-import no.nav.aap.behandlingsflyt.behandling.beregning.InntektsPeriode
+import no.nav.aap.behandlingsflyt.behandling.beregning.Månedsinntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
 import java.time.Year
+import java.time.YearMonth
 
 class InntektGrunnlagRepositoryImpl(private val connection: DBConnection) :
     InntektGrunnlagRepository {
@@ -35,7 +37,7 @@ class InntektGrunnlagRepositoryImpl(private val connection: DBConnection) :
     override fun lagre(
         behandlingId: BehandlingId,
         inntekter: Set<InntektPerÅr>,
-        inntektPerMåned: Set<InntektsPeriode>
+        inntektPerMåned: Set<Månedsinntekt>
     ) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         val nyttGrunnlag = InntektGrunnlag(
@@ -65,7 +67,7 @@ class InntektGrunnlagRepositoryImpl(private val connection: DBConnection) :
         }
     }
 
-    private fun lagreInntekter(inntekter: Set<InntektPerÅr>, inntektPerMåned: Set<InntektsPeriode>): Long {
+    private fun lagreInntekter(inntekter: Set<InntektPerÅr>, inntektPerMåned: Set<Månedsinntekt>): Long {
         val query = """
             INSERT INTO INNTEKTER DEFAULT VALUES
         """.trimIndent()
@@ -89,7 +91,7 @@ class InntektGrunnlagRepositoryImpl(private val connection: DBConnection) :
         connection.executeBatch(inntektPerMndInsertQuery, inntektPerMåned.toList()) {
             setParams { inntektPerMåned ->
                 setLong(1, inntekterId)
-                setPeriode(2, inntektPerMåned.periode)
+                setPeriode(2, Periode(inntektPerMåned.årMåned.atDay(1), inntektPerMåned.årMåned.atEndOfMonth()))
                 setBigDecimal(3, inntektPerMåned.beløp.verdi)
             }
         }
@@ -165,12 +167,12 @@ class InntektGrunnlagRepositoryImpl(private val connection: DBConnection) :
         )
     }
 
-    private fun mapInntektPerMåned(id: Long): Set<InntektsPeriode> =
+    private fun mapInntektPerMåned(id: Long): Set<Månedsinntekt> =
         connection.querySet("SELECT * FROM INNTEKT_PERIODE WHERE INNTEKT_ID = ?") {
             setParams { setLong(1, id) }
             setRowMapper {
-                InntektsPeriode(
-                    periode = it.getPeriode("periode"),
+                Månedsinntekt(
+                    årMåned = YearMonth.from(it.getPeriode("periode").fom),
                     beløp = it.getBigDecimal("belop").let(::Beløp)
                 )
             }
@@ -195,6 +197,6 @@ class InntektGrunnlagRepositoryImpl(private val connection: DBConnection) :
     }
 
     override fun hent(behandlingId: BehandlingId): InntektGrunnlag {
-        return requireNotNull(hentHvisEksisterer(behandlingId))
+        return requireNotNull(hentHvisEksisterer(behandlingId)) { "Fant ikke inntektgrunnlag for behandlingId=$behandlingId." }
     }
 }

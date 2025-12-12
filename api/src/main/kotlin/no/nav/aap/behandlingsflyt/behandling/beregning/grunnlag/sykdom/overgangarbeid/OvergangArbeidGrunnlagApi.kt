@@ -4,6 +4,7 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykdom.SykdomsvurderingResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidGrunnlag
@@ -22,13 +23,12 @@ import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
+import kotlin.collections.orEmpty
 
 fun NormalOpenAPIRoute.overgangArbeidGrunnlagApi(
     dataSource: DataSource, repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,
 ) {
-    val ansattInfoService = AnsattInfoService(gatewayProvider)
-
     route("/api/behandling") {
         route("/{referanse}/grunnlag/overgangarbeid") {
             getGrunnlag<BehandlingReferanse, OvergangArbeidGrunnlagResponse>(
@@ -39,6 +39,7 @@ fun NormalOpenAPIRoute.overgangArbeidGrunnlagApi(
                 val respons = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
+                    val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val overgangArbeidRepository = repositoryProvider.provide<OvergangArbeidRepository>()
                     val sykdomRepository = repositoryProvider.provide<SykdomRepository>()
@@ -52,22 +53,20 @@ fun NormalOpenAPIRoute.overgangArbeidGrunnlagApi(
                         ?.let { overgangArbeidRepository.hentHvisEksisterer(it) }
                         ?: OvergangArbeidGrunnlag(emptyList())
 
+                    val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+                    val perioderSomTrengerVurdering = avklaringsbehov.hentBehovForDefinisjon(Definisjon.AVKLAR_OVERGANG_ARBEID)?.perioderVedtaketBehøverVurdering().orEmpty()
+
                     OvergangArbeidGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
-
                         sisteVedtatteVurderinger = OvergangArbeidVurderingResponse.fraDomene(
                             forrigeGrunnlag.gjeldendeVurderinger(),
                             vurdertAvService,
                         ),
-
                         nyeVurderinger = grunnlag?.vurderinger.orEmpty()
                             .filter { it.vurdertIBehandling == behandling.id }
                             .map { OvergangArbeidVurderingResponse.fraDomene(it, vurdertAvService) },
-
                         kanVurderes = listOf(sak.rettighetsperiode),
-
-                        behøverVurderinger = listOf(sak.rettighetsperiode),
-
+                        behøverVurderinger = perioderSomTrengerVurdering.toList(),
                         gjeldendeSykdsomsvurderinger = sykdomRepository.hentHvisEksisterer(behandling.id)
                             ?.gjeldendeSykdomsvurderinger().orEmpty()
                             .map { SykdomsvurderingResponse.fraDomene(it, vurdertAvService) },
