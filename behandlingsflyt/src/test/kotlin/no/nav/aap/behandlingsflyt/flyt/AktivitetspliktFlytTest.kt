@@ -501,7 +501,7 @@ class AktivitetspliktFlytTest :
         sak: Sak,
     ): Behandling {
         return SakOgBehandlingService(repositoryProvider, gatewayProvider).opprettAktivitetspliktBehandling(
-            sak.id, vurderingsbehov
+            sak.id, ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE, vurderingsbehov
         )
     }
 
