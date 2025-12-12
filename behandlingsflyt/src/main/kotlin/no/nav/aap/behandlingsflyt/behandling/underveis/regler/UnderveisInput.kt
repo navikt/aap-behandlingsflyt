@@ -30,7 +30,4 @@ data class UnderveisInput(
     val overstyringMeldepliktGrunnlag: OverstyringMeldepliktGrunnlag,
     val meldeperioder: List<Periode>,
     val vedtaksdatoFørstegangsbehandling: LocalDate?,
-    val reduksjonArbeidOverGrenseEnabled: Boolean,
-    val reduksjonIkkeMeldtSegEnabled: Boolean,
-    val timerArbeidetPeriodisertSubMeldeperiodeEnabled: Boolean,
 ) : Faktagrunnlag

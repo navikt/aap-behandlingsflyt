@@ -256,6 +256,12 @@ fun NormalOpenAPIRoute.brevApi(
                     respond("{}", HttpStatusCode.Accepted)
                 }
             }
+            route("/{brevbestillingReferanse}/oppdater-brevmal") {
+                authorizedPut<BrevbestillingReferanse, String, Unit>(authorizationParamPathConfig) { brevbestillingReferanse, _ ->
+                    brevbestillingGateway.oppdaterBrevmal(brevbestillingReferanse)
+                    respond("{}", HttpStatusCode.Accepted)
+                }
+            }
             route("/{brevbestillingReferanse}/forhandsvis") {
                 authorizedGet<BrevbestillingReferanse, DokumentResponsDTO>(authorizationParamPathConfig) { brevbestillingReferanse ->
                     val pdf = dataSource.transaction { connection ->

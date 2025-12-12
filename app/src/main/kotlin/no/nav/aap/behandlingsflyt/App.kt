@@ -68,6 +68,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.meldepliktOverstyringGrun
 import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerApi
 import no.nav.aap.behandlingsflyt.drift.driftApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.flyt.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flytApi
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
@@ -84,9 +85,11 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
 import no.nav.aap.behandlingsflyt.pip.behandlingsflytPipApi
 import no.nav.aap.behandlingsflyt.prosessering.BehandlingsflytLogInfoProvider
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -325,11 +328,16 @@ private fun utførMigreringer(
     val scheduler = Executors.newScheduledThreadPool(1)
     scheduler.schedule(Runnable {
         val unleashGateway: UnleashGateway = gatewayProvider.provide()
+        val migrerMeldepliktFritakEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.MigrerMeldepliktFritak)
         val isLeader = isLeader(log)
-        log.info("isLeader = $isLeader")
+        log.info("isLeader = $isLeader, migrerMeldepliktFritakEnabled = $migrerMeldepliktFritakEnabled")
 
-        if (isLeader) {
+        if (migrerMeldepliktFritakEnabled && isLeader) {
             // Kjør migrering
+            dataSource.transaction { connection ->
+                val repository = MeldepliktRepositoryImpl(connection)
+                repository.migrerMeldepliktFritak()
+            }
         }
 
     }, 9, TimeUnit.MINUTES)

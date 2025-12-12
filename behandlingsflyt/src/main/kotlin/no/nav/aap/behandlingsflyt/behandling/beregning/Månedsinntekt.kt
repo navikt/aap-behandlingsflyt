@@ -1,10 +1,10 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning
 
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
+import java.time.YearMonth
 
-data class InntektsPeriode(
-    val periode: Periode,
+data class Månedsinntekt(
+    val årMåned: YearMonth,
     val beløp: Beløp
 )
 

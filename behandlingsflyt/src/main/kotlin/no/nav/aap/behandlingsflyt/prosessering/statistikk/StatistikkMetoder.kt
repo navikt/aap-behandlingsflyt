@@ -39,6 +39,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetstypePeriode
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.TilkjentYtelseDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.TilkjentYtelsePeriodeDTO
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Uføre
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.UføreType
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Utfall
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.VilkårDTO
@@ -430,7 +431,8 @@ class StatistikkMetoder(
                 grunnlag = grunnlag1119dto(grunnlag.underliggende()),
                 grunnlagYtterligereNedsatt = grunnlag1119dto(grunnlag.underliggendeYtterligereNedsatt()),
                 uføreYtterligereNedsattArbeidsevneÅr = grunnlag.uføreYtterligereNedsattArbeidsevneÅr().value,
-                uføregrad = grunnlag.uføregrad().prosentverdi(),
+                uføregrad = grunnlag.uføregrader().maxBy { it.virkningstidspunkt }.uføregrad.prosentverdi(),
+                uføregrader = grunnlag.uføregrader().map { Uføre(it.uføregrad.prosentverdi(), it.virkningstidspunkt) },
                 uføreInntekterFraForegåendeÅr = grunnlag.uføreInntekterFraForegåendeÅr()
                     .associate { it.år.value.toString() to it.inntektIKroner.verdi().toDouble() })
         )

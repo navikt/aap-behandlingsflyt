@@ -46,7 +46,7 @@ class VurderBrudd11_7Løser(
                 .orEmpty()
 
         val ny = Tidslinje(
-            Periode(vurdering.gjelderFra, Tid.MAKS), vurdering
+            Periode(vurdering.fom, Tid.MAKS), vurdering
         )
 
         val nyGjeldende = gjeldendeVedtatte.kombiner(ny, StandardSammenslåere.prioriterHøyreSideCrossJoin())

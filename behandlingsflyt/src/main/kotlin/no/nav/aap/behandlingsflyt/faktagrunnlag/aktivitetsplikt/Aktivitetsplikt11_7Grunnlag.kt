@@ -25,11 +25,11 @@ data class Aktivitetsplikt11_7Grunnlag(
 
     fun tidslinje(): Tidslinje<Aktivitetsplikt11_7Vurdering> {
         return vurderinger
-            .sortedBy { it.gjelderFra }
+            .sortedBy { it.fom }
             .fold(Tidslinje()) { tidslinje, vurdering ->
                 tidslinje.kombiner(
                     Tidslinje(
-                        Periode(vurdering.gjelderFra, Tid.MAKS), vurdering
+                        Periode(vurdering.fom, Tid.MAKS), vurdering
                     ),
                     StandardSammenslåere.prioriterHøyreSideCrossJoin()
                 )
