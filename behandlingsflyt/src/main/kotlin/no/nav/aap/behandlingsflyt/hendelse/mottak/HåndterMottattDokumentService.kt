@@ -22,11 +22,11 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRevurdering
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRevurderingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Omgjøringskilde
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Oppfølgingsoppgave
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppfølgingsoppgaveV0
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.PdlHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.PdlHendelseV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelseV0
@@ -122,6 +122,80 @@ class HåndterMottattDokumentService(
 
     }
 
+    fun håndterMottattOmgjøringEtterKlage(
+        sakId: SakId,
+        referanse: InnsendingReferanse,
+        mottattTidspunkt: LocalDateTime,
+        brevkategori: InnsendingType,
+        melding: OmgjøringKlageRevurdering,
+    ) {
+        log.info("Mottok dokument på sak-id $sakId, og referanse $referanse, med brevkategori $brevkategori. med beskrivelse fra melding: $melding")
+
+        val sak = sakService.hent(sakId)
+        val årsakTilOpprettelse = utledÅrsakTilOpprettelse(brevkategori, melding)
+        val periode = utledPeriode(brevkategori, mottattTidspunkt, melding)
+        val vurderingsbehov = utledVurderingsbehov(brevkategori, melding, periode)
+
+        val (vurderingsbehovForAktivitetsplikt, vurderingsbehovForYtelsesbehandling) = vurderingsbehov.toSet()
+            .partition { it.type in Vurderingsbehov.forAktivitetspliktbehandling() }
+
+        val opprettedeAktivitetspliktBehandlinger = vurderingsbehovForAktivitetsplikt
+            .map { it.type }.toSet()
+            .map {
+                val beskrivelse = when (melding) {
+                    is OmgjøringKlageRevurderingV0 -> melding.beskrivelse
+                }
+                val opprettet = sakOgBehandlingService.opprettAktivitetspliktBehandling(
+                    sakId,
+                    årsakTilOpprettelse,
+                    it,
+                    mottattTidspunkt,
+                    beskrivelse
+                )
+                prosesserBehandling.triggProsesserBehandling(opprettet)
+                opprettet
+            }
+
+        if (vurderingsbehovForYtelsesbehandling.isEmpty() && vurderingsbehovForAktivitetsplikt.isNotEmpty()) {
+            // TODO: Bør kanskje støtte flere behandlinger - velger den første
+            mottaDokumentService.markerSomBehandlet(sak.id, opprettedeAktivitetspliktBehandlinger.first().id, referanse)
+            return
+        }
+
+        val opprettetBehandling = sakOgBehandlingService.finnEllerOpprettBehandling(
+            sak.saksnummer,
+            VurderingsbehovOgÅrsak(
+                årsak = årsakTilOpprettelse,
+                vurderingsbehov = vurderingsbehovForYtelsesbehandling,
+                opprettet = mottattTidspunkt,
+                beskrivelse =
+                    when (melding) {
+                        is OmgjøringKlageRevurderingV0 -> melding.beskrivelse
+                    }
+            )
+        )
+
+        val behandlingSkrivelås = opprettetBehandling.åpenBehandling?.let {
+            låsRepository.låsBehandling(it.id)
+        }
+
+        when (opprettetBehandling) {
+            is SakOgBehandlingService.Ordinær ->
+                mottaDokumentService.oppdaterMedBehandlingId(sakId, opprettetBehandling.åpenBehandling.id, referanse)
+
+            else -> throw IllegalStateException("Forventet ordinær behandling ved omgjøring etter klage")
+        }
+
+        prosesserBehandling.triggProsesserBehandling(
+            opprettetBehandling,
+            listOf("trigger" to DefaultJsonMapper.toJson(vurderingsbehovForYtelsesbehandling.map { it.type }))
+        )
+
+        if (behandlingSkrivelås != null) {
+            låsRepository.verifiserSkrivelås(behandlingSkrivelås)
+        }
+    }
+
     fun håndterMottatteDokumenter(
         sakId: SakId,
         referanse: InnsendingReferanse,
@@ -199,12 +273,10 @@ class HåndterMottattDokumentService(
         log.info("Håndterer dialogmelding for $sak.id")
         val sisteYtelsesBehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
 
-        if (sisteYtelsesBehandling != null)
-        {
+        if (sisteYtelsesBehandling != null) {
             mottaDokumentService.markerSomBehandlet(sakId, sisteYtelsesBehandling.id, referanse)
             log.info("Markerer dialogmelding som behandlet $sisteYtelsesBehandling.id")
-            if (sisteYtelsesBehandling.status().erÅpen())
-            {
+            if (sisteYtelsesBehandling.status().erÅpen()) {
                 prosesserBehandling.triggProsesserBehandling(
                     sisteYtelsesBehandling,
                     listOf("trigger" to DefaultJsonMapper.toJson(vurderingsbehov.filter { it.type == Vurderingsbehov.MOTTATT_DIALOGMELDING }

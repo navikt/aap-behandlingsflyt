@@ -71,6 +71,13 @@ enum class Vurderingsbehov {
         fun alleInklusivGRegulering(): List<Vurderingsbehov> {
             return Vurderingsbehov.entries.toList()
         }
+        
+        fun forAktivitetspliktbehandling(): List<Vurderingsbehov> {
+            return listOf(
+                AKTIVITETSPLIKT_11_7,
+                AKTIVITETSPLIKT_11_9,
+            )
+        }
     }
 }
 
