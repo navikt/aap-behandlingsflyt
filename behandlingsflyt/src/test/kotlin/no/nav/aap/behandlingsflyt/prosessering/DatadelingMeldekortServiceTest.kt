@@ -162,7 +162,7 @@ private fun lagreUnderveisGrunnlag(
     meldeperioder: List<Periode>,
     testPeriode: Periode,
 ): UnderveisGrunnlag {
-    val testGrunnlag = Aldersgrunnlag(testPeriode, Fødselsdato(LocalDate.now().minusYears(20)))
+    val testGrunnlag = Aldersgrunnlag(testPeriode, Fødselsdato(LocalDate.now().minusYears(20)), grenseForAntallMånederFørFylte18 = 3)
     underveisRepository.lagre(
         testBehandling.id,
         listOf(testUnderveisperiode(testPeriode, meldeperioder.first())),
@@ -209,6 +209,7 @@ private fun testUnderveisperiode(testPeriode: Periode, meldeperiode: Periode): U
         institusjonsoppholdReduksjon = Prosent(0),
         meldepliktStatus = MeldepliktStatus.RIMELIG_GRUNN,
         meldePeriode = meldeperiode,
+        meldepliktGradering = Prosent(0),
     )
 
 private fun lagreMeldekort(

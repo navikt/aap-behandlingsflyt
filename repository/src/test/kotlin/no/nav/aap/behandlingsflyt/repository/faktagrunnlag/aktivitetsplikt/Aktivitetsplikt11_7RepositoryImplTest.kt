@@ -53,7 +53,7 @@ internal class Aktivitetsplikt11_7RepositoryImplTest {
                 begrunnelse = "Begrunnelse",
                 erOppfylt = true,
                 vurdertAv = "ident",
-                gjelderFra = 1 januar 2023,
+                fom = 1 januar 2023,
                 opprettet = Instant.parse("2023-01-01T12:00:00Z"),
                 vurdertIBehandling = behandling.id,
                 skalIgnorereVarselFrist = false
@@ -76,14 +76,14 @@ internal class Aktivitetsplikt11_7RepositoryImplTest {
                 erOppfylt = false,
                 utfall = Utfall.STANS,
                 vurdertAv = "ident2",
-                gjelderFra = 1 februar 2023,
+                fom = 1 februar 2023,
                 opprettet = Instant.parse("2023-01-02T12:10:00Z"),
                 vurdertIBehandling = behandling.id,
                 skalIgnorereVarselFrist = false
             )
             val nyTidslinje = grunnlag!!.tidslinje()
                 .kombiner(
-                    Tidslinje(Periode(vurdering2.gjelderFra, Tid.MAKS), vurdering2),
+                    Tidslinje(Periode(vurdering2.fom, Tid.MAKS), vurdering2),
                     StandardSammenslåere.prioriterHøyreSideCrossJoin()
                 )
 

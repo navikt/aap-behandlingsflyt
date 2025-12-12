@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.kontrakt.statistikk
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 /**
  * @param beregningsGrunnlag Beregningsgrunnlag. Kan være null om behandlingen avsluttes før inntekt hentes inn.
@@ -14,6 +15,7 @@ public data class AvsluttetBehandlingDTO(
     val diagnoser: Diagnoser? = null,
     val rettighetstypePerioder: List<RettighetstypePeriode>,
     val resultat: ResultatKode?,
+    val vedtakstidspunkt: LocalDateTime?
 )
 
 public enum class ResultatKode {
@@ -56,7 +58,8 @@ public data class TilkjentYtelsePeriodeDTO(
     val redusertDagsats: Double,
     val antallBarn: Int,
     val barnetilleggSats: Double,
-    val barnetillegg: Double
+    val barnetillegg: Double,
+    val utbetalingsdato: LocalDate
 )
 
 public data class VilkårsResultatDTO(
@@ -79,6 +82,9 @@ public enum class Vilkårtype {
     GRUNNLAGET,
     OVERGANGARBEIDVILKÅRET,
     OVERGANGUFØREVILKÅRET,
+    STRAFFEGJENNOMFØRING,
+    AKTIVITETSPLIKT,
+    OPPHOLDSKRAV,
 
     @Deprecated("Skal fases ut.")
     SYKEPENGEERSTATNING,
@@ -100,7 +106,7 @@ public data class VilkårsPeriodeDTO(
  * er alltid med. Minst én av grunnlag11_19dto, grunnlagYrkesskade, grunnlagUføre er ikke-null.
  */
 public data class BeregningsgrunnlagDTO(
-    val grunnlag11_19dto: Grunnlag11_19DTO? = null,
+    @Suppress("PropertyName") val grunnlag11_19dto: Grunnlag11_19DTO? = null,
     val grunnlagYrkesskade: GrunnlagYrkesskadeDTO? = null,
     val grunnlagUføre: GrunnlagUføreDTO? = null
 ) {
@@ -144,10 +150,14 @@ public data class GrunnlagUføreDTO(
     val type: UføreType,
     val grunnlag: Grunnlag11_19DTO,
     val grunnlagYtterligereNedsatt: Grunnlag11_19DTO,
+    @Deprecated("Bruk uføregrader.")
     val uføregrad: Int,
+    val uføregrader: List<Uføre>,
     val uføreInntekterFraForegåendeÅr: Map<String, Double>,
     val uføreYtterligereNedsattArbeidsevneÅr: Int,
 )
+
+public data class Uføre(val grad: Int, val virkningstidspunkt: LocalDate)
 
 public enum class UføreType {
     STANDARD, YTTERLIGERE_NEDSATT

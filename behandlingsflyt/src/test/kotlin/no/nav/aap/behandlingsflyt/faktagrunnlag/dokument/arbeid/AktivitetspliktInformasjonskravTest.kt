@@ -68,7 +68,7 @@ class AktivitetspliktInformasjonskravTest {
                 begrunnelse = "Begrunnelse 1",
                 erOppfylt = false,
                 utfall = Utfall.STANS,
-                gjelderFra = sak.rettighetsperiode.fom.plusMonths(2),
+                fom = sak.rettighetsperiode.fom.plusMonths(2),
                 vurdertAv = "Saksbehandler",
                 opprettet = sak.rettighetsperiode.fom.plusMonths(2).plusWeeks(1).atStartOfDay()
                     .toInstant(ZoneOffset.UTC),
@@ -84,7 +84,7 @@ class AktivitetspliktInformasjonskravTest {
                 begrunnelse = "Begrunnelse 2",
                 erOppfylt = false,
                 utfall = Utfall.OPPHØR,
-                gjelderFra = sak.rettighetsperiode.fom.plusMonths(3),
+                fom = sak.rettighetsperiode.fom.plusMonths(3),
                 vurdertAv = "Saksbehandler",
                 opprettet = sak.rettighetsperiode.fom.plusMonths(3).plusWeeks(1).atStartOfDay()
                     .toInstant(ZoneOffset.UTC),
@@ -101,7 +101,7 @@ class AktivitetspliktInformasjonskravTest {
             Aktivitetsplikt11_7Vurdering(
                 begrunnelse = "Begrunnelse 3",
                 erOppfylt = true,
-                gjelderFra = sak.rettighetsperiode.fom.plusMonths(3),
+                fom = sak.rettighetsperiode.fom.plusMonths(3),
                 vurdertAv = "Saksbehandler",
                 opprettet = sak.rettighetsperiode.fom.plusMonths(3).plusWeeks(1).atStartOfDay()
                     .toInstant(ZoneOffset.UTC),
@@ -154,7 +154,7 @@ class AktivitetspliktInformasjonskravTest {
                                 begrunnelse = "Begrunnelse 2",
                                 erOppfylt = false,
                                 utfall = Utfall.OPPHØR,
-                                gjelderFra = sak.rettighetsperiode.fom.plusMonths(3),
+                                fom = sak.rettighetsperiode.fom.plusMonths(3),
                                 vurdertAv = "Saksbehandler",
                                 opprettet = sak.rettighetsperiode.fom.plusMonths(3).plusWeeks(1).atStartOfDay()
                                     .toInstant(ZoneOffset.UTC),

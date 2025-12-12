@@ -23,7 +23,6 @@ data class Vurdering(
     internal val soningsVurdering: SoningVurdering? = null,
     private val meldeperiode: Periode? = null,
     val varighetVurdering: VarighetVurdering? = null,
-    private val reduksjonArbeidOverGrenseEnabled: Boolean? = null,
 ) {
     fun leggTilRettighetstype(rettighetstype: RettighetsType): Vurdering {
         return copy(fårAapEtter = rettighetstype)
@@ -91,11 +90,6 @@ data class Vurdering(
 
     fun harRett(): Boolean {
         return fårAapEtter != null &&
-                (when (reduksjonArbeidOverGrenseEnabled) {
-                    null, false -> arbeiderMindreEnnGrenseverdi()
-                    true -> true
-                }) &&
-                harOverholdtMeldeplikten() &&
                 sonerIkke() &&
                 !bryterAktivitetsplikt11_7() &&
                 !bryterOppholdskrav() &&
@@ -113,17 +107,14 @@ data class Vurdering(
         return !soningsVurdering.girOpphør
     }
 
-    private fun harOverholdtMeldeplikten(): Boolean {
-        val utfall = meldepliktVurdering?.utfall
-        return utfall == null || utfall == OPPFYLT
-    }
-
-    private fun arbeiderMindreEnnGrenseverdi(): Boolean {
-        return gradering == null || grenseverdi == null || grenseverdi() >= gradering.andelArbeid
-    }
-
-    fun rettighetsType(): RettighetsType? {
+    /** Rettighetstype før vi har kjørt underveissteget. */
+    fun preliminærRettighetsType(): RettighetsType? {
         return fårAapEtter
+    }
+
+    /** Rettighetstype etter vi har kjørt underveissteget. */
+    fun endeligRettighetsType(): RettighetsType? {
+        return if (harRett()) preliminærRettighetsType() else null
     }
 
     fun grenseverdi(): Prosent {
@@ -166,10 +157,6 @@ data class Vurdering(
             return UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT_11_7_OPPHØR
         } else if (stansEtterBruddPåAktivitetsplikt11_7()) {
             return UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT_11_7_STANS
-        } else if (reduksjonArbeidOverGrenseEnabled != true && !arbeiderMindreEnnGrenseverdi()) {
-            return UnderveisÅrsak.ARBEIDER_MER_ENN_GRENSEVERDI
-        } else if (!harOverholdtMeldeplikten()) {
-            return requireNotNull(meldepliktVurdering?.årsak)
         } else if (!varighetsvurderingOppfylt()) {
             return UnderveisÅrsak.VARIGHETSKVOTE_BRUKT_OPP
         }

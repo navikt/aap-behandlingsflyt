@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriod
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -22,6 +23,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.test.desember
+import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
@@ -114,17 +117,77 @@ class UtbetalingServiceTest {
         every { tilkjentYtelseRepository.hentHvisEksisterer(revurdering.id) } returns tilkjentYtelseForRevurdering()
 
 
-        val tilkjentYtelseDtoFørstegangsbehandling = utbetalingService.lagTilkjentYtelseForUtbetaling(sak.id, førstegangsbehandling.id)
+        val tilkjentYtelseDtoFørstegangsbehandling =
+            utbetalingService.lagTilkjentYtelseForUtbetaling(sak.id, førstegangsbehandling.id)
         assertThat(tilkjentYtelseDtoFørstegangsbehandling).isNotNull
         assertThat(tilkjentYtelseDtoFørstegangsbehandling?.nyMeldeperiode).isNull()
 
         val tilkjentYtelseDtoRevurdering = utbetalingService.lagTilkjentYtelseForUtbetaling(sak.id, revurdering.id)
         assertThat(tilkjentYtelseDtoRevurdering).isNotNull
         assertThat(tilkjentYtelseDtoRevurdering?.nyMeldeperiode).isNotNull
-        assertThat(tilkjentYtelseDtoRevurdering?.nyMeldeperiode).isEqualTo(MeldeperiodeDto(førsteTilkjentYtelsePeriode.fom, tredjeTilkjentYtelsePeriode.tom))
-
-
+        assertThat(tilkjentYtelseDtoRevurdering?.nyMeldeperiode).isEqualTo(
+            MeldeperiodeDto(
+                førsteTilkjentYtelsePeriode.fom,
+                tredjeTilkjentYtelsePeriode.tom
+            )
+        )
     }
+
+    @Test
+    fun `nyMeldeperiode styres av utbetalingsdato`() {
+        every { sakRepository.hent(any<SakId>()) } returns sak
+        every { behandlingRepository.hent(førstegangsbehandling.id) } returns førstegangsbehandling
+        every { behandlingRepository.hent(revurdering.id) } returns revurdering
+        every { behandlingRepository.hentAlleFor(any<SakId>()) } returns listOf(revurdering, førstegangsbehandling)
+        every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns UnderveisGrunnlag(
+            id = 0L,
+            perioder = emptyList()
+        )
+        every { underveisRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns UnderveisGrunnlag(
+            id = 1L,
+            perioder = emptyList()
+        )
+
+
+        val startdato = LocalDate.of(2025, 11, 29)
+        every { vedtakRepository.hent(førstegangsbehandling.id) } returns Vedtak(
+            førstegangsbehandling.id,
+            (8 desember 2025).atStartOfDay(), startdato
+        )
+        every { vedtakRepository.hent(revurdering.id) } returns Vedtak(
+            revurdering.id,
+            LocalDate.of(2025, 12, 17).atStartOfDay(),
+            startdato
+        )
+
+        every { tilkjentYtelseRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns listOf(
+            TilkjentYtelsePeriode(
+                periode = Periode(29 november 2025, 7 desember 2025),
+                tilkjent = tilkjentYtelseDto(8 desember 2025)
+            ),
+        )
+        every { tilkjentYtelseRepository.hentHvisEksisterer(revurdering.id) } returns listOf(
+            TilkjentYtelsePeriode(
+                periode = Periode(29 november 2025, 7 desember 2025),
+                tilkjent = tilkjentYtelseDto(8 desember 2025)
+            ),
+            TilkjentYtelsePeriode(
+                periode = Periode(8 desember 2025, 21 desember 2025),
+                tilkjent = tilkjentYtelseDto(17 desember 2025)
+            )
+        )
+
+        val tilkjentYtelseDtoRevurdering = utbetalingService.lagTilkjentYtelseForUtbetaling(sak.id, revurdering.id)
+        assertThat(tilkjentYtelseDtoRevurdering).isNotNull
+        assertThat(tilkjentYtelseDtoRevurdering?.nyMeldeperiode).isNotNull
+        assertThat(tilkjentYtelseDtoRevurdering?.nyMeldeperiode).isEqualTo(
+            MeldeperiodeDto(
+                8 desember 2025,
+                21 desember 2025
+            )
+        )
+    }
+
 
     private fun tilkjentYtelseForFørstegangsbehandling(): List<TilkjentYtelsePeriode> = listOf(
         TilkjentYtelsePeriode(
@@ -149,9 +212,8 @@ class UtbetalingServiceTest {
         TilkjentYtelsePeriode(
             periode = tredjeTilkjentYtelsePeriode,
             tilkjent = tilkjentYtelseDto(tredjeTilkjentYtelsePeriode.tom)
-        ),
-
-            )
+        )
+    )
 
     private fun tilkjentYtelseDto(utbetalingsdato: LocalDate): Tilkjent {
         return Tilkjent(
@@ -162,7 +224,8 @@ class UtbetalingServiceTest {
                 institusjonGradering = Prosent.`0_PROSENT`,
                 arbeidGradering = Prosent.`0_PROSENT`,
                 samordningUføregradering = Prosent.`0_PROSENT`,
-                samordningArbeidsgiverGradering = Prosent.`0_PROSENT`
+                samordningArbeidsgiverGradering = Prosent.`0_PROSENT`,
+                meldepliktGradering = Prosent.`0_PROSENT`,
             ),
             grunnlagsfaktor = GUnit(1),
             grunnbeløp = Beløp(100),

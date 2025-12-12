@@ -63,6 +63,10 @@ class FakeBrevbestillingGateway : BrevbestillingGateway {
         brevbestillingResponse = brevbestillingResponse!!.copy(status = Status.AVBRUTT)
     }
 
+    override fun gjenoppta(bestillingReferanse: BrevbestillingReferanse) {
+        brevbestillingResponse = brevbestillingResponse!!.copy(status = Status.UNDER_ARBEID)
+    }
+
     override fun kanDistribuereBrev(
         brukerIdent: String,
         mottakerIdentListe: List<String>,
@@ -86,6 +90,9 @@ class FakeBrevbestillingGateway : BrevbestillingGateway {
         brevdata: BrevdataDto
     ) {
         brevbestillingResponse = brevbestillingResponse!!.copy(brevdata = brevdata)
+    }
+
+    override fun oppdaterBrevmal(bestillingReferanse: BrevbestillingReferanse) {
     }
 
     override fun hentSignaturForhåndsvisning(

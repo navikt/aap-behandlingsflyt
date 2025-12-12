@@ -198,7 +198,7 @@ class AktivitetspliktFlytTest :
             .isEqualTo(aktivtStegFørEffektueringsbehandling)
 
         åpenBehandling
-            .løsBistand()
+            .løsBistand(sak.rettighetsperiode.fom)
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
@@ -243,7 +243,7 @@ class AktivitetspliktFlytTest :
         val sak = happyCaseFørstegangsbehandling(person = person)
         var åpenBehandling = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom, vissVarighet = true)
 
-        åpenBehandling = åpenBehandling.løsBistand()
+        åpenBehandling = åpenBehandling.løsBistand(sak.rettighetsperiode.fom)
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
@@ -281,7 +281,7 @@ class AktivitetspliktFlytTest :
                 begrunnelse = "Brudd",
                 erOppfylt = false,
                 utfall = Utfall.STANS,
-                gjelderFra = bruddFom,
+                fom = bruddFom,
                 vurdertAv = "Saksbehandler",
                 opprettet = sak.rettighetsperiode.fom.plusWeeks(20).atStartOfDay().toInstant(ZoneOffset.UTC),
                 vurdertIBehandling = behandlingId,
@@ -389,7 +389,7 @@ class AktivitetspliktFlytTest :
         )
         var åpenBehandlingForbiTilkjentYtelse =
             revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom, vissVarighet = true)
-                .løsBistand()
+                .løsBistand(sak.rettighetsperiode.fom)
                 .medKontekst {
                     assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                         .containsExactlyInAnyOrder(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
@@ -501,7 +501,7 @@ class AktivitetspliktFlytTest :
         sak: Sak,
     ): Behandling {
         return SakOgBehandlingService(repositoryProvider, gatewayProvider).opprettAktivitetspliktBehandling(
-            sak.id, vurderingsbehov
+            sak.id, ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE, vurderingsbehov
         )
     }
 

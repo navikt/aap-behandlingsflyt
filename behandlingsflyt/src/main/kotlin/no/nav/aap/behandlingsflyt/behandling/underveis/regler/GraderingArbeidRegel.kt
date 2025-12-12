@@ -1,11 +1,11 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UtledMeldeperiodeRegel.Companion.groupByMeldeperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneVurdering.Companion.tidslinje
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.somTidslinje
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
 import no.nav.aap.komponenter.verdityper.TimerArbeid
@@ -64,6 +64,7 @@ class GraderingArbeidRegel : UnderveisRegel {
         val opplysningerFørstMottatt: LocalDate? = null,
         val harRett: Boolean? = null,
         val grenseverdi: Prosent? = null,
+        val meldeperiode: Periode? = null,
     ) {
         companion object {
             fun mergePrioriterHøyre(venstre: OpplysningerOmArbeid?, høyre: OpplysningerOmArbeid?) =
@@ -76,6 +77,7 @@ class GraderingArbeidRegel : UnderveisRegel {
                     ).minOrNull(),
                     harRett = høyre?.harRett ?: venstre?.harRett,
                     grenseverdi = høyre?.grenseverdi ?: venstre?.grenseverdi,
+                    meldeperiode = høyre?.meldeperiode ?: venstre?.meldeperiode,
                 )
         }
     }
@@ -85,22 +87,24 @@ class GraderingArbeidRegel : UnderveisRegel {
         input: UnderveisInput
     ): Tidslinje<ArbeidsGradering> {
         val opplysninger = Tidslinje(input.periodeForVurdering, OpplysningerOmArbeid())
-            .outerJoin(arbeidsevnevurdering(input), OpplysningerOmArbeid::mergePrioriterHøyre)
-            .outerJoin(nullTimerVedFritakFraMeldeplikt(input), OpplysningerOmArbeid::mergePrioriterHøyre)
-            .outerJoin(opplysningerFraMeldekort(input), OpplysningerOmArbeid::mergePrioriterHøyre)
-            .outerJoin(harRettTidslinje(resultat), OpplysningerOmArbeid::mergePrioriterHøyre)
-            .outerJoin(grenseverdi(resultat), OpplysningerOmArbeid::mergePrioriterHøyre)
+            .leftJoin(arbeidsevnevurdering(input), OpplysningerOmArbeid::mergePrioriterHøyre)
+            .leftJoin(meldeperioder(input), OpplysningerOmArbeid::mergePrioriterHøyre)
+            .leftJoin(nullTimerVedFritakFraMeldeplikt(input), OpplysningerOmArbeid::mergePrioriterHøyre)
+            .leftJoin(opplysningerFraMeldekort(input), OpplysningerOmArbeid::mergePrioriterHøyre)
+            .leftJoin(harRettTidslinje(resultat), OpplysningerOmArbeid::mergePrioriterHøyre)
+            .leftJoin(grenseverdi(resultat), OpplysningerOmArbeid::mergePrioriterHøyre)
 
-
-        return groupByMeldeperiode(resultat, opplysninger)
-            .flatMap { meldeperiode ->
-                regnUtGradering(meldeperiode.verdi)
-            }
+        return opplysninger.splittOppIPerioderBasertPå { Pair(it.meldeperiode, it.grenseverdi) }
+            .flatMap { periode -> regnUtGradering(periode.verdi) }
             .komprimer()
     }
 
     private fun grenseverdi(vurderinger: Tidslinje<Vurdering>): Tidslinje<OpplysningerOmArbeid> {
         return vurderinger.map { OpplysningerOmArbeid(grenseverdi = it.grenseverdi()) }
+    }
+
+    private fun meldeperioder(input: UnderveisInput): Tidslinje<OpplysningerOmArbeid> {
+        return input.meldeperioder.somTidslinje({ it }, { OpplysningerOmArbeid(meldeperiode = it) })
     }
 
     private fun harRettTidslinje(vurderinger: Tidslinje<Vurdering>): Tidslinje<OpplysningerOmArbeid> {
@@ -127,7 +131,8 @@ class GraderingArbeidRegel : UnderveisRegel {
             if (fritaksvurdering?.harFritak == true && harPassertMeldeperiodeITid) {
                 OpplysningerOmArbeid(
                     timerArbeid = TimerArbeid(BigDecimal.ZERO),
-                    opplysningerFørstMottatt = meldeperiode.tom.plusDays(3) // Settes til samme dag som fritak-jobbkjøringstidspunktet
+                    opplysningerFørstMottatt = unntakFritaksUtbetalingDato[meldeperiode.tom.plusDays(3)]
+                        ?: meldeperiode.tom.plusDays(3)
                 )
             } else {
                 OpplysningerOmArbeid()
@@ -184,7 +189,10 @@ class GraderingArbeidRegel : UnderveisRegel {
                     andelArbeid = `0_PROSENT`,
                     fastsattArbeidsevne = it.arbeidsevne ?: `0_PROSENT`,
                     gradering = `0_PROSENT`,
-                    opplysningerMottatt = null,
+                    opplysningerMottatt = opplysningerOmArbeid.segmenter()
+                        .mapNotNull { it.verdi.opplysningerFørstMottatt }
+                        /* Høyeste dato er datoen første dato vi hadde opplysninger for *hele* meldeperioden. */
+                        .maxOrNull(),
                 )
             }
         }

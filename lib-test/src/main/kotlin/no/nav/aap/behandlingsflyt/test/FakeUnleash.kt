@@ -15,24 +15,26 @@ open class FakeUnleashBase(
 }
 
 
+/** Devlik unleash. */
 object FakeUnleash : FakeUnleashBase(
     mapOf(
         BehandlingsflytFeature.IngenValidering to false,
         BehandlingsflytFeature.NyBrevtype11_17 to true,
-        BehandlingsflytFeature.NyBrevtype11_18 to true,
-        BehandlingsflytFeature.Aktivitetsplikt11_9 to true,
         BehandlingsflytFeature.OverforingsdatoNullForAvregning to true,
-        BehandlingsflytFeature.OvergangArbeid to false,
+        BehandlingsflytFeature.OvergangArbeid to true,
         BehandlingsflytFeature.KvalitetssikringsSteg to true,
         BehandlingsflytFeature.FatteVedtakAvklaringsbehovService to true,
         BehandlingsflytFeature.EOSBeregning to true,
         BehandlingsflytFeature.NyeBarn to true,
-        BehandlingsflytFeature.Arbeidsopptrapping to true,
         BehandlingsflytFeature.NyBrevbyggerV3 to false,
         BehandlingsflytFeature.BedreUttrekkAvSakerMedFritakMeldeplikt to false,
         BehandlingsflytFeature.LagreVedtakIFatteVedtak to true,
-        BehandlingsflytFeature.ReduksjonArbeidOverGrense to true,
-        BehandlingsflytFeature.ForutgaendeMedlemskapPeriodisert to true,
+        BehandlingsflytFeature.PeriodisertSykepengeErstatningNyAvklaringsbehovService to true,
+        BehandlingsflytFeature.MidlertidigStopp11_4 to true,
+        BehandlingsflytFeature.ValiderOvergangUfore to true,
+        BehandlingsflytFeature.KravOmInntektsbortfall to true,
+        BehandlingsflytFeature.Under18 to true,
+        BehandlingsflytFeature.MigrerMeldepliktFritak to true,
     )
 )
 
@@ -40,19 +42,20 @@ object LokalUnleash : FakeUnleashBase(
     mapOf(
         BehandlingsflytFeature.IngenValidering to true,
         BehandlingsflytFeature.NyBrevtype11_17 to true,
-        BehandlingsflytFeature.NyBrevtype11_18 to true,
-        BehandlingsflytFeature.Aktivitetsplikt11_9 to true,
         BehandlingsflytFeature.OverforingsdatoNullForAvregning to true,
         BehandlingsflytFeature.OvergangArbeid to true,
         BehandlingsflytFeature.KvalitetssikringsSteg to true,
         BehandlingsflytFeature.FatteVedtakAvklaringsbehovService to true,
         BehandlingsflytFeature.EOSBeregning to true,
         BehandlingsflytFeature.NyeBarn to true,
-        BehandlingsflytFeature.Arbeidsopptrapping to true,
         BehandlingsflytFeature.NyBrevbyggerV3 to false,
         BehandlingsflytFeature.BedreUttrekkAvSakerMedFritakMeldeplikt to true,
         BehandlingsflytFeature.LagreVedtakIFatteVedtak to true,
-        BehandlingsflytFeature.ReduksjonArbeidOverGrense to true,
-        BehandlingsflytFeature.ForutgaendeMedlemskapPeriodisert to true,
+        BehandlingsflytFeature.PeriodisertSykepengeErstatningNyAvklaringsbehovService to true,
+        BehandlingsflytFeature.MidlertidigStopp11_4 to true,
+        BehandlingsflytFeature.ValiderOvergangUfore to true,
+        BehandlingsflytFeature.KravOmInntektsbortfall to true,
+        BehandlingsflytFeature.Under18 to true,
+        BehandlingsflytFeature.MigrerMeldepliktFritak to true,
     )
 )

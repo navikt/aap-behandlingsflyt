@@ -50,7 +50,7 @@ class ForeslåVedtakSteg internal constructor(
         avklaringsbehovene: Avklaringsbehovene
     ): Boolean {
         return tidligereVurderinger.harBehandlingsgrunnlag(kontekst, type())
-                && avklaringsbehovene.avklaringsbehovLøstAvNay().isNotEmpty()
+                && skalInnomForeslåVedtak(avklaringsbehovene)
     }
 
     private fun erTilstrekkeligVurdert(
@@ -67,6 +67,21 @@ class ForeslåVedtakSteg internal constructor(
         }
 
         return avklaringsbehovLøstAvNay.all { it.sistEndret().isBefore(sistForeslåttVedtak) }
+    }
+
+    private fun skalInnomForeslåVedtak(avklaringsbehovene: Avklaringsbehovene): Boolean {
+        val harAvklaringsbehovLøstAvNay = avklaringsbehovene.avklaringsbehovLøstAvNay().isNotEmpty()
+        if (!harAvklaringsbehovLøstAvNay) {
+            return false
+        }
+
+        val nayHarBareLøstLovvalgEllerVentepunkt = avklaringsbehovene.avklaringsbehovLøstAvNay().filterNot { it.erLovvalgOgMedlemskap() }.filterNot { it.erVentepunkt() }.isEmpty()
+        if (!nayHarBareLøstLovvalgEllerVentepunkt) {
+            return true
+        }
+        // Hvis behandling har vært innom sykdom, men behandlingen har ingen andre Nay-avklaringsbehov enn lovvalg
+        // så har lokal vurdert avslag. Skal returnere false
+        return !avklaringsbehovene.harVærtInnomSykdom()
     }
 
     companion object : FlytSteg {

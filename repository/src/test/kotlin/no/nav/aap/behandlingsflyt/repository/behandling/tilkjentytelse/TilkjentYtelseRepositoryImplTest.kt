@@ -57,7 +57,8 @@ class TilkjentYtelseRepositoryImplTest {
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
-                                Prosent.`0_PROSENT`
+                                Prosent.`0_PROSENT`,
+                                Prosent.`0_PROSENT`,
                             ),
                             barnetillegg = Beløp(999),
                             grunnlagsfaktor = GUnit("1.0"),
@@ -80,7 +81,8 @@ class TilkjentYtelseRepositoryImplTest {
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
-                                Prosent.`0_PROSENT`
+                                Prosent.`0_PROSENT`,
+                                Prosent.`0_PROSENT`,
                             ),
                             barnetillegg = Beløp(1000),
                             grunnlagsfaktor = GUnit("1.0"),
@@ -135,7 +137,8 @@ class TilkjentYtelseRepositoryImplTest {
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
-                                Prosent.`0_PROSENT`
+                                Prosent.`0_PROSENT`,
+                                Prosent.`0_PROSENT`,
                             ),
                             barnetillegg = Beløp(999),
                             grunnlagsfaktor = GUnit("1.0"),
@@ -158,7 +161,8 @@ class TilkjentYtelseRepositoryImplTest {
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
-                                Prosent.`0_PROSENT`
+                                Prosent.`0_PROSENT`,
+                                Prosent.`0_PROSENT`,
                             ),
                             barnetillegg = Beløp(1000),
                             grunnlagsfaktor = GUnit("1.0"),
@@ -187,7 +191,8 @@ class TilkjentYtelseRepositoryImplTest {
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
-                                Prosent.`0_PROSENT`
+                                Prosent.`0_PROSENT`,
+                                Prosent.`0_PROSENT`,
                             ),
                             barnetillegg = Beløp(999),
                             grunnlagsfaktor = GUnit("1.0"),
@@ -210,7 +215,8 @@ class TilkjentYtelseRepositoryImplTest {
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
                                 Prosent.`0_PROSENT`,
-                                Prosent.`0_PROSENT`
+                                Prosent.`0_PROSENT`,
+                                Prosent.`0_PROSENT`,
                             ),
                             barnetillegg = Beløp(1000),
                             grunnlagsfaktor = GUnit("1.0"),

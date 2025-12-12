@@ -19,7 +19,7 @@ data class SaksbehandlerOppgitteBarn(val id: Long? = null, val barn: List<Saksbe
         override fun identifikator(): BarnIdentifikator = if (ident == null) {
             BarnIdentifikator.NavnOgFødselsdato(navn, fødselsdato)
         } else {
-            BarnIdentifikator.BarnIdent(ident)
+            BarnIdentifikator.BarnIdent(ident, navn, fødselsdato)
         }
 
         override fun fødselsdato(): Fødselsdato = fødselsdato

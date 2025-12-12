@@ -36,7 +36,7 @@ data class RettighetsperiodeVurderingResponse(
 )
 
 
-fun NormalOpenAPIRoute.rettighetsperiodeGrunnlagAPI(
+fun NormalOpenAPIRoute.rettighetsperiodeGrunnlagApi(
     dataSource: DataSource,
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,

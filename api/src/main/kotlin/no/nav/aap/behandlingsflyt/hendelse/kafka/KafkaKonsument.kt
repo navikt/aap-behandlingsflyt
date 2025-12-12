@@ -4,14 +4,16 @@ import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.errors.WakeupException
 import org.slf4j.LoggerFactory
-import java.time.Duration
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.time.Duration
+import kotlin.time.toJavaDuration
 
 abstract class KafkaKonsument<K, V>(
     val topic: String,
     config: KafkaConsumerConfig<K, V>,
     consumerName: String,
-    private val pollTimeout: Duration = Duration.ofSeconds(10L),
+    private val pollTimeout: Duration,
+    private val closeTimeout: Duration,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
     private val lukket: AtomicBoolean = AtomicBoolean(false)
@@ -32,20 +34,28 @@ abstract class KafkaKonsument<K, V>(
             log.info("Starter konsumering av $topic")
             konsument.subscribe(listOf(topic))
             while (!lukket.get()) {
-                val meldinger: ConsumerRecords<K, V> = konsument.poll(pollTimeout)
-                håndter(meldinger)
-                konsument.commitSync()
-                antallMeldinger += meldinger.count()
+                val meldinger: ConsumerRecords<K, V> = konsument.poll(pollTimeout.toJavaDuration())
+                try {
+                    håndter(meldinger)
+                    konsument.commitSync()
+                    antallMeldinger += meldinger.count()
+                } catch (e: Exception) {
+                    log.error("Feil ved håndtering av meldinger", e)
+                }
             }
         } catch (e: WakeupException) {
             // Ignorerer exception hvis vi stenger ned
             log.info("Konsument av $topic ble lukket med WakeupException")
             if (!lukket.get()) throw e
         } catch (e: Exception) {
-            log.info("Feil ved innlesing av $topic", e.message)
+            log.info("Feil ved innlesing av $topic", e)
         } finally {
             log.info("Ferdig med å lese hendelser fra $${this.javaClass.name} - lukker konsument")
-            konsument.close()
+            try {
+                konsument.close(closeTimeout.toJavaDuration())
+            } catch (e: Exception) {
+                log.error("Feil ved lukking av konsument", e)
+            }
         }
     }
 

@@ -5,15 +5,13 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovHendelseHåndterer
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehovHendelse
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarSamordningArbeidsgiverLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBarnetilleggLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarForutgåendeMedlemskapLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovEnkelLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarManuellInntektVurderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOppholdskravLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangArbeidLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOvergangUføreEnkelLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeriodisertForutgåendeMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeriodisertLovvalgMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeriodisertOverstyrtLovvalgMedlemskapLøsning
@@ -53,7 +51,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForForutgåendeMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForLovvalgMedlemskapDto
@@ -65,7 +62,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurderingDTO
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.FritaksvurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.flate.OvergangArbeidVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flate.OvergangUføreVurderingLøsningDto
@@ -140,6 +137,7 @@ import no.nav.aap.behandlingsflyt.test.testGatewayProvider
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
@@ -243,6 +241,22 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
             )
         }
 
+        val PERSON_62 = {
+            FakePersoner.leggTil(
+                TestPerson(
+                    fødselsdato = Fødselsdato(LocalDate.now().minusYears(62))
+                )
+            )
+        }
+
+        val PERSON_61 = {
+            FakePersoner.leggTil(
+                TestPerson(
+                    fødselsdato = Fødselsdato(LocalDate.now().minusYears(61))
+                )
+            )
+        }
+
         val PERSON_MED_FORUTGÅENDE_MEDLEMSKAP = {
             FakePersoner.leggTil(
                 TestPerson(
@@ -255,7 +269,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                             ident = "",
                             fraOgMed = LocalDate.now().minusYears(20).toString(),
                             tilOgMed = LocalDate.now().toString(),
-                            status =  "GYLD",
+                            status = "GYLD",
                             statusaarsak = null,
                             medlem = true,
                             grunnlag = "grunnlag",
@@ -343,7 +357,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
             assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         }
             .løsSykdom(sak.rettighetsperiode.fom)
-            .løsBistand()
+            .løsBistand(fom = sak.rettighetsperiode.fom)
             .løsAvklaringsBehov(
                 RefusjonkravLøsning(
                     listOf(
@@ -360,7 +374,8 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
 
         if (sendMeldekort) {
             // Kan ikke bruke Tid.MAKS som finnes i rettighetsperioden - da blir det uendelig kjøretid på testene..?
-            val periodeForInnsendteMeldekort = Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.fom.plusYears(1))
+            val periodeForInnsendteMeldekort =
+                Periode(sak.rettighetsperiode.fom, sak.rettighetsperiode.fom.plusYears(1))
             sak.sendInnMeldekort(
                 journalpostId = JournalpostId("220"),
                 mottattTidspunkt = fom.atStartOfDay(),
@@ -451,6 +466,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                     ingenEndringIGruppe = ingenEndringIGruppe
                 )
             )
+
         }
         motor.kjørJobber()
         return hentBehandling(behandling.referanse)
@@ -470,6 +486,30 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         )
     }
 
+    @JvmName("assertThrowsExt")
+    protected fun Behandling.assertThrows(
+        expectedException: KClass<out Throwable>,
+        message: String? = null,
+        block: (Behandling) -> Unit
+    ): Behandling {
+        try {
+            block(this)
+            throw AssertionError("Forventet at blokk skulle kaste ${expectedException.simpleName}, men den kastet ingenting.")
+        } catch (e: Throwable) {
+            if (!expectedException.isInstance(e)) {
+                throw AssertionError(
+                    "Forventet at blokk skulle kaste ${expectedException.simpleName}, men den kastet ${e::class.simpleName}.",
+                )
+            }
+            if (message != null && e.message != message) {
+                throw AssertionError(
+                    "Forventet at blokk skulle kaste \"${message}\", men fikk \"${e.message}\".",
+                )
+            }
+        }
+        return this
+    }
+
     @JvmName("løsFramTilGrunnlagExt")
     protected fun Behandling.løsFramTilGrunnlag(rettighetsPeriodeFrom: LocalDate): Behandling {
         return løsFramTilGrunnlag(rettighetsPeriodeFrom, this)
@@ -479,14 +519,16 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         return behandling
             .løsSykdom(rettighetsPeriodeFrom)
             .løsAvklaringsBehov(
-                AvklarBistandsbehovLøsning(
-                    bistandsVurdering = BistandVurderingLøsningDto(
+                AvklarBistandsbehovEnkelLøsning(
+                    bistandsVurdering = BistandLøsningDto(
                         begrunnelse = "Trenger hjelp fra nav",
                         erBehovForAktivBehandling = true,
                         erBehovForArbeidsrettetTiltak = false,
                         erBehovForAnnenOppfølging = null,
                         skalVurdereAapIOvergangTilArbeid = null,
                         overgangBegrunnelse = null,
+                        fom = rettighetsPeriodeFrom,
+                        tom = null
                     ),
                 ),
             )
@@ -537,7 +579,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                         dokumenterBruktIVurdering = listOf(JournalpostId("123123")),
                         harSkadeSykdomEllerLyte = erOppfylt,
                         erSkadeSykdomEllerLyteVesentligdel = true.takeIf { erOppfylt },
-                        erNedsettelseIArbeidsevneMerEnnHalvparten =  when {
+                        erNedsettelseIArbeidsevneMerEnnHalvparten = when {
                             erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense != null -> false
                             erOppfylt -> true
                             else -> null
@@ -554,16 +596,18 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         )
     }
 
-    protected fun Behandling.løsBistand(erOppfylt: Boolean = true): Behandling {
+    protected fun Behandling.løsBistand(fom: LocalDate, erOppfylt: Boolean = true): Behandling {
         return this.løsAvklaringsBehov(
-            AvklarBistandsbehovLøsning(
-                BistandVurderingLøsningDto(
+            AvklarBistandsbehovEnkelLøsning(
+                BistandLøsningDto(
                     begrunnelse = "Trenger hjelp fra nav",
                     erBehovForAktivBehandling = erOppfylt,
                     erBehovForArbeidsrettetTiltak = false,
                     erBehovForAnnenOppfølging = false.takeUnless { erOppfylt },
                     skalVurdereAapIOvergangTilArbeid = null,
                     overgangBegrunnelse = null,
+                    fom = fom,
+                    tom = null
                 )
             )
         )
@@ -579,13 +623,15 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         return løsAvklaringsBehov(
             behandling = behandling,
             avklaringsBehovLøsning =
-                AvklarOvergangUføreLøsning(
+                AvklarOvergangUføreEnkelLøsning(
                     OvergangUføreVurderingLøsningDto(
                         begrunnelse = "Løsning",
                         brukerHarSøktOmUføretrygd = false,
                         brukerHarFåttVedtakOmUføretrygd = null,
                         brukerRettPåAAP = false,
                         virkningsdato = null,
+                        fom = null,
+                        tom = null,
                         overgangBegrunnelse = null
                     )
                 )
@@ -630,6 +676,19 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                     begrunnelse = "En begrunnelse",
                     harRettUtoverSøknadsdato = true,
                     harKravPåRenter = false,
+                )
+            )
+        )
+    }
+
+    protected fun Behandling.løsRettighetsperiodeIngenEndring(): Behandling {
+        return this.løsAvklaringsBehov(
+            avklaringsBehovLøsning = VurderRettighetsperiodeLøsning(
+                rettighetsperiodeVurdering = RettighetsperiodeVurderingDTO(
+                    startDato = null,
+                    begrunnelse = "En begrunnelse",
+                    harRettUtoverSøknadsdato = false,
+                    harKravPåRenter = null,
                 )
             )
         )
@@ -1033,7 +1092,8 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
             melding = NyÅrsakTilBehandlingV0(
                 årsakerTilBehandling = vurderingsbehov,
                 behandlingReferanse = behandlingReferanse.toString(),
-                null
+                reserverTilBruker = null,
+                beskrivelse = null
             ),
         )
     }
@@ -1109,7 +1169,10 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
     }
 
     @JvmName("løsFramTilForutgåendeMedlemskapExt")
-    protected fun Behandling.løsFramTilForutgåendeMedlemskap(vurderingerGjelderFra: LocalDate, harYrkesskade: Boolean = false): Behandling {
+    protected fun Behandling.løsFramTilForutgåendeMedlemskap(
+        vurderingerGjelderFra: LocalDate,
+        harYrkesskade: Boolean = false
+    ): Behandling {
         return løsFramTilForutgåendeMedlemskap(this, vurderingerGjelderFra, harYrkesskade)
     }
 
@@ -1120,7 +1183,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
     ): Behandling {
         var behandling = behandling
         behandling = løsSykdom(behandling, vurderingerGjelderFra)
-            .løsBistand()
+            .løsBistand(vurderingerGjelderFra)
             .løsAvklaringsBehov(
                 RefusjonkravLøsning(
                     listOf(
@@ -1178,7 +1241,10 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         )
     }
 
-    protected fun Behandling.løsYrkesskadeVurdering(yrkesskader: List<TestYrkesskade>, erÅrsakssammenheng: Boolean = true): Behandling {
+    protected fun Behandling.løsYrkesskadeVurdering(
+        yrkesskader: List<TestYrkesskade>,
+        erÅrsakssammenheng: Boolean = true
+    ): Behandling {
         return løsAvklaringsBehov(
             this,
             AvklarYrkesskadeLøsning(
@@ -1284,14 +1350,19 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                     }),
             Bruker("BESLUTTER")
         )
+
     protected fun Behandling.løsFritakMeldeplikt(fom: LocalDate): Behandling {
-        return løsAvklaringsBehov(this, FritakMeldepliktLøsning(
-            fritaksvurderinger = listOf(FritaksvurderingDto(
-                harFritak = true,
-                fraDato = fom,
-                begrunnelse = "har fritak",
-            ))
-        ))
+        return løsAvklaringsBehov(
+            this, FritakMeldepliktLøsning(
+                fritaksvurderinger = listOf(
+                    FritaksvurderingDto(
+                        harFritak = true,
+                        fraDato = fom,
+                        begrunnelse = "har fritak",
+                    )
+                )
+            )
+        )
     }
 
     protected fun Behandling.løsForeslåVedtak(): Behandling =
@@ -1312,7 +1383,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
             )
         )
     }
-    
+
     protected fun Behandling.løsYrkesskade(person: TestPerson): Behandling {
         require(person.yrkesskade.isNotEmpty()) { "Testperson må ha yrkesskade for å bruke denne metoden" }
         return løsAvklaringsBehov(
@@ -1460,10 +1531,11 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
     }
 
     protected fun Behandling.assertRettighetstype(vararg rettighetstyper: Pair<Periode, RettighetsType>): Behandling {
-        val faktiskeRettighetsTyper = dataSource.transaction(readOnly = true) { UnderveisRepositoryImpl(it).hent(this.id) }
-            .somTidslinje()
-            .mapNotNull { it.rettighetsType }
-            .komprimer()
+        val faktiskeRettighetsTyper =
+            dataSource.transaction(readOnly = true) { UnderveisRepositoryImpl(it).hent(this.id) }
+                .somTidslinje()
+                .mapNotNull { it.rettighetsType }
+                .komprimer()
 
         val assertions = tidslinjeOf(*rettighetstyper)
             .map<(RettighetsType) -> Unit> { ønsketRettighetsType ->

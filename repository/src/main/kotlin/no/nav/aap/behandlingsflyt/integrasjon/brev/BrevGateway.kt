@@ -22,12 +22,14 @@ import no.nav.aap.brev.kontrakt.Brevtype
 import no.nav.aap.brev.kontrakt.Faktagrunnlag
 import no.nav.aap.brev.kontrakt.FerdigstillBrevRequest
 import no.nav.aap.brev.kontrakt.ForhandsvisBrevRequest
+import no.nav.aap.brev.kontrakt.GjenopptaBrevbestillingRequest
 import no.nav.aap.brev.kontrakt.HentSignaturerRequest
 import no.nav.aap.brev.kontrakt.HentSignaturerResponse
 import no.nav.aap.brev.kontrakt.KanDistribuereBrevReponse
 import no.nav.aap.brev.kontrakt.KanDistribuereBrevRequest
 import no.nav.aap.brev.kontrakt.MottakerDistStatus
 import no.nav.aap.brev.kontrakt.MottakerDto
+import no.nav.aap.brev.kontrakt.OppdaterBrevmalRequest
 import no.nav.aap.brev.kontrakt.Signatur
 import no.nav.aap.brev.kontrakt.SignaturGrunnlag
 import no.nav.aap.brev.kontrakt.Språk
@@ -180,6 +182,14 @@ class BrevGateway : BrevbestillingGateway {
         client.put<_, Unit>(url, request)
     }
 
+    override fun oppdaterBrevmal(bestillingReferanse: BrevbestillingReferanse) {
+        val url = baseUri.resolve("/api/oppdater-brevmal")
+
+        val request = PutRequest(body = OppdaterBrevmalRequest(bestillingReferanse.brevbestillingReferanse))
+
+        client.put<_, Unit>(url, request)
+    }
+
     override fun forhåndsvis(
         bestillingReferanse: BrevbestillingReferanse,
         signaturer: List<SignaturGrunnlag>
@@ -208,6 +218,21 @@ class BrevGateway : BrevbestillingGateway {
 
         val request = PostRequest(
             body = AvbrytBrevbestillingRequest(bestillingReferanse.brevbestillingReferanse),
+            additionalHeaders = listOf(
+                Header("Accept", "application/json")
+            )
+        )
+        client.post<_, Unit>(
+            uri = url,
+            request = request
+        )
+    }
+
+    override fun gjenoppta(bestillingReferanse: BrevbestillingReferanse) {
+        val url = baseUri.resolve("/api/gjenoppta-bestilling")
+
+        val request = PostRequest(
+            body = GjenopptaBrevbestillingRequest(bestillingReferanse.brevbestillingReferanse),
             additionalHeaders = listOf(
                 Header("Accept", "application/json")
             )
@@ -291,9 +316,9 @@ class BrevGateway : BrevbestillingGateway {
                                 gradertDagsatsInkludertBarnetillegg = brevBehov.tilkjentYtelse?.gradertDagsatsInkludertBarnetillegg?.verdi,
                                 barnetillegg = brevBehov.tilkjentYtelse?.barnetillegg?.verdi,
                                 antallBarn = brevBehov.tilkjentYtelse?.antallBarn,
-                                minsteÅrligYtelse = null,
-                                minsteÅrligYtelseUnder25 = null,
-                                årligYtelse = null,
+                                minsteÅrligYtelse = brevBehov.tilkjentYtelse?.minsteÅrligYtelse?.verdi,
+                                minsteÅrligYtelseUnder25 = brevBehov.tilkjentYtelse?.minsteÅrligYtelseUnder25?.verdi,
+                                årligYtelse = brevBehov.tilkjentYtelse?.årligYtelse?.verdi
                             )
                         )
                     }

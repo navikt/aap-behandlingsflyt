@@ -22,10 +22,12 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRevurdering
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRevurderingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Omgjøringskilde
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Oppfølgingsoppgave
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppfølgingsoppgaveV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.PdlHendelseV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelseV0
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -60,6 +62,7 @@ class HåndterMottattDokumentService(
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
+    private val secureLogger = LoggerFactory.getLogger("secureLog")
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         sakService = SakService(repositoryProvider),
@@ -119,6 +122,80 @@ class HåndterMottattDokumentService(
 
     }
 
+    fun håndterMottattOmgjøringEtterKlage(
+        sakId: SakId,
+        referanse: InnsendingReferanse,
+        mottattTidspunkt: LocalDateTime,
+        brevkategori: InnsendingType,
+        melding: OmgjøringKlageRevurdering,
+    ) {
+        log.info("Mottok dokument på sak-id $sakId, og referanse $referanse, med brevkategori $brevkategori")
+
+        val sak = sakService.hent(sakId)
+        val årsakTilOpprettelse = utledÅrsakTilOpprettelse(brevkategori, melding)
+        val periode = utledPeriode(brevkategori, mottattTidspunkt, melding)
+        val vurderingsbehov = utledVurderingsbehov(brevkategori, melding, periode)
+
+        val (vurderingsbehovForAktivitetsplikt, vurderingsbehovForYtelsesbehandling) = vurderingsbehov.toSet()
+            .partition { it.type in Vurderingsbehov.forAktivitetspliktbehandling() }
+
+        val opprettedeAktivitetspliktBehandlinger = vurderingsbehovForAktivitetsplikt
+            .map { it.type }.toSet()
+            .map {
+                val beskrivelse = when (melding) {
+                    is OmgjøringKlageRevurderingV0 -> melding.beskrivelse
+                }
+                val opprettet = sakOgBehandlingService.opprettAktivitetspliktBehandling(
+                    sakId,
+                    årsakTilOpprettelse,
+                    it,
+                    mottattTidspunkt,
+                    beskrivelse
+                )
+                prosesserBehandling.triggProsesserBehandling(opprettet)
+                opprettet
+            }
+
+        if (vurderingsbehovForYtelsesbehandling.isEmpty() && vurderingsbehovForAktivitetsplikt.isNotEmpty()) {
+            // TODO: Bør kanskje støtte flere behandlinger - velger den første
+            mottaDokumentService.markerSomBehandlet(sak.id, opprettedeAktivitetspliktBehandlinger.first().id, referanse)
+            return
+        }
+
+        val opprettetBehandling = sakOgBehandlingService.finnEllerOpprettBehandling(
+            sak.saksnummer,
+            VurderingsbehovOgÅrsak(
+                årsak = årsakTilOpprettelse,
+                vurderingsbehov = vurderingsbehovForYtelsesbehandling,
+                opprettet = mottattTidspunkt,
+                beskrivelse =
+                    when (melding) {
+                        is OmgjøringKlageRevurderingV0 -> melding.beskrivelse
+                    }
+            )
+        )
+
+        val behandlingSkrivelås = opprettetBehandling.åpenBehandling?.let {
+            låsRepository.låsBehandling(it.id)
+        }
+
+        when (opprettetBehandling) {
+            is SakOgBehandlingService.Ordinær ->
+                mottaDokumentService.oppdaterMedBehandlingId(sakId, opprettetBehandling.åpenBehandling.id, referanse)
+
+            else -> throw IllegalStateException("Forventet ordinær behandling ved omgjøring etter klage")
+        }
+
+        prosesserBehandling.triggProsesserBehandling(
+            opprettetBehandling,
+            listOf("trigger" to DefaultJsonMapper.toJson(vurderingsbehovForYtelsesbehandling.map { it.type }))
+        )
+
+        if (behandlingSkrivelås != null) {
+            låsRepository.verifiserSkrivelås(behandlingSkrivelås)
+        }
+    }
+
     fun håndterMottatteDokumenter(
         sakId: SakId,
         referanse: InnsendingReferanse,
@@ -126,7 +203,7 @@ class HåndterMottattDokumentService(
         brevkategori: InnsendingType,
         melding: Melding?,
     ) {
-        log.info("Mottok dokument på sak-id $sakId, og referanse $referanse, med brevkategori $brevkategori.")
+        log.info("Mottok dokument på sak-id $sakId, og referanse $referanse, med brevkategori $brevkategori")
         val sak = sakService.hent(sakId)
         val periode = utledPeriode(brevkategori, mottattTidspunkt, melding)
         val vurderingsbehov = utledVurderingsbehov(brevkategori, melding, periode)
@@ -141,6 +218,8 @@ class HåndterMottattDokumentService(
                 beskrivelse = when (melding) {
                     is ManuellRevurderingV0 -> melding.beskrivelse
                     is OmgjøringKlageRevurderingV0 -> melding.beskrivelse
+                    is PdlHendelseV0 -> melding.beskrivelse
+                    is NyÅrsakTilBehandlingV0 -> melding.årsakerTilBehandling.joinToString(", ")
                     else -> null
                 }
             )
@@ -181,6 +260,34 @@ class HåndterMottattDokumentService(
         }
     }
 
+    fun håndterMottattDialogMelding(
+        sakId: SakId,
+        referanse: InnsendingReferanse,
+        mottattTidspunkt: LocalDateTime,
+        brevkategori: InnsendingType,
+        melding: Melding?
+    ) {
+        val sak = sakService.hent(sakId)
+        val periode = utledPeriode(brevkategori, mottattTidspunkt, melding)
+        val vurderingsbehov = utledVurderingsbehov(brevkategori, melding, periode)
+        log.info("Håndterer dialogmelding for $sak.id")
+        val sisteYtelsesBehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
+
+        if (sisteYtelsesBehandling != null) {
+            mottaDokumentService.markerSomBehandlet(sakId, sisteYtelsesBehandling.id, referanse)
+            log.info("Markerer dialogmelding som behandlet $sisteYtelsesBehandling.id")
+            if (sisteYtelsesBehandling.status().erÅpen()) {
+                prosesserBehandling.triggProsesserBehandling(
+                    sisteYtelsesBehandling,
+                    listOf("trigger" to DefaultJsonMapper.toJson(vurderingsbehov.filter { it.type == Vurderingsbehov.MOTTATT_DIALOGMELDING }
+                        .map { it.type }))
+                )
+                log.info("Prosessert behandling etter mottatt dialogmelding $sisteYtelsesBehandling.id")
+            }
+
+        }
+    }
+
     fun håndterMottattTilbakekrevingHendelse(
         sakId: SakId,
         referanse: InnsendingReferanse,
@@ -190,15 +297,9 @@ class HåndterMottattDokumentService(
     ) {
         when (melding) {
             is TilbakekrevingHendelseV0 -> {
-                log.info("Mottatt tilbakekrevingHendelse for sakId $sakId og eksternBehandlingId ${melding.eksternBehandlingId}")
-                val behandlingsref = melding.eksternBehandlingId  ?: error("Kan ikke finne behandlingId i tilbakekrevinghendelse")
+                val behandlingId = finnSisteIverksatteBehandling(sakId)
+                log.info("Mottatt tilbakekrevingHendelse for sakId $sakId og behandlingId $behandlingId")
                 tilbakekrevingService.håndter(sakId, melding.tilTilbakekrevingshendelse())
-                val behandlingId = try {
-                    behandlingRepository.hent(referanse = BehandlingReferanse(UUID.fromString(behandlingsref))).id
-                } catch (_: NoSuchElementException) {
-                    //Forsøker å finne behandlingId fra siste iverksatte behandling dersom vi ikke finner den utifra eksternBehandlingId.
-                    finnSisteIverksatteBehandling(sakId)
-                }
                 mottaDokumentService.markerSomBehandlet(sakId, behandlingId, referanse)
             }
         }
@@ -217,10 +318,15 @@ class HåndterMottattDokumentService(
             eksternBehandlingId = this.eksternBehandlingId,
             sakOpprettet = this.tilbakekreving.sakOpprettet,
             varselSendt = this.tilbakekreving.varselSendt,
-            behandlingsstatus = no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingBehandlingsstatus.valueOf(this.tilbakekreving.behandlingsstatus.name),
+            behandlingsstatus = no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingBehandlingsstatus.valueOf(
+                this.tilbakekreving.behandlingsstatus.name
+            ),
             totaltFeilutbetaltBeløp = Beløp(this.tilbakekreving.totaltFeilutbetaltBeløp),
             tilbakekrevingSaksbehandlingUrl = URI.create(this.tilbakekreving.saksbehandlingURL),
-            fullstendigPeriode = Periode(fom = this.tilbakekreving.fullstendigPeriode.fom, tom = this.tilbakekreving.fullstendigPeriode.tom),
+            fullstendigPeriode = Periode(
+                fom = this.tilbakekreving.fullstendigPeriode.fom,
+                tom = this.tilbakekreving.fullstendigPeriode.tom
+            ),
             versjon = this.versjon,
         )
     }
@@ -243,12 +349,13 @@ class HåndterMottattDokumentService(
         val behandling = behandlingRepository.hent(behandlingsreferanse)
         val årsakTilOpprettelse = utledÅrsakTilOpprettelse(innsendingType, melding)
 
+        secureLogger.info("Melding sin beskrivelse er " + melding.beskrivelse)
         låsRepository.withLåstBehandling(behandling.id) {
             val vurderingsbehov =
                 melding.årsakerTilBehandling.map { VurderingsbehovMedPeriode(it.tilVurderingsbehov()) }
             sakOgBehandlingService.oppdaterVurderingsbehovTilBehandling(
                 behandling,
-                VurderingsbehovOgÅrsak(vurderingsbehov, årsakTilOpprettelse)
+                VurderingsbehovOgÅrsak(vurderingsbehov, årsakTilOpprettelse, beskrivelse = melding.beskrivelse)
             )
             mottaDokumentService.markerSomBehandlet(sakId, behandling.id, referanse)
             prosesserBehandling.triggProsesserBehandling(

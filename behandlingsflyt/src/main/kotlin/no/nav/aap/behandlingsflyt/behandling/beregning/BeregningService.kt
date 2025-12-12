@@ -19,7 +19,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVur
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.math.BigDecimal
 import java.time.Year
 
 class BeregningService(
@@ -41,7 +43,7 @@ class BeregningService(
         beregningsgrunnlagRepository = repositoryProvider.provide(),
         beregningVurderingRepository = repositoryProvider.provide(),
         yrkesskadeRepository = repositoryProvider.provide(),
-        manuellInntektGrunnlagRepository = repositoryProvider.provide()
+        manuellInntektGrunnlagRepository = repositoryProvider.provide(),
     )
 
     fun beregnGrunnlag(behandlingId: BehandlingId): Beregningsgrunnlag {
@@ -63,9 +65,11 @@ class BeregningService(
             studentVurdering = student?.studentvurdering,
             yrkesskadevurdering = sykdomGrunnlag?.yrkesskadevurdering,
             vurdering = beregningVurdering,
-            inntekter = kombinertInntekt,
+            årsInntekter = kombinertInntekt,
+            // TODO: Hvor langt tilbake i tid skal man hente uføregrader?
             uføregrad = uføre?.vurderinger.orEmpty(),
-            registrerteYrkesskader = yrkesskadeGrunnlag?.yrkesskader
+            registrerteYrkesskader = yrkesskadeGrunnlag?.yrkesskader,
+            inntektsPerioder = inntektGrunnlag.inntektPerMåned
         )
 
         val beregning = Beregning(input)
@@ -89,13 +93,11 @@ class BeregningService(
         inntekter: Set<InntektPerÅr>,
         manuelleInntekter: Set<ManuellInntektVurdering>
     ): Set<InntektPerÅr> {
-        val manuelleByÅr = manuelleInntekter
-            .map { InntektPerÅr(it.år, it.belop, it) }
-            .groupBy { it.år }
-            .mapValues {
-                require(it.value.size == 1)
-                it.value.first()
-            }
+        val manuellePGIByÅr = manuelleInntekter
+            .tilÅrInntekt { it.belop }
+
+        val manuellEOSByÅr = manuelleInntekter
+            .tilÅrInntekt { it.eøsBeløp }
 
         val inntekterByÅr = inntekter
             .groupBy { it.år }
@@ -104,28 +106,42 @@ class BeregningService(
                 it.value.first()
             }
 
-        // Hvis begge deler finnes for samme år, foretrekkes verdien fra register
-        val kombinerteInntekter = (manuelleByÅr + inntekterByÅr).values.toSet()
+        val kombinerteInntekter =
+            (manuellePGIByÅr + inntekterByÅr).mapValues { (år, inntektPerÅr) ->
+                val eos = manuellEOSByÅr[år]?.beløp ?: Beløp(BigDecimal.ZERO)
+                inntektPerÅr.copy(beløp = inntektPerÅr.beløp.pluss(eos))
+            }.values.toSet()
 
         return kombinerteInntekter
+    }
+
+    private fun Collection<ManuellInntektVurdering>.tilÅrInntekt(selector: (ManuellInntektVurdering) -> Beløp?): Map<Year, InntektPerÅr> {
+        return this.filter { selector(it) != null }
+            .map { InntektPerÅr(it.år, selector(it)!!, it) }
+            .groupBy { it.år }
+            .mapValues {
+                it.value.single()
+            }
     }
 
     private fun utledInput(
         studentVurdering: StudentVurdering?,
         yrkesskadevurdering: Yrkesskadevurdering?,
         vurdering: BeregningGrunnlag?,
-        inntekter: Set<InntektPerÅr>,
+        årsInntekter: Set<InntektPerÅr>,
+        inntektsPerioder: Set<Månedsinntekt>,
         uføregrad: Set<Uføre>,
         registrerteYrkesskader: Yrkesskader?
     ): Inntektsbehov {
         return Inntektsbehov(
             BeregningInput(
                 nedsettelsesDato = Inntektsbehov.utledNedsettelsesdato(vurdering?.tidspunktVurdering, studentVurdering),
-                inntekter = inntekter,
+                årsInntekter = årsInntekter,
                 uføregrad = uføregrad,
                 yrkesskadevurdering = yrkesskadevurdering,
                 beregningGrunnlag = vurdering,
-                registrerteYrkesskader = registrerteYrkesskader
+                registrerteYrkesskader = registrerteYrkesskader,
+                inntektsPerioder = inntektsPerioder,
             )
         )
     }

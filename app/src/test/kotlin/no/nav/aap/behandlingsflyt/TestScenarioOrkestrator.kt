@@ -8,9 +8,9 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBarnetilleggLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBistandsbehovLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarForutgåendeMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarManuellInntektVurderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOppholdskravLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeriodisertForutgåendeMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningAndreStatligeYtelserLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSoningsforholdLøsning
@@ -33,11 +33,10 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.Yrkesskade
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.AvklarOppholdkravLøsningForPeriodeDto
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
-import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.AndreStatligeYtelser
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurderingPeriodeDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskapDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForForutgåendeMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
@@ -48,7 +47,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurderingDTO
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandVurderingLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.flate.BistandLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.SoningsvurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.SoningsvurderingerDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
@@ -66,6 +66,7 @@ import no.nav.aap.behandlingsflyt.repository.behandling.mellomlagring.Mellomlagr
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -152,17 +153,21 @@ class TestScenarioOrkestrator(
         )
     }
 
-    fun løsBistand(behandling: Behandling): Behandling {
+    fun løsBistand(behandling: Behandling, fom: LocalDate): Behandling {
         return løsAvklaringsBehov(
             behandling,
             AvklarBistandsbehovLøsning(
-                BistandVurderingLøsningDto(
-                    begrunnelse = "Trenger hjelp fra nav",
-                    erBehovForAktivBehandling = true,
-                    erBehovForArbeidsrettetTiltak = false,
-                    erBehovForAnnenOppfølging = null,
-                    skalVurdereAapIOvergangTilArbeid = null,
-                    overgangBegrunnelse = null,
+                listOf(
+                    BistandLøsningDto(
+                        fom = fom,
+                        begrunnelse = "Trenger hjelp fra nav",
+                        erBehovForAktivBehandling = true,
+                        erBehovForArbeidsrettetTiltak = false,
+                        erBehovForAnnenOppfølging = null,
+                        skalVurdereAapIOvergangTilArbeid = null,
+                        overgangBegrunnelse = null,
+                        tom = null
+                    ),
                 )
             )
         )
@@ -224,13 +229,20 @@ class TestScenarioOrkestrator(
         )
     }
 
-    fun løsManuellInntektVurdering(behandling: Behandling): Behandling {
+    fun løsManuellInntektVurdering(behandling: Behandling, manglendeInntektsÅr: List<Int>): Behandling {
         return løsAvklaringsBehov(
             behandling,
             AvklarManuellInntektVurderingLøsning(
                 manuellVurderingForManglendeInntekt = ManuellInntektVurderingDto(
                     begrunnelse = "Manuell inntekt vurdering ok",
-                    belop = BigDecimal(400000.00)
+                    belop = null,
+                    vurderinger = manglendeInntektsÅr.mapIndexed { index, år ->
+                        ÅrsVurdering(
+                            beløp = BigDecimal(500000.00 + (index * 10000)),
+                            eøsBeløp = null,
+                            år = år
+                        )
+                    }
                 )
             )
         )
@@ -312,10 +324,12 @@ class TestScenarioOrkestrator(
             AvklarSamordningAndreStatligeYtelserLøsning(
                 SamordningAndreStatligeYtelserVurderingDto(
                     "Samordning statlige ytelser ok",
-                    listOf(SamordningAndreStatligeYtelserVurderingPeriodeDto(
-                        AndreStatligeYtelser.BARNEPENSJON,
-                        Periode(LocalDate.now().minusMonths(3), LocalDate.now().minusMonths(2))
-                    ))
+                    listOf(
+                        SamordningAndreStatligeYtelserVurderingPeriodeDto(
+                            AndreStatligeYtelser.BARNEPENSJON,
+                            Periode(LocalDate.now().minusMonths(3), LocalDate.now().minusMonths(2))
+                        )
+                    )
                 )
             )
         )
@@ -357,15 +371,19 @@ class TestScenarioOrkestrator(
         )
     }
 
-    fun løsForutgåendeMedlemskap(behandling: Behandling): Behandling {
+    fun løsForutgåendeMedlemskap(behandling: Behandling, sak: Sak): Behandling {
         return løsAvklaringsBehov(
             behandling,
-            AvklarForutgåendeMedlemskapLøsning(
-                ManuellVurderingForForutgåendeMedlemskapDto(
-                    begrunnelse = "Forutgående medlemskap ok",
-                    harForutgåendeMedlemskap = true,
-                    varMedlemMedNedsattArbeidsevne = false,
-                    medlemMedUnntakAvMaksFemAar = false
+            AvklarPeriodisertForutgåendeMedlemskapLøsning(
+                løsningerForPerioder = listOf(
+                    PeriodisertManuellVurderingForForutgåendeMedlemskapDto(
+                        fom = sak.rettighetsperiode.fom,
+                        tom = null,
+                        begrunnelse = "Forutgående medlemskap ok",
+                        harForutgåendeMedlemskap = true,
+                        varMedlemMedNedsattArbeidsevne = null,
+                        medlemMedUnntakAvMaksFemAar = null
+                    )
                 )
             )
         )

@@ -92,12 +92,13 @@ class PdlBarnGateway : BarnGateway {
             res.person?.let { person ->
                 person.foedselsdato?.let { foedsel ->
                     val fødselsdato = PdlParser.utledFødselsdato(foedsel)
+                    val navn = person.navn?.firstOrNull()
+                        ?.let { listOfNotNull(it.fornavn, it.mellomnavn, it.etternavn).joinToString(" ") }
                     Barn(
-                        ident = BarnIdentifikator.BarnIdent(res.ident),
                         fødselsdato = requireNotNull(fødselsdato) { "Barn i PDL manglet fødselsdato. " },
                         dødsdato = person.doedsfall?.firstOrNull()?.doedsdato?.let { Dødsdato.parse(it) },
-                        navn = person.navn?.firstOrNull()
-                            ?.let { listOfNotNull(it.fornavn, it.mellomnavn, it.etternavn).joinToString(" ") })
+                        navn = navn,
+                        ident = BarnIdentifikator.BarnIdent(Ident(res.ident), navn, fødselsdato))
                 }
             }
         }

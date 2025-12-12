@@ -17,7 +17,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -26,7 +25,6 @@ class Aktivitetsplikt11_9Informasjonskrav(
     private val tidligereVurderinger: TidligereVurderinger,
     private val behandlingRepository: BehandlingRepository,
     private val aktivitetsplikt11_9Repository: Aktivitetsplikt11_9Repository,
-    private val unleashGateway: UnleashGateway
 ) : Informasjonskrav<IngenInput, IngenRegisterData> {
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.AKTIVITETSPLIKT_11_9
@@ -39,7 +37,6 @@ class Aktivitetsplikt11_9Informasjonskrav(
                 TidligereVurderingerImpl(repositoryProvider),
                 repositoryProvider.provide(),
                 repositoryProvider.provide(),
-                gatewayProvider.provide()
             )
         }
     }
@@ -51,12 +48,10 @@ class Aktivitetsplikt11_9Informasjonskrav(
         steg: StegType,
         oppdatert: InformasjonskravOppdatert?
     ): Boolean {
-        return unleashGateway.isEnabled(BehandlingsflytFeature.Aktivitetsplikt11_9)
-                && kontekst.vurderingType in listOf(
+        return kontekst.vurderingType in listOf(
             VurderingType.REVURDERING,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9
-        )
-                && !tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, steg)
+        ) && tidligereVurderinger.harBehandlingsgrunnlag(kontekst, steg)
     }
 
     override fun klargjør(kontekst: FlytKontekstMedPerioder) = IngenInput

@@ -17,7 +17,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
@@ -25,25 +24,26 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 class SakOgBehandlingService(
     private val grunnlagKopierer: GrunnlagKopierer,
     private val sakRepository: SakRepository,
     private val behandlingRepository: BehandlingRepository,
     private val trukketSøknadService: TrukketSøknadService,
-    private val unleashGateway: UnleashGateway,
     private val avbrytRevurderingService: AvbrytRevurderingService,
+    private val unleashGateway: UnleashGateway
 ) {
     constructor(
         repositoryProvider: RepositoryProvider,
-        gatewayProvider: GatewayProvider,
+        gatewayProvider: GatewayProvider
     ) : this(
         grunnlagKopierer = GrunnlagKopiererImpl(repositoryProvider),
         sakRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         trukketSøknadService = TrukketSøknadService(repositoryProvider),
-        unleashGateway = gatewayProvider.provide(),
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
+        unleashGateway = gatewayProvider.provide()
     )
 
     /**
@@ -182,17 +182,21 @@ class SakOgBehandlingService(
 
     fun opprettAktivitetspliktBehandling(
         sakId: SakId,
+        årsak: ÅrsakTilOpprettelse,
         vurderingsbehov: Vurderingsbehov,
+        opprettet: LocalDateTime = LocalDateTime.now(),
+        beskrivelse: String? = null,
     ): Behandling {
+        val vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+            vurderingsbehov = listOf(VurderingsbehovMedPeriode(vurderingsbehov)),
+            årsak = årsak,
+            opprettet = opprettet,
+            beskrivelse = beskrivelse
+        )
+
         val behandlingstype = when (vurderingsbehov) {
             Vurderingsbehov.AKTIVITETSPLIKT_11_7 -> TypeBehandling.Aktivitetsplikt
-            Vurderingsbehov.AKTIVITETSPLIKT_11_9 -> {
-                if (unleashGateway.isDisabled(BehandlingsflytFeature.Aktivitetsplikt11_9)) {
-                    throw IllegalStateException("Kan ikke opprette aktivitetsplikt 11-9 behandling når funksjonaliteten er deaktivert")
-                }
-                TypeBehandling.Aktivitetsplikt11_9
-            }
-
+            Vurderingsbehov.AKTIVITETSPLIKT_11_9 -> TypeBehandling.Aktivitetsplikt11_9
             else -> throw UgyldigForespørselException("Kan kun opprette behandling for aktivitetsplikt")
         }
 
@@ -207,20 +211,28 @@ class SakOgBehandlingService(
             sakId = sakId,
             behandlingstypeFilter = listOf(behandlingstype)
         )
-        val forrige = aktivitetspliktBehandlinger.firstOrNull()?.id
 
-        val åpenAktivitetspliktBehandling = aktivitetspliktBehandlinger.filter { it.status().erÅpen() }
+        val åpenAktivitetspliktBehandling = aktivitetspliktBehandlinger.singleOrNull { it.status().erÅpen() }
 
-        if (åpenAktivitetspliktBehandling.isNotEmpty()) {
-            throw UgyldigForespørselException("Finnes allerede en åpen behandling av denne typen")
+        if (åpenAktivitetspliktBehandling != null) {
+            when (årsak) {
+                ÅrsakTilOpprettelse.OMGJØRING_ETTER_KLAGE -> {
+                    oppdaterVurderingsbehovOgÅrsak(
+                        åpenAktivitetspliktBehandling,
+                        vurderingsbehovOgÅrsak
+                    )
+                    return åpenAktivitetspliktBehandling
+                }
+
+                else -> throw UgyldigForespørselException("Finnes allerede en åpen behandling av denne typen")
+            }
         }
+
+        val forrige = aktivitetspliktBehandlinger.firstOrNull()?.id
 
         return behandlingRepository.opprettBehandling(
             sakId = sakId,
-            vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
-                vurderingsbehov = listOf(VurderingsbehovMedPeriode(vurderingsbehov)),
-                årsak = ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
-            ),
+            vurderingsbehovOgÅrsak = vurderingsbehovOgÅrsak,
             typeBehandling = behandlingstype,
             forrigeBehandlingId = forrige,
         ).also { behandling ->

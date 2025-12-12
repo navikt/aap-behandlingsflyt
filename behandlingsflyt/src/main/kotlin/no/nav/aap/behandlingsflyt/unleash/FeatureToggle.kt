@@ -11,8 +11,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     IngenValidering,
     InnhentEnhetsregisterData,
     NyBrevtype11_17,
-    NyBrevtype11_18,
-    Aktivitetsplikt11_9,
     OverforingsdatoNullForAvregning,
     OvergangArbeid,
     AvklaringsbehovService,
@@ -22,15 +20,16 @@ enum class BehandlingsflytFeature : FeatureToggle {
     EOSBeregning,
     NyeBarn,
     InstFormaal,
-    Arbeidsopptrapping,
     IkkeAntaNullTimerArbeidet,
     NyBrevbyggerV3,
     LagreVedtakIFatteVedtak,
-    ReduksjonArbeidOverGrense,
-    ForutgaendeMedlemskapPeriodisert
+    PeriodisertSykepengeErstatningNyAvklaringsbehovService,
+    MidlertidigStopp11_4,
+    Under18,
+    ValiderOvergangUfore,
+    KravOmInntektsbortfall,
+    MigrerMeldepliktFritak
     ;
 
     override fun key(): String = name
 }
-
-

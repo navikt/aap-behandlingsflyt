@@ -74,18 +74,18 @@ enum class Kvote(val avslagsårsak: VarighetVurdering.Avslagsårsak, val tellerM
 }
 
 private fun skalTelleMotOrdinærKvote(vurdering: Vurdering): Boolean {
-    return vurdering.harRett() && vurdering.rettighetsType() in setOf(
+    return vurdering.harRett() && vurdering.preliminærRettighetsType() in setOf(
         RettighetsType.BISTANDSBEHOV,
         RettighetsType.STUDENT
     ) && !skalTelleMotSykepengeKvote(vurdering)
 }
 
 private fun skalTelleMotStudentKvote(vurdering: Vurdering): Boolean {
-    return vurdering.harRett() && vurdering.rettighetsType() == RettighetsType.STUDENT
+    return vurdering.harRett() && vurdering.preliminærRettighetsType() == RettighetsType.STUDENT
 }
 
 private fun skalTelleMotSykepengeKvote(vurdering: Vurdering): Boolean {
-    return vurdering.harRett() && vurdering.rettighetsType() == RettighetsType.SYKEPENGEERSTATNING
+    return vurdering.harRett() && vurdering.preliminærRettighetsType() == RettighetsType.SYKEPENGEERSTATNING
 }
 
 

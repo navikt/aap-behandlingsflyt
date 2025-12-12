@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.Arbeid
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.lookup.repository.RepositoryProvider
+import kotlin.collections.orEmpty
 
 class FastsettArbeidsevneLøser(
     private val arbeidsevneRepository: ArbeidsevneRepository,
@@ -21,11 +22,10 @@ class FastsettArbeidsevneLøser(
     ): LøsningsResultat {
         val arbeidsevneVurderinger =
             løsning.arbeidsevneVurderinger.map { it.toArbeidsevnevurdering(kontekst.bruker.ident) }
-        val eksisterendeArbeidsevnePerioder = ArbeidsevnePerioder(
-            arbeidsevneRepository.hentHvisEksisterer(kontekst.behandlingId())?.vurderinger.orEmpty()
-        )
+        val gamleVurderinger =
+            ArbeidsevnePerioder(kontekst.kontekst.forrigeBehandlingId?.let { arbeidsevneRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty())
         val nyeArbeidsevnePerioder =
-            eksisterendeArbeidsevnePerioder.leggTil(ArbeidsevnePerioder(arbeidsevneVurderinger))
+            gamleVurderinger.leggTil(ArbeidsevnePerioder(arbeidsevneVurderinger))
 
         arbeidsevneRepository.lagre(
             kontekst.behandlingId(),

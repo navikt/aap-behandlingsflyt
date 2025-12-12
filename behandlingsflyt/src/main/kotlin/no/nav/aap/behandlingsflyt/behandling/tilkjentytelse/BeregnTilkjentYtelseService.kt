@@ -2,6 +2,8 @@ package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 
 import no.nav.aap.behandlingsflyt.behandling.barnetillegg.RettTilBarnetillegg
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.unntakFastsattMeldedag
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.unntakFritaksUtbetalingDato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.tilTidslinje
@@ -23,6 +25,7 @@ import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`100_PROSENT`
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`66_PROSENT`
+import org.slf4j.LoggerFactory
 import java.time.LocalDate
 
 class TilkjentYtelseGrunnlag(
@@ -33,12 +36,15 @@ class TilkjentYtelseGrunnlag(
     val samordningGrunnlag: SamordningGrunnlag,
     val samordningUføre: SamordningUføreGrunnlag?,
     val samordningArbeidsgiver: SamordningArbeidsgiverGrunnlag?,
+    val minsteÅrligeYtelse: Tidslinje<GUnit> = MINSTE_ÅRLIG_YTELSE_TIDSLINJE,
 ) : Faktagrunnlag
 
 class BeregnTilkjentYtelseService(val grunnlag: TilkjentYtelseGrunnlag) {
 
+    private val log = LoggerFactory.getLogger(javaClass)
+
     internal companion object {
-        private const val ANTALL_ÅRLIGE_ARBEIDSDAGER = 260
+        const val ANTALL_ÅRLIGE_ARBEIDSDAGER = 260
     }
 
     fun beregnTilkjentYtelse(): Tidslinje<Tilkjent> {
@@ -46,7 +52,7 @@ class BeregnTilkjentYtelseService(val grunnlag: TilkjentYtelseGrunnlag) {
         val grunnlagsfaktor = grunnlag.beregningsgrunnlag ?: GUnit(0)
 
         val dagsatsTidslinje = aldersjusteringAvMinsteÅrligeYtelse(grunnlag.fødselsdato)
-            .innerJoin(MINSTE_ÅRLIG_YTELSE_TIDSLINJE) { aldersjustering, minsteYtelse ->
+            .innerJoin(grunnlag.minsteÅrligeYtelse) { aldersjustering, minsteYtelse ->
                 /** § 11-20 første avsnitt:
                  * > Arbeidsavklaringspenger gis med 66 prosent av grunnlaget, se § 11-19.
                  * > Minste årlige ytelse er 2,041 ganger grunnbeløpet.
@@ -79,6 +85,7 @@ class BeregnTilkjentYtelseService(val grunnlag: TilkjentYtelseGrunnlag) {
                     samordningGradering = samordning?.gradering ?: `0_PROSENT`,
                     samordningUføregradering = samordningUføre ?: `0_PROSENT`,
                     samordningArbeidsgiverGradering = if (samordningArbeidsgiver == null) `0_PROSENT` else `100_PROSENT`,
+                    meldepliktGradering = underveisperiode.meldepliktGradering ?: `0_PROSENT`,
             )
         }
             .filterNotNull()
@@ -110,6 +117,7 @@ class BeregnTilkjentYtelseService(val grunnlag: TilkjentYtelseGrunnlag) {
                         .minus(samordningUføregradering)
                         .minus(samordningGradering)
                         .minus(samordningArbeidsgiverGradering)
+                        .minus(meldepliktGradering)
                         .multiplisert(institusjonGradering.komplement())
                 },
                 graderingGrunnlag = graderingGrunnlag,
@@ -151,15 +159,32 @@ class BeregnTilkjentYtelseService(val grunnlag: TilkjentYtelseGrunnlag) {
         val meldeperiode = underveisperiode.meldePeriode
         val opplysningerMottatt = underveisperiode.arbeidsgradering.opplysningerMottatt
 
+        val unntakFastsattMeldedag =
+        // `meldeperiode` svarer til perioden det ble skrevet meldekort for (på dato `opplysningerMottatt`).
+        // For å finne unntakts-meldepliktperiode, må vi flytte denne to uker fram.
+            unntakFastsattMeldedag[meldeperiode.flytt(14).fom]
+
         val sisteMeldedagForMeldeperiode = meldeperiode.tom.plusDays(9)
         val førsteMeldedagForMeldeperiode = meldeperiode.tom.plusDays(1)
+
+        val prioritertFørstedag = unntakFastsattMeldedag ?: førsteMeldedagForMeldeperiode
+
+        // Hvis fritak fra meldeplikt, betal ut så tidlig som mulig.
+        // Ellers, betal ut etter dato for levert meldekort.
+        // Fallback til siste meldedag for meldeperiode.
+        // kanskje denne burde være min, ikke when
         val muligUtbetalingsdato = when {
             opplysningerMottatt != null -> opplysningerMottatt
-            underveisperiode.meldepliktStatus == MeldepliktStatus.FRITAK -> førsteMeldedagForMeldeperiode
+            underveisperiode.meldepliktStatus == MeldepliktStatus.FRITAK -> {
+                log.info("Traff sjekk for meldepliktstatus == FRITAK.")
+                unntakFritaksUtbetalingDato[førsteMeldedagForMeldeperiode]
+                    ?: førsteMeldedagForMeldeperiode
+            }
+
             else -> sisteMeldedagForMeldeperiode
         }
         val utbetalingsdato = muligUtbetalingsdato
-            .coerceIn(førsteMeldedagForMeldeperiode..sisteMeldedagForMeldeperiode)
+            .coerceIn(prioritertFørstedag..sisteMeldedagForMeldeperiode)
         return utbetalingsdato
     }
 

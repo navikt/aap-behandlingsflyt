@@ -6,10 +6,13 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykepengeerstatningVilkår
 import no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom.SykepengerErstatningFaktagrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.somTidslinje
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -19,6 +22,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
@@ -32,7 +38,8 @@ class VurderSykepengeErstatningSteg private constructor(
     private val behandlingRepository: BehandlingRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val tidligereVurderinger: TidligereVurderinger,
-    private val avklaringsbehovService: AvklaringsbehovService
+    private val avklaringsbehovService: AvklaringsbehovService,
+    private val unleashGateway: UnleashGateway
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         vilkårsresultatRepository = repositoryProvider.provide(),
@@ -42,35 +49,55 @@ class VurderSykepengeErstatningSteg private constructor(
         behandlingRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
-        avklaringsbehovService = AvklaringsbehovService(repositoryProvider)
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+        unleashGateway = gatewayProvider.provide()
+
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
-        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårGammel(
-            avklaringsbehovene = avklaringsbehovene,
-            behandlingRepository = behandlingRepository,
-            vilkårsresultatRepository = vilkårsresultatRepository,
-            definisjon = Definisjon.AVKLAR_SYKEPENGEERSTATNING,
-            tvingerAvklaringsbehov = setOf(),
-            nårVurderingErRelevant = ::perioderMedVurderingsbehov,
-            kontekst = kontekst,
-            perioderSomIkkeErTilstrekkeligVurdert = { emptySet() }, // Denne må minst sjekke at man har vurderinger for perioder når vurdering er relevant
-            tilbakestillGrunnlag = {
-                val vedtatteVurderinger =
-                    kontekst.forrigeBehandlingId?.let { sykepengerErstatningRepository.hentHvisEksisterer(it) }
-                        ?.vurderinger.orEmpty()
+        val vedtatteVurderinger =
+            kontekst.forrigeBehandlingId?.let { sykepengerErstatningRepository.hentHvisEksisterer(it) }
+                ?.vurderinger.orEmpty()
 
-                val aktiveVurderinger =
-                    sykepengerErstatningRepository.hentHvisEksisterer(kontekst.behandlingId)
-                        ?.vurderinger.orEmpty()
+        val aktiveVurderinger =
+            sykepengerErstatningRepository.hentHvisEksisterer(kontekst.behandlingId)
+                ?.vurderinger.orEmpty()
 
-                if (vedtatteVurderinger.toSet() != aktiveVurderinger.toSet()) {
-                    sykepengerErstatningRepository.lagre(kontekst.behandlingId, vedtatteVurderinger)
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.PeriodisertSykepengeErstatningNyAvklaringsbehovService)) {
+            avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
+                avklaringsbehovene = avklaringsbehovene,
+                behandlingRepository = behandlingRepository,
+                vilkårsresultatRepository = vilkårsresultatRepository,
+                definisjon = Definisjon.AVKLAR_SYKEPENGEERSTATNING,
+                tvingerAvklaringsbehov = setOf(Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING),
+                nårVurderingErRelevant = ::perioderMedVurderingsbehov,
+                kontekst = kontekst,
+                nårVurderingErGyldig = { aktiveVurderinger.somTidslinje().mapValue { true } },
+                tilbakestillGrunnlag = {
+                    if (vedtatteVurderinger.toSet() != aktiveVurderinger.toSet()) {
+                        sykepengerErstatningRepository.lagre(kontekst.behandlingId, vedtatteVurderinger)
+                    }
+                },
+            )
+        } else {
+            avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
+                avklaringsbehovene = avklaringsbehovene,
+                behandlingRepository = behandlingRepository,
+                vilkårsresultatRepository = vilkårsresultatRepository,
+                definisjon = Definisjon.AVKLAR_SYKEPENGEERSTATNING,
+                tvingerAvklaringsbehov = setOf(),
+                nårVurderingErRelevant = ::perioderMedVurderingsbehov,
+                kontekst = kontekst,
+                perioderSomIkkeErTilstrekkeligVurdert = { emptySet() }, // Denne må minst sjekke at man har vurderinger for perioder når vurdering er relevant
+                tilbakestillGrunnlag = {
+                    if (vedtatteVurderinger.toSet() != aktiveVurderinger.toSet()) {
+                        sykepengerErstatningRepository.lagre(kontekst.behandlingId, vedtatteVurderinger)
+                    }
                 }
-            }
-        )
+            )
+        }
 
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
@@ -96,7 +123,7 @@ class VurderSykepengeErstatningSteg private constructor(
         return Fullført
     }
 
-    private fun perioderMedVurderingsbehov(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
+    private fun  perioderMedVurderingsbehov(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
         val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
 
         val kravDato = kontekst.rettighetsperiode.fom
@@ -113,27 +140,27 @@ class VurderSykepengeErstatningSteg private constructor(
 
         val yrkesskadevurderinger = sykdomGrunnlag?.yrkesskadevurdringTidslinje(kontekst.rettighetsperiode).orEmpty()
 
-        return Tidslinje.map4(
+        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
+        val overganguføreVilkår = vilkårsresultat.optionalVilkår(Vilkårtype.OVERGANGUFØREVILKÅRET)?.tidslinje().orEmpty()
+
+        return Tidslinje.map5(
             tidligereVurderingsutfall,
             sykdomsvurderinger,
             bistandvurderinger,
-            yrkesskadevurderinger
-        ) { segmentPeriode, behandlingsutfall, sykdomsvurdering, bistandvurdering, yrkesskadevurdering ->
+            yrkesskadevurderinger,
+            overganguføreVilkår
+        ) { segmentPeriode, behandlingsutfall, sykdomsvurdering, bistandvurdering, yrkesskadevurdering, overgangUføreVilkårsvurdering ->
             when (behandlingsutfall) {
                 null -> false
                 TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG -> false
                 TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG -> false
                 TidligereVurderinger.Behandlingsutfall.UKJENT -> {
                     when {
-                        /* ikke nødvendig å vurdere SPE fordi medlemmet oppfyller vilkårene for ordinær aap */
-                        sykdomsvurdering?.erOppfyltOrdinær(
-                            kravDato,
-                            segmentPeriode
-                        ) == true && bistandvurdering?.erBehovForBistand() != true ->
-                            /* TODO: Her burde vi også se på 11-17 og 11-18 før vi sier ja */
-                            true
+                        sykdomsvurdering?.erOppfyltOrdinær(kravDato, segmentPeriode) == true
+                                && bistandvurdering?.erBehovForBistand() != true
+                                && overgangUføreVilkårsvurdering?.utfall != Utfall.OPPFYLT -> true
 
-                        /* i dette caset oppfyller ikke medlemmet vilkåret for ordinær AAP, men SPE er mulig */
+                        /* caset oppfyller ikke medlemmet vilkåret for ordinær AAP, men SPE er mulig */
                         sykdomsvurdering?.erOppfyltOrdinærtEllerMedYrkesskadeMenIkkeVissVarighet(yrkesskadevurdering) == true ->
                             true
 

@@ -39,7 +39,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.Lege
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.MeldingStatusType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektResponse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.SumPi
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektForÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.integrasjon.ident.IDENT_QUERY
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoGateway
@@ -102,6 +102,7 @@ import no.nav.aap.brev.kontrakt.BestillBrevResponse
 import no.nav.aap.brev.kontrakt.BestillBrevV2Request
 import no.nav.aap.brev.kontrakt.Brev
 import no.nav.aap.brev.kontrakt.BrevbestillingResponse
+import no.nav.aap.brev.kontrakt.BrevdataDto
 import no.nav.aap.brev.kontrakt.Brevtype
 import no.nav.aap.brev.kontrakt.FerdigstillBrevRequest
 import no.nav.aap.brev.kontrakt.HentSignaturerRequest
@@ -316,10 +317,9 @@ object FakeServers : AutoCloseable {
 
                 call.respond(
                     InntektResponse(person.inntekter().map { inntekt ->
-                        SumPi(
+                        InntektForÅr(
                             inntektAr = inntekt.år.value,
-                            belop = inntekt.beløp.verdi().toLong(),
-                            inntektType = "Lønnsinntekt"
+                            belop = inntekt.beløp.verdi().toLong()
                         )
                     }.toList())
                 )
@@ -346,7 +346,7 @@ object FakeServers : AutoCloseable {
         routing {
             route("/api/v1/oppgaver") {
                 post {
-                    val req = call.receive<OpprettOppgaveRequest>()
+                    call.receive<OpprettOppgaveRequest>()
 
                     call.respond(
                         OpprettOppgaveResponse(
@@ -424,8 +424,6 @@ object FakeServers : AutoCloseable {
         //create route
         routing {
             get("/api/tjenestepensjon/getActiveForholdMedActiveYtelser") {
-                val fomDate = call.request.queryParameters["fomDate"]
-                val tomDate = call.request.queryParameters["tomDate"]
                 val ident = call.request.headers["fnr"] ?: ""
                 val fakePerson = FakePersoner.hentPerson(ident)
 
@@ -670,8 +668,8 @@ object FakeServers : AutoCloseable {
                             )
                         ))
 
-                    @Suppress("UnusedVariable")
                     @Language("JSON")
+                    @Suppress("UnusedVariable", "unused")
                     val foreldrepengerOgSvangerskapspengerResponse = """
            [{
             "aktor": {
@@ -1433,13 +1431,17 @@ object FakeServers : AutoCloseable {
     }
 
     private fun mapIdentBolk(it: String): HentPersonBolkResult? {
-        val person = FakePersoner.hentPerson(it)
-        if (person == null) {
-            return null
-        }
+        val person = FakePersoner.hentPerson(it) ?: return null
         return HentPersonBolkResult(
             ident = person.identer.first().identifikator,
             person = PdlPersoninfo(
+                navn = listOf(
+                    PdlNavn(
+                        fornavn = person.navn.fornavn,
+                        mellomnavn = null,
+                        etternavn = person.navn.etternavn
+                    )
+                ),
                 foedselsdato = listOf(
                     PdlFoedsel(
                         person.fødselsdato.toFormattedString(),
@@ -1834,35 +1836,18 @@ object FakeServers : AutoCloseable {
 
         val brevStore = mutableListOf<BrevbestillingResponse>()
         val mutex = Any()
-        fun brev(
+        fun brevbestilling(
             brevbestillingReferanse: UUID,
             status: Status,
             brevtype: Brevtype,
+            brev: Brev? = null,
+            brevmal: String? = null,
+            brevdata: BrevdataDto? = null,
         ) = BrevbestillingResponse(
             referanse = brevbestillingReferanse,
-            brev = Brev(
-                kanSendesAutomatisk = false,
-                journalpostTittel = "En tittel",
-                overskrift = "Overskrift H1",
-                kanOverstyreBrevtittel = false,
-                tekstbolker = listOf(
-                    Tekstbolk(
-                        id = UUID.randomUUID(),
-                        overskrift = "Overskrift H2",
-                        innhold = listOf(
-                            Innhold(
-                                id = UUID.randomUUID(),
-                                overskrift = "Overskrift H3",
-                                blokker = emptyList(),
-                                kanRedigeres = true,
-                                erFullstendig = false
-                            )
-                        )
-                    )
-                )
-            ),
-            brevmal = null,
-            brevdata = null,
+            brev = brev,
+            brevmal = brevmal,
+            brevdata = brevdata,
             opprettet = LocalDateTime.now(),
             oppdatert = LocalDateTime.now(),
             behandlingReferanse = UUID.randomUUID(),
@@ -1874,21 +1859,110 @@ object FakeServers : AutoCloseable {
 
         routing {
             route("/api") {
-                route("/*") {
-                    post("/bestill") {
-                        val request = call.receive<BestillBrevV2Request>()
-                        val brevbestillingReferanse = UUID.randomUUID()
+                post("/v2/bestill") {
+                    val request = call.receive<BestillBrevV2Request>()
+                    val brevbestillingReferanse = UUID.randomUUID()
 
-                        val status = if (request.ferdigstillAutomatisk) {
-                            Status.FERDIGSTILT
-                        } else {
-                            Status.UNDER_ARBEID
-                        }
-                        synchronized(mutex) {
-                            brevStore += brev(brevbestillingReferanse, status, request.brevtype)
-                        }
-                        call.respond(status = HttpStatusCode.Created, BestillBrevResponse(brevbestillingReferanse))
+                    val status = if (request.ferdigstillAutomatisk) {
+                        Status.FERDIGSTILT
+                    } else {
+                        Status.UNDER_ARBEID
                     }
+                    synchronized(mutex) {
+                        brevStore += brevbestilling(
+                            brevbestillingReferanse = brevbestillingReferanse,
+                            status = status,
+                            brevtype = request.brevtype,
+                            brev = Brev(
+                                kanSendesAutomatisk = false,
+                                journalpostTittel = "En tittel",
+                                overskrift = "Overskrift H1",
+                                kanOverstyreBrevtittel = false,
+                                tekstbolker = listOf(
+                                    Tekstbolk(
+                                        id = UUID.randomUUID(),
+                                        overskrift = "Overskrift H2",
+                                        innhold = listOf(
+                                            Innhold(
+                                                id = UUID.randomUUID(),
+                                                overskrift = "Overskrift H3",
+                                                blokker = emptyList(),
+                                                kanRedigeres = true,
+                                                erFullstendig = false
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    }
+                    call.respond(status = HttpStatusCode.Created, BestillBrevResponse(brevbestillingReferanse))
+                }
+                post("/v3/bestill") {
+                    val request = call.receive<BestillBrevV2Request>()
+                    val brevbestillingReferanse = UUID.randomUUID()
+
+                    val status = if (request.ferdigstillAutomatisk) {
+                        Status.FERDIGSTILT
+                    } else {
+                        Status.UNDER_ARBEID
+                    }
+                    val brevmal = """
+                        {
+                          "_id": "id1",
+                          "overskrift": "Mal 1",
+                          "journalposttittel": "Mal 1",
+                          "kanSendesAutomatisk": false,
+                          "_type": "mal",
+                          "delmaler": [
+                            {
+                              "obligatorisk": false,
+                              "_type": "delmalRef",
+                              "delmal": {
+                                "_type": "delmal",
+                                "overskrift": "Delmal",
+                                "beskrivelse": "Delmal",
+                                "teksteditor": [
+                                  {
+                                    "style": "normal",
+                                    "_key": "key1",
+                                    "markDefs": [],
+                                    "children": [
+                                      {
+                                        "_type": "span",
+                                        "marks": [],
+                                        "text": "Delmal.",
+                                        "_key": "key2"
+                                      }
+                                    ],
+                                    "_type": "block"
+                                  }
+                                ],
+                                "_id": "id2",
+                                "paragraf": "11-3"
+                              },
+                              "_key": "key3"
+                            }
+                          ]
+                        }
+                    """.trimIndent()
+                    synchronized(mutex) {
+                        brevStore += brevbestilling(
+                            brevbestillingReferanse = brevbestillingReferanse,
+                            status = status,
+                            brevtype = request.brevtype,
+                            brevmal = brevmal,
+                            brevdata = BrevdataDto(
+                                delmaler = emptyList(),
+                                faktagrunnlag = emptyList(),
+                                periodetekster = emptyList(),
+                                valg = emptyList(),
+                                betingetTekst = emptyList(),
+                                fritekster = emptyList(),
+                            )
+                        )
+                    }
+                    call.respond(status = HttpStatusCode.Created, BestillBrevResponse(brevbestillingReferanse))
                 }
                 route("/bestilling/{referanse}") { ->
                     get {
@@ -1915,6 +1989,20 @@ object FakeServers : AutoCloseable {
                         } else {
                             synchronized(mutex) {
                                 brevStore[i] = brevStore[i].copy(brev = brev)
+                            }
+                            call.respond(HttpStatusCode.NoContent, Unit)
+                        }
+                    }
+                    put("/v3/oppdater") {
+                        val ref = UUID.fromString(call.pathParameters["referanse"])!!
+                        val brevdata = call.receive<BrevdataDto>()
+
+                        val i = brevStore.indexOfFirst { it.referanse == ref }
+                        if (brevStore[i].status != Status.UNDER_ARBEID) {
+                            call.respond(HttpStatusCode.BadRequest)
+                        } else {
+                            synchronized(mutex) {
+                                brevStore[i] = brevStore[i].copy(brevdata = brevdata)
                             }
                             call.respond(HttpStatusCode.NoContent, Unit)
                         }
@@ -1947,6 +2035,9 @@ object FakeServers : AutoCloseable {
                     }
                     val response = HentSignaturerResponse(signaturer)
                     call.respond(response)
+                }
+                put("/oppdater-brevmal") {
+                    call.respond(HttpStatusCode.NoContent, Unit)
                 }
                 post("/{referanse}/kan-distribuere-brev") {
                     val req = call.receive<KanDistribuereBrevRequest>()

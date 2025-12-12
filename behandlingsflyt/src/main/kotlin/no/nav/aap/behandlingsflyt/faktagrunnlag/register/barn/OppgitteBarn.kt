@@ -28,7 +28,7 @@ data class OppgitteBarn(val id: Long? = null, val oppgitteBarn: List<OppgittBarn
         override fun identifikator(): BarnIdentifikator = if (ident == null) {
             BarnIdentifikator.NavnOgFødselsdato(navn!!, fødselsdato!!)
         } else {
-            BarnIdentifikator.BarnIdent(ident)
+            BarnIdentifikator.BarnIdent(ident, navn, fødselsdato)
         }
 
         override fun fødselsdato(): Fødselsdato {

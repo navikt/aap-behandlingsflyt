@@ -4,8 +4,8 @@ import no.nav.aap.behandlingsflyt.behandling.beregning.Beregning
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelseService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.BeregningInput
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
@@ -95,7 +95,7 @@ fun tilInput(csvLine: CSVLine): Pair<BeregningInput, Fødselsdato> {
     return Pair(
         BeregningInput(
             nedsettelsesDato = LocalDate.of(csvLine.beregningsAar, 1, 1),
-            inntekter = csvLine.let { (intSiste, intNestSiste, intTredjeSiste, _, inntektSisteAar, inntektNestSisteAar, inntektTredjeSisteAar) ->
+            årsInntekter = csvLine.let { (intSiste, intNestSiste, intTredjeSiste, _, inntektSisteAar, inntektNestSisteAar, inntektTredjeSisteAar) ->
                 setOf(
                     InntektPerÅr(inntektSisteAar, Beløp(intSiste)),
                     InntektPerÅr(inntektNestSisteAar, Beløp(intNestSiste)),
@@ -105,7 +105,8 @@ fun tilInput(csvLine: CSVLine): Pair<BeregningInput, Fødselsdato> {
             uføregrad = emptySet(),
             yrkesskadevurdering = null,
             registrerteYrkesskader = null,
-            beregningGrunnlag = null
+            beregningGrunnlag = null,
+            inntektsPerioder = emptySet()
         ), csvLine.fødselsdato
     )
 }
@@ -141,6 +142,7 @@ fun beregnForInput(input: BeregningInput, fødselsdato: Fødselsdato): Triple<Ye
                         id = UnderveisperiodeId(0),
                         institusjonsoppholdReduksjon = Prosent(0),
                         meldepliktStatus = null,
+                        meldepliktGradering = null,
                     )
                 )
             ),

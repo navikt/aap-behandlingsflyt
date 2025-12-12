@@ -8,7 +8,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 data class ManuellVurderingForForutgåendeMedlemskap(
-    val id: Long? = null,
     val begrunnelse: String,
     val harForutgåendeMedlemskap: Boolean,
     val varMedlemMedNedsattArbeidsevne: Boolean?,
@@ -27,13 +26,6 @@ data class ManuellVurderingForForutgåendeMedlemskap(
                 || medlemMedUnntakAvMaksFemAar == true
     }
 }
-
-data class ManuellVurderingForForutgåendeMedlemskapDto(
-    val begrunnelse: String,
-    val harForutgåendeMedlemskap: Boolean,
-    val varMedlemMedNedsattArbeidsevne: Boolean?,
-    val medlemMedUnntakAvMaksFemAar: Boolean?
-)
 
 data class PeriodisertManuellVurderingForForutgåendeMedlemskapDto(
     override val fom: LocalDate,
@@ -59,12 +51,6 @@ data class PeriodisertManuellVurderingForForutgåendeMedlemskapDto(
         overstyrt = overstyrt
     )
 }
-
-data class HistoriskManuellVurderingForForutgåendeMedlemskap(
-    val manuellVurdering: ManuellVurderingForForutgåendeMedlemskap,
-    val opprettet: LocalDateTime,
-    val erGjeldendeVurdering: Boolean
-)
 
 fun List<PeriodisertManuellVurderingForForutgåendeMedlemskapDto>.validerGyldigVurderinger(): Validation<List<PeriodisertManuellVurderingForForutgåendeMedlemskapDto>> {
     forEach {

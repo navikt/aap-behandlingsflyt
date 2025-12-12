@@ -10,7 +10,7 @@ repositories {
 plugins {
     id("behandlingsflyt.conventions")
     alias(libs.plugins.ktor)
-    id("com.gradleup.shadow") version "9.2.2"
+    id("com.gradleup.shadow") version "9.3.0"
 }
 
 application {
@@ -63,7 +63,6 @@ tasks.register<JavaExec>("beregnCSV") {
 }
 
 dependencies {
-    implementation(libs.ktorServerCors)
     implementation(libs.ktorServerStatusPages)
 
     implementation("io.micrometer:micrometer-registry-prometheus:1.16.0")

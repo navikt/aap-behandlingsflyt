@@ -5,12 +5,10 @@ import com.papsign.ktor.openapigen.model.info.InfoModel
 import com.papsign.ktor.openapigen.route.apiRouting
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.routing.*
 import kotlinx.coroutines.Dispatchers
@@ -29,19 +27,19 @@ import no.nav.aap.behandlingsflyt.behandling.barnetillegg.barnetilleggApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.beregningsGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.alder.aldersGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.fritakmeldeplikt.meldepliktsgrunnlagApi
-import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.refusjon.refusjonGrunnlagAPI
+import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.refusjon.refusjonGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.bistand.bistandsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.overgangarbeid.overgangArbeidGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.overgangufore.overgangUforeGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykdom.sykdomsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykepengergrunnlag.sykepengerGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.manuellinntekt.manglendeGrunnlagApi
-import no.nav.aap.behandlingsflyt.behandling.beregning.tidspunkt.beregningVurderingAPI
+import no.nav.aap.behandlingsflyt.behandling.beregning.tidspunkt.beregningVurderingApi
 import no.nav.aap.behandlingsflyt.behandling.brev.sykdomsvurderingForBrevApi
-import no.nav.aap.behandlingsflyt.behandling.foreslåvedtak.foreslaaVedtakAPI
+import no.nav.aap.behandlingsflyt.behandling.foreslåvedtak.foreslaaVedtakApi
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.medlemskap.medlemskapsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.samordningGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.institusjonAPI
+import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.institusjonApi
 import no.nav.aap.behandlingsflyt.behandling.klage.behandlendeenhet.behandlendeEnhetGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.klage.formkrav.formkravGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.klage.fullmektig.fullmektigGrunnlagApi
@@ -49,27 +47,28 @@ import no.nav.aap.behandlingsflyt.behandling.klage.klagebehandling.klagebehandli
 import no.nav.aap.behandlingsflyt.behandling.klage.klagebehandling.klagebehandlingNayGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.klage.påklagetbehandling.påklagetBehandlingGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.klage.resultat.klageresultatApi
-import no.nav.aap.behandlingsflyt.behandling.klage.trekk.trekkKlageGrunnlagAPI
+import no.nav.aap.behandlingsflyt.behandling.klage.trekk.trekkKlageGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.kvalitetssikring.kvalitetssikringApi
-import no.nav.aap.behandlingsflyt.behandling.kvalitetssikring.kvalitetssikringTilgangAPI
-import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.forutgåendeMedlemskapAPI
-import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.lovvalgMedlemskapGrunnlagAPI
-import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.lovvalgMedlemskapAPI
+import no.nav.aap.behandlingsflyt.behandling.kvalitetssikring.kvalitetssikringTilgangApi
+import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.forutgåendeMedlemskapApi
+import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.lovvalgMedlemskapGrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.lovvalgMedlemskapApi
 import no.nav.aap.behandlingsflyt.behandling.mellomlagring.mellomlagretVurderingApi
 import no.nav.aap.behandlingsflyt.behandling.oppfolgingsbehandling.avklarOppfolgingsoppgaveGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.oppfolgingsbehandling.oppfølgingsOppgaveApi
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.oppholdskravGrunnlagApi
-import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.rettighetsperiodeGrunnlagAPI
-import no.nav.aap.behandlingsflyt.behandling.revurdering.avbrytRevurderingGrunnlagAPI
-import no.nav.aap.behandlingsflyt.behandling.simulering.simuleringAPI
+import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.rettighetsperiodeGrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.revurdering.avbrytRevurderingGrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.simulering.simuleringApi
 import no.nav.aap.behandlingsflyt.behandling.student.studentgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.svarfraandreinstans.svarfraandreinstans.svarFraAndreinstansGrunnlagApi
-import no.nav.aap.behandlingsflyt.behandling.søknad.trukketSøknadGrunnlagAPI
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilkjentYtelseAPI
+import no.nav.aap.behandlingsflyt.behandling.søknad.trukketSøknadGrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilkjentYtelseApi
 import no.nav.aap.behandlingsflyt.behandling.underveis.meldepliktOverstyringGrunnlagApi
-import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerAPI
-import no.nav.aap.behandlingsflyt.drift.driftAPI
+import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerApi
+import no.nav.aap.behandlingsflyt.drift.driftApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.flyt.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flytApi
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
@@ -83,12 +82,14 @@ import no.nav.aap.behandlingsflyt.hendelse.kafka.tilbakekreving.TilbakekrevingKa
 import no.nav.aap.behandlingsflyt.hendelse.mottattHendelseApi
 import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
-import no.nav.aap.behandlingsflyt.pip.behandlingsflytPip
+import no.nav.aap.behandlingsflyt.pip.behandlingsflytPipApi
 import no.nav.aap.behandlingsflyt.prosessering.BehandlingsflytLogInfoProvider
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -120,6 +121,7 @@ import java.util.logging.Level
 import java.util.logging.Logger
 import javax.sql.DataSource
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.toJavaDuration
 
 
 fun utledSubtypesTilMottattHendelseDTO(): List<Class<*>> {
@@ -202,11 +204,6 @@ internal fun Application.server(
 
     install(StatusPages, StatusPagesConfigHelper.setup())
 
-    install(CORS) {
-        anyHost()
-        allowHeader(HttpHeaders.ContentType)
-    }
-
     val dataSource = initDatasource(dbConfig)
     Migrering.migrate(dataSource)
 
@@ -220,7 +217,7 @@ internal fun Application.server(
     if (!Miljø.erLokal()) {
         startPDLHendelseKonsument(dataSource, repositoryRegistry, gatewayProvider)
     }
-    if (!Miljø.erDev() && !Miljø.erLokal() && !Miljø.erProd()) {
+    if (!Miljø.erLokal() && !Miljø.erProd()) {
         startTilbakekrevingEventKonsument(dataSource, repositoryRegistry, gatewayProvider)
     }
 
@@ -252,7 +249,7 @@ internal fun Application.server(
                 flytApi(dataSource, repositoryRegistry, gatewayProvider)
                 fatteVedtakGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 kvalitetssikringApi(dataSource, repositoryRegistry, gatewayProvider)
-                kvalitetssikringTilgangAPI(dataSource, repositoryRegistry)
+                kvalitetssikringTilgangApi(dataSource, repositoryRegistry)
                 bistandsgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 meldepliktsgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 meldepliktOverstyringGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
@@ -265,22 +262,22 @@ internal fun Application.server(
                 sykdomsvurderingForBrevApi(dataSource, repositoryRegistry, gatewayProvider)
                 sykepengerGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 oppholdskravGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                institusjonAPI(dataSource, repositoryRegistry, gatewayProvider)
+                institusjonApi(dataSource, repositoryRegistry, gatewayProvider)
                 avklaringsbehovApi(dataSource, repositoryRegistry, gatewayProvider)
-                tilkjentYtelseAPI(dataSource, repositoryRegistry)
-                foreslaaVedtakAPI(dataSource, repositoryRegistry)
-                trukketSøknadGrunnlagAPI(dataSource, repositoryRegistry)
-                avbrytRevurderingGrunnlagAPI(dataSource, repositoryRegistry)
-                rettighetsperiodeGrunnlagAPI(dataSource, repositoryRegistry, gatewayProvider)
-                beregningVurderingAPI(dataSource, repositoryRegistry, gatewayProvider)
+                tilkjentYtelseApi(dataSource, repositoryRegistry)
+                foreslaaVedtakApi(dataSource, repositoryRegistry)
+                trukketSøknadGrunnlagApi(dataSource, repositoryRegistry)
+                avbrytRevurderingGrunnlagApi(dataSource, repositoryRegistry)
+                rettighetsperiodeGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                beregningVurderingApi(dataSource, repositoryRegistry, gatewayProvider)
                 beregningsGrunnlagApi(dataSource, repositoryRegistry)
                 aldersGrunnlagApi(dataSource, repositoryRegistry)
                 barnetilleggApi(dataSource, repositoryRegistry, gatewayProvider)
                 motorApi(dataSource)
-                behandlingsflytPip(dataSource, repositoryRegistry)
+                behandlingsflytPipApi(dataSource, repositoryRegistry)
                 auditlogApi(dataSource, repositoryRegistry)
-                refusjonGrunnlagAPI(dataSource, repositoryRegistry, gatewayProvider)
-                manglendeGrunnlagApi(dataSource, repositoryRegistry)
+                refusjonGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                manglendeGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 mellomlagretVurderingApi(dataSource, repositoryRegistry)
                 // Klage
                 påklagetBehandlingGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
@@ -290,7 +287,7 @@ internal fun Application.server(
                 klagebehandlingKontorGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 klagebehandlingNayGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 klageresultatApi(dataSource, repositoryRegistry)
-                trekkKlageGrunnlagAPI(dataSource, repositoryRegistry)
+                trekkKlageGrunnlagApi(dataSource, repositoryRegistry)
                 // Svar fra kabal
                 svarFraAndreinstansGrunnlagApi(dataSource, repositoryRegistry)
                 // Oppfølgingsbehandling
@@ -301,15 +298,15 @@ internal fun Application.server(
                 aktivitetsplikt11_9GrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 // Flytt
                 brevApi(dataSource, repositoryRegistry, gatewayProvider)
-                dokumentinnhentingAPI(dataSource, repositoryRegistry, gatewayProvider)
+                dokumentinnhentingApi(dataSource, repositoryRegistry, gatewayProvider)
                 mottattHendelseApi(dataSource, repositoryRegistry, gatewayProvider)
-                underveisVurderingerAPI(dataSource, repositoryRegistry)
-                lovvalgMedlemskapAPI(dataSource, repositoryRegistry)
-                lovvalgMedlemskapGrunnlagAPI(dataSource, repositoryRegistry, gatewayProvider)
+                underveisVurderingerApi(dataSource, repositoryRegistry)
+                lovvalgMedlemskapApi(dataSource, repositoryRegistry)
+                lovvalgMedlemskapGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 samordningGrunnlag(dataSource, repositoryRegistry, gatewayProvider)
-                forutgåendeMedlemskapAPI(dataSource, repositoryRegistry, gatewayProvider)
-                driftAPI(dataSource, repositoryRegistry, gatewayProvider)
-                simuleringAPI(dataSource, repositoryRegistry, gatewayProvider)
+                forutgåendeMedlemskapApi(dataSource, repositoryRegistry, gatewayProvider)
+                driftApi(dataSource, repositoryRegistry, gatewayProvider)
+                simuleringApi(dataSource, repositoryRegistry, gatewayProvider)
                 overgangArbeidGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 // Endepunkter kun tilgjengelig lokalt og i test
                 if (!Miljø.erProd()) {
@@ -331,11 +328,16 @@ private fun utførMigreringer(
     val scheduler = Executors.newScheduledThreadPool(1)
     scheduler.schedule(Runnable {
         val unleashGateway: UnleashGateway = gatewayProvider.provide()
+        val migrerMeldepliktFritakEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.MigrerMeldepliktFritak)
         val isLeader = isLeader(log)
-        log.info("isLeader = $isLeader")
+        log.info("isLeader = $isLeader, migrerMeldepliktFritakEnabled = $migrerMeldepliktFritakEnabled")
 
-        if (isLeader) {
+        if (migrerMeldepliktFritakEnabled && isLeader) {
             // Kjør migrering
+            dataSource.transaction { connection ->
+                val repository = MeldepliktRepositoryImpl(connection)
+                repository.migrerMeldepliktFritak()
+            }
         }
 
     }, 9, TimeUnit.MINUTES)
@@ -392,7 +394,8 @@ fun Application.startKabalKonsument(
     dataSource: DataSource, repositoryRegistry: RepositoryRegistry
 ): KafkaKonsument<String, String> {
     val konsument = KabalKafkaKonsument(
-        config = KafkaConsumerConfig(), dataSource = dataSource, repositoryRegistry = repositoryRegistry
+        config = KafkaConsumerConfig(), dataSource = dataSource, repositoryRegistry = repositoryRegistry,
+        closeTimeout = AppConfig.stansArbeidTimeout
     )
     monitor.subscribe(ApplicationStarted) {
         val t = Thread {
@@ -417,7 +420,8 @@ fun Application.startTilbakekrevingEventKonsument(
     dataSource: DataSource, repositoryRegistry: RepositoryRegistry, gatewayProvider: GatewayProvider
 ): KafkaKonsument<String, String> {
     val konsument = TilbakekrevingKafkaKonsument(
-        config = KafkaConsumerConfig(), dataSource = dataSource, repositoryRegistry = repositoryRegistry, gatewayProvider = gatewayProvider
+        config = KafkaConsumerConfig(), dataSource = dataSource, repositoryRegistry = repositoryRegistry,
+        closeTimeout = AppConfig.stansArbeidTimeout
     )
     monitor.subscribe(ApplicationStarted) {
         val t = Thread {
@@ -448,12 +452,13 @@ fun Application.startPDLHendelseKonsument(
             keyDeserializer = org.apache.kafka.common.serialization.StringDeserializer::class.java,
             valueDeserializer = io.confluent.kafka.serializers.KafkaAvroDeserializer::class.java
         ),
+        closeTimeout = AppConfig.stansArbeidTimeout,
         dataSource = dataSource,
         repositoryRegistry = repositoryRegistry,
         gatewayProvider = gatewayProvider
     )
     monitor.subscribe(ApplicationStarted) {
-        val t = Thread() {
+        val t = Thread {
             konsument.konsumer()
         }
         t.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, e ->

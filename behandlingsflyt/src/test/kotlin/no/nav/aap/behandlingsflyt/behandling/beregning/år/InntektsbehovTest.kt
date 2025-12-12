@@ -1,7 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.beregning.år
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
+import no.nav.aap.behandlingsflyt.behandling.beregning.Månedsinntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.BeregningInput
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskade
@@ -21,33 +22,34 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.Year
+import java.time.YearMonth
 
 class InntektsbehovTest {
     @Test
     fun `henter ut relevante år, nemlig tre år før nedsettelsen`() {
         val nedsettelsesDato = LocalDate.now().withYear(2005)
+        val årsInntekter = setOf(
+            InntektPerÅr(nedsettelsesDato.plusYears(1).year, Beløp(123)),
+            InntektPerÅr(nedsettelsesDato.minusYears(0).year, Beløp(125)),
+            InntektPerÅr(nedsettelsesDato.minusYears(1).year, Beløp(126)),
+            InntektPerÅr(nedsettelsesDato.minusYears(2).year, Beløp(127)),
+            InntektPerÅr(nedsettelsesDato.minusYears(3).year, Beløp(128)),
+            InntektPerÅr(nedsettelsesDato.minusYears(4).year, Beløp(129))
+        )
         val forOrdinær = Inntektsbehov(
             BeregningInput(
                 nedsettelsesDato,
-                inntekter = setOf(
-                    InntektPerÅr(nedsettelsesDato.plusYears(1).year, Beløp(123)),
-                    InntektPerÅr(nedsettelsesDato.minusYears(0).year, Beløp(125)),
-                    InntektPerÅr(nedsettelsesDato.minusYears(1).year, Beløp(126)),
-                    InntektPerÅr(nedsettelsesDato.minusYears(2).year, Beløp(127)),
-                    InntektPerÅr(nedsettelsesDato.minusYears(3).year, Beløp(128)),
-                    InntektPerÅr(nedsettelsesDato.minusYears(4).year, Beløp(129))
-                ),
+                årsInntekter = årsInntekter,
                 uføregrad = setOf(Uføre(LocalDate.now(), Prosent.`0_PROSENT`)),
                 yrkesskadevurdering = null,
                 beregningGrunnlag = null,
-                registrerteYrkesskader = null
+                registrerteYrkesskader = null,
+                inntektsPerioder = inntektsPerioder(årsInntekter)
             )
         ).utledForOrdinær()
 
         assertThat(forOrdinær).containsExactlyInAnyOrder(
-            InntektPerÅr(2004, Beløp(126)),
-            InntektPerÅr(2003, Beløp(127)),
-            InntektPerÅr(2002, Beløp(128))
+            InntektPerÅr(2004, Beløp(126)), InntektPerÅr(2003, Beløp(127)), InntektPerÅr(2002, Beløp(128))
         )
     }
 
@@ -57,11 +59,12 @@ class InntektsbehovTest {
         val relevanteÅr = Inntektsbehov(
             BeregningInput(
                 nedsettelsesDato,
-                inntekter = emptySet(),
+                årsInntekter = emptySet(),
                 uføregrad = setOf(Uføre(LocalDate.now(), Prosent.`0_PROSENT`)),
                 yrkesskadevurdering = null,
                 beregningGrunnlag = null,
-                registrerteYrkesskader = null
+                registrerteYrkesskader = null,
+                inntektsPerioder = inntektsPerioder(emptySet())
             )
         ).utledAlleRelevanteÅr()
 
@@ -69,9 +72,7 @@ class InntektsbehovTest {
 
         assertThat(relevanteÅr).hasSize(3)
         assertThat(relevanteÅr).containsExactlyInAnyOrder(
-            nedsattYear.minusYears(3),
-            nedsattYear.minusYears(2),
-            nedsattYear.minusYears(1)
+            nedsattYear.minusYears(3), nedsattYear.minusYears(2), nedsattYear.minusYears(1)
         )
     }
 
@@ -81,12 +82,11 @@ class InntektsbehovTest {
         val ytterligereNedsattDato = LocalDate.now().minusYears(2)
         val relevanteÅr = Inntektsbehov(
             BeregningInput(
-                nedsettelsesDato,
-                emptySet(),
-                setOf(Uføre(LocalDate.now(), Prosent.`0_PROSENT`)),
-                null,
-                null,
-                BeregningGrunnlag(
+                nedsettelsesDato = nedsettelsesDato,
+                årsInntekter = emptySet(),
+                uføregrad = setOf(Uføre(LocalDate.now(), Prosent.`0_PROSENT`)),
+                inntektsPerioder = inntektsPerioder(emptySet()),
+                beregningGrunnlag = BeregningGrunnlag(
                     tidspunktVurdering = BeregningstidspunktVurdering(
                         begrunnelse = "asdf",
                         ytterligereNedsattArbeidsevneDato = ytterligereNedsattDato,
@@ -95,6 +95,8 @@ class InntektsbehovTest {
                         vurdertAv = "saksbehandler"
                     ), yrkesskadeBeløpVurdering = null
                 ),
+                yrkesskadevurdering = null,
+                registrerteYrkesskader = null,
             )
         ).utledAlleRelevanteÅr()
 
@@ -118,7 +120,7 @@ class InntektsbehovTest {
         val inntektsbehov = Inntektsbehov(
             BeregningInput(
                 nedsettelsesDato,
-                inntekter = emptySet(),
+                årsInntekter = emptySet(),
                 uføregrad = setOf(Uføre(LocalDate.now(), Prosent.`30_PROSENT`)),
                 yrkesskadevurdering = null,
                 registrerteYrkesskader = null,
@@ -130,7 +132,8 @@ class InntektsbehovTest {
                         ytterligereNedsattBegrunnelse = "begrunnelse",
                         vurdertAv = "saksbehandler"
                     ), yrkesskadeBeløpVurdering = null
-                )
+                ),
+                inntektsPerioder = emptySet()
             )
         )
 
@@ -143,7 +146,7 @@ class InntektsbehovTest {
         val inntektsbehov = Inntektsbehov(
             BeregningInput(
                 nedsettelsesDato,
-                inntekter = emptySet(),
+                årsInntekter = emptySet(),
                 uføregrad = setOf(Uføre(LocalDate.now(), Prosent.`30_PROSENT`)),
                 yrkesskadevurdering = Yrkesskadevurdering(
                     begrunnelse = "...",
@@ -155,10 +158,7 @@ class InntektsbehovTest {
                 registrerteYrkesskader = Yrkesskader(
                     listOf(
                         Yrkesskade(
-                            ref = "123",
-                            saksnummer = 0,
-                            kildesystem = "KLVN",
-                            skadedato = null
+                            ref = "123", saksnummer = 0, kildesystem = "KLVN", skadedato = null
                         )
                     )
                 ),
@@ -179,7 +179,8 @@ class InntektsbehovTest {
                             )
                         )
                     )
-                )
+                ),
+                inntektsPerioder = emptySet()
             )
         )
 
@@ -195,15 +196,12 @@ class InntektsbehovTest {
                 ytterligereNedsattBegrunnelse = null,
                 ytterligereNedsattArbeidsevneDato = LocalDate.now(),
                 vurdertAv = "saksbehandler",
-            ),
-            yrkesskadeBeløpVurdering = null
+            ), yrkesskadeBeløpVurdering = null
         )
 
         val relevanteÅr = Inntektsbehov.utledAlleRelevanteÅr(beregningGrunnlag, null)
         assertThat(relevanteÅr).containsExactlyInAnyOrder(
-            Year.of(2024),
-            Year.of(2023),
-            Year.of(2022)
+            Year.of(2024), Year.of(2023), Year.of(2022)
         )
     }
 
@@ -219,22 +217,19 @@ class InntektsbehovTest {
                 harBehovForBehandling = true,
                 avbruttStudieDato = 1 januar 2025,
                 avbruddMerEnn6Måneder = true,
-            ),
-            oppgittStudent = null
+            ), oppgittStudent = null
         )
 
         val relevanteÅr = Inntektsbehov.utledAlleRelevanteÅr(null, studentGrunnlag)
         assertThat(relevanteÅr).containsExactlyInAnyOrder(
-            Year.of(2024),
-            Year.of(2023),
-            Year.of(2022)
+            Year.of(2024), Year.of(2023), Year.of(2022)
         )
     }
 
     @Test
     fun `skal utlede de tre forutgående kalenderårene for både nedsettelsesdato og ytterligereNedsattArbeidsevneDato`() {
-        val nedsettelsesDato =  1 januar 2025
-        val ytterligereNedsattArbeidsevneDato =  1 januar 2020
+        val nedsettelsesDato = 1 januar 2025
+        val ytterligereNedsattArbeidsevneDato = 1 januar 2020
 
         val relevanteÅr = Inntektsbehov.utledAlleRelevanteÅr(nedsettelsesDato, ytterligereNedsattArbeidsevneDato)
         assertThat(relevanteÅr).containsExactlyInAnyOrder(
@@ -270,5 +265,15 @@ class InntektsbehovTest {
 
         val nedsettelsesdato = Inntektsbehov.utledNedsettelsesdato(beregningVurdering, studentvurdering)
         assertThat(nedsettelsesdato).isEqualTo(1 januar 2024)
+    }
+
+
+    private fun inntektsPerioder(inntektPerÅr: Set<InntektPerÅr>): Set<Månedsinntekt> {
+        return inntektPerÅr.map {
+            Månedsinntekt(
+                // TODO
+                YearMonth.of(it.år.value, 1), it.beløp
+            )
+        }.toSet()
     }
 }

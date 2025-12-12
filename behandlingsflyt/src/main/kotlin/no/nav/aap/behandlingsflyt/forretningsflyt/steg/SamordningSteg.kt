@@ -53,7 +53,7 @@ class SamordningSteg(
             ytelser, tidligereVurderinger
         )
 
-        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårGammel(
+        avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
             avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId),
             behandlingRepository = behandlingRepository,
             vilkårsresultatRepository = vilkårsresultatRepository,

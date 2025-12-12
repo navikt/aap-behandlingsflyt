@@ -36,7 +36,11 @@ interface BrevbestillingGateway : Gateway {
 
     fun oppdaterV3(bestillingReferanse: BrevbestillingReferanse, brevdata: BrevdataDto)
 
+    fun oppdaterBrevmal(bestillingReferanse: BrevbestillingReferanse)
+
     fun avbryt(bestillingReferanse: BrevbestillingReferanse)
+
+    fun gjenoppta(bestillingReferanse: BrevbestillingReferanse)
 
     fun kanDistribuereBrev(brukerIdent: String, mottakerIdentListe: List<String>, brevbestillingReferanse: BrevbestillingReferanse): List<MottakerDistStatus>
 

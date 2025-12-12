@@ -26,10 +26,11 @@ class TrukketSøknadVurderingDto(
     val journalpostId: String,
     val begrunnelse: String,
     val vurdertDato: LocalDate,
+    val skalTrekkes: Boolean,
     val vurdertAv: String,
 )
 
-fun NormalOpenAPIRoute.trukketSøknadGrunnlagAPI(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
+fun NormalOpenAPIRoute.trukketSøknadGrunnlagApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
     route("/api/behandling/{referanse}/grunnlag/trukket-søknad").authorizedGet<BehandlingReferanse, TrukketSøknadGrunnlagDto>(
         AuthorizationParamPathConfig(
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
@@ -50,6 +51,7 @@ fun NormalOpenAPIRoute.trukketSøknadGrunnlagAPI(dataSource: DataSource, reposit
                             journalpostId = it.journalpostId.identifikator,
                             begrunnelse = it.begrunnelse,
                             vurdertAv = it.vurdertAv.ident,
+                            skalTrekkes = it.skalTrekkes,
                             vurdertDato = it.vurdert.atZone(ZoneId.of("Europe/Oslo")).toLocalDate(),
                         )
                     }

@@ -49,7 +49,7 @@ class BarnetilleggStegTest {
             every { muligMedRettTilAAP(any(), StegType.BARNETILLEGG) } returns true
         }
 
-        avklaringsbehovService = AvklaringsbehovService(avklaringsbehovRepository, avbrytRevurderingService)
+        avklaringsbehovService = AvklaringsbehovService(avbrytRevurderingService)
         steg = BarnetilleggSteg(
             barnetilleggService = mockk(),
             barnetilleggRepository = mockk(),
