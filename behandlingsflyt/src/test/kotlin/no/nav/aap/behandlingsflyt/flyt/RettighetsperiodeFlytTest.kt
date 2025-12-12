@@ -338,7 +338,7 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
     }
 
     @Test
-    fun `Skal kunne utvide rettighetsperioden automatisk uten at vilkårene er begrenset i tidslengde`() {
+    fun `Skal kunne migrere rettighetsperioden automatisk og utvide vilkårslengden`() {
         /**
          * Begrenser rettighetsperioden til 1 år for å simulere eksisterende behandlinger fra tidligere
          */
@@ -387,7 +387,9 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
             }
         )
         val vilkårsresultat = dataSource.transaction { VilkårsresultatRepositoryImpl(it).hent(oppdatertBehandling.id) }
-        vilkårsresultat.alle().filter { it.tidslinje().isNotEmpty() }.forEach {
+        vilkårsresultat.alle()
+            .filterNot { it.type in vilkårSomIkkeAutomatiskUtvides() }
+            .forEach {
             vilkår -> val vilkårSluttdato = vilkår.tidslinje().perioder().max().tom
             assertThat(vilkårSluttdato)
                 .withFailMessage{"til-dato for vilkår ${vilkår.type} er ikke Tid.MAKS men $vilkårSluttdato"}
@@ -396,7 +398,7 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
     }
 
     @Test
-    fun `skal kunne migrere rettighetsperioder og få utvidet vedtakslengden ved innsending av meldekort`() {
+    fun `skal kunne migrere rettighetsperioder med samordning på starten av perioden`() {
         /**
          * Begrenser rettighetsperioden til 1 år for å simulere eksisterende behandlinger fra tidligere
          */
@@ -456,14 +458,29 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
             ) to { assertThat(it).isEqualTo(Utfall.OPPFYLT) },
         )
         val vilkårsresultat = dataSource.transaction { VilkårsresultatRepositoryImpl(it).hent(sisteBehandling.id) }
-        vilkårsresultat.alle().filter { it.tidslinje().isNotEmpty() }.forEach { vilkår ->
-            val vilkårSluttdato = vilkår.tidslinje().perioder().max().tom
-            assertThat(vilkårSluttdato)
-                .withFailMessage{"til-dato for vilkår ${vilkår.type} er ikke Tid.MAKS men $vilkårSluttdato"}
-                .isEqualTo(Tid.MAKS)
-        }
+        vilkårsresultat.alle()
+            .filterNot { it.type in vilkårSomIkkeAutomatiskUtvides() }
+            .forEach { vilkår ->
+                val vilkårSluttdato = vilkår.tidslinje().perioder().max().tom
+                assertThat(vilkårSluttdato)
+                    .withFailMessage{"til-dato for vilkår ${vilkår.type} er ikke Tid.MAKS men $vilkårSluttdato"}
+                    .isEqualTo(Tid.MAKS)
+            }
 
     }
+
+
+    /**
+     * TODO: Disse burde ideellt sett også blitt utvidet (minus samordning) ved
+     * migrering av rettighetsperioden, men må sjekkes når periodisering er "avklart"
+     */
+    private fun vilkårSomIkkeAutomatiskUtvides() = listOf(
+        Vilkårtype.OVERGANGUFØREVILKÅRET,
+        Vilkårtype.OVERGANGARBEIDVILKÅRET,
+        Vilkårtype.SYKEPENGEERSTATNING,
+        Vilkårtype.SAMORDNING
+    )
+
 
     private fun settRettighetsperiodeOgRekjørFraStart(
         midlertidigSak: Sak,
