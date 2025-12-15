@@ -184,7 +184,7 @@ class StatistikkMetoder(
                 Vurderingsbehov.MOTTATT_AVVIST_LEGEERKLÆRING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.AVVIST_LEGEERKLÆRING
                 Vurderingsbehov.MOTTATT_DIALOGMELDING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.DIALOGMELDING
                 Vurderingsbehov.G_REGULERING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.G_REGULERING
-                Vurderingsbehov.BARNETILLEGG_SATS_REGULERING -> TODO()
+                Vurderingsbehov.BARNETILLEGG_SATS_REGULERING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.BARNETILLEGG_SATS_REGULERING
                 Vurderingsbehov.REVURDER_MEDLEMSKAP -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_MEDLEMSKAP
                 Vurderingsbehov.REVURDER_BEREGNING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_BEREGNING
                 Vurderingsbehov.REVURDER_YRKESSKADE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_YRKESSKADE

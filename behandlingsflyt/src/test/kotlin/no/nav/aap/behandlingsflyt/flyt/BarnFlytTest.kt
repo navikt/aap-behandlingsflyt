@@ -26,6 +26,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskap
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.prosessering.TriggBarnetilleggSatsJobbUtfører
 import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.barn.BarnRepositoryImpl
@@ -34,6 +35,7 @@ import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
@@ -46,6 +48,8 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Tid
+import no.nav.aap.motor.FlytJobbRepository
+import no.nav.aap.motor.JobbInput
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -53,7 +57,7 @@ import kotlin.collections.map
 import kotlin.collections.orEmpty
 import kotlin.test.assertTrue
 
-class BarnFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
+class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
     val periode = Periode(LocalDate.now(), Tid.MAKS)
 
     @Test
@@ -153,9 +157,17 @@ class BarnFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             .fattVedtak()
 
         val sakerMedBarnetillegg = dataSource.transaction {
-            SakRepositoryImpl(it).finnSakerMedBarnetillegg(LocalDate.of(2026, 1,1))
+            SakRepositoryImpl(it).finnSakerMedBarnetillegg(LocalDate.of(2026, 1, 1))
         }
         assertThat(sakerMedBarnetillegg).containsExactly(behandling.sakId)
+
+        dataSource.transaction {
+            FlytJobbRepository(it).leggTil(JobbInput(TriggBarnetilleggSatsJobbUtfører))
+        }
+        motor.kjørJobber()
+        val sisteOpprettedeBehandling = hentSisteOpprettedeBehandlingForSak(behandling.sakId)
+        assertThat(sisteOpprettedeBehandling.id).isNotEqualTo(behandling.id)
+        assertThat(sisteOpprettedeBehandling.årsakTilOpprettelse).isEqualTo(ÅrsakTilOpprettelse.BARNETILLEGG_SATSENDRING)
     }
 
     @Test
@@ -1072,7 +1084,8 @@ class BarnFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                     assertThat(it.antallBarn).isEqualTo(1)
                 })
 
-                val periodeUtenBarnetillegg = Periode(dødtBarnDødsdato.toLocalDate().plusDays(1), tilkjentYtelseTidslinje.maxDato())
+                val periodeUtenBarnetillegg =
+                    Periode(dødtBarnDødsdato.toLocalDate().plusDays(1), tilkjentYtelseTidslinje.maxDato())
                 val tilkjentYtelseUtenBarnetillegg = tilkjentYtelseTidslinje.begrensetTil(periodeUtenBarnetillegg)
                 assertTidslinje(tilkjentYtelseUtenBarnetillegg, periodeUtenBarnetillegg to {
                     assertThat(it.barnetillegg).isEqualTo(Beløp(0))

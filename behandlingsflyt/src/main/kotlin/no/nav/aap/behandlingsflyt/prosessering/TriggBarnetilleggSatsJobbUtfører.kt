@@ -17,7 +17,8 @@ import java.time.LocalDate
 
 class TriggBarnetilleggSatsJobbUtfører(
     val sakRepository: SakRepository,
-    private val sakOgBehandlingService: SakOgBehandlingService
+    private val sakOgBehandlingService: SakOgBehandlingService,
+    private val prosesserBehandlingService: ProsesserBehandlingService,
 ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -28,12 +29,13 @@ class TriggBarnetilleggSatsJobbUtfører(
         log.info("Fant ${saker.size} saker med barnetillegg.")
 
         saker.forEach {
-            sakOgBehandlingService.finnEllerOpprettBehandling(
+            val behandling = sakOgBehandlingService.finnEllerOpprettBehandling(
                 it, VurderingsbehovOgÅrsak(
                     vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.BARNETILLEGG_SATS_REGULERING)),
                     årsak = ÅrsakTilOpprettelse.BARNETILLEGG_SATSENDRING
                 )
             )
+            prosesserBehandlingService.triggProsesserBehandling(behandling)
         }
 
     }
@@ -47,14 +49,15 @@ class TriggBarnetilleggSatsJobbUtfører(
         /**
          * Kjør hver 2 januar kl 09:00.
          */
-        override val cron: CronExpression = CronExpression.create("0 9 2 1 *")
+        override val cron: CronExpression = CronExpression.createWithoutSeconds("0 9 2 1 *")
 
         override fun konstruer(
             repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider
         ): TriggBarnetilleggSatsJobbUtfører {
             return TriggBarnetilleggSatsJobbUtfører(
                 sakRepository = repositoryProvider.provide(),
-                sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider)
+                sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
+                prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
             )
         }
     }
