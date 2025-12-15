@@ -21,7 +21,6 @@ class InntektsbortfallVurderingService {
         beregningService: BeregningService
     ): InntektsbortfallKanBehandlesAutomatisk {
         val sisteRelevanteÅr = hentSisteRelevanteÅr(kontekst, beregningService)
-
         val under62ÅrVedSøknadstidspunktGrunnlag = erUnder62PåRettighetsperioden(kontekst, brukerPersonopplysning)
         val inntektSisteÅrOver1GGrunnlag =
             inntektSisteÅrOver1G(inntektGrunnlag, manuellInntektGrunnlag, sisteRelevanteÅr)
@@ -63,6 +62,10 @@ class InntektsbortfallVurderingService {
                 InntektPerÅr(inntekt.år, manuell.belop!!)
             } ?: inntekt
         }
+        
+        if (kombinerte.isEmpty()) {
+            return GjennomsnittInntektSiste3ÅrOver3G(GUnit(BigDecimal.ZERO), false)
+        }
 
         val gjennomsnitt = kombinerte
             .map { it.gUnit().gUnit.verdi() }
@@ -101,15 +104,18 @@ class InntektsbortfallVurderingService {
         inntektGrunnlag: InntektGrunnlag?,
         år: Set<Year>
     ): List<InntektPerÅr> {
-        checkNotNull(inntektGrunnlag) {
-            "Forventet å finne inntektsgrunnlag siden dette lagres i informasjonskravet."
-        }
+        if (inntektGrunnlag == null) return emptyList()
         return inntektGrunnlag.inntekter.filter { it.år in år }
     }
 
     private fun hentSisteRelevanteÅr(kontekst: FlytKontekstMedPerioder, beregningService: BeregningService): Set<Year> {
         val relevantBeregningsPeriode = beregningService.utledRelevanteBeregningsÅr(kontekst.behandlingId)
-        val sisteÅr = relevantBeregningsPeriode.max()
+        val sisteÅr = if(relevantBeregningsPeriode.isNotEmpty()) {
+            relevantBeregningsPeriode.max()
+        } else {
+            Year.of(kontekst.rettighetsperiode.fom.year - 1)
+        }
+
         return (0L..2L).map { sisteÅr.minusYears(it) }.toSet()
     }
 }
