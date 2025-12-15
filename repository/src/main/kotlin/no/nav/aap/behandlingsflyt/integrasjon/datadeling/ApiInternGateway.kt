@@ -160,15 +160,16 @@ class ApiInternGatewayImpl() : ApiInternGateway {
     }
 
     private val arenaStatusCache = Caffeine.newBuilder()
-        .expireAfterWrite(Duration.ofHours(1))
+        .expireAfterWrite(Duration.ofHours(2))
         .maximumSize(10_000)
-        .build<SakerRequest, ArenaStatusResponse>()
+        .build<Set<String>, ArenaStatusResponse>()
 
-    override fun hentArenaStatus(personidentifikatorer: List<String>): ArenaStatusResponse {
-        val key = SakerRequest(personidentifikatorer = personidentifikatorer)
+    override fun hentArenaStatus(personidentifikatorer: Set<String>): ArenaStatusResponse {
+        val cacheKey = personidentifikatorer
         // Kalles ofte fra saksbehandling, så cache den
-        return arenaStatusCache.get(key, {
-            doHentArenaStatus(key)
+        return arenaStatusCache.get(cacheKey, {
+            val sakerRequest = SakerRequest(personidentifikatorer = cacheKey.toList())
+            doHentArenaStatus(sakerRequest)
         })
     }
 
@@ -178,7 +179,7 @@ class ApiInternGatewayImpl() : ApiInternGateway {
             PostRequest(body = sakerRequest),
             mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }
         )
-        requireNotNull(remoteResponse) { "Fikk ikke gyldig svar på om personen eksisterer i AAP Arena" }
+        requireNotNull(remoteResponse) { "Fikk ikke gyldig svar på om personen eksisterer i AAP-Arena" }
         return ArenaStatusResponse(remoteResponse.eksisterer)
     }
 }
