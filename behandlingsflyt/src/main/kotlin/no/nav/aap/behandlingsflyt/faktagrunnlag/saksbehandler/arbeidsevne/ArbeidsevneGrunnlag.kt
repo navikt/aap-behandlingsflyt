@@ -8,12 +8,18 @@ import java.time.LocalDate
 
 data class ArbeidsevneGrunnlag(
     val vurderinger: List<ArbeidsevneVurdering>,
-)
+) {
+    fun gjeldendeVurderinger(maksDato: LocalDate = Tid.MAKS): Tidslinje<ArbeidsevneVurdering> =
+        vurderinger
+            .groupBy { it.vurdertIBehandling }
+            .values
+            .sortedBy { it[0].opprettetTid }
+            .flatMap { vurderingerForBehandling -> vurderingerForBehandling.sortedBy { it.fraDato } }
+            .somTidslinje { Periode(it.fraDato, it.tilDato ?: maksDato) }
+            .komprimer()
 
-fun List<ArbeidsevneVurdering>.tilTidslinje(maksDato: LocalDate = Tid.MAKS): Tidslinje<ArbeidsevneVurdering> =
-    groupBy { it.vurdertIBehandling }
-        .values
-        .sortedBy { it[0].opprettetTid }
-        .flatMap { vurderingerForBehandling -> vurderingerForBehandling.sortedBy { it.fraDato } }
-        .somTidslinje { Periode(it.fraDato, it.tilDato ?: maksDato) }
-        .komprimer()
+    fun tilTidslinje(): Tidslinje<ArbeidsevneVurdering.ArbeidsevneVurderingData> =
+        gjeldendeVurderinger()
+            .map { it.toArbeidsevneVurderingData() }
+            .komprimer()
+}

@@ -19,14 +19,13 @@ data class ArbeidsevneVurdering(
     val opprettetTid: LocalDateTime,
     val vurdertAv: String,
 ) {
-    fun tidslinje(): Tidslinje<ArbeidsevneVurderingData> {
-        return Tidslinje(
-            listOf(
-                Segment(
-                    Periode(fraDato, Tid.MAKS),
-                    ArbeidsevneVurderingData(begrunnelse, arbeidsevne, opprettetTid, vurdertAv)
-                )
-            )
+    fun toArbeidsevneVurderingData(): ArbeidsevneVurderingData {
+        return ArbeidsevneVurderingData(
+            begrunnelse = begrunnelse,
+            arbeidsevne = arbeidsevne,
+            opprettetTid = opprettetTid,
+            vurdertAv = vurdertAv,
+            vurdertIBehandling = vurdertIBehandling
         )
     }
 
@@ -35,23 +34,6 @@ data class ArbeidsevneVurdering(
         val arbeidsevne: Prosent,
         val opprettetTid: LocalDateTime,
         val vurdertAv: String,
-    ) {
-        fun toArbeidsevneVurdering(fraDato: LocalDate): ArbeidsevneVurdering {
-            return ArbeidsevneVurdering(
-                begrunnelse = begrunnelse,
-                arbeidsevne = arbeidsevne,
-                fraDato = fraDato,
-                opprettetTid = opprettetTid,
-                vurdertAv = vurdertAv
-            )
-        }
-    }
-
-    companion object {
-        fun List<ArbeidsevneVurdering>.tidslinje(): Tidslinje<ArbeidsevneVurderingData> {
-            return sortedBy { it.fraDato }.fold(Tidslinje()) { acc, arbeidsevneVurdering ->
-                acc.kombiner(arbeidsevneVurdering.tidslinje(), StandardSammenslåere.prioriterHøyreSideCrossJoin())
-            }
-        }
-    }
+        val vurdertIBehandling: BehandlingId? = null,
+    )
 }

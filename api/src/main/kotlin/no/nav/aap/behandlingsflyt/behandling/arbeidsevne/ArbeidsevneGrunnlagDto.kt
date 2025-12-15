@@ -3,11 +3,9 @@ package no.nav.aap.behandlingsflyt.behandling.arbeidsevne
 import no.nav.aap.behandlingsflyt.PeriodiserteVurderingerDto
 import no.nav.aap.behandlingsflyt.VurderingDto
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattNavnOgEnhet
-import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.fritakmeldeplikt.PeriodisertFritakMeldepliktVurderingResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -38,7 +36,7 @@ data class ArbeidsevneVurderingDto(
 fun ArbeidsevneVurdering.toDto(ansattNavnOgEnhet: AnsattNavnOgEnhet? = null): ArbeidsevneVurderingDto =
     ArbeidsevneVurderingDto(
         begrunnelse,
-        opprettetTid ?: LocalDateTime.now(),
+        opprettetTid,
         arbeidsevne.prosentverdi(),
         fraDato,
         vurdertAv = VurdertAvResponse(
@@ -48,20 +46,6 @@ fun ArbeidsevneVurdering.toDto(ansattNavnOgEnhet: AnsattNavnOgEnhet? = null): Ar
             enhetsnavn = ansattNavnOgEnhet?.enhet
         )
     )
-
-data class SimulerArbeidsevneDto(
-    val vurderinger: List<SimuleringArbeidsevneVurderingDto>
-)
-
-data class SimuleringArbeidsevneVurderingDto(
-    val begrunnelse: String,
-    val arbeidsevne: Int,
-    val fraDato: LocalDate
-)
-
-data class SimulertArbeidsevneResultatDto(
-    val gjeldendeVedtatteVurderinger: List<ArbeidsevneVurderingDto>
-)
 
 data class PeriodisertArbeidsevneVurderingDto(
     override val fom: LocalDate,
