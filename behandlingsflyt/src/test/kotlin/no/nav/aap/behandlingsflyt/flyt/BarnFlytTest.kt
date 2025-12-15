@@ -510,7 +510,7 @@ class BarnFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 val tilkjentYtelseTidslinje =
                     tilkjentYtelseFraRepo.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
 
-                assertTrue(tilkjentYtelseTidslinje.isNotEmpty())
+                assertThat(tilkjentYtelseTidslinje.isNotEmpty())
 
                 val periodeEttBarn = Periode(fraDatoOppgitteBarn, fraDatoRegisterBarn.minusDays(1))
                 val tilkjentYtelseEttBarn = tilkjentYtelseTidslinje.begrensetTil(periodeEttBarn)
@@ -627,7 +627,7 @@ class BarnFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         )
 
         revurdering.medKontekst {
-            assertThat(revurdering.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
+            assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
             assertThat(revurdering.forrigeBehandlingId).isEqualTo(førstegangsbehandling.id)
             assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
         }
