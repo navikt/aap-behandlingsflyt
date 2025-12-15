@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.KanTriggeRevurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningInformasjonskrav

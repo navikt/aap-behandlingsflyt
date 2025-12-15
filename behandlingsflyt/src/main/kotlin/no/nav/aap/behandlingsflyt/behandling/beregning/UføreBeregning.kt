@@ -40,7 +40,7 @@ class UføreBeregning(
         require(inntektsPerioder
             .filter { Year.of(it.årMåned.year) in relevanteÅr }
             .groupingBy { it.årMåned.year }
-            .eachCount().values.all { it == 12 }) { "Krever inntekter for alle månender i relevante år." }
+            .eachCount().values.all { it == 12 }) { "Krever inntekter for alle måneder i relevante år." }
 
         val inntektPerMåned = inntektsPerioder
             .filter { Year.of(it.årMåned.year) in relevanteÅr }
