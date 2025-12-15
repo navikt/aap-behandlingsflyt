@@ -87,7 +87,7 @@ class VurderSykepengeErstatningSteg private constructor(
                 behandlingRepository = behandlingRepository,
                 vilkårsresultatRepository = vilkårsresultatRepository,
                 definisjon = Definisjon.AVKLAR_SYKEPENGEERSTATNING,
-                tvingerAvklaringsbehov = setOf(),
+                tvingerAvklaringsbehov = setOf(Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING),
                 nårVurderingErRelevant = ::perioderMedVurderingsbehov,
                 kontekst = kontekst,
                 perioderSomIkkeErTilstrekkeligVurdert = { emptySet() }, // Denne må minst sjekke at man har vurderinger for perioder når vurdering er relevant

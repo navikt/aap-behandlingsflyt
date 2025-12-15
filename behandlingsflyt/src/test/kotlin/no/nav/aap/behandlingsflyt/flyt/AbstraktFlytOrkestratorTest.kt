@@ -137,7 +137,6 @@ import no.nav.aap.behandlingsflyt.test.testGatewayProvider
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
@@ -156,6 +155,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.reflect.KClass
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
 
 
 @Fakes
@@ -1591,5 +1591,14 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         }
     }
 
+    fun assertStatusForDefinisjon(
+        avklaringsbehov: List<Avklaringsbehov>,
+        definisjon: Definisjon,
+        forventetStatus: AvklaringsbehovStatus
+    ) {
+        assertThat(avklaringsbehov.filter { it.definisjon == definisjon }
+            .map { it.status() })
+            .containsExactly(forventetStatus)
+    }
 
 }
