@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.UføreInn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.tilTidslinje
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -35,7 +36,7 @@ class UføreBeregning(
     fun beregnUføre(ytterligereNedsattÅr: Year): GrunnlagUføre {
         // tidslinjelogikken er basert på antagelsen om at uføre alltid har virkningstidspunkt på den første i måneden
         // og at vi får inntekt fra inntektskomponenten per måned
-        val uføreTidslinje = lagUføreTidslinje(uføregrader)
+        val uføreTidslinje = uføregrader.tilTidslinje()
 
         require(inntektsPerioder
             .filter { Year.of(it.årMåned.year) in relevanteÅr }
@@ -131,12 +132,6 @@ class UføreBeregning(
             )
         }.toSet()
         return GrunnlagetForBeregningen(oppjusterteInntekterPerÅr).beregnGrunnlaget()
-    }
-
-    private fun lagUføreTidslinje(uføregrader: Set<Uføre>): Tidslinje<Prosent> {
-        return uføregrader
-            .sortedBy { it.virkningstidspunkt }
-            .somTidslinje({ Periode(it.virkningstidspunkt, Tid.MAKS) }, { it.uføregrad })
     }
 
     private fun gUnit(år: Year, beløp: Beløp): Grunnbeløp.BenyttetGjennomsnittsbeløp =

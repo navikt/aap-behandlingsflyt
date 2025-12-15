@@ -37,7 +37,7 @@ class BeregningsGrunnlagApiTest {
             BeregningInput(
                 nedsettelsesDato = LocalDate.of(2023, 1, 1),
                 årsInntekter = årsInntekter,
-                uføregrad = setOf(Uføre(LocalDate.now(), Prosent(30))),
+                uføregrad = setOf(Uføre(LocalDate.of(2023, 1, 1), Prosent(30))),
                 yrkesskadevurdering = Yrkesskadevurdering(
                     begrunnelse = "en begrunnelse",
                     andelAvNedsettelsen = Prosent(30),
