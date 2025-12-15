@@ -55,7 +55,7 @@ class FakeApiInternGateway : ApiInternGateway {
         // No-op
     }
 
-    override fun hentArenaStatus(personidentifikatorer: List<String>): ArenaStatusResponse {
+    override fun hentArenaStatus(personidentifikatorer: Set<String>): ArenaStatusResponse {
         return ArenaStatusResponse(false)
     }
 }
