@@ -149,7 +149,7 @@ internal object AppConfig {
     // https://github.com/ktorio/ktor/blob/3.3.1/ktor-server/ktor-server-core/common/src/io/ktor/server/engine/ApplicationEngine.kt#L30
     val connectionGroupSize = ktorParallellitet / 2 + 1
     val workerGroupSize = ktorParallellitet / 2 + 1
-    val callGroupSize = ktorParallellitet
+    val callGroupSize = 32
 
     const val ANTALL_WORKERS_FOR_MOTOR = 4
     val hikariMaxPoolSize = ktorParallellitet + 2 * ANTALL_WORKERS_FOR_MOTOR
