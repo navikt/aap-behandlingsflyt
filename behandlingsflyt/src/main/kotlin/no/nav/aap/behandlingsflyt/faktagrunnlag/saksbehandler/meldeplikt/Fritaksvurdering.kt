@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.tidslinje.Segment
-import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
@@ -18,10 +17,13 @@ data class Fritaksvurdering(
     val opprettetTid: LocalDateTime,
     val vurdertIBehandling: BehandlingId? = null,
 ) {
-
-    fun tidslinje(): Tidslinje<FritaksvurderingData> {
-        return Tidslinje(
-            listOf(Segment(Periode(fraDato, Tid.MAKS), FritaksvurderingData(harFritak, begrunnelse, vurdertAv, opprettetTid)))
+    fun toFritaksvurderingData(): FritaksvurderingData {
+        return FritaksvurderingData(
+            harFritak = harFritak,
+            begrunnelse = begrunnelse,
+            vurdertAv = vurdertAv,
+            opprettetTid = opprettetTid,
+            vurdertIBehandling = vurdertIBehandling,
         )
     }
 
@@ -30,13 +32,6 @@ data class Fritaksvurdering(
         val begrunnelse: String,
         val vurdertAv: String,
         val opprettetTid: LocalDateTime,
+        val vurdertIBehandling: BehandlingId? = null,
     )
-
-    companion object {
-        fun List<Fritaksvurdering>.tidslinje(): Tidslinje<FritaksvurderingData> {
-            return sortedBy { it.fraDato }.fold(Tidslinje()) { acc, fritaksvurdering ->
-                acc.kombiner(fritaksvurdering.tidslinje(), StandardSammenslåere.prioriterHøyreSideCrossJoin())
-            }
-        }
-    }
 }
