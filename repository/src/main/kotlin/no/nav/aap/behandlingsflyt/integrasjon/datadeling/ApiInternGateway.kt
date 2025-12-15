@@ -36,12 +36,17 @@ import java.time.LocalDate
 
 class ApiInternGatewayImpl() : ApiInternGateway {
 
-    private val log = org.slf4j.LoggerFactory.getLogger(javaClass)
-
     companion object : Factory<ApiInternGateway> {
         override fun konstruer(): ApiInternGateway {
             return ApiInternGatewayImpl()
         }
+
+        private val log = org.slf4j.LoggerFactory.getLogger(javaClass)
+
+        private val arenaStatusCache = Caffeine.newBuilder()
+            .expireAfterWrite(Duration.ofHours(2))
+            .maximumSize(10_000)
+            .build<Set<String>, ArenaStatusResponse>()
     }
 
     private val restClient = RestClient.withDefaultResponseHandler(
@@ -158,11 +163,6 @@ class ApiInternGatewayImpl() : ApiInternGateway {
         }
 
     }
-
-    private val arenaStatusCache = Caffeine.newBuilder()
-        .expireAfterWrite(Duration.ofHours(2))
-        .maximumSize(10_000)
-        .build<Set<String>, ArenaStatusResponse>()
 
     override fun hentArenaStatus(personidentifikatorer: Set<String>): ArenaStatusResponse {
         val cacheKey = personidentifikatorer
