@@ -30,6 +30,7 @@ import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentY
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.barn.BarnRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.pip.PipRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -57,7 +58,7 @@ class BarnFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
 
     @Test
     fun `barnetillegg gis fram til 18 år`() {
-        val fom = LocalDate.now().minusMonths(3)
+        val fom = LocalDate.of(2025, 12, 15).minusMonths(3)
         val periode = Periode(fom, Tid.MAKS)
 
         val barnfødseldato = fom.minusYears(17).minusMonths(2)
@@ -145,6 +146,16 @@ class BarnFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         assertTidslinje(barnErOverAtten, periodeBarnOverAtten to {
             assertThat(it).isEqualTo(Beløp(0))
         })
+
+        // Test å fange opp sak med barnetillegg
+        behandling
+            .løsForeslåVedtak()
+            .fattVedtak()
+
+        val sakerMedBarnetillegg = dataSource.transaction {
+            SakRepositoryImpl(it).finnSakerMedBarnetillegg(LocalDate.of(2026, 1,1))
+        }
+        assertThat(sakerMedBarnetillegg).containsExactly(behandling.sakId)
     }
 
     @Test

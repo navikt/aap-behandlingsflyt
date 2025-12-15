@@ -224,7 +224,7 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
     override fun finnSakerMedBarnetillegg(påDato: LocalDate): List<SakId> {
         val sql = """
 with gjeldende_behandlinger as (SELECT *
-                                FROM (SELECT s.id as                                                       s_sak_id,
+                                FROM (SELECT s.id as s_sak_id,
                                              ROW_NUMBER()
                                              OVER (PARTITION BY b.sak_id ORDER BY v.vedtakstidspunkt DESC) rn,
                                              b.id as behandling_id
@@ -233,7 +233,7 @@ with gjeldende_behandlinger as (SELECT *
                                                join vedtak v on b.id = v.behandling_id
                                       WHERE b.status in ('AVSLUTTET', 'IVERKSETTES')) q
                                 WHERE rn = 1)
-select distinct b.s_sak_id
+select distinct b.s_sak_id as id
 from tilkjent_ytelse ty
          join gjeldende_behandlinger b on ty.behandling_id = b.behandling_id
          join public.tilkjent_periode tp on ty.id = tp.tilkjent_ytelse_id
