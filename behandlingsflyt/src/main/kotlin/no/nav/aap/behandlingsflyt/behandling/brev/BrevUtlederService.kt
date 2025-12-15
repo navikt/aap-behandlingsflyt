@@ -75,11 +75,14 @@ class BrevUtlederService(
 
     fun utledBehovForMeldingOmVedtak(behandlingId: BehandlingId): BrevBehov? {
         val behandling = behandlingRepository.hent(behandlingId)
-        val harArbeidsopptrapping = arbeidsopptrappingRepository.hentPerioder(behandlingId).isNotEmpty()
+        val forrigeBehandlingId = behandling.forrigeBehandlingId
+        var harBehandlingenArbeidsopptrapping = arbeidsopptrappingRepository.hentPerioder(behandlingId).isNotEmpty()
+        var harForrigeBehandlingArbeidsopptrapping = forrigeBehandlingId != null && arbeidsopptrappingRepository.hentPerioder(forrigeBehandlingId).isNotEmpty()
+        var skalSendeVedtakForArbeidsopptrapping = harBehandlingenArbeidsopptrapping && !harForrigeBehandlingArbeidsopptrapping
 
         when (behandling.typeBehandling()) {
             TypeBehandling.Førstegangsbehandling -> {
-                if (harArbeidsopptrapping) {
+                if (skalSendeVedtakForArbeidsopptrapping) {
                     return VedtakArbeidsopptrapping11_23_sjette_ledd
                 }
 
@@ -102,7 +105,7 @@ class BrevUtlederService(
             }
 
             TypeBehandling.Revurdering -> {
-                if (harArbeidsopptrapping) {
+                if (skalSendeVedtakForArbeidsopptrapping) {
                     return VedtakArbeidsopptrapping11_23_sjette_ledd
                 }
 

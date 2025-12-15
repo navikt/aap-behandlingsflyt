@@ -70,7 +70,7 @@ class BrevUtlederServiceTest {
     val beregningsgrunnlagRepository = mockk<BeregningsgrunnlagRepository>()
     val beregningVurderingRepository = mockk<BeregningVurderingRepository>()
     val aktivitetspliktRepository = mockk<Aktivitetsplikt11_7Repository>()
-    val arbeidsopptrappingRepository = mockk<ArbeidsopptrappingRepository>()  // TODO Legg til test for vedtaksbrev for arbeidsopptrapping
+    val arbeidsopptrappingRepository = mockk<ArbeidsopptrappingRepository>()
     val underveisRepository = mockk<UnderveisRepository>()
     val avbrytRevurderingService = mockk<AvbrytRevurderingService>()
     val unleashGateway = mockk<UnleashGateway>()
@@ -252,6 +252,7 @@ class BrevUtlederServiceTest {
         every { behandlingRepository.hent(revurdering.id) } returns revurdering
         every { avbrytRevurderingService.revurderingErAvbrutt(revurdering.id) } returns false
         every { arbeidsopptrappingRepository.hentPerioder(revurdering.id) } returns emptyList()
+        every { arbeidsopptrappingRepository.hentPerioder(revurdering.forrigeBehandlingId!!) } returns emptyList()
         every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns underveisGrunnlag(
             underveisperiode(
                 periode = Periode(1 januar 2023, 31 desember 2023),
@@ -282,6 +283,7 @@ class BrevUtlederServiceTest {
         every { behandlingRepository.hent(revurdering.id) } returns revurdering
         every { avbrytRevurderingService.revurderingErAvbrutt(revurdering.id) } returns false
         every { arbeidsopptrappingRepository.hentPerioder(revurdering.id) } returns emptyList()
+        every { arbeidsopptrappingRepository.hentPerioder(revurdering.forrigeBehandlingId!!) } returns emptyList()
         every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns underveisGrunnlag(
             underveisperiode(
                 periode = Periode(1 januar 2023, 31 desember 2023),
@@ -293,6 +295,60 @@ class BrevUtlederServiceTest {
         assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)).isEqualTo(VedtakEndring)
     }
 
+    @Test
+    fun `skal utlede brev for § 11-23 sjette ledd ved arbeidsopptrapping på gjeldende behandling og ikke på forrige behandling`() {
+        val revurdering = behandling(
+            typeBehandling = TypeBehandling.Revurdering,
+            forrigeBehandlingId = BehandlingId(Random.nextLong()),
+            vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_ARBEID)
+        )
+        every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
+        every { behandlingRepository.hent(revurdering.id) } returns revurdering
+        every { avbrytRevurderingService.revurderingErAvbrutt(revurdering.id) } returns false
+        every { arbeidsopptrappingRepository.hentPerioder(revurdering.id) } returns listOf(Periode(1 januar 2024, 31 desember 2024))
+        every { arbeidsopptrappingRepository.hentPerioder(revurdering.forrigeBehandlingId!!) } returns emptyList()
+        every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns underveisGrunnlag(
+            underveisperiode(
+                periode = Periode(1 januar 2024, 31 desember 2024),
+                rettighetsType = RettighetsType.ARBEIDSSØKER,
+                utfall = Utfall.OPPFYLT,
+            )
+        )
+
+        assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id))
+            .isEqualTo(VedtakArbeidsopptrapping11_23_sjette_ledd)
+    }
+
+    @Test
+    fun `skal ikke utlede brev for § 11-23 sjette ledd ved arbeidsopptrapping på gjeldende behandling i tillegg til forrige behandling`() {
+        val revurdering = behandling(
+            typeBehandling = TypeBehandling.Revurdering,
+            forrigeBehandlingId = BehandlingId(Random.nextLong()),
+            vurderingsbehov = listOf(Vurderingsbehov.OVERGANG_ARBEID)
+        )
+        every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
+        every { behandlingRepository.hent(revurdering.id) } returns revurdering
+        every { avbrytRevurderingService.revurderingErAvbrutt(revurdering.id) } returns false
+        every { arbeidsopptrappingRepository.hentPerioder(revurdering.id) } returns listOf(Periode(1 januar 2024, 31 desember 2024))
+        every { arbeidsopptrappingRepository.hentPerioder(revurdering.forrigeBehandlingId!!) } returns listOf(Periode(1 januar 2023, 31 desember 2023))
+        every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns underveisGrunnlag(
+            underveisperiode(
+                periode = Periode(1 januar 2024, 31 desember 2024),
+                rettighetsType = RettighetsType.ARBEIDSSØKER,
+                utfall = Utfall.OPPFYLT,
+            )
+        )
+        every { underveisRepository.hentHvisEksisterer(revurdering.forrigeBehandlingId!!) } returns underveisGrunnlag(
+            underveisperiode(
+                periode = Periode(1 januar 2023, 31 desember 2023),
+                rettighetsType = RettighetsType.ARBEIDSSØKER,
+                utfall = Utfall.OPPFYLT,
+            )
+        )
+
+        assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id))
+            .isNotEqualTo(VedtakArbeidsopptrapping11_23_sjette_ledd)
+    }
 
     @Test
     fun `skal utlede brev etter rettighetstype § 11-18 ved innvilgelse av revurdering`() {
@@ -311,6 +367,7 @@ class BrevUtlederServiceTest {
         )
         every { behandlingRepository.hent(revurdering.id) } returns revurdering
         every { arbeidsopptrappingRepository.hentPerioder(revurdering.id) } returns emptyList()
+        every { arbeidsopptrappingRepository.hentPerioder(revurdering.forrigeBehandlingId!!) } returns emptyList()
         every { avbrytRevurderingService.revurderingErAvbrutt(revurdering.id) } returns false
         every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns underveisGrunnlag(
             underveisperiode(
@@ -374,6 +431,7 @@ class BrevUtlederServiceTest {
         every { behandlingRepository.hent(revurdering.id) } returns revurdering
         every { avbrytRevurderingService.revurderingErAvbrutt(revurdering.id) } returns false
         every { arbeidsopptrappingRepository.hentPerioder(revurdering.id) } returns emptyList()
+        every { arbeidsopptrappingRepository.hentPerioder(revurdering.forrigeBehandlingId!!) } returns emptyList()
         every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns underveisGrunnlag(
             underveisperiode(
                 periode = Periode(1 januar 2023, 31 desember 2023),
