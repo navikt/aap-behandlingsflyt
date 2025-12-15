@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Repository
+import java.time.LocalDate
 
 interface SakRepository : Repository {
 
@@ -29,6 +30,6 @@ interface SakRepository : Repository {
 
     fun finnSakerMedFritakMeldeplikt(): List<SakId>
 
-    fun finnSakerMedBarnetillegg(): List<SakId>
+    fun finnSakerMedBarnetillegg(påDato: LocalDate): List<SakId>
 
 }

@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.type.Periode
+import java.time.LocalDate
 import java.util.concurrent.atomic.AtomicLong
 
 object InMemorySakRepository : SakRepository {
@@ -110,7 +111,7 @@ object InMemorySakRepository : SakRepository {
         TODO("Not yet implemented")
     }
 
-    override fun finnSakerMedBarnetillegg(): List<SakId> {
+    override fun finnSakerMedBarnetillegg(påDato: LocalDate): List<SakId> {
         TODO("Not yet implemented")
     }
 

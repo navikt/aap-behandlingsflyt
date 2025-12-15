@@ -13,6 +13,7 @@ import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import no.nav.aap.motor.cron.CronExpression
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
 
 class TriggBarnetilleggSatsJobbUtfører(
     val sakRepository: SakRepository,
@@ -23,7 +24,7 @@ class TriggBarnetilleggSatsJobbUtfører(
 
     override fun utfør(input: JobbInput) {
 
-        val saker = sakRepository.finnSakerMedBarnetillegg()
+        val saker = sakRepository.finnSakerMedBarnetillegg(LocalDate.of(2026, 1, 1))
         log.info("Fant ${saker.size} saker med barnetillegg.")
 
         saker.forEach {
