@@ -39,7 +39,7 @@ class TilkjentYtelseGrunnlag(
     val minsteÅrligeYtelse: Tidslinje<GUnit> = MINSTE_ÅRLIG_YTELSE_TIDSLINJE,
 ) : Faktagrunnlag
 
-class BeregnTilkjentYtelseService(val grunnlag: TilkjentYtelseGrunnlag) {
+class BeregnTilkjentYtelseService(private val grunnlag: TilkjentYtelseGrunnlag) {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
