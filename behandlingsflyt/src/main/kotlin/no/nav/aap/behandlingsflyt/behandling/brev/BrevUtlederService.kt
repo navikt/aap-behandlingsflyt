@@ -34,6 +34,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.FRITAK_ME
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.FASTSATT_PERIODE_PASSERT
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.AUTOMATISK_OPPDATER_VILKÅR
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_MELDEKORT
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
@@ -112,6 +113,7 @@ class BrevUtlederService(
                         FRITAK_MELDEPLIKT,
                         MOTTATT_MELDEKORT,
                         FASTSATT_PERIODE_PASSERT,
+                        AUTOMATISK_OPPDATER_VILKÅR,
                         EFFEKTUER_AKTIVITETSPLIKT,
                         EFFEKTUER_AKTIVITETSPLIKT_11_9
                     ).containsAll(

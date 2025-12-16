@@ -29,4 +29,6 @@ interface SakRepository : Repository {
 
     fun finnSakerMedFritakMeldeplikt(): List<SakId>
 
+    fun finnSakerMedUtenRiktigSluttdatoPåRettighetsperiode(): List<Sak>
+
 }

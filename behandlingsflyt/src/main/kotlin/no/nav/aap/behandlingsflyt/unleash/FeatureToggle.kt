@@ -21,7 +21,8 @@ enum class BehandlingsflytFeature : FeatureToggle {
     Under18,
     ValiderOvergangUfore,
     KravOmInntektsbortfall,
-    MigrerMeldepliktFritak
+    MigrerMeldepliktFritak,
+    MigrerRettighetsperiode
     ;
 
     override fun key(): String = name
