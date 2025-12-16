@@ -48,7 +48,7 @@ data class GrunnlagUføre(
     }
 
     fun uføreInntekterFraForegåendeÅr(): List<UføreInntekt> {
-        return uføreInntekterFraForegåendeÅr.toList()
+        return uføreInntekterFraForegåendeÅr
     }
 
     fun uføreYtterligereNedsattArbeidsevneÅr(): Year {

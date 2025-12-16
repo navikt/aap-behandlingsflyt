@@ -88,7 +88,7 @@ class SakOgBehandlingService(
         val åpenBehandling: Behandling?
     }
 
-    /* Dette er en vanlig, åpen behandling og behandlignen kan være åpen over tid, på tvers av
+    /** Dette er en vanlig, åpen behandling og behandlingen kan være åpen over tid, på tvers av
      * transaksjoner. */
     data class Ordinær(override val åpenBehandling: Behandling) : OpprettetBehandling
 
@@ -117,7 +117,8 @@ class SakOgBehandlingService(
         Vurderingsbehov.MOTTATT_MELDEKORT,
         Vurderingsbehov.FASTSATT_PERIODE_PASSERT,
         Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT,
-        Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9
+        Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9,
+        Vurderingsbehov.BARNETILLEGG_SATS_REGULERING,
     )
 
     fun finnEllerOpprettBehandling(sakId: SakId, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak): OpprettetBehandling {

@@ -209,14 +209,22 @@ WHERE BEREGNING_ID = ?
         ) {
             setParams { setLong(1, beregningsId) }
             setRowMapper { row ->
+                val ytterligereNedsattArbeidsevneAr = Year.of(row.getInt("UFORE_YTTERLIGERE_NEDSATT_ARBEIDSEVNE_AR"))
+
                 GrunnlagUføre(
                     grunnlaget = GUnit(row.getBigDecimal("G_UNIT")),
                     type = row.getEnum<GrunnlagUføre.Type>("TYPE"),
                     grunnlag = beregningsHoved.first { it.first == row.getLong("BEREGNING_HOVED_ID") }.second,
                     grunnlagYtterligereNedsatt = beregningsHoved.first { it.first == row.getLong("BEREGNING_HOVED_YTTERLIGERE_ID") }.second,
-                    uføregrader = row.getStringOrNull("uforegrader")?.let { DefaultJsonMapper.fromJson<List<Uføre>>(it) }.orEmpty().toSet(),
+                    uføregrader = row.getStringOrNull("uforegrader")
+                        ?.let { DefaultJsonMapper.fromJson<List<Uføre>>(it).toSet() } ?: setOf(
+                        Uføre(
+                            uføregrad = Prosent(row.getInt("uforegrad")),
+                            virkningstidspunkt = ytterligereNedsattArbeidsevneAr.atDay(1),
+                        )
+                    ),
                     uføreInntekterFraForegåendeÅr = hentUføreInntekt(row.getLong("ID")),
-                    uføreYtterligereNedsattArbeidsevneÅr = Year.of(row.getInt("UFORE_YTTERLIGERE_NEDSATT_ARBEIDSEVNE_AR"))
+                    uføreYtterligereNedsattArbeidsevneÅr = ytterligereNedsattArbeidsevneAr
                 )
             }
         }
@@ -457,10 +465,12 @@ VALUES (?, ?, ?, ?, ?, ?, ?)"""
             }
         }
 
-        connection.executeBatch("""
+        connection.executeBatch(
+            """
             INSERT INTO beregning_ufore_uforegrader (beregning_ufore_id, uforegrad, virkningstidspunkt)
             values  (?, ?, ?)
-        """.trimIndent(), beregningsgrunnlag.uføregrader()) {
+        """.trimIndent(), beregningsgrunnlag.uføregrader()
+        ) {
             setParams {
                 setLong(1, uføreId)
                 setInt(2, it.uføregrad.prosentverdi())
@@ -474,7 +484,6 @@ VALUES (?, ?, ?, ?, ?, ?, ?)"""
     }
 
     private fun lagreUføreInntekt(uføreId: Long, inntekter: List<UføreInntekt>) {
-        val nyesteUføre = inntekter.flatMap { it.inntektsPerioder }.maxBy { it.periode.fom }
         val ids = inntekter.map {
             connection.executeReturnKey(
                 """INSERT INTO BEREGNING_UFORE_INNTEKT
@@ -483,6 +492,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?)"""
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """
             ) {
+                val nyesteUføre = it.inntektsPerioder.maxBy { it.periode.fom }
                 // drop not null constraint på uføregrad og arbeidsgrad
                 setParams {
                     setLong(1, uføreId)
