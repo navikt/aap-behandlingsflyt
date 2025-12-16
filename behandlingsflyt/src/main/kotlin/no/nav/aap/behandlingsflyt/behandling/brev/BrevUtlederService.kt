@@ -118,13 +118,17 @@ class BrevUtlederService(
                         FASTSATT_PERIODE_PASSERT,
                         EFFEKTUER_AKTIVITETSPLIKT,
                         EFFEKTUER_AKTIVITETSPLIKT_11_9,
-                        BARNETILLEGG_SATS_REGULERING,
                     ).containsAll(
                         vurderingsbehov
                     )
                 ) {
                     return null
                 }
+
+                if (vurderingsbehov === setOf(BARNETILLEGG_SATS_REGULERING)) {
+                    return BarnetilleggSatsRegulering
+                }
+
                 if (resultat == Resultat.AVBRUTT) {
                     return null
                 }

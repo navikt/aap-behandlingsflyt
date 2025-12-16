@@ -23,6 +23,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
@@ -38,6 +39,7 @@ class MeldingOmVedtakBrevStegTest {
     val brevUtlederService = mockk<BrevUtlederService>()
     val trekkKlageService = mockk<TrekkKlageService>()
     val behandlingRepository = InMemoryBehandlingRepository
+    val sakRepository = InMemorySakRepository
     val avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
     val avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider)
 
@@ -98,6 +100,7 @@ class MeldingOmVedtakBrevStegTest {
             brevUtlederService = brevUtlederService,
             brevbestillingService = brevbestillingService,
             behandlingRepository = InMemoryBehandlingRepository,
+            sakRepository = sakRepository,
             trekkKlageService = trekkKlageService,
             avklaringsbehovService = avklaringsbehovService,
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
@@ -175,6 +178,7 @@ class MeldingOmVedtakBrevStegTest {
             brevUtlederService = brevUtlederService,
             brevbestillingService = brevbestillingService,
             behandlingRepository = InMemoryBehandlingRepository,
+            sakRepository = sakRepository,
             trekkKlageService = trekkKlageService,
             avklaringsbehovService = avklaringsbehovService,
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
@@ -221,6 +225,7 @@ class MeldingOmVedtakBrevStegTest {
             brevUtlederService = brevUtlederService,
             brevbestillingService = brevbestillingService,
             behandlingRepository = InMemoryBehandlingRepository,
+            sakRepository = sakRepository,
             trekkKlageService = trekkKlageService,
             avklaringsbehovService = avklaringsbehovService,
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
