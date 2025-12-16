@@ -98,8 +98,14 @@ class MeldingOmVedtakBrevSteg(
     }
 
     private fun bestillBrev(kontekst: FlytKontekstMedPerioder, brevBehov: BrevBehov) {
-        log.info("Bestiller brev for sak ${kontekst.sakId}.")
         if (brevBehov == BarnetilleggSatsRegulering) {
+            val alleredeBestilt =
+                brevbestillingService.hentBestillinger(kontekst.behandlingId, brevBehov.typeBrev).isNotEmpty()
+            if (alleredeBestilt) {
+                log.info("Har allerede bestilt automatisk brev om barnetillegg sats endring for sak ${kontekst.sakId}.")
+                return
+            }
+            log.info("Bestiller automatisk brev om barnetillegg sats endring for sak ${kontekst.sakId}.")
             val sak = sakRepository.hent(kontekst.sakId)
             val unikReferanse = "${sak.saksnummer}-${brevBehov.typeBrev}-02012026"
             brevbestillingService.bestill(
@@ -110,6 +116,7 @@ class MeldingOmVedtakBrevSteg(
                 brukApiV3 = false
             )
         } else {
+            log.info("Bestiller brev for sak ${kontekst.sakId}.")
             val behandling = behandlingRepository.hent(kontekst.behandlingId)
             val unikReferanse = "${behandling.referanse}-${brevBehov.typeBrev}"
             brevbestillingService.bestill(
