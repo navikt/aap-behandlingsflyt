@@ -2,7 +2,7 @@
 UPDATE student_vurdering
 SET vurdert_i_behandling = g.behandling_id
 FROM student_grunnlag g
-WHERE g.student_id = student_vurdering.id;
+WHERE g.student_id = student_vurdering.id and vurdert_i_behandling is null;
 
 -- Sett fom lik rettighetsperiode_fom
 UPDATE student_vurdering
@@ -10,7 +10,7 @@ SET fom = lower(sak.rettighetsperiode)
 FROM student_grunnlag g
 JOIN behandling b ON b.id = g.behandling_id
 JOIN sak ON sak.id = b.sak_id
-WHERE g.student_id = student_vurdering.id;
+WHERE g.student_id = student_vurdering.id and fom is null;
 
 -- Migrer til å bruke student_vurderinger
 DO
@@ -22,7 +22,7 @@ $$
         FOR grunnlag_rad IN
             SELECT id, student_id
             FROM student_grunnlag
-            WHERE student_id is not null
+            WHERE student_id is not null and student_vurderinger_id is null
             LOOP
                 -- Opprett rader for student_vurderinger
                 INSERT INTO student_vurderinger (opprettet_tid)
