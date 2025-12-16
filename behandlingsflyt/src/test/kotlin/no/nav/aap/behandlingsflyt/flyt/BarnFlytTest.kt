@@ -80,7 +80,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             )
         )
 
-        val (_, behandling) = sendInnFørsteSøknad(
+        val (sak, behandling) = sendInnFørsteSøknad(
             person = person,
             periode = periode,
         )
@@ -162,17 +162,30 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         }
         assertThat(sakerMedBarnetillegg).containsExactly(behandling.sakId)
 
+        // Bestiller brev om barnetillegg sats regulering
         dataSource.transaction {
             FlytJobbRepository(it).leggTil(JobbInput(TriggBarnetilleggSatsJobbUtfører))
         }
         motor.kjørJobber()
-        val sisteOpprettedeBehandling = hentSisteOpprettedeBehandlingForSak(behandling.sakId)
-        assertThat(sisteOpprettedeBehandling.id).isNotEqualTo(behandling.id)
-        assertThat(sisteOpprettedeBehandling.årsakTilOpprettelse).isEqualTo(ÅrsakTilOpprettelse.BARNETILLEGG_SATSENDRING)
-        assertThat(sisteOpprettedeBehandling.status()).isEqualTo(Status.AVSLUTTET)
+        val behandlingBarnetilleggSatsRegulering = hentSisteOpprettedeBehandlingForSak(behandling.sakId)
+        assertThat(behandlingBarnetilleggSatsRegulering.id).isNotEqualTo(behandling.id)
+        assertThat(behandlingBarnetilleggSatsRegulering.årsakTilOpprettelse).isEqualTo(ÅrsakTilOpprettelse.BARNETILLEGG_SATSENDRING)
+        assertThat(behandlingBarnetilleggSatsRegulering.status()).isEqualTo(Status.AVSLUTTET)
 
-        val brevBestilling = hentBrevAvType(sisteOpprettedeBehandling, TypeBrev.BARNETILLEGG_SATS_REGULERING)
-        assertThat(brevBestilling.status).isEqualTo(no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status.FULLFØRT)
+        assertThat(hentBrevAvTypeForSak(sak, TypeBrev.BARNETILLEGG_SATS_REGULERING)).singleElement()
+            .satisfies({
+                assertThat(it.status).isEqualTo(no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status.FULLFØRT)
+                assertThat(it.behandlingId).isEqualTo(behandlingBarnetilleggSatsRegulering.id)
+            })
+
+        // Bestiller ikke duplikat brev om barnetillegg sats regulering
+        dataSource.transaction {
+            FlytJobbRepository(it).leggTil(JobbInput(TriggBarnetilleggSatsJobbUtfører))
+        }
+        motor.kjørJobber()
+
+        // ikke flere etter siste behandling
+        assertThat(hentBrevAvTypeForSak(sak, TypeBrev.BARNETILLEGG_SATS_REGULERING)).hasSize(1)
     }
 
     @Test

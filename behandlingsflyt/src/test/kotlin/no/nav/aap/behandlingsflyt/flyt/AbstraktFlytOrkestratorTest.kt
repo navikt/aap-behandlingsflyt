@@ -34,6 +34,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.Sykdomsvur
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderRettighetsperiodeLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.YrkesskadeSakDto
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.YrkesskadevurderingDto
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Brevbestilling
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.mellomlagring.MellomlagretVurdering
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.AvklarOppholdkravLøsningForPeriodeDto
@@ -1131,6 +1132,12 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         dataSource.transaction { connection ->
             AvklaringsbehovOrkestrator(postgresRepositoryRegistry.provider(connection), gatewayProvider)
                 .settPåVentMensVentePåMedisinskeOpplysninger(key, SYSTEMBRUKER)
+        }
+    }
+
+    protected fun hentBrevAvTypeForSak(sak: Sak, typeBrev: TypeBrev): List<Brevbestilling> {
+        return dataSource.transaction(readOnly = true) {
+            BrevbestillingRepositoryImpl(it).hent(sak.id, typeBrev)
         }
     }
 

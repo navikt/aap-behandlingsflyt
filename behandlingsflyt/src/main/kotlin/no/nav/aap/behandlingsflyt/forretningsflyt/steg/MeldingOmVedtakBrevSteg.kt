@@ -100,7 +100,7 @@ class MeldingOmVedtakBrevSteg(
     private fun bestillBrev(kontekst: FlytKontekstMedPerioder, brevBehov: BrevBehov) {
         if (brevBehov == BarnetilleggSatsRegulering) {
             val alleredeBestilt =
-                brevbestillingService.hentBestillinger(kontekst.behandlingId, brevBehov.typeBrev).isNotEmpty()
+                brevbestillingService.hentBestillingerForSak(kontekst.sakId, brevBehov.typeBrev).isNotEmpty()
             if (alleredeBestilt) {
                 log.info("Har allerede bestilt automatisk brev om barnetillegg sats endring for sak ${kontekst.sakId}.")
                 return
