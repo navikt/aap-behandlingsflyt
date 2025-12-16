@@ -47,7 +47,7 @@ jobs:
 
       - name: Store reports
         if: failure()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v5
         with:
             name: reports
             path: |
