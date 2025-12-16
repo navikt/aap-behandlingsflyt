@@ -42,15 +42,15 @@ fun runCommand(command: String): String {
 
 dependencies {
     api(project(":kontrakt"))
-    implementation("io.micrometer:micrometer-registry-prometheus:1.16.0")
-    implementation("ch.qos.logback:logback-classic:1.5.21")
-    implementation("net.logstash.logback:logstash-logback-encoder:9.0")
-    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.22.0")
+    implementation(libs.micrometerRegistryPrometheus)
+    implementation(libs.logbackClassic)
+    implementation(libs.logstashLogbackEncoder)
+    implementation(libs.opentelemetryInstrumentationAnnotations)
 
     api(libs.tilgangPlugin)
     api(libs.tilgangKontrakt)
-    api("no.nav.aap.brev:kontrakt:0.0.204")
-    api("no.nav.aap.meldekort:kontrakt:0.0.161")
+    api(libs.brevKontrakt)
+    api(libs.meldekortKontrakt)
     api(libs.motor)
     api(libs.gateway)
     api(libs.utbetalKontrakt)
@@ -62,8 +62,8 @@ dependencies {
     implementation(libs.verdityper)
     implementation(libs.tidslinje)
     implementation(kotlin("reflect"))
-    implementation("org.flywaydb:flyway-database-postgresql:11.17.2")
-    runtimeOnly("org.postgresql:postgresql") // låst versjon i root build.gradle.kts
+    implementation(libs.flywayDatabasePostgresql)
+    runtimeOnly(libs.postgresql) // låst versjon i root build.gradle.kts
 
 
     testImplementation(project(":lib-test"))
@@ -73,12 +73,12 @@ dependencies {
     implementation(libs.motorTestUtils)
     testImplementation(libs.bundles.junit)
 
-    testImplementation("org.testcontainers:postgresql:1.21.3")
+    testImplementation(libs.testcontainersPostgres)
     constraints {
         implementation("org.apache.commons:commons-compress:1.28.0") {
             because("https://github.com/advisories/GHSA-4g9r-vxhx-9pgx")
         }
     }
-    testImplementation("io.mockk:mockk:1.14.6")
+    testImplementation(libs.mockk)
     testImplementation(kotlin("test"))
 }
