@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.flyt
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBarnetilleggLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBeregningstidspunktLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGrunnlag
@@ -168,6 +169,10 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         val sisteOpprettedeBehandling = hentSisteOpprettedeBehandlingForSak(behandling.sakId)
         assertThat(sisteOpprettedeBehandling.id).isNotEqualTo(behandling.id)
         assertThat(sisteOpprettedeBehandling.årsakTilOpprettelse).isEqualTo(ÅrsakTilOpprettelse.BARNETILLEGG_SATSENDRING)
+        assertThat(sisteOpprettedeBehandling.status()).isEqualTo(Status.AVSLUTTET)
+
+        val brevBestilling = hentBrevAvType(sisteOpprettedeBehandling, TypeBrev.BARNETILLEGG_SATS_REGULERING)
+        assertThat(brevBestilling.status).isEqualTo(no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status.FULLFØRT)
     }
 
     @Test

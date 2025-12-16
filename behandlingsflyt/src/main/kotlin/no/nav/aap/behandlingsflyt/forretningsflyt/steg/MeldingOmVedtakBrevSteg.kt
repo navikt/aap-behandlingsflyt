@@ -94,7 +94,7 @@ class MeldingOmVedtakBrevSteg(
     }
 
     private fun vedtakBehøverVurdering(klageErTrukket: Boolean, brevBehov: BrevBehov?): Boolean {
-        return !klageErTrukket && brevBehov != null
+        return !klageErTrukket && brevBehov != null && brevBehov != BarnetilleggSatsRegulering
     }
 
     private fun bestillBrev(kontekst: FlytKontekstMedPerioder, brevBehov: BrevBehov) {
