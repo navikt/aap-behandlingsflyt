@@ -4,6 +4,14 @@ SET vurdert_i_behandling = g.behandling_id
 FROM student_grunnlag g
 WHERE g.student_id = student_vurdering.id;
 
+-- Sett fom lik rettighetsperiode_fom
+UPDATE student_vurdering
+SET fom = lower(sak.rettighetsperiode)
+FROM student_grunnlag g
+JOIN behandling b ON b.id = g.behandling_id
+JOIN sak ON sak.id = b.sak_id
+WHERE g.student_id = student_vurdering.id;
+
 -- Migrer til å bruke student_vurderinger
 DO
 $$
