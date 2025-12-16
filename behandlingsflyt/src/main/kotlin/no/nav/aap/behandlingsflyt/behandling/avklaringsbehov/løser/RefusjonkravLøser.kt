@@ -16,9 +16,7 @@ class RefusjonkravLøser(
     private val refusjonkravRepository: RefusjonkravRepository,
     private val unleashGateway: UnleashGateway,
     private val sakRepository: SakRepository,
-
-
-    ) : AvklaringsbehovsLøser<RefusjonkravLøsning> {
+) : AvklaringsbehovsLøser<RefusjonkravLøsning> {
 
     constructor(
         repositoryProvider: RepositoryProvider,
@@ -32,8 +30,8 @@ class RefusjonkravLøser(
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: RefusjonkravLøsning): LøsningsResultat {
 
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.SosialRefusjon)){
-            val vurderinger =  løsning.refusjonkravVurderinger.map { refusjonkrav ->
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.SosialRefusjon)) {
+            val vurderinger = løsning.refusjonkravVurderinger.map { refusjonkrav ->
                 RefusjonkravVurdering(
                     harKrav = refusjonkrav.harKrav,
                     navKontor = refusjonkrav.navKontor,
@@ -44,8 +42,8 @@ class RefusjonkravLøser(
             refusjonkravRepository.lagre(kontekst.kontekst.sakId, kontekst.behandlingId(), vurderinger)
             return LøsningsResultat("Vurdert refusjonskrav")
 
-        } else{
-             fun validerRefusjonDatoer(
+        } else {
+            fun validerRefusjonDatoer(
                 kontekst: AvklaringsbehovKontekst,
                 løsning: RefusjonkravLøsning
             ): List<RefusjonkravVurderingDto> {
