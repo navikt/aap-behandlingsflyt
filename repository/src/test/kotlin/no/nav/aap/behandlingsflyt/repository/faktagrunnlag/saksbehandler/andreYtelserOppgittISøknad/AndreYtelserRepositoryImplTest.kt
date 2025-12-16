@@ -18,25 +18,24 @@ import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
 
 class AndreYtelserRepositoryImplTest {
-    private companion object {
-        private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
-        private lateinit var dataSource: TestDataSource
+    private lateinit var dataSource: TestDataSource
 
-        @BeforeAll
-        @JvmStatic
-        fun setup() {
-            dataSource = TestDataSource()
-        }
+    @BeforeEach
+    fun setUp() {
+        dataSource = TestDataSource()
+    }
 
-        @AfterAll
-        @JvmStatic
-        fun tearDown() = dataSource.close()
+    @AfterEach
+    fun tearDown() {
+        dataSource.close()
     }
     @Test
     fun `lagre og kopier, så slette gamle`() {
