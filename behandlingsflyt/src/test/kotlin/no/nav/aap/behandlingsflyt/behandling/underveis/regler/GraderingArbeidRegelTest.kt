@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.Arbeid
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
 import no.nav.aap.behandlingsflyt.help.assertTidslinjeEquals
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -180,6 +181,8 @@ class GraderingArbeidRegelTest {
                         begrunnelse = "",
                         arbeidsevne = `50_PROSENT`,
                         fraDato = fom.minusDays(1), /* viktig at vi tester vurderinger fra før rettighetsperioden */
+                        tilDato = null,
+                        vurdertIBehandling = BehandlingId(1),
                         opprettetTid = LocalDateTime.now(),
                         "vurdertAv"
                     )
@@ -353,6 +356,8 @@ class GraderingArbeidRegelTest {
                     begrunnelse = "",
                     arbeidsevne = it,
                     fraDato = rettighetsperiode.fom,
+                    tilDato = null,
+                    vurdertIBehandling = BehandlingId(1),
                     opprettetTid = LocalDateTime.now(),
                     "vurdertAv"
                 )
