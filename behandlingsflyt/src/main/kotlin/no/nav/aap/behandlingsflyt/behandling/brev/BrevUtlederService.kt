@@ -125,7 +125,7 @@ class BrevUtlederService(
                     return null
                 }
 
-                if (vurderingsbehov === setOf(BARNETILLEGG_SATS_REGULERING)) {
+                if (vurderingsbehov == setOf(BARNETILLEGG_SATS_REGULERING)) {
                     return BarnetilleggSatsRegulering
                 }
 
