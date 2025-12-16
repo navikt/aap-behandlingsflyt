@@ -26,30 +26,25 @@ enum class MeldepliktStatus {
 
 interface MeldepliktVurdering {
     val utfall: Utfall
-    val årsak: UnderveisÅrsak?
     val status: MeldepliktStatus
 
     data object Fritak: MeldepliktVurdering {
         override val utfall = Utfall.OPPFYLT
-        override val årsak = null
         override val status = FRITAK
     }
 
     data object FørVedtak: MeldepliktVurdering {
         override val utfall = Utfall.OPPFYLT
-        override val årsak = null
         override val status = FØR_VEDTAK
     }
 
     data object UtenRett: MeldepliktVurdering {
         override val utfall = Utfall.OPPFYLT
-        override val årsak = null
         override val status = UTEN_RETT
     }
 
     data object FørsteMeldeperiodeMedRett: MeldepliktVurdering {
         override val utfall = Utfall.OPPFYLT
-        override val årsak = null
         override val status = FØRSTE_MELDEPERIODE_MED_RETT
     }
 
@@ -57,37 +52,31 @@ interface MeldepliktVurdering {
         val journalpostId: JournalpostId,
     ): MeldepliktVurdering {
         override val utfall = Utfall.OPPFYLT
-        override val årsak = null
         override val status = MELDT_SEG
     }
 
     data object IkkeMeldtSeg: MeldepliktVurdering {
         override val utfall = Utfall.IKKE_OPPFYLT
-        override val årsak = UnderveisÅrsak.IKKE_OVERHOLDT_MELDEPLIKT_SANKSJON
         override val status = IKKE_MELDT_SEG
     }
 
     data object FremtidigIkkeOppfylt: MeldepliktVurdering {
         override val utfall = Utfall.IKKE_OPPFYLT
-        override val årsak = UnderveisÅrsak.MELDEPLIKT_FRIST_IKKE_PASSERT
         override val status = FREMTIDIG_IKKE_OPPFYLT
     }
 
     data object FremtidigOppfylt: MeldepliktVurdering {
         override val utfall = Utfall.OPPFYLT
-        override val årsak = null
         override val status = FREMTIDIG_OPPFYLT
     }
     
     data object RimeligGrunnOverstyring: MeldepliktVurdering {
         override val utfall = Utfall.OPPFYLT
-        override val årsak = null
         override val status = MeldepliktStatus.RIMELIG_GRUNN
     }
 
     data object MeldtSegOverstyring: MeldepliktVurdering {
         override val utfall = Utfall.OPPFYLT
-        override val årsak = null
         override val status = MELDT_SEG
     }
 }

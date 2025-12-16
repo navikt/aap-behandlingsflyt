@@ -4,10 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonsopphold
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGateway
-import no.nav.aap.behandlingsflyt.integrasjon.unleash.UnleashGatewayImpl
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
@@ -80,10 +78,7 @@ object InstitusjonsoppholdGatewayImpl : InstitusjonsoppholdGateway {
             body = request,
             additionalHeaders = listOfNotNull(
                 Header("Nav-Consumer-Id", "aap-behandlingsflyt"),
-                if (UnleashGatewayImpl.isEnabled(BehandlingsflytFeature.InstFormaal))
-                    Header("Nav-Formaal", "ARBEIDSAVKLARINGSPENGER")
-                else
-                    null,
+                Header("Nav-Formaal", "ARBEIDSAVKLARINGSPENGER"),
                 Header("Accept", "application/json")
             )
         )

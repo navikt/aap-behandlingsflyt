@@ -92,6 +92,9 @@ class FakeBrevbestillingGateway : BrevbestillingGateway {
         brevbestillingResponse = brevbestillingResponse!!.copy(brevdata = brevdata)
     }
 
+    override fun oppdaterBrevmal(bestillingReferanse: BrevbestillingReferanse) {
+    }
+
     override fun hentSignaturForhåndsvisning(
         signaturer: List<SignaturGrunnlag>,
         brukerIdent: String,

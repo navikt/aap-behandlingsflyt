@@ -21,6 +21,9 @@ import no.nav.aap.behandlingsflyt.medAzureTokenGen
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
@@ -120,7 +123,7 @@ fun NormalOpenAPIRoute.saksApi(
                     val sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider)
 
                     val behandling = sakOgBehandlingService.opprettAktivitetspliktBehandling(
-                        sakId, body.vurderingsbehov.tilVurderingsbehov()
+                        sakId, ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE, body.vurderingsbehov.tilVurderingsbehov()
                     )
 
                     ProsesserBehandlingService(repositoryProvider, gatewayProvider).triggProsesserBehandling(behandling)
@@ -429,11 +432,11 @@ fun NormalOpenAPIRoute.saksApi(
 
                 saksHistorikkService.utledSaksHistorikk(sakId)
             }
-            val navidenterIHistorikk = historikk.flatMap { it.hendelser.mapNotNull{ it.utførtAv} }
+            val navidenterIHistorikk = historikk.flatMap { it.hendelser.mapNotNull { it.utførtAv } }
             val visningsnavn = ansattInfoService.hentAnsatteVisningsnavn(navidenterIHistorikk).mapNotNull { it }
-            val visningsnavnMap = visningsnavn.associateBy( { it.navident }, {it.visningsnavn })
-            val historikkMedVisningsnavn = historikk.map{
-                val nyeHendelser = it.hendelser.map{
+            val visningsnavnMap = visningsnavn.associateBy({ it.navident }, { it.visningsnavn })
+            val historikkMedVisningsnavn = historikk.map {
+                val nyeHendelser = it.hendelser.map {
                     val navn = visningsnavnMap[it.utførtAv] ?: it.utførtAv
                     it.copy(utførtAv = navn)
                 }
