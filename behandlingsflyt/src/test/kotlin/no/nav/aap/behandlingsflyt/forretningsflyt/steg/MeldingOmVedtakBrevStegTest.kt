@@ -119,7 +119,7 @@ class MeldingOmVedtakBrevStegTest {
         assertThat(avklaringsbehov!!.historikk).hasSize(1)
         assertThat(avklaringsbehov.historikk.get(0).status).isEqualTo(Status.OPPRETTET)
 
-        verify(exactly = 1) { brevbestillingService.bestill(allAny(), allAny(), allAny(), allAny()) }
+        verify(exactly = 1) { brevbestillingService.bestill(behandling.id, VedtakAktivitetsplikt11_7, allAny(), false) }
 
         // Runde-2
 
