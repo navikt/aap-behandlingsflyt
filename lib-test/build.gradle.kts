@@ -2,13 +2,11 @@ plugins {
     id("behandlingsflyt.conventions")
 }
 
-val jacksonVersjon = "2.20.1"
-
 dependencies {
     implementation(project(":behandlingsflyt"))
     implementation(project(":repository"))
     implementation(project(":kontrakt"))
-    implementation("no.nav.aap.brev:kontrakt:0.0.202")
+    implementation(libs.brevKontrakt)
     implementation(libs.tilgangKontrakt)
     implementation(libs.httpklient)
     implementation(libs.verdityper)
@@ -21,12 +19,12 @@ dependencies {
     implementation(libs.ktorServerStatusPages)
 
     implementation(libs.ktorSerializationJackson)
-    implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersjon")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersjon")
+    implementation(libs.jacksonDatabind)
+    implementation(libs.jacksonDatatypeJsr310)
 
-    implementation("ch.qos.logback:logback-classic:1.5.21")
+    implementation(libs.logbackClassic)
 
-    implementation("com.nimbusds:nimbus-jose-jwt:10.6")
+    implementation(libs.joseJwt)
 
     implementation(libs.bundles.junit)
 }
