@@ -30,7 +30,7 @@ class AvventUtbetalingService(
     fun finnEventuellAvventUtbetaling(behandling: Behandling,  førsteVedtak: Vedtak?, tilkjentYtelseHelePerioden: Periode): TilkjentYtelseAvventDto? {
 
         val førsteVedtaksdato = førsteVedtak?.vedtakstidspunkt?.toLocalDate() ?: LocalDate.now()
-        val vedtak = vedtakService.hentVedtakForYtelsesbehandling(behandling.id) ?:return null
+        val vedtak = vedtakService.hentVedtak(behandling.id) ?:return null
 
         val avventUtbetalingPgaSosialRefusjonskrav =   if (unleashGateway.isEnabled(BehandlingsflytFeature.SosialRefusjon)) {
             overlapperMedSosialRefusjonskrav(behandling, vedtak, førsteVedtak, tilkjentYtelseHelePerioden)
@@ -81,7 +81,7 @@ class AvventUtbetalingService(
         val forrigeBehandlingId = behandling.forrigeBehandlingId
             ?: return virkningsTidspunkt
 
-        val vedtak = vedtakService.hentVedtakForYtelsesbehandling(forrigeBehandlingId)
+        val vedtak = vedtakService.hentVedtak(forrigeBehandlingId)
         val forrigeVirkningstidspunkt = vedtak?.virkningstidspunkt
         val nyTidligsteVirkingsTidspunkt =  if(vedtak?.virkningstidspunkt != null) {
             minOf(forrigeVirkningstidspunkt, virkningsTidspunkt)

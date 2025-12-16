@@ -43,37 +43,7 @@ class RefusjonkravLøser(
             return LøsningsResultat("Vurdert refusjonskrav")
 
         } else {
-            fun validerRefusjonDatoer(
-                kontekst: AvklaringsbehovKontekst,
-                løsning: RefusjonkravLøsning
-            ): List<RefusjonkravVurderingDto> {
-                val sak = sakRepository.hent(kontekst.kontekst.sakId)
-                val kravDato = sak.rettighetsperiode.fom
 
-                return løsning.refusjonkravVurderinger.map { vurdering ->
-                    if (vurdering.harKrav) {
-                        val refusjonFomDato = vurdering.fom ?: kravDato
-                        val refusjonTomDato = vurdering.tom
-                        val navKontor = vurdering.navKontor
-                        if (refusjonFomDato.isBefore(kravDato)) {
-                            throw IllegalArgumentException("Refusjonsdato kan ikke være før kravdato. Refusjonsdato: $refusjonFomDato, kravdato: $kravDato")
-                        }
-
-                        if (refusjonTomDato != null && refusjonFomDato.isAfter(refusjonTomDato)) {
-                            throw IllegalArgumentException("Tom ($refusjonTomDato) er før fom ($refusjonFomDato)")
-                        }
-
-                        RefusjonkravVurderingDto(
-                            harKrav = true,
-                            fom = refusjonFomDato,
-                            tom = refusjonTomDato,
-                            navKontor = navKontor
-                        )
-                    } else {
-                        vurdering
-                    }
-                }
-            }
 
 
             val vurderinger = validerRefusjonDatoer(kontekst, løsning).let {
@@ -97,6 +67,38 @@ class RefusjonkravLøser(
 
     override fun forBehov(): Definisjon {
         return Definisjon.REFUSJON_KRAV
+    }
+
+    fun validerRefusjonDatoer(
+        kontekst: AvklaringsbehovKontekst,
+        løsning: RefusjonkravLøsning
+    ): List<RefusjonkravVurderingDto> {
+        val sak = sakRepository.hent(kontekst.kontekst.sakId)
+        val kravDato = sak.rettighetsperiode.fom
+
+        return løsning.refusjonkravVurderinger.map { vurdering ->
+            if (vurdering.harKrav) {
+                val refusjonFomDato = vurdering.fom ?: kravDato
+                val refusjonTomDato = vurdering.tom
+                val navKontor = vurdering.navKontor
+                if (refusjonFomDato.isBefore(kravDato)) {
+                    throw IllegalArgumentException("Refusjonsdato kan ikke være før kravdato. Refusjonsdato: $refusjonFomDato, kravdato: $kravDato")
+                }
+
+                if (refusjonTomDato != null && refusjonFomDato.isAfter(refusjonTomDato)) {
+                    throw IllegalArgumentException("Tom ($refusjonTomDato) er før fom ($refusjonFomDato)")
+                }
+
+                RefusjonkravVurderingDto(
+                    harKrav = true,
+                    fom = refusjonFomDato,
+                    tom = refusjonTomDato,
+                    navKontor = navKontor
+                )
+            } else {
+                vurdering
+            }
+        }
     }
 
 }

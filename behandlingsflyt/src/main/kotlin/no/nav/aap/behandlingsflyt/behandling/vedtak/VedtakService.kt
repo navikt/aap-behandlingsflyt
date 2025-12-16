@@ -32,8 +32,7 @@ class VedtakService(
         return vedtakRepository.hent(førstegangsbehandlingen.id)?.vedtakstidspunkt
     }
 
-    fun hentVedtakForYtelsesbehandling(behandlingId: BehandlingId): Vedtak? {
-        // Hvorfor egen metode
+    fun hentVedtak(behandlingId: BehandlingId): Vedtak? {
         return vedtakRepository.hent(behandlingId)
     }
 

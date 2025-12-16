@@ -23,7 +23,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.utbetal.kodeverk.AvventÅrsak
@@ -88,7 +87,7 @@ class AvventUtbetalingServiceTest {
     @Test
     fun `Ingen refusjonskrav skal føre til ingen avvent utbetaling`() {
 
-        every { vedtakServiceMock.hentVedtakForYtelsesbehandling(any()) } returns vedtak
+        every { vedtakServiceMock.hentVedtak(any()) } returns vedtak
         every { refusjonkravRepositoryMock.hentHvisEksisterer(any()) } returns null
         every { tjenestepensjonRefusjonsKravVurderingRepositoryMock.hentHvisEksisterer(any()) } returns null
         every { samordningAndreStatligeYtelserRepositoryMock.hentHvisEksisterer(any()) } returns null
@@ -105,7 +104,7 @@ class AvventUtbetalingServiceTest {
 
     @Test
     fun `Refusjonskrav utenfor ytelsesperioden skal føre til ingen avvent utbetaling`() {
-        every { vedtakServiceMock.hentVedtakForYtelsesbehandling(any()) } returns vedtak
+        every { vedtakServiceMock.hentVedtak(any()) } returns vedtak
 
         every { refusjonkravRepositoryMock.hentHvisEksisterer(any()) } returns listOf(
             RefusjonkravVurdering(
@@ -170,7 +169,7 @@ class AvventUtbetalingServiceTest {
 
 
         every { behandlingRepositoryMock.hent(BehandlingId(1L)) } returns førstegangBehandling
-        every { vedtakServiceMock.hentVedtakForYtelsesbehandling(any()) } returns vedtak
+        every { vedtakServiceMock.hentVedtak(any()) } returns vedtak
         every { refusjonkravRepositoryMock.hentHvisEksisterer(any()) } returns
             listOf(RefusjonkravVurdering(true, null, null, "Nav Løten", "saksbehandler"))
         every { tjenestepensjonRefusjonsKravVurderingRepositoryMock.hentHvisEksisterer(any()) } returns null
@@ -201,7 +200,7 @@ class AvventUtbetalingServiceTest {
     @Test
     fun `Refusjonskrav med åpen tom overlapper med tilkjent ytelse skal føre til avvent utbetaling`() {
 
-        every { vedtakServiceMock.hentVedtakForYtelsesbehandling(any()) } returns vedtak
+        every { vedtakServiceMock.hentVedtak(any()) } returns vedtak
 
         every { refusjonkravRepositoryMock.hentHvisEksisterer(any()) } returns
                 listOf(RefusjonkravVurdering(true, null, null, "Nav Løten", "saksbehandler"))
@@ -227,7 +226,7 @@ class AvventUtbetalingServiceTest {
     @Test
     fun `Tjenestepensjon refusjonskrav overlapper med tilkjent ytelse skal føre til avvent utbetaling`() {
 
-        every { vedtakServiceMock.hentVedtakForYtelsesbehandling(any()) } returns vedtak
+        every { vedtakServiceMock.hentVedtak(any()) } returns vedtak
 
         every { refusjonkravRepositoryMock.hentHvisEksisterer(any()) } returns null
         every { tjenestepensjonRefusjonsKravVurderingRepositoryMock.hentHvisEksisterer(any()) } returns
@@ -258,7 +257,7 @@ class AvventUtbetalingServiceTest {
     @Test
     fun `Tjenestepensjon refusjonskrav utenover vedtaksdato fører til at vedtaksdato - 1 blir satt som tom`() {
 
-        every { vedtakServiceMock.hentVedtakForYtelsesbehandling(any()) } returns vedtak
+        every { vedtakServiceMock.hentVedtak(any()) } returns vedtak
 
         every { refusjonkravRepositoryMock.hentHvisEksisterer(any()) } returns null
         every { tjenestepensjonRefusjonsKravVurderingRepositoryMock.hentHvisEksisterer(any()) } returns
@@ -292,7 +291,7 @@ class AvventUtbetalingServiceTest {
     @Test
     fun `Samordning med andre statlige ytelser overlapper med tilkjent ytelse skal føre til avvent utbetaling`() {
 
-        every { vedtakServiceMock.hentVedtakForYtelsesbehandling(any()) } returns vedtak
+        every { vedtakServiceMock.hentVedtak(any()) } returns vedtak
 
         every { refusjonkravRepositoryMock.hentHvisEksisterer(any()) } returns null
         every { tjenestepensjonRefusjonsKravVurderingRepositoryMock.hentHvisEksisterer(any()) } returns null
@@ -328,7 +327,7 @@ class AvventUtbetalingServiceTest {
 
     @Test
     fun `Samordning med sluttpakke fra arbeidsgiver overlapper med tilkjent ytelse skal føre til avvent utbetaling`() {
-        every { vedtakServiceMock.hentVedtakForYtelsesbehandling(any()) } returns vedtak
+        every { vedtakServiceMock.hentVedtak(any()) } returns vedtak
 
         every { refusjonkravRepositoryMock.hentHvisEksisterer(any()) } returns null
         every { tjenestepensjonRefusjonsKravVurderingRepositoryMock.hentHvisEksisterer(any()) } returns null

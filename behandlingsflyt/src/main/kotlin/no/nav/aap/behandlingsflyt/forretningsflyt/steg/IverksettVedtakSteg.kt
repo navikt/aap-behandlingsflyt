@@ -12,7 +12,6 @@ import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.NavKontorPeriodeDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
-import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -36,8 +35,6 @@ import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
-import java.time.LocalDateTime
-import kotlin.math.min
 
 class IverksettVedtakSteg private constructor(
     private val sakRepository: SakRepository,
@@ -52,7 +49,6 @@ class IverksettVedtakSteg private constructor(
     private val flytJobbRepository: FlytJobbRepository,
     private val mellomlagretVurderingRepository: MellomlagretVurderingRepository,
     private val resultatUtleder: ResultatUtleder,
-    private val vedtakRepository: VedtakRepository,
     private val unleashGateway: UnleashGateway,
 ) : BehandlingSteg {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -104,7 +100,7 @@ class IverksettVedtakSteg private constructor(
         }
     }
     fun lagreVedtak(kontekst: FlytKontekstMedPerioder) {
-        if (vedtakRepository.hent(kontekst.behandlingId) != null) {
+        if (vedtakService.hentVedtak(kontekst.behandlingId) != null) {
             /* Vedtak lagret i `FatteVedtakSteg`, så ikke noe å gjøre her. */
             return
         }
@@ -129,7 +125,7 @@ class IverksettVedtakSteg private constructor(
          fun finnVedtakMedTidligsteVirkningstidspunkt(behandling: Behandling): Vedtak? {
             val alleBehandling = behandlingRepository.hentAlleFor(behandling.sakId, TypeBehandling.ytelseBehandlingstyper())
             val vedtakPåBehandling = alleBehandling.mapNotNull {
-                vedtakService.hentVedtakForYtelsesbehandling(it.id)
+                vedtakService.hentVedtak(it.id)
             }
 
             val vedtakMedVirkningstidspunkt = vedtakPåBehandling
@@ -151,7 +147,7 @@ class IverksettVedtakSteg private constructor(
             val forrigeBehandlingId = behandling.forrigeBehandlingId
                 ?: return vedtakstidspunkt
 
-            val vedtak = vedtakService.hentVedtakForYtelsesbehandling(forrigeBehandlingId)
+            val vedtak = vedtakService.hentVedtak(forrigeBehandlingId)
             val forrigeVedtakstidspunkt = vedtak?.vedtakstidspunkt
             val nyTidligsteedtakstidspunkt =  if(vedtak?.vedtakstidspunkt != null) {
                 minOf(forrigeVedtakstidspunkt.toLocalDate(), vedtakstidspunkt)
@@ -218,7 +214,7 @@ class IverksettVedtakSteg private constructor(
 
         lagreVedtak(kontekst)
 
-        val vedtak = vedtakRepository.hent(behandlingId = kontekst.behandlingId)
+        val vedtak = vedtakService.hentVedtak(behandlingId = kontekst.behandlingId)
             ?: error("Forventet å finne et vedtak for behandling ${kontekst.behandlingId} ved iverksetting")
 
 
@@ -251,12 +247,12 @@ class IverksettVedtakSteg private constructor(
 
                     val gjeldendeSosialRefusjonDtoer = navkontorSosialRefusjon
                         .filter { it.harKrav && it.navKontor != null }
-                        .map { it.tilNavKontorPeriodeDto() }
+                        .map { it.tilNavKontorPeriodeGammelDto() }
                         .toSet()
 
                     val forrigeSosialRefusjonDtoer = forrigeIverksatteSosialRefusjonsVurderinger
                         .filter { it.harKrav && it.navKontor != null }
-                        .map { it.tilNavKontorPeriodeDto() }
+                        .map { it.tilNavKontorPeriodeGammelDto() }
                         .toSet()
 
                     val sosialRefusjonerSomManglerOppgave = gjeldendeSosialRefusjonDtoer - forrigeSosialRefusjonDtoer
@@ -348,7 +344,6 @@ class IverksettVedtakSteg private constructor(
                 mellomlagretVurderingRepository = mellomlagretVurderingRepository,
                 gosysService = gosysService,
                 resultatUtleder = resultatUtleder,
-                vedtakRepository = repositoryProvider.provide(),
                 unleashGateway = gatewayProvider.provide<UnleashGateway>(),
 
                 )

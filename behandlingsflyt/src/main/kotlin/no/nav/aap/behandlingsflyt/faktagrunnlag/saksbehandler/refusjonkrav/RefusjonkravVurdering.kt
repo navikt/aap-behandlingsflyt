@@ -18,7 +18,7 @@ data class RefusjonkravVurdering(
             vedtaksdato = vedtaksdato
         )
     }
-    fun tilNavKontorPeriodeDto( ): NavKontorPeriodeDto {
+    fun tilNavKontorPeriodeGammelDto( ): NavKontorPeriodeDto {
         return NavKontorPeriodeDto(
             enhetsNummer = navKontorEnhetsNummer(navKontor) ?: "Kunne ikke utlede navkontor enhetsnummer basert på $navKontor",
             virkingsdato = fom,
