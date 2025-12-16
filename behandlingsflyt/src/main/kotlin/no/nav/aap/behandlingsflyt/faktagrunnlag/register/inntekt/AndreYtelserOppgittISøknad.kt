@@ -22,7 +22,7 @@ enum class AndreUtbetalingerYtelser {
     INGEN_AV_DISSE;
 
      companion object {
-         fun fromDb(value: String): AndreUtbetalingerYtelser? =
+         fun fromString(value: String): AndreUtbetalingerYtelser? =
              runCatching { valueOf(value.uppercase()) }.getOrNull()}
 }
 

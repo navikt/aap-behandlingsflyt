@@ -20,7 +20,8 @@ enum class BehandlingsflytFeature : FeatureToggle {
     Under18,
     ValiderOvergangUfore,
     KravOmInntektsbortfall,
-    MigrerMeldepliktFritak
+    MigrerMeldepliktFritak,
+    SosialRefusjon
     ;
 
     override fun key(): String = name

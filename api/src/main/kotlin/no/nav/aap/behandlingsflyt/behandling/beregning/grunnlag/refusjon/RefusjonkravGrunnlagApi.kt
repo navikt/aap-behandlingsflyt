@@ -18,6 +18,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -34,6 +36,7 @@ fun NormalOpenAPIRoute.refusjonGrunnlagApi(
 ) {
     val navKontorService = NavKontorService(gatewayProvider)
     val ansattInfoService = AnsattInfoService(gatewayProvider)
+    val unleashGateway = gatewayProvider.provide<UnleashGateway>()
 
     route("/api/behandling") {
         route("/{referanse}/grunnlag/refusjon") {
@@ -43,49 +46,86 @@ fun NormalOpenAPIRoute.refusjonGrunnlagApi(
                 behandlingPathParam = BehandlingPathParam("referanse"),
                 avklaringsbehovKode = Definisjon.REFUSJON_KRAV.kode.toString()
             ) { req ->
-                val response =
+
+                val response = if (unleashGateway.isEnabled(BehandlingsflytFeature.SosialRefusjon)){
+
+                        dataSource.transaction(readOnly = true) { connection ->
+                            val repositoryProvider = repositoryRegistry.provider(connection)
+                            val refusjonkravRepository = repositoryProvider.provide<RefusjonkravRepository>()
+
+                            val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                            val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
+                            val vilkårsresultatRepository =
+                                repositoryProvider.provide<VilkårsresultatRepository>()
+
+                            //TODO: Skal fikses etter prodsetting slik at det bare er gjeldendeVurderinger man skal forholde seg til
+                            val gjeldendeVurderinger = refusjonkravRepository.hentHvisEksisterer(behandling.id)?.map {
+                                it.tilResponse(ansattInfoService)
+                            }
+
+                            val andreYtelserRepository = repositoryProvider.provide<AndreYtelserOppgittISøknadRepository>()
+                            val andreUtbetalinger = andreYtelserRepository.hentHvisEksisterer(behandling.id)
+
+                            val gjeldendeVurdering =
+                                gjeldendeVurderinger?.firstOrNull()
+
+                            val virkningstidspunkt = try {
+                                if (behandling.erYtelsesbehandling()) {
+                                    VirkningstidspunktUtleder(
+                                        vilkårsresultatRepository = vilkårsresultatRepository
+                                    ).utledVirkningsTidspunkt(behandling.id)
+                                } else {
+                                    null
+                                }
+                            } catch (e: Exception) {
+                                null
+                            }
+
+                            val økonomiskSosialHjelp: Boolean? = andreUtbetalinger?.stønad?.contains(AndreUtbetalingerYtelser.ØKONOMISK_SOSIALHJELP)
+
+                            RefusjonkravGrunnlagResponse(
+                                nåværendeVirkningsTidspunkt = virkningstidspunkt,
+                                harTilgangTilÅSaksbehandle = kanSaksbehandle(),
+                                gjeldendeVurdering = gjeldendeVurdering,
+                                gjeldendeVurderinger = gjeldendeVurderinger,
+                                økonomiskSosialHjelp = økonomiskSosialHjelp,
+                                historiskeVurderinger = null
+                            )
+                        }
+
+                } else {
                     dataSource.transaction(readOnly = true) { connection ->
                         val repositoryProvider = repositoryRegistry.provider(connection)
                         val refusjonkravRepository = repositoryProvider.provide<RefusjonkravRepository>()
 
                         val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                         val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
-                        val vilkårsresultatRepository =
-                            repositoryProvider.provide<VilkårsresultatRepository>()
 
                         //TODO: Skal fikses etter prodsetting slik at det bare er gjeldendeVurderinger man skal forholde seg til
                         val gjeldendeVurderinger = refusjonkravRepository.hentHvisEksisterer(behandling.id)?.map {
                             it.tilResponse(ansattInfoService)
                         }
-
-                        val andreYtelserRepository = repositoryProvider.provide<AndreYtelserOppgittISøknadRepository>()
-                        val andreUtbetalinger = andreYtelserRepository.hentHvisEksisterer(behandling.id)
-
                         val gjeldendeVurdering =
                             gjeldendeVurderinger?.firstOrNull()
-
-                        val virkningstidspunkt = try {
-                            if (behandling.erYtelsesbehandling()) {
-                                VirkningstidspunktUtleder(
-                                    vilkårsresultatRepository = vilkårsresultatRepository
-                                ).utledVirkningsTidspunkt(behandling.id)
-                            } else {
-                                null
-                            }
-                        } catch (e: Exception) {
-                            null
-                        }
-
-                        val økonomiskSosialHjelp: Boolean? = andreUtbetalinger?.stønad?.contains(AndreUtbetalingerYtelser.ØKONOMISK_SOSIALHJELP)
+                        val historiskeVurderinger =
+                            refusjonkravRepository
+                                .hentHistoriskeVurderinger(behandling.sakId, behandling.id)
+                                .map { it.tilResponse(ansattInfoService) }
 
                         RefusjonkravGrunnlagResponse(
-                            nåværendeVirkningsTidspunkt = virkningstidspunkt,
                             harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                             gjeldendeVurdering = gjeldendeVurdering,
                             gjeldendeVurderinger = gjeldendeVurderinger,
-                            økonomiskSosialHjelp = økonomiskSosialHjelp
+                            historiskeVurderinger = historiskeVurderinger,
+                            økonomiskSosialHjelp = null,
+                            nåværendeVirkningsTidspunkt = null,
                         )
                     }
+                }
+
+
+
+
                 respond(response)
             }
         }

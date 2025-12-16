@@ -18,6 +18,15 @@ data class RefusjonkravVurdering(
             vedtaksdato = vedtaksdato
         )
     }
+    fun tilNavKontorPeriodeDto( ): NavKontorPeriodeDto {
+        return NavKontorPeriodeDto(
+            enhetsNummer = navKontorEnhetsNummer(navKontor) ?: "Kunne ikke utlede navkontor enhetsnummer basert på $navKontor",
+            virkingsdato = fom,
+            vedtaksdato = tom
+        )
+    }
+
+
 }
 
 data class RefusjonkravVurderingDto(
@@ -29,8 +38,8 @@ data class RefusjonkravVurderingDto(
 
 data class NavKontorPeriodeDto(
     val enhetsNummer: String,
-    val virkingsdato: LocalDate,
-    val vedtaksdato: LocalDate,
+    val virkingsdato: LocalDate?,
+    val vedtaksdato: LocalDate?,
 )
 
 fun navKontorEnhetsNummer(input: String?): String? {
