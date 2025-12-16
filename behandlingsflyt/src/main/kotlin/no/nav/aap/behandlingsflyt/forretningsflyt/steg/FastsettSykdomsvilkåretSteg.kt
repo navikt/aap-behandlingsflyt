@@ -86,7 +86,7 @@ class FastsettSykdomsvilkåretSteg private constructor(
             sykepengerErstatningGrunnlag,
             sykdomsGrunnlag?.sykdomsvurderinger.orEmpty(),
             bistandGrunnlag,
-            studentGrunnlag?.studentvurdering,
+            studentGrunnlag?.vurderinger,
             vilkårResultat.optionalVilkår(Vilkårtype.SYKEPENGEERSTATNING)?.tidslinje().orEmpty()
         )
         Sykdomsvilkår(vilkårResultat).vurder(faktagrunnlag)

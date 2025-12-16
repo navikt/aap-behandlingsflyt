@@ -136,7 +136,7 @@ class InntektInformasjonskrav(
         val beregningGrunnlag = beregningVurderingRepository.hentHvisEksisterer(kontekst.behandlingId)
 
         val nedsattArbeidsevneDato = beregningGrunnlag?.tidspunktVurdering?.nedsattArbeidsevneDato
-        val avbruttStudieDato = studentGrunnlag?.studentvurdering?.avbruttStudieDato
+        val avbruttStudieDato = studentGrunnlag?.vurderinger?.avbruttStudieDato
         return nedsattArbeidsevneDato != null || avbruttStudieDato != null
     }
 

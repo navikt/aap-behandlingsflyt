@@ -56,12 +56,12 @@ class VurderStudentSteg private constructor(
                 }
             },
             erTilstrekkeligVurdert = {
-                studentGrunnlag?.studentvurdering != null
+                studentGrunnlag?.vurderinger != null
             },
             tilbakestillGrunnlag = {
                 val vedtattVurdering = kontekst.forrigeBehandlingId
                     ?.let { studentRepository.hentHvisEksisterer(it) }
-                    ?.studentvurdering
+                    ?.vurderinger
                 studentRepository.lagre(kontekst.behandlingId, vedtattVurdering)
             },
             kontekst

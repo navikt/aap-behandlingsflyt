@@ -23,7 +23,7 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
     override fun lagre(behandlingId: BehandlingId, oppgittStudent: OppgittStudent?) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         val nyttGrunnlag = StudentGrunnlag(
-            studentvurdering = eksisterendeGrunnlag?.studentvurdering,
+            vurderinger = eksisterendeGrunnlag?.vurderinger,
             oppgittStudent = oppgittStudent
         )
 
@@ -33,7 +33,7 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
             }
 
             val oppgittStudentId = lagreOppgittStudent(oppgittStudent)
-            lagreGrunnlag(behandlingId, eksisterendeGrunnlag?.studentvurdering?.id, oppgittStudentId)
+            lagreGrunnlag(behandlingId, eksisterendeGrunnlag?.vurderinger?.id, oppgittStudentId)
         }
     }
 
@@ -55,10 +55,10 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
         }
     }
 
-    override fun lagre(behandlingId: BehandlingId, studentvurdering: StudentVurdering?) {
+    override fun lagre(behandlingId: BehandlingId, vurderinger: StudentVurdering?) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         val nyttGrunnlag = StudentGrunnlag(
-            studentvurdering = studentvurdering,
+            vurderinger = vurderinger,
             oppgittStudent = eksisterendeGrunnlag?.oppgittStudent
         )
 
@@ -67,7 +67,7 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
                 deaktiverGrunnlag(behandlingId)
             }
 
-            val vurderingId = studentvurdering?.let { lagreVurdering(it) }
+            val vurderingId = vurderinger?.let { lagreVurdering(it) }
             lagreGrunnlag(behandlingId, vurderingId, eksisterendeGrunnlag?.oppgittStudent?.id)
         }
     }

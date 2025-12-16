@@ -208,7 +208,7 @@ class InntektsbehovTest {
     @Test
     fun `skal utlede de tre forutgående kalenderårene basert på datoene i studentgrunnlaget`() {
         val studentGrunnlag = StudentGrunnlag(
-            studentvurdering = StudentVurdering(
+            vurderinger = StudentVurdering(
                 begrunnelse = "begrunnelse",
                 vurdertAv = "saksbehandler",
                 harAvbruttStudie = true,

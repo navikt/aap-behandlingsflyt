@@ -49,7 +49,7 @@ fun NormalOpenAPIRoute.studentgrunnlagApi(
                     respond(
                         StudentGrunnlagResponse(
                             harTilgangTilÅSaksbehandle = kanSaksbehandle(),
-                            studentvurdering = studentGrunnlag.studentvurdering?.tilResponse(ansattInfoService),
+                            studentvurdering = studentGrunnlag.vurderinger?.single()?.tilResponse(ansattInfoService),
                             oppgittStudent = studentGrunnlag.oppgittStudent
                         )
                     )

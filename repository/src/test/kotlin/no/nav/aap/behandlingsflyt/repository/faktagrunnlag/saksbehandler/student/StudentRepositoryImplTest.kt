@@ -70,7 +70,7 @@ class StudentRepositoryImplTest {
         val uthentet = dataSource.transaction {
             StudentRepositoryImpl(it).hent(behandling.id)
         }
-        assertThat(uthentet.studentvurdering)
+        assertThat(uthentet.vurderinger)
             .usingRecursiveComparison().ignoringFields("id", "vurdertTidspunkt")
             .isEqualTo(studentvurdering)
         assertThat(uthentet.oppgittStudent)
