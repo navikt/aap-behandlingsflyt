@@ -26,6 +26,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -43,7 +45,8 @@ class SamordningYtelseVurderingInformasjonskrav(
     private val tidligereVurderinger: TidligereVurderinger,
     private val fpGateway: ForeldrepengerGateway,
     private val spGateway: SykepengerGateway,
-    private val sakService: SakService
+    private val sakService: SakService,
+    private val unleashGateway: UnleashGateway
 ) : Informasjonskrav<SamordningInput, SamordningRegisterdata>, KanTriggeRevurdering {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -133,9 +136,15 @@ class SamordningYtelseVurderingInformasjonskrav(
     }
 
     private fun hentYtelseSykepenger(personIdent: String, oppslagsPeriode: Periode): List<UtbetaltePerioder> {
-        return spGateway.hentYtelseSykepenger(
-            setOf(personIdent), oppslagsPeriode.fom, oppslagsPeriode.tom
-        ).filter { oppslagsPeriode.inneholder((Periode(it.fom, it.tom))) }
+        return if (unleashGateway.isEnabled(BehandlingsflytFeature.HentSykepengerVedOverlapp)) {
+            spGateway.hentYtelseSykepenger(
+                setOf(personIdent), oppslagsPeriode.fom, oppslagsPeriode.tom
+            ).filter { oppslagsPeriode.overlapper((Periode(it.fom, it.tom))) }
+        } else {
+            spGateway.hentYtelseSykepenger(
+                setOf(personIdent), oppslagsPeriode.fom, oppslagsPeriode.tom
+            ).filter { oppslagsPeriode.inneholder((Periode(it.fom, it.tom))) }
+        }
     }
 
     private fun mapTilSamordningYtelse(
@@ -216,7 +225,8 @@ class SamordningYtelseVurderingInformasjonskrav(
                 TidligereVurderingerImpl(repositoryProvider),
                 gatewayProvider.provide(),
                 gatewayProvider.provide(),
-                SakService(repositoryProvider)
+                SakService(repositoryProvider),
+                gatewayProvider.provide()
             )
         }
 

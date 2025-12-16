@@ -23,6 +23,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -87,7 +88,8 @@ class SamordningYtelseVurderingServiceTest {
                 FakeTidligereVurderinger(),
                 AbakusForeldrepengerGateway(),
                 AbakusSykepengerGateway(),
-                SakService(postgresRepositoryRegistry.provider(connection))
+                SakService(postgresRepositoryRegistry.provider(connection)),
+                FakeUnleash
             )
             val foreldrePerson = PersonRepositoryImpl(connection).finnEllerOpprett(
                 listOf(
@@ -114,15 +116,15 @@ class SamordningYtelseVurderingServiceTest {
             sykepenger = listOf(
                 TestPerson.Sykepenger(
                     52,
-                    Periode(LocalDate.now().minusYears(5), LocalDate.now())
+                    Periode(LocalDate.now().minusYears(5), LocalDate.now().minusYears(4))
                 ),
                 TestPerson.Sykepenger(
                     51,
-                    Periode(LocalDate.now().minusWeeks(5), LocalDate.now())
+                    Periode(LocalDate.now().minusWeeks(12), LocalDate.now().minusWeeks(8))
                 ),
                 TestPerson.Sykepenger(
                     49,
-                    Periode(LocalDate.now().minusWeeks(3), LocalDate.now())
+                    Periode(LocalDate.now().minusWeeks(8), LocalDate.now())
                 )
             )
         )
@@ -135,7 +137,49 @@ class SamordningYtelseVurderingServiceTest {
                 FakeTidligereVurderinger(),
                 AbakusForeldrepengerGateway(),
                 AbakusSykepengerGateway(),
-                SakService(postgresRepositoryRegistry.provider(connection))
+                SakService(postgresRepositoryRegistry.provider(connection)),
+                FakeUnleash
+            )
+            val sykepengerPerson = PersonRepositoryImpl(connection).finnEllerOpprett(
+                listOf(
+                    Ident(
+                        person.identer.first().identifikator,
+                        true
+                    )
+                )
+            )
+            val kontekst =
+                opprettSakdata(connection, sykepengerPerson, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+
+            val input = samordningYtelseVurderingInformasjonskrav.klargjør(kontekst)
+            val data = samordningYtelseVurderingInformasjonskrav.hentData(input)
+
+            val ytelsePerioder = data.samordningYtelser.flatMap { it.ytelsePerioder }
+            assertThat(ytelsePerioder.size).isEqualTo(1)
+        }
+    }
+
+    @Test
+    fun `skal hente inn sykepenger når det er overlapp med rettighetsperioden`() {
+        val person = TestPerson(
+            sykepenger = listOf(
+                TestPerson.Sykepenger(
+                    70,
+                    Periode(LocalDate.now().minusMonths(3), LocalDate.now().plusMonths(3))
+                )
+            )
+        )
+        FakePersoner.leggTil(person)
+
+        dataSource.transaction { connection ->
+            val samordningYtelseVurderingInformasjonskrav = SamordningYtelseVurderingInformasjonskrav(
+                SamordningYtelseRepositoryImpl(connection),
+                SamordningVurderingRepositoryImpl(connection),
+                FakeTidligereVurderinger(),
+                AbakusForeldrepengerGateway(),
+                AbakusSykepengerGateway(),
+                SakService(postgresRepositoryRegistry.provider(connection)),
+                FakeUnleash
             )
             val sykepengerPerson = PersonRepositoryImpl(connection).finnEllerOpprett(
                 listOf(
@@ -167,7 +211,8 @@ class SamordningYtelseVurderingServiceTest {
                 FakeTidligereVurderinger(),
                 AbakusForeldrepengerGateway(),
                 AbakusSykepengerGateway(),
-                SakService(postgresRepositoryRegistry.provider(connection))
+                SakService(postgresRepositoryRegistry.provider(connection)),
+                FakeUnleash
             )
             val kontekst = opprettSakdata(connection)
 
