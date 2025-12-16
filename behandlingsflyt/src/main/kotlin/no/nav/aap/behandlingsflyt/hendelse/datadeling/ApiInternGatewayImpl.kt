@@ -41,6 +41,6 @@ interface ApiInternGateway : Gateway {
         behandlingId: BehandlingId
     )
 
-    fun hentArenaStatus(personidentifikatorer: List<String>): ArenaStatusResponse
+    fun hentArenaStatus(personidentifikatorer: Set<String>): ArenaStatusResponse
 }
 

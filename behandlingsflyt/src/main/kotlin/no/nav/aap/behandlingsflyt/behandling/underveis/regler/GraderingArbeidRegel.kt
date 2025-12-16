@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneVurdering.Companion.tidslinje
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -114,7 +113,7 @@ class GraderingArbeidRegel : UnderveisRegel {
     }
 
     private fun arbeidsevnevurdering(input: UnderveisInput): Tidslinje<OpplysningerOmArbeid> {
-        return input.arbeidsevneGrunnlag.vurderinger.tidslinje().mapValue {
+        return input.arbeidsevneGrunnlag.tilTidslinje().mapValue {
             OpplysningerOmArbeid(arbeidsevne = it.arbeidsevne)
         }
     }

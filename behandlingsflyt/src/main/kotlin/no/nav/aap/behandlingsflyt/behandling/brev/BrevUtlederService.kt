@@ -30,10 +30,11 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.FRITAK_MELDEPLIKT
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.BARNETILLEGG_SATS_REGULERING
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.FASTSATT_PERIODE_PASSERT
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.FRITAK_MELDEPLIKT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_MELDEKORT
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
@@ -75,11 +76,14 @@ class BrevUtlederService(
 
     fun utledBehovForMeldingOmVedtak(behandlingId: BehandlingId): BrevBehov? {
         val behandling = behandlingRepository.hent(behandlingId)
-        val harArbeidsopptrapping = arbeidsopptrappingRepository.hentPerioder(behandlingId).isNotEmpty()
+        val forrigeBehandlingId = behandling.forrigeBehandlingId
+        var harBehandlingenArbeidsopptrapping = arbeidsopptrappingRepository.hentPerioder(behandlingId).isNotEmpty()
+        var harForrigeBehandlingArbeidsopptrapping = forrigeBehandlingId != null && arbeidsopptrappingRepository.hentPerioder(forrigeBehandlingId).isNotEmpty()
+        var skalSendeVedtakForArbeidsopptrapping = harBehandlingenArbeidsopptrapping && !harForrigeBehandlingArbeidsopptrapping
 
         when (behandling.typeBehandling()) {
             TypeBehandling.Førstegangsbehandling -> {
-                if (harArbeidsopptrapping) {
+                if (skalSendeVedtakForArbeidsopptrapping) {
                     return VedtakArbeidsopptrapping11_23_sjette_ledd
                 }
 
@@ -102,7 +106,7 @@ class BrevUtlederService(
             }
 
             TypeBehandling.Revurdering -> {
-                if (harArbeidsopptrapping) {
+                if (skalSendeVedtakForArbeidsopptrapping) {
                     return VedtakArbeidsopptrapping11_23_sjette_ledd
                 }
 
@@ -113,7 +117,8 @@ class BrevUtlederService(
                         MOTTATT_MELDEKORT,
                         FASTSATT_PERIODE_PASSERT,
                         EFFEKTUER_AKTIVITETSPLIKT,
-                        EFFEKTUER_AKTIVITETSPLIKT_11_9
+                        EFFEKTUER_AKTIVITETSPLIKT_11_9,
+                        BARNETILLEGG_SATS_REGULERING,
                     ).containsAll(
                         vurderingsbehov
                     )
