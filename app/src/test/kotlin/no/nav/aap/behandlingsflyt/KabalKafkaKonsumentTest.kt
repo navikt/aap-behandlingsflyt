@@ -94,6 +94,8 @@ class KabalKafkaKonsumentTest {
 
     @Test
     fun `Kan motta og lagre ned hendelse fra Kabal`() {
+        val testTopic = KABAL_EVENT_TOPIC + "test2"
+        
         val sak = dataSource.transaction { sak(it, periode) }
         dataSource.transaction { finnEllerOpprettBehandling(it, sak) }
         val klagebehandling = dataSource.transaction { connection ->
@@ -102,8 +104,8 @@ class KabalKafkaKonsumentTest {
 
         val hendelse = lagBehandlingEvent(kilde = "KELVIN", klagebehandling.referanse.toString())
         produserHendelse(
-            listOf(hendelse),
-            KABAL_EVENT_TOPIC
+            listOf(Pair("1", DefaultJsonMapper.toJson(hendelse))),
+            testTopic
         )
 
         val konsument = KabalKafkaKonsument(
@@ -111,6 +113,7 @@ class KabalKafkaKonsumentTest {
             dataSource = dataSource,
             repositoryRegistry = repositoryRegistry,
             pollTimeout = 50.milliseconds,
+            topic = testTopic,
         )
 
         val thread = thread(start = true) {
@@ -126,7 +129,6 @@ class KabalKafkaKonsumentTest {
 
         thread.join()
         assertThat(konsument.antallMeldinger).isEqualTo(1)
-        konsument.lukk()
 
         motor.kjørJobber()
         val svarFraAnderinstansBehandling = dataSource.transaction { connection ->
@@ -161,6 +163,48 @@ class KabalKafkaKonsumentTest {
         assertThat(hendelser.first().kanal).isEqualTo(Kanal.DIGITAL)
         assertThat(hendelser.first().status).isEqualTo(Status.BEHANDLET)
         assertThat(hendelser.first().strukturertDokument).isNotNull
+    }
+
+    @Test
+    fun `Skal ikke konsumere neste melding dersom håndtering feiler`() {
+        val sak = dataSource.transaction { sak(it, periode) }
+        dataSource.transaction { finnEllerOpprettBehandling(it, sak) }
+        val klagebehandling = dataSource.transaction { connection ->
+            finnEllerOpprettBehandling(connection, sak, Vurderingsbehov.MOTATT_KLAGE)
+        }
+
+        val hendelse = lagBehandlingEvent(kilde = "KELVIN", klagebehandling.referanse.toString())
+        produserHendelse(
+            listOf(Pair("1", "blabla"), Pair("2", DefaultJsonMapper.toJson(hendelse))),
+            KABAL_EVENT_TOPIC
+        )
+
+        val konsument = KabalKafkaKonsument(
+            testConfig(kafka.bootstrapServers),
+            dataSource = dataSource,
+            repositoryRegistry = repositoryRegistry,
+            pollTimeout = 50.milliseconds,
+        )
+
+        val thread = thread(start = true) {
+            while (true) {
+                // Denne vil ikke ha noe relevans med mindre vi får en regresjon der neste melding blir behandlet
+                if (konsument.antallMeldinger > 0) {
+                    konsument.lukk()
+                    return@thread
+                }
+                // Det forventes konsumenten lukkes pga. exception
+                if (konsument.erLukket()) {
+                    return@thread
+                }
+                Thread.sleep(500L)
+            }
+        }
+        konsument.konsumer()
+
+        thread.join()
+        
+        assertThat(konsument.antallMeldinger).isEqualTo(0)
     }
 
     @Test
@@ -202,7 +246,7 @@ class KabalKafkaKonsumentTest {
         )
     }
 
-    private fun produserHendelse(hendelser: List<KabalHendelseKafkaMelding>, topic: String) {
+    private fun produserHendelse(hendelser: List<Pair<String, String>>, topic: String) {
         val producerProps = Properties().apply {
             put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.bootstrapServers)
             put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer::class.java.name)
@@ -211,8 +255,7 @@ class KabalKafkaKonsumentTest {
 
         KafkaProducer<String, String>(producerProps).use { producer ->
             hendelser.forEach { hendelse ->
-                val serialisert = DefaultJsonMapper.toJson(hendelse)
-                val record = ProducerRecord(topic, hendelse.eventId.toString(), serialisert)
+                val record = ProducerRecord(topic, hendelse.first, hendelse.second)
                 producer.send(record)
 
             }
@@ -253,5 +296,4 @@ class KabalKafkaKonsumentTest {
             }
         }
     }
-
 }
