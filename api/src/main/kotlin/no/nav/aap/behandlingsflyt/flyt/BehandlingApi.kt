@@ -19,7 +19,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.dokument.KlagedokumentInfo
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.pip.PipRepository
 import no.nav.aap.behandlingsflyt.pip.PipService
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -29,6 +28,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoBulkGateway
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -48,12 +49,12 @@ fun NormalOpenAPIRoute.behandlingApi(
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,
 ) {
-    fun hentArenaStatus(behandlingReferanse: BehandlingReferanse): ArenaStatusDTO? {
+    fun hentArenaStatus(sakId: SakId): ArenaStatusDTO? {
         val identer = dataSource.transaction(readOnly = true) { connection ->
             val repositoryProvider = repositoryRegistry.provider(connection)
-            val pipRepository = repositoryProvider.provide<PipRepository>()
-            pipRepository.finnIdenterPåBehandling(behandlingReferanse)
-        }.map { it.ident }
+            val sakRepository = repositoryProvider.provide<SakRepository>()
+            sakRepository.hent(sakId).person.identer()
+        }.map { it.identifikator }.toSet()
 
         val arenaStatus: ArenaStatusDTO? = runCatching {
             gatewayProvider.provide(ApiInternGateway::class).hentArenaStatus(identer)
@@ -104,8 +105,6 @@ fun NormalOpenAPIRoute.behandlingApi(
                     )
 
                     val vurderingsbehovOgÅrsaker = behandlingRepository.hentVurderingsbehovOgÅrsaker(behandling.id)
-
-                    val arenaStatus= hentArenaStatus(behandling.referanse)
 
                     DetaljertBehandlingDTO(
                         referanse = behandling.referanse.referanse,
@@ -160,7 +159,7 @@ fun NormalOpenAPIRoute.behandlingApi(
                         tilhørendeKlagebehandling = tilhørendeKlagebehandling?.referanse,
                         vedtaksdato = VedtakService(repositoryProvider).vedtakstidspunkt(behandling)?.toLocalDate(),
                         vurderingsbehovOgÅrsaker = vurderingsbehovOgÅrsaker,
-                        arenaStatus = arenaStatus
+                        arenaStatus = hentArenaStatus(behandling.sakId)
                     )
                 }
                 respond(dto)

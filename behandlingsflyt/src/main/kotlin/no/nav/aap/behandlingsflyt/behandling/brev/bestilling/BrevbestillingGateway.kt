@@ -36,6 +36,8 @@ interface BrevbestillingGateway : Gateway {
 
     fun oppdaterV3(bestillingReferanse: BrevbestillingReferanse, brevdata: BrevdataDto)
 
+    fun oppdaterBrevmal(bestillingReferanse: BrevbestillingReferanse)
+
     fun avbryt(bestillingReferanse: BrevbestillingReferanse)
 
     fun gjenoppta(bestillingReferanse: BrevbestillingReferanse)

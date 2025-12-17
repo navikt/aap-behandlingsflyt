@@ -119,6 +119,10 @@ public enum class StegType(
         gruppe = StegGruppe.GRUNNLAG,
         status = Status.UTREDES
     ),
+    VURDER_INNTEKTSBORTFALL(
+        gruppe = StegGruppe.GRUNNLAG,
+        status = Status.UTREDES
+    ),
     SAMORDNING_UFØRE(
         gruppe = StegGruppe.SAMORDNING,
         status = Status.UTREDES
@@ -151,7 +155,6 @@ public enum class StegType(
         gruppe = StegGruppe.UNDERVEIS,
         status = Status.UTREDES
     ),
-    @Deprecated("Ikke lenger i bruk for vanlig flyt")
     EFFEKTUER_11_7(
         gruppe = StegGruppe.UNDERVEIS,
         status = Status.UTREDES

@@ -18,11 +18,11 @@ class TilbakekrevingService(
 
     fun håndter(sakId: SakId, tilbakekrevingshendelse: Tilbakekrevingshendelse) {
         tilbakekrevingsbehandlingRepository.lagre(sakId, tilbakekrevingshendelse)
-        flytJobbRepository.leggTil(
+/*        flytJobbRepository.leggTil(
             jobbInput = JobbInput(jobb = OppdaterOppgaveMedTilbakekrevingHendelseUtfører)
                 .medPayload(tilbakekrevingshendelse)
                 .forSak(sakId = sakId.toLong())
          )
+*/
     }
-
 }

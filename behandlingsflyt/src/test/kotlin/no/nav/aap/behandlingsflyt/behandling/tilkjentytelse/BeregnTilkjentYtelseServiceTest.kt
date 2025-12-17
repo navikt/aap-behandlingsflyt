@@ -20,7 +20,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
+import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.test.august
+import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.juli
 import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.behandlingsflyt.test.mars
@@ -225,7 +227,7 @@ class BeregnTilkjentYtelseServiceTest {
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
-                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+                emptyList(), vurdertAv = "ident"
             )
         )
 
@@ -238,9 +240,12 @@ class BeregnTilkjentYtelseServiceTest {
                 samordningsgrunnlag,
                 samordningUføre,
                 samordningArbeidsgiver,
-                unntakMeldepliktDesemberEnabled = true
             )
         ).beregnTilkjentYtelse()
+
+        assertTidslinje(beregnTilkjentYtelseService, Periode(8 desember 2025, 21 desember 2025) to {
+            assertThat(it.utbetalingsdato).isEqualTo(LocalDate.of(2025, 12, levererMeldekortPåDato))
+        })
 
         assertThat(beregnTilkjentYtelseService.segmenter()).hasSize(1)
         assertThat(beregnTilkjentYtelseService.segmenter().first().verdi.utbetalingsdato)
@@ -279,7 +284,7 @@ class BeregnTilkjentYtelseServiceTest {
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
                 "",
-                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+                emptyList(), vurdertAv = "ident"
             )
         )
 
@@ -292,7 +297,6 @@ class BeregnTilkjentYtelseServiceTest {
                 samordningsgrunnlag,
                 samordningUføre,
                 samordningArbeidsgiver,
-                unntakMeldepliktDesemberEnabled = true
             )
         ).beregnTilkjentYtelse()
 
@@ -1134,14 +1138,14 @@ class BeregnTilkjentYtelseServiceTest {
     @CsvSource(
         useHeadersInDisplayName = true,
         textBlock = """arbeidsgrad,	sykepengegrad,	uforegrad,	institusjon,	   effektivGradering
-25	               ,25	         ,25  	      ,0	                  ,25
-0	               ,50	         ,0  	      ,50	                  ,25
-10	               ,25	         ,25	      ,50	                  ,20
-50	               ,0	         ,0	          ,50	                  ,25
-0	               ,50	         ,50	      ,0	                  ,0
-0	               ,50	         ,50	      ,50	                  ,0
-50	               ,30	         ,0	          ,50	                  ,10
-0	               ,10	         ,30	      ,50	                  ,30
+                       25	               ,25	         ,25  	      ,0	                  ,25
+                       0	               ,50	         ,0  	      ,50	                  ,25
+                       10	               ,25	         ,25	      ,50	                  ,20
+                       50	               ,0	         ,0	          ,50	                  ,25
+                       0	               ,50	         ,50	      ,0	                  ,0
+                       0	               ,50	         ,50	      ,50	                  ,0
+                       50	               ,30	         ,0	          ,50	                  ,10
+                       0	               ,10	         ,30	      ,50	                  ,30
 """
     )
     @ParameterizedTest
@@ -1187,8 +1191,7 @@ class BeregnTilkjentYtelseServiceTest {
 
         val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
             vurdering = SamordningArbeidsgiverVurdering(
-                "",
-                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+                "", emptyList(), vurdertAv = "ident"
             )
         )
 

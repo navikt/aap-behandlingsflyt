@@ -5,6 +5,7 @@ import kotlin.math.max
 plugins {
     id("org.jetbrains.kotlin.jvm")
     id("org.jetbrains.dokka")
+    `jvm-test-suite`
 }
 
 group = "no.nav.aap.behandlingsflyt"

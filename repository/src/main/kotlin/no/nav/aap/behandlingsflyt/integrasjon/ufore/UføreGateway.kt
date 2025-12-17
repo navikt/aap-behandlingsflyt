@@ -32,6 +32,9 @@ data class UførePeriode(
 
 data class UføreHistorikkRespons(val uforeperioder: List<UførePeriode>)
 
+/**
+ * Finnes ikke Swagger, men endepunkter er definert [slik](https://github.com/navikt/pensjon-pen/blob/main/pen-app/src/main/java/no/nav/pensjon/pen_app/domain/uforetrygd/ekstern/uf%C3%B8rehistorikk/UforehistorikkController.kt).
+ */
 object UføreGateway : UføreRegisterGateway {
     private val log = LoggerFactory.getLogger(javaClass)
     private val url = URI.create(requiredConfigForKey("integrasjon.pesys.url"))
@@ -79,6 +82,5 @@ object UføreGateway : UføreRegisterGateway {
                 uføregrad = Prosent(it.uforegrad)
             )
         }.toSet()
-
     }
 }

@@ -120,7 +120,7 @@ internal fun Aktivitetsplikt11_7Vurdering.tilDto(ansattInfoService: AnsattInfoSe
         begrunnelse = begrunnelse,
         erOppfylt = erOppfylt,
         utfall = utfall,
-        gjelderFra = gjelderFra,
+        gjelderFra = fom,
         vurdertAv = VurdertAvResponse.fraIdent(vurdertAv, opprettet, ansattInfoService),
         skalIgnorereVarselFrist = this.skalIgnorereVarselFrist
     )

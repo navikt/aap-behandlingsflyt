@@ -39,7 +39,7 @@ class FakeApiInternGateway : ApiInternGateway {
         vedtakId: Long,
         samId: String?,
         tilkjent: List<TilkjentYtelsePeriode>,
-        beregningsgrunnlag: BigDecimal,
+        beregningsgrunnlag: BigDecimal?,
         underveis: List<Underveisperiode>,
         vedtaksDato: LocalDate,
         rettighetsTypeTidslinje: Tidslinje<RettighetsType>
@@ -55,7 +55,7 @@ class FakeApiInternGateway : ApiInternGateway {
         // No-op
     }
 
-    override fun hentArenaStatus(personidentifikatorer: List<String>): ArenaStatusResponse {
+    override fun hentArenaStatus(personidentifikatorer: Set<String>): ArenaStatusResponse {
         return ArenaStatusResponse(false)
     }
 }

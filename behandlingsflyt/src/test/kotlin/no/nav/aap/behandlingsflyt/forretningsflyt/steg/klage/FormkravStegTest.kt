@@ -115,7 +115,6 @@ class FormkravStegTest {
             brevbestillingService = brevbestillingServiceMock,
             trekkKlageService = trekkKlageServiceMock,
             avklaringsbehovService = AvklaringsbehovService(
-                avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
                 avbrytRevurderingService = avbrytRevurderingServiceMock,
             ),
             unleashGateway = gatewayProvider.provide()
@@ -173,7 +172,6 @@ class FormkravStegTest {
             brevbestillingService = brevbestillingServiceMock,
             trekkKlageService = trekkKlageServiceMock,
             avklaringsbehovService = AvklaringsbehovService(
-                avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
                 avbrytRevurderingService = avbrytRevurderingServiceMock,
             ),
             unleashGateway = gatewayProvider.provide()
@@ -236,7 +234,6 @@ class FormkravStegTest {
             brevbestillingService = brevbestillingServiceMock,
             trekkKlageService = trekkKlageServiceMock,
             avklaringsbehovService = AvklaringsbehovService(
-                avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
                 avbrytRevurderingService = avbrytRevurderingServiceMock,
             ),
             unleashGateway = gatewayProvider.provide()
@@ -302,7 +299,6 @@ class FormkravStegTest {
             brevbestillingService = brevbestillingServiceMock,
             trekkKlageService = trekkKlageServiceMock,
             avklaringsbehovService = AvklaringsbehovService(
-                avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
                 avbrytRevurderingService = avbrytRevurderingServiceMock,
             ),
             unleashGateway = gatewayProvider.provide()
@@ -408,7 +404,6 @@ class FormkravStegTest {
             brevbestillingService = brevbestillingServiceMock,
             trekkKlageService = trekkKlageServiceMock,
             avklaringsbehovService = AvklaringsbehovService(
-                avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
                 avbrytRevurderingService = avbrytRevurderingServiceMock,
             ),
             unleashGateway = gatewayProvider.provide()
@@ -455,7 +450,6 @@ class FormkravStegTest {
             brevbestillingService = brevbestillingServiceMock,
             trekkKlageService = trekkKlageServiceMock,
             avklaringsbehovService = AvklaringsbehovService(
-                avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
                 avbrytRevurderingService = avbrytRevurderingServiceMock,
             ),
             unleashGateway = gatewayProvider.provide()
@@ -527,7 +521,6 @@ class FormkravStegTest {
             brevbestillingService = brevbestillingServiceMock,
             trekkKlageService = trekkKlageServiceMock,
             avklaringsbehovService = AvklaringsbehovService(
-                avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
                 avbrytRevurderingService = avbrytRevurderingServiceMock,
             ),
             unleashGateway = gatewayProvider.provide()

@@ -5,30 +5,22 @@ interface FeatureToggle {
 }
 
 enum class BehandlingsflytFeature : FeatureToggle {
-    // Eksempel på feature toggle. Kan fjernes når det legges til nye.
     // Se: https://aap-unleash-web.iap.nav.cloud.nais.io/projects/default
-    DummyFeature,
     IngenValidering,
-    InnhentEnhetsregisterData,
     NyBrevtype11_17,
-    NyBrevtype11_18,
-    Aktivitetsplikt11_9,
     OverforingsdatoNullForAvregning,
     OvergangArbeid,
-    AvklaringsbehovService,
     KvalitetssikringsSteg,
-    FatteVedtakAvklaringsbehovService,
     BedreUttrekkAvSakerMedFritakMeldeplikt,
     EOSBeregning,
-    NyeBarn,
-    InstFormaal,
-    IkkeAntaNullTimerArbeidet,
     NyBrevbyggerV3,
     LagreVedtakIFatteVedtak,
-    UnntakMeldepliktDesember,
-    ReduksjonArbeidOverGrense,
     PeriodisertSykepengeErstatningNyAvklaringsbehovService,
-    ReduksjonIkkeMeldtSeg,
+    MidlertidigStopp11_4,
+    Under18,
+    ValiderOvergangUfore,
+    KravOmInntektsbortfall,
+    MigrerMeldepliktFritak
     ;
 
     override fun key(): String = name

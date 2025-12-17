@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt
 
+import no.nav.aap.behandlingsflyt.behandling.beregning.Månedsinntekt
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
@@ -12,6 +13,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.InntektkomponentenGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.InntektskomponentData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -20,7 +23,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
 import java.time.Year
 
 class InntektInformasjonskrav(
@@ -29,8 +34,11 @@ class InntektInformasjonskrav(
     private val studentRepository: StudentRepository,
     private val beregningVurderingRepository: BeregningVurderingRepository,
     private val inntektRegisterGateway: InntektRegisterGateway,
+    private val inntektkomponentenGateway: InntektkomponentenGateway,
     private val tidligereVurderinger: TidligereVurderinger,
 ) : Informasjonskrav<InntektInformasjonskrav.InntektInput, InntektInformasjonskrav.InntektRegisterdata> {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     override val navn = Companion.navn
 
@@ -47,21 +55,66 @@ class InntektInformasjonskrav(
                 (oppdatert.ikkeKjørtSisteKalenderdag() || relevanteÅrErEndret(kontekst))
     }
 
-    data class InntektRegisterdata(val inntekter: Set<InntektPerÅr>) : InformasjonskravRegisterdata
+    data class InntektRegisterdata(
+        val inntekter: Set<InntektPerÅrFraRegister>,
+        val inntektsperioder: Set<Månedsinntekt>
+    ) : InformasjonskravRegisterdata
 
-    data class InntektInput(val person: Person, val relevanteÅr: Set<Year>) : InformasjonskravInput
+    data class InntektInput(
+        val person: Person,
+        val relevanteÅr: Set<Year>,
+        val relevanteÅrUføre: Set<Year>
+    ) :
+        InformasjonskravInput
 
     override fun klargjør(kontekst: FlytKontekstMedPerioder): InntektInput {
         val sak = sakService.hent(kontekst.sakId)
-        val relevanteÅr = utledAlleRelevanteÅr(kontekst.behandlingId)
-        return InntektInput(sak.person, relevanteÅr)
+        val (relevanteÅr, relevanteUføreInntektÅr) = utledAlleRelevanteÅr(kontekst.behandlingId)
+        return InntektInput(sak.person, relevanteÅr, relevanteUføreInntektÅr)
     }
 
     override fun hentData(input: InntektInput): InntektRegisterdata {
-        val (person, relevanteÅr) = input
+        val (person, relevanteÅr, relevanteÅrUføre) = input
         val oppdaterteInntekter = inntektRegisterGateway.innhent(person, relevanteÅr)
 
-        return InntektRegisterdata(oppdaterteInntekter)
+        val fom = relevanteÅrUføre.minOfOrNull { it.atMonth(1) }
+        val tom = relevanteÅrUføre.maxOfOrNull { it.atMonth(12) }
+        val inntekter = if (fom != null && tom != null) inntektkomponentenGateway.hentAInntekt(
+            person.aktivIdent().identifikator,
+            fom,
+            tom
+        ) else InntektskomponentData(emptyList())
+
+        val inntektPerMåned = summerArbeidsinntektPerMåned(inntekter)
+
+        return InntektRegisterdata(oppdaterteInntekter, inntektPerMåned)
+    }
+
+    private fun summerArbeidsinntektPerMåned(inntekter: InntektskomponentData): Set<Månedsinntekt> {
+        return inntekter.arbeidsInntektMaaned.map {
+            Pair(
+                it.arbeidsInntektInformasjon.inntektListe,
+                it.aarMaaned
+            )
+        }
+            .groupBy { (_, årMåned) -> årMåned }
+            .mapValues { (årMåned, value) ->
+                value
+                    .flatMap { it.first }
+                    .also {
+                        if (it.size < 12) {
+                            log.info("Fant færre enn 12 inntekter for år ${årMåned.year}. Fant ${it.size}.")
+                        }
+                    }
+                    .sumOf { it.beloep }
+            }
+            .map { (årMåned, beløp) ->
+                Månedsinntekt(
+                    årMåned = årMåned,
+                    beløp = Beløp(beløp.toBigDecimal())
+                )
+            }
+            .toSet()
     }
 
     override fun oppdater(
@@ -72,12 +125,20 @@ class InntektInformasjonskrav(
         val behandlingId = kontekst.behandlingId
 
         val inntektGrunnlag = inntektGrunnlagRepository.hentHvisEksisterer(behandlingId)
-        val oppdaterteInntekter = registerdata.inntekter
+        val (oppdaterteInntekter, inntektPerMåned) = registerdata
 
-        if (inntektGrunnlag?.inntekter == oppdaterteInntekter) {
+        val inntekterPerÅrFraRegister = oppdaterteInntekter.map { it.tilInntektPerÅr() }.toSet()
+
+        if (inntektGrunnlag?.inntekter == inntekterPerÅrFraRegister
+            && inntektGrunnlag.inntektPerMåned == inntektPerMåned
+        ) {
             return IKKE_ENDRET
         } else {
-            inntektGrunnlagRepository.lagre(behandlingId, oppdaterteInntekter)
+            inntektGrunnlagRepository.lagre(
+                behandlingId,
+                inntekterPerÅrFraRegister,
+                inntektPerMåned
+            )
             return ENDRET
         }
     }
@@ -92,21 +153,24 @@ class InntektInformasjonskrav(
     }
 
     private fun relevanteÅrErEndret(kontekst: FlytKontekstMedPerioder): Boolean {
+        val inntektGrunnlag = inntektGrunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
         val relevanteÅrEksisterendeGrunnlag =
-            hentHvisEksisterer(kontekst.behandlingId)?.inntekter?.map { it.år }?.toSet() ?: emptySet()
-        val relevanteÅrFraGjeldendeInntektsbehov = utledAlleRelevanteÅr(kontekst.behandlingId)
+            inntektGrunnlag?.inntekter.orEmpty().map { it.år }
+                .toSet()
+        val (relevanteÅrFraGjeldendeInntektsbehov, relevanteUføreInntektÅr) = utledAlleRelevanteÅr(kontekst.behandlingId)
 
-        return relevanteÅrEksisterendeGrunnlag != relevanteÅrFraGjeldendeInntektsbehov
+        val inntektsÅrUføre = inntektGrunnlag?.inntektPerMåned.orEmpty().map { Year.of(it.årMåned.year) }.toSet()
+
+        return (relevanteÅrEksisterendeGrunnlag != relevanteÅrFraGjeldendeInntektsbehov) || (inntektsÅrUføre != relevanteUføreInntektÅr)
     }
 
-    private fun utledAlleRelevanteÅr(behandlingId: BehandlingId): Set<Year> {
+    private fun utledAlleRelevanteÅr(behandlingId: BehandlingId): Pair<Set<Year>, Set<Year>> {
         val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId)
         val beregningGrunnlag = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
-        return Inntektsbehov.utledAlleRelevanteÅr(beregningGrunnlag, studentGrunnlag)
-    }
 
-    fun hentHvisEksisterer(behandlingId: BehandlingId): InntektGrunnlag? {
-        return inntektGrunnlagRepository.hentHvisEksisterer(behandlingId)
+        val relevanteUføreInntektÅr = Inntektsbehov.utledRelevanteYtterligereNedsattÅr(beregningGrunnlag)
+
+        return Pair(Inntektsbehov.utledAlleRelevanteÅr(beregningGrunnlag, studentGrunnlag), relevanteUføreInntektÅr)
     }
 
     companion object : Informasjonskravkonstruktør {
@@ -124,6 +188,7 @@ class InntektInformasjonskrav(
                 studentRepository = repositoryProvider.provide(),
                 beregningVurderingRepository = beregningVurderingRepository,
                 inntektRegisterGateway = gatewayProvider.provide(),
+                inntektkomponentenGateway = gatewayProvider.provide(),
                 tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
             )
         }

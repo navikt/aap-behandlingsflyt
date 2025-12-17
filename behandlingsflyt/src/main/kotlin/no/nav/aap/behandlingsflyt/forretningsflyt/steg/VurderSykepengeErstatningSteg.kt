@@ -82,12 +82,12 @@ class VurderSykepengeErstatningSteg private constructor(
                 },
             )
         } else {
-            avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårGammel(
+            avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
                 avklaringsbehovene = avklaringsbehovene,
                 behandlingRepository = behandlingRepository,
                 vilkårsresultatRepository = vilkårsresultatRepository,
                 definisjon = Definisjon.AVKLAR_SYKEPENGEERSTATNING,
-                tvingerAvklaringsbehov = setOf(),
+                tvingerAvklaringsbehov = setOf(Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING),
                 nårVurderingErRelevant = ::perioderMedVurderingsbehov,
                 kontekst = kontekst,
                 perioderSomIkkeErTilstrekkeligVurdert = { emptySet() }, // Denne må minst sjekke at man har vurderinger for perioder når vurdering er relevant
@@ -141,7 +141,7 @@ class VurderSykepengeErstatningSteg private constructor(
         val yrkesskadevurderinger = sykdomGrunnlag?.yrkesskadevurdringTidslinje(kontekst.rettighetsperiode).orEmpty()
 
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-        val overganguføreVilkår = vilkårsresultat.finnVilkår(Vilkårtype.OVERGANGUFØREVILKÅRET).tidslinje()
+        val overganguføreVilkår = vilkårsresultat.optionalVilkår(Vilkårtype.OVERGANGUFØREVILKÅRET)?.tidslinje().orEmpty()
 
         return Tidslinje.map5(
             tidligereVurderingsutfall,

@@ -10,7 +10,9 @@ import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
+import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.Clock
 import java.time.LocalDate
@@ -103,9 +105,7 @@ class MeldepliktRegel(
                     forrigeSegmentOppfylt = meldeperioderVurdert.segmenter().lastOrNull()?.verdi?.utfall == OPPFYLT,
                     dataForForrigeMeldeperiode = forrigePeriode?.verdi,
                 )
-                if (input.unntakMeldepliktDesemberEnabled) {
-                    forrigePeriode = nåværendeMeldeperiodeSegment
-                }
+                forrigePeriode = nåværendeMeldeperiodeSegment
                 meldeperioderVurdert.kombiner(neste, StandardSammenslåere.xor())
             }.begrensetTil(input.periodeForVurdering)
 
@@ -143,11 +143,6 @@ class MeldepliktRegel(
     }
 
 
-    fun meldepliktFraOgMed(input: UnderveisInput): LocalDate? {
-        return input.vedtaksdatoFørstegangsbehandling?.plusDays(1)
-    }
-
-
     private fun fritaksvurderingTidslinje(input: UnderveisInput): Tidslinje<MeldepliktData> {
         return input.meldepliktGrunnlag.tilTidslinje().mapValue { MeldepliktData(fritaksvurdering = it) }
     }
@@ -159,24 +154,14 @@ class MeldepliktRegel(
     }
 
     private fun førVedtakTidslinje(input: UnderveisInput): Tidslinje<MeldepliktData> {
-        val meldepliktFraOgMed = meldepliktFraOgMed(input)
+        val meldepliktFraOgMed = input.vedtaksdatoFørstegangsbehandling?.plusDays(1)
         return if (meldepliktFraOgMed == null) {
-            Tidslinje(input.periodeForVurdering, MeldepliktData(førVedtak = true))
-        } else if (meldepliktFraOgMed <= input.periodeForVurdering.fom) {
-            Tidslinje(input.periodeForVurdering, MeldepliktData(førVedtak = false))
+            tidslinjeOf(input.periodeForVurdering to MeldepliktData(førVedtak = true))
         } else {
-            Tidslinje(
-                listOf(
-                    Segment(
-                        periode = Periode(input.periodeForVurdering.fom, meldepliktFraOgMed.minusDays(1)),
-                        verdi = MeldepliktData(førVedtak = true)
-                    ),
-                    Segment(
-                        periode = Periode(meldepliktFraOgMed, input.periodeForVurdering.tom),
-                        verdi = MeldepliktData(førVedtak = false)
-                    ),
-                )
-            )
+            tidslinjeOf(
+                Periode(Tid.MIN, meldepliktFraOgMed.minusDays(1)) to MeldepliktData(førVedtak = true),
+                Periode(meldepliktFraOgMed, Tid.MAKS) to MeldepliktData(førVedtak = false)
+            ).begrensetTil(input.periodeForVurdering)
         }
     }
 

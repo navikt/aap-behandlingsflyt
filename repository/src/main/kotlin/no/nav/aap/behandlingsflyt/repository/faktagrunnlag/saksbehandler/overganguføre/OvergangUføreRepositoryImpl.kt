@@ -23,7 +23,7 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
     override fun hentHvisEksisterer(behandlingId: BehandlingId): OvergangUføreGrunnlag? {
         return connection.queryFirstOrNull(
             """
-            SELECT ID, VURDERINGER_ID
+            SELECT VURDERINGER_ID
             FROM OVERGANG_UFORE_GRUNNLAG
             WHERE AKTIV AND BEHANDLING_ID = ?
             """.trimIndent()
@@ -33,7 +33,6 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
             }
             setRowMapper { row ->
                 OvergangUføreGrunnlag(
-                    id = row.getLong("ID"),
                     vurderinger = mapOvergangUforevurderinger(row.getLongOrNull("VURDERINGER_ID"))
                 )
             }
@@ -59,8 +58,8 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
             brukerHarSøktOmUføretrygd = row.getBoolean("BRUKER_SOKT_UFORETRYGD"),
             brukerHarFåttVedtakOmUføretrygd = row.getStringOrNull("BRUKER_VEDTAK_UFORETRYGD"),
             brukerRettPåAAP = row.getBooleanOrNull("BRUKER_RETT_PAA_AAP"),
-            vurdertIBehandling = row.getLongOrNull("VURDERT_I_BEHANDLING")?.let(::BehandlingId),
-            fom = row.getLocalDateOrNull("VIRKNINGSDATO"), // Virkningsdato er 'vurderingen gjelder fra'
+            vurdertIBehandling = row.getLong("VURDERT_I_BEHANDLING").let(::BehandlingId),
+            fom = row.getLocalDate("VIRKNINGSDATO"), // Virkningsdato er 'vurderingen gjelder fra'
             vurdertAv = row.getString("VURDERT_AV"),
             opprettet = row.getInstant("OPPRETTET_TID"),
             tom = row.getLocalDateOrNull("TOM")
@@ -97,7 +96,6 @@ class OvergangUføreRepositoryImpl(private val connection: DBConnection) : Overg
         val overgangUforeGrunnlag = hentHvisEksisterer(behandlingId)
 
         val nyttGrunnlag = OvergangUføreGrunnlag(
-            id = null,
             vurderinger = overgangUføreVurderinger
         )
 

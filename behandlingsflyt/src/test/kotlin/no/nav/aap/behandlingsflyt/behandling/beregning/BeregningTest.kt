@@ -3,8 +3,8 @@ package no.nav.aap.behandlingsflyt.behandling.beregning
 import io.github.nchaugen.tabletest.junit.TableTest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.BeregningInput
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.år.Inntektsbehov
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
@@ -20,27 +20,33 @@ import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.within
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
+import java.math.MathContext
+import java.math.RoundingMode
 import java.time.LocalDate
 import java.time.Year
+import java.time.YearMonth
 
 class BeregningTest {
 
     @Test
     fun `beregn input med basic 11_19 uten yrkesskade eller uføre`() {
+        val årsInntekter = setOf(
+            InntektPerÅr(2022, Beløp(500000)),
+            InntektPerÅr(2021, Beløp(400000)),
+            InntektPerÅr(2020, Beløp(300000))
+        )
         val input = Inntektsbehov(
             beregningInput = BeregningInput(
                 nedsettelsesDato = LocalDate.of(2023, 1, 1),
-                inntekter = setOf(
-                    InntektPerÅr(2022, Beløp(500000)),
-                    InntektPerÅr(2021, Beløp(400000)),
-                    InntektPerÅr(2020, Beløp(300000))
-                ),
+                årsInntekter = årsInntekter,
                 uføregrad = emptySet(),
                 yrkesskadevurdering = null,
                 beregningGrunnlag = null,
-                registrerteYrkesskader = null
+                registrerteYrkesskader = null,
+                inntektsPerioder = inntektsPerioder(årsInntekter)
             )
         )
 
@@ -51,15 +57,16 @@ class BeregningTest {
 
     @Test
     fun `oppjusterer grunnlaget ved uføre`() {
+        val årsInntekter = setOf(
+            InntektPerÅr(2022, Beløp(500000)),
+            InntektPerÅr(2021, Beløp(400000)),
+            InntektPerÅr(2020, Beløp(300000))
+        )
         val input = Inntektsbehov(
             BeregningInput(
                 nedsettelsesDato = LocalDate.of(2015, 1, 1),
-                inntekter = setOf(
-                    InntektPerÅr(2022, Beløp(500000)),
-                    InntektPerÅr(2021, Beløp(400000)),
-                    InntektPerÅr(2020, Beløp(300000))
-                ),
-                uføregrad = setOf(Uføre(LocalDate.now(), Prosent(30))),
+                årsInntekter = årsInntekter,
+                uføregrad = setOf(Uføre(LocalDate.now().minusYears(5), Prosent(30))),
                 yrkesskadevurdering = null,
                 beregningGrunnlag = BeregningGrunnlag(
                     tidspunktVurdering = BeregningstidspunktVurdering(
@@ -70,12 +77,12 @@ class BeregningTest {
                         vurdertAv = "saksbehandler"
                     ), yrkesskadeBeløpVurdering = null
                 ),
-                registrerteYrkesskader = null
+                registrerteYrkesskader = null,
+                inntektsPerioder = inntektsPerioder(årsInntekter)
             )
         )
 
         val beregning = Beregning(input).beregneMedInput()
-
         assertThat(beregning.grunnlaget()).isEqualTo(GUnit("6"))
     }
 
@@ -89,7 +96,7 @@ class BeregningTest {
         val input = Inntektsbehov(
             BeregningInput(
                 nedsettelsesDato = LocalDate.of(2023, 1, 1),
-                inntekter = inntekterPerÅr,
+                årsInntekter = inntekterPerÅr,
                 uføregrad = emptySet(),
                 yrkesskadevurdering = Yrkesskadevurdering(
                     begrunnelse = "en begrunnelse",
@@ -126,7 +133,8 @@ class BeregningTest {
                             skadedato = LocalDate.of(2019, 1, 1)
                         )
                     )
-                )
+                ),
+                inntektsPerioder = inntektsPerioder(inntekterPerÅr)
             )
         )
 
@@ -139,15 +147,16 @@ class BeregningTest {
 
     @Test
     fun `Beregning med både uføre og yrkesskade`() {
+        val årsInntekter = setOf(
+            InntektPerÅr(2022, Beløp(500000)),
+            InntektPerÅr(2021, Beløp(400000)),
+            InntektPerÅr(2020, Beløp(300000))
+        )
         val input = Inntektsbehov(
             BeregningInput(
                 nedsettelsesDato = LocalDate.of(2023, 1, 1),
-                inntekter = setOf(
-                    InntektPerÅr(2022, Beløp(500000)),
-                    InntektPerÅr(2021, Beløp(400000)),
-                    InntektPerÅr(2020, Beløp(300000))
-                ),
-                uføregrad = setOf(Uføre(LocalDate.now(), Prosent(50))),
+                årsInntekter = årsInntekter,
+                uføregrad = setOf(Uføre(LocalDate.of(2023, 1, 1), Prosent(50))),
                 yrkesskadevurdering = Yrkesskadevurdering(
                     begrunnelse = "en begrunnelse",
                     andelAvNedsettelsen = Prosent(30),
@@ -160,7 +169,7 @@ class BeregningTest {
                         begrunnelse = "test",
                         nedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
                         ytterligereNedsattBegrunnelse = "test2",
-                        ytterligereNedsattArbeidsevneDato = LocalDate.of(2020, 1, 1),
+                        ytterligereNedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
                         vurdertAv = "saksbehandler"
                     ),
                     yrkesskadeBeløpVurdering = BeregningYrkeskaderBeløpVurdering(
@@ -183,27 +192,34 @@ class BeregningTest {
                             skadedato = LocalDate.of(2021, 1, 1)
                         )
                     )
-                )
+                ),
+                inntektsPerioder = inntektsPerioder(årsInntekter)
             )
         )
 
         val beregning = Beregning(input).beregneMedInput()
         beregning as GrunnlagYrkesskade
         beregning.underliggende() as GrunnlagUføre
-        assertThat(beregning.grunnlaget()).isEqualTo(GUnit("4.6205242620"))
+
+        assertThat(beregning.grunnlaget().verdi()).isCloseTo(
+            GUnit("4.6205242620").verdi(),
+            within(0.0001.toBigDecimal())
+        )
     }
 
 
     @Test
     fun `Hvis uføregraden er 0 prosent, endres ikke grunnlaget`() {
+        val årsInntekter = setOf(
+            InntektPerÅr(2022, Beløp(500000)),
+            InntektPerÅr(2021, Beløp(400000)),
+            InntektPerÅr(2020, Beløp(300000))
+        )
+
         val inputMedNullUføregrad = Inntektsbehov(
             BeregningInput(
                 nedsettelsesDato = LocalDate.of(2023, 1, 1),
-                inntekter = setOf(
-                    InntektPerÅr(2022, Beløp(500000)),
-                    InntektPerÅr(2021, Beløp(400000)),
-                    InntektPerÅr(2020, Beløp(300000))
-                ),
+                årsInntekter = årsInntekter,
                 uføregrad = setOf(Uføre(LocalDate.now(), Prosent(0))),
                 yrkesskadevurdering = null,
                 beregningGrunnlag = BeregningGrunnlag(
@@ -216,18 +232,15 @@ class BeregningTest {
                     ),
                     yrkesskadeBeløpVurdering = null
                 ),
-                registrerteYrkesskader = null
+                registrerteYrkesskader = null,
+                inntektsPerioder = inntektsPerioder(årsInntekter)
             )
         )
 
         val inputMedUføreGradIkkeOppgitt = Inntektsbehov(
             BeregningInput(
                 nedsettelsesDato = LocalDate.of(2023, 1, 1),
-                inntekter = setOf(
-                    InntektPerÅr(2022, Beløp(500000)),
-                    InntektPerÅr(2021, Beløp(400000)),
-                    InntektPerÅr(2020, Beløp(300000))
-                ),
+                årsInntekter = årsInntekter,
                 uføregrad = setOf(),
                 yrkesskadevurdering = null,
                 beregningGrunnlag = BeregningGrunnlag(
@@ -239,14 +252,18 @@ class BeregningTest {
                         vurdertAv = "saksbehandler"
                     ), yrkesskadeBeløpVurdering = null
                 ),
-                registrerteYrkesskader = null
+                registrerteYrkesskader = null,
+                inntektsPerioder = inntektsPerioder(årsInntekter)
             )
         )
 
         val beregning = Beregning(inputMedNullUføregrad).beregneMedInput()
         val beregningUtenUføregrad = Beregning(inputMedUføreGradIkkeOppgitt).beregneMedInput()
 
-        assertThat(beregning.grunnlaget()).isEqualTo(beregningUtenUføregrad.grunnlaget())
+        assertThat(beregning.grunnlaget().verdi()).isCloseTo(
+            beregningUtenUføregrad.grunnlaget().verdi(),
+            within(0.0001.toBigDecimal())
+        )
     }
 
     @TableTest(
@@ -264,11 +281,12 @@ class BeregningTest {
         val input = Inntektsbehov(
             beregningInput = BeregningInput(
                 nedsettelsesDato = nedsettelsesDato,
-                inntekter = inntektPerÅr,
                 uføregrad = emptySet(),
                 yrkesskadevurdering = null,
                 beregningGrunnlag = null,
-                registrerteYrkesskader = null
+                registrerteYrkesskader = null,
+                årsInntekter = inntektPerÅr,
+                inntektsPerioder = inntektsPerioder(inntektPerÅr)
             )
         )
         val beregning = Beregning(input).beregneMedInput()
@@ -282,8 +300,10 @@ class BeregningTest {
         @JvmStatic
         fun parseInntektPerÅr(map: Map<String, Double>): Set<InntektPerÅr> {
             return map.entries.map { (år, gVerdi) ->
-                val g = Grunnbeløp.tilTidslinjeGjennomsnitt().segment(Year.of(år.toInt()).atDay(250))?.verdi!!.multiplisert(
-                    GUnit(gVerdi.toString()))
+                val g =
+                    Grunnbeløp.tilTidslinjeGjennomsnitt().segment(Year.of(år.toInt()).atDay(250))?.verdi!!.multiplisert(
+                        GUnit(gVerdi.toString())
+                    )
                 InntektPerÅr(år.toInt(), g)
             }.toSet()
         }
@@ -292,6 +312,17 @@ class BeregningTest {
         fun parseGrunnlag(verdi: Double): GUnit {
             return GUnit(BigDecimal(verdi.toString()))
         }
+    }
+
+    private fun inntektsPerioder(inntektPerÅr: Set<InntektPerÅr>): Set<Månedsinntekt> {
+        return inntektPerÅr.flatMap {
+            (1..12).map { mnd ->
+                Månedsinntekt(
+                    YearMonth.of(it.år.value, mnd),
+                    Beløp(it.beløp.verdi.divide(12.toBigDecimal(), MathContext(10, RoundingMode.HALF_UP)))
+                )
+            }
+        }.toSet()
     }
 
 }

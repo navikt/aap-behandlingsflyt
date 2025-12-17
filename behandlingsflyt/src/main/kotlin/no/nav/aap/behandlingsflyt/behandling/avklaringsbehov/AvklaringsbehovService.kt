@@ -12,7 +12,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.TOTRINNS_VURDERT
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
@@ -23,19 +22,11 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class AvklaringsbehovService(
-    private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val avbrytRevurderingService: AvbrytRevurderingService
 ) {
     constructor(repositoryProvider: RepositoryProvider) : this(
-        avklaringsbehovRepository = repositoryProvider.provide(),
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider)
     )
-
-    @Deprecated("Oppdater avklaringsbehov med de andre metodene i AvklaringsbehovService")
-    fun avbrytForSteg(behandlingId: BehandlingId, steg: StegType) {
-        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
-        avklaringsbehovene.avbrytForSteg(steg)
-    }
 
     fun oppdaterAvklaringsbehov(
         avklaringsbehovene: Avklaringsbehovene,
@@ -226,41 +217,39 @@ class AvklaringsbehovService(
             VurderingType.FØRSTEGANGSBEHANDLING,
             VurderingType.REVURDERING -> {
                 val perioderVilkåretErRelevant = nårVurderingErRelevant(kontekst)
+                val perioderVilkåretErVurdert = kontekst.forrigeBehandlingId
+                    ?.let { forrigeBehandlingId ->
+                        val forrigeBehandling = behandlingRepository.hent(forrigeBehandlingId)
+                        val forrigeRettighetsperiode =
+                            /* Lagrer vi ned rettighetsperioden som ble brukt for en behandling noe sted? */
+                            vilkårsresultatRepository.hent(forrigeBehandlingId)
+                                .finnVilkår(Vilkårtype.ALDERSVILKÅRET)
+                                .tidslinje()
+                                .helePerioden()
 
-                if (perioderVilkåretErRelevant.segmenter()
-                        .any { it.verdi } && kontekst.vurderingsbehovRelevanteForSteg.any { it in tvingerAvklaringsbehov }
-                ) {
-                    Pair(
-                        true, emptySet() // Vi behøver vurdering, men har ingen obligatoriske perioder
-                    )
-                } else {
-
-                    val perioderVilkåretErVurdert = kontekst.forrigeBehandlingId
-                        ?.let { forrigeBehandlingId ->
-                            val forrigeBehandling = behandlingRepository.hent(forrigeBehandlingId)
-                            val forrigeRettighetsperiode =
-                                /* Lagrer vi ned rettighetsperioden som ble brukt for en behandling noe sted? */
-                                vilkårsresultatRepository.hent(forrigeBehandlingId)
-                                    .finnVilkår(Vilkårtype.ALDERSVILKÅRET)
-                                    .tidslinje()
-                                    .helePerioden()
-
-                            nårVurderingErRelevant(
-                                kontekst.copy(
-                                    /* TODO: hacky. Er faktisk bare behandlingId som brukes av sjekkene. */
-                                    behandlingId = forrigeBehandlingId,
-                                    forrigeBehandlingId = forrigeBehandling.forrigeBehandlingId,
-                                    rettighetsperiode = forrigeRettighetsperiode,
-                                    behandlingType = forrigeBehandling.typeBehandling(),
-                                )
+                        nårVurderingErRelevant(
+                            kontekst.copy(
+                                /* TODO: hacky. Er faktisk bare behandlingId som brukes av sjekkene. */
+                                behandlingId = forrigeBehandlingId,
+                                forrigeBehandlingId = forrigeBehandling.forrigeBehandlingId,
+                                rettighetsperiode = forrigeRettighetsperiode,
+                                behandlingType = forrigeBehandling.typeBehandling(),
                             )
-                        }
-                        .orEmpty()
+                        )
+                    }
+                    .orEmpty()
 
-                    val perioderSomBehøverVurdering =
-                        perioderVilkåretErRelevant.leftJoin(perioderVilkåretErVurdert) { erRelevant, erVurdert ->
-                            erRelevant && erVurdert != true
-                        }.filter { it.verdi }.komprimer().perioder().toSet()
+                val perioderSomBehøverVurdering =
+                    perioderVilkåretErRelevant.leftJoin(perioderVilkåretErVurdert) { erRelevant, erVurdert ->
+                        erRelevant && erVurdert != true
+                    }.filter { it.verdi }.komprimer().perioder().toSet()
+
+                if (perioderVilkåretErRelevant.segmenter().any { it.verdi }
+                    && kontekst.vurderingsbehovRelevanteForSteg.any { it in tvingerAvklaringsbehov }
+                ) {
+                    // Vi behøver vurdering, men har ikke nødvendigvis noen obligatoriske perioder)
+                    Pair(true, perioderSomBehøverVurdering)
+                } else {
                     Pair(perioderSomBehøverVurdering.isNotEmpty(), perioderSomBehøverVurdering)
                 }
             }
@@ -297,8 +286,12 @@ class AvklaringsbehovService(
         )
     }
 
-    @Deprecated("Bruk nårVurderingErGyldig i stedet for perioderSomIkkeErTilstrekkeligVurdert")
-    fun oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårGammel(
+    /**
+     * Her sender man inn eksplistte perioderSomIkkeErTilstrekkeligVurdert.
+     * Dette kan være nyttig dersom man må se på perioder som befinner seg utenfor perioder som behøver vurdering;
+     * for eksempel hvis man ikke skal tillate vurderinger utenfor nårVurderingErRelevant
+     */
+    fun oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
         avklaringsbehovene: Avklaringsbehovene,
         behandlingRepository: BehandlingRepository,
         vilkårsresultatRepository: VilkårsresultatRepository,

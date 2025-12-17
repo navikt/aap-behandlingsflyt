@@ -239,7 +239,7 @@ private fun mapTilExtendedVurdertBarnDto(
     return when (val ident = vurdertBarn.ident) {
         is BarnIdent -> ExtendedVurdertBarnDto(
             ident = ident.ident.identifikator,
-            navn = null,
+            navn = barn.navn.takeIf { barn.ident?.identifikator == ident.hentIdent().identifikator } ?: ident.navn,
             vurderinger = vurderinger,
             fødselsdato = barn.fodselsDato,
             oppgittForeldreRelasjon = barn.oppgittForeldreRelasjon,
@@ -263,7 +263,7 @@ fun hentBarn(ident: BarnIdentifikator, barnGrunnlag: BarnGrunnlag?): Identifiser
 }
 
 private fun hentBarnMedIdent(ident: BarnIdent, barnGrunnlag: BarnGrunnlag?): IdentifiserteBarnDto {
-    val registerBarn = barnGrunnlag?.registerbarn?.barn?.singleOrNull { it.ident == ident }
+    val registerBarn = barnGrunnlag?.registerbarn?.barn?.singleOrNull { it.ident.er(ident) }
     val oppgittBarn = barnGrunnlag?.oppgitteBarn?.oppgitteBarn?.singleOrNull { it.ident == ident.ident }
     val saksbehandlerOppgittBarn =
         barnGrunnlag?.saksbehandlerOppgitteBarn?.barn?.singleOrNull { it.ident == ident.ident }

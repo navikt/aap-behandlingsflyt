@@ -37,6 +37,7 @@ public const val AVKLAR_OVERGANG_UFORE: String = "5031"
 public const val AVKLAR_OVERGANG_ARBEID: String = "5032"
 public const val AVBRYT_REVURDERING_KODE: String = "5033"
 public const val AVKLAR_OPPHOLDSKRAV: String = "5035"
+public const val VURDER_INNTEKTSBORTFALL: String = "5040"
 public const val SKRIV_BREV_KODE: String = "5050"
 public const val SKRIV_VEDTAKSBREV_KODE: String = "5051"
 public const val SKRIV_FORHÅNDSVARSEL_AKTIVITETSPLIKT_BREV_KODE: String = "5052"
@@ -258,6 +259,11 @@ public enum class AvklaringsbehovKode {
      * [AVKLAR_OPPHOLDSKRAV_KODE]
      */
     `5035`,
+
+    /**
+     * [VURDER_INNTEKTSBORTFALL]
+     */
+    `5040`,
 
     /**
      * [SKRIV_BREV_KODE]

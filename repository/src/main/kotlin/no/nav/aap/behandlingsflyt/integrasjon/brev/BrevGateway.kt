@@ -29,6 +29,7 @@ import no.nav.aap.brev.kontrakt.KanDistribuereBrevReponse
 import no.nav.aap.brev.kontrakt.KanDistribuereBrevRequest
 import no.nav.aap.brev.kontrakt.MottakerDistStatus
 import no.nav.aap.brev.kontrakt.MottakerDto
+import no.nav.aap.brev.kontrakt.OppdaterBrevmalRequest
 import no.nav.aap.brev.kontrakt.Signatur
 import no.nav.aap.brev.kontrakt.SignaturGrunnlag
 import no.nav.aap.brev.kontrakt.Språk
@@ -181,6 +182,14 @@ class BrevGateway : BrevbestillingGateway {
         client.put<_, Unit>(url, request)
     }
 
+    override fun oppdaterBrevmal(bestillingReferanse: BrevbestillingReferanse) {
+        val url = baseUri.resolve("/api/oppdater-brevmal")
+
+        val request = PutRequest(body = OppdaterBrevmalRequest(bestillingReferanse.brevbestillingReferanse))
+
+        client.put<_, Unit>(url, request)
+    }
+
     override fun forhåndsvis(
         bestillingReferanse: BrevbestillingReferanse,
         signaturer: List<SignaturGrunnlag>
@@ -307,9 +316,9 @@ class BrevGateway : BrevbestillingGateway {
                                 gradertDagsatsInkludertBarnetillegg = brevBehov.tilkjentYtelse?.gradertDagsatsInkludertBarnetillegg?.verdi,
                                 barnetillegg = brevBehov.tilkjentYtelse?.barnetillegg?.verdi,
                                 antallBarn = brevBehov.tilkjentYtelse?.antallBarn,
-                                minsteÅrligYtelse = null,
-                                minsteÅrligYtelseUnder25 = null,
-                                årligYtelse = null,
+                                minsteÅrligYtelse = brevBehov.tilkjentYtelse?.minsteÅrligYtelse?.verdi,
+                                minsteÅrligYtelseUnder25 = brevBehov.tilkjentYtelse?.minsteÅrligYtelseUnder25?.verdi,
+                                årligYtelse = brevBehov.tilkjentYtelse?.årligYtelse?.verdi
                             )
                         )
                     }

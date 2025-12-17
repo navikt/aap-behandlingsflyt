@@ -29,7 +29,7 @@ interface ApiInternGateway : Gateway {
         vedtakId: Long,
         samId: String?,
         tilkjent: List<TilkjentYtelsePeriode>,
-        beregningsgrunnlag: BigDecimal,
+        beregningsgrunnlag: BigDecimal?,
         underveis: List<Underveisperiode>,
         vedtaksDato: LocalDate,
         rettighetsTypeTidslinje: Tidslinje<RettighetsType>
@@ -41,6 +41,6 @@ interface ApiInternGateway : Gateway {
         behandlingId: BehandlingId
     )
 
-    fun hentArenaStatus(personidentifikatorer: List<String>): ArenaStatusResponse
+    fun hentArenaStatus(personidentifikatorer: Set<String>): ArenaStatusResponse
 }
 

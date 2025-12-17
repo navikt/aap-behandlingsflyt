@@ -10,4 +10,5 @@ public data class NyÅrsakTilBehandlingV0(
     public val årsakerTilBehandling: List<Vurderingsbehov>,
     public val behandlingReferanse: String,
     public val reserverTilBruker: String?,
+    public val beskrivelse: String?,
 ) : NyÅrsakTilBehandling

@@ -36,12 +36,17 @@ import java.time.LocalDate
 
 class ApiInternGatewayImpl() : ApiInternGateway {
 
-    private val log = org.slf4j.LoggerFactory.getLogger(javaClass)
-
     companion object : Factory<ApiInternGateway> {
         override fun konstruer(): ApiInternGateway {
             return ApiInternGatewayImpl()
         }
+
+        private val log = org.slf4j.LoggerFactory.getLogger(javaClass)
+
+        private val arenaStatusCache = Caffeine.newBuilder()
+            .expireAfterWrite(Duration.ofHours(2))
+            .maximumSize(10_000)
+            .build<Set<String>, ArenaStatusResponse>()
     }
 
     private val restClient = RestClient.withDefaultResponseHandler(
@@ -74,7 +79,7 @@ class ApiInternGatewayImpl() : ApiInternGateway {
         vedtakId: Long,
         samId: String?,
         tilkjent: List<TilkjentYtelsePeriode>,
-        beregningsgrunnlag: BigDecimal,
+        beregningsgrunnlag: BigDecimal?,
         underveis: List<Underveisperiode>,
         vedtaksDato: LocalDate,
         rettighetsTypeTidslinje: Tidslinje<no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType>
@@ -159,16 +164,12 @@ class ApiInternGatewayImpl() : ApiInternGateway {
 
     }
 
-    private val arenaStatusCache = Caffeine.newBuilder()
-        .expireAfterWrite(Duration.ofHours(1))
-        .maximumSize(10_000)
-        .build<SakerRequest, ArenaStatusResponse>()
-
-    override fun hentArenaStatus(personidentifikatorer: List<String>): ArenaStatusResponse {
-        val key = SakerRequest(personidentifikatorer = personidentifikatorer)
+    override fun hentArenaStatus(personidentifikatorer: Set<String>): ArenaStatusResponse {
+        val cacheKey = personidentifikatorer
         // Kalles ofte fra saksbehandling, så cache den
-        return arenaStatusCache.get(key, {
-            doHentArenaStatus(key)
+        return arenaStatusCache.get(cacheKey, {
+            val sakerRequest = SakerRequest(personidentifikatorer = cacheKey.toList())
+            doHentArenaStatus(sakerRequest)
         })
     }
 
@@ -178,7 +179,7 @@ class ApiInternGatewayImpl() : ApiInternGateway {
             PostRequest(body = sakerRequest),
             mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }
         )
-        requireNotNull(remoteResponse) { "Fikk ikke gyldig svar på om personen eksisterer i AAP Arena" }
+        requireNotNull(remoteResponse) { "Fikk ikke gyldig svar på om personen eksisterer i AAP-Arena" }
         return ArenaStatusResponse(remoteResponse.eksisterer)
     }
 }

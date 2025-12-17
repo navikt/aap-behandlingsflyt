@@ -68,6 +68,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.meldepliktOverstyringGrun
 import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerApi
 import no.nav.aap.behandlingsflyt.drift.driftApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.flyt.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flytApi
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
@@ -84,9 +85,11 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
 import no.nav.aap.behandlingsflyt.pip.behandlingsflytPipApi
 import no.nav.aap.behandlingsflyt.prosessering.BehandlingsflytLogInfoProvider
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -146,7 +149,7 @@ internal object AppConfig {
     // https://github.com/ktorio/ktor/blob/3.3.1/ktor-server/ktor-server-core/common/src/io/ktor/server/engine/ApplicationEngine.kt#L30
     val connectionGroupSize = ktorParallellitet / 2 + 1
     val workerGroupSize = ktorParallellitet / 2 + 1
-    val callGroupSize = ktorParallellitet
+    val callGroupSize = 4 * ktorParallellitet
 
     const val ANTALL_WORKERS_FOR_MOTOR = 4
     val hikariMaxPoolSize = ktorParallellitet + 2 * ANTALL_WORKERS_FOR_MOTOR
@@ -214,7 +217,7 @@ internal fun Application.server(
     if (!Miljø.erLokal()) {
         startPDLHendelseKonsument(dataSource, repositoryRegistry, gatewayProvider)
     }
-    if (!Miljø.erDev() && !Miljø.erLokal() && !Miljø.erProd()) {
+    if (!Miljø.erLokal() && !Miljø.erProd()) {
         startTilbakekrevingEventKonsument(dataSource, repositoryRegistry, gatewayProvider)
     }
 
@@ -325,11 +328,16 @@ private fun utførMigreringer(
     val scheduler = Executors.newScheduledThreadPool(1)
     scheduler.schedule(Runnable {
         val unleashGateway: UnleashGateway = gatewayProvider.provide()
+        val migrerMeldepliktFritakEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.MigrerMeldepliktFritak)
         val isLeader = isLeader(log)
-        log.info("isLeader = $isLeader")
+        log.info("isLeader = $isLeader, migrerMeldepliktFritakEnabled = $migrerMeldepliktFritakEnabled")
 
-        if (isLeader) {
+        if (migrerMeldepliktFritakEnabled && isLeader) {
             // Kjør migrering
+            dataSource.transaction { connection ->
+                val repository = MeldepliktRepositoryImpl(connection)
+                repository.migrerMeldepliktFritak()
+            }
         }
 
     }, 9, TimeUnit.MINUTES)
