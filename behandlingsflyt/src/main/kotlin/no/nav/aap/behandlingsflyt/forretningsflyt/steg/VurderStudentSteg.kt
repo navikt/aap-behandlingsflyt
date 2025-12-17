@@ -59,10 +59,10 @@ class VurderStudentSteg private constructor(
                 !studentGrunnlag?.vurderinger.isNullOrEmpty()
             },
             tilbakestillGrunnlag = {
-                val vedtattVurdering = kontekst.forrigeBehandlingId
+                val vedtatteVurderinger = kontekst.forrigeBehandlingId
                     ?.let { studentRepository.hentHvisEksisterer(it) }
                     ?.vurderinger
-                studentRepository.lagre(kontekst.behandlingId, vedtattVurdering)
+                studentRepository.lagre(kontekst.behandlingId, vedtatteVurderinger)
             },
             kontekst
         )
