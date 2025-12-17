@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.SignaturService
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.brev.kontrakt.BrevbestillingResponse
 import no.nav.aap.brev.kontrakt.MottakerDto
@@ -45,8 +46,11 @@ class BrevbestillingService(
     }
 
     fun hentBestillinger(behandlingId: BehandlingId, typeBrev: TypeBrev): List<Brevbestilling> {
-        val bestillinger = brevbestillingRepository.hent(behandlingId).filter { it.typeBrev == typeBrev }
-        return bestillinger
+        return brevbestillingRepository.hent(behandlingId).filter { it.typeBrev == typeBrev }
+    }
+
+    fun hentBestillingerForSak(sakId: SakId, typeBrev: TypeBrev): List<Brevbestilling> {
+        return brevbestillingRepository.hent(sakId, typeBrev)
     }
 
     fun bestill(

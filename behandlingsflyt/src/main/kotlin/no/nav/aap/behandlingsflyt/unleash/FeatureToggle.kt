@@ -22,6 +22,8 @@ enum class BehandlingsflytFeature : FeatureToggle {
     KravOmInntektsbortfall,
     MigrerMeldepliktFritak,
     SosialRefusjon
+    HentSykepengerVedOverlapp,
+    KanSendeBrevOmBarnetilleggSatsRegulering
     ;
 
     override fun key(): String = name
