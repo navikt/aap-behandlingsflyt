@@ -6,6 +6,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅ
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
@@ -19,6 +21,7 @@ class TriggBarnetilleggSatsJobbUtfører(
     val sakRepository: SakRepository,
     private val sakOgBehandlingService: SakOgBehandlingService,
     private val prosesserBehandlingService: ProsesserBehandlingService,
+    private val unleashGateway: UnleashGateway,
 ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -28,16 +31,20 @@ class TriggBarnetilleggSatsJobbUtfører(
         val saker = sakRepository.finnSakerMedBarnetillegg(LocalDate.of(2026, 1, 1))
         log.info("Fant ${saker.size} saker med barnetillegg.")
 
-        saker.forEach {
-            val behandling = sakOgBehandlingService.finnEllerOpprettBehandling(
-                it, VurderingsbehovOgÅrsak(
-                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.BARNETILLEGG_SATS_REGULERING)),
-                    årsak = ÅrsakTilOpprettelse.BARNETILLEGG_SATSENDRING
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.KanSendeBrevOmBarnetilleggSatsRegulering)) {
+            log.info("Trigger behandlinger for barnetillegg sats regulering.")
+            saker.forEach {
+                val behandling = sakOgBehandlingService.finnEllerOpprettBehandling(
+                    it, VurderingsbehovOgÅrsak(
+                        vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.BARNETILLEGG_SATS_REGULERING)),
+                        årsak = ÅrsakTilOpprettelse.BARNETILLEGG_SATSENDRING
+                    )
                 )
-            )
-            prosesserBehandlingService.triggProsesserBehandling(behandling)
+                prosesserBehandlingService.triggProsesserBehandling(behandling)
+            }
+        } else {
+            log.info("Trigger ikke behandlinger for barnetillegg sats regulering. Funksjonsbryter er av.")
         }
-
     }
 
 
@@ -58,6 +65,7 @@ class TriggBarnetilleggSatsJobbUtfører(
                 sakRepository = repositoryProvider.provide(),
                 sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
                 prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
+                unleashGateway = gatewayProvider.provide(),
             )
         }
     }
