@@ -8,7 +8,8 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 class GosysService(private val oppgaveGateway: OppgaveGateway) {
 
     constructor(gatewayProvider: GatewayProvider) : this(
-        oppgaveGateway = gatewayProvider.provide()
+        oppgaveGateway = gatewayProvider.provide(),
+
     )
 
     fun opprettOppgave(

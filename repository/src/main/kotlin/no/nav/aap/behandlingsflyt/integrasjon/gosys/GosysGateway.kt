@@ -8,6 +8,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.NavKo
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.gateway.Gateway
@@ -24,13 +26,16 @@ import java.time.ZoneId.systemDefault
 import java.time.format.DateTimeFormatter
 import java.util.*
 
-class GosysGateway : OppgaveGateway {
+class GosysGateway(private val unleash: UnleashGateway) : OppgaveGateway {
 
     companion object : Factory<Gateway> {
+        lateinit var unleashGateway: UnleashGateway
+
         override fun konstruer(): Gateway {
-            return GosysGateway()
+            return GosysGateway(unleashGateway)
         }
     }
+
 
     private val log = LoggerFactory.getLogger(javaClass)
     private val baseUri = URI.create(requiredConfigForKey("integrasjon.gosys.url"))
@@ -55,11 +60,18 @@ class GosysGateway : OppgaveGateway {
             throw IllegalArgumentException("Kan ikke opprette refusjonsoppgave i Gosys uten gyldige datoer for navkontor periode.")
         }
 
+        val fom = navKontor.virkingsdato ?: throw IllegalArgumentException("Kan ikke opprette refusjonsoppgave i Gosys uten virkingsdato")
+        val tom = if (unleashGateway.isEnabled(BehandlingsflytFeature.SosialRefusjon)){
+            navKontor.vedtaksdato!!.minusDays(1)
+        } else {
+            navKontor.vedtaksdato ?: throw IllegalArgumentException("Kan ikke opprette refusjonsoppgave i Gosys uten gyldige vedtaksdato")
+        }
+
         val beskrivelse =
             "Refusjonskrav. Brukeren er innvilget etterbetaling av AAP fra ${
-                formatDateToSaksbehandlerVennlig(navKontor.virkingsdato!!)
+                formatDateToSaksbehandlerVennlig(fom)
             } til ${
-                formatDateToSaksbehandlerVennlig(navKontor.vedtaksdato!!.minusDays(1))
+                formatDateToSaksbehandlerVennlig(tom)
             }. Dere må sende refusjonskrav til NØS."
 
         val oppgaveRequest = OpprettOppgaveRequest(
