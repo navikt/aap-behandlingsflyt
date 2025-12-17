@@ -5,16 +5,25 @@ enum class Status {
     SENDT,
     FORHÅNDSVISNING_KLAR,
     FULLFØRT,
-    AVBRUTT;
+    AVBRUTT,
+    TILBAKESTILT,
+    ANNULLERT;
 
     fun erEndeTilstand(): Boolean {
         return setOf(
             FULLFØRT,
-            AVBRUTT
+            AVBRUTT,
+            TILBAKESTILT,
+            ANNULLERT
         ).contains(this)
     }
 
     fun kanGjenopptas(): Boolean {
         return AVBRUTT == this
     }
+
+    fun erTilbakestilt(): Boolean {
+        return TILBAKESTILT == this
+    }
+
 }

@@ -67,6 +67,11 @@ class FakeBrevbestillingGateway : BrevbestillingGateway {
         brevbestillingResponse = brevbestillingResponse!!.copy(status = Status.UNDER_ARBEID)
     }
 
+    // TODO : Fix når status ANNULERT er implementert i dep.
+    override fun slett(bestillingReferanse: BrevbestillingReferanse) {
+        brevbestillingResponse = brevbestillingResponse!!.copy(status = Status.AVBRUTT)
+    }
+
     override fun kanDistribuereBrev(
         brukerIdent: String,
         mottakerIdentListe: List<String>,

@@ -34,45 +34,26 @@ class BrevbestillingService(
         return brevbestillingRepository.hent(behandlingId).any { it.typeBrev.erVedtak() }
     }
 
-    fun erNyesteBestillingOmVedtakIEndeTilstand(behandlingId: BehandlingId, typeBrev: TypeBrev): Boolean {
-        val bestilling = hentNyesteBestilling(behandlingId, typeBrev)
+    fun erAlleBestillingerOmVedtakIEndeTilstand(behandlingId: BehandlingId): Boolean {
+        val vedtakBestillinger = brevbestillingRepository.hent(behandlingId).filter { it.typeBrev.erVedtak() }
+        return vedtakBestillinger.all { it.status.erEndeTilstand() }
+    }
+
+    fun erNyesteBestillingerOmVedtakIEndeTilstand(behandlingId: BehandlingId): Boolean {
+        val nyeste = brevbestillingRepository.hent(behandlingId)
+            .filter { it.typeBrev.erVedtak() }
+            .maxByOrNull { it.opprettet }
+        return nyeste == null || nyeste.status.erEndeTilstand()
+    }
+
+    fun erNyesteBestillingOmVedtakIEndeTilstandavklaringsbehov(behandlingId: BehandlingId, typeBrev: TypeBrev): Boolean {
+        val bestilling = hentNyesteAktiveBestilling(behandlingId, typeBrev)
         return bestilling != null && bestilling.status.erEndeTilstand()
     }
 
-    /**
-     * Brevbestillinger som ikke har ferdigstillAutomatisk lik True vil kunne tilbakestilles mellom status
-     * AVBRUTT og FORHÅNDSVISNING_KLAR gitt et framtidig scenario hvor selve BrevSteg kan tilbakestilles.
-     *
-     * Brevbestillinger med status FULLFØRT kan ikke tilbakestilles.
-     *
-     * Tilstand SENDT benyttes ikke lenger og start-status for vedtaksbrev i BrevSteg er FORHÅNDSVISNING_KLAR.
-     *
-     * Normalt vil en brevberstilling ha en endring av status-tilstand som går noe slik
-     *   Ny brevbestilling : null -> FORHÅNDSVISNING_KLAR
-     *   Avbryt brevbestilling: FORHÅNDSVISNING_KLAR -> AVBRUTT
-     *   Gjenoppta brevbestilling : AVBRUTT -> FORHÅNDSVISNING_KLAR
-     *   Evt. flere repetisjoner av avbryt og gjenoppta
-     *
-     *  Tilbakestill medføre en av to status-endringer for brevbestillingene:
-     *   1. Nye/gjenopptatt bestilling avbrytes og får tilstand AVBRUTT
-     *   2. Avbrutt bestilling forblir i tilstand AVBRUTT
-     */
-    fun tilbakestillVedtakBrevBestillinger(behandlingId: BehandlingId) {
-        val bestillinger = brevbestillingRepository.hent(behandlingId).filter { it.typeBrev.erVedtak() }
-        for (bestilling in bestillinger) {
-            if (bestilling.status == Status.FORHÅNDSVISNING_KLAR) {
-                avbryt(behandlingId, bestilling.referanse)
-            }
-        }
-    }
-
-    fun tilbakestillNyesteVedtakBrevBestilling(behandlingId: BehandlingId) {
-        val bestilling = brevbestillingRepository.hent(behandlingId)
-            .filter { it.typeBrev.erVedtak() }
-            .maxByOrNull { it.opprettet }
-        if (bestilling?.status == Status.FORHÅNDSVISNING_KLAR) {
-            avbryt(behandlingId, bestilling.referanse)
-        }
+    fun erBrevBestillingIEndeTilstand(brevbestillingReferanse: UUID): Boolean {
+        val bestilling = hentBrevbestilling(brevbestillingReferanse)
+        return bestilling != null && bestilling.status.erEndeTilstand()
     }
 
     fun gjenopptaVedtakBrevBestillinger(behandlingId: BehandlingId)  {
@@ -90,13 +71,16 @@ class BrevbestillingService(
     }
 
     /**
-     * I dagens løsning for brevbestilling er det alltid 1-1 forhold mellom behandlingId og typeBrev
+     * I dagens løsning for brevbestilling ønskes et 1-1 forhold mellom behandlingId og typeBrev
      * Dvs. det eksisterer til en hver tid kun 1 bestilling per brevtype for en behandling.
      * Eks. det kan være ett Innvilgelsesbrev og ett Forvaltningsbrev tilhørende samme behandlingId
      * Men ikke 2 Innvilgelsesbrev for samme behandlingId
      */
-    fun hentNyesteBestilling(behandlingId: BehandlingId, typeBrev: TypeBrev): Brevbestilling? {
-        return brevbestillingRepository.hent(behandlingId).filter { it.typeBrev == typeBrev }.maxByOrNull { it.opprettet }
+    fun hentNyesteAktiveBestilling(behandlingId: BehandlingId, typeBrev: TypeBrev): Brevbestilling? {
+        return brevbestillingRepository.hent(behandlingId)
+            .filter { it.typeBrev == typeBrev }
+            .filter { !it.status.erTilbakestilt() }
+            .maxByOrNull { it.opprettet }
     }
 
     fun bestill(
@@ -137,6 +121,10 @@ class BrevbestillingService(
 
     fun hentBrevbestilling(referanse: BrevbestillingReferanse): BrevbestillingResponse {
         return brevbestillingGateway.hent(referanse)
+    }
+
+    fun hentBrevbestilling(brevbestillingReferanse: UUID): Brevbestilling {
+        return brevbestillingRepository.hent(BrevbestillingReferanse(brevbestillingReferanse))
     }
 
     fun hentBrevbestillinger(behandlingReferanse: BehandlingReferanse): List<Brevbestilling> {
@@ -196,4 +184,41 @@ class BrevbestillingService(
             status = Status.FORHÅNDSVISNING_KLAR
         )
     }
+
+    /**
+     * Tilbakestill brevbestillinger benyttes av avklaringsbehovService
+     *      - sletter bestillingen fullstendig fra db-tabellen i aap-brev
+     *      - beholder bestillingen med status TILBAKESTILT i db-tabellen i aap-behandlingsflyt
+     */
+    private fun tilbakestill(behandlingId: BehandlingId, brevbestillingReferanse: UUID) {
+        val referanse = BrevbestillingReferanse(brevbestillingReferanse)
+        brevbestillingGateway.slett(referanse)
+        brevbestillingRepository.oppdaterStatus(
+            behandlingId = behandlingId,
+            referanse = referanse,
+            status = Status.TILBAKESTILT
+        )
+    }
+
+    /**
+     * Annuller brevbestillinger benyttes for å slette en bestilling fullstendig fra db-tabellen i aap-brev
+     */
+    private fun annuller(behandlingId: BehandlingId, referanse: BrevbestillingReferanse) {
+        brevbestillingGateway.slett(referanse)
+        brevbestillingRepository.oppdaterStatus(
+            behandlingId = behandlingId,
+            referanse = referanse,
+            status = Status.ANNULLERT
+        )
+    }
+
+    fun tilbakestillAlleAktiveBestillingerOmVedtakbrev(behandlingId: BehandlingId) {
+        hentBrevbestillinger(behandlingId)
+            .filter { it.typeBrev.erVedtak() }
+            .filter { it.status == Status.FORHÅNDSVISNING_KLAR }
+            .forEach {
+                tilbakestill(behandlingId, it.referanse.brevbestillingReferanse)
+            }
+    }
+
 }

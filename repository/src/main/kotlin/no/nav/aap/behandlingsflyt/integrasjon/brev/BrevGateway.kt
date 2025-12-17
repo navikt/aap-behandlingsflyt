@@ -234,6 +234,22 @@ class BrevGateway : BrevbestillingGateway {
         )
     }
 
+    override fun slett(bestillingReferanse: BrevbestillingReferanse) {
+        val url = baseUri.resolve("/api/slett")
+
+        // TODO: Bruk SlettBbRequest når dependencies er implmented
+        val request = PostRequest(
+            body = AvbrytBrevbestillingRequest(bestillingReferanse.brevbestillingReferanse),
+            additionalHeaders = listOf(
+                Header("Accept", "application/json")
+            )
+        )
+        client.post<_, Unit>(
+            uri = url,
+            request = request
+        )
+    }
+
     override fun hentSignaturForhåndsvisning(
         signaturer: List<SignaturGrunnlag>,
         brukerIdent: String,

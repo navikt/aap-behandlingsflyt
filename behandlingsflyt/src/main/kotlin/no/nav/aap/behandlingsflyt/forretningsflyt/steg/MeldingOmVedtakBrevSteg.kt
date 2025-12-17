@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovServ
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevBehov
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevUtlederService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -22,6 +23,7 @@ import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
+import java.util.*
 
 private val log = LoggerFactory.getLogger("BrevSteg")
 
@@ -49,19 +51,18 @@ class MeldingOmVedtakBrevSteg(
         val brevBehov = brevUtlederService.utledBehovForMeldingOmVedtak(kontekst.behandlingId)
 
         if (brevBehov != null && !klageErTrukket) {
-            val eksisterendeBestilling = brevbestillingService.hentNyesteBestilling(kontekst.behandlingId, brevBehov.typeBrev)
+            val eksisterendeBestilling = brevbestillingService.hentNyesteAktiveBestilling(kontekst.behandlingId, brevBehov.typeBrev)
             if (eksisterendeBestilling == null) {
                 bestillBrev(kontekst, brevBehov)
-            } else if (eksisterendeBestilling != null && eksisterendeBestilling.status.kanGjenopptas()) {
-                gjenopptaBrevBestilling(kontekst)
             }
+            // TODO : rydd vekk eksisterende vedtakbrev bestillinger hvis brevbehov er endret - ANNULLER+slett ?
         }
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
             avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId),
             Definisjon.SKRIV_VEDTAKSBREV,
             vedtakBehøverVurdering = { vedtakBehøverVurdering(klageErTrukket, brevBehov) },
-            erTilstrekkeligVurdert = { erTilstrekkeligVurdert(kontekst.behandlingId, brevBehov) },
+            erTilstrekkeligVurdert = { erTilstrekkeligVurdert(kontekst.behandlingId) },
             tilbakestillGrunnlag = { tilbakestillGrunnlag(kontekst.behandlingId) },
             kontekst
         )
@@ -69,41 +70,44 @@ class MeldingOmVedtakBrevSteg(
         return Fullført
     }
 
-    private fun erTilstrekkeligVurdert(behandlingId: BehandlingId, brevBehov: BrevBehov?): Boolean {
-        // gitt brevbehov=null er erTilstrekkeligVurdert input til oppdaterAvklaringsbehov() irrelevant og settes her til false
-        if (brevBehov == null)  {
-            return false
-        }
-        return brevbestillingService.erNyesteBestillingOmVedtakIEndeTilstand(behandlingId, brevBehov.typeBrev)
-    }
-
-    private fun gjenopptaBrevBestilling(kontekst: FlytKontekstMedPerioder) {
-        brevbestillingService.gjenopptaVedtakBrevBestillinger(kontekst.behandlingId)
+    /**
+     * ereTilstrekkeligVurdert vet nødvendigvis ikke hvilket konkrete vedtakbrev som ble vurdert av saksbehandler, da brevBehov er null.
+     * Men det bestilles kun vedtakbrev fra BrevSteg og kun ett vedtakbrev vil være relevant til en hver tid.
+     */
+    private fun erTilstrekkeligVurdert(behandlingId: BehandlingId): Boolean {
+        return brevbestillingService.erNyesteBestillingerOmVedtakIEndeTilstand(behandlingId)
     }
 
     /**
-     * BrevBestillinger i tilstand AVBRUTT, FORHÅNDSVISNING_KLAR (og SENDT) kan i teorien tilbakestilles. Den praktiske
-     * begrensningen per i dag er at selve brevsteget ikke kan tilbakestilles (ingen fremtidige scenarior for dette foreløpig)
+     * TilbakestillGrunnlag vet nødvendigvis ikke hvilket konkrete vedtakbrev som skal tilbakestilles, da brevBehov kan være null.
+     * Men det bestilles kun vedtakbrev fra BrevSteg og kun ett vedtakbrev vil være relevant til en hver tid.
+     *
+     * Dermed kan alle vedtakbrev som har tilstand FORHÅNDSVISNING_KLAR tilbakestilles
+     * (alltid forventet å være ett vedtakbrev per behandling)
+     *
+     * I dagens behandlingsflyt vil tilbakestill i praksis aldri forekomme da brevsteget i seg selv ikke kan
+     * tilbakestilles (ingen fremtidige scenarior for dette foreløpig)
      */
     private fun tilbakestillGrunnlag(behandlingId: BehandlingId) {
-        brevbestillingService.tilbakestillNyesteVedtakBrevBestilling(behandlingId)
+        brevbestillingService.tilbakestillAlleAktiveBestillingerOmVedtakbrev(behandlingId)
     }
 
     private fun vedtakBehøverVurdering(klageErTrukket: Boolean, brevBehov: BrevBehov?): Boolean {
         return !klageErTrukket && brevBehov != null
     }
 
-    private fun bestillBrev(kontekst: FlytKontekstMedPerioder, brevBehov: BrevBehov) {
+    private fun bestillBrev(kontekst: FlytKontekstMedPerioder, brevBehov: BrevBehov): UUID {
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
         log.info("Bestiller brev for sak ${kontekst.sakId}.")
         val unikReferanse = "${behandling.referanse}-${brevBehov.typeBrev}"
-        brevbestillingService.bestill(
+        val bestillingReferanse = brevbestillingService.bestill(
             behandlingId = kontekst.behandlingId,
             brevBehov = brevBehov,
             unikReferanse = unikReferanse,
             ferdigstillAutomatisk = false,
             brukApiV3 = brukApiV3(kontekst.behandlingId)
         )
+        return bestillingReferanse
     }
 
     private fun brukApiV3(behandlingId: BehandlingId): Boolean {

@@ -27,6 +27,7 @@ class BrevbestillingServiceTest {
     fun setUp() {
         every { brevbestillingGateway.gjenoppta(any()) } returns Unit
         every { brevbestillingGateway.avbryt(any()) } returns Unit
+        every { brevbestillingGateway.slett(any()) } returns Unit
         InMemoryBrevbestillingRepository.clearMemory()
         brevbestillingService = BrevbestillingService(
             signaturService,
@@ -38,77 +39,79 @@ class BrevbestillingServiceTest {
     }
 
     @Test
-    fun `tilbakestillVedtakBrevBestillinger hverken gjenopptar eller avbryter hvis ingen brevbestillinger finnes`() {
-
-        brevbestillingService.tilbakestillVedtakBrevBestillinger(behandlingId)
-
-        verify(exactly = 0) { brevbestillingGateway.gjenoppta(any()) }
-        verify(exactly = 0) { brevbestillingGateway.avbryt(any()) }
-    }
-
-    @Test
-    fun `tilbakestillVedtakBrevBestillinger hverken gjenopptar eller avbryter hvis ingen brev av typen vedtak finnes`() {
+    fun `tilbakestillBrevBestilling sletter og endrer ikke brevbestilling som ikke er av typen vedtak`() {
+        val referanse = BrevbestillingReferanse(UUID.randomUUID())
         InMemoryBrevbestillingRepository.lagre(
             behandlingId = behandlingId,
             typeBrev = TypeBrev.FORVALTNINGSMELDING,
-            bestillingReferanse = BrevbestillingReferanse(UUID.randomUUID()),
+            bestillingReferanse = referanse,
             status = Status.FORHÅNDSVISNING_KLAR
         )
 
-        brevbestillingService.tilbakestillVedtakBrevBestillinger(behandlingId)
+        brevbestillingService.tilbakestillAlleAktiveBestillingerOmVedtakbrev(behandlingId)
 
-        verify(exactly = 0) { brevbestillingGateway.gjenoppta(any()) }
-        verify(exactly = 0) { brevbestillingGateway.avbryt(any()) }
+        verify(exactly = 0) { brevbestillingGateway.slett(any()) }
+        val bestilling = brevbestillingService.hentBrevbestilling(referanse.brevbestillingReferanse)
+        assertEquals(TypeBrev.FORVALTNINGSMELDING, bestilling.typeBrev)
+        assertEquals(Status.FORHÅNDSVISNING_KLAR, bestilling.status)
     }
 
     @Test
-    fun `tilbakestillVedtakBrevBestillinger hverken gjenopptar eller avbryter hvis alle vedtaksbrev har status FULLFØRT`() {
-        val brevbestillinger = opprettNyBrevbestillingForHverBrevTypeIRepo()
-        for (brevbestilling in brevbestillinger.filter { it.typeBrev.erVedtak() }) {
-            InMemoryBrevbestillingRepository.oppdaterStatus(behandlingId, brevbestilling.referanse, Status.FULLFØRT)
-        }
+    fun `tilbakestillBrevBestilling sletter ikke brevbestilling med status FULLFØRT`() {
+        val referanse = BrevbestillingReferanse(UUID.randomUUID())
+        InMemoryBrevbestillingRepository.lagre(
+            behandlingId = behandlingId,
+            typeBrev = TypeBrev.VEDTAK_INNVILGELSE,
+            bestillingReferanse = referanse,
+            status = Status.FULLFØRT
+        )
 
-        brevbestillingService.tilbakestillVedtakBrevBestillinger(behandlingId)
+        brevbestillingService.tilbakestillAlleAktiveBestillingerOmVedtakbrev(behandlingId)
 
-        verify(exactly = 0) { brevbestillingGateway.gjenoppta(any()) }
-        verify(exactly = 0) { brevbestillingGateway.avbryt(any()) }
+        verify(exactly = 0) { brevbestillingGateway.slett(any()) }
+        val bestilling = brevbestillingService.hentBrevbestilling(referanse.brevbestillingReferanse)
+        assertEquals(TypeBrev.VEDTAK_INNVILGELSE, bestilling.typeBrev)
+        assertEquals(Status.FULLFØRT, bestilling.status)
     }
 
     @Test
-    fun `tilbakestillVedtakBrevBestillinger avbryter alle vedtaksbrev med status FORHÅNDSVISNING_KLAR`() {
-        val brevbestillinger = opprettNyBrevbestillingForHverBrevTypeIRepo()
-        for (brevbestilling in brevbestillinger.filter { it.typeBrev.erVedtak() }) {
-            InMemoryBrevbestillingRepository.oppdaterStatus(behandlingId, brevbestilling.referanse, Status.FORHÅNDSVISNING_KLAR)
-        }
+    fun `tilbakestillBrevBestilling sletter og endrer status på vedtaksbrev med status FORHÅNDSVISNING_KLAR`() {
+        val referanse = BrevbestillingReferanse(UUID.randomUUID())
+        InMemoryBrevbestillingRepository.lagre(
+            behandlingId = behandlingId,
+            typeBrev = TypeBrev.VEDTAK_INNVILGELSE,
+            bestillingReferanse = referanse,
+            status = Status.FORHÅNDSVISNING_KLAR
+        )
 
-        brevbestillingService.tilbakestillVedtakBrevBestillinger(behandlingId)
+        brevbestillingService.tilbakestillAlleAktiveBestillingerOmVedtakbrev(behandlingId)
 
-        val antallVedtakBrev = TypeBrev.entries.filter { it.erVedtak() }.size
-        verify(exactly = antallVedtakBrev) { brevbestillingGateway.avbryt(any()) }
-        brevbestillingService.hentBrevbestillinger(behandlingId)
-            .filter { it.typeBrev.erVedtak() }
-            .forEach { assertEquals(Status.AVBRUTT, it.status) }
-        brevbestillingService.hentBrevbestillinger(behandlingId)
-            .filter { !it.typeBrev.erVedtak() }
-            .forEach { assertEquals(Status.FORHÅNDSVISNING_KLAR, it.status) }
+        verify(exactly = 1) { brevbestillingGateway.slett(any()) }
+        val bestilling = brevbestillingService.hentBrevbestilling(referanse.brevbestillingReferanse)
+        assertEquals(TypeBrev.VEDTAK_INNVILGELSE, bestilling.typeBrev)
+        assertEquals(Status.TILBAKESTILT, bestilling.status)
     }
 
     @Test
-    fun `tilbakestillVedtakBrevBestillinger endrer ikke vedtaksbrev med status AVBRUTT`() {
-        val brevbestillinger = opprettNyBrevbestillingForHverBrevTypeIRepo()
-        for (brevbestilling in brevbestillinger.filter { it.typeBrev.erVedtak() }) {
-            InMemoryBrevbestillingRepository.oppdaterStatus(behandlingId, brevbestilling.referanse, Status.AVBRUTT)
-        }
-        brevbestillingService.tilbakestillVedtakBrevBestillinger(behandlingId)
+    fun `tilbakestillBrevBestilling endrer ikke vedtaksbrev med status AVBRUTT`() {
+        val referanse = BrevbestillingReferanse(UUID.randomUUID())
+        InMemoryBrevbestillingRepository.lagre(
+            behandlingId = behandlingId,
+            typeBrev = TypeBrev.VEDTAK_INNVILGELSE,
+            bestillingReferanse = referanse,
+            status = Status.AVBRUTT
+        )
 
-        verify(exactly = 0) { brevbestillingGateway.gjenoppta(any()) }
-        brevbestillingService.hentBrevbestillinger(behandlingId)
-            .filter { it.typeBrev.erVedtak() }
-            .forEach { assertEquals(Status.AVBRUTT, it.status) }
+        brevbestillingService.tilbakestillAlleAktiveBestillingerOmVedtakbrev(behandlingId)
+
+        verify(exactly = 0) { brevbestillingGateway.slett(any()) }
+        val bestilling = brevbestillingService.hentBrevbestilling(referanse.brevbestillingReferanse)
+        assertEquals(TypeBrev.VEDTAK_INNVILGELSE, bestilling.typeBrev)
+        assertEquals(Status.AVBRUTT, bestilling.status)
     }
 
     @Test
-    fun `tilbakestillVedtakBrevBestillinger avbryter kun vedtaksbrev med status AVBRUTT eller FORHÅNDSVISNING_KLAR`() {
+    fun `tilbakestillBrevBestilling sletter kun vedtaksbrev med gitt brevbestillingreferanse`() {
         val nyReferanse = BrevbestillingReferanse(UUID.randomUUID())
         InMemoryBrevbestillingRepository.lagre(
             behandlingId = behandlingId,
@@ -116,29 +119,13 @@ class BrevbestillingServiceTest {
             bestillingReferanse = nyReferanse,
             status = Status.FORHÅNDSVISNING_KLAR
         )
-        val avbruttReferanse = BrevbestillingReferanse(UUID.randomUUID())
-        InMemoryBrevbestillingRepository.lagre(
-            behandlingId = behandlingId,
-            typeBrev = TypeBrev.VEDTAK_11_7,
-            bestillingReferanse = avbruttReferanse,
-            status = Status.AVBRUTT
-        )
-        val fullførtReferanse = BrevbestillingReferanse(UUID.randomUUID())
-        InMemoryBrevbestillingRepository.lagre(
-            behandlingId = behandlingId,
-            typeBrev = TypeBrev.VEDTAK_11_9,
-            bestillingReferanse = fullførtReferanse,
-            status = Status.FULLFØRT
-        )
 
-        brevbestillingService.tilbakestillVedtakBrevBestillinger(behandlingId)
+        brevbestillingService.tilbakestillAlleAktiveBestillingerOmVedtakbrev(behandlingId)
 
-        verify(exactly = 1) { brevbestillingGateway.avbryt(any()) }
+        verify(exactly = 1) { brevbestillingGateway.slett(any()) }
 
         val brevbestillinger = brevbestillingService.hentBrevbestillinger(behandlingId)
-        assertEquals(Status.AVBRUTT, brevbestillinger.first { it.referanse == nyReferanse }.status)
-        assertEquals(Status.AVBRUTT, brevbestillinger.first { it.referanse == avbruttReferanse }.status)
-        assertEquals(Status.FULLFØRT, brevbestillinger.first { it.referanse == fullførtReferanse}.status)
+        assertEquals(Status.TILBAKESTILT, brevbestillinger.first { it.referanse == nyReferanse }.status)
     }
 
     @Test
