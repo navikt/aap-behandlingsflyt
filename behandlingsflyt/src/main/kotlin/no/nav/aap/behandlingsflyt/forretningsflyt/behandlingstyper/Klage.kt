@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.flyt.BehandlingType
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FatteVedtakSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.KvalitetssikringsSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.MeldingOmVedtakBrevSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SendForvaltningsmeldingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.FastsettBehandlendeEnhetSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.FormkravSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage.FullmektigSteg
@@ -27,6 +28,11 @@ object Klage : BehandlingType {
                 steg = TrekkKlageSteg,
                 vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.KLAGE_TRUKKET),
                 informasjonskrav = listOf(TrekkKlageInformasjonskrav)
+            )
+            .medSteg(
+                steg = SendForvaltningsmeldingSteg,
+                vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.MOTATT_KLAGE)
+                // TODO: informasjonskrav - behov ? snakker vi her om postadresse e.l. til brevbestilling?
             )
             .medSteg(steg = PåklagetBehandlingSteg)
             .medSteg(steg = FullmektigSteg)

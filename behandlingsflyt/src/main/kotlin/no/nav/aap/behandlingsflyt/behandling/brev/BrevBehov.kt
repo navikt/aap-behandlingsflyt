@@ -23,6 +23,7 @@ object ForhåndsvarselKlageFormkrav : BrevBehov(TypeBrev.FORHÅNDSVARSEL_KLAGE_F
 object KlageAvvist : BrevBehov(TypeBrev.KLAGE_AVVIST)
 object KlageOpprettholdelse : BrevBehov(TypeBrev.KLAGE_OPPRETTHOLDELSE)
 object KlageTrukket : BrevBehov(TypeBrev.KLAGE_TRUKKET)
+object KlageMottatt : BrevBehov(TypeBrev.KLAGE_MOTTATT)
 object Forvaltningsmelding : BrevBehov(TypeBrev.FORVALTNINGSMELDING)
 object VedtakAktivitetsplikt11_7 : BrevBehov(TypeBrev.VEDTAK_11_7)
 object VedtakAktivitetsplikt11_9 : BrevBehov(TypeBrev.VEDTAK_11_9)

@@ -300,6 +300,7 @@ class BrevGateway : BrevbestillingGateway {
         TypeBrev.VEDTAK_11_7 -> Brevtype.VEDTAK_11_7
         TypeBrev.VEDTAK_11_9 -> Brevtype.VEDTAK_11_9
         TypeBrev.VEDTAK_11_23_SJETTE_LEDD -> Brevtype.VEDTAK_11_23_SJETTE_LEDD
+        TypeBrev.KLAGE_MOTTATT -> Brevtype.FORVALTNINGSMELDING //TODO: Brevtype.KLAGE_MOTTATT når aap-brev PR er merget
     }
 
     private fun mapFaktagrunnlag(brevBehov: BrevBehov): Set<Faktagrunnlag> {

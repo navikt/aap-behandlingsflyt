@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.brev.Forvaltningsmelding
+import no.nav.aap.behandlingsflyt.behandling.brev.KlageMottatt
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -38,6 +39,21 @@ class SendForvaltningsmeldingSteg(
                     )
                 }
             }
+            TypeBehandling.Klage -> {
+                val behandlingId = kontekst.behandlingId
+                val behandling = behandlingRepository.hent(behandlingId)
+                if (!erBehandlingForMottattKlage(kontekst.vurderingsbehovRelevanteForSteg) &&
+                    !harAlleredeBestiltKlageMottattForBehandling(behandling)
+                    ) {
+                    val brevBehov = KlageMottatt
+                    brevbestillingService.bestill(
+                        behandlingId = behandlingId,
+                        brevBehov = brevBehov,
+                        unikReferanse = "${behandling.referanse}-${brevBehov.typeBrev}",
+                        ferdigstillAutomatisk = true
+                    )
+                }
+            }
 
             else -> {}
         }
@@ -50,9 +66,20 @@ class SendForvaltningsmeldingSteg(
             .any { it.typeBrev == TypeBrev.FORVALTNINGSMELDING }
     }
 
+    private fun harAlleredeBestiltKlageMottattForBehandling(behandling: Behandling): Boolean {
+        return brevbestillingService.hentBrevbestillinger(behandling.referanse)
+            .any { it.typeBrev == TypeBrev.KLAGE_MOTTATT}
+    }
+
+
     private fun erBehandlingForMottattSøknad(årsakerTilBehandling: Set<Vurderingsbehov>): Boolean {
         return Vurderingsbehov.MOTTATT_SØKNAD in årsakerTilBehandling
     }
+
+    private fun erBehandlingForMottattKlage(årsakerTilBehandling : Set<Vurderingsbehov>): Boolean {
+        return Vurderingsbehov.MOTATT_KLAGE in årsakerTilBehandling
+    }
+
 
     companion object : FlytSteg {
         override fun konstruer(
