@@ -21,7 +21,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     ValiderOvergangUfore,
     KravOmInntektsbortfall,
     MigrerMeldepliktFritak,
-    SosialRefusjon
+    SosialRefusjon,
     HentSykepengerVedOverlapp,
     KanSendeBrevOmBarnetilleggSatsRegulering
     ;
