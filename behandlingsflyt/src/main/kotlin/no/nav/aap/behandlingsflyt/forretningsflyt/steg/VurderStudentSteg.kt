@@ -56,7 +56,7 @@ class VurderStudentSteg private constructor(
                 }
             },
             erTilstrekkeligVurdert = {
-                studentGrunnlag?.vurderinger != null
+                !studentGrunnlag?.vurderinger.isNullOrEmpty()
             },
             tilbakestillGrunnlag = {
                 val vedtattVurdering = kontekst.forrigeBehandlingId
