@@ -102,7 +102,7 @@ class KabalKafkaKonsumentTest {
 
         val hendelse = lagBehandlingEvent(kilde = "KELVIN", klagebehandling.referanse.toString())
         produserHendelse(
-            listOf(hendelse),
+            listOf(Pair("1", "blabla"), Pair("2", DefaultJsonMapper.toJson(hendelse))),
             KABAL_EVENT_TOPIC
         )
 
@@ -202,7 +202,7 @@ class KabalKafkaKonsumentTest {
         )
     }
 
-    private fun produserHendelse(hendelser: List<KabalHendelseKafkaMelding>, topic: String) {
+    private fun produserHendelse(hendelser: List<Pair<String, String>>, topic: String) {
         val producerProps = Properties().apply {
             put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.bootstrapServers)
             put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer::class.java.name)
@@ -211,8 +211,7 @@ class KabalKafkaKonsumentTest {
 
         KafkaProducer<String, String>(producerProps).use { producer ->
             hendelser.forEach { hendelse ->
-                val serialisert = DefaultJsonMapper.toJson(hendelse)
-                val record = ProducerRecord(topic, hendelse.eventId.toString(), serialisert)
+                val record = ProducerRecord(topic, hendelse.first, hendelse.second)
                 producer.send(record)
 
             }
