@@ -127,7 +127,6 @@ class KabalKafkaKonsumentTest {
 
         thread.join()
         assertThat(konsument.antallMeldinger).isEqualTo(1)
-        konsument.lukk()
 
         motor.kjørJobber()
         val svarFraAnderinstansBehandling = dataSource.transaction { connection ->
@@ -163,12 +162,47 @@ class KabalKafkaKonsumentTest {
         assertThat(hendelser.first().status).isEqualTo(Status.BEHANDLET)
         assertThat(hendelser.first().strukturertDokument).isNotNull
     }
-    
-    @Disabled("TODO")
+
     @Test
     fun `Skal ikke konsumere neste melding dersom håndtering feiler`() {
-        val hendelser = listOf(Pair("1", "blabla"),listOf(Pair("1", "blabla")))
-        // TODO: Implementere testen
+        val sak = dataSource.transaction { sak(it, periode) }
+        dataSource.transaction { finnEllerOpprettBehandling(it, sak) }
+        val klagebehandling = dataSource.transaction { connection ->
+            finnEllerOpprettBehandling(connection, sak, Vurderingsbehov.MOTATT_KLAGE)
+        }
+
+        val hendelse = lagBehandlingEvent(kilde = "KELVIN", klagebehandling.referanse.toString())
+        produserHendelse(
+            listOf(Pair("1", "blabla"), Pair("2", DefaultJsonMapper.toJson(hendelse))),
+            KABAL_EVENT_TOPIC
+        )
+
+        val konsument = KabalKafkaKonsument(
+            testConfig(kafka.bootstrapServers),
+            dataSource = dataSource,
+            repositoryRegistry = repositoryRegistry,
+            pollTimeout = 50.milliseconds,
+        )
+
+        val thread = thread(start = true) {
+            while (true) {
+                // Denne vil ikke ha noe relevans med mindre vi får en regresjon der neste melding blir behandlet
+                if (konsument.antallMeldinger > 0) {
+                    konsument.lukk()
+                    return@thread
+                }
+                // Det forventes konsumenten lukkes pga. exception
+                if (konsument.erLukket()) {
+                    return@thread
+                }
+                Thread.sleep(500L)
+            }
+        }
+        konsument.konsumer()
+
+        thread.join()
+        
+        assertThat(konsument.antallMeldinger).isEqualTo(0)
     }
 
     @Test
@@ -260,5 +294,4 @@ class KabalKafkaKonsumentTest {
             }
         }
     }
-
 }

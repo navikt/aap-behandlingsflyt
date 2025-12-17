@@ -49,10 +49,15 @@ abstract class KafkaKonsument<K, V>(
             log.info("Ferdig med å lese hendelser fra $${this.javaClass.name} - lukker konsument")
             try {
                 konsument.close(closeTimeout.toJavaDuration())
+                lukket.set(true)
             } catch (e: Exception) {
                 log.error("Feil ved lukking av konsument", e)
             }
         }
+    }
+    
+    fun erLukket(): Boolean {
+        return lukket.get()
     }
 
     abstract fun håndter(meldinger: ConsumerRecords<K, V>)
