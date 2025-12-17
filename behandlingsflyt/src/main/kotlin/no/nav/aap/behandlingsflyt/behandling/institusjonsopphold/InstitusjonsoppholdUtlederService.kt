@@ -77,33 +77,31 @@ class InstitusjonsoppholdUtlederService(
         val oppholdUtenBarnetillegg =
             helseOppholdTidslinje.disjoint(barnetilleggTidslinje) { p, v -> Segment(p, v.verdi) }
 
-        // Oppholdet må være lengre enn 3 måneder for å være aktuelt for avklaring og må ha vart i minimum 2 måneder for å være klar for avklaring
-        val oppholdSomKanGiReduksjon = harOppholdSomKreverAvklaring(oppholdUtenBarnetillegg)
+       val oppholdSomKanGiReduksjon = harOppholdSomKreverAvklaring(oppholdUtenBarnetillegg)
 
         perioderSomTrengerVurdering = perioderSomTrengerVurdering.kombiner(oppholdSomKanGiReduksjon.mapValue {
             InstitusjonsoppholdVurdering(helse = HelseOpphold(vurdering = OppholdVurdering.UAVKLART))
         }, sammenslåer()).kombiner(helsevurderingerTidslinje, helsevurderingSammenslåer()).komprimer()
 
-        // Hvis det er mindre en 3 måneder siden sist opphold og bruker er nå innlagt
-        val helseoppholdUtenBarnetillegg = helseOppholdTidslinje.disjoint(
+      /*  val helseoppholdUtenBarnetillegg = helseOppholdTidslinje.disjoint(
             barnetilleggTidslinje
         ) { p, v ->
             Segment(
                 p,
                 v.verdi
             )
-        }.komprimer()
+        }.komprimer() */
 
-        val oppholdSomLiggerMindreEnnTreMånederFraForrigeSomGaReduksjon =
+       /* val oppholdSomLiggerMindreEnnTreMånederFraForrigeSomGaReduksjon =
             regnUtTidslinjeOverOppholdSomErMindreEnnTreMånederFraForrigeSomGaReduksjon(
                 perioderSomTrengerVurdering,
                 helseoppholdUtenBarnetillegg, helsevurderingerTidslinje
-            )
+            ) */
 
-        perioderSomTrengerVurdering = perioderSomTrengerVurdering.kombiner(
+    /*    perioderSomTrengerVurdering = perioderSomTrengerVurdering.kombiner(
             oppholdSomLiggerMindreEnnTreMånederFraForrigeSomGaReduksjon,
             sammenslåer()
-        ).komprimer()
+        ).komprimer()*/
 
         if (begrensetTilRettighetsperiode == true) {
             perioderSomTrengerVurdering = perioderSomTrengerVurdering.begrensetTil(input.rettighetsperiode)
@@ -271,9 +269,7 @@ class InstitusjonsoppholdUtlederService(
         return Tidslinje(
             oppholdUtenBarnetillegg.segmenter()
                 .filter { segment -> segment.verdi }
-                .filter { segment ->
-                    harOppholdSomVarerMerEnnFireMånederOgErMinstToMånederInnIOppholdet(segment)
-                })
+                )
     }
 
     private fun harOppholdSomVarerMerEnnFireMånederOgErMinstToMånederInnIOppholdet(
