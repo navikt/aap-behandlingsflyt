@@ -38,7 +38,6 @@ import org.apache.kafka.common.serialization.StringSerializer
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 import org.testcontainers.containers.output.Slf4jLogConsumer
@@ -95,6 +94,8 @@ class KabalKafkaKonsumentTest {
 
     @Test
     fun `Kan motta og lagre ned hendelse fra Kabal`() {
+        val testTopic = KABAL_EVENT_TOPIC + "test2"
+        
         val sak = dataSource.transaction { sak(it, periode) }
         dataSource.transaction { finnEllerOpprettBehandling(it, sak) }
         val klagebehandling = dataSource.transaction { connection ->
@@ -104,7 +105,7 @@ class KabalKafkaKonsumentTest {
         val hendelse = lagBehandlingEvent(kilde = "KELVIN", klagebehandling.referanse.toString())
         produserHendelse(
             listOf(Pair("1", DefaultJsonMapper.toJson(hendelse))),
-            KABAL_EVENT_TOPIC
+            testTopic
         )
 
         val konsument = KabalKafkaKonsument(
@@ -112,6 +113,7 @@ class KabalKafkaKonsumentTest {
             dataSource = dataSource,
             repositoryRegistry = repositoryRegistry,
             pollTimeout = 50.milliseconds,
+            topic = testTopic,
         )
 
         val thread = thread(start = true) {
