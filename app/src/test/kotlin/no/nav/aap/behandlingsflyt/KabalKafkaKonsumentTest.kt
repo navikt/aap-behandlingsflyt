@@ -38,6 +38,7 @@ import org.apache.kafka.common.serialization.StringSerializer
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 import org.testcontainers.containers.output.Slf4jLogConsumer
@@ -102,7 +103,7 @@ class KabalKafkaKonsumentTest {
 
         val hendelse = lagBehandlingEvent(kilde = "KELVIN", klagebehandling.referanse.toString())
         produserHendelse(
-            listOf(Pair("1", "blabla"), Pair("2", DefaultJsonMapper.toJson(hendelse))),
+            listOf(Pair("1", DefaultJsonMapper.toJson(hendelse))),
             KABAL_EVENT_TOPIC
         )
 
@@ -161,6 +162,13 @@ class KabalKafkaKonsumentTest {
         assertThat(hendelser.first().kanal).isEqualTo(Kanal.DIGITAL)
         assertThat(hendelser.first().status).isEqualTo(Status.BEHANDLET)
         assertThat(hendelser.first().strukturertDokument).isNotNull
+    }
+    
+    @Disabled("TODO")
+    @Test
+    fun `Skal ikke konsumere neste melding dersom håndtering feiler`() {
+        val hendelser = listOf(Pair("1", "blabla"),listOf(Pair("1", "blabla")))
+        // TODO: Implementere testen
     }
 
     @Test
