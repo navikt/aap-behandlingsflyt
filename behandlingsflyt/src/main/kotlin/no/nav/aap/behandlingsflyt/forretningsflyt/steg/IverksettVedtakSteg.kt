@@ -175,7 +175,8 @@ class IverksettVedtakSteg private constructor(
                 val tidligsteVedtaksTidspunkt = finnTidligesteVedtakstidspunktFraTidligereBehandlinger(behandling, vedtak.vedtakstidspunkt.toLocalDate())
                 val gjeldendeSosialRefusjonDtoer = navkontorSosialRefusjon
                     .filter { it.harKrav && it.navKontor != null }
-                    .map { it.tilNavKontorPeriodeDto(virkningsdato = vedtakMedTidligsteVirkingsdato.virkningstidspunkt, vedtaksdato = tidligsteVedtaksTidspunkt) }
+                    .map {
+                        it.tilNavKontorPeriodeDto(virkningsdato = vedtakMedTidligsteVirkingsdato.virkningstidspunkt, vedtaksdato = tidligsteVedtaksTidspunkt.minusDays(1)) }
                     .toSet()
 
                 log.info("Fant ${gjeldendeSosialRefusjonDtoer.size} refusjonskrav som skal få oppgave")

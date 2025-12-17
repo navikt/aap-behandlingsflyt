@@ -26,13 +26,13 @@ import java.time.ZoneId.systemDefault
 import java.time.format.DateTimeFormatter
 import java.util.*
 
-class GosysGateway(private val unleash: UnleashGateway) : OppgaveGateway {
+class GosysGateway : OppgaveGateway {
 
     companion object : Factory<Gateway> {
-        lateinit var unleashGateway: UnleashGateway
+
 
         override fun konstruer(): Gateway {
-            return GosysGateway(unleashGateway)
+            return GosysGateway()
         }
     }
 
@@ -60,18 +60,11 @@ class GosysGateway(private val unleash: UnleashGateway) : OppgaveGateway {
             throw IllegalArgumentException("Kan ikke opprette refusjonsoppgave i Gosys uten gyldige datoer for navkontor periode.")
         }
 
-        val fom = navKontor.virkingsdato ?: throw IllegalArgumentException("Kan ikke opprette refusjonsoppgave i Gosys uten virkingsdato")
-        val tom = if (unleashGateway.isEnabled(BehandlingsflytFeature.SosialRefusjon)){
-            navKontor.vedtaksdato!!.minusDays(1)
-        } else {
-            navKontor.vedtaksdato ?: throw IllegalArgumentException("Kan ikke opprette refusjonsoppgave i Gosys uten gyldige vedtaksdato")
-        }
-
         val beskrivelse =
             "Refusjonskrav. Brukeren er innvilget etterbetaling av AAP fra ${
-                formatDateToSaksbehandlerVennlig(fom)
+                formatDateToSaksbehandlerVennlig(navKontor.virkingsdato!!)
             } til ${
-                formatDateToSaksbehandlerVennlig(tom)
+                formatDateToSaksbehandlerVennlig(navKontor.vedtaksdato!!)
             }. Dere må sende refusjonskrav til NØS."
 
         val oppgaveRequest = OpprettOppgaveRequest(
