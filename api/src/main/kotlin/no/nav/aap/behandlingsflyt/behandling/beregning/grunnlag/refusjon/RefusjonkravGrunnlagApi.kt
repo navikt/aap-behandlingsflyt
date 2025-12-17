@@ -122,10 +122,6 @@ fun NormalOpenAPIRoute.refusjonGrunnlagApi(
                         )
                     }
                 }
-
-
-
-
                 respond(response)
             }
         }
