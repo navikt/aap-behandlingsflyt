@@ -35,13 +35,9 @@ abstract class KafkaKonsument<K, V>(
             konsument.subscribe(listOf(topic))
             while (!lukket.get()) {
                 val meldinger: ConsumerRecords<K, V> = konsument.poll(pollTimeout.toJavaDuration())
-                try {
-                    håndter(meldinger)
-                    konsument.commitSync()
-                    antallMeldinger += meldinger.count()
-                } catch (e: Exception) {
-                    log.error("Feil ved håndtering av meldinger", e)
-                }
+                håndter(meldinger)
+                konsument.commitSync()
+                antallMeldinger += meldinger.count()
             }
         } catch (e: WakeupException) {
             // Ignorerer exception hvis vi stenger ned
@@ -53,10 +49,15 @@ abstract class KafkaKonsument<K, V>(
             log.info("Ferdig med å lese hendelser fra $${this.javaClass.name} - lukker konsument")
             try {
                 konsument.close(closeTimeout.toJavaDuration())
+                lukket.set(true)
             } catch (e: Exception) {
                 log.error("Feil ved lukking av konsument", e)
             }
         }
+    }
+    
+    fun erLukket(): Boolean {
+        return lukket.get()
     }
 
     abstract fun håndter(meldinger: ConsumerRecords<K, V>)

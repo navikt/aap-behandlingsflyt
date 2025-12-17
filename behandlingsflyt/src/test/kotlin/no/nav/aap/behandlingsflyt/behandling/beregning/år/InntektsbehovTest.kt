@@ -121,7 +121,7 @@ class InntektsbehovTest {
             BeregningInput(
                 nedsettelsesDato,
                 årsInntekter = emptySet(),
-                uføregrad = setOf(Uføre(LocalDate.now(), Prosent.`30_PROSENT`)),
+                uføregrad = setOf(Uføre(LocalDate.now().minusYears(10), Prosent.`30_PROSENT`)),
                 yrkesskadevurdering = null,
                 registrerteYrkesskader = null,
                 beregningGrunnlag = BeregningGrunnlag(
