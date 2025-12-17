@@ -209,6 +209,9 @@ class MeldingOmVedtakBrevStegTest {
                 begrunnelse = "Brev ferdig"
             )
         )
+        // TODO: Dette burde vel ikke være mulig ? Dette må hindres - hensynta TILBAKESTILT status i
+        //brevbestillingService.ferdigstill(behandlingId, brevbestillingReferanse, Bruker("SAKSBEHANDLER"))
+
         val brevbestillingReferanse2 = BrevbestillingReferanse(UUID.randomUUID())
         every { brevbestillingGateway.bestillBrev(any(), any(), any(), any(), any(), any(), any(), any()) } returns brevbestillingReferanse2
         every { brevUtlederService.utledBehovForMeldingOmVedtak(any()) } returns VedtakAktivitetsplikt11_7
