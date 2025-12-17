@@ -935,9 +935,6 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                 periode
             )
         }
-        /**
-         * Denne trengs for å simulere gamle behandlinger i Kelvin som hadde 1 år med rettighetsperiode fra start
-         */
         val behandling = sak.sendInnSøknad(søknad, mottattTidspunkt, journalpostId)
 
         return Pair(sak, behandling)
