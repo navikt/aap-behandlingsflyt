@@ -179,7 +179,7 @@ class AndreYtelserOppgittISøknadRepositoryImpl(private val connection: DBConnec
 
 
     private fun deaktiverGrunnlag(behandlingId: BehandlingId) {
-        connection.execute("UPDATE ANDRE_YTELSER_OPPGITT_I_SOKNAD_GRUNNLAG SET aktive = FALSE WHERE aktive AND behandling_id = ?") {
+        connection.execute("UPDATE ANDRE_YTELSER_OPPGITT_I_SOKNAD_GRUNNLAG SET aktiv = FALSE WHERE aktiv AND behandling_id = ?") {
             setParams {
                 setLong(1, behandlingId.toLong())
             }
