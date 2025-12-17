@@ -185,8 +185,8 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
         }
 
         val query = """
-            INSERT INTO STUDENT_GRUNNLAG (behandling_id, student_id, oppgitt_student_id) 
-            SELECT ?, student_id, oppgitt_student_id from STUDENT_GRUNNLAG where behandling_id = ? and aktiv
+            INSERT INTO STUDENT_GRUNNLAG (behandling_id, student_id, oppgitt_student_id, student_vurderinger_id) 
+            SELECT ?, student_id, oppgitt_student_id, student_vurderinger_id from STUDENT_GRUNNLAG where behandling_id = ? and aktiv
         """.trimIndent()
 
         connection.execute(query) {
