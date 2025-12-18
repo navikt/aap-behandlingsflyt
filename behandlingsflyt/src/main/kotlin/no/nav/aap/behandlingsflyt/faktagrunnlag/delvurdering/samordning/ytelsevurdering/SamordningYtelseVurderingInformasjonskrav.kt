@@ -280,9 +280,9 @@ class SamordningYtelseVurderingInformasjonskrav(
 
                     secureLogger.info(
                         "Hentet samordningvurdering eksisterende ${eksisterendeVurderinger.vurderinger} med nye samordningsytelser ${samordningYtelser.map { it.ytelsePerioder }}  ${samordningYtelser.map { it.ytelseType.name }} Overlapp vurderinger" + isPeriodeDekketAvEksisterendePerioder(
-                        relevanteEksPerioder,
-                        nyPeriode
-                    )
+                            relevanteEksPerioder,
+                            nyPeriode
+                        )
                     )
 
                     if (!isPeriodeDekketAvEksisterendePerioder(relevanteEksPerioder, nyPeriode)) {
@@ -308,11 +308,38 @@ private fun <T : SamordningPeriode> isPeriodeDekketAvEksisterendePerioder(
 
 fun <T : SamordningPeriode> List<T>.tilTidslinje(): Tidslinje<Boolean> =
     Tidslinje(
-        this.map { p ->
-            Segment(
-                periode = Periode(p.periode.fom, p.periode.tom),
-                verdi = true
-            )
-        }
+        this
+            .map { it.periode }
+            .slåSammen()
+            .map { periode ->
+                Segment(
+                    periode = periode,
+                    verdi = true
+                )
+            }
     )
+
+fun List<Periode>.slåSammen(): List<Periode> {
+    if (isEmpty()) return emptyList()
+
+    val sortert = sortedBy { it.fom }
+    val resultat = mutableListOf<Periode>()
+
+    var gjeldende = sortert.first()
+
+    for (neste in sortert.drop(1)) {
+        if (gjeldende.overlapper(neste) || gjeldende.tom.plusDays(1) == neste.fom) {
+            gjeldende = Periode(
+                fom = minOf(gjeldende.fom, neste.fom),
+                tom = maxOf(gjeldende.tom, neste.tom)
+            )
+        } else {
+            resultat.add(gjeldende)
+            gjeldende = neste
+        }
+    }
+
+    resultat.add(gjeldende)
+    return resultat
+}
 
