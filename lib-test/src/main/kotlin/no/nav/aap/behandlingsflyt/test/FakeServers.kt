@@ -179,11 +179,7 @@ object FakeServers : AutoCloseable {
     private val started = AtomicBoolean(false)
 
     private fun Application.oppgavestyringFake() {
-        install(ContentNegotiation) {
-            jackson {
-                registerModule(JavaTimeModule())
-            }
-        }
+        installerContentNegotiation()
         install(StatusPages) {
             exception<Throwable> { call, cause ->
                 this@oppgavestyringFake.log.info(
@@ -210,11 +206,7 @@ object FakeServers : AutoCloseable {
     }
 
     private fun Application.pesysFake() {
-        install(ContentNegotiation) {
-            jackson {
-                registerModule(JavaTimeModule())
-            }
-        }
+        installerContentNegotiation()
         install(StatusPages) {
             exception<Throwable> { call, cause ->
                 this@pesysFake.log.info("Inntekt :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
@@ -256,12 +248,7 @@ object FakeServers : AutoCloseable {
     }
 
     private fun Application.sam() {
-        install(ContentNegotiation) {
-            jackson {
-                registerModule(JavaTimeModule())
-                disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-            }
-        }
+        installerContentNegotiation()
 
         install(StatusPages) {
             exception<Throwable> { call, cause ->
@@ -304,9 +291,7 @@ object FakeServers : AutoCloseable {
     }
 
     private fun Application.poppFake() {
-        install(ContentNegotiation) {
-            jackson()
-        }
+        installerContentNegotiation()
         install(StatusPages) {
             exception<Throwable> { call, cause ->
                 this@poppFake.log.info("Inntekt :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
@@ -334,11 +319,7 @@ object FakeServers : AutoCloseable {
     }
 
     private fun Application.gosysFake() {
-        install(ContentNegotiation) {
-            jackson {
-                registerModule(JavaTimeModule())
-            }
-        }
+        installerContentNegotiation()
         install(StatusPages) {
             exception<Throwable> { call, cause ->
                 this@gosysFake.log.info("Inntekt :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
@@ -365,9 +346,7 @@ object FakeServers : AutoCloseable {
     }
 
     private fun Application.leaderElectorFake() {
-        install(ContentNegotiation) {
-            jackson()
-        }
+        installerContentNegotiation()
         routing {
             route("/") {
                 get {
@@ -380,11 +359,7 @@ object FakeServers : AutoCloseable {
     }
 
     private fun Application.pdlFake() {
-        install(ContentNegotiation) {
-            jackson {
-                registerModule(JavaTimeModule())
-            }
-        }
+        installerContentNegotiation()
         install(StatusPages) {
             exception<Throwable> { call, cause ->
                 this@pdlFake.log.info("PDL :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
@@ -413,11 +388,7 @@ object FakeServers : AutoCloseable {
     }
 
     private fun Application.tjenestePensjonFake() {
-        install(ContentNegotiation) {
-            jackson {
-                registerModule(JavaTimeModule())
-            }
-        }
+        installerContentNegotiation()
         install(StatusPages) {
             exception<Throwable> { call, cause ->
                 this@tjenestePensjonFake.log.info("TP :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
@@ -471,9 +442,7 @@ object FakeServers : AutoCloseable {
     }
 
     private fun Application.tilgangFake() {
-        install(ContentNegotiation) {
-            jackson()
-        }
+        installerContentNegotiation()
         install(StatusPages) {
             exception<Throwable> { call, cause ->
                 this@tilgangFake.log.info(
@@ -513,11 +482,7 @@ object FakeServers : AutoCloseable {
     }
 
     private fun Application.dokumentinnhentingFake() {
-        install(ContentNegotiation) {
-            jackson {
-                registerModule(JavaTimeModule())
-            }
-        }
+        installerContentNegotiation()
         install(StatusPages) {
             exception<Throwable> { call, cause ->
                 this@dokumentinnhentingFake.log.info(
@@ -600,11 +565,7 @@ object FakeServers : AutoCloseable {
     }
 
     private fun Application.statistikkFake() {
-        install(ContentNegotiation) {
-            jackson {
-                registerModule(JavaTimeModule())
-            }
-        }
+        installerContentNegotiation()
         install(StatusPages) {
             exception<Throwable> { call, cause ->
                 this@statistikkFake.log.info(
@@ -628,12 +589,7 @@ object FakeServers : AutoCloseable {
     }
 
     private fun Application.fpFake() {
-        install(ContentNegotiation) {
-            jackson {
-                registerModule(JavaTimeModule())
-                disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-            }
-        }
+        installerContentNegotiation()
         install(StatusPages) {
             exception<Throwable> { call, cause ->
                 this@fpFake.log.info(
@@ -922,9 +878,7 @@ object FakeServers : AutoCloseable {
     }
 
     private fun Application.kabalFake() {
-        install(ContentNegotiation) {
-            jackson()
-        }
+        installerContentNegotiation()
         install(StatusPages) {
             exception<Throwable> { call, cause ->
                 this@kabalFake.log.info(
@@ -1045,9 +999,7 @@ object FakeServers : AutoCloseable {
               }
             }
         """.trimIndent()
-        install(ContentNegotiation) {
-            jackson()
-        }
+        installerContentNegotiation()
         install(StatusPages) {
             exception<Throwable> { call, cause ->
                 this@eregFake.log.info(
