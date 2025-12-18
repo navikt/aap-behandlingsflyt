@@ -89,7 +89,7 @@ class ManuellInntektGrunnlagRepositoryImpl(private val connection: DBConnection)
                     vurdertAv = it.getString("vurdert_av"),
                     opprettet = it.getLocalDateTime( "opprettet_tid"),
                     eøsBeløp = it.getBigDecimalOrNull("eos_belop")?.let(::Beløp),
-                    ferdigLignetPGI = it.getBigDecimalOrNull("ferdig_lignet_pgi")?.let { verdi -> Beløp(verdi) },
+                    ferdigLignetPGI = it.getBigDecimalOrNull("ferdig_lignet_pgi")?.let(::Beløp),
                 )
             }
         }
