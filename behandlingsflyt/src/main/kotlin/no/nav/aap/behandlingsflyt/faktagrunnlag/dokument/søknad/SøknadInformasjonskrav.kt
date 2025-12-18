@@ -10,7 +10,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.IngenInput
 import no.nav.aap.behandlingsflyt.faktagrunnlag.IngenRegisterData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.mapOppgitteYtelser
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.andreYtelserOppgittISøknad.AndreYtelserOppgittISøknadRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.OppgittStudent
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
@@ -23,7 +25,8 @@ class SøknadInformasjonskrav private constructor(
     private val mottaDokumentService: MottaDokumentService,
     private val studentRepository: StudentRepository,
     private val barnRepository: BarnRepository,
-    private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository
+    private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
+    private val andreYtelserRepository: AndreYtelserOppgittISøknadRepository
 ) : Informasjonskrav<IngenInput, IngenRegisterData> {
 
     companion object : Informasjonskravkonstruktør {
@@ -38,7 +41,8 @@ class SøknadInformasjonskrav private constructor(
                 MottaDokumentService(repositoryProvider),
                 repositoryProvider.provide<StudentRepository>(),
                 repositoryProvider.provide(),
-                medlemskapArbeidInntektRepository
+                medlemskapArbeidInntektRepository,
+                repositoryProvider.provide<AndreYtelserOppgittISøknadRepository>()
             )
         }
     }
@@ -78,6 +82,9 @@ class SøknadInformasjonskrav private constructor(
                         skalGjenopptaStudieStatus = ubehandletSøknad.studentData.skalGjenopptaStudie
                     )
             )
+            if (!ubehandletSøknad.andreUtbetalinger?.stønad.isNullOrEmpty() && ubehandletSøknad.andreUtbetalinger.lønn != null){
+                andreYtelserRepository.lagre(behandlingId, mapOppgitteYtelser(ubehandletSøknad.andreUtbetalinger))
+            }
 
             if (ubehandletSøknad.oppgitteBarn != null) {
                 barnRepository.lagreOppgitteBarn(kontekst.behandlingId, ubehandletSøknad.oppgitteBarn)
