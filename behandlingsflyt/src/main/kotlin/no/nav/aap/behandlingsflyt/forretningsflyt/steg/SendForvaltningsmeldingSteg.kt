@@ -42,7 +42,7 @@ class SendForvaltningsmeldingSteg(
             TypeBehandling.Klage -> {
                 val behandlingId = kontekst.behandlingId
                 val behandling = behandlingRepository.hent(behandlingId)
-                if (!erBehandlingForMottattKlage(kontekst.vurderingsbehovRelevanteForSteg) &&
+                if (erBehandlingForMottattKlage(kontekst.vurderingsbehovRelevanteForSteg) &&
                     !harAlleredeBestiltKlageMottattForBehandling(behandling)
                     ) {
                     val brevBehov = KlageMottatt
