@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjeneste
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.InstitusjonsoppholdJSON
@@ -240,7 +241,10 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO): Sak {
                 TestYrkesskade(),
                 TestYrkesskade(skadedato = null, saksreferanse = "ABCDE")
             ) else emptyList(),
-            uføre = dto.uføre?.let(::Prosent),
+            uføre = dto.uføre?.let { Uføre(
+                virkningstidspunkt = dto.uføreTidspunkt!!,
+                uføregrad = Prosent(it)
+            ) },
             barn = barn,
             institusjonsopphold = listOfNotNull(
                 if (dto.institusjoner.fengsel == true) genererFengselsopphold() else null,

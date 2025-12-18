@@ -106,7 +106,7 @@ data class UføreInntektDTO(
 data class UføreInntektPeriodisertDTO(
     val periode: Periode,
     val inntektIKroner: Beløp,
-    val uføregrad: Prosent,
+    val uføregrad: Int,
     val inntektJustertForUføregrad: Beløp
 )
 
