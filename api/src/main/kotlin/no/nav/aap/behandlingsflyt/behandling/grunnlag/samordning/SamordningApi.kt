@@ -109,7 +109,7 @@ data class SamordningUføreVurderingPeriodeDTO(
 data class SamordningAndreStatligeYtelserGrunnlagDTO(
     val harTilgangTilÅSaksbehandle: Boolean,
     val vurdering: SamordningAndreStatligeYtelserVurderingDTO?,
-    val historiskeVurderinger: List<SamordningAndreStatligeYtelserVurderingDTO> = emptyList(),
+    val historiskeVurderinger: List<SamordningAndreStatligeYtelserVurderingDTO>? = emptyList(),
 )
 
 data class SamordningAndreStatligeYtelserVurderingDTO(

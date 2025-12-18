@@ -8,17 +8,18 @@ import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.brev.bestilling.BrevbestillingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
-import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -45,41 +46,54 @@ internal class BrevbestillingRepositoryImplTest {
         dataSource.transaction { connection ->
             val brevbestillingRepository = BrevbestillingRepositoryImpl(connection)
 
-            val behandlingId = opprettBehandling(connection)
+            val sakId = opprettSak(connection)
+            val behandlingId = opprettBehandling(sakId, connection)
             val typeBrev = TypeBrev.VEDTAK_INNVILGELSE
             val referanse = BrevbestillingReferanse(UUID.randomUUID())
 
-            Assertions.assertThat(brevbestillingRepository.hent(behandlingId)).isEmpty()
+            assertThat(brevbestillingRepository.hent(behandlingId)).isEmpty()
 
-            brevbestillingRepository.lagre(behandlingId, typeBrev, referanse, Status.SENDT)
+            brevbestillingRepository.lagre(behandlingId, typeBrev, referanse, Status.FORHÅNDSVISNING_KLAR)
 
             val brevbestilling = brevbestillingRepository.hent(behandlingId)
-            Assertions.assertThat(brevbestilling).hasSize(1)
+            assertThat(brevbestilling).hasSize(1)
             brevbestilling.first().let {
-                Assertions.assertThat(it.behandlingId).isEqualTo(behandlingId)
-                Assertions.assertThat(it.typeBrev).isEqualTo(typeBrev)
-                Assertions.assertThat(it.referanse).isEqualTo(referanse)
-                Assertions.assertThat(it.status).isEqualTo(Status.SENDT)
+                assertThat(it.behandlingId).isEqualTo(behandlingId)
+                assertThat(it.typeBrev).isEqualTo(typeBrev)
+                assertThat(it.referanse).isEqualTo(referanse)
+                assertThat(it.status).isEqualTo(Status.FORHÅNDSVISNING_KLAR)
             }
 
-            brevbestillingRepository.oppdaterStatus(behandlingId, referanse,
-                Status.FORHÅNDSVISNING_KLAR
+            brevbestillingRepository.oppdaterStatus(
+                behandlingId, referanse,
+                Status.FULLFØRT
             )
 
             val oppdatertBrevbestilling = brevbestillingRepository.hent(behandlingId)
-            Assertions.assertThat(oppdatertBrevbestilling).hasSize(1)
-            Assertions.assertThat(oppdatertBrevbestilling.first().status)
-                .isEqualTo(Status.FORHÅNDSVISNING_KLAR)
-            Assertions.assertThat(oppdatertBrevbestilling.first().typeBrev).isEqualTo(typeBrev)
+            assertThat(oppdatertBrevbestilling).hasSize(1)
+            assertThat(oppdatertBrevbestilling.first().status)
+                .isEqualTo(Status.FULLFØRT)
+            assertThat(oppdatertBrevbestilling.first().typeBrev).isEqualTo(typeBrev)
+
+            val behandling2 = opprettBehandling(sakId, connection)
+            brevbestillingRepository.lagre(behandling2, typeBrev, BrevbestillingReferanse(UUID.randomUUID()), Status.FORHÅNDSVISNING_KLAR)
+
+            val behandling3 = opprettBehandling(opprettSak(connection), connection) // annen sak
+            brevbestillingRepository.lagre(behandling3, typeBrev, BrevbestillingReferanse(UUID.randomUUID()), Status.FORHÅNDSVISNING_KLAR)
+
+            assertThat(brevbestillingRepository.hent(sakId, typeBrev)).hasSize(2)
         }
     }
 
-    private fun opprettBehandling(connection: DBConnection): BehandlingId {
-        val person = PersonRepositoryImpl(connection).finnEllerOpprett(listOf(Ident("ident", true)))
-        val sakId = SakRepositoryImpl(connection).finnEllerOpprett(
+    private fun opprettSak(connection: DBConnection): SakId {
+        val person = PersonRepositoryImpl(connection).finnEllerOpprett(listOf(ident()))
+        return SakRepositoryImpl(connection).finnEllerOpprett(
             person,
             Periode(LocalDate.now(), LocalDate.now().plusDays(5))
         ).id
+    }
+
+    private fun opprettBehandling(sakId: SakId, connection: DBConnection): BehandlingId {
         return BehandlingRepositoryImpl(connection).opprettBehandling(
             sakId,
             TypeBehandling.Førstegangsbehandling,

@@ -67,6 +67,7 @@ public enum class Vurderingsbehov {
     AVVIST_LEGEERKLÆRING,
     DIALOGMELDING,
     G_REGULERING,
+    BARNETILLEGG_SATS_REGULERING,
     REVURDER_MEDLEMSKAP,
     REVURDER_YRKESSKADE,        // Yrkesskade
     REVURDER_BEREGNING,         // Beregningstidspunkt

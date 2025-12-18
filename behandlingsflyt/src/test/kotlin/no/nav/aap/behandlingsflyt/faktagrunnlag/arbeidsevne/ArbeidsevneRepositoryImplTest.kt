@@ -44,7 +44,7 @@ class ArbeidsevneRepositoryImplTest {
             val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
 
             val arbeidsevneVurdering = ArbeidsevneVurdering(
-                "begrunnelse", Prosent(34), LocalDate.now(), LocalDateTime.now(), "saksbehandler"
+                "begrunnelse", Prosent(34), LocalDate.now(), null, behandling.id, LocalDateTime.now(), "saksbehandler"
             )
 
             arbeidsevneRepository.lagre(
@@ -80,13 +80,13 @@ class ArbeidsevneRepositoryImplTest {
         dataSource.transaction { connection ->
             val sak = sak(connection, periode)
             val behandling = finnEllerOpprettBehandling(connection, sak)
-            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null, "vurdertAv")
+            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null, behandling.id, LocalDateTime.now(), "vurdertAv")
 
             val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
             arbeidsevneRepository.lagre(behandling.id, listOf(arbeidsevne))
             val vurderinger = arbeidsevneRepository.hentHvisEksisterer(behandling.id)?.vurderinger
             assertThat(vurderinger).hasSize(1)
-            assertThat(vurderinger).containsExactly(arbeidsevne.copy(opprettetTid = vurderinger?.first()?.opprettetTid))
+            assertThat(vurderinger).containsExactly(arbeidsevne.copy(opprettetTid = vurderinger?.first()?.opprettetTid!!))
         }
     }
 
@@ -96,7 +96,7 @@ class ArbeidsevneRepositoryImplTest {
             val sak = sak(connection, periode)
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
-            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null, "vurdertAv")
+            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null, behandling1.id, LocalDateTime.now(),"vurdertAv")
 
             arbeidsevneRepository.lagre(behandling1.id, listOf(arbeidsevne))
             BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling1.id, Status.AVSLUTTET)
@@ -105,7 +105,7 @@ class ArbeidsevneRepositoryImplTest {
 
             val vurderinger = arbeidsevneRepository.hentHvisEksisterer(behandling2.id)?.vurderinger
             assertThat(vurderinger).hasSize(1)
-            assertThat(vurderinger).containsExactly(arbeidsevne.copy(opprettetTid = vurderinger?.first()?.opprettetTid))
+            assertThat(vurderinger).containsExactly(arbeidsevne.copy(opprettetTid = vurderinger?.first()?.opprettetTid!!))
         }
     }
 
@@ -125,7 +125,7 @@ class ArbeidsevneRepositoryImplTest {
             val sak = sak(connection, periode)
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
-            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null, "vurdertAv")
+            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null, behandling1.id, LocalDateTime.now(), "vurdertAv")
             val arbeidsevne2 = arbeidsevne.copy(begrunnelse = "annen begrunnelse")
 
             arbeidsevneRepository.lagre(behandling1.id, listOf(arbeidsevne))
@@ -136,7 +136,7 @@ class ArbeidsevneRepositoryImplTest {
 
             val vurderinger = arbeidsevneRepository.hentHvisEksisterer(behandling2.id)?.vurderinger
             assertThat(vurderinger).hasSize(1)
-            assertThat(vurderinger).containsExactly(arbeidsevne2.copy(opprettetTid = vurderinger?.first()?.opprettetTid))
+            assertThat(vurderinger).containsExactly(arbeidsevne2.copy(opprettetTid = vurderinger?.first()?.opprettetTid!!))
         }
     }
 
@@ -146,7 +146,7 @@ class ArbeidsevneRepositoryImplTest {
             val sak = sak(connection, periode)
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
-            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null, "vurdertAv")
+            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null, behandling.id, LocalDateTime.now(), "vurdertAv")
             val arbeidsevne2 = arbeidsevne.copy("annen begrunnelse")
 
             arbeidsevneRepository.lagre(behandling.id, listOf(arbeidsevne))
@@ -154,14 +154,14 @@ class ArbeidsevneRepositoryImplTest {
 
             assertThat(originaleVurderinger).hasSize(1)
             assertThat(originaleVurderinger).containsExactly(
-                arbeidsevne.copy(opprettetTid = originaleVurderinger?.first()?.opprettetTid)
+                arbeidsevne.copy(opprettetTid = originaleVurderinger?.first()?.opprettetTid!!)
             )
 
             arbeidsevneRepository.lagre(behandling.id, listOf(arbeidsevne2))
             val oppdaterteVurderinger = arbeidsevneRepository.hentHvisEksisterer(behandling.id)?.vurderinger
             assertThat(oppdaterteVurderinger).hasSize(1)
             assertThat(oppdaterteVurderinger).containsExactly(
-                arbeidsevne2.copy(opprettetTid = oppdaterteVurderinger?.first()?.opprettetTid)
+                arbeidsevne2.copy(opprettetTid = oppdaterteVurderinger?.first()?.opprettetTid!!)
             )
 
             data class Opplysning(
@@ -209,7 +209,7 @@ class ArbeidsevneRepositoryImplTest {
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
             val arbeidsevne =
-                ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), LocalDateTime.now(), "vurdertAv")
+                ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null, behandling1.id, LocalDateTime.now(), "vurdertAv")
             val arbeidsevne2 = arbeidsevne.copy("annen begrunnelse")
 
             arbeidsevneRepository.lagre(behandling1.id, listOf(arbeidsevne))

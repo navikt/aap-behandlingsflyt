@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
@@ -85,20 +86,21 @@ class OvergangUføreSteg private constructor(
             },
         )
 
-        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-        if (avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_OVERGANG_UFORE)
-                ?.status() in listOf(Status.AVSLUTTET, Status.AVBRUTT)
-        ) {
-            val grunnlag = OvergangUføreFaktagrunnlag(
-                rettighetsperiode = kontekst.rettighetsperiode,
-                overgangUføreGrunnlag = overgangUføreRepository.hentHvisEksisterer(kontekst.behandlingId),
-            )
-            OvergangUføreVilkår(vilkårsresultat).vurder(grunnlag = grunnlag)
-        } else {
-            vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.OVERGANGUFØREVILKÅRET)
-        }
-        vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+        when (kontekst.vurderingType) {
+            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
+                val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
+                vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.OVERGANGUFØREVILKÅRET)
+                val grunnlag = OvergangUføreFaktagrunnlag(
+                    rettighetsperiode = kontekst.rettighetsperiode,
+                    overgangUføreGrunnlag = overgangUføreRepository.hentHvisEksisterer(kontekst.behandlingId),
+                )
+                OvergangUføreVilkår(vilkårsresultat).vurder(grunnlag = grunnlag)
+                vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
+            }
 
+            else -> {} // Do nothing
+        }
+        
         return Fullført
     }
 

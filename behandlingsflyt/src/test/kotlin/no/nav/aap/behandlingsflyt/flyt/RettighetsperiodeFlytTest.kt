@@ -482,6 +482,9 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
     )
 
 
+    /**
+     * Denne trengs for å simulere gamle behandlinger i Kelvin som hadde 1 år med rettighetsperiode fra start
+     */
     private fun settRettighetsperiodeOgRekjørFraStart(
         midlertidigSak: Sak,
         rettighetsperiode: Periode,

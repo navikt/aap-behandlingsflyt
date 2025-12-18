@@ -13,7 +13,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     KvalitetssikringsSteg,
     BedreUttrekkAvSakerMedFritakMeldeplikt,
     EOSBeregning,
-    NyeBarn,
     NyBrevbyggerV3,
     LagreVedtakIFatteVedtak,
     PeriodisertSykepengeErstatningNyAvklaringsbehovService,
@@ -22,7 +21,10 @@ enum class BehandlingsflytFeature : FeatureToggle {
     ValiderOvergangUfore,
     KravOmInntektsbortfall,
     MigrerMeldepliktFritak,
-    MigrerRettighetsperiode
+    MigrerRettighetsperiode,
+    SosialRefusjon,
+    HentSykepengerVedOverlapp,
+    KanSendeBrevOmBarnetilleggSatsRegulering
     ;
 
     override fun key(): String = name
