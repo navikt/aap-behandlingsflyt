@@ -41,9 +41,9 @@ class OpprettBehandlingMigrerRettighetsperiodeJobbUtfører(
         log.info("Fant ${sakerForMigrering.size} som kun har avsluttede behandlinger og kan migrere rettighetsperiode")
         if (unleashGateway.isEnabled(BehandlingsflytFeature.MigrerRettighetsperiode)) {
             sakerForMigrering.forEach { sak ->
-                val fritakMeldepliktBehandling = opprettNyBehandling(sak)
                 sakRepository.oppdaterRettighetsperiode(sak.id, Periode(sak.rettighetsperiode.fom, Tid.MAKS))
-                prosesserBehandlingService.triggProsesserBehandling(fritakMeldepliktBehandling)
+                val migrerVilkårTilRettighetsperiodeBehandling = opprettNyBehandling(sak)
+                prosesserBehandlingService.triggProsesserBehandling(migrerVilkårTilRettighetsperiodeBehandling)
                 log.info("Oppretter behandling for migrering av rettighetsperiode for saksnummer ${sak.saksnummer}")
             }
         } else {

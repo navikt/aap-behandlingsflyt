@@ -36,6 +36,9 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårs
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -44,7 +47,6 @@ import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.motor.JobbInput
-import no.nav.aap.motor.JobbSpesifikasjon
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -379,9 +381,8 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
         )
 
         migrerRettighetsperiodeTilTidMaks(startDato, sak)
-
-        val oppdatertBehandling =
-            sak.opprettManuellRevurdering(Vurderingsbehov.AUTOMATISK_OPPDATER_VILKÅR)
+        opprettAtomærAutomatiskOppdaterVilkårBehandling(sak)
+        val oppdatertBehandling = hentSisteOpprettedeBehandlingForSak(sak.id)
 
         val utfallTidslinjeOppdatert = dataSource.transaction {
             UnderveisRepositoryImpl(it).hent(oppdatertBehandling.id)
@@ -396,12 +397,12 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
         val vilkårsresultat = dataSource.transaction { VilkårsresultatRepositoryImpl(it).hent(oppdatertBehandling.id) }
         vilkårsresultat.alle()
             .filterNot { it.type in vilkårSomIkkeAutomatiskUtvides() }
-            .forEach {
-            vilkår -> val vilkårSluttdato = vilkår.tidslinje().perioder().max().tom
-            assertThat(vilkårSluttdato)
-                .withFailMessage{"til-dato for vilkår ${vilkår.type} er ikke Tid.MAKS men $vilkårSluttdato"}
-                .isEqualTo(Tid.MAKS)
-        }
+            .forEach { vilkår ->
+                val vilkårSluttdato = vilkår.tidslinje().perioder().max().tom
+                assertThat(vilkårSluttdato)
+                    .withFailMessage { "til-dato for vilkår ${vilkår.type} er ikke Tid.MAKS men $vilkårSluttdato" }
+                    .isEqualTo(Tid.MAKS)
+            }
     }
 
     @Test
@@ -436,12 +437,15 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
         val utfallTidslinje = underveisGrunnlag.perioder.somTidslinje { it.periode }.map { it.utfall }.komprimer()
         assertTidslinje(
             utfallTidslinje,
-            Periode(startDato, startDatoRettTilYtelse.minusDays(1)) to { assertThat(it).isEqualTo(Utfall.IKKE_OPPFYLT)},
+            Periode(
+                startDato,
+                startDatoRettTilYtelse.minusDays(1)
+            ) to { assertThat(it).isEqualTo(Utfall.IKKE_OPPFYLT) },
             Periode(startDatoRettTilYtelse, gammelRettighetsperiode.tom) to { assertThat(it).isEqualTo(Utfall.OPPFYLT) }
         )
 
         migrerRettighetsperiodeTilTidMaks(startDato, sak)
-        sak.opprettManuellRevurdering(Vurderingsbehov.AUTOMATISK_OPPDATER_VILKÅR)
+        opprettAtomærAutomatiskOppdaterVilkårBehandling(sak)
         sak.sendInnMeldekort(
             journalpostId = journalpostId(),
             timerArbeidet = mapOf(startDato to 5.0),
@@ -470,7 +474,7 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
             .forEach { vilkår ->
                 val vilkårSluttdato = vilkår.tidslinje().perioder().max().tom
                 assertThat(vilkårSluttdato)
-                    .withFailMessage{"til-dato for vilkår ${vilkår.type} er ikke Tid.MAKS men $vilkårSluttdato"}
+                    .withFailMessage { "til-dato for vilkår ${vilkår.type} er ikke Tid.MAKS men $vilkårSluttdato" }
                     .isEqualTo(Tid.MAKS)
             }
 
@@ -484,7 +488,8 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
         val gammelRettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusMonths(12).minusDays(1))
         val (midlertidigSak, behandling) = sendInnFørsteSøknad()
         val sakMedUtvidetRettighetsperiode = happyCaseFørstegangsbehandling()
-        val behandlingForSakMedUtvidetRettighetsperiode = hentSisteOpprettedeBehandlingForSak(sakMedUtvidetRettighetsperiode.id)
+        val behandlingForSakMedUtvidetRettighetsperiode =
+            hentSisteOpprettedeBehandlingForSak(sakMedUtvidetRettighetsperiode.id)
         assertThat(sakMedUtvidetRettighetsperiode.id).isNotEqualTo(midlertidigSak.id)
 
         settRettighetsperiodeOgRekjørFraStart(midlertidigSak, gammelRettighetsperiode, behandling)
@@ -510,13 +515,13 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
 
         dataSource.transaction { connection ->
 
-        val repositoryProvider = postgresRepositoryRegistry.provider(connection)
+            val repositoryProvider = postgresRepositoryRegistry.provider(connection)
             val migrerRettighetsperiodeJobbUtfører = OpprettBehandlingMigrerRettighetsperiodeJobbUtfører(
-            prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
-                    sakRepository = SakRepositoryImpl(connection),
-                    behandlingRepository = BehandlingRepositoryImpl(connection),
-                    sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
-                    unleashGateway = FakeUnleash
+                prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
+                sakRepository = SakRepositoryImpl(connection),
+                behandlingRepository = BehandlingRepositoryImpl(connection),
+                sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
+                unleashGateway = FakeUnleash
             )
             migrerRettighetsperiodeJobbUtfører.utfør(JobbInput(OpprettBehandlingMigrerRettighetsperiodeJobbUtfører))
         }
@@ -524,8 +529,11 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
         /**
          * Sak med utvidet rettighetsperiode fra start skal ikke migreres
          */
-        val sisteBehandlingForSakMedUtvidetRettighetsperiode = hentSisteOpprettedeBehandlingForSak(sakMedUtvidetRettighetsperiode.id)
-        assertThat(sisteBehandlingForSakMedUtvidetRettighetsperiode.id).isEqualTo(behandlingForSakMedUtvidetRettighetsperiode.id)
+        val sisteBehandlingForSakMedUtvidetRettighetsperiode =
+            hentSisteOpprettedeBehandlingForSak(sakMedUtvidetRettighetsperiode.id)
+        assertThat(sisteBehandlingForSakMedUtvidetRettighetsperiode.id).isEqualTo(
+            behandlingForSakMedUtvidetRettighetsperiode.id
+        )
 
         /**
          * Sak med begrenset rettighetsperiode fra start skal migreres
@@ -557,7 +565,7 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
             .forEach { vilkår ->
                 val vilkårSluttdato = vilkår.tidslinje().perioder().max().tom
                 assertThat(vilkårSluttdato)
-                    .withFailMessage{"til-dato for vilkår ${vilkår.type} er ikke Tid.MAKS men $vilkårSluttdato"}
+                    .withFailMessage { "til-dato for vilkår ${vilkår.type} er ikke Tid.MAKS men $vilkårSluttdato" }
                     .isEqualTo(Tid.MAKS)
             }
 
@@ -632,5 +640,22 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
             ),
         )
     )
+
+    private fun opprettAtomærAutomatiskOppdaterVilkårBehandling(sak: Sak) {
+        dataSource.transaction { connection ->
+            val repositoryProvider = postgresRepositoryRegistry.provider(connection)
+            val sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider)
+            val prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider)
+            val behandling = sakOgBehandlingService.finnEllerOpprettBehandling(
+                sakId = sak.id,
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                    årsak = ÅrsakTilOpprettelse.AUTOMATISK_OPPDATER_VILKÅR,
+                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.AUTOMATISK_OPPDATER_VILKÅR))
+                ),
+            )
+            prosesserBehandlingService.triggProsesserBehandling(behandling)
+        }
+    }
+
 
 }
