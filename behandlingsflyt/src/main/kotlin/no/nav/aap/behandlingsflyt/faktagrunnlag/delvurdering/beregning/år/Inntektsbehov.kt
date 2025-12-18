@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.beregning.Månedsinntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.tilTidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentGrunnlag
@@ -74,8 +75,11 @@ class Inntektsbehov(private val beregningInput: BeregningInput) {
      * Skal beregne med uføre om det finnes data på uføregrad.
      */
     fun finnesUføreData(): Boolean {
-        return beregningInput.beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato != null
+        val ytterligereNedsattArbeidsevneDato =
+            beregningInput.beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
+        return ytterligereNedsattArbeidsevneDato != null
                 && beregningInput.uføregrad.isNotEmpty()
+                && beregningInput.uføregrad.tilTidslinje().minDato() <= ytterligereNedsattArbeidsevneDato
     }
 
     /**

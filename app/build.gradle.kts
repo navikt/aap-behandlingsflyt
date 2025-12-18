@@ -1,7 +1,5 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
-val opentelemetryVersion = "2.22.0-alpha"
-
 repositories {
     mavenCentral()
     maven { url = uri("https://packages.confluent.io/maven/") }
@@ -65,10 +63,10 @@ tasks.register<JavaExec>("beregnCSV") {
 dependencies {
     implementation(libs.ktorServerStatusPages)
 
-    implementation("io.micrometer:micrometer-registry-prometheus:1.16.0")
-    implementation("ch.qos.logback:logback-classic:1.5.21")
-    implementation("net.logstash.logback:logstash-logback-encoder:9.0")
-    implementation("org.slf4j:jul-to-slf4j:2.0.17") // trengs for postgres-logging
+    implementation(libs.micrometerRegistryPrometheus)
+    implementation(libs.logbackClassic)
+    implementation(libs.logstashLogbackEncoder)
+    implementation(libs.julToSlf4J) // trengs for postgres-logging
 
     implementation(libs.motor)
     implementation(libs.dbconnect)
@@ -81,28 +79,27 @@ dependencies {
     implementation(libs.tidslinje)
 
     // Auditlogging
-    runtimeOnly("com.papertrailapp:logback-syslog4j:1.0.0")
+    runtimeOnly(libs.logbackSyslog)
 
     implementation(project(":api"))
     implementation(project(":behandlingsflyt"))
     implementation(project(":repository"))
-    implementation("com.zaxxer:HikariCP:7.0.2")
-    implementation("org.flywaydb:flyway-database-postgresql:11.17.2")
+    implementation(libs.hikariCp)
+    implementation(libs.flywayDatabasePostgresql)
 
-    runtimeOnly("org.postgresql:postgresql") // låst versjon i root build.gradle.kts
+    runtimeOnly(libs.postgresql) // låst versjon i root build.gradle.kts
 
-    implementation("ch.qos.logback:logback-classic:1.5.21")
-    implementation("io.opentelemetry.instrumentation:opentelemetry-logback-mdc-1.0:${opentelemetryVersion}")
-    implementation("io.opentelemetry.instrumentation:opentelemetry-ktor-3.0:${opentelemetryVersion}")
-    implementation("org.apache.avro:avro:1.12.1")
-    implementation("io.confluent:kafka-avro-serializer:7.6.0")
+    implementation(libs.opentelemetryLogbackMdc)
+    implementation(libs.opentelemetryKtor)
+    implementation(libs.avro)
+    implementation(libs.kafkaAvroSerializer)
     testImplementation(project(":lib-test"))
     implementation(libs.dbtest)
     implementation(libs.motorTestUtils)
     testImplementation(libs.bundles.junit)
     testImplementation(kotlin("test"))
 
-    testImplementation("org.apache.kafka:kafka-clients:4.1.1")
+    testImplementation(libs.kafkaClients)
 
     testImplementation(libs.testcontainers)
     testImplementation(libs.testcontainersPostgres)

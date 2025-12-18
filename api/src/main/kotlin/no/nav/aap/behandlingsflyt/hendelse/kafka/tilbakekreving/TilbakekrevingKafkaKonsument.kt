@@ -53,7 +53,7 @@ class TilbakekrevingKafkaKonsument(
         val tilbakekrevingHendelse = try {
             DefaultJsonMapper.fromJson<TilbakekrevingHendelseKafkaMelding>(meldingVerdi)
         } catch (exception: Exception) {
-            secureLogger.error("Kunne ikke parse melding fra tilbakekreving: $meldingKey")
+            secureLogger.error("Kunne ikke parse melding fra tilbakekreving: $meldingKey med verdi: $meldingVerdi", exception)
             throw exception
         }
         val saksnummer = Saksnummer(tilbakekrevingHendelse.eksternFagsakId)
