@@ -53,7 +53,7 @@ class BeregnTilkjentYtelseService(private val grunnlag: TilkjentYtelseGrunnlag) 
      * - [barnetillegget][utledBarnetillegg]
      * - [graderingen][gradering]
      *
-     * Endelig dagsags regnes ut som:
+     * Endelig dagsats regnes ut som:
      * ```
      * (barnetillegg × gradering) + (dagsats × gradering)
      * ```
