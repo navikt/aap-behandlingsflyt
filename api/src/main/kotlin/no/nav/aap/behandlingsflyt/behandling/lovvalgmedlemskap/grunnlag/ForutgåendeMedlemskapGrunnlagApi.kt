@@ -59,9 +59,10 @@ fun NormalOpenAPIRoute.forutgåendeMedlemskapApi(
                             ?.perioderVedtaketBehøverVurdering()
                             .orEmpty()
 
+                    val overstyrt = nyeVurderinger?.any { it.overstyrt } ?: false && behøverVurderinger.isEmpty()
                     PeriodisertForutgåendeMedlemskapGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
-                        overstyrt = (nyeVurderinger)?.any { it.overstyrt } ?: false,
+                        overstyrt = overstyrt,
                         behøverVurderinger = behøverVurderinger.toList(),
                         kanVurderes = listOf(sak.rettighetsperiode),
                         nyeVurderinger = nyeVurderinger?.map { it.toResponse(vurdertAvService) } ?: emptyList(),
