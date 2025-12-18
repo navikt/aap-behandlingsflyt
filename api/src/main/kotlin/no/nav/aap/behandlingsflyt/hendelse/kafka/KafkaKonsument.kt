@@ -38,12 +38,14 @@ abstract class KafkaKonsument<K, V>(
                 object: ConsumerRebalanceListener {
                     override fun onPartitionsAssigned(partitions: MutableCollection<TopicPartition>?) {
                         if (offset != null) {
-                            log.info("Setter offset $offset for topic $topic")
-                            konsument.seek(TopicPartition(topic, 0), offset)
+                            log.info("Setter offset $offset for partitions $partitions")
+                            partitions?.forEach {
+                                konsument.seek(it, offset)
+                            }
                         }
                     }
                     override fun onPartitionsRevoked(partitions: MutableCollection<TopicPartition>?) {
-
+                        log.info("Revoked partitions $partitions")
                     }
                 }
             )
