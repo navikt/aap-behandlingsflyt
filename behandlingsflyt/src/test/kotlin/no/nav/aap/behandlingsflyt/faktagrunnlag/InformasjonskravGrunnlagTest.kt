@@ -62,7 +62,7 @@ class InformasjonskravGrunnlagTest {
         @JvmStatic
         fun tearDown() = dataSource.close()
     }
-    
+
     private val gatewayProvider = createGatewayProvider {
         register<MedlemskapGateway>()
         register<AARegisterGateway>()
@@ -79,7 +79,9 @@ class InformasjonskravGrunnlagTest {
         dataSource.transaction { connection ->
             val (ident, kontekst) = klargjør(connection)
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
-                InformasjonskravRepositoryImpl(connection), postgresRepositoryRegistry.provider(connection), gatewayProvider
+                InformasjonskravRepositoryImpl(connection),
+                postgresRepositoryRegistry.provider(connection),
+                gatewayProvider
             )
 
             FakePersoner.leggTil(
@@ -113,7 +115,9 @@ class InformasjonskravGrunnlagTest {
         dataSource.transaction { connection ->
             val (ident, kontekst) = klargjør(connection)
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
-                InformasjonskravRepositoryImpl(connection), postgresRepositoryRegistry.provider(connection), gatewayProvider
+                InformasjonskravRepositoryImpl(connection),
+                postgresRepositoryRegistry.provider(connection),
+                gatewayProvider
             )
 
             FakePersoner.leggTil(
@@ -140,7 +144,9 @@ class InformasjonskravGrunnlagTest {
         dataSource.transaction { connection ->
             val (_, kontekst) = klargjør(connection)
             val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
-                InformasjonskravRepositoryImpl(connection), postgresRepositoryRegistry.provider(connection), gatewayProvider
+                InformasjonskravRepositoryImpl(connection),
+                postgresRepositoryRegistry.provider(connection),
+                gatewayProvider
             )
 
             val erOppdatert = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
@@ -154,38 +160,48 @@ class InformasjonskravGrunnlagTest {
 
     @Test
     fun `Lovvalg og medlemskap er oppdatert`() {
-        dataSource.transaction { connection ->
+        val (ident, kontekst) = dataSource.transaction { connection ->
             val (ident, kontekst) = klargjør(connection)
-            val informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(
-                InformasjonskravRepositoryImpl(connection), postgresRepositoryRegistry.provider(connection), gatewayProvider
-            )
-
-            FakePersoner.leggTil(
-                TestPerson(
-                    identer = setOf(ident),
-                    fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
-                    yrkesskade = emptyList()
-                )
-            )
-
-            val initiell = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
-                listOf(StegType.VURDER_LOVVALG to LovvalgInformasjonskrav),
-                kontekst
-            )
-
-            assertThat(initiell)
-                .hasSize(1)
-                .allMatch { it === LovvalgInformasjonskrav }
-
-            val erOppdatert = informasjonskravGrunnlag.oppdaterFaktagrunnlagForKravliste(
-                listOf(StegType.VURDER_LOVVALG to LovvalgInformasjonskrav),
-                kontekst
-            )
-            val lagretData = MedlemskapArbeidInntektRepositoryImpl(connection).hentHvisEksisterer(kontekst.behandlingId)
-
-            assertThat(lagretData?.inntekterINorgeGrunnlag?.size == 2).isTrue()
-            assertThat(erOppdatert).isEmpty()
+            Pair(ident, kontekst)
         }
+
+        FakePersoner.leggTil(
+            TestPerson(
+                identer = setOf(ident),
+                fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
+                yrkesskade = emptyList()
+            )
+        )
+
+        val initiell = dataSource.transaction {
+            InformasjonskravGrunnlagImpl(
+                postgresRepositoryRegistry.provider(it),
+                gatewayProvider
+            ).oppdaterFaktagrunnlagForKravliste(
+                listOf(StegType.VURDER_LOVVALG to LovvalgInformasjonskrav),
+                kontekst
+            )
+        }
+        assertThat(initiell)
+            .hasSize(1)
+            .allMatch { it === LovvalgInformasjonskrav }
+
+        val erOppdatert = dataSource.transaction {
+            InformasjonskravGrunnlagImpl(
+                postgresRepositoryRegistry.provider(it),
+                gatewayProvider
+            ).oppdaterFaktagrunnlagForKravliste(
+                listOf(StegType.VURDER_LOVVALG to LovvalgInformasjonskrav),
+                kontekst
+            )
+        }
+        val lagretData = dataSource.transaction {
+            MedlemskapArbeidInntektRepositoryImpl(it).hentHvisEksisterer(kontekst.behandlingId)
+        }
+
+        assertThat(lagretData?.inntekterINorgeGrunnlag!!).hasSize(120)
+        assertThat(erOppdatert).isEmpty()
+
     }
 
     @Test

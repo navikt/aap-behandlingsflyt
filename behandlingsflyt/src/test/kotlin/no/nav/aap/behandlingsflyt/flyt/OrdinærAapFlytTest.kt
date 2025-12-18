@@ -118,7 +118,7 @@ class OrdinærAapFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         assertThat(åpneAvklaringsbehov).anySatisfy { assertTrue(it.definisjon == Definisjon.FATTE_VEDTAK) }
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
 
-        behandling = løsFatteVedtak(behandling)
+        behandling = behandling.fattVedtak()
         assertThat(behandling.status()).isEqualTo(Status.IVERKSETTES)
 
         val vedtak = hentVedtak(behandling.id)
