@@ -86,8 +86,8 @@ class TestPerson(
         return this
     }
 
-    fun medUføre(uføre: Prosent?): TestPerson {
-        this.uføre = uføre?.let { Uføre(virkningstidspunkt = LocalDate.now().minusYears(3), uføregrad = uføre) }
+    fun medUføre(uføre: Prosent?, virkningstidspunkt: LocalDate = LocalDate.now().minusYears(3)): TestPerson {
+        this.uføre = uføre?.let { Uføre(virkningstidspunkt = virkningstidspunkt, uføregrad = uføre) }
         return this
     }
 
