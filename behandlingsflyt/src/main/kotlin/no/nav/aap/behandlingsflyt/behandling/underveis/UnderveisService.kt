@@ -12,15 +12,12 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.InstitusjonRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MapInstitusjonoppholdTilRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.OppholdskravRegel
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.SammenstiltAktivitetspliktRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UnderveisInput
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UtledMeldeperiodeRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Vurdering
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Grunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
@@ -53,7 +50,6 @@ class UnderveisService(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val meldekortRepository: MeldekortRepository,
     private val underveisRepository: UnderveisRepository,
-    private val aktivitetsplikt11_7Repository: Aktivitetsplikt11_7Repository,
     private val institusjonsoppholdUtlederService: InstitusjonsoppholdUtlederService,
     private val arbeidsevneRepository: ArbeidsevneRepository,
     private val meldepliktRepository: MeldepliktRepository,
@@ -69,7 +65,6 @@ class UnderveisService(
         vilkårsresultatRepository = repositoryProvider.provide(),
         meldekortRepository = repositoryProvider.provide(),
         underveisRepository = repositoryProvider.provide(),
-        aktivitetsplikt11_7Repository = repositoryProvider.provide(),
         institusjonsoppholdUtlederService = InstitusjonsoppholdUtlederService(repositoryProvider),
         arbeidsevneRepository = repositoryProvider.provide(),
         meldepliktRepository = repositoryProvider.provide(),
@@ -90,7 +85,6 @@ class UnderveisService(
             InstitusjonRegel(),
             OppholdskravRegel(),
             MeldepliktRegel(),
-            SammenstiltAktivitetspliktRegel(),
             FastsettGrenseverdiArbeidRegel(),
             GraderingArbeidRegel(),
             VarighetRegel(),
@@ -108,10 +102,6 @@ class UnderveisService(
             }
 
             sjekkAvhengighet(forventetFør = UtledMeldeperiodeRegel::class, forventetEtter = MeldepliktRegel::class)
-            sjekkAvhengighet(
-                forventetFør = UtledMeldeperiodeRegel::class,
-                forventetEtter = SammenstiltAktivitetspliktRegel::class
-            )
             sjekkAvhengighet(forventetFør = UtledMeldeperiodeRegel::class, forventetEtter = GraderingArbeidRegel::class)
             sjekkAvhengighet(forventetFør = FastsettGrenseverdiArbeidRegel::class, forventetEtter = GraderingArbeidRegel::class)
         }
@@ -169,9 +159,6 @@ class UnderveisService(
 
         val institusjonsopphold = MapInstitusjonoppholdTilRegel.map(utlederResultat)
 
-        val aktivitetsplikt11_7Grunnlag = aktivitetsplikt11_7Repository.hentHvisEksisterer(behandlingId)
-            ?: Aktivitetsplikt11_7Grunnlag(vurderinger = emptyList())
-
         val arbeidsevneGrunnlag = arbeidsevneRepository.hentHvisEksisterer(behandlingId)
             ?: ArbeidsevneGrunnlag(vurderinger = emptyList())
 
@@ -199,7 +186,6 @@ class UnderveisService(
             meldekort = meldekort,
             innsendingsTidspunkt = innsendingsTidspunkt,
             kvoter = kvote,
-            aktivitetsplikt11_7Grunnlag = aktivitetsplikt11_7Grunnlag,
             institusjonsopphold = institusjonsopphold,
             arbeidsevneGrunnlag = arbeidsevneGrunnlag,
             meldepliktGrunnlag = meldepliktGrunnlag,

@@ -40,11 +40,10 @@ class InstitusjonRegelTest {
     fun vurder() {
         val periode = Periode(LocalDate.of(2024, 1, 5), LocalDate.of(2025, 5, 1))
         val vurderingFraTidligereResultat = Vurdering(
-            RettighetsType.BISTANDSBEHOV,
-            MeldepliktVurdering.Fritak,
-            null,
-            null,
-            ArbeidsGradering(
+            fårAapEtter = RettighetsType.BISTANDSBEHOV,
+            meldepliktVurdering = MeldepliktVurdering.Fritak,
+            oppholdskravVurdering = null,
+            gradering = ArbeidsGradering(
                 totaltAntallTimer = TimerArbeid(BigDecimal.ZERO),
                 andelArbeid = Prosent(0),
                 fastsattArbeidsevne = Prosent.`0_PROSENT`,

@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.Institusjonsopp
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.underveis.Kvoter
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneGrunnlag
@@ -22,7 +21,6 @@ data class UnderveisInput(
     val innsendingsTidspunkt: Map<LocalDate, JournalpostId>,
     val dødsdato: LocalDate? = null,
     val kvoter: Kvoter,
-    val aktivitetsplikt11_7Grunnlag: Aktivitetsplikt11_7Grunnlag,
     val oppholdskravGrunnlag: OppholdskravGrunnlag,
     val institusjonsopphold: List<Institusjonsopphold>,
     val arbeidsevneGrunnlag: ArbeidsevneGrunnlag,
