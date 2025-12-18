@@ -31,6 +31,7 @@ import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -307,39 +308,6 @@ private fun <T : SamordningPeriode> isPeriodeDekketAvEksisterendePerioder(
 
 
 fun <T : SamordningPeriode> List<T>.tilTidslinje(): Tidslinje<Boolean> =
-    Tidslinje(
-        this
-            .map { it.periode }
-            .slåSammenOverlappendePerioder()
-            .map { periode ->
-                Segment(
-                    periode = periode,
-                    verdi = true
-                )
-            }
-    )
+    this.somTidslinje( { it.periode }, { true } )
 
-fun List<Periode>.slåSammenOverlappendePerioder(): List<Periode> {
-    if (isEmpty()) return emptyList()
-
-    val sortert = sortedBy { it.fom }
-    val resultat = mutableListOf<Periode>()
-
-    var gjeldende = sortert.first()
-
-    for (neste in sortert.drop(1)) {
-        if (gjeldende.overlapper(neste) || gjeldende.tom.plusDays(1) == neste.fom) {
-            gjeldende = Periode(
-                fom = minOf(gjeldende.fom, neste.fom),
-                tom = maxOf(gjeldende.tom, neste.tom)
-            )
-        } else {
-            resultat.add(gjeldende)
-            gjeldende = neste
-        }
-    }
-
-    resultat.add(gjeldende)
-    return resultat
-}
 
