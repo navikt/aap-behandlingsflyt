@@ -106,6 +106,7 @@ import no.nav.aap.motor.Motor
 import no.nav.aap.motor.api.motorApi
 import no.nav.aap.motor.retry.RetryService
 import no.nav.person.pdl.leesah.Personhendelse
+import org.apache.kafka.common.TopicPartition
 import org.slf4j.LoggerFactory
 import org.slf4j.bridge.SLF4JBridgeHandler
 import java.net.InetAddress
@@ -425,7 +426,7 @@ fun Application.startTilbakekrevingEventKonsument(
     )
     monitor.subscribe(ApplicationStarted) {
         val t = Thread {
-            konsument.konsumer()
+            konsument.konsumer(698L)
         }
         t.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, e ->
             log.error("Konsumering av $TILBAKEKREVING_EVENT_TOPIC ble lukket pga uhåndtert feil", e)

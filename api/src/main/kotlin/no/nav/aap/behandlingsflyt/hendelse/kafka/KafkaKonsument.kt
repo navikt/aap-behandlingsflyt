@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.hendelse.kafka
 
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
+import org.apache.kafka.common.TopicPartition
 import org.apache.kafka.common.errors.WakeupException
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
@@ -29,10 +30,14 @@ abstract class KafkaKonsument<K, V>(
         konsument.wakeup() // Trigger en WakeupException for å avslutte polling
     }
 
-    fun konsumer() {
+    fun konsumer(offset: Long? = null) {
         try {
             log.info("Starter konsumering av $topic")
             konsument.subscribe(listOf(topic))
+            if (offset != null) {
+                log.info("Setter offset $offset for topic $topic")
+                konsument.seek(TopicPartition(topic, 0), offset)
+            }
             while (!lukket.get()) {
                 val meldinger: ConsumerRecords<K, V> = konsument.poll(pollTimeout.toJavaDuration())
                 håndter(meldinger)
