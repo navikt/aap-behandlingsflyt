@@ -9,6 +9,9 @@ enum class ÅrsakTilOpprettelse {
     OMGJØRING_ETTER_SVAR_FRA_KLAGEINSTANS,
     ENDRING_I_REGISTERDATA,
 
+    // Satsjustering
+    BARNETILLEGG_SATSENDRING,
+
     // Meldeperioder og aktivitet
     FASTSATT_PERIODE_PASSERT,
     FRITAK_MELDEPLIKT,

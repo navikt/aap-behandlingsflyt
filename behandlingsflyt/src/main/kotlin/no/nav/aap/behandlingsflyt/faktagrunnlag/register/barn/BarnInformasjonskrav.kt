@@ -25,13 +25,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
-import java.time.LocalDateTime
-import java.time.ZoneId
 
 class BarnInformasjonskrav private constructor(
     private val barnRepository: BarnRepository,
@@ -39,8 +35,7 @@ class BarnInformasjonskrav private constructor(
     private val barnGateway: BarnGateway,
     private val identGateway: IdentGateway,
     private val tidligereVurderinger: TidligereVurderinger,
-    private val sakService: SakService,
-    private val unleashGateway: UnleashGateway
+    private val sakService: SakService
 ) : Informasjonskrav<BarnInformasjonskrav.BarnInput, BarnInformasjonskrav.Registerdata>, KanTriggeRevurdering {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -55,16 +50,9 @@ class BarnInformasjonskrav private constructor(
         // Kun gjøre oppslag mot register ved førstegangsbehandling og revurdering av barnetillegg (Se AAP-933).
         val gyldigBehandling =
             kontekst.erFørstegangsbehandling() || kontekst.erRevurderingMedVurderingsbehov(BARNETILLEGG)
-        return if (unleashGateway.isEnabled(BehandlingsflytFeature.NyeBarn)) {
-            gyldigBehandling &&
-                    (oppdatert == null || oppdatert.oppdatert.atZone(ZoneId.of("Europe/Oslo")).toLocalDateTime()
-                        .isBefore(LocalDateTime.now().minusHours(1))) &&
-                    !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
-        } else {
-            gyldigBehandling &&
-                    oppdatert.ikkeKjørtSisteKalenderdag() &&
-                    !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
-        }
+        return gyldigBehandling &&
+                oppdatert.ikkeKjørtSisteKalenderdag() &&
+                !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
     }
 
     data class BarnInput(
@@ -91,7 +79,8 @@ class BarnInformasjonskrav private constructor(
 
     override fun hentData(input: BarnInput): Registerdata {
         val (barnGrunnlag, person) = input
-        val saksbehandlerOppgitteBarnIdenter = barnGrunnlag?.saksbehandlerOppgitteBarn?.barn?.mapNotNull { it.ident }.orEmpty()
+        val saksbehandlerOppgitteBarnIdenter =
+            barnGrunnlag?.saksbehandlerOppgitteBarn?.barn?.mapNotNull { it.ident }.orEmpty()
         val oppgitteBarnIdenter = barnGrunnlag?.oppgitteBarn?.oppgitteBarn?.mapNotNull { it.ident }.orEmpty()
         val barn = barnGateway.hentBarn(person, oppgitteBarnIdenter, saksbehandlerOppgitteBarnIdenter)
 
@@ -185,8 +174,7 @@ class BarnInformasjonskrav private constructor(
                 gatewayProvider.provide(),
                 gatewayProvider.provide(),
                 TidligereVurderingerImpl(repositoryProvider),
-                SakService(repositoryProvider),
-                gatewayProvider.provide<UnleashGateway>()
+                SakService(repositoryProvider)
             )
         }
     }

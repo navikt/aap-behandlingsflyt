@@ -24,7 +24,6 @@ object FakeUnleash : FakeUnleashBase(
         BehandlingsflytFeature.OvergangArbeid to true,
         BehandlingsflytFeature.KvalitetssikringsSteg to true,
         BehandlingsflytFeature.EOSBeregning to true,
-        BehandlingsflytFeature.NyeBarn to true,
         BehandlingsflytFeature.NyBrevbyggerV3 to false,
         BehandlingsflytFeature.BedreUttrekkAvSakerMedFritakMeldeplikt to false,
         BehandlingsflytFeature.LagreVedtakIFatteVedtak to true,
@@ -34,6 +33,9 @@ object FakeUnleash : FakeUnleashBase(
         BehandlingsflytFeature.KravOmInntektsbortfall to true,
         BehandlingsflytFeature.Under18 to true,
         BehandlingsflytFeature.MigrerMeldepliktFritak to true,
+        BehandlingsflytFeature.SosialRefusjon to true,
+        BehandlingsflytFeature.HentSykepengerVedOverlapp to true,
+        BehandlingsflytFeature.KanSendeBrevOmBarnetilleggSatsRegulering to true,
     )
 )
 
@@ -45,7 +47,6 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.OvergangArbeid to true,
         BehandlingsflytFeature.KvalitetssikringsSteg to true,
         BehandlingsflytFeature.EOSBeregning to true,
-        BehandlingsflytFeature.NyeBarn to true,
         BehandlingsflytFeature.NyBrevbyggerV3 to false,
         BehandlingsflytFeature.BedreUttrekkAvSakerMedFritakMeldeplikt to true,
         BehandlingsflytFeature.LagreVedtakIFatteVedtak to true,
@@ -55,5 +56,8 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.KravOmInntektsbortfall to true,
         BehandlingsflytFeature.Under18 to true,
         BehandlingsflytFeature.MigrerMeldepliktFritak to true,
+        BehandlingsflytFeature.SosialRefusjon to true,
+        BehandlingsflytFeature.HentSykepengerVedOverlapp to true,
+        BehandlingsflytFeature.KanSendeBrevOmBarnetilleggSatsRegulering to true,
     )
 )

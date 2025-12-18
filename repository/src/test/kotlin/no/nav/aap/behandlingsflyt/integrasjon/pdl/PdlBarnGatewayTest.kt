@@ -7,7 +7,10 @@ import io.mockk.mockkStatic
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.komponenter.config.requiredConfigForKey
+import no.nav.aap.komponenter.httpklient.httpclient.RestClient
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -16,12 +19,20 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.assertThrows
+import java.io.InputStream
+import java.net.URI
+import java.time.LocalDate
+import java.util.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PdlBarnGatewayTest {
 
     private lateinit var gateway: PdlBarnGateway
-    private lateinit var mockPerson: Person
+    private val mockPerson: Person = Person(
+        id = PersonId(0L),
+        identifikator = UUID.randomUUID(),
+        identer = listOf(Ident("12345678901"))
+    )
 
     @BeforeAll
     fun setupMocks() {
@@ -30,19 +41,14 @@ class PdlBarnGatewayTest {
 
         mockkObject(PdlGateway)
 
-        val mockClient = mockk<no.nav.aap.komponenter.httpklient.httpclient.RestClient<java.io.InputStream>>()
+        val mockClient = mockk<RestClient<InputStream>>()
         every { PdlGateway getProperty "client" } returns mockClient
-        every { PdlGateway getProperty "url" } returns java.net.URI.create("http://mock-url")
+        every { PdlGateway getProperty "url" } returns URI.create("http://mock-url")
     }
 
     @BeforeEach
     fun setup() {
         gateway = PdlBarnGateway()
-        mockPerson = mockk {
-            every { aktivIdent() } returns mockk {
-                every { identifikator } returns "12345678901"
-            }
-        }
     }
 
     @Test
@@ -85,10 +91,12 @@ class PdlBarnGatewayTest {
 
         val resultat = gateway.hentBarn(mockPerson, emptyList(), emptyList())
 
-        assertEquals(1, resultat.registerBarn.size)
+        assertThat(resultat.registerBarn.size).isEqualTo(1)
+
         val barn = resultat.registerBarn.first()
         assertTrue(barn.ident is BarnIdentifikator.NavnOgFødselsdato)
-        assertEquals("Ella Hansen", barn.navn)
+        assertThat(barn.ident).isInstanceOf(BarnIdentifikator.NavnOgFødselsdato::class.java)
+        assertThat(barn.navn).isEqualTo("Ella Hansen")
     }
 
     @Test
@@ -128,8 +136,8 @@ class PdlBarnGatewayTest {
 
         val resultat = gateway.hentBarn(mockPerson, listOf(oppgittIdent), emptyList())
 
-        assertEquals(0, resultat.registerBarn.size)
-        assertEquals(1, resultat.oppgitteBarnFraPDL.size)
+        assertThat(resultat.oppgitteBarnFraPDL.size).isEqualTo(1)
+        assertThat(resultat.registerBarn.size).isEqualTo(0)
     }
 
     @Test
@@ -229,9 +237,18 @@ class PdlBarnGatewayTest {
         assertEquals(1, resultat.oppgitteBarnFraPDL.size)
         assertEquals(1, resultat.saksbehandlerOppgitteBarnPDL.size)
 
-        assertEquals(registerIdent, (resultat.registerBarn.first().ident as BarnIdentifikator.BarnIdent).ident.identifikator)
-        assertEquals(oppgittIdent.identifikator, (resultat.oppgitteBarnFraPDL.first().ident as BarnIdentifikator.BarnIdent).ident.identifikator)
-        assertEquals(saksbehandlerIdent.identifikator, (resultat.saksbehandlerOppgitteBarnPDL.first().ident as BarnIdentifikator.BarnIdent).ident.identifikator)
+        assertEquals(
+            registerIdent,
+            (resultat.registerBarn.first().ident as BarnIdentifikator.BarnIdent).ident.identifikator
+        )
+        assertEquals(
+            oppgittIdent.identifikator,
+            (resultat.oppgitteBarnFraPDL.first().ident as BarnIdentifikator.BarnIdent).ident.identifikator
+        )
+        assertEquals(
+            saksbehandlerIdent.identifikator,
+            (resultat.saksbehandlerOppgitteBarnPDL.first().ident as BarnIdentifikator.BarnIdent).ident.identifikator
+        )
     }
 
     @Test
@@ -283,22 +300,19 @@ class PdlBarnGatewayTest {
 
     // Hjelpemetoder for å lage testdata
     private fun lagPdlRelasjonResponse(relasjoner: List<ForelderBarnRelasjon>): PdlRelasjonDataResponse {
-        return mockk {
-            every { data } returns mockk {
-                every { hentPerson } returns mockk {
-                    every { forelderBarnRelasjon } returns relasjoner
-                }
-                every { hentPersonBolk } returns null
-            }
-        }
+        return PdlRelasjonDataResponse(
+            data = PdlRelasjonData(hentPerson = PdlPersoninfo(forelderBarnRelasjon = relasjoner)),
+            errors = null,
+            extensions = null
+        )
     }
 
     private fun lagBarnRelasjonMedIdent(ident: String): ForelderBarnRelasjon {
-        return mockk {
-            every { relatertPersonsRolle } returns ForelderBarnRelasjonRolle.BARN
-            every { relatertPersonsIdent } returns ident
-            every { relatertPersonUtenFolkeregisteridentifikator } returns null
-        }
+        return ForelderBarnRelasjon(
+            relatertPersonsIdent = ident,
+            relatertPersonsRolle = ForelderBarnRelasjonRolle.BARN,
+            relatertPersonUtenFolkeregisteridentifikator = null,
+        )
     }
 
     private fun lagBarnRelasjonUtenIdent(
@@ -306,66 +320,59 @@ class PdlBarnGatewayTest {
         etternavn: String,
         fødselsdato: String
     ): ForelderBarnRelasjon {
-        return mockk {
-            every { relatertPersonsRolle } returns ForelderBarnRelasjonRolle.BARN
-            every { relatertPersonsIdent } returns null
-            every { relatertPersonUtenFolkeregisteridentifikator } returns mockk {
-                every { foedselsdato } returns java.time.LocalDate.parse(fødselsdato)
-                every { navn } returns mockk {
-                    every { this@mockk.fornavn } returns fornavn
-                    every { this@mockk.etternavn } returns etternavn
-                }
-            }
-        }
+        return ForelderBarnRelasjon(
+            relatertPersonsRolle = ForelderBarnRelasjonRolle.BARN,
+            relatertPersonsIdent = null,
+            relatertPersonUtenFolkeregisteridentifikator = RelatertBiPerson(
+                foedselsdato = LocalDate.parse(fødselsdato),
+                statsborgerskap = null,
+                navn = PdlNavn(fornavn = fornavn, mellomnavn = null, etternavn = etternavn)
+            )
+        )
     }
 
     private fun lagBarnRelasjonUtenIdentOgData(): ForelderBarnRelasjon {
-        return mockk {
-            every { relatertPersonsRolle } returns ForelderBarnRelasjonRolle.BARN
-            every { relatertPersonsIdent } returns null
-            every { relatertPersonUtenFolkeregisteridentifikator } returns mockk {
-                every { foedselsdato } returns null
-                every { navn } returns null
-            }
-        }
+        return ForelderBarnRelasjon(
+            relatertPersonsIdent = null,
+            relatertPersonsRolle = ForelderBarnRelasjonRolle.BARN,
+            relatertPersonUtenFolkeregisteridentifikator = RelatertBiPerson(
+                foedselsdato = null,
+                navn = null,
+                statsborgerskap = null
+            )
+        )
     }
 
     private fun lagPdlBolkResponse(barnData: List<Triple<String, String, String?>>): PdlRelasjonDataResponse {
         val personBolkList = barnData.map { (ident, fødselsdato, dødsdato) ->
-            mockk<HentPersonBolkResult> {
-                every { this@mockk.ident } returns ident
-                every { person } returns mockk<PdlPersoninfo> {
-                    every { foedselsdato } returns listOf(mockk<PdlFoedsel> {
-                        every { this@mockk.foedselsdato } returns fødselsdato
-                        every { foedselAar } returns null
-                    })
-                    (every { doedsfall } returns dødsdato?.let {
-                        setOf(mockk<PDLDødsfall> {
-                            every { doedsdato } returns it
-                        })
-                    })
-                    every { navn } returns listOf(mockk<PdlNavn> {
-                        every { fornavn } returns "Janne"
-                        every { mellomnavn } returns null
-                        every { etternavn } returns "Larsen"
-                    })
-                    every { forelderBarnRelasjon } returns null
-                    every { statsborgerskap } returns null
-                    every { folkeregisterpersonstatus } returns null
-                    every { bostedsadresse } returns null
-                    every { oppholdsadresse } returns null
-                    every { kontaktadresse } returns null
-                }
-            }
+            HentPersonBolkResult(
+                ident = ident,
+                person = PdlPersoninfo(
+                    forelderBarnRelasjon = null,
+                    foedselsdato = listOf(
+                        PdlFoedsel(
+                            foedselsdato = fødselsdato,
+                            foedselAar = null,
+                        )
+                    ),
+                    doedsfall = dødsdato?.let { PDLDødsfall(doedsdato = it) }?.let(::setOf),
+                    statsborgerskap = null,
+                    folkeregisterpersonstatus = null,
+                    bostedsadresse = null,
+                    oppholdsadresse = null,
+                    kontaktadresse = null,
+                    navn = listOf(PdlNavn(fornavn = "Janne", mellomnavn = null, etternavn = "Larsen"))
+                )
+            )
         }
 
-        return mockk {
-            every { data } returns mockk<PdlRelasjonData> {
-                every { hentPersonBolk } returns personBolkList
-                every { hentPerson } returns null
-            }
-            every { errors } returns null
-            every { extensions } returns null
-        }
+        return PdlRelasjonDataResponse(
+            data = PdlRelasjonData(
+                hentPerson = null,
+                hentPersonBolk = personBolkList
+            ),
+            errors = null,
+            extensions = null,
+        )
     }
 }

@@ -8,6 +8,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.NavKo
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.gateway.Gateway
@@ -27,10 +29,13 @@ import java.util.*
 class GosysGateway : OppgaveGateway {
 
     companion object : Factory<Gateway> {
+
+
         override fun konstruer(): Gateway {
             return GosysGateway()
         }
     }
+
 
     private val log = LoggerFactory.getLogger(javaClass)
     private val baseUri = URI.create(requiredConfigForKey("integrasjon.gosys.url"))
@@ -50,18 +55,17 @@ class GosysGateway : OppgaveGateway {
         navKontor: NavKontorPeriodeDto
     ) {
 
+        if (navKontor.vedtaksdato == null || navKontor.virkingsdato == null) {
+            log.error("Kan ikke opprette refusjonsoppgave i Gosys uten gyldige datoer for navkontor periode. Navkontorperiode: $navKontor")
+            throw IllegalArgumentException("Kan ikke opprette refusjonsoppgave i Gosys uten gyldige datoer for navkontor periode.")
+        }
+
         val beskrivelse =
-            if (navKontor.fom != null && navKontor.tom != null) {
-                val fom = requireNotNull(navKontor.fom)
-                val tom = requireNotNull(navKontor.tom)
-                "Refusjonskrav. Brukeren er innvilget etterbetaling av AAP fra ${
-                    formatDateToSaksbehandlerVennlig(fom)
-                } til ${
-                    formatDateToSaksbehandlerVennlig(tom)
-                }. Dere må sende refusjonskrav til NØS."
-            } else {
-                "Refusjonskrav. Brukeren er innvilget etterbetaling av AAP til ${navKontor.enhetsNummer}. Dere må sende refusjonskrav til NØS."
-            }
+            "Refusjonskrav. Brukeren er innvilget etterbetaling av AAP fra ${
+                formatDateToSaksbehandlerVennlig(navKontor.virkingsdato!!)
+            } til ${
+                formatDateToSaksbehandlerVennlig(navKontor.vedtaksdato!!)
+            }. Dere må sende refusjonskrav til NØS."
 
         val oppgaveRequest = OpprettOppgaveRequest(
             oppgavetype = OppgaveType.VURDER_KONSEKVENS_FOR_YTELSE.verdi,

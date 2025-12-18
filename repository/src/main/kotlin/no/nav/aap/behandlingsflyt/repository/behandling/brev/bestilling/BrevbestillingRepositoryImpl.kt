@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.repository.behandling.brev.bestilling
 
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.*
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.lookup.repository.Factory
@@ -12,6 +13,28 @@ class BrevbestillingRepositoryImpl(private val connection: DBConnection) :
     companion object : Factory<BrevbestillingRepositoryImpl> {
         override fun konstruer(connection: DBConnection): BrevbestillingRepositoryImpl {
             return BrevbestillingRepositoryImpl(connection)
+        }
+    }
+
+    override fun hent(
+        sakId: SakId,
+        typeBrev: TypeBrev
+    ): List<Brevbestilling> {
+        val query =
+            """
+                SELECT bestilling.*
+                FROM BEHANDLING behandling
+                INNER JOIN BREVBESTILLING bestilling on bestilling.behandling_id = behandling.id
+                WHERE behandling.sak_id = ?
+                AND bestilling.type_brev = ?
+            """.trimIndent()
+
+        return connection.queryList(query) {
+            setParams {
+                setLong(1, sakId.toLong())
+                setEnumName(2, typeBrev)
+            }
+            setRowMapper { rowMapper(it) }
         }
     }
 

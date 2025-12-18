@@ -27,10 +27,11 @@ class KabalKafkaKonsument(
     config: KafkaConsumerConfig<String, String>,
     pollTimeout: Duration = 10.seconds,
     closeTimeout: Duration = 30.seconds,
+    topic: String = KABAL_EVENT_TOPIC,
     private val dataSource: DataSource,
     private val repositoryRegistry: RepositoryRegistry
 ) : KafkaKonsument<String, String>(
-    topic = KABAL_EVENT_TOPIC,
+    topic = topic,
     config = config,
     pollTimeout = pollTimeout,
     closeTimeout = closeTimeout,

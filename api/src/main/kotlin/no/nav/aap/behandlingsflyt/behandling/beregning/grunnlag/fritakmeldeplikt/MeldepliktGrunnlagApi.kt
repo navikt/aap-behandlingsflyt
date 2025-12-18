@@ -25,6 +25,7 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
@@ -58,18 +59,14 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(
                     val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
 
                     val nåTilstand = meldepliktRepository.hentHvisEksisterer(behandling.id)?.vurderinger
+                    val forrigeGrunnlag = behandling.forrigeBehandlingId?.let { meldepliktRepository.hentHvisEksisterer(it) }
 
-                    val vedtatteVerdier =
-                        behandling.forrigeBehandlingId?.let { meldepliktRepository.hentHvisEksisterer(it) }
-                            ?.vurderinger
-                            .orEmpty()
+                    val vedtatteVerdier = forrigeGrunnlag?.vurderinger.orEmpty()
 
                     val historikk =
                         meldepliktRepository.hentAlleVurderinger(behandling.sakId, behandling.id)
 
                     val nyeVurderinger = nåTilstand?.filter { it.vurdertIBehandling == behandling.id } ?: emptyList()
-                    val gjeldendeVedtatteVurderinger =
-                        nåTilstand?.filter { it.vurdertIBehandling != behandling.id }?.tilTidslinje() ?: Tidslinje()
 
                     FritakMeldepliktGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
@@ -91,7 +88,7 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(
                         kanVurderes = listOf(sak.rettighetsperiode),
                         behøverVurderinger = emptyList(),
                         nyeVurderinger = nyeVurderinger.map { it.toResponse(vurdertAvService) },
-                        sisteVedtatteVurderinger = gjeldendeVedtatteVurderinger.toResponse(vurdertAvService)
+                        sisteVedtatteVurderinger = forrigeGrunnlag?.gjeldendeVurderinger().orEmpty().toResponse(vurdertAvService)
                     )
                 }
 
