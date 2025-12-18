@@ -27,6 +27,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskap
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.prosessering.OpprettJobbForTriggBarnetilleggSatsJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.TriggBarnetilleggSatsJobbUtfører
 import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
@@ -164,7 +165,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
 
         // Bestiller brev om barnetillegg sats regulering
         dataSource.transaction {
-            FlytJobbRepository(it).leggTil(JobbInput(TriggBarnetilleggSatsJobbUtfører))
+            FlytJobbRepository(it).leggTil(JobbInput(OpprettJobbForTriggBarnetilleggSatsJobbUtfører))
         }
         motor.kjørJobber()
         val behandlingBarnetilleggSatsRegulering = hentSisteOpprettedeBehandlingForSak(behandling.sakId)
@@ -180,7 +181,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
 
         // Bestiller ikke duplikat brev om barnetillegg sats regulering
         dataSource.transaction {
-            FlytJobbRepository(it).leggTil(JobbInput(TriggBarnetilleggSatsJobbUtfører))
+            FlytJobbRepository(it).leggTil(JobbInput(OpprettJobbForTriggBarnetilleggSatsJobbUtfører))
         }
         motor.kjørJobber()
 

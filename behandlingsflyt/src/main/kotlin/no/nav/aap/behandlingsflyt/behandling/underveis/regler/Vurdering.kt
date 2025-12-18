@@ -20,7 +20,6 @@ data class Vurdering(
     private val samordningProsent: Prosent? = null,
     private val grenseverdi: Prosent? = null,
     internal val institusjonVurdering: InstitusjonVurdering? = null,
-    internal val soningsVurdering: SoningVurdering? = null,
     private val meldeperiode: Periode? = null,
     val varighetVurdering: VarighetVurdering? = null,
 ) {
@@ -42,10 +41,6 @@ data class Vurdering(
 
     fun leggTilInstitusjonVurdering(vurdering: InstitusjonVurdering): Vurdering {
         return copy(institusjonVurdering = vurdering)
-    }
-
-    fun leggTilSoningsVurdering(vurdering: SoningVurdering): Vurdering {
-        return copy(soningsVurdering = vurdering)
     }
 
     fun leggTilAktivitetspliktVurdering(vurdering: AktivitetspliktVurdering): Vurdering {
@@ -90,7 +85,6 @@ data class Vurdering(
 
     fun harRett(): Boolean {
         return fårAapEtter != null &&
-                sonerIkke() &&
                 !bryterAktivitetsplikt11_7() &&
                 !bryterOppholdskrav() &&
                 varighetsvurderingOppfylt()
@@ -98,13 +92,6 @@ data class Vurdering(
 
     private fun varighetsvurderingOppfylt(): Boolean {
         return varighetVurdering !is Avslag
-    }
-
-    private fun sonerIkke(): Boolean {
-        if (soningsVurdering == null) {
-            return true
-        }
-        return !soningsVurdering.girOpphør
     }
 
     /** Rettighetstype før vi har kjørt underveissteget. */
@@ -151,8 +138,6 @@ data class Vurdering(
             return UnderveisÅrsak.BRUDD_PÅ_OPPHOLDSKRAV_11_3_STANS
         } else if (opphørEtterOppholdskrav()) {
             return UnderveisÅrsak.BRUDD_PÅ_OPPHOLDSKRAV_11_3_OPPHØR
-        } else if (!sonerIkke()) {
-            return UnderveisÅrsak.SONER_STRAFF
         } else if (opphørEtterBruddPåAktivitetsplikt11_7()) {
             return UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT_11_7_OPPHØR
         } else if (stansEtterBruddPåAktivitetsplikt11_7()) {
