@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.hendelse.kafka
 
+import org.apache.kafka.clients.consumer.ConsumerRebalanceListener
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.TopicPartition
@@ -33,11 +34,19 @@ abstract class KafkaKonsument<K, V>(
     fun konsumer(offset: Long? = null) {
         try {
             log.info("Starter konsumering av $topic")
-            konsument.subscribe(listOf(topic))
-            if (offset != null) {
-                log.info("Setter offset $offset for topic $topic")
-                konsument.seek(TopicPartition(topic, 0), offset)
-            }
+            konsument.subscribe(listOf(topic),
+                object: ConsumerRebalanceListener {
+                    override fun onPartitionsAssigned(partitions: MutableCollection<TopicPartition>?) {
+                        if (offset != null) {
+                            log.info("Setter offset $offset for topic $topic")
+                            konsument.seek(TopicPartition(topic, 0), offset)
+                        }
+                    }
+                    override fun onPartitionsRevoked(partitions: MutableCollection<TopicPartition>?) {
+
+                    }
+                }
+            )
             while (!lukket.get()) {
                 val meldinger: ConsumerRecords<K, V> = konsument.poll(pollTimeout.toJavaDuration())
                 håndter(meldinger)
