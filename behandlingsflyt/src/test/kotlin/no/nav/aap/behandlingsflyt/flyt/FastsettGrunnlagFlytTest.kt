@@ -67,16 +67,19 @@ class FastsettGrunnlagFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) 
                                 år = Year.now().minusYears(1).value,
                                 beløp = BigDecimal(300000),
                                 eøsBeløp = null,
+                                ferdigLignetPGI = null,
                             ),
                             ÅrsVurdering(
                                 år = Year.now().minusYears(2).value,
                                 beløp = BigDecimal(400000),
                                 eøsBeløp = null,
+                                ferdigLignetPGI = null,
                             ),
                             ÅrsVurdering(
                                 år = Year.now().minusYears(3).value,
                                 beløp = BigDecimal(500000),
                                 eøsBeløp = null,
+                                ferdigLignetPGI = null,
                             ),
                         )
                     )

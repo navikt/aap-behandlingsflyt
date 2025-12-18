@@ -50,6 +50,7 @@ class AvklarManuellInntektVurderingLøser(
                         vurdertAv = kontekst.bruker.ident,
                         år = Year.of(vurdering.år),
                         eøsBeløp = vurdering.eøsBeløp?.let { Beløp(it) },
+                        ferdigLignetPGI = vurdering.ferdigLignetPGI?.let { Beløp(it) }
                     )
                 }.toSet()
             } else {

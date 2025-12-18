@@ -11,5 +11,6 @@ data class ManuellInntektVurderingDto(
 data class ÅrsVurdering(
     val beløp: BigDecimal?,
     val eøsBeløp: BigDecimal?,
-    val år: Int
+    val år: Int,
+    val ferdigLignetPGI: BigDecimal?,
 )
