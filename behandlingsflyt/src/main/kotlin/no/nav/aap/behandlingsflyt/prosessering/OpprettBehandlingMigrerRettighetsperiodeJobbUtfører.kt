@@ -12,6 +12,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
@@ -40,6 +42,7 @@ class OpprettBehandlingMigrerRettighetsperiodeJobbUtfører(
         if (unleashGateway.isEnabled(BehandlingsflytFeature.MigrerRettighetsperiode)) {
             sakerForMigrering.forEach { sak ->
                 val fritakMeldepliktBehandling = opprettNyBehandling(sak)
+                sakRepository.oppdaterRettighetsperiode(sak.id, Periode(sak.rettighetsperiode.fom, Tid.MAKS))
                 prosesserBehandlingService.triggProsesserBehandling(fritakMeldepliktBehandling)
                 log.info("Oppretter behandling for migrering av rettighetsperiode for saksnummer ${sak.saksnummer}")
             }
