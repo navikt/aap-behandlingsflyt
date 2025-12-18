@@ -310,7 +310,7 @@ fun <T : SamordningPeriode> List<T>.tilTidslinje(): Tidslinje<Boolean> =
     Tidslinje(
         this
             .map { it.periode }
-            .`slåSammenOverlappendePerioder`()
+            .slåSammenOverlappendePerioder()
             .map { periode ->
                 Segment(
                     periode = periode,
@@ -319,7 +319,7 @@ fun <T : SamordningPeriode> List<T>.tilTidslinje(): Tidslinje<Boolean> =
             }
     )
 
-fun List<Periode>.`slåSammenOverlappendePerioder`(): List<Periode> {
+fun List<Periode>.slåSammenOverlappendePerioder(): List<Periode> {
     if (isEmpty()) return emptyList()
 
     val sortert = sortedBy { it.fom }
