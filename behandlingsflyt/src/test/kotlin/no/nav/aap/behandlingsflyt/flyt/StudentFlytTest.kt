@@ -48,6 +48,7 @@ class StudentFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 )
             )
             .løsRefusjonskrav()
+            .løsBeregningstidspunkt()
             .løsForutgåendeMedlemskap(sak.rettighetsperiode.fom)
             .løsOppholdskrav(sak.rettighetsperiode.fom)
             .løsAndreStatligeYtelser()
@@ -85,9 +86,13 @@ class StudentFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                     .containsExactlyInAnyOrder(Definisjon.AVKLAR_SYKDOM)
             }
             .løsSykdom(sak.rettighetsperiode.fom)
+            .medKontekst {
+                assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                    .describedAs { "Skal vurderes for ordinær dersom ikke oppfylt student" }
+                    .containsExactlyInAnyOrder(Definisjon.AVKLAR_BISTANDSBEHOV)
+            }
             .løsBistand(sak.rettighetsperiode.fom)
             .løsSykdomsvurderingBrev()
-            .løsBeregningstidspunkt()
             .foreslåVedtak()
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }

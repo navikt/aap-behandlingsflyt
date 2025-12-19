@@ -59,11 +59,10 @@ class BeregningAvklarFaktaSteg private constructor(
                     VurderingType.REVURDERING -> {
                         when {
                             tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
-                            manueltTriggetVurderingsbehovBeregning(kontekst) -> erIkkeStudent(behandlingId)
+                            kontekst.vurderingsbehovRelevanteForSteg.isEmpty() -> false
+                            manueltTriggetVurderingsbehovBeregning(kontekst) -> true
                             manueltTriggetVurderingsbehovYrkesskade(kontekst) -> false
-                            else -> {
-                                erIkkeStudent(behandlingId)
-                            }
+                            else -> true
                         }
                     }
                     VurderingType.AUTOMATISK_OPPDATER_VILKÅR,
@@ -163,13 +162,7 @@ class BeregningAvklarFaktaSteg private constructor(
         return yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() == true
                 && yrkesskadeVurdering?.erÅrsakssammenheng == true
     }
-
-    private fun erIkkeStudent(behandlingId: BehandlingId): Boolean {
-        val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
-        return vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET).vilkårsperioder()
-            .firstOrNull()?.innvilgelsesårsak != Innvilgelsesårsak.STUDENT
-    }
-
+    
     private fun harFastsattBeløpForAlleRelevanteYrkesskadesaker(
         relevanteSaker: List<YrkesskadeSak>,
         beregningGrunnlag: BeregningGrunnlag?
