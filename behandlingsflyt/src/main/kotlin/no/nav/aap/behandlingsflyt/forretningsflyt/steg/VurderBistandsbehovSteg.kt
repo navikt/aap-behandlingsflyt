@@ -57,7 +57,7 @@ class VurderBistandsbehovSteg(
             vilkårsresultatRepository = vilkårsresultatRepository,
             definisjon = Definisjon.AVKLAR_BISTANDSBEHOV,
             tvingerAvklaringsbehov = kontekst.vurderingsbehovRelevanteForSteg,
-            nårVurderingErRelevant = { perioderHvorBistandsvilkåretErRelevant(kontekst) },
+            nårVurderingErRelevant = { nyKontekst -> perioderHvorBistandsvilkåretErRelevant(nyKontekst) },
             nårVurderingErGyldig = {
                 bistandRepository.hentHvisEksisterer(kontekst.behandlingId)
                     ?.somBistandsvurderingstidslinje()
