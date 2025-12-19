@@ -1,8 +1,8 @@
 [versions]
 ktor = "3.3.3"
-komponenter = "1.0.464"
+komponenter = "1.0.466"
 tilgang = "1.0.176"
-utbetaling = "0.0.68"
+utbetaling = "0.0.69"
 brev = "0.0.205"
 meldekort = "0.0.162"
 apiIntern = "0.0.21"
