@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.SkalGjenop
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
+import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar
@@ -52,6 +53,8 @@ class StudentRepositoryImplTest {
             )
         }
         val studentvurdering = StudentVurdering(
+            fom = 1 januar 2020,
+            tom = 1 april 2020,
             begrunnelse = "xasdasd",
             harAvbruttStudie = true,
             godkjentStudieAvLånekassen = true,
@@ -60,17 +63,19 @@ class StudentRepositoryImplTest {
             avbruttStudieDato = 13 februar 1989,
             avbruddMerEnn6Måneder = true,
             vurdertAv = "Gokken Gokkestad",
+            vurdertIBehandling = behandling.id
         )
         dataSource.transaction {
             StudentRepositoryImpl(it).lagre(
-                behandling.id, studentvurdering
+                behandling.id, setOf(studentvurdering)
             )
         }
 
         val uthentet = dataSource.transaction {
             StudentRepositoryImpl(it).hent(behandling.id)
         }
-        assertThat(uthentet.studentvurdering)
+        assertThat(uthentet.vurderinger).hasSize(1)
+        assertThat(uthentet.vurderinger!!.single())
             .usingRecursiveComparison().ignoringFields("id", "vurdertTidspunkt")
             .isEqualTo(studentvurdering)
         assertThat(uthentet.oppgittStudent)

@@ -57,13 +57,13 @@ class VurderStudentSteg private constructor(
                 }
             },
             erTilstrekkeligVurdert = {
-                studentGrunnlag?.studentvurdering != null
+                !studentGrunnlag?.vurderinger.isNullOrEmpty()
             },
             tilbakestillGrunnlag = {
-                val vedtattVurdering = kontekst.forrigeBehandlingId
+                val vedtatteVurderinger = kontekst.forrigeBehandlingId
                     ?.let { studentRepository.hentHvisEksisterer(it) }
-                    ?.studentvurdering
-                studentRepository.lagre(kontekst.behandlingId, vedtattVurdering)
+                    ?.vurderinger
+                studentRepository.lagre(kontekst.behandlingId, vedtatteVurderinger)
             },
             kontekst
         )

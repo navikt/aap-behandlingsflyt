@@ -62,7 +62,7 @@ class BeregningService(
             )
 
         val input = utledInput(
-            studentVurdering = student?.studentvurdering,
+            studentVurdering = student?.vurderinger?.single(),
             yrkesskadevurdering = sykdomGrunnlag?.yrkesskadevurdering,
             vurdering = beregningVurdering,
             årsInntekter = kombinertInntekt,

@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentEnkelLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plusHverdager
@@ -32,7 +32,7 @@ class StudentFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
 
         behandling = behandling
             .løsAvklaringsBehov(
-                AvklarStudentLøsning(
+                AvklarStudentEnkelLøsning(
                     studentvurdering = StudentVurderingDTO(
                         begrunnelse = "...",
                         harAvbruttStudie = true,

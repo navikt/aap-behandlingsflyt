@@ -168,7 +168,7 @@ class Inntektsbehov(private val beregningInput: BeregningInput) {
 
         fun utledAlleRelevanteÅr(beregningGrunnlag: BeregningGrunnlag?, studentGrunnlag: StudentGrunnlag?): Set<Year> {
             val nedsettelsesDato =
-                utledNedsettelsesdato(beregningGrunnlag?.tidspunktVurdering, studentGrunnlag?.studentvurdering)
+                utledNedsettelsesdato(beregningGrunnlag?.tidspunktVurdering, studentGrunnlag?.vurderinger?.single())
             val ytterligereNedsattArbeidsevneDato =
                 beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
 
