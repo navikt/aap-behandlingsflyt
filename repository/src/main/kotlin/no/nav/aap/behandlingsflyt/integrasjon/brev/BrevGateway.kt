@@ -317,9 +317,9 @@ class BrevGateway : BrevbestillingGateway {
                                 gradertDagsatsInkludertBarnetillegg = brevBehov.tilkjentYtelse?.gradertDagsatsInkludertBarnetillegg?.verdi,
                                 barnetillegg = brevBehov.tilkjentYtelse?.barnetillegg?.verdi,
                                 antallBarn = brevBehov.tilkjentYtelse?.antallBarn,
-                                minsteÅrligYtelse = brevBehov.tilkjentYtelse?.minsteÅrligYtelse?.verdi,
-                                minsteÅrligYtelseUnder25 = brevBehov.tilkjentYtelse?.minsteÅrligYtelseUnder25?.verdi,
-                                årligYtelse = brevBehov.tilkjentYtelse?.årligYtelse?.verdi
+                                minsteÅrligYtelse = brevBehov.tilkjentYtelse?.minsteÅrligYtelse?.heltallverdi(),
+                                minsteÅrligYtelseUnder25 = brevBehov.tilkjentYtelse?.minsteÅrligYtelseUnder25?.heltallverdi(),
+                                årligYtelse = brevBehov.tilkjentYtelse?.årligYtelse?.heltallverdi()
                             )
                         )
                     }
