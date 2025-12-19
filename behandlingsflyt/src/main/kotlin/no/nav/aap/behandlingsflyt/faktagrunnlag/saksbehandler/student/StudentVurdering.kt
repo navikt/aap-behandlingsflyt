@@ -29,7 +29,6 @@ data class StudentVurdering(
 }
 
 data class StudentVurderingDTO(
-    val id: Long? = null,
     val fom: LocalDate? = null, // TODO: Gjør denne påkrevd
     val tom: LocalDate? = null,
     val begrunnelse: String,
