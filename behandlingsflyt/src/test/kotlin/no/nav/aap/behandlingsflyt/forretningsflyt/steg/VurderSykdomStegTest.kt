@@ -2,9 +2,14 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import io.mockk.every
 import io.mockk.mockk
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
-import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.ErStudentStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.OppgittStudent
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentGrunnlag
@@ -24,7 +29,9 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepos
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
@@ -34,7 +41,18 @@ class VurderSykdomStegTest {
         val behandlingId = BehandlingId(1)
         val revurderingId = BehandlingId(2)
 
-        val behandlingRepository = mockk<BehandlingRepository>()
+        val behandlingRepository = mockk<BehandlingRepository>() {
+            every { hent(behandlingId) } returns mockk(relaxed = true)
+        }
+
+        val sykdomRepository = mockk<SykdomRepository> {
+            every { hentHvisEksisterer(any()) } returns null
+        }
+        val avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
+        val avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider)
+        val vilkårsresultatRepository = InMemoryVilkårsresultatRepository
+
+        
         val studentRepository = mockk<StudentRepository> {
             every { hentHvisEksisterer(behandlingId) } returns StudentGrunnlag(
                 StudentVurdering(
@@ -63,14 +81,7 @@ class VurderSykdomStegTest {
                 oppgittStudent = OppgittStudent(erStudentStatus = ErStudentStatus.AVBRUTT)
             )
         }
-
-        val sykdomRepository = mockk<SykdomRepository> {
-            every { hentHvisEksisterer(any()) } returns null
-        }
-        val avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
-        val avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider)
-        val vilkårsresultatRepository = InMemoryVilkårsresultatRepository
-
+        
         val steg = VurderSykdomSteg(
             studentRepository,
             sykdomRepository,
@@ -79,7 +90,13 @@ class VurderSykdomStegTest {
             avklaringsbehovService,
             behandlingRepository,
             vilkårsresultatRepository,
+            unleashGateway = mockk {
+                every { isDisabled(BehandlingsflytFeature.PeriodisertSykdom) } returns false
+            },
         )
+
+        lagreNedAlder( vilkårsresultatRepository, behandlingId)
+        
 
         val kontekst = FlytKontekstMedPerioder(
             sakId = SakId(1),
@@ -97,11 +114,55 @@ class VurderSykdomStegTest {
             .hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)
         assertThat(avklaringsbehov).isNull()
 
-        steg.utfør(kontekst.copy(behandlingId = revurderingId))
+        steg.utfør(kontekst.copy(behandlingId = revurderingId, forrigeBehandlingId = behandlingId))
 
         val avklaringsbehovEtterRevurdering = avklaringsbehovRepository.hentAvklaringsbehovene(revurderingId)
             .hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)
         assertThat(avklaringsbehovEtterRevurdering).isNotNull()
 
+    }
+    
+    private fun lagreNedAlder(vilkårsresultatRepository: VilkårsresultatRepository, behandlingId: BehandlingId) {
+        // Lagre ned aldervilkåret for å simulere at det var oppfylt i forrige behandling
+        vilkårsresultatRepository.lagre(
+            behandlingId,
+            Vilkårsresultat(
+                vilkår = listOf(
+                    Vilkår(
+                        Vilkårtype.ALDERSVILKÅRET, setOf(
+                            Vilkårsperiode(
+                                periode = Periode(Tid.MIN, (1 januar 2000).minusDays(1)),
+                                utfall = Utfall.IKKE_OPPFYLT,
+                                manuellVurdering = false,
+                                avslagsårsak = Avslagsårsak.BRUKER_UNDER_18,
+                                begrunnelse = null,
+                                faktagrunnlag = null,
+                            ),
+                            Vilkårsperiode(
+                                periode = Periode(
+                                    1 januar 2000,
+                                    (1 januar 2000).plusYears(67).minusYears(18).minusDays(1)
+                                ),
+                                utfall = Utfall.OPPFYLT,
+                                manuellVurdering = false,
+                                begrunnelse = null,
+                                faktagrunnlag = null,
+                            ),
+                            Vilkårsperiode(
+                                periode = Periode(
+                                    (1 januar 2000).plusYears(67).minusYears(18),
+                                    Tid.MAKS
+                                ),
+                                utfall = Utfall.IKKE_OPPFYLT,
+                                avslagsårsak = Avslagsårsak.BRUKER_OVER_67,
+                                manuellVurdering = false,
+                                begrunnelse = null,
+                                faktagrunnlag = null,
+                            )
+                        )
+                    )
+                )
+            )
+        )
     }
 }
