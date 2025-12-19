@@ -4,13 +4,18 @@ import no.nav.aap.behandlingsflyt.behandling.brev.Forvaltningsmelding
 import no.nav.aap.behandlingsflyt.behandling.brev.KlageMottatt
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
@@ -20,6 +25,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class SendForvaltningsmeldingSteg(
     private val brevbestillingService: BrevbestillingService,
     private val behandlingRepository: BehandlingRepository,
+    private val mottaDokumentService: MottaDokumentService
 ) : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -43,7 +49,8 @@ class SendForvaltningsmeldingSteg(
                 val behandlingId = kontekst.behandlingId
                 val behandling = behandlingRepository.hent(behandlingId)
                 if (erBehandlingForMottattKlage(kontekst.vurderingsbehovRelevanteForSteg) &&
-                    !harAlleredeBestiltKlageMottattForBehandling(behandling)
+                    !harAlleredeBestiltKlageMottattForBehandling(behandling) &&
+                    erMottattKlageFraJournalPostOgUbehandlet(behandlingId)
                     ) {
                     val brevBehov = KlageMottatt
                     brevbestillingService.bestill(
@@ -59,6 +66,14 @@ class SendForvaltningsmeldingSteg(
         }
 
         return Fullført
+    }
+
+    private fun erMottattKlageFraJournalPostOgUbehandlet(behandlingId: BehandlingId): Boolean {
+        val dokumenter = mottaDokumentService.hentMottattDokumenterAvType(behandlingId, InnsendingType.KLAGE)
+        return dokumenter.any { dokument ->
+            dokument.referanse.type == InnsendingReferanse.Type.JOURNALPOST &&
+            dokument.status == Status.MOTTATT
+        }
     }
 
     private fun harAlleredeBestiltForvaltningsmeldingForBehandling(behandling: Behandling): Boolean {
@@ -89,6 +104,7 @@ class SendForvaltningsmeldingSteg(
             return SendForvaltningsmeldingSteg(
                 brevbestillingService = BrevbestillingService(repositoryProvider, gatewayProvider),
                 behandlingRepository = repositoryProvider.provide(),
+                mottaDokumentService = MottaDokumentService(repositoryProvider)
             )
         }
 
