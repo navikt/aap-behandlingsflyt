@@ -36,6 +36,7 @@ object FakeUnleash : FakeUnleashBase(
         BehandlingsflytFeature.SosialRefusjon to true,
         BehandlingsflytFeature.HentSykepengerVedOverlapp to true,
         BehandlingsflytFeature.KanSendeBrevOmBarnetilleggSatsRegulering to true,
+        BehandlingsflytFeature.MigrerRettighetsperiode to true,
         BehandlingsflytFeature.PeriodisertSykdom to true,
     )
 )

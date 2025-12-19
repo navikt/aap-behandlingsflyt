@@ -77,6 +77,7 @@ class VurderLovvalgSteg private constructor(
 
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
+            VurderingType.AUTOMATISK_OPPDATER_VILKÅR,
             VurderingType.REVURDERING -> {
                 val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
                 Medlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode)
@@ -92,7 +93,6 @@ class VurderLovvalgSteg private constructor(
                     )
                 }
             }
-
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
             VurderingType.MELDEKORT,

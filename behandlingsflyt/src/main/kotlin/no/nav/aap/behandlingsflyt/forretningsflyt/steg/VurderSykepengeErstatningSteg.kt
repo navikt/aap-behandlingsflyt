@@ -100,7 +100,7 @@ class VurderSykepengeErstatningSteg private constructor(
         }
 
         when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
+            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING, VurderingType.AUTOMATISK_OPPDATER_VILKÅR -> {
                 val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
                 val grunnlag = SykepengerErstatningFaktagrunnlag(
                     rettighetsperiode = kontekst.rettighetsperiode,
@@ -111,7 +111,6 @@ class VurderSykepengeErstatningSteg private constructor(
 
                 vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
             }
-
             VurderingType.MELDEKORT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,

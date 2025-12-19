@@ -20,6 +20,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     Under18,
     ValiderOvergangUfore,
     KravOmInntektsbortfall,
+    MigrerRettighetsperiode,
     MigrerArbeidsevne,
     SosialRefusjon,
     HentSykepengerVedOverlapp,

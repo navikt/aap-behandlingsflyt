@@ -941,7 +941,6 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                 periode
             )
         }
-
         val behandling = sak.sendInnSøknad(søknad, mottattTidspunkt, journalpostId)
 
         return Pair(sak, behandling)
@@ -1587,6 +1586,19 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
     protected fun tilkjentYtelsePeriode(behandling: Behandling): Periode =
         dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(behandling.id) }?.tilTidslinje()
             ?.helePerioden() ?: error("Mangler tilkjent ytelse")
+
+    protected fun settRettighetsperiode(
+        sak: Sak,
+        rettighetsperiode: Periode
+    ) {
+        dataSource.transaction { connection ->
+            val sakRepository = SakRepositoryImpl(connection)
+            sakRepository.oppdaterRettighetsperiode(
+                sak.id,
+                rettighetsperiode
+            )
+        }
+    }
 
     fun assertStatusForDefinisjon(
         avklaringsbehov: List<Avklaringsbehov>,
