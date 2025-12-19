@@ -5,51 +5,52 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
-import no.nav.aap.motor.cron.CronExpression
 import org.slf4j.LoggerFactory
-import java.time.LocalDate
 
 class TriggBarnetilleggSatsJobbUtfører(
     val sakRepository: SakRepository,
     private val sakOgBehandlingService: SakOgBehandlingService,
     private val prosesserBehandlingService: ProsesserBehandlingService,
+    private val unleashGateway: UnleashGateway,
 ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
+        val sakId = SakId(input.sakId())
 
-        val saker = sakRepository.finnSakerMedBarnetillegg(LocalDate.of(2026, 1, 1))
-        log.info("Fant ${saker.size} saker med barnetillegg.")
+        log.info("Oppretter satsendring-behandling for sak med id $sakId.")
 
-        saker.forEach {
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.KanSendeBrevOmBarnetilleggSatsRegulering)) {
+            log.info("Trigger behandlinger for barnetillegg sats regulering.")
+
             val behandling = sakOgBehandlingService.finnEllerOpprettBehandling(
-                it, VurderingsbehovOgÅrsak(
+                sakId, VurderingsbehovOgÅrsak(
                     vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.BARNETILLEGG_SATS_REGULERING)),
                     årsak = ÅrsakTilOpprettelse.BARNETILLEGG_SATSENDRING
                 )
             )
             prosesserBehandlingService.triggProsesserBehandling(behandling)
-        }
 
+        } else {
+            log.info("Trigger ikke behandlinger for barnetillegg sats regulering. Funksjonsbryter er av.")
+        }
     }
 
 
     companion object : ProvidersJobbSpesifikasjon {
         override val type = "satsendring"
-        override val navn = "Finn og prosesser saker med barnetillegg."
-        override val beskrivelse = ""
-
-        /**
-         * Kjør hver 2 januar kl 09:00.
-         */
-        override val cron: CronExpression = CronExpression.createWithoutSeconds("0 9 2 1 *")
+        override val navn = "Prosesser sak med barnetillegg."
+        override val beskrivelse = "Input: sak-id"
 
         override fun konstruer(
             repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider
@@ -58,6 +59,7 @@ class TriggBarnetilleggSatsJobbUtfører(
                 sakRepository = repositoryProvider.provide(),
                 sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
                 prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
+                unleashGateway = gatewayProvider.provide(),
             )
         }
     }

@@ -28,7 +28,8 @@ object ProsesseringsJobber {
             VarsleVedtakJobbUtfører,
             IverksettUtbetalingJobbUtfører,
             KafkaFeilJobbUtfører,
-            TriggBarnetilleggSatsJobbUtfører
+            TriggBarnetilleggSatsJobbUtfører,
+            OpprettJobbForTriggBarnetilleggSatsJobbUtfører
         )
     }
 }

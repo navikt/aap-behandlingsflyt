@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AndreUtbetalingerDto
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.komponenter.verdityper.Beløp
 import org.jetbrains.annotations.NotNull
@@ -22,6 +23,7 @@ data class OpprettTestcaseDTO(
     @param:JsonProperty(value = "fødselsdato", required = true) val fødselsdato: LocalDate,
     @param:NotNull @param:JsonProperty(value = "yrkesskade", defaultValue = "false") val yrkesskade: Boolean,
     @param:JsonProperty(value = "uføre") val uføre: Int?,
+    @param:JsonProperty(value = "uføretidspunkt") val uføreTidspunkt: LocalDate?,
     @param:NotNull @param:JsonProperty(value = "student", defaultValue = "false") val student: Boolean,
     @param:NotNull @param:JsonProperty(value = "barn") val barn: List<TestBarn> = emptyList(),
     @param:NotNull @param:JsonProperty(value = "medlemskap", defaultValue = "true") val medlemskap: Boolean,
@@ -30,6 +32,7 @@ data class OpprettTestcaseDTO(
     val institusjoner: Institusjoner = Institusjoner(),
     val sykepenger: List<TestPerson.Sykepenger> = emptyList(),
     val søknadsdato: LocalDate? = null,
+    val andreUtbetalinger: AndreUtbetalingerDto? = null,
     val steg: StegType? = null,
     val erArbeidsevnenNedsatt: Boolean = true,
     val erNedsettelseIArbeidsevneMerEnnHalvparten: Boolean = true,

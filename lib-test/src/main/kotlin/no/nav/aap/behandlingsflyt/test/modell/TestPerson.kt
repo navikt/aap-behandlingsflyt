@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapDataIntern
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.InstitusjonsoppholdJSON
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlFolkeregisterPersonStatus
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlStatsborgerskap
@@ -32,11 +33,12 @@ class TestPerson(
     val fødselsdato: Fødselsdato = Fødselsdato(LocalDate.now().minusYears(19)),
     val identer: Set<Ident> = setOf(genererIdent(fødselsdato.toLocalDate())),
     val dødsdato: Dødsdato? = null,
+
     var barn: List<TestPerson> = emptyList(),
     val navn: PersonNavn = FiktivtNavnGenerator.genererNavn(),
     val yrkesskade: List<TestYrkesskade> = emptyList(),
     var institusjonsopphold: List<InstitusjonsoppholdJSON> = emptyList(),
-    var uføre: Prosent? = null,
+    var uføre: Uføre? = null,
     inntekter: List<InntektPerÅr> = defaultInntekt(),
     val personStatus: List<PdlFolkeregisterPersonStatus> = listOf(
         PdlFolkeregisterPersonStatus(
@@ -84,8 +86,8 @@ class TestPerson(
         return this
     }
 
-    fun medUføre(uføre: Prosent?): TestPerson {
-        this.uføre = uføre
+    fun medUføre(uføre: Prosent?, virkningstidspunkt: LocalDate = LocalDate.now().minusYears(3)): TestPerson {
+        this.uføre = uføre?.let { Uføre(virkningstidspunkt = virkningstidspunkt, uføregrad = uføre) }
         return this
     }
 

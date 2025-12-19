@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.flyt
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBarnetilleggLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBeregningstidspunktLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGrunnlag
@@ -26,6 +27,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskap
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.prosessering.OpprettJobbForTriggBarnetilleggSatsJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.TriggBarnetilleggSatsJobbUtfører
 import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
@@ -79,7 +81,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             )
         )
 
-        val (_, behandling) = sendInnFørsteSøknad(
+        val (sak, behandling) = sendInnFørsteSøknad(
             person = person,
             periode = periode,
         )
@@ -161,13 +163,30 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         }
         assertThat(sakerMedBarnetillegg).containsExactly(behandling.sakId)
 
+        // Bestiller brev om barnetillegg sats regulering
         dataSource.transaction {
-            FlytJobbRepository(it).leggTil(JobbInput(TriggBarnetilleggSatsJobbUtfører))
+            FlytJobbRepository(it).leggTil(JobbInput(OpprettJobbForTriggBarnetilleggSatsJobbUtfører))
         }
         motor.kjørJobber()
-        val sisteOpprettedeBehandling = hentSisteOpprettedeBehandlingForSak(behandling.sakId)
-        assertThat(sisteOpprettedeBehandling.id).isNotEqualTo(behandling.id)
-        assertThat(sisteOpprettedeBehandling.årsakTilOpprettelse).isEqualTo(ÅrsakTilOpprettelse.BARNETILLEGG_SATSENDRING)
+        val behandlingBarnetilleggSatsRegulering = hentSisteOpprettedeBehandlingForSak(behandling.sakId)
+        assertThat(behandlingBarnetilleggSatsRegulering.id).isNotEqualTo(behandling.id)
+        assertThat(behandlingBarnetilleggSatsRegulering.årsakTilOpprettelse).isEqualTo(ÅrsakTilOpprettelse.BARNETILLEGG_SATSENDRING)
+        assertThat(behandlingBarnetilleggSatsRegulering.status()).isEqualTo(Status.AVSLUTTET)
+
+        assertThat(hentBrevAvTypeForSak(sak, TypeBrev.BARNETILLEGG_SATS_REGULERING)).singleElement()
+            .satisfies({
+                assertThat(it.status).isEqualTo(no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status.FULLFØRT)
+                assertThat(it.behandlingId).isEqualTo(behandlingBarnetilleggSatsRegulering.id)
+            })
+
+        // Bestiller ikke duplikat brev om barnetillegg sats regulering
+        dataSource.transaction {
+            FlytJobbRepository(it).leggTil(JobbInput(OpprettJobbForTriggBarnetilleggSatsJobbUtfører))
+        }
+        motor.kjørJobber()
+
+        // ikke flere etter siste behandling
+        assertThat(hentBrevAvTypeForSak(sak, TypeBrev.BARNETILLEGG_SATS_REGULERING)).hasSize(1)
     }
 
     @Test

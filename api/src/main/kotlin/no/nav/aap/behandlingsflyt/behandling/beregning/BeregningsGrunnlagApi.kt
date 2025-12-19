@@ -178,7 +178,7 @@ private fun inntekterTilUføreDTO(uføreInntekt: UføreInntekt, grunnlagInntekt:
             UføreInntektPeriodisertDTO(
                 periode = it.periode,
                 inntektIKroner = it.inntektIKroner,
-                uføregrad = it.uføregrad,
+                uføregrad = it.uføregrad.prosentverdi(),
                 inntektJustertForUføregrad = it.inntektJustertForUføregrad
             )
         }

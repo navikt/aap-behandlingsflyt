@@ -27,7 +27,8 @@ class ManglendeInntektGrunnlagService(
             ÅrData(
                 år = manuellInntekt.år.value,
                 beløp = manuellInntekt.belop?.verdi,
-                eøsBeløp = manuellInntekt.eøsBeløp?.verdi
+                eøsBeløp = manuellInntekt.eøsBeløp?.verdi,
+                ferdigLignetPGI = manuellInntekt.ferdigLignetPGI?.verdi
             )
         }
 
@@ -54,7 +55,8 @@ class ManglendeInntektGrunnlagService(
                 ÅrData(
                     år = historiskManuellInntekt.år.value,
                     beløp = historiskManuellInntekt.belop?.verdi,
-                    eøsBeløp = historiskManuellInntekt.eøsBeløp?.verdi
+                    eøsBeløp = historiskManuellInntekt.eøsBeløp?.verdi,
+                    ferdigLignetPGI = historiskManuellInntekt.ferdigLignetPGI?.verdi
                 )
             }
 

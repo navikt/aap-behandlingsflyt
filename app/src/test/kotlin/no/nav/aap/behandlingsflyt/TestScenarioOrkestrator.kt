@@ -240,7 +240,8 @@ class TestScenarioOrkestrator(
                         ÅrsVurdering(
                             beløp = BigDecimal(500000.00 + (index * 10000)),
                             eøsBeløp = null,
-                            år = år
+                            år = år,
+                            ferdigLignetPGI = null
                         )
                     }
                 )
