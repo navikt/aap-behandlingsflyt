@@ -31,6 +31,7 @@ import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -280,9 +281,9 @@ class SamordningYtelseVurderingInformasjonskrav(
 
                     secureLogger.info(
                         "Hentet samordningvurdering eksisterende ${eksisterendeVurderinger.vurderinger} med nye samordningsytelser ${samordningYtelser.map { it.ytelsePerioder }}  ${samordningYtelser.map { it.ytelseType.name }} Overlapp vurderinger" + isPeriodeDekketAvEksisterendePerioder(
-                        relevanteEksPerioder,
-                        nyPeriode
-                    )
+                            relevanteEksPerioder,
+                            nyPeriode
+                        )
                     )
 
                     if (!isPeriodeDekketAvEksisterendePerioder(relevanteEksPerioder, nyPeriode)) {
@@ -307,12 +308,6 @@ private fun <T : SamordningPeriode> isPeriodeDekketAvEksisterendePerioder(
 
 
 fun <T : SamordningPeriode> List<T>.tilTidslinje(): Tidslinje<Boolean> =
-    Tidslinje(
-        this.map { p ->
-            Segment(
-                periode = Periode(p.periode.fom, p.periode.tom),
-                verdi = true
-            )
-        }
-    )
+    this.somTidslinje( { it.periode }, { true } )
+
 

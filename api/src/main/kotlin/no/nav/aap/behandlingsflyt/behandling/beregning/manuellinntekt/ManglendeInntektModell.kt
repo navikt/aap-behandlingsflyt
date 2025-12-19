@@ -36,4 +36,5 @@ data class ÅrData(
     val år: Int,
     val beløp: BigDecimal?,
     val eøsBeløp: BigDecimal? = null,
+    val ferdigLignetPGI: BigDecimal? = null,
 )

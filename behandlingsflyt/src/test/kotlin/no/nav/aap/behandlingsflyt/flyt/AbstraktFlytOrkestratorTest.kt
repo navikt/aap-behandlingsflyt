@@ -518,6 +518,11 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
 
     protected fun løsFramTilGrunnlag(rettighetsPeriodeFrom: LocalDate, behandling: Behandling): Behandling {
         return behandling
+            .medKontekst {
+                if (åpneAvklaringsbehov.firstOrNull { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP } != null) {
+                    this.behandling.løsLovvalg(LocalDate.now().minusYears(20))
+                }
+            }
             .løsSykdom(rettighetsPeriodeFrom)
             .løsAvklaringsBehov(
                 AvklarBistandsbehovEnkelLøsning(
@@ -1343,7 +1348,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         return kvalitetssikreOk(this, bruker)
     }
 
-    protected fun løsFatteVedtak(behandling: Behandling, returVed: Definisjon? = null): Behandling =
+    private fun løsFatteVedtak(behandling: Behandling, returVed: Definisjon? = null): Behandling =
         løsAvklaringsBehov(
             behandling,
             FatteVedtakLøsning(

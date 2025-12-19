@@ -23,6 +23,7 @@ data class OpprettTestcaseDTO(
     @param:JsonProperty(value = "fødselsdato", required = true) val fødselsdato: LocalDate,
     @param:NotNull @param:JsonProperty(value = "yrkesskade", defaultValue = "false") val yrkesskade: Boolean,
     @param:JsonProperty(value = "uføre") val uføre: Int?,
+    @param:JsonProperty(value = "uføretidspunkt") val uføreTidspunkt: LocalDate?,
     @param:NotNull @param:JsonProperty(value = "student", defaultValue = "false") val student: Boolean,
     @param:NotNull @param:JsonProperty(value = "barn") val barn: List<TestBarn> = emptyList(),
     @param:NotNull @param:JsonProperty(value = "medlemskap", defaultValue = "true") val medlemskap: Boolean,

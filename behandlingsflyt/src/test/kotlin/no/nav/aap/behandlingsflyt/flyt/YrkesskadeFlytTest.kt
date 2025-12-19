@@ -37,7 +37,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-class YrkesskadeFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
+class YrkesskadeFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
     @Test
     fun `skal ikke vise avklaringsbehov for yrkesskade ved avslag i tidligere steg`() {
         val personMedYrkesskade = TestPersoner.PERSON_MED_YRKESSKADE()
@@ -479,14 +479,15 @@ class YrkesskadeFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         val periode = Periode(fom, fom.plusYears(3))
 
         // Simulerer et svar fra YS-løsning om at det finnes en yrkesskade
+        val virkningstidspunkt = LocalDate.now().minusYears(3)
         val person = TestPersoner.PERSON_MED_YRKESSKADE().medBarn(
             listOf(
                 TestPerson(
                     identer = setOf(Ident("1234123")),
-                    fødselsdato = Fødselsdato(LocalDate.now().minusYears(3)),
+                    fødselsdato = Fødselsdato(virkningstidspunkt),
                 )
             )
-        ).medUføre(Prosent(50))
+        ).medUføre(Prosent(50), virkningstidspunkt = virkningstidspunkt)
 
         var (sak, behandling) = sendInnFørsteSøknad(
             person = person,
@@ -537,13 +538,13 @@ class YrkesskadeFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                         begrunnelse = "Samordnet med uføre",
                         vurderingPerioder = listOf(
                             SamordningUføreVurderingPeriodeDto(
-                                virkningstidspunkt = LocalDate.of(2022, 1, 1), uføregradTilSamordning = 50
+                                virkningstidspunkt = virkningstidspunkt, uføregradTilSamordning = 50
                             )
                         )
                     )
                 )
-            ).løsAndreStatligeYtelser()
-
+            )
+            .løsAndreStatligeYtelser()
             .medKontekst {
                 // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
                 assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon == Definisjon.FORESLÅ_VEDTAK).isTrue() }
@@ -576,7 +577,7 @@ class YrkesskadeFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                         begrunnelse = "Samordnet med uføre",
                         vurderingPerioder = listOf(
                             SamordningUføreVurderingPeriodeDto(
-                                virkningstidspunkt = LocalDate.of(2022, 1, 1), uføregradTilSamordning = 50
+                                virkningstidspunkt = virkningstidspunkt, uføregradTilSamordning = 50
                             )
                         )
                     )

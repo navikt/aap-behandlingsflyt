@@ -24,6 +24,7 @@ class OppdagEndretInformasjonskravJobbUtfører(
     private val sakOgBehandlingService: SakOgBehandlingService
 ) : JobbUtfører {
     private val log = LoggerFactory.getLogger(javaClass)
+    private val secureLogger = LoggerFactory.getLogger("secureLog")
 
     override fun utfør(input: JobbInput) {
         val sakId = SakId(input.sakId())
@@ -54,6 +55,7 @@ class OppdagEndretInformasjonskravJobbUtfører(
                 VurderingsbehovOgÅrsak(vurderingsbehov, ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA)
             )
             log.info("Opprettet revurdering for sak $sakId med behov $vurderingsbehov. Behandling: ${revurdering.referanse}.")
+            secureLogger.info("" + vurderingsbehov)
             prosesserBehandlingService.triggProsesserBehandling(
                 revurdering,
                 emptyList() // TODO: Se om vi bør legge ved triggere
