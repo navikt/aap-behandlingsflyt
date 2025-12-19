@@ -52,36 +52,42 @@ class VurderSykdomStegTest {
         val avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider)
         val vilkårsresultatRepository = InMemoryVilkårsresultatRepository
 
-        
+
         val studentRepository = mockk<StudentRepository> {
             every { hentHvisEksisterer(behandlingId) } returns StudentGrunnlag(
-                StudentVurdering(
-                    begrunnelse = "begrunnelse",
-                    vurdertAv = "saksbehandler",
-                    harAvbruttStudie = true,
-                    godkjentStudieAvLånekassen = true,
-                    avbruttPgaSykdomEllerSkade = true,
-                    harBehovForBehandling = true,
-                    avbruttStudieDato = 1 desember 2024,
-                    avbruddMerEnn6Måneder = true,
+                listOf(
+                    StudentVurdering(
+                        begrunnelse = "begrunnelse",
+                        vurdertAv = "saksbehandler",
+                        harAvbruttStudie = true,
+                        godkjentStudieAvLånekassen = true,
+                        avbruttPgaSykdomEllerSkade = true,
+                        harBehovForBehandling = true,
+                        avbruttStudieDato = 1 desember 2024,
+                        avbruddMerEnn6Måneder = true,
+                        vurdertIBehandling = behandlingId
+                    )
                 ),
                 oppgittStudent = OppgittStudent(erStudentStatus = ErStudentStatus.AVBRUTT)
             )
             every { hentHvisEksisterer(revurderingId) } returns StudentGrunnlag(
-                StudentVurdering(
-                    begrunnelse = "begrunnelse",
-                    vurdertAv = "saksbehandler",
-                    harAvbruttStudie = true,
-                    godkjentStudieAvLånekassen = true,
-                    avbruttPgaSykdomEllerSkade = false,
-                    harBehovForBehandling = true,
-                    avbruttStudieDato = 1 desember 2024,
-                    avbruddMerEnn6Måneder = true,
+                listOf(
+                    StudentVurdering(
+                        begrunnelse = "begrunnelse",
+                        vurdertAv = "saksbehandler",
+                        harAvbruttStudie = true,
+                        godkjentStudieAvLånekassen = true,
+                        avbruttPgaSykdomEllerSkade = false,
+                        harBehovForBehandling = true,
+                        avbruttStudieDato = 1 desember 2024,
+                        avbruddMerEnn6Måneder = true,
+                        vurdertIBehandling = revurderingId
+                    )
                 ),
                 oppgittStudent = OppgittStudent(erStudentStatus = ErStudentStatus.AVBRUTT)
             )
         }
-        
+
         val steg = VurderSykdomSteg(
             studentRepository,
             sykdomRepository,
@@ -95,8 +101,8 @@ class VurderSykdomStegTest {
             },
         )
 
-        lagreNedAlder( vilkårsresultatRepository, behandlingId)
-        
+        lagreNedAlder(vilkårsresultatRepository, behandlingId)
+
 
         val kontekst = FlytKontekstMedPerioder(
             sakId = SakId(1),
@@ -121,7 +127,7 @@ class VurderSykdomStegTest {
         assertThat(avklaringsbehovEtterRevurdering).isNotNull()
 
     }
-    
+
     private fun lagreNedAlder(vilkårsresultatRepository: VilkårsresultatRepository, behandlingId: BehandlingId) {
         // Lagre ned aldervilkåret for å simulere at det var oppfylt i forrige behandling
         vilkårsresultatRepository.lagre(
