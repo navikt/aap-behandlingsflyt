@@ -83,25 +83,6 @@ class InstitusjonsoppholdUtlederService(
             InstitusjonsoppholdVurdering(helse = HelseOpphold(vurdering = OppholdVurdering.UAVKLART))
         }, sammenslåer()).kombiner(helsevurderingerTidslinje, helsevurderingSammenslåer()).komprimer()
 
-      /*  val helseoppholdUtenBarnetillegg = helseOppholdTidslinje.disjoint(
-            barnetilleggTidslinje
-        ) { p, v ->
-            Segment(
-                p,
-                v.verdi
-            )
-        }.komprimer() */
-
-       /* val oppholdSomLiggerMindreEnnTreMånederFraForrigeSomGaReduksjon =
-            regnUtTidslinjeOverOppholdSomErMindreEnnTreMånederFraForrigeSomGaReduksjon(
-                perioderSomTrengerVurdering,
-                helseoppholdUtenBarnetillegg, helsevurderingerTidslinje
-            ) */
-
-    /*    perioderSomTrengerVurdering = perioderSomTrengerVurdering.kombiner(
-            oppholdSomLiggerMindreEnnTreMånederFraForrigeSomGaReduksjon,
-            sammenslåer()
-        ).komprimer()*/
 
         if (begrensetTilRettighetsperiode == true) {
             perioderSomTrengerVurdering = perioderSomTrengerVurdering.begrensetTil(input.rettighetsperiode)
@@ -120,41 +101,6 @@ class InstitusjonsoppholdUtlederService(
             val verdi = InstitusjonsoppholdVurdering(helse = helse, soning = soning)
             Segment(periode, verdi)
         }
-
-    private fun regnUtTidslinjeOverOppholdSomErMindreEnnTreMånederFraForrigeSomGaReduksjon(
-        perioderSomTrengerVurdering: Tidslinje<InstitusjonsoppholdVurdering>,
-        helseoppholdUtenBarnetillegg: Tidslinje<Boolean>,
-        helsevurderingerTidslinje: Tidslinje<HelseOpphold>
-    ): Tidslinje<InstitusjonsoppholdVurdering> {
-        var result = Tidslinje<InstitusjonsoppholdVurdering>()
-        // Kjører gjennom noen ganger for å ta med per vi får med et og et nytt opphold basert på den dumme regelen her
-        IntStream.range(0, max(helseoppholdUtenBarnetillegg.segmenter().count() - 1, 0)).forEach { i ->
-            val oppholdSomKanGiReduksjon = Tidslinje(
-                oppholdSomLiggerMindreEnnTreMånederFraForrigeSomGaReduksjon(
-                    helseoppholdUtenBarnetillegg, perioderSomTrengerVurdering
-                ).segmenter().mapNotNull {
-                    val fom = it.fom().withDayOfMonth(1).plusMonths(1)
-
-                    if (fom.isAfter(it.tom())) {
-                        null
-                    } else {
-                        Segment(
-                            it.periode, InstitusjonsoppholdVurdering(
-                                helse = HelseOpphold(
-                                    vurdering = OppholdVurdering.UAVKLART,
-                                    umiddelbarReduksjon = true
-                                )
-                            )
-                        )
-                    }
-                }
-            ).kombiner(helsevurderingerTidslinje, helsevurderingSammenslåer())
-
-            result = result.kombiner(oppholdSomKanGiReduksjon, sammenslåer())
-        }
-
-        return result
-    }
 
     private fun byggSoningsvurderingTidslinje(
         soningsvurderinger: List<Soningsvurdering>
@@ -270,19 +216,6 @@ class InstitusjonsoppholdUtlederService(
             oppholdUtenBarnetillegg.segmenter()
                 .filter { segment -> segment.verdi }
                 )
-    }
-
-    private fun harOppholdSomVarerMerEnnFireMånederOgErMinstToMånederInnIOppholdet(
-        segment: Segment<Boolean>
-    ): Boolean {
-        val fom = segment.fom().withDayOfMonth(1).plusMonths(1)
-
-        if (fom.isAfter(segment.tom())) {
-            return false
-        }
-        val førsteDagMedMuligReduksjon = fom.plusMonths(3)
-        val justertPeriode = Periode(fom, segment.tom())
-        return justertPeriode.inneholder(førsteDagMedMuligReduksjon) && (fom.plusMonths(2) <= LocalDate.now() || Miljø.er() == MiljøKode.DEV)
     }
 
     private fun <T> opprettTidslinje(segmenter: List<Segment<T>>): Tidslinje<Boolean> {
