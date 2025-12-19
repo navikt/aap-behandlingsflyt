@@ -32,7 +32,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class VurderLovvalgSteg private constructor(
@@ -44,7 +43,7 @@ class VurderLovvalgSteg private constructor(
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
 ) : BehandlingSteg {
-    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider) : this(
         vilkårsresultatRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         personopplysningRepository = repositoryProvider.provide(),
@@ -71,7 +70,7 @@ class VurderLovvalgSteg private constructor(
             definisjon = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP,
             tvingerAvklaringsbehov = vurderingsbehovSomTvingerAvklaringsbehov(),
             nårVurderingErRelevant = ::perioderVurderingErRelevant,
-            nårVurderingErGyldig = { perioderVurderingErGyldig(kontekst, grunnlag.value) },
+            nårVurderingErGyldig = ::perioderVurderingErGyldig,
             tilbakestillGrunnlag = { tilbakestillVurderinger(kontekst, grunnlag.value) },
         )
 
@@ -107,8 +106,8 @@ class VurderLovvalgSteg private constructor(
 
     private fun perioderVurderingErGyldig(
         kontekst: FlytKontekstMedPerioder,
-        grunnlag: MedlemskapLovvalgGrunnlag
     ): Tidslinje<Boolean> {
+        val grunnlag = hentGrunnlag(kontekst.sakId, kontekst.behandlingId)
         val automatiskVilkårsvurderingLovvalg = vilkårsvurderingLovvalgUtenManuelleVurderinger(kontekst, grunnlag).mapValue { it.erOppfylt() }
         val automatiskVurderingOppfylt = automatiskVilkårsvurderingLovvalg.filter { it.verdi }.isNotEmpty()
         if (automatiskVurderingOppfylt) {
@@ -229,7 +228,7 @@ class VurderLovvalgSteg private constructor(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
         ): BehandlingSteg {
-            return VurderLovvalgSteg(repositoryProvider, gatewayProvider)
+            return VurderLovvalgSteg(repositoryProvider)
         }
 
         override fun type(): StegType {

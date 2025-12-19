@@ -56,7 +56,7 @@ class OvergangUføreSteg private constructor(
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val perioderSomIkkeErTilstrekkeligVurdert: () -> Set<Periode> =
+        val perioderSomIkkeErTilstrekkeligVurdert: (kontekst: FlytKontekstMedPerioder) -> Set<Periode> =
             if (unleashGateway.isEnabled(BehandlingsflytFeature.ValiderOvergangUfore)) {
                 { perioderSomIkkeErTilstrekkeligVurdert(kontekst) }
             } else {

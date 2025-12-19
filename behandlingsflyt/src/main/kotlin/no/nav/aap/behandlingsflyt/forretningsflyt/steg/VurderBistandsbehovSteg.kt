@@ -58,8 +58,8 @@ class VurderBistandsbehovSteg(
             definisjon = Definisjon.AVKLAR_BISTANDSBEHOV,
             tvingerAvklaringsbehov = kontekst.vurderingsbehovRelevanteForSteg,
             nårVurderingErRelevant = { perioderHvorBistandsvilkåretErRelevant(kontekst) },
-            nårVurderingErGyldig = {
-                bistandRepository.hentHvisEksisterer(kontekst.behandlingId)
+            nårVurderingErGyldig = { nyKontekst ->
+                bistandRepository.hentHvisEksisterer(nyKontekst.behandlingId)
                     ?.somBistandsvurderingstidslinje()
                     .orEmpty()
                     .mapValue { true } // Alle vurderinger er gyldige hvis de finnes

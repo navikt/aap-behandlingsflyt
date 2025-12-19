@@ -74,7 +74,11 @@ class VurderSykepengeErstatningSteg private constructor(
                 tvingerAvklaringsbehov = setOf(Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING),
                 nårVurderingErRelevant = ::perioderMedVurderingsbehov,
                 kontekst = kontekst,
-                nårVurderingErGyldig = { aktiveVurderinger.somTidslinje().mapValue { true } },
+                nårVurderingErGyldig = { nyKontekst ->
+                    sykepengerErstatningRepository.hentHvisEksisterer(nyKontekst.behandlingId)
+                        ?.vurderinger.orEmpty()
+                        .somTidslinje()
+                        .mapValue { true } },
                 tilbakestillGrunnlag = {
                     if (vedtatteVurderinger.toSet() != aktiveVurderinger.toSet()) {
                         sykepengerErstatningRepository.lagre(kontekst.behandlingId, vedtatteVurderinger)
