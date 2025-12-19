@@ -67,7 +67,7 @@ class StudentRepositoryImplTest {
         )
         dataSource.transaction {
             StudentRepositoryImpl(it).lagre(
-                behandling.id, listOf(studentvurdering)
+                behandling.id, setOf(studentvurdering)
             )
         }
 

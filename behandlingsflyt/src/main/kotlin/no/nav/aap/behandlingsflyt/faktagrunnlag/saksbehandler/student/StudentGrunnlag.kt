@@ -4,8 +4,8 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
 
-class StudentGrunnlag(
-    val vurderinger: List<StudentVurdering>?,
+data class StudentGrunnlag(
+    val vurderinger: Set<StudentVurdering>?,
     val oppgittStudent: OppgittStudent?
 ) {
     fun somTidslinje(rettighetsperiode: Periode): Tidslinje<StudentVurdering> {
@@ -16,19 +16,6 @@ class StudentGrunnlag(
         } else {
             tidslinjeOf(rettighetsperiode to vurdering)
         }
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as StudentGrunnlag
-
-        return vurderinger == other.vurderinger
-    }
-
-    override fun hashCode(): Int {
-        return vurderinger?.hashCode() ?: 0
     }
 }
 

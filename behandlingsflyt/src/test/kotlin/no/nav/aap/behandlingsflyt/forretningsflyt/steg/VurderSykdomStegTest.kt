@@ -55,7 +55,7 @@ class VurderSykdomStegTest {
 
         val studentRepository = mockk<StudentRepository> {
             every { hentHvisEksisterer(behandlingId) } returns StudentGrunnlag(
-                listOf(
+                setOf(
                     StudentVurdering(
                         begrunnelse = "begrunnelse",
                         vurdertAv = "saksbehandler",
@@ -71,7 +71,7 @@ class VurderSykdomStegTest {
                 oppgittStudent = OppgittStudent(erStudentStatus = ErStudentStatus.AVBRUTT)
             )
             every { hentHvisEksisterer(revurderingId) } returns StudentGrunnlag(
-                listOf(
+                setOf(
                     StudentVurdering(
                         begrunnelse = "begrunnelse",
                         vurdertAv = "saksbehandler",

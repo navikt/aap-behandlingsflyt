@@ -47,7 +47,7 @@ class AvklarStudentLøser(
                 kontekst.behandlingId(),
                 sak.rettighetsperiode.fom
             )
-        }
+        }.toSet()
         
         val nyePlussVedtatte = nyeVurderinger + vedtatteVurderinger
         

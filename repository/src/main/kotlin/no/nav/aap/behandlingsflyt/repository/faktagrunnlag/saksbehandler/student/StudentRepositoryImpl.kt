@@ -56,7 +56,7 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
         }
     }
 
-    override fun lagre(behandlingId: BehandlingId, vurderinger: List<StudentVurdering>?) {
+    override fun lagre(behandlingId: BehandlingId, vurderinger: Set<StudentVurdering>?) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         val nyttGrunnlag = StudentGrunnlag(
             vurderinger = vurderinger,
@@ -130,7 +130,7 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
         }
     }
 
-    private fun lagreGrunnlag(behandlingId: BehandlingId, vurderinger: List<StudentVurdering>?, oppgittStudentId: Long?) {
+    private fun lagreGrunnlag(behandlingId: BehandlingId, vurderinger: Set<StudentVurdering>?, oppgittStudentId: Long?) {
         val (vurderingId, vurderingerId) = when {
             vurderinger.isNullOrEmpty() -> Pair(null, null)
             else -> lagreVurdering(vurderinger.single())
@@ -240,7 +240,7 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
         }
     }
 
-    private fun mapStudentVurdering(studentId: Long): List<StudentVurdering>? {
+    private fun mapStudentVurdering(studentId: Long): Set<StudentVurdering>? {
         val query = """
             SELECT * FROM STUDENT_VURDERING WHERE id = ?
         """.trimIndent()
@@ -267,7 +267,7 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
             }
         }
         
-        return vurdering?.let { listOf(it) }
+        return vurdering?.let { setOf(it) }
     }
 
     override fun hent(behandlingId: BehandlingId): StudentGrunnlag {

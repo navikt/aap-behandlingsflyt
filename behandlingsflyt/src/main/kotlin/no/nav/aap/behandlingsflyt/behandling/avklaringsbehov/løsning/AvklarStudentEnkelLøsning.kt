@@ -19,7 +19,7 @@ class AvklarStudentEnkelLøsning(
     @param:JsonProperty(
         "løsningerForPerioder",
         required = true
-    ) val løsningerForPerioder: List<StudentVurderingDTO>? = null,
+    ) val løsningerForPerioder: Set<StudentVurderingDTO>? = null,
     @param:JsonProperty(
         "behovstype",
         required = true,
