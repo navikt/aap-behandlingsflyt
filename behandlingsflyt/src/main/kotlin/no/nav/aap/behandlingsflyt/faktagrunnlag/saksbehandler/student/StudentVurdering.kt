@@ -6,7 +6,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 data class StudentVurdering(
-    val id: Long? = null,
     val fom: LocalDate? = null, // TODO: Gjør påkrevd,
     val tom: LocalDate? = null,
     val begrunnelse: String,
@@ -43,7 +42,6 @@ data class StudentVurderingDTO(
 ) {
     fun tilStudentVurdering(bruker: Bruker, vurdertIBehandling: BehandlingId, defaultFom: LocalDate): StudentVurdering {
         return StudentVurdering(
-            id = id,
             fom = fom ?: defaultFom,
             tom = tom,
             begrunnelse = begrunnelse,

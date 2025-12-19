@@ -251,7 +251,6 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
             }
             setRowMapper {
                 StudentVurdering(
-                    it.getLong("id"),
                     it.getLocalDateOrNull("fom"),
                     it.getLocalDateOrNull("tom"),
                     it.getString("begrunnelse"),

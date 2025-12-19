@@ -64,7 +64,6 @@ fun NormalOpenAPIRoute.studentgrunnlagApi(
 private fun StudentVurdering.tilResponse(ansattInfoService: AnsattInfoService): StudentVurderingResponse {
     val navnOgEnhet = ansattInfoService.hentAnsattNavnOgEnhet(this.vurdertAv)
     return StudentVurderingResponse(
-        id = this.id,
         begrunnelse = this.begrunnelse,
         harAvbruttStudie = this.harAvbruttStudie,
         godkjentStudieAvLånekassen = this.godkjentStudieAvLånekassen,
