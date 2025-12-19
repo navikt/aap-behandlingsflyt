@@ -4,6 +4,8 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStud
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plusHverdager
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurderingDTO
@@ -85,18 +87,23 @@ class StudentFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             .løsSykdom(sak.rettighetsperiode.fom)
             .løsBistand(sak.rettighetsperiode.fom)
             .løsSykdomsvurderingBrev()
+            .løsBeregningstidspunkt()
+            .foreslåVedtak()
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)
             }
             .fattVedtak()
             .medKontekst {
-                val vilkår = dataSource.transaction { VilkårsresultatRepositoryImpl(it).hent(behandling.id) }
+                val vilkår = dataSource.transaction { VilkårsresultatRepositoryImpl(it).hent(this.behandling.id) }
                 val v = vilkår.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
                 assertThat(v.harPerioderSomErOppfylt()).isTrue
             }
             .assertRettighetstype(
-                Periode(fom, fom.plusHverdager(Hverdager(130)).minusDays(1)) to RettighetsType.BISTANDSBEHOV,
+                Periode(
+                    fom,
+                    fom.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
+                ) to RettighetsType.BISTANDSBEHOV,
             )
 
     }

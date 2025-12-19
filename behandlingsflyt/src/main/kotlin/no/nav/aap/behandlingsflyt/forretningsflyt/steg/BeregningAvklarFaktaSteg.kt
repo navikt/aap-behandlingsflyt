@@ -59,9 +59,9 @@ class BeregningAvklarFaktaSteg private constructor(
                     VurderingType.REVURDERING -> {
                         when {
                             tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
-                            kontekst.vurderingsbehovRelevanteForSteg.isEmpty() -> false
                             manueltTriggetVurderingsbehovBeregning(kontekst) -> erIkkeStudent(behandlingId)
                             manueltTriggetVurderingsbehovYrkesskade(kontekst) -> false
+                            kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty() -> true
                             else -> {
                                 erIkkeStudent(behandlingId)
                             }
