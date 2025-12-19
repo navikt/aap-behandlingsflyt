@@ -38,10 +38,7 @@ public data class SøknadStudentDto(
 )
 
 public enum class KommeTilbake(public val stringRepresentation: String) {
-    Ja("Ja"), Nei("Nei"),
-
-    @JsonAlias("Vet ikke", "VetIkke")
-    VetIkke("Vet ikke");
+    Ja("Ja"), Nei("Nei"), VetIkke("Vet ikke");
 
     @JsonValue
     public fun customValue(): String = stringRepresentation
@@ -49,7 +46,7 @@ public enum class KommeTilbake(public val stringRepresentation: String) {
     /**
      * FIXME: Midlertidig fiks!
      * Må bruke @JsonCreator for å håndtere deserialisering korrekt for "VetIkke".
-     * customValue() med @JsonValue gjør at jackson ignorerer enum name og bruker tillater stringRepresentation
+     * customValue() med @JsonValue gjør at jackson ignorerer alias og kun tillater stringRepresentation
      * Usikker på hva konsekvensen ved å fjerne customValue() er andre steder i kodebasen, derav kjapp fiks før ferien.
      **/
     public companion object {
