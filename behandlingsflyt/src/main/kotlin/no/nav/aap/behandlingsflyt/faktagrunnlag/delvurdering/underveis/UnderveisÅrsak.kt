@@ -8,7 +8,9 @@ enum class UnderveisÅrsak(val konsekvens: Konsekvens) {
     BRUDD_PÅ_AKTIVITETSPLIKT_11_7_STANS(Konsekvens.STANS),
     @Deprecated("Vilkårssjekk er flyttet til Vilkårtype.AKTIVITETSPLIKT. Finnes ikke i prod, men i dev, så vi kan vurdere å slette.")
     BRUDD_PÅ_AKTIVITETSPLIKT_11_7_OPPHØR(Konsekvens.OPPHØR),
+    @Deprecated("Vilkårssjekk er flyttet til Vilkårtype.OPPHOLDSKRAV.")
     BRUDD_PÅ_OPPHOLDSKRAV_11_3_STANS(Konsekvens.STANS),
+    @Deprecated("Vilkårssjekk er flyttet til Vilkårtype.OPPHOLDSKRAV.")
     BRUDD_PÅ_OPPHOLDSKRAV_11_3_OPPHØR(Konsekvens.OPPHØR),
 
     @Deprecated("Sjekk om verdien finnes i prod-databasen før den evnt. slettes. Og dev?")

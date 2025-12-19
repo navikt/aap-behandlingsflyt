@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.Institusjonsopphold
-import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.underveis.Kvoter
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
@@ -21,7 +20,6 @@ data class UnderveisInput(
     val innsendingsTidspunkt: Map<LocalDate, JournalpostId>,
     val dødsdato: LocalDate? = null,
     val kvoter: Kvoter,
-    val oppholdskravGrunnlag: OppholdskravGrunnlag,
     val institusjonsopphold: List<Institusjonsopphold>,
     val arbeidsevneGrunnlag: ArbeidsevneGrunnlag,
     val meldepliktGrunnlag: MeldepliktGrunnlag,

@@ -1,8 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis
 
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.InstitusjonsoppholdUtlederService
-import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlagRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.AapEtterRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FastsettGrenseverdiArbeidRegel
@@ -11,7 +9,6 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companio
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.InstitusjonRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MapInstitusjonoppholdTilRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktRegel
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.OppholdskravRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UnderveisInput
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.UtledMeldeperiodeRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetRegel
@@ -55,7 +52,6 @@ class UnderveisService(
     private val meldepliktRepository: MeldepliktRepository,
     private val overstyringMeldepliktRepository: OverstyringMeldepliktRepository,
     private val meldeperiodeRepository: MeldeperiodeRepository,
-    private val oppholdskravRepository: OppholdskravGrunnlagRepository,
     private val arbeidsopptrappingRepository: ArbeidsopptrappingRepository,
     private val vedtakService: VedtakService,
     private val unleashGateway: UnleashGateway,
@@ -70,7 +66,6 @@ class UnderveisService(
         meldepliktRepository = repositoryProvider.provide(),
         meldeperiodeRepository = repositoryProvider.provide(),
         overstyringMeldepliktRepository = repositoryProvider.provide(),
-        oppholdskravRepository = repositoryProvider.provide(),
         arbeidsopptrappingRepository = repositoryProvider.provide(),
         vedtakService = VedtakService(repositoryProvider),
         unleashGateway = gatewayProvider.provide(),
@@ -83,7 +78,6 @@ class UnderveisService(
             AapEtterRegel(),
             UtledMeldeperiodeRegel(),
             InstitusjonRegel(),
-            OppholdskravRegel(),
             MeldepliktRegel(),
             FastsettGrenseverdiArbeidRegel(),
             GraderingArbeidRegel(),
@@ -173,9 +167,6 @@ class UnderveisService(
         val periodeForVurdering = utledPeriodeForUnderveisvurderinger(behandlingId, sak)
         val meldeperioder = meldeperiodeRepository.hentMeldeperioder(behandlingId, periodeForVurdering)
 
-        val oppholdskravGrunnlag = oppholdskravRepository.hentHvisEksisterer(behandlingId)
-            ?: OppholdskravGrunnlag(vurderinger = emptyList())
-
         val vedtaksdatoFørstegangsbehandling = vedtakService.vedtakstidspunktFørstegangsbehandling(sakId)
 
 
@@ -190,7 +181,6 @@ class UnderveisService(
             arbeidsevneGrunnlag = arbeidsevneGrunnlag,
             meldepliktGrunnlag = meldepliktGrunnlag,
             overstyringMeldepliktGrunnlag = overstyringMeldepliktGrunnlag,
-            oppholdskravGrunnlag = oppholdskravGrunnlag,
             meldeperioder = meldeperioder,
             vedtaksdatoFørstegangsbehandling = vedtaksdatoFørstegangsbehandling?.toLocalDate(),
         )

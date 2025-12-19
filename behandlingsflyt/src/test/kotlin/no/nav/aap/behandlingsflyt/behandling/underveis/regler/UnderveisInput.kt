@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.Institusjonsopphold
-import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.underveis.Kvoter
 import no.nav.aap.behandlingsflyt.behandling.underveis.tomKvoter
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeUtleder
@@ -38,7 +37,6 @@ fun tomUnderveisInput(
     innsendingsTidspunkt: Map<LocalDate, JournalpostId> = emptyMap(),
     kvoter: Kvoter = tomKvoter,
     institusjonsopphold: List<Institusjonsopphold> = emptyList(),
-    oppholdskravGrunnlag: OppholdskravGrunnlag = OppholdskravGrunnlag(emptyList()),
     arbeidsevneGrunnlag: ArbeidsevneGrunnlag = ArbeidsevneGrunnlag(emptyList()),
     meldepliktGrunnlag: MeldepliktGrunnlag = MeldepliktGrunnlag(emptyList()),
     overstyringMeldepliktGrunnlag: OverstyringMeldepliktGrunnlag = OverstyringMeldepliktGrunnlag(emptyList()),
@@ -58,7 +56,6 @@ fun tomUnderveisInput(
         overstyringMeldepliktGrunnlag = overstyringMeldepliktGrunnlag,
         meldeperioder = meldeperioder,
         vedtaksdatoFørstegangsbehandling = vedtaksdatoFørstegangsbehandling,
-        oppholdskravGrunnlag = oppholdskravGrunnlag,
     )
 }
 

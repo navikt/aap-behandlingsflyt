@@ -42,7 +42,6 @@ class InstitusjonRegelTest {
         val vurderingFraTidligereResultat = Vurdering(
             fårAapEtter = RettighetsType.BISTANDSBEHOV,
             meldepliktVurdering = MeldepliktVurdering.Fritak,
-            oppholdskravVurdering = null,
             gradering = ArbeidsGradering(
                 totaltAntallTimer = TimerArbeid(BigDecimal.ZERO),
                 andelArbeid = Prosent(0),
