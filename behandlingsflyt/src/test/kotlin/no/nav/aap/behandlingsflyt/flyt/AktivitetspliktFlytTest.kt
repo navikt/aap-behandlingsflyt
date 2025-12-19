@@ -215,24 +215,17 @@ class AktivitetspliktFlytTest :
 
         val underveisÅpenTidslinje = dataSource.transaction { connection ->
             UnderveisRepositoryImpl(connection).hent(åpenBehandling.id)
-                .let { segment ->
-                    Tidslinje(segment.perioder.map { Segment(it.periode, it) }).mapValue {
-                        Pair(
-                            it.utfall,
-                            it.avslagsårsak
-                        )
-                    }
-                }
+                .somTidslinje()
         }
 
-        underveisÅpenTidslinje.komprimer().assertTidslinje(
+        underveisÅpenTidslinje.assertTidslinje(
             Segment(Periode(sak.rettighetsperiode.fom, bruddFom.minusDays(1))) {
-                assertEquals(VilkårsresultatUtfall.OPPFYLT, it.first)
-                assertEquals(null, it.second)
+                assertEquals(VilkårsresultatUtfall.OPPFYLT, it.utfall)
+                assertEquals(null, it.avslagsårsak)
             },
             Segment(Periode(bruddFom, underveisÅpenTidslinje.helePerioden().tom)) {
-                assertEquals(VilkårsresultatUtfall.IKKE_OPPFYLT, it.first)
-                assertEquals(UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT_11_7_STANS, it.second)
+                assertEquals(VilkårsresultatUtfall.IKKE_OPPFYLT, it.utfall)
+                assertEquals(UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT, it.avslagsårsak)
             }
         )
     }
@@ -347,7 +340,7 @@ class AktivitetspliktFlytTest :
             },
             Segment(Periode(bruddFom, underveisTidslinjeEtterEffektuering.helePerioden().tom)) {
                 assertEquals(VilkårsresultatUtfall.IKKE_OPPFYLT, it.first)
-                assertEquals(UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT_11_7_STANS, it.second)
+                assertEquals(UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT, it.second)
             }
         )
     }
