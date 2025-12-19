@@ -42,7 +42,14 @@ class VurderSykdomStegTest {
         val revurderingId = BehandlingId(2)
 
         val behandlingRepository = mockk<BehandlingRepository>() {
-            every { hent(behandlingId) } returns mockk(relaxed = true)
+            every { hent(behandlingId) } returns mockk(relaxed = true) {
+                every { id } returns behandlingId
+                every { forrigeBehandlingId } returns null
+            }
+            every { hent(revurderingId) } returns mockk(relaxed = true) {
+                every { id } returns revurderingId
+                every { forrigeBehandlingId } returns behandlingId
+            }
         }
 
         val sykdomRepository = mockk<SykdomRepository> {
