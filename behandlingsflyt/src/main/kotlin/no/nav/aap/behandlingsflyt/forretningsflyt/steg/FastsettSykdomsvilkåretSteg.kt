@@ -79,7 +79,6 @@ class FastsettSykdomsvilkåretSteg private constructor(
 
         val rettighetsperiode = kontekst.rettighetsperiode
         val faktagrunnlag = SykdomsFaktagrunnlag(
-            kontekst.behandlingType,
             rettighetsperiode.fom,
             rettighetsperiode.tom,
             sykdomsGrunnlag?.yrkesskadevurdering,
