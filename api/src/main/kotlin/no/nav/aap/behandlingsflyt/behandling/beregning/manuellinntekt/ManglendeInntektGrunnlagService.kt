@@ -47,7 +47,9 @@ class ManglendeInntektGrunnlagService(
         val historiskeVurderinger =
             manuellInntektGrunnlagRepository.hentHistoriskeVurderinger(behandling.sakId, behandling.id)
 
-        val mappedHistoriskeVurderinger = historiskeVurderinger.map { historiskManuellInntektSet ->
+        val mappedHistoriskeVurderinger = historiskeVurderinger
+            .sortedByDescending { it.first().opprettet }
+            .map { historiskManuellInntektSet ->
 
             val årsVurderinger = historiskManuellInntektSet.map { historiskManuellInntekt ->
                 ÅrData(
@@ -68,6 +70,6 @@ class ManglendeInntektGrunnlagService(
             )
         }
 
-        return mappedHistoriskeVurderinger.sortedByDescending { it.vurdertAv.dato }
+        return mappedHistoriskeVurderinger
     }
 }
