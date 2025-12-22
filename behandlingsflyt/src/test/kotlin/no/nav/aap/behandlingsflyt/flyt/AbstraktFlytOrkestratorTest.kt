@@ -1379,14 +1379,14 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
     protected fun Behandling.løsForeslåVedtak(): Behandling =
         løsAvklaringsBehov(this, ForeslåVedtakLøsning())
 
-    protected fun Behandling.løsRefusjonskrav(): Behandling {
+    protected fun Behandling.løsRefusjonskrav(fom: LocalDate = LocalDate.now()): Behandling {
         return løsAvklaringsBehov(
             this,
             RefusjonkravLøsning(
                 listOf(
                     RefusjonkravVurderingDto(
                         harKrav = true,
-                        fom = LocalDate.now(),
+                        fom = fom,
                         tom = null,
                         navKontor = "",
                     )

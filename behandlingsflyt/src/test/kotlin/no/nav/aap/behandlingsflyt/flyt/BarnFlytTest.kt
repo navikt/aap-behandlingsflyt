@@ -28,7 +28,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.prosessering.OpprettJobbForTriggBarnetilleggSatsJobbUtfører
-import no.nav.aap.behandlingsflyt.prosessering.TriggBarnetilleggSatsJobbUtfører
 import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.barn.BarnRepositoryImpl
@@ -197,11 +196,11 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
 
     @Test
     fun `barnetillegg gis ikke for gamle barn`() {
-        val fom = LocalDate.now()
+        val fom = LocalDate.of(2025, 12, 4)
         val periode = Periode(fom, Tid.MAKS)
 
-        val ungtBarnFødselsdato = LocalDate.now().minusYears(7)
-        val gammeltBarnFødselsdato = LocalDate.now().minusYears(20)
+        val ungtBarnFødselsdato = fom.minusYears(7)
+        val gammeltBarnFødselsdato = fom.minusYears(20)
 
         val person = TestPersoner.STANDARD_PERSON().medBarn(
             listOf(
@@ -225,7 +224,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         behandling
             .løsSykdom(periode.fom)
             .løsBistand(periode.fom)
-            .løsRefusjonskrav()
+            .løsRefusjonskrav(periode.fom)
             .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
             .løsBeregningstidspunkt()
@@ -472,6 +471,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
 
     @Test
     fun `førstegangsbehandling med barnetillegg for oppgitte, registrerte og saksbehandler-oppgitte barn`() {
+        val periode = Periode(LocalDate.of(2026, 1, 1), Tid.MAKS)
         val oppgitteBarn = lagTestPerson("Tone", "Dovendyr", LocalDate.now().minusYears(9))
         val fraDatoOppgitteBarn = periode.fom
         val fraDatoRegisterBarn = LocalDate.now().plusMonths(1).plusDays(12)
@@ -569,14 +569,14 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 val periodeEttBarn = Periode(fraDatoOppgitteBarn, fraDatoRegisterBarn.minusDays(1))
                 val tilkjentYtelseEttBarn = tilkjentYtelseTidslinje.begrensetTil(periodeEttBarn)
                 assertTidslinje(tilkjentYtelseEttBarn, periodeEttBarn to {
-                    assertThat(it.barnetillegg).isEqualTo(Beløp(37))
+                    assertThat(it.barnetillegg).isEqualTo(Beløp(38))
                     assertThat(it.antallBarn).isEqualTo(1)
                 })
 
                 val periodeToBarn = Periode(fraDatoRegisterBarn, fraDatoSaksbehandlerOppgitteBarn.minusDays(1))
                 val tilkjentYtelseToBarn = tilkjentYtelseTidslinje.begrensetTil(periodeToBarn)
                 assertTidslinje(tilkjentYtelseToBarn, periodeToBarn to {
-                    assertThat(it.barnetillegg).isEqualTo(Beløp(74))
+                    assertThat(it.barnetillegg).isEqualTo(Beløp(76))
                     assertThat(it.antallBarn).isEqualTo(2)
                 })
 
@@ -584,7 +584,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                     Periode(fraDatoSaksbehandlerOppgitteBarn, tilkjentYtelseFraRepo.tilTidslinje().helePerioden().tom)
                 val tilkjentYtelseTreBarn = tilkjentYtelseTidslinje.begrensetTil(periodeTreBarn)
                 assertTidslinje(tilkjentYtelseTreBarn, periodeTreBarn to {
-                    assertThat(it.barnetillegg).isEqualTo(Beløp(111))
+                    assertThat(it.barnetillegg).isEqualTo(Beløp(114))
                     assertThat(it.antallBarn).isEqualTo(3)
                 })
             }
@@ -592,6 +592,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
 
     @Test
     fun `revurdering barnetillegg med ekstra saksbehandler-oppgitt barn øker utbetaling fra et til to barn`() {
+        val periode = Periode(LocalDate.of(2026, 1, 1), Tid.MAKS)
         val oppgitteBarn = lagTestPerson("Lilly", "Løve", LocalDate.now().minusYears(6))
 
         // Sender inn en søknad
@@ -640,7 +641,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
 
                 assertTrue(barnetillegg.isNotEmpty())
                 assertTidslinje(barnetillegg, tilkjentYtelsePeriode to {
-                    assertThat(it.barnetillegg).isEqualTo(Beløp(37))
+                    assertThat(it.barnetillegg).isEqualTo(Beløp(38))
                     assertThat(it.antallBarn).isEqualTo(1)
                 })
             }
@@ -729,7 +730,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 val periodeEttBarn = Periode(periode.fom, fomSaksbehandlerOppgitteBarn.minusDays(1))
                 val tilkjentYtelseEtBarn = tilkjentYtelseTidslinje.begrensetTil(periodeEttBarn)
                 assertTidslinje(tilkjentYtelseEtBarn, periodeEttBarn to {
-                    assertThat(it.barnetillegg).isEqualTo(Beløp(37))
+                    assertThat(it.barnetillegg).isEqualTo(Beløp(38))
                     assertThat(it.antallBarn).isEqualTo(1)
                 })
 
@@ -737,7 +738,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                     Periode(fomSaksbehandlerOppgitteBarn, tilkjentYtelseFraRepo.tilTidslinje().helePerioden().tom)
                 val tilkjentYtelseToBarn = tilkjentYtelseTidslinje.begrensetTil(periodeToBarn)
                 assertTidslinje(tilkjentYtelseToBarn, periodeToBarn to {
-                    assertThat(it.barnetillegg).isEqualTo(Beløp(74))
+                    assertThat(it.barnetillegg).isEqualTo(Beløp(76))
                     assertThat(it.antallBarn).isEqualTo(2)
                 })
 
@@ -747,7 +748,8 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
 
     @Test
     fun `førstegangsbehandling barnetillegg, nei på 11-13 - avslag, ingen tilkjent ytelse`() {
-        val oppgitteBarn = lagTestPerson("Tara", "Tiger", LocalDate.now().minusYears(15))
+        val periode = Periode(LocalDate.of(2026, 1, 1), Tid.MAKS)
+        val oppgitteBarn = lagTestPerson("Tara", "Tiger", periode.fom.minusYears(15))
         val fraDatoOppgitteBarn = periode.fom.plusMonths(1).plusDays(5)
 
         val søknad = TestSøknader.SØKNAD_MED_BARN(
@@ -798,7 +800,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                     Periode(fraDatoOppgitteBarn, tilkjentYtelseFraRepo.tilTidslinje().helePerioden().tom)
                 val tilkjentYtelseEttBarn = tilkjentYtelseTidslinje.begrensetTil(periodeEttBarn)
                 assertTidslinje(tilkjentYtelseEttBarn, periodeEttBarn to {
-                    assertThat(it.barnetillegg).isEqualTo(Beløp(37))
+                    assertThat(it.barnetillegg).isEqualTo(Beløp(38))
                     assertThat(it.antallBarn).isEqualTo(1)
                 })
             }
@@ -825,7 +827,8 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
 
     @Test
     fun `revurdering barnetillegg, nei på 11-13 - avslag, ingen barnetillegg i tilkjent ytelse`() {
-        val barnfødseldato = LocalDate.now().minusYears(10)
+        val periode = Periode(LocalDate.of(2026, 1, 1), Tid.MAKS)
+        val barnfødseldato = periode.fom.minusYears(10)
 
         val barnIdent = genererIdent(barnfødseldato)
         val barnNavn = PersonNavn("Mari", "Måke")
@@ -852,7 +855,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
 
                 assertTrue(barnetillegg.isNotEmpty())
                 assertTidslinje(barnetillegg, tilkjentYtelsePeriode to {
-                    assertThat(it.barnetillegg).isEqualTo(Beløp(37))
+                    assertThat(it.barnetillegg).isEqualTo(Beløp(38))
                     assertThat(it.antallBarn).isEqualTo(1)
                 })
             }
@@ -897,7 +900,8 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
 
     @Test
     fun `førstegangsbehandling der et barn fjernes reduserer barnetillegg tilsvarende`() {
-        val registerBarn = lagTestPerson("Slapp", "Isbjørn", LocalDate.now().minusYears(7))
+        val periode = Periode(LocalDate.of(2026, 1, 1), Tid.MAKS)
+        val registerBarn = lagTestPerson("Slapp", "Isbjørn", periode.fom.minusYears(7))
         val registerBarnIdent = genererIdent(registerBarn.fødselsdato.toLocalDate())
         val personMedRegistrerteBarn = TestPersoner.STANDARD_PERSON().medBarn(
             listOf(
@@ -953,7 +957,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 val tilkjentYtelsePeriode = tilkjentYtelseFraRepo.tilTidslinje().helePerioden()
                 val barnetillegg = tilkjentYtelseTidslinje.begrensetTil(tilkjentYtelsePeriode)
                 assertTidslinje(barnetillegg, tilkjentYtelsePeriode to {
-                    assertThat(it.barnetillegg).isEqualTo(Beløp(74))
+                    assertThat(it.barnetillegg).isEqualTo(Beløp(76))
                     assertThat(it.antallBarn).isEqualTo(2)
                 })
             }
@@ -978,7 +982,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 val tilkjentYtelsePeriode = tilkjentYtelseFraRepo.tilTidslinje().helePerioden()
                 val barnetillegg = tilkjentYtelseTidslinje.begrensetTil(tilkjentYtelsePeriode)
                 assertTidslinje(barnetillegg, tilkjentYtelsePeriode to {
-                    assertThat(it.barnetillegg).isEqualTo(Beløp(37))
+                    assertThat(it.barnetillegg).isEqualTo(Beløp(38))
                     assertThat(it.antallBarn).isEqualTo(1)
                 })
             }
@@ -986,7 +990,8 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
 
     @Test
     fun `førstegangsbehandling legge til nytt barn gir det ekstra barnetillegg tilsvarende`() {
-        val registerBarn = lagTestPerson("Tuva", "Trallala", LocalDate.now().minusYears(7))
+        val periode = Periode(LocalDate.of(2026, 1, 1), Tid.MAKS)
+        val registerBarn = lagTestPerson("Tuva", "Trallala", periode.fom.minusYears(7))
         val registerBarnIdent = genererIdent(registerBarn.fødselsdato.toLocalDate())
         val personMedRegistrerteBarn = TestPersoner.STANDARD_PERSON().medBarn(
             listOf(
@@ -1019,7 +1024,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                     val tilkjentYtelsePeriode = tilkjentYtelseFraRepo.tilTidslinje().helePerioden()
                     val barnetillegg = tilkjentYtelseTidslinje.begrensetTil(tilkjentYtelsePeriode)
                     assertTidslinje(barnetillegg, tilkjentYtelsePeriode to {
-                        assertThat(it.barnetillegg).isEqualTo(Beløp(37))
+                        assertThat(it.barnetillegg).isEqualTo(Beløp(38))
                         assertThat(it.antallBarn).isEqualTo(1)
                     })
                 }
@@ -1066,7 +1071,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 val tilkjentYtelsePeriode = tilkjentYtelseFraRepo.tilTidslinje().helePerioden()
                 val barnetillegg = tilkjentYtelseTidslinje.begrensetTil(tilkjentYtelsePeriode)
                 assertTidslinje(barnetillegg, tilkjentYtelsePeriode to {
-                    assertThat(it.barnetillegg).isEqualTo(Beløp(74))
+                    assertThat(it.barnetillegg).isEqualTo(Beløp(76))
                     assertThat(it.antallBarn).isEqualTo(2)
                 })
             }
@@ -1074,8 +1079,9 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
 
     @Test
     fun `Barnetillegg opphører ved registrert dødsdato`() {
-        val dødtBarnFødselsdato = LocalDate.now().minusYears(5)
-        val dødtBarnDødsdato = Dødsdato(LocalDate.now().plusMonths(5))
+        val periode = Periode(LocalDate.of(2026, 1, 1), Tid.MAKS)
+        val dødtBarnFødselsdato = periode.fom.minusYears(5)
+        val dødtBarnDødsdato = Dødsdato(periode.fom.plusMonths(5))
         val dødtBarnIdent = genererIdent(dødtBarnFødselsdato)
         val dødtBarnNavn = PersonNavn("Kunstig", "Gramatikk")
         val personMedDødtBarn = TestPersoner.STANDARD_PERSON().medBarn(
@@ -1111,7 +1117,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 val periodeMedBarnetillegg = Periode(periode.fom, dødtBarnDødsdato.toLocalDate())
                 val tilkjentYtelseMedBarnetillegg = tilkjentYtelseTidslinje.begrensetTil(periodeMedBarnetillegg)
                 assertTidslinje(tilkjentYtelseMedBarnetillegg, periodeMedBarnetillegg to {
-                    assertThat(it.barnetillegg).isEqualTo(Beløp(37))
+                    assertThat(it.barnetillegg).isEqualTo(Beløp(38))
                     assertThat(it.antallBarn).isEqualTo(1)
                 })
 
@@ -1154,7 +1160,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         }
             .løsSykdom(periode.fom)
             .løsBistand(periode.fom)
-            .løsRefusjonskrav()
+            .løsRefusjonskrav(periode.fom)
             .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
             .løsAvklaringsBehov(
