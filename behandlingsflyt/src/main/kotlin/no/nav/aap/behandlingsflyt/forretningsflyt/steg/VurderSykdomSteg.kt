@@ -55,7 +55,7 @@ class VurderSykdomSteg(
                 vilkårsresultatRepository = vilkårsresultatRepository,
                 definisjon = Definisjon.AVKLAR_SYKDOM,
                 tvingerAvklaringsbehov = kontekst.vurderingsbehovRelevanteForSteg,
-                nårVurderingErRelevant = { nyKontekst -> perioderHvorSykdomsvurderingErRelevant(nyKontekst) },
+                nårVurderingErRelevant = ::perioderHvorSykdomsvurderingErRelevant,
                 nårVurderingErGyldig = { tilstrekkeligVurdert(kontekst) },
                 kontekst,
                 tilbakestillGrunnlag = {

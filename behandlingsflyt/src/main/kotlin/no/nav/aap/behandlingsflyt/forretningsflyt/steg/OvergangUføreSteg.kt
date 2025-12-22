@@ -73,7 +73,7 @@ class OvergangUføreSteg private constructor(
             tvingerAvklaringsbehov = setOf(
                 Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
             ),
-            nårVurderingErRelevant = { perioderOvergangUføreErRelevant(kontekst) },
+            nårVurderingErRelevant = ::perioderOvergangUføreErRelevant,
             perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
             tilbakestillGrunnlag = {
                 val vedtatteVurderinger =
