@@ -57,7 +57,7 @@ class VurderBistandsbehovSteg(
             vilkårsresultatRepository = vilkårsresultatRepository,
             definisjon = Definisjon.AVKLAR_BISTANDSBEHOV,
             tvingerAvklaringsbehov = kontekst.vurderingsbehovRelevanteForSteg,
-            nårVurderingErRelevant = { perioderHvorBistandsvilkåretErRelevant(kontekst) },
+            nårVurderingErRelevant = ::perioderHvorBistandsvilkåretErRelevant,
             nårVurderingErGyldig = {
                 bistandRepository.hentHvisEksisterer(kontekst.behandlingId)
                     ?.somBistandsvurderingstidslinje()
@@ -82,7 +82,7 @@ class VurderBistandsbehovSteg(
         )
 
         when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> vurderBistandsvilkår(kontekst)
+            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING, VurderingType.AUTOMATISK_OPPDATER_VILKÅR -> vurderBistandsvilkår(kontekst)
             VurderingType.MELDEKORT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,

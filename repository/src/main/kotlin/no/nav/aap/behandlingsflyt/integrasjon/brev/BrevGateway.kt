@@ -287,6 +287,7 @@ class BrevGateway : BrevbestillingGateway {
         TypeBrev.VEDTAK_AVSLAG -> Brevtype.AVSLAG
         TypeBrev.VEDTAK_INNVILGELSE -> Brevtype.INNVILGELSE
         TypeBrev.VEDTAK_ENDRING -> Brevtype.VEDTAK_ENDRING
+        TypeBrev.BARNETILLEGG_SATS_REGULERING -> Brevtype.BARNETILLEGG_SATS_REGULERING
         TypeBrev.VARSEL_OM_BESTILLING -> Brevtype.VARSEL_OM_BESTILLING
         TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT -> Brevtype.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT
         TypeBrev.KLAGE_AVVIST -> Brevtype.KLAGE_AVVIST
@@ -316,9 +317,9 @@ class BrevGateway : BrevbestillingGateway {
                                 gradertDagsatsInkludertBarnetillegg = brevBehov.tilkjentYtelse?.gradertDagsatsInkludertBarnetillegg?.verdi,
                                 barnetillegg = brevBehov.tilkjentYtelse?.barnetillegg?.verdi,
                                 antallBarn = brevBehov.tilkjentYtelse?.antallBarn,
-                                minsteÅrligYtelse = brevBehov.tilkjentYtelse?.minsteÅrligYtelse?.verdi,
-                                minsteÅrligYtelseUnder25 = brevBehov.tilkjentYtelse?.minsteÅrligYtelseUnder25?.verdi,
-                                årligYtelse = brevBehov.tilkjentYtelse?.årligYtelse?.verdi
+                                minsteÅrligYtelse = brevBehov.tilkjentYtelse?.minsteÅrligYtelse?.heltallverdi(),
+                                minsteÅrligYtelseUnder25 = brevBehov.tilkjentYtelse?.minsteÅrligYtelseUnder25?.heltallverdi(),
+                                årligYtelse = brevBehov.tilkjentYtelse?.årligYtelse?.heltallverdi()
                             )
                         )
                     }

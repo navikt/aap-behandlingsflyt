@@ -34,6 +34,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.Sykdomsvur
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderRettighetsperiodeLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.YrkesskadeSakDto
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.YrkesskadevurderingDto
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Brevbestilling
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.mellomlagring.MellomlagretVurdering
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.AvklarOppholdkravLøsningForPeriodeDto
@@ -137,7 +138,6 @@ import no.nav.aap.behandlingsflyt.test.testGatewayProvider
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
@@ -156,6 +156,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.reflect.KClass
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
 
 
 @Fakes
@@ -517,6 +518,11 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
 
     protected fun løsFramTilGrunnlag(rettighetsPeriodeFrom: LocalDate, behandling: Behandling): Behandling {
         return behandling
+            .medKontekst {
+                if (åpneAvklaringsbehov.firstOrNull { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP } != null) {
+                    this.behandling.løsLovvalg(LocalDate.now().minusYears(20))
+                }
+            }
             .løsSykdom(rettighetsPeriodeFrom)
             .løsAvklaringsBehov(
                 AvklarBistandsbehovEnkelLøsning(
@@ -935,7 +941,6 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                 periode
             )
         }
-
         val behandling = sak.sendInnSøknad(søknad, mottattTidspunkt, journalpostId)
 
         return Pair(sak, behandling)
@@ -1131,6 +1136,12 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         dataSource.transaction { connection ->
             AvklaringsbehovOrkestrator(postgresRepositoryRegistry.provider(connection), gatewayProvider)
                 .settPåVentMensVentePåMedisinskeOpplysninger(key, SYSTEMBRUKER)
+        }
+    }
+
+    protected fun hentBrevAvTypeForSak(sak: Sak, typeBrev: TypeBrev): List<Brevbestilling> {
+        return dataSource.transaction(readOnly = true) {
+            BrevbestillingRepositoryImpl(it).hent(sak.id, typeBrev)
         }
     }
 
@@ -1337,7 +1348,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         return kvalitetssikreOk(this, bruker)
     }
 
-    protected fun løsFatteVedtak(behandling: Behandling, returVed: Definisjon? = null): Behandling =
+    private fun løsFatteVedtak(behandling: Behandling, returVed: Definisjon? = null): Behandling =
         løsAvklaringsBehov(
             behandling,
             FatteVedtakLøsning(
@@ -1575,5 +1586,28 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
     protected fun tilkjentYtelsePeriode(behandling: Behandling): Periode =
         dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(behandling.id) }?.tilTidslinje()
             ?.helePerioden() ?: error("Mangler tilkjent ytelse")
+
+    protected fun settRettighetsperiode(
+        sak: Sak,
+        rettighetsperiode: Periode
+    ) {
+        dataSource.transaction { connection ->
+            val sakRepository = SakRepositoryImpl(connection)
+            sakRepository.oppdaterRettighetsperiode(
+                sak.id,
+                rettighetsperiode
+            )
+        }
+    }
+
+    fun assertStatusForDefinisjon(
+        avklaringsbehov: List<Avklaringsbehov>,
+        definisjon: Definisjon,
+        forventetStatus: AvklaringsbehovStatus
+    ) {
+        assertThat(avklaringsbehov.filter { it.definisjon == definisjon }
+            .map { it.status() })
+            .containsExactly(forventetStatus)
+    }
 
 }

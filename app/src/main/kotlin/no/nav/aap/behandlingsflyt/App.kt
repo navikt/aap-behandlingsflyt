@@ -68,7 +68,6 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.meldepliktOverstyringGrun
 import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerApi
 import no.nav.aap.behandlingsflyt.drift.driftApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.flyt.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flytApi
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
@@ -85,7 +84,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
 import no.nav.aap.behandlingsflyt.pip.behandlingsflytPipApi
 import no.nav.aap.behandlingsflyt.prosessering.BehandlingsflytLogInfoProvider
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
@@ -121,7 +120,6 @@ import java.util.logging.Level
 import java.util.logging.Logger
 import javax.sql.DataSource
 import kotlin.time.Duration.Companion.seconds
-import kotlin.time.toJavaDuration
 
 
 fun utledSubtypesTilMottattHendelseDTO(): List<Class<*>> {
@@ -149,7 +147,7 @@ internal object AppConfig {
     // https://github.com/ktorio/ktor/blob/3.3.1/ktor-server/ktor-server-core/common/src/io/ktor/server/engine/ApplicationEngine.kt#L30
     val connectionGroupSize = ktorParallellitet / 2 + 1
     val workerGroupSize = ktorParallellitet / 2 + 1
-    val callGroupSize = ktorParallellitet
+    val callGroupSize = 4 * ktorParallellitet
 
     const val ANTALL_WORKERS_FOR_MOTOR = 4
     val hikariMaxPoolSize = ktorParallellitet + 2 * ANTALL_WORKERS_FOR_MOTOR
@@ -328,15 +326,15 @@ private fun utførMigreringer(
     val scheduler = Executors.newScheduledThreadPool(1)
     scheduler.schedule(Runnable {
         val unleashGateway: UnleashGateway = gatewayProvider.provide()
-        val migrerMeldepliktFritakEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.MigrerMeldepliktFritak)
+        val migrerArbeidsevneEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.MigrerArbeidsevne)
         val isLeader = isLeader(log)
-        log.info("isLeader = $isLeader, migrerMeldepliktFritakEnabled = $migrerMeldepliktFritakEnabled")
+        log.info("isLeader = $isLeader, migrerArbeidsevneEnabled = $migrerArbeidsevneEnabled")
 
-        if (migrerMeldepliktFritakEnabled && isLeader) {
+        if (migrerArbeidsevneEnabled && isLeader) {
             // Kjør migrering
             dataSource.transaction { connection ->
-                val repository = MeldepliktRepositoryImpl(connection)
-                repository.migrerMeldepliktFritak()
+                val repository = ArbeidsevneRepositoryImpl(connection)
+                repository.migrerArbeidsevne()
             }
         }
 

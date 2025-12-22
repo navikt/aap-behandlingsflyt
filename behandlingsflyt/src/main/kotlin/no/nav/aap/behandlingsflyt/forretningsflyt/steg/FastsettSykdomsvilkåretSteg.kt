@@ -44,7 +44,7 @@ class FastsettSykdomsvilkåretSteg private constructor(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
 
         when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
+            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING, VurderingType.AUTOMATISK_OPPDATER_VILKÅR -> {
                 if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
                     vilkårService.ingenNyeVurderinger(
                         kontekst,
@@ -79,14 +79,13 @@ class FastsettSykdomsvilkåretSteg private constructor(
 
         val rettighetsperiode = kontekst.rettighetsperiode
         val faktagrunnlag = SykdomsFaktagrunnlag(
-            kontekst.behandlingType,
             rettighetsperiode.fom,
             rettighetsperiode.tom,
             sykdomsGrunnlag?.yrkesskadevurdering,
             sykepengerErstatningGrunnlag,
             sykdomsGrunnlag?.sykdomsvurderinger.orEmpty(),
             bistandGrunnlag,
-            studentGrunnlag?.studentvurdering,
+            studentGrunnlag?.vurderinger?.single(),
             vilkårResultat.optionalVilkår(Vilkårtype.SYKEPENGEERSTATNING)?.tidslinje().orEmpty()
         )
         Sykdomsvilkår(vilkårResultat).vurder(faktagrunnlag)

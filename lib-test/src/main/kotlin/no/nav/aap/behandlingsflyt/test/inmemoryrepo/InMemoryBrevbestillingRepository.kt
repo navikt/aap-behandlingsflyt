@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.*
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import java.time.LocalDateTime
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicLong
@@ -10,6 +11,14 @@ object InMemoryBrevbestillingRepository: BrevbestillingRepository {
     private val bestilling = CopyOnWriteArrayList<Brevbestilling>()
     private val id = AtomicLong()
     private val lock = Object()
+
+    override fun hent(
+        sakId: SakId,
+        typeBrev: TypeBrev
+    ): List<Brevbestilling> {
+        val behandlinger = InMemoryBehandlingRepository.hentAlleFor(sakId).map { it.id }
+        return bestilling.filter { behandlinger.contains(it.behandlingId) }
+    }
 
     override fun hent(behandlingId: BehandlingId): List<Brevbestilling> {
         synchronized(lock) {

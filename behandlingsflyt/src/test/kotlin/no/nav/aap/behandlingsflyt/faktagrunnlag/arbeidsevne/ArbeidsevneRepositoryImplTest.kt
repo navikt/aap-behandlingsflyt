@@ -4,9 +4,15 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.Arbeid
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.test.august
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
@@ -44,7 +50,7 @@ class ArbeidsevneRepositoryImplTest {
             val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
 
             val arbeidsevneVurdering = ArbeidsevneVurdering(
-                "begrunnelse", Prosent(34), LocalDate.now(), LocalDateTime.now(), "saksbehandler"
+                "begrunnelse", Prosent(34), LocalDate.now(), null, behandling.id, LocalDateTime.now(), "saksbehandler"
             )
 
             arbeidsevneRepository.lagre(
@@ -80,13 +86,13 @@ class ArbeidsevneRepositoryImplTest {
         dataSource.transaction { connection ->
             val sak = sak(connection, periode)
             val behandling = finnEllerOpprettBehandling(connection, sak)
-            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null, "vurdertAv")
+            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null, behandling.id, LocalDateTime.now(), "vurdertAv")
 
             val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
             arbeidsevneRepository.lagre(behandling.id, listOf(arbeidsevne))
             val vurderinger = arbeidsevneRepository.hentHvisEksisterer(behandling.id)?.vurderinger
             assertThat(vurderinger).hasSize(1)
-            assertThat(vurderinger).containsExactly(arbeidsevne.copy(opprettetTid = vurderinger?.first()?.opprettetTid))
+            assertThat(vurderinger).containsExactly(arbeidsevne.copy(opprettetTid = vurderinger?.first()?.opprettetTid!!))
         }
     }
 
@@ -96,7 +102,7 @@ class ArbeidsevneRepositoryImplTest {
             val sak = sak(connection, periode)
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
-            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null, "vurdertAv")
+            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null, behandling1.id, LocalDateTime.now(),"vurdertAv")
 
             arbeidsevneRepository.lagre(behandling1.id, listOf(arbeidsevne))
             BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling1.id, Status.AVSLUTTET)
@@ -105,7 +111,7 @@ class ArbeidsevneRepositoryImplTest {
 
             val vurderinger = arbeidsevneRepository.hentHvisEksisterer(behandling2.id)?.vurderinger
             assertThat(vurderinger).hasSize(1)
-            assertThat(vurderinger).containsExactly(arbeidsevne.copy(opprettetTid = vurderinger?.first()?.opprettetTid))
+            assertThat(vurderinger).containsExactly(arbeidsevne.copy(opprettetTid = vurderinger?.first()?.opprettetTid!!))
         }
     }
 
@@ -125,7 +131,7 @@ class ArbeidsevneRepositoryImplTest {
             val sak = sak(connection, periode)
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
-            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null, "vurdertAv")
+            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null, behandling1.id, LocalDateTime.now(), "vurdertAv")
             val arbeidsevne2 = arbeidsevne.copy(begrunnelse = "annen begrunnelse")
 
             arbeidsevneRepository.lagre(behandling1.id, listOf(arbeidsevne))
@@ -136,7 +142,7 @@ class ArbeidsevneRepositoryImplTest {
 
             val vurderinger = arbeidsevneRepository.hentHvisEksisterer(behandling2.id)?.vurderinger
             assertThat(vurderinger).hasSize(1)
-            assertThat(vurderinger).containsExactly(arbeidsevne2.copy(opprettetTid = vurderinger?.first()?.opprettetTid))
+            assertThat(vurderinger).containsExactly(arbeidsevne2.copy(opprettetTid = vurderinger?.first()?.opprettetTid!!))
         }
     }
 
@@ -146,7 +152,7 @@ class ArbeidsevneRepositoryImplTest {
             val sak = sak(connection, periode)
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
-            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null, "vurdertAv")
+            val arbeidsevne = ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null, behandling.id, LocalDateTime.now(), "vurdertAv")
             val arbeidsevne2 = arbeidsevne.copy("annen begrunnelse")
 
             arbeidsevneRepository.lagre(behandling.id, listOf(arbeidsevne))
@@ -154,14 +160,14 @@ class ArbeidsevneRepositoryImplTest {
 
             assertThat(originaleVurderinger).hasSize(1)
             assertThat(originaleVurderinger).containsExactly(
-                arbeidsevne.copy(opprettetTid = originaleVurderinger?.first()?.opprettetTid)
+                arbeidsevne.copy(opprettetTid = originaleVurderinger?.first()?.opprettetTid!!)
             )
 
             arbeidsevneRepository.lagre(behandling.id, listOf(arbeidsevne2))
             val oppdaterteVurderinger = arbeidsevneRepository.hentHvisEksisterer(behandling.id)?.vurderinger
             assertThat(oppdaterteVurderinger).hasSize(1)
             assertThat(oppdaterteVurderinger).containsExactly(
-                arbeidsevne2.copy(opprettetTid = oppdaterteVurderinger?.first()?.opprettetTid)
+                arbeidsevne2.copy(opprettetTid = oppdaterteVurderinger?.first()?.opprettetTid!!)
             )
 
             data class Opplysning(
@@ -209,7 +215,7 @@ class ArbeidsevneRepositoryImplTest {
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
             val arbeidsevne =
-                ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), LocalDateTime.now(), "vurdertAv")
+                ArbeidsevneVurdering("begrunnelse", Prosent(100), LocalDate.now(), null, behandling1.id, LocalDateTime.now(), "vurdertAv")
             val arbeidsevne2 = arbeidsevne.copy("annen begrunnelse")
 
             arbeidsevneRepository.lagre(behandling1.id, listOf(arbeidsevne))
@@ -275,6 +281,59 @@ class ArbeidsevneRepositoryImplTest {
                         aktiv = true,
                         begrunnelse = arbeidsevne2.begrunnelse,
                         andelArbeidsevne = Prosent(100)
+                    )
+                )
+        }
+    }
+
+    @Test
+    fun `migrer vurdert i behandling for arbeidsevne`() {
+        val arbeidsevnevurderingFørstegangsbehandling =
+            ArbeidsevneVurdering("begrunnelse", Prosent(50), 13 august 2023, null, null, LocalDateTime.now(), "saksbehandler")
+        val arbeidsevnevurderingRevurdering =
+            ArbeidsevneVurdering("begrunnelse", Prosent(0), 10 august 2024, null, null, LocalDateTime.now(), "saksbehandler")
+
+        val behandling = dataSource.transaction { connection ->
+            val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+
+            arbeidsevneRepository.lagre(behandling.id, listOf(arbeidsevnevurderingFørstegangsbehandling))
+            BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
+            behandling
+        }
+
+        // Revurdering
+        dataSource.transaction { connection ->
+            val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)
+            val behandlingRepo = BehandlingRepositoryImpl(connection)
+
+            val revurdering =
+                behandlingRepo.opprettBehandling(
+                    behandling.sakId,
+                    TypeBehandling.Revurdering,
+                    behandling.id,
+                    VurderingsbehovOgÅrsak(
+                        listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
+                        ÅrsakTilOpprettelse.SØKNAD
+                    )
+                )
+
+            arbeidsevneRepository.kopier(behandling.id, revurdering.id)
+
+            arbeidsevneRepository.lagre(revurdering.id, listOf(arbeidsevnevurderingFørstegangsbehandling, arbeidsevnevurderingRevurdering))
+
+            arbeidsevneRepository.migrerArbeidsevne()
+
+            assertThat(arbeidsevneRepository.hentHvisEksisterer(revurdering.id)?.vurderinger).usingRecursiveComparison()
+                .ignoringFields("opprettetTid").isEqualTo(
+                    listOf(
+                        arbeidsevnevurderingFørstegangsbehandling.copy(
+                            vurdertIBehandling = behandling.id,
+                        ),
+                        arbeidsevnevurderingRevurdering.copy(
+                            vurdertIBehandling = revurdering.id,
+                        )
                     )
                 )
         }

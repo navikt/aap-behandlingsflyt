@@ -14,7 +14,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeri
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningAndreStatligeYtelserLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSoningsforholdLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentEnkelLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrkesskadeLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
@@ -88,7 +88,7 @@ class TestScenarioOrkestrator(
     fun løsStudent(behandling: Behandling): Behandling {
         return løsAvklaringsBehov(
             behandling,
-            AvklarStudentLøsning(
+            AvklarStudentEnkelLøsning(
                 studentvurdering = StudentVurderingDTO(
                     begrunnelse = "Er student ok",
                     harAvbruttStudie = true,
@@ -240,7 +240,8 @@ class TestScenarioOrkestrator(
                         ÅrsVurdering(
                             beløp = BigDecimal(500000.00 + (index * 10000)),
                             eøsBeløp = null,
-                            år = år
+                            år = år,
+                            ferdigLignetPGI = null
                         )
                     }
                 )

@@ -32,7 +32,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
@@ -44,7 +43,6 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.Tid
-import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.tuple
 import org.junit.jupiter.api.Test
@@ -253,7 +251,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
 
     @Test
     fun `stopper opp ved samordning ved funn av sykepenger, og løses ved info fra saksbehandler`() {
-        val fom = LocalDate.now().minusMonths(1)
+        val fom = LocalDate.now().minusYears(1)
         val periode = Periode(fom, fom.plusYears(3))
 
         val sykePengerPeriode = Periode(LocalDate.now().minusMonths(1), LocalDate.now().plusMonths(1))
@@ -265,8 +263,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 )
             )
         )
-        val ident = person.aktivIdent()
-        var behandling = opprettSamordning(ident, periode, sykePengerPeriode)
+        val behandling = opprettSamordning(person, periode, sykePengerPeriode)
         val sak = hentSak(behandling)
         var revurdering =
             sak.opprettManuellRevurdering(listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SAMORDNING_OG_AVREGNING))
@@ -307,10 +304,9 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 )
             )
         )
-        val ident = person.aktivIdent()
-        val behandling = opprettSamordning(ident, periode, sykePengerPeriode)
+        val behandling = opprettSamordning(person, periode, sykePengerPeriode)
         val sak = hentSak(behandling)
-        var revurdering =
+        val revurdering =
             sak.opprettManuellRevurdering(listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SAMORDNING_OG_AVREGNING))
 
 
@@ -329,58 +325,58 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
 
         // prosesser på nytt
         nullstillInformasjonskravOppdatert(InformasjonskravNavn.INSTITUSJONSOPPHOLD, revurdering.sakId)
-        revurdering = prosesserBehandling(revurdering)
-        val åpneAvklaringsbehovPåNyBehandling = hentÅpneAvklaringsbehov(revurdering.id)
-
-        // Behandlingen tilbakeføres til EtAnnetStedSteg
-        assertThat(revurdering.aktivtSteg()).isEqualTo(StegType.DU_ER_ET_ANNET_STED)
-        assertThat(åpneAvklaringsbehovPåNyBehandling.map { it.definisjon }).contains(Definisjon.AVKLAR_SONINGSFORRHOLD)
+        prosesserBehandling(revurdering)
+            .medKontekst {
+                // Behandlingen tilbakeføres til EtAnnetStedSteg
+                assertThat(this.behandling.aktivtSteg()).isEqualTo(StegType.DU_ER_ET_ANNET_STED)
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).contains(Definisjon.AVKLAR_SONINGSFORRHOLD)
+            }
     }
 
     private fun opprettSamordning(
-        ident: Ident,
+        person: TestPerson,
         periode: Periode,
         sykePengerPeriode: Periode
     ): Behandling {
         // Sender inn en søknad
-        var behandling = sendInnSøknad(
-            ident = ident,
-            periode = periode,
-            journalpostId = JournalpostId("20"),
-            mottattTidspunkt = LocalDateTime.now().minusMonths(0),
+        var behandling = sendInnFørsteSøknad(
             søknad = SøknadV0(
                 student = SøknadStudentDto(StudentStatus.Nei),
                 yrkesskade = "NEI",
                 oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
             ),
-        )
-        assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
-
-        val alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
-
-        assertThat(alleAvklaringsbehov).isNotEmpty()
-        assertThat(behandling.status()).isEqualTo(Status.UTREDES)
-
-        behandling = behandling.løsSykdom(periode.fom).løsBistand(periode.fom).løsAvklaringsBehov(
-            RefusjonkravLøsning(
-                listOf(
-                    RefusjonkravVurderingDto(
-                        harKrav = true, fom = LocalDate.now(), tom = null, navKontor = "",
+            person = person,
+            mottattTidspunkt = LocalDateTime.now(),
+            periode = periode,
+        ).second
+            .medKontekst {
+                assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
+                assertThat(åpneAvklaringsbehov).isNotEmpty()
+                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+            }
+            .løsSykdom(periode.fom)
+            .løsBistand(periode.fom)
+            .løsAvklaringsBehov(
+                RefusjonkravLøsning(
+                    listOf(
+                        RefusjonkravVurderingDto(
+                            harKrav = true, fom = LocalDate.now(), tom = null, navKontor = "",
+                        )
                     )
                 )
             )
-        ).løsAvklaringsBehov(
-            avklaringsBehovLøsning = FritakMeldepliktLøsning(
-                fritaksvurderinger = listOf(
-                    FritaksvurderingDto(
-                        harFritak = true,
-                        fraDato = periode.fom,
-                        begrunnelse = "...",
-                    )
+            .løsAvklaringsBehov(
+                avklaringsBehovLøsning = FritakMeldepliktLøsning(
+                    fritaksvurderinger = listOf(
+                        FritaksvurderingDto(
+                            harFritak = true,
+                            fraDato = periode.fom,
+                            begrunnelse = "...",
+                        )
+                    ),
                 ),
-            ),
-        )
+            )
             .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
             .løsAvklaringsBehov(
@@ -392,45 +388,43 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                         ytterligereNedsattBegrunnelse = null
                     ),
                 ),
-            ).løsForutgåendeMedlemskap(periode.fom)
-            .løsOppholdskrav(periode.fom)
-
-        assertThat(hentÅpneAvklaringsbehov(behandling.id).map { it.definisjon }).containsExactly(Definisjon.AVKLAR_SAMORDNING_GRADERING)
-
-        behandling = løsAvklaringsBehov(
-            behandling,
-            AvklarSamordningGraderingLøsning(
-                vurderingerForSamordning = VurderingerForSamordning(
-                    vurderteSamordningerData = listOf(
-                        SamordningVurderingData(
-                            ytelseType = Ytelse.SYKEPENGER,
-                            periode = sykePengerPeriode,
-                            gradering = 100,
-                            kronesum = null,
-                        )
-                    ),
-                    begrunnelse = "En god begrunnelse",
-                    maksDatoEndelig = false,
-                    fristNyRevurdering = null,
-                ),
-            ),
-        )
-        assertThat(hentÅpneAvklaringsbehov(behandling.id).map { it.definisjon }).isEqualTo(listOf(Definisjon.SAMORDNING_ANDRE_STATLIGE_YTELSER))
-
-        behandling = løsAvklaringsBehov(
-            behandling,
-            AvklarSamordningAndreStatligeYtelserLøsning(
-                samordningAndreStatligeYtelserVurdering = SamordningAndreStatligeYtelserVurderingDto(
-                    begrunnelse = "Ingen",
-                    vurderingPerioder = listOf()
-
-                )
-
             )
-        )
+//            .løsForutgåendeMedlemskap(periode.fom)
+            .løsOppholdskrav(periode.fom)
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsExactly(Definisjon.AVKLAR_SAMORDNING_GRADERING)
+            }
+            .løsAvklaringsBehov(
+                AvklarSamordningGraderingLøsning(
+                    vurderingerForSamordning = VurderingerForSamordning(
+                        vurderteSamordningerData = listOf(
+                            SamordningVurderingData(
+                                ytelseType = Ytelse.SYKEPENGER,
+                                periode = sykePengerPeriode,
+                                gradering = 100,
+                                kronesum = null,
+                            )
+                        ),
+                        begrunnelse = "En god begrunnelse",
+                        maksDatoEndelig = false,
+                        fristNyRevurdering = null,
+                    ),
+                ),
+            )
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsExactly(Definisjon.SAMORDNING_ANDRE_STATLIGE_YTELSER)
+            }
+            .løsAvklaringsBehov(
+                AvklarSamordningAndreStatligeYtelserLøsning(
+                    samordningAndreStatligeYtelserVurdering = SamordningAndreStatligeYtelserVurderingDto(
+                        begrunnelse = "Ingen",
+                        vurderingPerioder = listOf()
 
-        behandling = løsAvklaringsBehov(behandling, ForeslåVedtakLøsning())
-        behandling = løsFatteVedtak(behandling)
+                    )
+                )
+            )
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
 
         val uthentetTilkjentYtelse =
             requireNotNull(dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(behandling.id) }) { "Tilkjent ytelse skal være beregnet her." }
@@ -486,7 +480,10 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
 
 
         val meldekortInnsendingsdato = LocalDate.now().atStartOfDay()
-        sak.sendInnMeldekort(timerArbeidet =Periode(periode.fom, periode.fom.plusDays(14)).dager().associateWith { 0.0 }, mottattTidspunkt = meldekortInnsendingsdato)
+        sak.sendInnMeldekort(
+            timerArbeidet = Periode(periode.fom, periode.fom.plusDays(14)).dager().associateWith { 0.0 },
+            mottattTidspunkt = meldekortInnsendingsdato
+        )
         val revurdering = sak.opprettManuellRevurdering(
             vurderingsbehov = listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER),
         )
@@ -511,7 +508,8 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             .fattVedtak()
             .løsVedtaksbrev(TypeBrev.VEDTAK_ENDRING)
 
-        val tilkjentYtelse = dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(revurdering.id) }
+        val tilkjentYtelse =
+            dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(revurdering.id) }
 
         assertThat(tilkjentYtelse?.first()?.tilkjent?.utbetalingsdato).isEqualTo(meldekortInnsendingsdato.toLocalDate())
 

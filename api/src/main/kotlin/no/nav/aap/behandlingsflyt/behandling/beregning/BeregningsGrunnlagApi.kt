@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
@@ -174,14 +175,19 @@ private fun inntekterTilUføreDTO(uføreInntekt: UføreInntekt, grunnlagInntekt:
         justertForUføreGrad = grunnlagInntekt.inntektIKroner.verdi(),
         justertForUføreGradiG = grunnlagInntekt.inntektIG.verdi(),
         uføreGrad = uføreInntekt.inntektsPerioder.maxBy { it.periode.fom }.uføregrad.prosentverdi(),
-        inntektsPerioder = uføreInntekt.inntektsPerioder.map {
-            UføreInntektPeriodisertDTO(
-                periode = it.periode,
-                inntektIKroner = it.inntektIKroner,
-                uføregrad = it.uføregrad,
-                inntektJustertForUføregrad = it.inntektJustertForUføregrad
-            )
-        }
+        inntektsPerioder = uføreInntekt.inntektsPerioder
+            .somTidslinje({ it.periode }, { Triple(it.inntektIKroner, it.uføregrad, it.inntektJustertForUføregrad) })
+            .komprimer()
+            .segmenter()
+            .map { (periode, tirple) ->
+                val (inntektIKroner, uføregrad, inntektJustertForUføregrad) = tirple
+                UføreInntektPeriodisertDTO(
+                    periode = periode,
+                    inntektIKroner = inntektIKroner,
+                    uføregrad = uføregrad.prosentverdi(),
+                    inntektJustertForUføregrad = inntektJustertForUføregrad
+                )
+            }
     )
 }
 

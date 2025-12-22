@@ -11,7 +11,6 @@ open class StudentGrunnlagResponse(
 )
 
 data class StudentVurderingResponse(
-    val id: Long? = null,
     val begrunnelse: String,
     val harAvbruttStudie: Boolean,
     val godkjentStudieAvLånekassen: Boolean?,

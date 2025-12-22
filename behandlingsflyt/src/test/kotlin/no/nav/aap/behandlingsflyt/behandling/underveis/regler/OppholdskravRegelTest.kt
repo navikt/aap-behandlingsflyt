@@ -3,15 +3,25 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravPeriode
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravVurdering
+import no.nav.aap.behandlingsflyt.behandling.vilkår.oppholdskrav.Oppholdskravvilkår
+import no.nav.aap.behandlingsflyt.behandling.vilkår.oppholdskrav.OppholdskravvilkårGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.mai
-import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 class OppholdskravRegelTest {
@@ -51,25 +61,23 @@ class OppholdskravRegelTest {
                 )
             )
         )
-        
+
         val rettighetsperiode = Periode(1 januar 2020, 1 januar 2022)
 
-        val vurderinger = grunnlag.tilUnderveisTidslinje(rettighetsperiode)
+        val vurderinger = vurder(grunnlag, rettighetsperiode.fom)
 
-        assertEquals(2, vurderinger.segmenter().count())
-        
-        vurderinger.assertTidslinje(
-            Segment(Periode(rettighetsperiode.fom, 1 februar 2021)) {
-                assertEquals(
-                    it.vilkårsvurdering,
-                    OppholdskravUnderveisVurdering.Vilkårsvurdering.BRUDD_OPPHOLDSKRAV_11_3_STANS
-                )
+        assertEquals(3, vurderinger.segmenter().count())
+
+        assertTidslinje(
+            vurderinger,
+            Periode(rettighetsperiode.fom, 1 februar 2021) to {
+                assertEquals(Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_STANS, it.avslagsårsak)
             },
-            Segment(Periode(25 mai 2021, rettighetsperiode.tom)) {
-                assertEquals(
-                    it.vilkårsvurdering,
-                    OppholdskravUnderveisVurdering.Vilkårsvurdering.BRUDD_OPPHOLDSKRAV_11_3_STANS
-                )
+            Periode(2 februar 2021, 24 mai 2021) to {
+                assertEquals(null, it.avslagsårsak)
+            },
+            Periode(25 mai 2021, Tid.MAKS) to {
+                assertEquals(Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_STANS, it.avslagsårsak)
             },
         )
     }
@@ -81,10 +89,22 @@ class OppholdskravRegelTest {
             vurderinger = emptyList()
         )
 
-        val rettighetsperiode = Periode(1 januar 2020, 1 januar 2022)
+        val vurderinger = vurder(grunnlag, 1 januar 2020)
 
-        val vurderinger = grunnlag.tilUnderveisTidslinje(rettighetsperiode)
+        assertTidslinje(vurderinger,
+            Periode(1 januar 2020, Tid.MAKS) to {
+                assertThat(it.utfall).isEqualTo(Utfall.OPPFYLT)
+                assertThat(it.manuellVurdering).isEqualTo(false)
+            }
+        )
+    }
 
-        assertEquals(0, vurderinger.segmenter().count())
+    private fun vurder(grunnlag: OppholdskravGrunnlag, vurderFra: LocalDate): Tidslinje<Vilkårsvurdering> {
+        val vilkårsresultat = Vilkårsresultat()
+        Oppholdskravvilkår(vilkårsresultat).vurder(OppholdskravvilkårGrunnlag(
+            oppholdskravGrunnlag = grunnlag,
+            vurderFra = vurderFra
+        ))
+        return vilkårsresultat.finnVilkår(Vilkårtype.OPPHOLDSKRAV).tidslinje()
     }
 }

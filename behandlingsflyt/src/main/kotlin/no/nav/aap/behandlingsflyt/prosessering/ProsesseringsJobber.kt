@@ -27,7 +27,9 @@ object ProsesseringsJobber {
             HentSamIdJobbUtfører,
             VarsleVedtakJobbUtfører,
             IverksettUtbetalingJobbUtfører,
-            KafkaFeilJobbUtfører
+            KafkaFeilJobbUtfører,
+            TriggBarnetilleggSatsJobbUtfører,
+            OpprettJobbForTriggBarnetilleggSatsJobbUtfører
         )
     }
 }

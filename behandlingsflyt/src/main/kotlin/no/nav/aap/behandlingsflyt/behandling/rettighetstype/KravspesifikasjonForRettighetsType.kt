@@ -102,6 +102,24 @@ interface KravspesifikasjonForRettighetsType {
                   * eller IKKE_OPPFYLT.
                  */
                 && SkalIkkeGiAvslag.oppfyllesAv(vilkårsresultat[Vilkårtype.STRAFFEGJENNOMFØRING])
+                /* Aktivitetsplikt-vilkåret blir alltid satt, så kan egentlig være "MåVæreOppfylt",
+                  * men siden ikke alle åpne behandlinger har kjørt gjennom  dette steget, så
+                  * brukes det svakere kravet `SkalIkkeGiAvslag`.
+                  *
+                  * Betingelse for å bytte til "MåVæreOppfylt": alle åpne behandlinger har vurdering
+                  * for vilkåret `AKTITETSPLILT` hvor det er en periode med OPPFYLT
+                  * eller IKKE_OPPFYLT.
+                 */
+                && SkalIkkeGiAvslag.oppfyllesAv(vilkårsresultat[Vilkårtype.AKTIVITETSPLIKT])
+                /* Oppholdskrav-vilkåret blir alltid satt, så kan egentlig være "MåVæreOppfylt",
+                  * men siden ikke alle åpne behandlinger har kjørt gjennom  dette steget, så
+                  * brukes det svakere kravet `SkalIkkeGiAvslag`.
+                  *
+                  * Betingelse for å bytte til "MåVæreOppfylt": alle åpne behandlinger har vurdering
+                  * for vilkåret `AKTITETSPLILT` hvor det er en periode med OPPFYLT
+                  * eller IKKE_OPPFYLT.
+                 */
+                && SkalIkkeGiAvslag.oppfyllesAv(vilkårsresultat[Vilkårtype.OPPHOLDSKRAV])
                 && kravForutgåendeMedlemskap.oppfyllesAv(vilkårsresultat[Vilkårtype.MEDLEMSKAP])
                 && MåVæreOppfylt().oppfyllesAv(vilkårsresultat[Vilkårtype.LOVVALG])
                 && kravSykdom.oppfyllesAv(vilkårsresultat[Vilkårtype.SYKDOMSVILKÅRET])
@@ -118,6 +136,8 @@ interface KravspesifikasjonForRettighetsType {
                 MåVæreOppfylt().avslagsårsaker(vilkårsresultat[Vilkårtype.GRUNNLAGET]) +
                 SkalIkkeGiAvslag.avslagsårsaker(vilkårsresultat[Vilkårtype.SAMORDNING]) +
                 SkalIkkeGiAvslag.avslagsårsaker(vilkårsresultat[Vilkårtype.STRAFFEGJENNOMFØRING]) +
+                SkalIkkeGiAvslag.avslagsårsaker(vilkårsresultat[Vilkårtype.AKTIVITETSPLIKT]) +
+                SkalIkkeGiAvslag.avslagsårsaker(vilkårsresultat[Vilkårtype.OPPHOLDSKRAV]) +
                 kravForutgåendeMedlemskap.avslagsårsaker(vilkårsresultat[Vilkårtype.MEDLEMSKAP]) +
                 MåVæreOppfylt().avslagsårsaker(vilkårsresultat[Vilkårtype.LOVVALG]) +
                 kravSykdom.avslagsårsaker(vilkårsresultat[Vilkårtype.SYKDOMSVILKÅRET]) +
