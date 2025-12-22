@@ -23,8 +23,7 @@ public data class SøknadV0(
     public val student: SøknadStudentDto?,
     public val yrkesskade: String,
     public val oppgitteBarn: OppgitteBarn?,
-    public val medlemskap: SøknadMedlemskapDto? = null,
-    public val andreUtbetalinger: AndreUtbetalingerDto? = null,
+    public val medlemskap: SøknadMedlemskapDto? = null
 ) : Søknad
 
 
@@ -96,26 +95,6 @@ public data class OppgitteBarn(
     public val identer: Set<Ident>,
     public val barn: List<ManueltOppgittBarn> = emptyList(),
 )
-
-public data class AndreUtbetalingerDto(
-    public val lønn: Boolean?,
-    public val afp: String? = null,
-    public val stønad: List<AndreUtbetalingerYtelserDto>?
-
-)
-
-public enum class AndreUtbetalingerYtelserDto{
-    ØKONOMISK_SOSIALHJELP,
-    OMSORGSSTØNAD,
-    INTRODUKSJONSSTØNAD,
-    KVALIFISERINGSSTØNAD,
-    VERV,
-    UTLAND,
-    AFP,
-    STIPEND,
-    LÅN,
-    NEI;
-}
 
 public data class ManueltOppgittBarn(
     public val navn: String,

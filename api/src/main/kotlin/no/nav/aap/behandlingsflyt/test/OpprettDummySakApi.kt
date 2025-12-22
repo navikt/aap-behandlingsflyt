@@ -5,8 +5,6 @@ import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
-import io.ktor.http.HttpStatusCode
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AndreUtbetalingerDto
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -26,6 +24,7 @@ fun NormalOpenAPIRoute.opprettDummySakApi(
             require(!Miljø.erProd()) {
                 "Kan ikke opprette dummy-sak i produksjonsmiljøet"
             }
+
             try {
                 dataSource.transaction(readOnly = false) { connection ->
                     val sakService = TestSakService(repositoryRegistry.provider(connection), gatewayProvider)
@@ -33,8 +32,7 @@ fun NormalOpenAPIRoute.opprettDummySakApi(
                         ident = Ident(req.ident),
                         erStudent = req.erStudent,
                         harYrkesskade = req.harYrkesskade,
-                        harMedlemskap = req.harMedlemskap,
-                        andreUtbetalinger = req.andreUtbetalinger
+                        harMedlemskap = req.harMedlemskap
                     )
                 }
                 respondWithStatus(HttpStatusCode.Accepted)
@@ -50,5 +48,4 @@ data class OpprettDummySakDto(
     val erStudent: Boolean,
     val harYrkesskade: Boolean,
     val harMedlemskap: Boolean,
-    val andreUtbetalinger: AndreUtbetalingerDto?
 )

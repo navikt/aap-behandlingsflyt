@@ -6,7 +6,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AndreUtbetalingerDto
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.komponenter.verdityper.Beløp
 import org.jetbrains.annotations.NotNull
@@ -32,7 +31,6 @@ data class OpprettTestcaseDTO(
     val institusjoner: Institusjoner = Institusjoner(),
     val sykepenger: List<TestPerson.Sykepenger> = emptyList(),
     val søknadsdato: LocalDate? = null,
-    val andreUtbetalinger: AndreUtbetalingerDto? = null,
     val steg: StegType? = null,
     val erArbeidsevnenNedsatt: Boolean = true,
     val erNedsettelseIArbeidsevneMerEnnHalvparten: Boolean = true,

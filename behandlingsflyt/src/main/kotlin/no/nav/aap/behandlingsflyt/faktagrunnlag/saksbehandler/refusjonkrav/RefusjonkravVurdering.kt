@@ -5,41 +5,32 @@ import java.time.LocalDateTime
 
 data class RefusjonkravVurdering(
     val harKrav: Boolean,
-    val fom: LocalDate? = null,
-    val tom: LocalDate? = null,
+    val fom: LocalDate?,
+    val tom: LocalDate?,
     val navKontor: String?,
     val vurdertAv: String,
     val opprettetTid: LocalDateTime? = null,
 ) {
-    fun tilNavKontorPeriodeDto( virkningsdato : LocalDate,vedtaksdato: LocalDate): NavKontorPeriodeDto {
+    fun tilNavKontorPeriodeDto(): NavKontorPeriodeDto {
         return NavKontorPeriodeDto(
             enhetsNummer = navKontorEnhetsNummer(navKontor) ?: "Kunne ikke utlede navkontor enhetsnummer basert på $navKontor",
-            virkingsdato = virkningsdato,
-            vedtaksdato = vedtaksdato
+            fom = fom,
+            tom = tom
         )
     }
-    fun tilNavKontorPeriodeGammelDto( ): NavKontorPeriodeDto {
-        return NavKontorPeriodeDto(
-            enhetsNummer = navKontorEnhetsNummer(navKontor) ?: "Kunne ikke utlede navkontor enhetsnummer basert på $navKontor",
-            virkingsdato = fom,
-            vedtaksdato = tom
-        )
-    }
-
-
 }
 
 data class RefusjonkravVurderingDto(
     val harKrav: Boolean,
     val navKontor: String?,
-    val fom: LocalDate? = null,
-    val tom: LocalDate? = null,
+    val fom: LocalDate?,
+    val tom: LocalDate?,
 )
 
 data class NavKontorPeriodeDto(
     val enhetsNummer: String,
-    val virkingsdato: LocalDate?,
-    val vedtaksdato: LocalDate?,
+    val fom: LocalDate?,
+    val tom: LocalDate?,
 )
 
 fun navKontorEnhetsNummer(input: String?): String? {

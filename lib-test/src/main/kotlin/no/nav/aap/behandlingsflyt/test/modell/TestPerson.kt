@@ -33,7 +33,6 @@ class TestPerson(
     val fødselsdato: Fødselsdato = Fødselsdato(LocalDate.now().minusYears(19)),
     val identer: Set<Ident> = setOf(genererIdent(fødselsdato.toLocalDate())),
     val dødsdato: Dødsdato? = null,
-
     var barn: List<TestPerson> = emptyList(),
     val navn: PersonNavn = FiktivtNavnGenerator.genererNavn(),
     val yrkesskade: List<TestYrkesskade> = emptyList(),
