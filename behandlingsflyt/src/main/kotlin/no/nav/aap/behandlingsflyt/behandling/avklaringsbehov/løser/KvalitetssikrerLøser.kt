@@ -55,12 +55,6 @@ class KvalitetssikrerLøser(
 
             val vurderingerFørRetur = relevanteVurderinger
                 .filter { it.godkjent == true }
-                .filter {
-                    flyt.erStegFør(
-                        Definisjon.forKode(it.definisjon).løsesISteg,
-                        tidligsteStegMedRetur
-                    )
-                }
 
             val vurderingerSomMåReåpnes = relevanteVurderinger
                 .filter { vurdering ->
