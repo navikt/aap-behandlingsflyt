@@ -195,7 +195,7 @@ class InntektsbehovTest {
                 begrunnelse = "begrunnelse",
                 nedsattArbeidsevneDato = 1 januar 2025,
                 ytterligereNedsattBegrunnelse = null,
-                ytterligereNedsattArbeidsevneDato = LocalDate.now(),
+                ytterligereNedsattArbeidsevneDato = 1 januar 2025,
                 vurdertAv = "saksbehandler",
             ), yrkesskadeBeløpVurdering = null
         )
