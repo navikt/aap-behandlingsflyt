@@ -25,7 +25,7 @@ class AvklaringsbehovHendelseHåndterer(
 
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
 
-        avklaringsbehovene.validateTilstand(
+        avklaringsbehovene.validerTilstand(
             behandling = behandling,
             avklaringsbehov = hendelse.behov().definisjon()
         )

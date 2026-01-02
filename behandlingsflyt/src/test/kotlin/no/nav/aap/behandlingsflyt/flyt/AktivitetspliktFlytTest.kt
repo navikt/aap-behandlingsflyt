@@ -231,7 +231,7 @@ class AktivitetspliktFlytTest :
     }
 
     @Test
-    fun `Åpen behandling skal trekkes tilbake ved effktuering av aktivitetsplikt`() {
+    fun `Åpen behandling skal trekkes tilbake ved effektuering av aktivitetsplikt`() {
         val person = TestPersoner.STANDARD_PERSON()
         val sak = happyCaseFørstegangsbehandling(person = person)
         var åpenBehandling = revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom, vissVarighet = true)

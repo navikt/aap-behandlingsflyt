@@ -1174,7 +1174,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         )
     }
 
-    @JvmName("losForutgaaendeMedlemskapExt")
+    @JvmName("losForutgaaendeMedlemskapExt") // TODO hvorfor JVM name og hvorfor ikke norsk som ellers?
     protected fun Behandling.løsForutgåendeMedlemskap(gjelderFra: LocalDate, medlem: Boolean = true): Behandling {
         return løsForutgåendeMedlemskap(this, gjelderFra, medlem)
     }
