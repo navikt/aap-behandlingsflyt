@@ -4,19 +4,24 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStud
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plusHverdager
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurderingDTO
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.november
+import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
-class StudentFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
+class StudentFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
     @Test
-    fun `innvilge som student`() {
+    fun `innvilge som student, revurdering ordinær`() {
         val fom = 24 november 2025
         val periode = Periode(fom, fom.plusYears(3))
 
@@ -44,6 +49,7 @@ class StudentFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 )
             )
             .løsRefusjonskrav()
+            .løsBeregningstidspunkt()
             .løsOppholdskrav(sak.rettighetsperiode.fom)
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
@@ -56,6 +62,55 @@ class StudentFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             .assertRettighetstype(
                 Periode(fom, fom.plusHverdager(Hverdager(130)).minusDays(1)) to RettighetsType.STUDENT,
             )
+
+        // Revurdering
+        var revurdering = sak.opprettManuellRevurdering(
+            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_STUDENT),
+        )
+            .løsAvklaringsBehov(
+                AvklarStudentEnkelLøsning(
+                    studentvurdering = StudentVurderingDTO(
+                        begrunnelse = "...",
+                        harAvbruttStudie = false,
+                        godkjentStudieAvLånekassen = null,
+                        avbruttPgaSykdomEllerSkade = null,
+                        harBehovForBehandling = null,
+                        avbruttStudieDato = null,
+                        avbruddMerEnn6Måneder = null,
+                    )
+                )
+            )
+            .medKontekst {
+                assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                    .describedAs { "Skal vurderes for ordinær dersom ikke oppfylt student" }
+                    .containsExactlyInAnyOrder(Definisjon.AVKLAR_SYKDOM)
+            }
+            .løsSykdom(sak.rettighetsperiode.fom)
+            .medKontekst {
+                assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                    .describedAs { "Skal vurderes for ordinær dersom ikke oppfylt student" }
+                    .containsExactlyInAnyOrder(Definisjon.AVKLAR_BISTANDSBEHOV)
+            }
+            .løsBistand(sak.rettighetsperiode.fom)
+            .løsSykdomsvurderingBrev()
+            .foreslåVedtak()
+            .medKontekst {
+                assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                    .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)
+            }
+            .fattVedtak()
+            .medKontekst {
+                val vilkår = dataSource.transaction { VilkårsresultatRepositoryImpl(it).hent(this.behandling.id) }
+                val v = vilkår.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
+                assertThat(v.harPerioderSomErOppfylt()).isTrue
+            }
+            .assertRettighetstype(
+                Periode(
+                    fom,
+                    fom.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
+                ) to RettighetsType.BISTANDSBEHOV,
+            )
+
     }
 
 }
