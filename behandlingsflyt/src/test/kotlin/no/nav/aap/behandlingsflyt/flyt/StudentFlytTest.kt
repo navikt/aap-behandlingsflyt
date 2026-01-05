@@ -11,10 +11,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurderingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.november
-import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -64,7 +62,7 @@ class StudentFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             )
 
         // Revurdering
-        var revurdering = sak.opprettManuellRevurdering(
+        val revurdering = sak.opprettManuellRevurdering(
             listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_STUDENT),
         )
             .løsAvklaringsBehov(
@@ -100,7 +98,7 @@ class StudentFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             }
             .fattVedtak()
             .medKontekst {
-                val vilkår = dataSource.transaction { VilkårsresultatRepositoryImpl(it).hent(this.behandling.id) }
+                val vilkår = repositoryProvider.provide<VilkårsresultatRepository>().hent(this.behandling.id)
                 val v = vilkår.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
                 assertThat(v.harPerioderSomErOppfylt()).isTrue
             }
