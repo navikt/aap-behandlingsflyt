@@ -181,13 +181,13 @@ private fun inntekterTilUføreDTO(uføreInntekt: UføreInntekt, grunnlagInntekt:
             .segmenter()
             .map { (periode, triple) ->
                 val (inntektIKroner, uføregrad, inntektJustertForUføregrad) = triple
-                val antallMånender =
+                val antallMåneder =
                     ChronoUnit.MONTHS.between(periode.fom.withDayOfMonth(1), periode.tom.withDayOfMonth(1)).toInt()
                 UføreInntektPeriodisertDTO(
                     periode = periode,
-                    inntektIKroner = inntektIKroner.multiplisert(antallMånender),
+                    inntektIKroner = inntektIKroner.multiplisert(antallMåneder),
                     uføregrad = uføregrad.prosentverdi(),
-                    inntektJustertForUføregrad = inntektJustertForUføregrad.multiplisert(antallMånender)
+                    inntektJustertForUføregrad = inntektJustertForUføregrad.multiplisert(antallMåneder)
                 )
             }
     )
