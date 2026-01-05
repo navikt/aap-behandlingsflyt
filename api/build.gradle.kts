@@ -9,9 +9,6 @@ repositories {
     maven { url = uri("https://packages.confluent.io/maven/") }
 }
 
-val mockOAuth2ServerVersion = "3.0.1"
-val kafkaVersion = "4.1.1"
-
 dependencies {
     api(project(":behandlingsflyt"))
     implementation(libs.dbconnect)
@@ -20,9 +17,9 @@ dependencies {
     implementation(libs.motorApi)
     implementation(libs.verdityper)
     implementation(libs.tidslinje)
-    implementation("org.apache.avro:avro:1.12.1")
-    implementation("io.confluent:kafka-avro-serializer:7.6.0")
-    implementation("org.apache.kafka:kafka-clients:${kafkaVersion}")
+    implementation(libs.avro)
+    implementation(libs.kafkaAvroSerializer)
+    implementation(libs.kafkaClients)
     api(libs.tilgangPlugin)
     api(libs.tilgangKontrakt)
     compileOnly(libs.ktorHttpJvm)
@@ -35,8 +32,8 @@ dependencies {
         implementation("commons-codec:commons-codec:1.20.0")
     }
     testImplementation(libs.ktorClientContentNegotiation)
-    testImplementation("no.nav.security:mock-oauth2-server:$mockOAuth2ServerVersion")
+    testImplementation(libs.mockOauth2Server)
     testImplementation(project(":lib-test"))
     testImplementation(project(":repository"))
-    testImplementation("io.mockk:mockk:1.14.6")
+    testImplementation(libs.mockk)
 }

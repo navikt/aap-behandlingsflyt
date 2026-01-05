@@ -36,6 +36,7 @@ class SamordningArbeidsgiverSteg(
                         }
                     }
 
+                    VurderingType.AUTOMATISK_OPPDATER_VILKÅR,
                     VurderingType.MELDEKORT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,

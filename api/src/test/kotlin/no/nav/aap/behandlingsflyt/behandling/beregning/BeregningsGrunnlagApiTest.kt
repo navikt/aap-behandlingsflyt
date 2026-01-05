@@ -37,7 +37,7 @@ class BeregningsGrunnlagApiTest {
             BeregningInput(
                 nedsettelsesDato = LocalDate.of(2023, 1, 1),
                 årsInntekter = årsInntekter,
-                uføregrad = setOf(Uføre(LocalDate.now(), Prosent(30))),
+                uføregrad = setOf(Uføre(LocalDate.of(2023, 1, 1), Prosent(30))),
                 yrkesskadevurdering = Yrkesskadevurdering(
                     begrunnelse = "en begrunnelse",
                     andelAvNedsettelsen = Prosent(30),
@@ -159,6 +159,9 @@ class BeregningsGrunnlagApiTest {
         assertThat(grunnlagYrkesskadeUføre.yrkesskadeGrunnlag.grunnlag).isEqualByComparingTo(
             BigDecimal(6)
         )
+        assertThat(grunnlagYrkesskadeUføre.uføreGrunnlag.uføreInntekter.first().inntektsPerioder).hasSize(1).first()
+            .extracting { it.periode }
+            .isEqualTo(Periode(YearMonth.of(2022, 1).atDay(1), YearMonth.of(2022, 12).atEndOfMonth()))
     }
 
     private fun inntektsPerioder(inntektPerÅr: Set<InntektPerÅr>): Set<Månedsinntekt> {

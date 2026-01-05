@@ -11,4 +11,5 @@ data class ManuellInntektVurdering(
     val vurdertAv: String,
     val opprettet: LocalDateTime = LocalDateTime.now(),
     val eøsBeløp: Beløp? = null,
+    val ferdigLignetPGI: Beløp? = null,
 )

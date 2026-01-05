@@ -1,3 +1,4 @@
+import org.jetbrains.dokka.gradle.engine.parameters.VisibilityModifier
 import kotlin.math.max
 
 // Felles kode for alle build.gradle.kts filer som laster inn denne conventions pluginen
@@ -28,6 +29,7 @@ testing {
 
 dokka {
     dokkaSourceSets.configureEach {
+        documentedVisibilities.set(VisibilityModifier.entries.toSet())
         sourceLink {
             remoteUrl("https://github.com/navikt/aap-behandlingsflyt/blob/main")
             localDirectory.set(rootDir)

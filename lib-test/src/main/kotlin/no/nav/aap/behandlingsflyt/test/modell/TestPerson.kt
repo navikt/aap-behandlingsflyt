@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapDataIntern
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.InstitusjonsoppholdJSON
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlFolkeregisterPersonStatus
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlStatsborgerskap
@@ -25,7 +26,7 @@ fun genererIdent(fødselsdato: LocalDate): Ident {
 }
 
 fun defaultInntekt(): List<InntektPerÅr> {
-    return (1..10).map { InntektPerÅr(Year.now().minusYears(it.toLong()), Beløp("400000.0")) }
+    return (0..10).map { InntektPerÅr(Year.now().minusYears(it.toLong()), Beløp("400000.0")) }
 }
 
 class TestPerson(
@@ -36,7 +37,7 @@ class TestPerson(
     val navn: PersonNavn = FiktivtNavnGenerator.genererNavn(),
     val yrkesskade: List<TestYrkesskade> = emptyList(),
     var institusjonsopphold: List<InstitusjonsoppholdJSON> = emptyList(),
-    var uføre: Prosent? = null,
+    var uføre: Uføre? = null,
     inntekter: List<InntektPerÅr> = defaultInntekt(),
     val personStatus: List<PdlFolkeregisterPersonStatus> = listOf(
         PdlFolkeregisterPersonStatus(
@@ -47,7 +48,7 @@ class TestPerson(
     val statsborgerskap: List<PdlStatsborgerskap> = listOf(
         PdlStatsborgerskap(
             "NOR",
-            LocalDate.now().minusYears(5),
+            LocalDate.now().minusYears(6),
             null
         )
     ),
@@ -84,8 +85,8 @@ class TestPerson(
         return this
     }
 
-    fun medUføre(uføre: Prosent?): TestPerson {
-        this.uføre = uføre
+    fun medUføre(uføre: Prosent?, virkningstidspunkt: LocalDate = LocalDate.now().minusYears(3)): TestPerson {
+        this.uføre = uføre?.let { Uføre(virkningstidspunkt = virkningstidspunkt, uføregrad = uføre) }
         return this
     }
 
@@ -98,4 +99,11 @@ class TestPerson(
         this.institusjonsopphold = opphold
         return this
     }
+
+    fun medInntekter(inntekter: List<InntektPerÅr>): TestPerson {
+        this.inntekter.clear()
+        this.inntekter.addAll(inntekter)
+        return this
+    }
+
 }

@@ -70,13 +70,14 @@ class VurderLovvalgSteg private constructor(
             kontekst = kontekst,
             definisjon = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP,
             tvingerAvklaringsbehov = vurderingsbehovSomTvingerAvklaringsbehov(),
-            nårVurderingErRelevant = { nyKontekst -> perioderVurderingErRelevant(nyKontekst, grunnlag.value) },
+            nårVurderingErRelevant = ::perioderVurderingErRelevant,
             nårVurderingErGyldig = { perioderVurderingErGyldig(kontekst, grunnlag.value) },
             tilbakestillGrunnlag = { tilbakestillVurderinger(kontekst, grunnlag.value) },
         )
 
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
+            VurderingType.AUTOMATISK_OPPDATER_VILKÅR,
             VurderingType.REVURDERING -> {
                 val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
                 Medlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode)
@@ -92,7 +93,6 @@ class VurderLovvalgSteg private constructor(
                     )
                 }
             }
-
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
             VurderingType.MELDEKORT,
@@ -121,8 +121,8 @@ class VurderLovvalgSteg private constructor(
 
     private fun perioderVurderingErRelevant(
         kontekst: FlytKontekstMedPerioder,
-        grunnlag: MedlemskapLovvalgGrunnlag
     ): Tidslinje<Boolean> {
+        val grunnlag = hentGrunnlag(kontekst.sakId, kontekst.behandlingId)
         val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
         val automatiskVilkårsvurderingLovvalg = vilkårsvurderingLovvalgUtenManuelleVurderinger(kontekst, grunnlag)
 

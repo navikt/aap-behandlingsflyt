@@ -115,6 +115,7 @@ class SakOgBehandlingService(
     private val fasttrackKandidater = listOf(
         Vurderingsbehov.FRITAK_MELDEPLIKT,
         Vurderingsbehov.MOTTATT_MELDEKORT,
+        Vurderingsbehov.AUTOMATISK_OPPDATER_VILKÅR,
         Vurderingsbehov.FASTSATT_PERIODE_PASSERT,
         Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT,
         Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9,
@@ -176,7 +177,7 @@ class SakOgBehandlingService(
 
     fun finnEllerOpprettOrdinærBehandling(sakId: SakId, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak): Behandling {
         return when (val b = finnEllerOpprettBehandling(sakId, vurderingsbehovOgÅrsak)) {
-            is MåBehandlesAtomært -> error("skal ikke føre til atmoær behandling")
+            is MåBehandlesAtomært -> error("skal ikke føre til atomær behandling")
             is Ordinær -> b.åpenBehandling
         }
     }

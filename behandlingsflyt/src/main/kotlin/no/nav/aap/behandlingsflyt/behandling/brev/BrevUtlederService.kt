@@ -34,6 +34,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.BARNETILL
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.FASTSATT_PERIODE_PASSERT
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.AUTOMATISK_OPPDATER_VILKÅR
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.FRITAK_MELDEPLIKT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_MELDEKORT
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
@@ -116,15 +117,24 @@ class BrevUtlederService(
                         FRITAK_MELDEPLIKT,
                         MOTTATT_MELDEKORT,
                         FASTSATT_PERIODE_PASSERT,
+                        AUTOMATISK_OPPDATER_VILKÅR,
                         EFFEKTUER_AKTIVITETSPLIKT,
                         EFFEKTUER_AKTIVITETSPLIKT_11_9,
-                        BARNETILLEGG_SATS_REGULERING,
                     ).containsAll(
                         vurderingsbehov
                     )
                 ) {
                     return null
                 }
+
+                if (vurderingsbehov == setOf(BARNETILLEGG_SATS_REGULERING)) {
+                    return if (unleashGateway.isEnabled(BehandlingsflytFeature.KanSendeBrevOmBarnetilleggSatsRegulering)) {
+                        BarnetilleggSatsRegulering
+                    } else {
+                        null
+                    }
+                }
+
                 if (resultat == Resultat.AVBRUTT) {
                     return null
                 }

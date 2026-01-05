@@ -18,7 +18,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Grunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall as VilkårsresultatUtfall
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -48,10 +47,10 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.ZoneOffset
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall as VilkårsresultatUtfall
 
 class AktivitetspliktFlytTest :
     AbstraktFlytOrkestratorTest(FakeUnleash::class) {
@@ -136,27 +135,22 @@ class AktivitetspliktFlytTest :
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)
+                val grunnlagIAktivitetspliktBehandling = repositoryProvider.provide<Aktivitetsplikt11_7Repository>()
+                    .hentHvisEksisterer(aktivitetspliktBehandling.id)
+                val grunnlagIÅpenBehandling = repositoryProvider.provide<Aktivitetsplikt11_7Repository>()
+                    .hentHvisEksisterer(åpenBehandling.id)
+
+                assertThat(grunnlagIAktivitetspliktBehandling).isNotNull
+                assertThat(grunnlagIÅpenBehandling).isNull()
+            }
+            .fattVedtak().medKontekst {
+                assertThat(this.behandling).extracting { it.aktivtSteg() }
+                    .isEqualTo(StegType.BREV)
+            }.løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_11_7).medKontekst {
+                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
             }
 
-        dataSource.transaction { connection ->
-            val grunnlagIAktivitetspliktBehandling = Aktivitetsplikt11_7RepositoryImpl(connection)
-                .hentHvisEksisterer(aktivitetspliktBehandling.id)
-            val grunnlagIÅpenBehandling = Aktivitetsplikt11_7RepositoryImpl(connection)
-                .hentHvisEksisterer(åpenBehandling.id)
-
-            assertThat(grunnlagIAktivitetspliktBehandling).isNotNull
-            assertThat(grunnlagIÅpenBehandling).isNull()
-        }
-
-        aktivitetspliktBehandling.fattVedtak().medKontekst {
-            assertThat(this.behandling).extracting { it.aktivtSteg() }
-                .isEqualTo(StegType.BREV)
-
-        }.løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_11_7).medKontekst {
-            assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
-        }
-
-        var effektueringsbehandling = dataSource.transaction { connection ->
+        val effektueringsbehandling = dataSource.transaction { connection ->
             BehandlingRepositoryImpl(connection).finnSisteOpprettedeBehandlingFor(
                 sak.id,
                 listOf(TypeBehandling.Revurdering)
@@ -215,24 +209,17 @@ class AktivitetspliktFlytTest :
 
         val underveisÅpenTidslinje = dataSource.transaction { connection ->
             UnderveisRepositoryImpl(connection).hent(åpenBehandling.id)
-                .let { segment ->
-                    Tidslinje(segment.perioder.map { Segment(it.periode, it) }).mapValue {
-                        Pair(
-                            it.utfall,
-                            it.avslagsårsak
-                        )
-                    }
-                }
+                .somTidslinje()
         }
 
-        underveisÅpenTidslinje.komprimer().assertTidslinje(
+        underveisÅpenTidslinje.assertTidslinje(
             Segment(Periode(sak.rettighetsperiode.fom, bruddFom.minusDays(1))) {
-                assertEquals(VilkårsresultatUtfall.OPPFYLT, it.first)
-                assertEquals(null, it.second)
+                assertThat(it.utfall).isEqualTo(VilkårsresultatUtfall.OPPFYLT)
+                assertThat(it.avslagsårsak).isNull()
             },
             Segment(Periode(bruddFom, underveisÅpenTidslinje.helePerioden().tom)) {
-                assertEquals(VilkårsresultatUtfall.IKKE_OPPFYLT, it.first)
-                assertEquals(UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT_11_7_STANS, it.second)
+                assertThat(it.utfall).isEqualTo(VilkårsresultatUtfall.IKKE_OPPFYLT)
+                assertThat(it.avslagsårsak).isEqualTo(UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT)
             }
         )
     }
@@ -342,12 +329,12 @@ class AktivitetspliktFlytTest :
         assertThat(underveisTidslinjeEtterEffektuering).isNotEqualTo(underveisTidslinjeFørEffekuering)
         underveisTidslinjeEtterEffektuering.assertTidslinje(
             Segment(Periode(sak.rettighetsperiode.fom, bruddFom.minusDays(1))) {
-                assertEquals(VilkårsresultatUtfall.OPPFYLT, it.first)
-                assertEquals(null, it.second)
+                assertThat(it.first).isEqualTo(VilkårsresultatUtfall.OPPFYLT)
+                assertThat(it.second).isNull()
             },
             Segment(Periode(bruddFom, underveisTidslinjeEtterEffektuering.helePerioden().tom)) {
-                assertEquals(VilkårsresultatUtfall.IKKE_OPPFYLT, it.first)
-                assertEquals(UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT_11_7_STANS, it.second)
+                assertThat(it.first).isEqualTo(VilkårsresultatUtfall.IKKE_OPPFYLT)
+                assertThat(it.second).isEqualTo(UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT)
             }
         )
     }
@@ -387,7 +374,7 @@ class AktivitetspliktFlytTest :
             fom = LocalDate.now().minusMonths(1),
             person = person,
         )
-        var åpenBehandlingForbiTilkjentYtelse =
+        val åpenBehandlingForbiTilkjentYtelse =
             revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom, vissVarighet = true)
                 .løsBistand(sak.rettighetsperiode.fom)
                 .medKontekst {
@@ -464,7 +451,7 @@ class AktivitetspliktFlytTest :
                 assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
             }
 
-        var effektueringsbehandling = dataSource.transaction { connection ->
+        val effektueringsbehandling = dataSource.transaction { connection ->
             BehandlingRepositoryImpl(connection).finnSisteOpprettedeBehandlingFor(
                 sak.id,
                 listOf(TypeBehandling.Revurdering)

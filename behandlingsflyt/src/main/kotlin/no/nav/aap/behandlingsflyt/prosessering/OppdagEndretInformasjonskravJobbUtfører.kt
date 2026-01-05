@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.KanTriggeRevurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningInformasjonskrav
@@ -25,6 +24,7 @@ class OppdagEndretInformasjonskravJobbUtfører(
     private val sakOgBehandlingService: SakOgBehandlingService
 ) : JobbUtfører {
     private val log = LoggerFactory.getLogger(javaClass)
+    private val secureLogger = LoggerFactory.getLogger("secureLog")
 
     override fun utfør(input: JobbInput) {
         val sakId = SakId(input.sakId())
@@ -55,6 +55,7 @@ class OppdagEndretInformasjonskravJobbUtfører(
                 VurderingsbehovOgÅrsak(vurderingsbehov, ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA)
             )
             log.info("Opprettet revurdering for sak $sakId med behov $vurderingsbehov. Behandling: ${revurdering.referanse}.")
+            secureLogger.info("" + vurderingsbehov)
             prosesserBehandlingService.triggProsesserBehandling(
                 revurdering,
                 emptyList() // TODO: Se om vi bør legge ved triggere

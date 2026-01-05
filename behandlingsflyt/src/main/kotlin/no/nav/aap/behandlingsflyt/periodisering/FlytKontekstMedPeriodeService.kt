@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.MELDEKORT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.REVURDERING
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.EFFEKTUER_AKTIVITETSPLIKT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.AUTOMATISK_OPPDATER_VILKÅR
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -68,6 +69,7 @@ class FlytKontekstMedPeriodeService(
             MELDEKORT in vurderingTyper -> MELDEKORT
             EFFEKTUER_AKTIVITETSPLIKT in vurderingTyper -> EFFEKTUER_AKTIVITETSPLIKT
             EFFEKTUER_AKTIVITETSPLIKT_11_9 in vurderingTyper -> EFFEKTUER_AKTIVITETSPLIKT_11_9
+            AUTOMATISK_OPPDATER_VILKÅR in vurderingTyper -> AUTOMATISK_OPPDATER_VILKÅR
             else -> IKKE_RELEVANT
         }
     }
@@ -130,6 +132,7 @@ class FlytKontekstMedPeriodeService(
             Vurderingsbehov.AKTIVITETSPLIKT_11_7, Vurderingsbehov.AKTIVITETSPLIKT_11_9 -> IKKE_RELEVANT
             Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT -> EFFEKTUER_AKTIVITETSPLIKT
             Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9 -> EFFEKTUER_AKTIVITETSPLIKT_11_9
+            Vurderingsbehov.AUTOMATISK_OPPDATER_VILKÅR -> AUTOMATISK_OPPDATER_VILKÅR
         }
     }
 }

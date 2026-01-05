@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
 import java.time.Year
 
 class InntektInformasjonskrav(
@@ -36,6 +37,8 @@ class InntektInformasjonskrav(
     private val inntektkomponentenGateway: InntektkomponentenGateway,
     private val tidligereVurderinger: TidligereVurderinger,
 ) : Informasjonskrav<InntektInformasjonskrav.InntektInput, InntektInformasjonskrav.InntektRegisterdata> {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     override val navn = Companion.navn
 
@@ -95,7 +98,16 @@ class InntektInformasjonskrav(
             )
         }
             .groupBy { (_, årMåned) -> årMåned }
-            .mapValues { (_, value) -> value.flatMap { it.first }.sumOf { it.beloep } }
+            .mapValues { (årMåned, value) ->
+                value
+                    .flatMap { it.first }
+                    .also {
+                        if (it.size < 12) {
+                            log.info("Fant færre enn 12 inntekter for år ${årMåned.year}. Fant ${it.size}.")
+                        }
+                    }
+                    .sumOf { it.beloep }
+            }
             .map { (årMåned, beløp) ->
                 Månedsinntekt(
                     årMåned = årMåned,
@@ -136,7 +148,7 @@ class InntektInformasjonskrav(
         val beregningGrunnlag = beregningVurderingRepository.hentHvisEksisterer(kontekst.behandlingId)
 
         val nedsattArbeidsevneDato = beregningGrunnlag?.tidspunktVurdering?.nedsattArbeidsevneDato
-        val avbruttStudieDato = studentGrunnlag?.studentvurdering?.avbruttStudieDato
+        val avbruttStudieDato = studentGrunnlag?.vurderinger?.single()?.avbruttStudieDato
         return nedsattArbeidsevneDato != null || avbruttStudieDato != null
     }
 
@@ -155,7 +167,6 @@ class InntektInformasjonskrav(
     private fun utledAlleRelevanteÅr(behandlingId: BehandlingId): Pair<Set<Year>, Set<Year>> {
         val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId)
         val beregningGrunnlag = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
-
 
         val relevanteUføreInntektÅr = Inntektsbehov.utledRelevanteYtterligereNedsattÅr(beregningGrunnlag)
 

@@ -14,13 +14,10 @@ import no.nav.aap.komponenter.verdityper.Prosent
 data class Vurdering(
     internal val fårAapEtter: RettighetsType? = null,
     internal val meldepliktVurdering: MeldepliktVurdering? = null,
-    internal val aktivitetspliktVurdering: AktivitetspliktVurdering? = null,
-    internal val oppholdskravVurdering: OppholdskravUnderveisVurdering? = null,
     private val gradering: ArbeidsGradering? = null,
     private val samordningProsent: Prosent? = null,
     private val grenseverdi: Prosent? = null,
     internal val institusjonVurdering: InstitusjonVurdering? = null,
-    internal val soningsVurdering: SoningVurdering? = null,
     private val meldeperiode: Periode? = null,
     val varighetVurdering: VarighetVurdering? = null,
 ) {
@@ -44,14 +41,6 @@ data class Vurdering(
         return copy(institusjonVurdering = vurdering)
     }
 
-    fun leggTilSoningsVurdering(vurdering: SoningVurdering): Vurdering {
-        return copy(soningsVurdering = vurdering)
-    }
-
-    fun leggTilAktivitetspliktVurdering(vurdering: AktivitetspliktVurdering): Vurdering {
-        return copy(aktivitetspliktVurdering = vurdering)
-    }
-
     fun leggTilMeldeperiode(meldeperiode: Periode): Vurdering {
         return copy(meldeperiode = meldeperiode)
     }
@@ -60,51 +49,13 @@ data class Vurdering(
         return copy(varighetVurdering = varighetVurdering)
     }
 
-    fun leggTilOppholdskravVurdering(oppholdskravVurdering: OppholdskravUnderveisVurdering): Vurdering {
-        return copy(oppholdskravVurdering = oppholdskravVurdering)
-    }
-
-    private fun bryterAktivitetsplikt11_7(): Boolean {
-        return stansEtterBruddPåAktivitetsplikt11_7() || opphørEtterBruddPåAktivitetsplikt11_7()
-    }
-
-    private fun stansEtterBruddPåAktivitetsplikt11_7(): Boolean {
-        return aktivitetspliktVurdering?.vilkårsvurdering == AktivitetspliktVurdering.Vilkårsvurdering.BRUDD_AKTIVITETSPLIKT_11_7_STANS
-    }
-
-    private fun opphørEtterBruddPåAktivitetsplikt11_7(): Boolean {
-        return aktivitetspliktVurdering?.vilkårsvurdering == AktivitetspliktVurdering.Vilkårsvurdering.BRUDD_AKTIVITETSPLIKT_11_7_OPPHØR
-    }
-
-    private fun bryterOppholdskrav(): Boolean {
-        return opphørEtterOppholdskrav() || stansEtterOppholdskrav()
-    }
-
-    private fun opphørEtterOppholdskrav(): Boolean {
-        return oppholdskravVurdering?.vilkårsvurdering == OppholdskravUnderveisVurdering.Vilkårsvurdering.BRUDD_OPPHOLDSKRAV_11_3_OPPHØR
-    }
-
-    private fun stansEtterOppholdskrav(): Boolean {
-        return oppholdskravVurdering?.vilkårsvurdering == OppholdskravUnderveisVurdering.Vilkårsvurdering.BRUDD_OPPHOLDSKRAV_11_3_STANS
-    }
-
     fun harRett(): Boolean {
         return fårAapEtter != null &&
-                sonerIkke() &&
-                !bryterAktivitetsplikt11_7() &&
-                !bryterOppholdskrav() &&
                 varighetsvurderingOppfylt()
     }
 
     private fun varighetsvurderingOppfylt(): Boolean {
         return varighetVurdering !is Avslag
-    }
-
-    private fun sonerIkke(): Boolean {
-        if (soningsVurdering == null) {
-            return true
-        }
-        return !soningsVurdering.girOpphør
     }
 
     /** Rettighetstype før vi har kjørt underveissteget. */
@@ -147,16 +98,6 @@ data class Vurdering(
 
         if (fårAapEtter == null) {
             return UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT
-        } else if (stansEtterOppholdskrav()) {
-            return UnderveisÅrsak.BRUDD_PÅ_OPPHOLDSKRAV_11_3_STANS
-        } else if (opphørEtterOppholdskrav()) {
-            return UnderveisÅrsak.BRUDD_PÅ_OPPHOLDSKRAV_11_3_OPPHØR
-        } else if (!sonerIkke()) {
-            return UnderveisÅrsak.SONER_STRAFF
-        } else if (opphørEtterBruddPåAktivitetsplikt11_7()) {
-            return UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT_11_7_OPPHØR
-        } else if (stansEtterBruddPåAktivitetsplikt11_7()) {
-            return UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT_11_7_STANS
         } else if (!varighetsvurderingOppfylt()) {
             return UnderveisÅrsak.VARIGHETSKVOTE_BRUKT_OPP
         }
@@ -177,9 +118,7 @@ data class Vurdering(
             harRett=${harRett()},
             meldeplikt=${meldepliktVurdering},
             gradering=${gradering?.gradering ?: Prosent(0)},
-            aktivitetsplikt11_7=${aktivitetspliktVurdering},
             institusjonVurdering=${institusjonVurdering},
-            oppholdskravVurdering=${oppholdskravVurdering},
             grenseverdi=${grenseverdi}
             )""".trimIndent().replace("\n", "")
     }

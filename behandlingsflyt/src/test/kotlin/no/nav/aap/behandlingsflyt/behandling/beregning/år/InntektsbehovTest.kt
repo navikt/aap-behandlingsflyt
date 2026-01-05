@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentGru
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.YrkesskadeSak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -121,7 +122,7 @@ class InntektsbehovTest {
             BeregningInput(
                 nedsettelsesDato,
                 årsInntekter = emptySet(),
-                uføregrad = setOf(Uføre(LocalDate.now(), Prosent.`30_PROSENT`)),
+                uføregrad = setOf(Uføre(LocalDate.now().minusYears(10), Prosent.`30_PROSENT`)),
                 yrkesskadevurdering = null,
                 registrerteYrkesskader = null,
                 beregningGrunnlag = BeregningGrunnlag(
@@ -194,7 +195,7 @@ class InntektsbehovTest {
                 begrunnelse = "begrunnelse",
                 nedsattArbeidsevneDato = 1 januar 2025,
                 ytterligereNedsattBegrunnelse = null,
-                ytterligereNedsattArbeidsevneDato = LocalDate.now(),
+                ytterligereNedsattArbeidsevneDato = 1 januar 2025,
                 vurdertAv = "saksbehandler",
             ), yrkesskadeBeløpVurdering = null
         )
@@ -208,7 +209,7 @@ class InntektsbehovTest {
     @Test
     fun `skal utlede de tre forutgående kalenderårene basert på datoene i studentgrunnlaget`() {
         val studentGrunnlag = StudentGrunnlag(
-            studentvurdering = StudentVurdering(
+            vurderinger = setOf(StudentVurdering(
                 begrunnelse = "begrunnelse",
                 vurdertAv = "saksbehandler",
                 harAvbruttStudie = true,
@@ -217,7 +218,8 @@ class InntektsbehovTest {
                 harBehovForBehandling = true,
                 avbruttStudieDato = 1 januar 2025,
                 avbruddMerEnn6Måneder = true,
-            ), oppgittStudent = null
+                vurdertIBehandling = BehandlingId(1),
+            )), oppgittStudent = null
         )
 
         val relevanteÅr = Inntektsbehov.utledAlleRelevanteÅr(null, studentGrunnlag)
@@ -253,6 +255,7 @@ class InntektsbehovTest {
             harBehovForBehandling = true,
             avbruttStudieDato = 1 januar 2025,
             avbruddMerEnn6Måneder = true,
+            vurdertIBehandling = BehandlingId(1)
         )
 
         val beregningVurdering = BeregningstidspunktVurdering(

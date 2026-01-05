@@ -49,7 +49,7 @@ fun NormalOpenAPIRoute.studentgrunnlagApi(
                     respond(
                         StudentGrunnlagResponse(
                             harTilgangTilÅSaksbehandle = kanSaksbehandle(),
-                            studentvurdering = studentGrunnlag.studentvurdering?.tilResponse(ansattInfoService),
+                            studentvurdering = studentGrunnlag.vurderinger?.single()?.tilResponse(ansattInfoService),
                             oppgittStudent = studentGrunnlag.oppgittStudent
                         )
                     )
@@ -64,7 +64,6 @@ fun NormalOpenAPIRoute.studentgrunnlagApi(
 private fun StudentVurdering.tilResponse(ansattInfoService: AnsattInfoService): StudentVurderingResponse {
     val navnOgEnhet = ansattInfoService.hentAnsattNavnOgEnhet(this.vurdertAv)
     return StudentVurderingResponse(
-        id = this.id,
         begrunnelse = this.begrunnelse,
         harAvbruttStudie = this.harAvbruttStudie,
         godkjentStudieAvLånekassen = this.godkjentStudieAvLånekassen,

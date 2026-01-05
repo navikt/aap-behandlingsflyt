@@ -37,7 +37,7 @@ fun NormalOpenAPIRoute.driftApi(
                     behandlingPathParam = BehandlingPathParam("referanse"),
                     operasjon = Operasjon.DRIFTE
                 )
-            ){ params, request ->
+            ) { params, request ->
                 dataSource.transaction { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()

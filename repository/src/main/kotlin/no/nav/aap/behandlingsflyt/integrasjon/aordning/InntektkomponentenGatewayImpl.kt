@@ -66,11 +66,11 @@ class InntektkomponentenGatewayImpl : InntektkomponentenGateway {
 }
 
 private fun mapFraRespons(response: InntektskomponentResponse): InntektskomponentData {
-    val rensetInnektliste =
+    val rensetInntektliste =
         response.arbeidsInntektMaaned.filter { it.arbeidsInntektInformasjon.inntektListe?.isNotEmpty() == true }
 
     return InntektskomponentData(
-        rensetInnektliste.map {
+        rensetInntektliste.map {
             ArbeidsInntektMaaned(
                 aarMaaned = it.aarMaaned,
                 arbeidsInntektInformasjon = ArbeidsInntektInformasjon(

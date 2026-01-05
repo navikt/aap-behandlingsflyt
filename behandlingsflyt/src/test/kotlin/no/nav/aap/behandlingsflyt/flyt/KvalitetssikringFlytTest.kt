@@ -67,24 +67,21 @@ class KvalitetssikringFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::clas
             .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
             .løsBeregningstidspunkt()
-            .løsForutgåendeMedlemskap(fom)
             .løsOppholdskrav(fom)
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
-
-        // Returner fra beslutter - ikke godkjenn avklar sykdom
-        løsFatteVedtak(behandling, returVed = Definisjon.AVKLAR_SYKDOM)
-
-        behandling
+            // Returner fra beslutter - ikke godkjenn avklar sykdom
+            .beslutterGodkjennerIkke(returVed = Definisjon.AVKLAR_SYKDOM)
             .løsSykdom(fom)
 
         motor.kjørJobber()
         var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling)
-        assertThat(åpneAvklaringsbehov.firstOrNull{it.definisjon == Definisjon.KVALITETSSIKRING}).isNotNull()
+        assertThat(åpneAvklaringsbehov.firstOrNull { it.definisjon == Definisjon.KVALITETSSIKRING }).isNotNull()
 
         behandling.kvalitetssikreOk()
             .foreslåVedtak()
-        løsFatteVedtak(behandling)
+            .fattVedtak()
+
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling)
         assertThat(åpneAvklaringsbehov).hasSize(1)
         assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.SKRIV_VEDTAKSBREV)
@@ -112,12 +109,10 @@ class KvalitetssikringFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::clas
             .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
             .løsBeregningstidspunkt()
-            .løsForutgåendeMedlemskap(fom)
             .løsOppholdskrav(fom)
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
-
-        løsFatteVedtak(behandling, returVed = Definisjon.VURDER_RETTIGHETSPERIODE)
+            .beslutterGodkjennerIkke(returVed = Definisjon.VURDER_RETTIGHETSPERIODE)
 
         behandling.løsRettighetsperiodeIngenEndring()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())

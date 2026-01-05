@@ -21,7 +21,7 @@ class StudentVisningUtleder(
 
     override fun skalVises(behandlingId: BehandlingId): Boolean {
         val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId)
-        if (studentGrunnlag?.studentvurdering != null) {
+        if (studentGrunnlag?.vurderinger != null) {
             return true
         }
         val hentAvklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)

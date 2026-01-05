@@ -74,6 +74,7 @@ class BarnetilleggSteg(
                         || harGjortManuellVurderingIBehandlingen(kontekst)))))
 
             VurderingType.MELDEKORT,
+            VurderingType.AUTOMATISK_OPPDATER_VILKÅR,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
             VurderingType.IKKE_RELEVANT ->
