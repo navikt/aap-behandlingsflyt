@@ -45,7 +45,6 @@ class StudentFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 )
             )
             .løsRefusjonskrav()
-            .løsForutgåendeMedlemskap(sak.rettighetsperiode.fom)
             .løsOppholdskrav(sak.rettighetsperiode.fom)
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
