@@ -33,6 +33,7 @@ import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
@@ -73,98 +74,109 @@ class SendForvaltningsmeldingStegTest {
         )
     }
 
-    @ParameterizedTest
-    @EnumSource(TypeBehandling::class, mode = Mode.INCLUDE, names = ["Førstegangsbehandling", "Revurdering"])
-    fun `sender en og kun en forvaltningsmelding for en behandling som har årsak MOTTATT_SØKNAD`(typeBehandling: TypeBehandling) {
-        val behandling = opprettSakOgbehandlingForForvaltningsmelding(typeBehandling)
-        val flytkontekst = flytkontekstForBehandlingForForvaltningsmelding(behandling, Vurderingsbehov.MOTTATT_SØKNAD)
+    @Nested
+    inner class Forvaltningsmelding {
 
-        sendForvaltningsmeldingSteg.utfør(flytkontekst)
-        sendForvaltningsmeldingSteg.utfør(flytkontekst)
+        @ParameterizedTest
+        @EnumSource(TypeBehandling::class, mode = Mode.INCLUDE, names = ["Førstegangsbehandling", "Revurdering"])
+        fun `sender en og kun en forvaltningsmelding for en behandling som har årsak MOTTATT_SØKNAD`(typeBehandling: TypeBehandling) {
+            val behandling = opprettSakOgbehandlingForForvaltningsmelding(typeBehandling)
+            val flytkontekst =
+                flytkontekstForBehandlingForForvaltningsmelding(behandling, Vurderingsbehov.MOTTATT_SØKNAD)
 
-        val brevbestillinger = InMemoryBrevbestillingRepository.hent(behandling.id)
-        assertThat(brevbestillinger).hasSize(1)
-        assertThat(brevbestillinger.first().typeBrev).isEqualTo(TypeBrev.FORVALTNINGSMELDING)
+            sendForvaltningsmeldingSteg.utfør(flytkontekst)
+            sendForvaltningsmeldingSteg.utfør(flytkontekst)
+
+            val brevbestillinger = InMemoryBrevbestillingRepository.hent(behandling.id)
+            assertThat(brevbestillinger).hasSize(1)
+            assertThat(brevbestillinger.first().typeBrev).isEqualTo(TypeBrev.FORVALTNINGSMELDING)
+        }
+
+        @ParameterizedTest
+        @EnumSource(Vurderingsbehov::class, mode = Mode.EXCLUDE, names = ["MOTTATT_SØKNAD"])
+        fun `sender ikke forvaltningsmelding for en behandling som ikke har årsak MOTTATT_SØKNAD`(vurderingsbehov: Vurderingsbehov) {
+            val behandling = opprettSakOgbehandlingForForvaltningsmelding(TypeBehandling.Førstegangsbehandling)
+            val flytkontekst = flytkontekstForBehandlingForForvaltningsmelding(behandling, vurderingsbehov)
+
+            sendForvaltningsmeldingSteg.utfør(flytkontekst)
+
+            val brevbestillinger = InMemoryBrevbestillingRepository.hent(behandling.id)
+            assertThat(brevbestillinger).isEmpty()
+        }
+
+        @ParameterizedTest
+        @EnumSource(TypeBehandling::class, mode = Mode.EXCLUDE, names = ["Førstegangsbehandling", "Revurdering"])
+        fun `sender ikke forvaltningsmelding for en behandling som ikke er førstegangsbehandling eller revurdering`(
+            typeBehandling: TypeBehandling
+        ) {
+            val behandling = opprettSakOgbehandlingForForvaltningsmelding(typeBehandling)
+            val flytkontekst =
+                flytkontekstForBehandlingForForvaltningsmelding(behandling, Vurderingsbehov.MOTTATT_SØKNAD)
+
+            sendForvaltningsmeldingSteg.utfør(flytkontekst)
+
+            val brevbestillinger = InMemoryBrevbestillingRepository.hent(behandling.id)
+            assertThat(brevbestillinger).isEmpty()
+        }
     }
 
-    @ParameterizedTest
-    @EnumSource(Vurderingsbehov::class, mode = Mode.EXCLUDE, names = ["MOTTATT_SØKNAD"])
-    fun `sender ikke forvaltningsmelding for en behandling som ikke har årsak MOTTATT_SØKNAD`(vurderingsbehov: Vurderingsbehov) {
-        val behandling = opprettSakOgbehandlingForForvaltningsmelding(TypeBehandling.Førstegangsbehandling)
-        val flytkontekst = flytkontekstForBehandlingForForvaltningsmelding(behandling, vurderingsbehov)
+    @Nested
+    inner class KlageMottattmelding {
+        @Test
+        fun `sender en og kun en klage mottatt melding for en journalpost innsendt klage som har årsak MOTATT_KLAGE`() {
+            val behandling = opprettSakOgbehandlingForKlageMottatt(TypeBehandling.Klage)
+            val flytkontekst = flytkontekstForBehandlingForKlageMottatt(behandling, Vurderingsbehov.MOTATT_KLAGE)
+            opprettKlageDokument(behandling.sakId, behandling.id, InnsendingReferanse.Type.JOURNALPOST)
 
-        sendForvaltningsmeldingSteg.utfør(flytkontekst)
+            sendForvaltningsmeldingSteg.utfør(flytkontekst)
+            sendForvaltningsmeldingSteg.utfør(flytkontekst)
 
-        val brevbestillinger = InMemoryBrevbestillingRepository.hent(behandling.id)
-        assertThat(brevbestillinger).isEmpty()
-    }
+            val brevbestillinger = InMemoryBrevbestillingRepository.hent(behandling.id)
+            assertThat(brevbestillinger).hasSize(1)
+            assertThat(brevbestillinger.first().typeBrev).isEqualTo(TypeBrev.KLAGE_MOTTATT)
+        }
 
-    @ParameterizedTest
-    @EnumSource(TypeBehandling::class, mode = Mode.EXCLUDE, names = ["Førstegangsbehandling", "Revurdering"])
-    fun `sender ikke forvaltningsmelding for en behandling som ikke er førstegangsbehandling eller revurdering`(
-        typeBehandling: TypeBehandling
-    ) {
-        val behandling = opprettSakOgbehandlingForForvaltningsmelding(typeBehandling)
-        val flytkontekst = flytkontekstForBehandlingForForvaltningsmelding(behandling, Vurderingsbehov.MOTTATT_SØKNAD)
+        @ParameterizedTest
+        @EnumSource(InnsendingReferanse.Type::class, mode = Mode.EXCLUDE, names = ["JOURNALPOST"])
+        fun `sender kun klage mottatt melding for en klage som har innsendt referanse av type JOURNALPOST`(
+            typeInnsendingReferanse: InnsendingReferanse.Type
+        ) {
+            val behandling = opprettSakOgbehandlingForKlageMottatt(TypeBehandling.Klage)
+            val flytkontekst = flytkontekstForBehandlingForKlageMottatt(behandling, Vurderingsbehov.MOTATT_KLAGE)
+            opprettKlageDokument(behandling.sakId, behandling.id, typeInnsendingReferanse)
 
-        sendForvaltningsmeldingSteg.utfør(flytkontekst)
+            sendForvaltningsmeldingSteg.utfør(flytkontekst)
+            sendForvaltningsmeldingSteg.utfør(flytkontekst)
 
-        val brevbestillinger = InMemoryBrevbestillingRepository.hent(behandling.id)
-        assertThat(brevbestillinger).isEmpty()
-    }
+            val brevbestillinger = InMemoryBrevbestillingRepository.hent(behandling.id)
+            assertThat(brevbestillinger).isEmpty()
+        }
 
-    @Test
-    fun `sender en og kun en klage mottatt melding for en journalpost innsendt klage som har årsak MOTATT_KLAGE`() {
-        val behandling = opprettSakOgbehandlingForKlageMottatt(TypeBehandling.Klage)
-        val flytkontekst = flytkontekstForBehandlingForKlageMottatt(behandling, Vurderingsbehov.MOTATT_KLAGE)
-        opprettKlageDokument(behandling.sakId, behandling.id, InnsendingReferanse.Type.JOURNALPOST)
+        @ParameterizedTest
+        @EnumSource(Vurderingsbehov::class, mode = Mode.EXCLUDE, names = ["MOTATT_KLAGE"])
+        fun `sender ikke klage mottatt for en behandling som ikke har årsak MOTTATT_KLAGE`(vurderingsbehov: Vurderingsbehov) {
+            val behandling = opprettSakOgbehandlingForKlageMottatt(TypeBehandling.Klage)
+            val flytkontekst = flytkontekstForBehandlingForKlageMottatt(behandling, vurderingsbehov)
+            opprettKlageDokument(behandling.sakId, behandling.id, InnsendingReferanse.Type.JOURNALPOST)
 
-        sendForvaltningsmeldingSteg.utfør(flytkontekst)
-        sendForvaltningsmeldingSteg.utfør(flytkontekst)
+            sendForvaltningsmeldingSteg.utfør(flytkontekst)
 
-        val brevbestillinger = InMemoryBrevbestillingRepository.hent(behandling.id)
-        assertThat(brevbestillinger).hasSize(1)
-        assertThat(brevbestillinger.first().typeBrev).isEqualTo(TypeBrev.KLAGE_MOTTATT)
-    }
+            val brevbestillinger = InMemoryBrevbestillingRepository.hent(behandling.id)
+            assertThat(brevbestillinger).isEmpty()
+        }
 
-    @ParameterizedTest
-    @EnumSource(InnsendingReferanse.Type::class, mode = Mode.EXCLUDE, names = ["JOURNALPOST"])
-    fun `sender kun klage mottatt melding for en klage som har innsendt referanse av type JOURNALPOST`(typeInnsendingReferanse: InnsendingReferanse.Type) {
-        val behandling = opprettSakOgbehandlingForKlageMottatt(TypeBehandling.Klage)
-        val flytkontekst = flytkontekstForBehandlingForKlageMottatt(behandling, Vurderingsbehov.MOTATT_KLAGE)
-        opprettKlageDokument(behandling.sakId, behandling.id, typeInnsendingReferanse)
+        @ParameterizedTest
+        @EnumSource(TypeBehandling::class, mode = Mode.EXCLUDE, names = ["Klage"])
+        fun `sender ikke klage mottatt for en behandling som ikke er klage`(typeBehandling: TypeBehandling) {
+            val behandling = opprettSakOgbehandlingForKlageMottatt(typeBehandling)
+            val flytkontekst = flytkontekstForBehandlingForKlageMottatt(behandling, Vurderingsbehov.MOTATT_KLAGE)
+            opprettKlageDokument(behandling.sakId, behandling.id, InnsendingReferanse.Type.JOURNALPOST)
 
-        sendForvaltningsmeldingSteg.utfør(flytkontekst)
-        sendForvaltningsmeldingSteg.utfør(flytkontekst)
+            sendForvaltningsmeldingSteg.utfør(flytkontekst)
 
-        val brevbestillinger = InMemoryBrevbestillingRepository.hent(behandling.id)
-        assertThat(brevbestillinger).isEmpty()
-    }
-
-    @ParameterizedTest
-    @EnumSource(Vurderingsbehov::class, mode = Mode.EXCLUDE, names = ["MOTATT_KLAGE"])
-    fun `sender ikke klage mottatt for en behandling som ikke har årsak MOTTATT_KLAGE`(vurderingsbehov: Vurderingsbehov) {
-        val behandling = opprettSakOgbehandlingForKlageMottatt(TypeBehandling.Klage)
-        val flytkontekst = flytkontekstForBehandlingForKlageMottatt(behandling, vurderingsbehov)
-        opprettKlageDokument(behandling.sakId, behandling.id, InnsendingReferanse.Type.JOURNALPOST)
-
-        sendForvaltningsmeldingSteg.utfør(flytkontekst)
-
-        val brevbestillinger = InMemoryBrevbestillingRepository.hent(behandling.id)
-        assertThat(brevbestillinger).isEmpty()
-    }
-
-    @ParameterizedTest
-    @EnumSource(TypeBehandling::class, mode = Mode.EXCLUDE, names = ["Klage"])
-    fun `sender ikke klage mottatt for en behandling som ikke er klage`(typeBehandling: TypeBehandling) {
-        val behandling = opprettSakOgbehandlingForKlageMottatt(typeBehandling)
-        val flytkontekst = flytkontekstForBehandlingForKlageMottatt(behandling, Vurderingsbehov.MOTATT_KLAGE)
-        opprettKlageDokument(behandling.sakId, behandling.id, InnsendingReferanse.Type.JOURNALPOST)
-
-        sendForvaltningsmeldingSteg.utfør(flytkontekst)
-
-        val brevbestillinger = InMemoryBrevbestillingRepository.hent(behandling.id)
-        assertThat(brevbestillinger).isEmpty()
+            val brevbestillinger = InMemoryBrevbestillingRepository.hent(behandling.id)
+            assertThat(brevbestillinger).isEmpty()
+        }
     }
 
     private fun definisjonerSomLøsesFørSteg(
