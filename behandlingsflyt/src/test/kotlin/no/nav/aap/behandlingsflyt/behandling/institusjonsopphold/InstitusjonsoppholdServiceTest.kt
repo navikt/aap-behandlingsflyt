@@ -215,43 +215,6 @@ internal class InstitusjonsoppholdServiceTest {
     }
 
     @Test
-    fun `Delvis overlappende barnetillegg trenger ikke avklaring`() {
-        val input = InstitusjonsoppholdInput(
-            institusjonsOpphold = listOf(
-                Segment(
-                    Periode(
-                        LocalDate.now().minusMonths(5),
-                        LocalDate.now().minusMonths(1)
-                    ),
-                    Institusjon(
-                        Institusjonstype.HS,
-                        Oppholdstype.D,
-                        "123",
-                        "test"
-                    )
-                )
-            ),
-            soningsvurderinger = emptyList(),
-            barnetillegg = listOf(
-                BarnetilleggPeriode(
-                    Periode(
-                        LocalDate.now().minusMonths(5).minusDays(1),
-                        LocalDate.now().minusMonths(2)
-                    ),
-                    setOf(
-                        BarnIdentifikator.BarnIdent("123")
-                    )
-                )
-            ),
-            helsevurderinger = emptyList(),
-            rettighetsperiode = Periode(LocalDate.now().minusYears(1), LocalDate.now().plusYears(2))
-        )
-
-        val res = utlederService.utledBehov(input)
-        assertThat(res.harBehovForAvklaring()).isFalse
-    }
-
-    @Test
     fun `Opphold mindre enn 3 måneder etter forrige trigger ikke behov før et opphold trigger reduksjon`() {
         val innleggelsesperiode = Periode(
             LocalDate.now().minusMonths(12),

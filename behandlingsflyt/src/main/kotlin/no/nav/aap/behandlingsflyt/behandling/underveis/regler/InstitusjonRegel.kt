@@ -26,7 +26,8 @@ class InstitusjonRegel : UnderveisRegel {
         val reduksjonsTidslinje = utledTidslinjeHvorDetKanGisReduksjon(input)
         institusjonTidslinje = institusjonTidslinje.kombiner(reduksjonsTidslinje, sammenslåer())
 
-        return resultat.kombiner(institusjonTidslinje,
+        return resultat.kombiner(
+            institusjonTidslinje,
             JoinStyle.LEFT_JOIN { periode, venstreSegment, høyreSegment ->
                 var venstreVerdi = venstreSegment.verdi
                 if (høyreSegment?.verdi != null) {
@@ -91,6 +92,7 @@ class InstitusjonRegel : UnderveisRegel {
     }
 
     private fun utledTidslinjeHvorDetKanGisReduksjon(input: UnderveisInput): Tidslinje<Boolean> {
+
         val tidslinjeOverInnleggelser = Tidslinje(
             input.institusjonsopphold.filter {
                 it.institusjon?.erPåInstitusjon == true
@@ -104,6 +106,7 @@ class InstitusjonRegel : UnderveisRegel {
         return Tidslinje(
             tidslinjeOverInnleggelser
                 .segmenter()
+                .filter { (!it.periode.fom.withDayOfMonth(1).plusMonths(1).isAfter(it.periode.tom) && it.verdi) || !it.periode.fom.withDayOfMonth(1).plusMonths(1).plusMonths(3).isAfter(it.periode.tom) && !it.verdi }
                 .map { Segment(utledMuligReduksjonsPeriode(it.periode, it.verdi), true) })
     }
 
