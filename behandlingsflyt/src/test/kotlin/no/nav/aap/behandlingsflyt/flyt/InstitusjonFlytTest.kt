@@ -46,9 +46,6 @@ class InstitusjonFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
             .løsBeregningstidspunkt()
-            .løsForutgåendeMedlemskap(
-                gjelderFra = LocalDate.now()
-            )
             .løsOppholdskrav(fom)
             .medKontekst {
                 assertThat(åpneAvklaringsbehov.map { it.definisjon }).contains(Definisjon.AVKLAR_HELSEINSTITUSJON)

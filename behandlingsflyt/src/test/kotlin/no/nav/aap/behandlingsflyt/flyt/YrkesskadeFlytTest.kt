@@ -529,7 +529,6 @@ class YrkesskadeFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 ),
             )
             .løsBeregningstidspunkt()
-            .løsForutgåendeMedlemskap(fom)
             .løsOppholdskrav(fom)
             .løsBarnetillegg()
             .løsAvklaringsBehov(
@@ -569,7 +568,6 @@ class YrkesskadeFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 )
             )
             .løsBeregningstidspunkt()
-            .løsForutgåendeMedlemskap(fom)
             .løsOppholdskrav(fom)
             .løsAvklaringsBehov(
                 AvklarSamordningUføreLøsning(

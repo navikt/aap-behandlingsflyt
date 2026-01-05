@@ -136,27 +136,22 @@ class AktivitetspliktFlytTest :
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)
+                val grunnlagIAktivitetspliktBehandling = repositoryProvider.provide<Aktivitetsplikt11_7Repository>()
+                    .hentHvisEksisterer(aktivitetspliktBehandling.id)
+                val grunnlagIÅpenBehandling = repositoryProvider.provide<Aktivitetsplikt11_7Repository>()
+                    .hentHvisEksisterer(åpenBehandling.id)
+
+                assertThat(grunnlagIAktivitetspliktBehandling).isNotNull
+                assertThat(grunnlagIÅpenBehandling).isNull()
+            }
+            .fattVedtak().medKontekst {
+                assertThat(this.behandling).extracting { it.aktivtSteg() }
+                    .isEqualTo(StegType.BREV)
+            }.løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_11_7).medKontekst {
+                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
             }
 
-        dataSource.transaction { connection ->
-            val grunnlagIAktivitetspliktBehandling = Aktivitetsplikt11_7RepositoryImpl(connection)
-                .hentHvisEksisterer(aktivitetspliktBehandling.id)
-            val grunnlagIÅpenBehandling = Aktivitetsplikt11_7RepositoryImpl(connection)
-                .hentHvisEksisterer(åpenBehandling.id)
-
-            assertThat(grunnlagIAktivitetspliktBehandling).isNotNull
-            assertThat(grunnlagIÅpenBehandling).isNull()
-        }
-
-        aktivitetspliktBehandling.fattVedtak().medKontekst {
-            assertThat(this.behandling).extracting { it.aktivtSteg() }
-                .isEqualTo(StegType.BREV)
-
-        }.løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_11_7).medKontekst {
-            assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
-        }
-
-        var effektueringsbehandling = dataSource.transaction { connection ->
+        val effektueringsbehandling = dataSource.transaction { connection ->
             BehandlingRepositoryImpl(connection).finnSisteOpprettedeBehandlingFor(
                 sak.id,
                 listOf(TypeBehandling.Revurdering)
@@ -380,7 +375,7 @@ class AktivitetspliktFlytTest :
             fom = LocalDate.now().minusMonths(1),
             person = person,
         )
-        var åpenBehandlingForbiTilkjentYtelse =
+        val åpenBehandlingForbiTilkjentYtelse =
             revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom, vissVarighet = true)
                 .løsBistand(sak.rettighetsperiode.fom)
                 .medKontekst {
