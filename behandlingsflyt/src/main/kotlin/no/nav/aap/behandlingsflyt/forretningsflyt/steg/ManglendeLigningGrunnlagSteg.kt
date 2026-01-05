@@ -24,6 +24,7 @@ import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
 import java.time.Year
 
 /**
@@ -47,6 +48,8 @@ class ManglendeLigningGrunnlagSteg internal constructor(
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
         unleashGateway = gatewayProvider.provide(),
     )
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
@@ -112,6 +115,7 @@ class ManglendeLigningGrunnlagSteg internal constructor(
                             .map { it.år }).toSet()
 
                     // Har enten inntekt fra register eller manuelt satt inntekt for tre siste relevante år
+                    log.info("Siste relevante år: $sisteRelevanteÅr, kombinerte år: $kombinerteÅr")
                     sisteRelevanteÅr.all { it in kombinerteÅr }
                 } else {
                     val inntektGrunnlagSisteRelevanteÅr = hentInntektGrunnlag(inntektGrunnlag, sisteRelevanteÅr.first())
