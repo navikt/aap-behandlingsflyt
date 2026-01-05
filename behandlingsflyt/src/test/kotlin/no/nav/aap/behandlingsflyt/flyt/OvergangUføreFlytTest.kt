@@ -163,7 +163,6 @@ class OvergangUføreFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 )
             )
             .løsBeregningstidspunkt()
-            .løsForutgåendeMedlemskap(periode.fom)
             .løsOppholdskrav(periode.fom)
             .løsAndreStatligeYtelser()
             .medKontekst {

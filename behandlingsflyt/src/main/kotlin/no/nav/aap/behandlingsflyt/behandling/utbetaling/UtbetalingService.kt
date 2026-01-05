@@ -6,9 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Reduksjon11_9Reposit
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
-import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
-import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
@@ -17,7 +15,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.Refus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -67,8 +64,6 @@ class UtbetalingService(
             samordningAndreStatligeYtelserRepository = repositoryProvider.provide<SamordningAndreStatligeYtelserRepository>(),
             samordningArbeidsgiverYtelserRepository = repositoryProvider.provide<SamordningArbeidsgiverRepository>(),
             unleashGateway = gatewayProvider.provide<UnleashGateway>(),
-            vedtakService = VedtakService(repositoryProvider),
-            behandlingRepository = repositoryProvider.provide<BehandlingRepository>(),
         ),
     )
 
@@ -108,7 +103,7 @@ class UtbetalingService(
             }
             val vedtakstidspunktFraForrigeBehandling =
                 forrigeBehandling?.id?.let { vedtakRepository.hent(it)?.vedtakstidspunkt }
-            val avventUtbetaling = utledAvventUtbetaling(tilkjentYtelse, sakId, behandling)
+            val avventUtbetaling = utledAvventUtbetaling(tilkjentYtelse, sakId, behandlingId)
             val reduksjoner = reduksjon11_9Repository.hent(behandlingId)
 
             val nyMeldeperiode = utledNyMeldeperiode(
@@ -184,16 +179,13 @@ class UtbetalingService(
     private fun utledAvventUtbetaling(
         tilkjentYtelse: List<TilkjentYtelsePeriode>,
         sakId: SakId,
-        behandling: Behandling,
+        behandlingId: BehandlingId
     ): TilkjentYtelseAvventDto? {
-
-        val vedtakDenneBehandligen = vedtakRepository.hent(behandling.id)
-        val avventUtbetaling = if (tilkjentYtelse.isNotEmpty() && vedtakDenneBehandligen != null) {
-            val førsteVedtak = finnFørsteVedtak(sakId)
-
+        val avventUtbetaling = if (tilkjentYtelse.isNotEmpty()) {
+            val førsteVedtaksdato = finnFørsteVedtaksdato(sakId) ?: LocalDate.now()
             avventUtbetalingService.finnEventuellAvventUtbetaling(
-                behandling,
-                førsteVedtak,
+                behandlingId,
+                førsteVedtaksdato,
                 tilkjentYtelse.finnHelePerioden()
             )
         } else {
@@ -202,7 +194,7 @@ class UtbetalingService(
         return avventUtbetaling
     }
 
-    private fun finnFørsteVedtak(sakId: SakId): Vedtak? {
+    private fun finnFørsteVedtaksdato(sakId: SakId): LocalDate? {
         val behandlinger = behandlingRepository.hentAlleFor(sakId)
             .sortedBy { it.opprettetTidspunkt }
 
@@ -217,7 +209,7 @@ class UtbetalingService(
             if (harOppfyltPeriode) {
                 val vedtak = vedtakRepository.hent(avsluttedeBehandling.id)
                 if (vedtak != null) {
-                    return vedtak
+                    return vedtak.vedtakstidspunkt.toLocalDate()
                 }
             }
         }

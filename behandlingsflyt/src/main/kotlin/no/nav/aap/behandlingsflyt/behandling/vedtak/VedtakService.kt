@@ -32,10 +32,6 @@ class VedtakService(
         return vedtakRepository.hent(førstegangsbehandlingen.id)?.vedtakstidspunkt
     }
 
-    fun hentVedtak(behandlingId: BehandlingId): Vedtak? {
-        return vedtakRepository.hent(behandlingId)
-    }
-
     fun vedtakstidspunkt(behandling: Behandling): LocalDateTime? {
         return when (behandling.typeBehandling()) {
             TypeBehandling.Klage -> {

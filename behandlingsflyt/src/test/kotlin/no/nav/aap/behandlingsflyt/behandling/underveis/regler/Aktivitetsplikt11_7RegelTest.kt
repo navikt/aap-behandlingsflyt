@@ -1,18 +1,26 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Aktivitetsplikt11_7Regel.Companion.tilAktivitetspliktVurderingTidslinje
+import no.nav.aap.behandlingsflyt.behandling.vilkår.aktivitetsplikt.Aktivitetspliktvilkåret
+import no.nav.aap.behandlingsflyt.behandling.vilkår.aktivitetsplikt.AktivitetspliktvilkåretGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Vurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Utfall
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.juni
-import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.behandlingsflyt.test.mai
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
 import java.time.ZoneOffset
 
 class Aktivitetsplikt11_7RegelTest {
@@ -53,26 +61,31 @@ class Aktivitetsplikt11_7RegelTest {
                 ),
             )
         )
-        
+
         val rettighetsperiode = Periode(1 januar 2020, 1 januar 2023)
 
-        val vurderinger = grunnlag.tilAktivitetspliktVurderingTidslinje(rettighetsperiode)
+        val vurderinger = vurder(grunnlag, rettighetsperiode.fom)
 
-        assertEquals(2, vurderinger.segmenter().count())
-        
-        vurderinger.assertTidslinje(
-            Segment(Periode(1 februar 2020, 13 februar 2020)) {
-                assertEquals(
-                    it.vilkårsvurdering,
-                    AktivitetspliktVurdering.Vilkårsvurdering.BRUDD_AKTIVITETSPLIKT_11_7_STANS
-                )
+        assertTidslinje(
+            vurderinger,
+            Periode(1 januar 2020, 31 januar 2020) to {
+                assertEquals(null, it.avslagsårsak)
             },
-            Segment(Periode(1 juni 2021, rettighetsperiode.tom)) {
-                assertEquals(
-                    it.vilkårsvurdering,
-                    AktivitetspliktVurdering.Vilkårsvurdering.BRUDD_AKTIVITETSPLIKT_11_7_OPPHØR
-                )
+            Periode(1 februar 2020, 13 februar 2020) to {
+                assertEquals(Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_STANS, it.avslagsårsak)
+            },
+            Periode(14 februar 2020, 31 mai 2021) to {
+                assertEquals(null, it.avslagsårsak)
+            },
+            Periode(1 juni 2021, Tid.MAKS) to {
+                assertEquals(Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_OPPHØR, it.avslagsårsak)
             },
         )
+    }
+
+    private fun vurder(grunnlag: Aktivitetsplikt11_7Grunnlag, fraDato: LocalDate): Tidslinje<Vilkårsvurdering> {
+        val vilkårsvurdering = Vilkårsresultat()
+        Aktivitetspliktvilkåret(vilkårsvurdering).vurder(AktivitetspliktvilkåretGrunnlag(grunnlag, fraDato))
+        return vilkårsvurdering.finnVilkår(Vilkårtype.AKTIVITETSPLIKT).tidslinje()
     }
 }

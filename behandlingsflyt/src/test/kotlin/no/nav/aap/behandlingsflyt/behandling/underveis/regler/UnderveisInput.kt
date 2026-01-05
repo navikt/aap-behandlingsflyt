@@ -1,10 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.Institusjonsopphold
-import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.underveis.Kvoter
 import no.nav.aap.behandlingsflyt.behandling.underveis.tomKvoter
-import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
@@ -38,9 +36,7 @@ fun tomUnderveisInput(
     meldekort: List<Meldekort> = emptyList(),
     innsendingsTidspunkt: Map<LocalDate, JournalpostId> = emptyMap(),
     kvoter: Kvoter = tomKvoter,
-    aktivitetsplikt11_7Grunnlag: Aktivitetsplikt11_7Grunnlag = Aktivitetsplikt11_7Grunnlag(emptyList()),
     institusjonsopphold: List<Institusjonsopphold> = emptyList(),
-    oppholdskravGrunnlag: OppholdskravGrunnlag = OppholdskravGrunnlag(emptyList()),
     arbeidsevneGrunnlag: ArbeidsevneGrunnlag = ArbeidsevneGrunnlag(emptyList()),
     meldepliktGrunnlag: MeldepliktGrunnlag = MeldepliktGrunnlag(emptyList()),
     overstyringMeldepliktGrunnlag: OverstyringMeldepliktGrunnlag = OverstyringMeldepliktGrunnlag(emptyList()),
@@ -54,14 +50,12 @@ fun tomUnderveisInput(
         meldekort = meldekort,
         innsendingsTidspunkt = innsendingsTidspunkt,
         kvoter = kvoter,
-        aktivitetsplikt11_7Grunnlag = aktivitetsplikt11_7Grunnlag,
         institusjonsopphold = institusjonsopphold,
         arbeidsevneGrunnlag = arbeidsevneGrunnlag,
         meldepliktGrunnlag = meldepliktGrunnlag,
         overstyringMeldepliktGrunnlag = overstyringMeldepliktGrunnlag,
         meldeperioder = meldeperioder,
         vedtaksdatoFørstegangsbehandling = vedtaksdatoFørstegangsbehandling,
-        oppholdskravGrunnlag = oppholdskravGrunnlag,
     )
 }
 

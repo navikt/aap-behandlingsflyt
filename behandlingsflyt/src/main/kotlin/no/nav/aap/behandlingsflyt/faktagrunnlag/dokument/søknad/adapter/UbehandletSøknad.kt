@@ -8,7 +8,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fød
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.ErStudentStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.SkalGjenopptaStudieStatus
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KommeTilbake
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AndreUtbetalingerDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManueltOppgittBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Søknad
@@ -25,14 +24,12 @@ data class UbehandletSøknad(
     val studentData: StudentData?,
     val harYrkesskade: Boolean,
     val oppgitteBarn: OppgitteBarn?,
-    val utenlandsOppholdData: UtenlandsOppholdData?,
-    val andreUtbetalinger: AndreUtbetalingerDto?
+    val utenlandsOppholdData: UtenlandsOppholdData?
 ) {
     companion object {
         fun fraKontrakt(søknad: Søknad, mottattDato: LocalDate, journalPostId: JournalpostId): UbehandletSøknad {
             return when (søknad) {
                 is SøknadV0 -> UbehandletSøknad(
-                    andreUtbetalinger = søknad.andreUtbetalinger,
                     journalpostId = journalPostId,
                     periode = Periode(mottattDato, mottattDato),
                     studentData = if (søknad.student == null) null else søknad.student?.let {

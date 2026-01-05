@@ -44,12 +44,12 @@ class ManglendeInntektGrunnlagService(
 
     fun mapHistoriskeManuelleVurderinger(behandlingsreferanse: BehandlingReferanse): List<ManuellInntektGrunnlagVurdering> {
         val behandling = behandlingRepository.hent(behandlingsreferanse.referanse.let(::BehandlingReferanse))
-
         val historiskeVurderinger =
             manuellInntektGrunnlagRepository.hentHistoriskeVurderinger(behandling.sakId, behandling.id)
 
-        val mappedHistoriskeVurderinger = historiskeVurderinger.map { historiskManuellInntektSet ->
-            historiskManuellInntektSet
+        val mappedHistoriskeVurderinger = historiskeVurderinger
+            .sortedByDescending { it.first().opprettet }
+            .map { historiskManuellInntektSet ->
 
             val årsVurderinger = historiskManuellInntektSet.map { historiskManuellInntekt ->
                 ÅrData(
@@ -69,6 +69,7 @@ class ManglendeInntektGrunnlagService(
                 årsVurderinger = årsVurderinger
             )
         }
+
         return mappedHistoriskeVurderinger
     }
 }

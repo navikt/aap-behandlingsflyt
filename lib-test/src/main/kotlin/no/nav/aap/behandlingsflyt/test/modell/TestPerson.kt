@@ -26,14 +26,13 @@ fun genererIdent(fødselsdato: LocalDate): Ident {
 }
 
 fun defaultInntekt(): List<InntektPerÅr> {
-    return (1..10).map { InntektPerÅr(Year.now().minusYears(it.toLong()), Beløp("400000.0")) }
+    return (0..10).map { InntektPerÅr(Year.now().minusYears(it.toLong()), Beløp("400000.0")) }
 }
 
 class TestPerson(
     val fødselsdato: Fødselsdato = Fødselsdato(LocalDate.now().minusYears(19)),
     val identer: Set<Ident> = setOf(genererIdent(fødselsdato.toLocalDate())),
     val dødsdato: Dødsdato? = null,
-
     var barn: List<TestPerson> = emptyList(),
     val navn: PersonNavn = FiktivtNavnGenerator.genererNavn(),
     val yrkesskade: List<TestYrkesskade> = emptyList(),
@@ -49,7 +48,7 @@ class TestPerson(
     val statsborgerskap: List<PdlStatsborgerskap> = listOf(
         PdlStatsborgerskap(
             "NOR",
-            LocalDate.now().minusYears(5),
+            LocalDate.now().minusYears(6),
             null
         )
     ),
@@ -100,4 +99,11 @@ class TestPerson(
         this.institusjonsopphold = opphold
         return this
     }
+
+    fun medInntekter(inntekter: List<InntektPerÅr>): TestPerson {
+        this.inntekter.clear()
+        this.inntekter.addAll(inntekter)
+        return this
+    }
+
 }
