@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.ÅrsakTilRetur
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.flate.TrekkKlageVurderingDto
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.flate.TrekkKlageÅrsakDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Hjemmel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.BehandlendeEnhetLøsningDto
@@ -74,7 +75,7 @@ import java.time.LocalDateTime
 import java.util.*
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
 
-class KlageFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
+class KlageFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
     @Test
     fun `Teste Klageflyt - Omgjøring av 22-13 og revurdering genereres `() {
         val periode = Periode(LocalDate.now().minusMonths(3), LocalDate.now().plusYears(3))
@@ -343,16 +344,15 @@ class KlageFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 assertThat(this.behandling.referanse).isNotEqualTo(avslåttFørstegang.referanse)
                 assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Klage)
 
-                dataSource.transaction { connection ->
-                    val mottattDokumentRepository = MottattDokumentRepositoryImpl(connection)
-                    val klageDokumenter =
-                        mottattDokumentRepository.hentDokumenterAvType(klagebehandling.id, InnsendingType.KLAGE)
-                    assertThat(klageDokumenter).hasSize(1)
-                    assertThat(klageDokumenter.first().strukturertDokument).isNotNull
-                    assertThat(klageDokumenter.first().strukturerteData<KlageV0>()?.data?.kravMottatt).isEqualTo(
-                        kravMottatt
-                    )
-                }
+                val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
+                val klageDokumenter =
+                    mottattDokumentRepository.hentDokumenterAvType(klagebehandling.id, InnsendingType.KLAGE)
+                assertThat(klageDokumenter).hasSize(1)
+                assertThat(klageDokumenter.first().strukturertDokument).isNotNull
+                assertThat(klageDokumenter.first().strukturerteData<KlageV0>()?.data?.kravMottatt).isEqualTo(
+                    kravMottatt
+                )
+
 
                 // PåklagetBehandlingSteg
                 assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)

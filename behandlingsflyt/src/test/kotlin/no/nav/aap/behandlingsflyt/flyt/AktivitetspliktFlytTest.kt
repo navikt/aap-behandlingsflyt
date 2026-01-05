@@ -18,7 +18,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Grunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall as VilkårsresultatUtfall
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -48,10 +47,10 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.ZoneOffset
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall as VilkårsresultatUtfall
 
 class AktivitetspliktFlytTest :
     AbstraktFlytOrkestratorTest(FakeUnleash::class) {
@@ -215,12 +214,12 @@ class AktivitetspliktFlytTest :
 
         underveisÅpenTidslinje.assertTidslinje(
             Segment(Periode(sak.rettighetsperiode.fom, bruddFom.minusDays(1))) {
-                assertEquals(VilkårsresultatUtfall.OPPFYLT, it.utfall)
-                assertEquals(null, it.avslagsårsak)
+                assertThat(it.utfall).isEqualTo(VilkårsresultatUtfall.OPPFYLT)
+                assertThat(it.avslagsårsak).isNull()
             },
             Segment(Periode(bruddFom, underveisÅpenTidslinje.helePerioden().tom)) {
-                assertEquals(VilkårsresultatUtfall.IKKE_OPPFYLT, it.utfall)
-                assertEquals(UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT, it.avslagsårsak)
+                assertThat(it.utfall).isEqualTo(VilkårsresultatUtfall.IKKE_OPPFYLT)
+                assertThat(it.avslagsårsak).isEqualTo(UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT)
             }
         )
     }
@@ -330,12 +329,12 @@ class AktivitetspliktFlytTest :
         assertThat(underveisTidslinjeEtterEffektuering).isNotEqualTo(underveisTidslinjeFørEffekuering)
         underveisTidslinjeEtterEffektuering.assertTidslinje(
             Segment(Periode(sak.rettighetsperiode.fom, bruddFom.minusDays(1))) {
-                assertEquals(VilkårsresultatUtfall.OPPFYLT, it.first)
-                assertEquals(null, it.second)
+                assertThat(it.first).isEqualTo(VilkårsresultatUtfall.OPPFYLT)
+                assertThat(it.second).isNull()
             },
             Segment(Periode(bruddFom, underveisTidslinjeEtterEffektuering.helePerioden().tom)) {
-                assertEquals(VilkårsresultatUtfall.IKKE_OPPFYLT, it.first)
-                assertEquals(UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT, it.second)
+                assertThat(it.first).isEqualTo(VilkårsresultatUtfall.IKKE_OPPFYLT)
+                assertThat(it.second).isEqualTo(UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT)
             }
         )
     }
@@ -452,7 +451,7 @@ class AktivitetspliktFlytTest :
                 assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
             }
 
-        var effektueringsbehandling = dataSource.transaction { connection ->
+        val effektueringsbehandling = dataSource.transaction { connection ->
             BehandlingRepositoryImpl(connection).finnSisteOpprettedeBehandlingFor(
                 sak.id,
                 listOf(TypeBehandling.Revurdering)
