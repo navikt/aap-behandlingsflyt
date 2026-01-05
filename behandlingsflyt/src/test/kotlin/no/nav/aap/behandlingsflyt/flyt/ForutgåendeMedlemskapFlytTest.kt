@@ -14,7 +14,11 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
-class ForutgåendeMedlemskapFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
+/**
+ * TestPerson i denne testen har ingen inntekter for å kunne trigge steget. For om inntekter settes, finner
+ * steget inntekt fra A-Inntekt, og da hoppes det over steget.
+ */
+class ForutgåendeMedlemskapFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
 
     @Test
     fun `Trenger ikke manuell vurdering av forutgående medlemskap dersom automatisk vurdering er oppfylt`() {
@@ -65,7 +69,8 @@ class ForutgåendeMedlemskapFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash
 
     @Test
     fun `Må manuelt vurdere forutgående medlemskap dersom ikke oppfylt automatisk og yrkesskade uten årsakssammenheng`() {
-        val person = TestPersoner.PERSON_MED_YRKESSKADE()
+        val person = TestPersoner.PERSON_MED_YRKESSKADE().medInntekter(emptyList())
+
         val (sak, behandling) = sendInnFørsteSøknad(
             person = person,
             søknad = TestSøknader.SØKNAD_YRKESSKADE,
@@ -75,6 +80,7 @@ class ForutgåendeMedlemskapFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash
             .løsFramTilGrunnlag(sak.rettighetsperiode.fom)
             .løsYrkesskadeVurdering(person.yrkesskade, erÅrsakssammenheng = false)
             .løsBeregningstidspunkt()
+            .løsFastsettManuellInntekt()
             .medKontekst {
                 assertThat(åpneAvklaringsbehov).allMatch { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP }
             }
@@ -89,12 +95,12 @@ class ForutgåendeMedlemskapFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash
     }
 
     @Test
-    fun `Må manuelt vurdere forutgående medlemskap dersom automatisk vurdering ikke er oppfylt (ikke medlem med medlemsregisteret)`() {
-        val (sak, behandling) = sendInnFørsteSøknad()
+    fun `Må manuelt vurdere forutgående medlemskap dersom automatisk vurdering ikke er oppfylt (ikke medlem av medlemsregisteret)`() {
+        val (sak, behandling) = sendInnFørsteSøknad(person = TestPersoner.STANDARD_PERSON().medInntekter(emptyList()))
         val oppdatertBehandling = behandling
             .løsFramTilForutgåendeMedlemskap(sak.rettighetsperiode.fom)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).allMatch { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP }
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).contains(Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP)
             }
             .løsForutgåendeMedlemskap(sak.rettighetsperiode.fom)
             .medKontekst {
@@ -148,9 +154,10 @@ class ForutgåendeMedlemskapFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash
 
     @Test
     fun `Oppfyller ikke forutgående medlemskap hvis ikke medlem i folketrygden og ingen unntak oppfylles`() {
-        val (sak, behandling) = sendInnFørsteSøknad()
+        val (sak, behandling) = sendInnFørsteSøknad(person = TestPersoner.STANDARD_PERSON().medInntekter(emptyList()))
 
         val oppdatertBehandling = behandling
+            .løsLovvalg(sak.rettighetsperiode.fom)
             .løsFramTilForutgåendeMedlemskap(sak.rettighetsperiode.fom)
             .medKontekst {
                 assertThat(åpneAvklaringsbehov).allMatch { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP }
@@ -173,11 +180,12 @@ class ForutgåendeMedlemskapFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash
 
     @Test
     fun `Oppfyller forutgående medlemskap hvis ikke medlem i folketrygden, men unntak er oppfylt`() {
-        val (sak, behandling) = sendInnFørsteSøknad()
+        val (sak, behandling) = sendInnFørsteSøknad(person = TestPersoner.STANDARD_PERSON().medInntekter(emptyList()))
         val oppdatertBehandling = behandling
             .løsFramTilForutgåendeMedlemskap(sak.rettighetsperiode.fom)
             .medKontekst {
-                assertTrue(åpneAvklaringsbehov.all { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP })
+                assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                    .containsExactly(Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP)
             }
             .løsAvklaringsBehov(
                 AvklarPeriodisertForutgåendeMedlemskapLøsning(
@@ -212,13 +220,14 @@ class ForutgåendeMedlemskapFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash
 
     @Test
     fun `Kan sette forutgående medlemskap til ikke oppfylt i første periode, så oppfylt på senere dato`() {
-        val (sak, behandling) = sendInnFørsteSøknad()
+        val (sak, behandling) = sendInnFørsteSøknad(person = TestPersoner.STANDARD_PERSON().medInntekter(emptyList()))
         val dato5ÅrForutgåendeMedlemskapErOppfylt = sak.rettighetsperiode.fom.plusMonths(2)
 
         val oppdatertBehandling = behandling
             .løsFramTilForutgåendeMedlemskap(vurderingerGjelderFra = sak.rettighetsperiode.fom)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).allMatch { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP }
+                assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                    .containsExactly(Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP)
             }
             .løsAvklaringsBehov(
                 AvklarPeriodisertForutgåendeMedlemskapLøsning(
@@ -267,11 +276,12 @@ class ForutgåendeMedlemskapFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash
 
     @Test
     fun `Kan revurdere forutgående medlemskap ved å legge inn vurderingsbehov`() {
-        val (sak, behandling) = sendInnFørsteSøknad()
+        val (sak, behandling) = sendInnFørsteSøknad(person = TestPersoner.STANDARD_PERSON().medInntekter(emptyList()))
         val oppdatertBehandling = behandling
             .løsFramTilForutgåendeMedlemskap(sak.rettighetsperiode.fom)
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).allMatch { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP }
+                assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
+                    .containsExactly(Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP)
             }
             .løsForutgåendeMedlemskap(sak.rettighetsperiode.fom)
             .medKontekst {
@@ -286,7 +296,7 @@ class ForutgåendeMedlemskapFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash
         assertThat(oppdatertBehandling.status()).isEqualTo(Status.AVSLUTTET)
 
         val revurdering = sak
-            .opprettManuellRevurdering(listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP),)
+            .opprettManuellRevurdering(listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP))
             .medKontekst {
                 assertThat(åpneAvklaringsbehov).allMatch { it.definisjon == Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP }
             }

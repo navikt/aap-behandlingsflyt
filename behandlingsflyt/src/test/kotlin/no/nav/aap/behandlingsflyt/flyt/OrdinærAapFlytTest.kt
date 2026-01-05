@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykd
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykepengerErstatningLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
@@ -21,18 +22,16 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class OrdinærAapFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
+class OrdinærAapFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
     @Test
     fun `happy case førstegangsbehandling + revurder førstegangssøknad, nei på viss varighet, nei på 11-13 - avslag`() {
         val sak = happyCaseFørstegangsbehandling()
@@ -64,9 +63,8 @@ class OrdinærAapFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
             .medKontekst {
-                val underveisGrunnlag = dataSource.transaction { connection ->
-                    UnderveisRepositoryImpl(connection).hent(this.behandling.id)
-                }
+                val underveisGrunnlag = repositoryProvider.provide<UnderveisRepository>()
+                    .hent(this.behandling.id)
 
                 assertThat(underveisGrunnlag.perioder).isNotEmpty
                 assertThat(underveisGrunnlag.perioder).extracting<RettighetsType>(Underveisperiode::rettighetsType)
@@ -108,18 +106,17 @@ class OrdinærAapFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 )
             ),
         )
-        //behandling = løsOvergangUføre(behandling)
-        behandling = løsSykdomsvurderingBrev(behandling)
-
-        behandling = kvalitetssikreOk(behandling)
-
-        // Saken står til To-trinnskontroll hos beslutter
-        var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling)
-        assertThat(åpneAvklaringsbehov).anySatisfy { assertTrue(it.definisjon == Definisjon.FATTE_VEDTAK) }
-        assertThat(behandling.status()).isEqualTo(Status.UTREDES)
-
-        behandling = behandling.fattVedtak()
-        assertThat(behandling.status()).isEqualTo(Status.IVERKSETTES)
+            .løsSykdomsvurderingBrev()
+            .kvalitetssikreOk()
+            .medKontekst {
+                // Saken står til To-trinnskontroll hos beslutter
+                assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
+                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+            }
+            .fattVedtak()
+            .medKontekst {
+                assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
+            }
 
         val vedtak = hentVedtak(behandling.id)
         assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
@@ -142,8 +139,9 @@ class OrdinærAapFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             .allMatch { vilkårsperiode -> !vilkårsperiode.erOppfylt() }
 
         // Saken er avsluttet, så det skal ikke være flere åpne avklaringsbehov
-        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
-        assertThat(åpneAvklaringsbehov).isEmpty()
+        behandling.medKontekst {
+            assertThat(åpneAvklaringsbehov).isEmpty()
+        }
     }
 
     @Test
@@ -165,7 +163,6 @@ class OrdinærAapFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
             .løsBeregningstidspunkt()
-            .løsForutgåendeMedlemskap(sak.rettighetsperiode.fom)
             .løsOppholdskrav(sak.rettighetsperiode.fom)
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
