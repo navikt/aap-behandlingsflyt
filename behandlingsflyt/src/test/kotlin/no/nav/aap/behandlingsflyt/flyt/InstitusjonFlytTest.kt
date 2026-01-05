@@ -28,7 +28,7 @@ class InstitusjonFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             )
         )
 
-        val (sak, behandling) = sendInnFørsteSøknad(
+        val (_, behandling) = sendInnFørsteSøknad(
             person = person,
             mottattTidspunkt = fom.atStartOfDay(),
             periode = periode,
@@ -46,9 +46,6 @@ class InstitusjonFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
             .løsBeregningstidspunkt()
-            .løsForutgåendeMedlemskap(
-                gjelderFra = LocalDate.now()
-            )
             .løsOppholdskrav(fom)
             .medKontekst {
                 assertThat(åpneAvklaringsbehov.map { it.definisjon }).contains(Definisjon.AVKLAR_HELSEINSTITUSJON)

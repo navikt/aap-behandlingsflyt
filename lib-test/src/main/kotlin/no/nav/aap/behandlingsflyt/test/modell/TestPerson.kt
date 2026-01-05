@@ -26,7 +26,7 @@ fun genererIdent(fødselsdato: LocalDate): Ident {
 }
 
 fun defaultInntekt(): List<InntektPerÅr> {
-    return (1..10).map { InntektPerÅr(Year.now().minusYears(it.toLong()), Beløp("400000.0")) }
+    return (0..10).map { InntektPerÅr(Year.now().minusYears(it.toLong()), Beløp("400000.0")) }
 }
 
 class TestPerson(
@@ -48,7 +48,7 @@ class TestPerson(
     val statsborgerskap: List<PdlStatsborgerskap> = listOf(
         PdlStatsborgerskap(
             "NOR",
-            LocalDate.now().minusYears(5),
+            LocalDate.now().minusYears(6),
             null
         )
     ),
@@ -99,4 +99,11 @@ class TestPerson(
         this.institusjonsopphold = opphold
         return this
     }
+
+    fun medInntekter(inntekter: List<InntektPerÅr>): TestPerson {
+        this.inntekter.clear()
+        this.inntekter.addAll(inntekter)
+        return this
+    }
+
 }

@@ -113,6 +113,7 @@ class AvklaringsbehovOrkestrator(
         avklaringsbehovLøsning: AvklaringsbehovLøsning,
         bruker: Bruker
     ) {
+        log.info("Mottok løsning for avklaringsbehov ${avklaringsbehovLøsning.definisjon()}.")
         val løsningsResultat =
             avklaringsbehovLøsning.løs(repositoryProvider, AvklaringsbehovKontekst(bruker, kontekst), gatewayProvider)
 

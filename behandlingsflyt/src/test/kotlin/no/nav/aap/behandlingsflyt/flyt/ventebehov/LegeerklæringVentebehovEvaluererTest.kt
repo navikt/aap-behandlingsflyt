@@ -25,8 +25,8 @@ import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.Kanal
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeAll
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -74,7 +74,7 @@ internal class LegeerklæringVentebehovEvaluererTest {
             )
 
             val erLøst = evaluerer.ansesSomLøst(behandling.id, avklaringsbehov, behandling.sakId)
-            assertEquals(true, erLøst)
+            assertThat(erLøst).isTrue()
         }
     }
 
@@ -100,7 +100,7 @@ internal class LegeerklæringVentebehovEvaluererTest {
             )
 
             val erLøst = evaluerer.ansesSomLøst(behandling.id, avklaringsbehov, behandling.sakId)
-            assertEquals(true, erLøst)
+            assertThat(erLøst).isTrue()
         }
     }
 
@@ -126,7 +126,7 @@ internal class LegeerklæringVentebehovEvaluererTest {
             )
 
             val erLøst = evaluerer.ansesSomLøst(behandling.id, avklaringsbehov, behandling.sakId)
-            assertEquals(true, erLøst)
+            assertThat(erLøst).isTrue()
         }
     }
 
@@ -151,7 +151,7 @@ internal class LegeerklæringVentebehovEvaluererTest {
 
             val avklaringsbehov = Avklaringsbehov(1L, Definisjon.BESTILL_LEGEERKLÆRING, mutableListOf(), StegType.AVKLAR_SYKDOM, false)
             val erLøst = evaluerer.ansesSomLøst(behandling.id, avklaringsbehov, behandling.sakId)
-            assertEquals(false, erLøst)
+            assertThat(erLøst).isFalse()
         }
     }
 
@@ -177,7 +177,7 @@ internal class LegeerklæringVentebehovEvaluererTest {
             )
 
             val erIkkeLøst = evaluerer.ansesSomLøst(behandling.id, avklaringsbehov, behandling.sakId)
-            assertEquals(false, erIkkeLøst)
+            assertThat(erIkkeLøst).isFalse()
         }
     }
 

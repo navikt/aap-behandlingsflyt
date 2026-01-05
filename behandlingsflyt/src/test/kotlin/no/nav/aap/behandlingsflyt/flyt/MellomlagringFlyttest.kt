@@ -2,12 +2,11 @@ package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.mellomlagring.MellomlagretVurdering
+import no.nav.aap.behandlingsflyt.behandling.mellomlagring.MellomlagretVurderingRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
-import no.nav.aap.behandlingsflyt.repository.behandling.mellomlagring.MellomlagretVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
-import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Tag
@@ -48,7 +47,6 @@ class MellomlagringFlyttest() : AbstraktFlytOrkestratorTest(FakeUnleash::class) 
             .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
             .løsBeregningstidspunkt()
-            .løsForutgåendeMedlemskap(periode.fom)
             .løsOppholdskrav(periode.fom)
             .medKontekst {
                 val mellomlagretVerdi = hentMellomlagretVerdi()
@@ -67,11 +65,9 @@ class MellomlagringFlyttest() : AbstraktFlytOrkestratorTest(FakeUnleash::class) 
     }
 
     private fun BehandlingInfo.hentMellomlagretVerdi(): MellomlagretVurdering? {
-        val mellomlagretVerdi = dataSource.transaction { connection ->
-            MellomlagretVurderingRepositoryImpl(connection)
+        val mellomlagretVerdi =
+            repositoryProvider.provide<MellomlagretVurderingRepository>()
                 .hentHvisEksisterer(behandling.id, AvklaringsbehovKode.`5003`)
-        }
         return mellomlagretVerdi
     }
-
 }
