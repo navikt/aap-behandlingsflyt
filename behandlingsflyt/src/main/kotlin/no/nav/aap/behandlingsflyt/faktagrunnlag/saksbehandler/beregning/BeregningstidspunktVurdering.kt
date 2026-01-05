@@ -10,7 +10,7 @@ import java.time.LocalDateTime
 data class BeregningstidspunktVurdering(
     @JsonIgnore val id: Long? = null,
     val begrunnelse: String,
-    val nedsattArbeidsevneDato: LocalDate,
+    val nedsattArbeidsevneEllerStudieevneDato: LocalDate,
     val ytterligereNedsattBegrunnelse: String?,
     val ytterligereNedsattArbeidsevneDato: LocalDate?,
     val vurdertAv: String,

@@ -113,7 +113,7 @@ class UføreInformasjonskrav(
         sak: Sak
     ): LocalDate {
         val fraDato = beregningVurdering?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
-            ?: beregningVurdering?.tidspunktVurdering?.nedsattArbeidsevneDato
+            ?: beregningVurdering?.tidspunktVurdering?.nedsattArbeidsevneEllerStudieevneDato
             ?: sak.rettighetsperiode.fom
         return fraDato
     }

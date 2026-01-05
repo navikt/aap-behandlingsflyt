@@ -7,7 +7,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.tilTidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
@@ -166,11 +165,11 @@ class Inntektsbehov(private val beregningInput: BeregningInput) {
             return datoerForInnhenting.flatMap(::treÅrForutFor).toSortedSet()
         }
 
-        fun utledAlleRelevanteÅr(beregningGrunnlag: BeregningGrunnlag?, studentGrunnlag: StudentGrunnlag?): Set<Year> {
-            val nedsettelsesDato =
-                utledNedsettelsesdato(beregningGrunnlag?.tidspunktVurdering, studentGrunnlag?.vurderinger?.single())
+        fun utledAlleRelevanteÅr(beregningGrunnlag: BeregningGrunnlag?): Set<Year> {
+            val nedsettelsesDato = beregningGrunnlag?.tidspunktVurdering?.nedsattArbeidsevneEllerStudieevneDato
+            requireNotNull(nedsettelsesDato) { "Nedsettelsesdato kan ikke være null ved utledning av relevante år." }
             val ytterligereNedsattArbeidsevneDato =
-                beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato
+                beregningGrunnlag.tidspunktVurdering.ytterligereNedsattArbeidsevneDato
 
             return utledAlleRelevanteÅr(nedsettelsesDato, ytterligereNedsattArbeidsevneDato)
         }
@@ -184,7 +183,7 @@ class Inntektsbehov(private val beregningInput: BeregningInput) {
             studentVurdering: StudentVurdering?
         ): LocalDate {
             val nedsettelsesdatoer = setOfNotNull(
-                beregningVurdering?.nedsattArbeidsevneDato,
+                beregningVurdering?.nedsattArbeidsevneEllerStudieevneDato,
                 studentVurdering?.avbruttStudieDato
             )
 

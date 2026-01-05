@@ -143,7 +143,7 @@ private fun BeregningstidspunktVurdering.tilResponse(ansattInfoService: AnsattIn
     val navnOgEnhet = ansattInfoService.hentAnsattNavnOgEnhet(vurdertAv)
     return BeregningstidspunktVurderingResponse(
         begrunnelse = begrunnelse,
-        nedsattArbeidsevneDato = nedsattArbeidsevneDato,
+        nedsattArbeidsevneDato = nedsattArbeidsevneEllerStudieevneDato,
         ytterligereNedsattBegrunnelse = ytterligereNedsattBegrunnelse,
         ytterligereNedsattArbeidsevneDato = ytterligereNedsattArbeidsevneDato,
         vurdertAv = VurdertAvResponse(

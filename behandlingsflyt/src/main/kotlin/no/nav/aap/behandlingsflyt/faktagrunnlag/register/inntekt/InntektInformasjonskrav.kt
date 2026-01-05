@@ -144,12 +144,10 @@ class InntektInformasjonskrav(
     }
 
     private fun kanUtledeRelevanteÅr(kontekst: FlytKontekstMedPerioder): Boolean {
-        val studentGrunnlag = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
         val beregningGrunnlag = beregningVurderingRepository.hentHvisEksisterer(kontekst.behandlingId)
 
-        val nedsattArbeidsevneDato = beregningGrunnlag?.tidspunktVurdering?.nedsattArbeidsevneDato
-        val avbruttStudieDato = studentGrunnlag?.vurderinger?.single()?.avbruttStudieDato
-        return nedsattArbeidsevneDato != null || avbruttStudieDato != null
+        val nedsattArbeidsevneDato = beregningGrunnlag?.tidspunktVurdering?.nedsattArbeidsevneEllerStudieevneDato
+        return nedsattArbeidsevneDato != null
     }
 
     private fun relevanteÅrErEndret(kontekst: FlytKontekstMedPerioder): Boolean {
@@ -165,12 +163,10 @@ class InntektInformasjonskrav(
     }
 
     private fun utledAlleRelevanteÅr(behandlingId: BehandlingId): Pair<Set<Year>, Set<Year>> {
-        val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId)
         val beregningGrunnlag = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
-
         val relevanteUføreInntektÅr = Inntektsbehov.utledRelevanteYtterligereNedsattÅr(beregningGrunnlag)
 
-        return Pair(Inntektsbehov.utledAlleRelevanteÅr(beregningGrunnlag, studentGrunnlag), relevanteUføreInntektÅr)
+        return Pair(Inntektsbehov.utledAlleRelevanteÅr(beregningGrunnlag), relevanteUføreInntektÅr)
     }
 
     companion object : Informasjonskravkonstruktør {

@@ -256,7 +256,7 @@ class BrevUtlederService(
         beregningstidspunktVurdering: BeregningstidspunktVurdering?,
         beregningsgrunnlag: Beløp?,
     ): GrunnlagBeregning {
-        val beregningstidspunkt = beregningstidspunktVurdering?.nedsattArbeidsevneDato
+        val beregningstidspunkt = beregningstidspunktVurdering?.nedsattArbeidsevneEllerStudieevneDato
         val inntekter = grunnlag.inntekter().grunnlagInntektTilInntektPerÅr()
         return GrunnlagBeregning(
             beregningstidspunkt = beregningstidspunkt,
@@ -347,7 +347,7 @@ class BrevUtlederService(
         beregningstidspunktVurdering: BeregningstidspunktVurdering?
     ): LocalDate? {
         return when (grunnlag.type()) {
-            GrunnlagUføre.Type.STANDARD -> beregningstidspunktVurdering?.nedsattArbeidsevneDato
+            GrunnlagUføre.Type.STANDARD -> beregningstidspunktVurdering?.nedsattArbeidsevneEllerStudieevneDato
             GrunnlagUføre.Type.YTTERLIGERE_NEDSATT -> beregningstidspunktVurdering?.ytterligereNedsattArbeidsevneDato
         }
     }
