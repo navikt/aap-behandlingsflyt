@@ -854,68 +854,64 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             mottattTidspunkt = LocalDateTime.now().minusMonths(3),
             klage = KlageV0(kravMottatt = kravMottatt),
         )
-        assertThat(klagebehandling.referanse).isNotEqualTo(avslåttFørstegang.referanse)
-        assertThat(klagebehandling.typeBehandling()).isEqualTo(TypeBehandling.Klage)
+            .medKontekst {
+                assertThat(this.behandling.referanse).isNotEqualTo(avslåttFørstegang.referanse)
+                assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Klage)
 
-        dataSource.transaction { connection ->
-            val mottattDokumentRepository = MottattDokumentRepositoryImpl(connection)
-            val klageDokumenter =
-                mottattDokumentRepository.hentDokumenterAvType(klagebehandling.sakId, InnsendingType.KLAGE)
-            assertThat(klageDokumenter).hasSize(1)
-            assertThat(klageDokumenter.first().strukturertDokument).isNotNull
-            assertThat(klageDokumenter.first().strukturerteData<KlageV0>()?.data?.kravMottatt).isEqualTo(kravMottatt)
-        }
+                val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
+                val klageDokumenter =
+                    mottattDokumentRepository.hentDokumenterAvType(this.behandling.sakId, InnsendingType.KLAGE)
+                assertThat(klageDokumenter).hasSize(1)
+                assertThat(klageDokumenter.first().strukturertDokument).isNotNull
+                assertThat(
+                    klageDokumenter.first().strukturerteData<KlageV0>()?.data?.kravMottatt
+                ).isEqualTo(kravMottatt)
 
-        var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
-        assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
-            .isEqualTo(Definisjon.FASTSETT_PÅKLAGET_BEHANDLING)
+                assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+                    .isEqualTo(Definisjon.FASTSETT_PÅKLAGET_BEHANDLING)
 
-        løsAvklaringsBehov(
-            klagebehandling,
-            avklaringsBehovLøsning = FastsettPåklagetBehandlingLøsning(
-                påklagetBehandlingVurdering = PåklagetBehandlingVurderingLøsningDto(
-                    påklagetVedtakType = PåklagetVedtakType.KELVIN_BEHANDLING,
-                    påklagetBehandling = avslåttFørstegang.referanse.referanse,
+            }
+            .løsAvklaringsBehov(
+                FastsettPåklagetBehandlingLøsning(
+                    påklagetBehandlingVurdering = PåklagetBehandlingVurderingLøsningDto(
+                        påklagetVedtakType = PåklagetVedtakType.KELVIN_BEHANDLING,
+                        påklagetBehandling = avslåttFørstegang.referanse.referanse,
+                    )
                 )
             )
-        )
-
-        // FullmektigSteg
-        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
-        assertThat(åpneAvklaringsbehov).hasSize(1)
-        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.FASTSETT_FULLMEKTIG)
-
-        løsAvklaringsBehov(
-            klagebehandling,
-            avklaringsBehovLøsning = FastsettFullmektigLøsning(
-                fullmektigVurdering = FullmektigLøsningDto(
-                    harFullmektig = false
+            .medKontekst {
+                // FullmektigSteg
+                assertThat(åpneAvklaringsbehov).hasSize(1)
+                assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.FASTSETT_FULLMEKTIG)
+            }
+            .løsAvklaringsBehov(
+                avklaringsBehovLøsning = FastsettFullmektigLøsning(
+                    fullmektigVurdering = FullmektigLøsningDto(
+                        harFullmektig = false
+                    )
                 )
             )
-        )
-
-        // FormkravSteg
-        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
-        assertThat(åpneAvklaringsbehov).hasSize(1)
-        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.VURDER_FORMKRAV)
-
-        løsAvklaringsBehov(
-            klagebehandling,
-            avklaringsBehovLøsning = VurderFormkravLøsning(
-                formkravVurdering = FormkravVurderingLøsningDto(
-                    begrunnelse = "Begrunnelse",
-                    erBrukerPart = false,
-                    erFristOverholdt = true,
-                    likevelBehandles = false,
-                    erKonkret = true,
-                    erSignert = true
+            .medKontekst {
+                // FormkravSteg
+                assertThat(åpneAvklaringsbehov).hasSize(1)
+                assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.VURDER_FORMKRAV)
+            }
+            .løsAvklaringsBehov(
+                avklaringsBehovLøsning = VurderFormkravLøsning(
+                    formkravVurdering = FormkravVurderingLøsningDto(
+                        begrunnelse = "Begrunnelse",
+                        erBrukerPart = false,
+                        erFristOverholdt = true,
+                        likevelBehandles = false,
+                        erKonkret = true,
+                        erSignert = true
+                    )
                 )
             )
-        )
-
-        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
-        assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
-            .isEqualTo(Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV)
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+                    .isEqualTo(Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV)
+            }
 
         val formkravGrunnlag = dataSource.transaction {
             val formkravRepository = FormkravRepositoryImpl(it)
@@ -932,117 +928,108 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 behovstype = Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV.kode,
             )
         )
-
-        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
-        assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
-            .isEqualTo(Definisjon.VENTE_PÅ_FRIST_FORHÅNDSVARSEL_KLAGE_FORMKRAV)
-
-        // Ta av vent manuelt
-        løsAvklaringsBehov(
-            klagebehandling,
-            avklaringsBehovLøsning = VentePåFristForhåndsvarselKlageFormkravLøsning(),
-        )
-
-        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
-        assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
-            .isEqualTo(Definisjon.VURDER_FORMKRAV)
-
-        // Går manuelt tilbake til formkrav fordi nye opplysninger gir oppfylt
-        løsAvklaringsBehov(
-            klagebehandling,
-            avklaringsBehovLøsning = VurderFormkravLøsning(
-                formkravVurdering = FormkravVurderingLøsningDto(
-                    begrunnelse = "Ny begrunnelse",
-                    erBrukerPart = true,
-                    erFristOverholdt = true,
-                    likevelBehandles = true,
-                    erKonkret = true,
-                    erSignert = true
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+                    .isEqualTo(Definisjon.VENTE_PÅ_FRIST_FORHÅNDSVARSEL_KLAGE_FORMKRAV)
+            }
+            // Ta av vent manuelt
+            .løsAvklaringsBehov(
+                avklaringsBehovLøsning = VentePåFristForhåndsvarselKlageFormkravLøsning(),
+            )
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+                    .isEqualTo(Definisjon.VURDER_FORMKRAV)
+            }
+            // Går manuelt tilbake til formkrav fordi nye opplysninger gir oppfylt
+            .løsAvklaringsBehov(
+                avklaringsBehovLøsning = VurderFormkravLøsning(
+                    formkravVurdering = FormkravVurderingLøsningDto(
+                        begrunnelse = "Ny begrunnelse",
+                        erBrukerPart = true,
+                        erFristOverholdt = true,
+                        likevelBehandles = true,
+                        erKonkret = true,
+                        erSignert = true
+                    )
+                )
+            ) // Sier at formkrav nå er oppfyllt
+            .løsAvklaringsBehov(
+                avklaringsBehovLøsning = VurderFormkravLøsning(
+                    formkravVurdering = FormkravVurderingLøsningDto(
+                        begrunnelse = "begrunnelse",
+                        erBrukerPart = true,
+                        erFristOverholdt = true,
+                        erSignert = true,
+                        erKonkret = true,
+                        likevelBehandles = null
+                    )
                 )
             )
-        )
-
-        // Sier at formkrav nå er oppfyllt
-        løsAvklaringsBehov(
-            klagebehandling,
-            avklaringsBehovLøsning = VurderFormkravLøsning(
-                formkravVurdering = FormkravVurderingLøsningDto(
-                    begrunnelse = "begrunnelse",
-                    erBrukerPart = true,
-                    erFristOverholdt = true,
-                    erSignert = true,
-                    erKonkret = true,
-                    likevelBehandles = null
+            // Går inn i normal flyt
+            // BehandlendeEnhetSteg
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+                    .isEqualTo(Definisjon.FASTSETT_BEHANDLENDE_ENHET)
+            }
+            .løsAvklaringsBehov(
+                avklaringsBehovLøsning = FastsettBehandlendeEnhetLøsning(
+                    behandlendeEnhetVurdering = BehandlendeEnhetLøsningDto(
+                        skalBehandlesAvNay = true,
+                        skalBehandlesAvKontor = false
+                    )
                 )
             )
-        )
+            .medKontekst {
+                // KlagebehandlingNaySteg
+                assertThat(åpneAvklaringsbehov).hasSize(1)
+                assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.VURDER_KLAGE_NAY)
 
-        // Går inn i normal flyt
-        // BehandlendeEnhetSteg
-        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
-        assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
-            .isEqualTo(Definisjon.FASTSETT_BEHANDLENDE_ENHET)
-
-        løsAvklaringsBehov(
-            klagebehandling,
-            avklaringsBehovLøsning = FastsettBehandlendeEnhetLøsning(
-                behandlendeEnhetVurdering = BehandlendeEnhetLøsningDto(
-                    skalBehandlesAvNay = true,
-                    skalBehandlesAvKontor = false
+            }
+            .løsAvklaringsBehov(
+                avklaringsBehovLøsning = VurderKlageNayLøsning(
+                    klagevurderingNay = KlagevurderingNayLøsningDto(
+                        begrunnelse = "Begrunnelse",
+                        notat = null,
+                        innstilling = KlageInnstilling.OMGJØR,
+                        vilkårSomOpprettholdes = emptyList(),
+                        vilkårSomOmgjøres = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5)
+                    )
                 )
             )
-        )
-
-        // KlagebehandlingNaySteg
-        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
-        assertThat(åpneAvklaringsbehov).hasSize(1)
-        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.VURDER_KLAGE_NAY)
-
-        løsAvklaringsBehov(
-            klagebehandling,
-            avklaringsBehovLøsning = VurderKlageNayLøsning(
-                klagevurderingNay = KlagevurderingNayLøsningDto(
-                    begrunnelse = "Begrunnelse",
-                    notat = null,
-                    innstilling = KlageInnstilling.OMGJØR,
-                    vilkårSomOpprettholdes = emptyList(),
-                    vilkårSomOmgjøres = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5)
-                )
+            // Beslutter
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).hasSize(1)
+                assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.FATTE_VEDTAK)
+            }
+            .løsAvklaringsBehov(
+                avklaringsBehovLøsning = FatteVedtakLøsning(
+                    vurderinger = listOf(
+                        TotrinnsVurdering(
+                            begrunnelse = "Tilbakesend formkrav",
+                            godkjent = false,
+                            definisjon = Definisjon.VURDER_FORMKRAV.kode,
+                            grunner = listOf(ÅrsakTilRetur(ÅrsakTilReturKode.ANNET, "Formkrav ikke oppfylt")),
+                        ),
+                        TotrinnsVurdering(
+                            begrunnelse = "Begrunneøse",
+                            godkjent = true,
+                            definisjon = Definisjon.VURDER_KLAGE_NAY.kode,
+                            grunner = emptyList(),
+                        ),
+                    )
+                ),
+                Bruker("BESLUTTER")
             )
-        )
-
-        // Beslutter
-        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
-        assertThat(åpneAvklaringsbehov).hasSize(1)
-        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.FATTE_VEDTAK)
-
-        løsAvklaringsBehov(
-            klagebehandling,
-            avklaringsBehovLøsning = FatteVedtakLøsning(
-                vurderinger = listOf(
-                    TotrinnsVurdering(
-                        begrunnelse = "Tilbakesend formkrav",
-                        godkjent = false,
-                        definisjon = Definisjon.VURDER_FORMKRAV.kode,
-                        grunner = listOf(ÅrsakTilRetur(ÅrsakTilReturKode.ANNET, "Formkrav ikke oppfylt")),
-                    ),
-                    TotrinnsVurdering(
-                        begrunnelse = "Begrunneøse",
-                        godkjent = true,
-                        definisjon = Definisjon.VURDER_KLAGE_NAY.kode,
-                        grunner = emptyList(),
-                    ),
-                )
-            ),
-            Bruker("BESLUTTER")
-        )
-
-        // Sjekk at avklaringsbehov er blitt gjenåpnet
-        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(klagebehandling.id)
-        assertThat(åpneAvklaringsbehov).hasSize(3)
-        assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.VURDER_FORMKRAV)
-        assertThat(åpneAvklaringsbehov.first().status()).isEqualTo(AvklaringsbehovStatus.SENDT_TILBAKE_FRA_BESLUTTER)
+            .medKontekst {
+                // Sjekk at avklaringsbehov er blitt gjenåpnet
+                assertThat(åpneAvklaringsbehov).hasSize(3)
+                assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.VURDER_FORMKRAV)
+                assertThat(
+                    åpneAvklaringsbehov.first().status()
+                ).isEqualTo(AvklaringsbehovStatus.SENDT_TILBAKE_FRA_BESLUTTER)
+            }
     }
+
 
     @Test
     fun `Teste TrekkKlageFlyt`() {
