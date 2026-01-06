@@ -16,7 +16,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     NyBrevbyggerV3,
     LagreVedtakIFatteVedtak,
     PeriodisertSykepengeErstatningNyAvklaringsbehovService,
-    MidlertidigStopp11_4,
     Under18,
     ValiderOvergangUfore,
     KravOmInntektsbortfall,
