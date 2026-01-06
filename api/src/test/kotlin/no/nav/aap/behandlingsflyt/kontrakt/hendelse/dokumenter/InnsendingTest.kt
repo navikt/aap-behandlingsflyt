@@ -15,7 +15,7 @@ class InnsendingTest {
     @Test
     fun `deserialisering - komplett Søknad`() {
         val input = """
-        {
+               {
           "student" : {
             "erStudent" : "Ja",
             "kommeTilbake" : "Vet ikke"
@@ -47,6 +47,13 @@ class InnsendingTest {
               "iArbeid" : "nei"
             }],
             "iTtilleggArbeidUtenforNorge" : "ja"
+          },
+          "andreUtbetalinger": {
+            "lønn": "ja",
+            "afp": {
+              "hvemBetaler": "arbeidsgiver"
+            },
+            "stønad": [ "OMSORGSSTØNAD", "AFP" ]
           }
         }
         """
