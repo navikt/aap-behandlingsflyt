@@ -13,12 +13,12 @@ import java.time.LocalDate
 
 /**
  * Denne jobben brukes til å automatisk sende ut brev ved endring av barnetillegg-sats. Jobben er konfigurert til å
- * kjøre 2.januar kl 09:00 hvert år. Dersom kjøringen skal ha effekt må følgende endres:
+ * kjøre 2.januar kl 09:00 hvert år. Dersom kjøringen skal ha effekt må følgende gjøres:
  * - Verifiser at brevet som sendes er oppdatert med riktig innhold
- * - [OpprettJobbForTriggBarnetilleggSatsJobbUtfører.erAktiv] må settes til `true`
  * - [OpprettJobbForTriggBarnetilleggSatsJobbUtfører.unikBrevreferanseForSak] må endres for at det skal sendes et nytt
  *   brev. Man kan f.eks. bruke et datostempel for dagen brevet skal sendes, eller dato satsen endres. Hensikten med
  *   variabelen er å ikke sende duplikate brev.
+ * - [OpprettJobbForTriggBarnetilleggSatsJobbUtfører.erAktiv] må settes til `true`
  *
  * Etter at jobben er kjørt og verifisert OK kan [OpprettJobbForTriggBarnetilleggSatsJobbUtfører.erAktiv] settes tilbake
  * til `false`.
