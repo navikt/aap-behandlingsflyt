@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
+import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonForhold
@@ -57,6 +58,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 class OppdagEndretInformasjonskravJobbUtførerTest {
     init {
@@ -75,7 +77,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
         override fun hentBarn(
             person: Person,
             oppgitteBarnIdenter: List<Ident>,
-            saksbehandlerOppgitteBarn: List<Ident>
+            saksbehandlerOppgitteBarnIdenter: List<Ident>
         ) = barnInnhentingRespons
     }
 
@@ -184,7 +186,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
             )
 
             OppdagEndretInformasjonskravJobbUtfører.konstruer(repositoryProvider, gatewayProvider)
-                .utfør(førstegangsbehandlingen.sakId, førstegangsbehandlingen.id)
+                .utfør(førstegangsbehandlingen.sakId)
 
             val sisteYtelsesbehandling = SakOgBehandlingService(repositoryProvider, gatewayProvider)
                 .finnSisteYtelsesbehandlingFor(førstegangsbehandlingen.sakId)!!
@@ -221,7 +223,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
                 gatewayProvider = gatewayProvider,
             )
 
-            oppdagEndretInformasjonskravJobbUtfører.utfør(førstegangsbehandlingen.sakId, førstegangsbehandlingen.id)
+            oppdagEndretInformasjonskravJobbUtfører.utfør(førstegangsbehandlingen.sakId)
 
             val sisteYtelsesbehandling = SakOgBehandlingService(repositoryProvider, gatewayProvider)
                 .finnSisteYtelsesbehandlingFor(førstegangsbehandlingen.sakId)
@@ -265,6 +267,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
             ).let(::klargjørInformasjonskrav)
 
 
+            repositoryProvider.provide<VedtakRepository>().lagre(førstegangsbehandlingen.id, LocalDateTime.now(), LocalDate.now())
             repositoryProvider.provide<BehandlingRepository>()
                 .oppdaterBehandlingStatus(førstegangsbehandlingen.id, Status.AVSLUTTET)
             førstegangsbehandlingen
