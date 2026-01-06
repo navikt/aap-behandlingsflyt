@@ -7,40 +7,69 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.Refus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class RefusjonkravLøser(
     private val refusjonkravRepository: RefusjonkravRepository,
+    private val unleashGateway: UnleashGateway,
     private val sakRepository: SakRepository,
 ) : AvklaringsbehovsLøser<RefusjonkravLøsning> {
 
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(
+        repositoryProvider: RepositoryProvider,
+        gatewayProvider: GatewayProvider
+    ) : this(
         refusjonkravRepository = repositoryProvider.provide(),
+        unleashGateway = gatewayProvider.provide<UnleashGateway>(),
         sakRepository = repositoryProvider.provide(),
-    )
+
+        )
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: RefusjonkravLøsning): LøsningsResultat {
-        val vurderinger = validerRefusjonDatoer(kontekst, løsning).let {
-            it.map { dto ->
+
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.SosialRefusjon)) {
+            val vurderinger = løsning.refusjonkravVurderinger.map { refusjonkrav ->
                 RefusjonkravVurdering(
-                    harKrav = dto.harKrav,
-                    navKontor = dto.navKontor,
-                    fom = dto.fom,
-                    tom = dto.tom,
+                    harKrav = refusjonkrav.harKrav,
+                    navKontor = refusjonkrav.navKontor,
                     vurdertAv = kontekst.bruker.ident
                 )
             }
 
+            refusjonkravRepository.lagre(kontekst.kontekst.sakId, kontekst.behandlingId(), vurderinger)
+            return LøsningsResultat("Vurdert refusjonskrav")
+
+        } else {
+
+
+
+            val vurderinger = validerRefusjonDatoer(kontekst, løsning).let {
+                it.map { dto ->
+                    RefusjonkravVurdering(
+                        harKrav = dto.harKrav,
+                        navKontor = dto.navKontor,
+                        fom = dto.fom,
+                        tom = dto.tom,
+                        vurdertAv = kontekst.bruker.ident
+                    )
+                }
+
+            }
+            refusjonkravRepository.lagre(kontekst.kontekst.sakId, kontekst.behandlingId(), vurderinger)
+            return LøsningsResultat("Vurdert refusjonskrav")
         }
-        refusjonkravRepository.lagre(kontekst.kontekst.sakId, kontekst.behandlingId(), vurderinger)
-        return LøsningsResultat("Vurdert refusjonskrav")
+
+
     }
 
     override fun forBehov(): Definisjon {
         return Definisjon.REFUSJON_KRAV
     }
 
-    private fun validerRefusjonDatoer(
+    fun validerRefusjonDatoer(
         kontekst: AvklaringsbehovKontekst,
         løsning: RefusjonkravLøsning
     ): List<RefusjonkravVurderingDto> {
