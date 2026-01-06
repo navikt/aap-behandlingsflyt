@@ -1300,22 +1300,15 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
     @Test
     fun `Håndtere svar fra kabal - valg omgjøring skal opprette en revurdering`() {
         val person = TestPersoner.PERSON_FOR_UNG()
-        val ident = person.aktivIdent()
-
-        val periode = Periode(LocalDate.now().minusMonths(3), LocalDate.now().plusYears(3))
 
         // Avslås pga. alder
-        val avslåttFørstegang = sendInnSøknad(
-            ident, periode, SøknadV0(
-                student = SøknadStudentDto(StudentStatus.Nei),
-                yrkesskade = "NEI",
-                oppgitteBarn = null,
-                medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
-            )
-        )
+        val avslåttFørstegang = sendInnFørsteSøknad(
+            person = person,
+        ).second
         assertThat(avslåttFørstegang)
             .describedAs("Førstegangsbehandlingen skal være satt som avsluttet")
             .extracting { b -> b.status().erAvsluttet() }.isEqualTo(true)
+
         val kravMottatt = LocalDate.now().minusMonths(1)
         val sak = hentSak(avslåttFørstegang)
         val klagebehandling = sak.sendInnKlage(
@@ -1327,7 +1320,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         assertThat(klagebehandling.referanse).isNotEqualTo(avslåttFørstegang.referanse)
         assertThat(klagebehandling.typeBehandling()).isEqualTo(TypeBehandling.Klage)
 
-        var svarFraAndreinstansBehandling = sak.sendInnKabalHendelse(
+        val svarFraAndreinstansBehandling = sak.sendInnKabalHendelse(
             mottattTidspunkt = LocalDateTime.now().minusMonths(3),
             kabalHendelse = KabalHendelseV0(
                 eventId = UUID.randomUUID(),
@@ -1348,8 +1341,8 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         assertThat(svarFraAndreinstansBehandling.referanse).isNotEqualTo(klagebehandling.referanse)
         assertThat(svarFraAndreinstansBehandling.typeBehandling()).isEqualTo(TypeBehandling.SvarFraAndreinstans)
 
-        dataSource.transaction { connection ->
-            val mottattDokumentRepository = MottattDokumentRepositoryImpl(connection)
+        svarFraAndreinstansBehandling.medKontekst {
+            val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
             val kabalHendelseDokumenter =
                 mottattDokumentRepository.hentDokumenterAvType(
                     svarFraAndreinstansBehandling.sakId,
@@ -1358,29 +1351,26 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             assertThat(kabalHendelseDokumenter).hasSize(1)
             assertThat(kabalHendelseDokumenter.first().strukturertDokument).isNotNull
             assertThat(kabalHendelseDokumenter.first().strukturerteData<KabalHendelseV0>()?.data).isNotNull
+
+            assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
+                .isEqualTo(Definisjon.HÅNDTER_SVAR_FRA_ANDREINSTANS)
         }
-
-        var åpneAvklaringsbehov = hentÅpneAvklaringsbehov(svarFraAndreinstansBehandling.id)
-        assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
-            .isEqualTo(Definisjon.HÅNDTER_SVAR_FRA_ANDREINSTANS)
-
-        svarFraAndreinstansBehandling = løsAvklaringsBehov(
-            svarFraAndreinstansBehandling,
-            avklaringsBehovLøsning = HåndterSvarFraAndreinstansLøsning(
-                svarFraAndreinstansVurdering = HåndterSvarFraAndreinstansLøsningDto(
-                    begrunnelse = "Begrunnelse for håndtering",
-                    konsekvens = SvarFraAndreinstansKonsekvens.OMGJØRING,
-                    vilkårSomOmgjøres = listOf(
-                        Hjemmel.FOLKETRYGDLOVEN_11_5,
-                        Hjemmel.FOLKETRYGDLOVEN_11_6
+            .løsAvklaringsBehov(
+                avklaringsBehovLøsning = HåndterSvarFraAndreinstansLøsning(
+                    svarFraAndreinstansVurdering = HåndterSvarFraAndreinstansLøsningDto(
+                        begrunnelse = "Begrunnelse for håndtering",
+                        konsekvens = SvarFraAndreinstansKonsekvens.OMGJØRING,
+                        vilkårSomOmgjøres = listOf(
+                            Hjemmel.FOLKETRYGDLOVEN_11_5,
+                            Hjemmel.FOLKETRYGDLOVEN_11_6
+                        )
                     )
                 )
             )
-        )
-
-        åpneAvklaringsbehov = hentÅpneAvklaringsbehov(svarFraAndreinstansBehandling.id)
-        assertThat(åpneAvklaringsbehov).isEmpty()
-        assertThat(svarFraAndreinstansBehandling.status()).isEqualTo(Status.AVSLUTTET)
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).isEmpty()
+                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
+            }
 
         motor.kjørJobber()
 
