@@ -11,6 +11,18 @@ import no.nav.aap.motor.cron.CronExpression
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 
+/**
+ * Denne jobben brukes til å automatisk sende ut brev ved endring av barnetillegg-sats. Jobben er konfigurert til å
+ * kjøre 2.januar kl 09:00 hvert år. Dersom kjøringen skal ha effekt må følgende endres:
+ * - Verifiser at brevet som sendes er oppdatert med riktig innhold
+ * - [OpprettJobbForTriggBarnetilleggSatsJobbUtfører.erAktiv] må settes til `true`
+ * - [OpprettJobbForTriggBarnetilleggSatsJobbUtfører.unikBrevreferanseForSak] må endres for at det skal sendes et nytt
+ *   brev. Man kan f.eks. bruke et datostempel for dagen brevet skal sendes, eller dato satsen endres. Hensikten med
+ *   variabelen er å ikke sende duplikate brev.
+ *
+ * Etter at jobben er kjørt og verifisert OK kan [OpprettJobbForTriggBarnetilleggSatsJobbUtfører.erAktiv] settes tilbake
+ * til `false`.
+ */
 class OpprettJobbForTriggBarnetilleggSatsJobbUtfører(
     val sakRepository: SakRepository,
     private val flytJobbRepository: FlytJobbRepository
@@ -19,6 +31,14 @@ class OpprettJobbForTriggBarnetilleggSatsJobbUtfører(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
+
+        if (!erAktiv) {
+            log.warn(
+                "Jobb OpprettJobbForTriggBarnetilleggSatsJobbUtfører er ikke aktiv." +
+                        "Jobben må konfigureres og settes til aktiv dersom det skal opprettes nye behandlinger om endring av barnetillegg-sats for saker med barnetillegg."
+            )
+            return
+        }
 
         val saker = sakRepository.finnSakerMedBarnetillegg(LocalDate.of(2026, 1, 1))
         log.info("Fant ${saker.size} saker med barnetillegg.")
@@ -30,6 +50,8 @@ class OpprettJobbForTriggBarnetilleggSatsJobbUtfører(
 
 
     companion object : ProvidersJobbSpesifikasjon {
+        val erAktiv = false
+        val unikBrevreferanseForSak = "02012026"
         override val type = "satsendring-lag-jobber"
         override val navn = "Finn saker med barnetillegg, og queue jobber for dem."
         override val beskrivelse = ""
