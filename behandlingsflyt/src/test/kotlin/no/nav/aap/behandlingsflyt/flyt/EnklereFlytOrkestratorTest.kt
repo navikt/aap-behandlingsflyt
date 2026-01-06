@@ -21,6 +21,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.OPPRETT_REVURDERING
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.SEND_FORVALTNINGSMELDING
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.START_BEHANDLING
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.SØKNAD
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.SAMORDNING_SYKESTIPEND
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.VURDER_ALDER
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.VURDER_LOVVALG
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.VURDER_RETTIGHETSPERIODE
@@ -288,6 +289,7 @@ class EnklereFlytOrkestratorTest {
                 FASTSETT_MELDEPERIODER,
                 VURDER_ALDER,
                 AVKLAR_STUDENT,
+                SAMORDNING_SYKESTIPEND,
                 AVKLAR_SYKDOM
             )
         )
@@ -311,6 +313,7 @@ class EnklereFlytOrkestratorTest {
                 FASTSETT_MELDEPERIODER,
                 VURDER_ALDER,
                 AVKLAR_STUDENT,
+                SAMORDNING_SYKESTIPEND,
                 AVKLAR_SYKDOM
             )
         )
@@ -516,6 +519,19 @@ class EnklereFlytOrkestratorTest {
                     aktiv = false
                 ),
                 StegTilstand(stegType = AVKLAR_STUDENT, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
+                StegTilstand(stegType = SAMORDNING_SYKESTIPEND, stegStatus = StegStatus.START, aktiv = false),
+                StegTilstand(
+                    stegType = SAMORDNING_SYKESTIPEND,
+                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
+                    aktiv = false
+                ),
+                StegTilstand(stegType = SAMORDNING_SYKESTIPEND, stegStatus = StegStatus.UTFØRER, aktiv = false),
+                StegTilstand(
+                    stegType = SAMORDNING_SYKESTIPEND,
+                    stegStatus = StegStatus.AVKLARINGSPUNKT,
+                    aktiv = false
+                ),
+                StegTilstand(stegType = SAMORDNING_SYKESTIPEND, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
                 StegTilstand(stegType = AVKLAR_SYKDOM, stegStatus = StegStatus.START, aktiv = false),
                 StegTilstand(
                     stegType = AVKLAR_SYKDOM,
@@ -690,6 +706,19 @@ class EnklereFlytOrkestratorTest {
                     aktiv = false
                 ),
                 StegTilstand(stegType = AVKLAR_STUDENT, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
+                StegTilstand(stegType = SAMORDNING_SYKESTIPEND, stegStatus = StegStatus.START, aktiv = false),
+                StegTilstand(
+                    stegType = SAMORDNING_SYKESTIPEND,
+                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
+                    aktiv = false
+                ),
+                StegTilstand(stegType = SAMORDNING_SYKESTIPEND, stegStatus = StegStatus.UTFØRER, aktiv = false),
+                StegTilstand(
+                    stegType = SAMORDNING_SYKESTIPEND,
+                    stegStatus = StegStatus.AVKLARINGSPUNKT,
+                    aktiv = false
+                ),
+                StegTilstand(stegType = SAMORDNING_SYKESTIPEND, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
                 StegTilstand(stegType = AVKLAR_SYKDOM, stegStatus = StegStatus.START, aktiv = false),
                 StegTilstand(
                     stegType = AVKLAR_SYKDOM,
@@ -699,6 +728,7 @@ class EnklereFlytOrkestratorTest {
                 StegTilstand(stegType = AVKLAR_SYKDOM, stegStatus = StegStatus.UTFØRER, aktiv = false),
                 StegTilstand(stegType = AVKLAR_SYKDOM, stegStatus = StegStatus.AVKLARINGSPUNKT, aktiv = false),
                 StegTilstand(stegType = AVKLAR_SYKDOM, stegStatus = StegStatus.TILBAKEFØRT, aktiv = false),
+                StegTilstand(stegType = SAMORDNING_SYKESTIPEND, stegStatus = StegStatus.TILBAKEFØRT, aktiv = false),
                 StegTilstand(stegType = AVKLAR_STUDENT, stegStatus = StegStatus.TILBAKEFØRT, aktiv = false),
                 StegTilstand(stegType = AVKLAR_STUDENT, stegStatus = StegStatus.START, aktiv = false),
                 StegTilstand(
@@ -713,6 +743,19 @@ class EnklereFlytOrkestratorTest {
                     aktiv = false
                 ),
                 StegTilstand(stegType = AVKLAR_STUDENT, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
+                StegTilstand(stegType = SAMORDNING_SYKESTIPEND, stegStatus = StegStatus.START, aktiv = false),
+                StegTilstand(
+                    stegType = SAMORDNING_SYKESTIPEND,
+                    stegStatus = StegStatus.OPPDATER_FAKTAGRUNNLAG,
+                    aktiv = false
+                ),
+                StegTilstand(stegType = SAMORDNING_SYKESTIPEND, stegStatus = StegStatus.UTFØRER, aktiv = false),
+                StegTilstand(
+                    stegType = SAMORDNING_SYKESTIPEND,
+                    stegStatus = StegStatus.AVKLARINGSPUNKT,
+                    aktiv = false
+                ),
+                StegTilstand(stegType = SAMORDNING_SYKESTIPEND, stegStatus = StegStatus.AVSLUTTER, aktiv = false),
                 StegTilstand(stegType = AVKLAR_SYKDOM, stegStatus = StegStatus.START, aktiv = false),
                 StegTilstand(
                     stegType = AVKLAR_SYKDOM,

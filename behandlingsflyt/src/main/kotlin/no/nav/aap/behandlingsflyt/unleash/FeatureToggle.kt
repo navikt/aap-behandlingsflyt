@@ -26,6 +26,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     HentSykepengerVedOverlapp,
     KanSendeBrevOmBarnetilleggSatsRegulering,
     PeriodisertSykdom,
+    Sykestipend
     ;
 
     override fun key(): String = name
