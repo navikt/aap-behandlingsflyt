@@ -50,6 +50,7 @@ class RettighetsperiodeSteg(
                                 && manueltTriggetVurderingsbehov(kontekst)
 
                     VurderingType.MELDEKORT,
+                    VurderingType.AUTOMATISK_BREV,
                     VurderingType.AUTOMATISK_OPPDATER_VILKÅR,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
@@ -81,7 +82,8 @@ class RettighetsperiodeSteg(
             VurderingType.AUTOMATISK_OPPDATER_VILKÅR,
             VurderingType.IKKE_RELEVANT,
             VurderingType.MELDEKORT,
-            VurderingType.EFFEKTUER_AKTIVITETSPLIKT, 
+            VurderingType.AUTOMATISK_BREV,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9 -> {
                 // Ikke relevant
             }
