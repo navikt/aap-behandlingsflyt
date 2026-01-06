@@ -75,7 +75,6 @@ class BeslutterFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
 
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-
             .medKontekst {
                 // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
                 assertThat(åpneAvklaringsbehov).isNotEmpty()
@@ -175,13 +174,13 @@ class BeslutterFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
         // Sender inn en søknad
-        var (_, behandling) = sendInnFørsteSøknad(periode = periode)
+        val (_, behandling) = sendInnFørsteSøknad(periode = periode)
 
         val alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
         assertThat(alleAvklaringsbehov).isNotEmpty()
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
 
-        behandling = behandling.løsAvklaringsBehov(
+        behandling.løsAvklaringsBehov(
             AvklarSykdomLøsning(
                 løsningerForPerioder = listOf(
                     SykdomsvurderingLøsningDto(
