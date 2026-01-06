@@ -152,7 +152,7 @@ enum class Vilkårtype(
         kode = "AAP-4-2",
         spesielleInnvilgelsesÅrsaker = emptyList(),
         avslagsårsaker = listOf(
-            Avslagsårsak.HAR_RETT_TIL_FULT_UTTAK_ALDERSPENSJON
+            Avslagsårsak.HAR_RETT_TIL_FULLT_UTTAK_ALDERSPENSJON
         ),
         hjemmel = "§ 11-4 2. ledd"
     ),

@@ -10,12 +10,8 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.inntektsbortfall.InntektsbortfallKanBehandlesAutomatisk
 import no.nav.aap.behandlingsflyt.behandling.vilkår.inntektsbortfall.InntektsbortfallVilkår
 import no.nav.aap.behandlingsflyt.behandling.vilkår.inntektsbortfall.InntektsbortfallVurderingService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlagRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -26,6 +22,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -44,18 +41,22 @@ class InntektsbortfallSteg private constructor(
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
 
-        val vilkårsPerioder = vurderVilkår(kontekst).vilkårsperioder()
         avklaringsbehovService.oppdaterAvklaringsbehov(
             avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId),
             definisjon = Definisjon.VURDER_INNTEKTSBORTFALL,
             vedtakBehøverVurdering = {
+                val kravOmInntektsbortfallEnabled =
+                    unleashGateway.isEnabled(BehandlingsflytFeature.KravOmInntektsbortfall)
                 when (kontekst.vurderingType) {
                     VurderingType.FØRSTEGANGSBEHANDLING,
                     VurderingType.REVURDERING -> {
                         when {
                             tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
                             kontekst.vurderingsbehovRelevanteForSteg.isEmpty() -> false
-                            kanBehandlesAutomatiskRespons(kontekst).kanBehandlesAutomatisk -> false
+                            if (kravOmInntektsbortfallEnabled) (kanBehandlesAutomatisk(kontekst)?.kanBehandlesAutomatisk ?: true) else erUnder62PåRettighetsperioden(
+                                kontekst
+                            ) -> false
+
                             else -> true
                         }
                     }
@@ -70,46 +71,70 @@ class InntektsbortfallSteg private constructor(
                 }
             },
             erTilstrekkeligVurdert = {
-                vilkårsPerioder.none { it.utfall == Utfall.IKKE_VURDERT }
+                manuellInntektGrunnlagRepository.hentHvisEksisterer(
+                    kontekst.behandlingId
+                ) != null
             },
             tilbakestillGrunnlag = {
-                // TODO: tilbakestill me
+                inntektsbortfallRepository.deaktiverGjeldendeVurdering(kontekst.behandlingId)
             },
             kontekst = kontekst
         )
+
+        vurderVilkår(kontekst)
+
         return Fullført
     }
 
-    fun kanBehandlesAutomatiskRespons(kontekst: FlytKontekstMedPerioder): InntektsbortfallKanBehandlesAutomatisk {
+    fun kanBehandlesAutomatisk(kontekst: FlytKontekstMedPerioder): InntektsbortfallKanBehandlesAutomatisk? {
         val brukerPersonopplysning =
             personopplysningRepository.hentBrukerPersonOpplysningHvisEksisterer(kontekst.behandlingId)
-                ?: throw IllegalStateException("Forventet å finne personopplysninger")
+                ?: return null
 
         val manuellInntektGrunnlag = manuellInntektGrunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
         val inntektGrunnlag = inntektGrunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
 
-        return InntektsbortfallVurderingService().vurderInntektsbortfall(
+        return InntektsbortfallVurderingService(
             kontekst,
-            brukerPersonopplysning,
-            manuellInntektGrunnlag ?: ManuellInntektGrunnlag(emptySet()),
-            inntektGrunnlag,
-            beregningService
+            beregningService.utledRelevanteBeregningsÅr(kontekst.behandlingId)
+        ).vurderInntektsbortfall(
+            brukerPersonopplysning.fødselsdato,
+            manuellInntektGrunnlag?.manuelleInntekter.orEmpty(),
+            inntektGrunnlag?.inntekter
         )
     }
 
-    fun vurderVilkår(kontekst: FlytKontekstMedPerioder): Vilkår {
-        val tidligereManuellVurdering = inntektsbortfallRepository.hentHvisEksisterer(kontekst.behandlingId)
-        val kanBehandlesAutomatisk = kanBehandlesAutomatiskRespons(kontekst)
+    fun vurderVilkår(kontekst: FlytKontekstMedPerioder) {
+        val manuellVurdering = inntektsbortfallRepository.hentHvisEksisterer(kontekst.behandlingId)
+        val kanBehandlesAutomatisk = kanBehandlesAutomatisk(kontekst)
 
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-        InntektsbortfallVilkår(vilkårsresultat, kontekst.rettighetsperiode).vurder(
-            InntektsbortfallGrunnlag(
-                kanBehandlesAutomatisk,
-                tidligereManuellVurdering
-            )
-        )
+
+        InntektsbortfallVilkår(vilkårsresultat, kontekst.rettighetsperiode).apply {
+            if (kanBehandlesAutomatisk == null) {
+                settTilIkkeVurdert()
+            } else {
+                vurder(
+                    InntektsbortfallGrunnlag(
+                        kanBehandlesAutomatisk,
+                        manuellVurdering
+                    )
+                )
+            }
+        }
         vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
-        return vilkårsresultat.finnVilkår(Vilkårtype.INNTEKTSBORTFALL)
+    }
+
+
+    fun erUnder62PåRettighetsperioden(kontekst: FlytKontekstMedPerioder): Boolean {
+        val brukerPersonopplysning =
+            personopplysningRepository.hentBrukerPersonOpplysningHvisEksisterer(kontekst.behandlingId)
+                ?: throw IllegalStateException("Forventet å finne personopplysninger")
+
+        val erUnder62PåRettighetsperioden =
+            brukerPersonopplysning.fødselsdato.alderPåDato(kontekst.rettighetsperiode.fom) < 62
+
+        return erUnder62PåRettighetsperioden
     }
 
     companion object : FlytSteg {

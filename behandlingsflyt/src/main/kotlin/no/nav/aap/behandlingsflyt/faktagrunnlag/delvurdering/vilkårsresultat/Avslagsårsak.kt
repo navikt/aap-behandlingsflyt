@@ -30,7 +30,7 @@ enum class Avslagsårsak(
     BRUDD_PÅ_AKTIVITETSPLIKT_OPPHØR(kode = "11-7", hjemmel = "§ 11-7", Avslagstype.OPPHØR),
     BRUDD_PÅ_OPPHOLDSKRAV_STANS(kode = "11-3", hjemmel = "§ 11-3", Avslagstype.STANS),
     BRUDD_PÅ_OPPHOLDSKRAV_OPPHØR(kode = "11-3", hjemmel = "§ 11-3", Avslagstype.OPPHØR),
-    HAR_RETT_TIL_FULT_UTTAK_ALDERSPENSJON(kode = "11-4-2", hjemmel = "§ 11-4 2. ledd", Avslagstype.KUN_INNGANGSVILKÅR),
+    HAR_RETT_TIL_FULLT_UTTAK_ALDERSPENSJON(kode = "11-4-2", hjemmel = "§ 11-4 2. ledd", Avslagstype.KUN_INNGANGSVILKÅR),
 }
 
 /** [Avslagstype] sier hvordan en [Avslagsårsak] skal tolkes når

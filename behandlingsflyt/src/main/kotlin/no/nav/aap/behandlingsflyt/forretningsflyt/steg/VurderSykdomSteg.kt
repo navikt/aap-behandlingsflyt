@@ -66,7 +66,7 @@ class VurderSykdomSteg(
                     sykdomRepository.lagre(kontekst.behandlingId, vedtatteSykdomsvurderinger)
                 },
             )
-            return Fullført
+            Fullført
         }
     }
 

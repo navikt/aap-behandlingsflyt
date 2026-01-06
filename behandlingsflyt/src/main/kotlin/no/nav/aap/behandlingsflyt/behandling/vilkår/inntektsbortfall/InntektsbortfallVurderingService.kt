@@ -1,31 +1,31 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.inntektsbortfall
 
-import no.nav.aap.behandlingsflyt.behandling.beregning.BeregningService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.komponenter.verdityper.GUnit
 import java.math.BigDecimal
+import java.math.RoundingMode
 import java.time.MonthDay
 import java.time.Year
 
-class InntektsbortfallVurderingService {
+class InntektsbortfallVurderingService(
+    private val kontekst: FlytKontekstMedPerioder,
+    private val relevanteBeregningsår: Set<Year>
+) {
     fun vurderInntektsbortfall(
-        kontekst: FlytKontekstMedPerioder,
-        brukerPersonopplysning: Personopplysning,
-        manuellInntektGrunnlag: ManuellInntektGrunnlag?,
-        inntektGrunnlag: InntektGrunnlag?,
-        beregningService: BeregningService
+        fødselsdato: Fødselsdato,
+        manuelleInntekter: Set<ManuellInntektVurdering>,
+        inntektPerÅr: Set<InntektPerÅr>?
     ): InntektsbortfallKanBehandlesAutomatisk {
-        val sisteRelevanteÅr = hentSisteRelevanteÅr(kontekst, beregningService)
-        val under62ÅrVedSøknadstidspunktGrunnlag = erUnder62PåRettighetsperioden(kontekst, brukerPersonopplysning)
+        val sisteRelevanteÅr = hentSisteRelevanteÅr()
+        val under62ÅrVedSøknadstidspunktGrunnlag = erUnder62PåRettighetsperioden(fødselsdato)
         val inntektSisteÅrOver1GGrunnlag =
-            inntektSisteÅrOver1G(inntektGrunnlag, manuellInntektGrunnlag, sisteRelevanteÅr)
+            inntektSisteÅrOver1G(inntektPerÅr, manuelleInntekter, sisteRelevanteÅr)
         val gjennomsnittInntektSiste3ÅrOver3GGrunnlag =
-            gjennomsnittInntektSiste3ÅrOver3G(inntektGrunnlag, manuellInntektGrunnlag, sisteRelevanteÅr)
+            gjennomsnittInntektSiste3ÅrOver3G(inntektPerÅr, manuelleInntekter, sisteRelevanteÅr)
 
         return InntektsbortfallKanBehandlesAutomatisk(
             kanBehandlesAutomatisk = under62ÅrVedSøknadstidspunktGrunnlag.resultat || inntektSisteÅrOver1GGrunnlag.resultat || gjennomsnittInntektSiste3ÅrOver3GGrunnlag.resultat,
@@ -36,21 +36,20 @@ class InntektsbortfallVurderingService {
     }
 
     private fun erUnder62PåRettighetsperioden(
-        kontekst: FlytKontekstMedPerioder,
-        brukerPersonopplysning: Personopplysning
+        fødselsdato: Fødselsdato
     ): Under62ÅrVedSøknadstidspunkt {
-        val alderPåStartsdato = brukerPersonopplysning.fødselsdato.alderPåDato(kontekst.rettighetsperiode.fom)
+        val alderPåStartsdato = fødselsdato.alderPåDato(kontekst.rettighetsperiode.fom)
         return Under62ÅrVedSøknadstidspunkt(alderPåStartsdato, alderPåStartsdato < 62)
     }
 
     private fun gjennomsnittInntektSiste3ÅrOver3G(
-        inntektGrunnlag: InntektGrunnlag?,
-        manuellInntektGrunnlag: ManuellInntektGrunnlag?,
+        inntektGrunnlag: Set<InntektPerÅr>?,
+        manuelleInntekter: Set<ManuellInntektVurdering>,
         sisteRelevanteÅr: Set<Year>
     ): GjennomsnittInntektSiste3ÅrOver3G {
         val inntektGrunnlagSisteRelevanteÅr = hentInntekterGrunnlag(inntektGrunnlag, sisteRelevanteÅr)
         val manuelleInntekterRelevanteÅr =
-            manuellInntektGrunnlag?.manuelleInntekter?.filter { it.år in sisteRelevanteÅr } ?: emptyList()
+            manuelleInntekter.filter { it.år in sisteRelevanteÅr }
 
         val manuelleMap = manuelleInntekterRelevanteÅr
             .filter { it.belop != null }
@@ -62,31 +61,32 @@ class InntektsbortfallVurderingService {
                 InntektPerÅr(inntekt.år, manuell.belop!!)
             } ?: inntekt
         }
-        
-        if (kombinerte.isEmpty()) {
-            return GjennomsnittInntektSiste3ÅrOver3G(GUnit(BigDecimal.ZERO), false)
+
+        return if (kombinerte.isEmpty()) {
+            GjennomsnittInntektSiste3ÅrOver3G(gverdi = GUnit(BigDecimal.ZERO), resultat = false)
+        } else {
+            val gjennomsnitt = kombinerte
+                .map { it.gUnit().gUnit.verdi() }
+                .reduce(BigDecimal::add)
+                .divide(BigDecimal(3), RoundingMode.HALF_UP)
+
+            GjennomsnittInntektSiste3ÅrOver3G(
+                gverdi = GUnit(gjennomsnitt),
+                resultat = gjennomsnitt >= BigDecimal(3)
+            )
         }
-
-        val gjennomsnitt = kombinerte
-            .map { it.gUnit().gUnit.verdi() }
-            .reduce(BigDecimal::add)
-            .divide(BigDecimal(3))
-
-        return GjennomsnittInntektSiste3ÅrOver3G(
-            gverdi = GUnit(gjennomsnitt),
-            resultat = gjennomsnitt >= BigDecimal(3)
-        )
     }
 
     private fun inntektSisteÅrOver1G(
-        inntektGrunnlag: InntektGrunnlag?,
-        manuellInntektGrunnlag: ManuellInntektGrunnlag?,
+        inntektGrunnlag: Set<InntektPerÅr>?,
+        manuelleInntekter: Set<ManuellInntektVurdering>,
         sisteRelevanteÅr: Set<Year>
     ): InntektSisteÅrOver1G {
+        // FIXME set har ikke rekkefølge!
         val inntektGrunnlagSisteRelevanteÅr =
-            hentInntekterGrunnlag(inntektGrunnlag, setOf(sisteRelevanteÅr.first())).firstOrNull()
+            hentInntekterGrunnlag(inntektGrunnlag, setOf(sisteRelevanteÅr.max())).firstOrNull()
         val manuellInntektVurderingSisteRelevanteÅr =
-            manuellInntektGrunnlag?.manuelleInntekter?.firstOrNull { it.år == sisteRelevanteÅr }
+            manuelleInntekter.firstOrNull { it.år == sisteRelevanteÅr }
 
         val inntektsGrunnlag = manuellInntektVurderingSisteRelevanteÅr?.belop ?: inntektGrunnlagSisteRelevanteÅr?.beløp
 
@@ -101,17 +101,16 @@ class InntektsbortfallVurderingService {
     }
 
     private fun hentInntekterGrunnlag(
-        inntektGrunnlag: InntektGrunnlag?,
+        inntektPerÅr: Set<InntektPerÅr>?,
         år: Set<Year>
     ): List<InntektPerÅr> {
-        if (inntektGrunnlag == null) return emptyList()
-        return inntektGrunnlag.inntekter.filter { it.år in år }
+        if (inntektPerÅr == null) return emptyList()
+        return inntektPerÅr.filter { it.år in år }
     }
 
-    private fun hentSisteRelevanteÅr(kontekst: FlytKontekstMedPerioder, beregningService: BeregningService): Set<Year> {
-        val relevantBeregningsPeriode = beregningService.utledRelevanteBeregningsÅr(kontekst.behandlingId)
-        val sisteÅr = if(relevantBeregningsPeriode.isNotEmpty()) {
-            relevantBeregningsPeriode.max()
+    private fun hentSisteRelevanteÅr(): Set<Year> {
+        val sisteÅr = if (relevanteBeregningsår.isNotEmpty()) {
+            relevanteBeregningsår.max()
         } else {
             Year.of(kontekst.rettighetsperiode.fom.year - 1)
         }

@@ -80,7 +80,8 @@ class BeregningService(
     }
 
     fun utledRelevanteBeregningsÅr(behandlingId: BehandlingId): Set<Year> {
-        val beregningGrunnlag = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
+        val beregningGrunnlag = beregningVurderingRepository.hentHvisEksisterer(behandlingId) ?: return emptySet()
+
         return Inntektsbehov.utledAlleRelevanteÅr(beregningGrunnlag)
     }
 

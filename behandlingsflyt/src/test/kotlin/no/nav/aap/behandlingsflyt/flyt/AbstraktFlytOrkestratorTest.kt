@@ -622,12 +622,12 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         )
     }
 
-    protected fun Behandling.løsVurderInntektsbortfall(fom: LocalDate, erOppfylt: Boolean = true): Behandling {
+    protected fun Behandling.løsVurderInntektsbortfall(rettTilUttakAvAldersPensjon: Boolean = true): Behandling {
         return this.løsAvklaringsBehov(
             VurderInntektsbortfallLøsning(
                 InntektsbortfallVurderingDto(
                     begrunnelse = "",
-                    rettTilUttak = !erOppfylt
+                    rettTilUttak = rettTilUttakAvAldersPensjon
                 )
             )
         )

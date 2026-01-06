@@ -22,7 +22,7 @@ class InntektsbortfallVilkår(
                 periode = rettighetsPeriode,
                 utfall = Utfall.OPPFYLT,
                 manuellVurdering = false,
-                begrunnelse = "Bruker under 62 år",
+                begrunnelse = "Bruker under 62 år.",
                 faktagrunnlag = grunnlag
             )
         } else if (grunnlag.manuellVurdering == null) {
@@ -38,20 +38,32 @@ class InntektsbortfallVilkår(
                 periode = rettighetsPeriode,
                 utfall = Utfall.IKKE_OPPFYLT,
                 manuellVurdering = true,
-                begrunnelse = "Bruker har rett på fult uttak av alderspensjon",
+                begrunnelse = "Bruker har rett på fullt uttak av alderspensjon.",
                 faktagrunnlag = grunnlag,
-                avslagsårsak = Avslagsårsak.HAR_RETT_TIL_FULT_UTTAK_ALDERSPENSJON
+                avslagsårsak = Avslagsårsak.HAR_RETT_TIL_FULLT_UTTAK_ALDERSPENSJON
             )
         } else {
             Vilkårsperiode(
                 periode = rettighetsPeriode,
                 utfall = Utfall.OPPFYLT,
                 manuellVurdering = true,
-                begrunnelse = "Bruker har ikke rett på fult uttak av alderspensjon",
+                begrunnelse = "Bruker har ikke rett på fullt uttak av alderspensjon.",
                 faktagrunnlag = grunnlag
             )
         }
 
         vilkår.leggTilVurdering(vurdering)
+    }
+
+    fun settTilIkkeVurdert() {
+        vilkår.leggTilVurdering(
+            Vilkårsperiode(
+                periode = rettighetsPeriode,
+                utfall = Utfall.IKKE_VURDERT,
+                manuellVurdering = false,
+                begrunnelse = null,
+                innvilgelsesårsak = null
+            )
+        )
     }
 }
