@@ -56,7 +56,6 @@ class TriggBarnetilleggSatsJobbUtfører(
                 sakRepository = repositoryProvider.provide(),
                 sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
                 prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
-                unleashGateway = gatewayProvider.provide(),
             )
         }
     }
