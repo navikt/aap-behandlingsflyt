@@ -390,7 +390,7 @@ internal class InstitusjonsoppholdServiceTest {
     }
 
     @Test
-    fun `barnetillegg gjennom hele periodern gir ingen avklaring`() {
+    fun `barnetillegg gjennom hele perioden gir også avklaring`() {
         val input = InstitusjonsoppholdInput(
             institusjonsOpphold = listOf(
                 Segment(
@@ -423,6 +423,6 @@ internal class InstitusjonsoppholdServiceTest {
         )
 
         val res = utlederService.utledBehov(input)
-        assertThat(res.harBehovForAvklaring()).isFalse
+        assertThat(res.harBehovForAvklaring()).isTrue
     }
 }

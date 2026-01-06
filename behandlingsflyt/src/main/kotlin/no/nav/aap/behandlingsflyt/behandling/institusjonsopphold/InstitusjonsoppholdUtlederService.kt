@@ -50,7 +50,6 @@ class InstitusjonsoppholdUtlederService(
         val opphold = input.institusjonsOpphold
         val soningsOppgold = opphold.filter { segment -> segment.verdi.type == Institusjonstype.FO }
         val helseopphold = opphold.filter { segment -> segment.verdi.type == Institusjonstype.HS }
-        val barnetillegg = input.barnetillegg
         val soningsvurderingTidslinje = byggSoningsvurderingTidslinje(input.soningsvurderinger)
         val helsevurderingerTidslinje = byggHelsevurderingTidslinje(input.helsevurderinger)
 
@@ -71,13 +70,7 @@ class InstitusjonsoppholdUtlederService(
 
         val helseOppholdTidslinje = opprettTidslinje(helseopphold)
 
-        val barnetilleggTidslinje = barnetillegg.tilTidslinje()
-
-        //fjern perioder hvor bruker har barnetillegg gjennom hele helseinstitusjonsoppholdet
-        val oppholdUtenBarnetillegg =
-            helseOppholdTidslinje.disjoint(barnetilleggTidslinje) { p, v -> Segment(p, v.verdi) }
-
-       val oppholdSomKanGiReduksjon = harOppholdSomKreverAvklaring(oppholdUtenBarnetillegg)
+       val oppholdSomKanGiReduksjon = harOppholdSomKreverAvklaring(helseOppholdTidslinje)
 
         perioderSomTrengerVurdering = perioderSomTrengerVurdering.kombiner(oppholdSomKanGiReduksjon.mapValue {
             InstitusjonsoppholdVurdering(helse = HelseOpphold(vurdering = OppholdVurdering.UAVKLART))
