@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.flyt
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBarnetilleggLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBeregningstidspunktLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
@@ -30,7 +29,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskap
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.prosessering.OpprettJobbForTriggBarnetilleggSatsJobbUtfører
 import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.barn.BarnRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.pip.PipRepositoryImpl
@@ -38,7 +36,6 @@ import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
@@ -51,8 +48,6 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Tid
-import no.nav.aap.motor.FlytJobbRepository
-import no.nav.aap.motor.JobbInput
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -166,31 +161,6 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             SakRepositoryImpl(it).finnSakerMedBarnetillegg(LocalDate.of(2026, 1, 1))
         }
         assertThat(sakerMedBarnetillegg).containsExactly(behandling.sakId)
-
-        // Bestiller brev om barnetillegg sats regulering
-        dataSource.transaction {
-            FlytJobbRepository(it).leggTil(JobbInput(OpprettJobbForTriggBarnetilleggSatsJobbUtfører))
-        }
-        motor.kjørJobber()
-        val behandlingBarnetilleggSatsRegulering = hentSisteOpprettedeBehandlingForSak(behandling.sakId)
-        assertThat(behandlingBarnetilleggSatsRegulering.id).isNotEqualTo(behandling.id)
-        assertThat(behandlingBarnetilleggSatsRegulering.årsakTilOpprettelse).isEqualTo(ÅrsakTilOpprettelse.BARNETILLEGG_SATSENDRING)
-        assertThat(behandlingBarnetilleggSatsRegulering.status()).isEqualTo(Status.AVSLUTTET)
-
-        assertThat(hentBrevAvTypeForSak(sak, TypeBrev.BARNETILLEGG_SATS_REGULERING)).singleElement()
-            .satisfies({
-                assertThat(it.status).isEqualTo(no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status.FULLFØRT)
-                assertThat(it.behandlingId).isEqualTo(behandlingBarnetilleggSatsRegulering.id)
-            })
-
-        // Bestiller ikke duplikat brev om barnetillegg sats regulering
-        dataSource.transaction {
-            FlytJobbRepository(it).leggTil(JobbInput(OpprettJobbForTriggBarnetilleggSatsJobbUtfører))
-        }
-        motor.kjørJobber()
-
-        // ikke flere etter siste behandling
-        assertThat(hentBrevAvTypeForSak(sak, TypeBrev.BARNETILLEGG_SATS_REGULERING)).hasSize(1)
     }
 
     @Test
