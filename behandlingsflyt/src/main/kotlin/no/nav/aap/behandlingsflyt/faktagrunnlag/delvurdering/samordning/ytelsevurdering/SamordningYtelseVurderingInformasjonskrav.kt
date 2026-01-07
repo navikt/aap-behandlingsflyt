@@ -216,7 +216,7 @@ class SamordningYtelseVurderingInformasjonskrav(
 
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.SAMORDNING_YTELSE
-        private val secureLogger = LoggerFactory.getLogger("secureLog")
+        private val secureLogger = LoggerFactory.getLogger("team-logs")
         override fun konstruer(
             repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider
         ): SamordningYtelseVurderingInformasjonskrav {
