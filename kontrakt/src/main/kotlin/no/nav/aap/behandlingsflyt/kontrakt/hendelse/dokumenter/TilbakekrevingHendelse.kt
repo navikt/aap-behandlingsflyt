@@ -56,6 +56,15 @@ public data class TilbakekrevingHendelseV0(
     val tilbakekreving: TilbakekrevingKafkaDto,
 ) : TilbakekrevingHendelse
 
+@JsonIgnoreProperties(ignoreUnknown = true)
+public data class FagsysteminfoBehovV0(
+    val hendelsestype: String,
+    val versjon: Int,
+    val eksternFagsakId: String,
+    val kravgrunnlagReferanse: String,
+    val hendelseOpprettet: LocalDateTime,
+) : TilbakekrevingHendelse
+
 data class TilbakekrevingKafkaDto(
     val behandlingId: UUID,
     val sakOpprettet: LocalDateTime,

@@ -1,7 +1,9 @@
 package no.nav.aap.behandlingsflyt.hendelse.mottak
 
+import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingBehandlingsstatus
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingService
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.Tilbakekrevingshendelse
+import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -12,6 +14,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Aktivitetskort
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AktivitetskortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AnnetRelevantDokumentV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.FagsysteminfoBehovV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KabalHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Klage
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlageV0
@@ -31,6 +34,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.PdlHendelseV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelseV0
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.prosessering.tilbakekreving.FagsysteminfoSvarHendelse
+import no.nav.aap.behandlingsflyt.prosessering.tilbakekreving.MottakerDto
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -58,6 +63,7 @@ class HåndterMottattDokumentService(
     private val prosesserBehandling: ProsesserBehandlingService,
     private val mottaDokumentService: MottaDokumentService,
     private val behandlingRepository: BehandlingRepository,
+    private val vedtakRepository: VedtakRepository,
     private val tilbakekrevingService: TilbakekrevingService,
 ) {
 
@@ -71,6 +77,7 @@ class HåndterMottattDokumentService(
         prosesserBehandling = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
         mottaDokumentService = MottaDokumentService(repositoryProvider),
         behandlingRepository = repositoryProvider.provide<BehandlingRepository>(),
+        vedtakRepository = repositoryProvider.provide<VedtakRepository>(),
         tilbakekrevingService = TilbakekrevingService(repositoryProvider),
     )
 
@@ -302,8 +309,68 @@ class HåndterMottattDokumentService(
                 tilbakekrevingService.håndter(sakId, melding.tilTilbakekrevingshendelse())
                 mottaDokumentService.markerSomBehandlet(sakId, behandlingId, referanse)
             }
+            is FagsysteminfoBehovV0 -> {
+                val behandlingId = finnSisteIverksatteBehandling(sakId)
+                log.info("Mottatt fagsysteminfo behov for sakId $sakId og behandlingId $behandlingId")
+                tilbakekrevingService.håndter(sakId, melding.tilFagsysteminfoSvarHendelse(sakId))
+                mottaDokumentService.markerSomBehandlet(sakId, behandlingId, referanse)
+            }
         }
     }
+
+
+    private fun FagsysteminfoBehovV0.tilFagsysteminfoSvarHendelse(sakId: SakId): FagsysteminfoSvarHendelse {
+        val sak = sakService.hent(sakId)
+        val kravgrunnlagReferanse = decodeBase64(this.kravgrunnlagReferanse)
+        val behandling = behandlingRepository.hent(BehandlingReferanse(UUID.fromString(kravgrunnlagReferanse)))
+        val årsak = when (behandling.årsakTilOpprettelse) {
+            null -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.UKJENT
+            ÅrsakTilOpprettelse.SØKNAD -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
+            ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.KORRIGERING
+            ÅrsakTilOpprettelse.HELSEOPPLYSNINGER -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
+            ÅrsakTilOpprettelse.ANNET_RELEVANT_DOKUMENT -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
+            ÅrsakTilOpprettelse.OMGJØRING_ETTER_KLAGE -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.KLAGE
+            ÅrsakTilOpprettelse.OMGJØRING_ETTER_SVAR_FRA_KLAGEINSTANS -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.KLAGE
+            ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
+            ÅrsakTilOpprettelse.BARNETILLEGG_SATSENDRING -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.KLAGE
+            ÅrsakTilOpprettelse.FASTSATT_PERIODE_PASSERT -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
+            ÅrsakTilOpprettelse.FRITAK_MELDEPLIKT -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
+            ÅrsakTilOpprettelse.MELDEKORT -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.KORRIGERING
+            ÅrsakTilOpprettelse.AKTIVITETSMELDING -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
+            ÅrsakTilOpprettelse.OPPFØLGINGSOPPGAVE -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
+            ÅrsakTilOpprettelse.OPPFØLGINGSOPPGAVE_SAMORDNING_GRADERING -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
+            ÅrsakTilOpprettelse.SVAR_FRA_KLAGEINSTANS -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.KLAGE
+            ÅrsakTilOpprettelse.KLAGE -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.KLAGE
+            ÅrsakTilOpprettelse.AKTIVITETSPLIKT -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
+            ÅrsakTilOpprettelse.AKTIVITETSPLIKT_11_9 -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
+            ÅrsakTilOpprettelse.TILBAKEKREVING_HENDELSE -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.UKJENT // Ikke relevant
+            ÅrsakTilOpprettelse.AUTOMATISK_OPPDATER_VILKÅR -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
+        }
+
+        val vedtakstidspunkt = vedtakRepository.hent(behandling.id)?.vedtakstidspunkt ?: error("Fant ikke vedtak")
+        return FagsysteminfoSvarHendelse(
+            eksternFagsakId = this.eksternFagsakId,
+            hendelseOpprettet = LocalDateTime.now(),
+            mottaker = MottakerDto(
+                ident = sak.person.aktivIdent().identifikator,
+                type = MottakerDto.MottakerType.PERSON
+            ),
+            revurdering = FagsysteminfoSvarHendelse.RevurderingDto(
+                behandlingId = kravgrunnlagReferanse,
+                årsak = årsak,
+                årsakTilFeilutbetaling = null,
+                vedtaksdato = vedtakstidspunkt.toLocalDate(),
+            ),
+            utvidPerioder = emptyList(),
+            behandlendeEnhet = null, //TODO: hva skal eventuelt inn her?
+        )
+    }
+
+    fun decodeBase64(base64String: String): String {
+        val decodedBytes = Base64.getDecoder().decode(base64String)
+        return String(decodedBytes, Charsets.UTF_8)
+    }
+
 
     private fun finnSisteIverksatteBehandling(sakId: SakId): BehandlingId {
         return behandlingRepository.hentAlleFor(sakId).firstOrNull { it.status().erAvsluttet() }?.id
@@ -318,7 +385,7 @@ class HåndterMottattDokumentService(
             eksternBehandlingId = this.eksternBehandlingId,
             sakOpprettet = this.tilbakekreving.sakOpprettet,
             varselSendt = this.tilbakekreving.varselSendt,
-            behandlingsstatus = no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingBehandlingsstatus.valueOf(
+            behandlingsstatus = TilbakekrevingBehandlingsstatus.valueOf(
                 this.tilbakekreving.behandlingsstatus.name
             ),
             totaltFeilutbetaltBeløp = Beløp(this.tilbakekreving.totaltFeilutbetaltBeløp),
