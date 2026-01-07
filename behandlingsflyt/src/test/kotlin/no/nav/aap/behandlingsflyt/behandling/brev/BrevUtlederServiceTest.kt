@@ -108,6 +108,7 @@ class BrevUtlederServiceTest {
             behandlingId = førstegangsbehandling.id,
             vedtakstidspunkt = LocalDateTime.of(2025,1,1, 0, 0,0),
             virkningstidspunkt = virkningstidspunkt,
+            sluttdato = virkningstidspunkt.plusYears(1),
         )
         every { beregningsgrunnlagRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns Grunnlag11_19(
             grunnlaget = GUnit(2),

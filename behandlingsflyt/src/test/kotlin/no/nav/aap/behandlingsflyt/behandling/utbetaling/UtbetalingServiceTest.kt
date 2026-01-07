@@ -73,12 +73,13 @@ class UtbetalingServiceTest {
 
         every { vedtakRepository.hent(førstegangsbehandling.id) } returns Vedtak(
             førstegangsbehandling.id,
-            andreTilkjentYtelsePeriode.tom.plusDays(1).atStartOfDay(), søknadsDato
+            andreTilkjentYtelsePeriode.tom.plusDays(1).atStartOfDay(), søknadsDato, sluttdato
         )
         every { vedtakRepository.hent(revurdering.id) } returns Vedtak(
             revurdering.id,
             tredjeTilkjentYtelsePeriode.tom.plusDays(1).atStartOfDay(),
-            søknadsDato
+            søknadsDato,
+            sluttdato
         )
 
         every { tilkjentYtelseRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns tilkjentYtelseForFørstegangsbehandling()
@@ -105,12 +106,13 @@ class UtbetalingServiceTest {
 
         every { vedtakRepository.hent(førstegangsbehandling.id) } returns Vedtak(
             førstegangsbehandling.id,
-            førsteTilkjentYtelsePeriode.tom.plusDays(1).atStartOfDay(), søknadsDato
+            førsteTilkjentYtelsePeriode.tom.plusDays(1).atStartOfDay(), søknadsDato, sluttdato
         )
         every { vedtakRepository.hent(revurdering.id) } returns Vedtak(
             revurdering.id,
             tredjeTilkjentYtelsePeriode.tom.plusDays(1).atStartOfDay(),
-            søknadsDato
+            søknadsDato,
+            sluttdato
         )
 
         every { tilkjentYtelseRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns tilkjentYtelseForFørstegangsbehandling()
@@ -152,12 +154,13 @@ class UtbetalingServiceTest {
         val startdato = LocalDate.of(2025, 11, 29)
         every { vedtakRepository.hent(førstegangsbehandling.id) } returns Vedtak(
             førstegangsbehandling.id,
-            (8 desember 2025).atStartOfDay(), startdato
+            (8 desember 2025).atStartOfDay(), startdato, sluttdato
         )
         every { vedtakRepository.hent(revurdering.id) } returns Vedtak(
             revurdering.id,
             LocalDate.of(2025, 12, 17).atStartOfDay(),
-            startdato
+            startdato,
+            sluttdato
         )
 
         every { tilkjentYtelseRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns listOf(

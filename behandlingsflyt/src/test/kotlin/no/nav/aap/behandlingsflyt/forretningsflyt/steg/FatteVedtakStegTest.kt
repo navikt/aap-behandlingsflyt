@@ -59,13 +59,13 @@ class FatteVedtakStegTest {
 
     private fun steg() = FatteVedtakSteg(
         avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-        tidligereVurderinger = tidligereVurderinger,
-        klageresultatUtleder = klageresultatUtleder,
         trekkKlageService = trekkKlageService,
         avklaringsbehovService = avklaringsbehovService,
+        tidligereVurderinger = tidligereVurderinger,
+        klageresultatUtleder = klageresultatUtleder,
         vedtakService = mockk(relaxed = true),
         virkningstidspunktUtleder = mockk(relaxed = true),
-        unleashGateway = FakeUnleash,
+        unleashGateway = FakeUnleash,,
     )
 
     @Test

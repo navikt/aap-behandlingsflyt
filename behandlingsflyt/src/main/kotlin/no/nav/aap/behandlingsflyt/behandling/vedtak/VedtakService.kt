@@ -20,8 +20,13 @@ class VedtakService(
         behandlingRepository = repositoryProvider.provide(),
     )
 
-    fun lagreVedtak(behandlingId: BehandlingId, vedtakstidspunkt: LocalDateTime, virkningstidspunkt: LocalDate?) {
-        vedtakRepository.lagre(behandlingId, vedtakstidspunkt, virkningstidspunkt)
+    fun lagreVedtak(
+        behandlingId: BehandlingId,
+        vedtakstidspunkt: LocalDateTime,
+        virkningstidspunkt: LocalDate?,
+        sluttdato: LocalDate?
+    ) {
+        vedtakRepository.lagre(behandlingId, vedtakstidspunkt, virkningstidspunkt, sluttdato)
     }
 
     fun vedtakstidspunktFørstegangsbehandling(sakId: SakId): LocalDateTime? {

@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurdering
 import no.nav.aap.behandlingsflyt.behandling.gosysoppgave.GosysService
 import no.nav.aap.behandlingsflyt.behandling.mellomlagring.MellomlagretVurderingRepository
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.SluttdatoUtleder
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingService
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
@@ -43,6 +44,7 @@ class IverksettVedtakSteg private constructor(
     private val utbetalingService: UtbetalingService,
     private val vedtakService: VedtakService,
     private val virkningstidspunktUtleder: VirkningstidspunktUtleder,
+    private val sluttdatoUtleder: SluttdatoUtleder,
     private val trukketSøknadService: TrukketSøknadService,
     private val avbrytRevurderingService: AvbrytRevurderingService,
     private val gosysService: GosysService,
@@ -311,6 +313,84 @@ class IverksettVedtakSteg private constructor(
 }
 
 
+<<<<<<< Updated upstream
+=======
+        val stegHistorikk = behandlingRepository.hentStegHistorikk(kontekst.behandlingId)
+        val vedtakstidspunkt = stegHistorikk
+            .find { it.steg() == StegType.FATTE_VEDTAK && it.status() == StegStatus.AVSLUTTER }
+            ?.tidspunkt()
+            ?: error("Forventet å finne et avsluttet fatte vedtak steg")
+
+        val virkningstidspunkt = virkningstidspunktUtleder.utledVirkningsTidspunkt(kontekst.behandlingId)
+        val sluttdato = sluttdatoUtleder.utledSluttdato(kontekst.behandlingId)
+        vedtakService.lagreVedtak(kontekst.behandlingId, vedtakstidspunkt, virkningstidspunkt, sluttdato)
+    }
+
+    private fun lagGysOppgaveHvisRelevant(kontekst: FlytKontekstMedPerioder) {
+        val behandling = behandlingRepository.hent(behandlingId = kontekst.behandlingId)
+        if (!resultatUtleder.erRentAvslag(behandling)) {
+            opprettOppfølgingsoppgaveForNavkontorVedSosialRefusjon(kontekst)
+        } else {
+            log.info("Oppretter ikke gosysoppgave for sak ${kontekst.sakId} og behandling ${kontekst.behandlingId} , da AAP ikke er innvliget ")
+        }
+    }
+
+    private fun opprettOppfølgingsoppgaveForNavkontorVedSosialRefusjon(kontekst: FlytKontekstMedPerioder) {
+        val navkontorSosialRefusjon = refusjonkravRepository.hentHvisEksisterer(kontekst.behandlingId) ?: emptyList()
+        if (navkontorSosialRefusjon.isNotEmpty()) {
+            val forrigeIverksatteSosialRefusjonsVurderinger =
+                kontekst.forrigeBehandlingId?.let { refusjonkravRepository.hentHvisEksisterer(it) } ?: emptyList()
+
+            val gjeldendeSosialRefusjonDtoer = navkontorSosialRefusjon
+                .filter { it.harKrav && it.navKontor != null }
+                .map { it.tilNavKontorPeriodeDto() }
+                .toSet()
+
+            val forrigeSosialRefusjonDtoer = forrigeIverksatteSosialRefusjonsVurderinger
+                .filter { it.harKrav && it.navKontor != null }
+                .map { it.tilNavKontorPeriodeDto() }
+                .toSet()
+
+            val sosialRefusjonerSomManglerOppgave = gjeldendeSosialRefusjonDtoer - forrigeSosialRefusjonDtoer
+
+            log.info("Fant ${sosialRefusjonerSomManglerOppgave.size} refusjonskrav som mangler oppgave")
+            val aktivIdent = sakRepository.hent(kontekst.sakId).person.aktivIdent()
+
+            opprettGosysOppgaverForSosialrefusjon(sosialRefusjonerSomManglerOppgave, aktivIdent, kontekst)
+        }
+    }
+
+    private fun utbetal(kontekst: FlytKontekstMedPerioder) {
+        /**
+         * Må opprette jobb med sakId, men uten behandlingId for at disse skal bli kjørt sekvensielt i riktig rekkefølge.
+         * Viktig at eldste jobb kjøres først slik at utbetaling blir konsistent med Kelvin
+         */
+        flytJobbRepository.leggTil(
+            jobbInput = JobbInput(jobb = IverksettUtbetalingJobbUtfører)
+                .medPayload(kontekst.behandlingId)
+                .forSak(sakId = kontekst.sakId.toLong())
+        )
+    }
+
+    private fun opprettGosysOppgaverForSosialrefusjon(
+        navKontorerSomSkalHaOppgave: Set<NavKontorPeriodeDto>,
+        aktivIdent: Ident,
+        kontekst: FlytKontekstMedPerioder
+    ) {
+        navKontorerSomSkalHaOppgave.forEach { navKontor ->
+            // TODO: Opprett egen jobb-kjøring for å opprette gosysoppgave
+            if (navKontor.enhetsNummer.isNotEmpty()) {
+                log.info("Oppretter Gosysoppgave for $navKontor")
+                gosysService.opprettOppgave(
+                    aktivIdent,
+                    kontekst.behandlingId.toString(),
+                    kontekst.behandlingId,
+                    navKontor
+                )
+            }
+        }
+    }
+>>>>>>> Stashed changes
 
 
     companion object : FlytSteg {
@@ -327,6 +407,9 @@ class IverksettVedtakSteg private constructor(
             val virkningstidspunktUtlederService = VirkningstidspunktUtleder(
                 vilkårsresultatRepository = repositoryProvider.provide(),
             )
+            val sluttdatoUtlederService = SluttdatoUtleder(
+                vilkårsresultatRepository = repositoryProvider.provide(),
+            )
             val mellomlagretVurderingRepository = repositoryProvider.provide<MellomlagretVurderingRepository>()
             val resultatUtleder = ResultatUtleder(repositoryProvider)
             return IverksettVedtakSteg(
@@ -339,6 +422,7 @@ class IverksettVedtakSteg private constructor(
                 ),
                 vedtakService = VedtakService(vedtakRepository, behandlingRepository),
                 virkningstidspunktUtleder = virkningstidspunktUtlederService,
+                sluttdatoUtleder = sluttdatoUtlederService,
                 trukketSøknadService = TrukketSøknadService(repositoryProvider),
                 avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
                 flytJobbRepository = flytJobbRepository,

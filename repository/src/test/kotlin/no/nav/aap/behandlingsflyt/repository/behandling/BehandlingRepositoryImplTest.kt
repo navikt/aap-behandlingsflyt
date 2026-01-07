@@ -244,6 +244,7 @@ internal class BehandlingRepositoryImplTest {
                 behandlingId = førstegang.id,
                 vedtakstidspunkt = vedtakstidspunkt,
                 virkningstidspunkt = virkningstidspunkt,
+                sluttdato = sluttdato,
             )
 
             val klage = behandlingRepo.opprettBehandling(

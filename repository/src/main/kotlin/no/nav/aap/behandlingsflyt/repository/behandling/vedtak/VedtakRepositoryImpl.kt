@@ -20,16 +20,18 @@ class VedtakRepositoryImpl(private val connection: DBConnection) : VedtakReposit
         behandlingId: BehandlingId,
         vedtakstidspunkt: LocalDateTime,
         virkningstidspunkt: LocalDate?,
+        sluttdato: LocalDate?,
     ) {
         connection.execute(
             """
-            INSERT INTO VEDTAK (behandling_id, vedtakstidspunkt, virkningstidspunkt) VALUES (?, ?, ?)
+            INSERT INTO VEDTAK (behandling_id, vedtakstidspunkt, virkningstidspunkt, sluttdato) VALUES (?, ?, ?, ?)
             """.trimIndent()
         ) {
             setParams {
                 setLong(1, behandlingId.toLong())
                 setLocalDateTime(2, vedtakstidspunkt)
                 setLocalDate(3, virkningstidspunkt)
+                setLocalDate(4, sluttdato)
             }
         }
     }
@@ -43,7 +45,8 @@ class VedtakRepositoryImpl(private val connection: DBConnection) : VedtakReposit
                 Vedtak(
                     behandlingId = BehandlingId(it.getLong("behandling_id")),
                     vedtakstidspunkt = it.getLocalDateTime("vedtakstidspunkt"),
-                    virkningstidspunkt = it.getLocalDateOrNull("virkningstidspunkt")
+                    virkningstidspunkt = it.getLocalDateOrNull("virkningstidspunkt"),
+                    sluttdato = it.getLocalDateOrNull("sluttdato")
                 )
             }
         }

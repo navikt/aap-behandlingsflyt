@@ -14,11 +14,12 @@ object InMemoryVedtakRepository : VedtakRepository {
     override fun lagre(
         behandlingId: BehandlingId,
         vedtakstidspunkt: LocalDateTime,
-        virkningstidspunkt: LocalDate?
+        virkningstidspunkt: LocalDate?,
+        sluttdato: LocalDate?
     ) {
         grunnlag.putIfAbsent(
             behandlingId,
-            Pair(id.incrementAndGet(), Vedtak(behandlingId, vedtakstidspunkt, virkningstidspunkt))
+            Pair(id.incrementAndGet(), Vedtak(behandlingId, vedtakstidspunkt, virkningstidspunkt, sluttdato))
         )
     }
 

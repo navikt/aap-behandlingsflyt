@@ -88,6 +88,7 @@ class MeldeperiodeTilMeldekortBackendJobbUtførerTest {
                 behandlingId = BehandlingId(0),
                 vedtakstidspunkt = LocalDateTime.parse("2025-05-05T10:43:44.561"),
                 virkningstidspunkt = LocalDate.parse("2025-05-13"),
+                sluttdato = sluttdato,
             ),
             meldepliktGrunnlag = MeldepliktGrunnlag(emptyList()),
             underveisGrunnlag = UnderveisGrunnlag(

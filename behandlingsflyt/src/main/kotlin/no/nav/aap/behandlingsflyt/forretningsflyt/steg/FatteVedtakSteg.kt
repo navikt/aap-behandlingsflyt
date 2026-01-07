@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.SluttdatoUtleder
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
@@ -35,7 +36,8 @@ class FatteVedtakSteg(
     private val klageresultatUtleder: KlageresultatUtleder,
     private val vedtakService: VedtakService,
     private val virkningstidspunktUtleder: VirkningstidspunktUtleder,
-    private val unleashGateway: UnleashGateway,
+    private val sluttdatoUtleder: SluttdatoUtleder,
+    private val unleashGateway: UnleashGateway
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
@@ -69,6 +71,7 @@ class FatteVedtakSteg(
                     behandlingId = kontekst.behandlingId,
                     vedtakstidspunkt = vedtakstidspunkt,
                     virkningstidspunkt = virkningstidspunktUtleder.utledVirkningsTidspunkt(kontekst.behandlingId),
+                    sluttdato = sluttdatoUtleder.utledSluttdato(kontekst.behandlingId),
                 )
             }
         }
@@ -129,6 +132,7 @@ class FatteVedtakSteg(
                 klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
                 vedtakService = VedtakService(repositoryProvider),
                 virkningstidspunktUtleder = VirkningstidspunktUtleder(repositoryProvider),
+                sluttdatoUtleder = SluttdatoUtleder(repositoryProvider),
                 unleashGateway = gatewayProvider.provide(),
             )
         }

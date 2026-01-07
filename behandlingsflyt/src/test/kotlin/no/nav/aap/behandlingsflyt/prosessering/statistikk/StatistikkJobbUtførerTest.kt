@@ -329,7 +329,7 @@ class StatistikkJobbUtførerTest {
                 ),
             )
             VedtakService(postgresRepositoryRegistry.provider(connection)).lagreVedtak(
-                opprettetBehandling.id, vedtakstidspunkt, LocalDate.now()
+                opprettetBehandling.id, vedtakstidspunkt, LocalDate.now(),
             )
             beregningsgrunnlagRepository.lagre(
                 behandlingId = opprettetBehandling.id, Grunnlag11_19(

@@ -8,4 +8,5 @@ data class Vedtak(
     val behandlingId: BehandlingId,
     val vedtakstidspunkt: LocalDateTime,
     val virkningstidspunkt: LocalDate?,
+    val sluttdato: LocalDate?,
 )
