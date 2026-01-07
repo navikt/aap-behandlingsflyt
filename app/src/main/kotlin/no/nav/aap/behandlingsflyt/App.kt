@@ -276,7 +276,7 @@ internal fun Application.server(
                 auditlogApi(dataSource, repositoryRegistry)
                 refusjonGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 manglendeGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                mellomlagretVurderingApi(dataSource, repositoryRegistry)
+                mellomlagretVurderingApi(dataSource, repositoryRegistry, gatewayProvider)
                 // Klage
                 påklagetBehandlingGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 fullmektigGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
