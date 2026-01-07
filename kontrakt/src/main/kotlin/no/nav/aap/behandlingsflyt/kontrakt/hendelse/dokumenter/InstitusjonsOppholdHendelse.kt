@@ -9,7 +9,7 @@ import no.nav.aap.verdityper.dokument.Kanal
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-public sealed interface Inst2Hendelse : Melding
+public sealed interface InstitusjonsOppholdHendelse : Melding
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public data class Inst2HendelseKafkaMelding(
@@ -21,8 +21,8 @@ public data class Inst2HendelseKafkaMelding(
     var institusjonsOpphold: Inst2KafkaDto
 )
 {
-    public fun tilInst2HendelseV0(): Inst2Hendelse =
-        Inst2HendelseV0(
+    public fun tilInstitusjonsOppholdHendelseV0(): InstitusjonsOppholdHendelse =
+        InstitusjonsOppholdHendelseV0(
             hendelsesid = hendelseId,
             eksternFagsakId = oppholdId,
             norskIdent = norskident,
@@ -36,19 +36,19 @@ public data class Inst2HendelseKafkaMelding(
             type = InnsendingType.INSTITUSJONSOPPHOLD,
             kanal = Kanal.DIGITAL,
             mottattTidspunkt = LocalDateTime.now(),
-            melding = this.tilInst2HendelseV0()
+            melding = this.tilInstitusjonsOppholdHendelseV0()
         )
     }
 
 }
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public data class Inst2HendelseV0(
+public data class InstitusjonsOppholdHendelseV0(
     val hendelsesid: Long,
     val eksternFagsakId: Long,
     val norskIdent: String,
     val institusjonsOpphold: Inst2KafkaDto,
-) : Inst2Hendelse
+) : InstitusjonsOppholdHendelse
 
 public data class Inst2KafkaDto(
     val oppholdId: Long,
