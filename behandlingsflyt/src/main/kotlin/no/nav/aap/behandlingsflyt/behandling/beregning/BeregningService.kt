@@ -84,9 +84,8 @@ class BeregningService(
     }
 
     fun utledRelevanteBeregningsÅr(behandlingId: BehandlingId): Set<Year> {
-        val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId)
         val beregningGrunnlag = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
-        return Inntektsbehov.utledAlleRelevanteÅr(beregningGrunnlag, studentGrunnlag)
+        return Inntektsbehov.utledAlleRelevanteÅr(beregningGrunnlag)
     }
 
     private fun kombinerInntektOgManuellInntekt(
