@@ -24,7 +24,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     MigrerRettighetsperiode,
     MigrerArbeidsevne,
     HentSykepengerVedOverlapp,
-    KanSendeBrevOmBarnetilleggSatsRegulering,
     PeriodisertSykdom,
     Sykestipend
     ;

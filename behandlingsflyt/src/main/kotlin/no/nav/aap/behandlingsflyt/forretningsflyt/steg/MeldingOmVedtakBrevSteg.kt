@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.prosessering.OpprettJobbForTriggBarnetilleggSatsJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -107,7 +108,8 @@ class MeldingOmVedtakBrevSteg(
             }
             log.info("Bestiller automatisk brev om barnetillegg sats endring for sak ${kontekst.sakId}.")
             val sak = sakRepository.hent(kontekst.sakId)
-            val unikReferanse = "${sak.saksnummer}-${brevBehov.typeBrev}-02012026"
+            val unikReferanse =
+                "${sak.saksnummer}-${brevBehov.typeBrev}-${OpprettJobbForTriggBarnetilleggSatsJobbUtfører.jobbKonfigurasjon.unikBrevreferanseForSak}"
             brevbestillingService.bestill(
                 behandlingId = kontekst.behandlingId,
                 brevBehov = brevBehov,

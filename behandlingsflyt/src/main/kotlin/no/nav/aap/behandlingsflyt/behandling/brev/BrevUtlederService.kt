@@ -128,11 +128,7 @@ class BrevUtlederService(
                 }
 
                 if (vurderingsbehov == setOf(BARNETILLEGG_SATS_REGULERING)) {
-                    return if (unleashGateway.isEnabled(BehandlingsflytFeature.KanSendeBrevOmBarnetilleggSatsRegulering)) {
-                        BarnetilleggSatsRegulering
-                    } else {
-                        null
-                    }
+                    return BarnetilleggSatsRegulering
                 }
 
                 if (resultat == Resultat.AVBRUTT) {
