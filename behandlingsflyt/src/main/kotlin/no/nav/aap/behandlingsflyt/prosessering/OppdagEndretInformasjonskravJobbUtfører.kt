@@ -25,7 +25,7 @@ class OppdagEndretInformasjonskravJobbUtfører(
     private val låsRepository: TaSkriveLåsRepository,
 ) : JobbUtfører {
     private val log = LoggerFactory.getLogger(javaClass)
-    private val secureLogger = LoggerFactory.getLogger("secureLog")
+    private val secureLogger = LoggerFactory.getLogger("team-logs")
 
     override fun utfør(input: JobbInput) {
         val sakId = SakId(input.sakId())
