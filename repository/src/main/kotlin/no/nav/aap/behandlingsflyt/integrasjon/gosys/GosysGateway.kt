@@ -56,8 +56,8 @@ class GosysGateway : OppgaveGateway {
     ) {
 
         if (navKontor.vedtaksdato == null || navKontor.virkingsdato == null) {
-            log.error("Kan ikke opprette refusjonsoppgave i Gosys uten gyldige datoer for navkontor periode. Navkontorperiode: $navKontor")
-            throw IllegalArgumentException("Kan ikke opprette refusjonsoppgave i Gosys uten gyldige datoer for navkontor periode.")
+            log.info("Oppretter gosysoppgave med manglededato for behandling $behandlingId, " +
+                    "virkningsdato=${navKontor.virkingsdato}, vedtaksdato=${navKontor.vedtaksdato}")
         }
 
         val beskrivelse =
