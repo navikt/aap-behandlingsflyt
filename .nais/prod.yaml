@@ -63,8 +63,6 @@ spec:
         extra:
           - "NAVident"
           - "azp_name"
-  secureLogs:
-    enabled: true
   envFrom:
     - secret: kelvin-unleash-api-token
   accessPolicy:
@@ -130,6 +128,8 @@ spec:
           namespace: klage
         - application: medlemskap-medl-api
           namespace: team-rocket
+        - application: logging
+          namespace: nais-system
 
   env:
     - name: INTEGRASJON_PDL_URL

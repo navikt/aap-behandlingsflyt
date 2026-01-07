@@ -46,7 +46,7 @@ class BeregningVurderingRepositoryImplTest {
     fun `lagre, hent ut igjen, og slett`() {
         val tidspunktVurdering = BeregningstidspunktVurdering(
             begrunnelse = "Dette er en begrunnelse",
-            nedsattArbeidsevneDato = LocalDate.now(),
+            nedsattArbeidsevneEllerStudieevneDato = LocalDate.now(),
             ytterligereNedsattBegrunnelse = "Dette er en ytterligere begrunnelse",
             ytterligereNedsattArbeidsevneDato = LocalDate.now().plusDays(30),
             vurdertAv = "saksbehandler"
@@ -91,13 +91,13 @@ class BeregningVurderingRepositoryImplTest {
             assertThat(beregningGrunnlag.tidspunktVurdering).isNotNull
                 .extracting(
                     { it!!.begrunnelse },
-                    { it!!.nedsattArbeidsevneDato },
+                    { it!!.nedsattArbeidsevneEllerStudieevneDato },
                     { it!!.ytterligereNedsattBegrunnelse },
                     { it!!.ytterligereNedsattArbeidsevneDato }
                 )
                 .containsExactly(
                     tidspunktVurdering.begrunnelse,
-                    tidspunktVurdering.nedsattArbeidsevneDato,
+                    tidspunktVurdering.nedsattArbeidsevneEllerStudieevneDato,
                     tidspunktVurdering.ytterligereNedsattBegrunnelse,
                     tidspunktVurdering.ytterligereNedsattArbeidsevneDato
                 )

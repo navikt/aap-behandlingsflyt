@@ -99,9 +99,8 @@ class ProsesserBehandlingService(
             triggProsesserBehandling(åpenBehandling, emptyList())
         } else {
             flytJobbRepository.leggTil(
-                JobbInput(jobb = OppdagEndretInformasjonskravJobbUtfører).forBehandling(
-                    sakID = behandling.sakId.toLong(),
-                    behandlingId = behandling.id.toLong()
+                JobbInput(jobb = OppdagEndretInformasjonskravJobbUtfører).forSak(
+                    sakId = behandling.sakId.toLong(),
                 ).medCallId()
             )
         }

@@ -60,15 +60,14 @@ class BeregningAvklarFaktaSteg private constructor(
                         when {
                             tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
                             kontekst.vurderingsbehovRelevanteForSteg.isEmpty() -> false
-                            manueltTriggetVurderingsbehovBeregning(kontekst) -> erIkkeStudent(behandlingId)
+                            manueltTriggetVurderingsbehovBeregning(kontekst) -> true
                             manueltTriggetVurderingsbehovYrkesskade(kontekst) -> false
-                            else -> {
-                                erIkkeStudent(behandlingId)
-                            }
+                            else -> true
                         }
                     }
                     VurderingType.AUTOMATISK_OPPDATER_VILKÅR,
                     VurderingType.MELDEKORT,
+                    VurderingType.AUTOMATISK_BREV,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
                     VurderingType.IKKE_RELEVANT ->
@@ -106,6 +105,7 @@ class BeregningAvklarFaktaSteg private constructor(
                     }
                     VurderingType.AUTOMATISK_OPPDATER_VILKÅR,
                     VurderingType.MELDEKORT,
+                    VurderingType.AUTOMATISK_BREV,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
                     VurderingType.IKKE_RELEVANT ->
@@ -164,13 +164,7 @@ class BeregningAvklarFaktaSteg private constructor(
         return yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() == true
                 && yrkesskadeVurdering?.erÅrsakssammenheng == true
     }
-
-    private fun erIkkeStudent(behandlingId: BehandlingId): Boolean {
-        val vilkårsresultat = vilkårsresultatRepository.hent(behandlingId)
-        return vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET).vilkårsperioder()
-            .firstOrNull()?.innvilgelsesårsak != Innvilgelsesårsak.STUDENT
-    }
-
+    
     private fun harFastsattBeløpForAlleRelevanteYrkesskadesaker(
         relevanteSaker: List<YrkesskadeSak>,
         beregningGrunnlag: BeregningGrunnlag?

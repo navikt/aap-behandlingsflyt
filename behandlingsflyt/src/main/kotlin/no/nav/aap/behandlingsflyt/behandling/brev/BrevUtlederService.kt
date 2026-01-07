@@ -128,11 +128,7 @@ class BrevUtlederService(
                 }
 
                 if (vurderingsbehov == setOf(BARNETILLEGG_SATS_REGULERING)) {
-                    return if (unleashGateway.isEnabled(BehandlingsflytFeature.KanSendeBrevOmBarnetilleggSatsRegulering)) {
-                        BarnetilleggSatsRegulering
-                    } else {
-                        null
-                    }
+                    return BarnetilleggSatsRegulering
                 }
 
                 if (resultat == Resultat.AVBRUTT) {
@@ -256,7 +252,7 @@ class BrevUtlederService(
         beregningstidspunktVurdering: BeregningstidspunktVurdering?,
         beregningsgrunnlag: Beløp?,
     ): GrunnlagBeregning {
-        val beregningstidspunkt = beregningstidspunktVurdering?.nedsattArbeidsevneDato
+        val beregningstidspunkt = beregningstidspunktVurdering?.nedsattArbeidsevneEllerStudieevneDato
         val inntekter = grunnlag.inntekter().grunnlagInntektTilInntektPerÅr()
         return GrunnlagBeregning(
             beregningstidspunkt = beregningstidspunkt,
@@ -347,7 +343,7 @@ class BrevUtlederService(
         beregningstidspunktVurdering: BeregningstidspunktVurdering?
     ): LocalDate? {
         return when (grunnlag.type()) {
-            GrunnlagUføre.Type.STANDARD -> beregningstidspunktVurdering?.nedsattArbeidsevneDato
+            GrunnlagUføre.Type.STANDARD -> beregningstidspunktVurdering?.nedsattArbeidsevneEllerStudieevneDato
             GrunnlagUføre.Type.YTTERLIGERE_NEDSATT -> beregningstidspunktVurdering?.ytterligereNedsattArbeidsevneDato
         }
     }

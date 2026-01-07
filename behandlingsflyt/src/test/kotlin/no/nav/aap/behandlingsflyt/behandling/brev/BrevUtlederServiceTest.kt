@@ -122,7 +122,7 @@ class BrevUtlederServiceTest {
         every { beregningVurderingRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns BeregningGrunnlag(
             BeregningstidspunktVurdering(
                 begrunnelse = "",
-                nedsattArbeidsevneDato = LocalDate.of(2025, 1, 1),
+                nedsattArbeidsevneEllerStudieevneDato = LocalDate.of(2025, 1, 1),
                 ytterligereNedsattBegrunnelse = null,
                 ytterligereNedsattArbeidsevneDato = null,
                 vurdertAv = ""
@@ -389,7 +389,7 @@ class BrevUtlederServiceTest {
         every { beregningVurderingRepository.hentHvisEksisterer(revurdering.id) } returns BeregningGrunnlag(
             BeregningstidspunktVurdering(
                 begrunnelse = "",
-                nedsattArbeidsevneDato = LocalDate.of(2023, 2, 20),
+                nedsattArbeidsevneEllerStudieevneDato = LocalDate.of(2023, 2, 20),
                 ytterligereNedsattBegrunnelse = null,
                 ytterligereNedsattArbeidsevneDato = null,
                 vurdertAv = ""

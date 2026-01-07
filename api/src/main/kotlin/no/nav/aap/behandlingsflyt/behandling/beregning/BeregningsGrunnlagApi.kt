@@ -29,6 +29,7 @@ import no.nav.aap.tilgang.authorizedGet
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import javax.sql.DataSource
 
 private val årFormatter = DateTimeFormatter.ofPattern("yyyy")
@@ -179,13 +180,15 @@ private fun inntekterTilUføreDTO(uføreInntekt: UføreInntekt, grunnlagInntekt:
             .somTidslinje({ it.periode }, { Triple(it.inntektIKroner, it.uføregrad, it.inntektJustertForUføregrad) })
             .komprimer()
             .segmenter()
-            .map { (periode, tirple) ->
-                val (inntektIKroner, uføregrad, inntektJustertForUføregrad) = tirple
+            .map { (periode, triple) ->
+                val (inntektIKroner, uføregrad, inntektJustertForUføregrad) = triple
+                val antallMånender =
+                    ChronoUnit.MONTHS.between(periode.fom.withDayOfMonth(1), periode.tom.withDayOfMonth(1)).toInt()
                 UføreInntektPeriodisertDTO(
                     periode = periode,
-                    inntektIKroner = inntektIKroner,
+                    inntektIKroner = inntektIKroner.multiplisert(antallMånender),
                     uføregrad = uføregrad.prosentverdi(),
-                    inntektJustertForUføregrad = inntektJustertForUføregrad
+                    inntektJustertForUføregrad = inntektJustertForUføregrad.multiplisert(antallMånender)
                 )
             }
     )

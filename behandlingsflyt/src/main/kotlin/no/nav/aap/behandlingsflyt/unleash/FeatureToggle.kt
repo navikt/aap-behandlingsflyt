@@ -16,16 +16,16 @@ enum class BehandlingsflytFeature : FeatureToggle {
     NyBrevbyggerV3,
     LagreVedtakIFatteVedtak,
     PeriodisertSykepengeErstatningNyAvklaringsbehovService,
-    MidlertidigStopp11_4,
     Under18,
     ValiderOvergangUfore,
     KravOmInntektsbortfall,
+    MigrerMeldepliktFritak,
+    SosialRefusjon,
     MigrerRettighetsperiode,
     MigrerArbeidsevne,
-    SosialRefusjon,
     HentSykepengerVedOverlapp,
-    KanSendeBrevOmBarnetilleggSatsRegulering,
     PeriodisertSykdom,
+    Sykestipend
     ;
 
     override fun key(): String = name

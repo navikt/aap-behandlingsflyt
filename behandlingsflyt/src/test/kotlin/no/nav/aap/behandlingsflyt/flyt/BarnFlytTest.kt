@@ -167,6 +167,9 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         }
         assertThat(sakerMedBarnetillegg).containsExactly(behandling.sakId)
 
+        OpprettJobbForTriggBarnetilleggSatsJobbUtfører.jobbKonfigurasjon =
+            OpprettJobbForTriggBarnetilleggSatsJobbUtfører.jobbKonfigurasjon.copy(erAktiv = true)
+
         // Bestiller brev om barnetillegg sats regulering
         dataSource.transaction {
             FlytJobbRepository(it).leggTil(JobbInput(OpprettJobbForTriggBarnetilleggSatsJobbUtfører))
@@ -1126,10 +1129,10 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
 
     }
 
-    private fun hentTilkjentYtelse(behandlingId: BehandlingId) =
-        requireNotNull(dataSource.transaction {
-            TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(behandlingId)
-        }) { "Tilkjent ytelse skal være beregnet her." }
+    private fun BehandlingInfo.hentTilkjentYtelse(behandlingId: BehandlingId) =
+        requireNotNull(
+            repositoryProvider.provide<TilkjentYtelseRepository>().hentHvisEksisterer(behandlingId)
+        ) { "Tilkjent ytelse skal være beregnet her." }
 
     fun lagTestPerson(fornavn: String, etternavn: String, fødselsdato: LocalDate): TestPerson {
         return TestPerson(

@@ -97,6 +97,7 @@ class ManglendeLigningGrunnlagSteg internal constructor(
                     }
 
                     VurderingType.MELDEKORT,
+                    VurderingType.AUTOMATISK_BREV,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
                     VurderingType.AUTOMATISK_OPPDATER_VILKÅR,
