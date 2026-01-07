@@ -18,8 +18,14 @@ class OpprettRevurderingSteg(
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         return when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING, VurderingType.MELDEKORT, VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
-            VurderingType.AUTOMATISK_OPPDATER_VILKÅR, VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9, VurderingType.IKKE_RELEVANT -> {
+            VurderingType.FØRSTEGANGSBEHANDLING,
+            VurderingType.REVURDERING,
+            VurderingType.MELDEKORT,
+            VurderingType.AUTOMATISK_BREV,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
+            VurderingType.AUTOMATISK_OPPDATER_VILKÅR,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
+            VurderingType.IKKE_RELEVANT -> {
                 Fullført
             }
         }

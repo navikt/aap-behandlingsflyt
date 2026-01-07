@@ -7,8 +7,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
@@ -20,7 +18,6 @@ class TriggBarnetilleggSatsJobbUtfører(
     val sakRepository: SakRepository,
     private val sakOgBehandlingService: SakOgBehandlingService,
     private val prosesserBehandlingService: ProsesserBehandlingService,
-    private val unleashGateway: UnleashGateway,
 ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -30,7 +27,7 @@ class TriggBarnetilleggSatsJobbUtfører(
 
         log.info("Oppretter satsendring-behandling for sak med id $sakId.")
 
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.KanSendeBrevOmBarnetilleggSatsRegulering)) {
+        if (OpprettJobbForTriggBarnetilleggSatsJobbUtfører.jobbKonfigurasjon.erAktiv) {
             log.info("Trigger behandlinger for barnetillegg sats regulering.")
 
             val behandling = sakOgBehandlingService.finnEllerOpprettBehandling(
@@ -42,7 +39,7 @@ class TriggBarnetilleggSatsJobbUtfører(
             prosesserBehandlingService.triggProsesserBehandling(behandling)
 
         } else {
-            log.info("Trigger ikke behandlinger for barnetillegg sats regulering. Funksjonsbryter er av.")
+            log.info("Trigger ikke behandlinger for barnetillegg sats regulering. Jobb er ikke aktiv.")
         }
     }
 
@@ -59,7 +56,6 @@ class TriggBarnetilleggSatsJobbUtfører(
                 sakRepository = repositoryProvider.provide(),
                 sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
                 prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
-                unleashGateway = gatewayProvider.provide(),
             )
         }
     }

@@ -27,7 +27,6 @@ import java.time.Year
 class BeregningService(
     private val inntektGrunnlagRepository: InntektGrunnlagRepository,
     private val sykdomRepository: SykdomRepository,
-    private val studentRepository: StudentRepository,
     private val uføreRepository: UføreRepository,
     private val beregningsgrunnlagRepository: BeregningsgrunnlagRepository,
     private val beregningVurderingRepository: BeregningVurderingRepository,
@@ -38,7 +37,6 @@ class BeregningService(
     constructor(repositoryProvider: RepositoryProvider) : this(
         inntektGrunnlagRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
-        studentRepository = repositoryProvider.provide(),
         uføreRepository = repositoryProvider.provide(),
         beregningsgrunnlagRepository = repositoryProvider.provide(),
         beregningVurderingRepository = repositoryProvider.provide(),
@@ -51,7 +49,6 @@ class BeregningService(
         val manuellInntektGrunnlag = manuellInntektGrunnlagRepository.hentHvisEksisterer(behandlingId)
         val sykdomGrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
         val uføre = uføreRepository.hentHvisEksisterer(behandlingId)
-        val student = studentRepository.hentHvisEksisterer(behandlingId)
         val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
         val yrkesskadeGrunnlag = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
 
@@ -62,7 +59,6 @@ class BeregningService(
             )
 
         val input = utledInput(
-            studentVurdering = student?.vurderinger?.single(),
             yrkesskadevurdering = sykdomGrunnlag?.yrkesskadevurdering,
             vurdering = beregningVurdering,
             årsInntekter = kombinertInntekt,
@@ -84,9 +80,8 @@ class BeregningService(
     }
 
     fun utledRelevanteBeregningsÅr(behandlingId: BehandlingId): Set<Year> {
-        val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId)
         val beregningGrunnlag = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
-        return Inntektsbehov.utledAlleRelevanteÅr(beregningGrunnlag, studentGrunnlag)
+        return Inntektsbehov.utledAlleRelevanteÅr(beregningGrunnlag)
     }
 
     private fun kombinerInntektOgManuellInntekt(
@@ -125,7 +120,6 @@ class BeregningService(
     }
 
     private fun utledInput(
-        studentVurdering: StudentVurdering?,
         yrkesskadevurdering: Yrkesskadevurdering?,
         vurdering: BeregningGrunnlag?,
         årsInntekter: Set<InntektPerÅr>,
@@ -133,9 +127,12 @@ class BeregningService(
         uføregrad: Set<Uføre>,
         registrerteYrkesskader: Yrkesskader?
     ): Inntektsbehov {
+        val nedsettelsesdato = vurdering?.tidspunktVurdering?.nedsattArbeidsevneEllerStudieevneDato
+            ?: throw IllegalStateException("Nedsettelsesdato må være satt for beregning")
+
         return Inntektsbehov(
             BeregningInput(
-                nedsettelsesDato = Inntektsbehov.utledNedsettelsesdato(vurdering?.tidspunktVurdering, studentVurdering),
+                nedsettelsesDato = nedsettelsesdato,
                 årsInntekter = årsInntekter,
                 uføregrad = uføregrad,
                 yrkesskadevurdering = yrkesskadevurdering,

@@ -12,12 +12,21 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurderingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.FakeUnleashBase
 import no.nav.aap.behandlingsflyt.test.november
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedClass
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
+import kotlin.reflect.KClass
 
-class StudentFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
+@ParameterizedClass
+@MethodSource("testData")
+class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlytOrkestratorTest(unleashGateway) {
     @Test
     fun `innvilge som student, revurdering ordinær`() {
         val fom = 24 november 2025
@@ -46,6 +55,11 @@ class StudentFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                     ),
                 )
             )
+            .medKontekst { 
+                if(unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.Sykestipend)) {
+                    this.behandling.løsSykestipend()
+                }
+            }
             .løsRefusjonskrav()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(sak.rettighetsperiode.fom)
@@ -111,4 +125,39 @@ class StudentFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
 
     }
 
+    companion object {
+        @Suppress("unused")
+        @JvmStatic
+        fun testData(): List<Arguments> {
+            return listOf(
+                Arguments.of(FakeUnleash::class),
+                Arguments.of(SykestipendAktivert::class),
+            )
+        }
+    }
+
 }
+
+object SykestipendAktivert: FakeUnleashBase(
+    mapOf(
+        BehandlingsflytFeature.IngenValidering to false,
+        BehandlingsflytFeature.NyBrevtype11_17 to true,
+        BehandlingsflytFeature.OverforingsdatoNullForAvregning to true,
+        BehandlingsflytFeature.OvergangArbeid to true,
+        BehandlingsflytFeature.KvalitetssikringsSteg to true,
+        BehandlingsflytFeature.EOSBeregning to true,
+        BehandlingsflytFeature.NyBrevbyggerV3 to false,
+        BehandlingsflytFeature.BedreUttrekkAvSakerMedFritakMeldeplikt to false,
+        BehandlingsflytFeature.LagreVedtakIFatteVedtak to true,
+        BehandlingsflytFeature.PeriodisertSykepengeErstatningNyAvklaringsbehovService to true,
+        BehandlingsflytFeature.ValiderOvergangUfore to true,
+        BehandlingsflytFeature.KravOmInntektsbortfall to true,
+        BehandlingsflytFeature.Under18 to true,
+        BehandlingsflytFeature.MigrerArbeidsevne to true,
+        BehandlingsflytFeature.SosialRefusjon to true,
+        BehandlingsflytFeature.HentSykepengerVedOverlapp to true,
+        BehandlingsflytFeature.MigrerRettighetsperiode to true,
+        BehandlingsflytFeature.PeriodisertSykdom to true,
+        BehandlingsflytFeature.Sykestipend to true,
+    )
+)

@@ -31,7 +31,7 @@ class TilbakekrevingKafkaKonsument(
     consumerName = "AapBehandlingsflytTilbakekrevingHendelse",
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
-    private val secureLogger = LoggerFactory.getLogger("secureLog")
+    private val secureLogger = LoggerFactory.getLogger("team-logs")
 
     override fun håndter(meldinger: ConsumerRecords<String, String>) {
         meldinger.forEach(::håndter)

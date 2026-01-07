@@ -91,7 +91,7 @@ class InntektsbehovTest {
                     tidspunktVurdering = BeregningstidspunktVurdering(
                         begrunnelse = "asdf",
                         ytterligereNedsattArbeidsevneDato = ytterligereNedsattDato,
-                        nedsattArbeidsevneDato = nedsettelsesDato,
+                        nedsattArbeidsevneEllerStudieevneDato = nedsettelsesDato,
                         ytterligereNedsattBegrunnelse = "asdf",
                         vurdertAv = "saksbehandler"
                     ), yrkesskadeBeløpVurdering = null
@@ -128,7 +128,7 @@ class InntektsbehovTest {
                 beregningGrunnlag = BeregningGrunnlag(
                     tidspunktVurdering = BeregningstidspunktVurdering(
                         begrunnelse = "begrunnelse",
-                        nedsattArbeidsevneDato = nedsettelsesDato,
+                        nedsattArbeidsevneEllerStudieevneDato = nedsettelsesDato,
                         ytterligereNedsattArbeidsevneDato = LocalDate.now().minusYears(10),
                         ytterligereNedsattBegrunnelse = "begrunnelse",
                         vurdertAv = "saksbehandler"
@@ -166,7 +166,7 @@ class InntektsbehovTest {
                 beregningGrunnlag = BeregningGrunnlag(
                     tidspunktVurdering = BeregningstidspunktVurdering(
                         begrunnelse = "begrunnelse",
-                        nedsattArbeidsevneDato = nedsettelsesDato,
+                        nedsattArbeidsevneEllerStudieevneDato = nedsettelsesDato,
                         ytterligereNedsattArbeidsevneDato = LocalDate.now().minusYears(10),
                         ytterligereNedsattBegrunnelse = "begrunnelse",
                         vurdertAv = "saksbehandler"
@@ -193,36 +193,14 @@ class InntektsbehovTest {
         val beregningGrunnlag = BeregningGrunnlag(
             tidspunktVurdering = BeregningstidspunktVurdering(
                 begrunnelse = "begrunnelse",
-                nedsattArbeidsevneDato = 1 januar 2025,
+                nedsattArbeidsevneEllerStudieevneDato = 1 januar 2025,
                 ytterligereNedsattBegrunnelse = null,
                 ytterligereNedsattArbeidsevneDato = 1 januar 2025,
                 vurdertAv = "saksbehandler",
             ), yrkesskadeBeløpVurdering = null
         )
 
-        val relevanteÅr = Inntektsbehov.utledAlleRelevanteÅr(beregningGrunnlag, null)
-        assertThat(relevanteÅr).containsExactlyInAnyOrder(
-            Year.of(2024), Year.of(2023), Year.of(2022)
-        )
-    }
-
-    @Test
-    fun `skal utlede de tre forutgående kalenderårene basert på datoene i studentgrunnlaget`() {
-        val studentGrunnlag = StudentGrunnlag(
-            vurderinger = setOf(StudentVurdering(
-                begrunnelse = "begrunnelse",
-                vurdertAv = "saksbehandler",
-                harAvbruttStudie = true,
-                godkjentStudieAvLånekassen = true,
-                avbruttPgaSykdomEllerSkade = true,
-                harBehovForBehandling = true,
-                avbruttStudieDato = 1 januar 2025,
-                avbruddMerEnn6Måneder = true,
-                vurdertIBehandling = BehandlingId(1),
-            )), oppgittStudent = null
-        )
-
-        val relevanteÅr = Inntektsbehov.utledAlleRelevanteÅr(null, studentGrunnlag)
+        val relevanteÅr = Inntektsbehov.utledAlleRelevanteÅr(beregningGrunnlag)
         assertThat(relevanteÅr).containsExactlyInAnyOrder(
             Year.of(2024), Year.of(2023), Year.of(2022)
         )
@@ -243,33 +221,6 @@ class InntektsbehovTest {
             Year.of(2017),
         )
     }
-
-    @Test
-    fun `skal returnere den tidligste datoen fra beregningVurdering og studentVurdering`() {
-        val studentvurdering = StudentVurdering(
-            begrunnelse = "begrunnelse",
-            vurdertAv = "saksbehandler",
-            harAvbruttStudie = true,
-            godkjentStudieAvLånekassen = true,
-            avbruttPgaSykdomEllerSkade = true,
-            harBehovForBehandling = true,
-            avbruttStudieDato = 1 januar 2025,
-            avbruddMerEnn6Måneder = true,
-            vurdertIBehandling = BehandlingId(1)
-        )
-
-        val beregningVurdering = BeregningstidspunktVurdering(
-            begrunnelse = "begrunnelse",
-            nedsattArbeidsevneDato = 1 januar 2024,
-            ytterligereNedsattBegrunnelse = null,
-            ytterligereNedsattArbeidsevneDato = LocalDate.now(),
-            vurdertAv = "saksbehandler",
-        )
-
-        val nedsettelsesdato = Inntektsbehov.utledNedsettelsesdato(beregningVurdering, studentvurdering)
-        assertThat(nedsettelsesdato).isEqualTo(1 januar 2024)
-    }
-
 
     private fun inntektsPerioder(inntektPerÅr: Set<InntektPerÅr>): Set<Månedsinntekt> {
         return inntektPerÅr.map {

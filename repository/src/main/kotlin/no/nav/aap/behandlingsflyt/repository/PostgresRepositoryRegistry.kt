@@ -49,12 +49,14 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.medlemsskap.
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.opphold.OppholdskravGrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.uføre.UføreRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.yrkesskade.YrkesskadeRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.andreYtelserOppgittISøknad.AndreYtelserOppgittISøknadRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsgiver.SamordningArbeidsgiverRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.avbrytrevurdering.AvbrytRevurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.bistand.BistandRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.inntektsbortfall.InntektsbortfallRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.overganguføre.OvergangUføreRepositoryImpl
@@ -97,6 +99,7 @@ val postgresRepositoryRegistry = RepositoryRegistry()
     .register<BeregningVurderingRepositoryImpl>()
     .register<SykdomRepositoryImpl>()
     .register<YrkesskadeRepositoryImpl>()
+    .register<AndreYtelserOppgittISøknadRepositoryImpl>()
     .register<UføreRepositoryImpl>()
     .register<MedlemskapArbeidInntektRepositoryImpl>()
     .register<SykepengerErstatningRepositoryImpl>()
@@ -147,4 +150,4 @@ val postgresRepositoryRegistry = RepositoryRegistry()
     .register<Aktivitetsplikt11_9RepositoryImpl>()
     .register<Reduksjon11_9RepositoryImpl>()
     .register<TilbakekrevingRepositoryImpl>()
-
+    .register<InntektsbortfallRepositoryImpl>()

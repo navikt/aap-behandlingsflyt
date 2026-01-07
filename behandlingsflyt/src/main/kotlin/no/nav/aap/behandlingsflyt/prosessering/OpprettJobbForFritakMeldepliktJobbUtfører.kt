@@ -50,7 +50,9 @@ class OpprettJobbForFritakMeldepliktJobbUtfører(
         /**
          * Kjøres på både mandag og onsdag for å fange opp tidlig utbetaling i helligdager. På sikt bør vi få en litt
          * mindre sløsende løsning.
+         * For å kjøre på mandager - som kan være nødvendig før helligdagskjøringer:
+         *   override val cron = CronExpression.createWithoutSeconds("10 2 * * 1,3")
          */
-        override val cron = CronExpression.createWithoutSeconds("10 2 * * 1,3")
+        override val cron = CronExpression.createWithoutSeconds("10 2 * * 3")
     }
 }

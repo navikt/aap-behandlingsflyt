@@ -137,13 +137,13 @@ class OvergangUføreSteg private constructor(
     private fun perioderSomIkkeErTilstrekkeligVurdert(kontekst: FlytKontekstMedPerioder): Set<Periode> {
         val overgangUføreTidslinje = overgangUføreRepository.hentHvisEksisterer(kontekst.behandlingId)
             ?.somOvergangUforevurderingstidslinje().orEmpty()
-        val sykdomsdtidslinje =
+        val sykdomstidslinje =
             sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)?.somSykdomsvurderingstidslinje().orEmpty()
         val bistandstidslinje =
             bistandRepository.hentHvisEksisterer(kontekst.behandlingId)?.somBistandsvurderingstidslinje().orEmpty()
 
         val nårVurderingErKonsistent = nårVurderingErKonsistentMedSykdomOgBistand(
-            overgangUføreTidslinje, sykdomsdtidslinje, bistandstidslinje, kontekst.rettighetsperiode.fom
+            overgangUføreTidslinje, sykdomstidslinje, bistandstidslinje, kontekst.rettighetsperiode.fom
         )
 
         val nårPåkrevdVurderingMangler =

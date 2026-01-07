@@ -24,7 +24,7 @@ import java.sql.SQLException
 
 object StatusPagesConfigHelper {
     private val logger = LoggerFactory.getLogger(javaClass)
-    private val secureLogger = LoggerFactory.getLogger("secureLog")
+    private val secureLogger = LoggerFactory.getLogger("team-logs")
 
     fun setup(): StatusPagesConfig.() -> Unit = {
         exception<Throwable> { call, cause ->
