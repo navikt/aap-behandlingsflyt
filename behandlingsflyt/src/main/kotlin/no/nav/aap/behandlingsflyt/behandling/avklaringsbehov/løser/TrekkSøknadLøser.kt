@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
 import java.time.Instant
 
 class TrekkSøknadLøser(
@@ -24,6 +25,7 @@ class TrekkSøknadLøser(
         trekkSøknadRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
     )
+    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun løs(
         kontekst: AvklaringsbehovKontekst,
@@ -39,6 +41,9 @@ class TrekkSøknadLøser(
         }
 
         val søknader = mottattDokumentRepository.hentDokumenterAvType(kontekst.behandlingId(), InnsendingType.SØKNAD)
+        if (søknader.isEmpty()) {
+            log.error("Prøver å trekke søknad, men det finnes ingen søknad knyttet til behandlingen. Sak=${kontekst.kontekst.sakId.id}, behandling=${kontekst.behandlingId().id}")
+        }
         for (søknad in søknader) {
             trekkSøknadRepository.lagreTrukketSøknadVurdering(
                 kontekst.behandlingId(),
