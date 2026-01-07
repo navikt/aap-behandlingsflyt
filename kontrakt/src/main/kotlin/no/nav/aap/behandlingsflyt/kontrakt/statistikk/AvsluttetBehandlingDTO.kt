@@ -89,6 +89,7 @@ public enum class Vilkårtype {
     @Deprecated("Skal fases ut.")
     SYKEPENGEERSTATNING,
     SAMORDNING,
+    INNTEKTSBORTFALL
 }
 
 public data class VilkårsPeriodeDTO(
