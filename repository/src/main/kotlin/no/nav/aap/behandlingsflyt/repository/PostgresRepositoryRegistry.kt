@@ -56,6 +56,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.avbrytr
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.bistand.BistandRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.inntektsbortfall.InntektsbortfallRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.overganguføre.OvergangUføreRepositoryImpl
@@ -149,4 +150,4 @@ val postgresRepositoryRegistry = RepositoryRegistry()
     .register<Aktivitetsplikt11_9RepositoryImpl>()
     .register<Reduksjon11_9RepositoryImpl>()
     .register<TilbakekrevingRepositoryImpl>()
-
+    .register<InntektsbortfallRepositoryImpl>()
