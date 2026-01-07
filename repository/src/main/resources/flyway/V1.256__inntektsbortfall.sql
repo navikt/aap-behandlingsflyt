@@ -16,12 +16,12 @@ CREATE UNIQUE INDEX IDX_INNTEKTSBORTFALL_GRUNNLAG_BEHANDLING_ID ON INNTEKTSBORTF
 
 CREATE TABLE INNTEKTSBORTFALL_VURDERING
 (
-    ID                              BIGSERIAL PRIMARY KEY,
-    BEGRUNNELSE                     TEXT                                   NOT NULL,
-    RETT_TIL_ALDERSPENSJON_UTTAK    BOOLEAN                                NOT NULL,
-    VURDERINGER_ID                  BIGINT                                 NOT NULL REFERENCES INNTEKTSBORTFALL_VURDERINGER (ID),
-    VURDERT_I_BEHANDLING            BIGINT                                 NOT NULL REFERENCES BEHANDLING (ID),
-    VURDERT_AV                      varchar(50)                            NOT NULL,
-    OPPRETTET_TID                   TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
+    ID                           BIGSERIAL PRIMARY KEY,
+    BEGRUNNELSE                  TEXT                                   NOT NULL,
+    RETT_TIL_ALDERSPENSJON_UTTAK BOOLEAN                                NOT NULL,
+    VURDERINGER_ID               BIGINT                                 NOT NULL REFERENCES INNTEKTSBORTFALL_VURDERINGER (ID),
+    VURDERT_I_BEHANDLING         BIGINT                                 NOT NULL REFERENCES BEHANDLING (ID),
+    VURDERT_AV                   TEXT                                   NOT NULL,
+    OPPRETTET_TID                TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 CREATE INDEX IDX_INNTEKTSBORTFALL_VURDERING_VURDERINGER_ID ON INNTEKTSBORTFALL_VURDERING (VURDERINGER_ID);
