@@ -56,7 +56,7 @@ class GosysGateway : OppgaveGateway {
     ) {
 
         if (navKontor.vedtaksdato == null || navKontor.virkingsdato == null) {
-            log.info("Oppretter gosysoppgave med manglededato for behandling $behandlingId, " +
+            log.info("Oppretter gosysoppgave med manglende dato for behandling $behandlingId, " +
                     "virkningsdato=${navKontor.virkingsdato}, vedtaksdato=${navKontor.vedtaksdato}")
         }
 
