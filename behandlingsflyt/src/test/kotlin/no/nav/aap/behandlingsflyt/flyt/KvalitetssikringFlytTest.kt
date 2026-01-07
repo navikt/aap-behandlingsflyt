@@ -125,6 +125,52 @@ class KvalitetssikringFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::clas
     }
 
     @Test
+    fun `Kvalitetssikrer underkjenner AVKLAR_BISTANDSBEHOV, men tar ikke stilling til de andre avklaringsbehovene`() {
+        val fom = LocalDate.now().minusMonths(3)
+        val periode = Periode(fom, fom.plusYears(3))
+
+        val person = TestPersoner.STANDARD_PERSON()
+
+        val (_, behandling) = sendInnFørsteSøknad(
+            person = person,
+            periode = periode,
+        )
+        behandling
+            .løsSykdom(fom)
+            .løsBistand(fom)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+
+        val avklarBistandsbehov = hentAlleAvklaringsbehov(behandling)
+            .filter { behov -> behov.definisjon == Definisjon.AVKLAR_BISTANDSBEHOV }
+            .filter { behov -> behov.erTotrinn() || behov.kreverKvalitetssikring() }
+        assertThat(avklarBistandsbehov).hasSize(1)
+        løsAvklaringsBehov(
+            behandling,
+            KvalitetssikringLøsning(
+                avklarBistandsbehov
+                    .map { behov ->
+                        TotrinnsVurdering(
+                            behov.definisjon.kode,
+                            false,
+                            "begrunnelse",
+                            emptyList()
+                        )
+                    }),
+            Bruker("KVALITETSSIKRER"),
+        )
+
+        val avklaringsbehovSomKreverKvalitetssikring = hentAlleAvklaringsbehov(behandling)
+            .filter { behov -> behov.kreverKvalitetssikring() }
+        assertThat(avklaringsbehovSomKreverKvalitetssikring.any { it.definisjon == Definisjon.AVKLAR_BISTANDSBEHOV && it.status() == AvklaringsbehovStatus.SENDT_TILBAKE_FRA_KVALITETSSIKRER }).isTrue()
+        assertThat(
+            avklaringsbehovSomKreverKvalitetssikring
+                .filter { it.definisjon != Definisjon.AVKLAR_BISTANDSBEHOV }
+                .all { it.status() == AvklaringsbehovStatus.AVSLUTTET }
+        ).isTrue()
+    }
+
+    @Test
     fun `Kvalitetssikrer underkjenner AVKLAR_BISTANDSBEHOV, men godkjenner de andre avklaringsbehovene`() {
         val fom = LocalDate.now().minusMonths(3)
         val periode = Periode(fom, fom.plusYears(3))
@@ -165,6 +211,7 @@ class KvalitetssikringFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::clas
                 .all { it.status() == AvklaringsbehovStatus.KVALITETSSIKRET }
         ).isTrue()
     }
+
 
     @Test
     fun `Kvalitetssikrer underkjenner SKRIV_SYKDOMSVURDERING_BREV, men godkjenner de andre avklaringsbehovene`() {
