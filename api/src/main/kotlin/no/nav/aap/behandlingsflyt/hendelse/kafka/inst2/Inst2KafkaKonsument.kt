@@ -65,9 +65,11 @@ class Inst2KafkaKonsument(
             val repositoryProvider = repositoryRegistry.provider(connection)
             val hendelseService =
                 MottattHendelseService(repositoryProvider)
-            hendelseService.registrerMottattHendelse(dto = institusjonsoppholdHendelse.tilInnsending(meldingKey,
+
+            //TODO: Finn saksnummer først
+            /*hendelseService.registrerMottattHendelse(dto = institusjonsoppholdHendelse.tilInnsending(meldingKey,
                 Saksnummer(saksnummer))
-            )
+            )*/
         }
 
     }
