@@ -108,7 +108,8 @@ class MeldingOmVedtakBrevSteg(
             }
             log.info("Bestiller automatisk brev om barnetillegg sats endring for sak ${kontekst.sakId}.")
             val sak = sakRepository.hent(kontekst.sakId)
-            val unikReferanse = "${sak.saksnummer}-${brevBehov.typeBrev}-${OpprettJobbForTriggBarnetilleggSatsJobbUtfører.unikBrevreferanseForSak}"
+            val unikReferanse =
+                "${sak.saksnummer}-${brevBehov.typeBrev}-${OpprettJobbForTriggBarnetilleggSatsJobbUtfører.jobbKonfigurasjon.unikBrevreferanseForSak}"
             brevbestillingService.bestill(
                 behandlingId = kontekst.behandlingId,
                 brevBehov = brevBehov,

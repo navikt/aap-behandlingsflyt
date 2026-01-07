@@ -27,7 +27,7 @@ class TriggBarnetilleggSatsJobbUtfører(
 
         log.info("Oppretter satsendring-behandling for sak med id $sakId.")
 
-        if (OpprettJobbForTriggBarnetilleggSatsJobbUtfører.erAktiv) {
+        if (OpprettJobbForTriggBarnetilleggSatsJobbUtfører.jobbKonfigurasjon.erAktiv) {
             log.info("Trigger behandlinger for barnetillegg sats regulering.")
 
             val behandling = sakOgBehandlingService.finnEllerOpprettBehandling(
