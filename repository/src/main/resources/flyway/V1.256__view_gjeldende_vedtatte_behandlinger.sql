@@ -1,6 +1,6 @@
 CREATE OR REPLACE VIEW gjeldende_vedtatte_behandlinger AS
 SELECT *
-FROM (SELECT s.id as                                                       s_sak_id,
+FROM (SELECT s.id as                                                       sak_id,
              ROW_NUMBER()
              OVER (PARTITION BY b.sak_id ORDER BY v.vedtakstidspunkt DESC) rn,
              b.id as                                                       behandling_id
