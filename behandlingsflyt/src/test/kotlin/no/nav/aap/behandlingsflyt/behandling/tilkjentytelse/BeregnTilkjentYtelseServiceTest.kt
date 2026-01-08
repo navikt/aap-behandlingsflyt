@@ -616,6 +616,73 @@ class BeregnTilkjentYtelseServiceTest {
     }
 
     @Test
+    fun `institusjonsopphold med barnetillegg får ingen reduksjon`() {
+        val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
+        val beregningsgrunnlag = object : Grunnlag {
+            override fun grunnlaget(): GUnit {
+                return GUnit(BigDecimal(4))
+            }
+        }
+        val periode = Periode(1 juni 2023, 1 august 2023)
+
+        val underveisgrunnlag = underveisgrunnlag(periode, institusjonsOppholdReduksjon = Prosent.`50_PROSENT`)
+        val barnetilleggGrunnlag = BarnetilleggGrunnlag(
+            listOf(
+                BarnetilleggPeriode(
+                    Periode(LocalDate.of(2023, 5, 1), LocalDate.of(2023, 8, 1).plusYears(18)),
+                    setOf(BarnIdentifikator.BarnIdent("12345678910"))
+                )
+            )
+        )
+
+        val samordningsgrunnlag = SamordningGrunnlag(emptySet())
+        val samordningUføre = SamordningUføreGrunnlag(vurdering = SamordningUføreVurdering("", emptyList(), "ident"))
+
+        val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
+            vurdering = SamordningArbeidsgiverVurdering(
+                "",
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = "ident"
+            )
+        )
+
+        val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                barnetilleggGrunnlag,
+                samordningsgrunnlag,
+                samordningUføre,
+                samordningArbeidsgiver
+            )
+        ).beregnTilkjentYtelse()
+
+        assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
+            Segment(
+                periode = Periode(1 juni 2023, 1 august 2023), verdi = Tilkjent(
+                    dagsats = Beløp("1204.45"), //4*0.66*111477/260
+                    gradering = Prosent.`50_PROSENT`,
+                    graderingGrunnlag = GraderingGrunnlag(
+                        samordningGradering = Prosent.`0_PROSENT`,
+                        institusjonGradering = Prosent.`0_PROSENT`,
+                        arbeidGradering = Prosent.`100_PROSENT`,
+                        samordningUføregradering = Prosent.`0_PROSENT`,
+                        Prosent.`0_PROSENT`,
+                        Prosent.`0_PROSENT`,
+                    ),
+                    grunnlagsfaktor = GUnit("0.0101538462"),
+                    grunnbeløp = Beløp("118620"),
+                    antallBarn = 1,
+                    barnetilleggsats = Beløp("35.00"),
+                    barnetillegg = Beløp("35.00"),
+                    utbetalingsdato = periode.tom.plusDays(9),
+                )
+            ),
+        )
+    }
+
+
+    @Test
     fun `graderer tilkjent ytelse med samordning-graderinger`() {
         val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
         val beregningsgrunnlag = object : Grunnlag {
