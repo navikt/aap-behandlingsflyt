@@ -129,6 +129,7 @@ class AndreYtelserOppgittISøknadRepositoryImpl(private val connection: DBConnec
 
         val ytelserId = hentYtelseIderPÅBehandlingId(behandlingId)
         if (ytelserId == null) return
+        // er det flere grunnlag på samme ytelse id ?
         val alleGrunnlagPåYtelseId = hentAlleGrunnlagIdPåAndreYtelseId(ytelserId)
 
         val kunEtGrunnlagPåDetteSvaret = if (alleGrunnlagPåYtelseId.size == 1) true else false

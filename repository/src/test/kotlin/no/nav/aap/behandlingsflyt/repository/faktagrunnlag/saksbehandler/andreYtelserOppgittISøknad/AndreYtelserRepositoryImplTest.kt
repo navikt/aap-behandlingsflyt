@@ -37,6 +37,49 @@ class AndreYtelserRepositoryImplTest {
     fun tearDown() {
         dataSource.close()
     }
+
+    @Test
+    fun `lagre og slett`() {
+        val sak = dataSource.transaction { sak(it) }
+
+        val behandling1 = dataSource.transaction {
+            finnEllerOpprettBehandling(it, sak)
+        }
+        val stønad = listOf<AndreUtbetalingerYtelser>(
+            AndreUtbetalingerYtelser.ØKONOMISK_SOSIALHJELP,
+            AndreUtbetalingerYtelser.OMSORGSSTØNAD,
+            AndreUtbetalingerYtelser.AFP
+        )
+        val andreUtbetalinger = AndreYtelserSøknad(
+            ekstraLønn = true,
+            stønad = stønad,
+            afpKilder = "Arbeidsgiver"
+        )
+
+        dataSource.transaction {
+            AndreYtelserOppgittISøknadRepositoryImpl(it).lagre(
+                behandling1.id, andreUtbetalinger
+            )
+        }
+
+        val ytelser = dataSource.transaction {
+            AndreYtelserOppgittISøknadRepositoryImpl(it).hent(
+                behandling1.id
+            )
+        }
+
+
+        assertThat(ytelser).isEqualTo(andreUtbetalinger)
+
+        dataSource.transaction {
+            AndreYtelserOppgittISøknadRepositoryImpl(it).slett(
+                behandling1.id
+            )
+        }
+    }
+
+
+
     @Test
     fun `lagre og kopier, så slette gamle`() {
 
