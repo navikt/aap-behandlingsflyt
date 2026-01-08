@@ -93,7 +93,7 @@ class VarsleVedtakJobbUtfører(
         // For nå: kun varsle ved førstegangsbehandlinger.
         // På sikt skal vi varsle hver gang det skjer en "betydelig" endring i ytelsen. F.eks rettighetstype, stans,
         // etc.
-        if (behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling) {
+        if (behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling || relevantEndring) {
             log.info("Varsler SAM for behandling med referanse ${behandling.referanse} og saksnummer ${sak.saksnummer}.")
             samGateway.varsleVedtak(request)
         }
@@ -134,8 +134,6 @@ class VarsleVedtakJobbUtfører(
     }
 
     fun endringIRettighetstypeTidslinje(forrigeUnderveisGrunnlag: UnderveisGrunnlag?, nåværendeUnderveisGrunnlag: UnderveisGrunnlag): Boolean {
-        // Implementer logikk for å sammenligne tidslinjer og avgjøre om det har vært en endring i rettighetstype
-
         return forrigeUnderveisGrunnlag!=null && underveisTilRettighetsTypeTidslinje(forrigeUnderveisGrunnlag)!=underveisTilRettighetsTypeTidslinje(nåværendeUnderveisGrunnlag)
     }
 }
