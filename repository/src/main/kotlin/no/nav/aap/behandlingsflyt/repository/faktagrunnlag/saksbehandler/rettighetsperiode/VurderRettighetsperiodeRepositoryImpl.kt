@@ -64,7 +64,7 @@ class VurderRettighetsperiodeRepositoryImpl(private val connection: DBConnection
                 setLong(1, vurderingerId)
                 setString(2, grunnlag.vurdering.begrunnelse)
                 setLocalDate(3, grunnlag.vurdering.startDato)
-                setBoolean(4, grunnlag.vurdering.harRettUtoverSøknadsdato)
+                setEnumName(4, grunnlag.vurdering.harRettUtoverSøknadsdato)
                 setBoolean(5, grunnlag.vurdering.harKravPåRenter)
                 setString(6, grunnlag.vurdering.vurdertAv)
             }
@@ -136,7 +136,7 @@ class VurderRettighetsperiodeRepositoryImpl(private val connection: DBConnection
                     RettighetsperiodeVurdering(
                         begrunnelse = it.getString("begrunnelse"),
                         startDato = it.getLocalDateOrNull("start_dato"),
-                        harRettUtoverSøknadsdato = it.getBoolean("har_rett_utover_soknadsdato"),
+                        harRettUtoverSøknadsdato = it.getEnum("har_rett_utover_soknadsdato"),
                         harKravPåRenter = it.getBooleanOrNull("har_krav_paa_renter"),
                         vurdertAv = it.getString("vurdert_av"),
                         vurdertDato = it.getLocalDateTime("opprettet")

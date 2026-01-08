@@ -7,7 +7,7 @@ import java.time.LocalDateTime
 data class RettighetsperiodeVurdering(
     val startDato: LocalDate?,
     val begrunnelse: String,
-    val harRettUtoverSøknadsdato: Boolean,
+    val harRettUtoverSøknadsdato: RettighetsperiodeHarRett,
     val harKravPåRenter: Boolean?,
     val vurdertAv: String,
     val vurdertDato: LocalDateTime? = null
@@ -16,11 +16,18 @@ data class RettighetsperiodeVurdering(
 data class RettighetsperiodeVurderingDTO(
     val startDato: LocalDate?,
     val begrunnelse: String,
-    val harRettUtoverSøknadsdato: Boolean,
+    @Deprecated("bruk harRett") val harRettUtoverSøknadsdato: Boolean?,
+    val harRett: RettighetsperiodeHarRett?,
     val harKravPåRenter: Boolean?
 ) {
     init {
-        if (harRettUtoverSøknadsdato) {
+        if (harRett == null && harRettUtoverSøknadsdato == null) {
+            throw IllegalArgumentException("Enten harRettUtoverSøknadsdato eller harRett må være satt. Begge kan ikke være NULL.")
+        }
+
+        val harRettSjekk = harRett?.harRett() == true || harRettUtoverSøknadsdato == true
+
+        if (harRettSjekk) {
             if (startDato == null) {
                 throw UgyldigForespørselException("Må sette startdato når bruker har rett utover søknadsdatoen")
             }
@@ -28,13 +35,24 @@ data class RettighetsperiodeVurderingDTO(
                 throw UgyldigForespørselException("Må vurdere renter når bruker har rett utover søknadsdatoen")
             }
         }
-        if (!harRettUtoverSøknadsdato) {
+        if (!harRettSjekk) {
             if (startDato != null) {
                 throw UgyldigForespørselException("Kan ikke sette startdato når bruker ikke har rett utover søknadsdatoen")
             }
             if (harKravPåRenter != null) {
                 throw UgyldigForespørselException("Kan ikke vurdere renter når bruker ikke har rett utover søknadsdatoen")
             }
+        }
+    }
+}
+
+enum class RettighetsperiodeHarRett {
+    Ja, Nei, HarRettÅpenbart, HarRettMisvisendeOpplysninger;
+
+    fun harRett(): Boolean {
+        return when(this) {
+            Ja, HarRettÅpenbart, HarRettMisvisendeOpplysninger -> true
+            Nei -> false
         }
     }
 }
