@@ -121,10 +121,10 @@ class VarsleVedtakJobbUtfører(
     }
 
     fun endringITilkjentYtelseTidslinje(
-        forrigeTilkjentYtelse: List<TilkjentYtelsePeriode>?,
-        nåværendeTilkjentYtelse: List<TilkjentYtelsePeriode>?
+        forrigeTilkjentYtelse: Tidslinje<TilkjentYtelsePeriode>,
+        nåværendeTilkjentYtelse: Tidslinje<TilkjentYtelsePeriode>
     ): Boolean {
-        return forrigeTilkjentYtelse!=nåværendeTilkjentYtelse
+        return forrigeTilkjentYtelse.komprimer() !=nåværendeTilkjentYtelse.komprimer()
     }
 
     fun underveisTilRettighetsTypeTidslinje(underveis: UnderveisGrunnlag?): Tidslinje<RettighetsType> {
