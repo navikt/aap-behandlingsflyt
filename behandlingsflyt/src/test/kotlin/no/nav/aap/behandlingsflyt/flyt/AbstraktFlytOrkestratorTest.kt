@@ -71,6 +71,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.F
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.flate.OvergangArbeidVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flate.OvergangUføreVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeHarRett
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.sykestipend.SamordningSykestipendVurderingDto
@@ -695,6 +696,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                     begrunnelse = "En begrunnelse",
                     harRettUtoverSøknadsdato = true,
                     harKravPåRenter = false,
+                    harRett = RettighetsperiodeHarRett.HarRettÅpenbart
                 )
             )
         )
@@ -707,6 +709,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                     startDato = null,
                     begrunnelse = "En begrunnelse",
                     harRettUtoverSøknadsdato = false,
+                    harRett = RettighetsperiodeHarRett.Nei,
                     harKravPåRenter = null,
                 )
             )
