@@ -17,13 +17,7 @@ data class SykestipendVurdering(
     val opprettet: Instant,
 ) {
     init {
-        perioder.sortedBy { it.fom }
-            .windowed(2, 1)
-            .forEach { (denne, neste) ->
-                if (denne.tom < denne.fom || denne.tom >= neste.fom) {
-                    throw IllegalArgumentException("Perioder for sykestipendvurdering kan ikke overlappe: $denne og $neste")
-                }
-            }
+        if (Periode.overlapper(perioder)) throw IllegalArgumentException("Fant overlappende perioder")
     }
 }
 
