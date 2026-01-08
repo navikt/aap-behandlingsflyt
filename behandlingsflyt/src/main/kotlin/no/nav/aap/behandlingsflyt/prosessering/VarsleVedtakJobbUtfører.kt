@@ -135,7 +135,7 @@ class VarsleVedtakJobbUtfører(
     fun underveisTilRettighetsTypeTidslinje(underveis: UnderveisGrunnlag?, vedtakstidspunkt: LocalDate): Tidslinje<RettighetsType> {
         return underveis?.perioder.orEmpty()
             .mapNotNull { if (it.rettighetsType != null) Segment(it.periode, it.rettighetsType) else null }
-            .let(::Tidslinje).begrensetTil(Periode(LocalDate.MIN, vedtakstidspunkt))
+            .let(::Tidslinje).begrensetTil(Periode(LocalDate.MIN, vedtakstidspunkt)).komprimer()
     }
 
     fun endringIRettighetstypeTidslinje(forrigeUnderveisGrunnlag: UnderveisGrunnlag?, nåværendeUnderveisGrunnlag: UnderveisGrunnlag, vedtakstidspunkt: LocalDate): Boolean {
