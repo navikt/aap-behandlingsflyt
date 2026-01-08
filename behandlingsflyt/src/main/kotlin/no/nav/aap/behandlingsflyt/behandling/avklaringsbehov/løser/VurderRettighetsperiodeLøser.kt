@@ -6,7 +6,6 @@ import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.VurderRettighetsp
 import no.nav.aap.behandlingsflyt.behandling.søknad.DatoFraDokumentUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeHarRett
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
@@ -54,33 +53,25 @@ class VurderRettighetsperiodeLøser(
             throw UgyldigForespørselException("Kan ikke endre starttidspunkt til å gjelde ETTER søknadstidspunkt")
         }
 
-        // TODO: Slettes når frontend ikke lenger trenger bakoverkompavilitet
-        val harRettUtoverSøknadsdato = when(løsning.rettighetsperiodeVurdering.harRettUtoverSøknadsdato) {
-            true -> RettighetsperiodeHarRett.Ja
-            false -> RettighetsperiodeHarRett.Nei
-            null -> løsning.rettighetsperiodeVurdering.harRett!! // Er init-sjekk på at både harRettUtoverSøknadsdato og harRett ikke kan være NULL samtidig, denne er bare midlertidig nullable
-        }
-
         rettighetsperiodeRepository.lagreVurdering(
             behandlingId = behandling.id,
             vurdering =
                 RettighetsperiodeVurdering(
                     begrunnelse = løsning.rettighetsperiodeVurdering.begrunnelse,
                     startDato = nyStartDato,
-                    harRettUtoverSøknadsdato = harRettUtoverSøknadsdato,
-                    harKravPåRenter = løsning.rettighetsperiodeVurdering.harKravPåRenter,
+                    harRettUtoverSøknadsdato = løsning.rettighetsperiodeVurdering.harRett,
                     vurdertAv = kontekst.bruker.ident
                 )
         )
 
-        if (harRettUtoverSøknadsdato.harRett() && nyStartDato != null) {
+        if (løsning.rettighetsperiodeVurdering.harRett.toBoolean() && nyStartDato != null) {
             log.info("Oppdaterer rettighetsperioden til å gjelde fra $ for sak ${sak.id}")
             sakOgBehandlingService.overstyrRettighetsperioden(
                 sakId = sak.id,
                 startDato = nyStartDato,
                 sluttDato = Tid.MAKS
             )
-        } else if (!harRettUtoverSøknadsdato.harRett()) {
+        } else if (!løsning.rettighetsperiodeVurdering.harRett.toBoolean()) {
             val søknadsdato = finnSøknadsdatoForSak(sak.id)
                 ?: throw UgyldigForespørselException("Forsøker å tilbakestille rettighetsperioden, men finner ingen søknadsdato for saken")
             if (sak.rettighetsperiode.fom != søknadsdato) {

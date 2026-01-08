@@ -39,7 +39,6 @@ class VurderRettighetsperiodeRepositoryImplTest {
                 startDato = LocalDate.now().minusDays(10),
                 begrunnelse = "begrunnelse",
                 harRettUtoverSøknadsdato = RettighetsperiodeHarRett.`HarRettIkkeIStandTilÅSøkeTidligere`,
-                harKravPåRenter = true,
                 vurdertAv = "NAVident"
             )
             vurderRettighetsPeriodeRepo.lagreVurdering(behandling.id, vurdering)
@@ -67,7 +66,6 @@ class VurderRettighetsperiodeRepositoryImplTest {
                 startDato = null,
                 begrunnelse = "begrunnelse",
                 harRettUtoverSøknadsdato = RettighetsperiodeHarRett.Nei,
-                harKravPåRenter = null,
                 vurdertAv = "NAVident"
             )
             vurderRettighetsPeriodeRepo.lagreVurdering(behandling.id, vurdering)
@@ -93,7 +91,6 @@ class VurderRettighetsperiodeRepositoryImplTest {
                 startDato = LocalDate.now().minusDays(10),
                 begrunnelse = "begrunnelse",
                 harRettUtoverSøknadsdato = RettighetsperiodeHarRett.`HarRettIkkeIStandTilÅSøkeTidligere`,
-                harKravPåRenter = true,
                 vurdertAv = "NAVident"
             )
 
