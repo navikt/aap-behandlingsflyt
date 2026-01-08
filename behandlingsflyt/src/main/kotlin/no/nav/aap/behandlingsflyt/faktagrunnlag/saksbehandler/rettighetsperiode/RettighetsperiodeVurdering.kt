@@ -27,21 +27,11 @@ data class RettighetsperiodeVurderingDTO(
 
         val harRettSjekk = harRett?.harRett() == true || harRettUtoverSøknadsdato == true
 
-        if (harRettSjekk) {
-            if (startDato == null) {
-                throw UgyldigForespørselException("Må sette startdato når bruker har rett utover søknadsdatoen")
-            }
-            if (harKravPåRenter == null) {
-                throw UgyldigForespørselException("Må vurdere renter når bruker har rett utover søknadsdatoen")
-            }
+        if (harRettSjekk && startDato == null) {
+            throw UgyldigForespørselException("Må sette startdato når bruker har rett utover søknadsdatoen")
         }
-        if (!harRettSjekk) {
-            if (startDato != null) {
-                throw UgyldigForespørselException("Kan ikke sette startdato når bruker ikke har rett utover søknadsdatoen")
-            }
-            if (harKravPåRenter != null) {
-                throw UgyldigForespørselException("Kan ikke vurdere renter når bruker ikke har rett utover søknadsdatoen")
-            }
+        if (!harRettSjekk && startDato != null) {
+            throw UgyldigForespørselException("Kan ikke sette startdato når bruker ikke har rett utover søknadsdatoen")
         }
     }
 }
