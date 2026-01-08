@@ -26,6 +26,9 @@ interface Repository: no.nav.aap.komponenter.repository.Repository {
      * Soft-delete er ikke tilstrekkelig. Opplysningene må nulles ut eller radene må slette.
      *
      * Metoden skal kunne kalles flere ganger på en behandling (idempotent).
+     *
+     * Implementasjoner kan anta at behandlingen er en førstegangsbehandling. På grunn av kopiering er det
+     * ofte pekere til tidligere behandlinger i dataene.
      **/
     fun slett(behandlingId: BehandlingId)
 }

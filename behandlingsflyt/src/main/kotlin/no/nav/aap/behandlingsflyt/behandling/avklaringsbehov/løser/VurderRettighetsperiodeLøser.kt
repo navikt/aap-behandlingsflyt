@@ -8,17 +8,15 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
 import java.time.LocalDate
 
 class VurderRettighetsperiodeLøser(
@@ -28,6 +26,8 @@ class VurderRettighetsperiodeLøser(
     private val sakOgBehandlingService: SakOgBehandlingService,
     private val mottattDokumentRepository: MottattDokumentRepository,
 ) : AvklaringsbehovsLøser<VurderRettighetsperiodeLøsning> {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
@@ -48,38 +48,54 @@ class VurderRettighetsperiodeLøser(
         if (sak.status() == Status.AVSLUTTET) {
             throw UgyldigForespørselException("Kan ikke oppdatere rettighetsperioden etter at saken er avsluttet")
         }
-        if (innskrenkerTilEtterSøknadstidspunkt(løsning.rettighetsperiodeVurdering.startDato, sak.id)) {
+        val nyStartDato = løsning.rettighetsperiodeVurdering.startDato
+        if (innskrenkerTilEtterSøknadstidspunkt(nyStartDato, sak.id)) {
             throw UgyldigForespørselException("Kan ikke endre starttidspunkt til å gjelde ETTER søknadstidspunkt")
         }
 
+        val harRettUtoverSøknadsdato = løsning.rettighetsperiodeVurdering.harRettUtoverSøknadsdato
         rettighetsperiodeRepository.lagreVurdering(
             behandlingId = behandling.id,
             vurdering =
                 RettighetsperiodeVurdering(
                     begrunnelse = løsning.rettighetsperiodeVurdering.begrunnelse,
-                    startDato = løsning.rettighetsperiodeVurdering.startDato,
-                    harRettUtoverSøknadsdato = løsning.rettighetsperiodeVurdering.harRettUtoverSøknadsdato,
+                    startDato = nyStartDato,
+                    harRettUtoverSøknadsdato = harRettUtoverSøknadsdato,
                     harKravPåRenter = løsning.rettighetsperiodeVurdering.harKravPåRenter,
                     vurdertAv = kontekst.bruker.ident
                 )
         )
 
-        if (løsning.rettighetsperiodeVurdering.harRettUtoverSøknadsdato && løsning.rettighetsperiodeVurdering.startDato != null) {
-
+        if (harRettUtoverSøknadsdato && nyStartDato != null) {
+            log.info("Oppdaterer rettighetsperioden til å gjelde fra $ for sak ${sak.id}")
             sakOgBehandlingService.overstyrRettighetsperioden(
                 sakId = sak.id,
-                startDato = løsning.rettighetsperiodeVurdering.startDato,
+                startDato = nyStartDato,
                 sluttDato = Tid.MAKS
             )
+        } else if (!harRettUtoverSøknadsdato) {
+            val søknadsdato = finnSøknadsdatoForSak(sak.id)
+                ?: throw UgyldigForespørselException("Forsøker å tilbakestille rettighetsperioden, men finner ingen søknadsdato for saken")
+            if (sak.rettighetsperiode.fom != søknadsdato) {
+                log.info("Tilbakestiller rettighetsperioden til å gjelde fra søknadsdato $søknadsdato for sak ${sak.id}")
+                sakOgBehandlingService.overstyrRettighetsperioden(
+                    sakId = sak.id,
+                    startDato = søknadsdato,
+                    sluttDato = Tid.MAKS
+                )
+            }
         }
 
         return LøsningsResultat("Vurdert rettighetsperiode")
     }
 
     private fun innskrenkerTilEtterSøknadstidspunkt(startDato: LocalDate?, sakId: SakId): Boolean {
-        val søknadsdato = DatoFraDokumentUtleder(mottattDokumentRepository).utledSøknadsdatoForSak(sakId)?.toLocalDate()
+        val søknadsdato = finnSøknadsdatoForSak(sakId)
         return startDato != null && søknadsdato != null && startDato.isAfter(søknadsdato)
     }
+
+    private fun finnSøknadsdatoForSak(sakId: SakId): LocalDate? =
+        DatoFraDokumentUtleder(mottattDokumentRepository).utledSøknadsdatoForSak(sakId)?.toLocalDate()
 
     override fun forBehov(): Definisjon {
         return Definisjon.VURDER_RETTIGHETSPERIODE

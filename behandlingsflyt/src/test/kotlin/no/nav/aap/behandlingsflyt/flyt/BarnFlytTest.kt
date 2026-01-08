@@ -167,6 +167,9 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         }
         assertThat(sakerMedBarnetillegg).containsExactly(behandling.sakId)
 
+        OpprettJobbForTriggBarnetilleggSatsJobbUtfører.jobbKonfigurasjon =
+            OpprettJobbForTriggBarnetilleggSatsJobbUtfører.jobbKonfigurasjon.copy(erAktiv = true)
+
         // Bestiller brev om barnetillegg sats regulering
         dataSource.transaction {
             FlytJobbRepository(it).leggTil(JobbInput(OpprettJobbForTriggBarnetilleggSatsJobbUtfører))

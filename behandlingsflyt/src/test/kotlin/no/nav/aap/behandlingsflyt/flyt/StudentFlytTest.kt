@@ -55,8 +55,8 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     ),
                 )
             )
-            .medKontekst { 
-                if(unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.Sykestipend)) {
+            .medKontekst {
+                if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.Sykestipend)) {
                     this.behandling.løsSykestipend()
                 }
             }
@@ -76,7 +76,7 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             )
 
         // Revurdering
-        val revurdering = sak.opprettManuellRevurdering(
+        sak.opprettManuellRevurdering(
             listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_STUDENT),
         )
             .løsAvklaringsBehov(
@@ -138,7 +138,7 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
 
 }
 
-object SykestipendAktivert: FakeUnleashBase(
+object SykestipendAktivert : FakeUnleashBase(
     mapOf(
         BehandlingsflytFeature.IngenValidering to false,
         BehandlingsflytFeature.NyBrevtype11_17 to true,
@@ -156,7 +156,6 @@ object SykestipendAktivert: FakeUnleashBase(
         BehandlingsflytFeature.MigrerArbeidsevne to true,
         BehandlingsflytFeature.SosialRefusjon to true,
         BehandlingsflytFeature.HentSykepengerVedOverlapp to true,
-        BehandlingsflytFeature.KanSendeBrevOmBarnetilleggSatsRegulering to true,
         BehandlingsflytFeature.MigrerRettighetsperiode to true,
         BehandlingsflytFeature.PeriodisertSykdom to true,
         BehandlingsflytFeature.Sykestipend to true,

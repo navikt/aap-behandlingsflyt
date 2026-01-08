@@ -43,9 +43,6 @@ class RefusjonkravLøser(
             return LøsningsResultat("Vurdert refusjonskrav")
 
         } else {
-
-
-
             val vurderinger = validerRefusjonDatoer(kontekst, løsning).let {
                 it.map { dto ->
                     RefusjonkravVurdering(
@@ -56,7 +53,6 @@ class RefusjonkravLøser(
                         vurdertAv = kontekst.bruker.ident
                     )
                 }
-
             }
             refusjonkravRepository.lagre(kontekst.kontekst.sakId, kontekst.behandlingId(), vurderinger)
             return LøsningsResultat("Vurdert refusjonskrav")
