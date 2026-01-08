@@ -106,7 +106,15 @@ class InstitusjonRegel : UnderveisRegel {
         return Tidslinje(
             tidslinjeOverInnleggelser
                 .segmenter()
-                .filter { (!it.periode.fom.withDayOfMonth(1).plusMonths(1).isAfter(it.periode.tom) && it.verdi) || !it.periode.fom.withDayOfMonth(1).plusMonths(1).plusMonths(3).isAfter(it.periode.tom) && !it.verdi }
+                .filter {
+                val oneMonthLimit = it.periode.fom.withDayOfMonth(1).plusMonths(1)
+                val fourMonthLimit = it.periode.fom.withDayOfMonth(1).plusMonths(4)
+
+                when (it.verdi) {
+                    true  -> it.periode.tom >= oneMonthLimit
+                    false -> it.periode.tom >= fourMonthLimit
+                }
+            }
                 .map { Segment(utledMuligReduksjonsPeriode(it.periode, it.verdi), true) })
     }
 
