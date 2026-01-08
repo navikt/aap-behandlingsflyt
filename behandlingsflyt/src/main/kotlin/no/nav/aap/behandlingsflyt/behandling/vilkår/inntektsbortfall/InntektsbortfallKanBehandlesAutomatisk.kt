@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.inntektsbortfall
 
-import no.nav.aap.komponenter.verdityper.GUnit
+import java.math.BigDecimal
 
 data class InntektsbortfallKanBehandlesAutomatisk(
     val kanBehandlesAutomatisk: Boolean,
@@ -10,12 +10,12 @@ data class InntektsbortfallKanBehandlesAutomatisk(
 )
 
 data class InntektSisteÅrOver1G(
-    val gverdi: GUnit,
+    val gverdi: BigDecimal,
     val resultat: Boolean
 )
 
 data class GjennomsnittInntektSiste3ÅrOver3G(
-    val gverdi: GUnit,
+    val gverdi: BigDecimal,
     val resultat: Boolean
 )
 

@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.komponenter.verdityper.GUnit
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.MonthDay
@@ -63,7 +62,7 @@ class InntektsbortfallVurderingService(
         }
 
         return if (kombinerte.isEmpty()) {
-            GjennomsnittInntektSiste3ÅrOver3G(gverdi = GUnit(BigDecimal.ZERO), resultat = false)
+            GjennomsnittInntektSiste3ÅrOver3G(gverdi = BigDecimal.ZERO, resultat = false)
         } else {
             val gjennomsnitt = kombinerte
                 .map { it.gUnit().gUnit.verdi() }
@@ -71,7 +70,7 @@ class InntektsbortfallVurderingService(
                 .divide(BigDecimal(3), RoundingMode.HALF_UP)
 
             GjennomsnittInntektSiste3ÅrOver3G(
-                gverdi = GUnit(gjennomsnitt),
+                gverdi = gjennomsnitt,
                 resultat = gjennomsnitt >= BigDecimal(3)
             )
         }
@@ -95,9 +94,9 @@ class InntektsbortfallVurderingService(
             val gVerdi = Grunnbeløp.finnGUnit(startPåRelevantÅr, inntektsGrunnlag)
             val har1GSisteÅretEllerOver = gVerdi.gUnit.verdi() >= BigDecimal.ONE
 
-            return InntektSisteÅrOver1G(gVerdi.gUnit, har1GSisteÅretEllerOver)
+            return InntektSisteÅrOver1G(gVerdi.gUnit.verdi(), har1GSisteÅretEllerOver)
         }
-        return InntektSisteÅrOver1G(GUnit(BigDecimal.ZERO), false)
+        return InntektSisteÅrOver1G(BigDecimal.ZERO, false)
     }
 
     /**
