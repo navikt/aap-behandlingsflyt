@@ -17,7 +17,7 @@ class InntektsbortfallVilkår(
     private val vilkår: Vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.INNTEKTSBORTFALL)
 
     override fun vurder(grunnlag: InntektsbortfallGrunnlag) {
-        val vurdering = if (grunnlag.inntektsbortfallGrunnlag.kanBehandlesAutomatisk) {
+        val vurdering = if (grunnlag.inntektsbortfallKanBehandlesAutomatisk.kanBehandlesAutomatisk) {
             Vilkårsperiode(
                 periode = rettighetsPeriode,
                 utfall = Utfall.OPPFYLT,

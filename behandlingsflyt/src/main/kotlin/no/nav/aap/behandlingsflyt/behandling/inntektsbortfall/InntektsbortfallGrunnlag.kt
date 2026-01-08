@@ -5,6 +5,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.InntektsbortfallVurdering
 
 data class InntektsbortfallGrunnlag(
-    val inntektsbortfallGrunnlag: InntektsbortfallKanBehandlesAutomatisk,
+    val inntektsbortfallKanBehandlesAutomatisk: InntektsbortfallKanBehandlesAutomatisk,
     val manuellVurdering: InntektsbortfallVurdering?
-): Faktagrunnlag
+) : Faktagrunnlag
