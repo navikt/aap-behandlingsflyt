@@ -2,8 +2,10 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.VurderRettighetsperiodeRepository
 import no.nav.aap.behandlingsflyt.behandling.rettighetstype.RettighetstypeVurdering
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamGateway
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamordneVedtakRequest
@@ -26,6 +28,7 @@ import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
+import java.util.NavigableSet
 import kotlin.collections.mapNotNull
 import kotlin.collections.orEmpty
 
@@ -56,8 +59,9 @@ class VarsleVedtakJobbUtfører(
         val nåværendeRettighetsperiodeVurdering = rettighetsPeriodeRepo.hentVurdering(behandling.id)
 
         val tilkjentRepository: TilkjentYtelseRepository = repositoryProvider.provide()
-        val forrigeTilkjentYtelse = forrigeBehandlingId?.let { tilkjentRepository.hentHvisEksisterer(it) }
-        val nåværendeTilkjentYtelse = tilkjentRepository.hentHvisEksisterer(behandling.id)
+        val forrigeTilkjentYtelse =
+            forrigeBehandlingId?.let { tilkjentRepository.hentHvisEksisterer(it) }?.tilTidslinje()
+        val nåværendeTilkjentYtelse = tilkjentRepository.hentHvisEksisterer(behandling.id)?.tilTidslinje()
 
         val underveisRepo: UnderveisRepository = repositoryProvider.provide()
         val forrigeUnderveisGrunnlag = forrigeBehandlingId?.let { underveisRepo.hentHvisEksisterer(it) }
@@ -88,7 +92,7 @@ class VarsleVedtakJobbUtfører(
         val relevantEndring =
             endringIRettighetsPeriode(forrigeRettighetsperiodeVurdering,nåværendeRettighetsperiodeVurdering)
                     || endringITilkjentYtelseTidslinje(forrigeTilkjentYtelse,nåværendeTilkjentYtelse)
-                    || endringIRettighetstypeTidslinje(forrigeUnderveisGrunnlag, nåværendeUnderveisGrunnlag!!)
+                    || endringIRettighetstypeTidslinje(forrigeUnderveisGrunnlag, nåværendeUnderveisGrunnlag!!, vedtak.vedtakstidspunkt.toLocalDate())
 
         // For nå: kun varsle ved førstegangsbehandlinger.
         // På sikt skal vi varsle hver gang det skjer en "betydelig" endring i ytelsen. F.eks rettighetstype, stans,
@@ -121,19 +125,20 @@ class VarsleVedtakJobbUtfører(
     }
 
     fun endringITilkjentYtelseTidslinje(
-        forrigeTilkjentYtelse: Tidslinje<TilkjentYtelsePeriode>,
-        nåværendeTilkjentYtelse: Tidslinje<TilkjentYtelsePeriode>
+        forrigeTilkjentYtelse: Tidslinje<Tilkjent>?,
+        nåværendeTilkjentYtelse: Tidslinje<Tilkjent>?
     ): Boolean {
-        return forrigeTilkjentYtelse.komprimer() !=nåværendeTilkjentYtelse.komprimer()
+
+        return forrigeTilkjentYtelse?.komprimer() !=nåværendeTilkjentYtelse?.komprimer()
     }
 
-    fun underveisTilRettighetsTypeTidslinje(underveis: UnderveisGrunnlag?): Tidslinje<RettighetsType> {
+    fun underveisTilRettighetsTypeTidslinje(underveis: UnderveisGrunnlag?, vedtakstidspunkt: LocalDate): Tidslinje<RettighetsType> {
         return underveis?.perioder.orEmpty()
             .mapNotNull { if (it.rettighetsType != null) Segment(it.periode, it.rettighetsType) else null }
-            .let(::Tidslinje).begrensetTil(Periode(LocalDate.MIN, LocalDate.now()))
+            .let(::Tidslinje).begrensetTil(Periode(LocalDate.MIN, vedtakstidspunkt))
     }
 
-    fun endringIRettighetstypeTidslinje(forrigeUnderveisGrunnlag: UnderveisGrunnlag?, nåværendeUnderveisGrunnlag: UnderveisGrunnlag): Boolean {
-        return forrigeUnderveisGrunnlag!=null && underveisTilRettighetsTypeTidslinje(forrigeUnderveisGrunnlag)!=underveisTilRettighetsTypeTidslinje(nåværendeUnderveisGrunnlag)
+    fun endringIRettighetstypeTidslinje(forrigeUnderveisGrunnlag: UnderveisGrunnlag?, nåværendeUnderveisGrunnlag: UnderveisGrunnlag, vedtakstidspunkt: LocalDate): Boolean {
+        return forrigeUnderveisGrunnlag!=null && underveisTilRettighetsTypeTidslinje(forrigeUnderveisGrunnlag,vedtakstidspunkt)!=underveisTilRettighetsTypeTidslinje(nåværendeUnderveisGrunnlag, vedtakstidspunkt)
     }
 }
