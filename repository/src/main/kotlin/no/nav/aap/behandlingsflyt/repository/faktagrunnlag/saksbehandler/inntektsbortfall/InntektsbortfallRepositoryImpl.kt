@@ -29,8 +29,8 @@ class InntektsbortfallRepositoryImpl(private val connection: DBConnection) : Inn
 
         connection.execute(
             """
-            INSERT INTO INNTEKTSBORTFALL_VURDERING (BEGRUNNELSE, RETT_TIL_ALDERSPENSJON_UTTAK, VURDERINGER_ID, VURDERT_I_BEHANDLING, VURDERT_AV)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO INNTEKTSBORTFALL_VURDERING (BEGRUNNELSE, RETT_TIL_ALDERSPENSJON_UTTAK, VURDERINGER_ID, VURDERT_I_BEHANDLING, VURDERT_AV, OPPRETTET_TID)
+            VALUES (?, ?, ?, ?, ?, ?)
         """.trimIndent()
         ) {
             setParams {
@@ -39,6 +39,7 @@ class InntektsbortfallRepositoryImpl(private val connection: DBConnection) : Inn
                 setLong(3, vurderingerId)
                 setLong(4, vurdering.vurdertIBehandling.id)
                 setString(5, vurdering.vurdertAv)
+                setLocalDateTime(6, vurdering.opprettetTid)
             }
         }
 
@@ -88,6 +89,7 @@ class InntektsbortfallRepositoryImpl(private val connection: DBConnection) : Inn
                     row.getBoolean("RETT_TIL_ALDERSPENSJON_UTTAK"),
                     row.getString("VURDERT_AV"),
                     BehandlingId(row.getLong("VURDERT_I_BEHANDLING")),
+                    opprettetTid = row.getLocalDateTime("OPPRETTET_TID"),
                 )
             }
         }

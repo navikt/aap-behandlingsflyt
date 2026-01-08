@@ -39,6 +39,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.sykdomsvurderingForBrevApi
 import no.nav.aap.behandlingsflyt.behandling.foreslåvedtak.foreslaaVedtakApi
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.medlemskap.medlemskapsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.samordningGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.inntektsbortfall.inntektsbortfallGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.institusjonApi
 import no.nav.aap.behandlingsflyt.behandling.klage.behandlendeenhet.behandlendeEnhetGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.klage.formkrav.formkravGrunnlagApi
@@ -259,6 +260,7 @@ internal fun Application.server(
                 sykdomsgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 sykdomsvurderingForBrevApi(dataSource, repositoryRegistry, gatewayProvider)
                 sykepengerGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                inntektsbortfallGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 oppholdskravGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 institusjonApi(dataSource, repositoryRegistry, gatewayProvider)
                 avklaringsbehovApi(dataSource, repositoryRegistry, gatewayProvider)
