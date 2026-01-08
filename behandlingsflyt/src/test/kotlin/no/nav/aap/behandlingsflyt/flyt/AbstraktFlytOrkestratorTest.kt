@@ -694,9 +694,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                 rettighetsperiodeVurdering = RettighetsperiodeVurderingDTO(
                     startDato = dato,
                     begrunnelse = "En begrunnelse",
-                    harRettUtoverSøknadsdato = true,
-                    harKravPåRenter = false,
-                    harRett = RettighetsperiodeHarRett.`HarRettIkkeIStandTilÅSøkeTidligere`
+                    harRett = RettighetsperiodeHarRett.HarRettMisvisendeOpplysninger
                 )
             )
         )
@@ -708,9 +706,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                 rettighetsperiodeVurdering = RettighetsperiodeVurderingDTO(
                     startDato = null,
                     begrunnelse = "En begrunnelse",
-                    harRettUtoverSøknadsdato = false,
                     harRett = RettighetsperiodeHarRett.Nei,
-                    harKravPåRenter = null,
                 )
             )
         )

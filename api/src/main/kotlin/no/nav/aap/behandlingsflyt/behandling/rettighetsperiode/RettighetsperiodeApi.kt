@@ -30,10 +30,8 @@ data class RettighetsperiodeGrunnlagResponse(
 
 data class RettighetsperiodeVurderingResponse(
     val begrunnelse: String,
-    @Deprecated("bruk harRett") val harRettUtoverSøknadsdato: Boolean,
     val harRett: RettighetsperiodeHarRett,
     val startDato: LocalDate?,
-    val harKravPåRenter: Boolean?,
     val vurdertAv: VurdertAvResponse
 )
 
@@ -69,9 +67,7 @@ fun NormalOpenAPIRoute.rettighetsperiodeGrunnlagApi(
                             RettighetsperiodeVurderingResponse(
                                 begrunnelse = it.begrunnelse,
                                 startDato = it.startDato,
-                                harRettUtoverSøknadsdato = it.harRettUtoverSøknadsdato.harRett(),
                                 harRett = it.harRettUtoverSøknadsdato,
-                                harKravPåRenter = it.harKravPåRenter,
                                 vurdertAv =
                                     VurdertAvResponse(
                                         ident = it.vurdertAv,
