@@ -127,20 +127,12 @@ class AndreYtelserOppgittISøknadRepositoryImpl(private val connection: DBConnec
 
     override fun slett(behandlingId: BehandlingId) {
 
-        //skal slette alle grunnlag på en behandling?
         val ytelserId = hentYtelseIderPÅBehandlingId(behandlingId)
         if (ytelserId == null) return
-
-        // er det flere grunnlag på samme ytelse id ?
-
         val alleGrunnlagPåYtelseId = hentAlleGrunnlagIdPåAndreYtelseId(ytelserId)
-
-        //Skal slette alle??! :*/
 
         val kunEtGrunnlagPåDetteSvaret = if (alleGrunnlagPåYtelseId.size == 1) true else false
 
-
-        //sletter de på behandling id
         connection.execute(
             """
             delete from ANDRE_YTELSER_OPPGITT_I_SOKNAD_GRUNNLAG where behandling_id = ?;
@@ -155,7 +147,7 @@ class AndreYtelserOppgittISøknadRepositoryImpl(private val connection: DBConnec
         if (kunEtGrunnlagPåDetteSvaret) {
             connection.execute(
                 """
-            delete from ANDRE_YTELSER_OPPGITT_I_SOKNAD_GRUNNLAG where andre_ytelser_id = ?; 
+            delete from ANNEN_YTELSE_OPPGITT_I_SOKNAD where andre_ytelser_id = ?; 
         """.trimIndent()
             ) {
                 setParams {
