@@ -57,7 +57,7 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             )
             .medKontekst {
                 if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.Sykestipend)) {
-                    this.behandling.løsSykestipend()
+                    this.behandling.løsSykestipend(listOf(Periode(fom, fom.plusDays(14))))
                 }
             }
             .løsRefusjonskrav()
@@ -92,6 +92,11 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     )
                 )
             )
+            .medKontekst {
+                if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.Sykestipend)) {
+                    this.behandling.løsSykestipend()
+                }
+            }
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .describedAs { "Skal vurderes for ordinær dersom ikke oppfylt student" }

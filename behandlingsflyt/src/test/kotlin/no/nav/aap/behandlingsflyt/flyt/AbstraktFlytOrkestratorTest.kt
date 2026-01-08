@@ -1415,12 +1415,13 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         )
     }
 
-    protected fun Behandling.løsSykestipend(): Behandling {
+    protected fun Behandling.løsSykestipend(perioder: List<Periode> = emptyList()): Behandling {
         return løsAvklaringsBehov(
             this,
             AvklarSamordningSykestipendLøsning(
                 SamordningSykestipendVurderingDto(
-                    begrunnelse = "Wip"
+                    begrunnelse = "Begrunnelse",
+                    perioder = perioder.toSet()
                 )
             )
         )
