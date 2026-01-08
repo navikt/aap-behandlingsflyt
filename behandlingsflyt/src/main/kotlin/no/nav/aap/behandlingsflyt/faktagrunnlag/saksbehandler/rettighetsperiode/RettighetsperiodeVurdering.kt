@@ -7,7 +7,7 @@ import java.time.LocalDateTime
 data class RettighetsperiodeVurdering(
     val startDato: LocalDate?,
     val begrunnelse: String,
-    val harRettUtoverSøknadsdato: Boolean,
+    val harRettUtoverSøknadsdato: RettighetsperiodeHarRett,
     val harKravPåRenter: Boolean?,
     val vurdertAv: String,
     val vurdertDato: LocalDateTime? = null
@@ -16,25 +16,36 @@ data class RettighetsperiodeVurdering(
 data class RettighetsperiodeVurderingDTO(
     val startDato: LocalDate?,
     val begrunnelse: String,
-    val harRettUtoverSøknadsdato: Boolean,
+    @Deprecated("bruk harRett") val harRettUtoverSøknadsdato: Boolean?,
+    val harRett: RettighetsperiodeHarRett?,
     val harKravPåRenter: Boolean?
 ) {
     init {
-        if (harRettUtoverSøknadsdato) {
-            if (startDato == null) {
-                throw UgyldigForespørselException("Må sette startdato når bruker har rett utover søknadsdatoen")
-            }
-            if (harKravPåRenter == null) {
-                throw UgyldigForespørselException("Må vurdere renter når bruker har rett utover søknadsdatoen")
-            }
+        if (harRett == null && harRettUtoverSøknadsdato == null) {
+            throw IllegalArgumentException("Enten harRettUtoverSøknadsdato eller harRett må være satt. Begge kan ikke være NULL.")
         }
-        if (!harRettUtoverSøknadsdato) {
-            if (startDato != null) {
-                throw UgyldigForespørselException("Kan ikke sette startdato når bruker ikke har rett utover søknadsdatoen")
-            }
-            if (harKravPåRenter != null) {
-                throw UgyldigForespørselException("Kan ikke vurdere renter når bruker ikke har rett utover søknadsdatoen")
-            }
+
+        val harRettSjekk = harRett?.harRett() == true || harRettUtoverSøknadsdato == true
+
+        if (harRettSjekk && startDato == null) {
+            throw UgyldigForespørselException("Må sette startdato når bruker har rett utover søknadsdatoen")
+        }
+        if (!harRettSjekk && startDato != null) {
+            throw UgyldigForespørselException("Kan ikke sette startdato når bruker ikke har rett utover søknadsdatoen")
+        }
+    }
+}
+
+enum class RettighetsperiodeHarRett {
+    Ja, // For bakoverkompabikitet fra når feltet var boolean. Vi kan ikke vite hvilken av de 2 "har rett" true skal mappes til
+    Nei,
+    HarRettIkkeIStandTilÅSøkeTidligere,
+    HarRettMisvisendeOpplysninger;
+
+    fun harRett(): Boolean {
+        return when(this) {
+            Ja, HarRettIkkeIStandTilÅSøkeTidligere, HarRettMisvisendeOpplysninger -> true
+            Nei -> false
         }
     }
 }
