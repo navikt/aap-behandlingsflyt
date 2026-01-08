@@ -361,6 +361,7 @@ class HåndterMottattDokumentService(
                 årsakTilFeilutbetaling = null,
                 vedtaksdato = vedtakstidspunkt.toLocalDate(),
             ),
+            // TODO: Meldeperioder inkluderer helg i Kelvin, men er mandag-fredag i tilbakekreving. Kan bruke denne for å "slå sammen" to mandag-fredag-perioder til én lang periode.
             utvidPerioder = emptyList(),
             behandlendeEnhet = null, //TODO: hva skal eventuelt inn her?
         )
