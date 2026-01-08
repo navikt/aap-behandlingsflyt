@@ -15,8 +15,8 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = AVKLAR_SAMORDNING_SYKESTIPEND_KODE)
 class AvklarSamordningSykestipendLøsning(
-    @param:JsonProperty("løsning", required = true)
-    val løsning: SamordningSykestipendVurderingDto,
+    @param:JsonProperty("sykestipendVurdering", required = true)
+    val sykestipendVurdering: SamordningSykestipendVurderingDto,
     @param:JsonProperty(
         "behovstype",
         required = true,

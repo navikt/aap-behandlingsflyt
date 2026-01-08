@@ -25,13 +25,13 @@ class AvklarSamordningSykestipendLøser(
             is Validation.Valid -> {
                 sykestipendRepository.lagre(
                     kontekst.behandlingId(),
-                    løsning.løsning.tilVurdering(
+                    løsning.sykestipendVurdering.tilVurdering(
                         bruker = kontekst.bruker,
                         vurdertIBehandling = kontekst.behandlingId()
                     )
                 )
                 LøsningsResultat(
-                    begrunnelse = løsning.løsning.begrunnelse,
+                    begrunnelse = løsning.sykestipendVurdering.begrunnelse,
                 )
             }
         }
@@ -42,7 +42,7 @@ class AvklarSamordningSykestipendLøser(
     }
 
     private fun AvklarSamordningSykestipendLøsning.valider(): Validation<AvklarSamordningSykestipendLøsning> {
-        return if (Periode.overlapper(løsning.perioder)) {
+        return if (Periode.overlapper(sykestipendVurdering.perioder)) {
             Validation.Invalid(this, "Fant overlappende perioder")
 
         } else {

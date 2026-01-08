@@ -6,4 +6,5 @@ import no.nav.aap.lookup.repository.Repository
 interface SykestipendRepository: Repository {
     fun lagre(behandlingId: BehandlingId, vurdering: SykestipendVurdering)
     fun hentHvisEksisterer(behandlingId: BehandlingId): SykestipendGrunnlag?
+    fun deaktiverGrunnlag(behandlingId: BehandlingId)
 }

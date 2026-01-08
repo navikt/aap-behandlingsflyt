@@ -150,7 +150,7 @@ class SykestipendRepositoryImpl(private val connection: DBConnection) : Sykestip
         }
     }
 
-    private fun deaktiverGrunnlag(behandlingId: BehandlingId) {
+    override fun deaktiverGrunnlag(behandlingId: BehandlingId) {
         connection.execute("update sykestipend_grunnlag set aktiv = false where behandling_id = ? and aktiv = true") {
             setParams {
                 setLong(1, behandlingId.toLong())
