@@ -7,6 +7,7 @@ import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.Tags
+import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.mdc.LogKontekst
@@ -14,6 +15,7 @@ import no.nav.aap.behandlingsflyt.mdc.LoggingKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.server.auth.bruker
@@ -26,7 +28,11 @@ import no.nav.aap.tilgang.authorizedPost
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.mellomlagretVurderingApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry) {
+fun NormalOpenAPIRoute.mellomlagretVurderingApi(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider
+) {
     route("/api/behandling").tag(Tags.Behandling) {
         route("/mellomlagret-vurdering") {
             authorizedPost<Unit, MellomlagretVurderingResponse, MellomlagretVurderingRequest>(
@@ -34,6 +40,7 @@ fun NormalOpenAPIRoute.mellomlagretVurderingApi(dataSource: DataSource, reposito
                     operasjon = Operasjon.SAKSBEHANDLE,
                 )
             ) { _, request ->
+                val ansattInfoService = AnsattInfoService(gatewayProvider)
                 val response = dataSource.transaction { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
@@ -41,6 +48,7 @@ fun NormalOpenAPIRoute.mellomlagretVurderingApi(dataSource: DataSource, reposito
                     val referanse = BehandlingReferanse(request.behandlingsReferanse)
                     val avklaringsbehovKode = AvklaringsbehovKode.valueOf(request.avklaringsbehovkode)
                     val behandling = behandlingRepository.hent(referanse)
+
                     LoggingKontekst(
                         repositoryProvider,
                         LogKontekst(referanse = referanse)
@@ -54,7 +62,8 @@ fun NormalOpenAPIRoute.mellomlagretVurderingApi(dataSource: DataSource, reposito
                                 behandlingId = behandling.id,
                                 avklaringsbehovKode = avklaringsbehovKode,
                                 data = request.data,
-                                vurdertAv = bruker().ident,
+                                vurdertAv = ansattInfoService.hentAnsattNavnOgEnhet(bruker().ident)?.navn
+                                    ?: bruker().ident,
                                 vurdertDato = LocalDateTime.now()
                             )
                         )
