@@ -90,15 +90,18 @@ class VarsleVedtakJobbUtfører(
         )
 
         val relevantEndring =
-            endringIRettighetsPeriode(forrigeRettighetsperiodeVurdering,nåværendeRettighetsperiodeVurdering)
-                    || endringITilkjentYtelseTidslinje(forrigeTilkjentYtelse,nåværendeTilkjentYtelse)
-                    || endringIRettighetstypeTidslinje(forrigeUnderveisGrunnlag, nåværendeUnderveisGrunnlag!!, vedtak.vedtakstidspunkt.toLocalDate())
+            listOf(
+                behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling,
+                endringIRettighetsPeriode(forrigeRettighetsperiodeVurdering,nåværendeRettighetsperiodeVurdering),
+                endringITilkjentYtelseTidslinje(forrigeTilkjentYtelse,nåværendeTilkjentYtelse),
+                endringIRettighetstypeTidslinje(forrigeUnderveisGrunnlag, nåværendeUnderveisGrunnlag!!, vedtak.vedtakstidspunkt.toLocalDate())
+            )
 
         // For nå: kun varsle ved førstegangsbehandlinger.
         // På sikt skal vi varsle hver gang det skjer en "betydelig" endring i ytelsen. F.eks rettighetstype, stans,
         // etc.
-        if (behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling || relevantEndring) {
-            log.info("Varsler SAM for behandling med referanse ${behandling.referanse} og saksnummer ${sak.saksnummer}.")
+        if (relevantEndring.any()) {
+            log.info("Varsler SAM for behandling med referanse ${behandling.referanse} og saksnummer ${sak.saksnummer}. Årsak: førstegangsbehandling=${relevantEndring[0]}, endringIRettighetsPeriode=${relevantEndring[1]}, endringITilkjentYtelse=${relevantEndring[2]}, endringIRettighetstype=${relevantEndring[3]}")
             samGateway.varsleVedtak(request)
         }
 
