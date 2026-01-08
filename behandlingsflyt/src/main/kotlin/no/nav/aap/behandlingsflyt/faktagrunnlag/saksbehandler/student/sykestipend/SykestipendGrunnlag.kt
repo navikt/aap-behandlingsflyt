@@ -22,5 +22,16 @@ data class SykestipendVurdering(
 }
 
 data class SamordningSykestipendVurderingDto(
-    val begrunnelse: String
-)
+    val begrunnelse: String,
+    val perioder: Set<Periode>
+) {
+    fun tilVurdering(bruker: Bruker, vurdertIBehandling: BehandlingId): SykestipendVurdering {
+        return SykestipendVurdering(
+            begrunnelse = begrunnelse,
+            perioder = perioder,
+            vurdertIBehandling = vurdertIBehandling,
+            vurdertAv = bruker,
+            opprettet = Instant.now()
+        )
+    }
+}

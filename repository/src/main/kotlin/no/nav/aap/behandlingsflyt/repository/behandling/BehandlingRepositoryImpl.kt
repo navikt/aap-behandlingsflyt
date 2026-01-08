@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.sakogbehandling.SakOgBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
@@ -116,6 +117,39 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                 setUUID(1, referanse.referanse)
             }
             setRowMapper { Saksnummer(it.getString("saksnummer")) }
+        }
+    }
+
+    override fun finnAlleGjeldendeVedtatteBehandlinger(): List<SakOgBehandling> {
+        return connection.queryList(
+            """
+                SELECT * FROM gjeldende_vedtatte_behandlinger
+            """.trimIndent()
+        ) {
+            setRowMapper {
+                SakOgBehandling(
+                    sakId = SakId(it.getLong("sak_id")),
+                    behandlingId = BehandlingId(it.getLong("behandling_id"))
+                )
+            }
+        }
+    }
+
+    override fun finnGjeldendeVedtattBehandlingForSak(sakId: SakId): SakOgBehandling? {
+        return connection.queryFirstOrNull(
+            """
+                SELECT * FROM gjeldende_vedtatte_behandlinger where sak_id = ?
+            """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, sakId.toLong())
+            }
+            setRowMapper {
+                SakOgBehandling(
+                    sakId = SakId(it.getLong("sak_id")),
+                    behandlingId = BehandlingId(it.getLong("behandling_id"))
+                )
+            }
         }
     }
 

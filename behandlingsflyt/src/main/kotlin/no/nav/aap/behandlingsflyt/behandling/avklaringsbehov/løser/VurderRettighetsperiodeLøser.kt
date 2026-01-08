@@ -53,27 +53,25 @@ class VurderRettighetsperiodeLøser(
             throw UgyldigForespørselException("Kan ikke endre starttidspunkt til å gjelde ETTER søknadstidspunkt")
         }
 
-        val harRettUtoverSøknadsdato = løsning.rettighetsperiodeVurdering.harRettUtoverSøknadsdato
         rettighetsperiodeRepository.lagreVurdering(
             behandlingId = behandling.id,
             vurdering =
                 RettighetsperiodeVurdering(
                     begrunnelse = løsning.rettighetsperiodeVurdering.begrunnelse,
                     startDato = nyStartDato,
-                    harRettUtoverSøknadsdato = harRettUtoverSøknadsdato,
-                    harKravPåRenter = løsning.rettighetsperiodeVurdering.harKravPåRenter,
+                    harRettUtoverSøknadsdato = løsning.rettighetsperiodeVurdering.harRett,
                     vurdertAv = kontekst.bruker.ident
                 )
         )
 
-        if (harRettUtoverSøknadsdato && nyStartDato != null) {
+        if (løsning.rettighetsperiodeVurdering.harRett.toBoolean() && nyStartDato != null) {
             log.info("Oppdaterer rettighetsperioden til å gjelde fra $ for sak ${sak.id}")
             sakOgBehandlingService.overstyrRettighetsperioden(
                 sakId = sak.id,
                 startDato = nyStartDato,
                 sluttDato = Tid.MAKS
             )
-        } else if (!harRettUtoverSøknadsdato) {
+        } else if (!løsning.rettighetsperiodeVurdering.harRett.toBoolean()) {
             val søknadsdato = finnSøknadsdatoForSak(sak.id)
                 ?: throw UgyldigForespørselException("Forsøker å tilbakestille rettighetsperioden, men finner ingen søknadsdato for saken")
             if (sak.rettighetsperiode.fom != søknadsdato) {

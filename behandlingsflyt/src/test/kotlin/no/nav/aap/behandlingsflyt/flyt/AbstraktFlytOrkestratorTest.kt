@@ -71,6 +71,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.F
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.flate.OvergangArbeidVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flate.OvergangUføreVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeHarRett
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.sykestipend.SamordningSykestipendVurderingDto
@@ -693,8 +694,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                 rettighetsperiodeVurdering = RettighetsperiodeVurderingDTO(
                     startDato = dato,
                     begrunnelse = "En begrunnelse",
-                    harRettUtoverSøknadsdato = true,
-                    harKravPåRenter = false,
+                    harRett = RettighetsperiodeHarRett.HarRettMisvisendeOpplysninger
                 )
             )
         )
@@ -706,8 +706,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                 rettighetsperiodeVurdering = RettighetsperiodeVurderingDTO(
                     startDato = null,
                     begrunnelse = "En begrunnelse",
-                    harRettUtoverSøknadsdato = false,
-                    harKravPåRenter = null,
+                    harRett = RettighetsperiodeHarRett.Nei,
                 )
             )
         )
@@ -1415,12 +1414,13 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         )
     }
 
-    protected fun Behandling.løsSykestipend(): Behandling {
+    protected fun Behandling.løsSykestipend(perioder: List<Periode> = emptyList()): Behandling {
         return løsAvklaringsBehov(
             this,
             AvklarSamordningSykestipendLøsning(
                 SamordningSykestipendVurderingDto(
-                    begrunnelse = "Wip"
+                    begrunnelse = "Begrunnelse",
+                    perioder = perioder.toSet()
                 )
             )
         )
