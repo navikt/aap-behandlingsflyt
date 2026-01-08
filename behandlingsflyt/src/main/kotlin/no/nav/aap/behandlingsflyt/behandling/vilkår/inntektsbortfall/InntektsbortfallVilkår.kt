@@ -22,7 +22,7 @@ class InntektsbortfallVilkår(
                 periode = rettighetsPeriode,
                 utfall = Utfall.OPPFYLT,
                 manuellVurdering = false,
-                begrunnelse = "Bruker under 62 år.",
+                begrunnelse = "Bruker under 62 år, eller har hatt inntekt siste år over 1G, eller har hatt inntekt over 3G siste tre år.",
                 faktagrunnlag = grunnlag
             )
         } else if (grunnlag.manuellVurdering == null) {
