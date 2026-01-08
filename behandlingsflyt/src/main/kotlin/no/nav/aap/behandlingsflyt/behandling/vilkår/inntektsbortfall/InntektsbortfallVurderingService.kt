@@ -78,13 +78,13 @@ class InntektsbortfallVurderingService(
     }
 
     private fun inntektSisteÅrOver1G(
-        inntektGrunnlag: Set<InntektPerÅr>?,
+        inntektPerÅr: Set<InntektPerÅr>?,
         manuelleInntekter: Set<ManuellInntektVurdering>,
         sisteRelevanteÅr: Set<Year>
     ): InntektSisteÅrOver1G {
-        // FIXME set har ikke rekkefølge!
+        // Greit å ta firstOrNull her, siden den vil returnere maks ett element. Så svaret er veldefinert.
         val inntektGrunnlagSisteRelevanteÅr =
-            hentInntekterGrunnlag(inntektGrunnlag, setOf(sisteRelevanteÅr.max())).firstOrNull()
+            hentInntekterGrunnlag(inntektPerÅr, setOf(sisteRelevanteÅr.max())).firstOrNull()
         val manuellInntektVurderingSisteRelevanteÅr =
             manuelleInntekter.firstOrNull { it.år == sisteRelevanteÅr }
 
@@ -100,12 +100,15 @@ class InntektsbortfallVurderingService(
         return InntektSisteÅrOver1G(GUnit(BigDecimal.ZERO), false)
     }
 
+    /**
+     * Filtrer [inntektPerÅr] basert på [år]. Så størrelsen er alltid mindre enn eller lik input.
+     */
     private fun hentInntekterGrunnlag(
         inntektPerÅr: Set<InntektPerÅr>?,
         år: Set<Year>
     ): List<InntektPerÅr> {
         if (inntektPerÅr == null) return emptyList()
-        return inntektPerÅr.filter { it.år in år }
+        return inntektPerÅr.filter { it.år in år }.sortedBy { it.år }
     }
 
     private fun hentSisteRelevanteÅr(): Set<Year> {

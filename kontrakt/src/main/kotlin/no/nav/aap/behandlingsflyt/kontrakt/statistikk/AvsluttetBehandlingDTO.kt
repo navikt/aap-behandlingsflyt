@@ -85,8 +85,6 @@ public enum class Vilkårtype {
     STRAFFEGJENNOMFØRING,
     AKTIVITETSPLIKT,
     OPPHOLDSKRAV,
-
-    @Deprecated("Skal fases ut.")
     SYKEPENGEERSTATNING,
     SAMORDNING,
     INNTEKTSBORTFALL
