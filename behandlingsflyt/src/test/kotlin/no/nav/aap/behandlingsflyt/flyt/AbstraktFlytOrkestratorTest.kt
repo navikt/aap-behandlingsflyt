@@ -696,7 +696,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                     begrunnelse = "En begrunnelse",
                     harRettUtoverSøknadsdato = true,
                     harKravPåRenter = false,
-                    harRett = RettighetsperiodeHarRett.HarRettÅpenbart
+                    harRett = RettighetsperiodeHarRett.`HarRettIkkeIStandTilÅSøkeTidligere`
                 )
             )
         )

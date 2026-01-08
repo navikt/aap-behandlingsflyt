@@ -37,11 +37,14 @@ data class RettighetsperiodeVurderingDTO(
 }
 
 enum class RettighetsperiodeHarRett {
-    Ja, Nei, HarRettÅpenbart, HarRettMisvisendeOpplysninger;
+    Ja, // For bakoverkompabikitet fra når feltet var boolean. Vi kan ikke vite hvilken av de 2 "har rett" true skal mappes til
+    Nei,
+    HarRettIkkeIStandTilÅSøkeTidligere,
+    HarRettMisvisendeOpplysninger;
 
     fun harRett(): Boolean {
         return when(this) {
-            Ja, HarRettÅpenbart, HarRettMisvisendeOpplysninger -> true
+            Ja, HarRettIkkeIStandTilÅSøkeTidligere, HarRettMisvisendeOpplysninger -> true
             Nei -> false
         }
     }
