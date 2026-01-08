@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.institusjonsopphold
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.tilTidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
@@ -10,8 +10,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.komponenter.miljo.Miljø
-import no.nav.aap.komponenter.miljo.MiljøKode
 import no.nav.aap.komponenter.tidslinje.JoinStyle
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
@@ -20,8 +18,6 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
-import java.util.stream.IntStream
-import kotlin.math.max
 
 class InstitusjonsoppholdUtlederService(
     private val barnetilleggRepository: BarnetilleggRepository,
@@ -51,8 +47,8 @@ class InstitusjonsoppholdUtlederService(
         val soningsOppgold = opphold.filter { segment -> segment.verdi.type == Institusjonstype.FO }
         val helseopphold = opphold.filter { segment -> segment.verdi.type == Institusjonstype.HS }
         val soningsvurderingTidslinje = byggSoningsvurderingTidslinje(input.soningsvurderinger)
-        val helsevurderingerTidslinje = byggHelsevurderingTidslinje(input.helsevurderinger)
-
+        val barnetillegg = input.barnetillegg
+        val helsevurderingerTidslinje = byggHelsevurderingTidslinje(input.helsevurderinger, barnetillegg)
         var perioderSomTrengerVurdering =
             Tidslinje(soningsOppgold)
                 .begrensetTil(input.rettighetsperiode)
@@ -67,6 +63,7 @@ class InstitusjonsoppholdUtlederService(
                     val verdi = InstitusjonsoppholdVurdering(helse = helse, soning = soning)
                     Segment(periode, verdi)
                 })
+
 
         val helseOppholdTidslinje = opprettTidslinje(helseopphold)
 
@@ -118,18 +115,72 @@ class InstitusjonsoppholdUtlederService(
 
     private fun byggHelsevurderingTidslinje(
         helsevurderinger: List<HelseinstitusjonVurdering>,
+        barnetillegg: List<BarnetilleggPeriode>
     ): Tidslinje<HelseOpphold> {
-        return Tidslinje(helsevurderinger.sortedBy { it.periode }.map {
-            Segment(
-                it.periode, HelseOpphold(
-                    if (it.faarFriKostOgLosji && it.harFasteUtgifter == false && it.forsoergerEktefelle == false) {
-                        OppholdVurdering.AVSLÅTT
-                    } else {
-                        OppholdVurdering.GODKJENT
-                    }
-                )
-            )
-        }).komprimer()
+
+        val barnTilleggPeriodeDekkerAlt = barnetilleggDekkerAlleInstitusjonsperioder(
+            helsevurderinger,
+            barnetillegg
+        )
+
+        return Tidslinje(
+            helsevurderinger
+                .sortedBy { it.periode }
+                .map {
+                    Segment(
+                        it.periode,
+                        HelseOpphold(
+                            if (barnTilleggPeriodeDekkerAlt) {
+                                OppholdVurdering.GODKJENT
+                            } else if (
+                                it.faarFriKostOgLosji &&
+                                it.harFasteUtgifter == false &&
+                                it.forsoergerEktefelle == false
+                            ) {
+                                OppholdVurdering.AVSLÅTT
+                            } else {
+                                OppholdVurdering.GODKJENT
+                            }
+                        )
+                    )
+                }
+        ).komprimer()
+    }
+
+
+
+    private fun barnetilleggDekkerAlleInstitusjonsperioder(
+        helsevurderinger: List<HelseinstitusjonVurdering>,
+        barnetillegg: List<BarnetilleggPeriode>
+    ): Boolean {
+        val barnetilleggPerioder = barnetillegg.map { it.periode }
+
+        return helsevurderinger.all { helse ->
+            erFulltDekket(helse.periode, barnetilleggPerioder)
+        }
+    }
+
+    private fun erFulltDekket(
+        target: Periode,
+        dekning: List<Periode>
+    ): Boolean {
+        val relevante = dekning
+            .filter { it.overlapper(target) }
+            .sortedBy { it.fom }
+
+        if (relevante.isEmpty()) return false
+
+        var currentEnd = relevante.first().tom
+        if (relevante.first().fom > target.fom) return false
+
+        for (periode in relevante.drop(1)) {
+
+            if (periode.fom > currentEnd.plusDays(1)) return false
+            currentEnd = maxOf(currentEnd, periode.tom)
+            if (currentEnd >= target.tom) return true
+        }
+
+        return currentEnd >= target.tom
     }
 
     private fun sammenslåer(): JoinStyle.OUTER_JOIN<InstitusjonsoppholdVurdering, InstitusjonsoppholdVurdering, InstitusjonsoppholdVurdering> {

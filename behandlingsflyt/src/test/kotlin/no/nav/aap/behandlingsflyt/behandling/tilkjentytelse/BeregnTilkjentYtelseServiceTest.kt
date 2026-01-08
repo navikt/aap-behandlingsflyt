@@ -625,11 +625,11 @@ class BeregnTilkjentYtelseServiceTest {
         }
         val periode = Periode(1 juni 2023, 1 august 2023)
 
-        val underveisgrunnlag = underveisgrunnlag(periode, institusjonsOppholdReduksjon = Prosent.`50_PROSENT`)
+        val underveisgrunnlag = underveisgrunnlag(periode, institusjonsOppholdReduksjon = Prosent.`0_PROSENT`)
         val barnetilleggGrunnlag = BarnetilleggGrunnlag(
             listOf(
                 BarnetilleggPeriode(
-                    Periode(LocalDate.of(2023, 5, 1), LocalDate.of(2023, 8, 1).plusYears(18)),
+                    Periode(LocalDate.of(2022, 5, 1), LocalDate.of(2023, 8, 1).plusYears(18)),
                     setOf(BarnIdentifikator.BarnIdent("12345678910"))
                 )
             )
@@ -661,7 +661,7 @@ class BeregnTilkjentYtelseServiceTest {
             Segment(
                 periode = Periode(1 juni 2023, 1 august 2023), verdi = Tilkjent(
                     dagsats = Beløp("1204.45"), //4*0.66*111477/260
-                    gradering = Prosent.`50_PROSENT`,
+                    gradering = Prosent.`100_PROSENT`,
                     graderingGrunnlag = GraderingGrunnlag(
                         samordningGradering = Prosent.`0_PROSENT`,
                         institusjonGradering = Prosent.`0_PROSENT`,
