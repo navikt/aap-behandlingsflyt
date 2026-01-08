@@ -155,6 +155,10 @@ class TidligereVurderingerImpl(
                 ikkeOppfyltFørerTilAvslag(Vilkårtype.GRUNNLAGET, vilkårsresultat)
             },
 
+            Sjekk(StegType.VURDER_INNTEKTSBORTFALL) { vilkårsresultat, _ ->
+                ikkeOppfyltFørerTilAvslag(Vilkårtype.INNTEKTSBORTFALL, vilkårsresultat)
+            },
+
             Sjekk(StegType.VURDER_MEDLEMSKAP) { vilkårsresultat, _ ->
                 ikkeOppfyltFørerTilAvslag(Vilkårtype.MEDLEMSKAP, vilkårsresultat)
             },
