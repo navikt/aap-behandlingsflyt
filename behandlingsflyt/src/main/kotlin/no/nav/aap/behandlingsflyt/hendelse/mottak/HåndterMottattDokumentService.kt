@@ -344,6 +344,7 @@ class HåndterMottattDokumentService(
             ÅrsakTilOpprettelse.AKTIVITETSPLIKT -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
             ÅrsakTilOpprettelse.AKTIVITETSPLIKT_11_9 -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
             ÅrsakTilOpprettelse.TILBAKEKREVING_HENDELSE -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.UKJENT // Ikke relevant
+            ÅrsakTilOpprettelse.FAGSYSTEMINFO_BEHOV_HENDELSE -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.UKJENT // Ikke relevant
             ÅrsakTilOpprettelse.AUTOMATISK_OPPDATER_VILKÅR -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
         }
 
@@ -452,6 +453,7 @@ class HåndterMottattDokumentService(
             InnsendingType.PDL_HENDELSE_DODSFALL_BARN -> ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA
             InnsendingType.OMGJØRING_KLAGE_REVURDERING -> utledÅrsakEtterOmgjøringAvKlage(melding)
             InnsendingType.TILBAKEKREVING_HENDELSE -> ÅrsakTilOpprettelse.TILBAKEKREVING_HENDELSE
+            InnsendingType.FAGSYSTEMINFO_BEHOV_HENDELSE -> ÅrsakTilOpprettelse.FAGSYSTEMINFO_BEHOV_HENDELSE
         }
     }
 
@@ -532,6 +534,7 @@ class HåndterMottattDokumentService(
             InnsendingType.PDL_HENDELSE_DODSFALL_BRUKER -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.DØDSFALL_BRUKER))
             InnsendingType.PDL_HENDELSE_DODSFALL_BARN -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.DØDSFALL_BARN))
             InnsendingType.TILBAKEKREVING_HENDELSE -> emptyList()
+            InnsendingType.FAGSYSTEMINFO_BEHOV_HENDELSE-> emptyList()
         }
     }
 

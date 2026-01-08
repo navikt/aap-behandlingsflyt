@@ -46,6 +46,37 @@ public data class TilbakekrevingHendelseKafkaMelding(
     }
 }
 
+
+public data class FagsysteminfoBehovKafkaMelding(
+    val hendelsestype: String,
+    val versjon: Int,
+    val eksternFagsakId: String,
+    val kravgrunnlagReferanse: String,
+    val hendelseOpprettet: LocalDateTime,
+) {
+
+    public fun tilFagsysteminfoBehovV0(): FagsysteminfoBehovV0 =
+        FagsysteminfoBehovV0(
+            hendelsestype = hendelsestype,
+            versjon = versjon,
+            eksternFagsakId = eksternFagsakId,
+            kravgrunnlagReferanse = kravgrunnlagReferanse,
+            hendelseOpprettet = hendelseOpprettet,
+        )
+
+    public fun tilInnsending(meldingKey: String, saksnummer: Saksnummer): Innsending {
+        return Innsending(
+            saksnummer = saksnummer,
+            referanse = InnsendingReferanse(TilbakekrevingHendelseId.ny(meldingKey)),
+            type = InnsendingType.FAGSYSTEMINFO_BEHOV_HENDELSE,
+            kanal = Kanal.DIGITAL,
+            mottattTidspunkt = LocalDateTime.now(),
+            melding = this.tilFagsysteminfoBehovV0(),
+        )
+    }
+}
+
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 public data class TilbakekrevingHendelseV0(
     val hendelsestype: String,
@@ -55,6 +86,7 @@ public data class TilbakekrevingHendelseV0(
     val eksternBehandlingId: String?,
     val tilbakekreving: TilbakekrevingKafkaDto,
 ) : TilbakekrevingHendelse
+
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public data class FagsysteminfoBehovV0(
