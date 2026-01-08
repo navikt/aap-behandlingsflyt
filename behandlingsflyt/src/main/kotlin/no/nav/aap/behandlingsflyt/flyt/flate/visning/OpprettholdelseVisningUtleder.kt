@@ -18,7 +18,7 @@ class OpprettholdelseVisningUtleder(
     override fun skalVises(behandlingId: BehandlingId): Boolean {
         val resultat = klageresultatUtleder.utledKlagebehandlingResultat(behandlingId)
         return when (resultat) {
-            is Opprettholdes, is DelvisOmgjøres -> true
+            is Opprettholdes, is DelvisOmgjøres -> false // Siden steget er flyttet til etter brev så gir det ikke mening å vise det slik det står nå
             else -> false
         }
     }
