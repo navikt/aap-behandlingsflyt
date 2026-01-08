@@ -5,8 +5,12 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.underveis.KvoteService
+import no.nav.aap.behandlingsflyt.behandling.underveis.Kvoter
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -36,6 +40,21 @@ fun NormalOpenAPIRoute.kvoteApi(
                 val repositoryProvider = repositoryRegistry.provider(connection)
                 val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                 val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
+
+                val underveisgrunnlagRepository = repositoryProvider.provide<UnderveisRepository>()
+                val underveisgrunnlag = underveisgrunnlagRepository.hent(behandling.id)
+                val perioder = underveisgrunnlag.perioder
+                val rettighetstypePerioderMap = mutableMapOf<RettighetsType, List<Underveisperiode>>()
+                val kvoterForBehandling = KvoteService().beregn(behandling.id)
+
+                RettighetsType.entries.forEach { type ->
+                    rettighetstypePerioderMap[type] = perioder.filter { it.rettighetsType == type }
+                }
+
+                rettighetstypePerioderMap.forEach { (type, perioder) ->
+                    val antallHverdagerIKvote = utledAntallKvotedager(type, kvoterForBehandling)
+                    val bruktKvote = 0
+                }
 
                 val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
                 val virkningstidspunktUtleder = VirkningstidspunktUtleder(vilkårsresultatRepository)
@@ -89,4 +108,13 @@ private fun utledSenesteDatoForKvote(startDato: LocalDate?, antallHverdagerIKvot
         if (sluttDato?.dayOfWeek !in HELGEDAGER) gjenværendeDager--
     }
     return sluttDato
+}
+
+private fun utledAntallKvotedager(type: RettighetsType, kvoter: Kvoter): Int? {
+    when (type) {
+        RettighetsType.BISTANDSBEHOV -> kvoter.ordinærkvote.asInt
+        RettighetsType.STUDENT -> kvoter.studentkvote.asInt
+        RettighetsType.SYKEPENGEERSTATNING -> kvoter.sykepengeerstatningkvote.asInt
+        else -> null
+    }
 }
