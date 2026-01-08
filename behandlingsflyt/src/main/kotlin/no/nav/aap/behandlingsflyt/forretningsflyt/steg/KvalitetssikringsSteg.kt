@@ -104,7 +104,7 @@ class KvalitetssikringsSteg private constructor(
         return when (kontekst.behandlingType) {
             TypeBehandling.Førstegangsbehandling,
             TypeBehandling.Klage -> {
-                return avklaringsbehovene.harAvklaringsbehovSomKreverKvalitetssikring()
+                avklaringsbehovene.harAvklaringsbehovSomKreverKvalitetssikring()
             }
 
             else -> false

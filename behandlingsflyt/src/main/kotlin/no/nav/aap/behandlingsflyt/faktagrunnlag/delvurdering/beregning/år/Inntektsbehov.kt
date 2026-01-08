@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory
 import java.math.RoundingMode
 import java.time.LocalDate
 import java.time.Year
-import java.util.*
+import java.util.SortedSet
 
 class Inntektsbehov(private val beregningInput: BeregningInput) {
 
@@ -179,7 +179,8 @@ class Inntektsbehov(private val beregningInput: BeregningInput) {
         }
 
         fun utledRelevanteYtterligereNedsattÅr(beregningGrunnlag: BeregningGrunnlag?): Set<Year> {
-            return beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato?.let(::treÅrForutFor).orEmpty()
+            return beregningGrunnlag?.tidspunktVurdering?.ytterligereNedsattArbeidsevneDato?.let(::treÅrForutFor)
+                .orEmpty()
         }
 
         private fun treÅrForutFor(nedsettelsesdato: LocalDate): SortedSet<Year> {

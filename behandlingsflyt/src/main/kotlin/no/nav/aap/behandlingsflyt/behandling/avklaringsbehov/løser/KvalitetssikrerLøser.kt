@@ -53,14 +53,18 @@ class KvalitetssikrerLøser(
                 .map { it.løsesISteg }
                 .minWith(flyt.stegComparator)
 
-            val vurderingerFørRetur = relevanteVurderinger
-                .filter { it.godkjent == true }
-                .filter {
-                    flyt.erStegFør(
-                        Definisjon.forKode(it.definisjon).løsesISteg,
-                        tidligsteStegMedRetur
-                    )
-                }
+            val vurderingerFørRetur = if (unleashGateway.isEnabled(BehandlingsflytFeature.KvalitetssikringsSteg)) {
+                relevanteVurderinger.filter { it.godkjent == true }
+            } else {
+                relevanteVurderinger
+                    .filter { it.godkjent == true }
+                    .filter {
+                        flyt.erStegFør(
+                            Definisjon.forKode(it.definisjon).løsesISteg,
+                            tidligsteStegMedRetur
+                        )
+                    }
+            }
 
             val vurderingerSomMåReåpnes = relevanteVurderinger
                 .filter { vurdering ->

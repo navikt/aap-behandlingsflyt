@@ -142,6 +142,7 @@ interface KravspesifikasjonForRettighetsType {
                 MåVæreOppfylt().avslagsårsaker(vilkårsresultat[Vilkårtype.LOVVALG]) +
                 kravSykdom.avslagsårsaker(vilkårsresultat[Vilkårtype.SYKDOMSVILKÅRET]) +
                 kravOvergangArbeid.avslagsårsaker(vilkårsresultat[Vilkårtype.OVERGANGARBEIDVILKÅRET]) +
-                kravOvergangUfør.avslagsårsaker(vilkårsresultat[Vilkårtype.OVERGANGUFØREVILKÅRET])
+                kravOvergangUfør.avslagsårsaker(vilkårsresultat[Vilkårtype.OVERGANGUFØREVILKÅRET]) +
+                MåVæreOppfylt().avslagsårsaker(vilkårsresultat[Vilkårtype.INNTEKTSBORTFALL])
     }
 }
