@@ -7,9 +7,12 @@ import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.HttpStatusCode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.underveis.KvoteService
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Telleverk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -27,11 +30,12 @@ fun NormalOpenAPIRoute.kvoteApi(
     repositoryRegistry: RepositoryRegistry,
 ) {
     route("/api/kvote") {
-        getGrunnlag<BehandlingReferanse, KvoteDto>(
+        getGrunnlag<BehandlingReferanse, List<KvoteDto>>(
             behandlingPathParam = BehandlingPathParam("referanse"),
             avklaringsbehovKode = Definisjon.AVKLAR_BARNETILLEGG.kode.toString()
         ) { req ->
-            val respons: KvoteDto? = dataSource.transaction(readOnly = true) { connection ->
+            val respons: List<KvoteDto> = dataSource.transaction(readOnly = true) { connection ->
+                val kvoteListe = mutableListOf<KvoteDto>()
                 val repositoryProvider = repositoryRegistry.provider(connection)
                 val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                 val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
@@ -41,31 +45,39 @@ fun NormalOpenAPIRoute.kvoteApi(
                 val virkningstidspunkt = virkningstidspunktUtleder.utledVirkningsTidspunkt(behandling.id)
 
                 val kvoterForBehandling = KvoteService().beregn(behandling.id)
-                val ordinærKvote = kvoterForBehandling.ordinærkvote.asInt
-                val bruktOrdinærkvote = virkningstidspunkt?.datesUntil(LocalDate.now())?.filter { it.dayOfWeek !in HELGEDAGER }?.count()?.toInt()
+                kvoteListe.add(utledKvoteDto(virkningstidspunkt, kvoterForBehandling.ordinærkvote.asInt, Kvote.ORDINÆR))
+                kvoteListe.add(utledKvoteDto(virkningstidspunkt, kvoterForBehandling.studentkvote.asInt, Kvote.STUDENT))
+                kvoteListe.add(utledKvoteDto(virkningstidspunkt, kvoterForBehandling.sykepengeerstatningkvote.asInt, Kvote.SYKEPENGEERSTATNING))
 
-                KvoteDto(
-                    OrdinærKvote(
-                        kvote = ordinærKvote,
-                        bruktKvote = bruktOrdinærkvote,
-                        gjenværendeKvote = if (bruktOrdinærkvote != null) ordinærKvote - bruktOrdinærkvote else null,
-                        senesteDatoForKvote = utledSenesteDatoForKvote(virkningstidspunkt, ordinærKvote),
-                    ),
-                    StudentKvote(
-                        kvoteStartDato = virkningstidspunkt,
-                        kvoteSluttDato = utledSenesteDatoForKvote(virkningstidspunkt, kvoterForBehandling.studentkvote.asInt)
-                    )
-                )
-                null
+                kvoteListe
             }
-
-            if (respons == null) {
-                respondWithStatus(HttpStatusCode.NoContent)
-            } else {
-                respond(respons)
-            }
+            respond(respons)
         }
     }
+}
+
+private fun utledKvoteDto(virkningstidspunkt: LocalDate?, antallHverdagerIKvote: Int, type: Kvote): KvoteDto {
+    val senesteDatoForKvote = utledSenesteDatoForKvote(virkningstidspunkt, antallHverdagerIKvote)
+
+    if (type == Kvote.STUDENT) {
+        return KvoteDto(
+            rettighetStartDato = virkningstidspunkt,
+            rettighetEndDato = senesteDatoForKvote
+        )
+    }
+
+    val bruktKvote = virkningstidspunkt?.datesUntil(LocalDate.now())?.filter { it.dayOfWeek !in HELGEDAGER }?.count()?.toInt()
+    val stansdato = LocalDate.now()
+    val opphørsdato = LocalDate.now()
+
+    return KvoteDto(
+        kvote = antallHverdagerIKvote,
+        bruktKvote,
+        gjenværendeKvote = if (bruktKvote != null) antallHverdagerIKvote - bruktKvote else null,
+        senesteDatoForKvote,
+        stansdato,
+        opphørsdato
+    )
 }
 
 private fun utledSenesteDatoForKvote(startDato: LocalDate?, kvote: Int): LocalDate? {
