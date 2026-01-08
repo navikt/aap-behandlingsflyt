@@ -117,8 +117,7 @@ class InstitusjonsoppholdUtlederService(
         helsevurderinger: List<HelseinstitusjonVurdering>,
         barnetillegg: List<BarnetilleggPeriode>
     ): Tidslinje<HelseOpphold> {
-
-        val barnTilleggPeriodeDekkerAlt = barnetilleggDekkerAlleInstitusjonsperioder(
+        val barnTilleggPeriodeDekkerAlt = barnetillegg.isNotEmpty() && barnetilleggDekkerAlleInstitusjonsperioder(
             helsevurderinger,
             barnetillegg
         )
@@ -156,32 +155,25 @@ class InstitusjonsoppholdUtlederService(
         val barnetilleggPerioder = barnetillegg.map { it.periode }
 
         return helsevurderinger.all { helse ->
-            erFulltDekket(helse.periode, barnetilleggPerioder)
+            isPeriodeDekketAvEksisterendePerioder(helse.periode, barnetilleggPerioder)
         }
     }
 
-    private fun erFulltDekket(
+    private fun isPeriodeDekketAvEksisterendePerioder(
         target: Periode,
         dekning: List<Periode>
     ): Boolean {
-        val relevante = dekning
-            .filter { it.overlapper(target) }
-            .sortedBy { it.fom }
-
-        if (relevante.isEmpty()) return false
-
-        var currentEnd = relevante.first().tom
-        if (relevante.first().fom > target.fom) return false
-
-        for (periode in relevante.drop(1)) {
-
-            if (periode.fom > currentEnd.plusDays(1)) return false
-            currentEnd = maxOf(currentEnd, periode.tom)
-            if (currentEnd >= target.tom) return true
-        }
-
-        return currentEnd >= target.tom
+        return dekning
+            .tilTidslinje { true }
+            .komprimer()
+            .perioder()
+            .any { it.inneholder(target) }
     }
+
+    fun List<Periode>.tilTidslinje(valueProvider: (Periode) -> Boolean = { true }): Tidslinje<Boolean> =
+        Tidslinje(this.map { periode ->
+            Segment(periode, valueProvider(periode))
+        })
 
     private fun sammenslåer(): JoinStyle.OUTER_JOIN<InstitusjonsoppholdVurdering, InstitusjonsoppholdVurdering, InstitusjonsoppholdVurdering> {
         return JoinStyle.OUTER_JOIN { periode, venstreSegment, høyreSegment ->
