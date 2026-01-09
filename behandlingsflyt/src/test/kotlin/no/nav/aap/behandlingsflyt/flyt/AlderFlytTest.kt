@@ -96,7 +96,7 @@ class AlderFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             }
             .løsFramTilGrunnlag(sak.rettighetsperiode.fom)
             .løsBeregningstidspunkt()
-            .løsFastsettManuellInntekt()
+            .løsFastsettManuellInntekt(0)
             .medKontekst {
                 assertThat(åpneAvklaringsbehov.map { it.definisjon }).contains(Definisjon.VURDER_INNTEKTSBORTFALL)
             }
