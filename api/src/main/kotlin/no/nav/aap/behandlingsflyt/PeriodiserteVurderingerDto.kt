@@ -17,7 +17,7 @@ interface VurderingDto {
     /** Hvem som har kvalitetssikret vurderinge. `null` hvis ikke kvalitetssikret. */
     val kvalitetssikretAv: VurdertAvResponse?
 
-    /** Hvem som har besluttet vurderinge. `null` hvis ikke besluttet. */
+    /** Hvem som har besluttet vurderingen. `null` hvis ikke besluttet. */
     val besluttetAv: VurdertAvResponse?
 }
 

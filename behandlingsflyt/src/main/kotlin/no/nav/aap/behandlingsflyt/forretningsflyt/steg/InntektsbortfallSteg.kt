@@ -95,12 +95,12 @@ class InntektsbortfallSteg private constructor(
         val inntektGrunnlag = inntektGrunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
 
         return InntektsbortfallVurderingService(
-            kontekst,
-            beregningService.utledRelevanteBeregningsÅr(kontekst.behandlingId)
+            beregningService.utledRelevanteBeregningsÅr(kontekst.behandlingId),
+            kontekst.rettighetsperiode
         ).vurderInntektsbortfall(
             brukerPersonopplysning.fødselsdato,
             manuellInntektGrunnlag?.manuelleInntekter.orEmpty(),
-            inntektGrunnlag?.inntekter
+            inntektGrunnlag?.inntekter.orEmpty()
         )
     }
 
