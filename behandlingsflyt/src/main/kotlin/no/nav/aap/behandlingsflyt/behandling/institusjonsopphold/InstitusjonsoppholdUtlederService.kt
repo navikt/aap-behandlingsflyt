@@ -95,13 +95,13 @@ class InstitusjonsoppholdUtlederService(
         val startDato =
             perioderSomTrengerVurdering
                 .perioder()
-                .minOf { it.fom }
+                .minOfOrNull { it.fom }
 
         val sisteDagIFjerdeMaaned =
             startDato
-                .withDayOfMonth(1)
-                .plusMonths(4)
-                .minusDays(1)
+                ?.withDayOfMonth(1)
+                ?.plusMonths(4)
+                ?.minusDays(1)
 
         val oppholdetErForKort =
             perioderSomTrengerVurdering
