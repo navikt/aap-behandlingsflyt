@@ -42,13 +42,20 @@ class InstitusjonsoppholdUtlederService(
         return utledBehov(input, begrensetTilRettighetsperiode)
     }
 
-    internal fun utledBehov(input: InstitusjonsoppholdInput, begrensetTilRettighetsperiode: Boolean? = true): BehovForAvklaringer {
+    internal fun utledBehov(
+        input: InstitusjonsoppholdInput,
+        begrensetTilRettighetsperiode: Boolean? = true
+    ): BehovForAvklaringer {
         val opphold = input.institusjonsOpphold
         val soningsOppgold = opphold.filter { segment -> segment.verdi.type == Institusjonstype.FO }
         val helseopphold = opphold.filter { segment -> segment.verdi.type == Institusjonstype.HS }
         val soningsvurderingTidslinje = byggSoningsvurderingTidslinje(input.soningsvurderinger)
         val barnetillegg = input.barnetillegg
-        val helsevurderingerTidslinje = byggHelsevurderingTidslinje(input.helsevurderinger, barnetillegg)
+        val barnetilleggDekkerAlleInstitusjonsPerioder =
+            barnetilleggDekkerAlleInstitusjonsperioder(input.helsevurderinger, barnetillegg)
+        val helsevurderingerTidslinje =
+            byggHelsevurderingTidslinje(input.helsevurderinger, barnetilleggDekkerAlleInstitusjonsPerioder)
+
         var perioderSomTrengerVurdering =
             Tidslinje(soningsOppgold)
                 .begrensetTil(input.rettighetsperiode)
@@ -67,7 +74,7 @@ class InstitusjonsoppholdUtlederService(
 
         val helseOppholdTidslinje = opprettTidslinje(helseopphold)
 
-       val oppholdSomKanGiReduksjon = harOppholdSomKreverAvklaring(helseOppholdTidslinje)
+        val oppholdSomKanGiReduksjon = harOppholdSomKreverAvklaring(helseOppholdTidslinje)
 
         perioderSomTrengerVurdering = perioderSomTrengerVurdering.kombiner(oppholdSomKanGiReduksjon.mapValue {
             InstitusjonsoppholdVurdering(helse = HelseOpphold(vurdering = OppholdVurdering.UAVKLART))
@@ -77,7 +84,30 @@ class InstitusjonsoppholdUtlederService(
         if (begrensetTilRettighetsperiode == true) {
             perioderSomTrengerVurdering = perioderSomTrengerVurdering.begrensetTil(input.rettighetsperiode)
         }
-        return BehovForAvklaringer(perioderSomTrengerVurdering)
+
+        val oppholdetErForKort =
+            oppholdetErMindreEnnFireMaanederInkludertStartAvPeriodensForsteMaaned(perioderSomTrengerVurdering)
+
+        return BehovForAvklaringer(perioderSomTrengerVurdering, barnetilleggDekkerAlleInstitusjonsPerioder, oppholdetErForKort)
+    }
+
+    private fun oppholdetErMindreEnnFireMaanederInkludertStartAvPeriodensForsteMaaned(perioderSomTrengerVurdering: Tidslinje<InstitusjonsoppholdVurdering>): Boolean {
+        val startDato =
+            perioderSomTrengerVurdering
+                .perioder()
+                .minOf { it.fom }
+
+        val sisteDagIFjerdeMaaned =
+            startDato
+                .withDayOfMonth(1)
+                .plusMonths(4)
+                .minusDays(1)
+
+        val oppholdetErForKort =
+            perioderSomTrengerVurdering
+                .perioder()
+                .all { it.fom <= sisteDagIFjerdeMaaned }
+        return oppholdetErForKort
     }
 
     private fun helsevurderingSammenslåer(): JoinStyle.LEFT_JOIN<InstitusjonsoppholdVurdering, HelseOpphold, InstitusjonsoppholdVurdering> =
@@ -115,12 +145,9 @@ class InstitusjonsoppholdUtlederService(
 
     private fun byggHelsevurderingTidslinje(
         helsevurderinger: List<HelseinstitusjonVurdering>,
-        barnetillegg: List<BarnetilleggPeriode>
+        barnetilleggDekkerAlleInstitusjonsPerioder: Boolean
     ): Tidslinje<HelseOpphold> {
-        val barnTilleggPeriodeDekkerAlt = barnetillegg.isNotEmpty() && barnetilleggDekkerAlleInstitusjonsperioder(
-            helsevurderinger,
-            barnetillegg
-        )
+
 
         return Tidslinje(
             helsevurderinger
@@ -129,7 +156,7 @@ class InstitusjonsoppholdUtlederService(
                     Segment(
                         it.periode,
                         HelseOpphold(
-                            if (barnTilleggPeriodeDekkerAlt) {
+                            if (barnetilleggDekkerAlleInstitusjonsPerioder) {
                                 OppholdVurdering.GODKJENT
                             } else if (
                                 it.faarFriKostOgLosji &&
@@ -145,7 +172,6 @@ class InstitusjonsoppholdUtlederService(
                 }
         ).komprimer()
     }
-
 
 
     private fun barnetilleggDekkerAlleInstitusjonsperioder(
@@ -251,7 +277,7 @@ class InstitusjonsoppholdUtlederService(
         return Tidslinje(
             oppholdUtenBarnetillegg.segmenter()
                 .filter { segment -> segment.verdi }
-                )
+        )
     }
 
     private fun <T> opprettTidslinje(segmenter: List<Segment<T>>): Tidslinje<Boolean> {
