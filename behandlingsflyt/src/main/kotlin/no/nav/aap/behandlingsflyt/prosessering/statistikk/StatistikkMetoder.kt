@@ -349,6 +349,8 @@ class StatistikkMetoder(
                         RettighetsType.STUDENT -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.STUDENT
                         RettighetsType.ARBEIDSSØKER -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.ARBEIDSSØKER
                         RettighetsType.VURDERES_FOR_UFØRETRYGD -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.VURDERES_FOR_UFØRETRYGD
+                        RettighetsType.ETABLERING -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.ETABLERING
+                        RettighetsType.OPPTRAPPING_SJETTE_LEDD -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetsType.OPPTRAPPING_SJETTE_LEDD
                     }
                 )
             }
