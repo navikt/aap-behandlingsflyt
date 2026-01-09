@@ -54,10 +54,6 @@ class VarsleVedtakJobbUtfører(
             requireNotNull(vedtakRepository.hentId(behandling.id)) { "Fant ikke vedtak for behandlingId $behandlingId." }
         val forrigeBehandlingId = behandling.forrigeBehandlingId
 
-        val rettighetsPeriodeRepo = repositoryProvider.provide<VurderRettighetsperiodeRepository>()
-        val forrigeRettighetsperiodeVurdering =  forrigeBehandlingId?.let{ rettighetsPeriodeRepo.hentVurdering(forrigeBehandlingId) }
-        val nåværendeRettighetsperiodeVurdering = rettighetsPeriodeRepo.hentVurdering(behandling.id)
-
         val tilkjentRepository: TilkjentYtelseRepository = repositoryProvider.provide()
         val forrigeTilkjentYtelse =
             forrigeBehandlingId?.let { tilkjentRepository.hentHvisEksisterer(it) }?.tilTidslinje()
@@ -92,7 +88,6 @@ class VarsleVedtakJobbUtfører(
         val relevantEndring =
             listOf(
                 behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling,
-                endringIRettighetsPeriode(forrigeRettighetsperiodeVurdering,nåværendeRettighetsperiodeVurdering),
                 endringITilkjentYtelseTidslinje(forrigeTilkjentYtelse,nåværendeTilkjentYtelse),
                 endringIRettighetstypeTidslinje(forrigeUnderveisGrunnlag, nåværendeUnderveisGrunnlag!!, vedtak.vedtakstidspunkt.toLocalDate())
             )
@@ -122,11 +117,6 @@ class VarsleVedtakJobbUtfører(
         override val type = "flyt.Varsler"
     }
 
-    fun endringIRettighetsPeriode(prev: RettighetsperiodeVurdering?, curr:RettighetsperiodeVurdering?): Boolean{
-        // blir dette riktig? vanskelig å sammenligne rettighetsperiode da den ligger på saken, som ikke kan sjekkes historisk med "forrigeBehandlingId"
-        return prev==null || prev!=curr
-    }
-
     fun endringITilkjentYtelseTidslinje(
         forrigeTilkjentYtelse: Tidslinje<Tilkjent>?,
         nåværendeTilkjentYtelse: Tidslinje<Tilkjent>?
@@ -138,7 +128,7 @@ class VarsleVedtakJobbUtfører(
     fun underveisTilRettighetsTypeTidslinje(underveis: UnderveisGrunnlag?, vedtakstidspunkt: LocalDate): Tidslinje<RettighetsType> {
         return underveis?.perioder.orEmpty()
             .mapNotNull { if (it.rettighetsType != null) Segment(it.periode, it.rettighetsType) else null }
-            .let(::Tidslinje).begrensetTil(Periode(LocalDate.MIN, vedtakstidspunkt)).komprimer()
+            .let(::Tidslinje).komprimer()
     }
 
     fun endringIRettighetstypeTidslinje(forrigeUnderveisGrunnlag: UnderveisGrunnlag?, nåværendeUnderveisGrunnlag: UnderveisGrunnlag, vedtakstidspunkt: LocalDate): Boolean {
