@@ -106,7 +106,7 @@ class InstitusjonsoppholdUtlederService(
         val oppholdetErForKort =
             perioderSomTrengerVurdering
                 .perioder()
-                .all { it.fom <= sisteDagIFjerdeMaaned }
+                .all { it.tom <= sisteDagIFjerdeMaaned }
         return oppholdetErForKort
     }
 
@@ -178,9 +178,9 @@ class InstitusjonsoppholdUtlederService(
         helsevurderinger: List<HelseinstitusjonVurdering>,
         barnetillegg: List<BarnetilleggPeriode>
     ): Boolean {
-        val barnetilleggPerioder = barnetillegg.map { it.periode }
+        val barnetilleggPerioder = barnetillegg.filter { it.personIdenter.isNotEmpty()}.map { it.periode }
 
-        return helsevurderinger.all { helse ->
+        return barnetilleggPerioder.isNotEmpty() && helsevurderinger.all { helse ->
             isPeriodeDekketAvEksisterendePerioder(helse.periode, barnetilleggPerioder)
         }
     }

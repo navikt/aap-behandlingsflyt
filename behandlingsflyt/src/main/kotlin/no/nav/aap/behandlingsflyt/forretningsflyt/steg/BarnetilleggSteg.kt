@@ -46,7 +46,6 @@ class BarnetilleggSteg(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val barnetilgangTidslinje = beregnOgOppdaterBarnetilleggTidslinje(kontekst)
-
         avklaringsbehovService.oppdaterAvklaringsbehov(
             avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.AVKLAR_BARNETILLEGG,
