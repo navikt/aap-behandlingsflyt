@@ -53,7 +53,8 @@ class InntektsbortfallSteg private constructor(
                         when {
                             tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
                             kontekst.vurderingsbehovRelevanteForSteg.isEmpty() -> false
-                            if (kravOmInntektsbortfallEnabled) (kanBehandlesAutomatisk(kontekst)?.kanBehandlesAutomatisk ?: true) else erUnder62PåRettighetsperioden(
+                            if (kravOmInntektsbortfallEnabled) (kanBehandlesAutomatisk(kontekst)?.kanBehandlesAutomatisk
+                                ?: true) else erUnder62PåRettighetsperioden(
                                 kontekst
                             ) -> false
 
@@ -94,13 +95,17 @@ class InntektsbortfallSteg private constructor(
         val manuellInntektGrunnlag = manuellInntektGrunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
         val inntektGrunnlag = inntektGrunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
 
+        val inntekter = beregningService.kombinerInntektOgManuellInntekt(
+            inntektGrunnlag?.inntekter.orEmpty(),
+            manuellInntektGrunnlag?.manuelleInntekter.orEmpty()
+        )
+
         return InntektsbortfallVurderingService(
             beregningService.utledRelevanteBeregningsÅr(kontekst.behandlingId),
             kontekst.rettighetsperiode
         ).vurderInntektsbortfall(
             brukerPersonopplysning.fødselsdato,
-            manuellInntektGrunnlag?.manuelleInntekter.orEmpty(),
-            inntektGrunnlag?.inntekter.orEmpty()
+            inntekter
         )
     }
 

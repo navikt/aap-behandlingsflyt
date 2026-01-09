@@ -26,7 +26,6 @@ class InntektsbortfallVurderingServiceTest {
         val resultat = service.vurderInntektsbortfall(
             // Under 62 år
             fødselsdato = Fødselsdato(13 mars 1990),
-            manuelleInntekter = setOf(),
             inntektPerÅr = setOf()
         )
 
@@ -45,7 +44,6 @@ class InntektsbortfallVurderingServiceTest {
     ) {
         val resultat = service.vurderInntektsbortfall(
             fødselsdato = Fødselsdato(13 mars 1963),
-            manuelleInntekter = setOf(),
             inntektPerÅr = setOf(
                 InntektPerÅr(
                     Year.of(2023), Grunnbeløp.finnGrunnbeløp(1 januar 2025).multiplisert(
@@ -83,7 +81,6 @@ class InntektsbortfallVurderingServiceTest {
     ) {
         val resultat = service.vurderInntektsbortfall(
             fødselsdato = Fødselsdato(13 mars 1963),
-            manuelleInntekter = setOf(),
             inntektPerÅr = setOf(år1, år2, år3).mapIndexed { index, inntekt ->
                 val årForInntekt = 2023 + index
                 InntektPerÅr(

@@ -577,7 +577,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         )
     }
 
-    protected fun Behandling.løsFastsettManuellInntekt(): Behandling {
+    protected fun Behandling.løsFastsettManuellInntekt(inntektPerÅr: Int = 300_000): Behandling {
         return this.løsAvklaringsBehov(
             AvklarManuellInntektVurderingLøsning(
                 manuellVurderingForManglendeInntekt = ManuellInntektVurderingDto(
@@ -585,7 +585,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                     belop = null,
                     vurderinger = (2022..2025).map {
                         ÅrsVurdering(
-                            beløp = BigDecimal(300000),
+                            beløp = BigDecimal(inntektPerÅr),
                             eøsBeløp = null,
                             år = it,
                             ferdigLignetPGI = null,
