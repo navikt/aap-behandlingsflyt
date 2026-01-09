@@ -9,21 +9,6 @@ import no.nav.aap.komponenter.verdityper.Prosent
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-data class FastsettArbeidsevneDto(
-    val begrunnelse: String,
-    val arbeidsevne: Int,
-    val fraDato: LocalDate
-) {
-    fun toArbeidsevnevurdering(vurdertAv: String) =
-        ArbeidsevneVurdering(
-            begrunnelse = begrunnelse,
-            arbeidsevne = Prosent(arbeidsevne),
-            fraDato = fraDato,
-            opprettetTid = LocalDateTime.now(),
-            vurdertAv = vurdertAv
-        )
-}
-
 data class PeriodisertFastsettArbeidsevneDto(
     override val begrunnelse: String,
     override val fom: LocalDate,

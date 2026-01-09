@@ -289,9 +289,9 @@ class ArbeidsevneRepositoryImplTest {
     @Test
     fun `migrer vurdert i behandling for arbeidsevne`() {
         val arbeidsevnevurderingFørstegangsbehandling =
-            ArbeidsevneVurdering("begrunnelse", Prosent(50), 13 august 2023, null, null, LocalDateTime.now(), "saksbehandler")
+            ArbeidsevneVurdering("begrunnelse", Prosent(50), 13 august 2023, null, BehandlingId(1), LocalDateTime.now(), "saksbehandler")
         val arbeidsevnevurderingRevurdering =
-            ArbeidsevneVurdering("begrunnelse", Prosent(0), 10 august 2024, null, null, LocalDateTime.now(), "saksbehandler")
+            ArbeidsevneVurdering("begrunnelse", Prosent(0), 10 august 2024, null, BehandlingId(1), LocalDateTime.now(), "saksbehandler")
 
         val behandling = dataSource.transaction { connection ->
             val arbeidsevneRepository = ArbeidsevneRepositoryImpl(connection)

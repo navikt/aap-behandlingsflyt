@@ -40,31 +40,12 @@ class ArbeidsevneRepositoryImpl(private val connection: DBConnection) : Arbeidse
         }.toGrunnlag()
     }
 
-    override fun hentAlleVurderinger(sakId: SakId, behandlingId: BehandlingId): Set<ArbeidsevneVurdering> {
-        val query = """
-            SELECT a.ID AS ARBEIDSEVNE_ID, v.BEGRUNNELSE, v.FRA_DATO, v.TIL_DATO, v.ANDEL_ARBEIDSEVNE, v.VURDERT_I_BEHANDLING, v.OPPRETTET_TID,  v.VURDERT_AV
-            FROM ARBEIDSEVNE_GRUNNLAG g
-            INNER JOIN ARBEIDSEVNE a ON g.ARBEIDSEVNE_ID = a.ID
-            INNER JOIN ARBEIDSEVNE_VURDERING v ON a.ID = v.ARBEIDSEVNE_ID
-            JOIN BEHANDLING b ON b.ID = g.BEHANDLING_ID
-            WHERE g.AKTIV AND b.SAK_ID = ? AND b.opprettet_tid < (SELECT bh.opprettet_tid from behandling bh where id = ?)
-            """.trimIndent()
-
-        return connection.queryList(query) {
-            setParams {
-                setLong(1, sakId.toLong())
-                setLong(2, behandlingId.toLong())
-            }
-            setRowMapper(::toArbeidsevneInternal)
-        }.map { it.toArbeidsevnevurdering() }.toSet()
-    }
-
     fun toArbeidsevneInternal(row: Row): ArbeidsevneInternal = ArbeidsevneInternal(
         arbeidsevneId = row.getLong("ARBEIDSEVNE_ID"),
         begrunnelse = row.getString("BEGRUNNELSE"),
         fraDato = row.getLocalDate("FRA_DATO"), tilDato = row.getLocalDateOrNull("TIL_DATO"),
         arbeidsevne = Prosent(row.getInt("ANDEL_ARBEIDSEVNE")),
-        vurdertIBehandling = row.getLongOrNull("VURDERT_I_BEHANDLING")?.let { BehandlingId(it) },
+        vurdertIBehandling = BehandlingId(row.getLong("VURDERT_I_BEHANDLING")),
         opprettetTid = row.getLocalDateTime("OPPRETTET_TID"),
         vurdertAv = row.getString("VURDERT_AV")
     )
@@ -75,7 +56,7 @@ class ArbeidsevneRepositoryImpl(private val connection: DBConnection) : Arbeidse
         val fraDato: LocalDate,
         val tilDato: LocalDate?,
         val arbeidsevne: Prosent,
-        val vurdertIBehandling: BehandlingId?,
+        val vurdertIBehandling: BehandlingId,
         val opprettetTid: LocalDateTime,
         val vurdertAv: String
     ) {
@@ -120,7 +101,7 @@ class ArbeidsevneRepositoryImpl(private val connection: DBConnection) : Arbeidse
                 setLocalDate(3, it.tilDato)
                 setString(4, it.begrunnelse)
                 setInt(5, it.arbeidsevne.prosentverdi())
-                setLong(6, it.vurdertIBehandling?.id)
+                setLong(6, it.vurdertIBehandling.id)
                 setLocalDateTime(7, it.opprettetTid)
                 setString(8, it.vurdertAv)
             }

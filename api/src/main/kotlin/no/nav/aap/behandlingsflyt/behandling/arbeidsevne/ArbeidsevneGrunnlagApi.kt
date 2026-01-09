@@ -60,26 +60,10 @@ private fun arbeidsevneGrunnlag(
 
         val nåTilstand = arbeidsevneRepository.hentHvisEksisterer(behandling.id)?.vurderinger
         val forrigeGrunnlag = behandling.forrigeBehandlingId?.let { arbeidsevneRepository.hentHvisEksisterer(it) }
-
-        val vedtatteVerdier =
-            behandling.forrigeBehandlingId?.let { arbeidsevneRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
-        val historikk = arbeidsevneRepository.hentAlleVurderinger(behandling.sakId, behandling.id)
-
         val nyeVurderinger = nåTilstand?.filter { it.vurdertIBehandling == behandling.id } ?: emptyList()
 
         ArbeidsevneGrunnlagDto(
             harTilgangTilÅSaksbehandle = kanSaksbehandle,
-            historikk = historikk.map { it.toDto() }.sortedBy { it.vurderingsTidspunkt }.toSet(),
-            vurderinger =
-                nåTilstand
-                    ?.filterNot { vedtatteVerdier.contains(it) }
-                    ?.map { it.toDto(AnsattInfoService(gatewayProvider).hentAnsattNavnOgEnhet(it.vurdertAv)) }
-                    ?.sortedBy { it.fraDato }
-                    .orEmpty(),
-            gjeldendeVedtatteVurderinger =
-                vedtatteVerdier
-                    .map { it.toDto() }
-                    .sortedBy { it.fraDato },
             kanVurderes = listOf(sak.rettighetsperiode),
             behøverVurderinger = emptyList(),
             nyeVurderinger = nyeVurderinger.map { it.toResponse(vurdertAvService) },
