@@ -75,7 +75,7 @@ class TilbakekrevingKafkaKonsument(
                 hendelse.tilInnsending(meldingKey, Saksnummer(hendelse.eksternFagsakId))
             }
             else -> {
-                throw IllegalArgumentException("Ukjent hendelsestype ")
+                throw IllegalArgumentException("Ukjent hendelsestype $hendelsestype")
             }
         }
         dataSource.transaction { connection ->
