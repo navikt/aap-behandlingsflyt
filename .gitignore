@@ -43,3 +43,4 @@ build/
 .java-version
 .kotlin/
 openapi.json
+testpersoner.json

@@ -5,7 +5,7 @@ import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
-import io.ktor.http.HttpStatusCode
+import io.ktor.http.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
@@ -19,7 +19,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Ins
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
-import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.InstitusjonsoppholdJSON
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
@@ -46,8 +45,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SaksnummerParameter
 import no.nav.aap.behandlingsflyt.test.AzurePortHolder
-import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.FakeServers
+import no.nav.aap.behandlingsflyt.test.JSONTestPersonService
 import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
@@ -55,6 +54,7 @@ import no.nav.aap.behandlingsflyt.test.modell.defaultInntekt
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.behandlingsflyt.test.testGatewayProvider
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.Tid
@@ -84,7 +84,7 @@ fun main() {
     val dbConfig = initDbConfig()
 
     AzurePortHolder.setPort(8081)
-    FakeServers.start() // azurePort = 8081)
+    FakeServers.start(JSONTestPersonService()) // azurePort = 8081)
 
     // Starter server
     embeddedServer(Netty, configure = {
@@ -115,7 +115,7 @@ fun main() {
             route("/test") {
                 route("/opprett") {
                     post<Unit, OpprettTestcaseDTO, OpprettTestcaseDTO> { _, dto ->
-                        opprettNySakOgBehandling(dto)
+                        opprettNySakOgBehandling(dto, gatewayProvider)
                         respond(dto)
                     }
                 }
@@ -124,11 +124,12 @@ fun main() {
                     post<SaksnummerParameter, Unit, LeggTilInstitusjonsoppholdDTO> { param, dto ->
                         val ident = hentIdentForSak(Saksnummer(param.saksnummer))
 
-                        val oppdatertPerson = FakePersoner.hentPerson(ident)
+                        val fakePersoner = JSONTestPersonService()
+                        val oppdatertPerson = fakePersoner.hentPerson(ident)
                             ?.medInstitusjonsopphold(listOf(genererInstitusjonsopphold(dto)))
 
                         if (oppdatertPerson != null) {
-                            FakePersoner.oppdater(oppdatertPerson)
+                            fakePersoner.oppdater(oppdatertPerson)
                             respondWithStatus(HttpStatusCode.OK)
                         } else {
                             log.warn("Finner ikke person med ident $ident for å legge til institusjonsopphold")
@@ -218,10 +219,14 @@ private fun mapTilSøknad(dto: OpprettTestcaseDTO, urelaterteBarn: List<TestPers
     }
     val harMedlemskap = if (dto.medlemskap) "JA" else "NEI"
     return SøknadV0(
-        andreUtbetalinger = AndreUtbetalingerDto(lønn = dto.andreUtbetalinger?.lønn, stønad = dto.andreUtbetalinger?.stønad, afp = dto.andreUtbetalinger?.afp),
+        andreUtbetalinger = AndreUtbetalingerDto(
+            lønn = dto.andreUtbetalinger?.lønn,
+            stønad = dto.andreUtbetalinger?.stønad,
+            afp = dto.andreUtbetalinger?.afp
+        ),
         student = SøknadStudentDto(erStudent),
-        yrkesskade =   harYrkesskade,
-        oppgitteBarn =  oppgitteBarn,
+        yrkesskade = harYrkesskade,
+        oppgitteBarn = oppgitteBarn,
         medlemskap = SøknadMedlemskapDto(harMedlemskap, null, null, null, emptyList()),
     )
 }
@@ -231,9 +236,10 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO): Sak {
     val barn = dto.barn.filter { it.harRelasjon }.map { genererBarn(it) }
     val urelaterteBarnIPDL = dto.barn.filter { !it.harRelasjon && it.skalFinnesIPDL }.map { genererBarn(it) }
     val urelaterteBarnIkkeIPDL = dto.barn.filter { !it.harRelasjon && !it.skalFinnesIPDL }.map { genererBarn(it) }
-    barn.forEach { FakePersoner.leggTil(it) }
-    urelaterteBarnIPDL.forEach { FakePersoner.leggTil(it) }
-    FakePersoner.leggTil(
+    val jsonTestPersonService = JSONTestPersonService()
+    barn.forEach { jsonTestPersonService.leggTil(it) }
+    urelaterteBarnIPDL.forEach { jsonTestPersonService.leggTil(it) }
+    jsonTestPersonService.leggTil(
         TestPerson(
             identer = setOf(ident),
             fødselsdato = Fødselsdato(dto.fødselsdato),
@@ -241,10 +247,12 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO): Sak {
                 TestYrkesskade(),
                 TestYrkesskade(skadedato = null, saksreferanse = "ABCDE")
             ) else emptyList(),
-            uføre = dto.uføre?.let { Uføre(
-                virkningstidspunkt = dto.uføreTidspunkt!!,
-                uføregrad = Prosent(it)
-            ) },
+            uføre = dto.uføre?.let {
+                Uføre(
+                    virkningstidspunkt = dto.uføreTidspunkt!!,
+                    uføregrad = Prosent(it)
+                )
+            },
             barn = barn,
             institusjonsopphold = listOfNotNull(
                 if (dto.institusjoner.fengsel == true) genererFengselsopphold() else null,
@@ -312,7 +320,7 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO): Sak {
     return sak
 }
 
-private fun opprettNySakOgBehandling(dto: OpprettTestcaseDTO): Sak {
+private fun opprettNySakOgBehandling(dto: OpprettTestcaseDTO, gatewayProvider: GatewayProvider): Sak {
     val sak = sendInnSøknad(dto)
 
     if (dto.steg in listOf(StegType.START_BEHANDLING, StegType.AVKLAR_STUDENT)) return sak
@@ -321,7 +329,7 @@ private fun opprettNySakOgBehandling(dto: OpprettTestcaseDTO): Sak {
 
     // fullfør førstegangsbehandling
     log.info("Fullfører førstegangsbehandling for sak ${sak.id}")
-    val behandling = hentSisteBehandlingForSak(sak.id)
+    val behandling = hentSisteBehandlingForSak(sak.id, gatewayProvider)
 
     with(testScenarioOrkestrator) {
         // Student eller sykdom
@@ -447,12 +455,12 @@ private fun hentIdentForSak(saksnummer: Saksnummer): String {
     }
 }
 
-private fun hentSisteBehandlingForSak(sakId: SakId): Behandling {
+private fun hentSisteBehandlingForSak(sakId: SakId, gatewayProvider: GatewayProvider): Behandling {
     return datasource.transaction { connection ->
         val repositoryProvider = postgresRepositoryRegistry.provider(connection)
         val sbService = SakOgBehandlingService(
             repositoryProvider,
-            defaultGatewayProvider()
+            gatewayProvider
         )
 
         val behandling = sbService.finnSisteYtelsesbehandlingFor(sakId)
