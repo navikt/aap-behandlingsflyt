@@ -23,6 +23,8 @@ import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.test.FakeAnsattInfoGateway
+import no.nav.aap.behandlingsflyt.test.FakeEnhetGateway
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -76,7 +78,11 @@ class KabalKafkaKonsumentTest {
                 dataSource,
                 jobber = listOf(HendelseMottattHåndteringJobbUtfører, KafkaFeilJobbUtfører),
                 repositoryRegistry = repositoryRegistry,
-                gatewayProvider = createGatewayProvider { register<FakeUnleash>() }
+                gatewayProvider = createGatewayProvider {
+                    register<FakeUnleash>()
+                    register<FakeAnsattInfoGateway>()
+                    register<FakeEnhetGateway>()
+                }
             )
             motor.start()
 

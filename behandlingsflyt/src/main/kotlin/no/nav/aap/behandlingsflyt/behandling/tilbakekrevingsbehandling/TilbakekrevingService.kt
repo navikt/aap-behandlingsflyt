@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling
 
-import no.nav.aap.behandlingsflyt.prosessering.OppdaterOppgaveMedTilbakekrevingHendelseUtfører
+import no.nav.aap.behandlingsflyt.prosessering.tilbakekreving.FagsysteminfoSvarHendelse
+import no.nav.aap.behandlingsflyt.prosessering.tilbakekreving.SendFagsysteminfoBehovTilTilbakekrevingUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
@@ -25,4 +26,13 @@ class TilbakekrevingService(
          )
 */
     }
+
+    fun håndter(sakId: SakId, hendelse: FagsysteminfoSvarHendelse) {
+        flytJobbRepository.leggTil(
+            jobbInput = JobbInput(jobb = SendFagsysteminfoBehovTilTilbakekrevingUtfører)
+                .medPayload(hendelse)
+                .forSak(sakId = sakId.toLong())
+        )
+    }
+
 }

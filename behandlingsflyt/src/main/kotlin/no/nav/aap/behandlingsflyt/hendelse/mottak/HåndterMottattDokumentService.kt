@@ -1,10 +1,16 @@
 package no.nav.aap.behandlingsflyt.hendelse.mottak
 
+import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingBehandlingsstatus
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingService
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.Tilbakekrevingshendelse
+import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
@@ -12,6 +18,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Aktivitetskort
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AktivitetskortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AnnetRelevantDokumentV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.FagsysteminfoBehovV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KabalHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Klage
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlageV0
@@ -31,6 +38,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.PdlHendelseV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelseV0
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.prosessering.tilbakekreving.FagsysteminfoSvarHendelse
+import no.nav.aap.behandlingsflyt.prosessering.tilbakekreving.MottakerDto
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -43,6 +52,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
+import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -58,7 +68,10 @@ class HåndterMottattDokumentService(
     private val prosesserBehandling: ProsesserBehandlingService,
     private val mottaDokumentService: MottaDokumentService,
     private val behandlingRepository: BehandlingRepository,
+    private val vedtakRepository: VedtakRepository,
     private val tilbakekrevingService: TilbakekrevingService,
+    private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val ansattInfoService: AnsattInfoService,
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -71,7 +84,10 @@ class HåndterMottattDokumentService(
         prosesserBehandling = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
         mottaDokumentService = MottaDokumentService(repositoryProvider),
         behandlingRepository = repositoryProvider.provide<BehandlingRepository>(),
+        vedtakRepository = repositoryProvider.provide<VedtakRepository>(),
         tilbakekrevingService = TilbakekrevingService(repositoryProvider),
+        avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>(),
+        ansattInfoService = AnsattInfoService(gatewayProvider),
     )
 
     fun håndterMottatteKlage(
@@ -302,7 +318,97 @@ class HåndterMottattDokumentService(
                 tilbakekrevingService.håndter(sakId, melding.tilTilbakekrevingshendelse())
                 mottaDokumentService.markerSomBehandlet(sakId, behandlingId, referanse)
             }
+            is FagsysteminfoBehovV0 -> {
+                val behandlingId = finnSisteIverksatteBehandling(sakId)
+                log.info("Mottatt fagsysteminfo behov for sakId $sakId og behandlingId $behandlingId")
+                tilbakekrevingService.håndter(sakId, melding.tilFagsysteminfoSvarHendelse(sakId))
+                mottaDokumentService.markerSomBehandlet(sakId, behandlingId, referanse)
+            }
         }
+    }
+
+
+    private fun FagsysteminfoBehovV0.tilFagsysteminfoSvarHendelse(sakId: SakId): FagsysteminfoSvarHendelse {
+        val sak = sakService.hent(sakId)
+        val kravgrunnlagReferanse = decodeBase64(this.kravgrunnlagReferanse)
+        val behandling = behandlingRepository.hent(BehandlingReferanse(UUID.fromString(kravgrunnlagReferanse)))
+        val årsak = when (behandling.årsakTilOpprettelse) {
+            null -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.UKJENT
+            ÅrsakTilOpprettelse.SØKNAD -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
+            ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.KORRIGERING
+            ÅrsakTilOpprettelse.HELSEOPPLYSNINGER -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
+            ÅrsakTilOpprettelse.ANNET_RELEVANT_DOKUMENT -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
+            ÅrsakTilOpprettelse.OMGJØRING_ETTER_KLAGE -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.KLAGE
+            ÅrsakTilOpprettelse.OMGJØRING_ETTER_SVAR_FRA_KLAGEINSTANS -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.KLAGE
+            ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
+            ÅrsakTilOpprettelse.BARNETILLEGG_SATSENDRING -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.KLAGE
+            ÅrsakTilOpprettelse.FASTSATT_PERIODE_PASSERT -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
+            ÅrsakTilOpprettelse.FRITAK_MELDEPLIKT -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
+            ÅrsakTilOpprettelse.MELDEKORT -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.KORRIGERING
+            ÅrsakTilOpprettelse.AKTIVITETSMELDING -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
+            ÅrsakTilOpprettelse.OPPFØLGINGSOPPGAVE -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
+            ÅrsakTilOpprettelse.OPPFØLGINGSOPPGAVE_SAMORDNING_GRADERING -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
+            ÅrsakTilOpprettelse.SVAR_FRA_KLAGEINSTANS -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.KLAGE
+            ÅrsakTilOpprettelse.KLAGE -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.KLAGE
+            ÅrsakTilOpprettelse.AKTIVITETSPLIKT -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
+            ÅrsakTilOpprettelse.AKTIVITETSPLIKT_11_9 -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
+            ÅrsakTilOpprettelse.TILBAKEKREVING_HENDELSE -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.UKJENT // Ikke relevant
+            ÅrsakTilOpprettelse.FAGSYSTEMINFO_BEHOV_HENDELSE -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.UKJENT // Ikke relevant
+            ÅrsakTilOpprettelse.AUTOMATISK_OPPDATER_VILKÅR -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
+        }
+
+        val vedtakstidspunkt = vedtakRepository.hent(behandling.id)?.vedtakstidspunkt ?: error("Fant ikke vedtak")
+        return FagsysteminfoSvarHendelse(
+            eksternFagsakId = this.eksternFagsakId,
+            hendelseOpprettet = LocalDateTime.now(),
+            mottaker = MottakerDto(
+                ident = sak.person.aktivIdent().identifikator,
+                type = MottakerDto.MottakerType.PERSON
+            ),
+            revurdering = FagsysteminfoSvarHendelse.RevurderingDto(
+                behandlingId = kravgrunnlagReferanse,
+                årsak = årsak,
+                årsakTilFeilutbetaling = null,
+                vedtaksdato = vedtakstidspunkt.toLocalDate(),
+            ),
+            // TODO: Meldeperioder inkluderer helg i Kelvin, men er mandag-fredag i tilbakekreving. Kan bruke denne for å "slå sammen" to mandag-fredag-perioder til én lang periode.
+            utvidPerioder = emptyList(),
+            behandlendeEnhet = finnBehandlendeEnhet(behandling.id),
+        )
+    }
+
+    fun decodeBase64(base64String: String): String {
+        val decodedBytes = Base64.getDecoder().decode(base64String)
+        return String(decodedBytes, Charsets.UTF_8)
+    }
+
+    private fun finnBehandlendeEnhet(behandlingId: BehandlingId): String? {
+        val avklarinsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
+        return utledEnhetForSisteSaksbehandler(avklarinsbehovene)
+    }
+
+    private fun utledEnhetForSisteSaksbehandler(avklarinsbehovene: Avklaringsbehovene): String? {
+        if (Miljø.erLokal()) {
+            return "0300"
+        }
+        val sisteSaksbehandler = utledSisteSaksbehandler(avklarinsbehovene)
+        val enhet = if (Miljø.erDev()) {
+            log.info("Siste saksbehandler i saken er $sisteSaksbehandler")
+            "0300" // Det finnes ikke testdata i NOM - bruker hardkodet enhet i dev
+        } else {
+            ansattInfoService.hentAnsattEnhet(sisteSaksbehandler)
+        }
+        return enhet
+    }
+
+    private fun utledSisteSaksbehandler(avklaringsbehovene: Avklaringsbehovene): String {
+        return avklaringsbehovene.alle().mapNotNull { avklaringsbehov ->
+            avklaringsbehov.historikk.filter { it.endretAv.erNavIdent() && it.status == Status.AVSLUTTET }.maxOrNull()
+        }.max().endretAv
+    }
+
+    private fun String.erNavIdent(): Boolean {
+        return this.matches(Regex("\\w\\d{6}"))
     }
 
     private fun finnSisteIverksatteBehandling(sakId: SakId): BehandlingId {
@@ -318,7 +424,7 @@ class HåndterMottattDokumentService(
             eksternBehandlingId = this.eksternBehandlingId,
             sakOpprettet = this.tilbakekreving.sakOpprettet,
             varselSendt = this.tilbakekreving.varselSendt,
-            behandlingsstatus = no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingBehandlingsstatus.valueOf(
+            behandlingsstatus = TilbakekrevingBehandlingsstatus.valueOf(
                 this.tilbakekreving.behandlingsstatus.name
             ),
             totaltFeilutbetaltBeløp = Beløp(this.tilbakekreving.totaltFeilutbetaltBeløp),
@@ -384,6 +490,7 @@ class HåndterMottattDokumentService(
             InnsendingType.PDL_HENDELSE_DODSFALL_BARN -> ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA
             InnsendingType.OMGJØRING_KLAGE_REVURDERING -> utledÅrsakEtterOmgjøringAvKlage(melding)
             InnsendingType.TILBAKEKREVING_HENDELSE -> ÅrsakTilOpprettelse.TILBAKEKREVING_HENDELSE
+            InnsendingType.FAGSYSTEMINFO_BEHOV_HENDELSE -> ÅrsakTilOpprettelse.FAGSYSTEMINFO_BEHOV_HENDELSE
         }
     }
 
@@ -464,6 +571,7 @@ class HåndterMottattDokumentService(
             InnsendingType.PDL_HENDELSE_DODSFALL_BRUKER -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.DØDSFALL_BRUKER))
             InnsendingType.PDL_HENDELSE_DODSFALL_BARN -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.DØDSFALL_BARN))
             InnsendingType.TILBAKEKREVING_HENDELSE -> emptyList()
+            InnsendingType.FAGSYSTEMINFO_BEHOV_HENDELSE-> emptyList()
         }
     }
 
