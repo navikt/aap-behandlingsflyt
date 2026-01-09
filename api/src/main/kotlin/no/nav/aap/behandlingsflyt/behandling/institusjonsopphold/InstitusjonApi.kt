@@ -175,7 +175,9 @@ fun NormalOpenAPIRoute.institusjonApi(
                                     ansattnavn = ansattNavnOgEnhet?.navn,
                                     enhetsnavn = ansattNavnOgEnhet?.enhet
                                 )
-                            }
+                            },
+                        barnetilleggDekkerHelePerioden = behov.barneTilleggDekkerHelePerioden,
+                        forKortOpphold = behov.forKortOpphold
                     )
                 }
                 respond(grunnlagDto)
