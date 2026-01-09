@@ -41,10 +41,7 @@ class Inst2KafkaKonsument(
 
     fun håndter(melding: ConsumerRecord<String, String>) {
         log.info(
-            "Behandler institusjonsopphold-record med id: {}, partition {}, offset: {}",
-            melding.key(),
-            melding.partition(),
-            melding.offset(),
+            "Behandler institusjonsopphold-record med id: ${melding.key()}, partition ${melding.partition()}, offset: ${melding.offset()}"
         )
         melding.topic()
         val meldingKey = "${melding.partition()}-${melding.offset()}"

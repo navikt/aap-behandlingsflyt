@@ -347,6 +347,7 @@ class HåndterMottattDokumentService(
             ÅrsakTilOpprettelse.KLAGE -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.KLAGE
             ÅrsakTilOpprettelse.TILBAKEKREVING_HENDELSE,
             ÅrsakTilOpprettelse.FAGSYSTEMINFO_BEHOV_HENDELSE,
+            ÅrsakTilOpprettelse.INSTITUSJONSOPPHOLD -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
             null -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.UKJENT // Ikke relevant
         }
 
