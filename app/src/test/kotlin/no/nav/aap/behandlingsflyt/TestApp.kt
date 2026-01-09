@@ -382,9 +382,6 @@ private fun opprettNySakOgBehandling(dto: OpprettTestcaseDTO, gatewayProvider: G
             // Forutgående medlemskap
             if (dto.yrkesskade) {
                 løsFastsettYrkesskadeInntekt(behandling)
-            } else {
-                if (dto.steg == StegType.VURDER_MEDLEMSKAP) return sak
-                løsForutgåendeMedlemskap(behandling, sak)
             }
 
             // Oppholdskrav
