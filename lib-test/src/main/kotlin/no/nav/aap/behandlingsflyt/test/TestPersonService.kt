@@ -50,7 +50,8 @@ class JSONTestPersonService : TestPersonService {
     private fun skrivJSON(testPerson: TestPerson) {
         val jsonFile = File("testpersoner.json")
         if (!jsonFile.exists()) {
-            throw IllegalStateException("Could not find testpersoner.json")
+            // Create if not exists
+            jsonFile.createNewFile()
         }
 
         val hentJSON = hentJSONFil()

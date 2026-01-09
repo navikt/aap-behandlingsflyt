@@ -74,11 +74,11 @@ class NomInfoGateway : AnsattInfoGateway {
     }
 
     private fun finnAnsattEnhetsnummer(nomDataRessurs: NomDataRessurs): String {
-        val enhet = nomDataRessurs.orgTilknytning.single {
+        val enhet = nomDataRessurs.orgTilknytning.singleOrNull {
             it.erAktiv() && it.erDagligOppfolging
-        }.orgEnhet
+        }?.orgEnhet
 
-        return checkNotNull(enhet.remedyEnhetId)
+        return checkNotNull(enhet?.remedyEnhetId)
     }
 
     private fun OrgTilknytning.erAktiv(): Boolean {
