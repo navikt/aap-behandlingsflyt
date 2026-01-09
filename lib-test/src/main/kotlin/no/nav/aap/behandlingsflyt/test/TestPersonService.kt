@@ -52,6 +52,7 @@ class JSONTestPersonService : TestPersonService {
         if (!jsonFile.exists()) {
             // Create if not exists
             jsonFile.createNewFile()
+            jsonFile.writeText("[]")
         }
 
         val hentJSON = hentJSONFil()
