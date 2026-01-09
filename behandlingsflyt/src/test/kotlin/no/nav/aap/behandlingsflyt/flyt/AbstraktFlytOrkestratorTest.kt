@@ -57,8 +57,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForForutgåendeMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForLovvalgMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapDataIntern
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingerForBarnetillegg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurderingDto
@@ -95,20 +93,12 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ArbeidIPeriodeV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KabalHendelseV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Klage
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KommeTilbake
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderingV0
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManueltOppgittBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppfølgingsoppgaveV0
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppgitteBarn
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Søknad
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UtenlandsPeriodeDto
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
@@ -218,131 +208,6 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
             ).use { it.execute() }
         }
     }
-
-    object TestPersoner {
-        val STANDARD_PERSON = {
-            FakePersoner.leggTil(
-                TestPerson(
-                    fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
-                    yrkesskade = emptyList(),
-                    sykepenger = emptyList()
-                )
-            )
-        }
-
-        val PERSON_MED_YRKESSKADE = {
-            FakePersoner.leggTil(
-                TestPerson(
-                    fødselsdato = Fødselsdato(LocalDate.now().minusYears(25)),
-                    yrkesskade = listOf(TestYrkesskade(skadedato = LocalDate.now().minusYears(1))),
-                )
-            )
-        }
-
-        val PERSON_FOR_UNG = {
-            FakePersoner.leggTil(
-                TestPerson(
-                    fødselsdato = Fødselsdato(LocalDate.now().minusYears(17))
-                )
-            )
-        }
-
-        val PERSON_62 = {
-            FakePersoner.leggTil(
-                TestPerson(
-                    fødselsdato = Fødselsdato(LocalDate.now().minusYears(62))
-                )
-            )
-        }
-
-        val PERSON_61 = {
-            FakePersoner.leggTil(
-                TestPerson(
-                    fødselsdato = Fødselsdato(LocalDate.now().minusYears(61))
-                )
-            )
-        }
-
-        val PERSON_MED_FORUTGÅENDE_MEDLEMSKAP = {
-            FakePersoner.leggTil(
-                TestPerson(
-                    fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
-                    yrkesskade = emptyList(),
-                    sykepenger = emptyList(),
-                    medlStatus = listOf(
-                        MedlemskapDataIntern(
-                            unntakId = 100087727,
-                            ident = "",
-                            fraOgMed = LocalDate.now().minusYears(20).toString(),
-                            tilOgMed = LocalDate.now().toString(),
-                            status = "GYLD",
-                            statusaarsak = null,
-                            medlem = true,
-                            grunnlag = "grunnlag",
-                            lovvalg = "lovvalg",
-                            helsedel = true,
-                            lovvalgsland = "NOR",
-                            kilde = null
-                        )
-                    )
-                )
-            )
-        }
-    }
-
-    object TestSøknader {
-        val STANDARD_SØKNAD = SøknadV0(
-            student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
-            medlemskap = SøknadMedlemskapDto("JA", "JA", "NEI", "NEI", null)
-        )
-
-        val SØKNAD_INGEN_MEDLEMSKAP = SøknadV0(
-            student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
-            medlemskap = SøknadMedlemskapDto(
-                "JA", null, "JA", null,
-                listOf(
-                    UtenlandsPeriodeDto(
-                        "SWE",
-                        LocalDate.now().plusMonths(1),
-                        LocalDate.now().minusMonths(1),
-                        "JA",
-                        null,
-                        LocalDate.now().plusMonths(1),
-                        LocalDate.now().minusMonths(1),
-                    )
-                )
-            )
-        )
-
-        val SØKNAD_STUDENT = SøknadV0(
-            student = SøknadStudentDto(StudentStatus.Ja, KommeTilbake.Ja),
-            yrkesskade = "NEI",
-            oppgitteBarn = null,
-            medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
-        )
-
-        val SØKNAD_MED_BARN: (List<Pair<String, LocalDate>>) -> SøknadV0 = { barn ->
-            SøknadV0(
-                student = null,
-                yrkesskade = "NEI",
-                oppgitteBarn = OppgitteBarn(
-                    identer = emptySet(),
-                    barn = barn.map { (navn, fødseldato) ->
-                        ManueltOppgittBarn(
-                            navn = navn,
-                            fødselsdato = fødseldato,
-                            ident = null,
-                            relasjon = ManueltOppgittBarn.Relasjon.FOSTERFORELDER
-                        )
-                    }
-                ),
-                medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
-            )
-        }
-
-        val SØKNAD_YRKESSKADE = STANDARD_SØKNAD.copy(yrkesskade = "JA")
-    }
-
 
     fun happyCaseFørstegangsbehandling(
         fom: LocalDate = LocalDate.now().minusMonths(3),
