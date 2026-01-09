@@ -61,6 +61,7 @@ import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.rettighetsperiode
 import no.nav.aap.behandlingsflyt.behandling.revurdering.avbrytRevurderingGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.simulering.simuleringApi
 import no.nav.aap.behandlingsflyt.behandling.student.studentgrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.student.sykestipend.sykestipendGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.svarfraandreinstans.svarfraandreinstans.svarFraAndreinstansGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.søknad.trukketSøknadGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilkjentYtelseApi
@@ -256,6 +257,7 @@ internal fun Application.server(
                 overgangUforeGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 medlemskapsgrunnlagApi(dataSource, repositoryRegistry)
                 studentgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                sykestipendGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 sykdomsgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 sykdomsvurderingForBrevApi(dataSource, repositoryRegistry, gatewayProvider)
                 sykepengerGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
