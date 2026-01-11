@@ -22,7 +22,6 @@ public data class TilbakekrevingHendelseKafkaMelding(
     val hendelseOpprettet: LocalDateTime,
     val eksternBehandlingId: String?,
     val tilbakekreving: TilbakekrevingKafkaDto? = null,
-    val behandlingId: UUID? = null,
     val sakOpprettet: LocalDateTime? = null,
     val varselSendt: LocalDateTime? = null,
     val behandlingsstatus: TilbakekrevingBehandlingsstatus? = null,
@@ -34,17 +33,19 @@ public data class TilbakekrevingHendelseKafkaMelding(
 
     public fun tilTilbakekrevingHendelseV0(): TilbakekrevingHendelse {
 
-        //NB: triks for å støtte både ny og gammel datastruktur. Kan slettes når alle gamle meldinger er ferdig.
+        //TODO: triks for å støtte både ny og gammel datastruktur. Kan slettes når alle gamle meldinger er ferdig.
         val nyTilbakekreving = tilbakekreving
             ?: TilbakekrevingKafkaDto(
-                behandlingId = behandlingId!!,
-                sakOpprettet = sakOpprettet!!,
-                varselSendt = varselSendt,
-                behandlingsstatus = behandlingsstatus!!,
-                totaltFeilutbetaltBeløp = totaltFeilutbetaltBeløp!!,
-                saksbehandlingURL = saksbehandlingURL!!,
-                fullstendigPeriode = fullstendigPeriode!!
+                    //TODO: Litt stygg hack for å hente behandlingId fra url ettersom den ikke er med i gammel datastruktur.
+                    behandlingId = UUID.fromString(saksbehandlingURL!!.substringAfterLast('/')),
+                    sakOpprettet = sakOpprettet!!,
+                    varselSendt = varselSendt,
+                    behandlingsstatus = behandlingsstatus!!,
+                    totaltFeilutbetaltBeløp = totaltFeilutbetaltBeløp!!,
+                    saksbehandlingURL = saksbehandlingURL,
+                    fullstendigPeriode = fullstendigPeriode!!
             )
+
 
         return TilbakekrevingHendelseV0(
             hendelsestype = hendelsestype,
