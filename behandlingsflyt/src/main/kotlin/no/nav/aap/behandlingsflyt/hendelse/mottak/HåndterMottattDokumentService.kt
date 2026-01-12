@@ -1,8 +1,5 @@
 package no.nav.aap.behandlingsflyt.hendelse.mottak
 
-import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingBehandlingsstatus
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingService
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.Tilbakekrevingshendelse
@@ -10,7 +7,6 @@ import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
@@ -52,7 +48,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
-import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -70,8 +65,6 @@ class HåndterMottattDokumentService(
     private val behandlingRepository: BehandlingRepository,
     private val vedtakRepository: VedtakRepository,
     private val tilbakekrevingService: TilbakekrevingService,
-    private val avklaringsbehovRepository: AvklaringsbehovRepository,
-    private val ansattInfoService: AnsattInfoService,
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -85,9 +78,7 @@ class HåndterMottattDokumentService(
         mottaDokumentService = MottaDokumentService(repositoryProvider),
         behandlingRepository = repositoryProvider.provide<BehandlingRepository>(),
         vedtakRepository = repositoryProvider.provide<VedtakRepository>(),
-        tilbakekrevingService = TilbakekrevingService(repositoryProvider),
-        avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>(),
-        ansattInfoService = AnsattInfoService(gatewayProvider),
+        tilbakekrevingService = TilbakekrevingService(repositoryProvider, gatewayProvider),
     )
 
     fun håndterMottatteKlage(
@@ -358,6 +349,7 @@ class HåndterMottattDokumentService(
         }
 
         val vedtakstidspunkt = vedtakRepository.hent(behandling.id)?.vedtakstidspunkt ?: error("Fant ikke vedtak")
+        val nayEnhetForPerson = tilbakekrevingService.finnNayEnhetForPerson(sak.person.aktivIdent(), behandling)
         return FagsysteminfoSvarHendelse(
             eksternFagsakId = this.eksternFagsakId,
             hendelseOpprettet = LocalDateTime.now(),
@@ -373,7 +365,7 @@ class HåndterMottattDokumentService(
             ),
             // TODO: Meldeperioder inkluderer helg i Kelvin, men er mandag-fredag i tilbakekreving. Kan bruke denne for å "slå sammen" to mandag-fredag-perioder til én lang periode.
             utvidPerioder = emptyList(),
-            behandlendeEnhet = finnBehandlendeEnhet(behandling.id),
+            behandlendeEnhet = nayEnhetForPerson.enhetNr,
         )
     }
 
@@ -391,35 +383,6 @@ class HåndterMottattDokumentService(
 
 
     private fun List<Byte>.toHex() = joinToString(separator = "") { String.format("%02X".lowercase(), it) }
-
-    private fun finnBehandlendeEnhet(behandlingId: BehandlingId): String? {
-        val avklarinsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
-        return utledEnhetForSisteSaksbehandler(avklarinsbehovene)
-    }
-
-    private fun utledEnhetForSisteSaksbehandler(avklarinsbehovene: Avklaringsbehovene): String? {
-        if (Miljø.erLokal()) {
-            return "0300"
-        }
-        val sisteSaksbehandler = utledSisteSaksbehandler(avklarinsbehovene)
-        val enhet = if (Miljø.erDev()) {
-            log.info("Siste saksbehandler i saken er $sisteSaksbehandler")
-            "0300" // Det finnes ikke testdata i NOM - bruker hardkodet enhet i dev
-        } else {
-            ansattInfoService.hentAnsattEnhet(sisteSaksbehandler)
-        }
-        return enhet
-    }
-
-    private fun utledSisteSaksbehandler(avklaringsbehovene: Avklaringsbehovene): String {
-        return avklaringsbehovene.alle().mapNotNull { avklaringsbehov ->
-            avklaringsbehov.historikk.filter { it.endretAv.erNavIdent() && it.status == Status.AVSLUTTET }.maxOrNull()
-        }.max().endretAv
-    }
-
-    private fun String.erNavIdent(): Boolean {
-        return this.matches(Regex("\\w\\d{6}"))
-    }
 
     private fun finnSisteIverksatteBehandling(sakId: SakId): BehandlingId {
         return behandlingRepository.hentAlleFor(sakId).firstOrNull { it.status().erAvsluttet() }?.id
