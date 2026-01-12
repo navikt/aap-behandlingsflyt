@@ -1,8 +1,10 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
@@ -31,6 +33,8 @@ class FatteVedtakSteg(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val trekkKlageService: TrekkKlageService,
     private val avklaringsbehovService: AvklaringsbehovService,
+    private val avbrytRevurderingService: AvbrytRevurderingService,
+    private val trukketSøknadService: TrukketSøknadService,
     private val tidligereVurderinger: TidligereVurderinger,
     private val klageresultatUtleder: KlageresultatUtleder,
     private val vedtakService: VedtakService,
@@ -57,16 +61,15 @@ class FatteVedtakSteg(
         }
 
         if (unleashGateway.isEnabled(BehandlingsflytFeature.LagreVedtakIFatteVedtak)) {
-            val vedtakstidspunkt = if (vedtakBehøverVurdering && erTilstrekkeligVurdert) {
+            val vedtakstidspunkt = if (vedtakBehøverVurdering)
                 avklaringsbehovene.hentBehovForDefinisjon(Definisjon.FATTE_VEDTAK)
                     ?.historikk
                     ?.singleOrNull { it.status == Status.AVSLUTTET }
-                    ?.tidsstempel ?: LocalDateTime.now(ZoneId.of("Europe/Oslo"))
-            } else {
-                null
-            }
+                    ?.tidsstempel
+            else
+                LocalDateTime.now(ZoneId.of("Europe/Oslo"))
 
-            if (vedtakstidspunkt != null) {
+            if (skalLagreVedtak(kontekst) && vedtakstidspunkt != null) {
                 vedtakService.lagreVedtak(
                     behandlingId = kontekst.behandlingId,
                     vedtakstidspunkt = vedtakstidspunkt,
@@ -76,6 +79,27 @@ class FatteVedtakSteg(
         }
 
         return Fullført
+    }
+
+    private fun skalLagreVedtak(kontekst: FlytKontekstMedPerioder): Boolean {
+        when (kontekst.behandlingType) {
+            TypeBehandling.Førstegangsbehandling -> {
+                return !trukketSøknadService.søknadErTrukket(kontekst.behandlingId)
+            }
+
+            TypeBehandling.Revurdering -> {
+                return !avbrytRevurderingService.revurderingErAvbrutt(kontekst.behandlingId)
+            }
+
+            TypeBehandling.Tilbakekreving,
+            TypeBehandling.Klage,
+            TypeBehandling.SvarFraAndreinstans,
+            TypeBehandling.OppfølgingsBehandling,
+            TypeBehandling.Aktivitetsplikt,
+            TypeBehandling.Aktivitetsplikt11_9 -> {
+                return false
+            }
+        }
     }
 
     private fun vedtakBehøverVurdering(
@@ -127,6 +151,8 @@ class FatteVedtakSteg(
                 avklaringsbehovRepository = repositoryProvider.provide(),
                 trekkKlageService = TrekkKlageService(repositoryProvider),
                 avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+                avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
+                trukketSøknadService = TrukketSøknadService(repositoryProvider),
                 tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
                 klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
                 vedtakService = VedtakService(repositoryProvider),
