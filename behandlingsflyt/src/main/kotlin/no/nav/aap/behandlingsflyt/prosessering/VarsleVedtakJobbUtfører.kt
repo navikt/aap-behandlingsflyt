@@ -117,7 +117,7 @@ class VarsleVedtakJobbUtfører(
 
         requireNotNull(nåværendeTilkjentYtelse){"Hvis forrigeTilkjentYtelse ikke er null, så kan ikke nåværendeTilkjentYtelse være det."}
 
-        val res = forrigeTilkjentYtelse.komprimer().outerJoin(nåværendeTilkjentYtelse.komprimer()) { left: Tilkjent?, right: Tilkjent? ->
+        return forrigeTilkjentYtelse.komprimer().outerJoin(nåværendeTilkjentYtelse.komprimer()) { left: Tilkjent?, right: Tilkjent? ->
             when {
                 left == null && right == null -> false
                 left == null -> right?.gradering != Prosent.`0_PROSENT`
@@ -129,10 +129,8 @@ class VarsleVedtakJobbUtfører(
                     (leftErNull != rightErNull) || positivEndringDagsats
                 }
             }
-        }.filter {
-            it.verdi
-        }.isNotEmpty()
-        return res
+        }.filter { it.verdi }.isNotEmpty()
+
     }
 
     fun underveisTilRettighetsTypeTidslinje(
