@@ -123,8 +123,9 @@ class KvalitetssikringFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::clas
                 .all { it.status() == AvklaringsbehovStatus.KVALITETSSIKRET }
         ).isTrue()
 
-
-
+        val stegetsEgetBehov = hentAlleAvklaringsbehov(behandling)
+            .filter { behov -> behov.definisjon == Definisjon.KVALITETSSIKRING }
+        assertThat(stegetsEgetBehov.first().status()).isEqualTo(AvklaringsbehovStatus.OPPRETTET)
     }
 
     @Test

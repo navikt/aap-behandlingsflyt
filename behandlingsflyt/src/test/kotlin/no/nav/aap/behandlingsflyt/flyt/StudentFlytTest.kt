@@ -158,7 +158,6 @@ object SykestipendAktivert : FakeUnleashBase(
         BehandlingsflytFeature.ValiderOvergangUfore to true,
         BehandlingsflytFeature.KravOmInntektsbortfall to true,
         BehandlingsflytFeature.Under18 to true,
-        BehandlingsflytFeature.MigrerArbeidsevne to true,
         BehandlingsflytFeature.SosialRefusjon to true,
         BehandlingsflytFeature.HentSykepengerVedOverlapp to true,
         BehandlingsflytFeature.MigrerRettighetsperiode to true,
