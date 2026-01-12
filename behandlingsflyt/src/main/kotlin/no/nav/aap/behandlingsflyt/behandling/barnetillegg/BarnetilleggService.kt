@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.IBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn.OppgittBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.SaksbehandlerOppgitteBarn.SaksbehandlerOppgitteBarn
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.filtrerBortMigrerteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -48,7 +49,7 @@ class BarnetilleggService(
         tidslinje: Tidslinje<RettTilBarnetillegg>,
         barnGrunnlag: BarnGrunnlag
     ): Tidslinje<RettTilBarnetillegg> {
-        val folkeregisterBarn = barnGrunnlag.registerbarn?.barn.orEmpty()
+        val folkeregisterBarn = barnGrunnlag.registerbarn?.barn.orEmpty().filtrerBortMigrerteBarn()
         val vurderteBarn = barnGrunnlag.vurderteBarn?.barn.orEmpty()
 
         val barnUtenVurdering = folkeregisterBarn.filter { barn ->

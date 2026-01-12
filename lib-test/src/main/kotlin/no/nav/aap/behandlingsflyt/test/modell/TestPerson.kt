@@ -15,7 +15,9 @@ import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.FiktivtNavnGenerator
 import no.nav.aap.behandlingsflyt.test.FødselsnummerGenerator
 import no.nav.aap.behandlingsflyt.test.PersonNavn
+import no.nav.aap.behandlingsflyt.test.TestPersonService
 import no.nav.aap.komponenter.type.Periode
+import com.fasterxml.jackson.annotation.JsonIgnore
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
 import java.time.LocalDate
@@ -55,7 +57,9 @@ class TestPerson(
     val medlStatus: List<MedlemskapDataIntern> = emptyList(),
     var sykepenger: List<Sykepenger>? = null,
     val foreldrepenger: List<ForeldrePenger>? = null,
-    val tjenestePensjon: TjenestePensjonRespons? = null
+    val tjenestePensjon: TjenestePensjonRespons? = null,
+    @JsonIgnore
+    val testPersonService: TestPersonService = FakePersoner
 ) {
     data class Sykepenger(val grad: Int, val periode: Periode)
     data class ForeldrePenger(val grad: Number, val periode: Periode)
@@ -81,7 +85,7 @@ class TestPerson(
 
     fun medBarn(barn: List<TestPerson>): TestPerson {
         this.barn = barn
-        this.barn.forEach { FakePersoner.leggTil(it) }
+        this.barn.forEach { testPersonService.leggTil(it) }
         return this
     }
 

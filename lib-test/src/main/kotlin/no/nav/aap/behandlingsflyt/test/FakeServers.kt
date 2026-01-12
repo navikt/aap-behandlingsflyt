@@ -176,6 +176,8 @@ object FakeServers : AutoCloseable {
     internal val statistikkHendelser = mutableListOf<StoppetBehandling>()
     internal val legeerklæringStatuser = mutableListOf<LegeerklæringStatusResponse>()
 
+    private lateinit var fakePersoner: TestPersonService
+
     private val started = AtomicBoolean(false)
 
     private fun Application.oppgavestyringFake() {
@@ -219,7 +221,7 @@ object FakeServers : AutoCloseable {
         routing() {
             post("/api/uforetrygd/uforehistorikk/perioder") {
                 val body = call.receive<UføreRequest>()
-                val hentPerson = FakePersoner.hentPerson(body.fnr)
+                val hentPerson = fakePersoner.hentPerson(body.fnr)
                 if (hentPerson == null) {
                     call.respond(HttpStatusCode.NotFound, "Fant ikke person med fnr ${body.fnr}")
                     return@post
@@ -402,7 +404,7 @@ object FakeServers : AutoCloseable {
         routing {
             get("/api/tjenestepensjon/getActiveForholdMedActiveYtelser") {
                 val ident = call.request.headers["fnr"] ?: ""
-                val fakePerson = FakePersoner.hentPerson(ident)
+                val fakePerson = fakePersoner.hentPerson(ident)
 
                 if (fakePerson != null && fakePerson.tjenestePensjon != null) {
                     call.respond(fakePerson.tjenestePensjon)
@@ -607,7 +609,7 @@ object FakeServers : AutoCloseable {
             post("/hent-ytelse-vedtak") {
                 val req = call.receive<ForeldrepengerRequest>()
                 val ident = req.ident.verdi
-                val fakePerson = FakePersoner.hentPerson(ident)
+                val fakePerson = fakePersoner.hentPerson(ident)
                 if (fakePerson?.foreldrepenger != null) {
                     val foreldrepenger = fakePerson.foreldrepenger
 
@@ -776,7 +778,7 @@ object FakeServers : AutoCloseable {
             data class SykepengerRequest(val personidentifikatorer: Set<String>)
             post("/utbetalte-perioder-aap") {
                 val request = call.receive<SykepengerRequest>()
-                val fakePerson = FakePersoner.hentPerson(request.personidentifikatorer.first())
+                val fakePerson = fakePersoner.hentPerson(request.personidentifikatorer.first())
                 if (fakePerson?.sykepenger != null) {
                     call.respond(
                         SykepengerResponse(
@@ -1065,7 +1067,7 @@ object FakeServers : AutoCloseable {
         routing {
             post("/hentinntektliste") {
                 val request = call.receive<Map<String, Any>>()
-                val person = FakePersoner.hentPerson((request["ident"] as Map<*, *>)["identifikator"] as String)
+                val person = fakePersoner.hentPerson((request["ident"] as Map<*, *>)["identifikator"] as String)
 
                 val z = person!!.inntekter().flatMap { inntektPerÅr ->
                     (1..12).map { mnd ->
@@ -1278,7 +1280,7 @@ object FakeServers : AutoCloseable {
                 val body = call.receive<InstitusjonoppholdRequest>()
                 val ident = body.personident
 
-                val fakePerson = FakePersoner.hentPerson(ident)
+                val fakePerson = fakePersoner.hentPerson(ident)
 
                 if (fakePerson != null) {
                     call.respond(fakePerson.institusjonsopphold)
@@ -1311,7 +1313,7 @@ object FakeServers : AutoCloseable {
                 val body = call.receive<MedlemskapRequest>()
                 val ident = body.personident
 
-                val fakePerson = FakePersoner.hentPerson(ident)
+                val fakePerson = fakePersoner.hentPerson(ident)
 
                 if (fakePerson != null) {
                     call.respond(fakePerson.medlStatus)
@@ -1389,7 +1391,7 @@ object FakeServers : AutoCloseable {
     }
 
     private fun mapIdentBolk(it: String): HentPersonBolkResult? {
-        val person = FakePersoner.hentPerson(it) ?: return null
+        val person = fakePersoner.hentPerson(it) ?: return null
         return HentPersonBolkResult(
             ident = person.identer.first().identifikator,
             person = PdlPersoninfo(
@@ -1457,9 +1459,10 @@ object FakeServers : AutoCloseable {
     }
 
     private fun hentEllerGenererTestPerson(forespurtIdent: String): TestPerson {
-        val person = FakePersoner.hentPerson(forespurtIdent)
+        val person = fakePersoner.hentPerson(forespurtIdent)
         if (person == null) {
-            FakePersoner.leggTil(
+            log.info("Fant ikke testperson med ident $forespurtIdent.")
+            fakePersoner.leggTil(
                 TestPerson(
                     identer = setOf(Ident(forespurtIdent)),
                     fødselsdato = Fødselsdato(LocalDate.now().minusYears(30))
@@ -1467,7 +1470,7 @@ object FakeServers : AutoCloseable {
             )
         }
 
-        return FakePersoner.hentPerson(forespurtIdent)!!
+        return fakePersoner.hentPerson(forespurtIdent)!!
     }
 
     private fun mapIdent(person: TestPerson?): List<PdlIdent> {
@@ -2017,10 +2020,12 @@ object FakeServers : AutoCloseable {
     )
 
 
-    fun start() {
+    fun start(testPersonService: TestPersonService = FakePersoner) {
         if (started.get()) {
             return
         }
+
+        fakePersoner = testPersonService
 
         azure.start()
         setAzureProperties()

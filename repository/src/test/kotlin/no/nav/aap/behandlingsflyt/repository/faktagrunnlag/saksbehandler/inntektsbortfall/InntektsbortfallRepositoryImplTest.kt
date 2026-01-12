@@ -3,13 +3,13 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.inntek
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.InntektsbortfallVurdering
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import java.time.LocalDateTime
 
 class InntektsbortfallRepositoryImplTest {
     companion object {
@@ -37,7 +37,8 @@ class InntektsbortfallRepositoryImplTest {
             begrunnelse = "En begrunnelse",
             rettTilUttak = true,
             vurdertAv = "Z123456",
-            vurdertIBehandling = behandling.id
+            vurdertIBehandling = behandling.id,
+            opprettetTid = LocalDateTime.of(2023, 1, 1, 12, 0)
         )
 
         dataSource.transaction { connection ->

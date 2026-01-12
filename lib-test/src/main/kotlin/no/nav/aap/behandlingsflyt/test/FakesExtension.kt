@@ -10,7 +10,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.lang.reflect.ParameterizedType
 
-internal class FakesExtension() : BeforeAllCallback, ParameterResolver,
+internal class FakesExtension : BeforeAllCallback, ParameterResolver,
     BeforeEachCallback {
 
     private val log: Logger = LoggerFactory.getLogger(javaClass)
@@ -43,7 +43,7 @@ internal class FakesExtension() : BeforeAllCallback, ParameterResolver,
                 }
 
                 else -> {
-                    return false
+                    false
                 }
             }
         }

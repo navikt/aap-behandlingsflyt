@@ -59,6 +59,6 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.SosialRefusjon to true,
         BehandlingsflytFeature.HentSykepengerVedOverlapp to true,
         BehandlingsflytFeature.PeriodisertSykdom to true,
-        BehandlingsflytFeature.Sykestipend to false,
+        BehandlingsflytFeature.Sykestipend to true,
     )
 )

@@ -32,6 +32,7 @@ enum class ÅrsakTilOpprettelse {
     AKTIVITETSPLIKT_11_9,
 
     // Tilbakekreving
-    TILBAKEKREVING_HENDELSE
+    TILBAKEKREVING_HENDELSE,
+    FAGSYSTEMINFO_BEHOV_HENDELSE,
 
 }

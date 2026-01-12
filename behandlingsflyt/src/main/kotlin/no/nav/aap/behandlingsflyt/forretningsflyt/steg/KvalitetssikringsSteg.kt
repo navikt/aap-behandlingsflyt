@@ -142,6 +142,15 @@ class KvalitetssikringsSteg private constructor(
             }
         }
 
+        /**
+         * Hvis stegets eget behov ("KVALITETSSIKRING") har status OPPRETTET, skal det alltid skje en ny kvalitetssikring
+         */
+        if (avklaringsbehovene.alle()
+            .any { it.definisjon.kode == Definisjon.KVALITETSSIKRING.kode && it.status() == Status.OPPRETTET }
+        ) {
+            return false
+        }
+
         return true
     }
 
