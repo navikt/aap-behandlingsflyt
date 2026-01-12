@@ -39,25 +39,6 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
         }.grupperOgMapTilGrunnlag().firstOrNull()
     }
 
-    override fun hentAlleVurderinger(sakId: SakId, behandlingId: BehandlingId): Set<Fritaksvurdering> {
-        val query = """
-            SELECT f.ID AS MELDEPLIKT_ID, v.HAR_FRITAK, v.FRA_DATO, v.TIL_DATO, v.BEGRUNNELSE, v.OPPRETTET_TID, v.VURDERT_AV, v.VURDERT_I_BEHANDLING
-            FROM MELDEPLIKT_FRITAK_GRUNNLAG g
-            INNER JOIN MELDEPLIKT_FRITAK f ON g.MELDEPLIKT_ID = f.ID
-            INNER JOIN MELDEPLIKT_FRITAK_VURDERING v ON f.ID = v.MELDEPLIKT_ID
-            JOIN BEHANDLING b ON b.ID = g.BEHANDLING_ID
-            WHERE g.AKTIV AND b.SAK_ID = ? AND b.opprettet_tid < (SELECT a.opprettet_tid from behandling a where id = ?)
-            """.trimIndent()
-
-        return connection.queryList(query) {
-            setParams {
-                setLong(1, sakId.toLong())
-                setLong(2, behandlingId.toLong())
-            }
-            setRowMapper(::toMeldepliktInternal)
-        }.map { it.toFritaksvurdering() }.toSet()
-    }
-
     fun toMeldepliktInternal(row: Row): MeldepliktInternal = MeldepliktInternal(
         meldepliktId = row.getLong("MELDEPLIKT_ID"),
         harFritak = row.getBoolean("HAR_FRITAK"),
@@ -66,7 +47,7 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
         begrunnelse = row.getString("BEGRUNNELSE"),
         vurdertAv = row.getString("VURDERT_AV"),
         vurderingOpprettet = row.getLocalDateTime("OPPRETTET_TID"),
-        vurdertIBehandling = row.getLongOrNull("VURDERT_I_BEHANDLING")?.let { BehandlingId(it) }
+        vurdertIBehandling = BehandlingId(row.getLong("VURDERT_I_BEHANDLING"))
     )
 
 
@@ -78,7 +59,7 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
         val begrunnelse: String,
         val vurdertAv: String,
         val vurderingOpprettet: LocalDateTime,
-        val vurdertIBehandling: BehandlingId? = null,
+        val vurdertIBehandling: BehandlingId,
     ) {
         fun toFritaksvurdering(): Fritaksvurdering {
             return Fritaksvurdering(
@@ -126,7 +107,7 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
                 setLocalDate(5, it.tilDato)
                 setString(6, it.vurdertAv)
                 setLocalDateTime(7, it.opprettetTid)
-                setLong(8, it.vurdertIBehandling?.id)
+                setLong(8, it.vurdertIBehandling.id)
             }
         }
     }

@@ -59,8 +59,8 @@ class MeldepliktRepositoryImplTest {
 
             val meldepliktRepository = MeldepliktRepositoryImpl(connection)
             val fritaksvurderinger = listOf(
-                Fritaksvurdering(true, 13 august 2023, 25 august 2023, "en begrunnelse", "saksbehandler", LocalDateTime.now()),
-                Fritaksvurdering(false, 26 august 2023, null, "annen begrunnelse", "saksbehandler", LocalDateTime.now())
+                Fritaksvurdering(true, 13 august 2023, 25 august 2023, "en begrunnelse", "saksbehandler", LocalDateTime.now(), behandling.id),
+                Fritaksvurdering(false, 26 august 2023, null, "annen begrunnelse", "saksbehandler", LocalDateTime.now(), behandling.id),
             )
             meldepliktRepository.lagre(behandling.id, fritaksvurderinger)
             val meldepliktGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling.id)
@@ -74,7 +74,7 @@ class MeldepliktRepositoryImplTest {
             val sak = sak(connection)
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val meldepliktRepository = MeldepliktRepositoryImpl(connection)
-            val fritaksvurdering = Fritaksvurdering(true, 13 august 2023, null, "en begrunnelse", "saksbehandler", LocalDateTime.now())
+            val fritaksvurdering = Fritaksvurdering(true, 13 august 2023, null, "en begrunnelse", "saksbehandler", LocalDateTime.now(), behandling1.id)
 
             meldepliktRepository.lagre(
                 behandling1.id,
@@ -109,7 +109,7 @@ class MeldepliktRepositoryImplTest {
             val sak = sak(connection)
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val meldepliktRepository = MeldepliktRepositoryImpl(connection)
-            val fritaksvurdering = Fritaksvurdering(true, 13 august 2023, null, "en begrunnelse", "saksbehandler", LocalDateTime.now())
+            val fritaksvurdering = Fritaksvurdering(true, 13 august 2023, null, "en begrunnelse", "saksbehandler", LocalDateTime.now(), behandling1.id)
 
             meldepliktRepository.lagre(
                 behandling1.id,
@@ -134,7 +134,7 @@ class MeldepliktRepositoryImplTest {
             assertThat(meldepliktGrunnlag?.vurderinger).hasSize(1)
 
             val alleVurderingerFørBehandling =
-                meldepliktRepository.hentAlleVurderinger(behandling2.sakId, behandling2.id)
+                meldepliktRepository.hentHvisEksisterer(behandling1.id)?.vurderinger
 
             assertThat(alleVurderingerFørBehandling).hasSize(1)
         }
@@ -147,7 +147,7 @@ class MeldepliktRepositoryImplTest {
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val meldepliktRepository = MeldepliktRepositoryImpl(connection)
 
-            val fritaksvurdering = Fritaksvurdering(true, 13 august 2023, null, "en begrunnelse", "saksbehandler", LocalDateTime.now())
+            val fritaksvurdering = Fritaksvurdering(true, 13 august 2023, null, "en begrunnelse", "saksbehandler", LocalDateTime.now(), behandling.id)
 
             meldepliktRepository.lagre(
                 behandling.id,
@@ -214,9 +214,9 @@ class MeldepliktRepositoryImplTest {
                     ),
                 )
 
-            val alleVurderingerFørBehandling = meldepliktRepository.hentAlleVurderinger(behandling.sakId, behandling.id)
+            val nyttGrunnlag = meldepliktRepository.hentHvisEksisterer(behandling.id)
 
-            assertThat(alleVurderingerFørBehandling).isEmpty()
+            assertThat(nyttGrunnlag?.vurderinger?.firstOrNull()?.begrunnelse ).isEqualTo("annen begrunnelse")
         }
     }
 
@@ -227,7 +227,7 @@ class MeldepliktRepositoryImplTest {
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val meldepliktRepository = MeldepliktRepositoryImpl(connection)
 
-            val fritaksvurdering = Fritaksvurdering(true, 13 august 2023, null,  "en begrunnelse", "saksbehandler", LocalDateTime.now())
+            val fritaksvurdering = Fritaksvurdering(true, 13 august 2023, null,  "en begrunnelse", "saksbehandler", LocalDateTime.now(), behandling.id)
 
             meldepliktRepository.lagre(
                 behandling.id,
@@ -252,7 +252,7 @@ class MeldepliktRepositoryImplTest {
             val behandling1 = finnEllerOpprettBehandling(connection, sak)
             val meldepliktRepository = MeldepliktRepositoryImpl(connection)
 
-            val fritaksvurdering = Fritaksvurdering(true, 13 august 2023, null, "en begrunnelse", "saksbehandler", LocalDateTime.now())
+            val fritaksvurdering = Fritaksvurdering(true, 13 august 2023, null, "en begrunnelse", "saksbehandler", LocalDateTime.now(), behandling1.id)
 
             meldepliktRepository.lagre(
                 behandling1.id,
@@ -335,9 +335,9 @@ class MeldepliktRepositoryImplTest {
     @Test
     fun `migrer meldeplikt fritak`() {
         val fritaksvurderingFørstegangsbehandling =
-            Fritaksvurdering(true, 13 august 2023, null, "en begrunnelse", "saksbehandler", LocalDateTime.now())
+            Fritaksvurdering(true, 13 august 2023, null, "en begrunnelse", "saksbehandler", LocalDateTime.now(), BehandlingId(1))
         val fritaksvurderingRevurdering =
-            Fritaksvurdering(true, 10 august 2024, null, "en begrunnelse", "saksbehandler", LocalDateTime.now())
+            Fritaksvurdering(true, 10 august 2024, null, "en begrunnelse", "saksbehandler", LocalDateTime.now(), BehandlingId(1))
 
         val behandling = dataSource.transaction { connection ->
             val meldepliktRepository = MeldepliktRepositoryImpl(connection)

@@ -169,6 +169,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
                 begrunnelse = "bla bla",
                 vurdertAv = "saksbehandler1",
                 opprettetTid = LocalDateTime.now(),
+                vurdertIBehandling = fakeBehandling.id,
             ))
         )
 
