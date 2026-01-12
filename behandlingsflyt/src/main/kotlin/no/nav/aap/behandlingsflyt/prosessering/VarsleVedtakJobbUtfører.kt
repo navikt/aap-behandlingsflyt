@@ -1,9 +1,7 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
-import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.VurderRettighetsperiodeRepository
 import no.nav.aap.behandlingsflyt.behandling.rettighetstype.RettighetstypeVurdering
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
@@ -12,7 +10,6 @@ import no.nav.aap.behandlingsflyt.datadeling.sam.SamordneVedtakRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -21,14 +18,12 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryProvider
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
-import java.util.NavigableSet
 import kotlin.collections.mapNotNull
 import kotlin.collections.orEmpty
 
@@ -92,9 +87,6 @@ class VarsleVedtakJobbUtfører(
                 endringIRettighetstypeTidslinje(forrigeUnderveisGrunnlag, nåværendeUnderveisGrunnlag!!, vedtak.vedtakstidspunkt.toLocalDate())
             )
 
-        // For nå: kun varsle ved førstegangsbehandlinger.
-        // På sikt skal vi varsle hver gang det skjer en "betydelig" endring i ytelsen. F.eks rettighetstype, stans,
-        // etc.
         if (relevantEndring.any()) {
             log.info("Varsler SAM for behandling med referanse ${behandling.referanse} og saksnummer ${sak.saksnummer}. Årsak: førstegangsbehandling=${relevantEndring[0]}, endringIRettighetsPeriode=${relevantEndring[1]}, endringITilkjentYtelse=${relevantEndring[2]}, endringIRettighetstype=${relevantEndring[3]}")
             samGateway.varsleVedtak(request)
