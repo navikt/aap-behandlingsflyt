@@ -2,7 +2,9 @@ package no.nav.aap.behandlingsflyt.prosessering.tilbakekreving
 
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import org.apache.kafka.clients.CommonClientConfigs
+import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.config.SslConfigs
+import tools.jackson.databind.ser.jdk.StringSerializer
 import java.util.*
 
 data class KafkaProducerConfig<K, V>(
@@ -15,6 +17,7 @@ data class KafkaProducerConfig<K, V>(
     fun producerProperties(producerName: String): Properties = Properties().apply {
         this[CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG] = brokers
         this[CommonClientConfigs.CLIENT_ID_CONFIG] = "$applicationId-$producerName"
+        this[ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG] = StringSerializer::class.java.name
 
         ssl?.let { putAll(it.properties()) }
         schemaRegistry?.let { putAll(it.properties()) }
