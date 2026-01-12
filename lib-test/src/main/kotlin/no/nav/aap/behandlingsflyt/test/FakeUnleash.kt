@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.test
 
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.FeatureToggle
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
@@ -12,6 +13,8 @@ open class FakeUnleashBase(
     }
 
     override fun isEnabled(featureToggle: FeatureToggle, ident: String) = isEnabled(featureToggle)
+
+    override fun isEnabled(featureToggle: FeatureToggle, ident: String, typeBrev: TypeBrev) = isEnabled(featureToggle)
 }
 
 
