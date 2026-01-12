@@ -68,7 +68,7 @@ class FatteVedtakSteg(
             else
                 LocalDateTime.now(ZoneId.of("Europe/Oslo"))
 
-            if (skalLagreVedtak(kontekst) && vedtakstidspunkt != null) {
+            if (skalLagreYtelsesvedtak(kontekst) && vedtakstidspunkt != null) {
                 vedtakService.lagreVedtak(
                     behandlingId = kontekst.behandlingId,
                     vedtakstidspunkt = vedtakstidspunkt,
@@ -80,7 +80,7 @@ class FatteVedtakSteg(
         return Fullført
     }
 
-    private fun skalLagreVedtak(kontekst: FlytKontekstMedPerioder): Boolean {
+    private fun skalLagreYtelsesvedtak(kontekst: FlytKontekstMedPerioder): Boolean {
         when (kontekst.behandlingType) {
             TypeBehandling.Førstegangsbehandling -> {
                 return !trukketSøknadService.søknadErTrukket(kontekst.behandlingId)
