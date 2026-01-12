@@ -21,18 +21,41 @@ public data class TilbakekrevingHendelseKafkaMelding(
     val eksternFagsakId: String,
     val hendelseOpprettet: LocalDateTime,
     val eksternBehandlingId: String?,
-    val tilbakekreving: TilbakekrevingKafkaDto,
-) {
+    val tilbakekreving: TilbakekrevingKafkaDto? = null,
+    val sakOpprettet: LocalDateTime? = null,
+    val varselSendt: LocalDateTime? = null,
+    val behandlingsstatus: TilbakekrevingBehandlingsstatus? = null,
+    val totaltFeilutbetaltBeløp: BigDecimal? = null,
+    val saksbehandlingURL: String? = null,
+    val fullstendigPeriode: TilbakekrevingPeriode? = null,
 
-    public fun tilTilbakekrevingHendelseV0(): TilbakekrevingHendelse =
-        TilbakekrevingHendelseV0(
+    ) {
+
+    public fun tilTilbakekrevingHendelseV0(): TilbakekrevingHendelse {
+
+        //TODO: triks for å støtte både ny og gammel datastruktur. Kan slettes når alle gamle meldinger er ferdig.
+        val nyTilbakekreving = tilbakekreving
+            ?: TilbakekrevingKafkaDto(
+                    //TODO: Litt stygg hack for å hente behandlingId fra url ettersom den ikke er med i gammel datastruktur.
+                    behandlingId = UUID.fromString(saksbehandlingURL!!.substringAfterLast('/')),
+                    sakOpprettet = sakOpprettet!!,
+                    varselSendt = varselSendt,
+                    behandlingsstatus = behandlingsstatus!!,
+                    totaltFeilutbetaltBeløp = totaltFeilutbetaltBeløp!!,
+                    saksbehandlingURL = saksbehandlingURL,
+                    fullstendigPeriode = fullstendigPeriode!!
+            )
+
+
+        return TilbakekrevingHendelseV0(
             hendelsestype = hendelsestype,
             versjon = versjon,
             eksternFagsakId = eksternFagsakId,
             hendelseOpprettet = hendelseOpprettet,
             eksternBehandlingId = eksternBehandlingId,
-            tilbakekreving = tilbakekreving,
+            tilbakekreving = nyTilbakekreving,
         )
+    }
 
     public fun tilInnsending(meldingKey: String, saksnummer: Saksnummer): Innsending {
         return Innsending(
