@@ -41,7 +41,7 @@ fun ArbeidsevneVurdering.toDto(ansattNavnOgEnhet: AnsattNavnOgEnhet? = null): Ar
         fraDato,
         vurdertAv = VurdertAvResponse(
             ident = vurdertAv,
-            dato = requireNotNull(opprettetTid?.toLocalDate()) { "Fant ikke vurdert tidspunkt for arbeidsevnevurdering" },
+            dato = opprettetTid.toLocalDate(),
             ansattnavn = ansattNavnOgEnhet?.navn,
             enhetsnavn = ansattNavnOgEnhet?.enhet
         )

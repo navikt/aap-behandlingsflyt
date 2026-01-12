@@ -39,6 +39,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.sykdomsvurderingForBrevApi
 import no.nav.aap.behandlingsflyt.behandling.foreslåvedtak.foreslaaVedtakApi
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.medlemskap.medlemskapsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.samordningGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.inntektsbortfall.inntektsbortfallGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.institusjonApi
 import no.nav.aap.behandlingsflyt.behandling.klage.behandlendeenhet.behandlendeEnhetGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.klage.formkrav.formkravGrunnlagApi
@@ -61,6 +62,7 @@ import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.rettighetsperiode
 import no.nav.aap.behandlingsflyt.behandling.revurdering.avbrytRevurderingGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.simulering.simuleringApi
 import no.nav.aap.behandlingsflyt.behandling.student.studentgrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.student.sykestipend.sykestipendGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.svarfraandreinstans.svarfraandreinstans.svarFraAndreinstansGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.søknad.trukketSøknadGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilkjentYtelseApi
@@ -254,9 +256,11 @@ internal fun Application.server(
                 overgangUforeGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 medlemskapsgrunnlagApi(dataSource, repositoryRegistry)
                 studentgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                sykestipendGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 sykdomsgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 sykdomsvurderingForBrevApi(dataSource, repositoryRegistry, gatewayProvider)
                 sykepengerGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                inntektsbortfallGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 oppholdskravGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 institusjonApi(dataSource, repositoryRegistry, gatewayProvider)
                 avklaringsbehovApi(dataSource, repositoryRegistry, gatewayProvider)

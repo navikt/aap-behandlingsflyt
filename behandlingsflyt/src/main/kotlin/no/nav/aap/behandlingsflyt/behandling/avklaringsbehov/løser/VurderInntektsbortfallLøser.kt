@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Inntekts
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.time.LocalDateTime
 
 class VurderInntektsbortfallLøser(
     private val inntektsbortfallRepository: InntektsbortfallRepository,
@@ -29,7 +30,8 @@ class VurderInntektsbortfallLøser(
                 begrunnelse = løsning.vurdering.begrunnelse,
                 rettTilUttak = løsning.vurdering.rettTilUttak,
                 vurdertAv = kontekst.bruker.ident,
-                vurdertIBehandling = kontekst.behandlingId()
+                vurdertIBehandling = kontekst.behandlingId(),
+                opprettetTid = LocalDateTime.now(),
             )
         )
         return LøsningsResultat(begrunnelse = "Vurdert inntektsbortfall")

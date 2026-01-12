@@ -3,11 +3,6 @@ package no.nav.aap.behandlingsflyt.behandling.`vilkår`.inntektsbortfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.mars
@@ -20,18 +15,10 @@ import org.junit.jupiter.params.provider.CsvSource
 import java.time.Year
 
 class InntektsbortfallVurderingServiceTest {
-    val kontekst = FlytKontekstMedPerioder(
-        sakId = SakId(0L),
-        behandlingId = BehandlingId(0L),
-        forrigeBehandlingId = null,
-        behandlingType = TypeBehandling.Førstegangsbehandling,
-        vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-        rettighetsperiode = Periode(1 januar 2026, 31 desember 2026),
-        vurderingsbehovRelevanteForSteg = emptySet()
-    )
+    val rettighetsperiode = Periode(1 januar 2026, 31 desember 2026)
 
     val service = InntektsbortfallVurderingService(
-        kontekst, setOf(Year.of(2023), Year.of(2024), Year.of(2025))
+        setOf(Year.of(2023), Year.of(2024), Year.of(2025)), rettighetsperiode
     )
 
     @Test
@@ -39,7 +26,6 @@ class InntektsbortfallVurderingServiceTest {
         val resultat = service.vurderInntektsbortfall(
             // Under 62 år
             fødselsdato = Fødselsdato(13 mars 1990),
-            manuelleInntekter = setOf(),
             inntektPerÅr = setOf()
         )
 
@@ -58,7 +44,6 @@ class InntektsbortfallVurderingServiceTest {
     ) {
         val resultat = service.vurderInntektsbortfall(
             fødselsdato = Fødselsdato(13 mars 1963),
-            manuelleInntekter = setOf(),
             inntektPerÅr = setOf(
                 InntektPerÅr(
                     Year.of(2023), Grunnbeløp.finnGrunnbeløp(1 januar 2025).multiplisert(
@@ -96,7 +81,6 @@ class InntektsbortfallVurderingServiceTest {
     ) {
         val resultat = service.vurderInntektsbortfall(
             fødselsdato = Fødselsdato(13 mars 1963),
-            manuelleInntekter = setOf(),
             inntektPerÅr = setOf(år1, år2, år3).mapIndexed { index, inntekt ->
                 val årForInntekt = 2023 + index
                 InntektPerÅr(

@@ -61,11 +61,19 @@ class GosysGateway : OppgaveGateway {
         }
 
         val beskrivelse =
-            "Refusjonskrav. Brukeren er innvilget etterbetaling av AAP fra ${
-                formatDateToSaksbehandlerVennlig(navKontor.virkingsdato!!)
-            } til ${
-                formatDateToSaksbehandlerVennlig(navKontor.vedtaksdato!!)
-            }. Dere må sende refusjonskrav til NØS."
+            if (navKontor.virkingsdato != null && navKontor.vedtaksdato != null) {
+                val fom = requireNotNull(navKontor.virkingsdato)
+                val tom = requireNotNull(navKontor.vedtaksdato)
+                "Refusjonskrav. Brukeren er innvilget etterbetaling av AAP fra ${
+                    formatDateToSaksbehandlerVennlig(fom)
+                } til ${
+                    formatDateToSaksbehandlerVennlig(tom)
+                }. Dere må sende refusjonskrav til NØS."
+            } else {
+                "Refusjonskrav. Brukeren er innvilget etterbetaling av AAP til ${navKontor.enhetsNummer}. Dere må sende refusjonskrav til NØS."
+            }
+
+
 
         val oppgaveRequest = OpprettOppgaveRequest(
             oppgavetype = OppgaveType.VURDER_KONSEKVENS_FOR_YTELSE.verdi,

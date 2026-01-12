@@ -84,7 +84,7 @@ class BeregningService(
         return Inntektsbehov.utledAlleRelevanteÅr(beregningGrunnlag)
     }
 
-    private fun kombinerInntektOgManuellInntekt(
+    fun kombinerInntektOgManuellInntekt(
         inntekter: Set<InntektPerÅr>,
         manuelleInntekter: Set<ManuellInntektVurdering>
     ): Set<InntektPerÅr> {
