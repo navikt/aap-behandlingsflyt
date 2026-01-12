@@ -45,13 +45,12 @@ class FatteVedtakSteg(
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
         val vedtakBehøverVurdering = vedtakBehøverVurdering(kontekst, avklaringsbehovene)
-        val erTilstrekkeligVurdert = erTilstrekkeligVurdert(kontekst, avklaringsbehovene)
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
             avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.FATTE_VEDTAK,
             vedtakBehøverVurdering = { vedtakBehøverVurdering },
-            erTilstrekkeligVurdert = { erTilstrekkeligVurdert },
+            erTilstrekkeligVurdert = { erTilstrekkeligVurdert(kontekst, avklaringsbehovene) },
             tilbakestillGrunnlag = {},
             kontekst = kontekst
         )
