@@ -122,6 +122,9 @@ class KvalitetssikringFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::clas
                 .filter { it.definisjon != Definisjon.AVKLAR_SYKDOM }
                 .all { it.status() == AvklaringsbehovStatus.KVALITETSSIKRET }
         ).isTrue()
+
+
+
     }
 
     @Test
