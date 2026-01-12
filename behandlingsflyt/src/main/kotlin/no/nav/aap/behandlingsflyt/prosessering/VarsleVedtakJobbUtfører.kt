@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
-import no.nav.aap.behandlingsflyt.behandling.rettighetstype.RettighetstypeVurdering
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
@@ -23,9 +22,6 @@ import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import org.slf4j.LoggerFactory
-import java.time.LocalDate
-import kotlin.collections.mapNotNull
-import kotlin.collections.orEmpty
 
 class VarsleVedtakJobbUtfører(
     private val repositoryProvider: RepositoryProvider,
@@ -39,7 +35,6 @@ class VarsleVedtakJobbUtfører(
         val sakRepository: SakRepository = repositoryProvider.provide()
         val behandlingRepository: BehandlingRepository = repositoryProvider.provide()
         val vedtakRepository: VedtakRepository = repositoryProvider.provide()
-        val underveisRepository: RettighetstypeVurdering = repositoryProvider.provide()
 
         val behandlingId = input.payload<BehandlingId>()
         val behandling = behandlingRepository.hent(behandlingId)
@@ -83,12 +78,15 @@ class VarsleVedtakJobbUtfører(
         val relevantEndring =
             listOf(
                 behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling,
-                endringITilkjentYtelseTidslinje(forrigeTilkjentYtelse,nåværendeTilkjentYtelse),
-                endringIRettighetstypeTidslinje(forrigeUnderveisGrunnlag, nåværendeUnderveisGrunnlag!!, vedtak.vedtakstidspunkt.toLocalDate())
+                endringITilkjentYtelseTidslinje(forrigeTilkjentYtelse, nåværendeTilkjentYtelse),
+                endringIRettighetstypeTidslinje(
+                    forrigeUnderveisGrunnlag,
+                    nåværendeUnderveisGrunnlag!!
+                )
             )
 
         if (relevantEndring.any()) {
-            log.info("Varsler SAM for behandling med referanse ${behandling.referanse} og saksnummer ${sak.saksnummer}. Årsak: førstegangsbehandling=${relevantEndring[0]}, endringIRettighetsPeriode=${relevantEndring[1]}, endringITilkjentYtelse=${relevantEndring[2]}, endringIRettighetstype=${relevantEndring[3]}")
+            log.info("Varsler SAM for behandling med referanse ${behandling.referanse} og saksnummer ${sak.saksnummer}. Årsak: endringIRettighetsPeriode=${relevantEndring[0]}, endringITilkjentYtelse=${relevantEndring[1]}, endringIRettighetstype=${relevantEndring[2]}")
             samGateway.varsleVedtak(request)
         }
 
@@ -114,16 +112,23 @@ class VarsleVedtakJobbUtfører(
         nåværendeTilkjentYtelse: Tidslinje<Tilkjent>?
     ): Boolean {
 
-        return forrigeTilkjentYtelse?.komprimer() !=nåværendeTilkjentYtelse?.komprimer()
+        return forrigeTilkjentYtelse?.komprimer() != nåværendeTilkjentYtelse?.komprimer()
     }
 
-    fun underveisTilRettighetsTypeTidslinje(underveis: UnderveisGrunnlag?, vedtakstidspunkt: LocalDate): Tidslinje<RettighetsType> {
+    fun underveisTilRettighetsTypeTidslinje(
+        underveis: UnderveisGrunnlag?
+    ): Tidslinje<RettighetsType> {
         return underveis?.perioder.orEmpty()
             .mapNotNull { if (it.rettighetsType != null) Segment(it.periode, it.rettighetsType) else null }
             .let(::Tidslinje).komprimer()
     }
 
-    fun endringIRettighetstypeTidslinje(forrigeUnderveisGrunnlag: UnderveisGrunnlag?, nåværendeUnderveisGrunnlag: UnderveisGrunnlag, vedtakstidspunkt: LocalDate): Boolean {
-        return forrigeUnderveisGrunnlag!=null && underveisTilRettighetsTypeTidslinje(forrigeUnderveisGrunnlag,vedtakstidspunkt)!=underveisTilRettighetsTypeTidslinje(nåværendeUnderveisGrunnlag, vedtakstidspunkt)
+    fun endringIRettighetstypeTidslinje(
+        forrigeUnderveisGrunnlag: UnderveisGrunnlag?,
+        nåværendeUnderveisGrunnlag: UnderveisGrunnlag
+    ): Boolean {
+        return forrigeUnderveisGrunnlag != null && underveisTilRettighetsTypeTidslinje(
+            forrigeUnderveisGrunnlag
+        ) != underveisTilRettighetsTypeTidslinje(nåværendeUnderveisGrunnlag)
     }
 }
