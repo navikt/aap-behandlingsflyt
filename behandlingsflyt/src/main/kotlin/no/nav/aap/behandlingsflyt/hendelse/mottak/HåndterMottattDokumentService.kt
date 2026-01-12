@@ -330,8 +330,8 @@ class HåndterMottattDokumentService(
 
     private fun FagsysteminfoBehovV0.tilFagsysteminfoSvarHendelse(sakId: SakId): FagsysteminfoSvarHendelse {
         val sak = sakService.hent(sakId)
-        val kravgrunnlagReferanse = decodeBase64(this.kravgrunnlagReferanse)
-        val behandling = behandlingRepository.hent(BehandlingReferanse(UUID.fromString(kravgrunnlagReferanse)))
+        val kravgrunnlagReferanse = this.kravgrunnlagReferanse.base64ToUUID()
+        val behandling = behandlingRepository.hent(BehandlingReferanse(kravgrunnlagReferanse))
         val årsak = when (behandling.årsakTilOpprettelse) {
             null -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.UKJENT
             ÅrsakTilOpprettelse.SØKNAD -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
@@ -366,7 +366,7 @@ class HåndterMottattDokumentService(
                 type = MottakerDto.MottakerType.PERSON
             ),
             revurdering = FagsysteminfoSvarHendelse.RevurderingDto(
-                behandlingId = kravgrunnlagReferanse,
+                behandlingId = kravgrunnlagReferanse.toString(),
                 årsak = årsak,
                 årsakTilFeilutbetaling = null,
                 vedtaksdato = vedtakstidspunkt.toLocalDate(),
@@ -377,10 +377,20 @@ class HåndterMottattDokumentService(
         )
     }
 
-    fun decodeBase64(base64String: String): String {
-        val decodedBytes = Base64.getDecoder().decode(base64String)
-        return String(decodedBytes, Charsets.UTF_8)
+    private fun String.base64ToUUID(): UUID {
+        val bytes = Base64.getDecoder().decode(this)
+        val uuidString = listOf(
+            bytes.slice(0..3).toHex(),
+            bytes.slice(4..5).toHex(),
+            bytes.slice(6..7).toHex(),
+            bytes.slice(8..9).toHex(),
+            bytes.slice(10..15).toHex(),
+        ).joinToString(separator = "-")
+        return UUID.fromString(uuidString)
     }
+
+
+    private fun List<Byte>.toHex() = joinToString(separator = "") { String.format("%02X".lowercase(), it) }
 
     private fun finnBehandlendeEnhet(behandlingId: BehandlingId): String? {
         val avklarinsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
