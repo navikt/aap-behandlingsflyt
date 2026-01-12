@@ -4,7 +4,7 @@ data class RegisterBarn(val id: Long, val barn: List<Barn>)
 
 fun List<Barn>.filtrerBortMigrerteBarn(): List<Barn> {
     return this.filterNot { barn ->
-        barn.navn?.startsWith("migrert fra dsf") == true &&
+        barn.navn?.startsWith("migrert fra dsf", ignoreCase = true) == true &&
                 this.any { annetBarn ->
                     annetBarn != barn &&
                             annetBarn.fødselsdato == barn.fødselsdato &&
