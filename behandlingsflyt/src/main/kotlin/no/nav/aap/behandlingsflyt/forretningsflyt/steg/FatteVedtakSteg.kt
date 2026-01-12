@@ -41,12 +41,13 @@ class FatteVedtakSteg(
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
         val vedtakBehøverVurdering = vedtakBehøverVurdering(kontekst, avklaringsbehovene)
+        val erTilstrekkeligVurdert = erTilstrekkeligVurdert(kontekst, avklaringsbehovene)
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
             avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.FATTE_VEDTAK,
             vedtakBehøverVurdering = { vedtakBehøverVurdering },
-            erTilstrekkeligVurdert = { erTilstrekkeligVurdert(kontekst, avklaringsbehovene) },
+            erTilstrekkeligVurdert = { erTilstrekkeligVurdert },
             tilbakestillGrunnlag = {},
             kontekst = kontekst
         )
@@ -56,13 +57,14 @@ class FatteVedtakSteg(
         }
 
         if (unleashGateway.isEnabled(BehandlingsflytFeature.LagreVedtakIFatteVedtak)) {
-            val vedtakstidspunkt = if (vedtakBehøverVurdering)
+            val vedtakstidspunkt = if (vedtakBehøverVurdering && erTilstrekkeligVurdert) {
                 avklaringsbehovene.hentBehovForDefinisjon(Definisjon.FATTE_VEDTAK)
                     ?.historikk
                     ?.singleOrNull { it.status == Status.AVSLUTTET }
-                    ?.tidsstempel
-            else
-                LocalDateTime.now(ZoneId.of("Europe/Oslo"))
+                    ?.tidsstempel ?: LocalDateTime.now(ZoneId.of("Europe/Oslo"))
+            } else {
+                null
+            }
 
             if (vedtakstidspunkt != null) {
                 vedtakService.lagreVedtak(
