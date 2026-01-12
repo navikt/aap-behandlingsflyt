@@ -72,7 +72,7 @@ class InntektsbortfallSteg private constructor(
                 }
             },
             erTilstrekkeligVurdert = {
-                manuellInntektGrunnlagRepository.hentHvisEksisterer(
+                inntektsbortfallRepository.hentHvisEksisterer(
                     kontekst.behandlingId
                 ) != null
             },

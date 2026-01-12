@@ -86,11 +86,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
 import no.nav.aap.behandlingsflyt.pip.behandlingsflytPipApi
 import no.nav.aap.behandlingsflyt.prosessering.BehandlingsflytLogInfoProvider
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -330,16 +328,11 @@ private fun utførMigreringer(
     val scheduler = Executors.newScheduledThreadPool(1)
     scheduler.schedule(Runnable {
         val unleashGateway: UnleashGateway = gatewayProvider.provide()
-        val migrerArbeidsevneEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.MigrerArbeidsevne)
         val isLeader = isLeader(log)
-        log.info("isLeader = $isLeader, migrerArbeidsevneEnabled = $migrerArbeidsevneEnabled")
+        log.info("isLeader = $isLeader")
 
-        if (migrerArbeidsevneEnabled && isLeader) {
-            // Kjør migrering
-            dataSource.transaction { connection ->
-                val repository = ArbeidsevneRepositoryImpl(connection)
-                repository.migrerArbeidsevne()
-            }
+        if (isLeader) {
+            // kjør migreringer
         }
 
     }, 9, TimeUnit.MINUTES)
