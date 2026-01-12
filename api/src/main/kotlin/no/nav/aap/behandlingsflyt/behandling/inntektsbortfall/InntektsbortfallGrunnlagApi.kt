@@ -143,12 +143,18 @@ fun NormalOpenAPIRoute.inntektsbortfallGrunnlagApi(
 
                 val sak = sakRepository.hent(behandling.sakId)
 
+                val beregningService = BeregningService(repositoryProvider)
                 val relevanteBeregningsår =
-                    BeregningService(repositoryProvider).utledRelevanteBeregningsÅr(behandling.id)
+                    beregningService.utledRelevanteBeregningsÅr(behandling.id)
                 val brukerPersonopplysning =
                     personopplysningRepository.hentBrukerPersonOpplysningHvisEksisterer(behandling.id)!!
                 val manuelleInntekter = manuellInntektGrunnlagRepository.hentHvisEksisterer(behandling.id)
                 val inntektGrunnlag = inntektGrunnlagRepository.hentHvisEksisterer(behandling.id)
+
+                val kombinerteInntekter = beregningService.kombinerInntektOgManuellInntekt(
+                    inntektGrunnlag?.inntekter.orEmpty(),
+                    manuelleInntekter?.manuelleInntekter.orEmpty()
+                )
 
                 val vurdering = inntektsbortfallRepository.hentHvisEksisterer(behandling.id)
                     ?.tilDto(sak.rettighetsperiode.fom, VurdertAvService(repositoryProvider, gatewayProvider))
@@ -159,8 +165,7 @@ fun NormalOpenAPIRoute.inntektsbortfallGrunnlagApi(
                         relevanteBeregningsår = relevanteBeregningsår,
                     ).vurderInntektsbortfall(
                         brukerPersonopplysning.fødselsdato,
-                        manuelleInntekter?.manuelleInntekter.orEmpty(),
-                        inntektGrunnlag?.inntekter.orEmpty()
+                        kombinerteInntekter
                     ).tilDto(), vurdering
                 )
             }
