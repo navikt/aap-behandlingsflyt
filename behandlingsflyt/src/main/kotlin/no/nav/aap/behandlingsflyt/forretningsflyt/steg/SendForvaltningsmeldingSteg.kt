@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.behandling.brev.KlageMottatt
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -50,7 +49,7 @@ class SendForvaltningsmeldingSteg(
                 val behandling = behandlingRepository.hent(behandlingId)
                 if (erBehandlingForMottattKlage(kontekst.vurderingsbehovRelevanteForSteg) &&
                     !harAlleredeBestiltKlageMottattForBehandling(behandling) &&
-                    erMottattKlageFraJournalPostOgUbehandlet(behandlingId)
+                    erMottattKlageFraJournalPost(behandlingId)
                     ) {
                     val brevBehov = KlageMottatt
                     brevbestillingService.bestill(
@@ -68,12 +67,9 @@ class SendForvaltningsmeldingSteg(
         return Fullført
     }
 
-    private fun erMottattKlageFraJournalPostOgUbehandlet(behandlingId: BehandlingId): Boolean {
+    private fun erMottattKlageFraJournalPost(behandlingId: BehandlingId): Boolean {
         val dokumenter = mottaDokumentService.hentMottattDokumenterAvType(behandlingId, InnsendingType.KLAGE)
-        return dokumenter.any { dokument ->
-            dokument.referanse.type == InnsendingReferanse.Type.JOURNALPOST &&
-            dokument.status == Status.MOTTATT
-        }
+        return dokumenter.any { it.referanse.type == InnsendingReferanse.Type.JOURNALPOST }
     }
 
     private fun harAlleredeBestiltForvaltningsmeldingForBehandling(behandling: Behandling): Boolean {
