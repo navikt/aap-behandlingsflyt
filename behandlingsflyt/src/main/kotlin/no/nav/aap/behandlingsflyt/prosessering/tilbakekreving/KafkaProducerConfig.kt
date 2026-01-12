@@ -4,7 +4,7 @@ import no.nav.aap.komponenter.config.requiredConfigForKey
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.config.SslConfigs
-import tools.jackson.databind.ser.jdk.StringSerializer
+import org.apache.kafka.common.serialization.StringSerializer
 import java.util.*
 
 data class KafkaProducerConfig<K, V>(
