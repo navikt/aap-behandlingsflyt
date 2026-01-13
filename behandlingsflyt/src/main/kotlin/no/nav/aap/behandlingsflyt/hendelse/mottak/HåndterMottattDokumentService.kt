@@ -51,6 +51,7 @@ import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.utbetaling.helved.base64ToUUID
 import org.slf4j.LoggerFactory
 import java.net.URI
 import java.time.LocalDateTime
@@ -368,21 +369,6 @@ class HåndterMottattDokumentService(
             behandlendeEnhet = nayEnhetForPerson.enhetNr,
         )
     }
-
-    private fun String.base64ToUUID(): UUID {
-        val bytes = Base64.getDecoder().decode(this)
-        val uuidString = listOf(
-            bytes.slice(0..3).toHex(),
-            bytes.slice(4..5).toHex(),
-            bytes.slice(6..7).toHex(),
-            bytes.slice(8..9).toHex(),
-            bytes.slice(10..15).toHex(),
-        ).joinToString(separator = "-")
-        return UUID.fromString(uuidString)
-    }
-
-
-    private fun List<Byte>.toHex() = joinToString(separator = "") { String.format("%02X".lowercase(), it) }
 
     private fun finnSisteIverksatteBehandling(sakId: SakId): BehandlingId {
         return behandlingRepository.hentAlleFor(sakId).firstOrNull { it.status().erAvsluttet() }?.id
