@@ -218,13 +218,13 @@ class MedlemskapLovvalgVurderingService {
             grunnlag?.statsborgerskap
                 ?.none { it.land !in EØSLandEllerLandMedAvtale.gyldigeEØSLand.map { it.name } }
 
-        val manglerStatsborgerskapGrunnlag = grunnlag?.statsborgerskap?.map {
+        val manglerStatsborgerskapGrunnlag = grunnlag?.statsborgerskap?.filter { it.erGyldigIPeriode(rettighetsPeriode) }?.map {
             ManglerStatsborgerskapGrunnlag(
                 land = it.land,
                 gyldigFraOgMed = it.gyldigFraOgMed,
                 gyldigTilOgMed = it.gyldigTilOgMed
             )
-        }?.filter { it.erGyldigIPeriode(rettighetsPeriode) }
+        }
 
         return TilhørighetVurdering(
             kilde = listOf(Kilde.PDL),
