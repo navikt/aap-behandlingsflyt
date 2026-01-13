@@ -30,11 +30,6 @@ enum class PersonStatus {
     inaktiv
 }
 
-interface GyldigPeriode {
-    val gyldigFraOgMed: LocalDate?
-    val gyldigTilOgMed: LocalDate?
-}
-
 data class Statsborgerskap(
     val land: String,
     override val gyldigFraOgMed: LocalDate? = null,

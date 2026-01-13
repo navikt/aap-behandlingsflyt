@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.GyldigPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningMedHistorikkGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Statsborgerskap
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.erGyldigIPeriode
 import no.nav.aap.komponenter.type.Periode
 import java.time.YearMonth
 
@@ -226,13 +226,9 @@ class ForutgåendeMedlemskapVurderingService {
         forutgåendePeriode: Periode
     ): TilhørighetVurdering {
 
-        val eøsLandNavn = EØSLandEllerLandMedAvtale.gyldigeEØSLand
-            .map { it.name }
-            .toSet()
-
         val fantStatsborgerskapUtenforEØSiPerioden =
             grunnlag?.brukerPersonopplysning?.statsborgerskap
-                ?.any { it.erGyldigIPeriode(forutgåendePeriode) && it.land !in eøsLandNavn }
+                ?.any { it.erGyldigIPeriode(forutgåendePeriode) && it.land !in EØSLandEllerLandMedAvtale.gyldigeEØSLand.map { it.name } }
 
         val manglerStatsborgerskapGrunnlag =
             grunnlag?.brukerPersonopplysning?.statsborgerskap
@@ -327,9 +323,4 @@ class ForutgåendeMedlemskapVurderingService {
             vurdertPeriode = VurdertPeriode.SISTE_5_ÅR.beskrivelse
         )
     }
-
-    fun GyldigPeriode.erGyldigIPeriode(periode: Periode): Boolean =
-        gyldigTilOgMed == null ||
-                periode.inneholder(gyldigTilOgMed!!) ||
-                (gyldigFraOgMed != null && periode.inneholder(gyldigFraOgMed!!))
 }
