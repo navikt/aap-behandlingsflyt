@@ -120,6 +120,7 @@ interface KravspesifikasjonForRettighetsType {
                   * eller IKKE_OPPFYLT.
                  */
                 && SkalIkkeGiAvslag.oppfyllesAv(vilkårsresultat[Vilkårtype.OPPHOLDSKRAV])
+                && SkalIkkeGiAvslag.oppfyllesAv(vilkårsresultat[Vilkårtype.SAMORDNING_ANNEN_LOVGIVNING])
                 && kravForutgåendeMedlemskap.oppfyllesAv(vilkårsresultat[Vilkårtype.MEDLEMSKAP])
                 && MåVæreOppfylt().oppfyllesAv(vilkårsresultat[Vilkårtype.LOVVALG])
                 && kravSykdom.oppfyllesAv(vilkårsresultat[Vilkårtype.SYKDOMSVILKÅRET])
@@ -135,6 +136,7 @@ interface KravspesifikasjonForRettighetsType {
                 kravBistand.avslagsårsaker(vilkårsresultat[Vilkårtype.BISTANDSVILKÅRET]) +
                 MåVæreOppfylt().avslagsårsaker(vilkårsresultat[Vilkårtype.GRUNNLAGET]) +
                 SkalIkkeGiAvslag.avslagsårsaker(vilkårsresultat[Vilkårtype.SAMORDNING]) +
+                SkalIkkeGiAvslag.avslagsårsaker(vilkårsresultat[Vilkårtype.SAMORDNING_ANNEN_LOVGIVNING]) +
                 SkalIkkeGiAvslag.avslagsårsaker(vilkårsresultat[Vilkårtype.STRAFFEGJENNOMFØRING]) +
                 SkalIkkeGiAvslag.avslagsårsaker(vilkårsresultat[Vilkårtype.AKTIVITETSPLIKT]) +
                 SkalIkkeGiAvslag.avslagsårsaker(vilkårsresultat[Vilkårtype.OPPHOLDSKRAV]) +

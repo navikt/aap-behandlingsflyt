@@ -142,6 +142,7 @@ class StatistikkMetoder(
             avsluttetBehandling = if (hendelse.status == AVSLUTTET) hentAvsluttetBehandlingDTO(hendelse) else null,
             identerForSak = hentIdenterPåSak(sak.saksnummer),
             vurderingsbehov = vurderingsbehovForBehandling,
+            årsakTilOpprettelse = behandling.årsakTilOpprettelse?.name ?: "UDEFINERT",
             opprettetAv = hendelse.opprettetAv,
             nyeMeldekort = nyeMeldekort.map { meldekort ->
                 MeldekortDTO(

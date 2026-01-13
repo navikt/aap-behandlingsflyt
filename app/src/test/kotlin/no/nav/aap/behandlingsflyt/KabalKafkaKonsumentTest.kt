@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.test.FakeAnsattInfoGateway
 import no.nav.aap.behandlingsflyt.test.FakeEnhetGateway
+import no.nav.aap.behandlingsflyt.test.FakeOppgavestyringGateway
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -82,6 +83,7 @@ class KabalKafkaKonsumentTest {
                     register<FakeUnleash>()
                     register<FakeAnsattInfoGateway>()
                     register<FakeEnhetGateway>()
+                    register<FakeOppgavestyringGateway>()
                 }
             )
             motor.start()

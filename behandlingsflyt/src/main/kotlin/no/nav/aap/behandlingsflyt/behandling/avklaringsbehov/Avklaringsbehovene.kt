@@ -334,7 +334,7 @@ class Avklaringsbehovene(
             ?.maxOrNull()
     }
 
-    fun validateTilstand(behandling: Behandling, avklaringsbehov: Definisjon? = null) {
+    fun validerTilstand(behandling: Behandling, avklaringsbehov: Definisjon? = null) {
         ValiderBehandlingTilstand.validerTilstandBehandling(
             behandling = behandling,
             avklaringsbehov = avklaringsbehov,
