@@ -74,6 +74,8 @@ import no.nav.aap.behandlingsflyt.flyt.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flytApi
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
+import no.nav.aap.behandlingsflyt.hendelse.kafka.inst2.INSTITUSJONSOPPHOLD_EVENT_TOPIC
+import no.nav.aap.behandlingsflyt.hendelse.kafka.inst2.Inst2KafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KABAL_EVENT_TOPIC
 import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KabalKafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PDL_HENDELSE_TOPIC
@@ -217,6 +219,11 @@ internal fun Application.server(
     }
     if (!Miljø.erLokal() && !Miljø.erProd()) {
         startTilbakekrevingEventKonsument(dataSource, repositoryRegistry, gatewayProvider)
+    }
+
+    if (!Miljø.erLokal() && !Miljø.erProd()) {
+        //TODO: Kommenterer ut inntil vi har fått rettet opp i lesing av topic
+        //startInstitusjonsOppholdKonsument(dataSource, repositoryRegistry, gatewayProvider)
     }
 
     monitor.subscribe(ApplicationStopPreparing) { environment ->
@@ -463,6 +470,40 @@ fun Application.startPDLHendelseKonsument(
     }
     monitor.subscribe(ApplicationStopPreparing) { environment ->
         environment.log.info("Forbereder stopp av applikasjon, lukker PDLHendelseKonsument.")
+
+        konsument.lukk()
+    }
+
+    return konsument
+}
+
+
+fun Application.startInstitusjonsOppholdKonsument(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
+): KafkaKonsument<String, String> {
+    val konsument = Inst2KafkaKonsument(
+        config = KafkaConsumerConfig(
+            keyDeserializer = org.apache.kafka.common.serialization.StringDeserializer::class.java,
+            valueDeserializer = io.confluent.kafka.serializers.KafkaAvroDeserializer::class.java
+        ),
+        closeTimeout = AppConfig.stansArbeidTimeout,
+        dataSource = dataSource,
+        repositoryRegistry = repositoryRegistry,
+        gatewayProvider = gatewayProvider
+    )
+    monitor.subscribe(ApplicationStarted) {
+        val t = Thread {
+            konsument.konsumer()
+        }
+        t.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, e ->
+            log.error("Konsumering av $INSTITUSJONSOPPHOLD_EVENT_TOPIC ble lukket pga uhåndtert feil", e)
+        }
+        t.start()
+    }
+    monitor.subscribe(ApplicationStopPreparing) { environment ->
+        environment.log.info("Forbereder stopp av applikasjon, lukker InstitusjonKonsument.")
 
         konsument.lukk()
     }

@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap
 
+import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapArbeidInntektGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
@@ -31,7 +32,7 @@ class ForutgåendeMedlemskapVurderingServiceTest {
     }
 
     @Test
-    fun `stopp om inntekt har hull sste 5 år`() {
+    fun `stopp om inntekt har hull siste 5 år`() {
         val grunnlag = lagGrunnlag(false, false, true)
         val resultat = service.vurderTilhørighet(grunnlag, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
         assertThat(resultat.kanBehandlesAutomatisk).isFalse
@@ -44,6 +45,25 @@ class ForutgåendeMedlemskapVurderingServiceTest {
         assertThat(resultat.kanBehandlesAutomatisk).isTrue
     }
 
+    @Test
+    fun `Bruker har ferskt statsborgerskap utenfor EØS`() {
+        val grunnlag = lagGrunnlagSomFerskUtenforEØSStatsborger(true, true, true)
+        val resultat = service.vurderTilhørighet(grunnlag, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+        val vurdering = resultat.tilhørighetVurdering
+            .single { it.opplysning == "Har statsborgerskap utenfor EØS i perioden" }
+        assertThat(vurdering.resultat).isTrue
+    }
+
+    @Test
+    fun `Bruker har gammelt statsborgerskap utenfor EØS`() {
+        val grunnlag = lagGrunnlagSomMedSteingammeltUtenforEØSStatsborgerskap(true, true, true)
+        val resultat = service.vurderTilhørighet(grunnlag, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+        val vurdering = resultat.tilhørighetVurdering
+            .single { it.opplysning == "Har statsborgerskap utenfor EØS i perioden" }
+        assertThat(vurdering.resultat).isFalse
+    }
+
+
     private fun lagGrunnlag(
         godkjentPgaUnntakIMedl: Boolean,
         godkjentPgaInntekt: Boolean,
@@ -51,13 +71,45 @@ class ForutgåendeMedlemskapVurderingServiceTest {
     ): ForutgåendeMedlemskapGrunnlag {
         val inntekterINorgeGrunnlag = if (godkjentPgaInntekt) {
             listOf(
-                InntektINorgeGrunnlag("1", 1.0, "NOR", "NOR", "type", Periode(LocalDate.now().minusYears(5), LocalDate.now().minusYears(3)), "orgname"),
-                InntektINorgeGrunnlag("1", 1.0, "NOR", "NOR", "type", Periode(LocalDate.now().minusYears(3), LocalDate.now()), "orgname"),
+                InntektINorgeGrunnlag(
+                    "1",
+                    1.0,
+                    "NOR",
+                    "NOR",
+                    "type",
+                    Periode(LocalDate.now().minusYears(5), LocalDate.now().minusYears(3)),
+                    "orgname"
+                ),
+                InntektINorgeGrunnlag(
+                    "1",
+                    1.0,
+                    "NOR",
+                    "NOR",
+                    "type",
+                    Periode(LocalDate.now().minusYears(3), LocalDate.now()),
+                    "orgname"
+                ),
             )
         } else if (inntektHarHull) {
             listOf(
-                InntektINorgeGrunnlag("1", 1.0, "NOR", "NOR", "type", Periode(LocalDate.now().minusYears(5), LocalDate.now().minusYears(3)), "orgname"),
-                InntektINorgeGrunnlag("1", 1.0, "NOR", "NOR", "type", Periode(LocalDate.now().minusYears(1), LocalDate.now()), "orgname"),
+                InntektINorgeGrunnlag(
+                    "1",
+                    1.0,
+                    "NOR",
+                    "NOR",
+                    "type",
+                    Periode(LocalDate.now().minusYears(5), LocalDate.now().minusYears(3)),
+                    "orgname"
+                ),
+                InntektINorgeGrunnlag(
+                    "1",
+                    1.0,
+                    "NOR",
+                    "NOR",
+                    "type",
+                    Periode(LocalDate.now().minusYears(1), LocalDate.now()),
+                    "orgname"
+                ),
             )
         } else emptyList()
 
@@ -104,6 +156,213 @@ class ForutgåendeMedlemskapVurderingServiceTest {
                 ),
             ),
             nyeSoknadGrunnlag = UtenlandsOppholdData(true, true, false, false, null)
+        )
+    }
+
+    private fun lagGrunnlagSomMedSteingammeltUtenforEØSStatsborgerskap(
+        godkjentPgaUnntakIMedl: Boolean,
+        godkjentPgaInntekt: Boolean,
+        inntektHarHull: Boolean
+    ): ForutgåendeMedlemskapGrunnlag {
+        val inntekterINorgeGrunnlag = if (godkjentPgaInntekt) {
+            listOf(
+                InntektINorgeGrunnlag(
+                    "1",
+                    1.0,
+                    "NOR",
+                    "NOR",
+                    "type",
+                    Periode(LocalDate.now().minusYears(5), LocalDate.now().minusYears(3)),
+                    "orgname"
+                ),
+                InntektINorgeGrunnlag(
+                    "1",
+                    1.0,
+                    "NOR",
+                    "NOR",
+                    "type",
+                    Periode(LocalDate.now().minusYears(3), LocalDate.now()),
+                    "orgname"
+                ),
+            )
+        } else if (inntektHarHull) {
+            listOf(
+                InntektINorgeGrunnlag(
+                    "1",
+                    1.0,
+                    "NOR",
+                    "NOR",
+                    "type",
+                    Periode(LocalDate.now().minusYears(5), LocalDate.now().minusYears(3)),
+                    "orgname"
+                ),
+                InntektINorgeGrunnlag(
+                    "1",
+                    1.0,
+                    "NOR",
+                    "NOR",
+                    "type",
+                    Periode(LocalDate.now().minusYears(1), LocalDate.now()),
+                    "orgname"
+                ),
+            )
+        } else emptyList()
+
+        val medlUnntak = if (godkjentPgaUnntakIMedl) {
+            MedlemskapUnntakGrunnlag(
+                unntak = listOf(
+                    Segment(
+                        periode = Periode(LocalDate.now().minusYears(5), LocalDate.now()),
+                        verdi = Unntak(
+                            "unntak",
+                            "statusaarsak",
+                            true,
+                            "grunnlag",
+                            "lovvalg",
+                            false,
+                            EØSLandEllerLandMedAvtale.NOR.toString(),
+                            null
+                        )
+                    )
+                )
+            )
+        } else null
+
+        return ForutgåendeMedlemskapGrunnlag(
+            medlemskapArbeidInntektGrunnlag = ForutgåendeMedlemskapArbeidInntektGrunnlag(
+                medlemskapGrunnlag = medlUnntak,
+                inntekterINorgeGrunnlag = inntekterINorgeGrunnlag,
+                arbeiderINorgeGrunnlag = emptyList(),
+                vurderinger = emptyList()
+            ),
+            personopplysningGrunnlag = PersonopplysningMedHistorikkGrunnlag(
+                brukerPersonopplysning = PersonopplysningMedHistorikk(
+                    fødselsdato = Fødselsdato(LocalDate.now().minusYears(18)),
+                    id = 1,
+                    dødsdato = null,
+                    statsborgerskap = listOf(
+                        Statsborgerskap(
+                            "ETH",
+                            gyldigFraOgMed = LocalDate.now().minusYears(20),
+                            LocalDate.now().minusYears(9)
+                        ), Statsborgerskap("NOR", gyldigFraOgMed = LocalDate.now().minusYears(9), LocalDate.now())
+                    ),
+                    folkeregisterStatuser = listOf(
+                        FolkeregisterStatus(
+                            status = PersonStatus.bosatt,
+                            gyldighetstidspunkt = LocalDate.now(),
+                            opphoerstidspunkt = LocalDate.now()
+                        )
+                    )
+                ),
+            ),
+            nyeSoknadGrunnlag = UtenlandsOppholdData(false, false, false, false, null)
+        )
+    }
+
+    private fun lagGrunnlagSomFerskUtenforEØSStatsborger(
+        godkjentPgaUnntakIMedl: Boolean,
+        godkjentPgaInntekt: Boolean,
+        inntektHarHull: Boolean
+    ): ForutgåendeMedlemskapGrunnlag {
+        val inntekterINorgeGrunnlag = if (godkjentPgaInntekt) {
+            listOf(
+                InntektINorgeGrunnlag(
+                    "1",
+                    1.0,
+                    "NOR",
+                    "NOR",
+                    "type",
+                    Periode(LocalDate.now().minusYears(5), LocalDate.now().minusYears(3)),
+                    "orgname"
+                ),
+                InntektINorgeGrunnlag(
+                    "1",
+                    1.0,
+                    "NOR",
+                    "NOR",
+                    "type",
+                    Periode(LocalDate.now().minusYears(3), LocalDate.now()),
+                    "orgname"
+                ),
+            )
+        } else if (inntektHarHull) {
+            listOf(
+                InntektINorgeGrunnlag(
+                    "1",
+                    1.0,
+                    "NOR",
+                    "NOR",
+                    "type",
+                    Periode(LocalDate.now().minusYears(5), LocalDate.now().minusYears(3)),
+                    "orgname"
+                ),
+                InntektINorgeGrunnlag(
+                    "1",
+                    1.0,
+                    "NOR",
+                    "NOR",
+                    "type",
+                    Periode(LocalDate.now().minusYears(1), LocalDate.now()),
+                    "orgname"
+                ),
+            )
+        } else emptyList()
+
+        val medlUnntak = if (godkjentPgaUnntakIMedl) {
+            MedlemskapUnntakGrunnlag(
+                unntak = listOf(
+                    Segment(
+                        periode = Periode(LocalDate.now().minusYears(5), LocalDate.now()),
+                        verdi = Unntak(
+                            "unntak",
+                            "statusaarsak",
+                            true,
+                            "grunnlag",
+                            "lovvalg",
+                            false,
+                            EØSLandEllerLandMedAvtale.NOR.toString(),
+                            null
+                        )
+                    )
+                )
+            )
+        } else null
+
+        return ForutgåendeMedlemskapGrunnlag(
+            medlemskapArbeidInntektGrunnlag = ForutgåendeMedlemskapArbeidInntektGrunnlag(
+                medlemskapGrunnlag = medlUnntak,
+                inntekterINorgeGrunnlag = inntekterINorgeGrunnlag,
+                arbeiderINorgeGrunnlag = emptyList(),
+                vurderinger = emptyList()
+            ),
+            personopplysningGrunnlag = PersonopplysningMedHistorikkGrunnlag(
+                brukerPersonopplysning = PersonopplysningMedHistorikk(
+                    fødselsdato = Fødselsdato(LocalDate.now().minusYears(18)),
+                    id = 1,
+                    dødsdato = null,
+                    statsborgerskap = listOf(
+                        Statsborgerskap(
+                            "ETH",
+                            gyldigFraOgMed = LocalDate.now().minusYears(2),
+                            LocalDate.now().minusYears(1)
+                        ),
+                        Statsborgerskap(
+                            "NOR",
+                            gyldigFraOgMed = LocalDate.now().minusYears(1),
+                            LocalDate.now()
+                        )
+                    ),
+                    folkeregisterStatuser = listOf(
+                        FolkeregisterStatus(
+                            status = PersonStatus.bosatt,
+                            gyldighetstidspunkt = LocalDate.now(),
+                            opphoerstidspunkt = LocalDate.now()
+                        )
+                    )
+                ),
+            ),
+            nyeSoknadGrunnlag = UtenlandsOppholdData(false, false, false, false, null)
         )
     }
 }

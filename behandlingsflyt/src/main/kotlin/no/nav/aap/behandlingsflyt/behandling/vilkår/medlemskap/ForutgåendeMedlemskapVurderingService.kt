@@ -225,6 +225,11 @@ class ForutgåendeMedlemskapVurderingService {
     ): TilhørighetVurdering {
         val fantStatsborgerskapUtenforEØSiPerioden =
             grunnlag?.brukerPersonopplysning?.statsborgerskap
+                ?.filter {
+                    (it.gyldigTilOgMed == null)
+                            || forutgåendePeriode.inneholder(it.gyldigTilOgMed)
+                            || (it.gyldigFraOgMed != null && forutgåendePeriode.inneholder(it.gyldigFraOgMed))
+                }
                 ?.any { it.land !in EØSLandEllerLandMedAvtale.gyldigeEØSLand.map { eøsLand -> eøsLand.name } }
 
         val manglerStatsborgerskapGrunnlag = grunnlag?.brukerPersonopplysning?.statsborgerskap?.map {
