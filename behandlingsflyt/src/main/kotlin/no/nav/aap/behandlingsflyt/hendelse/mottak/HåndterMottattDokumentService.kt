@@ -7,7 +7,6 @@ import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
@@ -34,12 +33,13 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.PdlHendelseV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelseV0
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.prosessering.tilbakekreving.FagsysteminfoSvarHendelse
 import no.nav.aap.behandlingsflyt.prosessering.tilbakekreving.MottakerDto
-import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.tilVurderingsbehov
@@ -310,6 +310,7 @@ class HåndterMottattDokumentService(
                 tilbakekrevingService.håndter(sakId, melding.tilTilbakekrevingshendelse())
                 mottaDokumentService.markerSomBehandlet(sakId, behandlingId, referanse)
             }
+
             is FagsysteminfoBehovV0 -> {
                 val behandlingId = finnSisteIverksatteBehandling(sakId)
                 log.info("Mottatt fagsysteminfo behov for sakId $sakId og behandlingId $behandlingId")
@@ -325,28 +326,28 @@ class HåndterMottattDokumentService(
         val kravgrunnlagReferanse = this.kravgrunnlagReferanse.base64ToUUID()
         val behandling = behandlingRepository.hent(BehandlingReferanse(kravgrunnlagReferanse))
         val årsak = when (behandling.årsakTilOpprettelse) {
-            null -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.UKJENT
-            ÅrsakTilOpprettelse.SØKNAD -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
-            ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.KORRIGERING
-            ÅrsakTilOpprettelse.HELSEOPPLYSNINGER -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
-            ÅrsakTilOpprettelse.ANNET_RELEVANT_DOKUMENT -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
-            ÅrsakTilOpprettelse.OMGJØRING_ETTER_KLAGE -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.KLAGE
-            ÅrsakTilOpprettelse.OMGJØRING_ETTER_SVAR_FRA_KLAGEINSTANS -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.KLAGE
-            ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
-            ÅrsakTilOpprettelse.BARNETILLEGG_SATSENDRING -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.KLAGE
-            ÅrsakTilOpprettelse.FASTSATT_PERIODE_PASSERT -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
-            ÅrsakTilOpprettelse.FRITAK_MELDEPLIKT -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
-            ÅrsakTilOpprettelse.MELDEKORT -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.KORRIGERING
-            ÅrsakTilOpprettelse.AKTIVITETSMELDING -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
-            ÅrsakTilOpprettelse.OPPFØLGINGSOPPGAVE -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
-            ÅrsakTilOpprettelse.OPPFØLGINGSOPPGAVE_SAMORDNING_GRADERING -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
-            ÅrsakTilOpprettelse.SVAR_FRA_KLAGEINSTANS -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.KLAGE
-            ÅrsakTilOpprettelse.KLAGE -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.KLAGE
-            ÅrsakTilOpprettelse.AKTIVITETSPLIKT -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
-            ÅrsakTilOpprettelse.AKTIVITETSPLIKT_11_9 -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
-            ÅrsakTilOpprettelse.TILBAKEKREVING_HENDELSE -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.UKJENT // Ikke relevant
-            ÅrsakTilOpprettelse.FAGSYSTEMINFO_BEHOV_HENDELSE -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.UKJENT // Ikke relevant
+            ÅrsakTilOpprettelse.SØKNAD,
+            ÅrsakTilOpprettelse.HELSEOPPLYSNINGER,
+            ÅrsakTilOpprettelse.ANNET_RELEVANT_DOKUMENT,
+            ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA,
+            ÅrsakTilOpprettelse.FASTSATT_PERIODE_PASSERT,
+            ÅrsakTilOpprettelse.FRITAK_MELDEPLIKT,
+            ÅrsakTilOpprettelse.AKTIVITETSMELDING,
+            ÅrsakTilOpprettelse.OPPFØLGINGSOPPGAVE,
+            ÅrsakTilOpprettelse.OPPFØLGINGSOPPGAVE_SAMORDNING_GRADERING,
+            ÅrsakTilOpprettelse.AKTIVITETSPLIKT,
+            ÅrsakTilOpprettelse.AKTIVITETSPLIKT_11_9,
             ÅrsakTilOpprettelse.AUTOMATISK_OPPDATER_VILKÅR -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
+            ÅrsakTilOpprettelse.MELDEKORT,
+            ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.KORRIGERING
+            ÅrsakTilOpprettelse.OMGJØRING_ETTER_SVAR_FRA_KLAGEINSTANS,
+            ÅrsakTilOpprettelse.OMGJØRING_ETTER_KLAGE,
+            ÅrsakTilOpprettelse.BARNETILLEGG_SATSENDRING,
+            ÅrsakTilOpprettelse.SVAR_FRA_KLAGEINSTANS,
+            ÅrsakTilOpprettelse.KLAGE -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.KLAGE
+            ÅrsakTilOpprettelse.TILBAKEKREVING_HENDELSE,
+            ÅrsakTilOpprettelse.FAGSYSTEMINFO_BEHOV_HENDELSE,
+            null -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.UKJENT // Ikke relevant
         }
 
         val vedtakstidspunkt = vedtakRepository.hent(behandling.id)?.vedtakstidspunkt ?: error("Fant ikke vedtak")
@@ -530,7 +531,7 @@ class HåndterMottattDokumentService(
             InnsendingType.PDL_HENDELSE_DODSFALL_BRUKER -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.DØDSFALL_BRUKER))
             InnsendingType.PDL_HENDELSE_DODSFALL_BARN -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.DØDSFALL_BARN))
             InnsendingType.TILBAKEKREVING_HENDELSE -> emptyList()
-            InnsendingType.FAGSYSTEMINFO_BEHOV_HENDELSE-> emptyList()
+            InnsendingType.FAGSYSTEMINFO_BEHOV_HENDELSE -> emptyList()
         }
     }
 
