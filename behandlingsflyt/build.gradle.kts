@@ -61,6 +61,7 @@ dependencies {
     implementation(libs.infrastructure)
     implementation(libs.verdityper)
     implementation(libs.tidslinje)
+    implementation(libs.kafkaClients)
     implementation(kotlin("reflect"))
     implementation(libs.flywayDatabasePostgresql)
     runtimeOnly(libs.postgresql) // låst versjon i root build.gradle.kts

@@ -8,6 +8,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.NavKo
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.gateway.Gateway
@@ -27,10 +29,13 @@ import java.util.*
 class GosysGateway : OppgaveGateway {
 
     companion object : Factory<Gateway> {
+
+
         override fun konstruer(): Gateway {
             return GosysGateway()
         }
     }
+
 
     private val log = LoggerFactory.getLogger(javaClass)
     private val baseUri = URI.create(requiredConfigForKey("integrasjon.gosys.url"))
@@ -50,10 +55,15 @@ class GosysGateway : OppgaveGateway {
         navKontor: NavKontorPeriodeDto
     ) {
 
+        if (navKontor.vedtaksdato == null || navKontor.virkingsdato == null) {
+            log.info("Oppretter gosysoppgave med manglende dato for behandling $behandlingId, " +
+                    "virkningsdato=${navKontor.virkingsdato}, vedtaksdato=${navKontor.vedtaksdato}")
+        }
+
         val beskrivelse =
-            if (navKontor.fom != null && navKontor.tom != null) {
-                val fom = requireNotNull(navKontor.fom)
-                val tom = requireNotNull(navKontor.tom)
+            if (navKontor.virkingsdato != null && navKontor.vedtaksdato != null) {
+                val fom = requireNotNull(navKontor.virkingsdato)
+                val tom = requireNotNull(navKontor.vedtaksdato)
                 "Refusjonskrav. Brukeren er innvilget etterbetaling av AAP fra ${
                     formatDateToSaksbehandlerVennlig(fom)
                 } til ${
@@ -62,6 +72,8 @@ class GosysGateway : OppgaveGateway {
             } else {
                 "Refusjonskrav. Brukeren er innvilget etterbetaling av AAP til ${navKontor.enhetsNummer}. Dere må sende refusjonskrav til NØS."
             }
+
+
 
         val oppgaveRequest = OpprettOppgaveRequest(
             oppgavetype = OppgaveType.VURDER_KONSEKVENS_FOR_YTELSE.verdi,

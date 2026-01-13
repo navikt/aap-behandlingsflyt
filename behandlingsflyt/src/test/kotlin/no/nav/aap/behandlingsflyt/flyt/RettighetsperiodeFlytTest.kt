@@ -253,8 +253,8 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
     }
 
     @Test
-    fun `Skal kunne overstyre rettighetsperioden`() {
-        val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
+    fun `Skal kunne overstyre rettighetsperioden og angre seg etterpå`() {
+        val periode = Periode(LocalDate.now(), Tid.MAKS)
         val nyStartDato = periode.fom.minusDays(7)
 
         var (sak, behandling) = sendInnFørsteSøknad(
@@ -275,15 +275,15 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
         assertThat(åpneAvklaringsbehov).hasSize(1).first().extracting(Avklaringsbehov::definisjon)
             .isEqualTo(Definisjon.AVKLAR_SYKDOM)
 
-        sak = hentSak(sak.saksnummer)
+        hentSak(sak.saksnummer).also {
+            assertThat(it.rettighetsperiode).isEqualTo(Periode(nyStartDato, Tid.MAKS))
+        }
 
-        assertThat(sak.rettighetsperiode).isNotEqualTo(periode)
-        assertThat(sak.rettighetsperiode).isEqualTo(
-            Periode(
-                nyStartDato,
-                Tid.MAKS
-            )
-        )
+        behandling.løsRettighetsperiodeIngenEndring()
+        hentSak(sak.saksnummer).also {
+            assertThat(it.rettighetsperiode).isEqualTo(periode)
+        }
+
     }
 
     @Test

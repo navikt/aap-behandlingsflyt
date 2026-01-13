@@ -16,7 +16,7 @@ ij_smart_tabs = false
 ij_wrap_on_typing = false
 
 [*.xml]
-indent_size = 2
+indent_size = 4
 
 [{*.yml,*.yaml}]
 indent_size = 2

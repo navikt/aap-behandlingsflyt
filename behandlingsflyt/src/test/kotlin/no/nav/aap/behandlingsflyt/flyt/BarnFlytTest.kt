@@ -4,9 +4,12 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBarn
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBeregningstidspunktLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.RegisterBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Relasjon
@@ -29,7 +32,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.prosessering.OpprettJobbForTriggBarnetilleggSatsJobbUtfører
 import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.barn.BarnRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.pip.PipRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
@@ -54,8 +56,6 @@ import no.nav.aap.motor.JobbInput
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import kotlin.collections.map
-import kotlin.collections.orEmpty
 import kotlin.test.assertTrue
 
 class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
@@ -166,6 +166,9 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             SakRepositoryImpl(it).finnSakerMedBarnetillegg(LocalDate.of(2026, 1, 1))
         }
         assertThat(sakerMedBarnetillegg).containsExactly(behandling.sakId)
+
+        OpprettJobbForTriggBarnetilleggSatsJobbUtfører.jobbKonfigurasjon =
+            OpprettJobbForTriggBarnetilleggSatsJobbUtfører.jobbKonfigurasjon.copy(erAktiv = true)
 
         // Bestiller brev om barnetillegg sats regulering
         dataSource.transaction {
@@ -392,7 +395,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 assertThat(åpneAvklaringsbehov.map { it.definisjon }).containsExactly(Definisjon.FORESLÅ_VEDTAK)
 
                 val tilkjentYtelse =
-                    dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(behandling.id) }
+                    repositoryProvider.provide<TilkjentYtelseRepository>().hentHvisEksisterer(behandling.id)
                         .orEmpty().map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
 
                 val periodeMedBarneTilleggForToBarn =
@@ -407,9 +410,8 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                         periode.fom.plusYears(1).minusDays(1)
                     )
                 )
-                val underveisPeriode = dataSource.transaction { connection ->
-                    UnderveisRepositoryImpl(connection).hent(behandling.id)
-                }.somTidslinje().helePerioden()
+                val underveisPeriode =
+                    repositoryProvider.provide<UnderveisRepository>().hent(behandling.id).somTidslinje().helePerioden()
                 assertThat(periodeMedBarneTilleggForEttBarn).isEqualTo(
                     Periode(
                         periode.fom.plusYears(1),
@@ -709,9 +711,8 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 )
             )
             .medKontekst {
-                val barn = dataSource.transaction {
-                    BarnRepositoryImpl(it).hent(revurdering.id)
-                }
+                val barn = repositoryProvider.provide<BarnRepository>().hent(revurdering.id)
+
                 assertThat(barn.oppgitteBarn?.oppgitteBarn).hasSize(1)
                 assertThat(barn.saksbehandlerOppgitteBarn?.barn).hasSize(1)
                 assertThat(barn.vurderteBarn?.barn).hasSize(2)
@@ -937,9 +938,8 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             )
             .løsAndreStatligeYtelser()
             .medKontekst {
-                val barn = dataSource.transaction {
-                    BarnRepositoryImpl(it).hent(behandling.id)
-                }
+                val barn = repositoryProvider.provide<BarnRepository>().hent(behandling.id)
+
                 assertThat(barn.oppgitteBarn).isNull()
                 assertThat(barn.saksbehandlerOppgitteBarn?.barn).hasSize(1)
                 assertThat(barn.registerbarn?.barn).hasSize(1)
@@ -1129,10 +1129,10 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
 
     }
 
-    private fun hentTilkjentYtelse(behandlingId: BehandlingId) =
-        requireNotNull(dataSource.transaction {
-            TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(behandlingId)
-        }) { "Tilkjent ytelse skal være beregnet her." }
+    private fun BehandlingInfo.hentTilkjentYtelse(behandlingId: BehandlingId) =
+        requireNotNull(
+            repositoryProvider.provide<TilkjentYtelseRepository>().hentHvisEksisterer(behandlingId)
+        ) { "Tilkjent ytelse skal være beregnet her." }
 
     fun lagTestPerson(fornavn: String, etternavn: String, fødselsdato: LocalDate): TestPerson {
         return TestPerson(

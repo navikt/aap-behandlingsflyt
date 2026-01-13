@@ -16,7 +16,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.InntektkomponentenGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.InntektskomponentData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -31,7 +30,6 @@ import java.time.Year
 class InntektInformasjonskrav(
     private val sakService: SakService,
     private val inntektGrunnlagRepository: InntektGrunnlagRepository,
-    private val studentRepository: StudentRepository,
     private val beregningVurderingRepository: BeregningVurderingRepository,
     private val inntektRegisterGateway: InntektRegisterGateway,
     private val inntektkomponentenGateway: InntektkomponentenGateway,
@@ -144,12 +142,10 @@ class InntektInformasjonskrav(
     }
 
     private fun kanUtledeRelevanteÅr(kontekst: FlytKontekstMedPerioder): Boolean {
-        val studentGrunnlag = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
         val beregningGrunnlag = beregningVurderingRepository.hentHvisEksisterer(kontekst.behandlingId)
 
-        val nedsattArbeidsevneDato = beregningGrunnlag?.tidspunktVurdering?.nedsattArbeidsevneDato
-        val avbruttStudieDato = studentGrunnlag?.vurderinger?.single()?.avbruttStudieDato
-        return nedsattArbeidsevneDato != null || avbruttStudieDato != null
+        val nedsattArbeidsevneDato = beregningGrunnlag?.tidspunktVurdering?.nedsattArbeidsevneEllerStudieevneDato
+        return nedsattArbeidsevneDato != null
     }
 
     private fun relevanteÅrErEndret(kontekst: FlytKontekstMedPerioder): Boolean {
@@ -165,12 +161,10 @@ class InntektInformasjonskrav(
     }
 
     private fun utledAlleRelevanteÅr(behandlingId: BehandlingId): Pair<Set<Year>, Set<Year>> {
-        val studentGrunnlag = studentRepository.hentHvisEksisterer(behandlingId)
         val beregningGrunnlag = beregningVurderingRepository.hentHvisEksisterer(behandlingId)
-
         val relevanteUføreInntektÅr = Inntektsbehov.utledRelevanteYtterligereNedsattÅr(beregningGrunnlag)
 
-        return Pair(Inntektsbehov.utledAlleRelevanteÅr(beregningGrunnlag, studentGrunnlag), relevanteUføreInntektÅr)
+        return Pair(Inntektsbehov.utledAlleRelevanteÅr(beregningGrunnlag), relevanteUføreInntektÅr)
     }
 
     companion object : Informasjonskravkonstruktør {
@@ -185,7 +179,6 @@ class InntektInformasjonskrav(
             return InntektInformasjonskrav(
                 sakService = SakService(repositoryProvider),
                 inntektGrunnlagRepository = repositoryProvider.provide(),
-                studentRepository = repositoryProvider.provide(),
                 beregningVurderingRepository = beregningVurderingRepository,
                 inntektRegisterGateway = gatewayProvider.provide(),
                 inntektkomponentenGateway = gatewayProvider.provide(),

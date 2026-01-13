@@ -31,7 +31,7 @@ class FastsettBeregningstidspunktLøser(
             vurdering = løsning.beregningVurdering.let {
                 BeregningstidspunktVurdering(
                     begrunnelse = it.begrunnelse,
-                    nedsattArbeidsevneDato = it.nedsattArbeidsevneDato,
+                    nedsattArbeidsevneEllerStudieevneDato = it.nedsattArbeidsevneDato,
                     ytterligereNedsattBegrunnelse = it.ytterligereNedsattBegrunnelse,
                     ytterligereNedsattArbeidsevneDato = it.ytterligereNedsattArbeidsevneDato,
                     vurdertAv = kontekst.bruker.ident

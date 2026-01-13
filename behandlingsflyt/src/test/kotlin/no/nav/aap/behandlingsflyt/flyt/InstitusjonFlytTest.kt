@@ -28,7 +28,7 @@ class InstitusjonFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             )
         )
 
-        val (sak, behandling) = sendInnFørsteSøknad(
+        val (_, behandling) = sendInnFørsteSøknad(
             person = person,
             mottattTidspunkt = fom.atStartOfDay(),
             periode = periode,

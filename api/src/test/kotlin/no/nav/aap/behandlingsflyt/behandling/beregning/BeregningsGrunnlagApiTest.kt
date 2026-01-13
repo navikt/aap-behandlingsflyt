@@ -21,7 +21,6 @@ import java.math.BigDecimal
 import java.math.MathContext
 import java.math.RoundingMode
 import java.time.LocalDate
-import java.time.MonthDay
 import java.time.YearMonth
 
 class BeregningsGrunnlagApiTest {
@@ -50,7 +49,7 @@ class BeregningsGrunnlagApiTest {
                         begrunnelse = "test",
                         ytterligereNedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
                         ytterligereNedsattBegrunnelse = "test",
-                        nedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
+                        nedsattArbeidsevneEllerStudieevneDato = LocalDate.of(2023, 1, 1),
                         vurdertAv = "saksbehandler"
                     ),
                     yrkesskadeBeløpVurdering = BeregningYrkeskaderBeløpVurdering(
@@ -120,7 +119,7 @@ class BeregningsGrunnlagApiTest {
                         begrunnelse = "test",
                         ytterligereNedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
                         ytterligereNedsattBegrunnelse = "test",
-                        nedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
+                        nedsattArbeidsevneEllerStudieevneDato = LocalDate.of(2023, 1, 1),
                         vurdertAv = "saksbehandler"
                     ),
                     yrkesskadeBeløpVurdering = BeregningYrkeskaderBeløpVurdering(

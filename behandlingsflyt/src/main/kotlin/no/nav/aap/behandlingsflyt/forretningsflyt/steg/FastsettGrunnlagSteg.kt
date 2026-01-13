@@ -45,7 +45,7 @@ class FastsettGrunnlagSteg(
 
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING, VurderingType.AUTOMATISK_OPPDATER_VILKÅR -> {
-                if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+                if (tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())) {
                     vilkårService.ingenNyeVurderinger(kontekst, Vilkårtype.GRUNNLAGET, "mangler behandlingsgrunnlag")
                     return Fullført
                 }
@@ -53,6 +53,7 @@ class FastsettGrunnlagSteg(
             }
 
             VurderingType.MELDEKORT,
+            VurderingType.AUTOMATISK_BREV,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
             VurderingType.IKKE_RELEVANT -> {

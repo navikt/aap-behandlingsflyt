@@ -109,6 +109,16 @@ enum class Vilkårtype(
         obligatorisk = false
     ),
 
+    SAMORDNING_ANNEN_LOVGIVNING(
+        kode = "AAP-29",
+        spesielleInnvilgelsesÅrsaker = emptyList(),
+        avslagsårsaker = listOf(
+            Avslagsårsak.INNTEKTSTAP_DEKKES_ETTER_ANNEN_LOVGIVNING
+        ),
+        hjemmel = "§ 11-29",
+        obligatorisk = false
+    ),
+
     SYKEPENGEERSTATNING(
         kode = "AAP-13",
         spesielleInnvilgelsesÅrsaker = emptyList(),
@@ -147,5 +157,13 @@ enum class Vilkårtype(
         ),
         hjemmel = "§ 11-3",
         obligatorisk = false,
+    ),
+    INNTEKTSBORTFALL(
+        kode = "AAP-4-2",
+        spesielleInnvilgelsesÅrsaker = emptyList(),
+        avslagsårsaker = listOf(
+            Avslagsårsak.HAR_RETT_TIL_FULLT_UTTAK_ALDERSPENSJON
+        ),
+        hjemmel = "§ 11-4 2. ledd"
     ),
 }

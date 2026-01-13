@@ -1,14 +1,23 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamGateway
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamordneVedtakRequest
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryProvider
+import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
@@ -34,6 +43,16 @@ class VarsleVedtakJobbUtfører(
         val vedtak = vedtakRepository.hent(behandling.id)
         val vedtakId =
             requireNotNull(vedtakRepository.hentId(behandling.id)) { "Fant ikke vedtak for behandlingId $behandlingId." }
+        val forrigeBehandlingId = behandling.forrigeBehandlingId
+
+        val tilkjentRepository: TilkjentYtelseRepository = repositoryProvider.provide()
+        val forrigeTilkjentYtelse =
+            forrigeBehandlingId?.let { tilkjentRepository.hentHvisEksisterer(it) }?.tilTidslinje()
+        val nåværendeTilkjentYtelse = tilkjentRepository.hentHvisEksisterer(behandling.id)?.tilTidslinje()
+
+        val underveisRepo: UnderveisRepository = repositoryProvider.provide()
+        val forrigeUnderveisGrunnlag = forrigeBehandlingId?.let { underveisRepo.hentHvisEksisterer(it) }
+        val nåværendeUnderveisGrunnlag = underveisRepo.hentHvisEksisterer(behandling.id)
 
 
         requireNotNull(vedtak) { "Forventer at vedtak-objekter er lagret når denne jobben kjøres." }
@@ -57,11 +76,18 @@ class VarsleVedtakJobbUtfører(
             utvidetFrist = null,
         )
 
-        // For nå: kun varsle ved førstegangsbehandlinger.
-        // På sikt skal vi varsle hver gang det skjer en "betydelig" endring i ytelsen. F.eks rettighetstype, stans,
-        // etc.
-        if (behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling) {
-            log.info("Varsler SAM for behandling med referanse ${behandling.referanse} og saksnummer ${sak.saksnummer}.")
+        val relevantEndring =
+            listOf(
+                behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling,
+                endringITilkjentYtelseTidslinje(forrigeTilkjentYtelse, nåværendeTilkjentYtelse),
+                endringIRettighetstypeTidslinje(
+                    forrigeUnderveisGrunnlag,
+                    nåværendeUnderveisGrunnlag!!
+                )
+            )
+
+        if (relevantEndring.any()) {
+            log.info("Varsler SAM for behandling med referanse ${behandling.referanse} og saksnummer ${sak.saksnummer}. Årsak: førstegangsbehandling=${relevantEndring[0]}, endringITilkjentYtelse=${relevantEndring[1]}, endringIRettighetstype=${relevantEndring[2]}")
             samGateway.varsleVedtak(request)
         }
 
@@ -77,8 +103,52 @@ class VarsleVedtakJobbUtfører(
             )
         }
 
+        fun endringITilkjentYtelseTidslinje(
+            forrigeTilkjentYtelse: Tidslinje<Tilkjent>?,
+            nåværendeTilkjentYtelse: Tidslinje<Tilkjent>?
+        ): Boolean {
+            if (forrigeTilkjentYtelse == null && nåværendeTilkjentYtelse == null) return false
+            else if (forrigeTilkjentYtelse == null) return true
+
+            requireNotNull(nåværendeTilkjentYtelse){"Hvis forrigeTilkjentYtelse ikke er null, så kan ikke nåværendeTilkjentYtelse være det."}
+
+            return forrigeTilkjentYtelse.komprimer().outerJoin(nåværendeTilkjentYtelse.komprimer()) { left: Tilkjent?, right: Tilkjent? ->
+                when {
+                    left == null && right == null -> false
+                    left == null -> right?.gradering != Prosent.`0_PROSENT`
+                    right == null -> left.gradering != Prosent.`0_PROSENT`
+                    else -> {
+                        val leftErNull = left.gradering == Prosent.`0_PROSENT`
+                        val rightErNull = right.gradering == Prosent.`0_PROSENT`
+                        val positivEndringDagsats = (left.dagsats.verdi ) < (right.dagsats.verdi)
+                        (leftErNull != rightErNull) || positivEndringDagsats
+                    }
+                }
+            }.filter { it.verdi }.isNotEmpty()
+
+        }
+
         override val beskrivelse = "Varsler om endring nytt eller endring i vedtak til SAM"
         override val navn = "VarsleVedtakSam"
         override val type = "flyt.Varsler"
+    }
+
+
+
+    fun underveisTilRettighetsTypeTidslinje(
+        underveis: UnderveisGrunnlag?
+    ): Tidslinje<RettighetsType> {
+        return underveis?.perioder.orEmpty()
+            .mapNotNull { if (it.rettighetsType != null) Segment(it.periode, it.rettighetsType) else null }
+            .let(::Tidslinje).komprimer()
+    }
+
+    fun endringIRettighetstypeTidslinje(
+        forrigeUnderveisGrunnlag: UnderveisGrunnlag?,
+        nåværendeUnderveisGrunnlag: UnderveisGrunnlag
+    ): Boolean {
+        return forrigeUnderveisGrunnlag != null && underveisTilRettighetsTypeTidslinje(
+            forrigeUnderveisGrunnlag
+        ) != underveisTilRettighetsTypeTidslinje(nåværendeUnderveisGrunnlag)
     }
 }

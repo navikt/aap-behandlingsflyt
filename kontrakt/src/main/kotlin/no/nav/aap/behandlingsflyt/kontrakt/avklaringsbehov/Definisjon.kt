@@ -116,6 +116,13 @@ public enum class Definisjon(
         kreverToTrinn = true,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
     ),
+    AVKLAR_SAMORDNING_SYKESTIPEND(
+        kode = AvklaringsbehovKode.`5034`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.SAMORDNING_SYKESTIPEND,
+        kreverToTrinn = true,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
+    ),
     OVERSTYR_IKKE_OPPFYLT_MELDEPLIKT(
         kode = AvklaringsbehovKode.`5002`,
         type = BehovType.OVERSTYR,
@@ -171,6 +178,7 @@ public enum class Definisjon(
         kode = AvklaringsbehovKode.`5040`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.VURDER_INNTEKTSBORTFALL,
+        kreverToTrinn = true,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
     ),
     SKRIV_SYKDOMSVURDERING_BREV(

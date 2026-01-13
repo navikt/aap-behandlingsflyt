@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companio
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plusHverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
@@ -112,9 +113,7 @@ class SykepengeerstatningFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::cla
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
 
-                val resultat = dataSource.transaction {
-                    ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(behandling.id)
-                }
+                val resultat = ResultatUtleder(repositoryProvider).utledResultat(behandling.id)
                 assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
             }
 
@@ -207,12 +206,9 @@ class SykepengeerstatningFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::cla
             .fattVedtak()
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
+                val resultat = ResultatUtleder(repositoryProvider).utledResultat(behandling.id)
+                assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
             }
-
-        var resultat =
-            dataSource.transaction { ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(behandling.id) }
-        assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
-
 
         behandling = behandling.løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_11_18)
 
@@ -230,7 +226,7 @@ class SykepengeerstatningFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::cla
                 assertThat(it.utfall).isEqualTo(Utfall.OPPFYLT)
             })
 
-        resultat =
+        val resultat =
             dataSource.transaction { ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(behandling.id) }
 
         assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
@@ -264,9 +260,7 @@ class SykepengeerstatningFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::cla
             }
             .fattVedtak()
             .medKontekst {
-                val underveisGrunnlag = dataSource.transaction { connection ->
-                    UnderveisRepositoryImpl(connection).hent(this.behandling.id)
-                }
+                val underveisGrunnlag = repositoryProvider.provide<UnderveisRepository>().hent(this.behandling.id)
 
                 assertThat(underveisGrunnlag.perioder).isNotEmpty
                 assertThat(underveisGrunnlag.perioder).extracting<RettighetsType>(Underveisperiode::rettighetsType)
@@ -343,9 +337,7 @@ class SykepengeerstatningFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::cla
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
 
-                val resultat = dataSource.transaction {
-                    ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(behandling.id)
-                }
+                val resultat = ResultatUtleder(repositoryProvider).utledResultat(behandling.id)
                 assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
             }
             .løsVedtaksbrev()
@@ -359,15 +351,9 @@ class SykepengeerstatningFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::cla
                     .extracting(Vilkårsperiode::erOppfylt, Vilkårsperiode::innvilgelsesårsak)
                     .containsExactly(true, null)
 
-                val resultat =
-                    dataSource.transaction {
-                        ResultatUtleder(postgresRepositoryRegistry.provider(it)).utledResultat(
-                            behandling.id
-                        )
-                    }
-                val underveisGrunnlag = dataSource.transaction { connection ->
-                    UnderveisRepositoryImpl(connection).hent(behandling.id)
-                }
+                val resultat = ResultatUtleder(repositoryProvider).utledResultat(behandling.id)
+
+                val underveisGrunnlag = repositoryProvider.provide<UnderveisRepository>().hent(behandling.id)
 
                 assertThat(resultat).isEqualTo(Resultat.INNVILGELSE)
 
@@ -393,9 +379,9 @@ class SykepengeerstatningFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::cla
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
 
-                val underveisTidslinje = dataSource.transaction {
-                    UnderveisRepositoryImpl(it).hent(this.behandling.id).perioder
-                }.map { Segment(it.periode, it) }.let(::Tidslinje)
+                val underveisTidslinje =
+                    repositoryProvider.provide<UnderveisRepository>().hent(this.behandling.id).perioder
+                        .map { Segment(it.periode, it) }.let(::Tidslinje)
 
                 val oppfyltPeriode = underveisTidslinje.filter { it.verdi.rettighetsType != null }.helePerioden()
                 val vilkårsresultat = hentVilkårsresultat(behandlingId = this.behandling.id)
@@ -511,11 +497,6 @@ class SykepengeerstatningFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::cla
             }
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
-            .medKontekst {
-                val underveisGrunnlag = dataSource.transaction { connection ->
-                    UnderveisRepositoryImpl(connection).hent(this.behandling.id)
-                }
-            }
             .assertRettighetstype(
                 Periode(
                     sak.rettighetsperiode.fom,

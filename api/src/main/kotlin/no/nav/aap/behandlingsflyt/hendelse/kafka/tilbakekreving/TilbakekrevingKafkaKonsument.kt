@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.hendelse.kafka.tilbakekreving
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.FagsysteminfoBehovKafkaMelding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelseKafkaMelding
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -31,7 +32,7 @@ class TilbakekrevingKafkaKonsument(
     consumerName = "AapBehandlingsflytTilbakekrevingHendelse",
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
-    private val secureLogger = LoggerFactory.getLogger("secureLog")
+    private val secureLogger = LoggerFactory.getLogger("team-logs")
 
     override fun håndter(meldinger: ConsumerRecords<String, String>) {
         meldinger.forEach(::håndter)
@@ -50,20 +51,50 @@ class TilbakekrevingKafkaKonsument(
     }
 
     fun håndter(meldingKey: String, meldingVerdi: String) {
-        val tilbakekrevingHendelse = try {
-            DefaultJsonMapper.fromJson<TilbakekrevingHendelseKafkaMelding>(meldingVerdi)
-        } catch (exception: Exception) {
-            secureLogger.error("Kunne ikke parse melding fra tilbakekreving: $meldingKey med verdi: $meldingVerdi", exception)
-            throw exception
-        }
-        val saksnummer = Saksnummer(tilbakekrevingHendelse.eksternFagsakId)
-        log.info("Mottatt tilbakekrevinghendelse for saksnummer: $saksnummer")
-        dataSource.transaction { connection ->
-            val repositoryProvider = repositoryRegistry.provider(connection)
-            val hendelseService = MottattHendelseService(repositoryProvider)
-            hendelseService.registrerMottattHendelse(dto = tilbakekrevingHendelse.tilInnsending(meldingKey, saksnummer))
-        }
 
+        val tree = DefaultJsonMapper.objectMapper().readTree(meldingVerdi)
+        val hendelsestype = tree["hendelsestype"]?.asText()
+        val innsending = when (hendelsestype) {
+            "behandling_endret" -> {
+                val hendelse = try {
+                    DefaultJsonMapper.fromJson<TilbakekrevingHendelseKafkaMelding>(meldingVerdi)
+                } catch (exception: Exception) {
+                    secureLogger.error("Kunne ikke parse melding fra tilbakekreving: $meldingKey med verdi: $meldingVerdi", exception)
+                    throw exception
+                }
+                log.info("Mottatt tilbakekrevinghendelse for saksnummer: ${hendelse.eksternFagsakId}")
+                hendelse.tilInnsending(meldingKey, Saksnummer(hendelse.eksternFagsakId))
+            }
+            "fagsysteminfo_behov" -> {
+                val hendelse = try {
+                    DefaultJsonMapper.fromJson<FagsysteminfoBehovKafkaMelding>(meldingVerdi)
+                } catch (exception: Exception) {
+                    secureLogger.error("Kunne ikke parse melding fra tilbakekreving: $meldingKey med verdi: $meldingVerdi", exception)
+                    throw exception
+                }
+                log.info("Mottatt fagsysteminfobehovhendelse for saksnummer: ${hendelse.eksternFagsakId}")
+                hendelse.tilInnsending(meldingKey, Saksnummer(hendelse.eksternFagsakId))
+            }
+            "fagsysteminfo_svar" -> {
+                log.info("Hopper over meldinger med hendelsestype lik fagsysteminfo_svar")
+                null
+            }
+            null -> {
+                secureLogger.info("Hopper over meldinger med hendelsestype lik null: $meldingVerdi")
+                null
+            }
+            else -> {
+                secureLogger.info("Hopper over meldinger med ukjent hendelsestype: $meldingVerdi")
+                null
+            }
+        }
+        if (innsending != null) {
+            dataSource.transaction { connection ->
+                val repositoryProvider = repositoryRegistry.provider(connection)
+                val hendelseService = MottattHendelseService(repositoryProvider)
+                hendelseService.registrerMottattHendelse(innsending)
+            }
+        }
     }
 
 }

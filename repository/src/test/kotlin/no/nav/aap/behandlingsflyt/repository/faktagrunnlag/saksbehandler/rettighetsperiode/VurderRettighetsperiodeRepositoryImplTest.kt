@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.rettighetsperiode
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeHarRett
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurdering
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
@@ -37,8 +38,7 @@ class VurderRettighetsperiodeRepositoryImplTest {
             val vurdering = RettighetsperiodeVurdering(
                 startDato = LocalDate.now().minusDays(10),
                 begrunnelse = "begrunnelse",
-                harRettUtoverSøknadsdato = true,
-                harKravPåRenter = true,
+                harRettUtoverSøknadsdato = RettighetsperiodeHarRett.`HarRettIkkeIStandTilÅSøkeTidligere`,
                 vurdertAv = "NAVident"
             )
             vurderRettighetsPeriodeRepo.lagreVurdering(behandling.id, vurdering)
@@ -65,8 +65,7 @@ class VurderRettighetsperiodeRepositoryImplTest {
             val vurdering = RettighetsperiodeVurdering(
                 startDato = null,
                 begrunnelse = "begrunnelse",
-                harRettUtoverSøknadsdato = false,
-                harKravPåRenter = null,
+                harRettUtoverSøknadsdato = RettighetsperiodeHarRett.Nei,
                 vurdertAv = "NAVident"
             )
             vurderRettighetsPeriodeRepo.lagreVurdering(behandling.id, vurdering)
@@ -91,8 +90,7 @@ class VurderRettighetsperiodeRepositoryImplTest {
             val vurdering = RettighetsperiodeVurdering(
                 startDato = LocalDate.now().minusDays(10),
                 begrunnelse = "begrunnelse",
-                harRettUtoverSøknadsdato = true,
-                harKravPåRenter = true,
+                harRettUtoverSøknadsdato = RettighetsperiodeHarRett.`HarRettIkkeIStandTilÅSøkeTidligere`,
                 vurdertAv = "NAVident"
             )
 

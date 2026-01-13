@@ -23,7 +23,7 @@ class GjenopptakRepositoryImpl(private val connection: DBConnection) : Gjenoppta
                 FROM AVKLARINGSBEHOV_ENDRING
                 ORDER BY AVKLARINGSBEHOV_ID, OPPRETTET_TID DESC
              ) ae ON ae.AVKLARINGSBEHOV_ID = a.id
-            WHERE b.STATUS in ('${Status.UTREDES.name}', '${Status.OPPRETTET.name}')
+            WHERE b.STATUS in ('${Status.UTREDES.name}', '${Status.OPPRETTET.name}', '${Status.IVERKSETTES.name}')
             AND ae.status = ?
             AND ae.frist <= CURRENT_DATE
         """.trimIndent()

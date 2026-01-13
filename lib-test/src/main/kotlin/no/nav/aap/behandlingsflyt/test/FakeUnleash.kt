@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.test
 
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.FeatureToggle
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
@@ -12,6 +13,8 @@ open class FakeUnleashBase(
     }
 
     override fun isEnabled(featureToggle: FeatureToggle, ident: String) = isEnabled(featureToggle)
+
+    override fun isEnabled(featureToggle: FeatureToggle, ident: String, typeBrev: TypeBrev) = isEnabled(featureToggle)
 }
 
 
@@ -28,16 +31,15 @@ object FakeUnleash : FakeUnleashBase(
         BehandlingsflytFeature.BedreUttrekkAvSakerMedFritakMeldeplikt to false,
         BehandlingsflytFeature.LagreVedtakIFatteVedtak to true,
         BehandlingsflytFeature.PeriodisertSykepengeErstatningNyAvklaringsbehovService to true,
-        BehandlingsflytFeature.MidlertidigStopp11_4 to true,
         BehandlingsflytFeature.ValiderOvergangUfore to true,
         BehandlingsflytFeature.KravOmInntektsbortfall to true,
         BehandlingsflytFeature.Under18 to true,
-        BehandlingsflytFeature.MigrerArbeidsevne to true,
+        BehandlingsflytFeature.MigrerMeldepliktFritak to true,
         BehandlingsflytFeature.SosialRefusjon to true,
         BehandlingsflytFeature.HentSykepengerVedOverlapp to true,
-        BehandlingsflytFeature.KanSendeBrevOmBarnetilleggSatsRegulering to true,
         BehandlingsflytFeature.MigrerRettighetsperiode to true,
         BehandlingsflytFeature.PeriodisertSykdom to true,
+        BehandlingsflytFeature.Sykestipend to false,
     )
 )
 
@@ -53,14 +55,13 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.BedreUttrekkAvSakerMedFritakMeldeplikt to true,
         BehandlingsflytFeature.LagreVedtakIFatteVedtak to true,
         BehandlingsflytFeature.PeriodisertSykepengeErstatningNyAvklaringsbehovService to true,
-        BehandlingsflytFeature.MidlertidigStopp11_4 to true,
         BehandlingsflytFeature.ValiderOvergangUfore to true,
         BehandlingsflytFeature.KravOmInntektsbortfall to true,
         BehandlingsflytFeature.Under18 to true,
-        BehandlingsflytFeature.MigrerArbeidsevne to true,
+        BehandlingsflytFeature.MigrerMeldepliktFritak to true,
         BehandlingsflytFeature.SosialRefusjon to true,
         BehandlingsflytFeature.HentSykepengerVedOverlapp to true,
-        BehandlingsflytFeature.KanSendeBrevOmBarnetilleggSatsRegulering to true,
         BehandlingsflytFeature.PeriodisertSykdom to true,
+        BehandlingsflytFeature.Sykestipend to true,
     )
 )

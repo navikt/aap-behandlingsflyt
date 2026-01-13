@@ -18,6 +18,7 @@ data class ArbeidsevneGrunnlagDto(
     val vurderinger: List<ArbeidsevneVurderingDto>?,
     val gjeldendeVedtatteVurderinger: List<ArbeidsevneVurderingDto>?,
     val historikk: Set<ArbeidsevneVurderingDto>?,
+    val kvalitetssikretAv: VurdertAvResponse?,
 
     override val sisteVedtatteVurderinger: List<PeriodisertArbeidsevneVurderingDto>,
     override val nyeVurderinger: List<PeriodisertArbeidsevneVurderingDto>,
@@ -41,7 +42,7 @@ fun ArbeidsevneVurdering.toDto(ansattNavnOgEnhet: AnsattNavnOgEnhet? = null): Ar
         fraDato,
         vurdertAv = VurdertAvResponse(
             ident = vurdertAv,
-            dato = requireNotNull(opprettetTid?.toLocalDate()) { "Fant ikke vurdert tidspunkt for arbeidsevnevurdering" },
+            dato = opprettetTid.toLocalDate(),
             ansattnavn = ansattNavnOgEnhet?.navn,
             enhetsnavn = ansattNavnOgEnhet?.enhet
         )

@@ -85,10 +85,10 @@ public enum class Vilkårtype {
     STRAFFEGJENNOMFØRING,
     AKTIVITETSPLIKT,
     OPPHOLDSKRAV,
-
-    @Deprecated("Skal fases ut.")
     SYKEPENGEERSTATNING,
     SAMORDNING,
+    INNTEKTSBORTFALL,
+    SAMORDNING_ANNEN_LOVGIVNING
 }
 
 public data class VilkårsPeriodeDTO(

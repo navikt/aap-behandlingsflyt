@@ -66,7 +66,7 @@ class VurderSykdomSteg(
                     sykdomRepository.lagre(kontekst.behandlingId, vedtatteSykdomsvurderinger)
                 },
             )
-            return Fullført
+            Fullført
         }
     }
 
@@ -132,6 +132,7 @@ class VurderSykdomSteg(
             }
             VurderingType.AUTOMATISK_OPPDATER_VILKÅR,
             VurderingType.MELDEKORT -> false
+            VurderingType.AUTOMATISK_BREV -> false
             VurderingType.IKKE_RELEVANT -> false
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT -> false
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9 -> false

@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeri
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningAndreStatligeYtelserLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningArbeidsgiverLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningSykestipendLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrkesskadeLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
@@ -31,6 +32,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.Refusjonkr
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedtaksbrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SykdomsvurderingForBrevLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderInntektsbortfallLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderRettighetsperiodeLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.YrkesskadeSakDto
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.YrkesskadevurderingDto
@@ -55,11 +57,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForForutgåendeMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForLovvalgMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapDataIntern
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingerForBarnetillegg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.InntektsbortfallVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsVurdering
@@ -68,8 +69,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.flate.F
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.flate.OvergangArbeidVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flate.OvergangUføreVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeHarRett
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.sykestipend.SamordningSykestipendVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
@@ -90,20 +93,12 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ArbeidIPeriodeV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KabalHendelseV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Klage
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KommeTilbake
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderingV0
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManueltOppgittBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppfølgingsoppgaveV0
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppgitteBarn
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Søknad
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskapDto
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UtenlandsPeriodeDto
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
@@ -213,131 +208,6 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
             ).use { it.execute() }
         }
     }
-
-    object TestPersoner {
-        val STANDARD_PERSON = {
-            FakePersoner.leggTil(
-                TestPerson(
-                    fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
-                    yrkesskade = emptyList(),
-                    sykepenger = emptyList()
-                )
-            )
-        }
-
-        val PERSON_MED_YRKESSKADE = {
-            FakePersoner.leggTil(
-                TestPerson(
-                    fødselsdato = Fødselsdato(LocalDate.now().minusYears(25)),
-                    yrkesskade = listOf(TestYrkesskade(skadedato = LocalDate.now().minusYears(1))),
-                )
-            )
-        }
-
-        val PERSON_FOR_UNG = {
-            FakePersoner.leggTil(
-                TestPerson(
-                    fødselsdato = Fødselsdato(LocalDate.now().minusYears(17))
-                )
-            )
-        }
-
-        val PERSON_62 = {
-            FakePersoner.leggTil(
-                TestPerson(
-                    fødselsdato = Fødselsdato(LocalDate.now().minusYears(62))
-                )
-            )
-        }
-
-        val PERSON_61 = {
-            FakePersoner.leggTil(
-                TestPerson(
-                    fødselsdato = Fødselsdato(LocalDate.now().minusYears(61))
-                )
-            )
-        }
-
-        val PERSON_MED_FORUTGÅENDE_MEDLEMSKAP = {
-            FakePersoner.leggTil(
-                TestPerson(
-                    fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
-                    yrkesskade = emptyList(),
-                    sykepenger = emptyList(),
-                    medlStatus = listOf(
-                        MedlemskapDataIntern(
-                            unntakId = 100087727,
-                            ident = "",
-                            fraOgMed = LocalDate.now().minusYears(20).toString(),
-                            tilOgMed = LocalDate.now().toString(),
-                            status = "GYLD",
-                            statusaarsak = null,
-                            medlem = true,
-                            grunnlag = "grunnlag",
-                            lovvalg = "lovvalg",
-                            helsedel = true,
-                            lovvalgsland = "NOR",
-                            kilde = null
-                        )
-                    )
-                )
-            )
-        }
-    }
-
-    object TestSøknader {
-        val STANDARD_SØKNAD = SøknadV0(
-            student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
-            medlemskap = SøknadMedlemskapDto("JA", "JA", "NEI", "NEI", null)
-        )
-
-        val SØKNAD_INGEN_MEDLEMSKAP = SøknadV0(
-            student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
-            medlemskap = SøknadMedlemskapDto(
-                "JA", null, "JA", null,
-                listOf(
-                    UtenlandsPeriodeDto(
-                        "SWE",
-                        LocalDate.now().plusMonths(1),
-                        LocalDate.now().minusMonths(1),
-                        "JA",
-                        null,
-                        LocalDate.now().plusMonths(1),
-                        LocalDate.now().minusMonths(1),
-                    )
-                )
-            )
-        )
-
-        val SØKNAD_STUDENT = SøknadV0(
-            student = SøknadStudentDto(StudentStatus.Ja, KommeTilbake.Ja),
-            yrkesskade = "NEI",
-            oppgitteBarn = null,
-            medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
-        )
-
-        val SØKNAD_MED_BARN: (List<Pair<String, LocalDate>>) -> SøknadV0 = { barn ->
-            SøknadV0(
-                student = null,
-                yrkesskade = "NEI",
-                oppgitteBarn = OppgitteBarn(
-                    identer = emptySet(),
-                    barn = barn.map { (navn, fødseldato) ->
-                        ManueltOppgittBarn(
-                            navn = navn,
-                            fødselsdato = fødseldato,
-                            ident = null,
-                            relasjon = ManueltOppgittBarn.Relasjon.FOSTERFORELDER
-                        )
-                    }
-                ),
-                medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
-            )
-        }
-
-        val SØKNAD_YRKESSKADE = STANDARD_SØKNAD.copy(yrkesskade = "JA")
-    }
-
 
     fun happyCaseFørstegangsbehandling(
         fom: LocalDate = LocalDate.now().minusMonths(3),
@@ -618,6 +488,16 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         )
     }
 
+    protected fun Behandling.løsVurderInntektsbortfall(rettTilUttakAvAldersPensjon: Boolean = true): Behandling {
+        return this.løsAvklaringsBehov(
+            VurderInntektsbortfallLøsning(
+                InntektsbortfallVurderingDto(
+                    begrunnelse = "",
+                    rettTilUttak = rettTilUttakAvAldersPensjon
+                )
+            )
+        )
+    }
 
     @JvmName("løsOvergangUføreExt")
     protected fun Behandling.løsOvergangUføre(): Behandling {
@@ -679,8 +559,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                 rettighetsperiodeVurdering = RettighetsperiodeVurderingDTO(
                     startDato = dato,
                     begrunnelse = "En begrunnelse",
-                    harRettUtoverSøknadsdato = true,
-                    harKravPåRenter = false,
+                    harRett = RettighetsperiodeHarRett.HarRettMisvisendeOpplysninger
                 )
             )
         )
@@ -692,14 +571,13 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                 rettighetsperiodeVurdering = RettighetsperiodeVurderingDTO(
                     startDato = null,
                     begrunnelse = "En begrunnelse",
-                    harRettUtoverSøknadsdato = false,
-                    harKravPåRenter = null,
+                    harRett = RettighetsperiodeHarRett.Nei,
                 )
             )
         )
     }
 
-    protected fun Behandling.løsFastsettManuellInntekt(): Behandling {
+    protected fun Behandling.løsFastsettManuellInntekt(inntektPerÅr: Int = 300_000): Behandling {
         return this.løsAvklaringsBehov(
             AvklarManuellInntektVurderingLøsning(
                 manuellVurderingForManglendeInntekt = ManuellInntektVurderingDto(
@@ -707,7 +585,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                     belop = null,
                     vurderinger = (2022..2025).map {
                         ÅrsVurdering(
-                            beløp = BigDecimal(300000),
+                            beløp = BigDecimal(inntektPerÅr),
                             eøsBeløp = null,
                             år = it,
                             ferdigLignetPGI = null,
@@ -1396,6 +1274,18 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                         tom = null,
                         navKontor = "",
                     )
+                )
+            )
+        )
+    }
+
+    protected fun Behandling.løsSykestipend(perioder: List<Periode> = emptyList()): Behandling {
+        return løsAvklaringsBehov(
+            this,
+            AvklarSamordningSykestipendLøsning(
+                SamordningSykestipendVurderingDto(
+                    begrunnelse = "Begrunnelse",
+                    perioder = perioder.toSet()
                 )
             )
         )

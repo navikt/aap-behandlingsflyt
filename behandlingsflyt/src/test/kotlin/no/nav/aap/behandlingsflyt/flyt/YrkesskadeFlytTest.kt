@@ -12,7 +12,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingPeriodeDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
@@ -22,7 +24,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
@@ -346,12 +347,11 @@ class YrkesskadeFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 // Venter på at brevet skal fullføres
                 assertThat(åpneAvklaringsbehov).anySatisfy { assertTrue(it.definisjon == Definisjon.SKRIV_VEDTAKSBREV) }
 
-                val vilkårsresultat = dataSource.transaction { VilkårsresultatRepositoryImpl(it).hent(behandling.id) }
+                val vilkårsresultat = repositoryProvider.provide<VilkårsresultatRepository>().hent(behandling.id)
                     .finnVilkår(Vilkårtype.SYKDOMSVILKÅRET).tidslinje().komprimer()
 
-                val underveisPeriode = dataSource.transaction {
-                    UnderveisRepositoryImpl(it).hent(behandling.id)
-                }.somTidslinje().helePerioden()
+                val underveisPeriode = repositoryProvider.provide<UnderveisRepository>().hent(behandling.id)
+                    .somTidslinje().helePerioden()
 
                 assertTidslinje(
                     vilkårsresultat.begrensetTil(underveisPeriode),
@@ -459,7 +459,6 @@ class YrkesskadeFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             }
             .løsVedtaksbrev()
             .medKontekst {
-                val brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
                 assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
             }
 
@@ -681,7 +680,7 @@ class YrkesskadeFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 ),
             )
             .medKontekst {
-                assertThat(this.åpneAvklaringsbehov).anySatisfy { it.definisjon == Definisjon.AVKLAR_BISTANDSBEHOV }
+                assertThat(this.åpneAvklaringsbehov).anyMatch { it.definisjon == Definisjon.AVKLAR_BISTANDSBEHOV }
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }
     }
