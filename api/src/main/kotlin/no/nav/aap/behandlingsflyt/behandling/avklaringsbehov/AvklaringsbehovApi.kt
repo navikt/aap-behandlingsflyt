@@ -22,6 +22,7 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.server.auth.bruker
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.Operasjon
@@ -97,7 +98,7 @@ fun validerPerioder(løsninger: List<LøsningForPeriode>) {
         .sortedBy { it.fom }
         .windowed(2, 1)
         .mapNotNull { (vurdering, nesteVurdering) ->
-            val tom = vurdering.tom ?: nesteVurdering.fom.minusDays(1)
+            val tom = vurdering.tom ?: Tid.MAKS
 
             if (tom < vurdering.fom || tom >= nesteVurdering.fom)
                 "${vurdering.fom}–${vurdering.tom ?: "…"} og ${nesteVurdering.fom}–${nesteVurdering.tom ?: "…"}"
