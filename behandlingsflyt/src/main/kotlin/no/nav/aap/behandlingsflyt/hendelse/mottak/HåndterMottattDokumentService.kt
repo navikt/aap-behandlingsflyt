@@ -450,6 +450,7 @@ class HåndterMottattDokumentService(
             InnsendingType.PDL_HENDELSE_DODSFALL_BARN -> ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA
             InnsendingType.OMGJØRING_KLAGE_REVURDERING -> utledÅrsakEtterOmgjøringAvKlage(melding)
             InnsendingType.TILBAKEKREVING_HENDELSE -> ÅrsakTilOpprettelse.TILBAKEKREVING_HENDELSE
+            InnsendingType.INSTITUSJONSOPPHOLD -> ÅrsakTilOpprettelse.INSTITUSJONSOPPHOLD
             InnsendingType.FAGSYSTEMINFO_BEHOV_HENDELSE -> ÅrsakTilOpprettelse.FAGSYSTEMINFO_BEHOV_HENDELSE
         }
     }
@@ -531,7 +532,8 @@ class HåndterMottattDokumentService(
             InnsendingType.PDL_HENDELSE_DODSFALL_BRUKER -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.DØDSFALL_BRUKER))
             InnsendingType.PDL_HENDELSE_DODSFALL_BARN -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.DØDSFALL_BARN))
             InnsendingType.TILBAKEKREVING_HENDELSE -> emptyList()
-            InnsendingType.FAGSYSTEMINFO_BEHOV_HENDELSE -> emptyList()
+            InnsendingType.INSTITUSJONSOPPHOLD -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.INSTITUSJONSOPPHOLD))
+            InnsendingType.FAGSYSTEMINFO_BEHOV_HENDELSE-> emptyList()
         }
     }
 
