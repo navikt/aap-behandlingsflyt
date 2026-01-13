@@ -103,35 +103,37 @@ class VarsleVedtakJobbUtfører(
             )
         }
 
+        fun endringITilkjentYtelseTidslinje(
+            forrigeTilkjentYtelse: Tidslinje<Tilkjent>?,
+            nåværendeTilkjentYtelse: Tidslinje<Tilkjent>?
+        ): Boolean {
+            if (forrigeTilkjentYtelse == null && nåværendeTilkjentYtelse == null) return false
+            else if (forrigeTilkjentYtelse == null) return true
+
+            requireNotNull(nåværendeTilkjentYtelse){"Hvis forrigeTilkjentYtelse ikke er null, så kan ikke nåværendeTilkjentYtelse være det."}
+
+            return forrigeTilkjentYtelse.komprimer().outerJoin(nåværendeTilkjentYtelse.komprimer()) { left: Tilkjent?, right: Tilkjent? ->
+                when {
+                    left == null && right == null -> false
+                    left == null -> right?.gradering != Prosent.`0_PROSENT`
+                    right == null -> left.gradering != Prosent.`0_PROSENT`
+                    else -> {
+                        val leftErNull = left.gradering == Prosent.`0_PROSENT`
+                        val rightErNull = right.gradering == Prosent.`0_PROSENT`
+                        val positivEndringDagsats = (left.dagsats.verdi ) < (right.dagsats.verdi)
+                        (leftErNull != rightErNull) || positivEndringDagsats
+                    }
+                }
+            }.filter { it.verdi }.isNotEmpty()
+
+        }
+
         override val beskrivelse = "Varsler om endring nytt eller endring i vedtak til SAM"
         override val navn = "VarsleVedtakSam"
         override val type = "flyt.Varsler"
     }
 
-    fun endringITilkjentYtelseTidslinje(
-        forrigeTilkjentYtelse: Tidslinje<Tilkjent>?,
-        nåværendeTilkjentYtelse: Tidslinje<Tilkjent>?
-    ): Boolean {
-        if (forrigeTilkjentYtelse == null && nåværendeTilkjentYtelse == null) return false
-        else if (forrigeTilkjentYtelse == null) return true
 
-        requireNotNull(nåværendeTilkjentYtelse){"Hvis forrigeTilkjentYtelse ikke er null, så kan ikke nåværendeTilkjentYtelse være det."}
-
-        return forrigeTilkjentYtelse.komprimer().outerJoin(nåværendeTilkjentYtelse.komprimer()) { left: Tilkjent?, right: Tilkjent? ->
-            when {
-                left == null && right == null -> false
-                left == null -> right?.gradering != Prosent.`0_PROSENT`
-                right == null -> left.gradering != Prosent.`0_PROSENT`
-                else -> {
-                    val leftErNull = left.gradering == Prosent.`0_PROSENT`
-                    val rightErNull = right.gradering == Prosent.`0_PROSENT`
-                    val positivEndringDagsats = (left.dagsats.verdi ) < (right.dagsats.verdi)
-                    (leftErNull != rightErNull) || positivEndringDagsats
-                }
-            }
-        }.filter { it.verdi }.isNotEmpty()
-
-    }
 
     fun underveisTilRettighetsTypeTidslinje(
         underveis: UnderveisGrunnlag?
