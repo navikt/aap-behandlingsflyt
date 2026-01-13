@@ -44,7 +44,7 @@ fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(
                     val sykdomRepository = repositoryProvider.provide<SykdomRepository>()
                     val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
                     val sakRepository = repositoryProvider.provide<SakRepository>()
-                    
+
                     val behandling: Behandling =
                         BehandlingReferanseService(behandlingRepository).behandling(req)
                     val grunnlag = overgangUforeRepository.hentHvisEksisterer(behandling.id)
@@ -94,7 +94,11 @@ fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(
                         ),
                         behøverVurderinger = avklaringsbehov?.perioderVedtaketBehøverVurdering().orEmpty().toList(),
                         perioderSomIkkeErTilstrekkeligVurdert = avklaringsbehov?.perioderSomIkkeErTilstrekkeligVurdert()
-                            .orEmpty().toList()
+                            .orEmpty().toList(),
+                        kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
+                            Definisjon.AVKLAR_OVERGANG_UFORE,
+                            behandling.id
+                        )
                     )
                 }
 
