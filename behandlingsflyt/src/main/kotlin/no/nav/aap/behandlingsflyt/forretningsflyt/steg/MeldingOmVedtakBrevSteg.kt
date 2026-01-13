@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.BarnetilleggSatsRegulering
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevBehov
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevUtlederService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -126,16 +127,16 @@ class MeldingOmVedtakBrevSteg(
                 brevBehov = brevBehov,
                 unikReferanse = unikReferanse,
                 ferdigstillAutomatisk = false,
-                brukApiV3 = brukApiV3(kontekst.behandlingId)
+                brukApiV3 = brukApiV3(kontekst.behandlingId, brevBehov.typeBrev)
             )
         }
     }
 
-    private fun brukApiV3(behandlingId: BehandlingId): Boolean {
+    private fun brukApiV3(behandlingId: BehandlingId, typeBrev: TypeBrev): Boolean {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.FATTE_VEDTAK) ?: return false
         val endretAv = avklaringsbehov.endretAv()
-        return unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevbyggerV3, endretAv)
+        return unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevbyggerV3, endretAv, typeBrev)
     }
 
     companion object : FlytSteg {

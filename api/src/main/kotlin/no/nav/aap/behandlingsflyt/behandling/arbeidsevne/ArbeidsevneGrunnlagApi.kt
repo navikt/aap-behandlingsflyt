@@ -35,7 +35,15 @@ fun NormalOpenAPIRoute.arbeidsevneGrunnlagApi(
 
         ) { behandlingReferanse ->
 
-            respond(arbeidsevneGrunnlag(dataSource, behandlingReferanse, kanSaksbehandle(), repositoryRegistry, gatewayProvider))
+            respond(
+                arbeidsevneGrunnlag(
+                    dataSource,
+                    behandlingReferanse,
+                    kanSaksbehandle(),
+                    repositoryRegistry,
+                    gatewayProvider
+                )
+            )
         }
     }
 }
@@ -83,7 +91,8 @@ private fun arbeidsevneGrunnlag(
             kanVurderes = listOf(sak.rettighetsperiode),
             behøverVurderinger = emptyList(),
             nyeVurderinger = nyeVurderinger.map { it.toResponse(vurdertAvService) },
-            sisteVedtatteVurderinger = forrigeGrunnlag?.gjeldendeVurderinger().orEmpty().toResponse(vurdertAvService)
+            sisteVedtatteVurderinger = forrigeGrunnlag?.gjeldendeVurderinger().orEmpty().toResponse(vurdertAvService),
+            kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(Definisjon.FASTSETT_ARBEIDSEVNE, behandling.id)
         )
     }
 }

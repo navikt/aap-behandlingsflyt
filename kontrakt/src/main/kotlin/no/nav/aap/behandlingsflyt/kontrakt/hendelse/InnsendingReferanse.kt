@@ -53,6 +53,7 @@ public data class InnsendingReferanse(
     public constructor(id: AvvistLegeerklæringId) : this(Type.AVVIST_LEGEERKLÆRING_ID, id.asString)
     public constructor(id: KabalHendelseId) : this(Type.KABAL_HENDELSE_ID, id.asString)
     public constructor(id: TilbakekrevingHendelseId) : this(Type.TILBAKEKREVING_HENDELSE_ID, id.asString)
+    public constructor(id: TilbakekrevingFagsysteminfoBehovHendelseId) : this(Type.FAGSYSTEMINFO_BEHOV_HENDELSE_ID, id.asString)
     public constructor(id: PdlHendelseId) : this(Type.PDL_HENDELSE_ID, id.asString)
 }
 
@@ -91,6 +92,14 @@ public data class TilbakekrevingHendelseId(@JsonValue val value: String) {
 
     public companion object {
         public fun ny(meldingKey: String): TilbakekrevingHendelseId = TilbakekrevingHendelseId(meldingKey)
+    }
+}
+
+public data class TilbakekrevingFagsysteminfoBehovHendelseId(@JsonValue val value: String) {
+    val asString: String get() = value
+
+    public companion object {
+        public fun ny(meldingKey: String): TilbakekrevingFagsysteminfoBehovHendelseId = TilbakekrevingFagsysteminfoBehovHendelseId(meldingKey)
     }
 }
 

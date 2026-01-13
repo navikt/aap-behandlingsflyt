@@ -5,7 +5,7 @@ import no.nav.aap.komponenter.verdityper.GUnit
 data class InntektsbortfallKanBehandlesAutomatisk(
     val kanBehandlesAutomatisk: Boolean,
     val inntektSisteÅrOver1G: InntektSisteÅrOver1G,
-    val gjennomsnittInntektSiste3ÅrOver3G: GjennomsnittInntektSiste3ÅrOver3G,
+    val inntektSiste3ÅrOver3G: InntektSiste3ÅrOver3G,
     val under62ÅrVedSøknadstidspunkt: Under62ÅrVedSøknadstidspunkt,
 )
 
@@ -14,7 +14,7 @@ data class InntektSisteÅrOver1G(
     val resultat: Boolean
 )
 
-data class GjennomsnittInntektSiste3ÅrOver3G(
+data class InntektSiste3ÅrOver3G(
     val gverdi: GUnit,
     val resultat: Boolean
 )

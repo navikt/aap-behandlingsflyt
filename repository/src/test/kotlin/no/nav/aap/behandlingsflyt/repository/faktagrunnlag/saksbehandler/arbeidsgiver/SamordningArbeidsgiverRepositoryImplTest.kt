@@ -37,6 +37,48 @@ class SamordningArbeidsgiverRepositoryImplTest {
     }
 
     @Test
+    fun `lagre og slett`() {
+
+        val behandling = dataSource.transaction {
+            val sak = sak(it, Periode(1 januar 2023, 31 desember 2023))
+            finnEllerOpprettBehandling(it, sak)
+        }
+
+        dataSource.transaction {
+            val arbeidsgiverRepositoryImpl = SamordningArbeidsgiverRepositoryImpl(it)
+            val refusjonkrav = arbeidsgiverRepositoryImpl.hentHvisEksisterer(behandling.id)
+            assertNull(refusjonkrav)
+        }
+
+        val perioder = listOf(Periode(1 januar 2023, 1 februar 2023), Periode(2 februar 2023, 12 februar 2023))
+
+        dataSource.transaction {
+            val arbeidsgiverRepositoryImpl = SamordningArbeidsgiverRepositoryImpl(it)
+            arbeidsgiverRepositoryImpl.lagre(
+                sakId = behandling.sakId,
+                behandlingId = behandling.id,
+                refusjonkravVurderinger = SamordningArbeidsgiverVurdering(
+                    begrunnelse = "begrunnelse",
+                    perioder = perioder,
+                    vurdertAv = "vurdert_av",
+                )
+            )
+
+            val refusjonskrav = arbeidsgiverRepositoryImpl.hentHvisEksisterer(behandling.id)
+
+            assertNotNull(refusjonskrav)
+            assertThat(refusjonskrav?.vurdering?.perioder).isEqualTo(perioder)
+
+
+            arbeidsgiverRepositoryImpl.slett(behandling.id)
+        }
+
+
+    }
+
+
+
+    @Test
     fun `lagre, hent, kopier og slett arbeidsgiver perioder`() {
 
         val behandling = dataSource.transaction {

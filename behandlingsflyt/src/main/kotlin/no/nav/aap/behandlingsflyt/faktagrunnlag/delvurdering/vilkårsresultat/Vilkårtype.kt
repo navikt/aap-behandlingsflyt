@@ -109,6 +109,16 @@ enum class Vilkårtype(
         obligatorisk = false
     ),
 
+    SAMORDNING_ANNEN_LOVGIVNING(
+        kode = "AAP-29",
+        spesielleInnvilgelsesÅrsaker = emptyList(),
+        avslagsårsaker = listOf(
+            Avslagsårsak.INNTEKTSTAP_DEKKES_ETTER_ANNEN_LOVGIVNING
+        ),
+        hjemmel = "§ 11-29",
+        obligatorisk = false
+    ),
+
     SYKEPENGEERSTATNING(
         kode = "AAP-13",
         spesielleInnvilgelsesÅrsaker = emptyList(),

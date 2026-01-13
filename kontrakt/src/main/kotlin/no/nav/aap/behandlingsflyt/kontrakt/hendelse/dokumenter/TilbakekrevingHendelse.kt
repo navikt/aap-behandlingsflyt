@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.TilbakekrevingFagsysteminfoBehovHendelseId
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.TilbakekrevingHendelseId
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.verdityper.dokument.Kanal
@@ -90,7 +91,7 @@ public data class FagsysteminfoBehovKafkaMelding(
     public fun tilInnsending(meldingKey: String, saksnummer: Saksnummer): Innsending {
         return Innsending(
             saksnummer = saksnummer,
-            referanse = InnsendingReferanse(TilbakekrevingHendelseId.ny(meldingKey)),
+            referanse = InnsendingReferanse(TilbakekrevingFagsysteminfoBehovHendelseId.ny(meldingKey)),
             type = InnsendingType.FAGSYSTEMINFO_BEHOV_HENDELSE,
             kanal = Kanal.DIGITAL,
             mottattTidspunkt = LocalDateTime.now(),

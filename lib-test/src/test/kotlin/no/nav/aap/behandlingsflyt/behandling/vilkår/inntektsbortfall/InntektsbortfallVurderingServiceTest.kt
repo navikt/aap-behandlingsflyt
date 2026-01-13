@@ -69,19 +69,19 @@ class InntektsbortfallVurderingServiceTest {
     @ParameterizedTest
     @CsvSource(
         // Inntekter i G for
-        // 2023 2024 2025  - Forventet resultat
-        "   3,   2,    1,      false",
-        "   4,   3,    2,      true"
+        // 2023    2024    2025  - Forventet resultat
+        "   0.4,   0.4,    1.0,      false",
+        "   1.5,   1.0,    1.0,      true"
     )
-    fun `om gjennomsnittlig inntekt er over 3G, men ikke siste år, kan vilkåret likevel behandles automatisk`(
-        år1: Int,
-        år2: Int,
-        år3: Int,
+    fun `om inntekt siste 3 år er over 3G, men ikke siste år, kan vilkåret likevel behandles automatisk`(
+        år1: Double,
+        år2: Double,
+        år3: Double,
         kanBehandlesAutomatisk: Boolean
     ) {
         val resultat = service.vurderInntektsbortfall(
             fødselsdato = Fødselsdato(13 mars 1963),
-            inntektPerÅr = setOf(år1, år2, år3).mapIndexed { index, inntekt ->
+            inntektPerÅr = listOf(år1, år2, år3).mapIndexed { index, inntekt ->
                 val årForInntekt = 2023 + index
                 InntektPerÅr(
                     Year.of(årForInntekt), Grunnbeløp.finnGrunnbeløp(1 januar årForInntekt).multiplisert(
