@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemMedl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.AdresseType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.GyldigPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
@@ -49,9 +48,9 @@ data class MottarSykepengerGrunnlag(
 
 data class ManglerStatsborgerskapGrunnlag(
     val land: String,
-    override val gyldigFraOgMed: LocalDate? = null,
-    override val gyldigTilOgMed: LocalDate? = null,
-) : GyldigPeriode
+    val gyldigFraOgMed: LocalDate? = null,
+    val gyldigTilOgMed: LocalDate? = null,
+)
 
 data class OppgittJobbetIUtlandGrunnlag(
     val land: String?,

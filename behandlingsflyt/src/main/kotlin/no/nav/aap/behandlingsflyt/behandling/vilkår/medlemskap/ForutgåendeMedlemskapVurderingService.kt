@@ -4,10 +4,8 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapArbei
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.GyldigPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningMedHistorikkGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.erGyldigIPeriode
 import no.nav.aap.komponenter.type.Periode
 import java.time.YearMonth
 
@@ -170,20 +168,21 @@ class ForutgåendeMedlemskapVurderingService {
         val bosattUtenforNorge =
             grunnlag?.brukerPersonopplysning?.folkeregisterStatuser?.any { it.status != PersonStatus.bosatt }
 
-        val adresser =
-            grunnlag?.brukerPersonopplysning?.utenlandsAddresser
-                ?.filter { it.erGyldigIPeriode(forutgåendePeriode) }
-                ?.map {
-                    UtenlandskAdresseDto(
-                        gyldigFraOgMed = it.gyldigFraOgMed,
-                        gyldigTilOgMed = it.gyldigTilOgMed,
-                        adresseNavn = it.adresseNavn,
-                        postkode = it.postkode,
-                        bySted = it.bySted,
-                        landkode = it.landkode,
-                        adresseType = it.adresseType
-                    )
-                }
+        val adresser = grunnlag?.brukerPersonopplysning?.utenlandsAddresser?.map {
+            UtenlandskAdresseDto(
+                gyldigFraOgMed = it.gyldigFraOgMed,
+                gyldigTilOgMed = it.gyldigTilOgMed,
+                adresseNavn = it.adresseNavn,
+                postkode = it.postkode,
+                bySted = it.bySted,
+                landkode = it.landkode,
+                adresseType = it.adresseType
+            )
+        }?.filter {
+            (it.gyldigTilOgMed == null)
+                    || forutgåendePeriode.inneholder(it.gyldigTilOgMed)
+                    || (it.gyldigFraOgMed != null && forutgåendePeriode.inneholder(it.gyldigFraOgMed))
+        }
 
         val folkeregisterStatuserDto = grunnlag?.brukerPersonopplysning?.folkeregisterStatuser?.map {
             FolkeregisterStatusDto(it.status, it.gyldighetstidspunkt, it.opphoerstidspunkt)
@@ -228,18 +227,24 @@ class ForutgåendeMedlemskapVurderingService {
 
         val fantStatsborgerskapUtenforEØSiPerioden =
             grunnlag?.brukerPersonopplysning?.statsborgerskap
-                ?.any { it.erGyldigIPeriode(forutgåendePeriode) && it.land !in EØSLandEllerLandMedAvtale.gyldigeEØSLand.map { it.name } }
-
-        val manglerStatsborgerskapGrunnlag =
-            grunnlag?.brukerPersonopplysning?.statsborgerskap
-                ?.filter { it.erGyldigIPeriode(forutgåendePeriode) }
-                ?.map {
-                    ManglerStatsborgerskapGrunnlag(
-                        land = it.land,
-                        gyldigFraOgMed = it.gyldigFraOgMed,
-                        gyldigTilOgMed = it.gyldigTilOgMed
-                    )
+                ?.filter {
+                    (it.gyldigTilOgMed == null)
+                            || forutgåendePeriode.inneholder(it.gyldigTilOgMed)
+                            || (it.gyldigFraOgMed != null && forutgåendePeriode.inneholder(it.gyldigFraOgMed))
                 }
+                ?.any { it.land !in EØSLandEllerLandMedAvtale.gyldigeEØSLand.map { eøsLand -> eøsLand.name } }
+
+        val manglerStatsborgerskapGrunnlag = grunnlag?.brukerPersonopplysning?.statsborgerskap?.map {
+            ManglerStatsborgerskapGrunnlag(
+                land = it.land,
+                gyldigFraOgMed = it.gyldigFraOgMed,
+                gyldigTilOgMed = it.gyldigTilOgMed
+            )
+        }?.filter {
+            (it.gyldigTilOgMed == null)
+                    || forutgåendePeriode.inneholder(it.gyldigTilOgMed)
+                    || (it.gyldigFraOgMed != null && forutgåendePeriode.inneholder(it.gyldigFraOgMed))
+        }
 
         return TilhørighetVurdering(
             kilde = listOf(Kilde.PDL),

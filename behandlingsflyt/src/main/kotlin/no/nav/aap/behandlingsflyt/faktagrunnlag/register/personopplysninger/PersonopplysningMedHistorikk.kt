@@ -32,19 +32,19 @@ enum class PersonStatus {
 
 data class Statsborgerskap(
     val land: String,
-    override val gyldigFraOgMed: LocalDate? = null,
-    override val gyldigTilOgMed: LocalDate? = null,
-) : GyldigPeriode
+    val gyldigFraOgMed: LocalDate? = null,
+    val gyldigTilOgMed: LocalDate? = null,
+)
 
 data class UtenlandsAdresse(
-    override val gyldigFraOgMed: LocalDate? = null,
-    override val gyldigTilOgMed: LocalDate? = null,
+    val gyldigFraOgMed: LocalDate? = null,
+    val gyldigTilOgMed: LocalDate? = null,
     val adresseNavn: String?,
     val postkode: String?,
     val bySted: String?,
     val landkode: String?,
     val adresseType: AdresseType?
-) : GyldigPeriode
+)
 
 enum class AdresseType {
     KONTAKT_ADRESSE,
