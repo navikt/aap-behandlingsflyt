@@ -216,7 +216,7 @@ class MedlemskapLovvalgVurderingService {
 
         val manglerEØS =
             grunnlag?.statsborgerskap
-                ?.none { it.land !in EØSLandEllerLandMedAvtale.gyldigeEØSLand.map { it.name } }
+                ?.none { it.land in EØSLandEllerLandMedAvtale.gyldigeEØSLand.map { it.name } }
 
         val manglerStatsborgerskapGrunnlag = grunnlag?.statsborgerskap?.filter { it.erGyldigIPeriode(rettighetsPeriode) }?.map {
             ManglerStatsborgerskapGrunnlag(
