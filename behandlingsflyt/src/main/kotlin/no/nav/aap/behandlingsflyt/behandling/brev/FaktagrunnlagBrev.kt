@@ -13,9 +13,10 @@ data class TilkjentYtelse(
     val gradertDagsatsInkludertBarnetillegg: Beløp,
     val antallBarn: Int,
     val barnetilleggsats: Beløp,
-    val minsteÅrligYtelse: Beløp,
-    val minsteÅrligYtelseUnder25: Beløp,
-    val årligYtelse: Beløp
+    val `minsteÅrligYtelse`: Beløp,
+    val `minsteÅrligYtelseUnder25`: Beløp,
+    val `årligYtelse`: Beløp,
+    val sisteDagMedYtelse: LocalDate
 )
 
 data class GrunnlagBeregning(

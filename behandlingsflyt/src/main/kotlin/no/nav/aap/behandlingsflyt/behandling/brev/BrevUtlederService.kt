@@ -195,6 +195,7 @@ class BrevUtlederService(
 
         val tilkjentYtelse = utledTilkjentYtelse(behandling.id, vedtak.virkningstidspunkt)
 
+
         return Innvilgelse(
             virkningstidspunkt = vedtak.virkningstidspunkt,
             grunnlagBeregning = grunnlagBeregning,
@@ -333,7 +334,8 @@ class BrevUtlederService(
                 barnetilleggsats = tilkjent.barnetilleggsats,
                 minsteÅrligYtelse = minsteÅrligYtelse,
                 minsteÅrligYtelseUnder25 = Beløp(minsteÅrligYtelse.toTredjedeler()),
-                årligYtelse = tilkjent.dagsats.multiplisert(ANTALL_ÅRLIGE_ARBEIDSDAGER)
+                årligYtelse = tilkjent.dagsats.multiplisert(ANTALL_ÅRLIGE_ARBEIDSDAGER),
+                sisteDagMedYtelse = underveisperiode.periode.tom
             )
         }.segment(virkningstidspunkt)?.verdi
     }

@@ -43,6 +43,7 @@ import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Dagsatser
@@ -92,14 +93,54 @@ class BrevUtlederServiceTest {
         arbeidsopptrappingRepository = arbeidsopptrappingRepository,
         unleashGateway = unleashGateway,
     )
-
     val førsteTilkjentYtelsePeriode = Periode(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 12, 31))
 
-    /**
-     * Testen vil bli utdatert når ny brevbygger er implementert, da automatisering av beløpsvalg forventes innført
-     *
-     * Dette er kun for å sjekke at BrevUtlederService legger ved disse 3 årlige ytelse beløpene
-     */
+    @Test
+    fun `utledBehov legger ved sisteDagMedYtelse fra underveisTidslinje i TilkjentYtelse`() {
+        val virkningstidspunkt = LocalDate.of(2025, 1, 1)
+        val førstegangsbehandling = behandling(typeBehandling = TypeBehandling.Førstegangsbehandling)
+        every { vedtakRepository.hent(any<BehandlingId>()) } returns Vedtak(
+            behandlingId = førstegangsbehandling.id,
+            vedtakstidspunkt = LocalDateTime.of(2025,1,1, 0, 0,0),
+            virkningstidspunkt = virkningstidspunkt,
+        )
+        every { beregningsgrunnlagRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns Grunnlag11_19(
+            grunnlaget = GUnit(2),
+            erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(0),
+            inntekter = listOf(
+                grunnlagInntekt(2024, 220_000),
+                grunnlagInntekt(2023, 210_000),
+                grunnlagInntekt(2022, 200_000),
+            )
+        )
+        every { beregningVurderingRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns BeregningGrunnlag(
+            BeregningstidspunktVurdering(
+                begrunnelse = "",
+                nedsattArbeidsevneEllerStudieevneDato = LocalDate.of(2025, 1, 1),
+                ytterligereNedsattBegrunnelse = null,
+                ytterligereNedsattArbeidsevneDato = null,
+                vurdertAv = ""
+            ), null
+        )
+        every { behandlingRepository.hent(any<BehandlingId>()) } returns førstegangsbehandling
+        every { trukketSøknadService.søknadErTrukket(any<BehandlingId>()) } returns false
+        every { underveisRepository.hent(førstegangsbehandling.id) } returns underveisGrunnlag()
+        every { arbeidsopptrappingRepository.hentPerioder(any<BehandlingId>()) } returns emptyList()
+
+        val dagsats = Beløp("1000.00")
+        every { tilkjentYtelseRepository.hentHvisEksisterer(førstegangsbehandling.id)} returns tilkjentYtelseForFørstegangsbehandling(dagsats)
+        every { underveisRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns underveisGrunnlag()
+
+        val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(førstegangsbehandling.id)
+
+        assertIs<Innvilgelse>(resultat, "forventer brevbehov er av typen Innvilgelse")
+
+        assertNotNull(resultat.tilkjentYtelse, "tilkjent ytelse må eksistere")
+        val forventetSisteDagMedYtelse = underveisGrunnlag().somTidslinje().segmenter().lastOrNull()?.tom()
+        assertEquals(forventetSisteDagMedYtelse, resultat.tilkjentYtelse.sisteDagMedYtelse)
+    }
+
     @Test
     fun `utledBehov legger ved 3 alternative beløp for årlig ytelse`() {
         val virkningstidspunkt = LocalDate.of(2025, 1, 1)
@@ -158,7 +199,7 @@ class BrevUtlederServiceTest {
     }
 
     @Test
-    fun `skal feile ved utleding av brevtype dersom det aktivitetsplikt mangler`() {
+    fun `skal feile ved utleding av brevtype dersom aktivitetsplikt mangler`() {
         every { behandlingRepository.hent(any<BehandlingId>()) } returns aktivitetspliktBehandling
         every { aktivitetspliktRepository.hentHvisEksisterer(aktivitetspliktBehandling.id) } returns null
         every { arbeidsopptrappingRepository.hentPerioder(aktivitetspliktBehandling.id) } returns emptyList()
