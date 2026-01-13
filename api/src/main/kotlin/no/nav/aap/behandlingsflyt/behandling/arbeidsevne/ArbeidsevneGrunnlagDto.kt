@@ -18,6 +18,7 @@ data class ArbeidsevneGrunnlagDto(
     val vurderinger: List<ArbeidsevneVurderingDto>?,
     val gjeldendeVedtatteVurderinger: List<ArbeidsevneVurderingDto>?,
     val historikk: Set<ArbeidsevneVurderingDto>?,
+    val kvalitetssikretAv: VurdertAvResponse?,
 
     override val sisteVedtatteVurderinger: List<PeriodisertArbeidsevneVurderingDto>,
     override val nyeVurderinger: List<PeriodisertArbeidsevneVurderingDto>,
