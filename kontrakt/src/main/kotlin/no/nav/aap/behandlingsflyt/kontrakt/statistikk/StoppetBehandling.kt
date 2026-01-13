@@ -127,8 +127,6 @@ public enum class RettighetsType(public val hjemmel: String) {
     STUDENT(hjemmel = "§ 11-14"),
     ARBEIDSSØKER(hjemmel = "§ 11-17"),
     VURDERES_FOR_UFØRETRYGD(hjemmel = "§ 11-18"),
-    ETABLERING(hjemmel = "§ 11-15"),
-    OPPTRAPPING_SJETTE_LEDD(hjemmel = "§ 11-23 sjette ledd"),
 }
 
 public data class MeldekortDTO(

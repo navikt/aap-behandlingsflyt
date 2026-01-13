@@ -1,9 +1,10 @@
-package no.nav.aap.behandlingsflyt.behandling.kvote
+package no.nav.aap.behandlingsflyt.behandling.rettighet
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.underveis.KvoteService
+import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetsperiodeService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
@@ -15,56 +16,73 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import java.time.LocalDate
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.kvoteApi(
+fun NormalOpenAPIRoute.rettighetApi(
     dataSource: DataSource,
     repositoryRegistry: RepositoryRegistry,
 ) {
-    route("/api/kvote") {
-        getGrunnlag<BehandlingReferanse, List<KvoteDto>>(
+    route("/api/rettighet") {
+        getGrunnlag<BehandlingReferanse, List<RettighetDto>>(
             behandlingPathParam = BehandlingPathParam("referanse"),
             avklaringsbehovKode = Definisjon.AVKLAR_BARNETILLEGG.kode.toString()
         ) { req ->
-            val respons: List<KvoteDto> = dataSource.transaction(readOnly = true) { connection ->
+            val respons: List<RettighetDto> = dataSource.transaction(readOnly = true) { connection ->
                 val repositoryProvider = repositoryRegistry.provider(connection)
                 val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                 val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
-                val kvoterForBehandling = KvoteService().beregn(behandling.id)
 
                 val underveisgrunnlagRepository = repositoryProvider.provide<UnderveisRepository>()
                 val underveisgrunnlag = underveisgrunnlagRepository.hent(behandling.id)
                 val perioder = underveisgrunnlag.perioder
                 val rettighetstypePerioderMap = mutableMapOf<RettighetsType, List<Underveisperiode>>()
-                val kvoteDtoListe = mutableListOf<KvoteDto>()
+                val rettighetDtoListe = mutableListOf<RettighetDto>()
 
                 RettighetsType.entries.forEach { type ->
                     rettighetstypePerioderMap[type] = perioder.filter { it.rettighetsType == type }
                 }
 
                 rettighetstypePerioderMap.forEach { (type, perioder) ->
-                    val innfriddePerioder = perioder.filter { it.avslagsårsak == null }
-                    val antallDagerIKvote = kvoterForBehandling.hentKvoteForRettighetstype(type).asInt
-                    val bruktKvote = innfriddePerioder
-                        .filter { it.periode.tom <= LocalDate.now() }
-                        .sumOf { it.periode.antallHverdager().asInt }
+                    val innfriddePerioder = perioder.filter { it.avslagsårsak != null }
+                    val historiskePerioder = innfriddePerioder.filter { it.periode.tom.isBefore(LocalDate.now()) }
 
-                    kvoteDtoListe.add(
-                        KvoteDto(
-                            kvote = antallDagerIKvote,
+                    val gjeldendePeriode = innfriddePerioder.find { it.periode.fom <= LocalDate.now() && it.periode.tom >= LocalDate.now() }?.periode
+                    val bruktKvoteIGjeldendePeriode = if (gjeldendePeriode != null) Periode(gjeldendePeriode.fom, LocalDate.now().minusDays(1)).antallHverdager().asInt else 0
+                    val bruktKvote = historiskePerioder.sumOf { it.periode.antallHverdager().asInt }.plus(bruktKvoteIGjeldendePeriode)
+                    val totalKvoteForRettighet = KvoteService().beregn().hentKvoteForRettighetstype(type)?.asInt
+                    val gjenværendeKvote = totalKvoteForRettighet?.minus(bruktKvote) ?: 0
+
+                    val startDato = innfriddePerioder.first().periode.tom
+                    val maksDato =
+                        when (type) {
+                            RettighetsType.BISTANDSBEHOV, RettighetsType.SYKEPENGEERSTATNING -> {
+                                if (gjenværendeKvote > 0) {
+                                    LocalDate.now().plusDays(gjenværendeKvote.toLong())
+                                } else {
+                                    innfriddePerioder.first { it.avslagsårsak == UnderveisÅrsak.VARIGHETSKVOTE_BRUKT_OPP }.periode.fom
+                                }
+                            }
+                            RettighetsType.STUDENT, RettighetsType.ARBEIDSSØKER, RettighetsType.VURDERES_FOR_UFØRETRYGD
+                                -> RettighetsperiodeService().beregn(startDato).hentPeriodeForRettighetstype(type)?.tom
+                        }
+
+                    rettighetDtoListe.add(
+                        RettighetDto(
+                            kvote = totalKvoteForRettighet,
                             bruktKvote,
-                            gjenværendeKvote = antallDagerIKvote.minus(bruktKvote),
-                            startdatoForKvote = perioder.first().periode.tom,
-                            sluttDatoForKvote = innfriddePerioder.last().periode.tom,
+                            gjenværendeKvote = gjenværendeKvote,
+                            startdato = startDato,
+                            maksDato = maksDato,
                             opphørsdato = perioder.first { it.avslagsårsak == UnderveisÅrsak.VARIGHETSKVOTE_BRUKT_OPP }.periode.tom,
                             stansdato = perioder.first { it.avslagsårsak == UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT_11_7_STANS }.periode.tom // TODO Erstatt med ikke-deprecated
                         )
                     )
                 }
-                kvoteDtoListe
+                rettighetDtoListe
             }
             respond(respons)
         }
