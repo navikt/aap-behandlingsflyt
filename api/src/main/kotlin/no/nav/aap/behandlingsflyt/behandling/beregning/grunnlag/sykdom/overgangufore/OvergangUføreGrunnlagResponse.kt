@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.overgang
 
 import no.nav.aap.behandlingsflyt.PeriodiserteVurderingerDto
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykdom.SykdomsvurderingResponse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.komponenter.type.Periode
 
 data class OvergangUføreGrunnlagResponse(
@@ -16,5 +17,6 @@ data class OvergangUføreGrunnlagResponse(
     val gjeldendeSykdsomsvurderinger: List<SykdomsvurderingResponse>,
     override val kanVurderes: List<Periode>,
     override val behøverVurderinger: List<Periode>,
-    val perioderSomIkkeErTilstrekkeligVurdert: List<Periode>
+    val perioderSomIkkeErTilstrekkeligVurdert: List<Periode>,
+    val kvalitetssikretAv: VurdertAvResponse?,
 ): PeriodiserteVurderingerDto<OvergangUføreVurderingResponse>

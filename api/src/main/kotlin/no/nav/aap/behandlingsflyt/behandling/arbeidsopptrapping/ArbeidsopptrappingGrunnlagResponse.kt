@@ -16,7 +16,8 @@ data class ArbeidsopptrappingGrunnlagResponse(
     override val nyeVurderinger: List<ArbeidsopptrappingVurderingResponse>,
     override val kanVurderes: List<Periode>,
     override val behøverVurderinger: List<Periode>,
-    val ikkeVurderbarePerioder: List<Periode>
+    val ikkeVurderbarePerioder: List<Periode>,
+    val kvalitetssikretAv: VurdertAvResponse?,
 ) : PeriodiserteVurderingerDto<ArbeidsopptrappingVurderingResponse>
 
 data class ArbeidsopptrappingVurderingResponse(
