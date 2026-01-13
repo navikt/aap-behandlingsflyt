@@ -4,6 +4,10 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
+import no.nav.aap.behandlingsflyt.behandling.vilkår.samordning.annenlovgivning.SamordningAnnenLovgivningFaktagrunnlag
+import no.nav.aap.behandlingsflyt.behandling.vilkår.samordning.annenlovgivning.SamordningAnnenLovgivningVilkår
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.sykestipend.SykestipendRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.søkerOppgirStudentstatus
@@ -26,6 +30,7 @@ class SykestipendSteg private constructor(
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val avklaringsbehovService: AvklaringsbehovService,
+    private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val unleashGateway: UnleashGateway
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
@@ -34,6 +39,7 @@ class SykestipendSteg private constructor(
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
         avklaringsbehovRepository = repositoryProvider.provide(),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
+        vilkårsresultatRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide()
     )
 
@@ -85,7 +91,24 @@ class SykestipendSteg private constructor(
             },
             kontekst
         )
+        
+        vurderSamordningAnnenLovgivningVilkår(kontekst)
+        
         return Fullført
+    }
+    
+    // Bør kanskje inn i et eget steg?
+    private fun vurderSamordningAnnenLovgivningVilkår(kontekst: FlytKontekstMedPerioder) {
+        val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
+        vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SAMORDNING_ANNEN_LOVGIVNING)
+        
+        val grunnlag = SamordningAnnenLovgivningFaktagrunnlag(
+            kontekst.rettighetsperiode,
+            sykestipendRepository.hentHvisEksisterer(kontekst.behandlingId),
+        )
+
+        SamordningAnnenLovgivningVilkår(vilkårsresultat).vurder(grunnlag)
+        vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
     }
 
     companion object : FlytSteg {

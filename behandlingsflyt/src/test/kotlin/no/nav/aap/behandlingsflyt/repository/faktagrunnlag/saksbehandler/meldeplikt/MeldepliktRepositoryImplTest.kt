@@ -4,15 +4,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaks
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektForutgåendeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.august
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -327,59 +321,6 @@ class MeldepliktRepositoryImplTest {
                         fraDato = 13 august 2023,
                         begrunnelse = "annen begrunnelse",
                         harFritak = true
-                    )
-                )
-        }
-    }
-
-    @Test
-    fun `migrer meldeplikt fritak`() {
-        val fritaksvurderingFørstegangsbehandling =
-            Fritaksvurdering(true, 13 august 2023, null, "en begrunnelse", "saksbehandler", LocalDateTime.now(), BehandlingId(1))
-        val fritaksvurderingRevurdering =
-            Fritaksvurdering(true, 10 august 2024, null, "en begrunnelse", "saksbehandler", LocalDateTime.now(), BehandlingId(1))
-
-        val behandling = dataSource.transaction { connection ->
-            val meldepliktRepository = MeldepliktRepositoryImpl(connection)
-            val sak = sak(connection)
-            val behandling = finnEllerOpprettBehandling(connection, sak)
-
-            meldepliktRepository.lagre(behandling.id, listOf(fritaksvurderingFørstegangsbehandling))
-            BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
-            behandling
-        }
-
-        // Revurdering
-        dataSource.transaction { connection ->
-            val meldepliktRepository = MeldepliktRepositoryImpl(connection)
-            val behandlingRepo = BehandlingRepositoryImpl(connection)
-
-            val revurdering =
-                behandlingRepo.opprettBehandling(
-                    behandling.sakId,
-                    TypeBehandling.Revurdering,
-                    behandling.id,
-                    VurderingsbehovOgÅrsak(
-                        listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
-                        ÅrsakTilOpprettelse.SØKNAD
-                    )
-                )
-
-            meldepliktRepository.kopier(behandling.id, revurdering.id)
-
-            meldepliktRepository.lagre(revurdering.id, listOf(fritaksvurderingFørstegangsbehandling, fritaksvurderingRevurdering))
-
-            meldepliktRepository.migrerMeldepliktFritak()
-
-            assertThat(meldepliktRepository.hentHvisEksisterer(revurdering.id)?.vurderinger).usingRecursiveComparison()
-                .ignoringFields("opprettetTid").isEqualTo(
-                    listOf(
-                        fritaksvurderingFørstegangsbehandling.copy(
-                            vurdertIBehandling = behandling.id,
-                        ),
-                        fritaksvurderingRevurdering.copy(
-                            vurdertIBehandling = revurdering.id,
-                        )
                     )
                 )
         }

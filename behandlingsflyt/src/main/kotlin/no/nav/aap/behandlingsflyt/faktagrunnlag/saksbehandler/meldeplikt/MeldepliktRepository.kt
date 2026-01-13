@@ -8,5 +8,4 @@ interface MeldepliktRepository : Repository {
     fun hentHvisEksisterer(behandlingId: BehandlingId): MeldepliktGrunnlag?
     fun lagre(behandlingId: BehandlingId, vurderinger: List<Fritaksvurdering>)
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
-    fun migrerMeldepliktFritak()
 }

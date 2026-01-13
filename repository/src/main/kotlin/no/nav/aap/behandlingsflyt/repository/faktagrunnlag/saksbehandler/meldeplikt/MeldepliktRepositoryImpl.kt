@@ -7,12 +7,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
-import kotlin.system.measureTimeMillis
 
 class MeldepliktRepositoryImpl(private val connection: DBConnection) : MeldepliktRepository {
 
@@ -163,149 +161,5 @@ class MeldepliktRepositoryImpl(private val connection: DBConnection) : Meldeplik
             }
         }
     }
-
-
-    override fun migrerMeldepliktFritak() {
-        log.info("Starter migrering av meldeplikt fritak")
-        // Hent alle koblingstabeller
-        val kandidater = hentKandidater()
-        val kandidaterGruppertPåSak = kandidater.groupBy { it.sakId }
-
-        var migrerteVurderingerCount = 0
-        val totalTid = measureTimeMillis {
-            kandidaterGruppertPåSak.forEach { (sakId, kandidaterForSak) ->
-                log.info("Migrerer meldeplikt fritak for sak ${sakId.id} med ${kandidaterForSak.size} kandidater")
-                val sorterteKandidater = kandidaterForSak.sortedBy { it.grunnlagOpprettetTid }
-                val vurderingerMedVurderingerId =
-                    hentVurderinger(kandidaterForSak.map { it.meldepliktId }.toSet().toList())
-
-                // Kan skippe grunnlag som peker på vurderinger som allerede er migrert
-                val migrerteVurderingerId = mutableSetOf<Long>()
-
-                // Dette dekker en eksisterende vurdering som er lagret som en del av et nytt grunnlag;
-                // disse har ikke samme id som den originale.
-                // Antar at like vurderinger innenfor samme sak er samme vurdering
-                val nyeVerdierForVurdering =
-                    mutableMapOf<SammenlignbarFritaksvurdering, BehandlingId>()
-
-                sorterteKandidater.filterNot { it.meldepliktId in migrerteVurderingerId }.forEach { kandidat ->
-                    val vurderingerForGrunnlag =
-                        vurderingerMedVurderingerId.filter { it.vurderingerId == kandidat.meldepliktId }
-
-                    vurderingerForGrunnlag.forEach { vurderingMedIder ->
-                        val vurdering = vurderingMedIder.vurdering
-                        val vurderingId = vurderingMedIder.vurderingId
-                        val sammenlignbarVurdering = vurdering.tilSammenlignbar()
-                        val nyeVerdier = if (nyeVerdierForVurdering.containsKey(sammenlignbarVurdering)) {
-                            // Bruk den migrerte versjonen
-                            nyeVerdierForVurdering[sammenlignbarVurdering]!!
-                        } else {
-                            val vurdertIBehandling = kandidat.behandlingId
-                            nyeVerdierForVurdering.put(sammenlignbarVurdering, vurdertIBehandling)
-                            vurdertIBehandling
-                        }
-
-                        connection.execute(
-                            """
-                        UPDATE MELDEPLIKT_FRITAK_VURDERING
-                        SET VURDERT_I_BEHANDLING = ?
-                        WHERE ID = ?
-                        """.trimIndent()
-                        ) {
-                            setParams {
-                                setLong(1, nyeVerdier.id)
-                                setLong(2, vurderingId)
-                            }
-                        }
-                        migrerteVurderingerCount = migrerteVurderingerCount + 1
-
-                        migrerteVurderingerId.add(kandidat.meldepliktId)
-                    }
-                }
-            }
-        }
-        log.info("Fullført migrering av fritak meldeplikt. Migrerte ${kandidater.size} grunnlag og ${migrerteVurderingerCount} vurderinger på $totalTid ms.")
-    }
-
-
-
-    // Vurdering minus opprettet, tom, vurdertIBehandling
-    data class SammenlignbarFritaksvurdering(
-        val harFritak: Boolean,
-        val fraDato: LocalDate,
-        val begrunnelse: String,
-        val vurdertAv: String,
-    )
-
-    private fun Fritaksvurdering.tilSammenlignbar(): SammenlignbarFritaksvurdering {
-        return SammenlignbarFritaksvurdering(
-            begrunnelse = this.begrunnelse,
-            fraDato = this.fraDato,
-            harFritak = this.harFritak,
-            vurdertAv = this.vurdertAv,
-        )
-    }
-
-    private data class VurderingMedVurderingerId(
-        val vurderingerId: Long,
-        val vurderingId: Long,
-        val vurdering: Fritaksvurdering
-    )
-
-    private fun hentVurderinger(vurderingerIds: List<Long>): List<VurderingMedVurderingerId> {
-        val query = """
-            select * from meldeplikt_fritak_vurdering
-            where meldeplikt_id = ANY(?::bigint[])
-        """.trimIndent()
-        return connection.queryList(query) {
-            setParams {
-                setLongArray(1, vurderingerIds)
-            }
-            setRowMapper {
-                VurderingMedVurderingerId(
-                    vurderingerId = it.getLong("meldeplikt_id"),
-                    vurderingId = it.getLong("id"),
-                    vurdering = toMeldepliktInternal(it).toFritaksvurdering()
-                )
-            }
-        }
-    }
-
-    private fun hentKandidater(): List<Kandidat> {
-        val kandidaterQuery = """
-            select g.id as grunnlag_id,
-                     b.id as behandling_id,
-                     s.id as sak_id,
-                     s.rettighetsperiode,
-                     g.meldeplikt_id,
-                     g.opprettet_tid as grunnlag_opprettet_tid
-            
-            from meldeplikt_fritak_grunnlag g 
-            inner join behandling b on g.behandling_id = b.id
-            inner join sak s on b.sak_id = s.id
-        """.trimIndent()
-
-        return connection.queryList(kandidaterQuery) {
-            setRowMapper {
-                Kandidat(
-                    sakId = SakId(it.getLong("sak_id")),
-                    grunnlagId = it.getLong("grunnlag_id"),
-                    behandlingId = BehandlingId(it.getLong("behandling_id")),
-                    rettighetsperiode = it.getPeriode("rettighetsperiode"), // Denne er teknisk sett feil, men kanskje godt nok. Hvis ikke: join på rettighetsperiode_grunnlag
-                    meldepliktId = it.getLong("meldeplikt_id"),
-                    grunnlagOpprettetTid = it.getLocalDateTime("grunnlag_opprettet_tid"),
-                )
-            }
-        }
-    }
-
-    private data class Kandidat(
-        val sakId: SakId,
-        val grunnlagId: Long,
-        val behandlingId: BehandlingId,
-        val rettighetsperiode: Periode,
-        val meldepliktId: Long, // samme som vurderinger_id i andre vilkår
-        val grunnlagOpprettetTid: LocalDateTime,
-    )
 }
 

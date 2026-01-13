@@ -99,6 +99,9 @@ class Vilkår(
     }
 
 
+    fun harPerioderMedIkkeOppfylt(): Boolean {
+        return vilkårTidslinje.segmenter().any { it.verdi.erIkkeOppfylt() }
+    }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

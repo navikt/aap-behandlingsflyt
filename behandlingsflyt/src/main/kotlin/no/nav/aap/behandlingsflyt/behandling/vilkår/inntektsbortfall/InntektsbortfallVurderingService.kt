@@ -6,7 +6,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fød
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.GUnit
 import java.math.BigDecimal
-import java.math.RoundingMode
 import java.time.MonthDay
 import java.time.Year
 
@@ -22,13 +21,13 @@ class InntektsbortfallVurderingService(
         val under62ÅrVedSøknadstidspunktGrunnlag = erUnder62PåRettighetsperioden(fødselsdato)
         val inntektSisteÅrOver1GGrunnlag =
             inntektSisteÅrOver1G(inntektPerÅr, sisteRelevanteÅr)
-        val gjennomsnittInntektSiste3ÅrOver3GGrunnlag =
-            gjennomsnittInntektSiste3ÅrOver3G(inntektPerÅr, sisteRelevanteÅr)
+        val inntektSiste3ÅrOver3GGrunnlag =
+            inntektSiste3ÅrOver3G(inntektPerÅr, sisteRelevanteÅr)
 
         return InntektsbortfallKanBehandlesAutomatisk(
-            kanBehandlesAutomatisk = under62ÅrVedSøknadstidspunktGrunnlag.resultat || inntektSisteÅrOver1GGrunnlag.resultat || gjennomsnittInntektSiste3ÅrOver3GGrunnlag.resultat,
+            kanBehandlesAutomatisk = under62ÅrVedSøknadstidspunktGrunnlag.resultat || inntektSisteÅrOver1GGrunnlag.resultat || inntektSiste3ÅrOver3GGrunnlag.resultat,
             inntektSisteÅrOver1G = inntektSisteÅrOver1GGrunnlag,
-            gjennomsnittInntektSiste3ÅrOver3G = gjennomsnittInntektSiste3ÅrOver3GGrunnlag,
+            inntektSiste3ÅrOver3G = inntektSiste3ÅrOver3GGrunnlag,
             under62ÅrVedSøknadstidspunkt = under62ÅrVedSøknadstidspunktGrunnlag
         )
     }
@@ -40,21 +39,20 @@ class InntektsbortfallVurderingService(
         return Under62ÅrVedSøknadstidspunkt(alderPåStartsdato, alderPåStartsdato < 62)
     }
 
-    private fun gjennomsnittInntektSiste3ÅrOver3G(
+    private fun inntektSiste3ÅrOver3G(
         inntektGrunnlag: Set<InntektPerÅr>,
         sisteRelevanteÅr: Set<Year>
-    ): GjennomsnittInntektSiste3ÅrOver3G {
+    ): InntektSiste3ÅrOver3G {
         val inntektGrunnlagSisteRelevanteÅr = hentInntekterGrunnlag(inntektGrunnlag, sisteRelevanteÅr)
 
         return if (inntektGrunnlagSisteRelevanteÅr.isEmpty()) {
-            GjennomsnittInntektSiste3ÅrOver3G(gverdi = GUnit(BigDecimal.ZERO), resultat = false)
+            InntektSiste3ÅrOver3G(gverdi = GUnit(BigDecimal.ZERO), resultat = false)
         } else {
             val gjennomsnitt = inntektGrunnlagSisteRelevanteÅr
                 .map { it.gUnit().gUnit.verdi() }
                 .reduce(BigDecimal::add)
-                .divide(BigDecimal(3), RoundingMode.HALF_UP)
 
-            GjennomsnittInntektSiste3ÅrOver3G(
+            InntektSiste3ÅrOver3G(
                 gverdi = GUnit(gjennomsnitt),
                 resultat = gjennomsnitt >= BigDecimal(3)
             )
