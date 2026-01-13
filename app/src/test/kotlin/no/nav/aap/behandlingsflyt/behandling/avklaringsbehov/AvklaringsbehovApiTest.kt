@@ -93,8 +93,8 @@ class AvklaringsbehovApiTest {
     }
 
     @Test
-    fun `flere implisitte slutt-datoer er ok `() {
-        assertDoesNotThrow {
+    fun `flere implisitte slutt-datoer er ikke ok `() {
+        assertThrows<UgyldigForespørselException> {
             validerPerioder(listOf(
                 P(1 januar 2025, null),
                 P(2 januar 2025, null),
