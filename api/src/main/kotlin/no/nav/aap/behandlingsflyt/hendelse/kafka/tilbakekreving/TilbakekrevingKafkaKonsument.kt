@@ -51,8 +51,9 @@ class TilbakekrevingKafkaKonsument(
     }
 
     fun håndter(meldingKey: String, meldingVerdi: String) {
+
         val tree = DefaultJsonMapper.objectMapper().readTree(meldingVerdi)
-        val hendelsestype = tree["hendelsestype"].asText()
+        val hendelsestype = tree["hendelsestype"]?.asText()
         val innsending = when (hendelsestype) {
             "behandling_endret" -> {
                 val hendelse = try {
@@ -74,14 +75,25 @@ class TilbakekrevingKafkaKonsument(
                 log.info("Mottatt fagsysteminfobehovhendelse for saksnummer: ${hendelse.eksternFagsakId}")
                 hendelse.tilInnsending(meldingKey, Saksnummer(hendelse.eksternFagsakId))
             }
+            "fagsysteminfo_svar" -> {
+                log.info("Hopper over meldinger med hendelsestype lik fagsysteminfo_svar")
+                null
+            }
+            null -> {
+                secureLogger.info("Hopper over meldinger med hendelsestype lik null: $meldingVerdi")
+                null
+            }
             else -> {
-                throw IllegalArgumentException("Ukjent hendelsestype $hendelsestype")
+                secureLogger.info("Hopper over meldinger med ukjent hendelsestype: $meldingVerdi")
+                null
             }
         }
-        dataSource.transaction { connection ->
-            val repositoryProvider = repositoryRegistry.provider(connection)
-            val hendelseService = MottattHendelseService(repositoryProvider)
-            hendelseService.registrerMottattHendelse(innsending)
+        if (innsending != null) {
+            dataSource.transaction { connection ->
+                val repositoryProvider = repositoryRegistry.provider(connection)
+                val hendelseService = MottattHendelseService(repositoryProvider)
+                hendelseService.registrerMottattHendelse(innsending)
+            }
         }
     }
 
