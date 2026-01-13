@@ -43,6 +43,8 @@ class SendFagsysteminfoBehovTilTilbakekrevingUtfører(
 }
 
 data class FagsysteminfoSvarHendelse(
+    val hendelsestype: String = "fagsysteminfo_svar",
+    val versjon: Int = 1,
     val eksternFagsakId: String,
     val hendelseOpprettet: LocalDateTime,
     val mottaker: MottakerDto,
