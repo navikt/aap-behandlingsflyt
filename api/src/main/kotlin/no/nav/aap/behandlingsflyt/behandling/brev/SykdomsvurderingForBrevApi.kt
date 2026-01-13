@@ -18,6 +18,8 @@ import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 
 fun NormalOpenAPIRoute.sykdomsvurderingForBrevApi(
     dataSource: DataSource,
@@ -25,6 +27,7 @@ fun NormalOpenAPIRoute.sykdomsvurderingForBrevApi(
     gatewayProvider: GatewayProvider,
 ) {
     val ansattInfoService = AnsattInfoService(gatewayProvider)
+
     route("/api/behandling/{referanse}/grunnlag/sykdomsvurdering-for-brev") {
         getGrunnlag<BehandlingReferanse, SykdomsvurderingForBrevDto>(
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
@@ -35,13 +38,32 @@ fun NormalOpenAPIRoute.sykdomsvurderingForBrevApi(
                 val repositoryProvider = repositoryRegistry.provider(connection)
                 val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                 val sykdomsvurderingForBrevRepository = repositoryProvider.provide<SykdomsvurderingForBrevRepository>()
+                val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
 
-                val sykdomsvurderingForBrev = hentSykdomsvurderingForBrev(behandlingReferanse, behandlingRepository, sykdomsvurderingForBrevRepository)
-                val historiskeSykdomsvurderingerForBrev = hentHistoriskeSykdomsvurderingerForBrev(behandlingReferanse, behandlingRepository, sykdomsvurderingForBrevRepository)
+                val sykdomsvurderingForBrev = hentSykdomsvurderingForBrev(
+                    behandlingReferanse,
+                    behandlingRepository,
+                    sykdomsvurderingForBrevRepository
+                )
+                val historiskeSykdomsvurderingerForBrev = hentHistoriskeSykdomsvurderingerForBrev(
+                    behandlingReferanse,
+                    behandlingRepository,
+                    sykdomsvurderingForBrevRepository
+                )
 
                 SykdomsvurderingForBrevDto(
-                    vurdering = sykdomsvurderingForBrev?.toDto(ansattInfoService),
-                    historiskeVurderinger = historiskeSykdomsvurderingerForBrev.map { it.toDto(ansattInfoService) },
+                    vurdering = sykdomsvurderingForBrev?.toDto(
+                        ansattInfoService,
+                        vurdertAvService,
+                        behandlingRepository.hent(behandlingReferanse)
+                    ),
+                    historiskeVurderinger = historiskeSykdomsvurderingerForBrev.map {
+                        it.toDto(
+                            ansattInfoService,
+                            vurdertAvService,
+                            behandlingRepository.hent(behandlingReferanse)
+                        )
+                    },
                     kanSaksbehandle = kanSaksbehandle()
                 )
             }
@@ -70,7 +92,11 @@ private fun hentHistoriskeSykdomsvurderingerForBrev(
         .sortedByDescending { it.vurdertTidspunkt }
 }
 
-private fun SykdomsvurderingForBrev.toDto(ansattInfoService: AnsattInfoService): SykdomsvurderingForBrevVurderingDto {
+private fun SykdomsvurderingForBrev.toDto(
+    ansattInfoService: AnsattInfoService,
+    vurdertAvService: VurdertAvService,
+    behandling: Behandling
+): SykdomsvurderingForBrevVurderingDto {
     val ansattNavnOgEnhet = ansattInfoService.hentAnsattNavnOgEnhet(vurdertAv)
     return SykdomsvurderingForBrevVurderingDto(
         vurdering = vurdering,
@@ -79,6 +105,10 @@ private fun SykdomsvurderingForBrev.toDto(ansattInfoService: AnsattInfoService):
             dato = vurdertTidspunkt.toLocalDate(),
             ansattnavn = ansattNavnOgEnhet?.navn,
             enhetsnavn = ansattNavnOgEnhet?.enhet
-        )
+        ),
+        kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
+            definisjon = Definisjon.SKRIV_SYKDOMSVURDERING_BREV,
+            behandlingId = behandling.id,
+        ),
     )
 }
