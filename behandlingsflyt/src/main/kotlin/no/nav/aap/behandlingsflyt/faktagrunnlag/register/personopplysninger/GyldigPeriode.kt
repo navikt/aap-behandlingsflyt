@@ -8,7 +8,10 @@ interface GyldigPeriode {
     val gyldigTilOgMed: LocalDate?
 }
 
-fun GyldigPeriode.erGyldigIPeriode(periode: Periode): Boolean =
-    gyldigTilOgMed == null ||
-            periode.inneholder(gyldigTilOgMed!!) ||
-            (gyldigFraOgMed != null && periode.inneholder(gyldigFraOgMed!!))
+fun GyldigPeriode.erGyldigIPeriode(periode: Periode): Boolean {
+    val fra = gyldigFraOgMed
+    val til = gyldigTilOgMed
+
+    return (fra != null && periode.inneholder(fra)) || til == null ||
+            periode.inneholder(til)
+}
