@@ -214,9 +214,14 @@ class MedlemskapLovvalgVurderingService {
         grunnlag: Personopplysning?,
         rettighetsPeriode: Periode
     ): TilhørighetVurdering {
+
+        val eøsLandNavn = EØSLandEllerLandMedAvtale.gyldigeEØSLand
+            .map { it.name }
+            .toSet()
+
         val manglerEØS =
             grunnlag?.statsborgerskap
-                ?.none { it.land in EØSLandEllerLandMedAvtale.gyldigeEØSLand.map { eøsLand -> eøsLand.name } }
+                ?.none { it.land in eøsLandNavn }
 
         val manglerStatsborgerskapGrunnlag = grunnlag?.statsborgerskap?.map {
             ManglerStatsborgerskapGrunnlag(
