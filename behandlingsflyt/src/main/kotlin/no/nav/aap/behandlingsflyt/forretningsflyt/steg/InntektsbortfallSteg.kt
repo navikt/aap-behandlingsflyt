@@ -58,7 +58,7 @@ class InntektsbortfallSteg private constructor(
                                 kontekst
                             ) -> false
 
-                            else -> true
+                            else -> kravOmInntektsbortfallEnabled
                         }
                     }
 
