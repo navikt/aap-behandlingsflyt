@@ -161,7 +161,7 @@ class MedlemskapLovvalgVurderingService {
     }
 
     private fun utenlandskAdresse(grunnlag: Personopplysning?, rettighetsPeriode: Periode): TilhørighetVurdering {
-        val bosattUtenforNorge = grunnlag?.status != PersonStatus.bosatt
+        val bosattUtenforNorge = grunnlag?.status != PersonStatus.bosatt && grunnlag?.status != PersonStatus.doed
 
         val adresser = grunnlag?.utenlandsAddresser?.filter { it.erGyldigIPeriode(rettighetsPeriode) }?.map {
             UtenlandskAdresseDto(

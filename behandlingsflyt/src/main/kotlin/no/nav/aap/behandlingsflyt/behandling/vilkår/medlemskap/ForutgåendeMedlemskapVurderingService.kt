@@ -168,7 +168,7 @@ class ForutgåendeMedlemskapVurderingService {
         forutgåendePeriode: Periode
     ): TilhørighetVurdering {
         val bosattUtenforNorge =
-            grunnlag?.brukerPersonopplysning?.folkeregisterStatuser?.any { it.status != PersonStatus.bosatt }
+            grunnlag?.brukerPersonopplysning?.folkeregisterStatuser?.any { it.status != PersonStatus.bosatt && it.status != PersonStatus.doed }
 
         val adresser =
             grunnlag?.brukerPersonopplysning?.utenlandsAddresser
