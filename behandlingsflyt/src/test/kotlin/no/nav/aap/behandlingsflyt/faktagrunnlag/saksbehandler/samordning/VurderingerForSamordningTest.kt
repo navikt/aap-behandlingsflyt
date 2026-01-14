@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-internal class VurderingerForSamordningTest {
+class VurderingerForSamordningTest {
     @Test
     fun `skal kaste exception når perioder for samme ytelsetype overlapper`() {
         org.junit.jupiter.api.assertThrows<UgyldigForespørselException> {
