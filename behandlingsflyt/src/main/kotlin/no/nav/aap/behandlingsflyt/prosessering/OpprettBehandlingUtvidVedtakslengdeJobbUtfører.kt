@@ -22,6 +22,7 @@ import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import no.nav.aap.motor.cron.CronExpression
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
+import java.time.LocalDate.now
 
 class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
     private val prosesserBehandlingService: ProsesserBehandlingService,
@@ -35,10 +36,12 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
 
     override fun utfør(input: JobbInput) {
         val dryRun = true
-        val datoForUtvidelse = LocalDate.now().plusDays(28)
 
-        val saker = hentKandidaterForUtvidelseAvVedtakslengde(datoForUtvidelse)
-        log.info("Fant ${saker.size} kandidater for utvidelse av vedtakslende per $datoForUtvidelse")
+        // TODO få inn en begrunnelse for dette antallet dager
+        val datoHvorSakerSjekkesForUtvidelse = now().plusDays(28)
+
+        val saker = hentKandidaterForUtvidelseAvVedtakslengde(datoHvorSakerSjekkesForUtvidelse)
+        log.info("Fant ${saker.size} kandidater for utvidelse av vedtakslende per $datoHvorSakerSjekkesForUtvidelse (dryRun=$dryRun)")
 
         if (unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengde)) {
             saker
@@ -59,8 +62,8 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
 
                             // Trigger behandling som utvider vedtakslengde dersom nødvendig
                             val underveisGrunnlag = underveisRepository.hentHvisEksisterer(sisteGjeldendeBehandling.id)
-                            if (underveisGrunnlag != null && harBehovForUtvidetVedtakslengde(underveisGrunnlag, datoForUtvidelse)) {
-                                log.info("Oppretter behandling for utvidelse av vedtakslengde for saksnummer ${sak.saksnummer}")
+                            if (underveisGrunnlag != null && harBehovForUtvidetVedtakslengde(sakId, underveisGrunnlag, datoHvorSakerSjekkesForUtvidelse)) {
+                                log.info("Oppretter behandling for utvidelse av vedtakslengde sak $sakId")
                                 if (!dryRun) {
                                     val utvidVedtakslengdeBehandling = opprettNyBehandling(sak)
                                     prosesserBehandlingService.triggProsesserBehandling(utvidVedtakslengdeBehandling)
@@ -80,12 +83,15 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
     }
 
     private fun harBehovForUtvidetVedtakslengde(
+        sakId: SakId,
         underveisGrunnlag: UnderveisGrunnlag,
         datoForUtvidelse: LocalDate
     ): Boolean {
         val harFremtidigRettOrdinær = true // TODO sjekk om det finnes rett i fremtiden av type ORDINÆR
         val sisteVedtatteUnderveisperiode = underveisGrunnlag.perioder.maxBy { it.periode.tom }
         val gjeldendeSluttdato = sisteVedtatteUnderveisperiode.periode.tom
+
+        log.info("Sak $sakId har harFremtidigRettOrdinær=$harFremtidigRettOrdinær og gjeldendeSluttdato=$gjeldendeSluttdato")
         return gjeldendeSluttdato.isBefore(datoForUtvidelse) && harFremtidigRettOrdinær
     }
 
