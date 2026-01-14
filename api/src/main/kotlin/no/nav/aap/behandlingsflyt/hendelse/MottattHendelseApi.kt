@@ -13,7 +13,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SaksnummerParameter
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForSakResolver
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.AuthorizationMachineToMachineConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
@@ -25,7 +24,6 @@ import javax.sql.DataSource
 fun NormalOpenAPIRoute.mottattHendelseApi(
     dataSource: DataSource,
     repositoryRegistry: RepositoryRegistry,
-    gatewayProvider: GatewayProvider,
 ) {
     route("/api/hendelse") {
         route("/send") {
