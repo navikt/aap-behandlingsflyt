@@ -23,7 +23,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     SosialRefusjon,
     MigrerRettighetsperiode,
     HentSykepengerVedOverlapp,
-    SendBrevVedMottattKlage
+    SendBrevVedMottattKlage,
     PeriodisertSykdom,
     Sykestipend
     ;
