@@ -1,15 +1,16 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning
 
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.type.Periode
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class VurderingerForSamordningTest {
+internal class VurderingerForSamordningTest {
     @Test
     fun `skal kaste exception når perioder for samme ytelsetype overlapper`() {
-        org.junit.jupiter.api.assertThrows<IllegalArgumentException> {
+        org.junit.jupiter.api.assertThrows<UgyldigForespørselException> {
             VurderingerForSamordning(
                 begrunnelse = "...",
                 maksDatoEndelig = false,
@@ -26,7 +27,7 @@ class VurderingerForSamordningTest {
                         gradering = 100,
                     )
                 )
-            )
+            ).valider()
         }
     }
 
@@ -50,7 +51,7 @@ class VurderingerForSamordningTest {
                         gradering = 100,
                     )
                 )
-            )
+            ).valider()
         })
     }
 
@@ -74,7 +75,7 @@ class VurderingerForSamordningTest {
                         gradering = 100,
                     )
                 )
-            )
+            ).valider()
         })
     }
 }
