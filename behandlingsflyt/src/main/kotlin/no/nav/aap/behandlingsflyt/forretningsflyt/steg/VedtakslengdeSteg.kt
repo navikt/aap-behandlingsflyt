@@ -32,6 +32,13 @@ class VedtakslengdeSteg(
     private val vedtakslengdeRepository: FakeVedtakslengdeRepository,
     private val unleashGateway: UnleashGateway
 ) : BehandlingSteg {
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
+        underveisRepository = repositoryProvider.provide(),
+        vilkårsresultatRepository = repositoryProvider.provide(),
+        vedtakslengdeRepository = FakeVedtakslengdeRepository(),
+        unleashGateway = gatewayProvider.provide()
+    )
+
     private val log = LoggerFactory.getLogger(javaClass)
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         if (unleashGateway.isDisabled(BehandlingsflytFeature.Forlengelse)) {
@@ -62,7 +69,11 @@ class VedtakslengdeSteg(
                         rettighetstypeTidslinjeForInneværendeBehandling = rettighetstypeTidslinje
                     )
                 ) {
-                    utvidSluttdato(kontekst.behandlingId, kontekst.forrigeBehandlingId, sisteVedtatteUnderveisperiode.periode.tom)
+                    utvidSluttdato(
+                        kontekst.behandlingId,
+                        kontekst.forrigeBehandlingId,
+                        sisteVedtatteUnderveisperiode.periode.tom
+                    )
                 }
             }
 
@@ -77,7 +88,11 @@ class VedtakslengdeSteg(
                         rettighetstypeTidslinjeForInneværendeBehandling = rettighetstypeTidslinje
                     )
                 ) {
-                    utvidSluttdato(kontekst.behandlingId, kontekst.forrigeBehandlingId, sisteVedtatteUnderveisperiode.periode.tom)
+                    utvidSluttdato(
+                        kontekst.behandlingId,
+                        kontekst.forrigeBehandlingId,
+                        sisteVedtatteUnderveisperiode.periode.tom
+                    )
                 }
 
             }
