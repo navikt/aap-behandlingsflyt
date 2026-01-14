@@ -39,14 +39,10 @@ fun NormalOpenAPIRoute.rettighetApi(
                 val underveisgrunnlagRepository = repositoryProvider.provide<UnderveisRepository>()
                 val underveisgrunnlag = underveisgrunnlagRepository.hent(behandling.id)
                 val perioder = underveisgrunnlag.perioder
-                val rettighetstypePerioderMap = mutableMapOf<RettighetsType, List<Underveisperiode>>()
-                val rettighetDtoListe = mutableListOf<RettighetDto>()
+                val rettighetstypePerioderMap: Map<RettighetsType, List<Underveisperiode>> =
+                    RettighetsType.entries.associate { type -> type to perioder.filter { it.rettighetsType == type } }
 
-                RettighetsType.entries.forEach { type ->
-                    rettighetstypePerioderMap[type] = perioder.filter { it.rettighetsType == type }
-                }
-
-                rettighetstypePerioderMap.forEach { (type, perioder) ->
+                val rettighetDtoListe = rettighetstypePerioderMap.map { (type, perioder) ->
                     val innfriddePerioder = perioder.filter { it.avslagsårsak != null }
                     val historiskePerioder = innfriddePerioder.filter { it.periode.tom.isBefore(LocalDate.now()) }
 
@@ -70,17 +66,15 @@ fun NormalOpenAPIRoute.rettighetApi(
                                 -> RettighetsperiodeService().beregn(startDato).hentPeriodeForRettighetstype(type)?.tom
                         }
 
-                    rettighetDtoListe.add(
                         RettighetDto(
                             kvote = totalKvoteForRettighet,
-                            bruktKvote,
+                            bruktKvote = bruktKvote,
                             gjenværendeKvote = gjenværendeKvote,
                             startdato = startDato,
                             maksDato = maksDato,
                             opphørsdato = perioder.first { it.avslagsårsak == UnderveisÅrsak.VARIGHETSKVOTE_BRUKT_OPP }.periode.tom,
                             stansdato = perioder.first { it.avslagsårsak == UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT_11_7_STANS }.periode.tom // TODO Erstatt med ikke-deprecated
                         )
-                    )
                 }
                 rettighetDtoListe
             }
