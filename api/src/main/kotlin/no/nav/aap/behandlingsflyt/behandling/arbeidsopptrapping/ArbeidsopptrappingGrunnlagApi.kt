@@ -77,7 +77,11 @@ fun NormalOpenAPIRoute.arbeidsopptrappingGrunnlagApi(
                             .map { ArbeidsopptrappingVurderingResponse.fraDomene(it, vurdertAvService) },
                         kanVurderes = listOf(sak.rettighetsperiode),
                         behøverVurderinger = listOf(),
-                        ikkeVurderbarePerioder = ikkeVurderbarePerioder
+                        ikkeVurderbarePerioder = ikkeVurderbarePerioder,
+                        kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
+                            Definisjon.ARBEIDSOPPTRAPPING,
+                            behandling.id
+                        )
                     )
                 }
 

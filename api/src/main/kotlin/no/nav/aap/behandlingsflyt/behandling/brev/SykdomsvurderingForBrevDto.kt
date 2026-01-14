@@ -12,4 +12,5 @@ data class SykdomsvurderingForBrevDto(
 data class SykdomsvurderingForBrevVurderingDto(
     val vurdering: String?,
     val vurdertAv: VurdertAvResponse,
+    val kvalitetssikretAv: VurdertAvResponse? = null
 )

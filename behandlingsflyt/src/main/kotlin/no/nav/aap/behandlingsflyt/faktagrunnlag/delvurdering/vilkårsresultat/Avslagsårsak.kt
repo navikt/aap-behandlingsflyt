@@ -21,6 +21,7 @@ enum class Avslagsårsak(
     IKKE_OPPFYLT_OPPHOLDSKRAV_EØS(kode = "11-3-1", hjemmel = "§ 11-3 1.ledd", Avslagstype.STANS),
     NORGE_IKKE_KOMPETENT_STAT(kode= "EØS-forordning 883. Art 11-3-E", hjemmel = "EØS-forordning 883. Art 11-3-E", Avslagstype.UKJENT),
     ANNEN_FULL_YTELSE(kode = "11-27", hjemmel = "§ 11-27", Avslagstype.OPPHØR),
+    INNTEKTSTAP_DEKKES_ETTER_ANNEN_LOVGIVNING(kode = "11-29", hjemmel = "§ 11-29", Avslagstype.OPPHØR),
     IKKE_RETT_PA_AAP_UNDER_BEHANDLING_AV_UFORE(kode = "11-18", hjemmel = "§ 11-18", Avslagstype.OPPHØR),
     VARIGHET_OVERSKREDET_OVERGANG_UFORE(kode = "11-18", hjemmel = "§ 11-18 1. ledd", Avslagstype.OPPHØR),
     VARIGHET_OVERSKREDET_ARBEIDSSØKER(kode = "11-17", hjemmel = "§ 11-17", Avslagstype.OPPHØR),

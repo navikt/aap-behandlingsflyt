@@ -105,6 +105,11 @@ public class Innsending(
                 requireNotNull(melding)
             }
 
+            InnsendingType.INSTITUSJONSOPPHOLD -> {
+                requireNotNull(melding)
+            }
+
+
             InnsendingType.PDL_HENDELSE_DODSFALL_BRUKER, InnsendingType.PDL_HENDELSE_DODSFALL_BARN -> {
                 require(referanse.type == InnsendingReferanse.Type.PDL_HENDELSE_ID)
                 requireNotNull(melding) {"Melding for dødsfall kan ikke være null"}

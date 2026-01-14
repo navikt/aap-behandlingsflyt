@@ -5,7 +5,7 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.VurderingDto
 import no.nav.aap.behandlingsflyt.behandling.beregning.BeregningService
-import no.nav.aap.behandlingsflyt.behandling.vilkår.inntektsbortfall.GjennomsnittInntektSiste3ÅrOver3G
+import no.nav.aap.behandlingsflyt.behandling.vilkår.inntektsbortfall.InntektSiste3ÅrOver3G
 import no.nav.aap.behandlingsflyt.behandling.vilkår.inntektsbortfall.InntektSisteÅrOver1G
 import no.nav.aap.behandlingsflyt.behandling.vilkår.inntektsbortfall.InntektsbortfallKanBehandlesAutomatisk
 import no.nav.aap.behandlingsflyt.behandling.vilkår.inntektsbortfall.InntektsbortfallVurderingService
@@ -43,7 +43,7 @@ data class InntektsbortfallGrunnlagResponse(
 data class InntektsbortfallKanBehandlesAutomatiskDto(
     val kanBehandlesAutomatisk: Boolean,
     val inntektSisteÅrOver1G: InntektSisteÅrOver1GDto,
-    val gjennomsnittInntektSiste3ÅrOver3G: GjennomsnittInntektSiste3ÅrOver3GDto,
+    val inntektSiste3ÅrOver3G: InntektSiste3ÅrOver3GDto,
     val under62ÅrVedSøknadstidspunkt: Under62ÅrVedSøknadstidspunktDto,
 )
 
@@ -52,7 +52,7 @@ data class InntektSisteÅrOver1GDto(
     val resultat: Boolean
 )
 
-data class GjennomsnittInntektSiste3ÅrOver3GDto(
+data class InntektSiste3ÅrOver3GDto(
     val gverdi: BigDecimal,
     val resultat: Boolean
 )
@@ -96,8 +96,8 @@ fun Under62ÅrVedSøknadstidspunkt.tilDto(): Under62ÅrVedSøknadstidspunktDto =
     resultat = resultat
 )
 
-fun GjennomsnittInntektSiste3ÅrOver3G.tilDto(): GjennomsnittInntektSiste3ÅrOver3GDto =
-    GjennomsnittInntektSiste3ÅrOver3GDto(
+fun InntektSiste3ÅrOver3G.tilDto(): InntektSiste3ÅrOver3GDto =
+    InntektSiste3ÅrOver3GDto(
         gverdi = gverdi.verdi(),
         resultat = resultat
     )
@@ -112,7 +112,7 @@ fun InntektsbortfallKanBehandlesAutomatisk.tilDto(): InntektsbortfallKanBehandle
     InntektsbortfallKanBehandlesAutomatiskDto(
         kanBehandlesAutomatisk = kanBehandlesAutomatisk,
         inntektSisteÅrOver1G = inntektSisteÅrOver1G.tilDto(),
-        gjennomsnittInntektSiste3ÅrOver3G = gjennomsnittInntektSiste3ÅrOver3G.tilDto(),
+        inntektSiste3ÅrOver3G = inntektSiste3ÅrOver3G.tilDto(),
         under62ÅrVedSøknadstidspunkt = under62ÅrVedSøknadstidspunkt.tilDto()
     )
 

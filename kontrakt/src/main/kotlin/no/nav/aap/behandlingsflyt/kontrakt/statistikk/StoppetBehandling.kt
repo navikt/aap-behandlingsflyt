@@ -38,6 +38,7 @@ public data class StoppetBehandling(
     val ident: String,
     val versjon: String,
     val vurderingsbehov: List<Vurderingsbehov>,
+    val årsakTilOpprettelse: String,
     val avklaringsbehov: List<AvklaringsbehovHendelseDto>,
     val hendelsesTidspunkt: LocalDateTime,
     val avsluttetBehandling: AvsluttetBehandlingDTO? = null,

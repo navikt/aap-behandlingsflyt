@@ -178,6 +178,7 @@ public enum class Definisjon(
         kode = AvklaringsbehovKode.`5040`,
         type = BehovType.MANUELT_PÅKREVD,
         løsesISteg = StegType.VURDER_INNTEKTSBORTFALL,
+        kreverToTrinn = true,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
     ),
     SKRIV_SYKDOMSVURDERING_BREV(
