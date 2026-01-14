@@ -27,7 +27,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.prosessering.OpprettBehandlingMigrerRettighetsperiodeJobbUtfører
+import no.nav.aap.behandlingsflyt.prosessering.`OpprettBehandlingUtvidVedtakslengdeJobbUtfører`
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
@@ -510,14 +510,14 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
         dataSource.transaction { connection ->
 
             val repositoryProvider = postgresRepositoryRegistry.provider(connection)
-            val migrerRettighetsperiodeJobbUtfører = OpprettBehandlingMigrerRettighetsperiodeJobbUtfører(
+            val migrerRettighetsperiodeJobbUtfører = `OpprettBehandlingUtvidVedtakslengdeJobbUtfører`(
                 prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
                 sakRepository = SakRepositoryImpl(connection),
                 behandlingRepository = BehandlingRepositoryImpl(connection),
                 sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
                 unleashGateway = FakeUnleash
             )
-            migrerRettighetsperiodeJobbUtfører.utfør(JobbInput(OpprettBehandlingMigrerRettighetsperiodeJobbUtfører))
+            migrerRettighetsperiodeJobbUtfører.utfør(JobbInput(`OpprettBehandlingUtvidVedtakslengdeJobbUtfører`))
         }
 
         /**
@@ -643,8 +643,8 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
             val behandling = sakOgBehandlingService.finnEllerOpprettBehandling(
                 sakId = sak.id,
                 vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
-                    årsak = ÅrsakTilOpprettelse.AUTOMATISK_OPPDATER_VILKÅR,
-                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.AUTOMATISK_OPPDATER_VILKÅR))
+                    årsak = ÅrsakTilOpprettelse.UTVID_VEDTAKSLENGDE,
+                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.UTVID_VEDTAKSLENGDE))
                 ),
             )
             prosesserBehandlingService.triggProsesserBehandling(behandling)

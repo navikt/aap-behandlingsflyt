@@ -337,7 +337,7 @@ class HåndterMottattDokumentService(
             ÅrsakTilOpprettelse.OPPFØLGINGSOPPGAVE_SAMORDNING_GRADERING,
             ÅrsakTilOpprettelse.AKTIVITETSPLIKT,
             ÅrsakTilOpprettelse.AKTIVITETSPLIKT_11_9,
-            ÅrsakTilOpprettelse.AUTOMATISK_OPPDATER_VILKÅR -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
+            ÅrsakTilOpprettelse.UTVID_VEDTAKSLENGDE -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
             ÅrsakTilOpprettelse.MELDEKORT,
             ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.KORRIGERING
             ÅrsakTilOpprettelse.OMGJØRING_ETTER_SVAR_FRA_KLAGEINSTANS,

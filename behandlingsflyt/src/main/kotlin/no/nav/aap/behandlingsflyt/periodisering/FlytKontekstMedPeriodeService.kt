@@ -133,7 +133,7 @@ class FlytKontekstMedPeriodeService(
             Vurderingsbehov.AKTIVITETSPLIKT_11_7, Vurderingsbehov.AKTIVITETSPLIKT_11_9 -> IKKE_RELEVANT
             Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT -> EFFEKTUER_AKTIVITETSPLIKT
             Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9 -> EFFEKTUER_AKTIVITETSPLIKT_11_9
-            Vurderingsbehov.AUTOMATISK_OPPDATER_VILKÅR -> AUTOMATISK_OPPDATER_VILKÅR
+            Vurderingsbehov.UTVID_VEDTAKSLENGDE -> AUTOMATISK_OPPDATER_VILKÅR
             Vurderingsbehov.BARNETILLEGG_SATS_REGULERING -> AUTOMATISK_BREV
         }
     }
