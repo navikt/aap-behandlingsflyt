@@ -23,6 +23,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UførePeriodeMedEndringStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UførePeriodeSammenligner
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.andreYtelserOppgittISøknad.AndreYtelserOppgittISøknadRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonskravVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -127,6 +128,7 @@ data class SamordningArbeidsgiverGrunnlagDTO(
     val harTilgangTilÅSaksbehandle: Boolean,
     val vurdering: SamordningArbeidsgiverVurderingDTO?,
     val historiskeVurderinger: List<SamordningArbeidsgiverVurderingDTO>? = emptyList(),
+    val harFåttEkstrautbetalingFraArbeidsgiver: Boolean? = null
 )
 
 data class SamordningArbeidsgiverVurderingDTO(
@@ -410,7 +412,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                     ),
                 avklaringsbehovKode = Definisjon.SAMORDNING_ARBEIDSGIVER.kode.toString(),
             ) { behandlingReferanse ->
-                val (samordningArbeidsgiverVurdering, historskeSamordningArbeidsgiverVurderinger) =
+                val (samordningArbeidsgiverVurdering, historskeSamordningArbeidsgiverVurderinger,harFåttEkstrautbetalingFraArbeidsgiver) =
                     dataSource.transaction { connection ->
                         val repositoryProvider = repositoryRegistry.provider(connection)
                         val samordningArbeidsgiverRepository =
@@ -429,7 +431,12 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                             historiskeBehandlinger.mapNotNull { historiskeBehandling ->
                                 samordningArbeidsgiverRepository.hentHvisEksisterer(historiskeBehandling.id)?.vurdering
                             }
-                        Pair(vurdering, historskeSamordningArbeidsgiverVurderinger)
+
+                        val andreYtelserRepository = repositoryProvider.provide<AndreYtelserOppgittISøknadRepository>()
+                        val andreUtbetalinger = andreYtelserRepository.hentHvisEksisterer(behandling.id)
+                        val harFåttEkstrautbetalingFraArbeidsgiver  = andreUtbetalinger?.ekstraLønn
+
+                        Triple(vurdering, historskeSamordningArbeidsgiverVurderinger,harFåttEkstrautbetalingFraArbeidsgiver)
                     }
 
                 val navnOgEnhet = samordningArbeidsgiverVurdering?.let {
@@ -476,6 +483,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         vurdering = vurdering,
                         historiskeVurderinger = historiskeVurderingererDTO,
+                        harFåttEkstrautbetalingFraArbeidsgiver = harFåttEkstrautbetalingFraArbeidsgiver
                     )
                 )
             }
