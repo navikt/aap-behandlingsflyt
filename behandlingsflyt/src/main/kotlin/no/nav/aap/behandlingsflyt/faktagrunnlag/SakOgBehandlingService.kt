@@ -301,7 +301,8 @@ class SakOgBehandlingService(
         vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak,
     ): Behandling {
         check(!trukketSøknadService.søknadErTrukket(sisteYtelsesbehandling.id)) {
-            "ikke lov å opprette revurdering for trukket søknad ${sisteYtelsesbehandling.sakId}"
+            "ikke lov å opprette revurdering for trukket søknad ${sisteYtelsesbehandling.sakId} " +
+                    "(vurderingsbehov=${vurderingsbehovOgÅrsak.vurderingsbehov}, årsak=${vurderingsbehovOgÅrsak.årsak})"
         }
         return behandlingRepository.opprettBehandling(
             sakId = sisteYtelsesbehandling.sakId,
