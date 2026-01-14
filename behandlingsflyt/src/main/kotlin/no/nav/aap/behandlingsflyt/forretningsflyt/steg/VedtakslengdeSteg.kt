@@ -22,15 +22,18 @@ import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
+import java.time.Clock
 import java.time.LocalDate
 
 class VedtakslengdeSteg(
     private val underveisRepository: UnderveisRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val vedtakslengdeRepository: FakeVedtakslengdeRepository,
-    private val unleashGateway: UnleashGateway
+    private val unleashGateway: UnleashGateway,
+    private val clock: Clock = Clock.systemDefaultZone()
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         underveisRepository = repositoryProvider.provide(),
@@ -109,7 +112,7 @@ class VedtakslengdeSteg(
         rettighetstypeTidslinjeForInneværendeBehandling: Tidslinje<RettighetsType>
     ): Boolean {
         return harFremtidigRettOrdinær(forrigeSluttdato, rettighetstypeTidslinjeForInneværendeBehandling)
-                && LocalDate.now().plusDays(28) >= forrigeSluttdato
+                && LocalDate.now(clock).plusDays(28) >= forrigeSluttdato
 
     }
 
@@ -140,10 +143,9 @@ class VedtakslengdeSteg(
         rettighetstypeTidslinjeForInneværendeBehandling: Tidslinje<RettighetsType>
     ): Boolean {
         val varighetstidslinje = VarighetRegel().simluer(rettighetstypeTidslinjeForInneværendeBehandling)
-        return varighetstidslinje.segmenter()
-            .any { varighetSegment ->
-                varighetSegment.periode.fom.isAfter(vedtattSluttdato)
-                        && varighetSegment.verdi.brukerAvKvoter.any { kvote -> kvote == Kvote.ORDINÆR }
+        return varighetstidslinje.begrensetTil(Periode(vedtattSluttdato.plusDays(1), Tid.MAKS))
+            .segmenter()
+            .any { varighetSegment -> varighetSegment.verdi.brukerAvKvoter.any { kvote -> kvote == Kvote.ORDINÆR } 
                         && varighetSegment.verdi !is Avslag
             }
 
