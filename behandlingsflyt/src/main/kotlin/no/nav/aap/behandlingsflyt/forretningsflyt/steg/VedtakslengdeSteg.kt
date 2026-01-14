@@ -109,7 +109,7 @@ class VedtakslengdeSteg(
         rettighetstypeTidslinjeForInneværendeBehandling: Tidslinje<RettighetsType>
     ): Boolean {
         return harFremtidigRettOrdinær(forrigeSluttdato, rettighetstypeTidslinjeForInneværendeBehandling)
-                && forrigeSluttdato.plusDays(28) <= LocalDate.now()
+                && LocalDate.now().plusDays(28) >= forrigeSluttdato
 
     }
 
