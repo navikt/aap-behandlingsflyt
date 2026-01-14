@@ -108,20 +108,22 @@ class SamordningArbeidsgiverRepositoryImpl(private val connection: DBConnection)
 
 
     private fun finnVurderingerMedKunEtGrunnlag(vurderingIder: List<Long>): List<Long> = when {
+
+        //Denne skal sjekke om vurdereringer som er knyttet til denne behandling er knyttet til andre behandlinger også
+
         vurderingIder.isEmpty() -> emptyList()
         else -> {
-            val placeholders = List(vurderingIder.size) { "?" }.joinToString(", ")
             val sql = """
             SELECT SAMORDNING_ARBEIDSGIVER_VURDERING_ID
             FROM SAMORDNING_ARBEIDSGIVER_GRUNNLAG
-            WHERE SAMORDNING_ARBEIDSGIVER_VURDERING_ID IN ($placeholders)
+            WHERE SAMORDNING_ARBEIDSGIVER_VURDERING_ID = ANY(?::bigint[])
             GROUP BY SAMORDNING_ARBEIDSGIVER_VURDERING_ID
             HAVING COUNT(*) = 1
         """.trimIndent()
 
             connection.queryList(sql) {
                 setParams {
-                    vurderingIder.forEachIndexed { i, id -> setLong(i + 1, id) }
+                    setLongArray(1, vurderingIder)
                 }
                 setRowMapper { rs ->
                     rs.getLong("SAMORDNING_ARBEIDSGIVER_VURDERING_ID")
@@ -132,34 +134,46 @@ class SamordningArbeidsgiverRepositoryImpl(private val connection: DBConnection)
 
     override fun slett(behandlingId: BehandlingId) {
 
+        // Hent alle vurdering IDs knyttet til behandling
         val samordningArbeidsgiverVurderingIds = getSamordningArbeidsgiverVurderingIds(behandlingId)
-        val vuderingsIdMedKunEttGrunnlag =  finnVurderingerMedKunEtGrunnlag(samordningArbeidsgiverVurderingIds)
-
-        val deletedRows = connection.executeReturnUpdated(
-            """
-            delete from SAMORDNING_ARBEIDSGIVER_VURDERING where id = ANY(?::bigint[]);
-            delete from SAMORDNING_ARBEIDSGIVER_VURDERING_PERIODE where VURDERING_ID = ANY(?::bigint[]);
-
-        """.trimIndent()
-        ) {
-            setParams {
-                setLongArray(1, vuderingsIdMedKunEttGrunnlag)
-                setLongArray(2, vuderingsIdMedKunEttGrunnlag)
-            }
-        }
-        log.info("Slettet $deletedRows rader fra SAMORDNING_ARBEIDSGIVER_VURDERING")
+        // Finn vurdering IDs som kun har ett grunnlag (denne behandlingen)
+        val vurderingsIdMedKunEttGrunnlag = finnVurderingerMedKunEtGrunnlag(samordningArbeidsgiverVurderingIds)
 
         val deletedRowsGrunnlag = connection.executeReturnUpdated(
             """
-            delete from SAMORDNING_ARBEIDSGIVER_GRUNNLAG where behandling_id = ?;
- 
-            
+            delete from SAMORDNING_ARBEIDSGIVER_GRUNNLAG where behandling_id = ?
         """.trimIndent()
         ) {
             setParams {
-                setLong(1, behandlingId.id) }
+                setLong(1, behandlingId.id)
+            }
         }
         log.info("Slettet $deletedRowsGrunnlag rader fra SAMORDNING_ARBEIDSGIVER_GRUNNLAG")
+
+        if (vurderingsIdMedKunEttGrunnlag.isNotEmpty()) {
+
+            connection.execute(
+                """
+                delete from SAMORDNING_ARBEIDSGIVER_VURDERING_PERIODE where VURDERING_ID = ANY(?::bigint[])
+            """.trimIndent()
+            ) {
+                setParams {
+                    setLongArray(1, vurderingsIdMedKunEttGrunnlag)
+                }
+            }
+            val deletedRowsVurdering = connection.executeReturnUpdated(
+                """
+                delete from SAMORDNING_ARBEIDSGIVER_VURDERING where id = ANY(?::bigint[])
+            """.trimIndent()
+            ) {
+                setParams {
+                    setLongArray(1, vurderingsIdMedKunEttGrunnlag)
+                }
+            }
+            log.info("Slettet $deletedRowsVurdering rader fra SAMORDNING_ARBEIDSGIVER_VURDERING")
+        }
+
+
     }
 
     private fun getSamordningArbeidsgiverVurderingIds(behandlingId: BehandlingId): List<Long> = connection.queryList(

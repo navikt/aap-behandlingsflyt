@@ -87,7 +87,8 @@ public enum class Vilkårtype {
     OPPHOLDSKRAV,
     SYKEPENGEERSTATNING,
     SAMORDNING,
-    INNTEKTSBORTFALL
+    INNTEKTSBORTFALL,
+    SAMORDNING_ANNEN_LOVGIVNING
 }
 
 public data class VilkårsPeriodeDTO(

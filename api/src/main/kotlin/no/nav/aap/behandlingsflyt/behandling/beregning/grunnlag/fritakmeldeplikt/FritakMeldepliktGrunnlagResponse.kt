@@ -19,6 +19,7 @@ data class FritakMeldepliktGrunnlagResponse(
     val historikk: Set<FritakMeldepliktVurderingResponse>,
     val gjeldendeVedtatteVurderinger: List<FritakMeldepliktVurderingResponse>,
     val vurderinger: List<FritakMeldepliktVurderingResponse>,
+    val kvalitetssikretAv: VurdertAvResponse?,
 
     override val sisteVedtatteVurderinger: List<PeriodisertFritakMeldepliktVurderingResponse>,
     override val nyeVurderinger: List<PeriodisertFritakMeldepliktVurderingResponse>,

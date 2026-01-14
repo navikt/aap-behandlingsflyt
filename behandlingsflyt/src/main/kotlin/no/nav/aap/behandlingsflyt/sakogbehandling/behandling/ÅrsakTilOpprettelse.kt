@@ -35,4 +35,7 @@ enum class ÅrsakTilOpprettelse {
     TILBAKEKREVING_HENDELSE,
     FAGSYSTEMINFO_BEHOV_HENDELSE,
 
+    // Institusjonsopphold
+    INSTITUSJONSOPPHOLD
+
 }

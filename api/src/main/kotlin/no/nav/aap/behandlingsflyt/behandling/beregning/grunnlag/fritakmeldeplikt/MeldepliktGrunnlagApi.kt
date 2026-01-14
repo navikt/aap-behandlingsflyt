@@ -59,7 +59,8 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(
                     val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
 
                     val nåTilstand = meldepliktRepository.hentHvisEksisterer(behandling.id)?.vurderinger
-                    val forrigeGrunnlag = behandling.forrigeBehandlingId?.let { meldepliktRepository.hentHvisEksisterer(it) }
+                    val forrigeGrunnlag =
+                        behandling.forrigeBehandlingId?.let { meldepliktRepository.hentHvisEksisterer(it) }
 
                     val vedtatteVerdier = forrigeGrunnlag?.vurderinger.orEmpty()
 
@@ -88,7 +89,12 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(
                         kanVurderes = listOf(sak.rettighetsperiode),
                         behøverVurderinger = emptyList(),
                         nyeVurderinger = nyeVurderinger.map { it.toResponse(vurdertAvService) },
-                        sisteVedtatteVurderinger = forrigeGrunnlag?.gjeldendeVurderinger().orEmpty().toResponse(vurdertAvService)
+                        sisteVedtatteVurderinger = forrigeGrunnlag?.gjeldendeVurderinger().orEmpty()
+                            .toResponse(vurdertAvService),
+                        kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
+                            Definisjon.FRITAK_MELDEPLIKT,
+                            behandling.id
+                        )
                     )
                 }
 
