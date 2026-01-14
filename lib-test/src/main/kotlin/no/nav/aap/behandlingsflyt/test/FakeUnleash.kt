@@ -36,6 +36,7 @@ object FakeUnleash : FakeUnleashBase(
         BehandlingsflytFeature.SosialRefusjon to true,
         BehandlingsflytFeature.HentSykepengerVedOverlapp to true,
         BehandlingsflytFeature.KanSendeBrevOmBarnetilleggSatsRegulering to true,
+        BehandlingsflytFeature.SendBrevVedMottattKlage to true,
     )
 )
 
@@ -59,5 +60,6 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.SosialRefusjon to true,
         BehandlingsflytFeature.HentSykepengerVedOverlapp to true,
         BehandlingsflytFeature.KanSendeBrevOmBarnetilleggSatsRegulering to true,
+        BehandlingsflytFeature.SendBrevVedMottattKlage to true,
     )
 )

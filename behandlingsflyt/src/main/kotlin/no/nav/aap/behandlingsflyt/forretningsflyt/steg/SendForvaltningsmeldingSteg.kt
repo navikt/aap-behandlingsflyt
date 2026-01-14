@@ -18,13 +18,16 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class SendForvaltningsmeldingSteg(
     private val brevbestillingService: BrevbestillingService,
     private val behandlingRepository: BehandlingRepository,
-    private val mottaDokumentService: MottaDokumentService
+    private val mottaDokumentService: MottaDokumentService,
+    private val unleashGateway: UnleashGateway,
 ) : BehandlingSteg {
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
@@ -47,7 +50,8 @@ class SendForvaltningsmeldingSteg(
             TypeBehandling.Klage -> {
                 val behandlingId = kontekst.behandlingId
                 val behandling = behandlingRepository.hent(behandlingId)
-                if (erBehandlingForMottattKlage(kontekst.vurderingsbehovRelevanteForSteg) &&
+                if (unleashGateway.isEnabled(BehandlingsflytFeature.SendBrevVedMottattKlage) &&
+                    erBehandlingForMottattKlage(kontekst.vurderingsbehovRelevanteForSteg) &&
                     !harAlleredeBestiltKlageMottattForBehandling(behandling) &&
                     erMottattKlageFraJournalPost(behandlingId)
                     ) {
@@ -100,7 +104,8 @@ class SendForvaltningsmeldingSteg(
             return SendForvaltningsmeldingSteg(
                 brevbestillingService = BrevbestillingService(repositoryProvider, gatewayProvider),
                 behandlingRepository = repositoryProvider.provide(),
-                mottaDokumentService = MottaDokumentService(repositoryProvider)
+                mottaDokumentService = MottaDokumentService(repositoryProvider),
+                unleashGateway = gatewayProvider.provide()
             )
         }
 
