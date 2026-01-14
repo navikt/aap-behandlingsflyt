@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.tilTidslinje
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
@@ -21,6 +22,7 @@ import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
+import kotlin.collections.orEmpty
 
 fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagApi(
     dataSource: DataSource,
@@ -45,19 +47,25 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagApi(
                         val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
                         val sak = sakRepository.hent(behandling.sakId)
                         val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
+                        val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
 
                         val grunnlag = lovvalgMedlemskapRepository.hentHvisEksisterer(behandling.id)
                         val nyeVurderinger = grunnlag?.vurderinger?.filter { it.vurdertIBehandling == behandling.id }
                         val gjeldendeVedtatteVurderinger =
                             grunnlag?.vurderinger?.filter { it.vurdertIBehandling != behandling.id }?.tilTidslinje() ?: Tidslinje()
 
+                        val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
                         val behøverVurderinger =
-                            if (gjeldendeVedtatteVurderinger.isEmpty()) listOf(sak.rettighetsperiode)
-                            else sak.rettighetsperiode.minus(gjeldendeVedtatteVurderinger.helePerioden())
+                            avklaringsbehov.hentBehovForDefinisjon(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
+                                ?.perioderVedtaketBehøverVurdering()
+                                .orEmpty()
+
+                        // Dersom steget behøver en vurdering, skal det ikke lenger være overstyrt i denne behandlingen
+                        val overstyrt = nyeVurderinger?.any { it.overstyrt } ?: false && behøverVurderinger.isEmpty()
 
                         PeriodisertLovvalgMedlemskapGrunnlagResponse(
                             harTilgangTilÅSaksbehandle = kanSaksbehandle(),
-                            overstyrt = (nyeVurderinger)?.any { it.overstyrt } ?: false,
+                            overstyrt = overstyrt,
                             behøverVurderinger = behøverVurderinger.toList(),
                             kanVurderes = listOf(sak.rettighetsperiode),
                             nyeVurderinger = nyeVurderinger?.map { it.toResponse(vurdertAvService) } ?: emptyList(),

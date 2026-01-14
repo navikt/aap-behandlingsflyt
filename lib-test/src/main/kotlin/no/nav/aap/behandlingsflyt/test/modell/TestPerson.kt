@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapDataIntern
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
 import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.InstitusjonsoppholdJSON
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlFolkeregisterPersonStatus
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlStatsborgerskap
@@ -14,7 +15,9 @@ import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.FiktivtNavnGenerator
 import no.nav.aap.behandlingsflyt.test.FødselsnummerGenerator
 import no.nav.aap.behandlingsflyt.test.PersonNavn
+import no.nav.aap.behandlingsflyt.test.TestPersonService
 import no.nav.aap.komponenter.type.Periode
+import com.fasterxml.jackson.annotation.JsonIgnore
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
 import java.time.LocalDate
@@ -25,19 +28,18 @@ fun genererIdent(fødselsdato: LocalDate): Ident {
 }
 
 fun defaultInntekt(): List<InntektPerÅr> {
-    return (1..10).map { InntektPerÅr(Year.now().minusYears(it.toLong()), Beløp("400000.0")) }
+    return (0..10).map { InntektPerÅr(Year.now().minusYears(it.toLong()), Beløp("400000.0")) }
 }
 
 class TestPerson(
     val fødselsdato: Fødselsdato = Fødselsdato(LocalDate.now().minusYears(19)),
     val identer: Set<Ident> = setOf(genererIdent(fødselsdato.toLocalDate())),
     val dødsdato: Dødsdato? = null,
-
     var barn: List<TestPerson> = emptyList(),
     val navn: PersonNavn = FiktivtNavnGenerator.genererNavn(),
     val yrkesskade: List<TestYrkesskade> = emptyList(),
     var institusjonsopphold: List<InstitusjonsoppholdJSON> = emptyList(),
-    var uføre: Prosent? = null,
+    var uføre: Uføre? = null,
     inntekter: List<InntektPerÅr> = defaultInntekt(),
     val personStatus: List<PdlFolkeregisterPersonStatus> = listOf(
         PdlFolkeregisterPersonStatus(
@@ -48,14 +50,16 @@ class TestPerson(
     val statsborgerskap: List<PdlStatsborgerskap> = listOf(
         PdlStatsborgerskap(
             "NOR",
-            LocalDate.now().minusYears(5),
+            LocalDate.now().minusYears(6),
             null
         )
     ),
     val medlStatus: List<MedlemskapDataIntern> = emptyList(),
     var sykepenger: List<Sykepenger>? = null,
     val foreldrepenger: List<ForeldrePenger>? = null,
-    val tjenestePensjon: TjenestePensjonRespons? = null
+    val tjenestePensjon: TjenestePensjonRespons? = null,
+    @JsonIgnore
+    val testPersonService: TestPersonService = FakePersoner
 ) {
     data class Sykepenger(val grad: Int, val periode: Periode)
     data class ForeldrePenger(val grad: Number, val periode: Periode)
@@ -81,12 +85,12 @@ class TestPerson(
 
     fun medBarn(barn: List<TestPerson>): TestPerson {
         this.barn = barn
-        this.barn.forEach { FakePersoner.leggTil(it) }
+        this.barn.forEach { testPersonService.leggTil(it) }
         return this
     }
 
-    fun medUføre(uføre: Prosent?): TestPerson {
-        this.uføre = uføre
+    fun medUføre(uføre: Prosent?, virkningstidspunkt: LocalDate = LocalDate.now().minusYears(3)): TestPerson {
+        this.uføre = uføre?.let { Uføre(virkningstidspunkt = virkningstidspunkt, uføregrad = uføre) }
         return this
     }
 
@@ -99,4 +103,11 @@ class TestPerson(
         this.institusjonsopphold = opphold
         return this
     }
+
+    fun medInntekter(inntekter: List<InntektPerÅr>): TestPerson {
+        this.inntekter.clear()
+        this.inntekter.addAll(inntekter)
+        return this
+    }
+
 }

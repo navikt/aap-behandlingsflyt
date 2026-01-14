@@ -7,11 +7,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
+import kotlin.system.measureTimeMillis
 
 class ArbeidsevneRepositoryImpl(private val connection: DBConnection) : ArbeidsevneRepository {
 
@@ -57,7 +59,7 @@ class ArbeidsevneRepositoryImpl(private val connection: DBConnection) : Arbeidse
         }.map { it.toArbeidsevnevurdering() }.toSet()
     }
 
-    private fun toArbeidsevneInternal(row: Row): ArbeidsevneInternal = ArbeidsevneInternal(
+    fun toArbeidsevneInternal(row: Row): ArbeidsevneInternal = ArbeidsevneInternal(
         arbeidsevneId = row.getLong("ARBEIDSEVNE_ID"),
         begrunnelse = row.getString("BEGRUNNELSE"),
         fraDato = row.getLocalDate("FRA_DATO"), tilDato = row.getLocalDateOrNull("TIL_DATO"),
@@ -67,7 +69,7 @@ class ArbeidsevneRepositoryImpl(private val connection: DBConnection) : Arbeidse
         vurdertAv = row.getString("VURDERT_AV")
     )
 
-    private data class ArbeidsevneInternal(
+    data class ArbeidsevneInternal(
         val arbeidsevneId: Long,
         val begrunnelse: String,
         val fraDato: LocalDate,

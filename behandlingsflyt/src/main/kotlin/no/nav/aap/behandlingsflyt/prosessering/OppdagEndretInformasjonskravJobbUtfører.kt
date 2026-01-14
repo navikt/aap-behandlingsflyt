@@ -6,9 +6,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreInformasjonskrav
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
+import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -21,29 +21,31 @@ class OppdagEndretInformasjonskravJobbUtfører(
     private val repositoryProvider: RepositoryProvider,
     private val gatewayProvider: GatewayProvider,
     private val prosesserBehandlingService: ProsesserBehandlingService,
-    private val sakOgBehandlingService: SakOgBehandlingService
+    private val sakOgBehandlingService: SakOgBehandlingService,
+    private val låsRepository: TaSkriveLåsRepository,
 ) : JobbUtfører {
     private val log = LoggerFactory.getLogger(javaClass)
+    private val secureLogger = LoggerFactory.getLogger("team-logs")
 
     override fun utfør(input: JobbInput) {
         val sakId = SakId(input.sakId())
-        val behandlingId = BehandlingId(input.behandlingId())
-        utfør(sakId, behandlingId)
+        utfør(sakId)
     }
 
-    fun utfør(sakId: SakId, behandlingId: BehandlingId) {
+    fun utfør(sakId: SakId) {
+        val sakSkrivelås = låsRepository.låsSak(sakId)
         val relevanteInformasjonskrav: List<KanTriggeRevurdering> = listOf(
             //BarnService.konstruer(repositoryProvider, gatewayProvider), Vente på avklaring fra departementet
             SamordningYtelseVurderingInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
             UføreInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
             InstitusjonsoppholdInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
             PersonopplysningInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
-        ) // TODO: her kan man bruke noe refleksjon for å slippe å liste dem manuelt
-
+        )
+        val sisteFattedeYtelsesbehandling = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) ?: error("Fant ikke siste behandling med fattet vedtak for sak $sakId")
 
         val vurderingsbehov = relevanteInformasjonskrav
             .flatMap {
-                it.behovForRevurdering(behandlingId)
+                it.behovForRevurdering(sisteFattedeYtelsesbehandling.id)
                     .also { behov -> if (behov.isNotEmpty()) log.info("Fant endringer i ${it.javaClass.simpleName}") }
             }
             .toSet().toList() // Fjern duplikater
@@ -54,15 +56,17 @@ class OppdagEndretInformasjonskravJobbUtfører(
                 VurderingsbehovOgÅrsak(vurderingsbehov, ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA)
             )
             log.info("Opprettet revurdering for sak $sakId med behov $vurderingsbehov. Behandling: ${revurdering.referanse}.")
+            secureLogger.info("" + vurderingsbehov)
             prosesserBehandlingService.triggProsesserBehandling(
                 revurdering,
-                emptyList() // TODO: Se om vi bør legge ved triggere
+                emptyList()
             )
         }
         else
         {
             log.info("Lar være å opprette revurdering for sak $sakId med behov $vurderingsbehov da opplysningene er registrert fra før. ")
         }
+        låsRepository.verifiserSkrivelås(sakSkrivelås)
     }
 
 
@@ -76,10 +80,11 @@ class OppdagEndretInformasjonskravJobbUtfører(
             gatewayProvider: GatewayProvider
         ): OppdagEndretInformasjonskravJobbUtfører {
             return OppdagEndretInformasjonskravJobbUtfører(
-                repositoryProvider,
-                gatewayProvider,
-                ProsesserBehandlingService(repositoryProvider, gatewayProvider),
-                SakOgBehandlingService(repositoryProvider, gatewayProvider)
+                repositoryProvider = repositoryProvider,
+                gatewayProvider = gatewayProvider,
+                prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
+                sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
+                låsRepository = repositoryProvider.provide(),
             )
         }
     }

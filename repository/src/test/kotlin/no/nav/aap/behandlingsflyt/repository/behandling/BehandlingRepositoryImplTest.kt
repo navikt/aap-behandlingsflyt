@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregning
 import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.brev.bestilling.BrevbestillingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
@@ -45,6 +46,7 @@ import no.nav.aap.behandlingsflyt.repository.lås.TaSkriveLåsRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.pip.PipRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.SakOgBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
@@ -375,6 +377,47 @@ internal class BehandlingRepositoryImplTest {
                         )
                     )
                 )
+        }
+    }
+
+    @Test
+    fun `skal finne flere gjeldende vedtatte behandlinger`() {
+        dataSource.transaction { connection ->
+            val behandlingRepo = BehandlingRepositoryImpl(connection)
+            val vedtakRepo = VedtakRepositoryImpl(connection)
+            val åpenSak = sak(connection)
+            val sakMedVedtattBehandling = sak(connection)
+            val sakMedFlereVedtatteBehandlingOgÅpenBehandling = sak(connection)
+            val sisteVedtatteBehandlinger: MutableSet<SakOgBehandling> = mutableSetOf()
+
+            finnEllerOpprettBehandling(connection, åpenSak)
+
+            finnEllerOpprettBehandling(connection, sakMedVedtattBehandling).let { behandling ->
+                behandlingRepo.oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
+                vedtakRepo.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
+                sisteVedtatteBehandlinger.add(SakOgBehandling(sakMedVedtattBehandling.id, behandling.id))
+            }
+
+            finnEllerOpprettBehandling(connection, sakMedFlereVedtatteBehandlingOgÅpenBehandling).let { behandling ->
+                behandlingRepo.oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
+                vedtakRepo.lagre(behandling.id, LocalDateTime.now().minusWeeks(2), LocalDate.now().minusWeeks(2))
+            }
+
+            finnEllerOpprettBehandling(connection, sakMedFlereVedtatteBehandlingOgÅpenBehandling).let { behandling ->
+                behandlingRepo.oppdaterBehandlingStatus(behandling.id, Status.IVERKSETTES)
+                vedtakRepo.lagre(behandling.id, LocalDateTime.now().minusWeeks(1), LocalDate.now().minusWeeks(1))
+                sisteVedtatteBehandlinger.add(SakOgBehandling(sakMedFlereVedtatteBehandlingOgÅpenBehandling.id, behandling.id))
+            }
+            finnEllerOpprettBehandling(connection, sakMedFlereVedtatteBehandlingOgÅpenBehandling)
+
+            val alleGjeldendeVedtatteBehandlinger = behandlingRepo.finnAlleGjeldendeVedtatteBehandlinger()
+            assertThat(alleGjeldendeVedtatteBehandlinger.toSet()).isEqualTo(sisteVedtatteBehandlinger)
+
+            sisteVedtatteBehandlinger.forEach { sakOgBehandling ->
+                val gjeldendeVedtattBehandling = behandlingRepo.finnGjeldendeVedtattBehandlingForSak(sakOgBehandling.sakId)
+                assertThat(gjeldendeVedtattBehandling?.behandlingId).isEqualTo(sakOgBehandling.behandlingId)
+            }
+            assertThat(behandlingRepo.finnGjeldendeVedtattBehandlingForSak(åpenSak.id)).isNull()
         }
     }
 }

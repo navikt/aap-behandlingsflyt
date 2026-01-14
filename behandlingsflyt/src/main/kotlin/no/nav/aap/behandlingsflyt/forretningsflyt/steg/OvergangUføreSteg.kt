@@ -18,7 +18,6 @@ import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -73,7 +72,7 @@ class OvergangUføreSteg private constructor(
             tvingerAvklaringsbehov = setOf(
                 Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
             ),
-            nårVurderingErRelevant = { perioderOvergangUføreErRelevant(kontekst) },
+            nårVurderingErRelevant = ::perioderOvergangUføreErRelevant,
             perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
             tilbakestillGrunnlag = {
                 val vedtatteVurderinger =
@@ -138,13 +137,13 @@ class OvergangUføreSteg private constructor(
     private fun perioderSomIkkeErTilstrekkeligVurdert(kontekst: FlytKontekstMedPerioder): Set<Periode> {
         val overgangUføreTidslinje = overgangUføreRepository.hentHvisEksisterer(kontekst.behandlingId)
             ?.somOvergangUforevurderingstidslinje().orEmpty()
-        val sykdomsdtidslinje =
+        val sykdomstidslinje =
             sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)?.somSykdomsvurderingstidslinje().orEmpty()
         val bistandstidslinje =
             bistandRepository.hentHvisEksisterer(kontekst.behandlingId)?.somBistandsvurderingstidslinje().orEmpty()
 
         val nårVurderingErKonsistent = nårVurderingErKonsistentMedSykdomOgBistand(
-            overgangUføreTidslinje, sykdomsdtidslinje, bistandstidslinje, kontekst.rettighetsperiode.fom
+            overgangUføreTidslinje, sykdomstidslinje, bistandstidslinje, kontekst.rettighetsperiode.fom
         )
 
         val nårPåkrevdVurderingMangler =

@@ -67,7 +67,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
             definisjon = Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP,
             vilkårsresultatRepository = vilkårsresultatRepository,
             tvingerAvklaringsbehov = setOf(Vurderingsbehov.REVURDER_MEDLEMSKAP, Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP),
-            nårVurderingErRelevant = { nyKontekst -> nårVurderingErRelevant(nyKontekst, grunnlag.value) },
+            nårVurderingErRelevant = ::nårVurderingErRelevant,
             nårVurderingErGyldig = { nårVurderingErGyldig(kontekst, grunnlag.value) },
             kontekst = kontekst,
             tilbakestillGrunnlag = { tilbakestillGrunnlagNy(kontekst, grunnlag.value.medlemskapArbeidInntektGrunnlag) },
@@ -75,12 +75,14 @@ class VurderForutgåendeMedlemskapSteg private constructor(
 
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
+            VurderingType.AUTOMATISK_OPPDATER_VILKÅR,
             VurderingType.REVURDERING -> {
                 vurderVilkår(kontekst, grunnlag.value)
             }
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
             VurderingType.MELDEKORT,
+            VurderingType.AUTOMATISK_BREV,
             VurderingType.IKKE_RELEVANT -> {}
         }
 
@@ -130,8 +132,8 @@ class VurderForutgåendeMedlemskapSteg private constructor(
 
     private fun nårVurderingErRelevant(
         kontekst: FlytKontekstMedPerioder,
-        grunnlag: ForutgåendeMedlemskapGrunnlag
     ): Tidslinje<Boolean> {
+        val grunnlag = hentGrunnlag(kontekst.sakId, kontekst.behandlingId)
         val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
         val automatiskVilkårsvurderingForutgåendeMedlemskap = vilkårsvurderingForutgåendeMedlemskapUtenManuelleVurderinger(kontekst, grunnlag)
 

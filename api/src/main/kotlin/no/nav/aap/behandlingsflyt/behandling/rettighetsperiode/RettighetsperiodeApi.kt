@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.søknad.DatoFraDokumentUtleder
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeHarRett
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -29,9 +30,8 @@ data class RettighetsperiodeGrunnlagResponse(
 
 data class RettighetsperiodeVurderingResponse(
     val begrunnelse: String,
-    val harRettUtoverSøknadsdato: Boolean,
+    val harRett: RettighetsperiodeHarRett,
     val startDato: LocalDate?,
-    val harKravPåRenter: Boolean?,
     val vurdertAv: VurdertAvResponse
 )
 
@@ -67,8 +67,7 @@ fun NormalOpenAPIRoute.rettighetsperiodeGrunnlagApi(
                             RettighetsperiodeVurderingResponse(
                                 begrunnelse = it.begrunnelse,
                                 startDato = it.startDato,
-                                harRettUtoverSøknadsdato = it.harRettUtoverSøknadsdato,
-                                harKravPåRenter = it.harKravPåRenter,
+                                harRett = it.harRettUtoverSøknadsdato,
                                 vurdertAv =
                                     VurdertAvResponse(
                                         ident = it.vurdertAv,

@@ -20,13 +20,12 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.tuple
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.Year
 
-class FastsettGrunnlagFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
+class FastsettGrunnlagFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
     @Test
     fun `kan hente inn manuell inntektsdata i grunnlag og benytte i beregning`() {
         val ident = nyPerson(harYrkesskade = false, harUtenlandskOpphold = false, inntekter = mutableListOf())
@@ -67,16 +66,19 @@ class FastsettGrunnlagFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) 
                                 år = Year.now().minusYears(1).value,
                                 beløp = BigDecimal(300000),
                                 eøsBeløp = null,
+                                ferdigLignetPGI = null,
                             ),
                             ÅrsVurdering(
                                 år = Year.now().minusYears(2).value,
                                 beløp = BigDecimal(400000),
                                 eøsBeløp = null,
+                                ferdigLignetPGI = null,
                             ),
                             ÅrsVurdering(
                                 år = Year.now().minusYears(3).value,
                                 beløp = BigDecimal(500000),
                                 eøsBeløp = null,
+                                ferdigLignetPGI = null,
                             ),
                         )
                     )
@@ -109,26 +111,26 @@ class FastsettGrunnlagFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) 
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
         // Oppretter vanlig søknad
-        val behandling = sendInnSøknad(
+        sendInnSøknad(
             ident, periode, SøknadV0(
                 student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
                 medlemskap = SøknadMedlemskapDto("JA", null, "NEI", null, null)
             )
-        ).løsFramTilGrunnlag(periode.fom)
-
-        løsAvklaringsBehov(
-            behandling,
-            FastsettBeregningstidspunktLøsning(
-                beregningVurdering = BeregningstidspunktVurderingDto(
-                    begrunnelse = "Trenger hjelp fra Nav",
-                    nedsattArbeidsevneDato = LocalDate.now(),
-                    ytterligereNedsattArbeidsevneDato = null,
-                    ytterligereNedsattBegrunnelse = null
-                ),
-            ),
         )
-        val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
-        assertTrue(åpneAvklaringsbehov.none { it.definisjon == Definisjon.FASTSETT_MANUELL_INNTEKT })
+            .løsFramTilGrunnlag(periode.fom)
+            .løsAvklaringsBehov(
+                FastsettBeregningstidspunktLøsning(
+                    beregningVurdering = BeregningstidspunktVurderingDto(
+                        begrunnelse = "Trenger hjelp fra Nav",
+                        nedsattArbeidsevneDato = LocalDate.now(),
+                        ytterligereNedsattArbeidsevneDato = null,
+                        ytterligereNedsattBegrunnelse = null
+                    ),
+                ),
+            )
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).noneMatch { it.definisjon == Definisjon.FASTSETT_MANUELL_INNTEKT }
+            }
     }
 
 }

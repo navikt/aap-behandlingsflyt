@@ -21,7 +21,6 @@ import java.math.BigDecimal
 import java.math.MathContext
 import java.math.RoundingMode
 import java.time.LocalDate
-import java.time.MonthDay
 import java.time.YearMonth
 
 class BeregningsGrunnlagApiTest {
@@ -50,7 +49,7 @@ class BeregningsGrunnlagApiTest {
                         begrunnelse = "test",
                         ytterligereNedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
                         ytterligereNedsattBegrunnelse = "test",
-                        nedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
+                        nedsattArbeidsevneEllerStudieevneDato = LocalDate.of(2023, 1, 1),
                         vurdertAv = "saksbehandler"
                     ),
                     yrkesskadeBeløpVurdering = BeregningYrkeskaderBeløpVurdering(
@@ -120,7 +119,7 @@ class BeregningsGrunnlagApiTest {
                         begrunnelse = "test",
                         ytterligereNedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
                         ytterligereNedsattBegrunnelse = "test",
-                        nedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
+                        nedsattArbeidsevneEllerStudieevneDato = LocalDate.of(2023, 1, 1),
                         vurdertAv = "saksbehandler"
                     ),
                     yrkesskadeBeløpVurdering = BeregningYrkeskaderBeløpVurdering(
@@ -159,6 +158,9 @@ class BeregningsGrunnlagApiTest {
         assertThat(grunnlagYrkesskadeUføre.yrkesskadeGrunnlag.grunnlag).isEqualByComparingTo(
             BigDecimal(6)
         )
+        assertThat(grunnlagYrkesskadeUføre.uføreGrunnlag.uføreInntekter.first().inntektsPerioder).hasSize(1).first()
+            .extracting { it.periode }
+            .isEqualTo(Periode(YearMonth.of(2022, 1).atDay(1), YearMonth.of(2022, 12).atEndOfMonth()))
     }
 
     private fun inntektsPerioder(inntektPerÅr: Set<InntektPerÅr>): Set<Månedsinntekt> {

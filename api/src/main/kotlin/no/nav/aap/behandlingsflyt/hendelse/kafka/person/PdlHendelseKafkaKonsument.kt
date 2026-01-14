@@ -52,7 +52,7 @@ class PdlHendelseKafkaKonsument(
     closeTimeout = closeTimeout,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
-    private val secureLogger = LoggerFactory.getLogger("secureLog")
+    private val secureLogger = LoggerFactory.getLogger("team-logs")
     private val utfallOppfyltUtils = UtfallOppfyltUtils()
     override fun håndter(meldinger: ConsumerRecords<String, Personhendelse>) {
         meldinger.forEach { record ->

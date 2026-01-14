@@ -104,7 +104,7 @@ class KvalitetssikringsSteg private constructor(
         return when (kontekst.behandlingType) {
             TypeBehandling.Førstegangsbehandling,
             TypeBehandling.Klage -> {
-                return avklaringsbehovene.harAvklaringsbehovSomKreverKvalitetssikring()
+                avklaringsbehovene.harAvklaringsbehovSomKreverKvalitetssikring()
             }
 
             else -> false
@@ -140,6 +140,15 @@ class KvalitetssikringsSteg private constructor(
             if (sistReturnertFraBeslutter != null && sistKvalitetssikret != null) {
                 return sistKvalitetssikret > sistReturnertFraBeslutter
             }
+        }
+
+        /**
+         * Hvis stegets eget behov ("KVALITETSSIKRING") har status OPPRETTET, skal det alltid skje en ny kvalitetssikring
+         */
+        if (avklaringsbehovene.alle()
+            .any { it.definisjon.kode == Definisjon.KVALITETSSIKRING.kode && it.status() == Status.OPPRETTET }
+        ) {
+            return false
         }
 
         return true

@@ -14,16 +14,23 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = AVKLAR_STUDENT_KODE)
-class AvklarStudentLøsning(
+class AvklarStudentEnkelLøsning(
     @param:JsonProperty("studentvurdering", required = true) val studentvurdering: StudentVurderingDTO,
+    @param:JsonProperty(
+        "løsningerForPerioder",
+        required = true
+    ) val løsningerForPerioder: Set<StudentVurderingDTO>? = null,
     @param:JsonProperty(
         "behovstype",
         required = true,
         defaultValue = AVKLAR_STUDENT_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5001`
-) :
-    EnkeltAvklaringsbehovLøsning {
-    override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
+) : EnkeltAvklaringsbehovLøsning {
+    override fun løs(
+        repositoryProvider: RepositoryProvider,
+        kontekst: AvklaringsbehovKontekst,
+        gatewayProvider: GatewayProvider
+    ): LøsningsResultat {
         return AvklarStudentLøser(repositoryProvider).løs(kontekst, this)
     }
 

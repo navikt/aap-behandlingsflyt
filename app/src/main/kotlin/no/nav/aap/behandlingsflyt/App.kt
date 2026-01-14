@@ -39,6 +39,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.sykdomsvurderingForBrevApi
 import no.nav.aap.behandlingsflyt.behandling.foreslåvedtak.foreslaaVedtakApi
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.medlemskap.medlemskapsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.samordningGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.inntektsbortfall.inntektsbortfallGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.institusjonApi
 import no.nav.aap.behandlingsflyt.behandling.klage.behandlendeenhet.behandlendeEnhetGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.klage.formkrav.formkravGrunnlagApi
@@ -61,6 +62,7 @@ import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.rettighetsperiode
 import no.nav.aap.behandlingsflyt.behandling.revurdering.avbrytRevurderingGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.simulering.simuleringApi
 import no.nav.aap.behandlingsflyt.behandling.student.studentgrunnlagApi
+import no.nav.aap.behandlingsflyt.behandling.student.sykestipend.sykestipendGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.svarfraandreinstans.svarfraandreinstans.svarFraAndreinstansGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.søknad.trukketSøknadGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilkjentYtelseApi
@@ -68,11 +70,12 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.meldepliktOverstyringGrun
 import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerApi
 import no.nav.aap.behandlingsflyt.drift.driftApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.flyt.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flytApi
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
+import no.nav.aap.behandlingsflyt.hendelse.kafka.inst2.INSTITUSJONSOPPHOLD_EVENT_TOPIC
+import no.nav.aap.behandlingsflyt.hendelse.kafka.inst2.Inst2KafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KABAL_EVENT_TOPIC
 import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KabalKafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PDL_HENDELSE_TOPIC
@@ -85,11 +88,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
 import no.nav.aap.behandlingsflyt.pip.behandlingsflytPipApi
 import no.nav.aap.behandlingsflyt.prosessering.BehandlingsflytLogInfoProvider
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.saksApi
 import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -121,7 +122,6 @@ import java.util.logging.Level
 import java.util.logging.Logger
 import javax.sql.DataSource
 import kotlin.time.Duration.Companion.seconds
-import kotlin.time.toJavaDuration
 
 
 fun utledSubtypesTilMottattHendelseDTO(): List<Class<*>> {
@@ -221,6 +221,11 @@ internal fun Application.server(
         startTilbakekrevingEventKonsument(dataSource, repositoryRegistry, gatewayProvider)
     }
 
+    if (!Miljø.erLokal() && !Miljø.erProd()) {
+        //TODO: Kommenterer ut inntil vi har fått rettet opp i lesing av topic
+        //startInstitusjonsOppholdKonsument(dataSource, repositoryRegistry, gatewayProvider)
+    }
+
     monitor.subscribe(ApplicationStopPreparing) { environment ->
         environment.log.info("ktor forbereder seg på å stoppe.")
     }
@@ -258,9 +263,11 @@ internal fun Application.server(
                 overgangUforeGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 medlemskapsgrunnlagApi(dataSource, repositoryRegistry)
                 studentgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                sykestipendGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 sykdomsgrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 sykdomsvurderingForBrevApi(dataSource, repositoryRegistry, gatewayProvider)
                 sykepengerGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                inntektsbortfallGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 oppholdskravGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 institusjonApi(dataSource, repositoryRegistry, gatewayProvider)
                 avklaringsbehovApi(dataSource, repositoryRegistry, gatewayProvider)
@@ -278,7 +285,7 @@ internal fun Application.server(
                 auditlogApi(dataSource, repositoryRegistry)
                 refusjonGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 manglendeGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                mellomlagretVurderingApi(dataSource, repositoryRegistry)
+                mellomlagretVurderingApi(dataSource, repositoryRegistry, gatewayProvider)
                 // Klage
                 påklagetBehandlingGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
                 fullmektigGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
@@ -328,16 +335,11 @@ private fun utførMigreringer(
     val scheduler = Executors.newScheduledThreadPool(1)
     scheduler.schedule(Runnable {
         val unleashGateway: UnleashGateway = gatewayProvider.provide()
-        val migrerMeldepliktFritakEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.MigrerMeldepliktFritak)
         val isLeader = isLeader(log)
-        log.info("isLeader = $isLeader, migrerMeldepliktFritakEnabled = $migrerMeldepliktFritakEnabled")
+        log.info("isLeader = $isLeader")
 
-        if (migrerMeldepliktFritakEnabled && isLeader) {
-            // Kjør migrering
-            dataSource.transaction { connection ->
-                val repository = MeldepliktRepositoryImpl(connection)
-                repository.migrerMeldepliktFritak()
-            }
+        if (isLeader) {
+            // kjør migreringer
         }
 
     }, 9, TimeUnit.MINUTES)
@@ -468,6 +470,40 @@ fun Application.startPDLHendelseKonsument(
     }
     monitor.subscribe(ApplicationStopPreparing) { environment ->
         environment.log.info("Forbereder stopp av applikasjon, lukker PDLHendelseKonsument.")
+
+        konsument.lukk()
+    }
+
+    return konsument
+}
+
+
+fun Application.startInstitusjonsOppholdKonsument(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
+): KafkaKonsument<String, String> {
+    val konsument = Inst2KafkaKonsument(
+        config = KafkaConsumerConfig(
+            keyDeserializer = org.apache.kafka.common.serialization.StringDeserializer::class.java,
+            valueDeserializer = io.confluent.kafka.serializers.KafkaAvroDeserializer::class.java
+        ),
+        closeTimeout = AppConfig.stansArbeidTimeout,
+        dataSource = dataSource,
+        repositoryRegistry = repositoryRegistry,
+        gatewayProvider = gatewayProvider
+    )
+    monitor.subscribe(ApplicationStarted) {
+        val t = Thread {
+            konsument.konsumer()
+        }
+        t.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, e ->
+            log.error("Konsumering av $INSTITUSJONSOPPHOLD_EVENT_TOPIC ble lukket pga uhåndtert feil", e)
+        }
+        t.start()
+    }
+    monitor.subscribe(ApplicationStopPreparing) { environment ->
+        environment.log.info("Forbereder stopp av applikasjon, lukker InstitusjonKonsument.")
 
         konsument.lukk()
     }

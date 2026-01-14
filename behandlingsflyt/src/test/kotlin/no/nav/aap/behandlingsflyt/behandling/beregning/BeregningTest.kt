@@ -71,7 +71,7 @@ class BeregningTest {
                 beregningGrunnlag = BeregningGrunnlag(
                     tidspunktVurdering = BeregningstidspunktVurdering(
                         begrunnelse = "test",
-                        nedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
+                        nedsattArbeidsevneEllerStudieevneDato = LocalDate.of(2023, 1, 1),
                         ytterligereNedsattBegrunnelse = "test2",
                         ytterligereNedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
                         vurdertAv = "saksbehandler"
@@ -108,7 +108,7 @@ class BeregningTest {
                 beregningGrunnlag = BeregningGrunnlag(
                     tidspunktVurdering = BeregningstidspunktVurdering(
                         begrunnelse = "test",
-                        nedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
+                        nedsattArbeidsevneEllerStudieevneDato = LocalDate.of(2023, 1, 1),
                         ytterligereNedsattArbeidsevneDato = null,
                         ytterligereNedsattBegrunnelse = null,
                         vurdertAv = "saksbehandler"
@@ -167,7 +167,7 @@ class BeregningTest {
                 beregningGrunnlag = BeregningGrunnlag(
                     tidspunktVurdering = BeregningstidspunktVurdering(
                         begrunnelse = "test",
-                        nedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
+                        nedsattArbeidsevneEllerStudieevneDato = LocalDate.of(2023, 1, 1),
                         ytterligereNedsattBegrunnelse = "test2",
                         ytterligereNedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
                         vurdertAv = "saksbehandler"
@@ -226,7 +226,7 @@ class BeregningTest {
                     tidspunktVurdering = BeregningstidspunktVurdering(
                         begrunnelse = "test",
                         ytterligereNedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
-                        nedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
+                        nedsattArbeidsevneEllerStudieevneDato = LocalDate.of(2023, 1, 1),
                         ytterligereNedsattBegrunnelse = "test2",
                         vurdertAv = "saksbehandler"
                     ),
@@ -247,7 +247,7 @@ class BeregningTest {
                     tidspunktVurdering = BeregningstidspunktVurdering(
                         begrunnelse = "test",
                         ytterligereNedsattArbeidsevneDato = null,
-                        nedsattArbeidsevneDato = LocalDate.of(2023, 1, 1),
+                        nedsattArbeidsevneEllerStudieevneDato = LocalDate.of(2023, 1, 1),
                         ytterligereNedsattBegrunnelse = "asdf",
                         vurdertAv = "saksbehandler"
                     ), yrkesskadeBeløpVurdering = null

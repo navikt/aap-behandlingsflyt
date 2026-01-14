@@ -17,7 +17,7 @@ class AnsattInfoService(private val ansattInfoGateway: AnsattInfoGateway, privat
             val enhet = enhetGateway.hentEnhet(ansattInfo.enhetsnummer)
             return AnsattNavnOgEnhet(navn = ansattInfo.navn, enhet = enhet.navn)
         } catch (e: Exception) {
-            logger.warn("Kunne ikke hente ansattnavn og enhet for ident $navIdent.", e)
+            logger.info("Kunne ikke hente ansattnavn og enhet for ident $navIdent.", e)
             return null
         }
     }

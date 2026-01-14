@@ -12,7 +12,6 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import java.time.LocalDate
 
 class SykdomsFaktagrunnlag(
-    val typeBehandling: TypeBehandling,
     val kravDato: LocalDate,
     val sisteDagMedMuligYtelse: LocalDate,
     val yrkesskadevurdering: Yrkesskadevurdering?,

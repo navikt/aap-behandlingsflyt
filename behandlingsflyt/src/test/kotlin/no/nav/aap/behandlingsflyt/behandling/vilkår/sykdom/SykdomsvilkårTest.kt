@@ -7,7 +7,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandGru
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.tidslinje.Segment
@@ -35,7 +34,6 @@ class SykdomsvilkårTest {
         val kravdato = LocalDate.now()
         Sykdomsvilkår(vilkårsresultat).vurder(
             SykdomsFaktagrunnlag(
-                typeBehandling = TypeBehandling.Førstegangsbehandling,
                 kravDato = kravdato,
                 sisteDagMedMuligYtelse = kravdato.plusYears(3),
                 yrkesskadevurdering = null,
@@ -54,7 +52,6 @@ class SykdomsvilkårTest {
 
         Sykdomsvilkår(vilkårsresultat).vurder(
             SykdomsFaktagrunnlag(
-                typeBehandling = TypeBehandling.Førstegangsbehandling,
                 kravDato = kravdato,
                 sisteDagMedMuligYtelse = kravdato.plusYears(3),
                 yrkesskadevurdering = null,
@@ -79,7 +76,6 @@ class SykdomsvilkårTest {
         val opprettet = LocalDateTime.now()
         Sykdomsvilkår(vilkårsresultat).vurder(
             SykdomsFaktagrunnlag(
-                typeBehandling = TypeBehandling.Førstegangsbehandling,
                 kravDato = startDato,
                 sisteDagMedMuligYtelse = startDato.plusYears(3),
                 yrkesskadevurdering = null,
@@ -138,7 +134,6 @@ class SykdomsvilkårTest {
         val opprettet = LocalDateTime.now()
         Sykdomsvilkår(vilkårsresultat).vurder(
             SykdomsFaktagrunnlag(
-                typeBehandling = TypeBehandling.Førstegangsbehandling,
                 kravDato = startDato,
                 sisteDagMedMuligYtelse = startDato.plusYears(3),
                 yrkesskadevurdering = null,
@@ -176,7 +171,6 @@ class SykdomsvilkårTest {
         val opprettet = LocalDateTime.now()
         Sykdomsvilkår(vilkårsresultat).vurder(
             SykdomsFaktagrunnlag(
-                typeBehandling = TypeBehandling.Revurdering,
                 kravDato = startDato,
                 sisteDagMedMuligYtelse = startDato.plusYears(3),
                 yrkesskadevurdering = null,

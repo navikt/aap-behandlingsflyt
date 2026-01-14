@@ -22,8 +22,12 @@ val BARNETILLEGGSATS_TIDSLINJE = Tidslinje(
             verdi = Beløp(36)
         ),
         Segment(
-            periode = Periode(LocalDate.of(2025, 1, 1), Tid.MAKS),
+            periode = Periode(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 12, 31)),
             verdi = Beløp(37)
+        ),
+        Segment(
+            periode = Periode(LocalDate.of(2026, 1, 1), Tid.MAKS),
+            verdi = Beløp(38)
         )
     )
 )

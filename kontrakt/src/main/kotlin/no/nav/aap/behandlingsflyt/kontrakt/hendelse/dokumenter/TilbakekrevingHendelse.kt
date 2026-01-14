@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.TilbakekrevingFagsysteminfoBehovHendelseId
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.TilbakekrevingHendelseId
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.verdityper.dokument.Kanal
@@ -21,18 +22,41 @@ public data class TilbakekrevingHendelseKafkaMelding(
     val eksternFagsakId: String,
     val hendelseOpprettet: LocalDateTime,
     val eksternBehandlingId: String?,
-    val tilbakekreving: TilbakekrevingKafkaDto,
-) {
+    val tilbakekreving: TilbakekrevingKafkaDto? = null,
+    val sakOpprettet: LocalDateTime? = null,
+    val varselSendt: LocalDateTime? = null,
+    val behandlingsstatus: TilbakekrevingBehandlingsstatus? = null,
+    val totaltFeilutbetaltBeløp: BigDecimal? = null,
+    val saksbehandlingURL: String? = null,
+    val fullstendigPeriode: TilbakekrevingPeriode? = null,
 
-    public fun tilTilbakekrevingHendelseV0(): TilbakekrevingHendelse =
-        TilbakekrevingHendelseV0(
+    ) {
+
+    public fun tilTilbakekrevingHendelseV0(): TilbakekrevingHendelse {
+
+        //TODO: triks for å støtte både ny og gammel datastruktur. Kan slettes når alle gamle meldinger er ferdig.
+        val nyTilbakekreving = tilbakekreving
+            ?: TilbakekrevingKafkaDto(
+                    //TODO: Litt stygg hack for å hente behandlingId fra url ettersom den ikke er med i gammel datastruktur.
+                    behandlingId = UUID.fromString(saksbehandlingURL!!.substringAfterLast('/')),
+                    sakOpprettet = sakOpprettet!!,
+                    varselSendt = varselSendt,
+                    behandlingsstatus = behandlingsstatus!!,
+                    totaltFeilutbetaltBeløp = totaltFeilutbetaltBeløp!!,
+                    saksbehandlingURL = saksbehandlingURL,
+                    fullstendigPeriode = fullstendigPeriode!!
+            )
+
+
+        return TilbakekrevingHendelseV0(
             hendelsestype = hendelsestype,
             versjon = versjon,
             eksternFagsakId = eksternFagsakId,
             hendelseOpprettet = hendelseOpprettet,
             eksternBehandlingId = eksternBehandlingId,
-            tilbakekreving = tilbakekreving,
+            tilbakekreving = nyTilbakekreving,
         )
+    }
 
     public fun tilInnsending(meldingKey: String, saksnummer: Saksnummer): Innsending {
         return Innsending(
@@ -46,6 +70,37 @@ public data class TilbakekrevingHendelseKafkaMelding(
     }
 }
 
+
+public data class FagsysteminfoBehovKafkaMelding(
+    val hendelsestype: String,
+    val versjon: Int,
+    val eksternFagsakId: String,
+    val kravgrunnlagReferanse: String,
+    val hendelseOpprettet: LocalDateTime,
+) {
+
+    public fun tilFagsysteminfoBehovV0(): FagsysteminfoBehovV0 =
+        FagsysteminfoBehovV0(
+            hendelsestype = hendelsestype,
+            versjon = versjon,
+            eksternFagsakId = eksternFagsakId,
+            kravgrunnlagReferanse = kravgrunnlagReferanse,
+            hendelseOpprettet = hendelseOpprettet,
+        )
+
+    public fun tilInnsending(meldingKey: String, saksnummer: Saksnummer): Innsending {
+        return Innsending(
+            saksnummer = saksnummer,
+            referanse = InnsendingReferanse(TilbakekrevingFagsysteminfoBehovHendelseId.ny(meldingKey)),
+            type = InnsendingType.FAGSYSTEMINFO_BEHOV_HENDELSE,
+            kanal = Kanal.DIGITAL,
+            mottattTidspunkt = LocalDateTime.now(),
+            melding = this.tilFagsysteminfoBehovV0(),
+        )
+    }
+}
+
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 public data class TilbakekrevingHendelseV0(
     val hendelsestype: String,
@@ -54,6 +109,16 @@ public data class TilbakekrevingHendelseV0(
     val hendelseOpprettet: LocalDateTime,
     val eksternBehandlingId: String?,
     val tilbakekreving: TilbakekrevingKafkaDto,
+) : TilbakekrevingHendelse
+
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+public data class FagsysteminfoBehovV0(
+    val hendelsestype: String,
+    val versjon: Int,
+    val eksternFagsakId: String,
+    val kravgrunnlagReferanse: String,
+    val hendelseOpprettet: LocalDateTime,
 ) : TilbakekrevingHendelse
 
 data class TilbakekrevingKafkaDto(

@@ -220,6 +220,17 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
             }
         }
     }
+    override fun finnSakerMedUtenRiktigSluttdatoPåRettighetsperiode(): List<Sak> {
+        val sql = """
+            select * from sak s
+            where upper(s.rettighetsperiode) < ?
+        """.trimIndent()
+
+        return connection.queryList(sql) {
+            setParams { setLocalDate(1, Tid.MAKS) }
+            setRowMapper { row -> mapSak(row) }
+        }
+    }
 
     override fun finnSakerMedBarnetillegg(påDato: LocalDate): List<SakId> {
         val sql = """

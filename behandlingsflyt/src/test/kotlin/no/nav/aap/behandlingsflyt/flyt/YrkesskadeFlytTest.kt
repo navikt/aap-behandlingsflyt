@@ -12,7 +12,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagYrkesskade
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingPeriodeDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurderingDto
@@ -22,7 +24,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
@@ -37,7 +38,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-class YrkesskadeFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
+class YrkesskadeFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
     @Test
     fun `skal ikke vise avklaringsbehov for yrkesskade ved avslag i tidligere steg`() {
         val personMedYrkesskade = TestPersoner.PERSON_MED_YRKESSKADE()
@@ -346,12 +347,11 @@ class YrkesskadeFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 // Venter på at brevet skal fullføres
                 assertThat(åpneAvklaringsbehov).anySatisfy { assertTrue(it.definisjon == Definisjon.SKRIV_VEDTAKSBREV) }
 
-                val vilkårsresultat = dataSource.transaction { VilkårsresultatRepositoryImpl(it).hent(behandling.id) }
+                val vilkårsresultat = repositoryProvider.provide<VilkårsresultatRepository>().hent(behandling.id)
                     .finnVilkår(Vilkårtype.SYKDOMSVILKÅRET).tidslinje().komprimer()
 
-                val underveisPeriode = dataSource.transaction {
-                    UnderveisRepositoryImpl(it).hent(behandling.id)
-                }.somTidslinje().helePerioden()
+                val underveisPeriode = repositoryProvider.provide<UnderveisRepository>().hent(behandling.id)
+                    .somTidslinje().helePerioden()
 
                 assertTidslinje(
                     vilkårsresultat.begrensetTil(underveisPeriode),
@@ -459,7 +459,6 @@ class YrkesskadeFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             }
             .løsVedtaksbrev()
             .medKontekst {
-                val brevbestilling = hentBrevAvType(behandling, TypeBrev.VEDTAK_INNVILGELSE)
                 assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
             }
 
@@ -479,14 +478,15 @@ class YrkesskadeFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         val periode = Periode(fom, fom.plusYears(3))
 
         // Simulerer et svar fra YS-løsning om at det finnes en yrkesskade
+        val virkningstidspunkt = LocalDate.now().minusYears(3)
         val person = TestPersoner.PERSON_MED_YRKESSKADE().medBarn(
             listOf(
                 TestPerson(
                     identer = setOf(Ident("1234123")),
-                    fødselsdato = Fødselsdato(LocalDate.now().minusYears(3)),
+                    fødselsdato = Fødselsdato(virkningstidspunkt),
                 )
             )
-        ).medUføre(Prosent(50))
+        ).medUføre(Prosent(50), virkningstidspunkt = virkningstidspunkt)
 
         var (sak, behandling) = sendInnFørsteSøknad(
             person = person,
@@ -528,7 +528,6 @@ class YrkesskadeFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 ),
             )
             .løsBeregningstidspunkt()
-            .løsForutgåendeMedlemskap(fom)
             .løsOppholdskrav(fom)
             .løsBarnetillegg()
             .løsAvklaringsBehov(
@@ -537,13 +536,13 @@ class YrkesskadeFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                         begrunnelse = "Samordnet med uføre",
                         vurderingPerioder = listOf(
                             SamordningUføreVurderingPeriodeDto(
-                                virkningstidspunkt = LocalDate.of(2022, 1, 1), uføregradTilSamordning = 50
+                                virkningstidspunkt = virkningstidspunkt, uføregradTilSamordning = 50
                             )
                         )
                     )
                 )
-            ).løsAndreStatligeYtelser()
-
+            )
+            .løsAndreStatligeYtelser()
             .medKontekst {
                 // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
                 assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon == Definisjon.FORESLÅ_VEDTAK).isTrue() }
@@ -568,7 +567,6 @@ class YrkesskadeFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 )
             )
             .løsBeregningstidspunkt()
-            .løsForutgåendeMedlemskap(fom)
             .løsOppholdskrav(fom)
             .løsAvklaringsBehov(
                 AvklarSamordningUføreLøsning(
@@ -576,7 +574,7 @@ class YrkesskadeFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                         begrunnelse = "Samordnet med uføre",
                         vurderingPerioder = listOf(
                             SamordningUføreVurderingPeriodeDto(
-                                virkningstidspunkt = LocalDate.of(2022, 1, 1), uføregradTilSamordning = 50
+                                virkningstidspunkt = virkningstidspunkt, uføregradTilSamordning = 50
                             )
                         )
                     )
@@ -682,7 +680,7 @@ class YrkesskadeFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 ),
             )
             .medKontekst {
-                assertThat(this.åpneAvklaringsbehov).anySatisfy { it.definisjon == Definisjon.AVKLAR_BISTANDSBEHOV }
+                assertThat(this.åpneAvklaringsbehov).anyMatch { it.definisjon == Definisjon.AVKLAR_BISTANDSBEHOV }
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }
     }

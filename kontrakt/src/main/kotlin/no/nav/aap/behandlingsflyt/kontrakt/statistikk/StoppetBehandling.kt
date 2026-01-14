@@ -38,6 +38,7 @@ public data class StoppetBehandling(
     val ident: String,
     val versjon: String,
     val vurderingsbehov: List<Vurderingsbehov>,
+    val årsakTilOpprettelse: String,
     val avklaringsbehov: List<AvklaringsbehovHendelseDto>,
     val hendelsesTidspunkt: LocalDateTime,
     val avsluttetBehandling: AvsluttetBehandlingDTO? = null,
@@ -108,7 +109,8 @@ public enum class Vurderingsbehov {
     DØDSFALL_BARN,
     OPPHOLDSKRAV,
     EFFEKTUER_AKTIVITETSPLIKT,
-    EFFEKTUER_AKTIVITETSPLIKT_11_9;
+    EFFEKTUER_AKTIVITETSPLIKT_11_9,
+    AUTOMATISK_OPPDATER_VILKÅR;
 }
 
 /**

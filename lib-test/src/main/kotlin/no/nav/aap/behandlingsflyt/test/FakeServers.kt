@@ -16,6 +16,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.coroutines.runBlocking
+import no.nav.aap.behandlingsflyt.behandling.beregning.Månedsinntekt
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.BestillLegeerklæringDto
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.ForhåndsvisBrevRequest
 import no.nav.aap.behandlingsflyt.behandling.dokumentinnhenting.HentStatusLegeerklæring
@@ -37,9 +38,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Ytelser
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringStatusResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.MeldingStatusType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektForÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektResponse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.adapter.InntektForÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.integrasjon.ident.IDENT_QUERY
 import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlPersoninfoGateway
@@ -116,6 +117,7 @@ import no.nav.aap.brev.kontrakt.Språk
 import no.nav.aap.brev.kontrakt.Status
 import no.nav.aap.brev.kontrakt.Tekstbolk
 import no.nav.aap.komponenter.json.DefaultJsonMapper
+import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.meldekort.kontrakt.sak.MeldeperioderV0
 import no.nav.aap.tilgang.BehandlingTilgangRequest
 import no.nav.aap.tilgang.JournalpostTilgangRequest
@@ -128,8 +130,12 @@ import no.nav.aap.utbetal.trekk.TrekkResponsDto
 import org.intellij.lang.annotations.Language
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayInputStream
+import java.math.MathContext
+import java.math.RoundingMode
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.YearMonth
+import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
@@ -170,14 +176,12 @@ object FakeServers : AutoCloseable {
     internal val statistikkHendelser = mutableListOf<StoppetBehandling>()
     internal val legeerklæringStatuser = mutableListOf<LegeerklæringStatusResponse>()
 
+    private lateinit var fakePersoner: TestPersonService
+
     private val started = AtomicBoolean(false)
 
     private fun Application.oppgavestyringFake() {
-        install(ContentNegotiation) {
-            jackson {
-                registerModule(JavaTimeModule())
-            }
-        }
+        installerContentNegotiation()
         install(StatusPages) {
             exception<Throwable> { call, cause ->
                 this@oppgavestyringFake.log.info(
@@ -204,11 +208,7 @@ object FakeServers : AutoCloseable {
     }
 
     private fun Application.pesysFake() {
-        install(ContentNegotiation) {
-            jackson {
-                registerModule(JavaTimeModule())
-            }
-        }
+        installerContentNegotiation()
         install(StatusPages) {
             exception<Throwable> { call, cause ->
                 this@pesysFake.log.info("Inntekt :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
@@ -221,12 +221,12 @@ object FakeServers : AutoCloseable {
         routing() {
             post("/api/uforetrygd/uforehistorikk/perioder") {
                 val body = call.receive<UføreRequest>()
-                val hentPerson = FakePersoner.hentPerson(body.fnr)
+                val hentPerson = fakePersoner.hentPerson(body.fnr)
                 if (hentPerson == null) {
                     call.respond(HttpStatusCode.NotFound, "Fant ikke person med fnr ${body.fnr}")
                     return@post
                 }
-                val uføregrad = hentPerson.uføre?.prosentverdi()
+                val uføregrad = hentPerson.uføre
                 if (uføregrad == null) {
                     call.respond(HttpStatusCode.NotFound)
                 } else {
@@ -234,11 +234,11 @@ object FakeServers : AutoCloseable {
                         HttpStatusCode.OK, UføreHistorikkRespons(
                             uforeperioder = listOf(
                                 UførePeriode(
-                                    uforegrad = uføregrad,
+                                    uforegrad = uføregrad.uføregrad.prosentverdi(),
                                     uforegradTom = null,
-                                    uforegradFom = LocalDate.parse(body.dato),
+                                    uforegradFom = uføregrad.virkningstidspunkt,
                                     uforetidspunkt = null,
-                                    virkningstidspunkt = LocalDate.parse(body.dato)
+                                    virkningstidspunkt = uføregrad.virkningstidspunkt
                                 )
                             )
                         )
@@ -250,12 +250,7 @@ object FakeServers : AutoCloseable {
     }
 
     private fun Application.sam() {
-        install(ContentNegotiation) {
-            jackson {
-                registerModule(JavaTimeModule())
-                disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-            }
-        }
+        installerContentNegotiation()
 
         install(StatusPages) {
             exception<Throwable> { call, cause ->
@@ -298,9 +293,7 @@ object FakeServers : AutoCloseable {
     }
 
     private fun Application.poppFake() {
-        install(ContentNegotiation) {
-            jackson()
-        }
+        installerContentNegotiation()
         install(StatusPages) {
             exception<Throwable> { call, cause ->
                 this@poppFake.log.info("Inntekt :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
@@ -328,11 +321,7 @@ object FakeServers : AutoCloseable {
     }
 
     private fun Application.gosysFake() {
-        install(ContentNegotiation) {
-            jackson {
-                registerModule(JavaTimeModule())
-            }
-        }
+        installerContentNegotiation()
         install(StatusPages) {
             exception<Throwable> { call, cause ->
                 this@gosysFake.log.info("Inntekt :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
@@ -359,9 +348,7 @@ object FakeServers : AutoCloseable {
     }
 
     private fun Application.leaderElectorFake() {
-        install(ContentNegotiation) {
-            jackson()
-        }
+        installerContentNegotiation()
         routing {
             route("/") {
                 get {
@@ -374,11 +361,7 @@ object FakeServers : AutoCloseable {
     }
 
     private fun Application.pdlFake() {
-        install(ContentNegotiation) {
-            jackson {
-                registerModule(JavaTimeModule())
-            }
-        }
+        installerContentNegotiation()
         install(StatusPages) {
             exception<Throwable> { call, cause ->
                 this@pdlFake.log.info("PDL :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
@@ -407,11 +390,7 @@ object FakeServers : AutoCloseable {
     }
 
     private fun Application.tjenestePensjonFake() {
-        install(ContentNegotiation) {
-            jackson {
-                registerModule(JavaTimeModule())
-            }
-        }
+        installerContentNegotiation()
         install(StatusPages) {
             exception<Throwable> { call, cause ->
                 this@tjenestePensjonFake.log.info("TP :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
@@ -425,7 +404,7 @@ object FakeServers : AutoCloseable {
         routing {
             get("/api/tjenestepensjon/getActiveForholdMedActiveYtelser") {
                 val ident = call.request.headers["fnr"] ?: ""
-                val fakePerson = FakePersoner.hentPerson(ident)
+                val fakePerson = fakePersoner.hentPerson(ident)
 
                 if (fakePerson != null && fakePerson.tjenestePensjon != null) {
                     call.respond(fakePerson.tjenestePensjon)
@@ -465,9 +444,7 @@ object FakeServers : AutoCloseable {
     }
 
     private fun Application.tilgangFake() {
-        install(ContentNegotiation) {
-            jackson()
-        }
+        installerContentNegotiation()
         install(StatusPages) {
             exception<Throwable> { call, cause ->
                 this@tilgangFake.log.info(
@@ -507,11 +484,7 @@ object FakeServers : AutoCloseable {
     }
 
     private fun Application.dokumentinnhentingFake() {
-        install(ContentNegotiation) {
-            jackson {
-                registerModule(JavaTimeModule())
-            }
-        }
+        installerContentNegotiation()
         install(StatusPages) {
             exception<Throwable> { call, cause ->
                 this@dokumentinnhentingFake.log.info(
@@ -594,11 +567,7 @@ object FakeServers : AutoCloseable {
     }
 
     private fun Application.statistikkFake() {
-        install(ContentNegotiation) {
-            jackson {
-                registerModule(JavaTimeModule())
-            }
-        }
+        installerContentNegotiation()
         install(StatusPages) {
             exception<Throwable> { call, cause ->
                 this@statistikkFake.log.info(
@@ -622,12 +591,7 @@ object FakeServers : AutoCloseable {
     }
 
     private fun Application.fpFake() {
-        install(ContentNegotiation) {
-            jackson {
-                registerModule(JavaTimeModule())
-                disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-            }
-        }
+        installerContentNegotiation()
         install(StatusPages) {
             exception<Throwable> { call, cause ->
                 this@fpFake.log.info(
@@ -645,7 +609,7 @@ object FakeServers : AutoCloseable {
             post("/hent-ytelse-vedtak") {
                 val req = call.receive<ForeldrepengerRequest>()
                 val ident = req.ident.verdi
-                val fakePerson = FakePersoner.hentPerson(ident)
+                val fakePerson = fakePersoner.hentPerson(ident)
                 if (fakePerson?.foreldrepenger != null) {
                     val foreldrepenger = fakePerson.foreldrepenger
 
@@ -814,7 +778,7 @@ object FakeServers : AutoCloseable {
             data class SykepengerRequest(val personidentifikatorer: Set<String>)
             post("/utbetalte-perioder-aap") {
                 val request = call.receive<SykepengerRequest>()
-                val fakePerson = FakePersoner.hentPerson(request.personidentifikatorer.first())
+                val fakePerson = fakePersoner.hentPerson(request.personidentifikatorer.first())
                 if (fakePerson?.sykepenger != null) {
                     call.respond(
                         SykepengerResponse(
@@ -916,9 +880,7 @@ object FakeServers : AutoCloseable {
     }
 
     private fun Application.kabalFake() {
-        install(ContentNegotiation) {
-            jackson()
-        }
+        installerContentNegotiation()
         install(StatusPages) {
             exception<Throwable> { call, cause ->
                 this@kabalFake.log.info(
@@ -1039,9 +1001,7 @@ object FakeServers : AutoCloseable {
               }
             }
         """.trimIndent()
-        install(ContentNegotiation) {
-            jackson()
-        }
+        installerContentNegotiation()
         install(StatusPages) {
             exception<Throwable> { call, cause ->
                 this@eregFake.log.info(
@@ -1063,31 +1023,20 @@ object FakeServers : AutoCloseable {
     }
 
     private fun Application.ainntektFake() {
-        @Language("JSON")
-        val ainntektResponse = """
-            {
-                "arbeidsInntektMaaned": [
+        val ainntektResponse = { årMnd: YearMonth, beløp: Double ->
+            val årMndFormatert = årMnd.format(DateTimeFormatter.ofPattern("yyyy-MM"))
+            val opptjeningsperiode = årMnd.atDay(1).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+            """
+  
                     {
-                        "aarMaaned": "2025-01",
+                        "aarMaaned": "$årMndFormatert",
                         "arbeidsInntektInformasjon": {
                             "inntektListe": [
                                 {
-                                    "beloep": 4006.0,
+                                    "beloep": $beløp,
                                     "opptjeningsland": null,
                                     "skattemessigBosattLand": null,
-                                    "opptjeningsperiodeFom": "2025-01-22",
-                                    "opptjeningsperiodeTom": null,
-                                    "beskrivelse": "sykepenger",
-                                    "virksomhet": {
-                                      "identifikator": "896929119",
-                                      "aktoerType": "AKTOER_ID"
-                                    }
-                                },
-                                {
-                                    "beloep": 4444.0,
-                                    "opptjeningsland": null,
-                                    "skattemessigBosattLand": null,
-                                    "opptjeningsperiodeFom": "2025-01-01",
+                                    "opptjeningsperiodeFom": "$opptjeningsperiode",
                                     "opptjeningsperiodeTom": null,
                                     "beskrivelse": "ikkeSykepenger",
                                     "virksomhet": {
@@ -1097,19 +1046,11 @@ object FakeServers : AutoCloseable {
                                 }
                             ]
                         }
-                    },
-                    {
-                        "aarMaaned": "2026-01",
-                        "arbeidsInntektInformasjon": {
-                            "inntektListe": null
-                        }
                     }
-                ]
-            }
         """.trimIndent()
-        install(ContentNegotiation) {
-            jackson()
         }
+        installerContentNegotiation()
+
         install(StatusPages) {
             exception<Throwable> { call, cause ->
                 this@ainntektFake.log.info(
@@ -1125,18 +1066,35 @@ object FakeServers : AutoCloseable {
         }
         routing {
             post("/hentinntektliste") {
-                call.respond(ainntektResponse)
+                val request = call.receive<Map<String, Any>>()
+                val person = fakePersoner.hentPerson((request["ident"] as Map<*, *>)["identifikator"] as String)
+
+                val z = person!!.inntekter().flatMap { inntektPerÅr ->
+                    (1..12).map { mnd ->
+                        Månedsinntekt(
+                            YearMonth.of(inntektPerÅr.år.value, mnd),
+                            Beløp(
+                                inntektPerÅr.beløp.verdi.divide(
+                                    12.toBigDecimal(),
+                                    MathContext(10, RoundingMode.HALF_UP)
+                                )
+                            )
+                        )
+                    }
+                }.joinToString(",") {
+                    ainntektResponse(it.årMåned, it.beløp.verdi.toDouble())
+                }
+                call.respond(
+                    """
+                        {"arbeidsInntektMaaned": [$z]}
+                    """.trimIndent()
+                )
             }
         }
     }
 
     private fun Application.datadelingFake() {
-        install(ContentNegotiation) {
-            jackson {
-                registerModule(JavaTimeModule())
-                disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-            }
-        }
+        installerContentNegotiation()
 
         routing {
             post("/api/insert/meldeperioder") {
@@ -1151,15 +1109,17 @@ object FakeServers : AutoCloseable {
         }
     }
 
-    private fun Application.safFake() {
-
+    private fun Application.installerContentNegotiation() {
         install(ContentNegotiation) {
             jackson {
                 registerModule(JavaTimeModule())
                 disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
             }
         }
+    }
 
+    private fun Application.safFake() {
+        installerContentNegotiation()
         routing {
             get("/rest/hentdokument/{journalpostId}/{dokumentInfoId}/{variantFormat}") {
                 call.response.header(
@@ -1320,7 +1280,7 @@ object FakeServers : AutoCloseable {
                 val body = call.receive<InstitusjonoppholdRequest>()
                 val ident = body.personident
 
-                val fakePerson = FakePersoner.hentPerson(ident)
+                val fakePerson = fakePersoner.hentPerson(ident)
 
                 if (fakePerson != null) {
                     call.respond(fakePerson.institusjonsopphold)
@@ -1353,7 +1313,7 @@ object FakeServers : AutoCloseable {
                 val body = call.receive<MedlemskapRequest>()
                 val ident = body.personident
 
-                val fakePerson = FakePersoner.hentPerson(ident)
+                val fakePerson = fakePersoner.hentPerson(ident)
 
                 if (fakePerson != null) {
                     call.respond(fakePerson.medlStatus)
@@ -1431,7 +1391,7 @@ object FakeServers : AutoCloseable {
     }
 
     private fun mapIdentBolk(it: String): HentPersonBolkResult? {
-        val person = FakePersoner.hentPerson(it) ?: return null
+        val person = fakePersoner.hentPerson(it) ?: return null
         return HentPersonBolkResult(
             ident = person.identer.first().identifikator,
             person = PdlPersoninfo(
@@ -1499,9 +1459,10 @@ object FakeServers : AutoCloseable {
     }
 
     private fun hentEllerGenererTestPerson(forespurtIdent: String): TestPerson {
-        val person = FakePersoner.hentPerson(forespurtIdent)
+        val person = fakePersoner.hentPerson(forespurtIdent)
         if (person == null) {
-            FakePersoner.leggTil(
+            log.info("Fant ikke testperson med ident $forespurtIdent.")
+            fakePersoner.leggTil(
                 TestPerson(
                     identer = setOf(Ident(forespurtIdent)),
                     fødselsdato = Fødselsdato(LocalDate.now().minusYears(30))
@@ -1509,7 +1470,7 @@ object FakeServers : AutoCloseable {
             )
         }
 
-        return FakePersoner.hentPerson(forespurtIdent)!!
+        return fakePersoner.hentPerson(forespurtIdent)!!
     }
 
     private fun mapIdent(person: TestPerson?): List<PdlIdent> {
@@ -2059,10 +2020,12 @@ object FakeServers : AutoCloseable {
     )
 
 
-    fun start() {
+    fun start(testPersonService: TestPersonService = FakePersoner) {
         if (started.get()) {
             return
         }
+
+        fakePersoner = testPersonService
 
         azure.start()
         setAzureProperties()

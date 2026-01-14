@@ -63,6 +63,7 @@ class VurderOppholdskravSteg private constructor(
 
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
+            VurderingType.AUTOMATISK_OPPDATER_VILKÅR,
             VurderingType.REVURDERING -> {
                 val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
                 Oppholdskravvilkår(vilkårsresultat).vurder(OppholdskravvilkårGrunnlag(
@@ -73,6 +74,7 @@ class VurderOppholdskravSteg private constructor(
             }
 
             VurderingType.MELDEKORT,
+            VurderingType.AUTOMATISK_BREV,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
             VurderingType.IKKE_RELEVANT -> {

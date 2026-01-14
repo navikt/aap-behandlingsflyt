@@ -27,7 +27,8 @@ class ManglendeInntektGrunnlagService(
             ÅrData(
                 år = manuellInntekt.år.value,
                 beløp = manuellInntekt.belop?.verdi,
-                eøsBeløp = manuellInntekt.eøsBeløp?.verdi
+                eøsBeløp = manuellInntekt.eøsBeløp?.verdi,
+                ferdigLignetPGI = manuellInntekt.ferdigLignetPGI?.verdi
             )
         }
 
@@ -43,18 +44,19 @@ class ManglendeInntektGrunnlagService(
 
     fun mapHistoriskeManuelleVurderinger(behandlingsreferanse: BehandlingReferanse): List<ManuellInntektGrunnlagVurdering> {
         val behandling = behandlingRepository.hent(behandlingsreferanse.referanse.let(::BehandlingReferanse))
-
         val historiskeVurderinger =
             manuellInntektGrunnlagRepository.hentHistoriskeVurderinger(behandling.sakId, behandling.id)
 
-        val mappedHistoriskeVurderinger = historiskeVurderinger.map { historiskManuellInntektSet ->
-            historiskManuellInntektSet
+        val mappedHistoriskeVurderinger = historiskeVurderinger
+            .sortedByDescending { it.first().opprettet }
+            .map { historiskManuellInntektSet ->
 
             val årsVurderinger = historiskManuellInntektSet.map { historiskManuellInntekt ->
                 ÅrData(
                     år = historiskManuellInntekt.år.value,
                     beløp = historiskManuellInntekt.belop?.verdi,
-                    eøsBeløp = historiskManuellInntekt.eøsBeløp?.verdi
+                    eøsBeløp = historiskManuellInntekt.eøsBeløp?.verdi,
+                    ferdigLignetPGI = historiskManuellInntekt.ferdigLignetPGI?.verdi
                 )
             }
 
@@ -67,6 +69,7 @@ class ManglendeInntektGrunnlagService(
                 årsVurderinger = årsVurderinger
             )
         }
+
         return mappedHistoriskeVurderinger
     }
 }

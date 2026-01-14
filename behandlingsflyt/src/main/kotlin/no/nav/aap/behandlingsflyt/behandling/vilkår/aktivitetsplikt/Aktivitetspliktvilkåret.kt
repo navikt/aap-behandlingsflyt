@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.aktivitetsplikt
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Aktivitetsplikt11_7Regel.Companion.tilAktivitetspliktVurderingTidslinje
 import no.nav.aap.behandlingsflyt.behandling.vilkår.Vilkårsvurderer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Grunnlag
@@ -37,16 +36,17 @@ class Aktivitetspliktvilkåret(vilkårsresultat: Vilkårsresultat) : Vilkårsvur
         )
 
         val saksbehandlersVurderinger =
-            grunnlag.aktivitetsplikt117grunnlag.tilAktivitetspliktVurderingTidslinje(rettighetsperiode)
+            grunnlag.aktivitetsplikt117grunnlag
+                .tidslinje()
                 .map {
                     Vilkårsvurdering(
                         utfall = when {
-                            it.vurdering.erOppfylt -> Utfall.OPPFYLT
+                            it.erOppfylt -> Utfall.OPPFYLT
                             else -> Utfall.IKKE_OPPFYLT
                         },
                         manuellVurdering = true,
-                        begrunnelse = it.vurdering.begrunnelse,
-                        avslagsårsak = when (it.vurdering.utfall) {
+                        begrunnelse = it.begrunnelse,
+                        avslagsårsak = when (it.utfall) {
                             STANS -> Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_STANS
                             OPPHØR -> Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_OPPHØR
                             null -> null

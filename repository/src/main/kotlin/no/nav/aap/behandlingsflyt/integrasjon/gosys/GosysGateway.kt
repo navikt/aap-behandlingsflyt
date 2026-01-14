@@ -56,16 +56,24 @@ class GosysGateway : OppgaveGateway {
     ) {
 
         if (navKontor.vedtaksdato == null || navKontor.virkingsdato == null) {
-            log.error("Kan ikke opprette refusjonsoppgave i Gosys uten gyldige datoer for navkontor periode. Navkontorperiode: $navKontor")
-            throw IllegalArgumentException("Kan ikke opprette refusjonsoppgave i Gosys uten gyldige datoer for navkontor periode.")
+            log.info("Oppretter gosysoppgave med manglende dato for behandling $behandlingId, " +
+                    "virkningsdato=${navKontor.virkingsdato}, vedtaksdato=${navKontor.vedtaksdato}")
         }
 
         val beskrivelse =
-            "Refusjonskrav. Brukeren er innvilget etterbetaling av AAP fra ${
-                formatDateToSaksbehandlerVennlig(navKontor.virkingsdato!!)
-            } til ${
-                formatDateToSaksbehandlerVennlig(navKontor.vedtaksdato!!)
-            }. Dere må sende refusjonskrav til NØS."
+            if (navKontor.virkingsdato != null && navKontor.vedtaksdato != null) {
+                val fom = requireNotNull(navKontor.virkingsdato)
+                val tom = requireNotNull(navKontor.vedtaksdato)
+                "Refusjonskrav. Brukeren er innvilget etterbetaling av AAP fra ${
+                    formatDateToSaksbehandlerVennlig(fom)
+                } til ${
+                    formatDateToSaksbehandlerVennlig(tom)
+                }. Dere må sende refusjonskrav til NØS."
+            } else {
+                "Refusjonskrav. Brukeren er innvilget etterbetaling av AAP til ${navKontor.enhetsNummer}. Dere må sende refusjonskrav til NØS."
+            }
+
+
 
         val oppgaveRequest = OpprettOppgaveRequest(
             oppgavetype = OppgaveType.VURDER_KONSEKVENS_FOR_YTELSE.verdi,

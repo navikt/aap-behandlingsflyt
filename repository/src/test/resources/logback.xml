@@ -11,7 +11,7 @@
         <appender-ref ref="pretty"/>
     </root>
 
-    <logger level="TRACE" name="secureLog" additivity="false">
+    <logger level="TRACE" name="team-logs" additivity="false">
         <appender-ref ref="pretty"/>
     </logger>
 

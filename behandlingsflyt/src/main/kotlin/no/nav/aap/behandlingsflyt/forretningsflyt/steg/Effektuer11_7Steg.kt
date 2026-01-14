@@ -23,6 +23,7 @@ class Effektuer11_7Steg(
         when (kontekst.vurderingType) {
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
             VurderingType.FØRSTEGANGSBEHANDLING,
+            VurderingType.AUTOMATISK_OPPDATER_VILKÅR,
             VurderingType.REVURDERING -> {
                 val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
                 Aktivitetspliktvilkåret(vilkårsresultat).vurder(
@@ -36,6 +37,7 @@ class Effektuer11_7Steg(
             }
 
             VurderingType.MELDEKORT,
+            VurderingType.AUTOMATISK_BREV,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
             VurderingType.IKKE_RELEVANT -> {
                 /* noop */

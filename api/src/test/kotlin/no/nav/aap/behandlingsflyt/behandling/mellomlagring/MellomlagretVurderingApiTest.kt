@@ -5,6 +5,9 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
 import no.nav.aap.behandlingsflyt.BaseApiTest
+import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
+import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomInfoGateway
+import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NorgGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.test.Fakes
@@ -36,7 +39,10 @@ class MellomlagretVurderingApiTest : BaseApiTest() {
 
         testApplication {
             installApplication {
-                mellomlagretVurderingApi(ds, inMemoryRepositoryRegistry)
+                mellomlagretVurderingApi(ds, inMemoryRepositoryRegistry, createGatewayProvider {
+                    register<NomInfoGateway>()
+                    register<NorgGateway>()
+                })
             }
 
             val response =
@@ -79,7 +85,10 @@ class MellomlagretVurderingApiTest : BaseApiTest() {
 
         testApplication {
             installApplication {
-                mellomlagretVurderingApi(ds, inMemoryRepositoryRegistry)
+                mellomlagretVurderingApi(ds, inMemoryRepositoryRegistry, createGatewayProvider {
+                    register<NomInfoGateway>()
+                    register<NorgGateway>()
+                })
             }
 
             val nyMellomlagretVurdering = MellomlagretVurderingRequest(
@@ -113,7 +122,10 @@ class MellomlagretVurderingApiTest : BaseApiTest() {
         val avklaringsbehovKode = AvklaringsbehovKode.`8001`
         testApplication {
             installApplication {
-                mellomlagretVurderingApi(ds, inMemoryRepositoryRegistry)
+                mellomlagretVurderingApi(ds, inMemoryRepositoryRegistry, createGatewayProvider {
+                    register<NomInfoGateway>()
+                    register<NorgGateway>()
+                })
             }
 
             val response =
@@ -149,7 +161,10 @@ class MellomlagretVurderingApiTest : BaseApiTest() {
 
         testApplication {
             installApplication {
-                mellomlagretVurderingApi(ds, inMemoryRepositoryRegistry)
+                mellomlagretVurderingApi(ds, inMemoryRepositoryRegistry, createGatewayProvider {
+                    register<NomInfoGateway>()
+                    register<NorgGateway>()
+                })
             }
 
 

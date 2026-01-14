@@ -288,7 +288,7 @@ class BeregningVurderingRepositoryImpl(private val connection: DBConnection) : B
         val id = connection.executeReturnKey(query) {
             setParams {
                 setString(1, vurdering.begrunnelse)
-                setLocalDate(2, vurdering.nedsattArbeidsevneDato)
+                setLocalDate(2, vurdering.nedsattArbeidsevneEllerStudieevneDato)
                 setLocalDate(3, vurdering.ytterligereNedsattArbeidsevneDato)
                 setString(4, vurdering.ytterligereNedsattBegrunnelse)
                 setString(5, vurdering.vurdertAv)

@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentEnkelLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBeregningstidspunktLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
@@ -42,7 +42,7 @@ class BeslutterFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             assertThat(behandling.status()).isEqualTo(Status.UTREDES)
         }
             .løsAvklaringsBehov(
-                AvklarStudentLøsning(
+                AvklarStudentEnkelLøsning(
                     studentvurdering = StudentVurderingDTO(
                         begrunnelse = "Er student",
                         avbruttStudieDato = LocalDate.now(),
@@ -75,7 +75,6 @@ class BeslutterFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
 
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
-
             .medKontekst {
                 // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
                 assertThat(åpneAvklaringsbehov).isNotEmpty()
@@ -93,7 +92,6 @@ class BeslutterFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                     ),
                 ),
             )
-            .løsForutgåendeMedlemskap(periode.fom)
             .løsOppholdskrav(periode.fom)
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
@@ -138,7 +136,7 @@ class BeslutterFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                     ),
                 ),
                 Bruker("SAKSBEHANDLER")
-            ).løsForutgåendeMedlemskap(periode.fom)
+            )
             .løsOppholdskrav(periode.fom)
             .medKontekst {
                 assertThat(behandling.status()).isEqualTo(Status.UTREDES)
@@ -176,13 +174,13 @@ class BeslutterFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
         // Sender inn en søknad
-        var (sak, behandling) = sendInnFørsteSøknad(periode = periode)
+        val (_, behandling) = sendInnFørsteSøknad(periode = periode)
 
         val alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling)
         assertThat(alleAvklaringsbehov).isNotEmpty()
         assertThat(behandling.status()).isEqualTo(Status.UTREDES)
 
-        behandling = behandling.løsAvklaringsBehov(
+        behandling.løsAvklaringsBehov(
             AvklarSykdomLøsning(
                 løsningerForPerioder = listOf(
                     SykdomsvurderingLøsningDto(
@@ -205,8 +203,7 @@ class BeslutterFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             .løsSykdomsvurderingBrev()
             .kvalitetssikreOk()
             .løsBeregningstidspunkt()
-            .løsForutgåendeMedlemskap(sak.rettighetsperiode.fom)
-            .løsOppholdskrav(sak.rettighetsperiode.fom)
+            .løsOppholdskrav(periode.fom)
             .løsAvklaringsBehov(
                 AvklarSamordningGraderingLøsning(
                     VurderingerForSamordning(

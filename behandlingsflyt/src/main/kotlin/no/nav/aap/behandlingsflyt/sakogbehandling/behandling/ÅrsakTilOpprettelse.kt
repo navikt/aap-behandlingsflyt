@@ -17,6 +17,7 @@ enum class ÅrsakTilOpprettelse {
     FRITAK_MELDEPLIKT,
     MELDEKORT,
     AKTIVITETSMELDING,
+    AUTOMATISK_OPPDATER_VILKÅR,
 
     // Oppfølgingsbehandling
     OPPFØLGINGSOPPGAVE,
@@ -31,6 +32,10 @@ enum class ÅrsakTilOpprettelse {
     AKTIVITETSPLIKT_11_9,
 
     // Tilbakekreving
-    TILBAKEKREVING_HENDELSE
+    TILBAKEKREVING_HENDELSE,
+    FAGSYSTEMINFO_BEHOV_HENDELSE,
+
+    // Institusjonsopphold
+    INSTITUSJONSOPPHOLD
 
 }

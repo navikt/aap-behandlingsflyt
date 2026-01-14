@@ -48,7 +48,9 @@ class VurderStudentSteg private constructor(
                         tidligereVurderinger.muligMedRettTilAAP(kontekst, type()) &&
                                 Vurderingsbehov.REVURDER_STUDENT in kontekst.vurderingsbehovRelevanteForSteg
 
+                    VurderingType.AUTOMATISK_OPPDATER_VILKÅR,
                     VurderingType.MELDEKORT,
+                    VurderingType.AUTOMATISK_BREV,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
                     VurderingType.IKKE_RELEVANT ->
@@ -56,13 +58,13 @@ class VurderStudentSteg private constructor(
                 }
             },
             erTilstrekkeligVurdert = {
-                studentGrunnlag?.studentvurdering != null
+                !studentGrunnlag?.vurderinger.isNullOrEmpty()
             },
             tilbakestillGrunnlag = {
-                val vedtattVurdering = kontekst.forrigeBehandlingId
+                val vedtatteVurderinger = kontekst.forrigeBehandlingId
                     ?.let { studentRepository.hentHvisEksisterer(it) }
-                    ?.studentvurdering
-                studentRepository.lagre(kontekst.behandlingId, vedtattVurdering)
+                    ?.vurderinger
+                studentRepository.lagre(kontekst.behandlingId, vedtatteVurderinger)
             },
             kontekst
         )

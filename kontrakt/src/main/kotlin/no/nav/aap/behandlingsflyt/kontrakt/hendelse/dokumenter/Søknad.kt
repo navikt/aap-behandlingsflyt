@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter
 
 import com.fasterxml.jackson.annotation.JsonAlias
+import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonValue
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
@@ -37,13 +38,23 @@ public data class SøknadStudentDto(
 )
 
 public enum class KommeTilbake(public val stringRepresentation: String) {
-    Ja("Ja"), Nei("Nei"),
-
-    @JsonAlias("Vet ikke", "VetIkke")
-    VetIkke("Vet ikke");
+    Ja("Ja"), Nei("Nei"), VetIkke("Vet ikke");
 
     @JsonValue
     public fun customValue(): String = stringRepresentation
+
+    /**
+     * FIXME: Midlertidig fiks!
+     * Må bruke @JsonCreator for å håndtere deserialisering korrekt for "VetIkke".
+     * customValue() med @JsonValue gjør at jackson ignorerer alias og kun tillater stringRepresentation
+     * Usikker på hva konsekvensen ved å fjerne customValue() er andre steder i kodebasen, derav kjapp fiks før ferien.
+     **/
+    public companion object {
+        @JvmStatic
+        @JsonCreator
+        public fun from(value: String): KommeTilbake =
+            entries.first { it.name == value || it.stringRepresentation.equals(value, ignoreCase = true) }
+    }
 }
 
 public enum class StudentStatus {
@@ -87,10 +98,13 @@ public data class OppgitteBarn(
 )
 
 public data class AndreUtbetalingerDto(
-    public val lønn: Boolean?,
-    public val afp: String? = null,
+    public val lønn: String?,
+    public val afp: AfpDto? = null,
     public val stønad: List<AndreUtbetalingerYtelserDto>?
+)
 
+public data class AfpDto(
+    public val hvemBetaler: String?
 )
 
 public enum class AndreUtbetalingerYtelserDto{

@@ -56,6 +56,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SendForvaltningsmeldingSt
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SimulerUtbetalingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.StartBehandlingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SykdomsvurderingBrevSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SykestipendSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SøknadSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.TjenestepensjonRefusjonskravSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.UnderveisSteg
@@ -115,7 +116,22 @@ object Revurdering : BehandlingType {
             )
             .medSteg(steg = FastsettMeldeperiodeSteg)
             .medSteg(steg = VurderAlderSteg)
-            .medSteg(steg = VurderStudentSteg)
+            .medSteg(
+                steg = VurderStudentSteg,
+                vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.REVURDER_STUDENT,
+                    Vurderingsbehov.HELHETLIG_VURDERING
+                )
+            )
+            .medSteg(
+                steg = SykestipendSteg,
+                vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.REVURDER_STUDENT,
+                    Vurderingsbehov.HELHETLIG_VURDERING
+                )
+            )
             .medSteg(
                 steg = VurderSykdomSteg,
                 // UføreService trengs her for å trigge ytterligere nedsatt arbeidsevne-vurdering
@@ -392,8 +408,8 @@ object Revurdering : BehandlingType {
                 vurderingsbehovRelevanteForSteg = Vurderingsbehov.alleInklusivGRegulering(),
                 informasjonskrav = listOf(MeldekortInformasjonskrav, Aktivitetsplikt11_7Informasjonskrav)
             )
-            .medSteg(steg = UnderveisSteg)
             .medSteg(steg = Effektuer11_7Steg)
+            .medSteg(steg = UnderveisSteg)
             .medSteg(
                 steg = BeregnTilkjentYtelseSteg,
                 vurderingsbehovRelevanteForSteg = Vurderingsbehov.alleInklusivGRegulering(),

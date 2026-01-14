@@ -1,17 +1,19 @@
 package no.nav.aap.behandlingsflyt.hendelse.mottak
 
+import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingBehandlingsstatus
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingService
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.Tilbakekrevingshendelse
+import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Aktivitetskort
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AktivitetskortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AnnetRelevantDokumentV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.FagsysteminfoBehovV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KabalHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Klage
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlageV0
@@ -32,9 +34,12 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHen
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelseV0
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
+import no.nav.aap.behandlingsflyt.prosessering.tilbakekreving.FagsysteminfoSvarHendelse
+import no.nav.aap.behandlingsflyt.prosessering.tilbakekreving.MottakerDto
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.tilVurderingsbehov
@@ -46,6 +51,7 @@ import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.utbetaling.helved.base64ToUUID
 import org.slf4j.LoggerFactory
 import java.net.URI
 import java.time.LocalDateTime
@@ -58,11 +64,12 @@ class HåndterMottattDokumentService(
     private val prosesserBehandling: ProsesserBehandlingService,
     private val mottaDokumentService: MottaDokumentService,
     private val behandlingRepository: BehandlingRepository,
+    private val vedtakRepository: VedtakRepository,
     private val tilbakekrevingService: TilbakekrevingService,
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
-    private val secureLogger = LoggerFactory.getLogger("secureLog")
+    private val secureLogger = LoggerFactory.getLogger("team-logs")
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         sakService = SakService(repositoryProvider),
@@ -71,7 +78,8 @@ class HåndterMottattDokumentService(
         prosesserBehandling = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
         mottaDokumentService = MottaDokumentService(repositoryProvider),
         behandlingRepository = repositoryProvider.provide<BehandlingRepository>(),
-        tilbakekrevingService = TilbakekrevingService(repositoryProvider),
+        vedtakRepository = repositoryProvider.provide<VedtakRepository>(),
+        tilbakekrevingService = TilbakekrevingService(repositoryProvider, gatewayProvider),
     )
 
     fun håndterMottatteKlage(
@@ -302,7 +310,66 @@ class HåndterMottattDokumentService(
                 tilbakekrevingService.håndter(sakId, melding.tilTilbakekrevingshendelse())
                 mottaDokumentService.markerSomBehandlet(sakId, behandlingId, referanse)
             }
+
+            is FagsysteminfoBehovV0 -> {
+                val behandlingId = finnSisteIverksatteBehandling(sakId)
+                log.info("Mottatt fagsysteminfo behov for sakId $sakId og behandlingId $behandlingId")
+                tilbakekrevingService.håndter(sakId, melding.tilFagsysteminfoSvarHendelse(sakId))
+                mottaDokumentService.markerSomBehandlet(sakId, behandlingId, referanse)
+            }
         }
+    }
+
+
+    private fun FagsysteminfoBehovV0.tilFagsysteminfoSvarHendelse(sakId: SakId): FagsysteminfoSvarHendelse {
+        val sak = sakService.hent(sakId)
+        val kravgrunnlagReferanse = this.kravgrunnlagReferanse.base64ToUUID()
+        val behandling = behandlingRepository.hent(BehandlingReferanse(kravgrunnlagReferanse))
+        val årsak = when (behandling.årsakTilOpprettelse) {
+            ÅrsakTilOpprettelse.SØKNAD,
+            ÅrsakTilOpprettelse.HELSEOPPLYSNINGER,
+            ÅrsakTilOpprettelse.ANNET_RELEVANT_DOKUMENT,
+            ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA,
+            ÅrsakTilOpprettelse.FASTSATT_PERIODE_PASSERT,
+            ÅrsakTilOpprettelse.FRITAK_MELDEPLIKT,
+            ÅrsakTilOpprettelse.AKTIVITETSMELDING,
+            ÅrsakTilOpprettelse.OPPFØLGINGSOPPGAVE,
+            ÅrsakTilOpprettelse.OPPFØLGINGSOPPGAVE_SAMORDNING_GRADERING,
+            ÅrsakTilOpprettelse.AKTIVITETSPLIKT,
+            ÅrsakTilOpprettelse.AKTIVITETSPLIKT_11_9,
+            ÅrsakTilOpprettelse.AUTOMATISK_OPPDATER_VILKÅR -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
+            ÅrsakTilOpprettelse.MELDEKORT,
+            ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.KORRIGERING
+            ÅrsakTilOpprettelse.OMGJØRING_ETTER_SVAR_FRA_KLAGEINSTANS,
+            ÅrsakTilOpprettelse.OMGJØRING_ETTER_KLAGE,
+            ÅrsakTilOpprettelse.BARNETILLEGG_SATSENDRING,
+            ÅrsakTilOpprettelse.SVAR_FRA_KLAGEINSTANS,
+            ÅrsakTilOpprettelse.KLAGE -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.KLAGE
+            ÅrsakTilOpprettelse.TILBAKEKREVING_HENDELSE,
+            ÅrsakTilOpprettelse.FAGSYSTEMINFO_BEHOV_HENDELSE,
+            ÅrsakTilOpprettelse.INSTITUSJONSOPPHOLD -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
+            null -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.UKJENT // Ikke relevant
+        }
+
+        val vedtakstidspunkt = vedtakRepository.hent(behandling.id)?.vedtakstidspunkt ?: error("Fant ikke vedtak")
+        val nayEnhetForPerson = tilbakekrevingService.finnNayEnhetForPerson(sak.person.aktivIdent(), behandling)
+        return FagsysteminfoSvarHendelse(
+            eksternFagsakId = this.eksternFagsakId,
+            hendelseOpprettet = LocalDateTime.now(),
+            mottaker = MottakerDto(
+                ident = sak.person.aktivIdent().identifikator,
+                type = MottakerDto.MottakerType.PERSON
+            ),
+            revurdering = FagsysteminfoSvarHendelse.RevurderingDto(
+                behandlingId = kravgrunnlagReferanse.toString(),
+                årsak = årsak,
+                årsakTilFeilutbetaling = null,
+                vedtaksdato = vedtakstidspunkt.toLocalDate(),
+            ),
+            // TODO: Meldeperioder inkluderer helg i Kelvin, men er mandag-fredag i tilbakekreving. Kan bruke denne for å "slå sammen" to mandag-fredag-perioder til én lang periode.
+            utvidPerioder = emptyList(),
+            behandlendeEnhet = nayEnhetForPerson.enhetNr,
+        )
     }
 
     private fun finnSisteIverksatteBehandling(sakId: SakId): BehandlingId {
@@ -318,7 +385,7 @@ class HåndterMottattDokumentService(
             eksternBehandlingId = this.eksternBehandlingId,
             sakOpprettet = this.tilbakekreving.sakOpprettet,
             varselSendt = this.tilbakekreving.varselSendt,
-            behandlingsstatus = no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingBehandlingsstatus.valueOf(
+            behandlingsstatus = TilbakekrevingBehandlingsstatus.valueOf(
                 this.tilbakekreving.behandlingsstatus.name
             ),
             totaltFeilutbetaltBeløp = Beløp(this.tilbakekreving.totaltFeilutbetaltBeløp),
@@ -349,7 +416,6 @@ class HåndterMottattDokumentService(
         val behandling = behandlingRepository.hent(behandlingsreferanse)
         val årsakTilOpprettelse = utledÅrsakTilOpprettelse(innsendingType, melding)
 
-        secureLogger.info("Melding sin beskrivelse er " + melding.beskrivelse + " og årsaker til behandling er " + melding.årsakerTilBehandling.joinToString(", "))
         låsRepository.withLåstBehandling(behandling.id) {
             val vurderingsbehov =
                 melding.årsakerTilBehandling.map { VurderingsbehovMedPeriode(it.tilVurderingsbehov()) }
@@ -385,6 +451,8 @@ class HåndterMottattDokumentService(
             InnsendingType.PDL_HENDELSE_DODSFALL_BARN -> ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA
             InnsendingType.OMGJØRING_KLAGE_REVURDERING -> utledÅrsakEtterOmgjøringAvKlage(melding)
             InnsendingType.TILBAKEKREVING_HENDELSE -> ÅrsakTilOpprettelse.TILBAKEKREVING_HENDELSE
+            InnsendingType.INSTITUSJONSOPPHOLD -> ÅrsakTilOpprettelse.INSTITUSJONSOPPHOLD
+            InnsendingType.FAGSYSTEMINFO_BEHOV_HENDELSE -> ÅrsakTilOpprettelse.FAGSYSTEMINFO_BEHOV_HENDELSE
         }
     }
 
@@ -465,6 +533,8 @@ class HåndterMottattDokumentService(
             InnsendingType.PDL_HENDELSE_DODSFALL_BRUKER -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.DØDSFALL_BRUKER))
             InnsendingType.PDL_HENDELSE_DODSFALL_BARN -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.DØDSFALL_BARN))
             InnsendingType.TILBAKEKREVING_HENDELSE -> emptyList()
+            InnsendingType.INSTITUSJONSOPPHOLD -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.INSTITUSJONSOPPHOLD))
+            InnsendingType.FAGSYSTEMINFO_BEHOV_HENDELSE-> emptyList()
         }
     }
 
