@@ -148,7 +148,7 @@ class UnderveisService(
         val meldekortGrunnlag = meldekortRepository.hentHvisEksisterer(behandlingId)
         val meldekort = meldekortGrunnlag?.meldekort().orEmpty()
         val innsendingsTidspunkt = meldekortGrunnlag?.innsendingsdatoPerMelding().orEmpty()
-        val kvote = kvoteService.beregn(behandlingId)
+        val kvote = kvoteService.beregn()
         val utlederResultat = institusjonsoppholdUtlederService.utled(behandlingId, begrensetTilRettighetsperiode = false)
 
         val institusjonsopphold = MapInstitusjonoppholdTilRegel.map(utlederResultat)

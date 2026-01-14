@@ -155,6 +155,12 @@ public enum class StegType(
         gruppe = StegGruppe.UNDERVEIS,
         status = Status.UTREDES
     ),
+
+    FASTSETT_VEDTAKSLENGDE(
+        gruppe = StegGruppe.UNDERVEIS,
+        status = Status.UTREDES
+    ),
+    
     FASTSETT_UTTAK(
         gruppe = StegGruppe.UNDERVEIS,
         status = Status.UTREDES
