@@ -36,7 +36,7 @@ class SamordningArbeidsgiverSteg(
                         }
                     }
 
-                    VurderingType.AUTOMATISK_OPPDATER_VILKÅR,
+                    VurderingType.UTVID_VEDTAKSLENGDE,
                     VurderingType.MELDEKORT,
                     VurderingType.AUTOMATISK_BREV,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,

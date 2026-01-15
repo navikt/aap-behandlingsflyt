@@ -77,7 +77,7 @@ class VedtakslengdeSteg(
                 }
             }
 
-            VurderingType.AUTOMATISK_OPPDATER_VILKÅR -> {
+            VurderingType.UTVID_VEDTAKSLENGDE -> {
                 if (sisteVedtatteUnderveisperiode == null) {
                     log.info("Ingen vedtakslengde å utvide")
                     return Fullført

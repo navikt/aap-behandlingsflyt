@@ -86,10 +86,10 @@ class VedtakslengdeStegTest {
             sak.id,
             forrigeBehandling.id,
             VurderingsbehovOgÅrsak(
-                årsak = ÅrsakTilOpprettelse.AUTOMATISK_OPPDATER_VILKÅR,
+                årsak = ÅrsakTilOpprettelse.UTVID_VEDTAKSLENGDE,
                 vurderingsbehov = listOf(
                     VurderingsbehovMedPeriode(
-                        Vurderingsbehov.AUTOMATISK_OPPDATER_VILKÅR
+                        Vurderingsbehov.UTVID_VEDTAKSLENGDE
                     )
                 )
             )

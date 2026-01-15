@@ -82,7 +82,7 @@ class VurderBistandsbehovSteg(
         )
 
         when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING, VurderingType.AUTOMATISK_OPPDATER_VILKÅR -> vurderBistandsvilkår(kontekst)
+            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING, VurderingType.UTVID_VEDTAKSLENGDE -> vurderBistandsvilkår(kontekst)
             VurderingType.MELDEKORT,
             VurderingType.AUTOMATISK_BREV,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,

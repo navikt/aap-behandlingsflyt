@@ -43,6 +43,7 @@ object FakeUnleash : FakeUnleashBase(
         BehandlingsflytFeature.Sykestipend to false,
         BehandlingsflytFeature.Forlengelse to true,
         BehandlingsflytFeature.ForlengelseIManuellBehandling to false,
+        BehandlingsflytFeature.UtvidVedtakslengdeJobb to true,
     )
 )
 
@@ -69,5 +70,6 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.Sykestipend to true,
         BehandlingsflytFeature.Forlengelse to true,
         BehandlingsflytFeature.ForlengelseIManuellBehandling to true,
+        BehandlingsflytFeature.UtvidVedtakslengdeJobb to true,
     )
 )

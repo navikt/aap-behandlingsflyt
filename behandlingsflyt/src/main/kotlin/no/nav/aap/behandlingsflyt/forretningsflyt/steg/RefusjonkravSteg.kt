@@ -48,7 +48,7 @@ class RefusjonkravSteg private constructor(
                             else -> false
                         }
                     }
-                    VurderingType.AUTOMATISK_OPPDATER_VILKÅR,
+                    VurderingType.UTVID_VEDTAKSLENGDE,
                     VurderingType.REVURDERING,
                     VurderingType.MELDEKORT,
                     VurderingType.AUTOMATISK_BREV,

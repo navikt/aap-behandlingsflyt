@@ -32,7 +32,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class VurderLovvalgSteg private constructor(
@@ -77,7 +76,7 @@ class VurderLovvalgSteg private constructor(
 
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
-            VurderingType.AUTOMATISK_OPPDATER_VILKÅR,
+            VurderingType.UTVID_VEDTAKSLENGDE,
             VurderingType.REVURDERING -> {
                 val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
                 Medlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode)

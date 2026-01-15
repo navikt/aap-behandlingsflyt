@@ -23,7 +23,7 @@ class OpprettRevurderingSteg(
             VurderingType.MELDEKORT,
             VurderingType.AUTOMATISK_BREV,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
-            VurderingType.AUTOMATISK_OPPDATER_VILKÅR,
+            VurderingType.UTVID_VEDTAKSLENGDE,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
             VurderingType.IKKE_RELEVANT -> {
                 Fullført
