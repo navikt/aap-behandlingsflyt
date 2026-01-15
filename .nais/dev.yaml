@@ -156,6 +156,8 @@ spec:
       value: https://inst2-q2.dev-fss-pub.nais.io/api/v1/person/institusjonsopphold/soek
     - name: INTEGRASJON_INSTITUSJONSOPPHOLD_SCOPE
       value: api://dev-fss.team-rocket.inst2-q2/.default
+    - name: INTEGRASJON_INSTITUSJONSOPPHOLD_EVENT_TOPIC
+      value: team-rocket.institusjon-opphold-hendelser-q2
     - name: INTEGRASJON_INNTEKT_URL
       value: https://pensjon-popp-q2.dev-fss-pub.nais.io/popp/api/inntekt/sumPi
     - name: INTEGRASJON_INNTEKT_SCOPE
