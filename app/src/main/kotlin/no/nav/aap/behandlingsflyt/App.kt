@@ -85,6 +85,7 @@ import no.nav.aap.behandlingsflyt.hendelse.kafka.tilbakekreving.TilbakekrevingKa
 import no.nav.aap.behandlingsflyt.hendelse.mottattHendelseApi
 import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.InstitusjonsOppholdHendelse
 import no.nav.aap.behandlingsflyt.pip.behandlingsflytPipApi
 import no.nav.aap.behandlingsflyt.prosessering.BehandlingsflytLogInfoProvider
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
@@ -481,7 +482,7 @@ fun Application.startInstitusjonsOppholdKonsument(
     dataSource: DataSource,
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,
-): KafkaKonsument<String, String> {
+): KafkaKonsument<InstitusjonsOppholdHendelse, String> {
     val konsument = Inst2KafkaKonsument(
         config = KafkaConsumerConfig(
             keyDeserializer = org.apache.kafka.common.serialization.StringDeserializer::class.java,
