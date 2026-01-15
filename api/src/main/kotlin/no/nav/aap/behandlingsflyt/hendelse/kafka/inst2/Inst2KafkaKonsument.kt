@@ -4,9 +4,11 @@ import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Inst2HendelseKafkaMelding
-import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.InstitusjonsOppholdHendelse
+import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import org.apache.kafka.clients.consumer.ConsumerRecord
@@ -16,16 +18,17 @@ import javax.sql.DataSource
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
-const val INSTITUSJONSOPPHOLD_EVENT_TOPIC = "team-rocket.institusjon-opphold-hendelser"
+val INSTITUSJONSOPPHOLD_EVENT_TOPIC: String =
+    requiredConfigForKey("integrasjon.institusjonsopphold.event.topic")
 
 class Inst2KafkaKonsument(
-    config: KafkaConsumerConfig<String, String>,
+    config: KafkaConsumerConfig<InstitusjonsOppholdHendelse, String>,
     pollTimeout: Duration = 10.seconds,
     closeTimeout: Duration = 30.seconds,
     private val dataSource: DataSource,
     private val repositoryRegistry: RepositoryRegistry,
     private val gatewayProvider: GatewayProvider,
-) : KafkaKonsument<String, String>(
+) : KafkaKonsument<InstitusjonsOppholdHendelse, String>(
     topic = INSTITUSJONSOPPHOLD_EVENT_TOPIC,
     config = config,
     pollTimeout = pollTimeout,
@@ -35,13 +38,13 @@ class Inst2KafkaKonsument(
     private val log = LoggerFactory.getLogger(javaClass)
     private val secureLogger = LoggerFactory.getLogger("team-logs")
 
-    override fun håndter(meldinger: ConsumerRecords<String, String>) {
+    override fun håndter(meldinger: ConsumerRecords<InstitusjonsOppholdHendelse, String>) {
         meldinger.forEach(::håndter)
     }
 
-    fun håndter(melding: ConsumerRecord<String, String>) {
+    fun håndter(melding: ConsumerRecord<InstitusjonsOppholdHendelse, String>) {
         log.info(
-            "Behandler institusjonsopphold-record med id: ${melding.key()}, partition ${melding.partition()}, offset: ${melding.offset()}"
+            "Behandler institusjonsopphold-record med id: ${melding.key()}, partition ${melding.partition()}, offset: ${melding.offset()}, topic: ${topic}"
         )
         melding.topic()
         val meldingKey = "${melding.partition()}-${melding.offset()}"
@@ -52,11 +55,14 @@ class Inst2KafkaKonsument(
         val institusjonsoppholdHendelse = try {
             DefaultJsonMapper.fromJson<Inst2HendelseKafkaMelding>(meldingVerdi)
         } catch (exception: Exception) {
-            secureLogger.error("Kunne ikke parse melding fra institusjonsopphold: $meldingKey med verdi: $meldingVerdi", exception)
+            secureLogger.error(
+                "Kunne ikke parse melding fra institusjonsopphold: $meldingKey med verdi: $meldingVerdi",
+                exception
+            )
             throw exception
         }
         val saksnummer =
-           finnSaksNummer()
+            finnSaksNummer()
         log.info("Mottatt institusjonsoppholdhendelse for saksnummer: $saksnummer")
         dataSource.transaction { connection ->
             val repositoryProvider = repositoryRegistry.provider(connection)
@@ -75,7 +81,6 @@ class Inst2KafkaKonsument(
         //TODO: Finn saksnummer
         return "FAKE"
     }
-
 
 
 }

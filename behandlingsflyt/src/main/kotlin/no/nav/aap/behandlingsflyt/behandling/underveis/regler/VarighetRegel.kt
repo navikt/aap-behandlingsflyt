@@ -1,7 +1,9 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
+import no.nav.aap.behandlingsflyt.behandling.underveis.KvoteService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plusHverdager
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -41,6 +43,25 @@ class VarighetRegel : UnderveisRegel {
         }
 
         return resultat.leggTilVurderinger(varighetTidslinje, Vurdering::leggTilVarighetVurdering)
+    }
+    
+    fun simluer(rettighetstidslinje: Tidslinje<RettighetsType>): Tidslinje<VarighetVurdering> {
+        val telleverk = Telleverk(KvoteService().beregn())
+
+        val varighetTidslinje = rettighetstidslinje.flatMap {
+            val relevanteKvoter = relevanteKvoter(Vurdering(fårAapEtter = it.verdi))
+            when {
+                relevanteKvoter.isNotEmpty() ->
+                    vurderPeriode(
+                        periode = it.periode,
+                        relevanteKvoter = relevanteKvoter,
+                        telleverk = telleverk,
+                    )
+
+                else -> Tidslinje(it.periode, Oppfylt(brukerAvKvoter = emptySet()))
+            }
+        }
+        return varighetTidslinje
     }
 
     private fun relevanteKvoter(vurdering: Vurdering): Set<Kvote> {

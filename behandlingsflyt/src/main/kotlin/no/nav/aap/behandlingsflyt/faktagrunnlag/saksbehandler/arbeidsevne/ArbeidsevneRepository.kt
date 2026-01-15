@@ -6,7 +6,6 @@ import no.nav.aap.lookup.repository.Repository
 
 interface ArbeidsevneRepository : Repository {
     fun hentHvisEksisterer(behandlingId: BehandlingId): ArbeidsevneGrunnlag?
-    fun hentAlleVurderinger(sakId: SakId, behandlingId: BehandlingId): Set<ArbeidsevneVurdering>
     fun lagre(behandlingId: BehandlingId, vurderinger: List<ArbeidsevneVurdering>)
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
 }

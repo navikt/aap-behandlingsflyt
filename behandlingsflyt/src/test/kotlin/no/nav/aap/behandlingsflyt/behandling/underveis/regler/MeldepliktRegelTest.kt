@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Oversty
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktVurderingPeriode
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.desember
@@ -438,6 +439,7 @@ class MeldepliktRegelTest {
                         begrunnelse = "kan ikke",
                         vurdertAv = "saksbehandler",
                         opprettetTid = rettighetsperiode.fom.atStartOfDay(),
+                        vurdertIBehandling = BehandlingId(1),
                     )
                 )
             )
@@ -482,6 +484,7 @@ class MeldepliktRegelTest {
                         begrunnelse = "kan ikke",
                         vurdertAv = "saksbehandler",
                         opprettetTid = rettighetsperiode.fom.atStartOfDay(),
+                        vurdertIBehandling = BehandlingId(1),
                     )
                 )
             ),
@@ -866,6 +869,7 @@ class MeldepliktRegelTest {
                         begrunnelse = "kan ikke",
                         vurdertAv = "saksbehandler",
                         opprettetTid = rettighetsperiode.fom.atStartOfDay(),
+                        vurdertIBehandling = BehandlingId(1),
                     ),
                     Fritaksvurdering(
                         harFritak = false,
@@ -873,6 +877,7 @@ class MeldepliktRegelTest {
                         begrunnelse = "kan",
                         vurdertAv = "saksbehandler",
                         opprettetTid = rettighetsperiode.fom.atStartOfDay(),
+                        vurdertIBehandling = BehandlingId(1),
                     )
                 )
             ),
@@ -926,6 +931,7 @@ class MeldepliktRegelTest {
                         begrunnelse = "kan ikke",
                         vurdertAv = "saksbehandler",
                         opprettetTid = rettighetsperiode.fom.atStartOfDay(),
+                        vurdertIBehandling = BehandlingId(1),
                     ),
                     Fritaksvurdering(
                         harFritak = false,
@@ -933,6 +939,7 @@ class MeldepliktRegelTest {
                         begrunnelse = "kan",
                         vurdertAv = "saksbehandler",
                         opprettetTid = rettighetsperiode.fom.atStartOfDay(),
+                        vurdertIBehandling = BehandlingId(1),
                     )
                 )
             )
@@ -1027,6 +1034,7 @@ class MeldepliktRegelTest {
                         begrunnelse = "kan ikke",
                         vurdertAv = "saksbehandler",
                         opprettetTid = rettighetsperiode.fom.atStartOfDay(),
+                        vurdertIBehandling = BehandlingId(1),
                     ),
                     Fritaksvurdering(
                         harFritak = false,
@@ -1034,6 +1042,7 @@ class MeldepliktRegelTest {
                         begrunnelse = "kan",
                         vurdertAv = "saksbehandler",
                         opprettetTid = rettighetsperiode.fom.atStartOfDay(),
+                        vurdertIBehandling = BehandlingId(1),
                     )
                 )
             )
@@ -1200,7 +1209,8 @@ class MeldepliktRegelTest {
                         fraDato = 28 mai 2020,
                         begrunnelse = "kan ikke",
                         vurdertAv = "saksbehandler",
-                        opprettetTid = LocalDateTime.now()
+                        opprettetTid = LocalDateTime.now(),
+                        vurdertIBehandling = BehandlingId(1),
                     )
                 )
             )

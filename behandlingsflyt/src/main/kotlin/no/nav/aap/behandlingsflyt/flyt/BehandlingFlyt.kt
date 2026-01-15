@@ -188,13 +188,13 @@ class BehandlingFlyt private constructor(
 
     fun tilbakeflytEtterEndringer(
         oppdaterteGrunnlagstype: List<Informasjonskravkonstruktør>,
-        nyeVurderingsbehov: List<Vurderingsbehov>? = null
+        nyeVurderingsbehov: List<Vurderingsbehov> = emptyList()
     ): BehandlingFlyt {
         val tidligsteStegForVurderingsbehov =
-            nyeVurderingsbehov?.flatMap { vurderingsbehov[it].orEmpty() }
+            nyeVurderingsbehov.flatMap { vurderingsbehov[it].orEmpty() }
                 // Skal ikke kunne flyttes tilbake til steg med status OPPRETTET
-                ?.minus(StegType.entries.filter { it.status == Status.OPPRETTET }.toSet())
-                ?.minWithOrNull(stegComparator)
+                .minus(StegType.entries.filter { it.status == Status.OPPRETTET }.toSet())
+                .minWithOrNull(stegComparator)
 
         val skalTilSteg =
             flyt.filter { it.kravliste.any { at -> oppdaterteGrunnlagstype.contains(at) } }

@@ -15,7 +15,7 @@ data class ArbeidsevneVurdering(
     val arbeidsevne: Prosent,
     val fraDato: LocalDate,
     val tilDato: LocalDate? = null,
-    val vurdertIBehandling: BehandlingId? = null,
+    val vurdertIBehandling: BehandlingId,
     val opprettetTid: LocalDateTime,
     val vurdertAv: String,
 ) {
@@ -34,6 +34,6 @@ data class ArbeidsevneVurdering(
         val arbeidsevne: Prosent,
         val opprettetTid: LocalDateTime,
         val vurdertAv: String,
-        val vurdertIBehandling: BehandlingId? = null,
+        val vurdertIBehandling: BehandlingId,
     )
 }

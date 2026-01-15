@@ -268,6 +268,7 @@ class GraderingArbeidRegelTest {
                         fraDato = rettighetsperiode.fom,
                         begrunnelse = "kan ikke",
                         vurdertAv = "saksbehandler",
+                        vurdertIBehandling = BehandlingId(1),
                         opprettetTid = rettighetsperiode.fom.atStartOfDay(),
                     )
                 )
