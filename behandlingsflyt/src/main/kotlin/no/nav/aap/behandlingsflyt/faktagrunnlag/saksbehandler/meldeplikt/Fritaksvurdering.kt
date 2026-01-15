@@ -15,7 +15,7 @@ data class Fritaksvurdering(
     val begrunnelse: String,
     val vurdertAv: String,
     val opprettetTid: LocalDateTime,
-    val vurdertIBehandling: BehandlingId? = null,
+    val vurdertIBehandling: BehandlingId,
 ) {
     fun toFritaksvurderingData(): FritaksvurderingData {
         return FritaksvurderingData(
@@ -32,6 +32,6 @@ data class Fritaksvurdering(
         val begrunnelse: String,
         val vurdertAv: String,
         val opprettetTid: LocalDateTime,
-        val vurdertIBehandling: BehandlingId? = null,
+        val vurdertIBehandling: BehandlingId,
     )
 }
