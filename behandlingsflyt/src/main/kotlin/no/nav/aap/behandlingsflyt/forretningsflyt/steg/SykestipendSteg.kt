@@ -64,6 +64,8 @@ class SykestipendSteg private constructor(
 
                     VurderingType.REVURDERING ->
                         tidligereVurderinger.muligMedRettTilAAP(kontekst, type())
+                                && (studentGrunnlag?.vurderinger?.any { it.erOppfylt() } == true
+                                || sykestipendRepository.hentHvisEksisterer(kontekst.behandlingId) != null)
                                 && kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty()
 
                     VurderingType.AUTOMATISK_OPPDATER_VILKÅR,
@@ -91,17 +93,17 @@ class SykestipendSteg private constructor(
             },
             kontekst
         )
-        
+
         vurderSamordningAnnenLovgivningVilkår(kontekst)
-        
+
         return Fullført
     }
-    
+
     // Bør kanskje inn i et eget steg?
     private fun vurderSamordningAnnenLovgivningVilkår(kontekst: FlytKontekstMedPerioder) {
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
         vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SAMORDNING_ANNEN_LOVGIVNING)
-        
+
         val grunnlag = SamordningAnnenLovgivningFaktagrunnlag(
             kontekst.rettighetsperiode,
             sykestipendRepository.hentHvisEksisterer(kontekst.behandlingId),
