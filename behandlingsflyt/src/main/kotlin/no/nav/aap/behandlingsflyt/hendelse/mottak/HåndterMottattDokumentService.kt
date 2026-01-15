@@ -47,7 +47,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -69,7 +68,6 @@ class HåndterMottattDokumentService(
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
-    private val secureLogger = LoggerFactory.getLogger("team-logs")
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         sakService = SakService(repositoryProvider),
@@ -119,7 +117,7 @@ class HåndterMottattDokumentService(
 
                 prosesserBehandling.triggProsesserBehandling(
                     behandling,
-                    listOf("trigger" to DefaultJsonMapper.toJson(vurderingsbehov.map { it.type }))
+                    vurderingsbehov = vurderingsbehov.map { it.type }
                 )
 
                 if (behandlingSkrivelås != null) {
@@ -196,7 +194,7 @@ class HåndterMottattDokumentService(
 
         prosesserBehandling.triggProsesserBehandling(
             opprettetBehandling,
-            listOf("trigger" to DefaultJsonMapper.toJson(vurderingsbehovForYtelsesbehandling.map { it.type }))
+            vurderingsbehov = vurderingsbehovForYtelsesbehandling.map { it.type }
         )
 
         if (behandlingSkrivelås != null) {
@@ -260,7 +258,7 @@ class HåndterMottattDokumentService(
 
         prosesserBehandling.triggProsesserBehandling(
             opprettetBehandling,
-            listOf("trigger" to DefaultJsonMapper.toJson(vurderingsbehov.map { it.type }))
+            vurderingsbehov = vurderingsbehov.map { it.type }
         )
 
         if (behandlingSkrivelås != null) {
@@ -287,8 +285,8 @@ class HåndterMottattDokumentService(
             if (sisteYtelsesBehandling.status().erÅpen()) {
                 prosesserBehandling.triggProsesserBehandling(
                     sisteYtelsesBehandling,
-                    listOf("trigger" to DefaultJsonMapper.toJson(vurderingsbehov.filter { it.type == Vurderingsbehov.MOTTATT_DIALOGMELDING }
-                        .map { it.type }))
+                    vurderingsbehov = vurderingsbehov.filter { it.type == Vurderingsbehov.MOTTATT_DIALOGMELDING }
+                        .map { it.type }
                 )
                 log.info("Prosessert behandling etter mottatt dialogmelding $sisteYtelsesBehandling.id")
             }
@@ -299,8 +297,6 @@ class HåndterMottattDokumentService(
     fun håndterMottattTilbakekrevingHendelse(
         sakId: SakId,
         referanse: InnsendingReferanse,
-        mottattTidspunkt: LocalDateTime,
-        brevkategori: InnsendingType,
         melding: TilbakekrevingHendelse
     ) {
         when (melding) {
@@ -338,16 +334,20 @@ class HåndterMottattDokumentService(
             ÅrsakTilOpprettelse.AKTIVITETSPLIKT,
             ÅrsakTilOpprettelse.AKTIVITETSPLIKT_11_9,
             ÅrsakTilOpprettelse.AUTOMATISK_OPPDATER_VILKÅR -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
+
             ÅrsakTilOpprettelse.MELDEKORT,
             ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.KORRIGERING
+
             ÅrsakTilOpprettelse.OMGJØRING_ETTER_SVAR_FRA_KLAGEINSTANS,
             ÅrsakTilOpprettelse.OMGJØRING_ETTER_KLAGE,
             ÅrsakTilOpprettelse.BARNETILLEGG_SATSENDRING,
             ÅrsakTilOpprettelse.SVAR_FRA_KLAGEINSTANS,
             ÅrsakTilOpprettelse.KLAGE -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.KLAGE
+
             ÅrsakTilOpprettelse.TILBAKEKREVING_HENDELSE,
             ÅrsakTilOpprettelse.FAGSYSTEMINFO_BEHOV_HENDELSE,
             ÅrsakTilOpprettelse.INSTITUSJONSOPPHOLD -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
+
             null -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.UKJENT // Ikke relevant
         }
 
@@ -427,7 +427,7 @@ class HåndterMottattDokumentService(
             prosesserBehandling.triggProsesserBehandling(
                 sakId,
                 behandling.id,
-                listOf("trigger" to DefaultJsonMapper.toJson(vurderingsbehov.map { it.type }))
+                vurderingsbehov = vurderingsbehov.map { it.type }
             )
         }
     }
@@ -534,7 +534,7 @@ class HåndterMottattDokumentService(
             InnsendingType.PDL_HENDELSE_DODSFALL_BARN -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.DØDSFALL_BARN))
             InnsendingType.TILBAKEKREVING_HENDELSE -> emptyList()
             InnsendingType.INSTITUSJONSOPPHOLD -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.INSTITUSJONSOPPHOLD))
-            InnsendingType.FAGSYSTEMINFO_BEHOV_HENDELSE-> emptyList()
+            InnsendingType.FAGSYSTEMINFO_BEHOV_HENDELSE -> emptyList()
         }
     }
 

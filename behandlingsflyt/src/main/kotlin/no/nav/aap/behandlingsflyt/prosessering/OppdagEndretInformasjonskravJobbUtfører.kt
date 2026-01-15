@@ -41,7 +41,8 @@ class OppdagEndretInformasjonskravJobbUtfører(
             InstitusjonsoppholdInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
             PersonopplysningInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
         )
-        val sisteFattedeYtelsesbehandling = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) ?: error("Fant ikke siste behandling med fattet vedtak for sak $sakId")
+        val sisteFattedeYtelsesbehandling = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId)
+            ?: error("Fant ikke siste behandling med fattet vedtak for sak $sakId")
 
         val vurderingsbehov = relevanteInformasjonskrav
             .flatMap {
@@ -61,9 +62,7 @@ class OppdagEndretInformasjonskravJobbUtfører(
                 revurdering,
                 emptyList()
             )
-        }
-        else
-        {
+        } else {
             log.info("Lar være å opprette revurdering for sak $sakId med behov $vurderingsbehov da opplysningene er registrert fra før. ")
         }
         låsRepository.verifiserSkrivelås(sakSkrivelås)
