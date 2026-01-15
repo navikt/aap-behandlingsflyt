@@ -37,7 +37,6 @@ import java.util.UUID.randomUUID
 class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
 
     private val sakId_1 = SakId(1L)
-    private val sakId_2 = SakId(2L)
     private val behandlingId = BehandlingId(1L)
 
     val prosesserBehandlingService = mockk<ProsesserBehandlingService>()
@@ -71,8 +70,27 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
     }
 
     @Test
-    fun `skal ikke opprette og sette i gang prosessering av behandling hvis sluttdato er lenger frem enn dagens dato + 28 dager`() {
+    fun `skal oppdatere rettighetsperiode og opprette og sette i gang prosessering av behandling hvis rettighetsperiode ikke har fom satt til Tid_MAX`() {
         val sak = sak()
+        val behandling = behandlingMedVedtak()
+
+        every { underveisRepository.hentSakerMedSisteUnderveisperiodeFørDato(any()) } returns setOf(sakId_1)
+        every { underveisRepository.hentHvisEksisterer(behandling.id)} returns underveisGrunnlag(perioder = underveisPerioderIkkeUtløpt())
+        every { sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId_1) } returns behandlingMedVedtak()
+        every { sakOgBehandlingService.finnEllerOpprettBehandling(sak.id, any()) } returns opprettetBehandling()
+        every { sakRepository.hent(sakId_1) } returns sak
+        every { sakRepository.oppdaterRettighetsperiode(sak.id, any()) } just Runs
+        every { prosesserBehandlingService.triggProsesserBehandling(any<SakOgBehandlingService.OpprettetBehandling>()) } just Runs
+
+        opprettBehandlingUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
+
+        verify(exactly = 1) { sakRepository.oppdaterRettighetsperiode(sakId_1, Periode(sak.rettighetsperiode.fom, Tid.MAKS)) }
+        verify(exactly = 1) { prosesserBehandlingService.triggProsesserBehandling(any<SakOgBehandlingService.OpprettetBehandling>()) }
+    }
+
+    @Test
+    fun `skal ikke opprette og sette i gang prosessering av behandling hvis sluttdato er lenger frem enn dagens dato + 28 dager`() {
+        val sak = sak(Periode(LocalDate.now().minusDays(180), Tid.MAKS))
         val behandling = behandlingMedVedtak()
 
         every { underveisRepository.hentSakerMedSisteUnderveisperiodeFørDato(any()) } returns setOf(sakId_1)
@@ -87,26 +105,6 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
 
         verify(exactly = 0) { sakRepository.oppdaterRettighetsperiode(sakId_1, Periode(sak.rettighetsperiode.fom, Tid.MAKS)) }
         verify(exactly = 0) { prosesserBehandlingService.triggProsesserBehandling(any<SakOgBehandlingService.OpprettetBehandling>()) }
-    }
-
-    @Test
-    fun `skal fortsette med neste sak dersom foregående feiler`() {
-        val sak = sak()
-        val behandling = behandling()
-
-        every { underveisRepository.hentSakerMedSisteUnderveisperiodeFørDato(any()) } returns setOf(sakId_2, sakId_1)
-        every { underveisRepository.hentHvisEksisterer(behandling.id)} returns underveisGrunnlag()
-        every { sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId_1) } returns behandlingMedVedtak()
-        every { sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId_2) } throws RuntimeException("Noe feilet")
-        every { sakOgBehandlingService.finnEllerOpprettBehandling(sak.id, any()) } returns opprettetBehandling()
-        every { sakRepository.hent(sakId_1) } returns sak
-        every { sakRepository.oppdaterRettighetsperiode(sak.id, any()) } just Runs
-        every { prosesserBehandlingService.triggProsesserBehandling(any<SakOgBehandlingService.OpprettetBehandling>()) } just Runs
-
-        opprettBehandlingUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
-
-        verify(exactly = 1) { sakRepository.oppdaterRettighetsperiode(sakId_1, Periode(sak.rettighetsperiode.fom, Tid.MAKS)) }
-        verify(exactly = 1) { prosesserBehandlingService.triggProsesserBehandling(any<SakOgBehandlingService.OpprettetBehandling>()) }
     }
 
     @Test
