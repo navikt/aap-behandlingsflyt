@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.recursive.comparison.RecursiveComparisonConfiguration
 import org.junit.jupiter.api.*
@@ -40,7 +41,7 @@ class VedtakslengdeRepositoryImplTest {
     private fun vurdering(behandlingId: BehandlingId) = VedtakslengdeVurdering(
         sluttdato = LocalDate.of(2023, 12, 31),
         utvidetMed = ÅrMedHverdager.FØRSTE_ÅR,
-        vurdertAv = "Z654321",
+        vurdertAv = Bruker("Z654321"),
         vurdertIBehandling = behandlingId,
         opprettet = Instant.parse("2023-01-01T12:00:00Z")
     )

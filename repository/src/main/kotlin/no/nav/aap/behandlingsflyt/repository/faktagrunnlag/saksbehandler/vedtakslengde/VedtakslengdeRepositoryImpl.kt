@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.Vedt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
 
@@ -60,7 +61,7 @@ class VedtakslengdeRepositoryImpl(private val connection: DBConnection) : Vedtak
                 setLocalDate(1, vurdering.sluttdato)
                 setEnumName(2, vurdering.utvidetMed)
                 setLong(3, vurdering.vurdertIBehandling.toLong())
-                setString(4, vurdering.vurdertAv)
+                setString(4, vurdering.vurdertAv.ident)
                 setInstant(5, vurdering.opprettet)
             }
         }
@@ -89,7 +90,7 @@ class VedtakslengdeRepositoryImpl(private val connection: DBConnection) : Vedtak
                         sluttdato = row.getLocalDate("sluttdato"),
                         utvidetMed = row.getEnum("utvidet_med"),
                         vurdertIBehandling = BehandlingId(row.getLong("vurdert_i_behandling")),
-                        vurdertAv = row.getString("vurdert_av"),
+                        vurdertAv = Bruker(row.getString("vurdert_av")),
                         opprettet = row.getInstant("opprettet")
                     )
                 )
