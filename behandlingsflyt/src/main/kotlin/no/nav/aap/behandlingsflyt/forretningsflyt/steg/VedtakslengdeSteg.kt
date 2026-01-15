@@ -56,6 +56,10 @@ class VedtakslengdeSteg(
 
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
+                if (unleashGateway.isDisabled(BehandlingsflytFeature.ForlengelseIManuellBehandling)) {
+                    return Fullført
+                }
+                
                 // Initiell sluttdato skal samsvare med utledet i UnderveisService
                 if (sisteVedtatteUnderveisperiode == null) {
                     val initiellSluttdato = utledInitiellSluttdato(kontekst.behandlingId, kontekst.rettighetsperiode)
@@ -185,6 +189,7 @@ class VedtakslengdeSteg(
     }
 }
 
+// TODO: Bytt ut med ekte repository
 object FakeVedtakslengdeRepository {
     var vedtakslengdeGrunnlag: VedtakslengdeGrunnlag? = null
 
