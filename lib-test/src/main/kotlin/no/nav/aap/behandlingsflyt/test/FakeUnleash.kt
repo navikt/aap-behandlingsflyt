@@ -40,6 +40,7 @@ object FakeUnleash : FakeUnleashBase(
         BehandlingsflytFeature.MigrerRettighetsperiode to true,
         BehandlingsflytFeature.PeriodisertSykdom to true,
         BehandlingsflytFeature.Sykestipend to false,
+        BehandlingsflytFeature.UtvidVedtakslengdeJobb to true
     )
 )
 
@@ -63,5 +64,6 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.HentSykepengerVedOverlapp to true,
         BehandlingsflytFeature.PeriodisertSykdom to true,
         BehandlingsflytFeature.Sykestipend to true,
+        BehandlingsflytFeature.UtvidVedtakslengdeJobb to true
     )
 )

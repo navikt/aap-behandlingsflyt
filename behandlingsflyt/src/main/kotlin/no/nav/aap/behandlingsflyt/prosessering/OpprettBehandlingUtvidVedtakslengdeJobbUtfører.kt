@@ -43,7 +43,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
         val saker = hentKandidaterForUtvidelseAvVedtakslengde(datoHvorSakerSjekkesForUtvidelse)
         log.info("Fant ${saker.size} kandidater for utvidelse av vedtakslende per $datoHvorSakerSjekkesForUtvidelse (dryRun=$dryRun)")
 
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengde)) {
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeJobb)) {
             val resultat = saker
                 // TODO .filter { it.id == ? } // Kun kjøre spesifikk sak i første runde
                 .map { sakId ->

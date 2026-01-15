@@ -45,7 +45,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
     val underveisRepository = mockk<UnderveisRepository>()
     val sakOgBehandlingService = mockk<SakOgBehandlingService>()
     val unleashGateway = mockk<UnleashGateway> {
-        every { isEnabled(BehandlingsflytFeature.UtvidVedtakslengde) } returns true
+        every { isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeJobb) } returns true
     }
     val opprettBehandlingUtvidVedtakslengdeJobbUtfører =
         OpprettBehandlingUtvidVedtakslengdeJobbUtfører(prosesserBehandlingService, sakRepository, underveisRepository, sakOgBehandlingService, unleashGateway)
