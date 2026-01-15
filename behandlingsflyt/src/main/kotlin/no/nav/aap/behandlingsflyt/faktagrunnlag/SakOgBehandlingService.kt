@@ -301,7 +301,8 @@ class SakOgBehandlingService(
         vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak,
     ): Behandling {
         check(!trukketSøknadService.søknadErTrukket(sisteYtelsesbehandling.id)) {
-            "ikke lov å opprette ny behandling for trukket søknad ${sisteYtelsesbehandling.sakId}"
+            "ikke lov å opprette revurdering for trukket søknad ${sisteYtelsesbehandling.sakId} " +
+                    "(vurderingsbehov=${vurderingsbehovOgÅrsak.vurderingsbehov}, årsak=${vurderingsbehovOgÅrsak.årsak})"
         }
         return behandlingRepository.opprettBehandling(
             sakId = sisteYtelsesbehandling.sakId,
@@ -320,7 +321,7 @@ class SakOgBehandlingService(
         check(åpenRevurdering.status().erÅpen())
         check(åpenRevurdering.typeBehandling() == TypeBehandling.Revurdering)
         check(!trukketSøknadService.søknadErTrukket(åpenRevurdering.id)) {
-            "ikke lov å opprette ny behandling for trukket søknad ${åpenRevurdering.sakId}"
+            "ikke lov å opprette revurdering (foran forrige) på trukket søknad (revurdering sakId=${åpenRevurdering.sakId})"
         }
 
         val sisteAvsluttedeYtelsesvurdering = behandlingRepository.hent(åpenRevurdering.forrigeBehandlingId!!)

@@ -54,7 +54,7 @@ class LegeerklæringFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         behandling.medKontekst {
             val legeerklæringBestillingVenteBehov =
                 åpneAvklaringsbehov.filter { it.definisjon == Definisjon.BESTILL_LEGEERKLÆRING }
-            assertThat(legeerklæringBestillingVenteBehov.isEmpty()).isTrue()
+            assertThat(legeerklæringBestillingVenteBehov).isEmpty()
         }
     }
 
@@ -102,7 +102,7 @@ class LegeerklæringFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
 
         val legeerklæringBestillingVenteBehov =
             åpneAvklaringsbehov.filter { it.definisjon == Definisjon.BESTILL_LEGEERKLÆRING }
-        assertThat(legeerklæringBestillingVenteBehov.isEmpty()).isTrue()
+        assertThat(legeerklæringBestillingVenteBehov).isEmpty()
 
     }
 
@@ -147,7 +147,7 @@ class LegeerklæringFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling.id)
         val legeerklæringBestillingVenteBehov =
             åpneAvklaringsbehov.filter { it.definisjon == Definisjon.BESTILL_LEGEERKLÆRING }
-        assertThat(legeerklæringBestillingVenteBehov.isEmpty()).isTrue()
+        assertThat(legeerklæringBestillingVenteBehov).isEmpty()
     }
 
 }
