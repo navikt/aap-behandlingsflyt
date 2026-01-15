@@ -68,6 +68,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomsvurderingForBrevRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.søknad.TrukketSøknadRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.svarfraanadreinstans.SvarFraAndreinstansRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.log.ContextRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.lås.TaSkriveLåsRepositoryImpl
@@ -153,3 +154,4 @@ val postgresRepositoryRegistry = RepositoryRegistry()
     .register<TilbakekrevingRepositoryImpl>()
     .register<InntektsbortfallRepositoryImpl>()
     .register<SykestipendRepositoryImpl>()
+    .register<VedtakslengdeRepositoryImpl>()
