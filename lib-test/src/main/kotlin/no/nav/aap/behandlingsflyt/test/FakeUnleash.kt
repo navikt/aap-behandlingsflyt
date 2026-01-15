@@ -40,7 +40,7 @@ object FakeUnleash : FakeUnleashBase(
         BehandlingsflytFeature.MigrerRettighetsperiode to true,
         BehandlingsflytFeature.PeriodisertSykdom to true,
         BehandlingsflytFeature.Sykestipend to false,
-        BehandlingsflytFeature.Forlengelse to true,,
+        BehandlingsflytFeature.Forlengelse to true,
         BehandlingsflytFeature.ForlengelseIManuellBehandling to false,
     )
 )
