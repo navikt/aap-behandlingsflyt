@@ -17,11 +17,8 @@ import javax.sql.DataSource
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
-val INSTITUSJONSOPPHOLD_EVENT_TOPIC = ClientConfig(
-    scope = requiredConfigForKey(
-        "integrasjon.institusjonsopphold.event.topic"
-    )
-).toString()
+val INSTITUSJONSOPPHOLD_EVENT_TOPIC: String =
+    requiredConfigForKey("integrasjon.institusjonsopphold.event.topic")
 
 class Inst2KafkaKonsument(
     config: KafkaConsumerConfig<String, String>,
