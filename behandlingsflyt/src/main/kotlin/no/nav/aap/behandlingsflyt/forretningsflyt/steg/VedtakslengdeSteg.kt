@@ -38,7 +38,7 @@ class VedtakslengdeSteg(
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         underveisRepository = repositoryProvider.provide(),
         vilkårsresultatRepository = repositoryProvider.provide(),
-        vedtakslengdeRepository = FakeVedtakslengdeRepository(),
+        vedtakslengdeRepository = FakeVedtakslengdeRepository,
         unleashGateway = gatewayProvider.provide()
     )
 
@@ -48,7 +48,7 @@ class VedtakslengdeSteg(
             return Fullført
         }
 
-        val vedtakslengdeRepository = FakeVedtakslengdeRepository()
+        val vedtakslengdeRepository = FakeVedtakslengdeRepository
 
         val vedtattUnderveis = kontekst.forrigeBehandlingId?.let { underveisRepository.hentHvisEksisterer(it) }
         val sisteVedtatteUnderveisperiode = vedtattUnderveis?.perioder?.maxByOrNull { it.periode.tom }
@@ -185,7 +185,7 @@ class VedtakslengdeSteg(
     }
 }
 
-class FakeVedtakslengdeRepository() {
+object FakeVedtakslengdeRepository {
     var vedtakslengdeGrunnlag: VedtakslengdeGrunnlag? = null
 
     fun hentHvisEksisterer(behandlingId: BehandlingId): VedtakslengdeGrunnlag? {

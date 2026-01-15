@@ -79,7 +79,7 @@ class VedtakslengdeStegTest {
             input = object : Faktagrunnlag {}
         )
         
-        val vedtakslengdeRepository = FakeVedtakslengdeRepository()
+        val vedtakslengdeRepository = FakeVedtakslengdeRepository
 
         val inneværendeBehandling = revurdering(
             sak.id,
