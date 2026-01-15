@@ -55,10 +55,6 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(
                         nyeVurderinger = nyeVurderinger.map { it.toResponse(vurdertAvService) },
                         sisteVedtatteVurderinger = forrigeGrunnlag?.gjeldendeVurderinger().orEmpty()
                             .toResponse(vurdertAvService),
-                        kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
-                            Definisjon.FRITAK_MELDEPLIKT,
-                            behandling.id
-                        )
                     )
                 }
 
