@@ -11,8 +11,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FakeVedtakslengdeRepository
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
@@ -26,7 +24,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅ
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -84,7 +81,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             )
         }
 
-        val automatiskRevurdering = dataSource.transaction { connection ->
+        val automatiskBehandling = dataSource.transaction { connection ->
             val automatiskRevurdering = SakOgBehandlingService(
                 postgresRepositoryRegistry.provider(connection),
                 gatewayProvider
@@ -109,10 +106,10 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         }
 
         dataSource.transaction { connection ->
-            val vedtakslengdeVurdering = FakeVedtakslengdeRepository.hentHvisEksisterer(automatiskRevurdering.id)
+            val vedtakslengdeVurdering = FakeVedtakslengdeRepository.hentHvisEksisterer(automatiskBehandling.id)
             assertThat(vedtakslengdeVurdering).isNotNull
 
-            val underveisGrunnlag = UnderveisRepositoryImpl(connection).hentHvisEksisterer(automatiskRevurdering.id)
+            val underveisGrunnlag = UnderveisRepositoryImpl(connection).hentHvisEksisterer(automatiskBehandling.id)
             val sisteUnderveisperiode = underveisGrunnlag?.perioder?.maxBy { it.periode.fom }!!
             assertThat(sisteUnderveisperiode.periode.tom).isEqualTo(
                 gammelRettighetsperiode.tom.plussEtÅrMedHverdager(
@@ -123,10 +120,10 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             assertThat(sisteUnderveisperiode.rettighetsType).isEqualTo(RettighetsType.BISTANDSBEHOV)
 
             val rettighetstypeTidslinje =
-                VilkårsresultatRepositoryImpl(connection).hent(automatiskRevurdering.id).rettighetstypeTidslinje()
+                VilkårsresultatRepositoryImpl(connection).hent(automatiskBehandling.id).rettighetstypeTidslinje()
 
             // Rettighetstidslinjen begrenses av aldersvilkåret
-            val aldersvilkåret = VilkårsresultatRepositoryImpl(connection).hent(automatiskRevurdering.id)
+            val aldersvilkåret = VilkårsresultatRepositoryImpl(connection).hent(automatiskBehandling.id)
                 .finnVilkår(Vilkårtype.ALDERSVILKÅRET)
 
             assertThat(rettighetstypeTidslinje.perioder().maxOfOrNull { it.tom }).isEqualTo(

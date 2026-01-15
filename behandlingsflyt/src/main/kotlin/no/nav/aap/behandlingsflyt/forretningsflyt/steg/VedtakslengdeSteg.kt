@@ -69,18 +69,6 @@ class VedtakslengdeSteg(
                             utvidetMedHverdager = ÅrMedHverdager.FØRSTE_ÅR
                         )
                     )
-                } else if (
-                // I førsteomgang ønsker vi ikke utvide ved revurdering, men kan bli noe sånt:
-                    skalUtvide(
-                        forrigeSluttdato = sisteVedtatteUnderveisperiode.periode.tom,
-                        rettighetstypeTidslinjeForInneværendeBehandling = rettighetstypeTidslinje
-                    )
-                ) {
-                    utvidSluttdato(
-                        kontekst.behandlingId,
-                        kontekst.forrigeBehandlingId,
-                        sisteVedtatteUnderveisperiode.periode.tom
-                    )
                 }
             }
 
@@ -100,6 +88,8 @@ class VedtakslengdeSteg(
                         kontekst.forrigeBehandlingId,
                         sisteVedtatteUnderveisperiode.periode.tom
                     )
+                } else {
+                    log.info("Ingen utvidelse av vedtakslengde nødvendig")
                 }
 
             }
@@ -149,7 +139,8 @@ class VedtakslengdeSteg(
         val varighetstidslinje = VarighetRegel().simluer(rettighetstypeTidslinjeForInneværendeBehandling)
         return varighetstidslinje.begrensetTil(Periode(vedtattSluttdato.plusDays(1), Tid.MAKS))
             .segmenter()
-            .any { varighetSegment -> varighetSegment.verdi.brukerAvKvoter.any { kvote -> kvote == Kvote.ORDINÆR } 
+            .any { varighetSegment ->
+                varighetSegment.verdi.brukerAvKvoter.any { kvote -> kvote == Kvote.ORDINÆR }
                         && varighetSegment.verdi !is Avslag
             }
 
