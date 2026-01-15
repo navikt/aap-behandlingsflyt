@@ -78,7 +78,10 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
 
         // Dette skjer i jobben som oppretter den automatiske revurderingen
         dataSource.transaction { connection ->
-            SakRepositoryImpl(connection).oppdaterRettighetsperiode(sak.id,  Periode(gammelRettighetsperiode.fom, Tid.MAKS))
+            SakRepositoryImpl(connection).oppdaterRettighetsperiode(
+                sak.id,
+                Periode(gammelRettighetsperiode.fom, Tid.MAKS)
+            )
         }
 
         val automatiskRevurdering = dataSource.transaction { connection ->
@@ -102,13 +105,13 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             val nyBehandling = (automatiskRevurdering as SakOgBehandlingService.MåBehandlesAtomært).nyBehandling
             assertThat(BehandlingRepositoryImpl(connection).hent(nyBehandling.id).status().erAvsluttet()).isTrue()
             nyBehandling
-            
+
         }
 
         dataSource.transaction { connection ->
             val vedtakslengdeVurdering = FakeVedtakslengdeRepository.hentHvisEksisterer(automatiskRevurdering.id)
             assertThat(vedtakslengdeVurdering).isNotNull
-            
+
             val underveisGrunnlag = UnderveisRepositoryImpl(connection).hentHvisEksisterer(automatiskRevurdering.id)
             val sisteUnderveisperiode = underveisGrunnlag?.perioder?.maxBy { it.periode.fom }!!
             assertThat(sisteUnderveisperiode.periode.tom).isEqualTo(
@@ -121,8 +124,14 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
 
             val rettighetstypeTidslinje =
                 VilkårsresultatRepositoryImpl(connection).hent(automatiskRevurdering.id).rettighetstypeTidslinje()
-            assertThat(rettighetstypeTidslinje.perioder().maxOfOrNull { it.tom }).isEqualTo(Tid.MAKS)
 
+            // Rettighetstidslinjen begrenses av aldersvilkåret
+            val aldersvilkåret = VilkårsresultatRepositoryImpl(connection).hent(automatiskRevurdering.id)
+                .finnVilkår(Vilkårtype.ALDERSVILKÅRET)
+
+            assertThat(rettighetstypeTidslinje.perioder().maxOfOrNull { it.tom }).isEqualTo(
+                aldersvilkåret.tidslinje().segmenter().filter { it.verdi.utfall == Utfall.OPPFYLT }
+                    .maxOfOrNull { it.periode.tom })
         }
 
     }

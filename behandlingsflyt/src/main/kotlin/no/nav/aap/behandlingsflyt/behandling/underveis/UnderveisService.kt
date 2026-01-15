@@ -28,6 +28,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Meldepl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktRepository
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FakeVedtakslengdeRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -190,6 +191,11 @@ class UnderveisService(
         behandlingId: BehandlingId,
         sak: Sak
     ): Periode {
+        val vedtakslengdeGrunnlag = FakeVedtakslengdeRepository.hentHvisEksisterer(behandlingId)
+        if (vedtakslengdeGrunnlag != null) {
+            return Periode(sak.rettighetsperiode.fom, vedtakslengdeGrunnlag.dato)
+        }
+        
         val startdatoForBehandlingen =
             VirkningstidspunktUtleder(vilkårsresultatRepository).utledVirkningsTidspunkt(behandlingId)
                 ?: sak.rettighetsperiode.fom
