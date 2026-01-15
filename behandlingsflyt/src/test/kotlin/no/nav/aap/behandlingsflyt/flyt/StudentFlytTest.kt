@@ -185,6 +185,6 @@ object SykestipendAktivert : FakeUnleashBase(
         BehandlingsflytFeature.PeriodisertSykdom to true,
         BehandlingsflytFeature.Sykestipend to true,
         BehandlingsflytFeature.Forlengelse to true,
-        BehandlingsflytFeature.ForlengelseIManuellBehandling to true,
+        BehandlingsflytFeature.ForlengelseIManuellBehandling to false,
     )
 )
