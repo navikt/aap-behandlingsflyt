@@ -31,7 +31,8 @@ object ProsesseringsJobber {
             KafkaFeilJobbUtfører,
             TriggBarnetilleggSatsJobbUtfører,
             OpprettJobbForTriggBarnetilleggSatsJobbUtfører,
-            SendFagsysteminfoBehovTilTilbakekrevingUtfører
+            SendFagsysteminfoBehovTilTilbakekrevingUtfører,
+            OppdaterOppgaveMedTilbakekrevingsbehandlingUtfører,
         )
     }
 }
