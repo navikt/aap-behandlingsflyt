@@ -37,7 +37,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
     override fun utfør(input: JobbInput) {
         val dryRun = false
 
-        // TODO få inn en begrunnelse for dette antallet dager
+        // Forlenger behandlinger når det er 28 dager igjen til sluttdato
         val datoHvorSakerSjekkesForUtvidelse = now().plusDays(28)
 
         val saker = hentKandidaterForUtvidelseAvVedtakslengde(datoHvorSakerSjekkesForUtvidelse)
@@ -47,42 +47,36 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
             val resultat = saker
                 // TODO .filter { it.id == ? } // Kun kjøre spesifikk sak i første runde
                 .map { sakId ->
-                    try {
-                        val sisteGjeldendeBehandling = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId)
-                        if (sisteGjeldendeBehandling != null) {
-                            log.info("Gjeldende behandling for sak $sakId er ${sisteGjeldendeBehandling.id}")
+                    val sisteGjeldendeBehandling = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId)
+                    if (sisteGjeldendeBehandling != null) {
+                        log.info("Gjeldende behandling for sak $sakId er ${sisteGjeldendeBehandling.id}")
+                        val sak = sakRepository.hent(sakId)
 
-                            // Trigger behandling som utvider vedtakslengde dersom nødvendig
-                            val underveisGrunnlag = underveisRepository.hentHvisEksisterer(sisteGjeldendeBehandling.id)
-                            if (underveisGrunnlag != null && harBehovForUtvidetVedtakslengde(sakId, underveisGrunnlag, datoHvorSakerSjekkesForUtvidelse)) {
+                        // Trigger behandling som utvider vedtakslengde dersom nødvendig
+                        val underveisGrunnlag = underveisRepository.hentHvisEksisterer(sisteGjeldendeBehandling.id)
+                        if (underveisGrunnlag != null && (harBehovForUtvidetVedtakslengde(sakId, underveisGrunnlag, datoHvorSakerSjekkesForUtvidelse) || sak.rettighetsperiode.tom != Tid.MAKS)) {
 
-                                // Utvider rettighetsperiode til Tid.MAKS dersom denne har en annen verdi - tom her skal
-                                // på sikt fases ut og denne koden kan fjernes når alle saker har Tid.MAKS som tom
-                                val sak = sakRepository.hent(sakId)
-                                if (sak.rettighetsperiode.tom != Tid.MAKS) {
-                                    log.info("Utvider rettighetsperiode fra ${sak.rettighetsperiode.tom} til ${Tid.MAKS} for sak ${sakId}")
-                                    if (!dryRun) sakRepository.oppdaterRettighetsperiode(sak.id, Periode(sak.rettighetsperiode.fom, Tid.MAKS))
-                                }
-
-                                log.info("Oppretter behandling for utvidelse av vedtakslengde sak $sakId")
-                                if (!dryRun) {
-                                    val utvidVedtakslengdeBehandling = opprettNyBehandling(sak)
-                                    prosesserBehandlingService.triggProsesserBehandling(utvidVedtakslengdeBehandling)
-                                }
-                                true
-
-                            } else {
-                                log.info("Sak med id $sakId trenger ikke utvidelse av vedtakslengde, hopper over")
-                                false
+                            // Utvider rettighetsperiode til Tid.MAKS dersom denne har en annen verdi - tom her skal
+                            // på sikt fases ut og denne koden kan fjernes når alle saker har Tid.MAKS som tom
+                            if (sak.rettighetsperiode.tom != Tid.MAKS) {
+                                log.info("Utvider rettighetsperiode fra ${sak.rettighetsperiode.tom} til ${Tid.MAKS} for sak ${sakId}")
+                                if (!dryRun) sakRepository.oppdaterRettighetsperiode(sak.id, Periode(sak.rettighetsperiode.fom, Tid.MAKS))
                             }
 
+                            log.info("Oppretter behandling for utvidelse av vedtakslengde sak $sakId")
+                            if (!dryRun) {
+                                val utvidVedtakslengdeBehandling = opprettNyBehandling(sak)
+                                prosesserBehandlingService.triggProsesserBehandling(utvidVedtakslengdeBehandling)
+                            }
+                            true
+
                         } else {
-                            log.info("Sak med id $sakId har ingen gjeldende behandlinger, hopper over")
+                            log.info("Sak med id $sakId trenger ikke utvidelse av vedtakslengde, hopper over")
                             false
                         }
 
-                    } catch (e: Exception) {
-                        log.error("Feilet ved utvidelse av vedtakslengde for sak $sakId, fortsetter på neste sak", e)
+                    } else {
+                        log.info("Sak med id $sakId har ingen gjeldende behandlinger, hopper over")
                         false
                     }
                 }
@@ -96,6 +90,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
         underveisGrunnlag: UnderveisGrunnlag,
         datoForUtvidelse: LocalDate
     ): Boolean {
+
         val harFremtidigRettOrdinær = true // TODO sjekk om det finnes rett i fremtiden av type ORDINÆR
         val sisteVedtatteUnderveisperiode = underveisGrunnlag.perioder.maxByOrNull { it.periode.tom }
         if (sisteVedtatteUnderveisperiode != null) {
