@@ -4,9 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
@@ -65,7 +63,7 @@ class BeregningAvklarFaktaSteg private constructor(
                             else -> true
                         }
                     }
-                    VurderingType.AUTOMATISK_OPPDATER_VILKÅR,
+                    VurderingType.UTVID_VEDTAKSLENGDE,
                     VurderingType.MELDEKORT,
                     VurderingType.AUTOMATISK_BREV,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
@@ -103,7 +101,7 @@ class BeregningAvklarFaktaSteg private constructor(
 
                         }
                     }
-                    VurderingType.AUTOMATISK_OPPDATER_VILKÅR,
+                    VurderingType.UTVID_VEDTAKSLENGDE,
                     VurderingType.MELDEKORT,
                     VurderingType.AUTOMATISK_BREV,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,

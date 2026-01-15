@@ -132,6 +132,6 @@ fun EksponertÅrsak.tilVurderingsbehov() =
         EksponertÅrsak.OVERGANG_ARBEID -> Vurderingsbehov.OVERGANG_ARBEID
         EksponertÅrsak.DØDSFALL_BRUKER -> Vurderingsbehov.DØDSFALL_BRUKER
         EksponertÅrsak.DØDSFALL_BARN -> Vurderingsbehov.DØDSFALL_BARN
-        EksponertÅrsak.AUTOMATISK_OPPDATER_VILKÅR -> Vurderingsbehov.UTVID_VEDTAKSLENGDE
+        EksponertÅrsak.UTVID_VEDTAKSLENGDE -> Vurderingsbehov.UTVID_VEDTAKSLENGDE
         EksponertÅrsak.BARNETILLEGG_SATS_REGULERING -> Vurderingsbehov.BARNETILLEGG_SATS_REGULERING
     }

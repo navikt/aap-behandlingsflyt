@@ -1,8 +1,14 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Avslag
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetRegel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
@@ -13,6 +19,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.miljo.Miljø.erDev
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -21,6 +29,7 @@ import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import no.nav.aap.motor.cron.CronExpression
 import org.slf4j.LoggerFactory
+import java.time.Clock
 import java.time.LocalDate
 import java.time.LocalDate.now
 
@@ -29,7 +38,9 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
     private val sakRepository: SakRepository,
     private val underveisRepository: UnderveisRepository,
     private val sakOgBehandlingService: SakOgBehandlingService,
+    private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val unleashGateway: UnleashGateway,
+    private val clock: Clock = Clock.systemDefaultZone()
 ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -45,16 +56,16 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
 
         if (unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeJobb)) {
             val resultat = saker
-                // TODO .filter { it.id == ? } // Kun kjøre spesifikk sak i første runde
+                .filter { if (erDev()) it.id == 4154L else true}
                 .map { sakId ->
                     val sisteGjeldendeBehandling = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId)
                     if (sisteGjeldendeBehandling != null) {
-                        log.info("Gjeldende behandling for sak $sakId er ${sisteGjeldendeBehandling.id}")
                         val sak = sakRepository.hent(sakId)
+                        log.info("Gjeldende behandling for sak $sakId (${sak.saksnummer}) er ${sisteGjeldendeBehandling.id}")
 
                         // Trigger behandling som utvider vedtakslengde dersom nødvendig
                         val underveisGrunnlag = underveisRepository.hentHvisEksisterer(sisteGjeldendeBehandling.id)
-                        if (underveisGrunnlag != null && (harBehovForUtvidetVedtakslengde(sakId, underveisGrunnlag, datoHvorSakerSjekkesForUtvidelse) || sak.rettighetsperiode.tom != Tid.MAKS)) {
+                        if (underveisGrunnlag != null && (harBehovForUtvidetVedtakslengde(sisteGjeldendeBehandling.id, sakId, underveisGrunnlag, datoHvorSakerSjekkesForUtvidelse) || sak.rettighetsperiode.tom != Tid.MAKS)) {
 
                             // Utvider rettighetsperiode til Tid.MAKS dersom denne har en annen verdi - tom her skal
                             // på sikt fases ut og denne koden kan fjernes når alle saker har Tid.MAKS som tom
@@ -86,26 +97,56 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
     }
 
     private fun harBehovForUtvidetVedtakslengde(
+        behandlingId: BehandlingId,
         sakId: SakId,
         underveisGrunnlag: UnderveisGrunnlag,
         datoForUtvidelse: LocalDate
     ): Boolean {
-
-        val harFremtidigRettOrdinær = true // TODO sjekk om det finnes rett i fremtiden av type ORDINÆR
         val sisteVedtatteUnderveisperiode = underveisGrunnlag.perioder.maxByOrNull { it.periode.tom }
+        val rettighetstypeTidslinje = vilkårsresultatRepository.hent(behandlingId).rettighetstypeTidslinje()
+
         if (sisteVedtatteUnderveisperiode != null) {
+            val harFremtidigRettBistandsbehov = skalUtvide(
+                forrigeSluttdato = sisteVedtatteUnderveisperiode.periode.tom,
+                rettighetstypeTidslinjeForInneværendeBehandling = rettighetstypeTidslinje
+            )
+
             val gjeldendeSluttdato = sisteVedtatteUnderveisperiode.periode.tom
 
-            log.info("Sak $sakId har harFremtidigRettOrdinær=$harFremtidigRettOrdinær og gjeldendeSluttdato=$gjeldendeSluttdato")
-            return gjeldendeSluttdato.isBefore(datoForUtvidelse) && harFremtidigRettOrdinær
+            log.info("Sak $sakId har harFremtidigRettBistandsbehov=$harFremtidigRettBistandsbehov og gjeldendeSluttdato=$gjeldendeSluttdato")
+            return gjeldendeSluttdato.isBefore(datoForUtvidelse) && harFremtidigRettBistandsbehov
         }
-        log.info("Sak $sakId har harFremtidigRettOrdinær=$harFremtidigRettOrdinær men har ingen vedtatte underveisperioder")
+        log.info("Sak $sakId har ingen vedtatte underveisperioder")
         return false
     }
 
     private fun hentKandidaterForUtvidelseAvVedtakslengde(dato: LocalDate): Set<SakId> {
         // TODO: Må filtrere vekk de som allerede har blitt kjørt, men ikke kvalifiserte til reell utvidelse av vedtakslengde
         return underveisRepository.hentSakerMedSisteUnderveisperiodeFørDato(dato)
+    }
+
+    fun skalUtvide(
+        forrigeSluttdato: LocalDate,
+        rettighetstypeTidslinjeForInneværendeBehandling: Tidslinje<RettighetsType>
+    ): Boolean {
+        return harFremtidigRettOrdinær(forrigeSluttdato, rettighetstypeTidslinjeForInneværendeBehandling)
+                && LocalDate.now(clock).plusDays(28) >= forrigeSluttdato
+
+    }
+
+    // Det finnes en fremtidig periode med ordinær rett og gjenværende kvote
+    fun harFremtidigRettOrdinær(
+        vedtattSluttdato: LocalDate,
+        rettighetstypeTidslinjeForInneværendeBehandling: Tidslinje<RettighetsType>
+    ): Boolean {
+        val varighetstidslinje = VarighetRegel().simluer(rettighetstypeTidslinjeForInneværendeBehandling)
+        return varighetstidslinje.begrensetTil(Periode(vedtattSluttdato.plusDays(1), Tid.MAKS))
+            .segmenter()
+            .any { varighetSegment ->
+                varighetSegment.verdi.brukerAvKvoter.any { kvote -> kvote == Kvote.ORDINÆR }
+                        && varighetSegment.verdi !is Avslag
+            }
+
     }
 
     private fun opprettNyBehandling(sak: Sak): SakOgBehandlingService.OpprettetBehandling =
@@ -124,6 +165,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
                 sakRepository = repositoryProvider.provide(),
                 underveisRepository = repositoryProvider.provide(),
                 sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
+                vilkårsresultatRepository = repositoryProvider.provide(),
                 unleashGateway = gatewayProvider.provide(),
             )
         }

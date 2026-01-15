@@ -68,7 +68,7 @@ class SykestipendSteg private constructor(
                                 || sykestipendRepository.hentHvisEksisterer(kontekst.behandlingId) != null)
                                 && kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty()
 
-                    VurderingType.AUTOMATISK_OPPDATER_VILKÅR,
+                    VurderingType.UTVID_VEDTAKSLENGDE,
                     VurderingType.MELDEKORT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,

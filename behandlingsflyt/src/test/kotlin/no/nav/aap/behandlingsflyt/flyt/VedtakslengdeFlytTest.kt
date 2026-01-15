@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.prosessering.OpprettBehandlingUtvidVedtakslengdeJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
@@ -27,8 +28,11 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
+import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.motor.JobbInput
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
@@ -73,39 +77,29 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                     .maxOfOrNull { it.tom }).isEqualTo(gammelRettighetsperiode.tom) // Disse skal ikke ha rettighetslengde tid.maks
         }
 
-        // Dette skjer i jobben som oppretter den automatiske revurderingen
         dataSource.transaction { connection ->
-            SakRepositoryImpl(connection).oppdaterRettighetsperiode(
-                sak.id,
-                Periode(gammelRettighetsperiode.fom, Tid.MAKS)
+            val repositoryProvider = postgresRepositoryRegistry.provider(connection)
+
+            val opprettBehandlingUtvidVedtakslengdeJobbUtfører = OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
+                prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
+                sakRepository = SakRepositoryImpl(connection),
+                underveisRepository = UnderveisRepositoryImpl(connection),
+                sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
+                vilkårsresultatRepository = VilkårsresultatRepositoryImpl(connection),
+                unleashGateway = FakeUnleash
             )
+
+            opprettBehandlingUtvidVedtakslengdeJobbUtfører.utfør(JobbInput(OpprettBehandlingUtvidVedtakslengdeJobbUtfører))
         }
 
-        val automatiskBehandling = dataSource.transaction { connection ->
-            val automatiskRevurdering = SakOgBehandlingService(
-                postgresRepositoryRegistry.provider(connection),
-                gatewayProvider
-            ).finnEllerOpprettBehandling(
-                sak.id,
-                VurderingsbehovOgÅrsak(
-                    listOf(VurderingsbehovMedPeriode(Vurderingsbehov.AUTOMATISK_OPPDATER_VILKÅR, null)),
-                    årsak = ÅrsakTilOpprettelse.AUTOMATISK_OPPDATER_VILKÅR
-                )
-            )
-            ProsesserBehandlingService(
-                postgresRepositoryRegistry.provider(connection),
-                gatewayProvider
-            ).triggProsesserBehandling(
-                automatiskRevurdering
-            )
-            assertThat(automatiskRevurdering is SakOgBehandlingService.MåBehandlesAtomært)
-            val nyBehandling = (automatiskRevurdering as SakOgBehandlingService.MåBehandlesAtomært).nyBehandling
-            assertThat(BehandlingRepositoryImpl(connection).hent(nyBehandling.id).status().erAvsluttet()).isTrue()
-            nyBehandling
-
-        }
+        motor.kjørJobber()
 
         dataSource.transaction { connection ->
+            val automatiskBehandling = SakOgBehandlingService(
+                postgresRepositoryRegistry.provider(connection),
+                gatewayProvider
+            ).finnBehandlingMedSisteFattedeVedtak(sak.id)!!
+
             val vedtakslengdeVurdering = VedtakslengdeRepositoryImpl(connection).hentHvisEksisterer(automatiskBehandling.id)
             assertThat(vedtakslengdeVurdering).isNotNull
 

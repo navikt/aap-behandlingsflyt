@@ -10,6 +10,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -43,11 +50,12 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
     val sakRepository = mockk<SakRepository>()
     val underveisRepository = mockk<UnderveisRepository>()
     val sakOgBehandlingService = mockk<SakOgBehandlingService>()
+    val vilkårsresultatRepository = mockk<VilkårsresultatRepository>()
     val unleashGateway = mockk<UnleashGateway> {
         every { isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeJobb) } returns true
     }
     val opprettBehandlingUtvidVedtakslengdeJobbUtfører =
-        OpprettBehandlingUtvidVedtakslengdeJobbUtfører(prosesserBehandlingService, sakRepository, underveisRepository, sakOgBehandlingService, unleashGateway)
+        OpprettBehandlingUtvidVedtakslengdeJobbUtfører(prosesserBehandlingService, sakRepository, underveisRepository, sakOgBehandlingService, vilkårsresultatRepository, unleashGateway)
     val jobbInput = JobbInput(OpprettBehandlingUtvidVedtakslengdeJobbUtfører)
 
     @Test
@@ -62,6 +70,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
         every { sakRepository.hent(sakId_1) } returns sak
         every { sakRepository.oppdaterRettighetsperiode(sak.id, any()) } just Runs
         every { prosesserBehandlingService.triggProsesserBehandling(any<SakOgBehandlingService.OpprettetBehandling>()) } just Runs
+        every { vilkårsresultatRepository.hent(behandlingId) } returns genererVilkårsresultat(sak.rettighetsperiode)
 
         opprettBehandlingUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
 
@@ -81,6 +90,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
         every { sakRepository.hent(sakId_1) } returns sak
         every { sakRepository.oppdaterRettighetsperiode(sak.id, any()) } just Runs
         every { prosesserBehandlingService.triggProsesserBehandling(any<SakOgBehandlingService.OpprettetBehandling>()) } just Runs
+        every { vilkårsresultatRepository.hent(behandlingId) } returns genererVilkårsresultat(sak.rettighetsperiode)
 
         opprettBehandlingUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
 
@@ -100,6 +110,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
         every { sakRepository.hent(sakId_1) } returns sak
         every { sakRepository.oppdaterRettighetsperiode(sak.id, any()) } just Runs
         every { prosesserBehandlingService.triggProsesserBehandling(any<SakOgBehandlingService.OpprettetBehandling>()) } just Runs
+        every { vilkårsresultatRepository.hent(behandlingId) } returns genererVilkårsresultat(sak.rettighetsperiode)
 
         opprettBehandlingUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
 
@@ -129,6 +140,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
         every { sakOgBehandlingService.finnEllerOpprettBehandling(sak.id, any()) } returns opprettetBehandling()
         every { sakRepository.hent(sakId_1) } returns sak
         every { prosesserBehandlingService.triggProsesserBehandling(any<SakOgBehandlingService.OpprettetBehandling>()) } just Runs
+        every { vilkårsresultatRepository.hent(behandlingId) } returns genererVilkårsresultat(sak.rettighetsperiode)
 
         opprettBehandlingUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
 
@@ -214,4 +226,89 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
             nyBehandling = behandling(),
             åpenBehandling = null
         )
+
+    private fun genererVilkårsresultat(periode: Periode): Vilkårsresultat {
+        val aldersVilkåret =
+            Vilkår(
+                Vilkårtype.ALDERSVILKÅRET, setOf(
+                    Vilkårsperiode(
+                        periode,
+                        Utfall.OPPFYLT,
+                        false,
+                        null,
+                        faktagrunnlag = null
+                    )
+                )
+            )
+        val sykdomsVilkåret =
+            Vilkår(
+                Vilkårtype.SYKDOMSVILKÅRET, setOf(
+                    Vilkårsperiode(
+                        periode,
+                        Utfall.OPPFYLT,
+                        false,
+                        null,
+                        faktagrunnlag = null
+                    )
+                )
+            )
+        val lovvalgsVilkåret =
+            Vilkår(
+                Vilkårtype.LOVVALG, setOf(
+                    Vilkårsperiode(
+                        periode,
+                        Utfall.OPPFYLT,
+                        false,
+                        null,
+                        faktagrunnlag = null
+                    )
+                )
+            )
+        val medlemskapVilkåret =
+            Vilkår(
+                Vilkårtype.MEDLEMSKAP, setOf(
+                    Vilkårsperiode(
+                        periode,
+                        Utfall.OPPFYLT,
+                        false,
+                        null,
+                        faktagrunnlag = null
+                    )
+                )
+            )
+        val bistandVilkåret =
+            Vilkår(
+                Vilkårtype.BISTANDSVILKÅRET, setOf(
+                    Vilkårsperiode(
+                        periode,
+                        Utfall.OPPFYLT,
+                        false,
+                        null,
+                        faktagrunnlag = null
+                    )
+                )
+            )
+        val grunnlagVilkåret = Vilkår(
+            Vilkårtype.GRUNNLAGET, setOf(
+                Vilkårsperiode(
+                    periode,
+                    Utfall.OPPFYLT,
+                    false,
+                    null,
+                    faktagrunnlag = null
+                )
+            )
+        )
+
+        return Vilkårsresultat(
+            vilkår = listOf(
+                aldersVilkåret,
+                lovvalgsVilkåret,
+                sykdomsVilkåret,
+                medlemskapVilkåret,
+                bistandVilkåret,
+                grunnlagVilkåret,
+            )
+        )
+    }
 }

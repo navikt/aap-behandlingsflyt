@@ -256,7 +256,7 @@ class AvklaringsbehovService(
 
             VurderingType.MELDEKORT -> Pair(false, emptySet())
             VurderingType.AUTOMATISK_BREV -> Pair(false, emptySet())
-            VurderingType.AUTOMATISK_OPPDATER_VILKÅR -> Pair(false, emptySet())
+            VurderingType.UTVID_VEDTAKSLENGDE -> Pair(false, emptySet())
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT -> Pair(false, emptySet())
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9 -> Pair(false, emptySet())
             VurderingType.IKKE_RELEVANT -> Pair(false, emptySet())
