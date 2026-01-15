@@ -306,7 +306,7 @@ internal fun Application.server(
                 // Flytt
                 brevApi(dataSource, repositoryRegistry, gatewayProvider)
                 dokumentinnhentingApi(dataSource, repositoryRegistry, gatewayProvider)
-                mottattHendelseApi(dataSource, repositoryRegistry, gatewayProvider)
+                mottattHendelseApi(dataSource, repositoryRegistry)
                 underveisVurderingerApi(dataSource, repositoryRegistry)
                 lovvalgMedlemskapApi(dataSource, repositoryRegistry)
                 lovvalgMedlemskapGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)

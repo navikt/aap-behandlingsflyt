@@ -269,13 +269,15 @@ class AvklaringsbehovService(
             perioderVedtaketBehøverVurdering = { perioderVedtaketBehøverVurdering },
             perioderSomIkkeErTilstrekkeligVurdert =
                 {
-                    if (perioderSomIkkeErTilstrekkeligVurdert() != null) {
-                        perioderSomIkkeErTilstrekkeligVurdert()!!.toSet()
+                    val perioderSomIkkeErTilstrekkeligVurdertEvaluert = perioderSomIkkeErTilstrekkeligVurdert()
+                    if (perioderSomIkkeErTilstrekkeligVurdertEvaluert != null) {
+                        perioderSomIkkeErTilstrekkeligVurdertEvaluert.toSet()
                     } else {
-                        if (nårVurderingErGyldig() == null) {
+                        val nårVurderingErGyldigTidslinje = nårVurderingErGyldig()
+                        if (nårVurderingErGyldigTidslinje == null) {
                             null
                         } else {
-                            nårVurderingErRelevant(kontekst).leftJoin(nårVurderingErGyldig()!!) { erRelevant, erGyldig ->
+                            nårVurderingErRelevant(kontekst).leftJoin(nårVurderingErGyldigTidslinje) { erRelevant, erGyldig ->
                                 !erRelevant || erGyldig == true
                             }.komprimer().filter { !it.verdi }.perioder().toSet()
                         }
@@ -349,7 +351,7 @@ class AvklaringsbehovService(
         kontekst: FlytKontekstMedPerioder,
         tilbakestillGrunnlag: () -> Unit
     ) {
-        return oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
+        oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
             avklaringsbehovene,
             behandlingRepository,
             vilkårsresultatRepository,
@@ -360,7 +362,6 @@ class AvklaringsbehovService(
             { null },
             nårVurderingErGyldig,
             tilbakestillGrunnlag
-
         )
     }
 }
