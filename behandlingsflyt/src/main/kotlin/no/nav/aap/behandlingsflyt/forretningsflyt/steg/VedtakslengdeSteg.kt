@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Avslag
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
@@ -9,6 +10,8 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurdering
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -26,19 +29,20 @@ import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import java.time.Clock
+import java.time.Instant
 import java.time.LocalDate
 
 class VedtakslengdeSteg(
     private val underveisRepository: UnderveisRepository,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
-    private val vedtakslengdeRepository: FakeVedtakslengdeRepository,
+    private val vedtakslengdeRepository: VedtakslengdeRepository,
     private val unleashGateway: UnleashGateway,
     private val clock: Clock = Clock.systemDefaultZone()
 ) : BehandlingSteg {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         underveisRepository = repositoryProvider.provide(),
         vilkårsresultatRepository = repositoryProvider.provide(),
-        vedtakslengdeRepository = FakeVedtakslengdeRepository,
+        vedtakslengdeRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide()
     )
 
@@ -47,8 +51,6 @@ class VedtakslengdeSteg(
         if (unleashGateway.isDisabled(BehandlingsflytFeature.Forlengelse)) {
             return Fullført
         }
-
-        val vedtakslengdeRepository = FakeVedtakslengdeRepository
 
         val vedtattUnderveis = kontekst.forrigeBehandlingId?.let { underveisRepository.hentHvisEksisterer(it) }
         val sisteVedtatteUnderveisperiode = vedtattUnderveis?.perioder?.maxByOrNull { it.periode.tom }
@@ -64,9 +66,12 @@ class VedtakslengdeSteg(
                 if (sisteVedtatteUnderveisperiode == null) {
                     val initiellSluttdato = utledInitiellSluttdato(kontekst.behandlingId, kontekst.rettighetsperiode)
                     vedtakslengdeRepository.lagre(
-                        kontekst.behandlingId, VedtakslengdeGrunnlag(
-                            dato = initiellSluttdato.tom,
-                            utvidetMedHverdager = ÅrMedHverdager.FØRSTE_ÅR
+                        kontekst.behandlingId, VedtakslengdeVurdering(
+                            sluttdato = initiellSluttdato.tom,
+                            utvidetMed = ÅrMedHverdager.FØRSTE_ÅR,
+                            vurdertAv = SYSTEMBRUKER,
+                            vurdertIBehandling = kontekst.behandlingId,
+                            opprettet = Instant.now()
                         )
                     )
                 }
@@ -115,8 +120,8 @@ class VedtakslengdeSteg(
         forrigeBehandlingId: BehandlingId,
         forrigeSluttdato: LocalDate,
     ) {
-        val forrigeUtvidelse = vedtakslengdeRepository.hentHvisEksisterer(forrigeBehandlingId)
-        val utvidelseMedHverdager = when (forrigeUtvidelse?.utvidetMedHverdager) {
+        val forrigeUtvidelse = vedtakslengdeRepository.hentHvisEksisterer(forrigeBehandlingId)?.vurdering
+        val utvidelseMedHverdager = when (forrigeUtvidelse?.utvidetMed) {
             null, ÅrMedHverdager.FØRSTE_ÅR -> ÅrMedHverdager.ANDRE_ÅR // Antar at man skal utvide med andre år dersom grunnlag ikke finnes
             ÅrMedHverdager.ANDRE_ÅR -> ÅrMedHverdager.TREDJE_ÅR
             ÅrMedHverdager.TREDJE_ÅR, ÅrMedHverdager.ANNET -> ÅrMedHverdager.ANNET
@@ -124,9 +129,12 @@ class VedtakslengdeSteg(
 
         val nySluttdato = forrigeSluttdato.plussEtÅrMedHverdager(utvidelseMedHverdager)
         vedtakslengdeRepository.lagre(
-            behandlingId, VedtakslengdeGrunnlag(
-                dato = nySluttdato,
-                utvidetMedHverdager = utvidelseMedHverdager
+            behandlingId, VedtakslengdeVurdering(
+                sluttdato = nySluttdato,
+                utvidetMed = utvidelseMedHverdager,
+                vurdertAv = SYSTEMBRUKER,
+                vurdertIBehandling = behandlingId,
+                opprettet = Instant.now()
             )
         )
     }
@@ -179,27 +187,4 @@ class VedtakslengdeSteg(
         }
     }
 }
-
-// TODO: Bytt ut med ekte repository
-object FakeVedtakslengdeRepository {
-    var vedtakslengdeGrunnlag: VedtakslengdeGrunnlag? = null
-
-    fun hentHvisEksisterer(behandlingId: BehandlingId): VedtakslengdeGrunnlag? {
-        return vedtakslengdeGrunnlag
-    }
-
-    fun lagre(
-        behandlingId: BehandlingId,
-        vedtakslengdeGrunnlag: VedtakslengdeGrunnlag
-    ) {
-        this.vedtakslengdeGrunnlag = vedtakslengdeGrunnlag
-    }
-}
-
-data class VedtakslengdeGrunnlag(
-    val dato: LocalDate,
-    val utvidetMedHverdager: ÅrMedHverdager
-)
-
-
 

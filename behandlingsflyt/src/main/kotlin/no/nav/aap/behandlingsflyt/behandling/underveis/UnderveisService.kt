@@ -28,7 +28,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Meldepl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktRepository
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FakeVedtakslengdeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -55,7 +55,8 @@ class UnderveisService(
     private val meldeperiodeRepository: MeldeperiodeRepository,
     private val arbeidsopptrappingRepository: ArbeidsopptrappingRepository,
     private val vedtakService: VedtakService,
-    private val unleashGateway: UnleashGateway,
+    private val vedtakslengdeRepository: VedtakslengdeRepository,
+    private val unleashGateway: UnleashGateway
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         sakService = SakService(repositoryProvider),
@@ -69,6 +70,7 @@ class UnderveisService(
         overstyringMeldepliktRepository = repositoryProvider.provide(),
         arbeidsopptrappingRepository = repositoryProvider.provide(),
         vedtakService = VedtakService(repositoryProvider),
+        vedtakslengdeRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide(),
     )
 
@@ -191,9 +193,9 @@ class UnderveisService(
         behandlingId: BehandlingId,
         sak: Sak
     ): Periode {
-        val vedtakslengdeGrunnlag = FakeVedtakslengdeRepository.hentHvisEksisterer(behandlingId)
+        val vedtakslengdeGrunnlag = vedtakslengdeRepository.hentHvisEksisterer(behandlingId)
         if (vedtakslengdeGrunnlag != null) {
-            return Periode(sak.rettighetsperiode.fom, vedtakslengdeGrunnlag.dato)
+            return Periode(sak.rettighetsperiode.fom, vedtakslengdeGrunnlag.vurdering.sluttdato)
         }
         
         val startdatoForBehandlingen =

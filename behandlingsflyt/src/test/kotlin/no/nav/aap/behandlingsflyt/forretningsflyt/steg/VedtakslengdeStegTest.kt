@@ -33,6 +33,7 @@ import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVedtakslengdeRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
@@ -79,7 +80,7 @@ class VedtakslengdeStegTest {
             input = object : Faktagrunnlag {}
         )
         
-        val vedtakslengdeRepository = FakeVedtakslengdeRepository
+        val vedtakslengdeRepository = InMemoryVedtakslengdeRepository
 
         val inneværendeBehandling = revurdering(
             sak.id,
