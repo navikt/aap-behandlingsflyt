@@ -56,7 +56,10 @@ value class Hverdager(val asInt: Int) : Comparable<Hverdager> {
  * https://confluence.adeo.no/spaces/PAAP/pages/739025519/Kvoter+og+overganger+mellom+bestemmelser
  */
 enum class ÅrMedHverdager(val hverdagerIÅret: Hverdager){
-    FØRSTE_ÅR(Hverdager(261)),
+    /**
+     * Skal bare legge til 260 dager første året ettersom vi skal inkludere startdato og derfor får 261 totalt
+     **/
+    FØRSTE_ÅR(Hverdager(260)),
     ANDRE_ÅR(Hverdager(261)),
     TREDJE_ÅR(Hverdager(262)),
     ANNET(Hverdager(261))

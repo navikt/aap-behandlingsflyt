@@ -30,6 +30,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Oversty
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
@@ -41,6 +42,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.time.LocalDate
 import kotlin.reflect.KClass
 
 class UnderveisService(
@@ -56,6 +58,7 @@ class UnderveisService(
     private val arbeidsopptrappingRepository: ArbeidsopptrappingRepository,
     private val vedtakService: VedtakService,
     private val vedtakslengdeRepository: VedtakslengdeRepository,
+    private val behandlingRepository: BehandlingRepository,
     private val unleashGateway: UnleashGateway
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
@@ -71,6 +74,7 @@ class UnderveisService(
         arbeidsopptrappingRepository = repositoryProvider.provide(),
         vedtakService = VedtakService(repositoryProvider),
         vedtakslengdeRepository = repositoryProvider.provide(),
+        behandlingRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide(),
     )
 
@@ -203,18 +207,28 @@ class UnderveisService(
                 ?: sak.rettighetsperiode.fom
 
         /**
-         * Obs: Denne er "feil", men trengs for å være bakover-feil-kompatibel i første omgang.
-         * Når alle behandlinger har et innslag i vedtakslengdeGrunnlag så kan dette fjernes
+         * Obs: Denne er feil (262 dager).
+         * For bakoverkompatibilitet må vi beholde de gamle som har fått en dag for mye til å være 262 dager
+         * og sjekker derfor forrige behandling sin siste underveisperiode.
          */
-        val sluttdatoForBehandlingen = maxOf(sak.rettighetsperiode.fom, startdatoForBehandlingen)
+        val kalkulertSluttdatoForBehandlingen = maxOf(sak.rettighetsperiode.fom, startdatoForBehandlingen)
             .plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
+
+        val sluttDatoForBehandlingen = sistVedtatteUnderveisperiode(behandlingId) ?: kalkulertSluttdatoForBehandlingen
 
         /**
          * For behandlinger som har passert alle vilkår og vurderinger med kortere rettighetsperiode
          * enn "sluttdatoForBehandlingen" så vil det bli feil å vurdere underveis lenger enn faktisk rettighetsperiode.
+         * For de som har fått en dag "for mye" i gammel underveis må vi opprettholde denne
          */
-        val sluttdatoForBakoverkompabilitet = minOf(sak.rettighetsperiode.tom, sluttdatoForBehandlingen)
+        val sluttdatoForBakoverkompabilitet = minOf(sak.rettighetsperiode.tom, sluttDatoForBehandlingen)
 
         return Periode(sak.rettighetsperiode.fom, sluttdatoForBakoverkompabilitet)
+    }
+
+    private fun sistVedtatteUnderveisperiode(behandlingId: BehandlingId): LocalDate? {
+        val vedtattUnderveis =
+            behandlingRepository.hent(behandlingId).forrigeBehandlingId?.let { underveisRepository.hentHvisEksisterer(it) }
+        return vedtattUnderveis?.perioder?.maxByOrNull { it.periode.tom }?.periode?.tom
     }
 }
