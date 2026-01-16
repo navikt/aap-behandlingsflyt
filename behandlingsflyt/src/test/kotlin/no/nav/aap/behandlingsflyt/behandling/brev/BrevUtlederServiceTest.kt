@@ -39,11 +39,16 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.test.april
+import no.nav.aap.behandlingsflyt.test.august
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.behandlingsflyt.test.juli
+import no.nav.aap.behandlingsflyt.test.juni
+import no.nav.aap.behandlingsflyt.test.mai
+import no.nav.aap.behandlingsflyt.test.september
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
-import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Dagsatser
@@ -93,7 +98,6 @@ class BrevUtlederServiceTest {
         arbeidsopptrappingRepository = arbeidsopptrappingRepository,
         unleashGateway = unleashGateway,
     )
-    val førsteTilkjentYtelsePeriode = Periode(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 12, 31))
 
     @Test
     fun `utledBehov legger ved sisteDagMedYtelse fra underveisTidslinje i TilkjentYtelse`() {
@@ -137,7 +141,7 @@ class BrevUtlederServiceTest {
         assertIs<Innvilgelse>(resultat, "forventer brevbehov er av typen Innvilgelse")
 
         assertNotNull(resultat.tilkjentYtelse, "tilkjent ytelse må eksistere")
-        val forventetSisteDagMedYtelse = underveisGrunnlag().somTidslinje().segmenter().lastOrNull()?.tom()
+        val forventetSisteDagMedYtelse = underveisGrunnlag().somTidslinje().segmenter().last().tom()
         assertEquals(forventetSisteDagMedYtelse, resultat.tilkjentYtelse.sisteDagMedYtelse)
     }
 
@@ -582,19 +586,38 @@ class BrevUtlederServiceTest {
     private fun underveisGrunnlag(): UnderveisGrunnlag {
         return underveisGrunnlag(
             underveisperiode(
-                periode = Periode(1 januar 2025, 31 desember 2025),
+                periode = Periode(1 januar 2025, 30 april 2025),
+                rettighetsType = RettighetsType.BISTANDSBEHOV,
+                utfall = Utfall.OPPFYLT,
+            ),
+            underveisperiode(
+                periode = Periode(1 mai 2025, 31 august 2025),
+                rettighetsType = RettighetsType.BISTANDSBEHOV,
+                utfall = Utfall.OPPFYLT,
+            ),
+            underveisperiode(
+                periode = Periode(1 september 2025, 31 desember 2025),
                 rettighetsType = RettighetsType.BISTANDSBEHOV,
                 utfall = Utfall.OPPFYLT,
             )
         )
     }
 
-    private fun tilkjentYtelseForFørstegangsbehandling(dagsats: Beløp): List<TilkjentYtelsePeriode> = listOf(
-        TilkjentYtelsePeriode(
-            periode = førsteTilkjentYtelsePeriode,
-            tilkjent = tilkjentYtelseDto(dagsats, førsteTilkjentYtelsePeriode.tom)
+    private fun tilkjentYtelseForFørstegangsbehandling(dagsats: Beløp): List<TilkjentYtelsePeriode> {
+        val førstePeriode = Periode(1 januar 2025, 30 juni 2025)
+        val andrePeriode = Periode(1 juli 2025, 30 desember 2025)
+
+        return listOf(
+            TilkjentYtelsePeriode(
+                periode = førstePeriode,
+                tilkjent = tilkjentYtelseDto(dagsats, førstePeriode.tom)
+            ),
+            TilkjentYtelsePeriode(
+                periode = andrePeriode,
+                tilkjent = tilkjentYtelseDto(dagsats, andrePeriode.tom)
+            )
         )
-    )
+    }
 
     private fun tilkjentYtelseDto(dagsats: Beløp, utbetalingsdato: LocalDate): Tilkjent {
         return Tilkjent(
