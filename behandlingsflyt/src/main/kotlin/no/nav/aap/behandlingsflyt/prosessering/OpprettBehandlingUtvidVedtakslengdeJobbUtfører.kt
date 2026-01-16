@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.miljo.Miljø.erDev
 import no.nav.aap.komponenter.miljo.Miljø.erLokal
+import no.nav.aap.komponenter.miljo.Miljø.erProd
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
@@ -57,11 +58,12 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
             // Midlertidig sjekk for å unngå at denne jobben kjøres for åpne behandlinger
             .filter { kunSakerUtenÅpneYtelsesbehandlinger(it) }
 
-        log.info("Fant ${saker.size} kandidater for utvidelse av vedtakslende per $datoHvorSakerSjekkesForUtvidelse (dryRun=$dryRun)")
+        log.info("Fant ${saker.size} kandidater for utvidelse av vedtakslengde per $datoHvorSakerSjekkesForUtvidelse (dryRun=$dryRun)")
 
         if (unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeJobb)) {
             val resultat = saker
                 .filter { if (erDev()) it.id == 4243L else true}
+                .filter { if (erProd()) it.id == 1100L else true}
                 .map { sakId ->
                     val sisteGjeldendeBehandling = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId)
                     if (sisteGjeldendeBehandling != null) {
@@ -101,7 +103,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
         }
     }
 
-    private fun `kunSakerUtenÅpneYtelsesbehandlinger`(id: SakId): Boolean {
+    private fun kunSakerUtenÅpneYtelsesbehandlinger(id: SakId): Boolean {
         val sisteBehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(id)
         return sisteBehandling?.status() in setOf(Status.AVSLUTTET, Status.IVERKSETTES)
     }
