@@ -199,19 +199,11 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
 
     override fun finnSakerMedFritakMeldeplikt(): List<SakId> {
         val sql = """
-            select s.id from sak s, behandling b where s.id = b.sak_id and  b.id in (
-                select g.behandling_id
-                from meldeplikt_fritak_grunnlag g, public.meldeplikt_fritak_vurdering v
-                where g.meldeplikt_id = v.meldeplikt_id and g.aktiv = true and g.id in (
-                    select id
-                    from meldeplikt_fritak_grunnlag
-                    where aktiv = true and behandling_id in (
-                        select id from behandling where id not in (
-                            select forrige_id from behandling where forrige_id is not null
-                        )
-                    )
-                )
-            )
+            select distinct gvb.sak_id
+            from gjeldende_vedtatte_behandlinger gvb
+                join meldeplikt_fritak_grunnlag g on gvb.behandling_id = g.behandling_id
+                join meldeplikt_fritak_vurdering v on g.meldeplikt_id = v.meldeplikt_id
+            where g.aktiv = true and v.har_fritak = true;
         """.trimIndent()
 
         return connection.queryList(sql) {
