@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -106,7 +107,9 @@ class ProsesserBehandlingService(
             val kontekst = atomærFlytOrkestrator.opprettKontekst(åpenBehandling.sakId, åpenBehandling.id)
             atomærFlytOrkestrator.tilbakeførEtterAtomærBehandling(kontekst)
             triggProsesserBehandling(åpenBehandling, emptyList())
-        } else {
+        } else if (Vurderingsbehov.MOTTATT_MELDEKORT in opprettetBehandling.nyBehandling.vurderingsbehov()
+                .map { it.type }
+        ) {
             flytJobbRepository.leggTil(
                 JobbInput(jobb = OppdagEndretInformasjonskravJobbUtfører).forSak(
                     sakId = behandling.sakId.toLong(),
