@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.papsign.ktor.openapigen.model.info.InfoModel
 import com.papsign.ktor.openapigen.route.apiRouting
 import com.zaxxer.hikari.HikariConfig
@@ -486,7 +488,7 @@ fun Application.startInstitusjonsOppholdKonsument(
     val konsument = Inst2KafkaKonsument(
         config = KafkaConsumerConfig(
             keyDeserializer = org.apache.kafka.common.serialization.StringDeserializer::class.java,
-            valueDeserializer = io.confluent.kafka.serializers.KafkaAvroDeserializer::class.java
+            valueDeserializer = JsonDeserializer::class.java,
         ),
         closeTimeout = AppConfig.stansArbeidTimeout,
         dataSource = dataSource,
@@ -541,3 +543,12 @@ fun initDatasource(dbConfig: DbConfig): HikariDataSource = HikariDataSource(Hika
     connectionTestQuery = "SELECT 1"
     metricRegistry = prometheus
 })
+
+class JsonDeserializer : org.apache.kafka.common.serialization.Deserializer<InstitusjonsOppholdHendelseKafkaMelding> {
+    private val mapper = jacksonObjectMapper()
+
+    override fun deserialize(
+        topic: String?,
+        data: ByteArray,
+    ): InstitusjonsOppholdHendelseKafkaMelding = mapper.readValue(data)
+}
