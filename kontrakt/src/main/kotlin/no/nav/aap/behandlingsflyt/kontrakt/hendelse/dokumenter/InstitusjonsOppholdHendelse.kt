@@ -18,7 +18,7 @@ public data class InstitusjonsOppholdHendelseKafkaMelding(
     var norskident: String,
     var type: InstitusjonsoppholdsType,
     var kilde: InstitusjonsoppholdKilde,
-    var institusjonsOpphold: Inst2KafkaDto
+    var institusjonsOpphold: Inst2KafkaDto?
 )
 {
     public fun tilInstitusjonsOppholdHendelseV0(): InstitusjonsOppholdHendelse =
@@ -47,7 +47,7 @@ public data class InstitusjonsOppholdHendelseV0(
     val hendelsesid: Long,
     val eksternFagsakId: Long,
     val norskIdent: String,
-    val institusjonsOpphold: Inst2KafkaDto,
+    val institusjonsOpphold: Inst2KafkaDto?,
 ) : InstitusjonsOppholdHendelse
 
 public data class Inst2KafkaDto(
