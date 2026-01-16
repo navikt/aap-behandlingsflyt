@@ -65,6 +65,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
 
         every { underveisRepository.hentSakerMedSisteUnderveisperiodeFørDato(any()) } returns setOf(sakId_1)
         every { underveisRepository.hentHvisEksisterer(behandling.id)} returns underveisGrunnlag()
+        every { sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sakId_1) } returns behandling()
         every { sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId_1) } returns behandlingMedVedtak()
         every { sakOgBehandlingService.finnEllerOpprettBehandling(sak.id, any()) } returns opprettetBehandling()
         every { sakRepository.hent(sakId_1) } returns sak
@@ -85,6 +86,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
 
         every { underveisRepository.hentSakerMedSisteUnderveisperiodeFørDato(any()) } returns setOf(sakId_1)
         every { underveisRepository.hentHvisEksisterer(behandling.id)} returns underveisGrunnlag(perioder = underveisPerioderIkkeUtløpt())
+        every { sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sakId_1) } returns behandling()
         every { sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId_1) } returns behandlingMedVedtak()
         every { sakOgBehandlingService.finnEllerOpprettBehandling(sak.id, any()) } returns opprettetBehandling()
         every { sakRepository.hent(sakId_1) } returns sak
@@ -105,6 +107,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
 
         every { underveisRepository.hentSakerMedSisteUnderveisperiodeFørDato(any()) } returns setOf(sakId_1)
         every { underveisRepository.hentHvisEksisterer(behandling.id)} returns underveisGrunnlag(perioder = underveisPerioderIkkeUtløpt())
+        every { sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sakId_1) } returns behandling()
         every { sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId_1) } returns behandlingMedVedtak()
         every { sakOgBehandlingService.finnEllerOpprettBehandling(sak.id, any()) } returns opprettetBehandling()
         every { sakRepository.hent(sakId_1) } returns sak
@@ -136,6 +139,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
 
         every { underveisRepository.hentSakerMedSisteUnderveisperiodeFørDato(any()) } returns setOf(sakId_1)
         every { underveisRepository.hentHvisEksisterer(behandling.id)} returns underveisGrunnlag()
+        every { sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sakId_1) } returns behandling()
         every { sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId_1) } returns behandlingMedVedtak()
         every { sakOgBehandlingService.finnEllerOpprettBehandling(sak.id, any()) } returns opprettetBehandling()
         every { sakRepository.hent(sakId_1) } returns sak
@@ -148,13 +152,26 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
         verify(exactly = 1) { prosesserBehandlingService.triggProsesserBehandling(any<SakOgBehandlingService.OpprettetBehandling>()) }
     }
 
-    private fun behandling() =
+    @Test
+    fun `skal ikke kjøre jobb for behandlinger hvor siste behandling er åpen`() {
+        val sak = sak()
+
+        every { underveisRepository.hentSakerMedSisteUnderveisperiodeFørDato(any()) } returns setOf(sakId_1)
+        every { sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sakId_1) } returns behandling(status = Status.UTREDES)
+
+        opprettBehandlingUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
+
+        verify(exactly = 0) { sakRepository.oppdaterRettighetsperiode(sakId_1, Periode(sak.rettighetsperiode.fom, Tid.MAKS)) }
+        verify(exactly = 0) { prosesserBehandlingService.triggProsesserBehandling(any<SakOgBehandlingService.OpprettetBehandling>()) }
+    }
+
+    private fun behandling(status: Status = Status.IVERKSETTES) =
         Behandling(
             sakId = sakId_1,
             id = behandlingId,
             referanse = BehandlingReferanse(),
             typeBehandling = TypeBehandling.Førstegangsbehandling,
-            status = Status.IVERKSETTES,
+            status = status,
             opprettetTidspunkt = LocalDateTime.now(),
             årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
             forrigeBehandlingId = null,

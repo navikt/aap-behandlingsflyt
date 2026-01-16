@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
@@ -53,6 +54,9 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
         val datoHvorSakerSjekkesForUtvidelse = now().plusDays(28)
 
         val saker = hentKandidaterForUtvidelseAvVedtakslengde(datoHvorSakerSjekkesForUtvidelse)
+            // Midlertidig sjekk for å unngå at denne jobben kjøres for åpne behandlinger
+            .filter { kunSakerUtenÅpneYtelsesbehandlinger(it) }
+
         log.info("Fant ${saker.size} kandidater for utvidelse av vedtakslende per $datoHvorSakerSjekkesForUtvidelse (dryRun=$dryRun)")
 
         if (unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeJobb)) {
@@ -95,6 +99,11 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
 
             log.info("Jobb for utvidelse av vedtakslengde fullført for ${resultat.count { it }} av ${saker.size} saker (dryRun=$dryRun)")
         }
+    }
+
+    private fun `kunSakerUtenÅpneYtelsesbehandlinger`(id: SakId): Boolean {
+        val sisteBehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(id)
+        return sisteBehandling?.status() in setOf(Status.AVSLUTTET, Status.IVERKSETTES)
     }
 
     private fun harBehovForUtvidetVedtakslengde(
