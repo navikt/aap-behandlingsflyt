@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
 import no.nav.aap.behandlingsflyt.flyt.testutil.FakeBrevbestillingGateway
 import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Førstegangsbehandling
@@ -8,8 +9,11 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Revurdering
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
@@ -18,19 +22,24 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBrevbestillingRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMottattDokumentRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.EnumSource.Mode
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.*
 
 class SendForvaltningsmeldingStegTest {
@@ -65,44 +74,109 @@ class SendForvaltningsmeldingStegTest {
         )
     }
 
-    @ParameterizedTest
-    @EnumSource(TypeBehandling::class, mode = Mode.INCLUDE, names = ["Førstegangsbehandling", "Revurdering"])
-    fun `sender en og kun en forvaltningsmelding for en behandling som har årsak MOTTATT_SØKNAD`(typeBehandling: TypeBehandling) {
-        val behandling = opprettSakOgbehandling(typeBehandling)
-        val flytkontekst = flytkontekstForBehandling(behandling, Vurderingsbehov.MOTTATT_SØKNAD)
+    @Nested
+    inner class Forvaltningsmelding {
 
-        sendForvaltningsmeldingSteg.utfør(flytkontekst)
-        sendForvaltningsmeldingSteg.utfør(flytkontekst)
+        @ParameterizedTest
+        @EnumSource(TypeBehandling::class, mode = Mode.INCLUDE, names = ["Førstegangsbehandling", "Revurdering"])
+        fun `sender en og kun en forvaltningsmelding for en behandling som har årsak MOTTATT_SØKNAD`(typeBehandling: TypeBehandling) {
+            val behandling = opprettSakOgbehandlingForForvaltningsmelding(typeBehandling)
+            val flytkontekst =
+                flytkontekstForBehandlingForForvaltningsmelding(behandling, Vurderingsbehov.MOTTATT_SØKNAD)
 
-        val brevbestillinger = InMemoryBrevbestillingRepository.hent(behandling.id)
-        assertThat(brevbestillinger).hasSize(1)
-        assertThat(brevbestillinger.first().typeBrev).isEqualTo(TypeBrev.FORVALTNINGSMELDING)
+            sendForvaltningsmeldingSteg.utfør(flytkontekst)
+            sendForvaltningsmeldingSteg.utfør(flytkontekst)
+
+            val brevbestillinger = InMemoryBrevbestillingRepository.hent(behandling.id)
+            assertThat(brevbestillinger).hasSize(1)
+            assertThat(brevbestillinger.first().typeBrev).isEqualTo(TypeBrev.FORVALTNINGSMELDING)
+        }
+
+        @ParameterizedTest
+        @EnumSource(Vurderingsbehov::class, mode = Mode.EXCLUDE, names = ["MOTTATT_SØKNAD"])
+        fun `sender ikke forvaltningsmelding for en behandling som ikke har årsak MOTTATT_SØKNAD`(vurderingsbehov: Vurderingsbehov) {
+            val behandling = opprettSakOgbehandlingForForvaltningsmelding(TypeBehandling.Førstegangsbehandling)
+            val flytkontekst = flytkontekstForBehandlingForForvaltningsmelding(behandling, vurderingsbehov)
+
+            sendForvaltningsmeldingSteg.utfør(flytkontekst)
+
+            val brevbestillinger = InMemoryBrevbestillingRepository.hent(behandling.id)
+            assertThat(brevbestillinger).isEmpty()
+        }
+
+        @ParameterizedTest
+        @EnumSource(TypeBehandling::class, mode = Mode.EXCLUDE, names = ["Førstegangsbehandling", "Revurdering"])
+        fun `sender ikke forvaltningsmelding for en behandling som ikke er førstegangsbehandling eller revurdering`(
+            typeBehandling: TypeBehandling
+        ) {
+            val behandling = opprettSakOgbehandlingForForvaltningsmelding(typeBehandling)
+            val flytkontekst =
+                flytkontekstForBehandlingForForvaltningsmelding(behandling, Vurderingsbehov.MOTTATT_SØKNAD)
+
+            sendForvaltningsmeldingSteg.utfør(flytkontekst)
+
+            val brevbestillinger = InMemoryBrevbestillingRepository.hent(behandling.id)
+            assertThat(brevbestillinger).isEmpty()
+        }
     }
 
-    @ParameterizedTest
-    @EnumSource(Vurderingsbehov::class, mode = Mode.EXCLUDE, names = ["MOTTATT_SØKNAD"])
-    fun `sender ikke forvaltningsmelding for en behandling som ikke har årsak MOTTATT_SØKNAD`(vurderingsbehov: Vurderingsbehov) {
-        val behandling = opprettSakOgbehandling(TypeBehandling.Førstegangsbehandling)
-        val flytkontekst = flytkontekstForBehandling(behandling, vurderingsbehov)
+    @Nested
+    inner class KlageMottattmelding {
+        @Test
+        fun `sender en og kun en klage mottatt melding for en journalpost innsendt klage som har årsak MOTATT_KLAGE`() {
+            val behandling = opprettSakOgbehandlingForKlageMottatt(TypeBehandling.Klage)
+            val flytkontekst = flytkontekstForBehandlingForKlageMottatt(behandling, Vurderingsbehov.MOTATT_KLAGE)
+            opprettKlageDokument(behandling.sakId, behandling.id, InnsendingReferanse.Type.JOURNALPOST)
 
-        sendForvaltningsmeldingSteg.utfør(flytkontekst)
+            sendForvaltningsmeldingSteg.utfør(flytkontekst)
+            sendForvaltningsmeldingSteg.utfør(flytkontekst)
 
-        val brevbestillinger = InMemoryBrevbestillingRepository.hent(behandling.id)
-        assertThat(brevbestillinger).isEmpty()
-    }
+            val brevbestillinger = InMemoryBrevbestillingRepository.hent(behandling.id)
+            assertThat(brevbestillinger).hasSize(1)
+            assertThat(brevbestillinger.first().typeBrev).isEqualTo(TypeBrev.KLAGE_MOTTATT)
+        }
 
-    @ParameterizedTest
-    @EnumSource(TypeBehandling::class, mode = Mode.EXCLUDE, names = ["Førstegangsbehandling", "Revurdering"])
-    fun `sender ikke forvaltningsmelding for en behandling som ikke er førstegangsbehandling eller revurdering`(
-        typeBehandling: TypeBehandling
-    ) {
-        val behandling = opprettSakOgbehandling(typeBehandling)
-        val flytkontekst = flytkontekstForBehandling(behandling, Vurderingsbehov.MOTTATT_SØKNAD)
+        @ParameterizedTest
+        @EnumSource(InnsendingReferanse.Type::class, mode = Mode.EXCLUDE, names = ["JOURNALPOST"])
+        fun `sender kun klage mottatt melding for en klage som har innsendt referanse av type JOURNALPOST`(
+            typeInnsendingReferanse: InnsendingReferanse.Type
+        ) {
+            val behandling = opprettSakOgbehandlingForKlageMottatt(TypeBehandling.Klage)
+            val flytkontekst = flytkontekstForBehandlingForKlageMottatt(behandling, Vurderingsbehov.MOTATT_KLAGE)
+            opprettKlageDokument(behandling.sakId, behandling.id, typeInnsendingReferanse)
 
-        sendForvaltningsmeldingSteg.utfør(flytkontekst)
+            sendForvaltningsmeldingSteg.utfør(flytkontekst)
+            sendForvaltningsmeldingSteg.utfør(flytkontekst)
 
-        val brevbestillinger = InMemoryBrevbestillingRepository.hent(behandling.id)
-        assertThat(brevbestillinger).isEmpty()
+            val brevbestillinger = InMemoryBrevbestillingRepository.hent(behandling.id)
+            assertThat(brevbestillinger).isEmpty()
+        }
+
+        @ParameterizedTest
+        @EnumSource(Vurderingsbehov::class, mode = Mode.EXCLUDE, names = ["MOTATT_KLAGE"])
+        fun `sender ikke klage mottatt for en behandling som ikke har årsak MOTTATT_KLAGE`(vurderingsbehov: Vurderingsbehov) {
+            val behandling = opprettSakOgbehandlingForKlageMottatt(TypeBehandling.Klage)
+            val flytkontekst = flytkontekstForBehandlingForKlageMottatt(behandling, vurderingsbehov)
+            opprettKlageDokument(behandling.sakId, behandling.id, InnsendingReferanse.Type.JOURNALPOST)
+
+            sendForvaltningsmeldingSteg.utfør(flytkontekst)
+
+            val brevbestillinger = InMemoryBrevbestillingRepository.hent(behandling.id)
+            assertThat(brevbestillinger).isEmpty()
+        }
+
+        @ParameterizedTest
+        @EnumSource(TypeBehandling::class, mode = Mode.EXCLUDE, names = ["Klage"])
+        fun `sender ikke klage mottatt for en behandling som ikke er klage`(typeBehandling: TypeBehandling) {
+            val behandling = opprettSakOgbehandlingForKlageMottatt(typeBehandling)
+            val flytkontekst = flytkontekstForBehandlingForKlageMottatt(behandling, Vurderingsbehov.MOTATT_KLAGE)
+            opprettKlageDokument(behandling.sakId, behandling.id, InnsendingReferanse.Type.JOURNALPOST)
+
+            sendForvaltningsmeldingSteg.utfør(flytkontekst)
+
+            val brevbestillinger = InMemoryBrevbestillingRepository.hent(behandling.id)
+            assertThat(brevbestillinger).isEmpty()
+        }
     }
 
     private fun definisjonerSomLøsesFørSteg(
@@ -118,7 +192,7 @@ class SendForvaltningsmeldingStegTest {
 
     private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
 
-    private fun opprettSakOgbehandling(typeBehandling: TypeBehandling): Behandling {
+    private fun opprettSakOgbehandlingForForvaltningsmelding(typeBehandling: TypeBehandling): Behandling {
         val person = Person(PersonId(1), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
         val sak = InMemorySakRepository.finnEllerOpprett(person, periode)
         return InMemoryBehandlingRepository.opprettBehandling(
@@ -132,7 +206,7 @@ class SendForvaltningsmeldingStegTest {
         )
     }
 
-    private fun flytkontekstForBehandling(
+    private fun flytkontekstForBehandlingForForvaltningsmelding(
         behandling: Behandling,
         vurderingsbehov: Vurderingsbehov
     ): FlytKontekstMedPerioder {
@@ -142,6 +216,49 @@ class SendForvaltningsmeldingStegTest {
             forrigeBehandlingId = behandling.forrigeBehandlingId,
             behandlingType = behandling.typeBehandling(),
             vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
+            vurderingsbehovRelevanteForSteg = setOf(vurderingsbehov),
+            rettighetsperiode = periode,
+        )
+    }
+
+    private fun opprettSakOgbehandlingForKlageMottatt(typeBehandling: TypeBehandling): Behandling {
+        val person = Person(PersonId(1), UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
+        val sak = InMemorySakRepository.finnEllerOpprett(person, periode)
+        return InMemoryBehandlingRepository.opprettBehandling(
+            sak.id,
+            typeBehandling,
+            null,
+            VurderingsbehovOgÅrsak(
+                listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTATT_KLAGE)),
+                ÅrsakTilOpprettelse.KLAGE
+            )
+        )
+    }
+
+    private fun opprettKlageDokument(sakId: SakId, behandlingId: BehandlingId, typeInnsendingReferanse: InnsendingReferanse.Type) {
+        InMemoryMottattDokumentRepository.lagre(
+            MottattDokument(
+                referanse = InnsendingReferanse(typeInnsendingReferanse, "uuid-referanse"),
+                sakId = sakId,
+                behandlingId = behandlingId,
+                mottattTidspunkt = LocalDateTime.now(),
+                type = InnsendingType.KLAGE,
+                kanal = Kanal.DIGITAL,
+                strukturertDokument = null
+            )
+        )
+    }
+
+    private fun flytkontekstForBehandlingForKlageMottatt(
+        behandling: Behandling,
+        vurderingsbehov: Vurderingsbehov
+    ): FlytKontekstMedPerioder {
+        return FlytKontekstMedPerioder(
+            sakId = behandling.sakId,
+            behandlingId = behandling.id,
+            forrigeBehandlingId = behandling.forrigeBehandlingId,
+            behandlingType = behandling.typeBehandling(),
+            vurderingType = VurderingType.IKKE_RELEVANT,
             vurderingsbehovRelevanteForSteg = setOf(vurderingsbehov),
             rettighetsperiode = periode,
         )

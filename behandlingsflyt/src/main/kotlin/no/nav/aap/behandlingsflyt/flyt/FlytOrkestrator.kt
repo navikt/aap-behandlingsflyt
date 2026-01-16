@@ -120,7 +120,7 @@ class FlytOrkestrator(
         this.prosesserBehandling(kontekst)
     }
 
-    private fun forberedBehandling(kontekst: FlytKontekst, triggere: List<Vurderingsbehov>?) {
+    private fun forberedBehandling(kontekst: FlytKontekst, triggere: List<Vurderingsbehov>) {
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
@@ -173,7 +173,7 @@ class FlytOrkestrator(
                 behandling.aktivtSteg(),
                 tilbakeføringsflyt.stegene().last(),
                 oppdaterFaktagrunnlagForKravliste.joinToString { it.navn.toString() },
-                triggere?.joinToString { it.toString() }
+                triggere.joinToString { it.toString() }
             )
         }
         tilbakefør(kontekst, behandling, tilbakeføringsflyt, avklaringsbehovene)

@@ -3,8 +3,6 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage
 import io.mockk.every
 import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
-import io.mockk.mockkStatic
-import io.mockk.unmockkStatic
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
@@ -36,17 +34,18 @@ import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
-import java.util.concurrent.atomic.AtomicInteger
 
 @ExtendWith(MockKExtension::class)
+@Execution(ExecutionMode.SAME_THREAD)
 class FormkravStegTest {
     val trekkKlageServiceMock = mockk<TrekkKlageService>()
     val formkravRepositoryMock = mockk<FormkravRepository>()
@@ -60,13 +59,6 @@ class FormkravStegTest {
 
     @BeforeEach
     fun setup() {
-        // Avklaringsbehov må skje etterhverandre i tid, men testene kan kjøre så fort at alle får samme tidspunkt. Og da blir sorteringen feil
-        // Mocker derfor LocalDateTime.now slik at alle kall kommer 1 minutt etter hverandre.
-        val start = LocalDateTime.now()
-        mockkStatic(LocalDateTime::class)
-        val counter = AtomicInteger(0)
-        every { LocalDateTime.now() } answers { start.plusMinutes(counter.getAndIncrement().toLong()) }
-
         every { trekkKlageServiceMock.klageErTrukket(any()) } returns false
         every { formkravRepositoryMock.hentHvisEksisterer(any()) } returns null
         every { avbrytRevurderingServiceMock.revurderingErAvbrutt(any()) } returns true
@@ -79,11 +71,6 @@ class FormkravStegTest {
             kontekst = any(),
         ) } returns Unit
         InMemoryAvklaringsbehovRepository.clearMemory()
-    }
-
-    @AfterEach
-    fun tearDown() {
-        unmockkStatic(LocalDateTime::class)
     }
 
     @Test

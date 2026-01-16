@@ -630,6 +630,7 @@ class StatistikkJobbUtførerTest {
 
         val avklaringsbehov = listOf(
             AvklaringsbehovHendelseDto(
+                id = 0L,
                 avklaringsbehovDefinisjon = Definisjon.FATTE_VEDTAK,
                 status = no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER,
                 endringer = listOf(

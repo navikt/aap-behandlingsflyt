@@ -16,6 +16,7 @@ enum class TypeBrev {
     KLAGE_AVVIST,
     KLAGE_OPPRETTHOLDELSE,
     KLAGE_TRUKKET,
+    KLAGE_MOTTATT,
     FORVALTNINGSMELDING;
 
     fun erVedtak(): Boolean {

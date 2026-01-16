@@ -646,7 +646,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             }
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .medKontekst {
-                assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon == Definisjon.FATTE_VEDTAK).isTrue() }
+                assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.FATTE_VEDTAK) }
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }
             .fattVedtak()

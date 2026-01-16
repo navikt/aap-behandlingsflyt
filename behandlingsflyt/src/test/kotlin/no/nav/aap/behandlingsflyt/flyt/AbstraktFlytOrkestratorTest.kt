@@ -715,7 +715,8 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         sakId: SakId,
         vurderingsbehov: List<VurderingsbehovMedPeriode>,
         typeBehandling: TypeBehandling,
-        forrigeBehandlingId: BehandlingId?
+        forrigeBehandlingId: BehandlingId?,
+        årsak: ÅrsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD
     ): Behandling {
         return dataSource.transaction { connection ->
             BehandlingRepositoryImpl(connection).opprettBehandling(
@@ -724,7 +725,7 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
                 typeBehandling = typeBehandling,
                 vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
                     vurderingsbehov = vurderingsbehov,
-                    årsak = ÅrsakTilOpprettelse.SØKNAD
+                    årsak = årsak
                 )
             )
         }
