@@ -203,7 +203,8 @@ class UnderveisService(
                 ?: sak.rettighetsperiode.fom
 
         /**
-         * TODO: Dersom sluttdato skal utvides må det håndteres her
+         * Obs: Denne er "feil", men trengs for å være bakover-feil-kompatibel i første omgang.
+         * Når alle behandlinger har et innslag i vedtakslengdeGrunnlag så kan dette fjernes
          */
         val sluttdatoForBehandlingen = maxOf(sak.rettighetsperiode.fom, startdatoForBehandlingen)
             .plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
