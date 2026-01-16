@@ -56,7 +56,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
 
         if (unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeJobb)) {
             val resultat = saker
-                .filter { if (erDev()) it.id == 4154L else true}
+                .filter { if (erDev()) it.id == 4243L else true}
                 .map { sakId ->
                     val sisteGjeldendeBehandling = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId)
                     if (sisteGjeldendeBehandling != null) {
