@@ -1,6 +1,6 @@
 plugins {
     kotlin("jvm") apply false
-    id("behandlingsflyt.conventions")
+    id("aap.conventions")
 }
 
 dependencies {
