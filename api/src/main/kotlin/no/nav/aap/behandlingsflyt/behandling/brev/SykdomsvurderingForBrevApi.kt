@@ -4,15 +4,11 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
-import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrevRepository
-import no.nav.aap.behandlingsflyt.harTilgangOgKanSaksbehandle
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
@@ -22,6 +18,8 @@ import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 
 fun NormalOpenAPIRoute.sykdomsvurderingForBrevApi(
     dataSource: DataSource,
@@ -41,9 +39,6 @@ fun NormalOpenAPIRoute.sykdomsvurderingForBrevApi(
                 val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                 val sykdomsvurderingForBrevRepository = repositoryProvider.provide<SykdomsvurderingForBrevRepository>()
                 val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
-                val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
-                val behandling = behandlingRepository.hent(behandlingReferanse)
-                val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
 
                 val sykdomsvurderingForBrev = hentSykdomsvurderingForBrev(
                     behandlingReferanse,
@@ -69,7 +64,7 @@ fun NormalOpenAPIRoute.sykdomsvurderingForBrevApi(
                             behandlingRepository.hent(behandlingReferanse)
                         )
                     },
-                    kanSaksbehandle = harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene)
+                    kanSaksbehandle = kanSaksbehandle()
                 )
             }
             respond(grunnlag)

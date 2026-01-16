@@ -4,7 +4,6 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
@@ -13,7 +12,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.navenheter.NavKontorSer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.andreYtelserOppgittISøknad.AndreYtelserOppgittISøknadRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
-import no.nav.aap.behandlingsflyt.harTilgangOgKanSaksbehandle
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -85,12 +83,9 @@ fun NormalOpenAPIRoute.refusjonGrunnlagApi(
 
                             val økonomiskSosialHjelp: Boolean? = andreUtbetalinger?.stønad?.contains(AndreUtbetalingerYtelser.ØKONOMISK_SOSIALHJELP)
 
-                            val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
-                            val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-
                             RefusjonkravGrunnlagResponse(
                                 nåværendeVirkningsTidspunkt = virkningstidspunkt,
-                                harTilgangTilÅSaksbehandle = harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene),
+                                harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                                 gjeldendeVurdering = gjeldendeVurdering,
                                 gjeldendeVurderinger = gjeldendeVurderinger,
                                 økonomiskSosialHjelp = økonomiskSosialHjelp,
@@ -117,11 +112,8 @@ fun NormalOpenAPIRoute.refusjonGrunnlagApi(
                                 .hentHistoriskeVurderinger(behandling.sakId, behandling.id)
                                 .map { it.tilResponse(ansattInfoService) }
 
-                        val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
-                        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-
                         RefusjonkravGrunnlagResponse(
-                            harTilgangTilÅSaksbehandle = harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene),
+                            harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                             gjeldendeVurdering = gjeldendeVurdering,
                             gjeldendeVurderinger = gjeldendeVurderinger,
                             historiskeVurderinger = historiskeVurderinger,
