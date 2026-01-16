@@ -20,6 +20,7 @@ import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.miljo.Miljø.erDev
+import no.nav.aap.komponenter.miljo.Miljø.erLokal
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
@@ -56,7 +57,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
 
         if (unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeJobb)) {
             val resultat = saker
-                .filter { if (erDev()) it.id == 4243L else true}
+                .filter { if (erDev() || erLokal()) it.id == 4243L else true}
                 .map { sakId ->
                     val sisteGjeldendeBehandling = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId)
                     if (sisteGjeldendeBehandling != null) {
