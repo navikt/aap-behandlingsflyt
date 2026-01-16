@@ -70,7 +70,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
             return OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
                 prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
                 sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
-                vedtakslengdeService = VedtakslengdeService(repositoryProvider),
+                vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
             )
         }
 

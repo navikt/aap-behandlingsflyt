@@ -92,7 +92,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeUnleash::
 
             val opprettJobbUtvidVedtakslengdeJobbUtfører = `OpprettJobbUtvidVedtakslengdeJobbUtfører`(
                 sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
-                vedtakslengdeService = VedtakslengdeService(repositoryProvider),
+                vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
                 flytJobbRepository = FlytJobbRepositoryImpl(connection),
                 unleashGateway = VedtakslengdeUnleash,
                 clock = clock,
