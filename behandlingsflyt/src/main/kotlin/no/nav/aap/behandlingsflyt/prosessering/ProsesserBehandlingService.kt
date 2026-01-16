@@ -107,13 +107,21 @@ class ProsesserBehandlingService(
             val kontekst = atomærFlytOrkestrator.opprettKontekst(åpenBehandling.sakId, åpenBehandling.id)
             atomærFlytOrkestrator.tilbakeførEtterAtomærBehandling(kontekst)
             triggProsesserBehandling(åpenBehandling, emptyList())
-        } else if (Vurderingsbehov.MOTTATT_MELDEKORT in opprettetBehandling.nyBehandling.vurderingsbehov()
-                .map { it.type }
-        ) {
+        } else if (skalInnhenteInformasjon(opprettetBehandling.nyBehandling.vurderingsbehov().map { it.type })) {
             flytJobbRepository.leggTil(
                 JobbInput(jobb = OppdagEndretInformasjonskravJobbUtfører).forSak(
                     sakId = behandling.sakId.toLong(),
                 ).medCallId()
+            )
+        }
+    }
+
+    private fun skalInnhenteInformasjon(vurderingsbehov: List<Vurderingsbehov>): Boolean {
+        vurderingsbehov.any {
+            it in listOf(
+                Vurderingsbehov.MOTTATT_MELDEKORT,
+                Vurderingsbehov.FRITAK_MELDEPLIKT,
+                Vurderingsbehov.FASTSATT_PERIODE_PASSERT
             )
         }
     }
