@@ -74,6 +74,8 @@ import no.nav.aap.behandlingsflyt.flyt.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flytApi
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
+import no.nav.aap.behandlingsflyt.hendelse.kafka.inst2.INSTITUSJONSOPPHOLD_EVENT_TOPIC
+import no.nav.aap.behandlingsflyt.hendelse.kafka.inst2.Inst2KafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KABAL_EVENT_TOPIC
 import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KabalKafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PDL_HENDELSE_TOPIC
@@ -83,6 +85,7 @@ import no.nav.aap.behandlingsflyt.hendelse.kafka.tilbakekreving.TilbakekrevingKa
 import no.nav.aap.behandlingsflyt.hendelse.mottattHendelseApi
 import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.InstitusjonsOppholdHendelseKafkaMelding
 import no.nav.aap.behandlingsflyt.pip.behandlingsflytPipApi
 import no.nav.aap.behandlingsflyt.prosessering.BehandlingsflytLogInfoProvider
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
@@ -219,6 +222,10 @@ internal fun Application.server(
         startTilbakekrevingEventKonsument(dataSource, repositoryRegistry, gatewayProvider)
     }
 
+    if (!Miljø.erLokal() && !Miljø.erProd()) {
+        startInstitusjonsOppholdKonsument(dataSource, repositoryRegistry, gatewayProvider)
+    }
+
     monitor.subscribe(ApplicationStopPreparing) { environment ->
         environment.log.info("ktor forbereder seg på å stoppe.")
     }
@@ -299,7 +306,7 @@ internal fun Application.server(
                 // Flytt
                 brevApi(dataSource, repositoryRegistry, gatewayProvider)
                 dokumentinnhentingApi(dataSource, repositoryRegistry, gatewayProvider)
-                mottattHendelseApi(dataSource, repositoryRegistry, gatewayProvider)
+                mottattHendelseApi(dataSource, repositoryRegistry)
                 underveisVurderingerApi(dataSource, repositoryRegistry)
                 lovvalgMedlemskapApi(dataSource, repositoryRegistry)
                 lovvalgMedlemskapGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
@@ -463,6 +470,40 @@ fun Application.startPDLHendelseKonsument(
     }
     monitor.subscribe(ApplicationStopPreparing) { environment ->
         environment.log.info("Forbereder stopp av applikasjon, lukker PDLHendelseKonsument.")
+
+        konsument.lukk()
+    }
+
+    return konsument
+}
+
+
+fun Application.startInstitusjonsOppholdKonsument(
+    dataSource: DataSource,
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider,
+): KafkaKonsument<String, InstitusjonsOppholdHendelseKafkaMelding> {
+    val konsument = Inst2KafkaKonsument(
+        config = KafkaConsumerConfig(
+            keyDeserializer = org.apache.kafka.common.serialization.StringDeserializer::class.java,
+            valueDeserializer = io.confluent.kafka.serializers.KafkaAvroDeserializer::class.java
+        ),
+        closeTimeout = AppConfig.stansArbeidTimeout,
+        dataSource = dataSource,
+        repositoryRegistry = repositoryRegistry,
+        gatewayProvider = gatewayProvider
+    )
+    monitor.subscribe(ApplicationStarted) {
+        val t = Thread {
+            konsument.konsumer()
+        }
+        t.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, e ->
+            log.error("Konsumering av $INSTITUSJONSOPPHOLD_EVENT_TOPIC ble lukket pga uhåndtert feil", e)
+        }
+        t.start()
+    }
+    monitor.subscribe(ApplicationStopPreparing) { environment ->
+        environment.log.info("Forbereder stopp av applikasjon, lukker InstitusjonKonsument.")
 
         konsument.lukk()
     }

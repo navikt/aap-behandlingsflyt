@@ -3,7 +3,9 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import io.mockk.every
 import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
+import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.*
@@ -33,6 +35,8 @@ class FatteVedtakStegTest {
     val tidligereVurderinger = mockk<TidligereVurderinger>()
     val trekkKlageService = mockk<TrekkKlageService>()
     val avklaringsbehovService = mockk<AvklaringsbehovService>()
+    val avbrytRevurderingService = mockk<AvbrytRevurderingService>()
+    val trukketSøknadService = mockk<TrukketSøknadService>()
     val gatewayProvider = createGatewayProvider {
         register<FakeUnleash>()
     }
@@ -63,6 +67,8 @@ class FatteVedtakStegTest {
         klageresultatUtleder = klageresultatUtleder,
         trekkKlageService = trekkKlageService,
         avklaringsbehovService = avklaringsbehovService,
+        avbrytRevurderingService = avbrytRevurderingService,
+        trukketSøknadService = trukketSøknadService,
         vedtakService = mockk(relaxed = true),
         virkningstidspunktUtleder = mockk(relaxed = true),
         unleashGateway = FakeUnleash,
@@ -91,7 +97,7 @@ class FatteVedtakStegTest {
     @Test
     fun `Klagevurderinger skal kvalitetssikres hvis resultatet er Omgjør`() {
         val kontekst = kontekst()
-        
+
         every { tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, StegType.FATTE_VEDTAK) } returns false
 
         val resultat = steg().utfør(kontekst)

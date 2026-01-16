@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykdom.Sy
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.harTilgangOgKanSaksbehandle
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -70,14 +71,14 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(
                             )
                         }
 
-                    val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+                    val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
                     val perioderVedtaketBehøverVurdering =
-                        avklaringsbehov.hentBehovForDefinisjon(Definisjon.AVKLAR_BISTANDSBEHOV)
+                        avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_BISTANDSBEHOV)
                             ?.perioderVedtaketBehøverVurdering()
                             .orEmpty()
 
                     BistandGrunnlagResponse(
-                        harTilgangTilÅSaksbehandle = kanSaksbehandle(),
+                        harTilgangTilÅSaksbehandle = harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene),
                         vurderinger = nyeVurderinger, // TODO: Fjern
                         nyeVurderinger = nyeVurderinger,
                         gjeldendeVedtatteVurderinger = BistandVurderingResponse.fraDomene(

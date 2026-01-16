@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.brev.bestilling
 
 import io.mockk.every
-import kotlin.random.Random
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.brev.SignaturService
@@ -9,13 +8,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBrevbestillingRepository
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.util.*
-import kotlin.test.assertEquals
-import kotlin.test.assertNotEquals
+import kotlin.random.Random
 
 class BrevbestillingServiceTest {
 
@@ -42,7 +41,7 @@ class BrevbestillingServiceTest {
     }
 
     @Test
-    fun `hentTilbakestillbareBestillingerOmVedtak_returnEmptyList_hvisIngenBrevBestillingerFinnes`() {
+    fun `hentTilbakestillbareBestillingerOmVedtak returnerer emptyList hvis ingen brevbestillinger finnes`() {
         InMemoryBrevbestillingRepository.clearMemory()
         val brevbestillingService = BrevbestillingService(
             signaturService,
@@ -54,11 +53,11 @@ class BrevbestillingServiceTest {
 
         val resultat = brevbestillingService.hentTilbakestillbareBestillingerOmVedtak(behandlingId)
 
-        assertTrue(resultat.isEmpty())
+        assertThat(resultat).isEmpty()
     }
 
     @Test
-    fun `hentTilbakestillbareBestillingerOmVedtak_returnEmptyList_hvisAlleVedtaksBrevHarEndeStatus`() {
+    fun `hentTilbakestillbareBestillingerOmVedtak returnerer emptyList hvis alle vedtaksbrev har endestatus`() {
         val brevbestllingService = BrevbestillingService(
             signaturService,
             brevbestillingGateway,
@@ -73,11 +72,11 @@ class BrevbestillingServiceTest {
 
         val resultat = brevbestllingService.hentTilbakestillbareBestillingerOmVedtak(behandlingId)
 
-        assertTrue(resultat.isEmpty())
+        assertThat(resultat).isEmpty()
     }
 
     @Test
-    fun `hentTilbakestillbareBestillingerOmVedtak_returnEmptyList_hvisIngenVedtakBrevFinnes`() {
+    fun `hentTilbakestillbareBestillingerOmVedtak returnerer emptyList hvis ingen vedtaksbrev finnes`() {
         val brevbestllingService = BrevbestillingService(
             signaturService,
             brevbestillingGateway,
@@ -95,12 +94,12 @@ class BrevbestillingServiceTest {
 
         val resultat = brevbestllingService.hentTilbakestillbareBestillingerOmVedtak(behandlingId)
 
-        assertFalse(TypeBrev.FORVALTNINGSMELDING.erVedtak())
-        assertTrue(resultat.isEmpty())
+        assertThat(TypeBrev.FORVALTNINGSMELDING.erVedtak()).isFalse
+        assertThat(resultat).isEmpty()
     }
 
     @Test
-    fun `hentTilbakestillbareBestillingerOmVedtak_returnKorrektListe_nårAlleVedtaksBrevHarStatusForhåndsvisningKlar`() {
+    fun `hentTilbakestillbareBestillingerOmVedtak returnerer korrekt liste når alle vedtaksbrev har status ForhåndsvisningKlar`() {
         val brevbestllingService = BrevbestillingService(
             signaturService,
             brevbestillingGateway,
@@ -112,15 +111,15 @@ class BrevbestillingServiceTest {
         val resultat = brevbestllingService.hentTilbakestillbareBestillingerOmVedtak(behandlingId)
 
         val antallVedtakBrev = TypeBrev.entries.filter { it.erVedtak() }.size
-        assertEquals(antallVedtakBrev, resultat.size)
+        assertThat(resultat).hasSize(antallVedtakBrev)
         for (brevBestilling in resultat) {
-            assertEquals(Status.FORHÅNDSVISNING_KLAR, brevBestilling.status)
-            assertTrue(brevBestilling.typeBrev.erVedtak())
+            assertThat(brevBestilling.status).isEqualTo(Status.FORHÅNDSVISNING_KLAR)
+            assertThat(brevBestilling.typeBrev.erVedtak()).isTrue
         }
     }
 
     @Test
-    fun `hentTilbakestillbareBestillingerOmVedtak() return korrekt liste kun med vedtaksBrev som har status FORHÅNDSVISNING_KLAR og SENDT`() {
+    fun `hentTilbakestillbareBestillingerOmVedtak() returnerer korrekt liste kun med vedtaksBrev som har status FORHÅNDSVISNING_KLAR og SENDT`() {
         val brevbestllingService = BrevbestillingService(
             signaturService,
             brevbestillingGateway,
@@ -138,17 +137,17 @@ class BrevbestillingServiceTest {
         val resultat = brevbestllingService.hentTilbakestillbareBestillingerOmVedtak(behandlingId)
 
         val antallTilbakestillbareVedtakBrev = TypeBrev.entries.filter { it.erVedtak() }.size - 2
-        assertEquals(antallTilbakestillbareVedtakBrev, resultat.size)
+        assertThat(resultat).hasSize(antallTilbakestillbareVedtakBrev)
         for (brevBestilling in resultat) {
-            assertNotEquals(fullførtBrevBestilling.referanse, brevBestilling.referanse)
-            assertNotEquals(avbruttBrevBestilling.referanse, brevBestilling.referanse)
-            assertEquals(Status.FORHÅNDSVISNING_KLAR, brevBestilling.status)
-            assertTrue(brevBestilling.typeBrev.erVedtak())
+            assertThat(brevBestilling.referanse).isNotEqualTo(fullførtBrevBestilling.referanse)
+            assertThat(brevBestilling.referanse).isNotEqualTo(avbruttBrevBestilling.referanse)
+            assertThat(brevBestilling.status).isEqualTo(Status.FORHÅNDSVISNING_KLAR)
+            assertThat(brevBestilling.typeBrev.erVedtak()).isTrue
         }
     }
 
     @Test
-    fun `erAlleBestillingerOmVedtakIEndeTilstand_returnTrue_hvisIngenBrevBestillingerFinnes`() {
+    fun `erAlleBestillingerOmVedtakIEndeTilstand returnerer true hvis ingen brevbestillinger finnes`() {
         InMemoryBrevbestillingRepository.clearMemory()
         val brevbestillingService = BrevbestillingService(
             signaturService,
@@ -160,11 +159,11 @@ class BrevbestillingServiceTest {
 
         val resultat = brevbestillingService.erAlleBestillingerOmVedtakIEndeTilstand(behandlingId)
 
-        assertTrue(resultat)
+        assertThat(resultat).isTrue
     }
 
     @Test
-    fun `erAlleBestillingerOmVedtakIEndeTilstand_returnFalse_hvisIngenVedtaksBrevHarEndeTilstand`() {
+    fun `erAlleBestillingerOmVedtakIEndeTilstand returnerer false hvis ingen vedtaksbrev har ende-tilstand`() {
         val brevbestllingService = BrevbestillingService(
             signaturService,
             brevbestillingGateway,
@@ -175,7 +174,7 @@ class BrevbestillingServiceTest {
 
         val resultat = brevbestllingService.erAlleBestillingerOmVedtakIEndeTilstand(behandlingId)
 
-        assertFalse(resultat)
+        assertThat(resultat).isFalse
     }
 
     @Test
@@ -391,7 +390,7 @@ class BrevbestillingServiceTest {
         brevbestllingService.gjenopptaBestilling(behandlingId, referanse)
 
         val resultat = InMemoryBrevbestillingRepository.hent(referanse)
-        assertTrue(resultat.status.equals(Status.FORHÅNDSVISNING_KLAR))
+        assertThat(resultat.status).isEqualTo(Status.FORHÅNDSVISNING_KLAR)
         verify { brevbestillingGateway.gjenoppta(referanse)}
     }
 

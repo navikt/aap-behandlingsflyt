@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.prosessering
 import io.mockk.every
 import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
-import io.mockk.slot
 import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingGateway
 import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
@@ -50,17 +49,20 @@ class IverksettUtbetalingJobbUtførerTest {
         every { sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns opprettBehandlingMedVedtak(
             behandlingId_1
         )
-        val behandlingIdSlot = slot<BehandlingId>()
+        var capturedBehandlingId: BehandlingId? = null
         every {
             utbetalingService.lagTilkjentYtelseForUtbetaling(
-                sakId, capture(behandlingIdSlot), any()
+                sakId, any(), any()
             )
-        } returns mockk<TilkjentYtelseDto>()
+        } answers {
+            capturedBehandlingId = secondArg()
+            mockk<TilkjentYtelseDto>()
+        }
         every { utbetalingGateway.utbetal(any()) } answers { }
 
         iverksettUtbetalingJobbUtfører.utfør(jobbInput.medPayload(behandlingId_1))
 
-        assertThat(behandlingIdSlot.captured).isEqualTo(behandlingId_1)
+        assertThat(capturedBehandlingId).isEqualTo(behandlingId_1)
     }
 
     @Test
@@ -68,17 +70,20 @@ class IverksettUtbetalingJobbUtførerTest {
         every { sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns opprettBehandlingMedVedtak(
             behandlingId_2
         )
-        val behandlingIdSlot = slot<BehandlingId>()
+        var capturedBehandlingId: BehandlingId? = null
         every {
             utbetalingService.lagTilkjentYtelseForUtbetaling(
-                sakId, capture(behandlingIdSlot), any()
+                sakId, any(), any()
             )
-        } returns mockk<TilkjentYtelseDto>()
+        } answers {
+            capturedBehandlingId = secondArg()
+            mockk<TilkjentYtelseDto>()
+        }
         every { utbetalingGateway.utbetal(any()) } answers { }
 
         iverksettUtbetalingJobbUtfører.utfør(jobbInput.medPayload(behandlingId_1))
 
-        assertThat(behandlingIdSlot.captured).isEqualTo(behandlingId_2)
+        assertThat(capturedBehandlingId).isEqualTo(behandlingId_2)
     }
 
     private fun opprettBehandlingMedVedtak(behandlingId: BehandlingId): BehandlingMedVedtak = BehandlingMedVedtak(

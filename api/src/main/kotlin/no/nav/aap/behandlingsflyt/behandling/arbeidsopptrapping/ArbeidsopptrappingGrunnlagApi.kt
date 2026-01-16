@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.arbeidsopptrapping
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
@@ -10,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandGru
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.harTilgangOgKanSaksbehandle
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -28,8 +30,6 @@ import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import java.time.LocalDate
 import javax.sql.DataSource
-import kotlin.collections.map
-import kotlin.collections.orEmpty
 
 fun NormalOpenAPIRoute.arbeidsopptrappingGrunnlagApi(
     dataSource: DataSource,
@@ -66,8 +66,14 @@ fun NormalOpenAPIRoute.arbeidsopptrappingGrunnlagApi(
                         behandling.forrigeBehandlingId?.let { arbeidsopptrappingRepository.hentHvisEksisterer(it) }
                             ?: ArbeidsopptrappingGrunnlag(emptyList())
 
+                    val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
+                    val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+
                     ArbeidsopptrappingGrunnlagResponse(
-                        harTilgangTilÅSaksbehandle = kanSaksbehandle(),
+                        harTilgangTilÅSaksbehandle = harTilgangOgKanSaksbehandle(
+                            kanSaksbehandle(),
+                            avklaringsbehovene
+                        ),
                         sisteVedtatteVurderinger = ArbeidsopptrappingVurderingResponse.fraDomene(
                             forrigeGrunnlag.gjeldendeVurderinger(),
                             vurdertAvService
@@ -77,7 +83,11 @@ fun NormalOpenAPIRoute.arbeidsopptrappingGrunnlagApi(
                             .map { ArbeidsopptrappingVurderingResponse.fraDomene(it, vurdertAvService) },
                         kanVurderes = listOf(sak.rettighetsperiode),
                         behøverVurderinger = listOf(),
-                        ikkeVurderbarePerioder = ikkeVurderbarePerioder
+                        ikkeVurderbarePerioder = ikkeVurderbarePerioder,
+                        kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
+                            Definisjon.ARBEIDSOPPTRAPPING,
+                            behandling.id
+                        )
                     )
                 }
 

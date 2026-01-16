@@ -50,7 +50,7 @@ class SignaturService(
             }
 
             // Automatiske brev
-            TypeBrev.VARSEL_OM_BESTILLING, TypeBrev.FORVALTNINGSMELDING, TypeBrev.BARNETILLEGG_SATS_REGULERING -> emptyList()
+            TypeBrev.KLAGE_MOTTATT, TypeBrev.VARSEL_OM_BESTILLING, TypeBrev.FORVALTNINGSMELDING, TypeBrev.BARNETILLEGG_SATS_REGULERING -> emptyList()
         }.distinctBy { it.navIdent }
     }
 

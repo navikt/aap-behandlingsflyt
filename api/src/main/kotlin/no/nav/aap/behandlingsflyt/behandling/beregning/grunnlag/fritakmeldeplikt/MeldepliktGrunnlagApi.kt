@@ -3,16 +3,10 @@ package no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.fritakmeldeplik
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.tilTidslinje
-import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.PeriodisertManuellVurderingForForutgåendeMedlemskapResponse
-import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.toResponse
-import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskap
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.tilTidslinje
+import no.nav.aap.behandlingsflyt.harTilgangOgKanSaksbehandle
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -24,13 +18,9 @@ import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
-import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
-import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
-import java.time.LocalDate
-import java.time.LocalDateTime
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(
@@ -38,8 +28,6 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider
 ) {
-    val ansattInfoService = AnsattInfoService(gatewayProvider)
-
     route("/api/behandling/{referanse}/grunnlag/fritak-meldeplikt") {
         getGrunnlag<BehandlingReferanse, FritakMeldepliktGrunnlagResponse>(
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
@@ -60,61 +48,22 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(
 
                     val nåTilstand = meldepliktRepository.hentHvisEksisterer(behandling.id)?.vurderinger
                     val forrigeGrunnlag = behandling.forrigeBehandlingId?.let { meldepliktRepository.hentHvisEksisterer(it) }
-
-                    val vedtatteVerdier = forrigeGrunnlag?.vurderinger.orEmpty()
-
-                    val historikk =
-                        meldepliktRepository.hentAlleVurderinger(behandling.sakId, behandling.id)
-
                     val nyeVurderinger = nåTilstand?.filter { it.vurdertIBehandling == behandling.id } ?: emptyList()
 
+                    val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
+                    val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+
                     FritakMeldepliktGrunnlagResponse(
-                        harTilgangTilÅSaksbehandle = kanSaksbehandle(),
-                        historikk =
-                            historikk
-                                .map { tilResponse(it, ansattInfoService) }
-                                .sortedBy { it.vurderingsTidspunkt }
-                                .toSet(),
-                        gjeldendeVedtatteVurderinger =
-                            vedtatteVerdier
-                                .map { tilResponse(it, ansattInfoService) }
-                                .sortedBy { it.fraDato },
-                        vurderinger =
-                            nåTilstand
-                                ?.filterNot { vedtatteVerdier.contains(it) }
-                                ?.map { tilResponse(it, ansattInfoService) }
-                                ?.sortedBy { it.fraDato }
-                                .orEmpty(),
+                        harTilgangTilÅSaksbehandle = harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene),
                         kanVurderes = listOf(sak.rettighetsperiode),
                         behøverVurderinger = emptyList(),
                         nyeVurderinger = nyeVurderinger.map { it.toResponse(vurdertAvService) },
-                        sisteVedtatteVurderinger = forrigeGrunnlag?.gjeldendeVurderinger().orEmpty().toResponse(vurdertAvService)
+                        sisteVedtatteVurderinger = forrigeGrunnlag?.gjeldendeVurderinger().orEmpty()
+                            .toResponse(vurdertAvService),
                     )
                 }
 
             respond(meldepliktGrunnlag)
         }
     }
-}
-
-private fun tilResponse(
-    fritaksvurdering: Fritaksvurdering,
-    ansattInfoService: AnsattInfoService
-): FritakMeldepliktVurderingResponse {
-    val ansattNavnOgEnhet = ansattInfoService.hentAnsattNavnOgEnhet(fritaksvurdering.vurdertAv)
-
-    return FritakMeldepliktVurderingResponse(
-        begrunnelse = fritaksvurdering.begrunnelse,
-        vurderingsTidspunkt = fritaksvurdering.opprettetTid ?: LocalDateTime.now(),
-        harFritak = fritaksvurdering.harFritak,
-        fraDato = fritaksvurdering.fraDato,
-        vurdertAv = VurdertAvResponse(
-            ident = fritaksvurdering.vurdertAv,
-            dato =
-                fritaksvurdering.opprettetTid?.toLocalDate()
-                    ?: error("Fant ikke opprettet tidspunkt for fritaksvurdering"),
-            ansattnavn = ansattNavnOgEnhet?.navn,
-            enhetsnavn = ansattNavnOgEnhet?.enhet
-        )
-    )
 }

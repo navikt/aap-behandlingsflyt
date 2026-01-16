@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.test
 
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.FeatureToggle
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
@@ -12,6 +13,8 @@ open class FakeUnleashBase(
     }
 
     override fun isEnabled(featureToggle: FeatureToggle, ident: String) = isEnabled(featureToggle)
+
+    override fun isEnabled(featureToggle: FeatureToggle, ident: String, typeBrev: TypeBrev) = isEnabled(featureToggle)
 }
 
 
@@ -34,9 +37,13 @@ object FakeUnleash : FakeUnleashBase(
         BehandlingsflytFeature.MigrerMeldepliktFritak to true,
         BehandlingsflytFeature.SosialRefusjon to true,
         BehandlingsflytFeature.HentSykepengerVedOverlapp to true,
+        BehandlingsflytFeature.SendBrevVedMottattKlage to true,
         BehandlingsflytFeature.MigrerRettighetsperiode to true,
         BehandlingsflytFeature.PeriodisertSykdom to true,
         BehandlingsflytFeature.Sykestipend to false,
+        BehandlingsflytFeature.Forlengelse to true,
+        BehandlingsflytFeature.ForlengelseIManuellBehandling to false,
+        BehandlingsflytFeature.UtvidVedtakslengdeJobb to true,
     )
 )
 
@@ -58,7 +65,11 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.MigrerMeldepliktFritak to true,
         BehandlingsflytFeature.SosialRefusjon to true,
         BehandlingsflytFeature.HentSykepengerVedOverlapp to true,
+        BehandlingsflytFeature.SendBrevVedMottattKlage to true,
         BehandlingsflytFeature.PeriodisertSykdom to true,
         BehandlingsflytFeature.Sykestipend to true,
+        BehandlingsflytFeature.Forlengelse to true,
+        BehandlingsflytFeature.ForlengelseIManuellBehandling to true,
+        BehandlingsflytFeature.UtvidVedtakslengdeJobb to true,
     )
 )

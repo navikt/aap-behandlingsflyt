@@ -150,6 +150,8 @@ spec:
       value: https://inst2.prod-fss-pub.nais.io/api/v1/person/institusjonsopphold/soek
     - name: INTEGRASJON_INSTITUSJONSOPPHOLD_SCOPE
       value: api://prod-fss.team-rocket.inst2/.default
+    - name: INTEGRASJON_INSTITUSJONSOPPHOLD_EVENT_TOPIC
+      value: team-rocket.institusjon-opphold-hendelser
     - name: INTEGRASJON_INNTEKT_URL
       value: https://pensjon-popp.prod-fss-pub.nais.io/popp/api/inntekt/sumPi
     - name: INTEGRASJON_INNTEKT_SCOPE

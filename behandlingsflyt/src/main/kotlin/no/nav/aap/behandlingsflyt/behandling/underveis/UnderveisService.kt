@@ -28,6 +28,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Meldepl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.OverstyringMeldepliktRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -54,7 +55,8 @@ class UnderveisService(
     private val meldeperiodeRepository: MeldeperiodeRepository,
     private val arbeidsopptrappingRepository: ArbeidsopptrappingRepository,
     private val vedtakService: VedtakService,
-    private val unleashGateway: UnleashGateway,
+    private val vedtakslengdeRepository: VedtakslengdeRepository,
+    private val unleashGateway: UnleashGateway
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         sakService = SakService(repositoryProvider),
@@ -68,6 +70,7 @@ class UnderveisService(
         overstyringMeldepliktRepository = repositoryProvider.provide(),
         arbeidsopptrappingRepository = repositoryProvider.provide(),
         vedtakService = VedtakService(repositoryProvider),
+        vedtakslengdeRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide(),
     )
 
@@ -148,7 +151,7 @@ class UnderveisService(
         val meldekortGrunnlag = meldekortRepository.hentHvisEksisterer(behandlingId)
         val meldekort = meldekortGrunnlag?.meldekort().orEmpty()
         val innsendingsTidspunkt = meldekortGrunnlag?.innsendingsdatoPerMelding().orEmpty()
-        val kvote = kvoteService.beregn(behandlingId)
+        val kvote = kvoteService.beregn()
         val utlederResultat = institusjonsoppholdUtlederService.utled(behandlingId, begrensetTilRettighetsperiode = false)
 
         val institusjonsopphold = MapInstitusjonoppholdTilRegel.map(utlederResultat)
@@ -190,12 +193,18 @@ class UnderveisService(
         behandlingId: BehandlingId,
         sak: Sak
     ): Periode {
+        val vedtakslengdeGrunnlag = vedtakslengdeRepository.hentHvisEksisterer(behandlingId)
+        if (vedtakslengdeGrunnlag != null) {
+            return Periode(sak.rettighetsperiode.fom, vedtakslengdeGrunnlag.vurdering.sluttdato)
+        }
+        
         val startdatoForBehandlingen =
             VirkningstidspunktUtleder(vilkårsresultatRepository).utledVirkningsTidspunkt(behandlingId)
                 ?: sak.rettighetsperiode.fom
 
         /**
-         * TODO: Dersom sluttdato skal utvides må det håndteres her
+         * Obs: Denne er "feil", men trengs for å være bakover-feil-kompatibel i første omgang.
+         * Når alle behandlinger har et innslag i vedtakslengdeGrunnlag så kan dette fjernes
          */
         val sluttdatoForBehandlingen = maxOf(sak.rettighetsperiode.fom, startdatoForBehandlingen)
             .plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)

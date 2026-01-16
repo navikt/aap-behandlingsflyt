@@ -4,11 +4,15 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvResponse
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrevRepository
+import no.nav.aap.behandlingsflyt.harTilgangOgKanSaksbehandle
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
@@ -25,6 +29,7 @@ fun NormalOpenAPIRoute.sykdomsvurderingForBrevApi(
     gatewayProvider: GatewayProvider,
 ) {
     val ansattInfoService = AnsattInfoService(gatewayProvider)
+
     route("/api/behandling/{referanse}/grunnlag/sykdomsvurdering-for-brev") {
         getGrunnlag<BehandlingReferanse, SykdomsvurderingForBrevDto>(
             relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
@@ -35,14 +40,36 @@ fun NormalOpenAPIRoute.sykdomsvurderingForBrevApi(
                 val repositoryProvider = repositoryRegistry.provider(connection)
                 val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                 val sykdomsvurderingForBrevRepository = repositoryProvider.provide<SykdomsvurderingForBrevRepository>()
+                val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
+                val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
+                val behandling = behandlingRepository.hent(behandlingReferanse)
+                val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
 
-                val sykdomsvurderingForBrev = hentSykdomsvurderingForBrev(behandlingReferanse, behandlingRepository, sykdomsvurderingForBrevRepository)
-                val historiskeSykdomsvurderingerForBrev = hentHistoriskeSykdomsvurderingerForBrev(behandlingReferanse, behandlingRepository, sykdomsvurderingForBrevRepository)
+                val sykdomsvurderingForBrev = hentSykdomsvurderingForBrev(
+                    behandlingReferanse,
+                    behandlingRepository,
+                    sykdomsvurderingForBrevRepository
+                )
+                val historiskeSykdomsvurderingerForBrev = hentHistoriskeSykdomsvurderingerForBrev(
+                    behandlingReferanse,
+                    behandlingRepository,
+                    sykdomsvurderingForBrevRepository
+                )
 
                 SykdomsvurderingForBrevDto(
-                    vurdering = sykdomsvurderingForBrev?.toDto(ansattInfoService),
-                    historiskeVurderinger = historiskeSykdomsvurderingerForBrev.map { it.toDto(ansattInfoService) },
-                    kanSaksbehandle = kanSaksbehandle()
+                    vurdering = sykdomsvurderingForBrev?.toDto(
+                        ansattInfoService,
+                        vurdertAvService,
+                        behandlingRepository.hent(behandlingReferanse)
+                    ),
+                    historiskeVurderinger = historiskeSykdomsvurderingerForBrev.map {
+                        it.toDto(
+                            ansattInfoService,
+                            vurdertAvService,
+                            behandlingRepository.hent(behandlingReferanse)
+                        )
+                    },
+                    kanSaksbehandle = harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene)
                 )
             }
             respond(grunnlag)
@@ -70,7 +97,11 @@ private fun hentHistoriskeSykdomsvurderingerForBrev(
         .sortedByDescending { it.vurdertTidspunkt }
 }
 
-private fun SykdomsvurderingForBrev.toDto(ansattInfoService: AnsattInfoService): SykdomsvurderingForBrevVurderingDto {
+private fun SykdomsvurderingForBrev.toDto(
+    ansattInfoService: AnsattInfoService,
+    vurdertAvService: VurdertAvService,
+    behandling: Behandling
+): SykdomsvurderingForBrevVurderingDto {
     val ansattNavnOgEnhet = ansattInfoService.hentAnsattNavnOgEnhet(vurdertAv)
     return SykdomsvurderingForBrevVurderingDto(
         vurdering = vurdering,
@@ -79,6 +110,10 @@ private fun SykdomsvurderingForBrev.toDto(ansattInfoService: AnsattInfoService):
             dato = vurdertTidspunkt.toLocalDate(),
             ansattnavn = ansattNavnOgEnhet?.navn,
             enhetsnavn = ansattNavnOgEnhet?.enhet
-        )
+        ),
+        kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
+            definisjon = Definisjon.SKRIV_SYKDOMSVURDERING_BREV,
+            behandlingId = behandling.id,
+        ),
     )
 }
