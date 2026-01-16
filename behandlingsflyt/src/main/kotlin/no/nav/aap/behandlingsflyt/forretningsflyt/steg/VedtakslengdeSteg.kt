@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurdering
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -61,7 +62,7 @@ class VedtakslengdeSteg(
                 if (unleashGateway.isDisabled(BehandlingsflytFeature.ForlengelseIManuellBehandling)) {
                     return Fullført
                 }
-                
+
                 // Initiell sluttdato skal samsvare med utledet i UnderveisService
                 if (sisteVedtatteUnderveisperiode == null) {
                     val initiellSluttdato = utledInitiellSluttdato(kontekst.behandlingId, kontekst.rettighetsperiode)
@@ -74,6 +75,22 @@ class VedtakslengdeSteg(
                             opprettet = Instant.now()
                         )
                     )
+                } else {
+                    val vedtattVedtakslengdeGrunnlag =
+                        vedtakslengdeRepository.hentHvisEksisterer(kontekst.forrigeBehandlingId)
+                    
+                    // Skal lagre ned vedtakslengde for eksisterende behandlinger som mangler dette
+                    if (vedtattVedtakslengdeGrunnlag == null) {
+                        vedtakslengdeRepository.lagre(
+                            kontekst.behandlingId, VedtakslengdeVurdering(
+                                sluttdato = sisteVedtatteUnderveisperiode.periode.tom,
+                                utvidetMed = ÅrMedHverdager.FØRSTE_ÅR,
+                                vurdertAv = SYSTEMBRUKER,
+                                vurdertIBehandling = kontekst.behandlingId,
+                                opprettet = Instant.now()
+                            )
+                        )
+                    }
                 }
             }
 
