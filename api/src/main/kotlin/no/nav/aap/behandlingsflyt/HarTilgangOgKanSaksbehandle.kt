@@ -11,9 +11,5 @@ fun harTilgangOgKanSaksbehandle(harTilgang: Boolean, avklaringsbehovene: Avklari
             behov.isEmpty() || behov.singleOrNull()?.status() != Status.AVSLUTTET
         }
 
-    val erReturnertFraBeslutter = avklaringsbehovene.alle()
-        .filter { it.kreverKvalitetssikring() }
-        .any { it.status() == Status.SENDT_TILBAKE_FRA_BESLUTTER }
-
-    return harTilgang && erFørAvsluttetKvalitetssikring || harTilgang && erReturnertFraBeslutter
+    return harTilgang && erFørAvsluttetKvalitetssikring
 }
