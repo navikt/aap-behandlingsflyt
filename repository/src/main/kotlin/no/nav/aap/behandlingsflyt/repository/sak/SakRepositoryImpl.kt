@@ -199,7 +199,7 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
 
     override fun finnSakerMedFritakMeldeplikt(): List<SakId> {
         val sql = """
-            select distinct gvb.sak_id
+            select distinct gvb.sak_id as sak_id
             from gjeldende_vedtatte_behandlinger gvb
                 join meldeplikt_fritak_grunnlag g on gvb.behandling_id = g.behandling_id
                 join meldeplikt_fritak_vurdering v on g.meldeplikt_id = v.meldeplikt_id
@@ -208,7 +208,7 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
 
         return connection.queryList(sql) {
             setRowMapper {
-                SakId(it.getLong("id"))
+                SakId(it.getLong("sak_id"))
             }
         }
     }
