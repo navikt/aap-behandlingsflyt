@@ -49,6 +49,18 @@ value class Hverdager(val asInt: Int) : Comparable<Hverdager> {
             }
         }
     }
+
+    fun fraOgMed(start: LocalDate): LocalDate {
+        val sisteHverdag = hverdagerFraOgMed(start).elementAt(this.asInt - 1)
+        /** Dette bevarer adferden som er implementert for kvoter,  altså at vi velger
+         * siste dag før kvoten er brukt opp.
+         **/
+        return if (sisteHverdag.dayOfWeek == DayOfWeek.FRIDAY) {
+            sisteHverdag.plusDays(2)
+        } else {
+            sisteHverdag
+        }
+    }
 }
 
 /**
