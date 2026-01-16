@@ -16,8 +16,10 @@ import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
 
 private val kravprioritet =
-    /* Rekkefølgen på disse er av betydning: første match blir valgt.  Ideelt sett burde de nok være i samme rekkefølge som vi vurdere vilkår i flyten. Samtidig er nok
-    * en del (nesten alle?) av kravene gjensidig utelukkende. */
+    /**
+     * Rekkefølgen på disse er av betydning: første match blir valgt. Ideelt sett burde de nok være i samme rekkefølge
+     * som vi vurdere vilkår i flyten. Samtidig er nok en del (nesten alle?) av kravene gjensidig utelukkende.
+     * */
     listOf(
         KravForStudent,
         KravForOrdinærAap,
@@ -214,8 +216,3 @@ fun avslagsårsakerVedTapAvRettPåAAP(
         }
         .let(::Tidslinje)
 }
-
-fun <T> Tidslinje<T>.mergePrioriterVenstre(other: Tidslinje<T>): Tidslinje<T> {
-    return other.mergePrioriterHøyre(this)
-}
-
