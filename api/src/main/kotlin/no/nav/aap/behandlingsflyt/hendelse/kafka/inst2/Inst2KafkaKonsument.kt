@@ -3,8 +3,14 @@ package no.nav.aap.behandlingsflyt.hendelse.kafka.inst2
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.InstitusjonsOppholdHendelseKafkaMelding
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -50,24 +56,31 @@ class Inst2KafkaKonsument(
     }
 
     fun håndter(meldingKey: String, meldingVerdi: InstitusjonsOppholdHendelseKafkaMelding) {
-        val saksnummer =
-            finnSaksNummer()
-        log.info("Mottatt institusjonsoppholdhendelse for saksnummer: $saksnummer")
         dataSource.transaction { connection ->
             val repositoryProvider = repositoryRegistry.provider(connection)
+            val sakRepository: SakRepository = repositoryProvider.provide()
+            val personRepository: PersonRepository = repositoryProvider.provide()
+            var person: Person? = null
             val hendelseService =
                 MottattHendelseService(repositoryProvider)
+            person = personRepository.finn(Ident(meldingVerdi.norskident))
+            if (person != null) {
 
-            //TODO: Finn saksnummer først
-          /*  hendelseService.registrerMottattHendelse(dto = meldingVerdi.tilInnsending(meldingKey,
-                Saksnummer(saksnummer)
-            )
-            )*/
+                val sak = sakRepository.finnSakerFor(person)
+                for (saken in sak) {
+
+                    hendelseService.registrerMottattHendelse(dto = meldingVerdi.tilInnsending(meldingKey,
+                       saken.saksnummer)
+                    )
+                    log.info("Mottatt institusjonsoppholdhendelse for saksnummer: ${saken.saksnummer}")
+                }
+            }
         }
 
     }
 
     private fun finnSaksNummer(): String {
+
         //TODO: Finn saksnummer
         return "FAKE"
     }
