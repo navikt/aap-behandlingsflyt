@@ -3,8 +3,10 @@ package no.nav.aap.behandlingsflyt.behandling.arbeidsevne
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepository
+import no.nav.aap.behandlingsflyt.harTilgangOgKanSaksbehandle
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -48,8 +50,11 @@ fun NormalOpenAPIRoute.arbeidsevneGrunnlagApi(
                 val forrigeGrunnlag = behandling.forrigeBehandlingId?.let { arbeidsevneRepository.hentHvisEksisterer(it) }
                 val nyeVurderinger = nåTilstand?.filter { it.vurdertIBehandling == behandling.id } ?: emptyList()
 
+                val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
+                val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+
                 ArbeidsevneGrunnlagDto(
-                    harTilgangTilÅSaksbehandle = kanSaksbehandle(),
+                    harTilgangTilÅSaksbehandle = harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene),
                     kanVurderes = listOf(sak.rettighetsperiode),
                     behøverVurderinger = emptyList(),
                     nyeVurderinger = nyeVurderinger.map { it.toResponse(vurdertAvService) },

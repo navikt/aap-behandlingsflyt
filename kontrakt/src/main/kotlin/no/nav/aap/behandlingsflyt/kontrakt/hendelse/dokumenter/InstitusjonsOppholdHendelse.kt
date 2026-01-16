@@ -12,7 +12,7 @@ import java.time.LocalDateTime
 public sealed interface InstitusjonsOppholdHendelse : Melding
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public data class Inst2HendelseKafkaMelding(
+public data class InstitusjonsOppholdHendelseKafkaMelding(
     val hendelseId: Long,
     var oppholdId: Long,
     var norskident: String,
