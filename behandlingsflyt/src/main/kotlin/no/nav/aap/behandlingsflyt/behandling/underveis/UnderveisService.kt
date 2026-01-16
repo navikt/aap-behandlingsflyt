@@ -207,14 +207,20 @@ class UnderveisService(
                 ?: sak.rettighetsperiode.fom
 
         /**
-         * Obs: Denne er feil (262 dager).
+         * Obs: Denne var feil (262 dager).
          * For bakoverkompatibilitet må vi beholde de gamle som har fått en dag for mye til å være 262 dager
          * og sjekker derfor forrige behandling sin siste underveisperiode.
          */
         val kalkulertSluttdatoForBehandlingen = maxOf(sak.rettighetsperiode.fom, startdatoForBehandlingen)
             .plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
 
-        val sluttDatoForBehandlingen = sistVedtatteUnderveisperiode(behandlingId) ?: kalkulertSluttdatoForBehandlingen
+        val sistVedtatteUnderveisperiode = sistVedtatteUnderveisperiode(behandlingId)
+        val sluttDatoForBehandlingen =
+            if (sistVedtatteUnderveisperiode != null && sistVedtatteUnderveisperiode > kalkulertSluttdatoForBehandlingen) {
+                sistVedtatteUnderveisperiode
+            } else {
+                kalkulertSluttdatoForBehandlingen
+            }
 
         /**
          * For behandlinger som har passert alle vilkår og vurderinger med kortere rettighetsperiode
