@@ -30,6 +30,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.JobbInput
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -40,6 +42,12 @@ import kotlin.test.Test
 class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
 
     private val sakId = SakId(123L)
+
+    // TODO kan fjernes når vi ikke lenger har miljøspesifikke filter i OpprettBehandlingUtvidVedtakslengdeJobbUtfører
+    @BeforeEach
+    fun setup() {
+        System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
+    }
 
     @Test
     fun `Skal opprette revurdering pga fritak meldeplikt`() {
