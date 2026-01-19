@@ -17,7 +17,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.dokument.KlagedokumentInformasjonUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetVedtakType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.IKlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageResultatType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
@@ -72,6 +74,7 @@ class StatistikkMetoder(
     private val meldekortRepository: MeldekortRepository,
     private val påklagetBehandlingRepository: PåklagetBehandlingRepository,
     private val vedtakService: VedtakService,
+    private val klagedokumentInformasjonUtleder: KlagedokumentInformasjonUtleder,
     trukketSøknadService: TrukketSøknadService,
     private val klageresultatUtleder: IKlageresultatUtleder,
     avbrytRevurderingService: AvbrytRevurderingService
@@ -91,6 +94,7 @@ class StatistikkMetoder(
         påklagetBehandlingRepository = repositoryProvider.provide(),
         vedtakService = VedtakService(repositoryProvider),
         trukketSøknadService = TrukketSøknadService(repositoryProvider.provide()),
+        klagedokumentInformasjonUtleder = KlagedokumentInformasjonUtleder(repositoryProvider),
         klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider)
     )
@@ -158,21 +162,31 @@ class StatistikkMetoder(
     }
 
     private fun relatertBehandling(behandling: Behandling): UUID? {
-        val påklagetBehandlingReferanse = if (behandling.typeBehandling() == TypeBehandling.Klage) {
-            val påklagetBehandling =
-                påklagetBehandlingRepository.hentGjeldendeVurderingMedReferanse(behandling.referanse)
-            påklagetBehandling?.referanse
-        } else null
+        return when (behandling.typeBehandling()) {
+            TypeBehandling.Førstegangsbehandling -> null
+            TypeBehandling.Revurdering -> if (behandling.forrigeBehandlingId != null) behandlingRepository.hent(
+                behandling.forrigeBehandlingId
+            ).referanse.referanse else null
 
-        val forrigeBehandling =
-            if (behandling.forrigeBehandlingId != null) behandlingRepository.hent(behandling.forrigeBehandlingId) else null
+            TypeBehandling.Tilbakekreving -> TODO()
+            TypeBehandling.Klage -> {
+                val påklagetBehandling =
+                    påklagetBehandlingRepository.hentGjeldendeVurderingMedReferanse(behandling.referanse)
 
-        if (forrigeBehandling != null && påklagetBehandlingReferanse != null) {
-            log.error("Fant både forrigeBehandling og påklagetBehandlingReferanse for behandling ${behandling.referanse}. Returnerer forrigeBehandling.")
+                check(påklagetBehandling == null || påklagetBehandling.påklagetVedtakType == PåklagetVedtakType.KELVIN_BEHANDLING) {
+                    "Hvis det klages på en behandling utenfor Kelvin, må dette være synlig i statistikk med referanse til eksternt system."
+                }
+
+                påklagetBehandling?.referanse?.referanse
+            }
+
+            TypeBehandling.SvarFraAndreinstans -> {
+                klagedokumentInformasjonUtleder.utledKlagebehandlingForSvar(behandling.id).referanse
+            }
+            TypeBehandling.OppfølgingsBehandling -> null
+            TypeBehandling.Aktivitetsplikt -> null
+            TypeBehandling.Aktivitetsplikt11_9 -> null
         }
-
-        return forrigeBehandling?.referanse?.referanse
-            ?: påklagetBehandlingReferanse?.referanse
     }
 
     private fun utledVurderingsbehovForBehandling(behandling: Behandling): List<no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov> =
