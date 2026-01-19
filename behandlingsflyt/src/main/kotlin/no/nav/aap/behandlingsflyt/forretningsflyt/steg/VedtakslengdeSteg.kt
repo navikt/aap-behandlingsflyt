@@ -179,6 +179,9 @@ class VedtakslengdeSteg(
             VirkningstidspunktUtleder(vilkårsresultatRepository).utledVirkningsTidspunkt(behandlingId)
                 ?: rettighetsperiode.fom
 
+        /**
+         * Det første år inkluderes startdatoen, og en dag på slutten må trekkes ifra for at det skal bli 261 dager
+         */
         val sluttdatoForBehandlingen = startdatoForBehandlingen
             .plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
 

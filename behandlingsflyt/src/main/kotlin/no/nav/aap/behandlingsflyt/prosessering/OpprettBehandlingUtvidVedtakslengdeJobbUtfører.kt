@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
@@ -20,6 +21,8 @@ import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.miljo.Miljø.erDev
+import no.nav.aap.komponenter.miljo.Miljø.erLokal
+import no.nav.aap.komponenter.miljo.Miljø.erProd
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
@@ -52,11 +55,14 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
         val datoHvorSakerSjekkesForUtvidelse = now().plusDays(28)
 
         val saker = hentKandidaterForUtvidelseAvVedtakslengde(datoHvorSakerSjekkesForUtvidelse)
-        log.info("Fant ${saker.size} kandidater for utvidelse av vedtakslende per $datoHvorSakerSjekkesForUtvidelse (dryRun=$dryRun)")
+            // Midlertidig sjekk for å unngå at denne jobben kjøres for åpne behandlinger
+            .filter { kunSakerUtenÅpneYtelsesbehandlinger(it) }
+
+        log.info("Fant ${saker.size} kandidater for utvidelse av vedtakslengde per $datoHvorSakerSjekkesForUtvidelse (dryRun=$dryRun)")
 
         if (unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeJobb)) {
             val resultat = saker
-                .filter { if (erDev()) it.id == 4154L else true}
+                .filter { if (erDev()) it.id == 4243L else if (erProd()) it.id == 1100L else if (erLokal()) true else false}
                 .map { sakId ->
                     val sisteGjeldendeBehandling = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId)
                     if (sisteGjeldendeBehandling != null) {
@@ -94,6 +100,11 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
 
             log.info("Jobb for utvidelse av vedtakslengde fullført for ${resultat.count { it }} av ${saker.size} saker (dryRun=$dryRun)")
         }
+    }
+
+    private fun kunSakerUtenÅpneYtelsesbehandlinger(id: SakId): Boolean {
+        val sisteBehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(id)
+        return sisteBehandling?.status() in setOf(Status.AVSLUTTET, Status.IVERKSETTES)
     }
 
     private fun harBehovForUtvidetVedtakslengde(
