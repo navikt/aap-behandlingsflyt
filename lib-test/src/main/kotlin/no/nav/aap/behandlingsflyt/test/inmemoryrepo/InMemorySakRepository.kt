@@ -111,6 +111,10 @@ object InMemorySakRepository : SakRepository {
         TODO("Not yet implemented")
     }
 
+    override fun finnSakerMedInstitusjonsOpphold(): List<Sak> {
+        TODO("Not yet implemented")
+    }
+
     override fun finnSakerMedUtenRiktigSluttdatoPåRettighetsperiode(): List<Sak> {
         TODO("Not yet implemented")
     }
