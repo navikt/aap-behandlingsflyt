@@ -34,9 +34,15 @@ import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
+
+    @BeforeEach
+    fun setup() {
+        System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
+    }
 
     @Test
     fun `forleng vedtak med passert slutt uten eksplisitt sluttdato`() {
