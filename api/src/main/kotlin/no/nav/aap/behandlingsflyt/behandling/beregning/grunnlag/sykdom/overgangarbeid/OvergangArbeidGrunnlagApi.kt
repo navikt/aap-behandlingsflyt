@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.OvergangArbeidRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.harTilgangOgKanSaksbehandle
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -17,6 +18,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -53,11 +56,17 @@ fun NormalOpenAPIRoute.overgangArbeidGrunnlagApi(
                         ?.let { overgangArbeidRepository.hentHvisEksisterer(it) }
                         ?: OvergangArbeidGrunnlag(emptyList())
 
-                    val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-                    val perioderSomTrengerVurdering = avklaringsbehov.hentBehovForDefinisjon(Definisjon.AVKLAR_OVERGANG_ARBEID)?.perioderVedtaketBehøverVurdering().orEmpty()
+                    val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+                    val perioderSomTrengerVurdering = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_OVERGANG_ARBEID)?.perioderVedtaketBehøverVurdering().orEmpty()
+
+                    val unleashGateway = gatewayProvider.provide<UnleashGateway>()
 
                     OvergangArbeidGrunnlagResponse(
-                        harTilgangTilÅSaksbehandle = kanSaksbehandle(),
+                        harTilgangTilÅSaksbehandle = if (unleashGateway.isEnabled(BehandlingsflytFeature.EOSBeregning)) {
+                            harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene)
+                        } else {
+                            kanSaksbehandle()
+                        },
                         sisteVedtatteVurderinger = OvergangArbeidVurderingResponse.fraDomene(
                             forrigeGrunnlag.gjeldendeVurderinger(),
                             vurdertAvService,

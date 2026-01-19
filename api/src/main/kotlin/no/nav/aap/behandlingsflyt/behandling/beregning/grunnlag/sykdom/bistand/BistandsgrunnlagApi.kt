@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykdom.Sy
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.harTilgangOgKanSaksbehandle
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -16,6 +17,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -70,14 +73,20 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(
                             )
                         }
 
-                    val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+                    val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
                     val perioderVedtaketBehøverVurdering =
-                        avklaringsbehov.hentBehovForDefinisjon(Definisjon.AVKLAR_BISTANDSBEHOV)
+                        avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_BISTANDSBEHOV)
                             ?.perioderVedtaketBehøverVurdering()
                             .orEmpty()
 
+                    val unleashGateway = gatewayProvider.provide<UnleashGateway>()
+
                     BistandGrunnlagResponse(
-                        harTilgangTilÅSaksbehandle = kanSaksbehandle(),
+                        harTilgangTilÅSaksbehandle = if (unleashGateway.isEnabled(BehandlingsflytFeature.EOSBeregning)) {
+                            harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene)
+                        } else {
+                            kanSaksbehandle()
+                        },
                         vurderinger = nyeVurderinger, // TODO: Fjern
                         nyeVurderinger = nyeVurderinger,
                         gjeldendeVedtatteVurderinger = BistandVurderingResponse.fraDomene(

@@ -20,8 +20,11 @@ import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
+import no.nav.aap.behandlingsflyt.harTilgangOgKanSaksbehandle
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
 import kotlin.collections.orEmpty
@@ -62,11 +65,17 @@ fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(
                         ?.maxByOrNull { it.opprettet!! }
                         ?.let { OvergangUføreVurderingResponse.fraDomene(it, vurdertAvService) }
 
-                    val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-                        .hentBehovForDefinisjon(Definisjon.AVKLAR_OVERGANG_UFORE)
+                    val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+                    val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_OVERGANG_UFORE)
+
+                    val unleashGateway = gatewayProvider.provide<UnleashGateway>()
 
                     OvergangUføreGrunnlagResponse(
-                        harTilgangTilÅSaksbehandle = kanSaksbehandle(),
+                        harTilgangTilÅSaksbehandle = if (unleashGateway.isEnabled(BehandlingsflytFeature.EOSBeregning)) {
+                            harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene)
+                        } else {
+                            kanSaksbehandle()
+                        },
                         vurdering = nyesteVurdering, // TODO: Fjern
                         nyeVurderinger = nyeVurderinger,
                         // TODO: Fjern

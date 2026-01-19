@@ -3,8 +3,10 @@ package no.nav.aap.behandlingsflyt.behandling.arbeidsevne
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepository
+import no.nav.aap.behandlingsflyt.harTilgangOgKanSaksbehandle
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -13,6 +15,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -48,8 +52,17 @@ fun NormalOpenAPIRoute.arbeidsevneGrunnlagApi(
                 val forrigeGrunnlag = behandling.forrigeBehandlingId?.let { arbeidsevneRepository.hentHvisEksisterer(it) }
                 val nyeVurderinger = nåTilstand?.filter { it.vurdertIBehandling == behandling.id } ?: emptyList()
 
+                val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
+                val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+
+                val unleashGateway = gatewayProvider.provide<UnleashGateway>()
+
                 ArbeidsevneGrunnlagDto(
-                    harTilgangTilÅSaksbehandle = kanSaksbehandle(),
+                    harTilgangTilÅSaksbehandle = if (unleashGateway.isEnabled(BehandlingsflytFeature.EOSBeregning)) {
+                        harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene)
+                    } else {
+                        kanSaksbehandle()
+                    },
                     kanVurderes = listOf(sak.rettighetsperiode),
                     behøverVurderinger = emptyList(),
                     nyeVurderinger = nyeVurderinger.map { it.toResponse(vurdertAvService) },
