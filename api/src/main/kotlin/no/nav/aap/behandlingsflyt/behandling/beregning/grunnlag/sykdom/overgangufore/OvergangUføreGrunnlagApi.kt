@@ -71,7 +71,7 @@ fun NormalOpenAPIRoute.overgangUforeGrunnlagApi(
                     val unleashGateway = gatewayProvider.provide<UnleashGateway>()
 
                     OvergangUføreGrunnlagResponse(
-                        harTilgangTilÅSaksbehandle = if (unleashGateway.isEnabled(BehandlingsflytFeature.EOSBeregning)) {
+                        harTilgangTilÅSaksbehandle = if (unleashGateway.isEnabled(BehandlingsflytFeature.KvalitetssikringsSteg)) {
                             harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene)
                         } else {
                             kanSaksbehandle()

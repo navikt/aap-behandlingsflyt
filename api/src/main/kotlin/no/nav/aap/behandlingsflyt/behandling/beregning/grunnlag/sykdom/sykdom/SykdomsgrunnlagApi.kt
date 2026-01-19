@@ -96,7 +96,7 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
                             .map { SykdomsvurderingResponse.fraDomene(it, vurdertAvService) },
                         gjeldendeVedtatteSykdomsvurderinger = sisteVedtatte, // TODO: Fjern
                         sisteVedtatteVurderinger = sisteVedtatte,
-                        harTilgangTilÅSaksbehandle = if (unleashGateway.isEnabled(BehandlingsflytFeature.EOSBeregning)) {
+                        harTilgangTilÅSaksbehandle = if (unleashGateway.isEnabled(BehandlingsflytFeature.KvalitetssikringsSteg)) {
                             harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene)
                         } else {
                             kanSaksbehandle()
@@ -141,7 +141,7 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
                     val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
 
                     YrkesskadeVurderingGrunnlagResponse(
-                        harTilgangTilÅSaksbehandle = if (unleashGateway.isEnabled(BehandlingsflytFeature.EOSBeregning)) {
+                        harTilgangTilÅSaksbehandle = if (unleashGateway.isEnabled(BehandlingsflytFeature.KvalitetssikringsSteg)) {
                             harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene)
                         } else {
                             kanSaksbehandle()

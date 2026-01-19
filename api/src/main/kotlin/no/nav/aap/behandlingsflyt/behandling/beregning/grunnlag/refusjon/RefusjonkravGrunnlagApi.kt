@@ -92,7 +92,7 @@ fun NormalOpenAPIRoute.refusjonGrunnlagApi(
 
                             RefusjonkravGrunnlagResponse(
                                 nåværendeVirkningsTidspunkt = virkningstidspunkt,
-                                harTilgangTilÅSaksbehandle = if (unleashGateway.isEnabled(BehandlingsflytFeature.EOSBeregning)) {
+                                harTilgangTilÅSaksbehandle = if (unleashGateway.isEnabled(BehandlingsflytFeature.KvalitetssikringsSteg)) {
                                     harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene)
                                 } else {
                                     kanSaksbehandle()

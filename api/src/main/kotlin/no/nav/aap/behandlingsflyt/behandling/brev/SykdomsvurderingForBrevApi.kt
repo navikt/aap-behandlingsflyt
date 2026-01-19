@@ -73,7 +73,7 @@ fun NormalOpenAPIRoute.sykdomsvurderingForBrevApi(
                             behandlingRepository.hent(behandlingReferanse)
                         )
                     },
-                    kanSaksbehandle = if (unleashGateway.isEnabled(BehandlingsflytFeature.EOSBeregning)) {
+                    kanSaksbehandle = if (unleashGateway.isEnabled(BehandlingsflytFeature.KvalitetssikringsSteg)) {
                         harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene)
                     } else {
                         kanSaksbehandle()

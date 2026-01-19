@@ -58,7 +58,7 @@ fun NormalOpenAPIRoute.meldepliktsgrunnlagApi(
                     val unleashGateway = gatewayProvider.provide<UnleashGateway>()
 
                     FritakMeldepliktGrunnlagResponse(
-                        harTilgangTilÅSaksbehandle = if (unleashGateway.isEnabled(BehandlingsflytFeature.EOSBeregning)) {
+                        harTilgangTilÅSaksbehandle = if (unleashGateway.isEnabled(BehandlingsflytFeature.KvalitetssikringsSteg)) {
                             harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene)
                         } else {
                             kanSaksbehandle()

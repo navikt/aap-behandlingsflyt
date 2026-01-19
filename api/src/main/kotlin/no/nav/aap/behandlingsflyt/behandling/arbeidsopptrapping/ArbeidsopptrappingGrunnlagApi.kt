@@ -76,7 +76,7 @@ fun NormalOpenAPIRoute.arbeidsopptrappingGrunnlagApi(
                     val unleashGateway = gatewayProvider.provide<UnleashGateway>()
 
                     ArbeidsopptrappingGrunnlagResponse(
-                        harTilgangTilÅSaksbehandle = if (unleashGateway.isEnabled(BehandlingsflytFeature.EOSBeregning)) {
+                        harTilgangTilÅSaksbehandle = if (unleashGateway.isEnabled(BehandlingsflytFeature.KvalitetssikringsSteg)) {
                             harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene)
                         } else {
                             kanSaksbehandle()

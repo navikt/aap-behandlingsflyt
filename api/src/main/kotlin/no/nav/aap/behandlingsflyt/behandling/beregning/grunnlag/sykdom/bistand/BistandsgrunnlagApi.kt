@@ -82,7 +82,7 @@ fun NormalOpenAPIRoute.bistandsgrunnlagApi(
                     val unleashGateway = gatewayProvider.provide<UnleashGateway>()
 
                     BistandGrunnlagResponse(
-                        harTilgangTilÅSaksbehandle = if (unleashGateway.isEnabled(BehandlingsflytFeature.EOSBeregning)) {
+                        harTilgangTilÅSaksbehandle = if (unleashGateway.isEnabled(BehandlingsflytFeature.KvalitetssikringsSteg)) {
                             harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene)
                         } else {
                             kanSaksbehandle()
