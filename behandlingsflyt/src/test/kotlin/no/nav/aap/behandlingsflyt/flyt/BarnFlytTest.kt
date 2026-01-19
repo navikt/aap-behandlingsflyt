@@ -6,6 +6,8 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVe
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plusHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGrunnlag
@@ -300,7 +302,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         FakePersoner.leggTil(manueltBarnIPDL)
 
         val barnNavn = "Gregor Gorgh"
-        val barnAlder = LocalDate.now().minusYears(17)
+        val barnAlder = LocalDate.now().minusYears(17).minusMonths(1)
         val søknad = TestSøknader.SØKNAD_MED_BARN(
             listOf(
                 Pair(
@@ -407,14 +409,14 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 assertThat(periodeMedBarneTilleggForToBarn).isEqualTo(
                     Periode(
                         periode.fom,
-                        periode.fom.plusYears(1).minusDays(1)
+                        periode.fom.plusYears(1).minusMonths(1).minusDays(1)
                     )
                 )
                 val underveisPeriode =
                     repositoryProvider.provide<UnderveisRepository>().hent(behandling.id).somTidslinje().helePerioden()
                 assertThat(periodeMedBarneTilleggForEttBarn).isEqualTo(
                     Periode(
-                        periode.fom.plusYears(1),
+                        periode.fom.plusYears(1).minusMonths(1),
                         underveisPeriode.tom
                     )
                 )
