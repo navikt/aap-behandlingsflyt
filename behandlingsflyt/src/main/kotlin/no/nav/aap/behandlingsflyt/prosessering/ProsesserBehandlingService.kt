@@ -117,7 +117,7 @@ class ProsesserBehandlingService(
     }
 
     private fun skalInnhenteInformasjon(vurderingsbehov: List<Vurderingsbehov>): Boolean {
-        vurderingsbehov.any {
+        return vurderingsbehov.any {
             it in listOf(
                 Vurderingsbehov.MOTTATT_MELDEKORT,
                 Vurderingsbehov.FRITAK_MELDEPLIKT,
