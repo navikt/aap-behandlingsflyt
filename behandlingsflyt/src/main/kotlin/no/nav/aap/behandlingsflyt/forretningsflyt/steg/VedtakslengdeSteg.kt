@@ -63,7 +63,6 @@ class VedtakslengdeSteg(
                     return Fullført
                 }
 
-                // Initiell sluttdato skal samsvare med utledet i UnderveisService
                 lagreGjeldendeSluttdatoHvisIkkeEksisterer(sisteVedtatteUnderveisperiode, kontekst)
             }
 
@@ -174,6 +173,7 @@ class VedtakslengdeSteg(
         val sluttdato = if (sisteVedtatteUnderveisperiode != null) {
             sisteVedtatteUnderveisperiode.periode.tom
         } else {
+            // Initiell sluttdato skal samsvare med utledet i UnderveisService
             utledInitiellSluttdato(kontekst.behandlingId, kontekst.rettighetsperiode).tom
         }
 
