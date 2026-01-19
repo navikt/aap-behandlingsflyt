@@ -170,18 +170,18 @@ class VedtakslengdeSteg(
         sisteVedtatteUnderveisperiode: Underveisperiode?,
         kontekst: FlytKontekstMedPerioder
     ) {
-        val sluttdato = if (sisteVedtatteUnderveisperiode != null) {
-            sisteVedtatteUnderveisperiode.periode.tom
-        } else {
-            // Initiell sluttdato skal samsvare med utledet i UnderveisService
-            utledInitiellSluttdato(kontekst.behandlingId, kontekst.rettighetsperiode).tom
-        }
-
         val vedtattVedtakslengdeGrunnlag =
             kontekst.forrigeBehandlingId?.let { vedtakslengdeRepository.hentHvisEksisterer(kontekst.forrigeBehandlingId) }
 
-        // Skal lagre ned vedtakslengde for eksisterende behandlinger som mangler dette
         if (vedtattVedtakslengdeGrunnlag == null) {
+            val sluttdato = if (sisteVedtatteUnderveisperiode != null) {
+                sisteVedtatteUnderveisperiode.periode.tom
+            } else {
+                // Initiell sluttdato skal samsvare med utledet i UnderveisService
+                utledInitiellSluttdato(kontekst.behandlingId, kontekst.rettighetsperiode).tom
+            }
+
+            // Skal lagre ned vedtakslengde for eksisterende behandlinger som mangler dette
             vedtakslengdeRepository.lagre(
                 kontekst.behandlingId, VedtakslengdeVurdering(
                     sluttdato = sluttdato,
