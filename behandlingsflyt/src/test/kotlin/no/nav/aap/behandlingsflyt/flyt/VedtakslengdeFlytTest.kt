@@ -27,6 +27,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.november
+import no.nav.aap.behandlingsflyt.test.oktober
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.type.Periode
@@ -47,7 +48,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
 
     @Test
     fun `forleng vedtak med passert slutt uten eksplisitt sluttdato`() {
-        val gammelRettighetsperiode = Periode(1 november 2024, 1 november 2025)
+        val gammelRettighetsperiode = Periode(1 november 2024, 30 oktober 2025)
 
         val (midlertidigSak, førstegangsbehandling) = sendInnFørsteSøknad()
         settRettighetsperiodeOgRekjørFraStart(midlertidigSak, gammelRettighetsperiode, førstegangsbehandling)
