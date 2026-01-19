@@ -39,6 +39,7 @@ import org.junit.jupiter.api.Test
 
 class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
 
+    // TODO kan fjernes når vi ikke lenger har miljøspesifikke filter i OpprettBehandlingUtvidVedtakslengdeJobbUtfører
     @BeforeEach
     fun setup() {
         System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")

@@ -43,6 +43,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
 
     private val sakId = SakId(123L)
 
+    // TODO kan fjernes når vi ikke lenger har miljøspesifikke filter i OpprettBehandlingUtvidVedtakslengdeJobbUtfører
     @BeforeEach
     fun setup() {
         System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
