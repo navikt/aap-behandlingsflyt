@@ -215,12 +215,7 @@ class UnderveisService(
             .plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
 
         val sistVedtatteUnderveisperiode = sistVedtatteUnderveisperiode(behandlingId)
-        val sluttDatoForBehandlingen =
-            if (sistVedtatteUnderveisperiode != null && sistVedtatteUnderveisperiode > kalkulertSluttdatoForBehandlingen) {
-                sistVedtatteUnderveisperiode
-            } else {
-                kalkulertSluttdatoForBehandlingen
-            }
+        val sluttDatoForBehandlingen = listOfNotNull(sistVedtatteUnderveisperiode, kalkulertSluttdatoForBehandlingen).max()
 
         /**
          * For behandlinger som har passert alle vilkår og vurderinger med kortere rettighetsperiode
@@ -235,6 +230,6 @@ class UnderveisService(
     private fun sistVedtatteUnderveisperiode(behandlingId: BehandlingId): LocalDate? {
         val vedtattUnderveis =
             behandlingRepository.hent(behandlingId).forrigeBehandlingId?.let { underveisRepository.hentHvisEksisterer(it) }
-        return vedtattUnderveis?.perioder?.maxByOrNull { it.periode.tom }?.periode?.tom
+        return vedtattUnderveis?.perioder?.maxOfOrNull { it.periode.tom }
     }
 }

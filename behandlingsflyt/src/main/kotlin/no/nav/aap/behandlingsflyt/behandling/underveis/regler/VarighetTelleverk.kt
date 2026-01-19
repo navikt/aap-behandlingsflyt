@@ -18,8 +18,17 @@ value class Hverdager(val asInt: Int) : Comparable<Hverdager> {
             return hverdagerFraOgMed(this).elementAt(hverdager.asInt)
         }
 
+        /**
+         * Skal bare legge til 260 dager første året ettersom Kelvin inkluderer startdato og dermed blir startdato + 260 dager = 261 totalt.
+         * For resterende år er startdato inkludert i forrige periode og det skal legges til riktig antall dagerskal inkludere startdato og derfor får 261 totalt
+         **/
         fun LocalDate.plussEtÅrMedHverdager(årMedHverdager: ÅrMedHverdager): LocalDate {
-            return hverdagerFraOgMed(this).elementAt(årMedHverdager.hverdagerIÅret.asInt)
+            return when(årMedHverdager) {
+                ÅrMedHverdager.FØRSTE_ÅR -> hverdagerFraOgMed(this).elementAt(årMedHverdager.hverdagerIÅret.asInt - 1)
+                ÅrMedHverdager.ANDRE_ÅR ,
+                ÅrMedHverdager.TREDJE_ÅR ,
+                ÅrMedHverdager.ANNET -> hverdagerFraOgMed(this).elementAt(årMedHverdager.hverdagerIÅret.asInt)
+            }
         }
 
         private val hverdagene = listOf(
@@ -56,10 +65,7 @@ value class Hverdager(val asInt: Int) : Comparable<Hverdager> {
  * https://confluence.adeo.no/spaces/PAAP/pages/739025519/Kvoter+og+overganger+mellom+bestemmelser
  */
 enum class ÅrMedHverdager(val hverdagerIÅret: Hverdager){
-    /**
-     * Skal bare legge til 260 dager første året ettersom vi skal inkludere startdato og derfor får 261 totalt
-     **/
-    FØRSTE_ÅR(Hverdager(260)),
+    FØRSTE_ÅR(Hverdager(261)),
     ANDRE_ÅR(Hverdager(261)),
     TREDJE_ÅR(Hverdager(262)),
     ANNET(Hverdager(261))
