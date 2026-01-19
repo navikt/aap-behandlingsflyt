@@ -14,6 +14,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
@@ -115,7 +116,7 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
         }
     }
 
-    override fun `hentSakerMedSisteUnderveisperiodeFørDato`(sisteUnderveisDato: LocalDate): Set<SakId> {
+    override fun hentSakerMedSisteUnderveisperiodeFørDato(sisteUnderveisDato: LocalDate): Set<SakId> {
         val query = """
             WITH siste_underveisperiode AS (SELECT ug.behandling_id, max(upper(periode)) AS siste_dato
                 FROM underveis_grunnlag ug
@@ -125,15 +126,16 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
                 WHERE ug.aktiv = true
                 GROUP BY ug.behandling_id
             )
-            SELECT s.id as sakId FROM siste_underveisperiode sup
+            SELECT s.id as sakId, s.rettighetsperiode FROM siste_underveisperiode sup
                 JOIN behandling b ON sup.behandling_id = b.id
                 JOIN sak s ON b.sak_id = s.id
-            WHERE sup.siste_dato < ?;
+            WHERE sup.siste_dato < ? AND upper(s.rettighetsperiode) > ?;
         """.trimIndent()
 
         return connection.queryList(query) {
             setParams {
                 setLocalDate(1, sisteUnderveisDato)
+                setLocalDate(2, Tid.MAKS)
             }
             setRowMapper {
                 SakId(it.getLong("sakId"))

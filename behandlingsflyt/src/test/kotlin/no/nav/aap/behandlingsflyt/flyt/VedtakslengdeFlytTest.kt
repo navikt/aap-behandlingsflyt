@@ -90,7 +90,6 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
 
             val opprettBehandlingUtvidVedtakslengdeJobbUtfører = OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
                 prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
-                sakRepository = SakRepositoryImpl(connection),
                 underveisRepository = UnderveisRepositoryImpl(connection),
                 sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
                 vilkårsresultatRepository = VilkårsresultatRepositoryImpl(connection),
