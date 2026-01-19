@@ -43,7 +43,19 @@ class SykepengeerstatningVilkår(vilkårsresultat: Vilkårsresultat) :
         yrkesskadeVurdering: Yrkesskadevurdering?,
         grunnlag: SykepengerErstatningFaktagrunnlag,
     ): Vilkårsvurdering {
-        return if (sykepengeerstatningVurdering?.harRettPå == true &&
+
+        return if ( sykepengeerstatningVurdering == null) {
+            Vilkårsvurdering(
+                Vilkårsperiode(
+                    periode = grunnlag.rettighetsperiode,
+                    utfall = Utfall.IKKE_VURDERT,
+                    begrunnelse = null,
+                    innvilgelsesårsak = null,
+                    avslagsårsak = null,
+                    faktagrunnlag = grunnlag,
+                )
+            )
+        } else if (sykepengeerstatningVurdering.harRettPå == true &&
             sykdomsvurdering?.erOppfyltOrdinærtEllerMedYrkesskadeSettBortFraVissVarighet(yrkesskadeVurdering) ?: false
         ) {
             Vilkårsvurdering(
@@ -69,4 +81,5 @@ class SykepengeerstatningVilkår(vilkårsresultat: Vilkårsresultat) :
             )
         }
     }
+
 }
