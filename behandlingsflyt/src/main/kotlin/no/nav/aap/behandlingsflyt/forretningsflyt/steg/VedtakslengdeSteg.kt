@@ -8,9 +8,9 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurdering
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -64,34 +64,7 @@ class VedtakslengdeSteg(
                 }
 
                 // Initiell sluttdato skal samsvare med utledet i UnderveisService
-                if (sisteVedtatteUnderveisperiode == null) {
-                    val initiellSluttdato = utledInitiellSluttdato(kontekst.behandlingId, kontekst.rettighetsperiode)
-                    vedtakslengdeRepository.lagre(
-                        kontekst.behandlingId, VedtakslengdeVurdering(
-                            sluttdato = initiellSluttdato.tom,
-                            utvidetMed = ÅrMedHverdager.FØRSTE_ÅR,
-                            vurdertAv = SYSTEMBRUKER,
-                            vurdertIBehandling = kontekst.behandlingId,
-                            opprettet = Instant.now()
-                        )
-                    )
-                } else {
-                    val vedtattVedtakslengdeGrunnlag =
-                        vedtakslengdeRepository.hentHvisEksisterer(kontekst.forrigeBehandlingId)
-                    
-                    // Skal lagre ned vedtakslengde for eksisterende behandlinger som mangler dette
-                    if (vedtattVedtakslengdeGrunnlag == null) {
-                        vedtakslengdeRepository.lagre(
-                            kontekst.behandlingId, VedtakslengdeVurdering(
-                                sluttdato = sisteVedtatteUnderveisperiode.periode.tom,
-                                utvidetMed = ÅrMedHverdager.FØRSTE_ÅR,
-                                vurdertAv = SYSTEMBRUKER,
-                                vurdertIBehandling = kontekst.behandlingId,
-                                opprettet = Instant.now()
-                            )
-                        )
-                    }
-                }
+                lagreGjeldendeSluttdatoHvisIkkeEksisterer(sisteVedtatteUnderveisperiode, kontekst)
             }
 
             VurderingType.UTVID_VEDTAKSLENGDE -> {
@@ -193,6 +166,34 @@ class VedtakslengdeSteg(
 
         return Periode(rettighetsperiode.fom, sluttdatoForBakoverkompabilitet)
     }
+
+    private fun lagreGjeldendeSluttdatoHvisIkkeEksisterer(
+        sisteVedtatteUnderveisperiode: Underveisperiode?,
+        kontekst: FlytKontekstMedPerioder
+    ) {
+        val sluttdato = if (sisteVedtatteUnderveisperiode != null) {
+            sisteVedtatteUnderveisperiode.periode.tom
+        } else {
+            utledInitiellSluttdato(kontekst.behandlingId, kontekst.rettighetsperiode).tom
+        }
+
+        val vedtattVedtakslengdeGrunnlag =
+            kontekst.forrigeBehandlingId?.let { vedtakslengdeRepository.hentHvisEksisterer(kontekst.forrigeBehandlingId) }
+
+        // Skal lagre ned vedtakslengde for eksisterende behandlinger som mangler dette
+        if (vedtattVedtakslengdeGrunnlag == null) {
+            vedtakslengdeRepository.lagre(
+                kontekst.behandlingId, VedtakslengdeVurdering(
+                    sluttdato = sluttdato,
+                    utvidetMed = ÅrMedHverdager.FØRSTE_ÅR,
+                    vurdertAv = SYSTEMBRUKER,
+                    vurdertIBehandling = kontekst.behandlingId,
+                    opprettet = Instant.now()
+                )
+            )
+        }
+    }
+
 
     companion object : FlytSteg {
         override fun konstruer(
