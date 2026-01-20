@@ -27,6 +27,7 @@ import java.time.LocalDate
 
 @ExtendWith(MockKExtension::class)
 @MockKExtension.CheckUnnecessaryStub
+@MockKExtension.RequireParallelTesting
 class VurderBrudd11_7LøserTest {
     private val aktivitetsplikt11_7Repository = mockk<Aktivitetsplikt11_7Repository>()
     private val behandlingRepository = mockk<BehandlingRepository>()
