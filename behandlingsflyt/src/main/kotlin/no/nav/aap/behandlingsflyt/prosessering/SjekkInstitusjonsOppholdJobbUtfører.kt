@@ -45,9 +45,9 @@ class SjekkInstitusjonsOppholdJobbUtfører(
                     if (sisteGjeldendeBehandling != null) {
                         val sak = sakRepository.hent(sak.id)
                         log.info("Gjeldende behandling for sak $sak.id (${sak.saksnummer}) er ${sisteGjeldendeBehandling.id}")
-                        log.info("Fant sak med institusjonsopphold $sak.id")
                         if (erKandidatForVurderingAvInstitusjonsopphold(sisteGjeldendeBehandling.id)) {
                             val opprettInstitusjonsOppholdBehandling = opprettNyBehandling(sak)
+                            log.info("Fant sak med institusjonsopphold $sak.id")
                             prosesserBehandlingService.triggProsesserBehandling(opprettInstitusjonsOppholdBehandling)
                         }
                     } else {
@@ -72,7 +72,7 @@ class SjekkInstitusjonsOppholdJobbUtfører(
     }
 
     private fun tomErInnenTreMaaneder(periode: Periode): Boolean {
-        return periode.tom.isBefore(LocalDate.now().plusMonths(3))
+        return periode.tom.isBefore(LocalDate.now().withDayOfMonth(1).plusMonths(4))
     }
 
     private fun opprettNyBehandling(sak: Sak): SakOgBehandlingService.OpprettetBehandling =
