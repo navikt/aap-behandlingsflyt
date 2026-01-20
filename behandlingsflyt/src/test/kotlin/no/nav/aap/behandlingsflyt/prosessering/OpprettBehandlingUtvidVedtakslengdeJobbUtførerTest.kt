@@ -10,7 +10,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
@@ -34,6 +33,7 @@ import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.motor.JobbInput
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDate
@@ -57,6 +57,11 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
     val opprettBehandlingUtvidVedtakslengdeJobbUtfører =
         OpprettBehandlingUtvidVedtakslengdeJobbUtfører(prosesserBehandlingService, sakRepository, underveisRepository, sakOgBehandlingService, vilkårsresultatRepository, unleashGateway)
     val jobbInput = JobbInput(OpprettBehandlingUtvidVedtakslengdeJobbUtfører)
+
+    @BeforeEach
+    fun setup() {
+        System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
+    }
 
     @Test
     fun `skal oppdatere rettighetsperiode og opprette og sette i gang prosessering av behandling hvis sluttdato er innenfor dagens dato + 28 dager`() {
