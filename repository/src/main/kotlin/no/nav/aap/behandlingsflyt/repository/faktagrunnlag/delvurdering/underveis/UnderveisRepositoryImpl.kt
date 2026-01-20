@@ -126,7 +126,7 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
                 WHERE ug.aktiv = true
                 GROUP BY ug.behandling_id
             )
-            SELECT s.id as sakId, s.rettighetsperiode FROM siste_underveisperiode sup
+            SELECT s.id as sakId FROM siste_underveisperiode sup
                 JOIN behandling b ON sup.behandling_id = b.id
                 JOIN sak s ON b.sak_id = s.id
             WHERE sup.siste_dato < ? AND upper(s.rettighetsperiode) >= ?;

@@ -83,7 +83,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
 
     @Test
     fun `skal ikke opprette og sette i gang prosessering av behandling hvis sluttdato er lenger frem enn dagens dato + 28 dager`() {
-        val sak = sak(Periode(LocalDate.now().minusDays(180), Tid.MAKS))
+        val sak = sak()
         val behandling = behandlingMedVedtak()
 
         every { underveisRepository.hentSakerMedSisteUnderveisperiodeFørDato(any()) } returns setOf(sakId_1)
