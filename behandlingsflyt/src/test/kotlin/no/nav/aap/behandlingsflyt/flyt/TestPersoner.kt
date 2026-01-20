@@ -11,7 +11,7 @@ object TestPersoner {
     val STANDARD_PERSON = {
         FakePersoner.leggTil(
             TestPerson(
-                fødselsdato = `Fødselsdato`(LocalDate.now().minusYears(20)),
+                fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
                 yrkesskade = emptyList(),
                 sykepenger = emptyList()
             )
@@ -21,7 +21,7 @@ object TestPersoner {
     val PERSON_MED_YRKESSKADE = {
         FakePersoner.leggTil(
             TestPerson(
-                fødselsdato = `Fødselsdato`(LocalDate.now().minusYears(25)),
+                fødselsdato = Fødselsdato(LocalDate.now().minusYears(25)),
                 yrkesskade = listOf(TestYrkesskade(skadedato = LocalDate.now().minusYears(1))),
             )
         )
@@ -30,7 +30,7 @@ object TestPersoner {
     val PERSON_FOR_UNG = {
         FakePersoner.leggTil(
             TestPerson(
-                fødselsdato = `Fødselsdato`(LocalDate.now().minusYears(17))
+                fødselsdato = Fødselsdato(LocalDate.now().minusYears(17))
             )
         )
     }
@@ -38,7 +38,7 @@ object TestPersoner {
     val PERSON_62 = {
         FakePersoner.leggTil(
             TestPerson(
-                fødselsdato = `Fødselsdato`(LocalDate.now().minusYears(62))
+                fødselsdato = Fødselsdato(LocalDate.now().minusYears(62))
             )
         )
     }
@@ -46,7 +46,7 @@ object TestPersoner {
     val PERSON_61 = {
         FakePersoner.leggTil(
             TestPerson(
-                fødselsdato = `Fødselsdato`(LocalDate.now().minusYears(61))
+                fødselsdato = Fødselsdato(LocalDate.now().minusYears(61))
             )
         )
     }
@@ -54,7 +54,7 @@ object TestPersoner {
     val PERSON_MED_FORUTGÅENDE_MEDLEMSKAP = {
         FakePersoner.leggTil(
             TestPerson(
-                fødselsdato = `Fødselsdato`(LocalDate.now().minusYears(20)),
+                fødselsdato = Fødselsdato(LocalDate.now().minusYears(20)),
                 yrkesskade = emptyList(),
                 sykepenger = emptyList(),
                 medlStatus = listOf(

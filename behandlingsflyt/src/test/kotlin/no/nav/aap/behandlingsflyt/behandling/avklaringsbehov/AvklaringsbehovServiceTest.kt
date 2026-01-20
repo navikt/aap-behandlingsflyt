@@ -43,7 +43,12 @@ class AvklaringsbehovServiceTest {
         vilkårsresultatRepository = InMemoryVilkårsresultatRepository
         avbrytRevurderingService = mockk()
         every { avbrytRevurderingService.revurderingErAvbrutt(any()) } returns false
-        avklaringsbehovService = AvklaringsbehovService(avbrytRevurderingService)
+        avklaringsbehovService = AvklaringsbehovService(
+            avbrytRevurderingService = avbrytRevurderingService,
+            avklaringsbehovRepository = avklaringsbehovRepository,
+            behandlingRepository = behandlingRepository,
+            vilkårsresultatRepository = vilkårsresultatRepository
+        )
     }
 
     @Test
@@ -67,7 +72,6 @@ class AvklaringsbehovServiceTest {
 
         // Act
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovene,
             definisjon = definisjon,
             vedtakBehøverVurdering = vedtakBehøverVurdering,
             erTilstrekkeligVurdert = erTilstrekkeligVurdert,
@@ -107,7 +111,6 @@ class AvklaringsbehovServiceTest {
 
         // Act
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovene,
             definisjon = definisjon,
             vedtakBehøverVurdering = vedtakBehøverVurdering,
             erTilstrekkeligVurdert = erTilstrekkeligVurdert,
@@ -144,7 +147,6 @@ class AvklaringsbehovServiceTest {
 
         // Act
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovene,
             definisjon = definisjon,
             vedtakBehøverVurdering = vedtakBehøverVurdering,
             erTilstrekkeligVurdert = erTilstrekkeligVurdert,
@@ -179,7 +181,6 @@ class AvklaringsbehovServiceTest {
 
         // Act
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovene,
             definisjon = definisjon,
             vedtakBehøverVurdering = vedtakBehøverVurdering,
             erTilstrekkeligVurdert = erTilstrekkeligVurdert,
@@ -235,9 +236,6 @@ class AvklaringsbehovServiceTest {
         )
 
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
-            avklaringsbehovene = avklaringsbehovene,
-            behandlingRepository = behandlingRepository,
-            vilkårsresultatRepository = vilkårsresultatRepository,
             definisjon = definisjon,
             tvingerAvklaringsbehov = tvingerAvklaringsbehov,
             nårVurderingErRelevant = nårVurderingErRelevant,
@@ -290,9 +288,6 @@ class AvklaringsbehovServiceTest {
         )
 
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
-            avklaringsbehovene = avklaringsbehovene,
-            behandlingRepository = behandlingRepository,
-            vilkårsresultatRepository = vilkårsresultatRepository,
             definisjon = definisjon,
             tvingerAvklaringsbehov = tvingerAvklaringsbehov,
             nårVurderingErRelevant = nårVurderingErRelevant,
@@ -346,9 +341,6 @@ class AvklaringsbehovServiceTest {
         )
 
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
-            avklaringsbehovene = avklaringsbehovene,
-            behandlingRepository = behandlingRepository,
-            vilkårsresultatRepository = vilkårsresultatRepository,
             definisjon = definisjon,
             tvingerAvklaringsbehov = tvingerAvklaringsbehov,
             nårVurderingErRelevant = nårVurderingErRelevant,
@@ -404,9 +396,6 @@ class AvklaringsbehovServiceTest {
         )
 
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
-            avklaringsbehovene = avklaringsbehovene,
-            behandlingRepository = behandlingRepository,
-            vilkårsresultatRepository = vilkårsresultatRepository,
             definisjon = definisjon,
             tvingerAvklaringsbehov = tvingerAvklaringsbehov,
             nårVurderingErRelevant = nårVurderingErRelevant,
@@ -454,9 +443,6 @@ class AvklaringsbehovServiceTest {
         )
 
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
-            avklaringsbehovene = avklaringsbehovene,
-            behandlingRepository = behandlingRepository,
-            vilkårsresultatRepository = vilkårsresultatRepository,
             definisjon = definisjon,
             tvingerAvklaringsbehov = tvingerAvklaringsbehov,
             nårVurderingErRelevant = nårVurderingErRelevant,
@@ -505,9 +491,6 @@ class AvklaringsbehovServiceTest {
         )
 
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
-            avklaringsbehovene = avklaringsbehovene,
-            behandlingRepository = behandlingRepository,
-            vilkårsresultatRepository = vilkårsresultatRepository,
             definisjon = definisjon,
             tvingerAvklaringsbehov = tvingerAvklaringsbehov,
             nårVurderingErRelevant = nårVurderingErRelevant,
