@@ -19,6 +19,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
@@ -32,6 +33,7 @@ import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.type.Periode
@@ -56,6 +58,7 @@ class ManglendeLigningGrunnlagStegTest {
     private lateinit var steg: ManglendeLigningGrunnlagSteg
     private val sakRepository = InMemorySakRepository
     private val behandlingRepository = InMemoryBehandlingRepository
+    private val vilkårsresultatRepository = InMemoryVilkårsresultatRepository
     private lateinit var avbrytRevurderingService: AvbrytRevurderingService
     private lateinit var avklaringsbehovService: AvklaringsbehovService
 
@@ -91,7 +94,7 @@ class ManglendeLigningGrunnlagStegTest {
             every { revurderingErAvbrutt(any()) } returns false
         }
 
-        avklaringsbehovService = AvklaringsbehovService(avbrytRevurderingService)
+        avklaringsbehovService = AvklaringsbehovService(avbrytRevurderingService, avklaringsbehovRepository, behandlingRepository, vilkårsresultatRepository)
 
         steg = ManglendeLigningGrunnlagSteg(
             avklaringsbehovRepository,

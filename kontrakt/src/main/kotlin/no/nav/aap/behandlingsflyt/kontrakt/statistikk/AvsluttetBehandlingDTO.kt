@@ -15,7 +15,14 @@ public data class AvsluttetBehandlingDTO(
     val diagnoser: Diagnoser? = null,
     val rettighetstypePerioder: List<RettighetstypePeriode>,
     val resultat: ResultatKode?,
-    val vedtakstidspunkt: LocalDateTime?
+    val vedtakstidspunkt: LocalDateTime?,
+    val fritaksvurderinger: Iterable<Fritakvurdering>? = null
+)
+
+public data class Fritakvurdering(
+    val harFritak: Boolean,
+    val fraDato: LocalDate,
+    val tilDato: LocalDate? = null,
 )
 
 public enum class ResultatKode {

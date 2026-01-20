@@ -60,10 +60,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
         val grunnlag = lazy { hentGrunnlag(kontekst.sakId, kontekst.behandlingId) }
 
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
-            avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId),
-            behandlingRepository = behandlingRepository,
             definisjon = Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP,
-            vilkårsresultatRepository = vilkårsresultatRepository,
             tvingerAvklaringsbehov = setOf(Vurderingsbehov.REVURDER_MEDLEMSKAP, Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP),
             nårVurderingErRelevant = ::nårVurderingErRelevant,
             nårVurderingErGyldig = { nårVurderingErGyldig(kontekst, grunnlag.value) },

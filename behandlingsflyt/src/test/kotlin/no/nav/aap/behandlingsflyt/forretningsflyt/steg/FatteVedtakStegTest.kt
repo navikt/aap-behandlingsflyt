@@ -47,7 +47,7 @@ class FatteVedtakStegTest {
         every { trekkKlageService.klageErTrukket(any()) } returns false
         every {
             avklaringsbehovService.oppdaterAvklaringsbehov(
-                any(), any(), any(), any(), any(), any()
+                any(), any(), any(), any(), any()
             )
         } returns Unit
     }

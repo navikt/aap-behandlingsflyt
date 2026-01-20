@@ -29,7 +29,6 @@ class TrekkKlageSteg private constructor(
         val trekkKlageGrunnlag = trekkKlageRepository.hentTrekkKlageGrunnlag(kontekst.behandlingId)
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehov,
             definisjon = Definisjon.VURDER_TREKK_AV_KLAGE,
             vedtakBehøverVurdering = { Vurderingsbehov.KLAGE_TRUKKET in kontekst.vurderingsbehovRelevanteForSteg },
             erTilstrekkeligVurdert = { trekkKlageGrunnlag != null },
