@@ -121,7 +121,7 @@ jobs:
             with:
                 fetch-depth: 0
             #  Ha denne tidlig, så action kan skippe raskt om ingen endringer.
-          - uses: paulhatch/semantic-version@v5.4.0
+          - uses: paulhatch/semantic-version@v6.0.0
             id: tag
             with:
                 change_path: "kontrakt/"

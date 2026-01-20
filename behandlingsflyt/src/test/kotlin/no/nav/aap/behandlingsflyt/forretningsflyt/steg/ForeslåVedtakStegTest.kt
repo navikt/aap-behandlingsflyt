@@ -21,6 +21,7 @@ import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.type.Periode
@@ -38,9 +39,13 @@ class ForeslåVedtakStegTest {
         mockk<AvbrytRevurderingService> {
             every { revurderingErAvbrutt(any()) } returns false
         },
-        TrukketSøknadService(
-            InMemoryTrukketSøknadRepository
-        ),
+        avklaringsbehovRepository,
+        behandlingRepository = InMemoryBehandlingRepository,
+        vilkårsresultatRepository = InMemoryVilkårsresultatRepository,
+        trukketSøknadService =
+            TrukketSøknadService(
+                InMemoryTrukketSøknadRepository
+            ),
     )
     private val steg = ForeslåVedtakSteg(avklaringsbehovRepository, FakeTidligereVurderinger(), avklaringsbehovService)
     private val sakRepository = InMemorySakRepository

@@ -64,10 +64,7 @@ class OvergangUføreSteg private constructor(
 
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
-            behandlingRepository = behandlingRepository,
-            vilkårsresultatRepository = vilkårsresultatRepository,
             kontekst = kontekst,
-            avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.AVKLAR_OVERGANG_UFORE,
             tvingerAvklaringsbehov = setOf(
                 Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,

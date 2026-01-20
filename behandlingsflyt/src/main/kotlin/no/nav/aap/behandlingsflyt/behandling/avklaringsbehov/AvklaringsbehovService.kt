@@ -24,15 +24,20 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 class AvklaringsbehovService(
     private val avbrytRevurderingService: AvbrytRevurderingService,
+    private val avklaringsbehovRepository: AvklaringsbehovRepository,
+    private val behandlingRepository: BehandlingRepository,
+    private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val trukketSøknadService: TrukketSøknadService
 ) {
     constructor(repositoryProvider: RepositoryProvider) : this(
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
+        avklaringsbehovRepository = repositoryProvider.provide(),
+        behandlingRepository = repositoryProvider.provide(),
+        vilkårsresultatRepository = repositoryProvider.provide()
         trukketSøknadService = TrukketSøknadService(repositoryProvider)
     )
 
     fun oppdaterAvklaringsbehov(
-        avklaringsbehovene: Avklaringsbehovene,
         definisjon: Definisjon,
         vedtakBehøverVurdering: () -> Boolean,
         erTilstrekkeligVurdert: () -> Boolean,
@@ -40,7 +45,6 @@ class AvklaringsbehovService(
         kontekst: FlytKontekstMedPerioder
     ) {
         oppdaterAvklaringsbehov(
-            avklaringsbehovene,
             definisjon,
             vedtakBehøverVurdering = vedtakBehøverVurdering,
             perioderSomIkkeErTilstrekkeligVurdert = { null },
@@ -64,7 +68,6 @@ class AvklaringsbehovService(
      * ikke er relevant allikevel. Denne funksjonen hjelper også med det.
      */
     private fun oppdaterAvklaringsbehov(
-        avklaringsbehovene: Avklaringsbehovene,
         definisjon: Definisjon,
 
         /** Skal vedtaket inneholde en menneskelig vurdering av [definisjon]?
@@ -105,6 +108,7 @@ class AvklaringsbehovService(
         kontekst: FlytKontekstMedPerioder
     ) {
         require(definisjon.løsesISteg != StegType.UDEFINERT)
+        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
 
         // TODO: Fjern denne når alle kall tar i bruk perioderSomIkkeErTilstrekkeligVurdert
@@ -213,9 +217,6 @@ class AvklaringsbehovService(
     }
 
     private fun oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
-        avklaringsbehovene: Avklaringsbehovene,
-        behandlingRepository: BehandlingRepository,
-        vilkårsresultatRepository: VilkårsresultatRepository,
         definisjon: Definisjon,
         tvingerAvklaringsbehov: Set<Vurderingsbehov>,
         nårVurderingErRelevant: (kontekst: FlytKontekstMedPerioder) -> Tidslinje<Boolean>,
@@ -274,7 +275,6 @@ class AvklaringsbehovService(
         }
 
         oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovene,
             definisjon = definisjon,
             vedtakBehøverVurdering = { behøverVurdering },
             perioderVedtaketBehøverVurdering = { perioderVedtaketBehøverVurdering },
@@ -307,9 +307,6 @@ class AvklaringsbehovService(
      * for eksempel hvis man ikke skal tillate vurderinger utenfor nårVurderingErRelevant
      */
     fun oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
-        avklaringsbehovene: Avklaringsbehovene,
-        behandlingRepository: BehandlingRepository,
-        vilkårsresultatRepository: VilkårsresultatRepository,
         definisjon: Definisjon,
         tvingerAvklaringsbehov: Set<Vurderingsbehov>,
         nårVurderingErRelevant: (kontekst: FlytKontekstMedPerioder) -> Tidslinje<Boolean>,
@@ -318,9 +315,6 @@ class AvklaringsbehovService(
         tilbakestillGrunnlag: () -> Unit
     ) {
         return oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
-            avklaringsbehovene,
-            behandlingRepository,
-            vilkårsresultatRepository,
             definisjon,
             tvingerAvklaringsbehov,
             nårVurderingErRelevant,
@@ -344,9 +338,6 @@ class AvklaringsbehovService(
      * Vurder å skrive om til service, slik at man slipper å injecte inn alle repositoriesene?
      */
     fun oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
-        avklaringsbehovene: Avklaringsbehovene,
-        behandlingRepository: BehandlingRepository,
-        vilkårsresultatRepository: VilkårsresultatRepository,
         definisjon: Definisjon,
         tvingerAvklaringsbehov: Set<Vurderingsbehov>,
         /**
@@ -363,9 +354,6 @@ class AvklaringsbehovService(
         tilbakestillGrunnlag: () -> Unit
     ) {
         oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
-            avklaringsbehovene,
-            behandlingRepository,
-            vilkårsresultatRepository,
             definisjon,
             tvingerAvklaringsbehov,
             nårVurderingErRelevant,

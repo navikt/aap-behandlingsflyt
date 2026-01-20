@@ -37,7 +37,6 @@ class TjenestepensjonRefusjonskravSteg private constructor(
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.SAMORDNING_REFUSJONS_KRAV,
             vedtakBehøverVurdering = {
                 when (kontekst.vurderingType) {

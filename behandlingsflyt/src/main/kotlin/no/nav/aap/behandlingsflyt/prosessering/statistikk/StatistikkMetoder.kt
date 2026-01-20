@@ -17,10 +17,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.dokument.KlagedokumentInformasjonUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetVedtakType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.IKlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageResultatType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.AVSLUTTET
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -30,6 +33,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvsluttetBehandlingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.BeregningsgrunnlagDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Diagnoser
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Fritakvurdering
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Grunnlag11_19DTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.GrunnlagUføreDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.GrunnlagYrkesskadeDTO
@@ -53,6 +57,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.verdityper.dokument.Kanal
 import org.slf4j.LoggerFactory
@@ -72,9 +77,11 @@ class StatistikkMetoder(
     private val meldekortRepository: MeldekortRepository,
     private val påklagetBehandlingRepository: PåklagetBehandlingRepository,
     private val vedtakService: VedtakService,
+    private val klagedokumentInformasjonUtleder: KlagedokumentInformasjonUtleder,
     trukketSøknadService: TrukketSøknadService,
     private val klageresultatUtleder: IKlageresultatUtleder,
-    avbrytRevurderingService: AvbrytRevurderingService
+    avbrytRevurderingService: AvbrytRevurderingService,
+    private val meldepliktRepository: MeldepliktRepository,
 ) {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
@@ -91,8 +98,10 @@ class StatistikkMetoder(
         påklagetBehandlingRepository = repositoryProvider.provide(),
         vedtakService = VedtakService(repositoryProvider),
         trukketSøknadService = TrukketSøknadService(repositoryProvider.provide()),
+        klagedokumentInformasjonUtleder = KlagedokumentInformasjonUtleder(repositoryProvider),
         klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
-        avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider)
+        avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
+        meldepliktRepository = repositoryProvider.provide()
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -122,9 +131,8 @@ class StatistikkMetoder(
             meldekort?.meldekort().orEmpty().toSet().minus(forrigeBehandlingMeldekort?.meldekort().orEmpty().toSet())
                 .toList()
 
-
         val vurderingsbehovForBehandling = utledVurderingsbehovForBehandling(behandling)
-        val statistikkHendelse = StoppetBehandling(
+        return StoppetBehandling(
             saksnummer = hendelse.saksnummer.toString(),
             behandlingType = hendelse.behandlingType,
             behandlingStatus = hendelse.status,
@@ -154,25 +162,35 @@ class StatistikkMetoder(
             },
             søknadIder = søknadIder
         )
-        return statistikkHendelse
     }
 
     private fun relatertBehandling(behandling: Behandling): UUID? {
-        val påklagetBehandlingReferanse = if (behandling.typeBehandling() == TypeBehandling.Klage) {
-            val påklagetBehandling =
-                påklagetBehandlingRepository.hentGjeldendeVurderingMedReferanse(behandling.referanse)
-            påklagetBehandling?.referanse
-        } else null
+        return when (behandling.typeBehandling()) {
+            TypeBehandling.Førstegangsbehandling -> null
+            TypeBehandling.Revurdering -> if (behandling.forrigeBehandlingId != null) behandlingRepository.hent(
+                behandling.forrigeBehandlingId
+            ).referanse.referanse else null
 
-        val forrigeBehandling =
-            if (behandling.forrigeBehandlingId != null) behandlingRepository.hent(behandling.forrigeBehandlingId) else null
+            TypeBehandling.Tilbakekreving -> TODO()
+            TypeBehandling.Klage -> {
+                val påklagetBehandling =
+                    påklagetBehandlingRepository.hentGjeldendeVurderingMedReferanse(behandling.referanse)
 
-        if (forrigeBehandling != null && påklagetBehandlingReferanse != null) {
-            log.error("Fant både forrigeBehandling og påklagetBehandlingReferanse for behandling ${behandling.referanse}. Returnerer forrigeBehandling.")
+                check(påklagetBehandling == null || påklagetBehandling.påklagetVedtakType == PåklagetVedtakType.KELVIN_BEHANDLING) {
+                    "Hvis det klages på en behandling utenfor Kelvin, må dette være synlig i statistikk med referanse til eksternt system."
+                }
+
+                påklagetBehandling?.referanse?.referanse
+            }
+
+            TypeBehandling.SvarFraAndreinstans -> {
+                klagedokumentInformasjonUtleder.utledKlagebehandlingForSvar(behandling.id).referanse
+            }
+
+            TypeBehandling.OppfølgingsBehandling -> null
+            TypeBehandling.Aktivitetsplikt -> null
+            TypeBehandling.Aktivitetsplikt11_9 -> null
         }
-
-        return forrigeBehandling?.referanse?.referanse
-            ?: påklagetBehandlingReferanse?.referanse
     }
 
     private fun utledVurderingsbehovForBehandling(behandling: Behandling): List<no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov> =
@@ -327,7 +345,13 @@ class StatistikkMetoder(
                 )
             }
 
-        val avsluttetBehandlingDTO = AvsluttetBehandlingDTO(
+        val fritaksvurderinger =
+            meldepliktRepository.hentHvisEksisterer(behandling.id)?.tilTidslinje().orEmpty().komprimer()
+                .map { periode, data ->
+                    Fritakvurdering(data.harFritak, periode.fom, periode.tom)
+                }.verdier()
+
+        return AvsluttetBehandlingDTO(
             vilkårsResultat = VilkårsResultatDTO(
                 typeBehandling = behandling.typeBehandling(), vilkår = vilkårsresultat.alle().map { res ->
                     VilkårDTO(
@@ -349,8 +373,8 @@ class StatistikkMetoder(
             rettighetstypePerioder = rettighetstypePerioder,
             resultat = hentResultat(behandling),
             vedtakstidspunkt = vedtakTidspunkt,
+            fritaksvurderinger = fritaksvurderinger
         )
-        return avsluttetBehandlingDTO
     }
 
     private fun hentResultat(behandling: Behandling): ResultatKode? {

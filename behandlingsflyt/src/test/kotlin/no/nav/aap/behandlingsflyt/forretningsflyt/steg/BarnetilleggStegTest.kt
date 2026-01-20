@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
@@ -15,6 +16,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fød
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
@@ -28,6 +30,8 @@ import java.util.*
 
 class BarnetilleggStegTest {
     private lateinit var avklaringsbehovRepository: AvklaringsbehovRepository
+    private lateinit var vilkårsresultatRepository: VilkårsresultatRepository
+    private lateinit var behandlingRepository: BehandlingRepository
     private lateinit var avklaringsbehovService: AvklaringsbehovService
     private lateinit var steg: BarnetilleggSteg
     private lateinit var barnRepository: BarnRepository
@@ -54,7 +58,11 @@ class BarnetilleggStegTest {
             every { muligMedRettTilAAP(any(), StegType.BARNETILLEGG) } returns true
         }
 
-        avklaringsbehovService = AvklaringsbehovService(avbrytRevurderingService, trukketSøknadService)
+        avklaringsbehovRepository = mockk()
+        vilkårsresultatRepository = mockk()
+        behandlingRepository = mockk()
+
+        avklaringsbehovService = AvklaringsbehovService(avbrytRevurderingService, avklaringsbehovRepository, behandlingRepository, vilkårsresultatRepository, trukketSøknadService)
         steg = BarnetilleggSteg(
             barnetilleggService = mockk(),
             barnetilleggRepository = mockk(),

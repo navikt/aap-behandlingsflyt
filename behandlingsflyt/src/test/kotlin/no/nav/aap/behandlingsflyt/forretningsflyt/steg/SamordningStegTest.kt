@@ -88,7 +88,11 @@ class SamordningStegTest {
             AvbrytRevurderingService(
                 avbrytRevurderingRepository
             ),
-            TrukketSøknadService(
+            InMemoryAvklaringsbehovRepository,
+            InMemoryBehandlingRepository,
+            InMemoryVilkårsresultatRepository,
+            ),
+            trukketSøknadService = TrukketSøknadService(
                 trukketSøknadRepository
             ),
         ),
@@ -239,7 +243,6 @@ class SamordningStegTest {
                 vurdertAv = "ident"
             )
         )
-
 
         steg.utfør(flytKontekstMedPerioder(behandling))
         verifiserAvklaringsbehov(behandling, Status.OPPRETTET)

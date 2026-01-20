@@ -14,9 +14,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -38,7 +36,6 @@ import java.time.LocalDate.now
 
 class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
     private val prosesserBehandlingService: ProsesserBehandlingService,
-    private val sakRepository: SakRepository,
     private val underveisRepository: UnderveisRepository,
     private val sakOgBehandlingService: SakOgBehandlingService,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
@@ -66,23 +63,14 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
                 .map { sakId ->
                     val sisteGjeldendeBehandling = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId)
                     if (sisteGjeldendeBehandling != null) {
-                        val sak = sakRepository.hent(sakId)
-                        log.info("Gjeldende behandling for sak $sakId (${sak.saksnummer}) er ${sisteGjeldendeBehandling.id}")
+                        log.info("Gjeldende behandling for sak $sakId er ${sisteGjeldendeBehandling.id}")
 
                         // Trigger behandling som utvider vedtakslengde dersom nødvendig
                         val underveisGrunnlag = underveisRepository.hentHvisEksisterer(sisteGjeldendeBehandling.id)
-                        if (underveisGrunnlag != null && (harBehovForUtvidetVedtakslengde(sisteGjeldendeBehandling.id, sakId, underveisGrunnlag, datoHvorSakerSjekkesForUtvidelse) || sak.rettighetsperiode.tom != Tid.MAKS)) {
-
-                            // Utvider rettighetsperiode til Tid.MAKS dersom denne har en annen verdi - tom her skal
-                            // på sikt fases ut og denne koden kan fjernes når alle saker har Tid.MAKS som tom
-                            if (sak.rettighetsperiode.tom != Tid.MAKS) {
-                                log.info("Utvider rettighetsperiode fra ${sak.rettighetsperiode.tom} til ${Tid.MAKS} for sak ${sakId}")
-                                if (!dryRun) sakRepository.oppdaterRettighetsperiode(sak.id, Periode(sak.rettighetsperiode.fom, Tid.MAKS))
-                            }
-
+                        if (underveisGrunnlag != null && harBehovForUtvidetVedtakslengde(sisteGjeldendeBehandling.id, sakId, underveisGrunnlag, datoHvorSakerSjekkesForUtvidelse)) {
                             log.info("Oppretter behandling for utvidelse av vedtakslengde sak $sakId")
                             if (!dryRun) {
-                                val utvidVedtakslengdeBehandling = opprettNyBehandling(sak)
+                                val utvidVedtakslengdeBehandling = opprettNyBehandling(sakId)
                                 prosesserBehandlingService.triggProsesserBehandling(utvidVedtakslengdeBehandling)
                             }
                             true
@@ -141,7 +129,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
         rettighetstypeTidslinjeForInneværendeBehandling: Tidslinje<RettighetsType>
     ): Boolean {
         return harFremtidigRettOrdinær(forrigeSluttdato, rettighetstypeTidslinjeForInneværendeBehandling)
-                && LocalDate.now(clock).plusDays(28) >= forrigeSluttdato
+                && now(clock).plusDays(28) >= forrigeSluttdato
 
     }
 
@@ -160,9 +148,9 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
 
     }
 
-    private fun opprettNyBehandling(sak: Sak): SakOgBehandlingService.OpprettetBehandling =
+    private fun opprettNyBehandling(sakId: SakId): SakOgBehandlingService.OpprettetBehandling =
         sakOgBehandlingService.finnEllerOpprettBehandling(
-            sakId = sak.id,
+            sakId = sakId,
             vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
                 årsak = ÅrsakTilOpprettelse.UTVID_VEDTAKSLENGDE,
                 vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.UTVID_VEDTAKSLENGDE))
@@ -173,7 +161,6 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
             return OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
                 prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
-                sakRepository = repositoryProvider.provide(),
                 underveisRepository = repositoryProvider.provide(),
                 sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
                 vilkårsresultatRepository = repositoryProvider.provide(),
