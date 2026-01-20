@@ -412,7 +412,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                     ),
                 avklaringsbehovKode = Definisjon.SAMORDNING_ARBEIDSGIVER.kode.toString(),
             ) { behandlingReferanse ->
-                val (samordningArbeidsgiverVurdering, historskeSamordningArbeidsgiverVurderinger,harFåttEkstrautbetalingFraArbeidsgiver) =
+                val (samordningArbeidsgiverVurdering, historskeSamordningArbeidsgiverVurderinger, harFåttEkstrautbetalingFraArbeidsgiver) =
                     dataSource.transaction { connection ->
                         val repositoryProvider = repositoryRegistry.provider(connection)
                         val samordningArbeidsgiverRepository =
