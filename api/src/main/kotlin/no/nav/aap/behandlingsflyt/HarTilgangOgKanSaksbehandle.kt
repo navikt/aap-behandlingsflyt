@@ -5,10 +5,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 
 fun harTilgangOgKanSaksbehandle(harTilgang: Boolean, avklaringsbehovene: Avklaringsbehovene): Boolean {
-    val erFørAvsluttetKvalitetssikring = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.KVALITETSSIKRING)
-        .let { kvalitetssikring ->
-            kvalitetssikring == null || kvalitetssikring.status() != Status.AVSLUTTET
-        }
+    val erFørAvsluttetKvalitetssikring = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.KVALITETSSIKRING) == null
 
     val erReturnertFraBeslutter = avklaringsbehovene.alle()
         .filter { it.kreverKvalitetssikring() }
