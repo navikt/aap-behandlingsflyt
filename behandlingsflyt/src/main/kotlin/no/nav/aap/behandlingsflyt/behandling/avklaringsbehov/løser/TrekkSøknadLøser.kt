@@ -48,15 +48,17 @@ class TrekkSøknadLøser(
 
         val søknader = mottattDokumentRepository.hentDokumenterAvType(kontekst.behandlingId(), InnsendingType.SØKNAD)
         if (søknader.isEmpty()) {
-            log.error("Prøver å trekke søknad, men det finnes ingen søknad knyttet til behandlingen. Sak=${kontekst.kontekst.sakId.id}, behandling=${kontekst.behandlingId().id}")
-
             if (unleashGateway.isEnabled(
                     BehandlingsflytFeature.TrekkSoeknadOpprettetFraLegeerklaering,
                     kontekst.bruker.ident
                 )
             ) {
-                log.info("Forsøker å trekke legeerklæring i stedet for søknad.")
                 forsøkTrekkLegeerklæring(kontekst, løsning)
+            } else {
+                log.error(
+                    "Prøver å trekke søknad, men det finnes ingen søknad knyttet til behandlingen. " +
+                            "Sak=${kontekst.kontekst.sakId.id}, behandling=${kontekst.behandlingId().id}"
+                )
             }
         } else {
             søknader.forEach { søknad ->
@@ -82,6 +84,8 @@ class TrekkSøknadLøser(
         kontekst: AvklaringsbehovKontekst,
         løsning: TrekkSøknadLøsning
     ) {
+        log.info("Ingen søknad funnet for sak ${kontekst.kontekst.sakId.id}. Forsøker å trekke legeerklæring i stedet for søknad.")
+
         val legeerklæring =
             mottattDokumentRepository.hentDokumenterAvType(kontekst.behandlingId(), InnsendingType.LEGEERKLÆRING)
 
