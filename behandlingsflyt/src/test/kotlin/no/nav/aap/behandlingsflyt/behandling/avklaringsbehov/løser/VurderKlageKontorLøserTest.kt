@@ -22,6 +22,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 
 @ExtendWith(MockKExtension::class)
 @MockKExtension.CheckUnnecessaryStub
+@MockKExtension.RequireParallelTesting
 class VurderKlageKontorLøserTest {
     @Test
     fun `løs skal returnere et løsningsresultat når vilkårSomOmgjøres inneholder gyldige hjemler`() {
@@ -31,8 +32,7 @@ class VurderKlageKontorLøserTest {
         val vurderKlageKontorLøser = VurderKlageKontorLøser(klagebehandlingKontorRepositoryMock)
 
         val løsning = vurderKlageKontorLøser.løs(
-            kontekst = lagAvklaringsbehovKontekst(),
-            løsning = VurderKlageKontorLøsning(
+            kontekst = lagAvklaringsbehovKontekst(), løsning = VurderKlageKontorLøsning(
                 klagevurderingKontor = KlagevurderingKontorLøsningDto(
                     begrunnelse = "Begrunnelse for klage",
                     notat = "Notat",
@@ -65,22 +65,19 @@ class VurderKlageKontorLøserTest {
 
         val exception = assertThrows<UgyldigForespørselException> {
             vurderKlageKontorLøser.løs(
-                kontekst = lagAvklaringsbehovKontekst(),
-                løsning = løsning
+                kontekst = lagAvklaringsbehovKontekst(), løsning = løsning
             )
         }
 
         assertThat(exception.message).contains("FOLKETRYGDLOVEN_11_3")
     }
 
-    private fun lagAvklaringsbehovKontekst(): AvklaringsbehovKontekst =
-        AvklaringsbehovKontekst(
-            bruker = Bruker("12345678901"),
-            kontekst = FlytKontekst(
-                sakId = SakId(1L),
-                behandlingId = BehandlingId(1L),
-                forrigeBehandlingId = null,
-                behandlingType = TypeBehandling.Klage
-            )
+    private fun lagAvklaringsbehovKontekst(): AvklaringsbehovKontekst = AvklaringsbehovKontekst(
+        bruker = Bruker("12345678901"), kontekst = FlytKontekst(
+            sakId = SakId(1L),
+            behandlingId = BehandlingId(1L),
+            forrigeBehandlingId = null,
+            behandlingType = TypeBehandling.Klage
         )
+    )
 }

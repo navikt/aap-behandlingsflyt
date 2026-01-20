@@ -18,8 +18,17 @@ value class Hverdager(val asInt: Int) : Comparable<Hverdager> {
             return hverdagerFraOgMed(this).elementAt(hverdager.asInt)
         }
 
+        /**
+         * Skal bare legge til 260 dager første året ettersom Kelvin inkluderer startdato og dermed blir startdato + 260 dager = 261 totalt.
+         * For resterende år er startdato inkludert i forrige periode og det skal legges til riktig antall dagerskal inkludere startdato og derfor får 261 totalt
+         **/
         fun LocalDate.plussEtÅrMedHverdager(årMedHverdager: ÅrMedHverdager): LocalDate {
-            return hverdagerFraOgMed(this).elementAt(årMedHverdager.hverdagerIÅret.asInt)
+            return when(årMedHverdager) {
+                ÅrMedHverdager.FØRSTE_ÅR -> hverdagerFraOgMed(this).elementAt(årMedHverdager.hverdagerIÅret.asInt - 1)
+                ÅrMedHverdager.ANDRE_ÅR ,
+                ÅrMedHverdager.TREDJE_ÅR ,
+                ÅrMedHverdager.ANNET -> hverdagerFraOgMed(this).elementAt(årMedHverdager.hverdagerIÅret.asInt)
+            }
         }
 
         private val hverdagene = listOf(
@@ -49,6 +58,18 @@ value class Hverdager(val asInt: Int) : Comparable<Hverdager> {
             }
         }
     }
+
+    fun fraOgMed(start: LocalDate): LocalDate {
+        val sisteHverdag = hverdagerFraOgMed(start).elementAt(this.asInt - 1)
+        /** Dette bevarer adferden som er implementert for kvoter,  altså at vi velger
+         * siste dag før kvoten er brukt opp.
+         **/
+        return if (sisteHverdag.dayOfWeek == DayOfWeek.FRIDAY) {
+            sisteHverdag.plusDays(2)
+        } else {
+            sisteHverdag
+        }
+    }
 }
 
 /**
@@ -64,7 +85,7 @@ enum class ÅrMedHverdager(val hverdagerIÅret: Hverdager){
 
 enum class Kvote(val avslagsårsak: VarighetVurdering.Avslagsårsak, val tellerMotKvote: (Vurdering) -> Boolean) {
     ORDINÆR(VarighetVurdering.Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP, ::skalTelleMotOrdinærKvote),
-    STUDENT(VarighetVurdering.Avslagsårsak.STUDENTKVOTE_BRUKT_OPP, ::skalTelleMotStudentKvote),
+    STUDENT(VarighetVurdering.Avslagsårsak.STUDENTKVOTE_BRUKT_OPP, { false }),
     ETABLERINGSFASE(VarighetVurdering.Avslagsårsak.ETABLERINGSFASEKVOTE_BRUKT_OPP, { false }),
     UTVIKLINGSFASE(VarighetVurdering.Avslagsårsak.UTVIKLINGSFASEKVOTE_BRUKT_OPP, { false }),
     SYKEPENGEERSTATNING(
@@ -78,10 +99,6 @@ private fun skalTelleMotOrdinærKvote(vurdering: Vurdering): Boolean {
         RettighetsType.BISTANDSBEHOV,
         RettighetsType.STUDENT
     ) && !skalTelleMotSykepengeKvote(vurdering)
-}
-
-private fun skalTelleMotStudentKvote(vurdering: Vurdering): Boolean {
-    return vurdering.harRett() && vurdering.preliminærRettighetsType() == RettighetsType.STUDENT
 }
 
 private fun skalTelleMotSykepengeKvote(vurdering: Vurdering): Boolean {
@@ -111,7 +128,6 @@ data class KvoteTilstand(
 
 class Telleverk private constructor(
     private val ordinærkvote: KvoteTilstand,
-    private val studentkvote: KvoteTilstand,
     private val utviklingsfasekvote: KvoteTilstand,
     private val etableringsfasekvote: KvoteTilstand,
     private val sykepengeerstatningkvote: KvoteTilstand
@@ -120,10 +136,6 @@ class Telleverk private constructor(
         ordinærkvote = KvoteTilstand(
             kvote = Kvote.ORDINÆR,
             hverdagerTilgjengelig = kvoter.ordinærkvote,
-        ),
-        studentkvote = KvoteTilstand(
-            kvote = Kvote.STUDENT,
-            hverdagerTilgjengelig = kvoter.studentkvote,
         ),
         utviklingsfasekvote = KvoteTilstand(
             kvote = Kvote.UTVIKLINGSFASE,
@@ -142,7 +154,6 @@ class Telleverk private constructor(
     private fun <T> map(relevanteKvoter: Set<Kvote>, action: (KvoteTilstand) -> T): List<T> {
         return listOfNotNull(
             if (Kvote.ORDINÆR in relevanteKvoter) action(ordinærkvote) else null,
-            if (Kvote.STUDENT in relevanteKvoter) action(studentkvote) else null,
             if (Kvote.ETABLERINGSFASE in relevanteKvoter) action(etableringsfasekvote) else null,
             if (Kvote.UTVIKLINGSFASE in relevanteKvoter) action(utviklingsfasekvote) else null,
             if (Kvote.SYKEPENGEERSTATNING in relevanteKvoter) action(sykepengeerstatningkvote) else null,

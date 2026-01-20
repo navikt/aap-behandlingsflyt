@@ -12,7 +12,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Klage
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRevurdering
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelseV0
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -96,8 +95,6 @@ class HendelseMottattHåndteringJobbUtfører(
                 håndterMottattDokumentService.håndterMottattTilbakekrevingHendelse(
                     sakId = sakId,
                     referanse = referanse,
-                    mottattTidspunkt = mottattTidspunkt,
-                    brevkategori = innsendingType,
                     melding = parsedMelding as TilbakekrevingHendelseV0,
                 )
             }
@@ -106,8 +103,6 @@ class HendelseMottattHåndteringJobbUtfører(
                 håndterMottattDokumentService.håndterMottattTilbakekrevingHendelse(
                     sakId = sakId,
                     referanse = referanse,
-                    mottattTidspunkt = mottattTidspunkt,
-                    brevkategori = innsendingType,
                     melding = parsedMelding as FagsysteminfoBehovV0,
                 )
             }

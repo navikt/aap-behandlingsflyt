@@ -115,7 +115,7 @@ class SakOgBehandlingService(
     private val fasttrackKandidater = listOf(
         Vurderingsbehov.FRITAK_MELDEPLIKT,
         Vurderingsbehov.MOTTATT_MELDEKORT,
-        Vurderingsbehov.AUTOMATISK_OPPDATER_VILKÅR,
+        Vurderingsbehov.UTVID_VEDTAKSLENGDE,
         Vurderingsbehov.FASTSATT_PERIODE_PASSERT,
         Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT,
         Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9,
@@ -301,7 +301,8 @@ class SakOgBehandlingService(
         vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak,
     ): Behandling {
         check(!trukketSøknadService.søknadErTrukket(sisteYtelsesbehandling.id)) {
-            "ikke lov å opprette revurdering for trukket søknad ${sisteYtelsesbehandling.sakId}"
+            "ikke lov å opprette revurdering for trukket søknad ${sisteYtelsesbehandling.sakId} " +
+                    "(vurderingsbehov=${vurderingsbehovOgÅrsak.vurderingsbehov}, årsak=${vurderingsbehovOgÅrsak.årsak})"
         }
         return behandlingRepository.opprettBehandling(
             sakId = sisteYtelsesbehandling.sakId,

@@ -38,7 +38,7 @@ class TilbakekrevingRepositoryImpl(private val connection: DBConnection) : Tilba
                 setLocalDateTime(4, tilbakekrevingshendelse.hendelseOpprettet)
                 setString(5, tilbakekrevingshendelse.eksternBehandlingId)
                 setLocalDateTime(6, tilbakekrevingshendelse.sakOpprettet)
-                setLocalDateTime(7, tilbakekrevingshendelse.varselSendt)
+                setLocalDate(7, tilbakekrevingshendelse.varselSendt)
                 setEnumName(8, tilbakekrevingshendelse.behandlingsstatus)
                 setBigDecimal(9, tilbakekrevingshendelse.totaltFeilutbetaltBeløp.verdi)
                 setString(10, tilbakekrevingshendelse.tilbakekrevingSaksbehandlingUrl.toString())
@@ -82,7 +82,7 @@ class TilbakekrevingRepositoryImpl(private val connection: DBConnection) : Tilba
                 setLocalDateTime(4, tilbakekrevingshendelse.hendelseOpprettet)
                 setString(5, tilbakekrevingshendelse.eksternBehandlingId)
                 setLocalDateTime(6, tilbakekrevingshendelse.sakOpprettet)
-                setLocalDateTime(7, tilbakekrevingshendelse.varselSendt)
+                setLocalDate(7, tilbakekrevingshendelse.varselSendt)
                 setEnumName(8, tilbakekrevingshendelse.behandlingsstatus)
                 setBigDecimal(9, tilbakekrevingshendelse.totaltFeilutbetaltBeløp.verdi)
                 setString(10, tilbakekrevingshendelse.tilbakekrevingSaksbehandlingUrl.toString())
@@ -119,7 +119,7 @@ class TilbakekrevingRepositoryImpl(private val connection: DBConnection) : Tilba
                     hendelseOpprettet = row.getLocalDateTime("HENDELSE_OPPRETTET"),
                     eksternBehandlingId = row.getStringOrNull("EKSTERN_BEHANDLING_ID"),
                     sakOpprettet = row.getLocalDateTime("SAK_OPPRETTET"),
-                    varselSendt = row.getLocalDateTimeOrNull("VARSEL_SENDT"),
+                    varselSendt = row.getLocalDateOrNull("VARSEL_SENDT"),
                     behandlingsstatus = row.getEnum("BEHANDLINGSSTATUS"),
                     totaltFeilutbetaltBeløp = Beløp(row.getBigDecimal("TOTALT_FEILUTBETALT_BELOP")),
                     saksbehandlingURL = URI.create(row.getString("TILBAKEKREVING_SAKSBEHANDLING_URL")), fullstendigPeriode = row.getPeriode("FULLSTENDIG_PERIODE")

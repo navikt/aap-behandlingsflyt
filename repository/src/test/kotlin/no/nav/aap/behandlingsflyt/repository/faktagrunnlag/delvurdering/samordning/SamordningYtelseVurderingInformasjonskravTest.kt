@@ -9,8 +9,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingInformasjonskrav.Companion.harEndringerIYtelserIkkeDekketAvEksisterendeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingInformasjonskrav.Companion.harEndringerIYtelserIkkeDekketAvManuelleVurderinger
-import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
-import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.juli
@@ -18,17 +16,15 @@ import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.behandlingsflyt.test.oktober
 import no.nav.aap.behandlingsflyt.test.september
-import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertDoesNotThrow
-import java.time.LocalDate
 
 class SamordningYtelseVurderingInformasjonskravTest {
 
@@ -245,12 +241,12 @@ class SamordningYtelseVurderingInformasjonskravTest {
             )
         )
 
-        assertTrue(
+        assertThat(
             harEndringerIYtelserIkkeDekketAvEksisterendeGrunnlag(
                 eksisterendeGrunnlag,
                 setOf(nyYtelse)
             )
-        )
+        ).isTrue
     }
 
 
@@ -293,12 +289,12 @@ class SamordningYtelseVurderingInformasjonskravTest {
             )
         )
 
-        assertTrue(
+        assertThat(
             harEndringerIYtelserIkkeDekketAvEksisterendeGrunnlag(
                 eksisterendeGrunnlag,
                 setOf(nyYtelse)
             )
-        )
+        ).isTrue
     }
 
     @Test
@@ -336,7 +332,8 @@ class SamordningYtelseVurderingInformasjonskravTest {
     fun ` ingen overlapp med eksisterende ytelser når det ikke finnes ytelser fra før`() {
         val eksisterendeGrunnlag = SamordningYtelseGrunnlag(
             grunnlagId = 1L,
-            ytelser = emptySet())
+            ytelser = emptySet()
+        )
 
         val nyYtelse = SamordningYtelse(
             ytelseType = Ytelse.SYKEPENGER,

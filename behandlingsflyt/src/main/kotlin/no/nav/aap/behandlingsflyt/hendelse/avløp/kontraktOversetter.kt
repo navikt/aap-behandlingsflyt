@@ -53,6 +53,7 @@ fun sortererteAvklaringsbehov(
     .sortedWith(behandling.flyt().avklaringsbehovComparator)
     .map { avklaringsbehov ->
         AvklaringsbehovHendelseDto(
+            id = avklaringsbehov.id,
             avklaringsbehovDefinisjon = avklaringsbehov.definisjon,
             status = avklaringsbehov.status(),
             endringer = avklaringsbehov.historikk.map { endring ->

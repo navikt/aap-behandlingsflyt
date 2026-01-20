@@ -21,7 +21,6 @@ class FullmektigSteg private constructor(
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene,
             definisjon = Definisjon.FASTSETT_FULLMEKTIG,
             vedtakBehøverVurdering = { !trekkKlageService.klageErTrukket(kontekst.behandlingId) },
             erTilstrekkeligVurdert = { true },

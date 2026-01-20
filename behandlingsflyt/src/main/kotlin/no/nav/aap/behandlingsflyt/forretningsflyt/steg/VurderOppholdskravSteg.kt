@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
-import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlagRepository
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.tilTidslinje
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
@@ -45,9 +44,6 @@ class VurderOppholdskravSteg private constructor(
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
-            avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId),
-            behandlingRepository = behandlingRepository,
-            vilkårsresultatRepository = vilkårsresultatRepository,
             kontekst = kontekst,
             definisjon = Definisjon.AVKLAR_OPPHOLDSKRAV,
             tvingerAvklaringsbehov = setOf(Vurderingsbehov.OPPHOLDSKRAV),
@@ -63,7 +59,7 @@ class VurderOppholdskravSteg private constructor(
 
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
-            VurderingType.AUTOMATISK_OPPDATER_VILKÅR,
+            VurderingType.UTVID_VEDTAKSLENGDE,
             VurderingType.REVURDERING -> {
                 val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
                 Oppholdskravvilkår(vilkårsresultat).vurder(OppholdskravvilkårGrunnlag(

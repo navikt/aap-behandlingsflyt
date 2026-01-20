@@ -21,6 +21,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGateway as IInstitusjonsoppholdGateway
 
 class InstitusjonsoppholdInformasjonskrav private constructor(
@@ -30,6 +31,9 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
     private val tidligereVurderinger: TidligereVurderinger,
 ) : Informasjonskrav<InstitusjonsoppholdInformasjonskrav.Input, InstitusjonsoppholdInformasjonskrav.InstitusjonsoppholdRegisterdata>,
     KanTriggeRevurdering {
+
+    private val logger = LoggerFactory.getLogger(this::class.java)
+
     override val navn = Companion.navn
 
     override fun erRelevant(
@@ -56,7 +60,17 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
         return InstitusjonsoppholdRegisterdata(
             opphold = institusjonsoppholdRegisterGateway
                 .innhent(sak.person)
-                .filter { it.periode().overlapper(sak.rettighetsperiode) }
+                .filter {
+                    try {
+                        it.periode().overlapper(sak.rettighetsperiode)
+                    } catch (e: IllegalArgumentException) {
+                        logger.error(
+                            "Ugyldig periode for institusjonsopphold funnet i sak ${sak.id} og ignoreres (startdato=${it.startdato}, sluttdato=${it.sluttdato}",
+                            e
+                        )
+                        false
+                    }
+                }
         )
     }
 

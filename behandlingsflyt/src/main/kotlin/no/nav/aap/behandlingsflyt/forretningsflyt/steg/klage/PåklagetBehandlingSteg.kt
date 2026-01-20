@@ -22,7 +22,6 @@ class PåklagetBehandlingSteg private constructor(
         val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehov,
             definisjon = Definisjon.FASTSETT_PÅKLAGET_BEHANDLING,
             vedtakBehøverVurdering = { !trekkKlageService.klageErTrukket(kontekst.behandlingId)},
             erTilstrekkeligVurdert = { true },

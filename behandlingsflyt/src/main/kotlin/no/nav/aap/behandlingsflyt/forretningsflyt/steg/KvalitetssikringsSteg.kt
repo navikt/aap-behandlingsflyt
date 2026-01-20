@@ -48,7 +48,6 @@ class KvalitetssikringsSteg private constructor(
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.KVALITETSSIKRING,
             vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst, avklaringsbehovene) },
             erTilstrekkeligVurdert = { erTilstrekkeligVurdert(avklaringsbehovene) },

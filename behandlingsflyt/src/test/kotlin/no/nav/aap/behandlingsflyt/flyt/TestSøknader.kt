@@ -11,14 +11,14 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UtenlandsPeriodeD
 import java.time.LocalDate
 
 object TestSøknader {
-    val STANDARD_SØKNAD = `SøknadV0`(
-        student = `SøknadStudentDto`(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
-        medlemskap = `SøknadMedlemskapDto`("JA", "JA", "NEI", "NEI", null)
+    val STANDARD_SØKNAD = SøknadV0(
+        student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
+        medlemskap = SøknadMedlemskapDto("JA", "JA", "NEI", "NEI", null)
     )
 
-    val SØKNAD_INGEN_MEDLEMSKAP = `SøknadV0`(
-        student = `SøknadStudentDto`(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
-        medlemskap = `SøknadMedlemskapDto`(
+    val SØKNAD_INGEN_MEDLEMSKAP = SøknadV0(
+        student = SøknadStudentDto(StudentStatus.Nei), yrkesskade = "NEI", oppgitteBarn = null,
+        medlemskap = SøknadMedlemskapDto(
             "JA", null, "JA", null,
             listOf(
                 UtenlandsPeriodeDto(
@@ -34,15 +34,15 @@ object TestSøknader {
         )
     )
 
-    val SØKNAD_STUDENT = `SøknadV0`(
-        student = `SøknadStudentDto`(StudentStatus.Ja, KommeTilbake.Ja),
+    val SØKNAD_STUDENT = SøknadV0(
+        student = SøknadStudentDto(StudentStatus.Ja, KommeTilbake.Ja),
         yrkesskade = "NEI",
         oppgitteBarn = null,
-        medlemskap = `SøknadMedlemskapDto`("JA", "NEI", "NEI", "NEI", null)
+        medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
     )
 
-    val SØKNAD_MED_BARN: (List<Pair<String, LocalDate>>) -> `SøknadV0` = { barn ->
-        `SøknadV0`(
+    val SØKNAD_MED_BARN: (List<Pair<String, LocalDate>>) -> SøknadV0 = { barn ->
+        SøknadV0(
             student = null,
             yrkesskade = "NEI",
             oppgitteBarn = OppgitteBarn(
@@ -56,7 +56,7 @@ object TestSøknader {
                     )
                 }
             ),
-            medlemskap = `SøknadMedlemskapDto`("JA", "NEI", "NEI", "NEI", null)
+            medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)
         )
     }
 

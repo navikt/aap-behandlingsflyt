@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.behandling.arbeidsevne
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -34,65 +33,31 @@ fun NormalOpenAPIRoute.arbeidsevneGrunnlagApi(
             avklaringsbehovKode = Definisjon.FASTSETT_ARBEIDSEVNE.kode.toString()
 
         ) { behandlingReferanse ->
+            val arbeidsevneGrunnlag = dataSource.transaction { connection ->
+                val repositoryProvider = repositoryRegistry.provider(connection)
+                val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                val sakRepository = repositoryProvider.provide<SakRepository>()
+                val arbeidsevneRepository = repositoryProvider.provide<ArbeidsevneRepository>()
+                val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
 
-            respond(
-                arbeidsevneGrunnlag(
-                    dataSource,
-                    behandlingReferanse,
-                    kanSaksbehandle(),
-                    repositoryRegistry,
-                    gatewayProvider
+                val behandling: Behandling =
+                    BehandlingReferanseService(behandlingRepository).behandling(behandlingReferanse)
+                val sak = sakRepository.hent(behandling.sakId)
+
+                val nåTilstand = arbeidsevneRepository.hentHvisEksisterer(behandling.id)?.vurderinger
+                val forrigeGrunnlag = behandling.forrigeBehandlingId?.let { arbeidsevneRepository.hentHvisEksisterer(it) }
+                val nyeVurderinger = nåTilstand?.filter { it.vurdertIBehandling == behandling.id } ?: emptyList()
+
+                ArbeidsevneGrunnlagDto(
+                    harTilgangTilÅSaksbehandle = kanSaksbehandle(),
+                    kanVurderes = listOf(sak.rettighetsperiode),
+                    behøverVurderinger = emptyList(),
+                    nyeVurderinger = nyeVurderinger.map { it.toResponse(vurdertAvService) },
+                    sisteVedtatteVurderinger = forrigeGrunnlag?.gjeldendeVurderinger().orEmpty().toResponse(vurdertAvService),
                 )
-            )
+            }
+
+            respond(arbeidsevneGrunnlag)
         }
-    }
-}
-
-private fun arbeidsevneGrunnlag(
-    dataSource: DataSource,
-    behandlingReferanse: BehandlingReferanse,
-    kanSaksbehandle: Boolean,
-    repositoryRegistry: RepositoryRegistry,
-    gatewayProvider: GatewayProvider,
-): ArbeidsevneGrunnlagDto {
-    return dataSource.transaction { connection ->
-        val repositoryProvider = repositoryRegistry.provider(connection)
-        val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-        val sakRepository = repositoryProvider.provide<SakRepository>()
-        val arbeidsevneRepository = repositoryProvider.provide<ArbeidsevneRepository>()
-        val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
-
-        val behandling: Behandling =
-            BehandlingReferanseService(behandlingRepository).behandling(behandlingReferanse)
-        val sak = sakRepository.hent(behandling.sakId)
-
-        val nåTilstand = arbeidsevneRepository.hentHvisEksisterer(behandling.id)?.vurderinger
-        val forrigeGrunnlag = behandling.forrigeBehandlingId?.let { arbeidsevneRepository.hentHvisEksisterer(it) }
-
-        val vedtatteVerdier =
-            behandling.forrigeBehandlingId?.let { arbeidsevneRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
-        val historikk = arbeidsevneRepository.hentAlleVurderinger(behandling.sakId, behandling.id)
-
-        val nyeVurderinger = nåTilstand?.filter { it.vurdertIBehandling == behandling.id } ?: emptyList()
-
-        ArbeidsevneGrunnlagDto(
-            harTilgangTilÅSaksbehandle = kanSaksbehandle,
-            historikk = historikk.map { it.toDto() }.sortedBy { it.vurderingsTidspunkt }.toSet(),
-            vurderinger =
-                nåTilstand
-                    ?.filterNot { vedtatteVerdier.contains(it) }
-                    ?.map { it.toDto(AnsattInfoService(gatewayProvider).hentAnsattNavnOgEnhet(it.vurdertAv)) }
-                    ?.sortedBy { it.fraDato }
-                    .orEmpty(),
-            gjeldendeVedtatteVurderinger =
-                vedtatteVerdier
-                    .map { it.toDto() }
-                    .sortedBy { it.fraDato },
-            kanVurderes = listOf(sak.rettighetsperiode),
-            behøverVurderinger = emptyList(),
-            nyeVurderinger = nyeVurderinger.map { it.toResponse(vurdertAvService) },
-            sisteVedtatteVurderinger = forrigeGrunnlag?.gjeldendeVurderinger().orEmpty().toResponse(vurdertAvService),
-            kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(Definisjon.FASTSETT_ARBEIDSEVNE, behandling.id)
-        )
     }
 }

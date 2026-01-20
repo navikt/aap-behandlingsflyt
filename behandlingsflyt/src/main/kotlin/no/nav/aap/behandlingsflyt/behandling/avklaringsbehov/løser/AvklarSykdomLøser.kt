@@ -47,29 +47,13 @@ class AvklarSykdomLøser(
             gjeldendeVurderinger
         )
 
-        return when (val validertLøsning = løsning.valider()) {
-            is Validation.Invalid -> throw UgyldigForespørselException(validertLøsning.errorMessage)
-            is Validation.Valid -> {
-                sykdomRepository.lagre(
-                    behandlingId = behandling.id,
-                    sykdomsvurderinger = gjeldendeVurderinger,
-                )
-                LøsningsResultat(
-                    begrunnelse = "Vurdering av § 11-5"
-                )
-            }
-        }
-    }
-
-    private fun AvklarSykdomLøsning.valider(): Validation<AvklarSykdomLøsning> {
-        if (løsningerForPerioder.isEmpty()) {
-            return Validation.Invalid(this, "Må sende inn minst én sykdomsvurdering")
-        }
-        if (løsningerForPerioder.map { it.fom }.distinct().size != løsningerForPerioder.size) {
-            return Validation.Invalid(this, "Vurderingene må ha unik 'vurderingenGjelderFra'-dato")
-        }
-        // TODO: Bør ha validering på konsistente verdier
-        return Validation.Valid(this)
+        sykdomRepository.lagre(
+            behandlingId = behandling.id,
+            sykdomsvurderinger = gjeldendeVurderinger,
+        )
+        return LøsningsResultat(
+            begrunnelse = "Vurdering av § 11-5"
+        )
     }
 
     private fun validerSykdomOgYrkesskadeKonsistens(

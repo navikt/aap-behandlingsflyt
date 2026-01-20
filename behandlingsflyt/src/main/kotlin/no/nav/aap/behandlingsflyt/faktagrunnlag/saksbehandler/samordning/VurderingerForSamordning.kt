@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning
 
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.type.Periode
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -13,16 +14,18 @@ data class VurderingerForSamordning(
     val fristNyRevurdering: LocalDate? = null,
     val vurderteSamordningerData: List<SamordningVurderingData>
 ) {
-    init {
+    fun valider() {
         vurderteSamordningerData.groupBy { it.ytelseType }.forEach { (_, samordninger) ->
             // VERIFISER INGEN OVERLAPP
-            val sortedPerioder = samordninger.map { it.periode }.sortedBy { it.fom }
-
-            for (i in 0 until sortedPerioder.size - 1) {
-                val current = sortedPerioder[i]
-                val next = sortedPerioder[i + 1]
-                require(!current.overlapper(next)) { "Perioder kan ikke overlappe for samme ytelsetype: $current og $next" }
-            }
+            samordninger
+                .map { it.periode }
+                .sortedBy { it.fom }
+                .windowed(2)
+                .forEach { (current, next) ->
+                    if (current.overlapper(next)) {
+                        throw UgyldigForespørselException("Perioder kan ikke overlappe for samme ytelsetype: $current og $next")
+                    }
+                }
         }
     }
 }

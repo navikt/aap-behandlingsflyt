@@ -53,7 +53,6 @@ class SykestipendSteg private constructor(
         }
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.AVKLAR_SAMORDNING_SYKESTIPEND,
             vedtakBehøverVurdering = {
                 when (kontekst.vurderingType) {
@@ -64,9 +63,11 @@ class SykestipendSteg private constructor(
 
                     VurderingType.REVURDERING ->
                         tidligereVurderinger.muligMedRettTilAAP(kontekst, type())
+                                && (studentGrunnlag?.vurderinger?.any { it.erOppfylt() } == true
+                                || sykestipendRepository.hentHvisEksisterer(kontekst.behandlingId) != null)
                                 && kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty()
 
-                    VurderingType.AUTOMATISK_OPPDATER_VILKÅR,
+                    VurderingType.UTVID_VEDTAKSLENGDE,
                     VurderingType.MELDEKORT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
@@ -91,17 +92,17 @@ class SykestipendSteg private constructor(
             },
             kontekst
         )
-        
+
         vurderSamordningAnnenLovgivningVilkår(kontekst)
-        
+
         return Fullført
     }
-    
+
     // Bør kanskje inn i et eget steg?
     private fun vurderSamordningAnnenLovgivningVilkår(kontekst: FlytKontekstMedPerioder) {
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
         vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.SAMORDNING_ANNEN_LOVGIVNING)
-        
+
         val grunnlag = SamordningAnnenLovgivningFaktagrunnlag(
             kontekst.rettighetsperiode,
             sykestipendRepository.hentHvisEksisterer(kontekst.behandlingId),

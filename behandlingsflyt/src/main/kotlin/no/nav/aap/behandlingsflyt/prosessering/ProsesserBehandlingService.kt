@@ -6,8 +6,11 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
@@ -33,42 +36,49 @@ class ProsesserBehandlingService(
 
     fun triggProsesserBehandling(
         opprettetBehandling: SakOgBehandlingService.OpprettetBehandling,
+        vurderingsbehov: List<Vurderingsbehov> = emptyList(),
         parameters: List<Pair<String, String>> = emptyList()
     ) {
 
         when (opprettetBehandling) {
             is SakOgBehandlingService.Ordinær -> triggProsesserBehandling(
-                opprettetBehandling.åpenBehandling,
-                parameters
+                opprettetBehandling.åpenBehandling, vurderingsbehov, parameters
             )
 
             is SakOgBehandlingService.MåBehandlesAtomært -> kjørAtomærBehandling(opprettetBehandling)
         }
     }
 
-    fun triggProsesserBehandling(behandling: Behandling, parameters: List<Pair<String, String>> = emptyList()) {
-        triggProsesserBehandling(behandling.sakId, behandling.id, parameters)
+    fun triggProsesserBehandling(
+        behandling: Behandling,
+        vurderingsbehov: List<Vurderingsbehov> = emptyList(),
+        parameters: List<Pair<String, String>> = emptyList()
+    ) {
+        triggProsesserBehandling(behandling.sakId, behandling.id, vurderingsbehov, parameters)
     }
 
     fun triggProsesserBehandling(
         sakId: SakId,
         behandlingId: BehandlingId,
+        vurderingsbehov: List<Vurderingsbehov> = emptyList(),
         parameters: List<Pair<String, String>> = emptyList()
     ) {
-        val eksisterendeJobber = flytJobbRepository
-            .hentJobberForBehandling(behandlingId.toLong())
+        val eksisterendeJobber = flytJobbRepository.hentJobberForBehandling(behandlingId.toLong())
             .filter { it.type() == ProsesserBehandlingJobbUtfører.type }
 
         if (eksisterendeJobber.isNotEmpty()) {
-            log.info("Har planlagt eksisterende kjøring, planlegger ikke en ny. {}", eksisterendeJobber)
-            /* Når vi returnerer her mister vi triggerne. Er det problematisk? */
+            log.info(
+                "Har planlagt eksisterende kjøring, planlegger ikke en ny. {}",
+                eksisterendeJobber
+            )/* Når vi returnerer her mister vi triggerne. Er det problematisk? */
             return
         }
 
         val jobbInput = JobbInput(jobb = ProsesserBehandlingJobbUtfører).forBehandling(
-            sakId.toLong(),
-            behandlingId.toLong()
-        ).medCallId()
+            sakId.toLong(), behandlingId.toLong()
+        )
+            .medCallId()
+            .medParameter("trigger", DefaultJsonMapper.toJson(vurderingsbehov))
 
         parameters.forEach {
             jobbInput.medParameter(it.first, it.second)
@@ -97,11 +107,21 @@ class ProsesserBehandlingService(
             val kontekst = atomærFlytOrkestrator.opprettKontekst(åpenBehandling.sakId, åpenBehandling.id)
             atomærFlytOrkestrator.tilbakeførEtterAtomærBehandling(kontekst)
             triggProsesserBehandling(åpenBehandling, emptyList())
-        } else {
+        } else if (skalInnhenteInformasjon(opprettetBehandling.nyBehandling.vurderingsbehov().map { it.type })) {
             flytJobbRepository.leggTil(
                 JobbInput(jobb = OppdagEndretInformasjonskravJobbUtfører).forSak(
                     sakId = behandling.sakId.toLong(),
                 ).medCallId()
+            )
+        }
+    }
+
+    private fun skalInnhenteInformasjon(vurderingsbehov: List<Vurderingsbehov>): Boolean {
+        return vurderingsbehov.any {
+            it in listOf(
+                Vurderingsbehov.MOTTATT_MELDEKORT,
+                Vurderingsbehov.FRITAK_MELDEPLIKT,
+                Vurderingsbehov.FASTSATT_PERIODE_PASSERT
             )
         }
     }
