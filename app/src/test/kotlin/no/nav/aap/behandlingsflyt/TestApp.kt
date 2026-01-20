@@ -136,7 +136,24 @@ fun main() {
                             respondWithStatus(HttpStatusCode.BadRequest)
                         }
                     }
+                }
 
+                route("/endre/{saksnummer}/legg-til-yrkesskade") {
+                    post<SaksnummerParameter, Unit, Unit> { param, _ ->
+                        val ident = hentIdentForSak(Saksnummer(param.saksnummer))
+
+                        val fakePersoner = JSONTestPersonService()
+                        val oppdatertPerson = fakePersoner.hentPerson(ident)
+                            ?.medYrkesskade(TestYrkesskade())
+
+                        if (oppdatertPerson != null) {
+                            fakePersoner.oppdater(oppdatertPerson)
+                            respondWithStatus(HttpStatusCode.OK)
+                        } else {
+                            log.warn("Finner ikke person med ident $ident for å legge til yrkesskade")
+                            respondWithStatus(HttpStatusCode.BadRequest)
+                        }
+                    }
                 }
             }
         }

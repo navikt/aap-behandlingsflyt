@@ -30,6 +30,7 @@ import java.time.ZoneOffset
 
 @ExtendWith(MockKExtension::class)
 @MockKExtension.CheckUnnecessaryStub
+@MockKExtension.RequireParallelTesting
 class AvklarSykdomLøserTest {
 
     private val behandlingMock = mockk<BehandlingRepository>()

@@ -132,7 +132,7 @@ class StatistikkMetoder(
                 .toList()
 
         val vurderingsbehovForBehandling = utledVurderingsbehovForBehandling(behandling)
-        val statistikkHendelse = StoppetBehandling(
+        return StoppetBehandling(
             saksnummer = hendelse.saksnummer.toString(),
             behandlingType = hendelse.behandlingType,
             behandlingStatus = hendelse.status,
@@ -162,7 +162,6 @@ class StatistikkMetoder(
             },
             søknadIder = søknadIder
         )
-        return statistikkHendelse
     }
 
     private fun relatertBehandling(behandling: Behandling): UUID? {
