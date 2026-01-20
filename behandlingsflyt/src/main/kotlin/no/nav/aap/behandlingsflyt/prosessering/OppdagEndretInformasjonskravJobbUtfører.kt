@@ -56,7 +56,7 @@ class OppdagEndretInformasjonskravJobbUtfører(
                 sakId,
                 VurderingsbehovOgÅrsak(vurderingsbehov, ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA)
             )
-            log.info("Opprettet revurdering for sak $sakId med behov $vurderingsbehov. Behandling: ${revurdering.referanse}.")
+            log.info("Fant endringer i $sakId med behov $vurderingsbehov. Behandling: ${revurdering.referanse}.")
             secureLogger.info("" + vurderingsbehov)
             prosesserBehandlingService.triggProsesserBehandling(
                 revurdering,
