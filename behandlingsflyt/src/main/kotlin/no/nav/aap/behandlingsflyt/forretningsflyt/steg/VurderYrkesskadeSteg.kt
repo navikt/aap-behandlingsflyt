@@ -41,7 +41,6 @@ class VurderYrkesskadeSteg private constructor(
         val sykdomsgrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.AVKLAR_YRKESSKADE,
             vedtakBehøverVurdering = {
                 behøverVurdering(

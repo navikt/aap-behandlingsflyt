@@ -129,7 +129,7 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
             SELECT s.id as sakId, s.rettighetsperiode FROM siste_underveisperiode sup
                 JOIN behandling b ON sup.behandling_id = b.id
                 JOIN sak s ON b.sak_id = s.id
-            WHERE sup.siste_dato < ? AND upper(s.rettighetsperiode) > ?;
+            WHERE sup.siste_dato < ? AND upper(s.rettighetsperiode) >= ?;
         """.trimIndent()
 
         return connection.queryList(query) {
