@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -14,6 +15,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvbrytRevurderingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -29,6 +31,7 @@ class AvklaringsbehovServiceTest {
     private val avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
     private val vilkårsresultatRepository = InMemoryVilkårsresultatRepository
     private val avbrytRevurderingService = AvbrytRevurderingService(InMemoryAvbrytRevurderingRepository)
+    private val trukketSøknadServce =  TrukketSøknadService(InMemoryTrukketSøknadRepository)
     private lateinit var avklaringsbehovService: AvklaringsbehovService
 
     @BeforeEach
@@ -37,7 +40,8 @@ class AvklaringsbehovServiceTest {
             avbrytRevurderingService = avbrytRevurderingService,
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
             behandlingRepository = InMemoryBehandlingRepository,
-            vilkårsresultatRepository = vilkårsresultatRepository
+            vilkårsresultatRepository = vilkårsresultatRepository,
+            trukketSøknadService = trukketSøknadServce
         )
     }
 

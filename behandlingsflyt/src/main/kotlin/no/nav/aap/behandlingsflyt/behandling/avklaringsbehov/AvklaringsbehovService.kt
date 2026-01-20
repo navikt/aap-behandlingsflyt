@@ -33,7 +33,7 @@ class AvklaringsbehovService(
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
         avklaringsbehovRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
-        vilkårsresultatRepository = repositoryProvider.provide()
+        vilkårsresultatRepository = repositoryProvider.provide(),
         trukketSøknadService = TrukketSøknadService(repositoryProvider)
     )
 

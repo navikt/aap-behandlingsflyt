@@ -91,7 +91,6 @@ class SamordningStegTest {
             InMemoryAvklaringsbehovRepository,
             InMemoryBehandlingRepository,
             InMemoryVilkårsresultatRepository,
-            ),
             trukketSøknadService = TrukketSøknadService(
                 trukketSøknadRepository
             ),
