@@ -30,10 +30,16 @@ class SykepengeerstatningVilkår(vilkårsresultat: Vilkårsresultat) :
             sisteMuligDagMedYtelse = grunnlag.rettighetsperiode.tom
         ).orEmpty()
 
-        val tidslinje = Tidslinje.zip3(sykdomsvurderingTidslinje, sykepengeerstatningTidslinje, yrkesskadevurderingTidslinje)
-            .mapValue { (sykdomsvurdering, sykepengeerstatningVurdering, yrkesskadevurdering) ->
-                opprettVilkårsvurdering(sykdomsvurdering, sykepengeerstatningVurdering, yrkesskadevurdering, grunnlag)
-            }
+        val tidslinje =
+            Tidslinje.zip3(sykdomsvurderingTidslinje, sykepengeerstatningTidslinje, yrkesskadevurderingTidslinje)
+                .mapValue { (sykdomsvurdering, sykepengeerstatningVurdering, yrkesskadevurdering) ->
+                    opprettVilkårsvurdering(
+                        sykdomsvurdering,
+                        sykepengeerstatningVurdering,
+                        yrkesskadevurdering,
+                        grunnlag
+                    )
+                }
         vilkår.leggTilVurderinger(tidslinje)
     }
 
@@ -43,8 +49,21 @@ class SykepengeerstatningVilkår(vilkårsresultat: Vilkårsresultat) :
         yrkesskadeVurdering: Yrkesskadevurdering?,
         grunnlag: SykepengerErstatningFaktagrunnlag,
     ): Vilkårsvurdering {
-        return if (sykepengeerstatningVurdering?.harRettPå == true &&
-            sykdomsvurdering?.erOppfyltOrdinærtEllerMedYrkesskadeSettBortFraVissVarighet(yrkesskadeVurdering) ?: false
+
+        return if (sykepengeerstatningVurdering == null) {
+            Vilkårsvurdering(
+                Vilkårsperiode(
+                    periode = grunnlag.rettighetsperiode,
+                    utfall = Utfall.IKKE_VURDERT,
+                    begrunnelse = null,
+                    innvilgelsesårsak = null,
+                    avslagsårsak = null,
+                    faktagrunnlag = grunnlag,
+                )
+            )
+        } else if (sykepengeerstatningVurdering.harRettPå && sykdomsvurdering?.erOppfyltOrdinærtEllerMedYrkesskadeSettBortFraVissVarighet(
+                yrkesskadeVurdering
+            ) ?: false
         ) {
             Vilkårsvurdering(
                 Vilkårsperiode(
@@ -69,4 +88,5 @@ class SykepengeerstatningVilkår(vilkårsresultat: Vilkårsresultat) :
             )
         }
     }
+
 }
