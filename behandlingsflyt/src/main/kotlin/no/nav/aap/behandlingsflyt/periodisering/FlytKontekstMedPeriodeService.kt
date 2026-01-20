@@ -15,13 +15,14 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.REVURDERING
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.UTVID_VEDTAKSLENGDE
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class FlytKontekstMedPeriodeService(
     private val sakService: SakService,
     private val behandlingRepository: BehandlingRepository,
 ) {
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         sakService = SakService(repositoryProvider),
         behandlingRepository = repositoryProvider.provide(),
     )
