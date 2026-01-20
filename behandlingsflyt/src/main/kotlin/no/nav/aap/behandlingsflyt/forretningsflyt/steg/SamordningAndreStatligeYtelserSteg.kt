@@ -24,7 +24,6 @@ class SamordningAndreStatligeYtelserSteg(
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId),
             definisjon = Definisjon.SAMORDNING_ANDRE_STATLIGE_YTELSER,
             vedtakBehøverVurdering = {
                 when (kontekst.vurderingType) {

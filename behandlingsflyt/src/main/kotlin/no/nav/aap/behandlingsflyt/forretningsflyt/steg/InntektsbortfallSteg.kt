@@ -42,7 +42,6 @@ class InntektsbortfallSteg private constructor(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId),
             definisjon = Definisjon.VURDER_INNTEKTSBORTFALL,
             vedtakBehøverVurdering = {
                 val kravOmInntektsbortfallEnabled =

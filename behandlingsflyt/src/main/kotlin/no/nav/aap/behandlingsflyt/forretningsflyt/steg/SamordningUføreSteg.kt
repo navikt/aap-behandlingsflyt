@@ -39,7 +39,6 @@ class SamordningUføreSteg(
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.AVKLAR_SAMORDNING_UFØRE,
             vedtakBehøverVurdering = {
                 when (kontekst.vurderingType) {

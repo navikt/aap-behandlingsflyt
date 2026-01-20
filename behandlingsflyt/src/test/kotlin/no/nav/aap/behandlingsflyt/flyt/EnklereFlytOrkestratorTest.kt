@@ -174,7 +174,7 @@ class EnklereFlytOrkestratorTest {
     }
 
     @Test
-    fun `skal gå gjennom alle stegene definert i beandlings`() {
+    fun `skal gå gjennom alle stegene definert i behandlingsflyt`() {
         val person = Person(UUID.randomUUID(), listOf(genererIdent(LocalDate.now().minusYears(23))))
 
         val sak = sakRepository.finnEllerOpprett(person, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))

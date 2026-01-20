@@ -5,6 +5,6 @@ import no.nav.aap.behandlingsflyt.flyt.BehandlingType
 
 object Førstegangsbehandling : BehandlingType {
     override fun flyt(): BehandlingFlyt {
-        return Revurdering.flyt().utenVurderingsbehov()
+        return Revurdering.flyt()
     }
 }

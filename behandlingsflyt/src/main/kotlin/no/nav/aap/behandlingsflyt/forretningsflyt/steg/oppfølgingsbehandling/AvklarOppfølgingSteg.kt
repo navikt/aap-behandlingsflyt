@@ -42,7 +42,6 @@ class AvklarOppfølgingSteg(
                 "Oppfølgingsoppgavedokument var null i steg ${type()}. BehandlingId: ${kontekst.behandlingId}"
             }
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovene,
             definisjon = when (oppfølgingsoppgavedokument.hvemSkalFølgeOpp) {
                 HvemSkalFølgeOpp.Lokalkontor -> Definisjon.AVKLAR_OPPFØLGINGSBEHOV_LOKALKONTOR
                 HvemSkalFølgeOpp.NasjonalEnhet -> Definisjon.AVKLAR_OPPFØLGINGSBEHOV_NAY

@@ -57,7 +57,6 @@ class ManglendeLigningGrunnlagSteg internal constructor(
         val inntektGrunnlag = inntektGrunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.FASTSETT_MANUELL_INNTEKT,
             vedtakBehøverVurdering = {
                 when (kontekst.vurderingType) {

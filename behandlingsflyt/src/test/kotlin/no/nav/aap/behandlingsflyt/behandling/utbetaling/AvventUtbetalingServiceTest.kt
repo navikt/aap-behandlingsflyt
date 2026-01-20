@@ -38,6 +38,7 @@ import kotlin.test.Test
 
 @ExtendWith(MockKExtension::class)
 @MockKExtension.CheckUnnecessaryStub
+@MockKExtension.RequireParallelTesting
 @Execution(ExecutionMode.SAME_THREAD)
 class AvventUtbetalingServiceTest {
 

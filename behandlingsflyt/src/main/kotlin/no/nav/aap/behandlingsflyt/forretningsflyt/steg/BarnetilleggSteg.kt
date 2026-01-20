@@ -48,7 +48,6 @@ class BarnetilleggSteg(
         val barnetilgangTidslinje = beregnOgOppdaterBarnetilleggTidslinje(kontekst)
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.AVKLAR_BARNETILLEGG,
             vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst) },
             erTilstrekkeligVurdert = { !harPerioderMedBarnTilAvklaring(barnetilgangTidslinje) },

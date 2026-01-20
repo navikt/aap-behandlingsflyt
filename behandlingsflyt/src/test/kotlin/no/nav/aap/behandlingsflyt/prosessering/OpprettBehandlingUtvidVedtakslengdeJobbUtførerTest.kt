@@ -10,7 +10,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
@@ -34,6 +33,7 @@ import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.motor.JobbInput
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDate
@@ -47,7 +47,6 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
     private val behandlingId = BehandlingId(1L)
 
     val prosesserBehandlingService = mockk<ProsesserBehandlingService>()
-    val sakRepository = mockk<SakRepository>()
     val underveisRepository = mockk<UnderveisRepository>()
     val sakOgBehandlingService = mockk<SakOgBehandlingService>()
     val vilkårsresultatRepository = mockk<VilkårsresultatRepository>()
@@ -55,11 +54,17 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
         every { isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeJobb) } returns true
     }
     val opprettBehandlingUtvidVedtakslengdeJobbUtfører =
-        OpprettBehandlingUtvidVedtakslengdeJobbUtfører(prosesserBehandlingService, sakRepository, underveisRepository, sakOgBehandlingService, vilkårsresultatRepository, unleashGateway)
+        OpprettBehandlingUtvidVedtakslengdeJobbUtfører(prosesserBehandlingService, underveisRepository, sakOgBehandlingService, vilkårsresultatRepository, unleashGateway)
     val jobbInput = JobbInput(OpprettBehandlingUtvidVedtakslengdeJobbUtfører)
 
+    // TODO kan fjernes når vi ikke lenger har miljøspesifikke filter i OpprettBehandlingUtvidVedtakslengdeJobbUtfører
+    @BeforeEach
+    fun setup() {
+        System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
+    }
+
     @Test
-    fun `skal oppdatere rettighetsperiode og opprette og sette i gang prosessering av behandling hvis sluttdato er innenfor dagens dato + 28 dager`() {
+    fun `skal opprette og sette i gang prosessering av behandling hvis sluttdato er innenfor dagens dato + 28 dager`() {
         val sak = sak()
         val behandling = behandlingMedVedtak()
 
@@ -68,19 +73,16 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
         every { sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sakId_1) } returns behandling()
         every { sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId_1) } returns behandlingMedVedtak()
         every { sakOgBehandlingService.finnEllerOpprettBehandling(sak.id, any()) } returns opprettetBehandling()
-        every { sakRepository.hent(sakId_1) } returns sak
-        every { sakRepository.oppdaterRettighetsperiode(sak.id, any()) } just Runs
         every { prosesserBehandlingService.triggProsesserBehandling(any<SakOgBehandlingService.OpprettetBehandling>()) } just Runs
         every { vilkårsresultatRepository.hent(behandlingId) } returns genererVilkårsresultat(sak.rettighetsperiode)
 
         opprettBehandlingUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
 
-        verify(exactly = 1) { sakRepository.oppdaterRettighetsperiode(sakId_1, Periode(sak.rettighetsperiode.fom, Tid.MAKS)) }
         verify(exactly = 1) { prosesserBehandlingService.triggProsesserBehandling(any<SakOgBehandlingService.OpprettetBehandling>()) }
     }
 
     @Test
-    fun `skal oppdatere rettighetsperiode og opprette og sette i gang prosessering av behandling hvis rettighetsperiode ikke har fom satt til Tid_MAX`() {
+    fun `skal ikke opprette og sette i gang prosessering av behandling hvis sluttdato er lenger frem enn dagens dato + 28 dager`() {
         val sak = sak()
         val behandling = behandlingMedVedtak()
 
@@ -89,35 +91,11 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
         every { sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sakId_1) } returns behandling()
         every { sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId_1) } returns behandlingMedVedtak()
         every { sakOgBehandlingService.finnEllerOpprettBehandling(sak.id, any()) } returns opprettetBehandling()
-        every { sakRepository.hent(sakId_1) } returns sak
-        every { sakRepository.oppdaterRettighetsperiode(sak.id, any()) } just Runs
         every { prosesserBehandlingService.triggProsesserBehandling(any<SakOgBehandlingService.OpprettetBehandling>()) } just Runs
         every { vilkårsresultatRepository.hent(behandlingId) } returns genererVilkårsresultat(sak.rettighetsperiode)
 
         opprettBehandlingUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
 
-        verify(exactly = 1) { sakRepository.oppdaterRettighetsperiode(sakId_1, Periode(sak.rettighetsperiode.fom, Tid.MAKS)) }
-        verify(exactly = 1) { prosesserBehandlingService.triggProsesserBehandling(any<SakOgBehandlingService.OpprettetBehandling>()) }
-    }
-
-    @Test
-    fun `skal ikke opprette og sette i gang prosessering av behandling hvis sluttdato er lenger frem enn dagens dato + 28 dager`() {
-        val sak = sak(Periode(LocalDate.now().minusDays(180), Tid.MAKS))
-        val behandling = behandlingMedVedtak()
-
-        every { underveisRepository.hentSakerMedSisteUnderveisperiodeFørDato(any()) } returns setOf(sakId_1)
-        every { underveisRepository.hentHvisEksisterer(behandling.id)} returns underveisGrunnlag(perioder = underveisPerioderIkkeUtløpt())
-        every { sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sakId_1) } returns behandling()
-        every { sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId_1) } returns behandlingMedVedtak()
-        every { sakOgBehandlingService.finnEllerOpprettBehandling(sak.id, any()) } returns opprettetBehandling()
-        every { sakRepository.hent(sakId_1) } returns sak
-        every { sakRepository.oppdaterRettighetsperiode(sak.id, any()) } just Runs
-        every { prosesserBehandlingService.triggProsesserBehandling(any<SakOgBehandlingService.OpprettetBehandling>()) } just Runs
-        every { vilkårsresultatRepository.hent(behandlingId) } returns genererVilkårsresultat(sak.rettighetsperiode)
-
-        opprettBehandlingUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
-
-        verify(exactly = 0) { sakRepository.oppdaterRettighetsperiode(sakId_1, Periode(sak.rettighetsperiode.fom, Tid.MAKS)) }
         verify(exactly = 0) { prosesserBehandlingService.triggProsesserBehandling(any<SakOgBehandlingService.OpprettetBehandling>()) }
     }
 
@@ -131,37 +109,12 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
     }
 
     @Test
-    fun `skal ikke oppdatere rettighetsperiode dersom tom allerede er Tid_MAKS`() {
-        val sak = sak(
-            rettighetsperiode = Periode(LocalDate.now().minusDays(180), Tid.MAKS)
-        )
-        val behandling = behandlingMedVedtak()
-
-        every { underveisRepository.hentSakerMedSisteUnderveisperiodeFørDato(any()) } returns setOf(sakId_1)
-        every { underveisRepository.hentHvisEksisterer(behandling.id)} returns underveisGrunnlag()
-        every { sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sakId_1) } returns behandling()
-        every { sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId_1) } returns behandlingMedVedtak()
-        every { sakOgBehandlingService.finnEllerOpprettBehandling(sak.id, any()) } returns opprettetBehandling()
-        every { sakRepository.hent(sakId_1) } returns sak
-        every { prosesserBehandlingService.triggProsesserBehandling(any<SakOgBehandlingService.OpprettetBehandling>()) } just Runs
-        every { vilkårsresultatRepository.hent(behandlingId) } returns genererVilkårsresultat(sak.rettighetsperiode)
-
-        opprettBehandlingUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
-
-        verify(exactly = 0) { sakRepository.oppdaterRettighetsperiode(sakId_1, any()) }
-        verify(exactly = 1) { prosesserBehandlingService.triggProsesserBehandling(any<SakOgBehandlingService.OpprettetBehandling>()) }
-    }
-
-    @Test
     fun `skal ikke kjøre jobb for behandlinger hvor siste behandling er åpen`() {
-        val sak = sak()
-
         every { underveisRepository.hentSakerMedSisteUnderveisperiodeFørDato(any()) } returns setOf(sakId_1)
         every { sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sakId_1) } returns behandling(status = Status.UTREDES)
 
         opprettBehandlingUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
 
-        verify(exactly = 0) { sakRepository.oppdaterRettighetsperiode(sakId_1, Periode(sak.rettighetsperiode.fom, Tid.MAKS)) }
         verify(exactly = 0) { prosesserBehandlingService.triggProsesserBehandling(any<SakOgBehandlingService.OpprettetBehandling>()) }
     }
 
@@ -190,9 +143,9 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
             virkningstidspunkt = null,
             vurderingsbehov = setOf(),
             årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD
-    )
+        )
 
-    private fun sak(rettighetsperiode: Periode = Periode(LocalDate.now().minusDays(180), LocalDate.now().plusDays(10))) =
+    private fun sak(rettighetsperiode: Periode = Periode(LocalDate.now().minusDays(180), Tid.MAKS)) =
         Sak(
             id = sakId_1,
             saksnummer = Saksnummer("123"),

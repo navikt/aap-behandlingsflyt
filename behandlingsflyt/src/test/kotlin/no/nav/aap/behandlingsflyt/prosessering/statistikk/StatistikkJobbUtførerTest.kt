@@ -24,6 +24,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReposito
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.dokument.KlagedokumentInformasjonUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.IKlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageResultat
@@ -81,6 +82,7 @@ import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMeldekortRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMeldepliktRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMottattDokumentRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTilkjentYtelseRepository
@@ -506,6 +508,7 @@ class StatistikkJobbUtførerTest {
                 ),
                 resultat = ResultatKode.INNVILGET,
                 vedtakstidspunkt = vedtakstidspunkt,
+                fritaksvurderinger = emptyList()
             )
         )
     }
@@ -624,7 +627,9 @@ class StatistikkJobbUtførerTest {
                 klageresultatUtleder = DummyKlageresultatUtleder(),
                 avbrytRevurderingService = AvbrytRevurderingService(inMemoryRepositoryProvider),
                 meldekortRepository = InMemoryMeldekortRepository,
+                klagedokumentInformasjonUtleder = KlagedokumentInformasjonUtleder(inMemoryRepositoryProvider),
                 vedtakService = VedtakService(inMemoryRepositoryProvider),
+                meldepliktRepository = InMemoryMeldepliktRepository,
             )
         )
 

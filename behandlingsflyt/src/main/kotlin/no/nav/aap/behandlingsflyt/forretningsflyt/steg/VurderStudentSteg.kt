@@ -36,7 +36,6 @@ class VurderStudentSteg private constructor(
         val studentGrunnlag = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.AVKLAR_STUDENT,
             vedtakBehøverVurdering = {
                 when (kontekst.vurderingType) {

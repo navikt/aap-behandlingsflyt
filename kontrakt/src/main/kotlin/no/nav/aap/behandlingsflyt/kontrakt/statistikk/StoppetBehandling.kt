@@ -29,6 +29,7 @@ public data class StoppetBehandling(
     val sakStatus: SakStatus,
     val behandlingReferanse: UUID,
     val relatertBehandling: UUID? = null,
+    val relatertFagsystem: String? = "KELVIN",
     val behandlingOpprettetTidspunkt: LocalDateTime,
     val mottattTid: LocalDateTime,
     val tidspunktSisteEndring: LocalDateTime? = null,

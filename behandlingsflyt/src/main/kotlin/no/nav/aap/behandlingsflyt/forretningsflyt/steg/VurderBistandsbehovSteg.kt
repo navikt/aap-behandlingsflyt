@@ -52,9 +52,6 @@ class VurderBistandsbehovSteg(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
-            avklaringsbehovene = avklaringsbehovene,
-            behandlingRepository = behandlingRepository,
-            vilkårsresultatRepository = vilkårsresultatRepository,
             definisjon = Definisjon.AVKLAR_BISTANDSBEHOV,
             tvingerAvklaringsbehov = kontekst.vurderingsbehovRelevanteForSteg,
             nårVurderingErRelevant = ::perioderHvorBistandsvilkåretErRelevant,

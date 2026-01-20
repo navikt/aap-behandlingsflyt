@@ -36,7 +36,6 @@ class UnderveisSteg(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         underveisService.vurder(kontekst.sakId, kontekst.behandlingId)
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId),
             definisjon = Definisjon.FORESLÅ_UTTAK,
             vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst) },
             erTilstrekkeligVurdert = {

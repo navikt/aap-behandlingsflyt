@@ -29,6 +29,7 @@ import java.time.LocalDate
 
 @ExtendWith(MockKExtension::class)
 @MockKExtension.CheckUnnecessaryStub
+@MockKExtension.RequireParallelTesting
 class FatteVedtakStegTest {
 
     val klageresultatUtleder = mockk<KlageresultatUtleder>(relaxed = true)
@@ -46,7 +47,7 @@ class FatteVedtakStegTest {
         every { trekkKlageService.klageErTrukket(any()) } returns false
         every {
             avklaringsbehovService.oppdaterAvklaringsbehov(
-                any(), any(), any(), any(), any(), any()
+                any(), any(), any(), any(), any()
             )
         } returns Unit
     }

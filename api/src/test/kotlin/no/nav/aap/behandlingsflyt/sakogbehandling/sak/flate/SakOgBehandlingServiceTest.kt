@@ -103,7 +103,7 @@ class SakOgBehandlingServiceTest {
             hendelseOpprettet = LocalDateTime.now(),
             eksternBehandlingId = UUID.randomUUID().toString(),
             sakOpprettet = LocalDateTime.now(),
-            varselSendt = LocalDateTime.now(),
+            varselSendt = LocalDate.now(),
             behandlingsstatus = TilbakekrevingBehandlingsstatus.OPPRETTET,
             totaltFeilutbetaltBeløp = Beløp(1000),
             tilbakekrevingSaksbehandlingUrl = URI.create("https://localhost"),

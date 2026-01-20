@@ -23,7 +23,6 @@ class SamordningArbeidsgiverSteg(
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId),
             definisjon = Definisjon.SAMORDNING_ARBEIDSGIVER,
             vedtakBehøverVurdering = {
                 when (kontekst.vurderingType) {

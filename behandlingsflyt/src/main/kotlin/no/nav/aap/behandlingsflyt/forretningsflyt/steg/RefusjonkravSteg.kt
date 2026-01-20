@@ -34,7 +34,6 @@ class RefusjonkravSteg private constructor(
         val grunnlag = lazy { refusjonkravRepository.hentHvisEksisterer(kontekst.behandlingId) }
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId),
             definisjon = Definisjon.REFUSJON_KRAV,
             vedtakBehøverVurdering = {
                 when (kontekst.vurderingType) {

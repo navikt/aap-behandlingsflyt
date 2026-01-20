@@ -39,7 +39,6 @@ class RettighetsperiodeSteg(
         val rettighetsperiodeVurdering = rettighetsperiodeRepository.hentVurdering(kontekst.behandlingId)
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovene,
             kontekst = kontekst,
             definisjon = Definisjon.VURDER_RETTIGHETSPERIODE,
             vedtakBehøverVurdering = {

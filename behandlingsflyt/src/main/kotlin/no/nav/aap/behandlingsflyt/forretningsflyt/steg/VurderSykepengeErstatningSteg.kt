@@ -67,9 +67,6 @@ class VurderSykepengeErstatningSteg private constructor(
 
         if (unleashGateway.isEnabled(BehandlingsflytFeature.PeriodisertSykepengeErstatningNyAvklaringsbehovService)) {
             avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
-                avklaringsbehovene = avklaringsbehovene,
-                behandlingRepository = behandlingRepository,
-                vilkårsresultatRepository = vilkårsresultatRepository,
                 definisjon = Definisjon.AVKLAR_SYKEPENGEERSTATNING,
                 tvingerAvklaringsbehov = setOf(Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING),
                 nårVurderingErRelevant = ::perioderMedVurderingsbehov,
@@ -83,9 +80,6 @@ class VurderSykepengeErstatningSteg private constructor(
             )
         } else {
             avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
-                avklaringsbehovene = avklaringsbehovene,
-                behandlingRepository = behandlingRepository,
-                vilkårsresultatRepository = vilkårsresultatRepository,
                 definisjon = Definisjon.AVKLAR_SYKEPENGEERSTATNING,
                 tvingerAvklaringsbehov = setOf(Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING),
                 nårVurderingErRelevant = ::perioderMedVurderingsbehov,
