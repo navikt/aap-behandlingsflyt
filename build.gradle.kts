@@ -1,9 +1,11 @@
-// top-level build gradle
+// Kotlin konfigurasjonen er gitt av pluginen 'aap.conventions' i buildSrc
+// og settings.gradle.kts
 
 plugins {
     base
     `maven-publish`
     id("org.cyclonedx.bom") version "3.1.0"
+    id("aap.conventions")
 }
 
 // Produser en SBOM (Software Bill of Materials) og last den opp som et Maven-artifact
@@ -40,5 +42,16 @@ publishing {
                 password = System.getenv("GITHUB_TOKEN")
             }
         }
+    }
+}
+
+subprojects {
+    // no-op; just ensuring subprojects are configured
+}
+
+// Call the tasks of the subprojects
+for (taskName in listOf<String>("clean", "build", "check")) {
+    tasks.named(taskName) {
+        dependsOn(subprojects.map { it.path + ":$taskName" })
     }
 }
