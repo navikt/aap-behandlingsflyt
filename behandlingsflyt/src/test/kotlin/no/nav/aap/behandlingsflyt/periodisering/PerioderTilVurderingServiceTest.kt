@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.periodisering
 
+import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
@@ -43,7 +44,8 @@ class PerioderTilVurderingServiceTest {
         )
 
         val flytKontekstMedPeriodeService = FlytKontekstMedPeriodeService(
-            inMemoryRepositoryProvider
+            inMemoryRepositoryProvider,
+            createGatewayProvider { }
         )
 
         val res = flytKontekstMedPeriodeService.utled(
