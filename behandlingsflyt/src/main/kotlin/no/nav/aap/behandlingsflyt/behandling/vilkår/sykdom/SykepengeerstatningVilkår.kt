@@ -30,10 +30,16 @@ class SykepengeerstatningVilkår(vilkårsresultat: Vilkårsresultat) :
             sisteMuligDagMedYtelse = grunnlag.rettighetsperiode.tom
         ).orEmpty()
 
-        val tidslinje = Tidslinje.zip3(sykdomsvurderingTidslinje, sykepengeerstatningTidslinje, yrkesskadevurderingTidslinje)
-            .mapValue { (sykdomsvurdering, sykepengeerstatningVurdering, yrkesskadevurdering) ->
-                opprettVilkårsvurdering(sykdomsvurdering, sykepengeerstatningVurdering, yrkesskadevurdering, grunnlag)
-            }
+        val tidslinje =
+            Tidslinje.zip3(sykdomsvurderingTidslinje, sykepengeerstatningTidslinje, yrkesskadevurderingTidslinje)
+                .mapValue { (sykdomsvurdering, sykepengeerstatningVurdering, yrkesskadevurdering) ->
+                    opprettVilkårsvurdering(
+                        sykdomsvurdering,
+                        sykepengeerstatningVurdering,
+                        yrkesskadevurdering,
+                        grunnlag
+                    )
+                }
         vilkår.leggTilVurderinger(tidslinje)
     }
 
@@ -44,7 +50,7 @@ class SykepengeerstatningVilkår(vilkårsresultat: Vilkårsresultat) :
         grunnlag: SykepengerErstatningFaktagrunnlag,
     ): Vilkårsvurdering {
 
-        return if ( sykepengeerstatningVurdering == null) {
+        return if (sykepengeerstatningVurdering == null) {
             Vilkårsvurdering(
                 Vilkårsperiode(
                     periode = grunnlag.rettighetsperiode,
@@ -55,8 +61,9 @@ class SykepengeerstatningVilkår(vilkårsresultat: Vilkårsresultat) :
                     faktagrunnlag = grunnlag,
                 )
             )
-        } else if (sykepengeerstatningVurdering.harRettPå == true &&
-            sykdomsvurdering?.erOppfyltOrdinærtEllerMedYrkesskadeSettBortFraVissVarighet(yrkesskadeVurdering) ?: false
+        } else if (sykepengeerstatningVurdering.harRettPå && sykdomsvurdering?.erOppfyltOrdinærtEllerMedYrkesskadeSettBortFraVissVarighet(
+                yrkesskadeVurdering
+            ) ?: false
         ) {
             Vilkårsvurdering(
                 Vilkårsperiode(
