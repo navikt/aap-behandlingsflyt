@@ -29,6 +29,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.Client
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import org.slf4j.LoggerFactory
 import java.math.BigDecimal
 import java.net.URI
 import java.time.Duration
@@ -41,13 +42,13 @@ class ApiInternGatewayImpl() : ApiInternGateway {
             return ApiInternGatewayImpl()
         }
 
-        private val log = org.slf4j.LoggerFactory.getLogger(javaClass)
-
         private val arenaStatusCache = Caffeine.newBuilder()
             .expireAfterWrite(Duration.ofHours(2))
             .maximumSize(10_000)
             .build<Set<String>, ArenaStatusResponse>()
     }
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     private val restClient = RestClient.withDefaultResponseHandler(
         config = ClientConfig(scope = requiredConfigForKey("integrasjon.datadeling.scope")),
