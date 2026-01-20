@@ -37,7 +37,6 @@ class TjenestepensjonRefusjonskravSteg private constructor(
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.SAMORDNING_REFUSJONS_KRAV,
             vedtakBehøverVurdering = {
                 when (kontekst.vurderingType) {
@@ -51,7 +50,7 @@ class TjenestepensjonRefusjonskravSteg private constructor(
                         }
                     }
 
-                    VurderingType.AUTOMATISK_OPPDATER_VILKÅR,
+                    VurderingType.UTVID_VEDTAKSLENGDE,
                     VurderingType.MELDEKORT,
                     VurderingType.AUTOMATISK_BREV,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,

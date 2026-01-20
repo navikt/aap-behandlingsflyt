@@ -22,6 +22,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 
 @ExtendWith(MockKExtension::class)
 @MockKExtension.CheckUnnecessaryStub
+@MockKExtension.RequireParallelTesting
 class VurderFormkravLøserTest {
     private val formkravRepositoryMock = mockk<FormkravRepository>()
     private val avklaringsbehovRepositoryMock = mockk<AvklaringsbehovRepository>()

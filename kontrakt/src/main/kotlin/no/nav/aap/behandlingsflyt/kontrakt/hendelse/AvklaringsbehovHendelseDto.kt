@@ -11,27 +11,11 @@ import java.time.LocalDateTime
  * @param endringer Alle endringer som har skjedd på en gitt behandling.
  */
 public data class AvklaringsbehovHendelseDto(
+    val id: Long? = null,
     val avklaringsbehovDefinisjon: Definisjon,
     val status: Status,
     val endringer: List<EndringDTO>
 )
-
-@Deprecated("Ikke i bruk.")
-public enum class TypeBrev {
-    VEDTAK_AVSLAG,
-    VEDTAK_INNVILGELSE,
-    VEDTAK_11_18,
-    VEDTAK_11_7,
-    VEDTAK_11_9,
-    VEDTAK_ENDRING,
-    VARSEL_OM_BESTILLING,
-    FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT,
-    KLAGE_AVVIST,
-    KLAGE_OPPRETTHOLDELSE,
-    KLAGE_TRUKKET,
-    FORHÅNDSVARSEL_KLAGE_FORMKRAV,
-    FORVALTNINGSMELDING;
-}
 
 public data class EndringDTO(
     val status: Status,

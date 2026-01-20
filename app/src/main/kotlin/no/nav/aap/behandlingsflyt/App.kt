@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.papsign.ktor.openapigen.model.info.InfoModel
 import com.papsign.ktor.openapigen.route.apiRouting
 import com.zaxxer.hikari.HikariConfig
@@ -85,6 +87,7 @@ import no.nav.aap.behandlingsflyt.hendelse.kafka.tilbakekreving.TilbakekrevingKa
 import no.nav.aap.behandlingsflyt.hendelse.mottattHendelseApi
 import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.InstitusjonsOppholdHendelseKafkaMelding
 import no.nav.aap.behandlingsflyt.pip.behandlingsflytPipApi
 import no.nav.aap.behandlingsflyt.prosessering.BehandlingsflytLogInfoProvider
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
@@ -222,8 +225,7 @@ internal fun Application.server(
     }
 
     if (!Miljø.erLokal() && !Miljø.erProd()) {
-        //TODO: Kommenterer ut inntil vi har fått rettet opp i lesing av topic
-        //startInstitusjonsOppholdKonsument(dataSource, repositoryRegistry, gatewayProvider)
+        startInstitusjonsOppholdKonsument(dataSource, repositoryRegistry, gatewayProvider)
     }
 
     monitor.subscribe(ApplicationStopPreparing) { environment ->
@@ -306,7 +308,7 @@ internal fun Application.server(
                 // Flytt
                 brevApi(dataSource, repositoryRegistry, gatewayProvider)
                 dokumentinnhentingApi(dataSource, repositoryRegistry, gatewayProvider)
-                mottattHendelseApi(dataSource, repositoryRegistry, gatewayProvider)
+                mottattHendelseApi(dataSource, repositoryRegistry)
                 underveisVurderingerApi(dataSource, repositoryRegistry)
                 lovvalgMedlemskapApi(dataSource, repositoryRegistry)
                 lovvalgMedlemskapGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
@@ -482,11 +484,11 @@ fun Application.startInstitusjonsOppholdKonsument(
     dataSource: DataSource,
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,
-): KafkaKonsument<String, String> {
+): KafkaKonsument<String, InstitusjonsOppholdHendelseKafkaMelding> {
     val konsument = Inst2KafkaKonsument(
         config = KafkaConsumerConfig(
             keyDeserializer = org.apache.kafka.common.serialization.StringDeserializer::class.java,
-            valueDeserializer = io.confluent.kafka.serializers.KafkaAvroDeserializer::class.java
+            valueDeserializer = JsonDeserializer::class.java,
         ),
         closeTimeout = AppConfig.stansArbeidTimeout,
         dataSource = dataSource,
@@ -541,3 +543,12 @@ fun initDatasource(dbConfig: DbConfig): HikariDataSource = HikariDataSource(Hika
     connectionTestQuery = "SELECT 1"
     metricRegistry = prometheus
 })
+
+class JsonDeserializer : org.apache.kafka.common.serialization.Deserializer<InstitusjonsOppholdHendelseKafkaMelding> {
+    private val mapper = jacksonObjectMapper()
+
+    override fun deserialize(
+        topic: String?,
+        data: ByteArray,
+    ): InstitusjonsOppholdHendelseKafkaMelding = mapper.readValue(data)
+}

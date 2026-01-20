@@ -30,6 +30,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.JobbInput
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -169,6 +171,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
                 begrunnelse = "bla bla",
                 vurdertAv = "saksbehandler1",
                 opprettetTid = LocalDateTime.now(),
+                vurdertIBehandling = fakeBehandling.id,
             ))
         )
 

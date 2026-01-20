@@ -71,7 +71,7 @@ class RettighetsperiodeStegTest {
             vilkårsresultatRepository,
             sakService,
             avklaringsbehovRepository,
-            AvklaringsbehovService(avbrytRevurderingService),
+            AvklaringsbehovService(avbrytRevurderingService, avklaringsbehovRepository, behandlingRepository, vilkårsresultatRepository),
             tidligereVurderinger,
             rettighetsperiodeRepository,
         )

@@ -1,6 +1,6 @@
 
 plugins {
-    id("behandlingsflyt.conventions")
+    id("aap.conventions")
 }
 
 tasks{

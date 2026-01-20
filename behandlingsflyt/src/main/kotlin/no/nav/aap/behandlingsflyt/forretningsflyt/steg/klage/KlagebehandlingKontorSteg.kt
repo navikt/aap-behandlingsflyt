@@ -36,7 +36,6 @@ class KlagebehandlingKontorSteg private constructor(
         val klageErTrukket = trekkKlageService.klageErTrukket(kontekst.behandlingId)
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehov,
             definisjon = Definisjon.VURDER_KLAGE_KONTOR,
             vedtakBehøverVurdering = {
                 !klageErTrukket && !klageErAvslått && skalBehandlesAvKontor

@@ -21,7 +21,6 @@ class SvarFraAndreinstansSteg private constructor(
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.HÅNDTER_SVAR_FRA_ANDREINSTANS,
             vedtakBehøverVurdering = { true },
             erTilstrekkeligVurdert = { true },

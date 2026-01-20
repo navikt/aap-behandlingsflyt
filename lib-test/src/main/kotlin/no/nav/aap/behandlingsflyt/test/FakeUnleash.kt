@@ -37,9 +37,13 @@ object FakeUnleash : FakeUnleashBase(
         BehandlingsflytFeature.MigrerMeldepliktFritak to true,
         BehandlingsflytFeature.SosialRefusjon to true,
         BehandlingsflytFeature.HentSykepengerVedOverlapp to true,
+        BehandlingsflytFeature.SendBrevVedMottattKlage to true,
         BehandlingsflytFeature.MigrerRettighetsperiode to true,
         BehandlingsflytFeature.PeriodisertSykdom to true,
         BehandlingsflytFeature.Sykestipend to false,
+        BehandlingsflytFeature.Forlengelse to true,
+        BehandlingsflytFeature.ForlengelseIManuellBehandling to false,
+        BehandlingsflytFeature.UtvidVedtakslengdeJobb to true,
     )
 )
 
@@ -61,7 +65,11 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.MigrerMeldepliktFritak to true,
         BehandlingsflytFeature.SosialRefusjon to true,
         BehandlingsflytFeature.HentSykepengerVedOverlapp to true,
+        BehandlingsflytFeature.SendBrevVedMottattKlage to true,
         BehandlingsflytFeature.PeriodisertSykdom to true,
         BehandlingsflytFeature.Sykestipend to true,
+        BehandlingsflytFeature.Forlengelse to true,
+        BehandlingsflytFeature.ForlengelseIManuellBehandling to true,
+        BehandlingsflytFeature.UtvidVedtakslengdeJobb to true,
     )
 )

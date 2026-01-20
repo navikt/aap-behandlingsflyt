@@ -146,8 +146,9 @@ class TrekkOgAvbrytFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         // Avbryt revurdering 1
         revurdering1.leggTilVurderingsbehov(
             no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDERING_AVBRUTT
-        )
-        assertThat(hentAlleAvklaringsbehov(revurdering1)).anySatisfy { avklaringsbehov -> assertThat(avklaringsbehov.erÅpent() && avklaringsbehov.definisjon == Definisjon.AVBRYT_REVURDERING).isTrue() }
+        ).medKontekst {
+            assertThat(åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }.contains(Definisjon.AVBRYT_REVURDERING)
+        }
 
         løsAvklaringsBehov(
             revurdering1,

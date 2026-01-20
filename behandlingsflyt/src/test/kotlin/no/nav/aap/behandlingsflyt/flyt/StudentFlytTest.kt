@@ -78,7 +78,10 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .assertRettighetstype(
                 if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.Sykestipend)) {
                     val virkningstidspunkt = fom.plusDays(15)
-                    Periode(virkningstidspunkt, virkningstidspunkt.plusHverdager(Hverdager(130)).minusDays(1)) to RettighetsType.STUDENT
+                    Periode(
+                        virkningstidspunkt,
+                        virkningstidspunkt.plusHverdager(Hverdager(130)).minusDays(1)
+                    ) to RettighetsType.STUDENT
                 } else {
                     Periode(fom, fom.plusHverdager(Hverdager(130)).minusDays(1)) to RettighetsType.STUDENT
                 }
@@ -140,10 +143,19 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 assertThat(v.harPerioderSomErOppfylt()).isTrue
             }
             .assertRettighetstype(
-                Periode(
-                    fom,
-                    fom.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
-                ) to RettighetsType.BISTANDSBEHOV,
+                if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.Sykestipend)) {
+                    val gammeltVirkningstidspunkt = fom.plusDays(15)
+                    Periode(
+                        fom,
+                        gammeltVirkningstidspunkt.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
+                    ) to RettighetsType.BISTANDSBEHOV
+                } else {
+                    Periode(
+                        fom,
+                        fom.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
+                    ) to RettighetsType.BISTANDSBEHOV
+                }
+
             )
 
     }
@@ -181,5 +193,7 @@ object SykestipendAktivert : FakeUnleashBase(
         BehandlingsflytFeature.MigrerRettighetsperiode to true,
         BehandlingsflytFeature.PeriodisertSykdom to true,
         BehandlingsflytFeature.Sykestipend to true,
+        BehandlingsflytFeature.Forlengelse to true,
+        BehandlingsflytFeature.ForlengelseIManuellBehandling to false,
     )
 )
