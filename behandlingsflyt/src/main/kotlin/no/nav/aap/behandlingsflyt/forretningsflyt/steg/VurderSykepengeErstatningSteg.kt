@@ -71,7 +71,11 @@ class VurderSykepengeErstatningSteg private constructor(
                 tvingerAvklaringsbehov = setOf(Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING),
                 nårVurderingErRelevant = ::perioderMedVurderingsbehov,
                 kontekst = kontekst,
-                nårVurderingErGyldig = { aktiveVurderinger.somTidslinje().mapValue { true } },
+                nårVurderingErGyldig = { kontekst ->
+                    val vurderinger =
+                        sykepengerErstatningRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger.orEmpty()
+                    vurderinger.somTidslinje().mapValue { true }
+                },
                 tilbakestillGrunnlag = {
                     if (vedtatteVurderinger.toSet() != aktiveVurderinger.toSet()) {
                         sykepengerErstatningRepository.lagre(kontekst.behandlingId, vedtatteVurderinger)
@@ -105,6 +109,7 @@ class VurderSykepengeErstatningSteg private constructor(
 
                 vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
             }
+
             VurderingType.MELDEKORT,
             VurderingType.AUTOMATISK_BREV,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
@@ -117,7 +122,7 @@ class VurderSykepengeErstatningSteg private constructor(
         return Fullført
     }
 
-    private fun  perioderMedVurderingsbehov(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
+    private fun perioderMedVurderingsbehov(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
         val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
 
         val kravDato = kontekst.rettighetsperiode.fom
@@ -135,7 +140,8 @@ class VurderSykepengeErstatningSteg private constructor(
         val yrkesskadevurderinger = sykdomGrunnlag?.yrkesskadevurdringTidslinje(kontekst.rettighetsperiode).orEmpty()
 
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
-        val overganguføreVilkår = vilkårsresultat.optionalVilkår(Vilkårtype.OVERGANGUFØREVILKÅRET)?.tidslinje().orEmpty()
+        val overganguføreVilkår =
+            vilkårsresultat.optionalVilkår(Vilkårtype.OVERGANGUFØREVILKÅRET)?.tidslinje().orEmpty()
 
         return Tidslinje.map5(
             tidligereVurderingsutfall,

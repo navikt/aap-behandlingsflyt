@@ -63,7 +63,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
             definisjon = Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP,
             tvingerAvklaringsbehov = setOf(Vurderingsbehov.REVURDER_MEDLEMSKAP, Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP),
             nårVurderingErRelevant = ::nårVurderingErRelevant,
-            nårVurderingErGyldig = { nårVurderingErGyldig(kontekst, grunnlag.value) },
+            nårVurderingErGyldig = { kontekst -> nårVurderingErGyldig(kontekst, grunnlag.value) },
             kontekst = kontekst,
             tilbakestillGrunnlag = { tilbakestillGrunnlagNy(kontekst, grunnlag.value.medlemskapArbeidInntektGrunnlag) },
         )

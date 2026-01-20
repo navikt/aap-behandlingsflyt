@@ -195,8 +195,6 @@ class LovvalgOgMedlemskapFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::clas
             .løsBistand(sak.rettighetsperiode.fom)
             .løsSykdomsvurderingBrev()
             .løsBeregningstidspunkt()
-            .løsForutgåendeMedlemskap(sak.rettighetsperiode.fom)
-            .løsOppholdskrav(nyttTidspunktForOppfyltMedlemskap)
             .løsUtenSamordning()
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())

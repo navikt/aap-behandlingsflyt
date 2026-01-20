@@ -48,7 +48,7 @@ class VurderOppholdskravSteg private constructor(
             definisjon = Definisjon.AVKLAR_OPPHOLDSKRAV,
             tvingerAvklaringsbehov = setOf(Vurderingsbehov.OPPHOLDSKRAV),
             nårVurderingErRelevant = { nyKontekst -> nårVurderingErRelevant(nyKontekst) },
-            nårVurderingErGyldig = { nårVurderingErGyldig(kontekst) },
+            nårVurderingErGyldig = ::nårVurderingErGyldig,
             tilbakestillGrunnlag = {
                 oppholdskravGrunnlagRepository.tilbakestillGrunnlag(
                     kontekst.behandlingId,

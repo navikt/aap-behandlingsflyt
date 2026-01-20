@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.TOTRINNS_VURDERT
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
@@ -211,7 +212,7 @@ class AvklaringsbehovService(
         nårVurderingErRelevant: (kontekst: FlytKontekstMedPerioder) -> Tidslinje<Boolean>,
         kontekst: FlytKontekstMedPerioder,
         perioderSomIkkeErTilstrekkeligVurdert: () -> Set<Periode>?,
-        nårVurderingErGyldig: () -> Tidslinje<Boolean>?,
+        nårVurderingErGyldig: (kontekst: FlytKontekstMedPerioder) -> Tidslinje<Boolean>?,
         tilbakestillGrunnlag: () -> Unit,
     ) {
         val (behøverVurdering, perioderVedtaketBehøverVurdering) = when (kontekst.vurderingType) {
@@ -228,7 +229,7 @@ class AvklaringsbehovService(
                                 .tidslinje()
                                 .helePerioden()
 
-                        nårVurderingErRelevant(
+                        nårVurderingErGyldig(
                             kontekst.copy(
                                 /* TODO: hacky. Er faktisk bare behandlingId som brukes av sjekkene. */
                                 behandlingId = forrigeBehandlingId,
@@ -273,7 +274,7 @@ class AvklaringsbehovService(
                     if (perioderSomIkkeErTilstrekkeligVurdertEvaluert != null) {
                         perioderSomIkkeErTilstrekkeligVurdertEvaluert.toSet()
                     } else {
-                        val nårVurderingErGyldigTidslinje = nårVurderingErGyldig()
+                        val nårVurderingErGyldigTidslinje = nårVurderingErGyldig(kontekst)
                         if (nårVurderingErGyldigTidslinje == null) {
                             null
                         } else {
@@ -338,7 +339,7 @@ class AvklaringsbehovService(
          * Hvilke perioder behandlingen har en god nok vurdering for.
          * Det vil løftes avklaringsbehov for relevante perioder som mangler gyldig vurdering.
          */
-        nårVurderingErGyldig: () -> Tidslinje<Boolean>,
+        nårVurderingErGyldig: (kontekst: FlytKontekstMedPerioder) -> Tidslinje<Boolean>,
         kontekst: FlytKontekstMedPerioder,
         tilbakestillGrunnlag: () -> Unit
     ) {
