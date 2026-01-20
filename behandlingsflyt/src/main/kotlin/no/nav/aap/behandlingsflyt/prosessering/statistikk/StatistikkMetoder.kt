@@ -228,6 +228,7 @@ class StatistikkMetoder(
                 Vurderingsbehov.DØDSFALL_BRUKER -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.DØDSFALL_BRUKER
                 Vurderingsbehov.DØDSFALL_BARN -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.DØDSFALL_BARN
                 Vurderingsbehov.UTVID_VEDTAKSLENGDE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.UTVID_VEDTAKSLENGDE
+                Vurderingsbehov.MIGRER_RETTIGHETSPERIODE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.MIGRER_RETTIGHETSPERIODE
             }
         }.distinct()
 

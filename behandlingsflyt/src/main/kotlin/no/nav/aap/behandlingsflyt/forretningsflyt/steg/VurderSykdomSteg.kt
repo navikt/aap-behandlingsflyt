@@ -131,6 +131,7 @@ class VurderSykdomSteg(
                         kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty()
             }
             VurderingType.UTVID_VEDTAKSLENGDE,
+            VurderingType.MIGRER_RETTIGHETSPERIODE,
             VurderingType.MELDEKORT -> false
             VurderingType.AUTOMATISK_BREV -> false
             VurderingType.IKKE_RELEVANT -> false

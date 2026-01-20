@@ -49,6 +49,7 @@ class RefusjonkravSteg private constructor(
                         }
                     }
                     VurderingType.UTVID_VEDTAKSLENGDE,
+                    VurderingType.MIGRER_RETTIGHETSPERIODE,
                     VurderingType.REVURDERING,
                     VurderingType.MELDEKORT,
                     VurderingType.AUTOMATISK_BREV,

@@ -23,6 +23,7 @@ class Effektuer11_7Steg(
         when (kontekst.vurderingType) {
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
             VurderingType.FØRSTEGANGSBEHANDLING,
+            VurderingType.MIGRER_RETTIGHETSPERIODE,
             VurderingType.UTVID_VEDTAKSLENGDE,
             VurderingType.REVURDERING -> {
                 val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
