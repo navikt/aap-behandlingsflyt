@@ -20,6 +20,7 @@ import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
@@ -34,7 +35,7 @@ class ForeslåVedtakStegTest {
     private val avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
     private val avklaringsbehovService = AvklaringsbehovService(mockk<AvbrytRevurderingService> {
         every { revurderingErAvbrutt(any()) } returns false
-    })
+    }, avklaringsbehovRepository, behandlingRepository = InMemoryBehandlingRepository, vilkårsresultatRepository = InMemoryVilkårsresultatRepository)
     private val steg = ForeslåVedtakSteg(avklaringsbehovRepository, FakeTidligereVurderinger(), avklaringsbehovService)
     private val sakRepository = InMemorySakRepository
 

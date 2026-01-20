@@ -49,7 +49,6 @@ class BeregningAvklarFaktaSteg private constructor(
         // Beregningstidspunkt
         avklaringsbehovService.oppdaterAvklaringsbehov(
             kontekst = kontekst,
-            avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT,
             vedtakBehøverVurdering = {
                 when (kontekst.vurderingType) {
@@ -88,7 +87,6 @@ class BeregningAvklarFaktaSteg private constructor(
         // Yrkesskadeinntekt
         avklaringsbehovService.oppdaterAvklaringsbehov(
             kontekst = kontekst,
-            avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.FASTSETT_YRKESSKADEINNTEKT,
             vedtakBehøverVurdering = {
                 when (kontekst.vurderingType) {

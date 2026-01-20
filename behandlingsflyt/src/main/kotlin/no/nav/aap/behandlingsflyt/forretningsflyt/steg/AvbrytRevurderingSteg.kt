@@ -24,7 +24,6 @@ class AvbrytRevurderingSteg private constructor(
         val erTilstrekkeligVurdert = avbrytRevurderingRepository.hentHvisEksisterer(kontekst.behandlingId) != null
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId),
             definisjon = Definisjon.AVBRYT_REVURDERING,
             vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst) },
             erTilstrekkeligVurdert = { erTilstrekkeligVurdert },

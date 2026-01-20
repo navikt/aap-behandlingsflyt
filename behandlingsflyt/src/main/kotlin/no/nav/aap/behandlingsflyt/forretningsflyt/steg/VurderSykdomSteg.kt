@@ -50,9 +50,6 @@ class VurderSykdomSteg(
             utførGammel(kontekst)
         } else {
             avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
-                avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId),
-                behandlingRepository = behandlingRepository,
-                vilkårsresultatRepository = vilkårsresultatRepository,
                 definisjon = Definisjon.AVKLAR_SYKDOM,
                 tvingerAvklaringsbehov = kontekst.vurderingsbehovRelevanteForSteg,
                 nårVurderingErRelevant = ::perioderHvorSykdomsvurderingErRelevant,
@@ -102,7 +99,6 @@ class VurderSykdomSteg(
 
     fun utførGammel(kontekst: FlytKontekstMedPerioder): StegResultat {
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId),
             definisjon = Definisjon.AVKLAR_SYKDOM,
             vedtakBehøverVurdering = { vedtakBehøverVurderingGammel(kontekst) },
             erTilstrekkeligVurdert = { tilstrekkeligVurdertGammel(kontekst) },
