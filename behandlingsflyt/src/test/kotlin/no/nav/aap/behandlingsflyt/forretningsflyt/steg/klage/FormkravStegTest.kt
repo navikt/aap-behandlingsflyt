@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRefer
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravRepository
@@ -32,6 +33,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -53,6 +55,7 @@ class FormkravStegTest {
     val brevbestillingServiceMock = mockk<BrevbestillingService>()
     val avklaringsbehovServiceMock = mockk<AvklaringsbehovService>()
     val avbrytRevurderingServiceMock = mockk<AvbrytRevurderingService>()
+    val trukketSøknadRepository = InMemoryTrukketSøknadRepository
     val gatewayProvider = createGatewayProvider {
         register<FakeUnleash>()
     }
@@ -103,6 +106,7 @@ class FormkravStegTest {
             trekkKlageService = trekkKlageServiceMock,
             avklaringsbehovService = AvklaringsbehovService(
                 avbrytRevurderingService = avbrytRevurderingServiceMock,
+                trukketSøknadService = TrukketSøknadService(trukketSøknadRepository)
             ),
             unleashGateway = gatewayProvider.provide()
         )
@@ -160,6 +164,7 @@ class FormkravStegTest {
             trekkKlageService = trekkKlageServiceMock,
             avklaringsbehovService = AvklaringsbehovService(
                 avbrytRevurderingService = avbrytRevurderingServiceMock,
+                trukketSøknadService = TrukketSøknadService(trukketSøknadRepository)
             ),
             unleashGateway = gatewayProvider.provide()
         )
@@ -222,6 +227,7 @@ class FormkravStegTest {
             trekkKlageService = trekkKlageServiceMock,
             avklaringsbehovService = AvklaringsbehovService(
                 avbrytRevurderingService = avbrytRevurderingServiceMock,
+                trukketSøknadService = TrukketSøknadService(trukketSøknadRepository)
             ),
             unleashGateway = gatewayProvider.provide()
         )
@@ -287,6 +293,7 @@ class FormkravStegTest {
             trekkKlageService = trekkKlageServiceMock,
             avklaringsbehovService = AvklaringsbehovService(
                 avbrytRevurderingService = avbrytRevurderingServiceMock,
+                trukketSøknadService = TrukketSøknadService(trukketSøknadRepository)
             ),
             unleashGateway = gatewayProvider.provide()
         )
@@ -392,6 +399,7 @@ class FormkravStegTest {
             trekkKlageService = trekkKlageServiceMock,
             avklaringsbehovService = AvklaringsbehovService(
                 avbrytRevurderingService = avbrytRevurderingServiceMock,
+                trukketSøknadService = TrukketSøknadService(trukketSøknadRepository)
             ),
             unleashGateway = gatewayProvider.provide()
         )
@@ -438,6 +446,7 @@ class FormkravStegTest {
             trekkKlageService = trekkKlageServiceMock,
             avklaringsbehovService = AvklaringsbehovService(
                 avbrytRevurderingService = avbrytRevurderingServiceMock,
+                trukketSøknadService = TrukketSøknadService(trukketSøknadRepository)
             ),
             unleashGateway = gatewayProvider.provide()
         )
@@ -509,6 +518,7 @@ class FormkravStegTest {
             trekkKlageService = trekkKlageServiceMock,
             avklaringsbehovService = AvklaringsbehovService(
                 avbrytRevurderingService = avbrytRevurderingServiceMock,
+                trukketSøknadService = TrukketSøknadService(trukketSøknadRepository)
             ),
             unleashGateway = gatewayProvider.provide()
         )

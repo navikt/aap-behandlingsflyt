@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -22,10 +23,12 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class AvklaringsbehovService(
-    private val avbrytRevurderingService: AvbrytRevurderingService
+    private val avbrytRevurderingService: AvbrytRevurderingService,
+    private val trukketSøknadService: TrukketSøknadService
 ) {
     constructor(repositoryProvider: RepositoryProvider) : this(
-        avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider)
+        avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
+        trukketSøknadService = TrukketSøknadService(repositoryProvider)
     )
 
     fun oppdaterAvklaringsbehov(
@@ -192,6 +195,14 @@ class AvklaringsbehovService(
                 SENDT_TILBAKE_FRA_BESLUTTER,
                 KVALITETSSIKRET,
                 SENDT_TILBAKE_FRA_KVALITETSSIKRER -> {
+                    val erFrivilligAvklaringsbehovUtenTidligereVurdering = avklaringsbehov.definisjon.erFrivillig()
+                        && kontekst.forrigeBehandlingId == null
+
+                    val søknadErIkkeTrukket = !trukketSøknadService.søknadErTrukket(kontekst.behandlingId)
+                    if (erFrivilligAvklaringsbehovUtenTidligereVurdering && søknadErIkkeTrukket) {
+                        return
+                    }
+
                     avklaringsbehovene.internalAvbryt(definisjon)
                     if (!avbrytRevurderingService.revurderingErAvbrutt(kontekst.behandlingId)) {
                         tilbakestillGrunnlag()

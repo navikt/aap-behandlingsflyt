@@ -5,6 +5,7 @@ import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
@@ -32,6 +33,7 @@ class BarnetilleggStegTest {
     private lateinit var barnRepository: BarnRepository
     private lateinit var tidligereVurderinger: TidligereVurderinger
     private lateinit var avbrytRevurderingService: AvbrytRevurderingService
+    private lateinit var trukketSøknadService: TrukketSøknadService
     private val behandlingId = BehandlingId(Random().nextLong())
 
     @BeforeEach
@@ -39,6 +41,9 @@ class BarnetilleggStegTest {
         avklaringsbehovRepository = mockk()
         avbrytRevurderingService = mockk {
             every { revurderingErAvbrutt(any()) } returns false
+        }
+        trukketSøknadService = mockk {
+            every { søknadErTrukket(any()) } returns false
         }
 
         barnRepository = mockk {
@@ -49,7 +54,7 @@ class BarnetilleggStegTest {
             every { muligMedRettTilAAP(any(), StegType.BARNETILLEGG) } returns true
         }
 
-        avklaringsbehovService = AvklaringsbehovService(avbrytRevurderingService)
+        avklaringsbehovService = AvklaringsbehovService(avbrytRevurderingService, trukketSøknadService)
         steg = BarnetilleggSteg(
             barnetilleggService = mockk(),
             barnetilleggRepository = mockk(),
