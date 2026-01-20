@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.KonsekvensAv
 import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.OppfølgingsBehandlingRepository
 import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.OppfølgingsoppgaveGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.BehandletOppfølgingsOppgave
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
@@ -25,6 +26,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.HvemSkalFølgeOpp
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -66,6 +68,12 @@ class AvklarOppfølgingStegTest {
     private lateinit var avklaringsbehovRepository: AvklaringsbehovRepository
 
     @MockK
+    private lateinit var vilkårsresultatRepository: VilkårsresultatRepository
+
+    @MockK
+    private lateinit var behandlingRepository: BehandlingRepository
+    
+    @MockK
     private lateinit var avbrytRevurderingService: AvbrytRevurderingService
 
     @MockK
@@ -104,6 +112,9 @@ class AvklarOppfølgingStegTest {
         }
 
         avklaringsbehovService = AvklaringsbehovService(
+            avklaringsbehovRepository = avklaringsbehovRepository,
+            behandlingRepository = behandlingRepository,
+            vilkårsresultatRepository = vilkårsresultatRepository,
             avbrytRevurderingService = avbrytRevurderingService
         )
     }

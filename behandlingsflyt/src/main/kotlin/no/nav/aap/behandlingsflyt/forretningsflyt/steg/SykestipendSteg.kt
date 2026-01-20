@@ -53,7 +53,6 @@ class SykestipendSteg private constructor(
         }
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.AVKLAR_SAMORDNING_SYKESTIPEND,
             vedtakBehøverVurdering = {
                 when (kontekst.vurderingType) {

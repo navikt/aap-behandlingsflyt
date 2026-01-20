@@ -27,7 +27,6 @@ class KlagebehandlingNayOppsummeringSteg private constructor(
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.BEKREFT_TOTALVURDERING_KLAGE,
             vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst) },
             erTilstrekkeligVurdert = { true },

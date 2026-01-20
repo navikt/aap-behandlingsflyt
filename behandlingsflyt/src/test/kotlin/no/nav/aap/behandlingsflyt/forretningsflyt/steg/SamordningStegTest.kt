@@ -80,7 +80,10 @@ class SamordningStegTest {
         avklaringsbehovService = AvklaringsbehovService(
             AvbrytRevurderingService(
                 avbrytRevurderingRepository
-            )
+            ),
+            InMemoryAvklaringsbehovRepository,
+            InMemoryBehandlingRepository,
+            InMemoryVilkårsresultatRepository,
         ),
     )
 

@@ -35,7 +35,6 @@ class ForeslåVedtakSteg internal constructor(
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.FORESLÅ_VEDTAK,
             vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst, avklaringsbehovene) },
             erTilstrekkeligVurdert = { erTilstrekkeligVurdert(avklaringsbehovene) },
