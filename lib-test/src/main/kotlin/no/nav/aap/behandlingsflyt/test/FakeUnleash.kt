@@ -44,6 +44,7 @@ object FakeUnleash : FakeUnleashBase(
         BehandlingsflytFeature.Forlengelse to true,
         BehandlingsflytFeature.ForlengelseIManuellBehandling to false,
         BehandlingsflytFeature.UtvidVedtakslengdeJobb to true,
+        BehandlingsflytFeature.InstitusjonsoppholdJobb to true
     )
 )
 
@@ -71,5 +72,6 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.Forlengelse to true,
         BehandlingsflytFeature.ForlengelseIManuellBehandling to true,
         BehandlingsflytFeature.UtvidVedtakslengdeJobb to true,
+        BehandlingsflytFeature.InstitusjonsoppholdJobb to true
     )
 )
