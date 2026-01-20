@@ -33,6 +33,7 @@ import java.util.*
 
 @ExtendWith(MockKExtension::class)
 @MockKExtension.CheckUnnecessaryStub
+@MockKExtension.RequireParallelTesting
 class BehandlingHendelseServiceTest {
     @Test
     fun `verifiser at FlytJobbRepository blir kalt med riktige argumenter`() {

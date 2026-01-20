@@ -23,6 +23,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.Påkla
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.IKlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageResultatType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.AVSLUTTET
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -32,6 +33,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.AvsluttetBehandlingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.BeregningsgrunnlagDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Diagnoser
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Fritakvurdering
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Grunnlag11_19DTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.GrunnlagUføreDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.GrunnlagYrkesskadeDTO
@@ -55,6 +57,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.verdityper.dokument.Kanal
 import org.slf4j.LoggerFactory
@@ -77,7 +80,8 @@ class StatistikkMetoder(
     private val klagedokumentInformasjonUtleder: KlagedokumentInformasjonUtleder,
     trukketSøknadService: TrukketSøknadService,
     private val klageresultatUtleder: IKlageresultatUtleder,
-    avbrytRevurderingService: AvbrytRevurderingService
+    avbrytRevurderingService: AvbrytRevurderingService,
+    private val meldepliktRepository: MeldepliktRepository,
 ) {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
@@ -96,7 +100,8 @@ class StatistikkMetoder(
         trukketSøknadService = TrukketSøknadService(repositoryProvider.provide()),
         klagedokumentInformasjonUtleder = KlagedokumentInformasjonUtleder(repositoryProvider),
         klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
-        avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider)
+        avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
+        meldepliktRepository = repositoryProvider.provide()
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -125,7 +130,6 @@ class StatistikkMetoder(
         val nyeMeldekort =
             meldekort?.meldekort().orEmpty().toSet().minus(forrigeBehandlingMeldekort?.meldekort().orEmpty().toSet())
                 .toList()
-
 
         val vurderingsbehovForBehandling = utledVurderingsbehovForBehandling(behandling)
         val statistikkHendelse = StoppetBehandling(
@@ -183,6 +187,7 @@ class StatistikkMetoder(
             TypeBehandling.SvarFraAndreinstans -> {
                 klagedokumentInformasjonUtleder.utledKlagebehandlingForSvar(behandling.id).referanse
             }
+
             TypeBehandling.OppfølgingsBehandling -> null
             TypeBehandling.Aktivitetsplikt -> null
             TypeBehandling.Aktivitetsplikt11_9 -> null
@@ -341,7 +346,13 @@ class StatistikkMetoder(
                 )
             }
 
-        val avsluttetBehandlingDTO = AvsluttetBehandlingDTO(
+        val fritaksvurderinger =
+            meldepliktRepository.hentHvisEksisterer(behandling.id)?.tilTidslinje().orEmpty().komprimer()
+                .map { periode, data ->
+                    Fritakvurdering(data.harFritak, periode.fom, periode.tom)
+                }.verdier()
+
+        return AvsluttetBehandlingDTO(
             vilkårsResultat = VilkårsResultatDTO(
                 typeBehandling = behandling.typeBehandling(), vilkår = vilkårsresultat.alle().map { res ->
                     VilkårDTO(
@@ -363,8 +374,8 @@ class StatistikkMetoder(
             rettighetstypePerioder = rettighetstypePerioder,
             resultat = hentResultat(behandling),
             vedtakstidspunkt = vedtakTidspunkt,
+            fritaksvurderinger = fritaksvurderinger
         )
-        return avsluttetBehandlingDTO
     }
 
     private fun hentResultat(behandling: Behandling): ResultatKode? {
