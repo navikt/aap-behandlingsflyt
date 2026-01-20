@@ -98,6 +98,7 @@ class BrevUtlederServiceTest {
         arbeidsopptrappingRepository = arbeidsopptrappingRepository,
         unleashGateway = unleashGateway,
     )
+    val forventetSisteDagMedYtelse = 31 august 2025
 
     @Test
     fun `utledBehov legger ved sisteDagMedYtelse fra underveisTidslinje i TilkjentYtelse`() {
@@ -141,7 +142,6 @@ class BrevUtlederServiceTest {
         assertIs<Innvilgelse>(resultat, "forventer brevbehov er av typen Innvilgelse")
 
         assertNotNull(resultat.tilkjentYtelse, "tilkjent ytelse må eksistere")
-        val forventetSisteDagMedYtelse = underveisGrunnlag().somTidslinje().segmenter().last().tom()
         assertEquals(forventetSisteDagMedYtelse, resultat.tilkjentYtelse.sisteDagMedYtelse)
     }
 
@@ -591,14 +591,14 @@ class BrevUtlederServiceTest {
                 utfall = Utfall.OPPFYLT,
             ),
             underveisperiode(
-                periode = Periode(1 mai 2025, 31 august 2025),
+                periode = Periode(1 mai 2025, forventetSisteDagMedYtelse),
                 rettighetsType = RettighetsType.BISTANDSBEHOV,
                 utfall = Utfall.OPPFYLT,
             ),
             underveisperiode(
                 periode = Periode(1 september 2025, 31 desember 2025),
                 rettighetsType = RettighetsType.BISTANDSBEHOV,
-                utfall = Utfall.OPPFYLT,
+                utfall = Utfall.IKKE_VURDERT,
             )
         )
     }

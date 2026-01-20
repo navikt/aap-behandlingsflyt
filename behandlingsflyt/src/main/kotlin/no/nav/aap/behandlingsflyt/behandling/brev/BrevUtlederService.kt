@@ -335,7 +335,10 @@ class BrevUtlederService(
                 minsteÅrligYtelse = minsteÅrligYtelse,
                 minsteÅrligYtelseUnder25 = Beløp(minsteÅrligYtelse.toTredjedeler()),
                 årligYtelse = tilkjent.dagsats.multiplisert(ANTALL_ÅRLIGE_ARBEIDSDAGER),
-                sisteDagMedYtelse = underveisTidslinje.perioder().last().tom
+                sisteDagMedYtelse = underveisTidslinje.segmenter()
+                    .filter { (_, underveisperiode) ->
+                        underveisperiode.utfall == Utfall.OPPFYLT
+                    }.last().periode.tom
             )
         }.segment(virkningstidspunkt)?.verdi
     }
