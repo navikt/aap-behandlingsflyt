@@ -1,7 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
-import io.mockk.every
-import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
@@ -13,6 +11,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvbrytRevurderingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
@@ -23,30 +22,21 @@ import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDate
 
-@ExtendWith(MockKExtension::class)
-@MockKExtension.RequireParallelTesting
 class AvklaringsbehovServiceTest {
 
-    private lateinit var avklaringsbehovRepository: InMemoryAvklaringsbehovRepository
-    private lateinit var behandlingRepository: InMemoryBehandlingRepository
-    private lateinit var vilkårsresultatRepository: InMemoryVilkårsresultatRepository
-    private lateinit var avbrytRevurderingService: AvbrytRevurderingService
+    private val avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
+    private val vilkårsresultatRepository = InMemoryVilkårsresultatRepository
+    private val avbrytRevurderingService = AvbrytRevurderingService(InMemoryAvbrytRevurderingRepository)
     private lateinit var avklaringsbehovService: AvklaringsbehovService
 
     @BeforeEach
     fun setup() {
-        avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
-        behandlingRepository = InMemoryBehandlingRepository
-        vilkårsresultatRepository = InMemoryVilkårsresultatRepository
-        avbrytRevurderingService = mockk()
-        every { avbrytRevurderingService.revurderingErAvbrutt(any()) } returns false
         avklaringsbehovService = AvklaringsbehovService(
             avbrytRevurderingService = avbrytRevurderingService,
-            avklaringsbehovRepository = avklaringsbehovRepository,
-            behandlingRepository = behandlingRepository,
+            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
+            behandlingRepository = InMemoryBehandlingRepository,
             vilkårsresultatRepository = vilkårsresultatRepository
         )
     }
