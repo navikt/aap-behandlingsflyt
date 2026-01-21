@@ -33,6 +33,7 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
 ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
+    private val secureLogger = LoggerFactory.getLogger("team-logs")
 
     override fun utfør(input: JobbInput) {
 
@@ -50,9 +51,9 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
             val behandlingEtterMigrering = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
                 ?: error("Fant ikke behandling for sak=${sakId}")
             validerBehandlingerErUlike(behandlingFørMigrering, behandlingEtterMigrering)
+            validerVilkår(behandlingFørMigrering, behandlingEtterMigrering)
             validerTilkjentYtelse(behandlingFørMigrering, behandlingEtterMigrering)
             validerUnderveisPerioder(behandlingFørMigrering, behandlingEtterMigrering)
-            validerVilkår(behandlingFørMigrering, behandlingEtterMigrering)
 
             log.info("Jobb for migrering av rettighetsperiode fullført for sak ${sakId}")
         } else {
@@ -69,6 +70,7 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         val periodeForVilkårFør = vilkårFør.somTidslinje().helePerioden()
         val vilkårEtterBegrensetTilPeriodeFørMigrering = vilkårEtter.somTidslinje().begrensetTil(periodeForVilkårFør)
         if (vilkårEtterBegrensetTilPeriodeFørMigrering != vilkårFør.somTidslinje()) {
+            secureLogger.info("Migrering vilkår før=${vilkårFør.somTidslinje()} og etter=$vilkårEtterBegrensetTilPeriodeFørMigrering")
             throw IllegalStateException("Vilkår før og etter migrering er ulik i den ")
         }
     }
@@ -88,6 +90,7 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
             val periodeEtter = underveisEtter.find { it.periode == periodeFør.periode }
                 ?: error("Fant ikke underveisperiode for ny behandling for indeks: ${index}")
             if (periodeFør != periodeEtter) {
+                secureLogger.info("Migrering underveis før=$periodeFør og etter=$periodeEtter")
                 throw IllegalStateException("Ulike underveisperioder mellom ny og gammel behandling for indeks: ${index}")
             }
         }
@@ -109,6 +112,7 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
             if (periodeEtter == null) {
                 throw IllegalStateException("Mangler periode ${periodeFør.periode} med tilkjent ytelse i ny behandling - indeks: $index")
             } else if (periodeEtter != periodeFør) {
+                secureLogger.info("Migrering tilkjent ytelse før=$periodeFør og etter=$periodeEtter")
                 throw IllegalStateException("Ulike perioder i tilkjent ytelse mellom ny og gammel behandling - indeks: $index")
             }
         }
