@@ -18,7 +18,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     PeriodisertSykepengeErstatningNyAvklaringsbehovService,
     Under18,
     ValiderOvergangUfore,
-    KravOmInntektsbortfall,
     MigrerMeldepliktFritak,
     SosialRefusjon,
     MigrerRettighetsperiode,
