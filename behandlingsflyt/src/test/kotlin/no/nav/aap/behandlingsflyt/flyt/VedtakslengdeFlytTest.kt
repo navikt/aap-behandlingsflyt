@@ -8,8 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.prosessering.OpprettBehandlingUtvidVedtakslengdeJobbUtfører
-import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
+import no.nav.aap.behandlingsflyt.prosessering.OpprettJobbUtvidVedtakslengdeJobbUtfører
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
@@ -17,6 +16,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.vedtaks
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.motor.FlytJobbRepositoryImpl
 import no.nav.aap.motor.JobbInput
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -78,15 +78,14 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         dataSource.transaction { connection ->
             val repositoryProvider = postgresRepositoryRegistry.provider(connection)
 
-            val opprettBehandlingUtvidVedtakslengdeJobbUtfører = OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
-                prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
+            val opprettJobbUtvidVedtakslengdeJobbUtfører = `OpprettJobbUtvidVedtakslengdeJobbUtfører`(
                 underveisRepository = UnderveisRepositoryImpl(connection),
                 sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
-                vilkårsresultatRepository = VilkårsresultatRepositoryImpl(connection),
-                unleashGateway = FakeUnleash
+                flytJobbRepository = FlytJobbRepositoryImpl(connection),
+                unleashGateway = FakeUnleash,
             )
 
-            opprettBehandlingUtvidVedtakslengdeJobbUtfører.utfør(JobbInput(OpprettBehandlingUtvidVedtakslengdeJobbUtfører))
+            opprettJobbUtvidVedtakslengdeJobbUtfører.utfør(JobbInput(OpprettJobbUtvidVedtakslengdeJobbUtfører))
         }
 
         motor.kjørJobber()

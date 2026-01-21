@@ -22,6 +22,7 @@ object ProsesseringsJobber {
             MeldeperiodeTilMeldekortBackendJobbUtfører,
             OpprettJobbForFastsattPeriodeJobbUtfører,
             OpprettJobbForFritakMeldepliktJobbUtfører,
+            OpprettJobbUtvidVedtakslengdeJobbUtfører,
             OpprettBehandlingFritakMeldepliktJobbUtfører,
             OpprettBehandlingFastsattPeriodePassertJobbUtfører,
             OpprettBehandlingUtvidVedtakslengdeJobbUtfører,

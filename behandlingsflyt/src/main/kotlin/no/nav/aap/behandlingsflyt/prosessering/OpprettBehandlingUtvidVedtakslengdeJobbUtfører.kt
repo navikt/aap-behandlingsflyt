@@ -8,19 +8,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.miljo.Miljø.erDev
-import no.nav.aap.komponenter.miljo.Miljø.erLokal
-import no.nav.aap.komponenter.miljo.Miljø.erProd
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
@@ -28,7 +22,6 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
-import no.nav.aap.motor.cron.CronExpression
 import org.slf4j.LoggerFactory
 import java.time.Clock
 import java.time.LocalDate
@@ -39,60 +32,29 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
     private val underveisRepository: UnderveisRepository,
     private val sakOgBehandlingService: SakOgBehandlingService,
     private val vilkårsresultatRepository: VilkårsresultatRepository,
-    private val unleashGateway: UnleashGateway,
     private val clock: Clock = Clock.systemDefaultZone()
 ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
-        val dryRun = false
+        val datoHvorSakerSjekkesForUtvidelse = now(clock).plusDays(28)
 
-        // Forlenger behandlinger når det er 28 dager igjen til sluttdato
-        val datoHvorSakerSjekkesForUtvidelse = now().plusDays(28)
-
-        val saker = hentKandidaterForUtvidelseAvVedtakslengde(datoHvorSakerSjekkesForUtvidelse)
-            // Midlertidig sjekk for å unngå at denne jobben kjøres for åpne behandlinger
-            .filter { kunSakerUtenÅpneYtelsesbehandlinger(it) }
-
-        log.info("Fant ${saker.size} kandidater for utvidelse av vedtakslengde per $datoHvorSakerSjekkesForUtvidelse (dryRun=$dryRun)")
-
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeJobb)) {
-            val resultat = saker
-                .filter { if (erDev()) it.id == 4243L else if (erProd()) it.id == 1100L else if (erLokal()) true else false}
-                .map { sakId ->
-                    val sisteGjeldendeBehandling = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId)
-                    if (sisteGjeldendeBehandling != null) {
-                        log.info("Gjeldende behandling for sak $sakId er ${sisteGjeldendeBehandling.id}")
-
-                        // Trigger behandling som utvider vedtakslengde dersom nødvendig
-                        val underveisGrunnlag = underveisRepository.hentHvisEksisterer(sisteGjeldendeBehandling.id)
-                        if (underveisGrunnlag != null && harBehovForUtvidetVedtakslengde(sisteGjeldendeBehandling.id, sakId, underveisGrunnlag, datoHvorSakerSjekkesForUtvidelse)) {
-                            log.info("Oppretter behandling for utvidelse av vedtakslengde sak $sakId")
-                            if (!dryRun) {
-                                val utvidVedtakslengdeBehandling = opprettNyBehandling(sakId)
-                                prosesserBehandlingService.triggProsesserBehandling(utvidVedtakslengdeBehandling)
-                            }
-                            true
-
-                        } else {
-                            log.info("Sak med id $sakId trenger ikke utvidelse av vedtakslengde, hopper over")
-                            false
-                        }
-
-                    } else {
-                        log.info("Sak med id $sakId har ingen gjeldende behandlinger, hopper over")
-                        false
-                    }
-                }
-
-            log.info("Jobb for utvidelse av vedtakslengde fullført for ${resultat.count { it }} av ${saker.size} saker (dryRun=$dryRun)")
+        val sakId = SakId(input.sakId())
+        val sisteGjeldendeBehandling = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId)
+        if (sisteGjeldendeBehandling != null) {
+            log.info("Gjeldende behandling for sak $sakId er ${sisteGjeldendeBehandling.id}")
+            val underveisGrunnlag = underveisRepository.hentHvisEksisterer(sisteGjeldendeBehandling.id)
+            if (underveisGrunnlag != null && harBehovForUtvidetVedtakslengde(sisteGjeldendeBehandling.id, sakId, underveisGrunnlag, datoHvorSakerSjekkesForUtvidelse)) {
+                log.info("Oppretter behandling for utvidelse av vedtakslengde sak $sakId")
+                val utvidVedtakslengdeBehandling = opprettNyBehandling(sakId)
+                prosesserBehandlingService.triggProsesserBehandling(utvidVedtakslengdeBehandling)
+            } else {
+                log.info("Sak med id $sakId trenger ikke utvidelse av vedtakslengde, hopper over")
+            }
+        } else {
+            log.info("Sak med id $sakId har ingen gjeldende behandlinger, hopper over")
         }
-    }
-
-    private fun kunSakerUtenÅpneYtelsesbehandlinger(id: SakId): Boolean {
-        val sisteBehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(id)
-        return sisteBehandling?.status() in setOf(Status.AVSLUTTET, Status.IVERKSETTES)
     }
 
     private fun harBehovForUtvidetVedtakslengde(
@@ -119,18 +81,12 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
         return false
     }
 
-    private fun hentKandidaterForUtvidelseAvVedtakslengde(dato: LocalDate): Set<SakId> {
-        // TODO: Må filtrere vekk de som allerede har blitt kjørt, men ikke kvalifiserte til reell utvidelse av vedtakslengde
-        return underveisRepository.hentSakerMedSisteUnderveisperiodeFørDato(dato)
-    }
-
     fun skalUtvide(
         forrigeSluttdato: LocalDate,
         rettighetstypeTidslinjeForInneværendeBehandling: Tidslinje<RettighetsType>
     ): Boolean {
         return harFremtidigRettOrdinær(forrigeSluttdato, rettighetstypeTidslinjeForInneværendeBehandling)
                 && now(clock).plusDays(28) >= forrigeSluttdato
-
     }
 
     // Det finnes en fremtidig periode med ordinær rett og gjenværende kvote
@@ -164,19 +120,11 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
                 underveisRepository = repositoryProvider.provide(),
                 sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
                 vilkårsresultatRepository = repositoryProvider.provide(),
-                unleashGateway = gatewayProvider.provide(),
             )
         }
 
         override val type = "batch.UtvidVedtakslengdeJobbUtfører"
-
         override val navn = "Utvid vedtakslengde for saker"
-
         override val beskrivelse = "Skal trigge behandling som utvider vedtakslengde for saker som er i ferd med å nå sluttdato"
-
-        /**
-         * Kjøres hver dag kl 05:00
-         */
-        override val cron = CronExpression.createWithoutSeconds("0 5 * * *")
     }
 }
