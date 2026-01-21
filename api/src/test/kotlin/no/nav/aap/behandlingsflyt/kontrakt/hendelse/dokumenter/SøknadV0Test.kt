@@ -12,7 +12,7 @@ internal class SøknadV0Test {
     fun `SøknadStudentDto serde`() {
         val dto = SøknadStudentDto(
             erStudent = StudentStatus.Ja,
-            kommeTilbake = KommeTilbake.VetIkke
+            kommeTilbake = JaNeiVetIkke.VetIkke
         )
 
         val json = DefaultJsonMapper.toJson(dto)
@@ -23,17 +23,17 @@ internal class SøknadV0Test {
     }
 
     @ParameterizedTest
-    @EnumSource(KommeTilbake::class)
-    fun `KommeTilbake serde`(kommeTilbake: KommeTilbake) {
-        val json = DefaultJsonMapper.toJson(kommeTilbake)
+    @EnumSource(JaNeiVetIkke::class)
+    fun `KommeTilbake serde`(jaNeiVetIkke: JaNeiVetIkke) {
+        val json = DefaultJsonMapper.toJson(jaNeiVetIkke)
 
-        assertThat(json).isEqualTo("\"${kommeTilbake.customValue()}\"")
+        assertThat(json).isEqualTo("\"${jaNeiVetIkke.customValue()}\"")
 
-        val deserialized = DefaultJsonMapper.fromJson(json, KommeTilbake::class.java)
+        val deserialized = DefaultJsonMapper.fromJson(json, JaNeiVetIkke::class.java)
 
-        assertThat(deserialized).isEqualTo(kommeTilbake)
+        assertThat(deserialized).isEqualTo(jaNeiVetIkke)
 
-        assertThat(DefaultJsonMapper.fromJson("\"${kommeTilbake.name}\"", KommeTilbake::class.java)).isEqualTo(kommeTilbake)
+        assertThat(DefaultJsonMapper.fromJson("\"${jaNeiVetIkke.name}\"", JaNeiVetIkke::class.java)).isEqualTo(jaNeiVetIkke)
     }
 
 }

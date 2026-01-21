@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt
 
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KommeTilbake
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.JaNeiVetIkke
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManueltOppgittBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppgitteBarn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
@@ -35,7 +35,7 @@ object TestSøknader {
     )
 
     val SØKNAD_STUDENT = SøknadV0(
-        student = SøknadStudentDto(StudentStatus.Ja, KommeTilbake.Ja),
+        student = SøknadStudentDto(StudentStatus.Ja, JaNeiVetIkke.Ja),
         yrkesskade = "NEI",
         oppgitteBarn = null,
         medlemskap = SøknadMedlemskapDto("JA", "NEI", "NEI", "NEI", null)

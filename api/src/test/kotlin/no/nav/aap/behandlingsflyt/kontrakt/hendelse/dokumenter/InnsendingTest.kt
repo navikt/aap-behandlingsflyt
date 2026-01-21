@@ -86,7 +86,7 @@ class InnsendingTest {
 
         assertThat(fromJson).isInstanceOf(Melding::class.java)
         fromJson as SøknadV0
-        assertThat(fromJson.student?.kommeTilbake).isEqualTo(KommeTilbake.VetIkke)
+        assertThat(fromJson.student?.kommeTilbake).isEqualTo(JaNeiVetIkke.VetIkke)
     }
 
     @Test
@@ -111,7 +111,7 @@ class InnsendingTest {
     fun `serialisere og deserialisere søknad-dto`() {
         val søknad = SøknadV0(
             student = SøknadStudentDto(
-                erStudent = StudentStatus.Ja, kommeTilbake = KommeTilbake.VetIkke
+                erStudent = StudentStatus.Ja, kommeTilbake = JaNeiVetIkke.VetIkke
             ),
             yrkesskade = "ja",
             oppgitteBarn = OppgitteBarn(
