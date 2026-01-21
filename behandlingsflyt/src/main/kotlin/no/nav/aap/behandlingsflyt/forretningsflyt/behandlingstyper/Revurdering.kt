@@ -126,14 +126,6 @@ object Revurdering : BehandlingType {
                 )
             )
             .medSteg(
-                steg = SykestipendSteg,
-                vurderingsbehovRelevanteForSteg = listOf(
-                    Vurderingsbehov.MOTTATT_SØKNAD,
-                    Vurderingsbehov.REVURDER_STUDENT,
-                    Vurderingsbehov.HELHETLIG_VURDERING
-                )
-            )
-            .medSteg(
                 steg = VurderSykdomSteg,
                 // UføreService trengs her for å trigge ytterligere nedsatt arbeidsevne-vurdering
                 informasjonskrav = listOf(
@@ -392,6 +384,14 @@ object Revurdering : BehandlingType {
                 vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.REVURDER_SAMORDNING_ARBEIDSGIVER)
             )
             .medSteg(steg = SamordningAvslagSteg)
+            .medSteg(
+                steg = SykestipendSteg,
+                vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.MOTTATT_SØKNAD,
+                    Vurderingsbehov.REVURDER_STUDENT,
+                    Vurderingsbehov.HELHETLIG_VURDERING
+                )
+            )
             .medSteg(
                 steg = SamordningAndreStatligeYtelserSteg,
                 vurderingsbehovRelevanteForSteg = listOf(
