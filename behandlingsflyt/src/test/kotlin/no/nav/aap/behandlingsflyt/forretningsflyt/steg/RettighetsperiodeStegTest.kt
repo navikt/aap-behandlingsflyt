@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.VurderRettighetsperiodeRepository
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -29,6 +30,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.type.Periode
@@ -50,6 +52,7 @@ class RettighetsperiodeStegTest {
     private lateinit var steg: RettighetsperiodeSteg
     private val sakRepository = InMemorySakRepository
     private val behandlingRepository = InMemoryBehandlingRepository
+    private val trukketSøknadRepository = InMemoryTrukketSøknadRepository
 
     @BeforeEach
     fun setup() {
@@ -71,7 +74,13 @@ class RettighetsperiodeStegTest {
             vilkårsresultatRepository,
             sakService,
             avklaringsbehovRepository,
-            AvklaringsbehovService(avbrytRevurderingService, avklaringsbehovRepository, behandlingRepository, vilkårsresultatRepository),
+            AvklaringsbehovService(
+                avbrytRevurderingService,
+                avklaringsbehovRepository,
+                behandlingRepository,
+                vilkårsresultatRepository,
+                TrukketSøknadService(trukketSøknadRepository)
+            ),
             tidligereVurderinger,
             rettighetsperiodeRepository,
         )
@@ -204,7 +213,12 @@ class RettighetsperiodeStegTest {
         val avklaringsbehovene = Avklaringsbehovene(InMemoryAvklaringsbehovRepository, behandling.id)
 
         // Dette er nok litt søkt scenario, men legger til et tidligere avklaringsbehov med status OPPRETTET
-        avklaringsbehovene.leggTil(listOf(Definisjon.VURDER_RETTIGHETSPERIODE), StegType.VURDER_RETTIGHETSPERIODE, null, null)
+        avklaringsbehovene.leggTil(
+            listOf(Definisjon.VURDER_RETTIGHETSPERIODE),
+            StegType.VURDER_RETTIGHETSPERIODE,
+            null,
+            null
+        )
 
         every { avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id) } returns avklaringsbehovene
         every { rettighetsperiodeRepository.hentVurdering(forrigeBehandling.id) } returns null
@@ -216,7 +230,12 @@ class RettighetsperiodeStegTest {
     }
 
     private fun leggTilLøstOgAvsluttetAvklaringsbehov(avklaringsbehovene: Avklaringsbehovene) {
-        avklaringsbehovene.leggTil(listOf(Definisjon.VURDER_RETTIGHETSPERIODE), StegType.VURDER_RETTIGHETSPERIODE, null, null)
+        avklaringsbehovene.leggTil(
+            listOf(Definisjon.VURDER_RETTIGHETSPERIODE),
+            StegType.VURDER_RETTIGHETSPERIODE,
+            null,
+            null
+        )
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.VURDER_RETTIGHETSPERIODE, "begrunnelse", "saksbehandler")
         avklaringsbehovene.avslutt(Definisjon.VURDER_RETTIGHETSPERIODE)
     }

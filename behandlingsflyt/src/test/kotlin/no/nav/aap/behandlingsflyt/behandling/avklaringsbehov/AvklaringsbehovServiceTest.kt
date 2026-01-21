@@ -3,6 +3,8 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -14,14 +16,18 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvbrytRevurderingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Tid
+import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.time.Instant
 import java.time.LocalDate
 
 class AvklaringsbehovServiceTest {
@@ -29,6 +35,7 @@ class AvklaringsbehovServiceTest {
     private val avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
     private val vilkårsresultatRepository = InMemoryVilkårsresultatRepository
     private val avbrytRevurderingService = AvbrytRevurderingService(InMemoryAvbrytRevurderingRepository)
+    private val trukketSøknadRepository = InMemoryTrukketSøknadRepository
     private lateinit var avklaringsbehovService: AvklaringsbehovService
 
     @BeforeEach
@@ -37,7 +44,8 @@ class AvklaringsbehovServiceTest {
             avbrytRevurderingService = avbrytRevurderingService,
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
             behandlingRepository = InMemoryBehandlingRepository,
-            vilkårsresultatRepository = vilkårsresultatRepository
+            vilkårsresultatRepository = vilkårsresultatRepository,
+            trukketSøknadService = TrukketSøknadService(trukketSøknadRepository)
         )
     }
 
@@ -491,5 +499,89 @@ class AvklaringsbehovServiceTest {
 
         val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
         assertThat(avklaringsbehov?.status()).isEqualTo(Status.AVSLUTTET)
+    }
+
+    @Test
+    fun `oppdaterAvklaringsbehov skal ikke default tilbakestille frivillige avklaringsbehov`() {
+        // Arrange
+        val behandlingId = BehandlingId(1003)
+        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
+        val definisjon = Definisjon.AVKLAR_SAMORDNING_UFØRE
+        avklaringsbehovene.leggTil(listOf(definisjon), definisjon.løsesISteg, null, null)
+        avklaringsbehovene.løsAvklaringsbehov(definisjon, begrunnelse = "Test", endretAv = "Tester")
+
+        val vedtakBehøverVurdering = { false }
+        val erTilstrekkeligVurdert = { false }
+        val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
+        val kontekst = FlytKontekstMedPerioder(
+            sakId = SakId(1),
+            behandlingId = behandlingId,
+            forrigeBehandlingId = null,
+            behandlingType = TypeBehandling.Førstegangsbehandling,
+            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
+            rettighetsperiode = Periode(LocalDate.now(), Tid.MAKS),
+            vurderingsbehovRelevanteForSteg = emptySet()
+        )
+
+        // Act
+        avklaringsbehovService.oppdaterAvklaringsbehov(
+            definisjon = definisjon,
+            vedtakBehøverVurdering = vedtakBehøverVurdering,
+            erTilstrekkeligVurdert = erTilstrekkeligVurdert,
+            tilbakestillGrunnlag = tilbakestillGrunnlag,
+            kontekst = kontekst
+        )
+
+        // Assert
+        val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
+        assertThat(avklaringsbehov?.status()).isEqualTo(Status.AVSLUTTET)
+        verify(exactly = 0) { tilbakestillGrunnlag() }
+    }
+
+    @Test
+    fun `oppdaterAvklaringsbehov skal tilbakestille frivillige avklaringsbehov ved søknadstrekking`() {
+        // Arrange
+        val behandlingId = BehandlingId(1003)
+        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
+        val definisjon = Definisjon.AVKLAR_SAMORDNING_UFØRE
+        avklaringsbehovene.leggTil(listOf(definisjon), definisjon.løsesISteg, null, null)
+        avklaringsbehovene.løsAvklaringsbehov(definisjon, begrunnelse = "Test", endretAv = "Tester")
+
+        val vedtakBehøverVurdering = { false }
+        val erTilstrekkeligVurdert = { false }
+        val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
+        val kontekst = FlytKontekstMedPerioder(
+            sakId = SakId(1),
+            behandlingId = behandlingId,
+            forrigeBehandlingId = null,
+            behandlingType = TypeBehandling.Førstegangsbehandling,
+            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
+            rettighetsperiode = Periode(LocalDate.now(), Tid.MAKS),
+            vurderingsbehovRelevanteForSteg = emptySet()
+        )
+        trukketSøknadRepository.lagreTrukketSøknadVurdering(
+            behandlingId,
+            TrukketSøknadVurdering(
+                journalpostId = JournalpostId("12344321"),
+                begrunnelse = "en grunn",
+                vurdertAv = Bruker("Z00000"),
+                skalTrekkes = true,
+                vurdert = Instant.parse("2020-01-01T12:12:12Z"),
+            )
+        )
+
+        // Act
+        avklaringsbehovService.oppdaterAvklaringsbehov(
+            definisjon = definisjon,
+            vedtakBehøverVurdering = vedtakBehøverVurdering,
+            erTilstrekkeligVurdert = erTilstrekkeligVurdert,
+            tilbakestillGrunnlag = tilbakestillGrunnlag,
+            kontekst = kontekst
+        )
+
+        // Assert
+        val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(definisjon)
+        assertThat(avklaringsbehov?.status()).isEqualTo(Status.AVBRUTT)
+        verify(exactly = 1) { tilbakestillGrunnlag() }
     }
 }
