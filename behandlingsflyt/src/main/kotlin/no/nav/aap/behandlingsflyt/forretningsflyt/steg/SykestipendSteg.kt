@@ -80,15 +80,7 @@ class SykestipendSteg private constructor(
                 sykestipendGrunnlag != null
             },
             tilbakestillGrunnlag = {
-                val vedtatteVurdering = kontekst.forrigeBehandlingId
-                    ?.let { sykestipendRepository.hentHvisEksisterer(it) }
-                    ?.vurdering
-                if (vedtatteVurdering != null) {
-                    sykestipendRepository.lagre(kontekst.behandlingId, vedtatteVurdering)
-                } else {
-                    sykestipendRepository.deaktiverGrunnlag(kontekst.behandlingId)
-                }
-
+                // Manuelt frivillige skal ikke tilbakestilles
             },
             kontekst
         )
