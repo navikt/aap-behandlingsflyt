@@ -25,8 +25,7 @@ class StudentVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<Stud
                 .somTidslinje { Periode(it.avbruttStudieDato!!, it.avbruttStudieDato.plusMonths(6).minusDays(1)) }
                 .mapValue { true }
 
-        // TODO: Her tror jeg vi må resette vilkårsvurderingen
-
+        vilkår.leggTilIkkeVurdertPeriode(grunnlag.rettighetsperiode) // Resetter vilkårstidslinjen
         vilkår.leggTilVurderinger(
             studentTidslinje.leftJoin(varighetsTidslinje) { studentvurdering, varighetOk ->
                 if (studentvurdering.erOppfylt()) {

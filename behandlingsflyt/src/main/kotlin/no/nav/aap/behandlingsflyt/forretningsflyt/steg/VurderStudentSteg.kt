@@ -72,10 +72,9 @@ class VurderStudentSteg private constructor(
         )
         
         when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
+            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING, VurderingType.UTVID_VEDTAKSLENGDE -> {
                 vurderStudentvilkår(kontekst)
             }
-            VurderingType.UTVID_VEDTAKSLENGDE,
             VurderingType.MELDEKORT,
             VurderingType.AUTOMATISK_BREV,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,

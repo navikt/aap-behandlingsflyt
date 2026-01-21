@@ -92,7 +92,7 @@ class VilkårsresultatTest {
 
             val tidslinje = v.rettighetstypeTidslinje()
             assertThat(tidslinje.segmenter()).hasSize(1)
-            assertThat(tidslinje.segmenter().first().verdi).isEqualTo(RettighetsType.BISTANDSBEHOV)
+            assertThat(tidslinje.segmenter().first().verdi).isEqualTo(RettighetsType.STUDENT)
             assertThat(tidslinje.helePerioden()).isEqualTo(Periode(startDag, startDag.plusDays(4)))
         }
 
