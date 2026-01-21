@@ -24,6 +24,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtle
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Opprettholdes
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.perioder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -34,9 +35,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.BARNETILL
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.FASTSATT_PERIODE_PASSERT
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.UTVID_VEDTAKSLENGDE
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.FRITAK_MELDEPLIKT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_MELDEKORT
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.UTVID_VEDTAKSLENGDE
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -78,9 +79,13 @@ class BrevUtlederService(
     fun utledBehovForMeldingOmVedtak(behandlingId: BehandlingId): BrevBehov? {
         val behandling = behandlingRepository.hent(behandlingId)
         val forrigeBehandlingId = behandling.forrigeBehandlingId
-        var harBehandlingenArbeidsopptrapping = arbeidsopptrappingRepository.hentPerioder(behandlingId).isNotEmpty()
-        var harForrigeBehandlingArbeidsopptrapping = forrigeBehandlingId != null && arbeidsopptrappingRepository.hentPerioder(forrigeBehandlingId).isNotEmpty()
-        var skalSendeVedtakForArbeidsopptrapping = harBehandlingenArbeidsopptrapping && !harForrigeBehandlingArbeidsopptrapping
+        val harBehandlingenArbeidsopptrapping =
+            arbeidsopptrappingRepository.hentHvisEksisterer(behandlingId).perioder().isNotEmpty()
+        val harForrigeBehandlingArbeidsopptrapping =
+            forrigeBehandlingId != null && arbeidsopptrappingRepository.hentHvisEksisterer(forrigeBehandlingId)
+                .perioder().isNotEmpty()
+        val skalSendeVedtakForArbeidsopptrapping =
+            harBehandlingenArbeidsopptrapping && !harForrigeBehandlingArbeidsopptrapping
 
         when (behandling.typeBehandling()) {
             TypeBehandling.Førstegangsbehandling -> {

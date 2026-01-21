@@ -18,3 +18,27 @@ data class ArbeidsopptrappingGrunnlag(
             .somTidslinje { Periode(it.vurderingenGjelderFra, it.vurderingenGjelderTil ?: maksDato) }
     }
 }
+
+fun ArbeidsopptrappingGrunnlag?.perioder(): List<Periode> {
+    val vurderinger = this?.vurderinger.orEmpty()
+        .sortedBy { it.vurderingenGjelderFra }
+
+    val vurderingMedPerioder = vurderinger.mapIndexed { index, vurdering ->
+        val fom = vurdering.vurderingenGjelderFra
+        val tom = when {
+            vurdering.vurderingenGjelderTil != null ->
+                vurdering.vurderingenGjelderTil
+
+            index < vurderinger.lastIndex ->
+                vurderinger[index + 1].vurderingenGjelderFra
+
+            else ->
+                vurdering.vurderingenGjelderFra.plusMonths(12)
+        }
+        vurdering to Periode(fom, tom)
+    }
+
+    return vurderingMedPerioder
+        .filter { (v) -> v.rettPaaAAPIOpptrapping && v.reellMulighetTilOpptrapping }
+        .map { (_, periode) -> periode }
+}
