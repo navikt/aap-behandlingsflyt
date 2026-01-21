@@ -66,6 +66,10 @@ class VedtakslengdeSteg(
                 lagreGjeldendeSluttdatoHvisIkkeEksisterer(sisteVedtatteUnderveisperiode, kontekst)
             }
 
+            VurderingType.MIGRER_RETTIGHETSPERIODE -> {
+                lagreGjeldendeSluttdatoHvisIkkeEksisterer(sisteVedtatteUnderveisperiode, kontekst)
+            }
+
             VurderingType.UTVID_VEDTAKSLENGDE -> {
                 if (sisteVedtatteUnderveisperiode == null) {
                     log.info("Ingen vedtakslengde å utvide")

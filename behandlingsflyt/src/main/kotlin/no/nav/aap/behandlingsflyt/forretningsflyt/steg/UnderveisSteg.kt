@@ -60,6 +60,7 @@ class UnderveisSteg(
                 Vurderingsbehov.REVURDER_MELDEPLIKT_RIMELIG_GRUNN in kontekst.vurderingsbehovRelevanteForSteg
             }
             VurderingType.UTVID_VEDTAKSLENGDE,
+            VurderingType.MIGRER_RETTIGHETSPERIODE,
             VurderingType.MELDEKORT,
             VurderingType.AUTOMATISK_BREV,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
