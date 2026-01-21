@@ -68,6 +68,7 @@ class SykestipendSteg private constructor(
                                 && kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty()
 
                     VurderingType.UTVID_VEDTAKSLENGDE,
+                    VurderingType.MIGRER_RETTIGHETSPERIODE,
                     VurderingType.MELDEKORT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
