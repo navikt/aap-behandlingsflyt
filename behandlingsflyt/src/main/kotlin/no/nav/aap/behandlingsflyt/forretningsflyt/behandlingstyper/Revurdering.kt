@@ -387,9 +387,8 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = SykestipendSteg,
                 vurderingsbehovRelevanteForSteg = listOf(
-                    Vurderingsbehov.MOTTATT_SØKNAD,
                     Vurderingsbehov.REVURDER_STUDENT,
-                    Vurderingsbehov.HELHETLIG_VURDERING
+                    Vurderingsbehov.REVURDER_SYKESTIPEND
                 )
             )
             .medSteg(
