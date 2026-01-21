@@ -3,57 +3,58 @@ package no.nav.aap.behandlingsflyt.behandling.underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.komponenter.type.Periode
 import org.junit.jupiter.api.Test
+import org.assertj.core.api.Assertions.assertThat
+import java.time.Clock
 import java.time.LocalDate
-import kotlin.test.assertEquals
 
-private val NÅ = LocalDate.now()
+private val dagensDato = LocalDate.now(Clock.systemDefaultZone())
 
 class RettighetsperiodeServiceTest {
     @Test
     fun `skal utlede riktig rettighetsperiode for arbeidssøker`() {
-        val rettighetsperioder = RettighetsperiodeService().beregn(NÅ)
-        val forventetPeriode = Periode(NÅ, NÅ.plusMonths(6))
+        val rettighetsperioder = RettighetsperiodeService().beregn(dagensDato)
+        val forventetPeriode = Periode(dagensDato, dagensDato.plusMonths(6))
 
-        assertEquals(forventetPeriode, rettighetsperioder.arbeidssøkerPeriode)
+        assertThat(rettighetsperioder.arbeidssøkerPeriode).isEqualTo(forventetPeriode)
     }
 
     @Test
     fun `skal utlede riktig rettighetsperiode for student`() {
-        val rettighetsperioder = RettighetsperiodeService().beregn(NÅ)
-        val forventetPeriode = Periode(NÅ, NÅ.plusMonths(6))
+        val rettighetsperioder = RettighetsperiodeService().beregn(dagensDato)
+        val forventetPeriode = Periode(dagensDato, dagensDato.plusMonths(6))
 
-        assertEquals(forventetPeriode, rettighetsperioder.studentPeriode)
+        assertThat(rettighetsperioder.studentPeriode).isEqualTo(forventetPeriode)
     }
 
     @Test
     fun `skal utlede riktig rettighetsperiode for overgang til uføre`() {
-        val rettighetsperioder = RettighetsperiodeService().beregn(NÅ)
-        val forventetPeriode = Periode(NÅ, NÅ.plusMonths(8))
+        val rettighetsperioder = RettighetsperiodeService().beregn(dagensDato)
+        val forventetPeriode = Periode(dagensDato, dagensDato.plusMonths(8))
 
-        assertEquals(forventetPeriode, rettighetsperioder.overgangUførePeriode)
+        assertThat(rettighetsperioder.overgangUførePeriode).isEqualTo(forventetPeriode)
     }
 
     @Test
     fun `skal utlede riktig maksdato for rettighet arbeidssøker`() {
-        val maksdatoForArbeidssøker = RettighetsperiodeService().utledMaksdatoForRettighet(RettighetsType.ARBEIDSSØKER, NÅ)
-        val forventetMaksdato = NÅ.plusMonths(6)
+        val maksdatoForArbeidssøker = RettighetsperiodeService().utledMaksdatoForRettighet(RettighetsType.ARBEIDSSØKER, dagensDato)
+        val forventetMaksdato = dagensDato.plusMonths(6)
 
-        assertEquals(forventetMaksdato, maksdatoForArbeidssøker)
+        assertThat(maksdatoForArbeidssøker).isEqualTo(forventetMaksdato)
     }
 
     @Test
     fun `skal utlede riktig maksdato for rettighet student`() {
-        val maksdatoForStudent = RettighetsperiodeService().utledMaksdatoForRettighet(RettighetsType.STUDENT, NÅ)
-        val forventetMaksdato = NÅ.plusMonths(6)
+        val maksdatoForStudent = RettighetsperiodeService().utledMaksdatoForRettighet(RettighetsType.STUDENT, dagensDato)
+        val forventetMaksdato = dagensDato.plusMonths(6)
 
-        assertEquals(forventetMaksdato, maksdatoForStudent)
+        assertThat(maksdatoForStudent).isEqualTo(forventetMaksdato)
     }
 
     @Test
     fun `skal utlede riktig maksdato for rettighet overgang til uføre`() {
-        val maksdatoForOvergangUføre = RettighetsperiodeService().utledMaksdatoForRettighet(RettighetsType.VURDERES_FOR_UFØRETRYGD, NÅ)
-        val forventetMaksdato = NÅ.plusMonths(8)
+        val maksdatoForOvergangUføre = RettighetsperiodeService().utledMaksdatoForRettighet(RettighetsType.VURDERES_FOR_UFØRETRYGD, dagensDato)
+        val forventetMaksdato = dagensDato.plusMonths(8)
 
-        assertEquals(forventetMaksdato, maksdatoForOvergangUføre)
+        assertThat(maksdatoForOvergangUføre).isEqualTo(forventetMaksdato)
     }
 }

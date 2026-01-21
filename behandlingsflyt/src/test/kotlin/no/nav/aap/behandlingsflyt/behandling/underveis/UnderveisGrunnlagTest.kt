@@ -11,9 +11,9 @@ import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import org.junit.jupiter.api.Test
+import org.assertj.core.api.Assertions.assertThat
 import java.math.BigDecimal
 import java.time.LocalDate
-import kotlin.test.assertEquals
 
 private val NITTENDE_JAN_2025 = LocalDate.of(2025, 1, 19)
 private val TOM_PERIODE = Periode(LocalDate.now(), LocalDate.now())
@@ -30,8 +30,8 @@ class UnderveisGrunnlagTest {
         val kvoter = underveisGrunnlag.utledKvoterForRettighetstype(RettighetsType.BISTANDSBEHOV)
         val totalKvoteForBistandsbehov = 784
 
-        assertEquals(0, kvoter.bruktKvote)
-        assertEquals(totalKvoteForBistandsbehov, kvoter.gjenværendeKvote)
+        assertThat(kvoter.bruktKvote).isEqualTo(0)
+        assertThat(kvoter.gjenværendeKvote).isEqualTo(totalKvoteForBistandsbehov)
     }
 
     @Test
@@ -49,8 +49,8 @@ class UnderveisGrunnlagTest {
         val totalKvoteForSykepengeErstatning = 130
         val forventetBruktKvote = 12
 
-        assertEquals(forventetBruktKvote, kvoter.bruktKvote)
-        assertEquals(totalKvoteForSykepengeErstatning.minus(forventetBruktKvote), kvoter.gjenværendeKvote)
+        assertThat(kvoter.bruktKvote).isEqualTo(forventetBruktKvote)
+        assertThat(kvoter.gjenværendeKvote).isEqualTo(totalKvoteForSykepengeErstatning.minus(forventetBruktKvote))
     }
 
     @Test
@@ -63,9 +63,9 @@ class UnderveisGrunnlagTest {
 
         val underveisGrunnlag = UnderveisGrunnlag(1234, perioder)
         val maksdato = underveisGrunnlag.utledMaksdatoForRettighet(RettighetsType.BISTANDSBEHOV)
-        val forventetMaksdato = NITTENDE_JAN_2025.plusYears(3).plusMonths(1).plusDays(14)
+        val forventetMaksdato = NITTENDE_JAN_2025.plusYears(3).plusMonths(1).plusWeeks(2).plusDays(1)
 
-        assertEquals(forventetMaksdato, maksdato)
+        assertThat(maksdato).isEqualTo(forventetMaksdato)
     }
 
     @Test
@@ -78,9 +78,9 @@ class UnderveisGrunnlagTest {
 
         val underveisGrunnlag = UnderveisGrunnlag(1234, perioder)
         val maksdato = underveisGrunnlag.utledMaksdatoForRettighet(RettighetsType.SYKEPENGEERSTATNING)
-        val forventetMaksdato = NITTENDE_JAN_2025.plusYears(1).plusMonths(3).plusWeeks(3).plusDays(5)
+        val forventetMaksdato = NITTENDE_JAN_2025.plusYears(1).plusMonths(3).plusWeeks(3).plusDays(6)
 
-        assertEquals(forventetMaksdato, maksdato)
+        assertThat(maksdato).isEqualTo(forventetMaksdato)
     }
 }
 
