@@ -14,14 +14,14 @@ object Stopp : Transisjon {
     }
 }
 
-class FunnetAvklaringsbehov(private val avklaringsbehov: List<Definisjon>) : Transisjon {
-    fun avklaringsbehov(): List<Definisjon> {
+class FunnetAvklaringsbehov(private val avklaringsbehov: Definisjon) : Transisjon {
+    fun avklaringsbehov(): Definisjon {
         return avklaringsbehov
     }
 }
 
-class FunnetVentebehov(private val ventebehov: List<Ventebehov>) : Transisjon {
-    fun ventebehov(): List<Ventebehov> {
+class FunnetVentebehov(private val ventebehov: Ventebehov) : Transisjon {
+    fun ventebehov(): Ventebehov {
         return ventebehov
     }
 }

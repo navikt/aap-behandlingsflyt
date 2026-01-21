@@ -99,7 +99,7 @@ class ForeslåVedtakStegTest {
             )
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
         avklaringsbehovene.leggTil(
-            definisjoner = listOf(Definisjon.AVKLAR_SYKDOM),
+            definisjon = Definisjon.AVKLAR_SYKDOM,
             funnetISteg = StegType.AVKLAR_SYKDOM, null, null
         )
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_SYKDOM, "ja", "TESTEN")
@@ -133,7 +133,7 @@ class ForeslåVedtakStegTest {
             )
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
         avklaringsbehovene.leggTil(
-            definisjoner = listOf(Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT),
+            definisjon = Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT,
             funnetISteg = StegType.FASTSETT_BEREGNINGSTIDSPUNKT, null, null
         )
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT, "ja", "TESTEN")
@@ -168,11 +168,11 @@ class ForeslåVedtakStegTest {
             )
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
         avklaringsbehovene.leggTil(
-            definisjoner = listOf(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP),
+            definisjon = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP,
             funnetISteg = StegType.VURDER_LOVVALG, null, null
         )
         avklaringsbehovene.leggTil(
-            definisjoner = listOf(Definisjon.AVKLAR_SYKDOM),
+            definisjon = Definisjon.AVKLAR_SYKDOM,
             funnetISteg = StegType.AVKLAR_SYKDOM, null, null
         )
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP, "ja", "TESTEN")
@@ -208,7 +208,7 @@ class ForeslåVedtakStegTest {
             )
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
         avklaringsbehovene.leggTil(
-            definisjoner = listOf(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP),
+            definisjon = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP,
             funnetISteg = StegType.VURDER_LOVVALG, null, null
         )
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP, "ja", "TESTEN")
@@ -243,13 +243,13 @@ class ForeslåVedtakStegTest {
             )
         var avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
         avklaringsbehovene.leggTil(
-            definisjoner = listOf(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP),
+            definisjon = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP,
             funnetISteg = StegType.VURDER_LOVVALG,
             null, null
         )
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP, "ja", "TESTEN")
         avklaringsbehovene.leggTil(
-            definisjoner = listOf(Definisjon.FORESLÅ_VEDTAK),
+            definisjon = Definisjon.FORESLÅ_VEDTAK,
             funnetISteg = StegType.FORESLÅ_VEDTAK,
             null, null
         )

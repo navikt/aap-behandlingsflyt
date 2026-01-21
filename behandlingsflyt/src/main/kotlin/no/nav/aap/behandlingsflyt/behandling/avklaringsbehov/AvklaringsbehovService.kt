@@ -130,7 +130,7 @@ class AvklaringsbehovService(
 
                     null, AVBRUTT ->
                         avklaringsbehovene.leggTil(
-                            listOf(definisjon),
+                            definisjon,
                             definisjon.løsesISteg,
                             perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
                             perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()
@@ -177,7 +177,7 @@ class AvklaringsbehovService(
                     SENDT_TILBAKE_FRA_KVALITETSSIKRER,
                     AVBRUTT -> {
                         avklaringsbehovene.leggTil(
-                            listOf(definisjon),
+                            definisjon,
                             definisjon.løsesISteg,
                             perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
                             perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering()

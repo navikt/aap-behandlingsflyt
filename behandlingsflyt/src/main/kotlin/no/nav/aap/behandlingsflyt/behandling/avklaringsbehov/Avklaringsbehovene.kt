@@ -17,7 +17,6 @@ import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.tilgang.Rolle
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
-import kotlin.collections.filter
 
 class Avklaringsbehovene(
     private val repository: AvklaringsbehovOperasjonerRepository,
@@ -56,7 +55,7 @@ class Avklaringsbehovene(
             if (hentBehovForDefinisjon(definisjon) == null) {
                 // Legger til frivillig behov
                 leggTil(
-                    definisjoner = listOf(definisjon),
+                    definisjon = definisjon,
                     funnetISteg = definisjon.løsesISteg,
                     bruker = bruker,
                     perioderVedtaketBehøverVurdering = null,
@@ -70,7 +69,7 @@ class Avklaringsbehovene(
         if (definisjon.erOverstyring()) {
             if (hentBehovForDefinisjon(definisjon) == null) {
                 leggTil(
-                    definisjoner = listOf(definisjon),
+                    definisjon = definisjon,
                     funnetISteg = definisjon.løsesISteg,
                     bruker = bruker,
                     perioderVedtaketBehøverVurdering = null,
@@ -86,7 +85,7 @@ class Avklaringsbehovene(
      * NB! Dersom avklaringsbehovet finnes fra før og er åpent så ignorerer vi det nye behovet, mens dersom det er avsluttet eller avbrutt så reåpner vi det.
      */
     fun leggTil(
-        definisjoner: List<Definisjon>,
+        definisjon: Definisjon,
         funnetISteg: StegType,
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
         perioderVedtaketBehøverVurdering: Set<Periode>?,
@@ -95,8 +94,8 @@ class Avklaringsbehovene(
         grunn: ÅrsakTilSettPåVent? = null,
         bruker: Bruker = SYSTEMBRUKER
     ) {
-        log.info("Legger til avklaringsbehov :: {} - {}", definisjoner, funnetISteg)
-        definisjoner.forEach { definisjon ->
+        log.info("Legger til avklaringsbehov :: {} - {}", definisjon, funnetISteg)
+        definisjon.let { definisjon ->
             val avklaringsbehov = hentBehovForDefinisjon(definisjon)
             if (avklaringsbehov != null) {
                 if (avklaringsbehov.erAvsluttet()) {
