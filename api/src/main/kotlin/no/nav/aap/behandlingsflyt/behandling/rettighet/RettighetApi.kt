@@ -3,11 +3,13 @@ package no.nav.aap.behandlingsflyt.behandling.rettighet
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.behandling.rettighetstype.avslagsårsakerVedTapAvRettPåAAP
 import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetsperiodeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -34,6 +36,10 @@ fun NormalOpenAPIRoute.rettighetApi(
 
                 val underveisgrunnlagRepository = repositoryProvider.provide<UnderveisRepository>()
                 val underveisgrunnlag = underveisgrunnlagRepository.hent(behandling.id)
+                val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
+                val vilkårsresultat = vilkårsresultatRepository.hent(behandling.id)
+                val avslagForTapAvAAP = avslagsårsakerVedTapAvRettPåAAP(vilkårsresultat)
+
                 val rettighetstypePerioderMap: Map<RettighetsType, List<Underveisperiode>> =
                     RettighetsType.entries.associate { type -> type to underveisgrunnlag.perioder.filter { it.rettighetsType == type } }
 
@@ -56,8 +62,8 @@ fun NormalOpenAPIRoute.rettighetApi(
                             gjenværendeKvote = gjenværendeKvote,
                             startdato = startdato,
                             maksDato = maksDato,
-                            opphørsdato = perioder.first { it.avslagsårsak == UnderveisÅrsak.VARIGHETSKVOTE_BRUKT_OPP }.periode.tom,
-                            stansdato = perioder.last { it.avslagsårsak == UnderveisÅrsak.BRUDD_PÅ_AKTIVITETSPLIKT_11_7_STANS }.periode.tom // TODO Erstatt med ikke-deprecated
+                            opphørsdato = avslagForTapAvAAP.filter { it.verdi.any { it.avslagstype === Avslagstype.OPPHØR } }.perioder().first().tom,
+                            stansdato = avslagForTapAvAAP.filter { it.verdi.any { it.avslagstype === Avslagstype.STANS } }.perioder().first().tom
                         )
                 }
                 rettighetDtoListe
