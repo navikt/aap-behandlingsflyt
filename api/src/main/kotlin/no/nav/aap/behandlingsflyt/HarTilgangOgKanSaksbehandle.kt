@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 fun harTilgangOgKanSaksbehandle(harTilgang: Boolean, avklaringsbehovene: Avklaringsbehovene): Boolean {
     val erFørAvsluttetKvalitetssikring = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.KVALITETSSIKRING) == null
 
-    val erReturnertFraKvalitetssikering = avklaringsbehovene.alle()
+    val erReturnertFraKvalitetssikrer = avklaringsbehovene.alle()
         .filter { it.kreverKvalitetssikring() }
         .any { it.status() == Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER }
 
@@ -15,5 +15,5 @@ fun harTilgangOgKanSaksbehandle(harTilgang: Boolean, avklaringsbehovene: Avklari
         .filter { it.kreverKvalitetssikring() }
         .any { it.status() == Status.SENDT_TILBAKE_FRA_BESLUTTER }
 
-    return harTilgang && (erFørAvsluttetKvalitetssikring || erReturnertFraKvalitetssikering || erReturnertFraBeslutter)
+    return harTilgang && (erFørAvsluttetKvalitetssikring || erReturnertFraKvalitetssikrer || erReturnertFraBeslutter)
 }
