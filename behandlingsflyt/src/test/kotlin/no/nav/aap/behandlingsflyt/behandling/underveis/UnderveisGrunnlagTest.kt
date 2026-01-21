@@ -54,7 +54,7 @@ class UnderveisGrunnlagTest {
     }
 
     @Test
-    fun `skal utlede maksdato 3 år, 1 måned og 15 dager frem i tid for rettighet bistandsbehov`() {
+    fun `skal utlede maksdato 2 år, 11 måneder og 12 dager frem i tid for rettighet bistandsbehov`() {
         val perioder = listOf(
             underveisperiode(
                 Periode(NITTENDE_JAN_2025.minusWeeks(3), NITTENDE_JAN_2025.minusWeeks(1)),
@@ -63,13 +63,13 @@ class UnderveisGrunnlagTest {
 
         val underveisGrunnlag = UnderveisGrunnlag(1234, perioder)
         val maksdato = underveisGrunnlag.utledMaksdatoForRettighet(RettighetsType.BISTANDSBEHOV)
-        val forventetMaksdato = NITTENDE_JAN_2025.plusYears(3).plusMonths(1).plusWeeks(2).plusDays(1)
+        val forventetMaksdato = NITTENDE_JAN_2025.plusYears(2).plusMonths(11).plusWeeks(1).plusDays(5)
 
         assertThat(maksdato).isEqualTo(forventetMaksdato)
     }
 
     @Test
-    fun `skal utlede maksdato 1 år, 3 måneder og 27 dager for rettighet sykepengeerstatning`() {
+    fun `skal utlede maksdato 4 måneder og 4 uker for rettighet sykepengeerstatning`() {
         val perioder = listOf(
             underveisperiode(
                 Periode(NITTENDE_JAN_2025.minusWeeks(5), NITTENDE_JAN_2025.minusWeeks(2)),
@@ -78,7 +78,7 @@ class UnderveisGrunnlagTest {
 
         val underveisGrunnlag = UnderveisGrunnlag(1234, perioder)
         val maksdato = underveisGrunnlag.utledMaksdatoForRettighet(RettighetsType.SYKEPENGEERSTATNING)
-        val forventetMaksdato = NITTENDE_JAN_2025.plusYears(1).plusMonths(3).plusWeeks(3).plusDays(6)
+        val forventetMaksdato = NITTENDE_JAN_2025.plusMonths(4).plusWeeks(4)
 
         assertThat(maksdato).isEqualTo(forventetMaksdato)
     }

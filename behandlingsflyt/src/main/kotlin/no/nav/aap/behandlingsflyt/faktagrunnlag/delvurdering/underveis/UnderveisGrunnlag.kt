@@ -34,11 +34,12 @@ data class UnderveisGrunnlag(
 
     fun utledMaksdatoForRettighet(type: RettighetsType): LocalDate {
         val gjenværendeKvote = utledKvoterForRettighetstype(type).gjenværendeKvote
+        val innfriddePerioder = utledInnfriddePerioderForRettighet(type)
+
         if (gjenværendeKvote > 0) {
-            return dagensDato.plusHverdager(Hverdager(gjenværendeKvote))
+            return innfriddePerioder.last().periode.tom.plusHverdager(Hverdager(gjenværendeKvote))
         }
-        return utledInnfriddePerioderForRettighet(type)
-            .first { it.avslagsårsak == UnderveisÅrsak.VARIGHETSKVOTE_BRUKT_OPP }.periode.fom
+        return innfriddePerioder.first { it.avslagsårsak == UnderveisÅrsak.VARIGHETSKVOTE_BRUKT_OPP }.periode.fom
     }
 
     fun utledKvoterForRettighetstype(rettighetsType: RettighetsType): RettighetKvoter {

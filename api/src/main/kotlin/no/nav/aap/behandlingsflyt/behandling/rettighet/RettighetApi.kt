@@ -63,8 +63,8 @@ fun NormalOpenAPIRoute.rettighetApi(
                             gjenværendeKvote = gjenværendeKvote,
                             startdato = startdato,
                             maksDato = maksDato,
-                            opphørsdato = avslagForTapAvAAP.filter { it.verdi.any { it.avslagstype === Avslagstype.OPPHØR } }.perioder().first().tom,
-                            stansdato = avslagForTapAvAAP.filter { it.verdi.any { it.avslagstype === Avslagstype.STANS } }.perioder().first().tom
+                            opphørsdato = avslagForTapAvAAP.filter { it.verdi.any { it.avslagstype === Avslagstype.OPPHØR && it.hjemmel === type.hjemmel } }.perioder().first().tom,
+                            stansdato = avslagForTapAvAAP.filter { it.verdi.any { it.avslagstype === Avslagstype.STANS && it.hjemmel === type.hjemmel } }.perioder().first().tom
                         )
                 }
                 rettighetDtoListe
