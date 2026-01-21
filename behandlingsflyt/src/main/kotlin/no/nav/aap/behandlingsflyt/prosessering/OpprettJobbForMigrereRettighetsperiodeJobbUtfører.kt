@@ -42,7 +42,7 @@ class OpprettJobbForMigrereRettighetsperiodeJobbUtfører(
 
     companion object : ProvidersJobbSpesifikasjon {
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
-            return `OpprettJobbForMigrereRettighetsperiodeJobbUtfører`(
+            return OpprettJobbForMigrereRettighetsperiodeJobbUtfører(
                 flytJobbRepository = repositoryProvider.provide(),
                 sakRepository = repositoryProvider.provide(),
                 sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
@@ -50,7 +50,7 @@ class OpprettJobbForMigrereRettighetsperiodeJobbUtfører(
             )
         }
 
-        override val type = "batch.OpprettJobbForMigrerRettighetsperiodeJobbUtfører"
+        override val type = "batch.OpprettJobbForMigrerRettighetsperioder"
 
         override val navn = "Oppretter jobber for de sakene som skal migrere rettighetsperiode til Tid.MAKS"
 

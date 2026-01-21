@@ -134,7 +134,7 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
 
     companion object : ProvidersJobbSpesifikasjon {
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
-            return `OpprettBehandlingMigrereRettighetsperiodeJobbUtfører`(
+            return OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
                 prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
                 sakRepository = repositoryProvider.provide(),
                 underveisRepository = repositoryProvider.provide(),
