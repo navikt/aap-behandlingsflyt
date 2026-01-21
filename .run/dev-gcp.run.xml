@@ -10,9 +10,6 @@
       <env name="INTEGRASJON_TJENESTEPENSJON_SCOPE" value="api://dev-fss.pensjonsamhandling.tp-q2/.default" />
       <env name="INTEGRASJON_PDL_URL" value="https://pdl-api.dev-fss-pub.nais.io/graphql" />
       <env name="INTEGRASJON_PDL_SCOPE" value="api://dev-fss.pdl.pdl-api/.default" />
-      <env name="INTEGRASJON_SAF_URL_GRAPHQL" value="https://saf-q2.dev-fss-pub.nais.io/graphql" />
-      <env name="INTEGRASJON_SAF_URL_REST" value="https://saf-q2.dev-fss-pub.nais.io/rest" />
-      <env name="INTEGRASJON_SAF_SCOPE" value="api://dev-fss.teamdokumenthandtering.saf/.default" />
       <env name="INTEGRASJON_YRKESSKADE_URL" value="https://yrkesskade-saker.intern.dev.nav.no/api/v1/saker/" />
       <env name="INTEGRASJON_YRKESSKADE_SCOPE" value="api://dev-gcp.yrkesskade.yrkesskade-saker/.default" />
       <env name="INTEGRASJON_GOSYS_URL" value="https://oppgave.dev-fss-pub.nais.io" />
