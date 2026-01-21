@@ -2,7 +2,9 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.behandling.underveis.KvoteService
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plusHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.somTidslinje
@@ -33,11 +35,10 @@ data class UnderveisGrunnlag(
     fun utledMaksdatoForRettighet(type: RettighetsType): LocalDate {
         val gjenværendeKvote = utledKvoterForRettighetstype(type).gjenværendeKvote
         if (gjenværendeKvote > 0) {
-            return dagensDato.plusDays(gjenværendeKvote.toLong())
-        } else {
-            return utledInnfriddePerioderForRettighet(type)
-                .first { it.avslagsårsak == UnderveisÅrsak.VARIGHETSKVOTE_BRUKT_OPP }.periode.fom
+            return dagensDato.plusHverdager(Hverdager(gjenværendeKvote))
         }
+        return utledInnfriddePerioderForRettighet(type)
+            .first { it.avslagsårsak == UnderveisÅrsak.VARIGHETSKVOTE_BRUKT_OPP }.periode.fom
     }
 
     fun utledKvoterForRettighetstype(rettighetsType: RettighetsType): RettighetKvoter {
