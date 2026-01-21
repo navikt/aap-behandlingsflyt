@@ -43,7 +43,7 @@ fun NormalOpenAPIRoute.rettighetApi(
                 val rettighetstypePerioderMap: Map<RettighetsType, List<Underveisperiode>> =
                     RettighetsType.entries.associate { type -> type to underveisgrunnlag.perioder.filter { it.rettighetsType == type } }
 
-                val rettighetDtoListe = rettighetstypePerioderMap.map { (type, perioder) ->
+                val rettighetDtoListe = rettighetstypePerioderMap.map { (type) ->
                     val rettighetKvoter = underveisgrunnlag.utledKvoterForRettighetstype(type)
                     val startdato = underveisgrunnlag.utledStartdatoForRettighet(type)
                     val gjenværendeKvote = rettighetKvoter.gjenværendeKvote
@@ -57,6 +57,7 @@ fun NormalOpenAPIRoute.rettighetApi(
                         }
 
                         RettighetDto(
+                            type = type,
                             kvote = rettighetKvoter.totalKvote,
                             bruktKvote = rettighetKvoter.bruktKvote,
                             gjenværendeKvote = gjenværendeKvote,
