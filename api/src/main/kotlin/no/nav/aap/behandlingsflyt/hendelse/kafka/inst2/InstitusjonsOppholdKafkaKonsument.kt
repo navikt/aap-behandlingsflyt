@@ -9,7 +9,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.ConsumerRecords
@@ -21,13 +20,12 @@ import kotlin.time.Duration.Companion.seconds
 val INSTITUSJONSOPPHOLD_EVENT_TOPIC: String =
     requiredConfigForKey("integrasjon.institusjonsopphold.event.topic")
 
-class Inst2KafkaKonsument(
+class InstitusjonsOppholdKafkaKonsument(
     config: KafkaConsumerConfig<String, InstitusjonsOppholdHendelseKafkaMelding>,
     pollTimeout: Duration = 10.seconds,
     closeTimeout: Duration = 30.seconds,
     private val dataSource: DataSource,
     private val repositoryRegistry: RepositoryRegistry,
-    private val gatewayProvider: GatewayProvider,
 ) : KafkaKonsument<String, InstitusjonsOppholdHendelseKafkaMelding>(
     topic = INSTITUSJONSOPPHOLD_EVENT_TOPIC,
     config = config,
@@ -58,6 +56,7 @@ class Inst2KafkaKonsument(
             val hendelseService =
                 MottattHendelseService(repositoryProvider)
             val person = personRepository.finn(Ident(meldingVerdi.norskident))
+            secureLogger.info("Prøver å finne person for ${meldingVerdi.norskident} ${person}")
             if (person != null) {
 
                 val saker = sakRepository.finnSakerFor(person)
