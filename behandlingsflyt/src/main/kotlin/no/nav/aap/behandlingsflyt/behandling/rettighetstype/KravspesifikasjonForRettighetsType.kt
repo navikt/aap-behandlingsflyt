@@ -11,6 +11,7 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 interface KravspesifikasjonForRettighetsType {
     val rettighetstype: RettighetsType
 
+    val kravStudent: Krav
     val kravBistand: Krav
     val kravForutgåendeMedlemskap: Krav
     val kravSykdom: Krav
@@ -128,6 +129,7 @@ interface KravspesifikasjonForRettighetsType {
                 && kravOvergangUfør.oppfyllesAv(vilkårsresultat[Vilkårtype.OVERGANGUFØREVILKÅRET])
                 && kravSykepengeerstatning.oppfyllesAv(vilkårsresultat[Vilkårtype.SYKEPENGEERSTATNING])
                 && forutgåendeAap.oppfyllesAv(forutgåendeRettighetstyper)
+                && kravStudent.oppfyllesAv(vilkårsresultat[Vilkårtype.STUDENT])
     }
 
     /** Her mangler  stans/opphør fra underveis. */
@@ -145,6 +147,7 @@ interface KravspesifikasjonForRettighetsType {
                 kravSykdom.avslagsårsaker(vilkårsresultat[Vilkårtype.SYKDOMSVILKÅRET]) +
                 kravOvergangArbeid.avslagsårsaker(vilkårsresultat[Vilkårtype.OVERGANGARBEIDVILKÅRET]) +
                 kravOvergangUfør.avslagsårsaker(vilkårsresultat[Vilkårtype.OVERGANGUFØREVILKÅRET]) +
-                SkalIkkeGiAvslag.avslagsårsaker(vilkårsresultat[Vilkårtype.INNTEKTSBORTFALL])
+                SkalIkkeGiAvslag.avslagsårsaker(vilkårsresultat[Vilkårtype.INNTEKTSBORTFALL]) +
+                kravStudent.avslagsårsaker(vilkårsresultat[Vilkårtype.STUDENT])
     }
 }

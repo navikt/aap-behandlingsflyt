@@ -37,6 +37,8 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
     fun `innvilge som student, revurdering ordinær`() {
         val fom = 24 november 2025
         val periode = Periode(fom, fom.plusYears(3))
+        
+        val sykestipendPeriode = Periode(fom, fom.plusDays(14))
 
         val person = TestPersoner.STANDARD_PERSON()
 
@@ -79,7 +81,7 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             }
             .medKontekst {
                 if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.Sykestipend)) {
-                    this.behandling.løsSykestipend(listOf(Periode(fom, fom.plusDays(14))))
+                    this.behandling.løsSykestipend(listOf(sykestipendPeriode))
 
                     val vilkår = repositoryProvider.provide<VilkårsresultatRepository>().hent(this.behandling.id)
                     val syksetipendVilkår = vilkår.finnVilkår(Vilkårtype.SAMORDNING_ANNEN_LOVGIVNING)
@@ -99,7 +101,7 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             }
             .assertRettighetstype(
                 if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.Sykestipend)) {
-                    val virkningstidspunkt = fom.plusDays(15)
+                    val virkningstidspunkt = sykestipendPeriode.tom.plusDays(1)
                     Periode(
                         virkningstidspunkt,
                         virkningstidspunkt.plusHverdager(Hverdager(130)).minusDays(1)

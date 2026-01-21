@@ -82,6 +82,7 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
         vilkår.leggTilVurderinger(tidslinje)
     }
 
+    // TODO: Håndter denne
     private fun studentvurderingTidslinje(grunnlag: SykdomsFaktagrunnlag): Tidslinje<StudentVurdering?> {
         val studentVurdering = grunnlag.studentvurdering ?: return Tidslinje.empty()
         val fom = studentVurdering.fom ?: grunnlag.kravDato
