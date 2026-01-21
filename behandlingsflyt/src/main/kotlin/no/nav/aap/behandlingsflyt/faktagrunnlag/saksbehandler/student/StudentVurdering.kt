@@ -16,7 +16,7 @@ data class StudentVurdering(
     val avbruttStudieDato: LocalDate?,
     val avbruddMerEnn6Måneder: Boolean?,
     val vurdertAv: String,
-    val vurdertTidspunkt: LocalDateTime,
+    val vurdertTidspunkt: LocalDateTime = LocalDateTime.now(),
     val vurdertIBehandling: BehandlingId?, // TODO: Gjør påkrevd
 ) {
     fun erOppfylt(): Boolean {
