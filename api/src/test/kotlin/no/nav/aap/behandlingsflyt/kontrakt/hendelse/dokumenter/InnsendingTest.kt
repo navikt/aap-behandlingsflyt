@@ -14,6 +14,7 @@ class InnsendingTest {
 
     @Test
     fun `deserialisering - komplett Søknad`() {
+        @Language("JSON")
         val input = """
                {
           "student" : {
@@ -49,7 +50,7 @@ class InnsendingTest {
             "iTtilleggArbeidUtenforNorge" : "ja"
           },
           "andreUtbetalinger": {
-            "lønn": "ja",
+            "lønn": "Ja",
             "afp": {
               "hvemBetaler": "arbeidsgiver"
             },
