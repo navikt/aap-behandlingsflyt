@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
@@ -16,6 +17,7 @@ import org.slf4j.LoggerFactory
 class OpprettJobbForMigrereRettighetsperiodeJobbUtfører(
     private val flytJobbRepository: FlytJobbRepository,
     private val sakRepository: SakRepository,
+    private val trukketSøknadService: TrukketSøknadService,
     private val sakOgBehandlingService: SakOgBehandlingService,
     private val unleashGateway: UnleashGateway,
 ) : JobbUtfører {
@@ -26,8 +28,13 @@ class OpprettJobbForMigrereRettighetsperiodeJobbUtfører(
 
         val saker = sakRepository.finnSakerMedUtenRiktigSluttdatoPåRettighetsperiode()
         val sakerUtenÅpenBehandling = saker.filter { sak ->
-                sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)?.status()?.erAvsluttet()
-                ?: error("Fant ikke behandling for sak=${sak.id}")
+            val sisteYtelsesbehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
+            if (sisteYtelsesbehandling != null) {
+                val erTrukket = trukketSøknadService.søknadErTrukket(sisteYtelsesbehandling.id)
+                sisteYtelsesbehandling.status().erAvsluttet() && !erTrukket
+            } else {
+                throw IllegalArgumentException("Fant ikke siste ytelsesbehandling for ${sak.id}")
+            }
         }
         log.info("Fant ${saker.size} migrering av rettighetsperiode. Antall iverksatte/avsluttede kandidater: ${sakerUtenÅpenBehandling.size}")
 
@@ -45,6 +52,7 @@ class OpprettJobbForMigrereRettighetsperiodeJobbUtfører(
             return OpprettJobbForMigrereRettighetsperiodeJobbUtfører(
                 flytJobbRepository = repositoryProvider.provide(),
                 sakRepository = repositoryProvider.provide(),
+                trukketSøknadService = TrukketSøknadService(repositoryProvider),
                 sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
                 unleashGateway = gatewayProvider.provide(),
             )
