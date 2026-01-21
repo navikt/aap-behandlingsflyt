@@ -98,9 +98,9 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         behandlingEtterMigrering: Behandling
     ) {
         val tilkjentYtelseFør = tilkjentYtelseRepository.hentHvisEksisterer(`behandlingFørMigrering`.id)
-            ?: error("Fant ikke tilkjent ytelse for behandling=${`behandlingFørMigrering`.id}")
+            ?: emptyList()
         val tilkjentYtelseEtter = tilkjentYtelseRepository.hentHvisEksisterer(behandlingEtterMigrering.id)
-            ?: error("Fant ikke tilkjent ytelse for behandling=${behandlingEtterMigrering.id}")
+            ?: emptyList()
         if (tilkjentYtelseEtter.size != tilkjentYtelseFør.size) {
             throw IllegalStateException("Ulikt antall tilkjent ytelseperioder mellom ny ${tilkjentYtelseEtter.size} og gammel behandling ${tilkjentYtelseFør.size}")
         }
