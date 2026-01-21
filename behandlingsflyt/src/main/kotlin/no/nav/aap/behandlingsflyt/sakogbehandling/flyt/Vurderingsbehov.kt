@@ -53,7 +53,8 @@ enum class Vurderingsbehov {
     OVERGANG_ARBEID,
     DØDSFALL_BRUKER,
     DØDSFALL_BARN,
-    BARNETILLEGG_SATS_REGULERING
+    BARNETILLEGG_SATS_REGULERING,
+    REVURDER_SYKESTIPEND
     ;
 
     companion object {
@@ -136,4 +137,5 @@ fun EksponertÅrsak.tilVurderingsbehov() =
         EksponertÅrsak.UTVID_VEDTAKSLENGDE -> Vurderingsbehov.UTVID_VEDTAKSLENGDE
         EksponertÅrsak.MIGRER_RETTIGHETSPERIODE -> Vurderingsbehov.MIGRER_RETTIGHETSPERIODE
         EksponertÅrsak.BARNETILLEGG_SATS_REGULERING -> Vurderingsbehov.BARNETILLEGG_SATS_REGULERING
+        EksponertÅrsak.REVURDER_SYKESTIPEND -> Vurderingsbehov.REVURDER_SYKESTIPEND
     }

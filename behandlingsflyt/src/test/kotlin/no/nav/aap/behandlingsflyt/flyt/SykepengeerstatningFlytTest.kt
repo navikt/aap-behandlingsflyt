@@ -220,7 +220,7 @@ class SykepengeerstatningFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::cla
         assertTidslinje(
             sykepeengeerstatningsvilkåret.tidslinje(),
             Periode(periode.fom, periode.fom.plusMonths(8).minusDays(1)) to {
-                assertThat(it.utfall).isEqualTo(Utfall.IKKE_VURDERT)
+                assertThat(it.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
             },
             Periode(periode.fom.plusMonths(8), Tid.MAKS) to {
                 assertThat(it.utfall).isEqualTo(Utfall.OPPFYLT)

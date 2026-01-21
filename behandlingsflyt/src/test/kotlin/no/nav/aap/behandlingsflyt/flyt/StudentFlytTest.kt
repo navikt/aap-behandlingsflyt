@@ -37,7 +37,7 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
     fun `innvilge som student, revurdering ordinær`() {
         val fom = 24 november 2025
         val periode = Periode(fom, fom.plusYears(3))
-        
+
         val sykestipendPeriode = Periode(fom, fom.plusDays(14))
 
         val person = TestPersoner.STANDARD_PERSON()
@@ -79,6 +79,9 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     }
                 )
             }
+            .løsRefusjonskrav()
+            .løsBeregningstidspunkt()
+            .løsOppholdskrav(fom)
             .medKontekst {
                 if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.Sykestipend)) {
                     this.behandling.løsSykestipend(listOf(sykestipendPeriode))
@@ -88,9 +91,6 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     assertThat(syksetipendVilkår.harPerioderMedIkkeOppfylt()).isTrue
                 }
             }
-            .løsRefusjonskrav()
-            .løsBeregningstidspunkt()
-            .løsOppholdskrav(fom)
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
@@ -139,13 +139,6 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     }
                 )
 
-                if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.Sykestipend)) {
-                    this.behandling.løsSykestipend()
-
-                    val vilkår = repositoryProvider.provide<VilkårsresultatRepository>().hent(this.behandling.id)
-                    val v = vilkår.finnVilkår(Vilkårtype.SAMORDNING_ANNEN_LOVGIVNING)
-                    assertThat(v.harPerioderMedIkkeOppfylt()).isFalse
-                }
             }
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
@@ -162,7 +155,11 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsSykdomsvurderingBrev()
             .medKontekst {
                 if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.Sykestipend)) {
-                    this.behandling.løsOppholdskrav(fom) // TODO: Det er en bug i steget der dette behovet blir løftet på nytt 
+                    this.behandling.løsSykestipend()
+
+                    val vilkår = repositoryProvider.provide<VilkårsresultatRepository>().hent(this.behandling.id)
+                    val v = vilkår.finnVilkår(Vilkårtype.SAMORDNING_ANNEN_LOVGIVNING)
+                    assertThat(v.harPerioderMedIkkeOppfylt()).isFalse
                 }
             }
             .foreslåVedtak()

@@ -460,7 +460,7 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
             ) to { assertThat(it).isEqualTo(Utfall.IKKE_OPPFYLT) },
             Periode(
                 startDatoRettTilYtelse,
-                startDatoRettTilYtelse.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
+                utfallTidslinje.maxDato()
             ) to { assertThat(it).isEqualTo(Utfall.OPPFYLT) },
         )
         val vilkårsresultat = dataSource.transaction { VilkårsresultatRepositoryImpl(it).hent(sisteBehandling.id) }
@@ -553,8 +553,8 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
             val behandling = sakOgBehandlingService.finnEllerOpprettBehandling(
                 sakId = sak.id,
                 vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
-                    årsak = ÅrsakTilOpprettelse.UTVID_VEDTAKSLENGDE,
-                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.UTVID_VEDTAKSLENGDE))
+                    årsak = ÅrsakTilOpprettelse.MIGRER_RETTIGHETSPERIODE,
+                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MIGRER_RETTIGHETSPERIODE))
                 ),
             )
             prosesserBehandlingService.triggProsesserBehandling(behandling)

@@ -118,7 +118,7 @@ public enum class Definisjon(
     ),
     AVKLAR_SAMORDNING_SYKESTIPEND(
         kode = AvklaringsbehovKode.`5034`,
-        type = BehovType.MANUELT_PÅKREVD,
+        type = BehovType.MANUELT_FRIVILLIG,
         løsesISteg = StegType.SAMORDNING_SYKESTIPEND,
         kreverToTrinn = true,
         løsesAv = listOf(Rolle.SAKSBEHANDLER_NASJONAL)

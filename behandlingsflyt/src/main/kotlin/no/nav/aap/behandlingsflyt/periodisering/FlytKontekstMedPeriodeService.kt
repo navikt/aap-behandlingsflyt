@@ -95,6 +95,7 @@ class FlytKontekstMedPeriodeService(
             Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER,
             Vurderingsbehov.REVURDER_SAMORDNING_ARBEIDSGIVER,
             Vurderingsbehov.REVURDER_SAMORDNING_TJENESTEPENSJON,
+            Vurderingsbehov.REVURDER_SYKESTIPEND,
             Vurderingsbehov.REFUSJONSKRAV,
             Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
             Vurderingsbehov.SØKNAD_TRUKKET,
