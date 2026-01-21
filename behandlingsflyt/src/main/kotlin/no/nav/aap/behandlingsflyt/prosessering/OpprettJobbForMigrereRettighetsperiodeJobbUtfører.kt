@@ -36,7 +36,8 @@ class OpprettJobbForMigrereRettighetsperiodeJobbUtfører(
                 val erTrukket = trukketSøknadService.søknadErTrukket(sisteYtelsesbehandling.id)
                 sisteYtelsesbehandling.status().erAvsluttet() && !erTrukket
             } else {
-                throw IllegalArgumentException("Fant ikke siste ytelsesbehandling for ${sak.id}")
+                log.info("Fant ikke ytelsesbehandlinger for sak ${sak.id} ")
+                false
             }
         }.filter { erForhåndskvalifisertSak(it) }
 
