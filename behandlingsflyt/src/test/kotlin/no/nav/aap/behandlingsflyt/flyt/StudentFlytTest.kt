@@ -55,6 +55,9 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     ),
                 )
             )
+            .løsRefusjonskrav()
+            .løsBeregningstidspunkt()
+            .løsOppholdskrav(fom)
             .medKontekst {
                 if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.Sykestipend)) {
                     this.behandling.løsSykestipend(listOf(Periode(fom, fom.plusDays(14))))
@@ -64,9 +67,6 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                     assertThat(v.harPerioderMedIkkeOppfylt()).isTrue
                 }
             }
-            .løsRefusjonskrav()
-            .løsBeregningstidspunkt()
-            .løsOppholdskrav(fom)
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
@@ -105,15 +105,6 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 )
             )
             .medKontekst {
-                if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.Sykestipend)) {
-                    this.behandling.løsSykestipend()
-
-                    val vilkår = repositoryProvider.provide<VilkårsresultatRepository>().hent(this.behandling.id)
-                    val v = vilkår.finnVilkår(Vilkårtype.SAMORDNING_ANNEN_LOVGIVNING)
-                    assertThat(v.harPerioderMedIkkeOppfylt()).isFalse
-                }
-            }
-            .medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
                     .describedAs { "Skal vurderes for ordinær dersom ikke oppfylt student" }
                     .containsExactlyInAnyOrder(Definisjon.AVKLAR_SYKDOM)
@@ -128,7 +119,11 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsSykdomsvurderingBrev()
             .medKontekst {
                 if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.Sykestipend)) {
-                    this.behandling.løsOppholdskrav(fom) // TODO: Det er en bug i steget der dette behovet blir løftet på nytt 
+                    this.behandling.løsSykestipend()
+
+                    val vilkår = repositoryProvider.provide<VilkårsresultatRepository>().hent(this.behandling.id)
+                    val v = vilkår.finnVilkår(Vilkårtype.SAMORDNING_ANNEN_LOVGIVNING)
+                    assertThat(v.harPerioderMedIkkeOppfylt()).isFalse
                 }
             }
             .foreslåVedtak()

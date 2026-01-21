@@ -116,11 +116,7 @@ class TidligereVurderingerImpl(
             Sjekk(StegType.VURDER_ALDER) { vilkårsresultat, _ ->
                 ikkeOppfyltFørerTilAvslag(Vilkårtype.ALDERSVILKÅRET, vilkårsresultat)
             },
-
-            Sjekk(StegType.SAMORDNING_SYKESTIPEND) { vilkårsresultat, _ ->
-                ikkeOppfyltFørerTilAvslag(Vilkårtype.SAMORDNING_ANNEN_LOVGIVNING, vilkårsresultat)
-            },
-
+            
             Sjekk(StegType.VURDER_BISTANDSBEHOV) { _, kontekst ->
                 /* TODO: Tror ikke dette er riktig. Sykdomsvilkåret er ikke satt når
                 *   man er i steget VURDER_BiSTANDSBEHOV. */
@@ -169,6 +165,10 @@ class TidligereVurderingerImpl(
 
             Sjekk(StegType.SAMORDNING_AVSLAG) { vilkårsresultat, _ ->
                 ikkeOppfyltFørerTilAvslag(Vilkårtype.SAMORDNING, vilkårsresultat)
+            },
+            
+            Sjekk(StegType.SAMORDNING_SYKESTIPEND) { vilkårsresultat, _ ->
+                ikkeOppfyltFørerTilAvslag(Vilkårtype.SAMORDNING_ANNEN_LOVGIVNING, vilkårsresultat)
             },
         )
 

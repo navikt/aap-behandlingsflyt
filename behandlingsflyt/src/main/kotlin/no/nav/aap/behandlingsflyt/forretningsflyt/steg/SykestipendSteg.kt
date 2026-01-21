@@ -44,7 +44,6 @@ class SykestipendSteg private constructor(
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val studentGrunnlag = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
         val sykestipendGrunnlag = sykestipendRepository.hentHvisEksisterer(kontekst.behandlingId)
 
