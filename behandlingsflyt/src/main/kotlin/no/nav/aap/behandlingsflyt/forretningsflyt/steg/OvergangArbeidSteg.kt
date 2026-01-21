@@ -111,7 +111,7 @@ class OvergangArbeidSteg internal constructor(
             .orEmpty()
 
         val studentVurderinger = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
-            ?.somTidslinje(kontekst.rettighetsperiode)
+            ?.somStudenttidslinje(kontekst.rettighetsperiode)
             .orEmpty()
 
         val overgangUføreVurderinger = overgangUføreRepository.hentHvisEksisterer(kontekst.behandlingId)

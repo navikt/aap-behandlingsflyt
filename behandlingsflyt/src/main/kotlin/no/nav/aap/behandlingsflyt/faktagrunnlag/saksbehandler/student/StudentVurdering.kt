@@ -16,7 +16,7 @@ data class StudentVurdering(
     val avbruttStudieDato: LocalDate?,
     val avbruddMerEnn6Måneder: Boolean?,
     val vurdertAv: String,
-    val vurdertTidspunkt: LocalDateTime? = null,
+    val vurdertTidspunkt: LocalDateTime,
     val vurdertIBehandling: BehandlingId?, // TODO: Gjør påkrevd
 ) {
     fun erOppfylt(): Boolean {
@@ -51,6 +51,7 @@ data class StudentVurderingDTO(
             avbruttStudieDato = avbruttStudieDato,
             avbruddMerEnn6Måneder = avbruddMerEnn6Måneder,
             vurdertAv = bruker.ident,
+            vurdertTidspunkt = LocalDateTime.now(),
             vurdertIBehandling = vurdertIBehandling
         )
     }

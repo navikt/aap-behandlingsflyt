@@ -12,6 +12,8 @@ enum class Avslagsårsak(
     BRUKER_OVER_67(kode = "11-4-1-2", hjemmel = "§ 11-4 1. ledd", Avslagstype.OPPHØR),
     MANGLENDE_DOKUMENTASJON(kode = "21-3", hjemmel = "§ 21-3, § 11-1", Avslagstype.UKJENT), // FIXME: Dette er neppe rett med 11-1,
     IKKE_RETT_PA_SYKEPENGEERSTATNING(kode = "11-13", hjemmel = "§ 11-13", Avslagstype.OPPHØR),
+    IKKE_RETT_PA_STUDENT(kode = "11-14", hjemmel = "§ 11-14", Avslagstype.OPPHØR),
+    VARIGHET_OVERSKREDET_STUDENT(kode = "11-14", hjemmel = "§ 11-14", Avslagstype.OPPHØR),
     IKKE_SYKDOM_AV_VISS_VARIGHET(kode = "11-5-1", "§ 11-5", Avslagstype.OPPHØR),
     IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL(kode = "11-5-1", "§ 11-5", Avslagstype.OPPHØR),
     IKKE_NOK_REDUSERT_ARBEIDSEVNE(kode = "11-5-1", "§ 11-5", Avslagstype.OPPHØR),
