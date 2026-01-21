@@ -33,7 +33,7 @@ class OpprettJobbForMigrereRettighetsperiodeJobbUtfører(
 
         if (unleashGateway.isEnabled(BehandlingsflytFeature.MigrerRettighetsperiode)) {
             sakerUtenÅpenBehandling.forEach { sak ->
-                flytJobbRepository.leggTil(JobbInput(OpprettBehandlingFritakMeldepliktJobbUtfører).forSak(sak.id.toLong()))
+                flytJobbRepository.leggTil(JobbInput(OpprettBehandlingMigrereRettighetsperiodeJobbUtfører).forSak(sak.id.toLong()))
             }
 
             log.info("Jobb for migrering av rettighetsperiode fullført for ${sakerUtenÅpenBehandling.size}")
