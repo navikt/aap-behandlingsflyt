@@ -64,6 +64,38 @@ class HarTilgangOgKanSaksbehandleTest {
     }
 
     @Test
+    fun `Når kvalitetssikrer har returnert`() {
+        InMemoryAvklaringsbehovRepository.opprett(
+            BehandlingId(1),
+            definisjon = Definisjon.AVKLAR_SYKDOM,
+            funnetISteg = StegType.AVKLAR_SYKDOM,
+            begrunnelse = "Begrunnelse",
+            endretAv = "Ident",
+        )
+
+        InMemoryAvklaringsbehovRepository.opprett(
+            BehandlingId(1),
+            definisjon = Definisjon.KVALITETSSIKRING,
+            funnetISteg = StegType.KVALITETSSIKRING,
+            begrunnelse = "Begrunnelse",
+            endretAv = "Ident",
+        )
+
+        val avklaringsbehovene = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(BehandlingId(1))
+        avklaringsbehovene.vurderKvalitet(
+            definisjon = Definisjon.AVKLAR_SYKDOM,
+            godkjent = false,
+            begrunnelse = "Ikke godkjent",
+            vurdertAv = "Kvalitetssikrer",
+        )
+
+        val harTilgangTilÅSaksbehandle =
+            harTilgangOgKanSaksbehandle(harTilgang = true, avklaringsbehovene = avklaringsbehovene)
+
+        assertThat(harTilgangTilÅSaksbehandle).isTrue()
+    }
+
+    @Test
     fun `Når beslutter har returnert`() {
         InMemoryAvklaringsbehovRepository.opprett(
             BehandlingId(1),
@@ -72,7 +104,7 @@ class HarTilgangOgKanSaksbehandleTest {
             begrunnelse = "Begrunnelse",
             endretAv = "Ident",
         )
-        
+
         InMemoryAvklaringsbehovRepository.opprett(
             BehandlingId(1),
             definisjon = Definisjon.KVALITETSSIKRING,
