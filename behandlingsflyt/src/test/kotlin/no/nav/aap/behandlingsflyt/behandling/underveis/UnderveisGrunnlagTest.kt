@@ -54,7 +54,7 @@ class UnderveisGrunnlagTest {
     }
 
     @Test
-    fun `skal utlede riktig maksdato for rettighet bistandsbehov`() {
+    fun `skal utlede maksdato 3 år, 1 måned og 15 dager frem i tid for rettighet bistandsbehov`() {
         val perioder = listOf(
             underveisperiode(
                 Periode(NITTENDE_JAN_2025.minusWeeks(3), NITTENDE_JAN_2025.minusWeeks(1)),
@@ -69,7 +69,7 @@ class UnderveisGrunnlagTest {
     }
 
     @Test
-    fun `skal utlede riktig maksdato for rettighet sykepengeerstatning`() {
+    fun `skal utlede maksdato 1 år, 3 måneder og 27 dager for rettighet sykepengeerstatning`() {
         val perioder = listOf(
             underveisperiode(
                 Periode(NITTENDE_JAN_2025.minusWeeks(5), NITTENDE_JAN_2025.minusWeeks(2)),
