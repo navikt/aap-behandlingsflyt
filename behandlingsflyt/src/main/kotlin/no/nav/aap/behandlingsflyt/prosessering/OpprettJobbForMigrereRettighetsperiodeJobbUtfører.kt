@@ -2,10 +2,13 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.miljo.Miljø
+import no.nav.aap.komponenter.miljo.MiljøKode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
@@ -27,7 +30,7 @@ class OpprettJobbForMigrereRettighetsperiodeJobbUtfører(
     override fun utfør(input: JobbInput) {
 
         val saker = sakRepository.finnSakerMedUtenRiktigSluttdatoPåRettighetsperiode()
-        val sakerUtenÅpenBehandling = saker.filter { sak ->
+        val sakerForMigrering = saker.filter { sak ->
             val sisteYtelsesbehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
             if (sisteYtelsesbehandling != null) {
                 val erTrukket = trukketSøknadService.søknadErTrukket(sisteYtelsesbehandling.id)
@@ -35,15 +38,35 @@ class OpprettJobbForMigrereRettighetsperiodeJobbUtfører(
             } else {
                 throw IllegalArgumentException("Fant ikke siste ytelsesbehandling for ${sak.id}")
             }
-        }
-        log.info("Fant ${saker.size} migrering av rettighetsperiode. Antall iverksatte/avsluttede kandidater: ${sakerUtenÅpenBehandling.size}")
+        }.filter { erForhåndskvalifisertSak(it) }
+
+        log.info("Fant ${saker.size} migrering av rettighetsperiode. Antall iverksatte/avsluttede kandidater: ${sakerForMigrering.size}")
 
         if (unleashGateway.isEnabled(BehandlingsflytFeature.MigrerRettighetsperiode)) {
-            sakerUtenÅpenBehandling.forEach { sak ->
+            sakerForMigrering.forEach { sak ->
                 flytJobbRepository.leggTil(JobbInput(OpprettBehandlingMigrereRettighetsperiodeJobbUtfører).forSak(sak.id.toLong()))
             }
 
-            log.info("Jobb for migrering av rettighetsperiode fullført for ${sakerUtenÅpenBehandling.size}")
+            log.info("Jobb for migrering av rettighetsperiode fullført for ${sakerForMigrering.size}")
+        }
+    }
+
+    /**
+     * Før vi skrur på for fullt ønsker vi å teste enkeltsaker i hvert miljø
+     */
+    fun erForhåndskvalifisertSak(sak: Sak): Boolean {
+        val forhåndskvalifisertDev = listOf(
+            "4QZGD4W", // Rent avslag - skal migreres "ok"
+            "4V4JB0G", // Trukket søknad - skal ikke migreres
+            "4R4NWoG", // Åpen behandling - skal ikke migreres
+            "4NTL7oW", // Vanlig 11-6
+            "4SMNX8W", // 11-18 med stans
+        )
+        val forhåndskvalifisertProd = emptyList<String>()
+        return when (Miljø.er()) {
+            MiljøKode.DEV -> forhåndskvalifisertDev.contains(sak.saksnummer.toString())
+            MiljøKode.PROD -> false
+            MiljøKode.LOKALT -> true
         }
     }
 
