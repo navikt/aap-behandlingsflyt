@@ -389,14 +389,14 @@ class TestScenarioOrkestrator(
         )
     }
 
-    fun løsOppholdskrav(behandling: Behandling): Behandling {
+    fun løsOppholdskrav(behandling: Behandling, rettighetsperiodeFom: LocalDate): Behandling {
         return løsAvklaringsBehov(
             behandling,
             AvklarOppholdskravLøsning(
                 løsningerForPerioder = listOf(
                     AvklarOppholdkravLøsningForPeriodeDto(
                         begrunnelse = "Oppholdskrav ok",
-                        fom = LocalDate.now().minusMonths(2),
+                        fom = rettighetsperiodeFom,
                         tom = null,
                         oppfylt = true,
                         land = "Norge"

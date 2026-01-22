@@ -1,0 +1,44 @@
+ALTER TABLE HELSEOPPHOLD_VURDERING ADD COLUMN OPPHOLD_ID BIGINT REFERENCES OPPHOLD(ID);
+
+-- TODO Thao: Husk håntering av migrering av eksisterende vurdering som ikke hadde opphold.id fra før
+-- Migrering:  Legg til OPPHOLD_ID i HELSEOPPHOLD_VURDERING
+
+-- -- Steg 1: Legg til kolonnen som nullable først
+-- ALTER TABLE HELSEOPPHOLD_VURDERING ADD COLUMN OPPHOLD_ID BIGINT NULL;
+--
+-- -- Steg 2: Migrer eksisterende data
+-- -- Koble vurderinger til opphold basert på periode-match
+-- UPDATE HELSEOPPHOLD_VURDERING hv
+-- SET OPPHOLD_ID = (
+--     SELECT o.ID
+--     FROM OPPHOLD o
+--              INNER JOIN OPPHOLD_GRUNNLAG og ON o.OPPHOLD_PERSON_ID = og.OPPHOLD_PERSON_ID
+--              INNER JOIN HELSEOPPHOLD_VURDERINGER hvs ON hvs.ID = hv.HELSEOPPHOLD_VURDERINGER_ID
+--              INNER JOIN OPPHOLD_GRUNNLAG og2 ON og2.HELSEOPPHOLD_VURDERINGER_ID = hvs.ID
+--     WHERE og.AKTIV = TRUE
+--       AND og2.AKTIV = TRUE
+--       AND o.INSTITUSJONSTYPE = 'HS'
+--       AND o.PERIODE && hv.PERIODE  -- Periode overlapper
+-- ORDER BY o.PERIODE
+--     LIMIT 1
+--     )
+-- WHERE OPPHOLD_ID IS NULL;
+--
+-- -- Steg 3: Håndter vurderinger som ikke kunne matches (hvis noen)
+-- -- Logg eller slett de som ikke har match (avhengig av business logic)
+-- -- Eksempel: Slett orphaned vurderinger
+-- DELETE FROM HELSEOPPHOLD_VURDERING WHERE OPPHOLD_ID IS NULL;
+--
+-- -- Alternativ: Behold de med NULL hvis du vil manuell håndtering senere
+-- -- SELECT * FROM HELSEOPPHOLD_VURDERING WHERE OPPHOLD_ID IS NULL;
+--
+-- -- Steg 4: Gjør kolonnen NOT NULL (hvis alle er migrert)
+-- ALTER TABLE HELSEOPPHOLD_VURDERING ALTER COLUMN OPPHOLD_ID SET NOT NULL;
+--
+-- -- Steg 5: Legg til foreign key constraint
+-- ALTER TABLE HELSEOPPHOLD_VURDERING
+--     ADD CONSTRAINT FK_HELSEOPPHOLD_VURDERING_OPPHOLD
+--         FOREIGN KEY (OPPHOLD_ID) REFERENCES OPPHOLD(ID) ON DELETE CASCADE;
+--
+-- -- Steg 6: Legg til index for ytelse
+-- CREATE INDEX IDX_HELSEOPPHOLD_VURDERING_OPPHOLD_ID ON HELSEOPPHOLD_VURDERING(OPPHOLD_ID);

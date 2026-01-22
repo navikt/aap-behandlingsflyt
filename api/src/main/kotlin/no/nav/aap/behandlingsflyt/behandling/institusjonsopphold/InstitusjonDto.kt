@@ -8,6 +8,7 @@ import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
 
 data class InstitusjonsoppholdDto(
+    val oppholdId: String,
     val institusjonstype: String,
     val oppholdstype: String,
     val status: String,
@@ -18,6 +19,7 @@ data class InstitusjonsoppholdDto(
     companion object {
         fun institusjonToDto(institusjonsopphold: Segment<Institusjon>) =
             InstitusjonsoppholdDto(
+                oppholdId = lagOppholdId(institusjonsopphold.verdi.navn, institusjonsopphold.periode.fom),
                 institusjonstype = institusjonsopphold.verdi.type.beskrivelse,
                 oppholdstype = institusjonsopphold.verdi.kategori.beskrivelse,
                 status =
@@ -45,11 +47,13 @@ data class HelseinstitusjonGrunnlagDto(
 
 data class HelseoppholdDto(
     val periode: Periode,
+    val oppholdId: String,
     val vurderinger: List<HelseinstitusjonVurderingDto>?,
     val status: OppholdVurderingDto
 )
 
 data class HelseinstitusjonVurderingDto(
+    val oppholdId: String,
     val begrunnelse: String,
     val faarFriKostOgLosji: Boolean,
     val forsoergerEktefelle: Boolean? = null,
