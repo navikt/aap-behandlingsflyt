@@ -47,22 +47,34 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
 
 
         if (unleashGateway.isEnabled(BehandlingsflytFeature.MigrerRettighetsperiode)) {
+            if (sak.rettighetsperiode.tom == Tid.MAKS) {
+                log.info("Har allerede tid maks som rettighetsperiode - lager ikke en ny behandling")
+
+            }
             val behandlingFørMigrering = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
                 ?: error("Fant ikke behandling for sak=${sakId}")
             sakOgBehandlingService.overstyrRettighetsperioden(sak.id, sak.rettighetsperiode.fom, Tid.MAKS)
             val utvidVedtakslengdeBehandling = opprettNyBehandling(sak)
             prosesserBehandlingService.triggProsesserBehandling(utvidVedtakslengdeBehandling)
-            val behandlingEtterMigrering = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
-                ?: error("Fant ikke behandling for sak=${sakId}")
-            validerBehandlingerErUlike(behandlingFørMigrering, behandlingEtterMigrering)
-            validerRettighetstype(behandlingFørMigrering, behandlingEtterMigrering)
-            validerTilkjentYtelse(behandlingFørMigrering, behandlingEtterMigrering)
-            validerUnderveisPerioder(behandlingFørMigrering, behandlingEtterMigrering)
+            validerTilstandEtterMigrering(sak, sakId, behandlingFørMigrering)
 
             log.info("Jobb for migrering av rettighetsperiode fullført for sak ${sakId}")
         } else {
             log.info("Featuretoggle er skrudd av - migrerer ikke")
         }
+    }
+
+    private fun validerTilstandEtterMigrering(
+        sak: Sak,
+        sakId: Long,
+        behandlingFørMigrering: Behandling
+    ) {
+        val behandlingEtterMigrering = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
+            ?: error("Fant ikke behandling for sak=${sakId}")
+        validerBehandlingerErUlike(`behandlingFørMigrering`, behandlingEtterMigrering)
+        validerRettighetstype(`behandlingFørMigrering`, behandlingEtterMigrering)
+        validerTilkjentYtelse(`behandlingFørMigrering`, behandlingEtterMigrering)
+        validerUnderveisPerioder(`behandlingFørMigrering`, behandlingEtterMigrering)
     }
 
     private fun validerRettighetstype(
