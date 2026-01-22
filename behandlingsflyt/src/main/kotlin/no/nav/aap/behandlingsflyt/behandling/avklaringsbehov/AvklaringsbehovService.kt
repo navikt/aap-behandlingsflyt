@@ -199,11 +199,10 @@ class AvklaringsbehovService(
                 SENDT_TILBAKE_FRA_BESLUTTER,
                 KVALITETSSIKRET,
                 SENDT_TILBAKE_FRA_KVALITETSSIKRER -> {
-                    val erFrivilligAvklaringsbehovUtenTidligereVurdering = avklaringsbehov.definisjon.erFrivillig()
-                        && kontekst.forrigeBehandlingId == null
+                    val erFrivilligAvklaringsbehov = avklaringsbehov.definisjon.erFrivillig()
 
                     val søknadErIkkeTrukket = !trukketSøknadService.søknadErTrukket(kontekst.behandlingId)
-                    if (erFrivilligAvklaringsbehovUtenTidligereVurdering && søknadErIkkeTrukket) {
+                    if (erFrivilligAvklaringsbehov && søknadErIkkeTrukket) {
                         return
                     }
 
