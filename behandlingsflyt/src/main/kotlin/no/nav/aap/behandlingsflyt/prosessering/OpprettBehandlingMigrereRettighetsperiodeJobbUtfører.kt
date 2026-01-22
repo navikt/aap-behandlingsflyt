@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
@@ -17,7 +16,6 @@ import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.somTidslinje
-import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
@@ -90,16 +88,17 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         behandlingEtterMigrering: Behandling
     ) {
         val underveisFør =
-            underveisRepository.hentHvisEksisterer(behandlingFørMigrering.id)?.somTidslinje()?.komprimer()?.segmenter()
-                ?.toList()
+            underveisRepository.hentHvisEksisterer(behandlingFørMigrering.id)?.perioder?.map { it.copy(id = null) }
+                ?.somTidslinje { it.periode }?.komprimer()
+                ?.segmenter()?.toList()
                 ?: error("Fant ikke underveis for behandling ${behandlingFørMigrering.id}")
         val underveisEtter =
-            underveisRepository.hentHvisEksisterer(behandlingEtterMigrering.id)?.somTidslinje()?.komprimer()
+            underveisRepository.hentHvisEksisterer(behandlingEtterMigrering.id)?.perioder?.map { it.copy(id = null) }
+                ?.somTidslinje { it.periode }?.komprimer()
                 ?.segmenter()?.toList()
                 ?: error("Fant ikke underveis for behandling ${behandlingEtterMigrering.id}")
         secureLogger.info("Migrering underveis før=$underveisFør og etter=$underveisEtter")
         if (underveisFør.size != underveisEtter.size) {
-            secureLogger.info("Migrering underveis før=$underveisFør og etter=$underveisEtter")
             throw IllegalStateException("Ulikt antall underveisperioder før ${underveisFør.size} og etter migrering ${underveisEtter.size}")
         }
         underveisFør.forEachIndexed { index, periodeFør ->
@@ -117,11 +116,13 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         behandlingEtterMigrering: Behandling
     ) {
         val tilkjentYtelseEffektivDagsatsFør =
-            tilkjentYtelseRepository.hentHvisEksisterer(behandlingFørMigrering.id)?.somTidslinje ({ it.periode},{ it.tilkjent.redusertDagsats() })?.komprimer()
+            tilkjentYtelseRepository.hentHvisEksisterer(behandlingFørMigrering.id)
+                ?.somTidslinje({ it.periode }, { it.tilkjent.redusertDagsats() })?.komprimer()
                 ?.segmenter()?.toList()
                 ?: emptyList()
         val tilkjentYtelseEffektivDagsatsEtter =
-            tilkjentYtelseRepository.hentHvisEksisterer(behandlingEtterMigrering.id)?.somTidslinje ({ it.periode},{ it.tilkjent.redusertDagsats() })?.komprimer()
+            tilkjentYtelseRepository.hentHvisEksisterer(behandlingEtterMigrering.id)
+                ?.somTidslinje({ it.periode }, { it.tilkjent.redusertDagsats() })?.komprimer()
                 ?.segmenter()?.toList()
                 ?: emptyList()
         secureLogger.info("Migrering tilkjent ytelse før=$tilkjentYtelseEffektivDagsatsFør og etter=$tilkjentYtelseEffektivDagsatsEtter")
@@ -132,7 +133,7 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
              * Vi har også ulik oppførsel på graderinger før og etter november/desember
              */
             if (tilkjentYtelseEffektivDagsatsFør.isEmpty()) {
-                if (tilkjentYtelseEffektivDagsatsEtter.any {it.verdi.verdi() > BigDecimal.ZERO}) {
+                if (tilkjentYtelseEffektivDagsatsEtter.any { it.verdi.verdi() > BigDecimal.ZERO }) {
                     throw IllegalStateException("Har gått fra totalt avslag til å få tilkjent ytelse med mulig utbetaling siden redusert dagsats ikke er 0")
                 }
             } else {
