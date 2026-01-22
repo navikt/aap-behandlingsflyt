@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.tidslinje.somTidslinje
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
@@ -88,14 +89,15 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         behandlingFørMigrering: Behandling,
         behandlingEtterMigrering: Behandling
     ) {
+        /**
+         * Må nulle ut periode og id for å kunne komprimere og se reelle forskjeller på underveisperiodene
+         */
         val underveisFør =
-            underveisRepository.hentHvisEksisterer(behandlingFørMigrering.id)?.perioder?.map { it.copy(id = null) }
-                ?.somTidslinje { it.periode }?.komprimer()
+            underveisRepository.hentHvisEksisterer(behandlingFørMigrering.id)?.somTidslinje()?.map { it.copy(periode = Periode(Tid.MIN, Tid.MAKS), id = null) }?.komprimer()
                 ?.segmenter()?.toList()
                 ?: error("Fant ikke underveis for behandling ${behandlingFørMigrering.id}")
         val underveisEtter =
-            underveisRepository.hentHvisEksisterer(behandlingEtterMigrering.id)?.perioder?.map { it.copy(id = null) }
-                ?.somTidslinje { it.periode }?.komprimer()
+            underveisRepository.hentHvisEksisterer(behandlingEtterMigrering.id)?.somTidslinje()?.map { it.copy(periode = Periode(Tid.MIN, Tid.MAKS), id = null) }?.komprimer()
                 ?.segmenter()?.toList()
                 ?: error("Fant ikke underveis for behandling ${behandlingEtterMigrering.id}")
         secureLogger.info("Migrering underveis før=$underveisFør og etter=$underveisEtter")
