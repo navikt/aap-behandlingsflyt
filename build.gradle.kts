@@ -45,10 +45,6 @@ publishing {
     }
 }
 
-subprojects {
-    // no-op; just ensuring subprojects are configured
-}
-
 // Call the tasks of the subprojects
 for (taskName in listOf<String>("clean", "build", "check")) {
     tasks.named(taskName) {
