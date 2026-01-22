@@ -124,7 +124,7 @@ class TidligereVurderingerImpl(
                 val sykdomstidslinje = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)
                     ?.somSykdomsvurderingstidslinje().orEmpty()
                 val studenttidslinje =
-                    studentRepository.hentHvisEksisterer(kontekst.behandlingId)?.somTidslinje(periode).orEmpty()
+                    studentRepository.hentHvisEksisterer(kontekst.behandlingId)?.somStudenttidslinje(periode).orEmpty()
 
                 sykdomstidslinje.outerJoin(studenttidslinje) { segmentPeriode, sykdomsvurdering, studentVurdering ->
                     if (studentVurdering != null && studentVurdering.erOppfylt()) return@outerJoin UKJENT

@@ -483,7 +483,8 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
         Vilkårtype.OVERGANGUFØREVILKÅRET,
         Vilkårtype.OVERGANGARBEIDVILKÅRET,
         Vilkårtype.SYKEPENGEERSTATNING,
-        Vilkårtype.SAMORDNING
+        Vilkårtype.SAMORDNING,
+        Vilkårtype.STUDENT
     )
 
 

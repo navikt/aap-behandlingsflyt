@@ -114,7 +114,7 @@ class VurderBistandsbehovSteg(
             .orEmpty()
 
         val studentvurderinger = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
-            ?.somTidslinje(kontekst.rettighetsperiode)
+            ?.somStudenttidslinje(kontekst.rettighetsperiode)
             .orEmpty()
 
         return Tidslinje.map3(tidligereVurderingsutfall, sykdomsvurderinger, studentvurderinger)
