@@ -69,6 +69,10 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         val vilkårEtter = vilkårsresultatRepository.hent(behandlingEtterMigrering.id)
         val rettighetstypeFør = vilkårFør.rettighetstypeTidslinje()
         val rettighetstypeEtter = vilkårEtter.rettighetstypeTidslinje()
+        if (rettighetstypeFør.isEmpty() && rettighetstypeEtter.isEmpty()) {
+            log.info("Rettighetstypen er tom før og etter migrering - totalt avslag")
+            return
+        }
         val rettighetstypeEtterBegrenset = rettighetstypeEtter.begrensetTil(rettighetstypeFør.helePerioden())
         secureLogger.info("Migrering vilkår før=${rettighetstypeFør} og etter=$rettighetstypeEtter")
         if (rettighetstypeEtterBegrenset != rettighetstypeFør) {
