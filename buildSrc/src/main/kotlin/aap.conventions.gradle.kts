@@ -1,5 +1,6 @@
 import org.jetbrains.dokka.gradle.engine.parameters.VisibilityModifier
 import kotlin.math.max
+import kotlin.math.min
 
 // Felles kode for alle build.gradle.kts filer som laster inn denne conventions pluginen
 
@@ -51,10 +52,12 @@ private fun bestemAntallTestTråder(): Int {
         if (isCiBuild) {
             (processors * 1.5).toInt() // vi har mye io-wait under testene våre
         } else {
-            // reduser antall tråder ved lokal kjøring for å unngå at utvikler-maskinen blir for treg
-            max(processors / 2, processors - 4)
+            /**
+             * Begrens antall tråder ved lokal kjøring for å unngå at utvikler-maskinen blir for treg
+             * Mer enn 6 tråder krasjer lokal kjøring for M3 Max
+             */
+            min(6, max(processors / 2, processors - 4))
         }
-
     return antallTråder
 }
 

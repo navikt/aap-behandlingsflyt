@@ -212,6 +212,29 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
             }
         }
     }
+
+    override fun finnSakerMedInstitusjonsOpphold(): List<Sak> {
+        val sql = """
+            select s.id from sak s, behandling b where s.id = b.sak_id and  b.id in (
+                select g.behandling_id
+                from opphold_grunnlag g, public.helseopphold_vurderinger v
+                where g.helseopphold_vurderinger_id  = v.id and g.aktiv = true and g.id in (
+                    select id
+                    from opphold_grunnlag
+                    where aktiv = true and behandling_id in (
+                        select id from behandling where id not in (
+                            select forrige_id from behandling where forrige_id is not null
+                        )
+                    )
+                )
+            )
+        """.trimIndent()
+
+        return connection.queryList(sql) {
+            setRowMapper { row -> mapSak(row) }
+        }
+    }
+
     override fun finnSakerMedUtenRiktigSluttdatoPåRettighetsperiode(): List<Sak> {
         val sql = """
             select * from sak s

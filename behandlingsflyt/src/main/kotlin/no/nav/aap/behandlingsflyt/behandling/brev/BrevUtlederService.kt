@@ -35,6 +35,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.EFFEKTUER
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.FASTSATT_PERIODE_PASSERT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.UTVID_VEDTAKSLENGDE
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MIGRER_RETTIGHETSPERIODE
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.FRITAK_MELDEPLIKT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_MELDEKORT
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
@@ -118,6 +119,7 @@ class BrevUtlederService(
                         MOTTATT_MELDEKORT,
                         FASTSATT_PERIODE_PASSERT,
                         UTVID_VEDTAKSLENGDE,
+                        MIGRER_RETTIGHETSPERIODE,
                         EFFEKTUER_AKTIVITETSPLIKT,
                         EFFEKTUER_AKTIVITETSPLIKT_11_9,
                     ).containsAll(
@@ -194,6 +196,7 @@ class BrevUtlederService(
         val grunnlagBeregning = hentGrunnlagBeregning(behandling.id, vedtak.virkningstidspunkt)
 
         val tilkjentYtelse = utledTilkjentYtelse(behandling.id, vedtak.virkningstidspunkt)
+
 
         return Innvilgelse(
             virkningstidspunkt = vedtak.virkningstidspunkt,
@@ -282,8 +285,8 @@ class BrevUtlederService(
 
         val tilkjentYtelseTidslinje =
             tilkjentYtelseRepository.hentHvisEksisterer(behandlingId)?.tilTidslinje() ?: return null
-        val underveisTidslinje =
-            Tidslinje(underveisRepository.hent(behandlingId).perioder.map { Segment(it.periode, it) })
+        val underveidGrunnlag = underveisRepository.hent(behandlingId)
+        val underveisTidslinje = Tidslinje(underveidGrunnlag.perioder.map { Segment(it.periode, it) })
 
         // Minste årlige ytelse beløp utledes her fra Grunnbeløp's tilTidslinje() og ikke tilTidslinjeGjennomsnitt().
         // Det gir identisk beløp som nav.no/aap/kalkulator og benytter Grunnbeløp.beløp og ikke Grunnbeløp.gjennomsnittBeløp
@@ -333,7 +336,8 @@ class BrevUtlederService(
                 barnetilleggsats = tilkjent.barnetilleggsats,
                 minsteÅrligYtelse = minsteÅrligYtelse,
                 minsteÅrligYtelseUnder25 = Beløp(minsteÅrligYtelse.toTredjedeler()),
-                årligYtelse = tilkjent.dagsats.multiplisert(ANTALL_ÅRLIGE_ARBEIDSDAGER)
+                årligYtelse = tilkjent.dagsats.multiplisert(ANTALL_ÅRLIGE_ARBEIDSDAGER),
+                sisteDagMedYtelse = underveidGrunnlag.sisteDagMedYtelse()
             )
         }.segment(virkningstidspunkt)?.verdi
     }

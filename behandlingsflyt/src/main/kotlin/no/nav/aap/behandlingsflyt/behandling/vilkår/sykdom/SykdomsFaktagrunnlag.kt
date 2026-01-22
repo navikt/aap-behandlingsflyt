@@ -7,7 +7,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVur
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import java.time.LocalDate
 
@@ -19,5 +18,6 @@ class SykdomsFaktagrunnlag(
     val sykdomsvurderinger: List<Sykdomsvurdering>,
     val bistandvurderingFaktagrunnlag: BistandGrunnlag?,
     val studentvurdering: StudentVurdering?,
-    val sykepengeerstatningVilkår: Tidslinje<Vilkårsvurdering>
+    val sykepengeerstatningVilkår: Tidslinje<Vilkårsvurdering>,
+    val sykestipendFeature: Boolean = false,
 ) : Faktagrunnlag

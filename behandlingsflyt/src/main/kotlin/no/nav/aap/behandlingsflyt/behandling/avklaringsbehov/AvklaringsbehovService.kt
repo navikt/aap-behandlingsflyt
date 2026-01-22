@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -25,13 +26,15 @@ class AvklaringsbehovService(
     private val avbrytRevurderingService: AvbrytRevurderingService,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val behandlingRepository: BehandlingRepository,
-    private val vilkårsresultatRepository: VilkårsresultatRepository
+    private val vilkårsresultatRepository: VilkårsresultatRepository,
+    private val trukketSøknadService: TrukketSøknadService
 ) {
     constructor(repositoryProvider: RepositoryProvider) : this(
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
         avklaringsbehovRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
-        vilkårsresultatRepository = repositoryProvider.provide()
+        vilkårsresultatRepository = repositoryProvider.provide(),
+        trukketSøknadService = TrukketSøknadService(repositoryProvider)
     )
 
     fun oppdaterAvklaringsbehov(
@@ -196,6 +199,13 @@ class AvklaringsbehovService(
                 SENDT_TILBAKE_FRA_BESLUTTER,
                 KVALITETSSIKRET,
                 SENDT_TILBAKE_FRA_KVALITETSSIKRER -> {
+                    val erFrivilligAvklaringsbehov = avklaringsbehov.definisjon.erFrivillig()
+
+                    val søknadErIkkeTrukket = !trukketSøknadService.søknadErTrukket(kontekst.behandlingId)
+                    if (erFrivilligAvklaringsbehov && søknadErIkkeTrukket) {
+                        return
+                    }
+
                     avklaringsbehovene.internalAvbryt(definisjon)
                     if (!avbrytRevurderingService.revurderingErAvbrutt(kontekst.behandlingId)) {
                         tilbakestillGrunnlag()
@@ -258,6 +268,7 @@ class AvklaringsbehovService(
             VurderingType.MELDEKORT -> Pair(false, emptySet())
             VurderingType.AUTOMATISK_BREV -> Pair(false, emptySet())
             VurderingType.UTVID_VEDTAKSLENGDE -> Pair(false, emptySet())
+            VurderingType.MIGRER_RETTIGHETSPERIODE -> Pair(false, emptySet())
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT -> Pair(false, emptySet())
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9 -> Pair(false, emptySet())
             VurderingType.IKKE_RELEVANT -> Pair(false, emptySet())

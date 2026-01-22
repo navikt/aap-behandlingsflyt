@@ -116,6 +116,7 @@ class SakOgBehandlingService(
         Vurderingsbehov.FRITAK_MELDEPLIKT,
         Vurderingsbehov.MOTTATT_MELDEKORT,
         Vurderingsbehov.UTVID_VEDTAKSLENGDE,
+        Vurderingsbehov.MIGRER_RETTIGHETSPERIODE,
         Vurderingsbehov.FASTSATT_PERIODE_PASSERT,
         Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT,
         Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9,

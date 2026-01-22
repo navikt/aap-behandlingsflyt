@@ -18,6 +18,7 @@ enum class ÅrsakTilOpprettelse {
     MELDEKORT,
     AKTIVITETSMELDING,
     UTVID_VEDTAKSLENGDE,
+    MIGRER_RETTIGHETSPERIODE,
 
     // Oppfølgingsbehandling
     OPPFØLGINGSOPPGAVE,
@@ -34,8 +35,5 @@ enum class ÅrsakTilOpprettelse {
     // Tilbakekreving
     TILBAKEKREVING_HENDELSE,
     FAGSYSTEMINFO_BEHOV_HENDELSE,
-
-    // Institusjonsopphold
-    INSTITUSJONSOPPHOLD
 
 }

@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepos
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.InnhentetSykdomsOpplysninger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.RegistrertYrkesskade
+import no.nav.aap.behandlingsflyt.harTilgangOgKanSaksbehandle
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -20,6 +21,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -34,6 +37,7 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
     gatewayProvider: GatewayProvider,
 ) {
     val ansattInfoService = AnsattInfoService(gatewayProvider)
+    val unleashGateway = gatewayProvider.provide<UnleashGateway>()
 
     route("/api/behandling") {
         route("/{referanse}/grunnlag/sykdom/sykdom") {
@@ -73,9 +77,8 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
 
                     val sak = sakRepository.hent(behandling.sakId)
 
-                    val avklaringsbehov = avklaringsbehovRepository
-                        .hentAvklaringsbehovene(behandling.id)
-                        .hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)
+                    val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+                    val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)
 
                     SykdomGrunnlagResponse(
                         opplysninger = InnhentetSykdomsOpplysninger(
@@ -93,7 +96,11 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
                             .map { SykdomsvurderingResponse.fraDomene(it, vurdertAvService) },
                         gjeldendeVedtatteSykdomsvurderinger = sisteVedtatte, // TODO: Fjern
                         sisteVedtatteVurderinger = sisteVedtatte,
-                        harTilgangTilÅSaksbehandle = kanSaksbehandle(),
+                        harTilgangTilÅSaksbehandle = if (unleashGateway.isEnabled(BehandlingsflytFeature.KvalitetssikringsSteg)) {
+                            harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene)
+                        } else {
+                            kanSaksbehandle()
+                        },
                         kvalitetssikretAv = vurdertAvService.kvalitetssikretAv(
                             definisjon = Definisjon.AVKLAR_SYKDOM,
                             behandlingId = behandling.id,
@@ -131,7 +138,7 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
                         .map { yrkesskade -> RegistrertYrkesskade(yrkesskade) }
 
                     YrkesskadeVurderingGrunnlagResponse(
-                        harTilgangTilÅSaksbehandle = kanSaksbehandle(),
+                        kanSaksbehandle(),
                         opplysninger = InnhentetSykdomsOpplysninger(
                             oppgittYrkesskadeISøknad = false,
                             innhentedeYrkesskader = innhentedeYrkesskader,

@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.sykdom
 
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager
 import no.nav.aap.behandlingsflyt.behandling.vilkår.Vilkårsvurderer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
@@ -25,10 +26,7 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun vurder(grunnlag: SykdomsFaktagrunnlag) {
-        val studentVurderingTidslinje = Tidslinje(
-            Periode(grunnlag.kravDato, grunnlag.sisteDagMedMuligYtelse),
-            grunnlag.studentvurdering
-        )
+        val studentVurderingTidslinje = studentvurderingTidslinje(grunnlag)
 
         val yrkesskadeVurderingTidslinje = Tidslinje(
             Periode(grunnlag.kravDato, grunnlag.sisteDagMedMuligYtelse),
@@ -82,6 +80,20 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
                 }
 
         vilkår.leggTilVurderinger(tidslinje)
+    }
+
+    // TODO: Håndter denne
+    private fun studentvurderingTidslinje(grunnlag: SykdomsFaktagrunnlag): Tidslinje<StudentVurdering?> {
+        val studentVurdering = grunnlag.studentvurdering ?: return Tidslinje.empty()
+        val fom = studentVurdering.fom ?: grunnlag.kravDato
+        val periode = if (grunnlag.sykestipendFeature) {
+            val virkningstidspunkt = fom.plusDays(15)
+            Periode(virkningstidspunkt, Hverdager(130).fraOgMed(virkningstidspunkt))
+        } else {
+            Periode(fom, Hverdager(130).fraOgMed(fom))
+        }
+
+        return Tidslinje(periode, grunnlag.studentvurdering)
     }
 
     private fun kombinerAlleTidslinjer(
@@ -139,10 +151,18 @@ class SykdomsvilkårFraLansering(vilkårsresultat: Vilkårsresultat) : Vilkårsv
         if (studentVurdering?.erOppfylt() == true) {
             utfall = Utfall.OPPFYLT
             innvilgelsesårsak = Innvilgelsesårsak.STUDENT
-        } else if (sykdomVurdering?.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenheng(grunnlag.kravDato, segmentPeriode) == true && yrkesskadeVurdering?.erÅrsakssammenheng == true) {
+        } else if (sykdomVurdering?.erOppfyltForYrkesskadeSettBortIfraÅrsakssammenheng(
+                grunnlag.kravDato,
+                segmentPeriode
+            ) == true && yrkesskadeVurdering?.erÅrsakssammenheng == true
+        ) {
             utfall = Utfall.OPPFYLT
             innvilgelsesårsak = Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG
-        } else if (sykdomVurdering?.erOppfyltOrdinær(grunnlag.kravDato, segmentPeriode) == true && bistandsvurdering?.erBehovForBistand() == true) {
+        } else if (sykdomVurdering?.erOppfyltOrdinær(
+                grunnlag.kravDato,
+                segmentPeriode
+            ) == true && bistandsvurdering?.erBehovForBistand() == true
+        ) {
             utfall = Utfall.OPPFYLT
             innvilgelsesårsak = null
         } else if (sykepengeerstatningVilkår.isEmpty() && sykepengerVurdering?.harRettPå == true && sykdomVurdering?.erOppfyltOrdinærSettBortIfraVissVarighet() == true) {

@@ -1,19 +1,19 @@
 package no.nav.aap.behandlingsflyt.periodisering
 
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.AUTOMATISK_BREV
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.EFFEKTUER_AKTIVITETSPLIKT
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.FØRSTEGANGSBEHANDLING
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.IKKE_RELEVANT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.MELDEKORT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.REVURDERING
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.EFFEKTUER_AKTIVITETSPLIKT
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.UTVID_VEDTAKSLENGDE
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.MIGRER_RETTIGHETSPERIODE
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -32,17 +32,6 @@ class FlytKontekstMedPeriodeService(
         val sak = sakService.hent(kontekst.sakId)
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
 
-        if (kontekst.behandlingType == TypeBehandling.Førstegangsbehandling) {
-            return FlytKontekstMedPerioder(
-                sakId = kontekst.sakId,
-                behandlingId = kontekst.behandlingId,
-                forrigeBehandlingId = kontekst.forrigeBehandlingId,
-                behandlingType = kontekst.behandlingType,
-                vurderingType = FØRSTEGANGSBEHANDLING,
-                rettighetsperiode = sak.rettighetsperiode,
-                vurderingsbehovRelevanteForSteg = behandling.vurderingsbehov().map { it.type }.toSet()
-            )
-        }
         val flyt = behandling.flyt()
         val vurderingsbehovRelevanteForSteg = flyt.vurderingsbehovRelevantForSteg(stegType)
 
@@ -71,6 +60,7 @@ class FlytKontekstMedPeriodeService(
             EFFEKTUER_AKTIVITETSPLIKT in vurderingTyper -> EFFEKTUER_AKTIVITETSPLIKT
             EFFEKTUER_AKTIVITETSPLIKT_11_9 in vurderingTyper -> EFFEKTUER_AKTIVITETSPLIKT_11_9
             UTVID_VEDTAKSLENGDE in vurderingTyper -> UTVID_VEDTAKSLENGDE
+            MIGRER_RETTIGHETSPERIODE in vurderingTyper -> MIGRER_RETTIGHETSPERIODE
             AUTOMATISK_BREV in vurderingTyper -> AUTOMATISK_BREV
             else -> IKKE_RELEVANT
         }
@@ -105,6 +95,7 @@ class FlytKontekstMedPeriodeService(
             Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER,
             Vurderingsbehov.REVURDER_SAMORDNING_ARBEIDSGIVER,
             Vurderingsbehov.REVURDER_SAMORDNING_TJENESTEPENSJON,
+            Vurderingsbehov.REVURDER_SYKESTIPEND,
             Vurderingsbehov.REFUSJONSKRAV,
             Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
             Vurderingsbehov.SØKNAD_TRUKKET,
@@ -134,6 +125,7 @@ class FlytKontekstMedPeriodeService(
             Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT -> EFFEKTUER_AKTIVITETSPLIKT
             Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9 -> EFFEKTUER_AKTIVITETSPLIKT_11_9
             Vurderingsbehov.UTVID_VEDTAKSLENGDE -> UTVID_VEDTAKSLENGDE
+            Vurderingsbehov.MIGRER_RETTIGHETSPERIODE -> MIGRER_RETTIGHETSPERIODE
             Vurderingsbehov.BARNETILLEGG_SATS_REGULERING -> AUTOMATISK_BREV
         }
     }
