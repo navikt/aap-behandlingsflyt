@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.integrasjon.brev
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevBehov
 import no.nav.aap.behandlingsflyt.behandling.brev.GrunnlagBeregning
 import no.nav.aap.behandlingsflyt.behandling.brev.Innvilgelse
+import no.nav.aap.behandlingsflyt.behandling.brev.UtvidVedtakslengde
 import no.nav.aap.behandlingsflyt.behandling.brev.VurderesForUføretrygd
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingGateway
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
@@ -286,6 +287,7 @@ class BrevGateway : BrevbestillingGateway {
     private fun mapTypeBrev(typeBrev: TypeBrev): Brevtype = when (typeBrev) {
         TypeBrev.VEDTAK_AVSLAG -> Brevtype.AVSLAG
         TypeBrev.VEDTAK_INNVILGELSE -> Brevtype.INNVILGELSE
+        TypeBrev.VEDTAK_UTVID_VEDTAKSLENGDE -> Brevtype.VEDTAK_UTVID_VEDTAKSLENGDE
         TypeBrev.VEDTAK_ENDRING -> Brevtype.VEDTAK_ENDRING
         TypeBrev.BARNETILLEGG_SATS_REGULERING -> Brevtype.BARNETILLEGG_SATS_REGULERING
         TypeBrev.VARSEL_OM_BESTILLING -> Brevtype.VARSEL_OM_BESTILLING
@@ -321,7 +323,8 @@ class BrevGateway : BrevbestillingGateway {
                                 minsteÅrligYtelse = brevBehov.tilkjentYtelse?.minsteÅrligYtelse?.heltallverdi(),
                                 minsteÅrligYtelseUnder25 = brevBehov.tilkjentYtelse?.minsteÅrligYtelseUnder25?.heltallverdi(),
                                 årligYtelse = brevBehov.tilkjentYtelse?.årligYtelse?.heltallverdi(),
-                                sisteDagMedYtelse = brevBehov.tilkjentYtelse?.sisteDagMedYtelse
+                                sisteDagMedYtelse = brevBehov.tilkjentYtelse?.sisteDagMedYtelse,
+                                kravdatoUføretrygd = null
                             )
                         )
                     }
@@ -339,6 +342,14 @@ class BrevGateway : BrevbestillingGateway {
                             grunnlagBeregningTilFaktagrunnlag(brevBehov.grunnlagBeregning!!)
                         )
                     }
+                }
+            }
+
+            is UtvidVedtakslengde -> {
+                buildSet {
+                    add(
+                        Faktagrunnlag.SisteDagMedYtelse(brevBehov.sluttdato)
+                    )
                 }
             }
 

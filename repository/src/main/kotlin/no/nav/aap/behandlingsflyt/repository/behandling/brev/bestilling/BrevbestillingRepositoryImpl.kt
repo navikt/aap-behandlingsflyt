@@ -91,6 +91,7 @@ class BrevbestillingRepositoryImpl(private val connection: DBConnection) :
             """
                 INSERT INTO BREVBESTILLING (BEHANDLING_ID, TYPE_BREV, REFERANSE, STATUS)
                 VALUES (?, ?, ?, ?)
+                ON CONFLICT(REFERANSE) DO NOTHING
             """.trimIndent()
 
         connection.execute(query) {

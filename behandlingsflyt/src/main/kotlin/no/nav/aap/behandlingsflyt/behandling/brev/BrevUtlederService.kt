@@ -79,9 +79,9 @@ class BrevUtlederService(
     fun utledBehovForMeldingOmVedtak(behandlingId: BehandlingId): BrevBehov? {
         val behandling = behandlingRepository.hent(behandlingId)
         val forrigeBehandlingId = behandling.forrigeBehandlingId
-        var harBehandlingenArbeidsopptrapping = arbeidsopptrappingRepository.hentPerioder(behandlingId).isNotEmpty()
-        var harForrigeBehandlingArbeidsopptrapping = forrigeBehandlingId != null && arbeidsopptrappingRepository.hentPerioder(forrigeBehandlingId).isNotEmpty()
-        var skalSendeVedtakForArbeidsopptrapping = harBehandlingenArbeidsopptrapping && !harForrigeBehandlingArbeidsopptrapping
+        val harBehandlingenArbeidsopptrapping = arbeidsopptrappingRepository.hentPerioder(behandlingId).isNotEmpty()
+        val harForrigeBehandlingArbeidsopptrapping = forrigeBehandlingId != null && arbeidsopptrappingRepository.hentPerioder(forrigeBehandlingId).isNotEmpty()
+        val skalSendeVedtakForArbeidsopptrapping = harBehandlingenArbeidsopptrapping && !harForrigeBehandlingArbeidsopptrapping
 
         when (behandling.typeBehandling()) {
             TypeBehandling.Førstegangsbehandling -> {
@@ -118,7 +118,6 @@ class BrevUtlederService(
                         FRITAK_MELDEPLIKT,
                         MOTTATT_MELDEKORT,
                         FASTSATT_PERIODE_PASSERT,
-                        UTVID_VEDTAKSLENGDE,
                         MIGRER_RETTIGHETSPERIODE,
                         EFFEKTUER_AKTIVITETSPLIKT,
                         EFFEKTUER_AKTIVITETSPLIKT_11_9,
@@ -131,6 +130,10 @@ class BrevUtlederService(
 
                 if (vurderingsbehov == setOf(BARNETILLEGG_SATS_REGULERING)) {
                     return BarnetilleggSatsRegulering
+                }
+
+                if (vurderingsbehov == setOf(UTVID_VEDTAKSLENGDE)) {
+                    return brevBehovUtvidVedtakslengde(behandling)
                 }
 
                 if (resultat == Resultat.AVBRUTT) {
@@ -184,6 +187,11 @@ class BrevUtlederService(
             TypeBehandling.Tilbakekreving, TypeBehandling.SvarFraAndreinstans, TypeBehandling.OppfølgingsBehandling, TypeBehandling.Aktivitetsplikt11_9 ->
                 return null // TODO
         }
+    }
+
+    private fun brevBehovUtvidVedtakslengde(behandling: Behandling): UtvidVedtakslengde {
+        val underveidGrunnlag = underveisRepository.hent(behandling.id)
+        return UtvidVedtakslengde(sluttdato = underveidGrunnlag.sisteDagMedYtelse())
     }
 
     private fun brevBehovInnvilgelse(behandling: Behandling): Innvilgelse {

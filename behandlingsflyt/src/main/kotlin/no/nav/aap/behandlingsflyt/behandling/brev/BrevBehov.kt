@@ -13,6 +13,7 @@ data class Innvilgelse(
 }
 
 data class VurderesForUføretrygd(val grunnlagBeregning: GrunnlagBeregning?) : BrevBehov(TypeBrev.VEDTAK_11_18)
+data class UtvidVedtakslengde(val sluttdato: LocalDate) : BrevBehov(TypeBrev.VEDTAK_UTVID_VEDTAKSLENGDE)
 object Arbeidssøker : BrevBehov(TypeBrev.VEDTAK_11_17)
 object Avslag : BrevBehov(TypeBrev.VEDTAK_AVSLAG)
 object VedtakEndring : BrevBehov(TypeBrev.VEDTAK_ENDRING)
