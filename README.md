@@ -88,6 +88,34 @@ curl -X 'GET' \
   -H "Authorization: Bearer $token"
 ```
 
+Send inn dokument til TestApp:
+
+```shell
+token=$(curl -s -XPOST http://localhost:8081/token/Z12345 | jq -r '.access_token')
+saksnummer=4LDY7G0
+asInnsendingId=$(uuidgen)
+
+curl -X 'POST' \
+  "http://0.0.0.0:8080/api/hendelse/sak/$saksnummer/send" \
+  -H 'accept: application/json' \
+  -H "Authorization: Bearer $token" \
+  -H 'Content-Type: application/json' \
+   -d "{
+    \"kanal\": \"DIGITAL\",
+    \"melding\": {
+      \"meldingType\": \"AnnetRelevantDokumentV0\",
+      \"årsakerTilBehandling\": [\"LEGEERKLÆRING\"]
+    },
+    \"mottattTidspunkt\": \"$(date +%Y-%m-%dT%H:%M:%S)\",
+    \"referanse\": {
+      \"type\": \"JOURNALPOST\",
+      \"verdi\": \"$asInnsendingId\"
+    },
+    \"saksnummer\": \"$saksnummer\",
+    \"type\": \"ANNET_RELEVANT_DOKUMENT\"
+  }"
+```
+
 #### Testapp mot dev-gcp
 
 > ️⚠️ **_Bruk med omhu siden det potensielt kan ødelegge koblinger mellom oppgave og behandling i dev!_**

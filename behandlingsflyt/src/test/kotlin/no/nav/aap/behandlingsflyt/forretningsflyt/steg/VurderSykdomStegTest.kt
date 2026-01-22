@@ -34,6 +34,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import java.time.LocalDateTime
 
 class VurderSykdomStegTest {
     @Test
@@ -73,7 +74,8 @@ class VurderSykdomStegTest {
                         harBehovForBehandling = true,
                         avbruttStudieDato = 1 desember 2024,
                         avbruddMerEnn6Måneder = true,
-                        vurdertIBehandling = behandlingId
+                        vurdertIBehandling = behandlingId,
+                        vurdertTidspunkt = LocalDateTime.now()
                     )
                 ),
                 oppgittStudent = OppgittStudent(erStudentStatus = ErStudentStatus.AVBRUTT)
@@ -89,7 +91,8 @@ class VurderSykdomStegTest {
                         harBehovForBehandling = true,
                         avbruttStudieDato = 1 desember 2024,
                         avbruddMerEnn6Måneder = true,
-                        vurdertIBehandling = revurderingId
+                        vurdertIBehandling = revurderingId,
+                        vurdertTidspunkt = LocalDateTime.now()
                     )
                 ),
                 oppgittStudent = OppgittStudent(erStudentStatus = ErStudentStatus.AVBRUTT)

@@ -136,12 +136,6 @@ spec:
       value: https://pdl-api.prod-fss-pub.nais.io/graphql
     - name: INTEGRASJON_PDL_SCOPE
       value: api://prod-fss.pdl.pdl-api/.default
-    - name: INTEGRASJON_SAF_URL_GRAPHQL
-      value: https://saf.prod-fss-pub.nais.io/graphql
-    - name: INTEGRASJON_SAF_URL_REST
-      value: https://saf.prod-fss-pub.nais.io/rest
-    - name: INTEGRASJON_SAF_SCOPE
-      value: api://prod-fss.teamdokumenthandtering.saf/.default
     - name: INTEGRASJON_YRKESSKADE_URL
       value: http://yrkesskade-saker.yrkesskade/api/v1/saker/
     - name: INTEGRASJON_YRKESSKADE_SCOPE

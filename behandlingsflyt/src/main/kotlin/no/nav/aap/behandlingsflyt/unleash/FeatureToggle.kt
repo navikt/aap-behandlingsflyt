@@ -28,7 +28,9 @@ enum class BehandlingsflytFeature : FeatureToggle {
     Sykestipend,
     Forlengelse,
     ForlengelseIManuellBehandling,
-    UtvidVedtakslengdeJobb
+    UtvidVedtakslengdeJobb,
+    InstitusjonsoppholdJobb,
+    TrekkSoeknadOpprettetFraLegeerklaering,
     ;
 
     override fun key(): String = name
