@@ -12,9 +12,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Av
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -27,15 +28,21 @@ fun NormalOpenAPIRoute.rettighetApi(
     dataSource: DataSource,
     repositoryRegistry: RepositoryRegistry,
 ) {
-    route("/api/behandling/{referanse}/rettighet") {
-        getGrunnlag<BehandlingReferanse, List<RettighetDto>>(
-            behandlingPathParam = BehandlingPathParam("referanse"),
+    route("/api/behandling/{saksnummer}/rettighet") {
+        getGrunnlag<Saksnummer, List<RettighetDto>>(
+            behandlingPathParam = BehandlingPathParam("saksnummer"),
             avklaringsbehovKode = Definisjon.AVKLAR_BARNETILLEGG.kode.toString()
         ) { req ->
             val respons: List<RettighetDto> = dataSource.transaction(readOnly = true) { connection ->
                 val repositoryProvider = repositoryRegistry.provider(connection)
+
+                val sakRepository = repositoryProvider.provide<SakRepository>()
+                val sak = sakRepository.hent(req)
                 val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
-                val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
+                val behandling = behandlingRepository.finnSisteOpprettedeBehandlingFor(
+                    sak.id,
+                    listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)
+                )
 
                 val underveisgrunnlagRepository = repositoryProvider.provide<UnderveisRepository>()
                 val underveisgrunnlag = underveisgrunnlagRepository.hent(behandling.id)
@@ -50,31 +57,28 @@ fun NormalOpenAPIRoute.rettighetApi(
                     val rettighetKvoter = underveisgrunnlag.utledKvoterForRettighetstype(type)
                     val startdato = underveisgrunnlag.utledStartdatoForRettighet(type)
                     val gjenværendeKvote = rettighetKvoter.gjenværendeKvote
+                    val perioderForOpphør = hentPerioderForAvslag(avslagForTapAvAAP, listOf(Avslagstype.OPPHØR))
+                    val perioderForStans = hentPerioderForAvslag(avslagForTapAvAAP, listOf(Avslagstype.STANS))
 
                     val maksDato =
                         when (type) {
                             RettighetsType.BISTANDSBEHOV, RettighetsType.SYKEPENGEERSTATNING
                                 -> underveisgrunnlag.utledMaksdatoForRettighet(type)
+
                             RettighetsType.STUDENT, RettighetsType.ARBEIDSSØKER, RettighetsType.VURDERES_FOR_UFØRETRYGD
                                 -> RettighetsperiodeService().utledMaksdatoForRettighet(type, startdato)
                         }
 
-                        RettighetDto(
-                            type = type,
-                            kvote = rettighetKvoter.totalKvote,
-                            bruktKvote = rettighetKvoter.bruktKvote,
-                            gjenværendeKvote = gjenværendeKvote,
-                            startdato = startdato,
-                            maksDato = maksDato,
-                            avslagDato = hentPerioderForAvslag(avslagForTapAvAAP, listOf(Avslagstype.OPPHØR)).first().tom,
-                            avslagÅrsak = if (hentPerioderForAvslag(avslagForTapAvAAP, listOf(Avslagstype.OPPHØR)).isEmpty()) {
-                                Avslagstype.OPPHØR
-                            } else if (hentPerioderForAvslag(avslagForTapAvAAP, listOf(Avslagstype.STANS)).isEmpty()) {
-                                Avslagstype.STANS
-                            } else {
-                                null
-                            }
-                        )
+                    RettighetDto(
+                        type = type,
+                        kvote = rettighetKvoter.totalKvote,
+                        bruktKvote = rettighetKvoter.bruktKvote,
+                        gjenværendeKvote = gjenværendeKvote,
+                        startdato = startdato,
+                        maksDato = maksDato,
+                        avslagDato = perioderForOpphør.first().tom,
+                        avslagÅrsak = if (perioderForOpphør.isNotEmpty()) Avslagstype.OPPHØR else if (perioderForStans.isNotEmpty()) Avslagstype.STANS else null
+                    )
                 }
                 rettighetDtoListe
             }
