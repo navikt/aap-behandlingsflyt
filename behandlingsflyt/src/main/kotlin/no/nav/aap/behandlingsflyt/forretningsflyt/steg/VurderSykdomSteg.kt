@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.harPeriodeSomIkkeErOppfylt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.vilkårIkkeOppfylt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -123,7 +124,7 @@ class VurderSykdomSteg(
                 val studentGrunnlag = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
 
                 tidligereVurderinger.muligMedRettTilAAP(kontekst, type()) &&
-                        studentGrunnlag.vilkårIkkeOppfylt() &&
+                        studentGrunnlag.harPeriodeSomIkkeErOppfylt() &&
                         kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty()
             }
             VurderingType.UTVID_VEDTAKSLENGDE,
