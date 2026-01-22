@@ -2,7 +2,9 @@ package no.nav.aap.behandlingsflyt.behandling.rettighet
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
+import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
+import io.ktor.http.HttpStatusCode
 import no.nav.aap.behandlingsflyt.behandling.rettighetstype.avslagsårsakerVedTapAvRettPåAAP
 import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetsperiodeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
@@ -33,7 +35,7 @@ fun NormalOpenAPIRoute.rettighetApi(
             behandlingPathParam = BehandlingPathParam("saksnummer"),
             avklaringsbehovKode = Definisjon.AVKLAR_BARNETILLEGG.kode.toString()
         ) { req ->
-            val respons: List<RettighetDto> = dataSource.transaction(readOnly = true) { connection ->
+            val respons: List<RettighetDto>? = dataSource.transaction(readOnly = true) { connection ->
                 val repositoryProvider = repositoryRegistry.provider(connection)
 
                 val sakRepository = repositoryProvider.provide<SakRepository>()
@@ -44,8 +46,12 @@ fun NormalOpenAPIRoute.rettighetApi(
                     listOf(TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering)
                 )
 
+                if (behandling == null) {
+                    null
+                }
+
                 val underveisgrunnlagRepository = repositoryProvider.provide<UnderveisRepository>()
-                val underveisgrunnlag = underveisgrunnlagRepository.hent(behandling.id)
+                val underveisgrunnlag = underveisgrunnlagRepository.hent(behandling!!.id)
                 val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
                 val vilkårsresultat = vilkårsresultatRepository.hent(behandling.id)
                 val avslagForTapAvAAP = avslagsårsakerVedTapAvRettPåAAP(vilkårsresultat)
@@ -57,8 +63,8 @@ fun NormalOpenAPIRoute.rettighetApi(
                     val rettighetKvoter = underveisgrunnlag.utledKvoterForRettighetstype(type)
                     val startdato = underveisgrunnlag.utledStartdatoForRettighet(type)
                     val gjenværendeKvote = rettighetKvoter.gjenværendeKvote
-                    val perioderForOpphør = hentPerioderForAvslag(avslagForTapAvAAP, listOf(Avslagstype.OPPHØR))
-                    val perioderForStans = hentPerioderForAvslag(avslagForTapAvAAP, listOf(Avslagstype.STANS))
+                    val perioderForOpphør = hentPerioderForAvslag(avslagForTapAvAAP, Avslagstype.OPPHØR)
+                    val perioderForStans = hentPerioderForAvslag(avslagForTapAvAAP, Avslagstype.STANS)
 
                     val maksDato =
                         when (type) {
@@ -82,11 +88,16 @@ fun NormalOpenAPIRoute.rettighetApi(
                 }
                 rettighetDtoListe
             }
-            respond(respons)
+
+            if (respons == null) {
+                respondWithStatus(HttpStatusCode.NoContent)
+            } else {
+                respond(respons)
+            }
         }
     }
 }
 
-fun hentPerioderForAvslag(tidslinje: Tidslinje<Set<Avslagsårsak>>, avslagListe: List<Avslagstype>): List<Periode> {
-    return tidslinje.filter { it.verdi.any { avslagListe.contains(it.avslagstype) } }.perioder().toList()
+fun hentPerioderForAvslag(tidslinje: Tidslinje<Set<Avslagsårsak>>, avslag: Avslagstype): List<Periode> {
+    return tidslinje.filter { it.verdi.any { it.avslagstype == avslag } }.perioder().toList()
 }

@@ -63,7 +63,7 @@ class UnderveisGrunnlagTest {
 
         val underveisGrunnlag = UnderveisGrunnlag(1234, perioder)
         val maksdato = underveisGrunnlag.utledMaksdatoForRettighet(RettighetsType.BISTANDSBEHOV)
-        val forventetMaksdato = FØRSTE_JAN_2026.plusYears(3).plusWeeks(1)
+        val forventetMaksdato = FØRSTE_JAN_2026.plusYears(3).plusDays(8)
 
         assertThat(maksdato).isEqualTo(forventetMaksdato)
     }
@@ -78,7 +78,7 @@ class UnderveisGrunnlagTest {
 
         val underveisGrunnlag = UnderveisGrunnlag(1234, perioder)
         val maksdato = underveisGrunnlag.utledMaksdatoForRettighet(RettighetsType.SYKEPENGEERSTATNING)
-        val forventetMaksdato = FØRSTE_JAN_2026.plusMonths(5).plusDays(29)
+        val forventetMaksdato = FØRSTE_JAN_2026.plusMonths(5).plusMonths(1)
 
         assertThat(maksdato).isEqualTo(forventetMaksdato)
     }
