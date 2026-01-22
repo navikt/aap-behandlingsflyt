@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -71,10 +72,10 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
     ) {
         val behandlingEtterMigrering = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
             ?: error("Fant ikke behandling for sak=${sakId}")
-        validerBehandlingerErUlike(`behandlingFørMigrering`, behandlingEtterMigrering)
-        validerRettighetstype(`behandlingFørMigrering`, behandlingEtterMigrering)
-        validerTilkjentYtelse(`behandlingFørMigrering`, behandlingEtterMigrering)
-        validerUnderveisPerioder(`behandlingFørMigrering`, behandlingEtterMigrering)
+        validerBehandlingerErUlike(behandlingFørMigrering, behandlingEtterMigrering)
+        validerRettighetstype(behandlingFørMigrering, behandlingEtterMigrering)
+        validerTilkjentYtelse(behandlingFørMigrering, behandlingEtterMigrering)
+        validerUnderveisPerioder(behandlingFørMigrering, behandlingEtterMigrering)
     }
 
     private fun validerRettighetstype(
@@ -105,11 +106,13 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
          * Må nulle ut periode og id for å kunne komprimere og se reelle forskjeller på underveisperiodene
          */
         val underveisFør =
-            underveisRepository.hentHvisEksisterer(behandlingFørMigrering.id)?.somTidslinje()?.map { it.copy(periode = Periode(Tid.MIN, Tid.MAKS), id = null) }?.komprimer()
+            underveisRepository.hentHvisEksisterer(behandlingFørMigrering.id)?.somTidslinje()
+                ?.map { it.copy(periode = Periode(Tid.MIN, Tid.MAKS), id = null) }?.komprimer()
                 ?.segmenter()?.toList()
                 ?: error("Fant ikke underveis for behandling ${behandlingFørMigrering.id}")
         val underveisEtter =
-            underveisRepository.hentHvisEksisterer(behandlingEtterMigrering.id)?.somTidslinje()?.map { it.copy(periode = Periode(Tid.MIN, Tid.MAKS), id = null) }?.komprimer()
+            underveisRepository.hentHvisEksisterer(behandlingEtterMigrering.id)?.somTidslinje()
+                ?.map { it.copy(periode = Periode(Tid.MIN, Tid.MAKS), id = null) }?.komprimer()
                 ?.segmenter()?.toList()
                 ?: error("Fant ikke underveis for behandling ${behandlingEtterMigrering.id}")
         secureLogger.info("Migrering underveis før=$underveisFør og etter=$underveisEtter")
@@ -119,11 +122,48 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         underveisFør.forEachIndexed { index, periodeFør ->
             val periodeEtter = underveisEtter.find { it.periode == periodeFør.periode }
                 ?: error("Fant ikke underveisperiode for ny behandling for indeks: ${index}")
-            if (periodeFør != periodeEtter) {
+            val verdiFør = periodeFør.verdi
+            val verdiEtter = periodeEtter.verdi
+            if (verdiFør.meldePeriode != verdiEtter.meldePeriode
+                || verdiFør.avslagsårsak != verdiEtter.avslagsårsak
+                || verdiFør.brukerAvKvoter != verdiEtter.brukerAvKvoter
+                || verdiFør.grenseverdi != verdiEtter.grenseverdi
+                || verdiFør.arbeidsgradering.opplysningerMottatt != verdiEtter.arbeidsgradering.opplysningerMottatt
+                || verdiFør.arbeidsgradering.fastsattArbeidsevne != verdiEtter.arbeidsgradering.fastsattArbeidsevne
+                || verdiFør.arbeidsgradering.totaltAntallTimer != verdiEtter.arbeidsgradering.totaltAntallTimer
+                || verdiFør.rettighetsType != verdiEtter.rettighetsType
+                || verdiFør.utfall != verdiEtter.utfall
+                || verdiFør.trekk != verdiEtter.trekk
+                || verdiFør.institusjonsoppholdReduksjon != verdiEtter.institusjonsoppholdReduksjon
+                || !likArbeidsgradering(verdiFør.arbeidsgradering, verdiEtter.arbeidsgradering)
+            ) {
+                // Spesialsjekk på meldeplitstatus, gradering,
                 secureLogger.info("Migrering underveis før=$periodeFør og etter=$periodeEtter")
                 throw IllegalStateException("Ulike underveisperioder mellom ny og gammel behandling for indeks: ${index}")
             }
         }
+    }
+
+    /**
+     * På grunn av endring i logisk oppbygging av underveisperioder har vi flippet arbeidsgradering andel arbeid og gradering
+     * i løpet av 2025 for å ikke innvilge fremtidige perioder
+     */
+    fun likArbeidsgradering(
+        arbeidsgraderingFør: ArbeidsGradering,
+        arbeidsgraderingEtter: ArbeidsGradering
+    ): Boolean {
+        if (arbeidsgraderingFør.gradering != arbeidsgraderingEtter.gradering) {
+            if (arbeidsgraderingFør.gradering.komplement() != arbeidsgraderingEtter.gradering) {
+                return false
+            }
+        }
+        if (arbeidsgraderingFør.andelArbeid != arbeidsgraderingEtter.andelArbeid) {
+            if (arbeidsgraderingFør.andelArbeid.komplement() != arbeidsgraderingEtter.andelArbeid) {
+                return false
+            }
+        }
+
+        return true
     }
 
     private fun validerTilkjentYtelse(
@@ -175,7 +215,7 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         behandlingFørMigrering: Behandling,
         behandlingEtterMigrering: Behandling,
     ) {
-        if (behandlingEtterMigrering.id == `behandlingFørMigrering`.id) {
+        if (behandlingEtterMigrering.id == behandlingFørMigrering.id) {
             throw IllegalStateException("Skal ha ulik behandling før og etter migrering av rettighetsperiode")
         }
     }
