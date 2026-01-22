@@ -211,7 +211,6 @@ object SykestipendAktivert : FakeUnleashBase(
         BehandlingsflytFeature.OverforingsdatoNullForAvregning to true,
         BehandlingsflytFeature.OvergangArbeid to true,
         BehandlingsflytFeature.KvalitetssikringsSteg to true,
-        BehandlingsflytFeature.EOSBeregning to true,
         BehandlingsflytFeature.NyBrevbyggerV3 to false,
         BehandlingsflytFeature.BedreUttrekkAvSakerMedFritakMeldeplikt to false,
         BehandlingsflytFeature.LagreVedtakIFatteVedtak to true,
