@@ -33,9 +33,10 @@ object ProsesseringsJobber {
             TriggBarnetilleggSatsJobbUtfører,
             OpprettJobbForTriggBarnetilleggSatsJobbUtfører,
             OpprettJobbForMigrereRettighetsperiodeJobbUtfører,
+            OppdaterOppgaveMedTilbakekrevingsbehandlingUtfører,
             OpprettBehandlingMigrereRettighetsperiodeJobbUtfører,
             SendFagsysteminfoBehovTilTilbakekrevingUtfører,
-            SjekkInstitusjonsOppholdJobbUtfører
+            SjekkInstitusjonsOppholdJobbUtfører,
         )
     }
 }
