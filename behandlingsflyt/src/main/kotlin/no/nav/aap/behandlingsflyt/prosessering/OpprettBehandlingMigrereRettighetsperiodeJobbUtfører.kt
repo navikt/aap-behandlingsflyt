@@ -50,7 +50,7 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         if (unleashGateway.isEnabled(BehandlingsflytFeature.MigrerRettighetsperiode)) {
             if (sak.rettighetsperiode.tom == Tid.MAKS) {
                 log.info("Har allerede tid maks som rettighetsperiode - lager ikke en ny behandling")
-
+                return
             }
             val behandlingFørMigrering = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
                 ?: error("Fant ikke behandling for sak=${sakId}")
