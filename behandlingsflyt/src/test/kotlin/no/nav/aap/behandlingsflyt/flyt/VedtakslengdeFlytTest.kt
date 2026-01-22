@@ -15,6 +15,8 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårs
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.desember
+import no.nav.aap.behandlingsflyt.test.fixedClock
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.motor.FlytJobbRepositoryImpl
 import no.nav.aap.motor.JobbInput
@@ -25,7 +27,9 @@ import java.time.LocalDateTime
 
 class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
 
-    // TODO kan fjernes når vi ikke lenger har miljøspesifikke filter i OpprettBehandlingUtvidVedtakslengdeJobbUtfører
+    private val clock = fixedClock(1 desember 2025)
+
+    // TODO kan fjernes når vi ikke lenger har miljøspesifikke filter i OpprettJobbUtvidVedtakslengdeJobbUtfører
     @BeforeEach
     fun setup() {
         System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
@@ -33,7 +37,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
 
     @Test
     fun `forleng vedtak med passert slutt uten eksplisitt sluttdato`() {
-        val søknadstidspunkt = LocalDateTime.of(2024, 12, 1, 12, 0)
+        val søknadstidspunkt = LocalDateTime.now(clock).minusYears(1)
         val (sak, førstegangsbehandling) = sendInnFørsteSøknad(mottattTidspunkt = søknadstidspunkt)
         val rettighetsperiode = sak.rettighetsperiode
         val startDato = sak.rettighetsperiode.fom
@@ -83,6 +87,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
                 flytJobbRepository = FlytJobbRepositoryImpl(connection),
                 unleashGateway = FakeUnleash,
+                clock = clock,
             )
 
             opprettJobbUtvidVedtakslengdeJobbUtfører.utfør(JobbInput(OpprettJobbUtvidVedtakslengdeJobbUtfører))

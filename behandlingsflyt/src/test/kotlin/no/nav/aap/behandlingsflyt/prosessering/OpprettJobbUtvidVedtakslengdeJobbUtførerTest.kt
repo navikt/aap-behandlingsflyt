@@ -16,8 +16,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.desember
+import no.nav.aap.behandlingsflyt.test.fixedClock
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import org.assertj.core.api.Assertions.assertThat
@@ -29,21 +30,24 @@ import java.time.LocalDateTime
 @ExtendWith(MockKExtension::class)
 class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
 
+    private val dagensDato = 1 desember 2025
     private val sakId = SakId(1L)
     private val behandlingId = BehandlingId(1L)
+    private val jobbInput = JobbInput(OpprettJobbUtvidVedtakslengdeJobbUtfører)
 
-    val underveisRepository = mockk<UnderveisRepository>()
-    val sakOgBehandlingService = mockk<SakOgBehandlingService>()
-    val flytJobbRepository = mockk<FlytJobbRepository>()
-    val unleashGateway = mockk<UnleashGateway> {
-        every { isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeJobb) } returns true
-    }
-    val opprettJobbUtvidVedtakslengdeJobbUtfører =
-        OpprettJobbUtvidVedtakslengdeJobbUtfører(underveisRepository, sakOgBehandlingService, flytJobbRepository, unleashGateway)
-    val jobbInput = JobbInput(OpprettJobbUtvidVedtakslengdeJobbUtfører)
+    private val underveisRepository = mockk<UnderveisRepository>()
+    private val sakOgBehandlingService = mockk<SakOgBehandlingService>()
+    private val flytJobbRepository = mockk<FlytJobbRepository>()
+    private val opprettJobbUtvidVedtakslengdeJobbUtfører =
+        OpprettJobbUtvidVedtakslengdeJobbUtfører(
+            underveisRepository = underveisRepository,
+            sakOgBehandlingService = sakOgBehandlingService,
+            flytJobbRepository = flytJobbRepository,
+            unleashGateway = FakeUnleash,
+            clock = fixedClock(dagensDato)
+        )
 
-
-    // TODO kan fjernes når vi ikke lenger har miljøspesifikke filter i OpprettJobbUtvidVedtakslengdeJobbUtførerTest
+    // TODO kan fjernes når vi ikke lenger har miljøspesifikke filter i OpprettJobbUtvidVedtakslengdeJobbUtfører
     @BeforeEach
     fun setup() {
         System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
@@ -55,7 +59,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
 
         every { underveisRepository.hentSakerMedSisteUnderveisperiodeFørDato(any()) } returns setOf(sakId)
         every { sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns behandling()
-        every { flytJobbRepository.leggTil(any()) } just Runs
+        every { flytJobbRepository.leggTil(match { it.sakId() == sakId.id }) } just Runs
 
         opprettJobbUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
 
@@ -65,6 +69,25 @@ class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
         assertThat(slot.captured)
             .usingRecursiveComparison()
             .isEqualTo(jobbInputSak)
+    }
+
+    @Test
+    fun `skal ikke opprette jobber for åpne behandlinger`() {
+        every { underveisRepository.hentSakerMedSisteUnderveisperiodeFørDato(any()) } returns setOf(sakId)
+        every { sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns behandling(status = Status.UTREDES)
+
+        opprettJobbUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
+
+        verify(exactly = 0) { flytJobbRepository.leggTil(any()) }
+    }
+
+    @Test
+    fun `skal ikke opprette jobber hvis ingen saker returneres`() {
+        every { underveisRepository.hentSakerMedSisteUnderveisperiodeFørDato(any()) } returns emptySet()
+
+        opprettJobbUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
+
+        verify(exactly = 0) { flytJobbRepository.leggTil(any()) }
     }
 
     private fun behandling(status: Status = Status.IVERKSETTES) =

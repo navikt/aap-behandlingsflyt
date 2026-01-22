@@ -39,8 +39,8 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
 
     override fun utfør(input: JobbInput) {
         val datoHvorSakerSjekkesForUtvidelse = now(clock).plusDays(28)
-
         val sakId = SakId(input.sakId())
+
         val sisteGjeldendeBehandling = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId)
         if (sisteGjeldendeBehandling != null) {
             log.info("Gjeldende behandling for sak $sakId er ${sisteGjeldendeBehandling.id}")
