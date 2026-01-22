@@ -85,6 +85,7 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
             ?: error("Fant ikke underveis for behandling ${behandlingFørMigrering.id}")
         val underveisEtter = underveisRepository.hentHvisEksisterer(behandlingEtterMigrering.id)?.perioder
             ?: error("Fant ikke underveis for behandling ${behandlingEtterMigrering.id}")
+        secureLogger.info("Migrering underveis før=$underveisFør og etter=$underveisEtter")
         if (underveisFør.size != underveisEtter.size) {
             secureLogger.info("Migrering underveis før=$underveisFør og etter=$underveisEtter")
             throw IllegalStateException("Ulikt antall underveisperioder før ${underveisFør.size} og etter migrering ${underveisEtter.size}")
@@ -103,12 +104,12 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         behandlingFørMigrering: Behandling,
         behandlingEtterMigrering: Behandling
     ) {
-        val tilkjentYtelseFør = tilkjentYtelseRepository.hentHvisEksisterer(`behandlingFørMigrering`.id)
+        val tilkjentYtelseFør = tilkjentYtelseRepository.hentHvisEksisterer(behandlingFørMigrering.id)
             ?: emptyList()
         val tilkjentYtelseEtter = tilkjentYtelseRepository.hentHvisEksisterer(behandlingEtterMigrering.id)
             ?: emptyList()
+        secureLogger.info("Migrering tilkjent ytelse før=$tilkjentYtelseFør og etter=$tilkjentYtelseEtter")
         if (tilkjentYtelseEtter.size != tilkjentYtelseFør.size) {
-            secureLogger.info("Migrering tilkjent ytelse før=$tilkjentYtelseFør og etter=$tilkjentYtelseEtter")
             throw IllegalStateException("Ulikt antall tilkjent ytelseperioder mellom ny ${tilkjentYtelseEtter.size} og gammel behandling ${tilkjentYtelseFør.size}")
         }
         tilkjentYtelseFør.forEachIndexed { index, periodeFør ->
