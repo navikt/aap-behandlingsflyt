@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
@@ -15,6 +16,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
@@ -85,9 +87,9 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         behandlingFørMigrering: Behandling,
         behandlingEtterMigrering: Behandling
     ) {
-        val underveisFør = underveisRepository.hentHvisEksisterer(behandlingFørMigrering.id)?.perioder
+        val underveisFør = underveisRepository.hentHvisEksisterer(behandlingFørMigrering.id)?.somTidslinje()?.komprimer()?.segmenter()?.toList()
             ?: error("Fant ikke underveis for behandling ${behandlingFørMigrering.id}")
-        val underveisEtter = underveisRepository.hentHvisEksisterer(behandlingEtterMigrering.id)?.perioder
+        val underveisEtter = underveisRepository.hentHvisEksisterer(behandlingEtterMigrering.id)?.somTidslinje()?.komprimer()?.segmenter()?.toList()
             ?: error("Fant ikke underveis for behandling ${behandlingEtterMigrering.id}")
         secureLogger.info("Migrering underveis før=$underveisFør og etter=$underveisEtter")
         if (underveisFør.size != underveisEtter.size) {
@@ -108,9 +110,9 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         behandlingFørMigrering: Behandling,
         behandlingEtterMigrering: Behandling
     ) {
-        val tilkjentYtelseFør = tilkjentYtelseRepository.hentHvisEksisterer(behandlingFørMigrering.id)
+        val tilkjentYtelseFør = tilkjentYtelseRepository.hentHvisEksisterer(behandlingFørMigrering.id)?.tilTidslinje()?.komprimer()?.segmenter()?.toList()
             ?: emptyList()
-        val tilkjentYtelseEtter = tilkjentYtelseRepository.hentHvisEksisterer(behandlingEtterMigrering.id)
+        val tilkjentYtelseEtter = tilkjentYtelseRepository.hentHvisEksisterer(behandlingEtterMigrering.id)?.tilTidslinje()?.komprimer()?.segmenter()?.toList()
             ?: emptyList()
         secureLogger.info("Migrering tilkjent ytelse før=$tilkjentYtelseFør og etter=$tilkjentYtelseEtter")
         if (tilkjentYtelseEtter.size != tilkjentYtelseFør.size) {
@@ -119,7 +121,7 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         tilkjentYtelseFør.forEachIndexed { index, periodeFør ->
             val periodeEtter = tilkjentYtelseEtter.find { it.periode == periodeFør.periode }
             if (periodeEtter == null) {
-                throw IllegalStateException("Mangler periode ${periodeFør.periode} med tilkjent ytelse i ny behandling - indeks: $index")
+                throw IllegalStateException("Mangler periode ${periodeFør} med tilkjent ytelse i ny behandling - indeks: $index")
             } else if (periodeEtter != periodeFør) {
                 secureLogger.info("Migrering tilkjent ytelse før=$periodeFør og etter=$periodeEtter")
                 throw IllegalStateException("Ulike perioder i tilkjent ytelse mellom ny og gammel behandling - indeks: $index")
