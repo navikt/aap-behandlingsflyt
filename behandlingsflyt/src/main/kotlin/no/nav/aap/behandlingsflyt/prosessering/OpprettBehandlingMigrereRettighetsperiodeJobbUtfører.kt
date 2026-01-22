@@ -51,7 +51,7 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
             val behandlingEtterMigrering = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
                 ?: error("Fant ikke behandling for sak=${sakId}")
             validerBehandlingerErUlike(behandlingFørMigrering, behandlingEtterMigrering)
-            validerVilkår(behandlingFørMigrering, behandlingEtterMigrering)
+            validerRettighetstype(behandlingFørMigrering, behandlingEtterMigrering)
             validerTilkjentYtelse(behandlingFørMigrering, behandlingEtterMigrering)
             validerUnderveisPerioder(behandlingFørMigrering, behandlingEtterMigrering)
 
@@ -61,16 +61,18 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         }
     }
 
-    private fun validerVilkår(
+    private fun validerRettighetstype(
         behandlingFørMigrering: Behandling,
         behandlingEtterMigrering: Behandling
     ) {
         val vilkårFør = vilkårsresultatRepository.hent(behandlingFørMigrering.id)
         val vilkårEtter = vilkårsresultatRepository.hent(behandlingEtterMigrering.id)
-        val periodeForVilkårFør = vilkårFør.somTidslinje().helePerioden()
-        val vilkårEtterBegrensetTilPeriodeFørMigrering = vilkårEtter.somTidslinje().begrensetTil(periodeForVilkårFør)
-        if (vilkårEtterBegrensetTilPeriodeFørMigrering != vilkårFør.somTidslinje()) {
-            secureLogger.info("Migrering vilkår før=${vilkårFør.somTidslinje()} og etter=$vilkårEtterBegrensetTilPeriodeFørMigrering")
+        val rettighetstypeFør = vilkårFør.rettighetstypeTidslinje()
+        val rettighetstypeEtter = vilkårEtter.rettighetstypeTidslinje()
+        val rettighetstypeEtterBegrenset = rettighetstypeEtter.begrensetTil(rettighetstypeFør.helePerioden())
+        secureLogger.info("Migrering vilkår før=${rettighetstypeFør} og etter=$rettighetstypeEtter")
+        if (rettighetstypeEtterBegrenset != rettighetstypeFør) {
+            secureLogger.info("Migrering vilkår før=${rettighetstypeFør} og etter=$rettighetstypeEtterBegrenset")
             throw IllegalStateException("Vilkår før og etter migrering er ulik i den ")
         }
     }
@@ -84,6 +86,7 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         val underveisEtter = underveisRepository.hentHvisEksisterer(behandlingEtterMigrering.id)?.perioder
             ?: error("Fant ikke underveis for behandling ${behandlingEtterMigrering.id}")
         if (underveisFør.size != underveisEtter.size) {
+            secureLogger.info("Migrering underveis før=$underveisFør og etter=$underveisEtter")
             throw IllegalStateException("Ulikt antall underveisperioder før ${underveisFør.size} og etter migrering ${underveisEtter.size}")
         }
         underveisFør.forEachIndexed { index, periodeFør ->
@@ -105,6 +108,7 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         val tilkjentYtelseEtter = tilkjentYtelseRepository.hentHvisEksisterer(behandlingEtterMigrering.id)
             ?: emptyList()
         if (tilkjentYtelseEtter.size != tilkjentYtelseFør.size) {
+            secureLogger.info("Migrering tilkjent ytelse før=$tilkjentYtelseFør og etter=$tilkjentYtelseEtter")
             throw IllegalStateException("Ulikt antall tilkjent ytelseperioder mellom ny ${tilkjentYtelseEtter.size} og gammel behandling ${tilkjentYtelseFør.size}")
         }
         tilkjentYtelseFør.forEachIndexed { index, periodeFør ->
