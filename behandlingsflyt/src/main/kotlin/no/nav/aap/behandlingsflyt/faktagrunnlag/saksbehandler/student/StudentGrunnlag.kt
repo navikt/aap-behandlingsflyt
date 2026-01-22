@@ -53,7 +53,7 @@ fun StudentGrunnlag?.harPeriodeSomIkkeErOppfylt(): Boolean {
     if (tidslinje.isEmpty()) {
         return true
     }
-    return tidslinje.segmenter().all { it.verdi.erOppfylt() }
+    return tidslinje.segmenter().any { !it.verdi.erOppfylt() }
 }
 
 fun StudentGrunnlag?.søkerOppgirStudentstatus(): Boolean {

@@ -17,8 +17,7 @@ open class FakeUnleashBase(
     override fun isEnabled(featureToggle: FeatureToggle, ident: String, typeBrev: TypeBrev) = isEnabled(featureToggle)
 }
 
-
-/** Devlik unleash. */
+/** Prodlik unleash. */
 object FakeUnleash : FakeUnleashBase(
     mapOf(
         BehandlingsflytFeature.IngenValidering to false,
