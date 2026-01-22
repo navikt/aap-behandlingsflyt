@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.rettighet
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import java.time.LocalDate
 
@@ -10,6 +11,6 @@ data class RettighetDto(
     var gjenværendeKvote: Int? = null,
     val startdato: LocalDate? = null,
     val maksDato: LocalDate? = null,
-    val stansdato: LocalDate? = null,
-    val opphørsdato: LocalDate? = null,
+    val avslagDato: LocalDate? = null,
+    val avslagÅrsak: Avslagstype? = null,
 )

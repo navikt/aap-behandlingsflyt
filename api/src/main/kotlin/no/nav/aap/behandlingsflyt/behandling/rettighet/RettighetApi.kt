@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetsperiodeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagstype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -16,6 +17,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
@@ -63,8 +66,14 @@ fun NormalOpenAPIRoute.rettighetApi(
                             gjenværendeKvote = gjenværendeKvote,
                             startdato = startdato,
                             maksDato = maksDato,
-                            opphørsdato = avslagForTapAvAAP.filter { it.verdi.any { it.avslagstype === Avslagstype.OPPHØR && it.hjemmel === type.hjemmel } }.perioder().first().tom,
-                            stansdato = avslagForTapAvAAP.filter { it.verdi.any { it.avslagstype === Avslagstype.STANS && it.hjemmel === type.hjemmel } }.perioder().first().tom
+                            avslagDato = hentPerioderForAvslag(avslagForTapAvAAP, listOf(Avslagstype.OPPHØR)).first().tom,
+                            avslagÅrsak = if (hentPerioderForAvslag(avslagForTapAvAAP, listOf(Avslagstype.OPPHØR)).isEmpty()) {
+                                Avslagstype.OPPHØR
+                            } else if (hentPerioderForAvslag(avslagForTapAvAAP, listOf(Avslagstype.STANS)).isEmpty()) {
+                                Avslagstype.STANS
+                            } else {
+                                null
+                            }
                         )
                 }
                 rettighetDtoListe
@@ -72,4 +81,8 @@ fun NormalOpenAPIRoute.rettighetApi(
             respond(respons)
         }
     }
+}
+
+fun hentPerioderForAvslag(tidslinje: Tidslinje<Set<Avslagsårsak>>, avslagListe: List<Avslagstype>): List<Periode> {
+    return tidslinje.filter { it.verdi.any { avslagListe.contains(it.avslagstype) } }.perioder().toList()
 }

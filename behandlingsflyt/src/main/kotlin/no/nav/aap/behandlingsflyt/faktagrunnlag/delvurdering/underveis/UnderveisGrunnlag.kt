@@ -5,10 +5,12 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.KvoteService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plusHverdager
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import java.time.Clock
 import java.time.LocalDate
 
@@ -32,22 +34,17 @@ data class UnderveisGrunnlag(
         return utledInnfriddePerioderForRettighet(rettighetsType).first().periode.fom
     }
 
-    fun utledMaksdatoForRettighet(type: RettighetsType): LocalDate {
+    fun utledMaksdatoForRettighet(type: RettighetsType): LocalDate? {
         val gjenværendeKvote = utledKvoterForRettighetstype(type).gjenværendeKvote
-        val innfriddePerioder = utledInnfriddePerioderForRettighet(type)
 
         if (gjenværendeKvote > 0) {
-            return innfriddePerioder.last().periode.tom.plusHverdager(Hverdager(gjenværendeKvote))
+            return Hverdager(gjenværendeKvote).fraOgMed(dagensDato)
         }
-        return innfriddePerioder.first { it.avslagsårsak == UnderveisÅrsak.VARIGHETSKVOTE_BRUKT_OPP }.periode.fom
+        return perioder.firstOrNull { it.rettighetsType == type && it.avslagsårsak === UnderveisÅrsak.VARIGHETSKVOTE_BRUKT_OPP }?.periode?.fom
     }
 
     fun utledKvoterForRettighetstype(rettighetsType: RettighetsType): RettighetKvoter {
-        val innfriddePerioder = utledInnfriddePerioderForRettighet(rettighetsType)
-        val historiskePerioder = innfriddePerioder.filter { it.periode.tom.isBefore(dagensDato) }
-        val gjeldendePeriode = innfriddePerioder.find { it.periode.fom <= dagensDato && it.periode.tom >= dagensDato }?.periode
-        val bruktKvoteIGjeldendePeriode = if (gjeldendePeriode != null) Periode(gjeldendePeriode.fom, dagensDato.minusDays(1)).antallHverdager().asInt else 0
-        val bruktKvote = historiskePerioder.sumOf { it.periode.antallHverdager().asInt }.plus(bruktKvoteIGjeldendePeriode)
+        val bruktKvote = utledInnfriddePerioderForRettighet(rettighetsType).somTidslinje { it.periode }.begrensetTil(Periode(Tid.MIN, dagensDato)).segmenter().sumOf { it.periode.antallHverdager().asInt }
         val totalKvote = KvoteService().beregn().hentKvoteForRettighetstype(rettighetsType)?.asInt
         val gjenværendeKvote = totalKvote?.minus(bruktKvote) ?: 0
 
