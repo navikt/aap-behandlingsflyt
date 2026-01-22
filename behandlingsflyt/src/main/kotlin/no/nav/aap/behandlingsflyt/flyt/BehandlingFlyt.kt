@@ -66,6 +66,9 @@ class BehandlingFlyt private constructor(
             .flatMap { steg -> steg.kravliste.map { steg.steg.type() to it } }
     }
 
+    /**
+     * Setter aktivt steg for denne flyten og for parent-flyten.
+     */
     fun forberedFlyt(aktivtSteg: StegType): FlytSteg {
         return forberedFlyt(steg(aktivtSteg)).steg
     }
@@ -117,7 +120,8 @@ class BehandlingFlyt private constructor(
         return aIndex < bIndex
     }
 
-    /** Sorter avklaringsbehov i samme rekkefølgen som stegene behovet løses i.
+    /**
+     * Sorter avklaringsbehov i samme rekkefølgen som stegene behovet løses i.
      * Steg som løses i ukjente steg, plasseres bakerst. */
     val stegComparator: Comparator<StegType> by lazy {
         val rekkefølge = flyt.mapIndexed { i, steg -> steg.steg.type() to i }.toMap()
@@ -146,7 +150,7 @@ class BehandlingFlyt private constructor(
     }
 
     /**
-     * Brukes av APIet
+     * Returner alle stegene i denne flyten.
      */
     fun stegene(): List<StegType> {
         return flyt.map { it.steg.type() }
@@ -186,15 +190,20 @@ class BehandlingFlyt private constructor(
         return skalTilStegForBehov(listOf(avklaringsbehov))
     }
 
+    /**
+     * Returnerer den originale flyten i motsatt rekkefølge, slik at FlytOrkestrator
+     * kan rulle tilbake ett og ett steg.
+     *
+     */
     fun tilbakeflytEtterEndringer(
         oppdaterteGrunnlagstype: List<Informasjonskravkonstruktør>,
-        nyeVurderingsbehov: List<Vurderingsbehov>? = null
+        nyeVurderingsbehov: List<Vurderingsbehov> = emptyList()
     ): BehandlingFlyt {
         val tidligsteStegForVurderingsbehov =
-            nyeVurderingsbehov?.flatMap { vurderingsbehov[it].orEmpty() }
+            nyeVurderingsbehov.flatMap { vurderingsbehov[it].orEmpty() }
                 // Skal ikke kunne flyttes tilbake til steg med status OPPRETTET
-                ?.minus(StegType.entries.filter { it.status == Status.OPPRETTET }.toSet())
-                ?.minWithOrNull(stegComparator)
+                .minus(StegType.entries.filter { it.status == Status.OPPRETTET }.toSet())
+                .minWithOrNull(stegComparator)
 
         val skalTilSteg =
             flyt.filter { it.kravliste.any { at -> oppdaterteGrunnlagstype.contains(at) } }
@@ -313,7 +322,7 @@ class BehandlingFlytBuilder {
 
     fun build(): BehandlingFlyt {
         if (buildt) {
-            throw IllegalStateException("[Utvikler feil] Builder er allerede bygget")
+            throw IllegalStateException("[Utviklerfeil] Builder er allerede bygget")
         }
         buildt = true
 

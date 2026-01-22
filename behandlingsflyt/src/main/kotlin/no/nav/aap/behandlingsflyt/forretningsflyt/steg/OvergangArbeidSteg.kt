@@ -67,9 +67,6 @@ class OvergangArbeidSteg internal constructor(
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
-            avklaringsbehovene = avklaringsbehovene,
-            behandlingRepository = behandlingRepository,
-            vilkårsresultatRepository = vilkårsresultatRepository,
             definisjon = Definisjon.AVKLAR_OVERGANG_ARBEID,
             tvingerAvklaringsbehov = setOf(
                 Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
@@ -114,7 +111,7 @@ class OvergangArbeidSteg internal constructor(
             .orEmpty()
 
         val studentVurderinger = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
-            ?.somTidslinje(kontekst.rettighetsperiode)
+            ?.somStudenttidslinje(kontekst.rettighetsperiode)
             .orEmpty()
 
         val overgangUføreVurderinger = overgangUføreRepository.hentHvisEksisterer(kontekst.behandlingId)

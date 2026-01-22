@@ -29,6 +29,7 @@ public data class StoppetBehandling(
     val sakStatus: SakStatus,
     val behandlingReferanse: UUID,
     val relatertBehandling: UUID? = null,
+    val relatertFagsystem: String? = "KELVIN",
     val behandlingOpprettetTidspunkt: LocalDateTime,
     val mottattTid: LocalDateTime,
     val tidspunktSisteEndring: LocalDateTime? = null,
@@ -110,7 +111,9 @@ public enum class Vurderingsbehov {
     OPPHOLDSKRAV,
     EFFEKTUER_AKTIVITETSPLIKT,
     EFFEKTUER_AKTIVITETSPLIKT_11_9,
-    AUTOMATISK_OPPDATER_VILKÅR;
+    UTVID_VEDTAKSLENGDE,
+    MIGRER_RETTIGHETSPERIODE,
+    REVURDER_SYKESTIPEND;
 }
 
 /**

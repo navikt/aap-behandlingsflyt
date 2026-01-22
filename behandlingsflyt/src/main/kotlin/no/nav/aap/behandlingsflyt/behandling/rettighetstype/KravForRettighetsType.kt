@@ -16,10 +16,13 @@ import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
 
 private val kravprioritet =
-    /* Rekkefølgen på disse er av betydning: første match blir valgt.  Ideelt sett burde de nok være i samme rekkefølge som vi vurdere vilkår i flyten. Samtidig er nok
-    * en del (nesten alle?) av kravene gjensidig utelukkende. */
+    /**
+     * Rekkefølgen på disse er av betydning: første match blir valgt. Ideelt sett burde de nok være i samme rekkefølge
+     * som vi vurdere vilkår i flyten. Samtidig er nok en del (nesten alle?) av kravene gjensidig utelukkende.
+     * */
     listOf(
         KravForStudent,
+        KravForStudentGammel,
         KravForOrdinærAap,
         KravForYrkesskade,
         KravForOvergangUføretrygd,
@@ -84,14 +87,29 @@ object KravForSykepengeerstatningGammeltFormat : KravspesifikasjonForRettighetsT
     override val kravOvergangUfør = IngenKrav
     override val kravOvergangArbeid = IngenKrav
     override val forutgåendeAap = IngenKravOmForutgåendeAAP
+    override val kravStudent = IngenKrav
 }
 
-data object KravForStudent : KravspesifikasjonForRettighetsType {
+data object KravForStudentGammel : KravspesifikasjonForRettighetsType {
     override val rettighetstype = RettighetsType.STUDENT
     override val kravForutgåendeMedlemskap = MåVæreOppfylt()
     override val kravSykdom = MåVæreOppfylt(Innvilgelsesårsak.STUDENT)
     override val kravBistand = IngenKrav
 
+    override val kravOvergangUfør = IngenKrav
+    override val kravOvergangArbeid = IngenKrav
+    override val kravSykepengeerstatning = IngenKrav
+    override val forutgåendeAap = IngenKravOmForutgåendeAAP
+    override val kravStudent = IngenKrav
+}
+
+data object KravForStudent : KravspesifikasjonForRettighetsType {
+    override val rettighetstype = RettighetsType.STUDENT
+    override val kravStudent = MåVæreOppfylt()
+    override val kravForutgåendeMedlemskap = MåVæreOppfylt()
+    override val kravBistand = IngenKrav
+
+    override val kravSykdom = IngenKrav
     override val kravOvergangUfør = IngenKrav
     override val kravOvergangArbeid = IngenKrav
     override val kravSykepengeerstatning = IngenKrav
@@ -109,6 +127,7 @@ data object KravForOrdinærAap : KravspesifikasjonForRettighetsType {
     override val kravOvergangArbeid = IngenKrav
     override val kravSykepengeerstatning = IngenKrav
     override val forutgåendeAap = IngenKravOmForutgåendeAAP
+    override val kravStudent = IngenKrav
 }
 
 data object KravForYrkesskade : KravspesifikasjonForRettighetsType {
@@ -122,6 +141,7 @@ data object KravForYrkesskade : KravspesifikasjonForRettighetsType {
     override val kravOvergangArbeid = IngenKrav
     override val kravSykepengeerstatning = IngenKrav
     override val forutgåendeAap = IngenKravOmForutgåendeAAP
+    override val kravStudent = IngenKrav
 }
 
 data object KravForSykepengeerstatning : KravspesifikasjonForRettighetsType {
@@ -135,6 +155,7 @@ data object KravForSykepengeerstatning : KravspesifikasjonForRettighetsType {
     override val kravOvergangUfør = IngenKrav
     override val kravOvergangArbeid = IngenKrav
     override val forutgåendeAap = IngenKravOmForutgåendeAAP
+    override val kravStudent = IngenKrav
 }
 
 data object KravForOvergangUføretrygd : KravspesifikasjonForRettighetsType {
@@ -148,6 +169,7 @@ data object KravForOvergangUføretrygd : KravspesifikasjonForRettighetsType {
     override val kravOvergangArbeid = IngenKrav
     override val kravSykepengeerstatning = IngenKrav
     override val forutgåendeAap = IngenKravOmForutgåendeAAP
+    override val kravStudent = IngenKrav
 }
 
 data object KravForOvergangArbeid : KravspesifikasjonForRettighetsType {
@@ -161,6 +183,7 @@ data object KravForOvergangArbeid : KravspesifikasjonForRettighetsType {
     override val kravSykdom = IngenKrav
     override val kravOvergangUfør = IngenKrav
     override val kravSykepengeerstatning = IngenKrav
+    override val kravStudent = IngenKrav
 }
 
 fun vurderRettighetsType(vilkårsresultat: Vilkårsresultat): Tidslinje<RettighetsType> {
@@ -214,8 +237,3 @@ fun avslagsårsakerVedTapAvRettPåAAP(
         }
         .let(::Tidslinje)
 }
-
-fun <T> Tidslinje<T>.mergePrioriterVenstre(other: Tidslinje<T>): Tidslinje<T> {
-    return other.mergePrioriterHøyre(this)
-}
-

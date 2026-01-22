@@ -48,7 +48,7 @@ public enum class StegType(
         status = Status.UTREDES
     ),
     SAMORDNING_SYKESTIPEND(
-        gruppe = StegGruppe.STUDENT,
+        gruppe = StegGruppe.SAMORDNING,
         status = Status.UTREDES
     ),
     VURDER_BISTANDSBEHOV(
@@ -155,6 +155,12 @@ public enum class StegType(
         gruppe = StegGruppe.UNDERVEIS,
         status = Status.UTREDES
     ),
+
+    FASTSETT_VEDTAKSLENGDE(
+        gruppe = StegGruppe.UNDERVEIS,
+        status = Status.UTREDES
+    ),
+    
     FASTSETT_UTTAK(
         gruppe = StegGruppe.UNDERVEIS,
         status = Status.UTREDES

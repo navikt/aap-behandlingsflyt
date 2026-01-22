@@ -24,7 +24,6 @@ class VurderAktivitetsplikt11_9Steg(
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         avklaringsbehovService.oppdaterAvklaringsbehov(
             kontekst = kontekst,
-            avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.VURDER_BRUDD_11_9,
             vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst) },
             erTilstrekkeligVurdert = { true },

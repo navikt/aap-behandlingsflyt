@@ -64,6 +64,39 @@ class VilkårsresultatTest {
         }
 
         @Test
+        fun `avslag på Inntektsbortfall gir avslag`() {
+            val v = tomVurdering()
+            val startDag = LocalDate.now()
+            val sluttDag = startDag.plusDays(10)
+            val periode = Periode(startDag, sluttDag)
+            val avslagsperiode = Periode(startDag.plusDays(5), sluttDag)
+            Vilkårtype.entries.forEach {
+                val vilkår = v.leggTilHvisIkkeEksisterer(it)
+                vilkår.leggTilVurdering(
+                    Vilkårsperiode(
+                        periode,
+                        utfall = Utfall.OPPFYLT,
+                        begrunnelse = null,
+                        innvilgelsesårsak = null,
+                    )
+                )
+            }
+            v.leggTilHvisIkkeEksisterer(Vilkårtype.INNTEKTSBORTFALL).leggTilVurdering(
+                Vilkårsperiode(
+                    avslagsperiode,
+                    utfall = Utfall.IKKE_OPPFYLT,
+                    begrunnelse = null,
+                    avslagsårsak = Avslagsårsak.HAR_RETT_TIL_FULLT_UTTAK_ALDERSPENSJON
+                )
+            )
+
+            val tidslinje = v.rettighetstypeTidslinje()
+            assertThat(tidslinje.segmenter()).hasSize(1)
+            assertThat(tidslinje.segmenter().first().verdi).isEqualTo(RettighetsType.STUDENT)
+            assertThat(tidslinje.helePerioden()).isEqualTo(Periode(startDag, startDag.plusDays(4)))
+        }
+
+        @Test
         fun `om bistands-vilkåret ikke er i midten får vi brudd på tidslinjen`() {
             val nå = LocalDate.now()
             val v = tomVurdering()

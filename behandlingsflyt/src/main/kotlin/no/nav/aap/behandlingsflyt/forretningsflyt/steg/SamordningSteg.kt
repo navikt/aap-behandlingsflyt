@@ -54,9 +54,6 @@ class SamordningSteg(
         )
 
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
-            avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId),
-            behandlingRepository = behandlingRepository,
-            vilkårsresultatRepository = vilkårsresultatRepository,
             definisjon = Definisjon.AVKLAR_SAMORDNING_GRADERING,
             tvingerAvklaringsbehov = setOf(
                 Vurderingsbehov.SAMORDNING_OG_AVREGNING,

@@ -22,6 +22,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 
 @ExtendWith(MockKExtension::class)
 @MockKExtension.CheckUnnecessaryStub
+@MockKExtension.RequireParallelTesting
 class VurderKlageNayLøserTest {
     @Test
     fun `løs skal returnere et løsningsresultat når vilkårSomOmgjøres inneholder gyldige hjemler`() {

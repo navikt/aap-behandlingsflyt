@@ -24,7 +24,7 @@ public data class TilbakekrevingHendelseKafkaMelding(
     val eksternBehandlingId: String?,
     val tilbakekreving: TilbakekrevingKafkaDto? = null,
     val sakOpprettet: LocalDateTime? = null,
-    val varselSendt: LocalDateTime? = null,
+    val varselSendt: LocalDate? = null,
     val behandlingsstatus: TilbakekrevingBehandlingsstatus? = null,
     val totaltFeilutbetaltBeløp: BigDecimal? = null,
     val saksbehandlingURL: String? = null,
@@ -124,7 +124,7 @@ public data class FagsysteminfoBehovV0(
 data class TilbakekrevingKafkaDto(
     val behandlingId: UUID,
     val sakOpprettet: LocalDateTime,
-    val varselSendt: LocalDateTime?,
+    val varselSendt: LocalDate?,
     val behandlingsstatus: TilbakekrevingBehandlingsstatus,
     val totaltFeilutbetaltBeløp: BigDecimal,
     val saksbehandlingURL: String,

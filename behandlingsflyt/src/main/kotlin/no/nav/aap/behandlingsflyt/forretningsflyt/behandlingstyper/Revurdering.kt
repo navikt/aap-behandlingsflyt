@@ -60,6 +60,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SykestipendSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SøknadSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.TjenestepensjonRefusjonskravSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.UnderveisSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VedtakslengdeSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VisGrunnlagSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderAlderSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderBistandsbehovSteg
@@ -118,14 +119,6 @@ object Revurdering : BehandlingType {
             .medSteg(steg = VurderAlderSteg)
             .medSteg(
                 steg = VurderStudentSteg,
-                vurderingsbehovRelevanteForSteg = listOf(
-                    Vurderingsbehov.MOTTATT_SØKNAD,
-                    Vurderingsbehov.REVURDER_STUDENT,
-                    Vurderingsbehov.HELHETLIG_VURDERING
-                )
-            )
-            .medSteg(
-                steg = SykestipendSteg,
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
                     Vurderingsbehov.REVURDER_STUDENT,
@@ -392,6 +385,13 @@ object Revurdering : BehandlingType {
             )
             .medSteg(steg = SamordningAvslagSteg)
             .medSteg(
+                steg = SykestipendSteg,
+                vurderingsbehovRelevanteForSteg = listOf(
+                    Vurderingsbehov.REVURDER_STUDENT,
+                    Vurderingsbehov.REVURDER_SYKESTIPEND
+                )
+            )
+            .medSteg(
                 steg = SamordningAndreStatligeYtelserSteg,
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
@@ -409,6 +409,7 @@ object Revurdering : BehandlingType {
                 informasjonskrav = listOf(MeldekortInformasjonskrav, Aktivitetsplikt11_7Informasjonskrav)
             )
             .medSteg(steg = Effektuer11_7Steg)
+            .medSteg(steg = VedtakslengdeSteg)
             .medSteg(steg = UnderveisSteg)
             .medSteg(
                 steg = BeregnTilkjentYtelseSteg,

@@ -47,7 +47,6 @@ class FatteVedtakSteg(
         val vedtakBehøverVurdering = vedtakBehøverVurdering(kontekst, avklaringsbehovene)
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.FATTE_VEDTAK,
             vedtakBehøverVurdering = { vedtakBehøverVurdering },
             erTilstrekkeligVurdert = { erTilstrekkeligVurdert(kontekst, avklaringsbehovene) },

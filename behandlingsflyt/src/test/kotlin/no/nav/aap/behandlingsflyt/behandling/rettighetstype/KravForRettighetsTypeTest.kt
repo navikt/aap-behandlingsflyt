@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.rettighetstype
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak.BRUKER_OVER_67
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak.HAR_RETT_TIL_FULLT_UTTAK_ALDERSPENSJON
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak.VARIGHET_OVERSKREDET_OVERGANG_UFORE
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
@@ -14,6 +15,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype.ALDERSVILKÅRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype.BISTANDSVILKÅRET
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype.GRUNNLAGET
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype.INNTEKTSBORTFALL
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype.LOVVALG
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype.MEDLEMSKAP
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype.OVERGANGUFØREVILKÅRET
@@ -61,7 +63,42 @@ class KravForRettighetsTypeTest {
     }
 
     @Test
-    fun `overgang uføre hvor varighet overskides`() {
+    fun `ordinær AAP, hvor INNTEKTSBORTFALL ikke er oppfylt`() {
+        val kravdato = 1 januar 2025
+        val sisteVurdering = 17 desember 2026
+        val sisteDagInntektsbortfallVilkåretErOppfylt = 5 desember 2026
+        val rettighetsperiode = Periode(kravdato, sisteVurdering)
+
+        val vilkårsresultat = Vilkårsresultat()
+        vilkårsresultat.vurdertOppfylt(LOVVALG, rettighetsperiode)
+        vilkårsresultat.vurdertOppfylt(SYKDOMSVILKÅRET, rettighetsperiode)
+        vilkårsresultat.vurdertOppfylt(BISTANDSVILKÅRET, rettighetsperiode)
+        vilkårsresultat.vurdertOppfylt(MEDLEMSKAP, rettighetsperiode)
+        vilkårsresultat.vurdertOppfylt(GRUNNLAGET, rettighetsperiode)
+        vilkårsresultat.vurdertOppfylt(ALDERSVILKÅRET, rettighetsperiode)
+        vilkårsresultat.vurdertOppfylt(INNTEKTSBORTFALL, Periode(kravdato, sisteDagInntektsbortfallVilkåretErOppfylt))
+        vilkårsresultat.vurdertIkkeOppfylt(
+            INNTEKTSBORTFALL, Periode(sisteDagInntektsbortfallVilkåretErOppfylt.plusDays(1), sisteVurdering),
+            HAR_RETT_TIL_FULLT_UTTAK_ALDERSPENSJON
+        )
+
+        assertTidslinje(
+            vurderRettighetsType(vilkårsresultat),
+            Periode(kravdato, sisteDagInntektsbortfallVilkåretErOppfylt) to {
+                assertThat(it).isEqualTo(RettighetsType.BISTANDSBEHOV)
+            },
+        )
+
+        assertTidslinje(
+            avslagsårsakerVedTapAvRettPåAAP(vilkårsresultat),
+            Periode(sisteDagInntektsbortfallVilkåretErOppfylt, sisteDagInntektsbortfallVilkåretErOppfylt) to {
+                assertThat(it).isEqualTo(setOf(HAR_RETT_TIL_FULLT_UTTAK_ALDERSPENSJON))
+            }
+        )
+    }
+
+    @Test
+    fun `overgang uføre hvor varighet overskrides`() {
         /* NB: den faktiske varigheten knyttet til 11-18 regnes ikke ut her, men i vilkårsvurderingen
           * av OVERGANGUFØREVILKÅRET-vurderignen. Så sluttdatoen valgt
           * her er litt tilfeldig.

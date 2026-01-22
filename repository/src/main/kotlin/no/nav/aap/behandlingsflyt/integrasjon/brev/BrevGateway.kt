@@ -300,6 +300,7 @@ class BrevGateway : BrevbestillingGateway {
         TypeBrev.VEDTAK_11_7 -> Brevtype.VEDTAK_11_7
         TypeBrev.VEDTAK_11_9 -> Brevtype.VEDTAK_11_9
         TypeBrev.VEDTAK_11_23_SJETTE_LEDD -> Brevtype.VEDTAK_11_23_SJETTE_LEDD
+        TypeBrev.KLAGE_MOTTATT -> Brevtype.KLAGE_MOTTATT
     }
 
     private fun mapFaktagrunnlag(brevBehov: BrevBehov): Set<Faktagrunnlag> {
@@ -319,7 +320,8 @@ class BrevGateway : BrevbestillingGateway {
                                 antallBarn = brevBehov.tilkjentYtelse?.antallBarn,
                                 minsteÅrligYtelse = brevBehov.tilkjentYtelse?.minsteÅrligYtelse?.heltallverdi(),
                                 minsteÅrligYtelseUnder25 = brevBehov.tilkjentYtelse?.minsteÅrligYtelseUnder25?.heltallverdi(),
-                                årligYtelse = brevBehov.tilkjentYtelse?.årligYtelse?.heltallverdi()
+                                årligYtelse = brevBehov.tilkjentYtelse?.årligYtelse?.heltallverdi(),
+                                sisteDagMedYtelse = brevBehov.tilkjentYtelse?.sisteDagMedYtelse
                             )
                         )
                     }

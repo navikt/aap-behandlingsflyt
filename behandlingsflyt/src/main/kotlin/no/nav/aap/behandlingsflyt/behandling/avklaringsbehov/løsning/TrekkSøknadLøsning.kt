@@ -18,6 +18,6 @@ class TrekkSøknadLøsning(
     @param:JsonProperty("skalTrekkes", required = false) val skalTrekkes: Boolean = true,
 ) : EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
-        return TrekkSøknadLøser(repositoryProvider).løs(kontekst, this)
+        return TrekkSøknadLøser(repositoryProvider, gatewayProvider).løs(kontekst, this)
     }
 }

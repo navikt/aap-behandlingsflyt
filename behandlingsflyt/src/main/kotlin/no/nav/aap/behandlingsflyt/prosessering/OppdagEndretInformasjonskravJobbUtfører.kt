@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreInformasjonskrav
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
@@ -41,7 +42,8 @@ class OppdagEndretInformasjonskravJobbUtfører(
             InstitusjonsoppholdInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
             PersonopplysningInformasjonskrav.konstruer(repositoryProvider, gatewayProvider),
         )
-        val sisteFattedeYtelsesbehandling = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) ?: error("Fant ikke siste behandling med fattet vedtak for sak $sakId")
+        val sisteFattedeYtelsesbehandling = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId)
+            ?: error("Fant ikke siste behandling med fattet vedtak for sak $sakId")
 
         val vurderingsbehov = relevanteInformasjonskrav
             .flatMap {
@@ -55,15 +57,13 @@ class OppdagEndretInformasjonskravJobbUtfører(
                 sakId,
                 VurderingsbehovOgÅrsak(vurderingsbehov, ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA)
             )
-            log.info("Opprettet revurdering for sak $sakId med behov $vurderingsbehov. Behandling: ${revurdering.referanse}.")
+            log.info("Fant endringer i $sakId med behov $vurderingsbehov. Behandling: ${revurdering.referanse}.")
             secureLogger.info("" + vurderingsbehov)
             prosesserBehandlingService.triggProsesserBehandling(
                 revurdering,
-                emptyList()
+                vurderingsbehov = vurderingsbehov.map { it.type },
             )
-        }
-        else
-        {
+        } else {
             log.info("Lar være å opprette revurdering for sak $sakId med behov $vurderingsbehov da opplysningene er registrert fra før. ")
         }
         låsRepository.verifiserSkrivelås(sakSkrivelås)

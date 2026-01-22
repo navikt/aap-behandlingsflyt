@@ -23,7 +23,6 @@ class FastsettBehandlendeEnhetSteg private constructor(
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId),
             definisjon = Definisjon.FASTSETT_BEHANDLENDE_ENHET,
             vedtakBehøverVurdering = { behøverVurdering(kontekst) },
             erTilstrekkeligVurdert = { true },

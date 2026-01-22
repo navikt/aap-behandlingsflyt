@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.Samordn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.VurderingerForSamordning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
+import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -19,12 +20,13 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class BeslutterFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
+class BeslutterFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
     @Test
     fun `to-trinn og ingen endring i gruppe etter sendt tilbake fra beslutter`() {
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
@@ -78,7 +80,7 @@ class BeslutterFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             .medKontekst {
                 // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
                 assertThat(åpneAvklaringsbehov).isNotEmpty()
-                assertThat(åpneAvklaringsbehov).anySatisfy { behov -> assertThat(behov.definisjon == Definisjon.KVALITETSSIKRING).isTrue() }
+                assertThat(åpneAvklaringsbehov).anySatisfy { behov -> assertThat(behov.definisjon).isEqualTo(Definisjon.KVALITETSSIKRING) }
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }
             .kvalitetssikreOk()
@@ -97,13 +99,13 @@ class BeslutterFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .medKontekst {
                 // Saken står til To-trinnskontroll hos beslutter
-                assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon == Definisjon.FATTE_VEDTAK).isTrue() }
+                assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.FATTE_VEDTAK) }
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }
             .beslutterGodkjennerIkke(returVed = Definisjon.AVKLAR_SYKDOM)
             .medKontekst {
                 assertThat(behandling.status()).isEqualTo(Status.UTREDES)
-                assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon == Definisjon.AVKLAR_SYKDOM).isTrue() }
+                assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SYKDOM) }
             }.løsAvklaringsBehov(
                 AvklarSykdomLøsning(
                     løsningerForPerioder = listOf(
@@ -141,12 +143,12 @@ class BeslutterFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
             .medKontekst {
                 assertThat(behandling.status()).isEqualTo(Status.UTREDES)
                 // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
-                assertThat(åpneAvklaringsbehov).anySatisfy { behov -> assertThat(behov.definisjon == Definisjon.FORESLÅ_VEDTAK).isTrue() }
+                assertThat(åpneAvklaringsbehov).anySatisfy { behov -> assertThat(behov.definisjon).isEqualTo(Definisjon.FORESLÅ_VEDTAK) }
             }
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .medKontekst {
                 // Saken står til To-trinnskontroll hos beslutter
-                assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon == Definisjon.FATTE_VEDTAK).isTrue() }
+                assertThat(åpneAvklaringsbehov).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.FATTE_VEDTAK) }
                 assertThat(behandling.status()).isEqualTo(Status.UTREDES)
             }
             .fattVedtak()
@@ -164,7 +166,6 @@ class BeslutterFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 val sykdomsvilkåret = vilkårsresultat.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
 
                 assertThat(sykdomsvilkåret.vilkårsperioder())
-                    .hasSize(1)
                     .allMatch { vilkårsperiode -> vilkårsperiode.erOppfylt() }
             }
     }

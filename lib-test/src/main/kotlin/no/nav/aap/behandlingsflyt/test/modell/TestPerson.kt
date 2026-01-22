@@ -37,7 +37,7 @@ class TestPerson(
     val dødsdato: Dødsdato? = null,
     var barn: List<TestPerson> = emptyList(),
     val navn: PersonNavn = FiktivtNavnGenerator.genererNavn(),
-    val yrkesskade: List<TestYrkesskade> = emptyList(),
+    val yrkesskade: List<TestYrkesskade> = mutableListOf(),
     var institusjonsopphold: List<InstitusjonsoppholdJSON> = emptyList(),
     var uføre: Uføre? = null,
     inntekter: List<InntektPerÅr> = defaultInntekt(),
@@ -101,6 +101,11 @@ class TestPerson(
 
     fun medInstitusjonsopphold(opphold: List<InstitusjonsoppholdJSON>): TestPerson {
         this.institusjonsopphold = opphold
+        return this
+    }
+
+    fun medYrkesskade(yrkesskade: TestYrkesskade): TestPerson {
+        this.yrkesskade.plus(yrkesskade)
         return this
     }
 

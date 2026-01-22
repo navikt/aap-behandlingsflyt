@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.arbeidsopptrapping
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
@@ -10,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandGru
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.harTilgangOgKanSaksbehandle
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -18,6 +20,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
@@ -66,8 +70,17 @@ fun NormalOpenAPIRoute.arbeidsopptrappingGrunnlagApi(
                         behandling.forrigeBehandlingId?.let { arbeidsopptrappingRepository.hentHvisEksisterer(it) }
                             ?: ArbeidsopptrappingGrunnlag(emptyList())
 
+                    val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
+                    val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+
+                    val unleashGateway = gatewayProvider.provide<UnleashGateway>()
+
                     ArbeidsopptrappingGrunnlagResponse(
-                        harTilgangTilÅSaksbehandle = kanSaksbehandle(),
+                        harTilgangTilÅSaksbehandle = if (unleashGateway.isEnabled(BehandlingsflytFeature.KvalitetssikringsSteg)) {
+                            harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene)
+                        } else {
+                            kanSaksbehandle()
+                        },
                         sisteVedtatteVurderinger = ArbeidsopptrappingVurderingResponse.fraDomene(
                             forrigeGrunnlag.gjeldendeVurderinger(),
                             vurdertAvService

@@ -1,5 +1,6 @@
 import org.jetbrains.dokka.gradle.engine.parameters.VisibilityModifier
 import kotlin.math.max
+import kotlin.math.min
 
 // Felles kode for alle build.gradle.kts filer som laster inn denne conventions pluginen
 
@@ -51,10 +52,12 @@ private fun bestemAntallTestTråder(): Int {
         if (isCiBuild) {
             (processors * 1.5).toInt() // vi har mye io-wait under testene våre
         } else {
-            // reduser antall tråder ved lokal kjøring for å unngå at utvikler-maskinen blir for treg
-            max(processors / 2, processors - 4)
+            /**
+             * Begrens antall tråder ved lokal kjøring for å unngå at utvikler-maskinen blir for treg
+             * Mer enn 6 tråder krasjer lokal kjøring for M3 Max
+             */
+            min(6, max(processors / 2, processors - 4))
         }
-
     return antallTråder
 }
 
@@ -67,11 +70,12 @@ tasks {
         }
     }
 
-    (findByName("distTar") as? Tar)?.apply {
-        // Bruk et unikt navn for jar-filen til distTar, for å unngå navnekollisjoner i multi-modul prosjekt,
-        // slik at vi ikke bruker samme navn, feks. "kontrakt.jar" "api.jar" i flere moduler.
+    (findByName("jar") as? Jar)?.apply {
+        // Bruk et unikt navn for jar-filen til hver submodul, for å unngå navnekollisjoner i multi-modul prosjekt,
+        // gjennom at vi ikke bruker samme navn, feks. "kontrakt.jar" og "api.jar", i flere moduler.
         // Dette unngår feil av typen "Entry <name>.jar is a duplicate but no duplicate handling strategy has been set"
-        // Alternativet er å unngå å bruke det eksakt samme navnet på moduler i forskjellige prosjekter, som feks "kontrakt".
+        // Alternativet er å unngå å bruke det eksakt samme navnet på submoduler fra forskjellige moduler,
+        // som feks "kontrakt".
         archiveBaseName.set("${rootProject.name}-${project.name}")
     }
 }
@@ -83,12 +87,14 @@ kotlin {
         apiVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_2)
         languageVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_2)
 
-        // Bruk et unikt navn for <project>.kotlin_module for hvert sub-prosjekt,
-        // slik at vi unngår navnekollisjoner når vi inkluderer flere av våre kotlin-moduler i samme jar-fil, feks. ved bruk av shadowJar.
-        // Kroneksempelet er "kontrakt.kotlin_module" fra både behandlingsflyt, brev, meldekort og andre steder.
-        // Dette gjør at vi kan beholde informasjonen for hver modul, og kotlin-reflect og andre verktøy fungerer som forventet.
-        // Alternativet er å unngå å bruke det eksakt samme navnet på moduler i forskjellige prosjekter, som feks "kontrakt".
-        freeCompilerArgs.add("-module-name=${rootProject.name}-${project.name}")
+        // Bruk et unikt navn for <submodule>.kotlin_module for hver Gradle-submodul, for å unngå navnekollisjoner i
+        // multi-modul prosjekt, hvor vi inkluderer flere av våre kotlin-moduler i samme jar-fil eller
+        // på samme runtime classpath. Kroneksempelet er "kontrakt.kotlin_module" fra både behandlingsflyt, brev,
+        // meldekort og andre steder.
+        // Dette gjør at vi kan beholde informasjonen for hver kotlin_module, og kotlin-reflect og andre verktøy
+        // fungerer som forventet. Alternativet er å unngå å bruke det eksakt samme navnet på submoduler fra
+        // forskjellige moduler, som feks "kontrakt".
+        moduleName.set("${rootProject.name}-${project.name}")
     }
 }
 

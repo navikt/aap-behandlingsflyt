@@ -1,12 +1,8 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
@@ -28,17 +24,13 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class BeregningAvklarFaktaSteg private constructor(
     private val beregningVurderingRepository: BeregningVurderingRepository,
     private val sykdomRepository: SykdomRepository,
-    private val vilkårsresultatRepository: VilkårsresultatRepository,
-    private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val yrkesskadeRepository: YrkesskadeRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
 ) : BehandlingSteg {
-    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider) : this(
         beregningVurderingRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
-        vilkårsresultatRepository = repositoryProvider.provide(),
-        avklaringsbehovRepository = repositoryProvider.provide(),
         yrkesskadeRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider),
@@ -46,12 +38,10 @@ class BeregningAvklarFaktaSteg private constructor(
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val behandlingId = kontekst.behandlingId
-        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
 
         // Beregningstidspunkt
         avklaringsbehovService.oppdaterAvklaringsbehov(
             kontekst = kontekst,
-            avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT,
             vedtakBehøverVurdering = {
                 when (kontekst.vurderingType) {
@@ -59,13 +49,16 @@ class BeregningAvklarFaktaSteg private constructor(
                     VurderingType.REVURDERING -> {
                         when {
                             tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
+                            !eksistererVedtattVurdering(kontekst.forrigeBehandlingId) -> true
                             kontekst.vurderingsbehovRelevanteForSteg.isEmpty() -> false
                             manueltTriggetVurderingsbehovBeregning(kontekst) -> true
                             manueltTriggetVurderingsbehovYrkesskade(kontekst) -> false
                             else -> true
                         }
                     }
-                    VurderingType.AUTOMATISK_OPPDATER_VILKÅR,
+
+                    VurderingType.UTVID_VEDTAKSLENGDE,
+                    VurderingType.MIGRER_RETTIGHETSPERIODE,
                     VurderingType.MELDEKORT,
                     VurderingType.AUTOMATISK_BREV,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
@@ -90,7 +83,6 @@ class BeregningAvklarFaktaSteg private constructor(
         // Yrkesskadeinntekt
         avklaringsbehovService.oppdaterAvklaringsbehov(
             kontekst = kontekst,
-            avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.FASTSETT_YRKESSKADEINNTEKT,
             vedtakBehøverVurdering = {
                 when (kontekst.vurderingType) {
@@ -103,7 +95,9 @@ class BeregningAvklarFaktaSteg private constructor(
 
                         }
                     }
-                    VurderingType.AUTOMATISK_OPPDATER_VILKÅR,
+
+                    VurderingType.UTVID_VEDTAKSLENGDE,
+                    VurderingType.MIGRER_RETTIGHETSPERIODE,
                     VurderingType.MELDEKORT,
                     VurderingType.AUTOMATISK_BREV,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
@@ -135,6 +129,14 @@ class BeregningAvklarFaktaSteg private constructor(
         return Fullført
     }
 
+    private fun eksistererVedtattVurdering(forrigeBehandlingId: BehandlingId?): Boolean {
+        if (forrigeBehandlingId == null)
+            return false
+
+        val beregningVurdering = beregningVurderingRepository.hentHvisEksisterer(forrigeBehandlingId)
+        return beregningVurdering?.tidspunktVurdering != null
+    }
+
     private fun manueltTriggetVurderingsbehovBeregning(kontekst: FlytKontekstMedPerioder): Boolean {
         return kontekst.vurderingsbehovRelevanteForSteg.any {
             it in listOf(
@@ -164,7 +166,7 @@ class BeregningAvklarFaktaSteg private constructor(
         return yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() == true
                 && yrkesskadeVurdering?.erÅrsakssammenheng == true
     }
-    
+
     private fun harFastsattBeløpForAlleRelevanteYrkesskadesaker(
         relevanteSaker: List<YrkesskadeSak>,
         beregningGrunnlag: BeregningGrunnlag?
@@ -178,7 +180,7 @@ class BeregningAvklarFaktaSteg private constructor(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
         ): BehandlingSteg {
-            return BeregningAvklarFaktaSteg(repositoryProvider, gatewayProvider)
+            return BeregningAvklarFaktaSteg(repositoryProvider)
         }
 
         override val rekkefølge: List<Definisjon> = listOf(

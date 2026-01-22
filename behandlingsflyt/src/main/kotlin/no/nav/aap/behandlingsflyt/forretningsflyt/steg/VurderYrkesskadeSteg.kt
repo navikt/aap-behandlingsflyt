@@ -15,7 +15,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
@@ -42,7 +41,6 @@ class VurderYrkesskadeSteg private constructor(
         val sykdomsgrunnlag = sykdomRepository.hentHvisEksisterer(behandlingId)
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.AVKLAR_YRKESSKADE,
             vedtakBehøverVurdering = {
                 behøverVurdering(
@@ -74,7 +72,7 @@ class VurderYrkesskadeSteg private constructor(
                 ) && flytKontekstMedPerioder.vurderingsbehovRelevanteForSteg.isNotEmpty() && yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() == true
             }
 
-            VurderingType.AUTOMATISK_OPPDATER_VILKÅR, VurderingType.MELDEKORT, VurderingType.AUTOMATISK_BREV, VurderingType.EFFEKTUER_AKTIVITETSPLIKT, VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9, VurderingType.IKKE_RELEVANT -> false
+            VurderingType.UTVID_VEDTAKSLENGDE, VurderingType.MIGRER_RETTIGHETSPERIODE, VurderingType.MELDEKORT, VurderingType.AUTOMATISK_BREV, VurderingType.EFFEKTUER_AKTIVITETSPLIKT, VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9, VurderingType.IKKE_RELEVANT -> false
         }
     }
 

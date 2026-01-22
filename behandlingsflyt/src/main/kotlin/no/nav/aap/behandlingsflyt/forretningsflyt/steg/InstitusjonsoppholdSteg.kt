@@ -48,9 +48,6 @@ class InstitusjonsoppholdSteg(
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
 
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
-            avklaringsbehovene = avklaringsbehovene,
-            behandlingRepository = behandlingRepository,
-            vilkårsresultatRepository = vilkårsresultatRepository,
             perioderSomIkkeErTilstrekkeligVurdert = { perioderHelseoppholdIkkeErTilstrekkeligVurdert(kontekst) },
             kontekst = kontekst,
             tilbakestillGrunnlag = {
@@ -76,9 +73,6 @@ class InstitusjonsoppholdSteg(
 
 
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
-            avklaringsbehovene = avklaringsbehovene,
-            behandlingRepository = behandlingRepository,
-            vilkårsresultatRepository = vilkårsresultatRepository,
             nårVurderingErRelevant = ::perioderMedVurderingsbehovSoning,
             perioderSomIkkeErTilstrekkeligVurdert = { perioderSoningOppholdIkkeErTilstrekkeligVurdert(kontekst = kontekst) },
             kontekst = kontekst,
@@ -103,7 +97,8 @@ class InstitusjonsoppholdSteg(
 
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
-            VurderingType.AUTOMATISK_OPPDATER_VILKÅR,
+            VurderingType.UTVID_VEDTAKSLENGDE,
+            VurderingType.MIGRER_RETTIGHETSPERIODE,
             VurderingType.REVURDERING,  -> {
                 val utlederResultat = institusjonsoppholdUtlederService.utled(kontekst.behandlingId, begrensetTilRettighetsperiode = false)
 

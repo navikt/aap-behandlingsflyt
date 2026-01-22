@@ -27,7 +27,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.prosessering.OpprettBehandlingMigrerRettighetsperiodeJobbUtfører
+import no.nav.aap.behandlingsflyt.prosessering.`OpprettBehandlingUtvidVedtakslengdeJobbUtfører`
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
@@ -460,7 +460,7 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
             ) to { assertThat(it).isEqualTo(Utfall.IKKE_OPPFYLT) },
             Periode(
                 startDatoRettTilYtelse,
-                startDatoRettTilYtelse.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
+                utfallTidslinje.maxDato()
             ) to { assertThat(it).isEqualTo(Utfall.OPPFYLT) },
         )
         val vilkårsresultat = dataSource.transaction { VilkårsresultatRepositoryImpl(it).hent(sisteBehandling.id) }
@@ -474,97 +474,6 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
             }
 
     }
-
-    @Test
-    fun `skal fange opp og migrere sak med feil rettighetsperiode via jobb`() {
-        /**
-         * Begrenser rettighetsperioden til 1 år for å simulere eksisterende behandlinger fra tidligere
-         */
-        val gammelRettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusMonths(12).minusDays(1))
-        val (midlertidigSak, behandling) = sendInnFørsteSøknad()
-        val sakMedUtvidetRettighetsperiode = happyCaseFørstegangsbehandling()
-        val behandlingForSakMedUtvidetRettighetsperiode =
-            hentSisteOpprettedeBehandlingForSak(sakMedUtvidetRettighetsperiode.id)
-        assertThat(sakMedUtvidetRettighetsperiode.id).isNotEqualTo(midlertidigSak.id)
-
-        settRettighetsperiodeOgRekjørFraStart(midlertidigSak, gammelRettighetsperiode, behandling)
-        val sak = hentSak(behandling)
-        val startDato = sak.rettighetsperiode.fom
-        val startDatoRettTilYtelse = sak.rettighetsperiode.fom.plusMonths(2)
-
-        behandling
-            .løsSykdom(startDato)
-            .løsBistand(startDato)
-            .løsRefusjonskrav()
-            .løsSykdomsvurderingBrev()
-            .kvalitetssikreOk()
-            .løsBeregningstidspunkt(startDato)
-            .løsOppholdskrav(startDato)
-            .løsAvklaringsBehov(medSamordningSykepenger(startDato, startDatoRettTilYtelse))
-            .løsAndreStatligeYtelser()
-            .løsAvklaringsBehov(ForeslåVedtakLøsning())
-            .fattVedtak()
-            .løsVedtaksbrev(TypeBrev.VEDTAK_INNVILGELSE)
-
-
-        dataSource.transaction { connection ->
-
-            val repositoryProvider = postgresRepositoryRegistry.provider(connection)
-            val migrerRettighetsperiodeJobbUtfører = OpprettBehandlingMigrerRettighetsperiodeJobbUtfører(
-                prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
-                sakRepository = SakRepositoryImpl(connection),
-                behandlingRepository = BehandlingRepositoryImpl(connection),
-                sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
-                unleashGateway = FakeUnleash
-            )
-            migrerRettighetsperiodeJobbUtfører.utfør(JobbInput(OpprettBehandlingMigrerRettighetsperiodeJobbUtfører))
-        }
-
-        /**
-         * Sak med utvidet rettighetsperiode fra start skal ikke migreres
-         */
-        val sisteBehandlingForSakMedUtvidetRettighetsperiode =
-            hentSisteOpprettedeBehandlingForSak(sakMedUtvidetRettighetsperiode.id)
-        assertThat(sisteBehandlingForSakMedUtvidetRettighetsperiode.id).isEqualTo(
-            behandlingForSakMedUtvidetRettighetsperiode.id
-        )
-
-        /**
-         * Sak med begrenset rettighetsperiode fra start skal migreres
-         */
-        val sisteBehandling = hentSisteOpprettedeBehandlingForSak(sak.id)
-        assertThat(sisteBehandling.id).isNotEqualTo(behandling.id)
-        val oppdatertSak = hentSak(sisteBehandling)
-        assertThat(oppdatertSak.rettighetsperiode).isEqualTo(Periode(sak.rettighetsperiode.fom, Tid.MAKS))
-
-        val vilkårsResultat = dataSource.transaction { VilkårsresultatRepositoryImpl(it).hent(sisteBehandling.id) }
-        assertThat(vilkårsResultat).isNotNull
-        val oppdatertUtfallTidslinje =
-            dataSource.transaction { UnderveisRepositoryImpl(it).hent(sisteBehandling.id) }
-                .perioder.somTidslinje { it.periode }.map { it.utfall }.komprimer()
-        assertTidslinje(
-            oppdatertUtfallTidslinje,
-            Periode(
-                startDato,
-                startDatoRettTilYtelse.minusDays(1)
-            ) to { assertThat(it).isEqualTo(Utfall.IKKE_OPPFYLT) },
-            Periode(
-                startDatoRettTilYtelse,
-                startDatoRettTilYtelse.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
-            ) to { assertThat(it).isEqualTo(Utfall.OPPFYLT) },
-        )
-        val vilkårsresultat = dataSource.transaction { VilkårsresultatRepositoryImpl(it).hent(sisteBehandling.id) }
-        vilkårsresultat.alle()
-            .filterNot { it.type in vilkårSomIkkeAutomatiskUtvides() }
-            .forEach { vilkår ->
-                val vilkårSluttdato = vilkår.tidslinje().perioder().max().tom
-                assertThat(vilkårSluttdato)
-                    .withFailMessage { "til-dato for vilkår ${vilkår.type} er ikke Tid.MAKS men $vilkårSluttdato" }
-                    .isEqualTo(Tid.MAKS)
-            }
-
-    }
-
 
     /**
      * TODO: Disse burde ideellt sett også blitt utvidet (minus samordning) ved
@@ -574,7 +483,8 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
         Vilkårtype.OVERGANGUFØREVILKÅRET,
         Vilkårtype.OVERGANGARBEIDVILKÅRET,
         Vilkårtype.SYKEPENGEERSTATNING,
-        Vilkårtype.SAMORDNING
+        Vilkårtype.SAMORDNING,
+        Vilkårtype.STUDENT
     )
 
 
@@ -643,13 +553,11 @@ class RettighetsperiodeFlytTest() : AbstraktFlytOrkestratorTest(FakeUnleash::cla
             val behandling = sakOgBehandlingService.finnEllerOpprettBehandling(
                 sakId = sak.id,
                 vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
-                    årsak = ÅrsakTilOpprettelse.AUTOMATISK_OPPDATER_VILKÅR,
-                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.AUTOMATISK_OPPDATER_VILKÅR))
+                    årsak = ÅrsakTilOpprettelse.MIGRER_RETTIGHETSPERIODE,
+                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MIGRER_RETTIGHETSPERIODE))
                 ),
             )
             prosesserBehandlingService.triggProsesserBehandling(behandling)
         }
     }
-
-
 }

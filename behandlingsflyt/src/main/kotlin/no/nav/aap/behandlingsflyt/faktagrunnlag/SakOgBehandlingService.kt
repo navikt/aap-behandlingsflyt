@@ -115,7 +115,8 @@ class SakOgBehandlingService(
     private val fasttrackKandidater = listOf(
         Vurderingsbehov.FRITAK_MELDEPLIKT,
         Vurderingsbehov.MOTTATT_MELDEKORT,
-        Vurderingsbehov.AUTOMATISK_OPPDATER_VILKÅR,
+        Vurderingsbehov.UTVID_VEDTAKSLENGDE,
+        Vurderingsbehov.MIGRER_RETTIGHETSPERIODE,
         Vurderingsbehov.FASTSATT_PERIODE_PASSERT,
         Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT,
         Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT_11_9,

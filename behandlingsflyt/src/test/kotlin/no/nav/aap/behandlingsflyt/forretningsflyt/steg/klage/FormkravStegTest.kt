@@ -3,8 +3,6 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage
 import io.mockk.every
 import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
-import io.mockk.mockkStatic
-import io.mockk.unmockkStatic
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
@@ -13,6 +11,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRefer
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravRepository
@@ -34,19 +33,22 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
-import java.util.concurrent.atomic.AtomicInteger
 
 @ExtendWith(MockKExtension::class)
+@Execution(ExecutionMode.SAME_THREAD)
 class FormkravStegTest {
     val trekkKlageServiceMock = mockk<TrekkKlageService>()
     val formkravRepositoryMock = mockk<FormkravRepository>()
@@ -54,36 +56,24 @@ class FormkravStegTest {
     val brevbestillingServiceMock = mockk<BrevbestillingService>()
     val avklaringsbehovServiceMock = mockk<AvklaringsbehovService>()
     val avbrytRevurderingServiceMock = mockk<AvbrytRevurderingService>()
+    val trukketSøknadRepository = InMemoryTrukketSøknadRepository
     val gatewayProvider = createGatewayProvider {
         register<FakeUnleash>()
     }
 
     @BeforeEach
     fun setup() {
-        // Avklaringsbehov må skje etterhverandre i tid, men testene kan kjøre så fort at alle får samme tidspunkt. Og da blir sorteringen feil
-        // Mocker derfor LocalDateTime.now slik at alle kall kommer 1 minutt etter hverandre.
-        val start = LocalDateTime.now()
-        mockkStatic(LocalDateTime::class)
-        val counter = AtomicInteger(0)
-        every { LocalDateTime.now() } answers { start.plusMinutes(counter.getAndIncrement().toLong()) }
-
         every { trekkKlageServiceMock.klageErTrukket(any()) } returns false
         every { formkravRepositoryMock.hentHvisEksisterer(any()) } returns null
         every { avbrytRevurderingServiceMock.revurderingErAvbrutt(any()) } returns true
         every { avklaringsbehovServiceMock.oppdaterAvklaringsbehov(
-            avklaringsbehovene = any(),
-             definisjon = Definisjon.VURDER_FORMKRAV,
+            definisjon = Definisjon.VURDER_FORMKRAV,
             vedtakBehøverVurdering = any(),
             erTilstrekkeligVurdert = any(),
             tilbakestillGrunnlag = any(),
             kontekst = any(),
         ) } returns Unit
         InMemoryAvklaringsbehovRepository.clearMemory()
-    }
-
-    @AfterEach
-    fun tearDown() {
-        unmockkStatic(LocalDateTime::class)
     }
 
     @Test
@@ -116,6 +106,10 @@ class FormkravStegTest {
             trekkKlageService = trekkKlageServiceMock,
             avklaringsbehovService = AvklaringsbehovService(
                 avbrytRevurderingService = avbrytRevurderingServiceMock,
+                InMemoryAvklaringsbehovRepository,
+                behandlingRepositoryMock,
+                InMemoryVilkårsresultatRepository,
+                trukketSøknadService = TrukketSøknadService(trukketSøknadRepository)
             ),
             unleashGateway = gatewayProvider.provide()
         )
@@ -173,6 +167,10 @@ class FormkravStegTest {
             trekkKlageService = trekkKlageServiceMock,
             avklaringsbehovService = AvklaringsbehovService(
                 avbrytRevurderingService = avbrytRevurderingServiceMock,
+                InMemoryAvklaringsbehovRepository,
+                behandlingRepositoryMock,
+                InMemoryVilkårsresultatRepository,
+                trukketSøknadService = TrukketSøknadService(trukketSøknadRepository)
             ),
             unleashGateway = gatewayProvider.provide()
         )
@@ -235,6 +233,10 @@ class FormkravStegTest {
             trekkKlageService = trekkKlageServiceMock,
             avklaringsbehovService = AvklaringsbehovService(
                 avbrytRevurderingService = avbrytRevurderingServiceMock,
+                InMemoryAvklaringsbehovRepository,
+                behandlingRepositoryMock,
+                InMemoryVilkårsresultatRepository,
+                trukketSøknadService = TrukketSøknadService(trukketSøknadRepository)
             ),
             unleashGateway = gatewayProvider.provide()
         )
@@ -300,6 +302,10 @@ class FormkravStegTest {
             trekkKlageService = trekkKlageServiceMock,
             avklaringsbehovService = AvklaringsbehovService(
                 avbrytRevurderingService = avbrytRevurderingServiceMock,
+                InMemoryAvklaringsbehovRepository,
+                behandlingRepositoryMock,
+                InMemoryVilkårsresultatRepository,
+                trukketSøknadService = TrukketSøknadService(trukketSøknadRepository)
             ),
             unleashGateway = gatewayProvider.provide()
         )
@@ -405,6 +411,10 @@ class FormkravStegTest {
             trekkKlageService = trekkKlageServiceMock,
             avklaringsbehovService = AvklaringsbehovService(
                 avbrytRevurderingService = avbrytRevurderingServiceMock,
+                InMemoryAvklaringsbehovRepository,
+                behandlingRepositoryMock,
+                InMemoryVilkårsresultatRepository,
+                trukketSøknadService = TrukketSøknadService(trukketSøknadRepository)
             ),
             unleashGateway = gatewayProvider.provide()
         )
@@ -451,6 +461,10 @@ class FormkravStegTest {
             trekkKlageService = trekkKlageServiceMock,
             avklaringsbehovService = AvklaringsbehovService(
                 avbrytRevurderingService = avbrytRevurderingServiceMock,
+                InMemoryAvklaringsbehovRepository,
+                behandlingRepositoryMock,
+                InMemoryVilkårsresultatRepository,
+                trukketSøknadService = TrukketSøknadService(trukketSøknadRepository)
             ),
             unleashGateway = gatewayProvider.provide()
         )
@@ -522,6 +536,10 @@ class FormkravStegTest {
             trekkKlageService = trekkKlageServiceMock,
             avklaringsbehovService = AvklaringsbehovService(
                 avbrytRevurderingService = avbrytRevurderingServiceMock,
+                InMemoryAvklaringsbehovRepository,
+                behandlingRepositoryMock,
+                InMemoryVilkårsresultatRepository,
+                trukketSøknadService = TrukketSøknadService(trukketSøknadRepository)
             ),
             unleashGateway = gatewayProvider.provide()
         )

@@ -52,9 +52,6 @@ class VurderBistandsbehovSteg(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
-            avklaringsbehovene = avklaringsbehovene,
-            behandlingRepository = behandlingRepository,
-            vilkårsresultatRepository = vilkårsresultatRepository,
             definisjon = Definisjon.AVKLAR_BISTANDSBEHOV,
             tvingerAvklaringsbehov = kontekst.vurderingsbehovRelevanteForSteg,
             nårVurderingErRelevant = ::perioderHvorBistandsvilkåretErRelevant,
@@ -82,7 +79,7 @@ class VurderBistandsbehovSteg(
         )
 
         when (kontekst.vurderingType) {
-            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING, VurderingType.AUTOMATISK_OPPDATER_VILKÅR -> vurderBistandsvilkår(kontekst)
+            VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING, VurderingType.UTVID_VEDTAKSLENGDE, VurderingType.MIGRER_RETTIGHETSPERIODE -> vurderBistandsvilkår(kontekst)
             VurderingType.MELDEKORT,
             VurderingType.AUTOMATISK_BREV,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
@@ -117,7 +114,7 @@ class VurderBistandsbehovSteg(
             .orEmpty()
 
         val studentvurderinger = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
-            ?.somTidslinje(kontekst.rettighetsperiode)
+            ?.somStudenttidslinje(kontekst.rettighetsperiode)
             .orEmpty()
 
         return Tidslinje.map3(tidligereVurderingsutfall, sykdomsvurderinger, studentvurderinger)
