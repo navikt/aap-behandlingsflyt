@@ -16,13 +16,14 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import org.slf4j.LoggerFactory
+import java.math.BigDecimal
 
 class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
     private val prosesserBehandlingService: ProsesserBehandlingService,
@@ -87,10 +88,14 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         behandlingFørMigrering: Behandling,
         behandlingEtterMigrering: Behandling
     ) {
-        val underveisFør = underveisRepository.hentHvisEksisterer(behandlingFørMigrering.id)?.somTidslinje()?.komprimer()?.segmenter()?.toList()
-            ?: error("Fant ikke underveis for behandling ${behandlingFørMigrering.id}")
-        val underveisEtter = underveisRepository.hentHvisEksisterer(behandlingEtterMigrering.id)?.somTidslinje()?.komprimer()?.segmenter()?.toList()
-            ?: error("Fant ikke underveis for behandling ${behandlingEtterMigrering.id}")
+        val underveisFør =
+            underveisRepository.hentHvisEksisterer(behandlingFørMigrering.id)?.somTidslinje()?.komprimer()?.segmenter()
+                ?.toList()
+                ?: error("Fant ikke underveis for behandling ${behandlingFørMigrering.id}")
+        val underveisEtter =
+            underveisRepository.hentHvisEksisterer(behandlingEtterMigrering.id)?.somTidslinje()?.komprimer()
+                ?.segmenter()?.toList()
+                ?: error("Fant ikke underveis for behandling ${behandlingEtterMigrering.id}")
         secureLogger.info("Migrering underveis før=$underveisFør og etter=$underveisEtter")
         if (underveisFør.size != underveisEtter.size) {
             secureLogger.info("Migrering underveis før=$underveisFør og etter=$underveisEtter")
@@ -110,13 +115,29 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         behandlingFørMigrering: Behandling,
         behandlingEtterMigrering: Behandling
     ) {
-        val tilkjentYtelseFør = tilkjentYtelseRepository.hentHvisEksisterer(behandlingFørMigrering.id)?.tilTidslinje()?.komprimer()?.segmenter()?.toList()
-            ?: emptyList()
-        val tilkjentYtelseEtter = tilkjentYtelseRepository.hentHvisEksisterer(behandlingEtterMigrering.id)?.tilTidslinje()?.komprimer()?.segmenter()?.toList()
-            ?: emptyList()
+        val tilkjentYtelseFør =
+            tilkjentYtelseRepository.hentHvisEksisterer(behandlingFørMigrering.id)?.tilTidslinje()?.komprimer()
+                ?.segmenter()?.toList()
+                ?: emptyList()
+        val tilkjentYtelseEtter =
+            tilkjentYtelseRepository.hentHvisEksisterer(behandlingEtterMigrering.id)?.tilTidslinje()?.komprimer()
+                ?.segmenter()?.toList()
+                ?: emptyList()
         secureLogger.info("Migrering tilkjent ytelse før=$tilkjentYtelseFør og etter=$tilkjentYtelseEtter")
         if (tilkjentYtelseEtter.size != tilkjentYtelseFør.size) {
-            throw IllegalStateException("Ulikt antall tilkjent ytelseperioder mellom ny ${tilkjentYtelseEtter.size} og gammel behandling ${tilkjentYtelseFør.size}")
+            /**
+             * Lagret ikke ned tilkjent ytelse på rene avslag tidligere, men startet med det i november/desember 2025.
+             * Nye behandlinger genererer dermed tilkjent ytelse for rene avslag
+             */
+            if (tilkjentYtelseFør.isEmpty()) {
+                if (tilkjentYtelseEtter.any {
+                        it.verdi.redusertDagsats().verdi() > BigDecimal.ZERO || it.verdi.gradering != `0_PROSENT`
+                    }) {
+                    throw IllegalStateException("Har gått fra totalt avslag til å få tilkjent ytelse med mulig utbetaling - sjekk gradering og redusert dagsats ")
+                }
+            } else {
+                throw IllegalStateException("Ulikt antall tilkjent ytelseperioder mellom ny ${tilkjentYtelseEtter.size} og gammel behandling ${tilkjentYtelseFør.size}")
+            }
         }
         tilkjentYtelseFør.forEachIndexed { index, periodeFør ->
             val periodeEtter = tilkjentYtelseEtter.find { it.periode == periodeFør.periode }
