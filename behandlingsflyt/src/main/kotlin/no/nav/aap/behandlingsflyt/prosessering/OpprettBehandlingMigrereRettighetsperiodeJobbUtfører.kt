@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -115,32 +116,31 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         behandlingFørMigrering: Behandling,
         behandlingEtterMigrering: Behandling
     ) {
-        val tilkjentYtelseFør =
-            tilkjentYtelseRepository.hentHvisEksisterer(behandlingFørMigrering.id)?.tilTidslinje()?.komprimer()
+        val tilkjentYtelseEffektivDagsatsFør =
+            tilkjentYtelseRepository.hentHvisEksisterer(behandlingFørMigrering.id)?.somTidslinje ({ it.periode},{ it.tilkjent.redusertDagsats() })?.komprimer()
                 ?.segmenter()?.toList()
                 ?: emptyList()
-        val tilkjentYtelseEtter =
-            tilkjentYtelseRepository.hentHvisEksisterer(behandlingEtterMigrering.id)?.tilTidslinje()?.komprimer()
+        val tilkjentYtelseEffektivDagsatsEtter =
+            tilkjentYtelseRepository.hentHvisEksisterer(behandlingEtterMigrering.id)?.somTidslinje ({ it.periode},{ it.tilkjent.redusertDagsats() })?.komprimer()
                 ?.segmenter()?.toList()
                 ?: emptyList()
-        secureLogger.info("Migrering tilkjent ytelse før=$tilkjentYtelseFør og etter=$tilkjentYtelseEtter")
-        if (tilkjentYtelseEtter.size != tilkjentYtelseFør.size) {
+        secureLogger.info("Migrering tilkjent ytelse før=$tilkjentYtelseEffektivDagsatsFør og etter=$tilkjentYtelseEffektivDagsatsEtter")
+        if (tilkjentYtelseEffektivDagsatsEtter.size != tilkjentYtelseEffektivDagsatsFør.size) {
             /**
              * Lagret ikke ned tilkjent ytelse på rene avslag tidligere, men startet med det i november/desember 2025.
-             * Nye behandlinger genererer dermed tilkjent ytelse for rene avslag
+             * Nye behandlinger genererer dermed tilkjent ytelse for rene avslag.
+             * Vi har også ulik oppførsel på graderinger før og etter november/desember
              */
-            if (tilkjentYtelseFør.isEmpty()) {
-                if (tilkjentYtelseEtter.any {
-                        it.verdi.redusertDagsats().verdi() > BigDecimal.ZERO || it.verdi.gradering != `0_PROSENT`
-                    }) {
-                    throw IllegalStateException("Har gått fra totalt avslag til å få tilkjent ytelse med mulig utbetaling - sjekk gradering og redusert dagsats ")
+            if (tilkjentYtelseEffektivDagsatsFør.isEmpty()) {
+                if (tilkjentYtelseEffektivDagsatsEtter.any {it.verdi.verdi() > BigDecimal.ZERO}) {
+                    throw IllegalStateException("Har gått fra totalt avslag til å få tilkjent ytelse med mulig utbetaling siden redusert dagsats ikke er 0")
                 }
             } else {
-                throw IllegalStateException("Ulikt antall tilkjent ytelseperioder mellom ny ${tilkjentYtelseEtter.size} og gammel behandling ${tilkjentYtelseFør.size}")
+                throw IllegalStateException("Ulikt antall tilkjent ytelseperioder mellom ny ${tilkjentYtelseEffektivDagsatsEtter.size} og gammel behandling ${tilkjentYtelseEffektivDagsatsFør.size}")
             }
         }
-        tilkjentYtelseFør.forEachIndexed { index, periodeFør ->
-            val periodeEtter = tilkjentYtelseEtter.find { it.periode == periodeFør.periode }
+        tilkjentYtelseEffektivDagsatsFør.forEachIndexed { index, periodeFør ->
+            val periodeEtter = tilkjentYtelseEffektivDagsatsEtter.find { it.periode == periodeFør.periode }
             if (periodeEtter == null) {
                 throw IllegalStateException("Mangler periode ${periodeFør} med tilkjent ytelse i ny behandling - indeks: $index")
             } else if (periodeEtter != periodeFør) {
