@@ -71,6 +71,8 @@ class InstitusjonsOppholdKafkaKonsument(
                         ?.faktiskSluttdato
                         ?: meldingVerdi.institusjonsOpphold?.forventetSluttdato
 
+                    log.info("Finner institusjonsopphold: ${oppholdSluttDato} og ${meldingVerdi.institusjonsOpphold
+                        ?.faktiskSluttdato} og ${meldingVerdi.institusjonsOpphold?.forventetSluttdato} og {$omTreeMaaneder}")
                     if (oppholdSluttDato != null && oppholdSluttDato <= omTreeMaaneder) {
                         hendelseService.registrerMottattHendelse(
                             dto = meldingVerdi.tilInnsending(
