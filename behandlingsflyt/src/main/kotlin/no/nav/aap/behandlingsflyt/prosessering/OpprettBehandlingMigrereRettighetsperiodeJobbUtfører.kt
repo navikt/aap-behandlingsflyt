@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -136,8 +137,10 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
                 if (tilkjentYtelseEffektivDagsatsEtter.any { it.verdi.verdi() > BigDecimal.ZERO }) {
                     throw IllegalStateException("Har gått fra totalt avslag til å få tilkjent ytelse med mulig utbetaling siden redusert dagsats ikke er 0")
                 }
-            } else {
+            } else if (Miljø.erProd()) {
                 throw IllegalStateException("Ulikt antall tilkjent ytelseperioder mellom ny ${tilkjentYtelseEffektivDagsatsEtter.size} og gammel behandling ${tilkjentYtelseEffektivDagsatsFør.size}")
+            } else {
+                log.warn("Ulikt antall tilkjent ytelseperioder ved migrering - godtas i dev pga gammel data")
             }
         }
         tilkjentYtelseEffektivDagsatsFør.forEachIndexed { index, periodeFør ->
@@ -146,7 +149,10 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
                 throw IllegalStateException("Mangler periode ${periodeFør} med tilkjent ytelse i ny behandling - indeks: $index")
             } else if (periodeEtter != periodeFør) {
                 secureLogger.info("Migrering tilkjent ytelse før=$periodeFør og etter=$periodeEtter")
-                throw IllegalStateException("Ulike perioder i tilkjent ytelse mellom ny og gammel behandling - indeks: $index")
+                log.warn("Ulik tilkjent ytelseperiode ved migrering - godtas i dev pga gammel data")
+                if (Miljø.erProd()) {
+                    throw IllegalStateException("Ulike perioder i tilkjent ytelse mellom ny og gammel behandling - indeks: $index")
+                }
             }
         }
     }
