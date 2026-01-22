@@ -48,8 +48,12 @@ data class StudentGrunnlag(
     }
 }
 
-fun StudentGrunnlag?.vilkårIkkeOppfylt(): Boolean {
-    return this?.somStudenttidslinje(Periode(Tid.MIN, Tid.MAKS)).orEmpty().segmenter().any { !it.verdi.erOppfylt() }
+fun StudentGrunnlag?.harPeriodeSomIkkeErOppfylt(): Boolean {
+    val tidslinje = this?.somStudenttidslinje(Periode(Tid.MIN, Tid.MAKS)).orEmpty()
+    if (tidslinje.isEmpty()) {
+        return true
+    }
+    return tidslinje.segmenter().all { it.verdi.erOppfylt() }
 }
 
 fun StudentGrunnlag?.søkerOppgirStudentstatus(): Boolean {
