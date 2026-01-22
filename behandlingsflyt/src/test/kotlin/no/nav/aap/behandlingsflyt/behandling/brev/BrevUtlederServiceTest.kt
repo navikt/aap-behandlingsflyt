@@ -297,6 +297,47 @@ class BrevUtlederServiceTest {
         assertEquals(resultat.sykdomsvurdering, "Vurdering av sykdom")
     }
 
+    @Test
+    fun `faktagrunnlag for sykdomsvurdering settes til null hvis det ikke finnes`() {
+        val førstegangsbehandling = behandling(typeBehandling = TypeBehandling.Førstegangsbehandling)
+        every { vedtakRepository.hent(any<BehandlingId>()) } returns Vedtak(
+            behandlingId = førstegangsbehandling.id,
+            vedtakstidspunkt = LocalDateTime.of(2025,1,1, 0, 0,0),
+            virkningstidspunkt = null
+        )
+
+        every { beregningsgrunnlagRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns Grunnlag11_19(
+            grunnlaget = GUnit(2),
+            erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(0),
+            inntekter = listOf(
+                grunnlagInntekt(2024, 220_000),
+                grunnlagInntekt(2023, 210_000),
+                grunnlagInntekt(2022, 200_000),
+            )
+        )
+
+        every { beregningVurderingRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns BeregningGrunnlag(
+            BeregningstidspunktVurdering(
+                begrunnelse = "",
+                nedsattArbeidsevneEllerStudieevneDato = LocalDate.of(2025, 1, 1),
+                ytterligereNedsattBegrunnelse = null,
+                ytterligereNedsattArbeidsevneDato = null,
+                vurdertAv = ""
+            ), null
+        )
+
+        every { behandlingRepository.hent(any<BehandlingId>()) } returns førstegangsbehandling
+        every { trukketSøknadService.søknadErTrukket(any<BehandlingId>()) } returns false
+        every { underveisRepository.hentHvisEksisterer(any<BehandlingId>()) } returns underveisgrunnlagAvslag()
+        every { arbeidsopptrappingRepository.hentPerioder(any<BehandlingId>()) } returns emptyList()
+
+        every { sykdomsvurderingForBrevRepository.hent(any<BehandlingId>())} returns null
+
+        val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(førstegangsbehandling.id)
+        assertIs<Avslag>(resultat, "brevbehov er av type Avslag")
+        assertEquals(null, resultat.sykdomsvurdering)
+    }
 
     @Test
     fun `skal feile ved utleding av brevtype dersom aktivitetsplikt mangler`() {
