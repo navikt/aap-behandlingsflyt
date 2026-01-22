@@ -13,6 +13,7 @@ import no.nav.aap.komponenter.repository.RepositoryRegistry
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
 import javax.sql.DataSource
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -60,11 +61,33 @@ class InstitusjonsOppholdKafkaKonsument(
             if (person != null) {
 
                 val saker = sakRepository.finnSakerFor(person)
+                val omTreeMaaneder = LocalDate.now()
+                    .withDayOfMonth(1)
+                    .plusMonths(3)
+
                 for (saken in saker) {
 
-                    hendelseService.registrerMottattHendelse(dto = meldingVerdi.tilInnsending(meldingKey,
-                       saken.saksnummer)
-                    )
+                    val oppholdSluttDato = meldingVerdi.institusjonsOpphold
+                        ?.faktiskSluttdato
+                        ?: meldingVerdi.institusjonsOpphold?.forventetSluttdato
+
+                    log.info("Finner institusjonsopphold: ${oppholdSluttDato} og ${meldingVerdi.institusjonsOpphold
+                        ?.faktiskSluttdato} og ${meldingVerdi.institusjonsOpphold?.forventetSluttdato} og {$omTreeMaaneder}")
+                    if (oppholdSluttDato != null && oppholdSluttDato > omTreeMaaneder) {
+                        hendelseService.registrerMottattHendelse(
+                            dto = meldingVerdi.tilInnsending(
+                                meldingKey,
+                                saken.saksnummer
+                            )
+                        )
+                        log.info("Sendt institusjonsoppholdhendelse for saksnummer: ${saken.saksnummer}")
+                    } else {
+                        log.info(
+                            "Ignorerer institusjonsoppholdhendelse for saksnummer: ${saken.saksnummer}, " +
+                                    "institusjonsoppholdet er for lenge til skal avsluttes"
+                        )
+                    }
+
                     log.info("Mottatt institusjonsoppholdhendelse for saksnummer: ${saken.saksnummer}")
                 }
             }
