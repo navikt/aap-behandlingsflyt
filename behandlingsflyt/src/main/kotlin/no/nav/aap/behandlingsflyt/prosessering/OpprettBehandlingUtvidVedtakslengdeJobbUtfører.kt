@@ -27,11 +27,10 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
-        val datoHvorSakerSjekkesForUtvidelse = now(clock).plusDays(28)
+        val datoForUtvidelse = now(clock).plusDays(28)
         val sakId = SakId(input.sakId())
 
         // I tilfellet en behandling har blitt opprettet i tiden mellom jobben ble opprettet til den ble startet
-        // Denne sjekken kan fjernes når vi har støtter for dette
         if (!kunSakerUtenÅpneYtelsesbehandlinger(sakId)) {
             log.info("Sak med id $sakId har åpne ytelsesbehandlinger, hopper over")
             return
@@ -40,8 +39,8 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
         val sisteGjeldendeBehandling = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId)
         if (sisteGjeldendeBehandling != null) {
             log.info("Gjeldende behandling for sak $sakId er ${sisteGjeldendeBehandling.id}")
-            if (vedtakslengdeService.skalUtvideVedtakslengde(sisteGjeldendeBehandling.id, datoHvorSakerSjekkesForUtvidelse)) {
-                log.info("Oppretter behandling for utvidelse av vedtakslengde sak $sakId")
+            if (vedtakslengdeService.skalUtvideVedtakslengde(sisteGjeldendeBehandling.id, datoForUtvidelse)) {
+                log.info("Oppretter behandling for utvidelse av vedtakslengde for sak $sakId")
                 val utvidVedtakslengdeBehandling = opprettNyBehandling(sakId)
                 prosesserBehandlingService.triggProsesserBehandling(utvidVedtakslengdeBehandling)
             } else {

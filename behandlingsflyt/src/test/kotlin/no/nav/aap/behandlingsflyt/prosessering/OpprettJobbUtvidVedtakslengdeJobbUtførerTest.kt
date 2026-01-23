@@ -7,13 +7,15 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
@@ -31,20 +33,21 @@ import java.time.LocalDateTime
 class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
 
     private val dagensDato = 1 desember 2025
+    private val clock = fixedClock(dagensDato)
     private val sakId = SakId(1L)
     private val behandlingId = BehandlingId(1L)
     private val jobbInput = JobbInput(OpprettJobbUtvidVedtakslengdeJobbUtfører)
 
-    private val underveisRepository = mockk<UnderveisRepository>()
     private val sakOgBehandlingService = mockk<SakOgBehandlingService>()
+    private val vedtakslengdeService = mockk<VedtakslengdeService>()
     private val flytJobbRepository = mockk<FlytJobbRepository>()
     private val opprettJobbUtvidVedtakslengdeJobbUtfører =
         OpprettJobbUtvidVedtakslengdeJobbUtfører(
-            underveisRepository = underveisRepository,
             sakOgBehandlingService = sakOgBehandlingService,
+            vedtakslengdeService = vedtakslengdeService,
             flytJobbRepository = flytJobbRepository,
             unleashGateway = FakeUnleash,
-            clock = fixedClock(dagensDato)
+            clock = clock
         )
 
     // TODO kan fjernes når vi ikke lenger har miljøspesifikke filter i OpprettJobbUtvidVedtakslengdeJobbUtfører
@@ -57,8 +60,10 @@ class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
     fun `skal opprette jobber for behandlinger hvor vedtakslengde skal forlenges`() {
         val jobbInputSak = JobbInput(OpprettBehandlingUtvidVedtakslengdeJobbUtfører).forSak(sakId.id)
 
-        every { underveisRepository.hentSakerMedSisteUnderveisperiodeFørDato(any()) } returns setOf(sakId)
+        every { vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(any()) } returns setOf(sakId)
+        every { vedtakslengdeService.skalUtvideVedtakslengde(behandlingId, any())} returns true
         every { sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns behandling()
+        every { sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
         every { flytJobbRepository.leggTil(match { it.sakId() == sakId.id }) } just Runs
 
         opprettJobbUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
@@ -73,7 +78,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
 
     @Test
     fun `skal ikke opprette jobber for åpne behandlinger`() {
-        every { underveisRepository.hentSakerMedSisteUnderveisperiodeFørDato(any()) } returns setOf(sakId)
+        every { vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(any()) } returns setOf(sakId)
         every { sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns behandling(status = Status.UTREDES)
 
         opprettJobbUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
@@ -83,7 +88,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
 
     @Test
     fun `skal ikke opprette jobber hvis ingen saker returneres`() {
-        every { underveisRepository.hentSakerMedSisteUnderveisperiodeFørDato(any()) } returns emptySet()
+        every { vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(any()) } returns emptySet()
 
         opprettJobbUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
 
@@ -102,4 +107,19 @@ class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
             forrigeBehandlingId = null,
             versjon = 1L
         )
+
+    private fun behandlingMedVedtak(): BehandlingMedVedtak =
+        BehandlingMedVedtak(
+            saksnummer = Saksnummer("123"),
+            id = behandlingId,
+            referanse = BehandlingReferanse(),
+            typeBehandling = TypeBehandling.Førstegangsbehandling,
+            status = Status.IVERKSETTES,
+            opprettetTidspunkt = LocalDateTime.now(clock),
+            vedtakstidspunkt = LocalDateTime.now(clock),
+            virkningstidspunkt = null,
+            vurderingsbehov = setOf(),
+            årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD
+        )
+
 }

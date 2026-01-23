@@ -6,6 +6,7 @@ import io.mockk.junit5.MockKExtension
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
+import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
@@ -55,9 +56,8 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
     private val opprettBehandlingUtvidVedtakslengdeJobbUtfører =
         OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
             prosesserBehandlingService = prosesserBehandlingService,
-            underveisRepository = underveisRepository,
             sakOgBehandlingService = sakOgBehandlingService,
-            vilkårsresultatRepository = vilkårsresultatRepository,
+            vedtakslengdeService = VedtakslengdeService(underveisRepository, vilkårsresultatRepository, fixedClock(dagensDato)),
             clock = fixedClock(dagensDato)
         )
 
@@ -99,9 +99,8 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
 
         every { underveisRepository.hentHvisEksisterer(behandling.id)} returns underveisGrunnlag(perioder = underveisPerioderIkkeUtløpt())
         every { sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns behandling()
-        every { sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
+        every { sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns null
         every { sakOgBehandlingService.finnEllerOpprettBehandling(sak.id, any()) } returns opprettetBehandling()
-        every { prosesserBehandlingService.triggProsesserBehandling(any<SakOgBehandlingService.OpprettetBehandling>()) } just Runs
         every { vilkårsresultatRepository.hent(behandlingId) } returns genererVilkårsresultat(sak.rettighetsperiode)
 
         opprettBehandlingUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)

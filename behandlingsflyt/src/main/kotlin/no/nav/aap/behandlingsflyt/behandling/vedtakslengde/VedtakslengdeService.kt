@@ -7,16 +7,19 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
+import java.time.Clock
 import java.time.LocalDate
 
 class VedtakslengdeService(
     private val underveisRepository: UnderveisRepository,
-    private val vilkårsresultatRepository: VilkårsresultatRepository
+    private val vilkårsresultatRepository: VilkårsresultatRepository,
+    private val clock: Clock = Clock.systemDefaultZone()
 ) {
     constructor(repositoryProvider: RepositoryProvider) : this(
         underveisRepository = repositoryProvider.provide(),
@@ -25,9 +28,13 @@ class VedtakslengdeService(
 
     private val log = LoggerFactory.getLogger(javaClass)
 
+    fun hentSakerAktuelleForUtvidelseAvVedtakslengde(datoForUtvidelse: LocalDate): Set<SakId> {
+        return underveisRepository.hentSakerMedSisteUnderveisperiodeFørDato(datoForUtvidelse)
+    }
+
     fun skalUtvideVedtakslengde(
         behandlingId: BehandlingId,
-        datoForUtvidelse: LocalDate
+        datoForUtvidelse: LocalDate = LocalDate.now(clock).plusDays(28)
     ): Boolean {
         val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandlingId)
         if (underveisGrunnlag != null) {

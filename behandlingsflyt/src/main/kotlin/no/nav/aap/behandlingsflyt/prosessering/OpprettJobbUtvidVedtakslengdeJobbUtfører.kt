@@ -1,16 +1,8 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Avslag
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetRegel
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
@@ -18,9 +10,6 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.miljo.Miljø.erDev
 import no.nav.aap.komponenter.miljo.Miljø.erLokal
 import no.nav.aap.komponenter.miljo.Miljø.erProd
-import no.nav.aap.komponenter.tidslinje.Tidslinje
-import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
@@ -33,7 +22,6 @@ import java.time.LocalDate
 import java.time.LocalDate.now
 
 class OpprettJobbUtvidVedtakslengdeJobbUtfører(
-    private val underveisRepository: UnderveisRepository,
     private val sakOgBehandlingService: SakOgBehandlingService,
     private val vedtakslengdeService: VedtakslengdeService,
     private val flytJobbRepository: FlytJobbRepository,
@@ -44,15 +32,20 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
-        // Forlenger behandlinger når det er 28 dager igjen til sluttdato
-        val datoHvorSakerSjekkesForUtvidelse = now(clock).plusDays(28)
+        // Forlenger saker når det er 28 dager igjen til sluttdato
+        val datoForUtvidelse = now(clock).plusDays(28)
+        val saker = hentKandidaterForUtvidelseAvVedtakslengde(datoForUtvidelse)
 
-        val saker = hentKandidaterForUtvidelseAvVedtakslengde(datoHvorSakerSjekkesForUtvidelse)
-
-        log.info("Fant ${saker.size} kandidater for utvidelse av vedtakslengde per $datoHvorSakerSjekkesForUtvidelse")
+        log.info("Fant ${saker.size} kandidater for utvidelse av vedtakslengde per $datoForUtvidelse")
         if (unleashGateway.isEnabled(BehandlingsflytFeature.UtvidVedtakslengdeJobb)) {
             saker
-                .filter { if (erDev()) it.id == 4243L else if (erProd()) it.id == 1100L else if (erLokal()) true else false}
+                // TODO fjerne dette filteret når vi har fått verifisert at jobben fungerer som forventet i dev/prod
+                .filter {
+                    if (erDev()) it.id == 4243L
+                    else if (erProd()) it.id == 1100L
+                    else if (erLokal()) true
+                    else false
+                }
                 .also { log.info("Oppretter jobber for alle saker som er aktuelle kandidator for utvidelse av vedtakslengde. Antall = ${it.size}") }
                 .forEach {
                     flytJobbRepository.leggTil(JobbInput(OpprettBehandlingUtvidVedtakslengdeJobbUtfører).forSak(it.toLong()))
@@ -60,17 +53,17 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
         }
     }
 
+    // TODO: Må filtrere vekk de som allerede har blitt kjørt, men ikke kvalifiserte til reell utvidelse av vedtakslengde
+    private fun hentKandidaterForUtvidelseAvVedtakslengde(datoForUtvidelse: LocalDate): Set<SakId> {
+        return vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(datoForUtvidelse)
+            .filter { kunSakerUtenÅpneYtelsesbehandlinger(it) }
+            .filter { kunSakerMedBehovForUtvidelseAvVedtakslengde(it, datoForUtvidelse) }
+            .toSet()
+    }
+
     private fun kunSakerUtenÅpneYtelsesbehandlinger(id: SakId): Boolean {
         val sisteBehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(id)
         return sisteBehandling?.status() in setOf(Status.AVSLUTTET, Status.IVERKSETTES)
-    }
-
-    private fun hentKandidaterForUtvidelseAvVedtakslengde(dato: LocalDate): Set<SakId> {
-        // TODO: Må filtrere vekk de som allerede har blitt kjørt, men ikke kvalifiserte til reell utvidelse av vedtakslengde
-        return underveisRepository.hentSakerMedSisteUnderveisperiodeFørDato(dato)
-            .filter { kunSakerUtenÅpneYtelsesbehandlinger(it) }
-            .filter { kunSakerMedBehovForUtvidelseAvVedtakslengde(it, dato) }
-            .toSet()
     }
 
     private fun kunSakerMedBehovForUtvidelseAvVedtakslengde(id: SakId, dato: LocalDate): Boolean {
@@ -84,7 +77,6 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
     companion object : ProvidersJobbSpesifikasjon {
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
             return OpprettJobbUtvidVedtakslengdeJobbUtfører(
-                underveisRepository = repositoryProvider.provide(),
                 sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
                 vedtakslengdeService = VedtakslengdeService(repositoryProvider),
                 flytJobbRepository = repositoryProvider.provide(),
