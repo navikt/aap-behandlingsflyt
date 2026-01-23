@@ -36,7 +36,7 @@ object ProsesseringsJobber {
             OppdaterOppgaveMedTilbakekrevingsbehandlingUtfører,
             OpprettBehandlingMigrereRettighetsperiodeJobbUtfører,
             SendFagsysteminfoBehovTilTilbakekrevingUtfører,
-//            SjekkInstitusjonsOppholdJobbUtfører,
+            SjekkInstitusjonsOppholdJobbUtfører,
         )
     }
 }
