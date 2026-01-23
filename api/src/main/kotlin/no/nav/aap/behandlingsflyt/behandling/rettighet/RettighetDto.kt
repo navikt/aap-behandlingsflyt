@@ -9,7 +9,7 @@ data class RettighetDto(
     val kvote: Int? = null,
     val bruktKvote: Int? = null,
     var gjenværendeKvote: Int? = null,
-    val startdato: LocalDate? = null,
+    val startDato: LocalDate? = null,
     val maksDato: LocalDate? = null,
     val avslagDato: LocalDate? = null,
     val avslagÅrsak: Avslagstype? = null,

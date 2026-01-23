@@ -56,7 +56,7 @@ class UnderveisGrunnlagTest {
     }
 
     @Test
-    fun `skal utlede maksdato 2 år, 11 måneder og 17 dager frem i tid for rettighet bistandsbehov`() {
+    fun `skal utlede maksdato 2 år, 11 måneder og 17 dager frem i tid for rettighet bistandsbehov ved brukt kvote på 2 uker`() {
         val perioder = listOf(
             underveisperiode(
                 Periode(FØRSTE_JAN_2026.minusWeeks(3), FØRSTE_JAN_2026.minusWeeks(1)),
@@ -71,7 +71,7 @@ class UnderveisGrunnlagTest {
     }
 
     @Test
-    fun `skal utlede maksdato 5 måneder og 8 dager frem i tid for rettighet sykepengeerstatning`() {
+    fun `skal utlede maksdato 5 måneder og 8 dager frem i tid for rettighet sykepengeerstatning ved brukt kvote på 3 uker`() {
         val perioder = listOf(
             underveisperiode(
                 Periode(FØRSTE_JAN_2026.minusWeeks(5), FØRSTE_JAN_2026.minusWeeks(2)),

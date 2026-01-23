@@ -51,7 +51,7 @@ class RettighetsperiodeServiceTest {
     }
 
     @Test
-    fun `skal utlede maksdato åtte måneder frem i tid for rettighet overgang til uføre`() {
+    fun `skal utlede maksdato 8 måneder frem i tid for rettighet overgang til uføre`() {
         val maksdatoForOvergangUføre = RettighetsperiodeService().utledMaksdatoForRettighet(RettighetsType.VURDERES_FOR_UFØRETRYGD, dagensDato)
         val forventetMaksdato = dagensDato.plusMonths(8)
 
