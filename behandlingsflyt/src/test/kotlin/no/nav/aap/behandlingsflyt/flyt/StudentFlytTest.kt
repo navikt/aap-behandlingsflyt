@@ -225,3 +225,25 @@ object SykestipendAktivert : FakeUnleashBase(
         BehandlingsflytFeature.ForlengelseIManuellBehandling to false,
     )
 )
+
+object AlleAvskrudd: FakeUnleashBase(
+    mapOf(
+        BehandlingsflytFeature.IngenValidering to true, // Denne er default på
+        BehandlingsflytFeature.NyBrevtype11_17 to false,
+        BehandlingsflytFeature.OverforingsdatoNullForAvregning to false,
+        BehandlingsflytFeature.OvergangArbeid to false,
+        BehandlingsflytFeature.KvalitetssikringsSteg to false,
+        BehandlingsflytFeature.NyBrevbyggerV3 to false,
+        BehandlingsflytFeature.LagreVedtakIFatteVedtak to false,
+        BehandlingsflytFeature.PeriodisertSykepengeErstatningNyAvklaringsbehovService to false,
+        BehandlingsflytFeature.ValiderOvergangUfore to false,
+        BehandlingsflytFeature.Under18 to false,
+        BehandlingsflytFeature.SosialRefusjon to false,
+        BehandlingsflytFeature.HentSykepengerVedOverlapp to false,
+        BehandlingsflytFeature.MigrerRettighetsperiode to false,
+        BehandlingsflytFeature.PeriodisertSykdom to false,
+        BehandlingsflytFeature.Sykestipend to false,
+        BehandlingsflytFeature.Forlengelse to false,
+        BehandlingsflytFeature.ForlengelseIManuellBehandling to false,
+    )
+)
