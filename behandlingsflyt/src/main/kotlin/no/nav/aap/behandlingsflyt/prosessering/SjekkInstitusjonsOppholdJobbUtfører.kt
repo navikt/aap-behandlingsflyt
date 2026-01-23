@@ -79,7 +79,7 @@ class SjekkInstitusjonsOppholdJobbUtfører(
         sakOgBehandlingService.finnEllerOpprettBehandling(
             sakId = sak.id,
             vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
-                årsak = ÅrsakTilOpprettelse.INSTITUSJONSOPPHOLD,
+                årsak = ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA,
                 vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.INSTITUSJONSOPPHOLD))
             ),
         )

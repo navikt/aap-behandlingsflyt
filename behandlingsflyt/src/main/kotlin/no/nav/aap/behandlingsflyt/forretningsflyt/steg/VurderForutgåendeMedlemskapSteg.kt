@@ -71,6 +71,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
             VurderingType.UTVID_VEDTAKSLENGDE,
+            VurderingType.MIGRER_RETTIGHETSPERIODE,
             VurderingType.REVURDERING -> {
                 vurderVilkår(kontekst, grunnlag.value)
             }

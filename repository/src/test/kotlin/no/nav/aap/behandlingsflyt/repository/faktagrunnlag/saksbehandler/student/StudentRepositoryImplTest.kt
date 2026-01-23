@@ -17,6 +17,9 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import java.sql.Timestamp
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 
 class StudentRepositoryImplTest {
     companion object {
@@ -63,8 +66,10 @@ class StudentRepositoryImplTest {
             avbruttStudieDato = 13 februar 1989,
             avbruddMerEnn6Måneder = true,
             vurdertAv = "Gokken Gokkestad",
+            vurdertTidspunkt = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS),
             vurdertIBehandling = behandling.id
         )
+        
         dataSource.transaction {
             StudentRepositoryImpl(it).lagre(
                 behandling.id, setOf(studentvurdering)
@@ -76,10 +81,10 @@ class StudentRepositoryImplTest {
         }
         assertThat(uthentet.vurderinger).hasSize(1)
         assertThat(uthentet.vurderinger!!.single())
-            .usingRecursiveComparison().ignoringFields("id", "vurdertTidspunkt")
+            .usingRecursiveComparison().ignoringFields("id")
             .isEqualTo(studentvurdering)
         assertThat(uthentet.oppgittStudent)
-            .usingRecursiveComparison().ignoringFields("id", "vurdertTidspunkt")
+            .usingRecursiveComparison().ignoringFields("id")
             .isEqualTo(oppgittStudent)
 
         // SLETT

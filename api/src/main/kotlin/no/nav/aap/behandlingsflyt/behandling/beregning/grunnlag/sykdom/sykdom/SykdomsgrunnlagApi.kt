@@ -137,15 +137,8 @@ fun NormalOpenAPIRoute.sykdomsgrunnlagApi(
                     val innhentedeYrkesskader = yrkesskadeGrunnlag?.yrkesskader?.yrkesskader.orEmpty()
                         .map { yrkesskade -> RegistrertYrkesskade(yrkesskade) }
 
-                    val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
-                    val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-
                     YrkesskadeVurderingGrunnlagResponse(
-                        harTilgangTilÅSaksbehandle = if (unleashGateway.isEnabled(BehandlingsflytFeature.KvalitetssikringsSteg)) {
-                            harTilgangOgKanSaksbehandle(kanSaksbehandle(), avklaringsbehovene)
-                        } else {
-                            kanSaksbehandle()
-                        },
+                        kanSaksbehandle(),
                         opplysninger = InnhentetSykdomsOpplysninger(
                             oppgittYrkesskadeISøknad = false,
                             innhentedeYrkesskader = innhentedeYrkesskader,
