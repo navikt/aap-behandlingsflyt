@@ -68,6 +68,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
         val behandling = behandlingMedVedtak()
 
         every { underveisRepository.hentHvisEksisterer(behandling.id)} returns underveisGrunnlag()
+        every { sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns behandling()
         every { sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
         every { sakOgBehandlingService.finnEllerOpprettBehandling(sak.id, any()) } returns opprettetBehandling()
         every { prosesserBehandlingService.triggProsesserBehandling(any<SakOgBehandlingService.OpprettetBehandling>()) } just Runs
@@ -80,10 +81,10 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
 
     @Test
     fun `skal ikke opprette og sette i gang prosessering av behandling hvis sluttdato er lenger frem enn dagens dato + 28 dager`() {
-        val sak = sak()
         val behandling = behandlingMedVedtak()
 
         every { underveisRepository.hentHvisEksisterer(behandling.id)} returns underveisGrunnlag()
+        every { sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns behandling()
         every { sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns null
 
         opprettBehandlingUtvidVedtakslengdeJobbUtfører.utfør(jobbInput)
@@ -97,6 +98,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
         val behandling = behandlingMedVedtak()
 
         every { underveisRepository.hentHvisEksisterer(behandling.id)} returns underveisGrunnlag(perioder = underveisPerioderIkkeUtløpt())
+        every { sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns behandling()
         every { sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
         every { sakOgBehandlingService.finnEllerOpprettBehandling(sak.id, any()) } returns opprettetBehandling()
         every { prosesserBehandlingService.triggProsesserBehandling(any<SakOgBehandlingService.OpprettetBehandling>()) } just Runs
@@ -113,6 +115,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
         val behandling = behandlingMedVedtak()
 
         every { underveisRepository.hentHvisEksisterer(behandling.id)} returns underveisGrunnlag()
+        every { sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sakId) } returns behandling()
         every { sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
         every { sakOgBehandlingService.finnEllerOpprettBehandling(sak.id, any()) } returns opprettetBehandling()
         every { prosesserBehandlingService.triggProsesserBehandling(any<SakOgBehandlingService.OpprettetBehandling>()) } just Runs

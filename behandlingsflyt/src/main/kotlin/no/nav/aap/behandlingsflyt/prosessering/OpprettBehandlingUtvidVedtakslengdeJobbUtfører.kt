@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
@@ -26,6 +27,7 @@ import org.slf4j.LoggerFactory
 import java.time.Clock
 import java.time.LocalDate
 import java.time.LocalDate.now
+import kotlin.collections.contains
 
 class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
     private val prosesserBehandlingService: ProsesserBehandlingService,
@@ -40,6 +42,13 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
     override fun utfør(input: JobbInput) {
         val datoHvorSakerSjekkesForUtvidelse = now(clock).plusDays(28)
         val sakId = SakId(input.sakId())
+
+        // I tilfellet en behandling har blitt opprettet i tiden mellom jobben ble opprettet til den ble startet
+        // Denne sjekken kan fjernes når vi har støtter for dette
+        if (!kunSakerUtenÅpneYtelsesbehandlinger(sakId)) {
+            log.info("Sak med id $sakId har åpne ytelsesbehandlinger, hopper over")
+            return
+        }
 
         val sisteGjeldendeBehandling = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId)
         if (sisteGjeldendeBehandling != null) {
@@ -79,6 +88,11 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
         }
         log.info("Sak $sakId har ingen vedtatte underveisperioder")
         return false
+    }
+
+    private fun kunSakerUtenÅpneYtelsesbehandlinger(id: SakId): Boolean {
+        val sisteBehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(id)
+        return sisteBehandling?.status() in setOf(Status.AVSLUTTET, Status.IVERKSETTES)
     }
 
     fun skalUtvide(
