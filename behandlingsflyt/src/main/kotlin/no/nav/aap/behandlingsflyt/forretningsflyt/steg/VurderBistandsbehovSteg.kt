@@ -107,7 +107,7 @@ class VurderBistandsbehovSteg(
     }
 
     private fun perioderHvorBistandsvilkåretErRelevant(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
-        val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
+        val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type()).komprimer()
 
         val sykdomsvurderinger = sykdomsRepository.hentHvisEksisterer(kontekst.behandlingId)
             ?.somSykdomsvurderingstidslinje()
