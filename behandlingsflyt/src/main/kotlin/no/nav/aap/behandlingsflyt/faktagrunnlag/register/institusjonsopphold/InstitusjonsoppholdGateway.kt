@@ -5,4 +5,5 @@ import no.nav.aap.komponenter.gateway.Gateway
 
 interface InstitusjonsoppholdGateway : Gateway {
     fun innhent(person: Person): List<Institusjonsopphold>
+    fun hentDataForHendelse(oppholdId: Long): Institusjonsopphold
 }

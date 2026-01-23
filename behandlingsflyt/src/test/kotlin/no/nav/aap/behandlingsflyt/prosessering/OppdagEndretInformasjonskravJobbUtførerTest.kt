@@ -109,6 +109,9 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
     object FakeInstitusjonsoppholdGateway : InstitusjonsoppholdGateway {
         var response: List<Institusjonsopphold> = emptyList()
         override fun innhent(person: Person) = response
+        override fun hentDataForHendelse(oppholdId: Long): Institusjonsopphold {
+            TODO("Not yet implemented")
+        }
     }
 
     object FakePersonopplysningGateway : PersonopplysningGateway {
