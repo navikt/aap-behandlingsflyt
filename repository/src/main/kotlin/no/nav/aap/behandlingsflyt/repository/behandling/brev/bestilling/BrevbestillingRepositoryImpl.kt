@@ -54,7 +54,7 @@ class BrevbestillingRepositoryImpl(private val connection: DBConnection) :
         }
     }
 
-    override fun hent(brevbestillingReferanse: BrevbestillingReferanse): Brevbestilling {
+    override fun hent(brevbestillingReferanse: BrevbestillingReferanse): Brevbestilling? {
         val query =
             """
                 SELECT *
@@ -62,7 +62,7 @@ class BrevbestillingRepositoryImpl(private val connection: DBConnection) :
                 WHERE REFERANSE = ?
             """.trimIndent()
 
-        return connection.queryFirst(query) {
+        return connection.queryFirstOrNull(query) {
             setParams {
                 setUUID(1, brevbestillingReferanse.brevbestillingReferanse)
             }
@@ -91,7 +91,6 @@ class BrevbestillingRepositoryImpl(private val connection: DBConnection) :
             """
                 INSERT INTO BREVBESTILLING (BEHANDLING_ID, TYPE_BREV, REFERANSE, STATUS)
                 VALUES (?, ?, ?, ?)
-                ON CONFLICT(REFERANSE) DO NOTHING
             """.trimIndent()
 
         connection.execute(query) {
