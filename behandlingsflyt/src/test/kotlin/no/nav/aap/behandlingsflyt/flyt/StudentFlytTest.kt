@@ -2,8 +2,6 @@ package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentEnkelLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plusHverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
@@ -14,8 +12,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurderingDTO
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.test.AlleAvskrudd
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
-import no.nav.aap.behandlingsflyt.test.FakeUnleashBase
 import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.behandlingsflyt.test.oktober
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
@@ -97,23 +96,36 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .medKontekst {
                 val vilkår = repositoryProvider.provide<VilkårsresultatRepository>().hent(behandling.id)
                 val v = vilkår.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
-                assertThat(v.harPerioderSomErOppfylt()).isTrue
+                assertThat(v.harPerioderSomErOppfylt()).isFalse
             }
             .assertRettighetstype(
                 if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.Sykestipend)) {
                     val virkningstidspunkt = sykestipendPeriode.tom.plusDays(1)
                     Periode(
                         virkningstidspunkt,
-                        virkningstidspunkt.plusHverdager(Hverdager(130)).minusDays(1)
+                        avbruttStudieDato.plusMonths(6).minusDays(1)
                     ) to RettighetsType.STUDENT
                 } else {
-                    Periode(fom, fom.plusHverdager(Hverdager(130)).minusDays(1)) to RettighetsType.STUDENT
+                    Periode(fom, avbruttStudieDato.plusMonths(6).minusDays(1)) to RettighetsType.STUDENT
                 }
             )
 
         // Revurdering
+        val relevanteVurderingsbehov =
+            unleashGateway.objectInstance!!.isDisabled(BehandlingsflytFeature.PeriodisertSykdom)
+                .let {
+                    if (it) {
+                        listOf(
+                            Vurderingsbehov.REVURDER_STUDENT,
+                            Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
+                        ) // Vi kan ikke detektere behovet for ikke-perodisert sykdom, og må derfor eksplisitt revurdere på sykdom også
+                    } else {
+                        listOf(Vurderingsbehov.REVURDER_STUDENT)
+                    }
+                }
+
         sak.opprettManuellRevurdering(
-            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_STUDENT),
+            relevanteVurderingsbehov,
         )
             .løsAvklaringsBehov(
                 AvklarStudentEnkelLøsning(
@@ -197,32 +209,10 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
         fun testData(): List<Arguments> {
             return listOf(
                 Arguments.of(FakeUnleash::class),
-                Arguments.of(SykestipendAktivert::class),
+                Arguments.of(AlleAvskrudd::class),
             )
         }
     }
 
 }
-
-object SykestipendAktivert : FakeUnleashBase(
-    mapOf(
-        BehandlingsflytFeature.IngenValidering to false,
-        BehandlingsflytFeature.NyBrevtype11_17 to true,
-        BehandlingsflytFeature.OverforingsdatoNullForAvregning to true,
-        BehandlingsflytFeature.OvergangArbeid to true,
-        BehandlingsflytFeature.KvalitetssikringsSteg to true,
-        BehandlingsflytFeature.NyBrevbyggerV3 to false,
-        BehandlingsflytFeature.LagreVedtakIFatteVedtak to true,
-        BehandlingsflytFeature.PeriodisertSykepengeErstatningNyAvklaringsbehovService to true,
-        BehandlingsflytFeature.ValiderOvergangUfore to true,
-        BehandlingsflytFeature.Under18 to true,
-        BehandlingsflytFeature.SosialRefusjon to true,
-        BehandlingsflytFeature.HentSykepengerVedOverlapp to true,
-        BehandlingsflytFeature.MigrerRettighetsperiode to true,
-        BehandlingsflytFeature.PeriodisertSykdom to true,
-        BehandlingsflytFeature.Sykestipend to true,
-        BehandlingsflytFeature.Forlengelse to true,
-        BehandlingsflytFeature.ForlengelseIManuellBehandling to false,
-    )
-)
 
