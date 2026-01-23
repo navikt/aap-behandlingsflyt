@@ -1,8 +1,10 @@
 package no.nav.aap.behandlingsflyt.hendelse.kafka.inst2
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGateway
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Inst2KafkaDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.InstitusjonsOppholdHendelseKafkaMelding
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -27,6 +29,7 @@ class InstitusjonsOppholdKafkaKonsument(
     closeTimeout: Duration = 30.seconds,
     private val dataSource: DataSource,
     private val repositoryRegistry: RepositoryRegistry,
+    val institusjonsoppholdKlient: InstitusjonsoppholdGateway,
 ) : KafkaKonsument<String, InstitusjonsOppholdHendelseKafkaMelding>(
     topic = INSTITUSJONSOPPHOLD_EVENT_TOPIC,
     config = config,
@@ -66,14 +69,15 @@ class InstitusjonsOppholdKafkaKonsument(
                     .plusMonths(4)
 
                 for (saken in saker) {
-                    //TODO: Hente beriket institusjonsopphold
-                    val oppholdSluttDato = meldingVerdi.institusjonsOpphold
-                        ?.faktiskSluttdato
-                        ?: meldingVerdi.institusjonsOpphold?.forventetSluttdato
+                    val institusjonsopphold = institusjonsoppholdKlient.hentDataForHendelse(meldingVerdi.oppholdId)
+                    val beriketInstitusjonsopphold = Inst2KafkaDto(
+                        startdato = institusjonsopphold.startdato,
+                        sluttdato = institusjonsopphold.sluttdato,
+                    )
+                    meldingVerdi.institusjonsOpphold = beriketInstitusjonsopphold
+                    val sluttdato = meldingVerdi.institusjonsOpphold?.sluttdato
 
-                    log.info("Finner institusjonsopphold: ${oppholdSluttDato} og ${meldingVerdi.institusjonsOpphold
-                        ?.faktiskSluttdato} og ${meldingVerdi.institusjonsOpphold?.forventetSluttdato} og institusjonsopphold er ${meldingVerdi.institusjonsOpphold} og ${meldingVerdi.institusjonsOpphold?.kilde} og {$omTreeMaaneder}")
-                    if (oppholdSluttDato != null && oppholdSluttDato > omTreeMaaneder) {
+                    if (sluttdato != null && sluttdato > omTreeMaaneder) {
                         hendelseService.registrerMottattHendelse(
                             dto = meldingVerdi.tilInnsending(
                                 meldingKey,

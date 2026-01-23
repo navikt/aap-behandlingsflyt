@@ -21,6 +21,10 @@ data class InstitusjonoppholdRequest(
     val personident: String
 )
 
+data class InstitusjonoppholdEnkelt(
+    val oppholdId: Long
+)
+
 /**
  * Hentet [herfra](https://github.com/navikt/institusjon/blob/d176c942e599658c887c5fe970e358b62fea1c06/apps/inst2/src/main/java/no/nav/inst2/provider/rs/api/domain/EnkeltInstitusjonsopphold.java#L65).
  */
@@ -87,6 +91,20 @@ object InstitusjonsoppholdGatewayImpl : InstitusjonsoppholdGateway {
         }))
     }
 
+    private fun query(request: InstitusjonoppholdEnkelt): InstitusjonsoppholdJSON {
+        val httpRequest = PostRequest(
+            body = request,
+            additionalHeaders = listOfNotNull(
+                Header("Nav-Consumer-Id", "aap-behandlingsflyt"),
+                Header("Nav-Formaal", "ARBEIDSAVKLARINGSPENGER"),
+                Header("Accept", "application/json")
+            )
+        )
+        return requireNotNull(client.post(uri = url, request = httpRequest, mapper = { body, _ ->
+            DefaultJsonMapper.fromJson(body)
+        }))
+    }
+
     override fun innhent(person: Person): List<Institusjonsopphold> {
         val request = InstitusjonoppholdRequest(person.aktivIdent().identifikator)
         val oppholdRes = query(request)
@@ -103,4 +121,23 @@ object InstitusjonsoppholdGatewayImpl : InstitusjonsoppholdGateway {
         }
         return institusjonsopphold
     }
+
+    override fun hentDataForHendelse(oppholdId: Long): Institusjonsopphold {
+        val request = InstitusjonoppholdEnkelt(oppholdId)
+        val oppholdRes = query(request)
+
+        val institusjonsopphold =
+
+            Institusjonsopphold.nyttOpphold(
+                requireNotNull(oppholdRes.institusjonstype) { "Institusjonstype på institusjonsopphold må være satt." },
+                oppholdRes.kategori,
+                requireNotNull(oppholdRes.startdato) { "Startdato på institusjonsopphold må være satt." },
+                oppholdRes.faktiskSluttdato ?: oppholdRes.forventetSluttdato,
+                oppholdRes.organisasjonsnummer,
+                oppholdRes.institusjonsnavn ?: "Ukjent institusjon"
+            )
+
+        return institusjonsopphold
+    }
+
 }
