@@ -61,6 +61,7 @@ class TilbakekrevingKafkaKonsument(
                 val hendelse = try {
                     DefaultJsonMapper.fromJson<TilbakekrevingHendelseKafkaMelding>(meldingVerdi)
                 } catch (exception: Exception) {
+                    log.error("Kunne ikke parse melding fra tilbakekreving: $meldingKey", exception)
                     secureLogger.error("Kunne ikke parse melding fra tilbakekreving: $meldingKey med verdi: $meldingVerdi", exception)
                     throw exception
                 }
@@ -71,6 +72,7 @@ class TilbakekrevingKafkaKonsument(
                 val hendelse = try {
                     DefaultJsonMapper.fromJson<FagsysteminfoBehovKafkaMelding>(meldingVerdi)
                 } catch (exception: Exception) {
+                    log.error("Kunne ikke parse melding fra tilbakekreving: $meldingKey", exception)
                     secureLogger.error("Kunne ikke parse melding fra tilbakekreving: $meldingKey med verdi: $meldingVerdi", exception)
                     throw exception
                 }
@@ -82,10 +84,12 @@ class TilbakekrevingKafkaKonsument(
                 null
             }
             null -> {
+                log.info("Hopper over meldinger med hendelsestype lik null: $meldingKey")
                 secureLogger.info("Hopper over meldinger med hendelsestype lik null: $meldingVerdi")
                 null
             }
             else -> {
+                log.info("Hopper over meldinger med ukjent hendelsestype: $meldingKey")
                 secureLogger.info("Hopper over meldinger med ukjent hendelsestype: $meldingVerdi")
                 null
             }

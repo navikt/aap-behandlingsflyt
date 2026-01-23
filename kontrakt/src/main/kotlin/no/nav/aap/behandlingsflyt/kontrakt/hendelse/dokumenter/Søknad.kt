@@ -34,10 +34,10 @@ public data class SøknadV0(
  */
 public data class SøknadStudentDto(
     public val erStudent: StudentStatus,
-    public val kommeTilbake: KommeTilbake? = null
+    public val kommeTilbake: JaNeiVetIkke? = null
 )
 
-public enum class KommeTilbake(public val stringRepresentation: String) {
+public enum class JaNeiVetIkke(public val stringRepresentation: String) {
     Ja("Ja"), Nei("Nei"), VetIkke("Vet ikke");
 
     @JsonValue
@@ -52,9 +52,13 @@ public enum class KommeTilbake(public val stringRepresentation: String) {
     public companion object {
         @JvmStatic
         @JsonCreator
-        public fun from(value: String): KommeTilbake =
+        public fun from(value: String): JaNeiVetIkke =
             entries.first { it.name == value || it.stringRepresentation.equals(value, ignoreCase = true) }
     }
+}
+
+public enum class JaNei {
+    Ja, Nei;
 }
 
 public enum class StudentStatus {
@@ -98,7 +102,7 @@ public data class OppgitteBarn(
 )
 
 public data class AndreUtbetalingerDto(
-    public val lønn: String?,
+    public val lønn: JaNei?,
     public val afp: AfpDto? = null,
     public val stønad: List<AndreUtbetalingerYtelserDto>?
 )
