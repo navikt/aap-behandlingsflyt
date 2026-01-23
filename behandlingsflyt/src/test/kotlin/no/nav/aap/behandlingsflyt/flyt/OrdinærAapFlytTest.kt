@@ -23,6 +23,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskap
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
+import no.nav.aap.behandlingsflyt.test.AlleAvskrudd
 import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
