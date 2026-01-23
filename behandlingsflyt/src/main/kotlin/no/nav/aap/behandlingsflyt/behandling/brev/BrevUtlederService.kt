@@ -151,7 +151,7 @@ class BrevUtlederService(
                     behandling.forrigeBehandlingId != null &&
                     !harRettighetsType(behandling.forrigeBehandlingId, RettighetsType.ARBEIDSSØKER)
                 ) {
-                    return Arbeidssøker
+                    return brevBehovArbeidssøker(behandling)
                 }
                 return VedtakEndring
             }
@@ -183,6 +183,25 @@ class BrevUtlederService(
 
             TypeBehandling.Tilbakekreving, TypeBehandling.SvarFraAndreinstans, TypeBehandling.OppfølgingsBehandling, TypeBehandling.Aktivitetsplikt11_9 ->
                 return null // TODO
+        }
+    }
+
+    private fun brevBehovArbeidssøker(behandling: Behandling): Arbeidssøker {
+        val vedtak = checkNotNull(vedtakRepository.hent(behandling.id)) {
+            "Fant ikke vedtak for behandling med arbeidssøker"
+        }
+        checkNotNull(vedtak.virkningstidspunkt) {
+            "Vedtak for behandling for arbeidssøker mangler virkningstidspunkt"
+        }
+
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.ArbeidssokerBrevMedFaktagrunnlag)) {
+            return Arbeidssøker(
+                tilkjentYtelse = utledTilkjentYtelse(behandling.id, vedtak.virkningstidspunkt)
+            )
+        } else {
+            return Arbeidssøker(
+                tilkjentYtelse = null
+            )
         }
     }
 

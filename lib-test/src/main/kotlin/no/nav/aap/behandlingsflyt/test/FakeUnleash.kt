@@ -43,6 +43,7 @@ object FakeUnleash : FakeUnleashBase(
         BehandlingsflytFeature.UtvidVedtakslengdeJobb to true,
         BehandlingsflytFeature.InstitusjonsoppholdJobb to true,
         BehandlingsflytFeature.TrekkSoeknadOpprettetFraLegeerklaering to true,
+        BehandlingsflytFeature.ArbeidssokerBrevMedFaktagrunnlag to false,
 
         )
 )
@@ -70,6 +71,7 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.UtvidVedtakslengdeJobb to true,
         BehandlingsflytFeature.InstitusjonsoppholdJobb to true,
         BehandlingsflytFeature.TrekkSoeknadOpprettetFraLegeerklaering to true,
+        BehandlingsflytFeature.ArbeidssokerBrevMedFaktagrunnlag to true,
 
         )
 )
@@ -93,5 +95,6 @@ object AlleAvskrudd: FakeUnleashBase(
         BehandlingsflytFeature.Sykestipend to false,
         BehandlingsflytFeature.Forlengelse to false,
         BehandlingsflytFeature.ForlengelseIManuellBehandling to false,
+        BehandlingsflytFeature.ArbeidssokerBrevMedFaktagrunnlag to false,
     )
 )

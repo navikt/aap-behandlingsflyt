@@ -101,6 +101,67 @@ class BrevUtlederServiceTest {
     val forventetSisteDagMedYtelse = 31 august 2025
 
     @Test
+    fun `utledBehov legger ved sisteDagMedYtelse i TilkjentYtelse faktagrunnlag for 11-17 brev ved revurdering`() {
+        val virkningstidspunkt = LocalDate.of(2025, 1, 1)
+        val førstegangsbehandling = behandling(
+            typeBehandling = TypeBehandling.Førstegangsbehandling,
+            status = Status.AVSLUTTET,
+            årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
+            vurderingsbehov = emptyList()
+        )
+        val revurdering = behandling(
+            typeBehandling = TypeBehandling.Revurdering,
+            status = Status.OPPRETTET,
+            årsakTilOpprettelse = ÅrsakTilOpprettelse.HELSEOPPLYSNINGER,
+            vurderingsbehov = listOf(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
+            forrigeBehandlingId = førstegangsbehandling.id
+        )
+        every { vedtakRepository.hent(any<BehandlingId>()) } returns Vedtak(
+            behandlingId = revurdering.id,
+            vedtakstidspunkt = LocalDateTime.of(2025,1,1, 0, 0,0),
+            virkningstidspunkt = virkningstidspunkt,
+        )
+        every { beregningsgrunnlagRepository.hentHvisEksisterer(revurdering.id) } returns Grunnlag11_19(
+            grunnlaget = GUnit(2),
+            erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(0),
+            inntekter = listOf(
+                grunnlagInntekt(2024, 220_000),
+                grunnlagInntekt(2023, 210_000),
+                grunnlagInntekt(2022, 200_000),
+            )
+        )
+        every { beregningVurderingRepository.hentHvisEksisterer(revurdering.id) } returns BeregningGrunnlag(
+            BeregningstidspunktVurdering(
+                begrunnelse = "",
+                nedsattArbeidsevneEllerStudieevneDato = LocalDate.of(2025, 1, 1),
+                ytterligereNedsattBegrunnelse = null,
+                ytterligereNedsattArbeidsevneDato = null,
+                vurdertAv = ""
+            ), null
+        )
+        every { behandlingRepository.hent(any<BehandlingId>()) } returns revurdering
+        every { trukketSøknadService.søknadErTrukket(any<BehandlingId>()) } returns false
+        every { underveisRepository.hent(revurdering.id) } returns underveisGrunnlag(RettighetsType.BISTANDSBEHOV)
+        every { arbeidsopptrappingRepository.hentPerioder(any<BehandlingId>()) } returns emptyList()
+        every { avbrytRevurderingService.revurderingErAvbrutt(any<BehandlingId>()) } returns false
+        every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
+
+        val dagsats = Beløp("1000.00")
+        every { tilkjentYtelseRepository.hentHvisEksisterer(revurdering.id)} returns tilkjentYtelse(dagsats)
+        every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns underveisGrunnlag(RettighetsType.ARBEIDSSØKER)
+        every { underveisRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns underveisGrunnlag(RettighetsType.BISTANDSBEHOV)
+        every { unleashGateway.isEnabled(BehandlingsflytFeature.ArbeidssokerBrevMedFaktagrunnlag) } returns true
+
+        val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
+
+        assertIs<Arbeidssøker>(resultat, "forventer brevbehov er av typen Arbeidssøker")
+
+        assertNotNull(resultat.tilkjentYtelse, "tilkjent ytelse må eksistere")
+        assertEquals(forventetSisteDagMedYtelse, resultat.tilkjentYtelse.sisteDagMedYtelse)
+    }
+
+    @Test
     fun `utledBehov legger ved sisteDagMedYtelse fra underveisTidslinje i TilkjentYtelse`() {
         val virkningstidspunkt = LocalDate.of(2025, 1, 1)
         val førstegangsbehandling = behandling(typeBehandling = TypeBehandling.Førstegangsbehandling)
@@ -130,12 +191,12 @@ class BrevUtlederServiceTest {
         )
         every { behandlingRepository.hent(any<BehandlingId>()) } returns førstegangsbehandling
         every { trukketSøknadService.søknadErTrukket(any<BehandlingId>()) } returns false
-        every { underveisRepository.hent(førstegangsbehandling.id) } returns underveisGrunnlag()
+        every { underveisRepository.hent(førstegangsbehandling.id) } returns underveisGrunnlag(RettighetsType.BISTANDSBEHOV)
         every { arbeidsopptrappingRepository.hentPerioder(any<BehandlingId>()) } returns emptyList()
 
         val dagsats = Beløp("1000.00")
-        every { tilkjentYtelseRepository.hentHvisEksisterer(førstegangsbehandling.id)} returns tilkjentYtelseForFørstegangsbehandling(dagsats)
-        every { underveisRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns underveisGrunnlag()
+        every { tilkjentYtelseRepository.hentHvisEksisterer(førstegangsbehandling.id)} returns tilkjentYtelse(dagsats)
+        every { underveisRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns underveisGrunnlag(RettighetsType.BISTANDSBEHOV)
 
         val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(førstegangsbehandling.id)
 
@@ -175,12 +236,12 @@ class BrevUtlederServiceTest {
         )
         every { behandlingRepository.hent(any<BehandlingId>()) } returns førstegangsbehandling
         every { trukketSøknadService.søknadErTrukket(any<BehandlingId>()) } returns false
-        every { underveisRepository.hent(førstegangsbehandling.id) } returns underveisGrunnlag()
+        every { underveisRepository.hent(førstegangsbehandling.id) } returns underveisGrunnlag(RettighetsType.BISTANDSBEHOV)
         every { arbeidsopptrappingRepository.hentPerioder(any<BehandlingId>()) } returns emptyList()
 
         val dagsats = Beløp("1000.00")
-        every { tilkjentYtelseRepository.hentHvisEksisterer(førstegangsbehandling.id)} returns tilkjentYtelseForFørstegangsbehandling(dagsats)
-        every { underveisRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns underveisGrunnlag()
+        every { tilkjentYtelseRepository.hentHvisEksisterer(førstegangsbehandling.id)} returns tilkjentYtelse(dagsats)
+        every { underveisRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns underveisGrunnlag(RettighetsType.BISTANDSBEHOV)
 
         val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(førstegangsbehandling.id)
 
@@ -305,8 +366,17 @@ class BrevUtlederServiceTest {
                 utfall = Utfall.OPPFYLT,
             )
         )
+        every { vedtakRepository.hent(any<BehandlingId>()) } returns Vedtak(
+            behandlingId = revurdering.id,
+            vedtakstidspunkt = LocalDateTime.of(2025,1,1, 0, 0,0),
+            virkningstidspunkt = LocalDate.of(2025, 1, 1)
+        )
+        val dagsats = Beløp("1000.00")
+        every { tilkjentYtelseRepository.hentHvisEksisterer(revurdering.id)} returns tilkjentYtelse(dagsats)
+        every { underveisRepository.hent(revurdering.id) } returns underveisGrunnlag(RettighetsType.ARBEIDSSØKER)
+        every { unleashGateway.isEnabled(BehandlingsflytFeature.ArbeidssokerBrevMedFaktagrunnlag) } returns false
 
-        assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)).isEqualTo(Arbeidssøker)
+        assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id) is Arbeidssøker)
     }
 
     @Test
@@ -583,11 +653,11 @@ class BrevUtlederServiceTest {
         )
     }
 
-    private fun underveisGrunnlag(): UnderveisGrunnlag {
+    private fun underveisGrunnlag(rettighetsType: RettighetsType): UnderveisGrunnlag {
         return underveisGrunnlag(
             underveisperiode(
                 periode = Periode(1 januar 2025, 30 april 2025),
-                rettighetsType = RettighetsType.BISTANDSBEHOV,
+                rettighetsType = rettighetsType,
                 utfall = Utfall.OPPFYLT,
             ),
             underveisperiode(
@@ -603,7 +673,7 @@ class BrevUtlederServiceTest {
         )
     }
 
-    private fun tilkjentYtelseForFørstegangsbehandling(dagsats: Beløp): List<TilkjentYtelsePeriode> {
+    private fun tilkjentYtelse(dagsats: Beløp): List<TilkjentYtelsePeriode> {
         val førstePeriode = Periode(1 januar 2025, 30 juni 2025)
         val andrePeriode = Periode(1 juli 2025, 30 desember 2025)
 
