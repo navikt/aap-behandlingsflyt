@@ -38,10 +38,12 @@ class SjekkInstitusjonsOppholdJobbUtfører(
 
         log.info("Fant ${sakerMedInstitusjonsOpphold.size} kandidater for institusjonsopphold")
 
+
         if (unleashGateway.isEnabled(BehandlingsflytFeature.InstitusjonsoppholdJobb)) {
             val resultat = sakerMedInstitusjonsOpphold
                 .map { sak ->
                     val sisteGjeldendeBehandling = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sak.id)
+                    //TODO får vel kanskje sjekke vurderingsbehov, om det finnes fra før
                     if (sisteGjeldendeBehandling != null) {
                         val sak = sakRepository.hent(sak.id)
                         log.info("Gjeldende behandling for sak $sak.id (${sak.saksnummer}) er ${sisteGjeldendeBehandling.id}")
@@ -79,7 +81,7 @@ class SjekkInstitusjonsOppholdJobbUtfører(
         sakOgBehandlingService.finnEllerOpprettBehandling(
             sakId = sak.id,
             vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
-                årsak = ÅrsakTilOpprettelse.INSTITUSJONSOPPHOLD,
+                årsak = ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA,
                 vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.INSTITUSJONSOPPHOLD))
             ),
         )

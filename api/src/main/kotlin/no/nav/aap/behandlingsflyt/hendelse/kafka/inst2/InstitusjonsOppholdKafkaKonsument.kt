@@ -1,8 +1,10 @@
 package no.nav.aap.behandlingsflyt.hendelse.kafka.inst2
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGateway
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Inst2KafkaDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.InstitusjonsOppholdHendelseKafkaMelding
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -13,6 +15,7 @@ import no.nav.aap.komponenter.repository.RepositoryRegistry
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
 import javax.sql.DataSource
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -26,6 +29,7 @@ class InstitusjonsOppholdKafkaKonsument(
     closeTimeout: Duration = 30.seconds,
     private val dataSource: DataSource,
     private val repositoryRegistry: RepositoryRegistry,
+    val institusjonsoppholdKlient: InstitusjonsoppholdGateway,
 ) : KafkaKonsument<String, InstitusjonsOppholdHendelseKafkaMelding>(
     topic = INSTITUSJONSOPPHOLD_EVENT_TOPIC,
     config = config,
@@ -60,11 +64,34 @@ class InstitusjonsOppholdKafkaKonsument(
             if (person != null) {
 
                 val saker = sakRepository.finnSakerFor(person)
-                for (saken in saker) {
+                val omTreeMaaneder = LocalDate.now()
+                    .withDayOfMonth(1)
+                    .plusMonths(4)
 
-                    hendelseService.registrerMottattHendelse(dto = meldingVerdi.tilInnsending(meldingKey,
-                       saken.saksnummer)
+                for (saken in saker) {
+                    val institusjonsopphold = institusjonsoppholdKlient.hentDataForHendelse(meldingVerdi.oppholdId)
+                    val beriketInstitusjonsopphold = Inst2KafkaDto(
+                        startdato = institusjonsopphold.startdato,
+                        sluttdato = institusjonsopphold.sluttdato,
                     )
+                    meldingVerdi.institusjonsOpphold = beriketInstitusjonsopphold
+                    val sluttdato = meldingVerdi.institusjonsOpphold?.sluttdato
+
+                    if (sluttdato != null && sluttdato > omTreeMaaneder) {
+                        hendelseService.registrerMottattHendelse(
+                            dto = meldingVerdi.tilInnsending(
+                                meldingKey,
+                                saken.saksnummer
+                            )
+                        )
+                        log.info("Sendt institusjonsoppholdhendelse for saksnummer: ${saken.saksnummer}")
+                    } else {
+                        log.info(
+                            "Ignorerer institusjonsoppholdhendelse for saksnummer: ${saken.saksnummer}, " +
+                                    "institusjonsoppholdet er for lenge til skal avsluttes"
+                        )
+                    }
+
                     log.info("Mottatt institusjonsoppholdhendelse for saksnummer: ${saken.saksnummer}")
                 }
             }

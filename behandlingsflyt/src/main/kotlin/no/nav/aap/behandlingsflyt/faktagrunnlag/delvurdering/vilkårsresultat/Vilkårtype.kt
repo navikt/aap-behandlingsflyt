@@ -129,6 +129,17 @@ enum class Vilkårtype(
         hjemmel = "§ 11-13",
         obligatorisk = false
     ),
+    STUDENT(
+        kode = "AAP-14",
+        spesielleInnvilgelsesÅrsaker = emptyList(),
+        avslagsårsaker = listOf(
+            Avslagsårsak.MANGLENDE_DOKUMENTASJON,
+            Avslagsårsak.IKKE_RETT_PA_STUDENT,
+            Avslagsårsak.VARIGHET_OVERSKREDET_STUDENT
+        ),
+        hjemmel = "§ 11-14",
+        obligatorisk = false
+    ),
     STRAFFEGJENNOMFØRING(
         kode = "AAP-26",
         spesielleInnvilgelsesÅrsaker = emptyList(),

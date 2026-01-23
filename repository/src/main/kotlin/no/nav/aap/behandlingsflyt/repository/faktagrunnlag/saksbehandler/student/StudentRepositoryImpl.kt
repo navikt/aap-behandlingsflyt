@@ -154,8 +154,8 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
         val vurderingerId = connection.executeReturnKey("""INSERT INTO STUDENT_VURDERINGER DEFAULT VALUES""")
 
         val query = """
-                INSERT INTO STUDENT_VURDERING (begrunnelse, avbrutt_studie, godkjent_studie_av_laanekassen, avbrutt_pga_sykdom_eller_skade, har_behov_for_behandling, avbrutt_dato, avbrudd_mer_enn_6_maaneder, vurdert_av, fom, tom, vurdert_i_behandling, student_vurderinger_id)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO STUDENT_VURDERING (begrunnelse, avbrutt_studie, godkjent_studie_av_laanekassen, avbrutt_pga_sykdom_eller_skade, har_behov_for_behandling, avbrutt_dato, avbrudd_mer_enn_6_maaneder, vurdert_av, fom, tom, vurdert_i_behandling, student_vurderinger_id, vurdert_tidspunkt)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent()
 
         val vurderingId = connection.executeReturnKey(query) {
@@ -172,6 +172,7 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
                 setLocalDate(10, studentvurdering.tom)
                 setLong(11, studentvurdering.vurdertIBehandling?.toLong())
                 setLong(12, vurderingerId)
+                setLocalDateTime(13, studentvurdering.vurdertTidspunkt)
             }
         }
 

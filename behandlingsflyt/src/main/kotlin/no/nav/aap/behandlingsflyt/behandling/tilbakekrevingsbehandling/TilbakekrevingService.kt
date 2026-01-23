@@ -2,8 +2,8 @@ package no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling
 
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
 import no.nav.aap.behandlingsflyt.kontrakt.oppgave.EnhetNrDto
-import no.nav.aap.behandlingsflyt.pip.PipRepository
 import no.nav.aap.behandlingsflyt.pip.PipService
+import no.nav.aap.behandlingsflyt.prosessering.OppdaterOppgaveMedTilbakekrevingsbehandlingUtfører
 import no.nav.aap.behandlingsflyt.prosessering.tilbakekreving.FagsysteminfoSvarHendelse
 import no.nav.aap.behandlingsflyt.prosessering.tilbakekreving.SendFagsysteminfoBehovTilTilbakekrevingUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -30,12 +30,11 @@ class TilbakekrevingService(
 
     fun håndter(sakId: SakId, tilbakekrevingshendelse: Tilbakekrevingshendelse) {
         tilbakekrevingsbehandlingRepository.lagre(sakId, tilbakekrevingshendelse)
-/*        flytJobbRepository.leggTil(
-            jobbInput = JobbInput(jobb = OppdaterOppgaveMedTilbakekrevingHendelseUtfører)
-                .medPayload(tilbakekrevingshendelse)
+        flytJobbRepository.leggTil(
+            jobbInput = JobbInput(jobb = OppdaterOppgaveMedTilbakekrevingsbehandlingUtfører)
+                .medParameter("tilbakekrevingBehandlingId", tilbakekrevingshendelse.tilbakekrevingBehandlingId.toString())
                 .forSak(sakId = sakId.toLong())
          )
-*/
     }
 
     fun håndter(sakId: SakId, hendelse: FagsysteminfoSvarHendelse) {
