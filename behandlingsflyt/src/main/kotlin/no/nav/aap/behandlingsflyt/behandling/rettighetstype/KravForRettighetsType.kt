@@ -22,7 +22,6 @@ private val kravprioritet =
      * */
     listOf(
         KravForStudent,
-        KravForStudentGammel,
         KravForOrdinærAap,
         KravForYrkesskade,
         KravForOvergangUføretrygd,
@@ -86,19 +85,6 @@ object KravForSykepengeerstatningGammeltFormat : KravspesifikasjonForRettighetsT
     override val kravBistand = IngenKrav
     override val kravOvergangUfør = IngenKrav
     override val kravOvergangArbeid = IngenKrav
-    override val forutgåendeAap = IngenKravOmForutgåendeAAP
-    override val kravStudent = IngenKrav
-}
-
-data object KravForStudentGammel : KravspesifikasjonForRettighetsType {
-    override val rettighetstype = RettighetsType.STUDENT
-    override val kravForutgåendeMedlemskap = MåVæreOppfylt()
-    override val kravSykdom = MåVæreOppfylt(Innvilgelsesårsak.STUDENT)
-    override val kravBistand = IngenKrav
-
-    override val kravOvergangUfør = IngenKrav
-    override val kravOvergangArbeid = IngenKrav
-    override val kravSykepengeerstatning = IngenKrav
     override val forutgåendeAap = IngenKravOmForutgåendeAAP
     override val kravStudent = IngenKrav
 }
