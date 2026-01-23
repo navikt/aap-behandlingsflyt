@@ -19,7 +19,7 @@ data class ArbeidsopptrappingGrunnlag(
     }
 }
 
-fun ArbeidsopptrappingGrunnlag?.perioder(): List<Periode> {
+fun ArbeidsopptrappingGrunnlag?.innvilgedePerioder(): List<Periode> {
     val vurderinger = this?.vurderinger.orEmpty()
         .sortedBy { it.vurderingenGjelderFra }
 

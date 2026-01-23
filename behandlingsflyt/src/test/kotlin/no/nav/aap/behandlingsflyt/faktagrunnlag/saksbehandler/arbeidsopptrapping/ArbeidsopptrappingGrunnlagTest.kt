@@ -35,10 +35,11 @@ class ArbeidsopptrappingGrunnlagTest {
             )
         )
 
-        val perioder = grunnlag.perioder()
+        val perioder = grunnlag.innvilgedePerioder()
 
         assertThat(perioder).hasSize(1)
         assertThat(perioder.first().fom).isEqualTo(LocalDate.of(2024, 2, 1))
+        assertThat(perioder.first().tom).isEqualTo(LocalDate.of(2024, 2, 1).plusYears(1))
     }
 
     @Test
@@ -68,7 +69,7 @@ class ArbeidsopptrappingGrunnlagTest {
             )
         )
 
-        val perioder = grunnlag.perioder()
+        val perioder = grunnlag.innvilgedePerioder()
 
         assertThat(perioder).containsExactly(
             Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 3, 1)),
@@ -93,7 +94,7 @@ class ArbeidsopptrappingGrunnlagTest {
             )
         )
 
-        val perioder = grunnlag.perioder()
+        val perioder = grunnlag.innvilgedePerioder()
 
         assertThat(perioder.single())
             .isEqualTo(Periode(LocalDate.of(2024, 6, 1), LocalDate.of(2025, 6, 1)))
