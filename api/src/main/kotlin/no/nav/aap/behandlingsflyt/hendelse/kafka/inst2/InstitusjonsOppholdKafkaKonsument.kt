@@ -63,16 +63,16 @@ class InstitusjonsOppholdKafkaKonsument(
                 val saker = sakRepository.finnSakerFor(person)
                 val omTreeMaaneder = LocalDate.now()
                     .withDayOfMonth(1)
-                    .plusMonths(3)
+                    .plusMonths(4)
 
                 for (saken in saker) {
-
+                    //TODO: Hente beriket institusjonsopphold
                     val oppholdSluttDato = meldingVerdi.institusjonsOpphold
                         ?.faktiskSluttdato
                         ?: meldingVerdi.institusjonsOpphold?.forventetSluttdato
 
                     log.info("Finner institusjonsopphold: ${oppholdSluttDato} og ${meldingVerdi.institusjonsOpphold
-                        ?.faktiskSluttdato} og ${meldingVerdi.institusjonsOpphold?.forventetSluttdato} og {$omTreeMaaneder}")
+                        ?.faktiskSluttdato} og ${meldingVerdi.institusjonsOpphold?.forventetSluttdato} og institusjonsopphold er ${meldingVerdi.institusjonsOpphold} og ${meldingVerdi.institusjonsOpphold?.kilde} og {$omTreeMaaneder}")
                     if (oppholdSluttDato != null && oppholdSluttDato > omTreeMaaneder) {
                         hendelseService.registrerMottattHendelse(
                             dto = meldingVerdi.tilInnsending(
