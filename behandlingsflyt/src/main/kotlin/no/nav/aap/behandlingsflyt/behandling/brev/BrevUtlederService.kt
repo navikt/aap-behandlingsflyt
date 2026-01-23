@@ -190,8 +190,8 @@ class BrevUtlederService(
     }
 
     private fun brevBehovUtvidVedtakslengde(behandling: Behandling): UtvidVedtakslengde {
-        val underveidGrunnlag = underveisRepository.hent(behandling.id)
-        return UtvidVedtakslengde(sluttdato = underveidGrunnlag.sisteDagMedYtelse())
+        val underveisGrunnlag = underveisRepository.hent(behandling.id)
+        return UtvidVedtakslengde(sluttdato = underveisGrunnlag.sisteDagMedYtelse())
     }
 
     private fun brevBehovInnvilgelse(behandling: Behandling): Innvilgelse {
