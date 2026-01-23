@@ -31,6 +31,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     UtvidVedtakslengdeJobb,
     InstitusjonsoppholdJobb,
     TrekkSoeknadOpprettetFraLegeerklaering,
+    VURDER_SYKEPENGEERSTATNING_SJEKK
     ;
 
     override fun key(): String = name

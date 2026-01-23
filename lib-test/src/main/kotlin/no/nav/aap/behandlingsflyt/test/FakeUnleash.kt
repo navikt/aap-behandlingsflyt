@@ -46,6 +46,7 @@ object FakeUnleash : FakeUnleashBase(
         BehandlingsflytFeature.UtvidVedtakslengdeJobb to true,
         BehandlingsflytFeature.InstitusjonsoppholdJobb to true,
         BehandlingsflytFeature.TrekkSoeknadOpprettetFraLegeerklaering to true,
+        BehandlingsflytFeature.VURDER_SYKEPENGEERSTATNING_SJEKK to true,
 
         )
 )
@@ -76,6 +77,8 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.UtvidVedtakslengdeJobb to true,
         BehandlingsflytFeature.InstitusjonsoppholdJobb to true,
         BehandlingsflytFeature.TrekkSoeknadOpprettetFraLegeerklaering to true,
+        BehandlingsflytFeature.VURDER_SYKEPENGEERSTATNING_SJEKK to true,
+
 
         )
 )

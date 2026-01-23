@@ -17,6 +17,8 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Revurdering
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.outerJoin
@@ -61,19 +63,23 @@ class TidligereVurderingerImpl(
     private val avbrytRevurderingService: AvbrytRevurderingService,
     private val sykdomRepository: SykdomRepository,
     private val studentRepository: StudentRepository,
+    private val unleashGateway: UnleashGateway
 ) : TidligereVurderinger {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
 
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(
+        repositoryProvider: RepositoryProvider,
+        unleashGateway: UnleashGateway
+    ) : this(
         trukketSøknadService = TrukketSøknadService(repositoryProvider),
         vilkårsresultatRepository = repositoryProvider.provide(),
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
         sykdomRepository = repositoryProvider.provide(),
-        studentRepository = repositoryProvider.provide()
+        studentRepository = repositoryProvider.provide(),
+        unleashGateway = unleashGateway
     )
-
     data class Sjekk(
         val steg: StegType,
         val sjekk: (vilkårsresultat: Vilkårsresultat, kontekst: FlytKontekstMedPerioder) -> Tidslinje<TidligereVurderinger.Behandlingsutfall>
@@ -149,12 +155,21 @@ class TidligereVurderingerImpl(
                 }
             },
 
+
+            if (unleashGateway.isEnabled(BehandlingsflytFeature.VURDER_SYKEPENGEERSTATNING_SJEKK)) {
+                Sjekk(StegType.VURDER_SYKEPENGEERSTATNING) { vilkårsresultat, _ ->
+                    ikkeOppfyltFørerTilAvslag(Vilkårtype.SYKEPENGEERSTATNING, vilkårsresultat)
+                }
+            } else null,
+
+
+
             Sjekk(StegType.FASTSETT_SYKDOMSVILKÅRET) { _, _ ->
                 /* Det finnes unntak til sykdomsvilkåret, så selv om vilkåret ikke er oppfylt, så
                  * vet vi ikke her om det blir avslag eller ei. */
                 Tidslinje()
-            },
 
+            },
             Sjekk(StegType.FASTSETT_GRUNNLAG) { vilkårsresultat, _ ->
                 ikkeOppfyltFørerTilAvslag(Vilkårtype.GRUNNLAGET, vilkårsresultat)
             },
@@ -172,7 +187,11 @@ class TidligereVurderingerImpl(
             },
         )
 
-        return spesifikkeSjekker + fellesSjekker
+
+
+
+
+        return spesifikkeSjekker + fellesSjekker.filterNotNull()
     }
 
     init {
