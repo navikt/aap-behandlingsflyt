@@ -13,8 +13,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskap
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.repository.behandling.vedtak.VedtakRepositoryImpl
-import no.nav.aap.behandlingsflyt.test.AlleAvskrudd
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
@@ -23,7 +22,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
 
-class TrekkOgAvbrytFlytTest: AbstraktFlytOrkestratorTest(AlleAvskrudd::class) {
+class TrekkOgAvbrytFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
     fun `kan trekke søknad som har passert manuelt vurdert lovvalg`() {
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))

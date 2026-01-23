@@ -9,7 +9,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
@@ -35,7 +35,7 @@ class SakOgBehandlingServiceTest {
     }
 
 
-    private val gatewayProvider = createGatewayProvider { register<FakeUnleash>() }
+    private val gatewayProvider = createGatewayProvider { register<AlleAvskruddUnleash>() }
 
     @Test
     fun `gjenbruker åpen behandling hvis vi prøver å opprette enda en ny behandling etter et meldekort`() {

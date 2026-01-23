@@ -56,7 +56,7 @@ private fun bestemAntallTestTråder(): Int {
              * Begrens antall tråder ved lokal kjøring for å unngå at utvikler-maskinen blir for treg
              * Mer enn 6 tråder krasjer lokal kjøring for M3 Max
              */
-            min(6, max(processors / 2, processors - 4))
+            min(4, max(processors / 2, processors - 4))
         }
     return antallTråder
 }

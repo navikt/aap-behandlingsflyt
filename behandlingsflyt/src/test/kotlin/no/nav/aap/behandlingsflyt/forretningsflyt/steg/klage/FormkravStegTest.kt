@@ -31,7 +31,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
@@ -58,7 +58,7 @@ class FormkravStegTest {
     val avbrytRevurderingServiceMock = mockk<AvbrytRevurderingService>()
     val trukketSøknadRepository = InMemoryTrukketSøknadRepository
     val gatewayProvider = createGatewayProvider {
-        register<FakeUnleash>()
+        register<AlleAvskruddUnleash>()
     }
 
     @BeforeEach

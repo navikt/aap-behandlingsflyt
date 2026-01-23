@@ -4,13 +4,13 @@ import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.Institusjonsop
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class InstitusjonFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
+class InstitusjonFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
     fun `Stopper opp på institusjonssteget i førstegangsbehandling når innleggelsesdato er mer enn 2 mnd siden`() {
         val fom = LocalDate.now()

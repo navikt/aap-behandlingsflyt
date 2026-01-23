@@ -20,7 +20,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
@@ -104,7 +104,7 @@ class MeldingOmVedtakBrevStegTest {
             trekkKlageService = trekkKlageService,
             avklaringsbehovService = avklaringsbehovService,
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-            unleashGateway = FakeUnleash,
+            unleashGateway = AlleAvskruddUnleash,
         )
 
         // Runde-1
@@ -182,7 +182,7 @@ class MeldingOmVedtakBrevStegTest {
             trekkKlageService = trekkKlageService,
             avklaringsbehovService = avklaringsbehovService,
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-            unleashGateway = FakeUnleash,
+            unleashGateway = AlleAvskruddUnleash,
         )
         every { brevUtlederService.utledBehovForMeldingOmVedtak(any()) } returns null
 
@@ -229,7 +229,7 @@ class MeldingOmVedtakBrevStegTest {
             trekkKlageService = trekkKlageService,
             avklaringsbehovService = avklaringsbehovService,
             avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-            unleashGateway = FakeUnleash,
+            unleashGateway = AlleAvskruddUnleash,
         )
         every { trekkKlageService.klageErTrukket(any()) } returns true
 
