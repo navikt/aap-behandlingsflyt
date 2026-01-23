@@ -8,22 +8,22 @@ import io.ktor.http.HttpStatusCode
 import no.nav.aap.behandlingsflyt.behandling.rettighetstype.avslagsårsakerVedTapAvRettPåAAP
 import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetsperiodeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.tilgang.BehandlingPathParam
-import no.nav.aap.tilgang.getGrunnlag
+import no.nav.aap.tilgang.AuthorizationParamPathConfig
+import no.nav.aap.tilgang.SakPathParam
+import no.nav.aap.tilgang.authorizedGet
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.rettighetApi(
@@ -31,15 +31,16 @@ fun NormalOpenAPIRoute.rettighetApi(
     repositoryRegistry: RepositoryRegistry,
 ) {
     route("/api/behandling/{saksnummer}/rettighet") {
-        getGrunnlag<Saksnummer, List<RettighetDto>>(
-            behandlingPathParam = BehandlingPathParam("saksnummer"),
-            avklaringsbehovKode = Definisjon.AVKLAR_BARNETILLEGG.kode.toString()
-        ) { req ->
+        authorizedGet<Saksnummer, List<RettighetDto>>(
+            AuthorizationParamPathConfig(
+                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                sakPathParam = SakPathParam("saksnummer"),
+            )
+        ) { saksnummer ->
             val respons: List<RettighetDto>? = dataSource.transaction(readOnly = true) { connection ->
                 val repositoryProvider = repositoryRegistry.provider(connection)
-
                 val sakRepository = repositoryProvider.provide<SakRepository>()
-                val sak = sakRepository.hent(req)
+                val sak = sakRepository.hent(saksnummer)
                 val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                 val behandling = behandlingRepository.finnSisteOpprettedeBehandlingFor(
                     sak.id,
@@ -56,11 +57,10 @@ fun NormalOpenAPIRoute.rettighetApi(
                 val vilkårsresultat = vilkårsresultatRepository.hent(behandling.id)
                 val avslagForTapAvAAP = avslagsårsakerVedTapAvRettPåAAP(vilkårsresultat)
 
-                val rettighetstypePerioderMap: Map<RettighetsType, List<Underveisperiode>> =
-                    RettighetsType.entries.associate { type -> type to underveisgrunnlag.perioder.filter { it.rettighetsType == type } }
+                val rettighetstyper = underveisgrunnlag.perioder.map { it.rettighetsType }.distinct()
 
-                val rettighetDtoListe = rettighetstypePerioderMap.map { (type) ->
-                    val rettighetKvoter = underveisgrunnlag.utledKvoterForRettighetstype(type)
+                val rettighetDtoListe = rettighetstyper.map { type ->
+                    val rettighetKvoter = underveisgrunnlag.utledKvoterForRettighetstype(type!!)
                     val startdato = underveisgrunnlag.utledStartdatoForRettighet(type)
                     val gjenværendeKvote = rettighetKvoter.gjenværendeKvote
                     val perioderForOpphør = hentPerioderForAvslag(avslagForTapAvAAP, Avslagstype.OPPHØR)
