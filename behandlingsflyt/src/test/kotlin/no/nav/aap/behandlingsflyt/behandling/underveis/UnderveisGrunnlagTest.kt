@@ -13,10 +13,12 @@ import no.nav.aap.komponenter.verdityper.TimerArbeid
 import org.junit.jupiter.api.Test
 import org.assertj.core.api.Assertions.assertThat
 import java.math.BigDecimal
+import java.time.Clock
 import java.time.LocalDate
 
 private val FØRSTE_JAN_2026 = LocalDate.of(2026, 1, 1)
-private val TOM_PERIODE = Periode(LocalDate.now(), LocalDate.now())
+private val TOM_PERIODE = Periode(FØRSTE_JAN_2026, FØRSTE_JAN_2026)
+private val dagensDato = LocalDate.now(Clock.systemDefaultZone())
 
 class UnderveisGrunnlagTest {
     @Test
@@ -54,7 +56,7 @@ class UnderveisGrunnlagTest {
     }
 
     @Test
-    fun `skal utlede maksdato 2 år, 11 måneder og 12 dager frem i tid for rettighet bistandsbehov`() {
+    fun `skal utlede maksdato 2 år, 11 måneder og 17 dager frem i tid for rettighet bistandsbehov`() {
         val perioder = listOf(
             underveisperiode(
                 Periode(FØRSTE_JAN_2026.minusWeeks(3), FØRSTE_JAN_2026.minusWeeks(1)),
@@ -63,13 +65,13 @@ class UnderveisGrunnlagTest {
 
         val underveisGrunnlag = UnderveisGrunnlag(1234, perioder)
         val maksdato = underveisGrunnlag.utledMaksdatoForRettighet(RettighetsType.BISTANDSBEHOV)
-        val forventetMaksdato = FØRSTE_JAN_2026.plusYears(3).plusDays(8)
+        val forventetMaksdato = dagensDato.plusYears(2).plusMonths(11).plusDays(17)
 
         assertThat(maksdato).isEqualTo(forventetMaksdato)
     }
 
     @Test
-    fun `skal utlede maksdato 4 måneder og 4 uker for rettighet sykepengeerstatning`() {
+    fun `skal utlede maksdato 5 måneder og 8 dager frem i tid for rettighet sykepengeerstatning`() {
         val perioder = listOf(
             underveisperiode(
                 Periode(FØRSTE_JAN_2026.minusWeeks(5), FØRSTE_JAN_2026.minusWeeks(2)),
@@ -78,7 +80,7 @@ class UnderveisGrunnlagTest {
 
         val underveisGrunnlag = UnderveisGrunnlag(1234, perioder)
         val maksdato = underveisGrunnlag.utledMaksdatoForRettighet(RettighetsType.SYKEPENGEERSTATNING)
-        val forventetMaksdato = FØRSTE_JAN_2026.plusMonths(5).plusMonths(1)
+        val forventetMaksdato = dagensDato.plusMonths(5).plusDays(8)
 
         assertThat(maksdato).isEqualTo(forventetMaksdato)
     }
