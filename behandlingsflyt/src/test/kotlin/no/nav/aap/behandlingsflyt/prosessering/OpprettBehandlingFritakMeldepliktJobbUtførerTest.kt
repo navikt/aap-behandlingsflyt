@@ -155,7 +155,7 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
             virkningstidspunkt = LocalDate.now(),
             vurderingsbehov = setOf(),
             årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
-            forrigeBehandlingId = null,
+            forrigeBehandlingId = BehandlingId(455L),
         )
 
 
