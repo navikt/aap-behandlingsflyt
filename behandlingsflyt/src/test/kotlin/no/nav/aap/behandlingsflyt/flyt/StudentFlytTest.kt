@@ -225,3 +225,4 @@ object SykestipendAktivert : FakeUnleashBase(
         BehandlingsflytFeature.ForlengelseIManuellBehandling to false,
     )
 )
+
