@@ -17,6 +17,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ArenaStatusResponse
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.MeldekortPerioderDTO
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.ArenaVedtaksvariantDTO
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.ArenavedtakDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.AvslagsårsakDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DatadelingDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.DetaljertMeldekortDTO
@@ -28,6 +30,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.datadeling.TilkjentDTO
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.UnderveisDTO
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.prometheus
+import no.nav.aap.behandlingsflyt.prosessering.datadeling.UtledArenaVedtakstype
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -112,7 +115,8 @@ class ApiInternGatewayImpl : ApiInternGateway {
         underveis: List<Underveisperiode>,
         vedtaksDato: LocalDate,
         rettighetsTypeTidslinje: Tidslinje<RettighetsType>,
-        stansOpphørGrunnlag: Set<GjeldendeStansEllerOpphør>?
+        stansOpphørGrunnlag: Set<GjeldendeStansEllerOpphør>?,
+        arenavedtak: Tidslinje<UtledArenaVedtakstype.ArenaVedtak>
     ) {
         log.info("Sender behandling for behandlingId=${behandling.id} med vedtakId=$vedtakId, sak: ${sak.saksnummer}. Beregningsgrunnlag: $beregningsgrunnlag")
         restClient.post(
@@ -169,7 +173,7 @@ class ApiInternGatewayImpl : ApiInternGateway {
                     },
                     vedtakId = vedtakId,
                     samId = samId,
-                    stansOpphørVurdering = stansOpphørGrunnlag?.map {
+                    stansOpphørVurdering = stansOpphørGrunnlag.orEmpty().map {
                         GjeldendeStansEllerOpphørDTO(
                             fom = it.fom,
                             opprettet = it.opprettet,
@@ -179,7 +183,27 @@ class ApiInternGatewayImpl : ApiInternGateway {
                             },
                             avslagsårsaker = it.vurdering.årsaker.mapNotNull { mapAvslagsårsak(it) }.toSet(),
                         )
-                    }?.toSet() ?: emptySet()
+                    }.toSet(),
+                    arenavedtak = arenavedtak.segmenter().map {
+                        ArenavedtakDTO(
+                            vedtakId = it.verdi.vedtakId.id,
+                            fom = it.fom(),
+                            tom = it.tom(),
+                            vedtaksvariant = when (it.verdi.vedtaksvariant) {
+                                UtledArenaVedtakstype.ArenaVedtaksvariant.O_AVSLAG -> ArenaVedtaksvariantDTO.O_AVSLAG
+                                UtledArenaVedtakstype.ArenaVedtaksvariant.O_INNV_NAV -> ArenaVedtaksvariantDTO.O_INNV_NAV
+                                UtledArenaVedtakstype.ArenaVedtaksvariant.O_INNV_SOKNAD -> ArenaVedtaksvariantDTO.O_INNV_SOKNAD
+                                UtledArenaVedtakstype.ArenaVedtaksvariant.E_FORLENGE -> ArenaVedtaksvariantDTO.E_FORLENGE
+                                UtledArenaVedtakstype.ArenaVedtaksvariant.E_VERDI -> ArenaVedtaksvariantDTO.E_VERDI
+                                UtledArenaVedtakstype.ArenaVedtaksvariant.G_AVSLAG -> ArenaVedtaksvariantDTO.G_AVSLAG
+                                UtledArenaVedtakstype.ArenaVedtaksvariant.G_INNV_NAV -> ArenaVedtaksvariantDTO.G_INNV_NAV
+                                UtledArenaVedtakstype.ArenaVedtaksvariant.G_INNV_SOKNAD -> ArenaVedtaksvariantDTO.G_INNV_SOKNAD
+                                UtledArenaVedtakstype.ArenaVedtaksvariant.S_DOD -> ArenaVedtaksvariantDTO.S_DOD
+                                UtledArenaVedtakstype.ArenaVedtaksvariant.S_OPPHOR -> ArenaVedtaksvariantDTO.S_OPPHOR
+                                UtledArenaVedtakstype.ArenaVedtaksvariant.S_STANS -> ArenaVedtaksvariantDTO.S_STANS
+                            }
+                        )
+                    },
                 ),
             ),
             mapper = { _, _ ->
