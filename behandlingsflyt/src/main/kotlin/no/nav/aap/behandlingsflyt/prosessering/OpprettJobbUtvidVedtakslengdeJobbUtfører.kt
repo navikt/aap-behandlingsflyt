@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.prosessering
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Avslag
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetRegel
+import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
@@ -34,7 +35,7 @@ import java.time.LocalDate.now
 class OpprettJobbUtvidVedtakslengdeJobbUtfører(
     private val underveisRepository: UnderveisRepository,
     private val sakOgBehandlingService: SakOgBehandlingService,
-    private val vilkårsresultatRepository: VilkårsresultatRepository,
+    private val vedtakslengdeService: VedtakslengdeService,
     private val flytJobbRepository: FlytJobbRepository,
     private val unleashGateway: UnleashGateway,
     private val clock: Clock = Clock.systemDefaultZone()
@@ -64,57 +65,6 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
         return sisteBehandling?.status() in setOf(Status.AVSLUTTET, Status.IVERKSETTES)
     }
 
-    private fun harBehovForUtvidetVedtakslengde(
-        behandlingId: BehandlingId,
-        sakId: SakId,
-        datoForUtvidelse: LocalDate
-    ): Boolean {
-        val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandlingId)
-        if (underveisGrunnlag != null) {
-            val sisteVedtatteUnderveisperiode = underveisGrunnlag.perioder.maxByOrNull { it.periode.tom }
-            val rettighetstypeTidslinje = vilkårsresultatRepository.hent(behandlingId).rettighetstypeTidslinje()
-
-            if (sisteVedtatteUnderveisperiode != null) {
-                val harFremtidigRettBistandsbehov = skalUtvide(
-                    forrigeSluttdato = sisteVedtatteUnderveisperiode.periode.tom,
-                    rettighetstypeTidslinjeForInneværendeBehandling = rettighetstypeTidslinje
-                )
-
-                val gjeldendeSluttdato = sisteVedtatteUnderveisperiode.periode.tom
-
-                log.info("Sak $sakId har harFremtidigRettBistandsbehov=$harFremtidigRettBistandsbehov og gjeldendeSluttdato=$gjeldendeSluttdato")
-                return gjeldendeSluttdato.isBefore(datoForUtvidelse) && harFremtidigRettBistandsbehov
-            } else {
-                log.info("Sak $sakId har ingen vedtatte underveisperioder")
-            }
-        } else {
-            log.info("Sak $sakId har ingen underveisgrunnlag")
-        }
-        return false
-    }
-
-    fun skalUtvide(
-        forrigeSluttdato: LocalDate,
-        rettighetstypeTidslinjeForInneværendeBehandling: Tidslinje<RettighetsType>
-    ): Boolean {
-        return harFremtidigRettOrdinær(forrigeSluttdato, rettighetstypeTidslinjeForInneværendeBehandling)
-                && now(clock).plusDays(28) >= forrigeSluttdato
-    }
-
-    // Det finnes en fremtidig periode med ordinær rett og gjenværende kvote
-    fun harFremtidigRettOrdinær(
-        vedtattSluttdato: LocalDate,
-        rettighetstypeTidslinjeForInneværendeBehandling: Tidslinje<RettighetsType>
-    ): Boolean {
-        val varighetstidslinje = VarighetRegel().simluer(rettighetstypeTidslinjeForInneværendeBehandling)
-        return varighetstidslinje.begrensetTil(Periode(vedtattSluttdato.plusDays(1), Tid.MAKS))
-            .segmenter()
-            .any { varighetSegment ->
-                varighetSegment.verdi.brukerAvKvoter.any { kvote -> kvote == Kvote.ORDINÆR }
-                        && varighetSegment.verdi !is Avslag
-            }
-    }
-
     private fun hentKandidaterForUtvidelseAvVedtakslengde(dato: LocalDate): Set<SakId> {
         // TODO: Må filtrere vekk de som allerede har blitt kjørt, men ikke kvalifiserte til reell utvidelse av vedtakslengde
         return underveisRepository.hentSakerMedSisteUnderveisperiodeFørDato(dato)
@@ -126,7 +76,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
     private fun kunSakerMedBehovForUtvidelseAvVedtakslengde(id: SakId, dato: LocalDate): Boolean {
         val sisteGjeldendeBehandling = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(id)
         if (sisteGjeldendeBehandling != null) {
-            return harBehovForUtvidetVedtakslengde(sisteGjeldendeBehandling.id, id, dato)
+            return vedtakslengdeService.skalUtvideVedtakslengde(sisteGjeldendeBehandling.id, dato)
         }
         return false
     }
@@ -136,6 +86,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
             return OpprettJobbUtvidVedtakslengdeJobbUtfører(
                 underveisRepository = repositoryProvider.provide(),
                 sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
+                vedtakslengdeService = VedtakslengdeService(repositoryProvider),
                 flytJobbRepository = repositoryProvider.provide(),
                 unleashGateway = gatewayProvider.provide(),
             )
