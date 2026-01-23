@@ -175,6 +175,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         return BehandlingMedVedtak(
             saksnummer = Saksnummer(row.getString("saksnummer")),
             id = behandlingId,
+            forrigeBehandlingId = row.getLongOrNull("forrige_id")?.let { BehandlingId(it) },
             referanse = BehandlingReferanse(row.getUUID("referanse")),
             typeBehandling = TypeBehandling.Companion.from(row.getString("type")),
             status = row.getEnum("status"),
@@ -385,6 +386,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
             SELECT
                 S.SAKSNUMMER,
                 B.ID,
+                B.FORRIGE_ID,
                 B.REFERANSE,
                 B.TYPE,
                 B.STATUS,

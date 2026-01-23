@@ -155,7 +155,8 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
             vedtakstidspunkt = LocalDateTime.now(clock),
             virkningstidspunkt = null,
             vurderingsbehov = setOf(),
-            årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD
+            årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
+            forrigeBehandlingId = null,
         )
 
     private fun sak(rettighetsperiode: Periode = Periode(LocalDate.now(clock).minusDays(180), Tid.MAKS)) =
