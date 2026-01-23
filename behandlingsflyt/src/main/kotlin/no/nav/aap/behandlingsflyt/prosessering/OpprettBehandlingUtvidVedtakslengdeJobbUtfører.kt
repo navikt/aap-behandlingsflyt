@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Avslag
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetRegel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
@@ -27,7 +26,6 @@ import org.slf4j.LoggerFactory
 import java.time.Clock
 import java.time.LocalDate
 import java.time.LocalDate.now
-import kotlin.collections.contains
 
 class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
     private val prosesserBehandlingService: ProsesserBehandlingService,
@@ -53,8 +51,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
         val sisteGjeldendeBehandling = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId)
         if (sisteGjeldendeBehandling != null) {
             log.info("Gjeldende behandling for sak $sakId er ${sisteGjeldendeBehandling.id}")
-            val underveisGrunnlag = underveisRepository.hentHvisEksisterer(sisteGjeldendeBehandling.id)
-            if (underveisGrunnlag != null && harBehovForUtvidetVedtakslengde(sisteGjeldendeBehandling.id, sakId, underveisGrunnlag, datoHvorSakerSjekkesForUtvidelse)) {
+            if (harBehovForUtvidetVedtakslengde(sisteGjeldendeBehandling.id, sakId, datoHvorSakerSjekkesForUtvidelse)) {
                 log.info("Oppretter behandling for utvidelse av vedtakslengde sak $sakId")
                 val utvidVedtakslengdeBehandling = opprettNyBehandling(sakId)
                 prosesserBehandlingService.triggProsesserBehandling(utvidVedtakslengdeBehandling)
@@ -66,33 +63,38 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
         }
     }
 
-    private fun harBehovForUtvidetVedtakslengde(
-        behandlingId: BehandlingId,
-        sakId: SakId,
-        underveisGrunnlag: UnderveisGrunnlag,
-        datoForUtvidelse: LocalDate
-    ): Boolean {
-        val sisteVedtatteUnderveisperiode = underveisGrunnlag.perioder.maxByOrNull { it.periode.tom }
-        val rettighetstypeTidslinje = vilkårsresultatRepository.hent(behandlingId).rettighetstypeTidslinje()
-
-        if (sisteVedtatteUnderveisperiode != null) {
-            val harFremtidigRettBistandsbehov = skalUtvide(
-                forrigeSluttdato = sisteVedtatteUnderveisperiode.periode.tom,
-                rettighetstypeTidslinjeForInneværendeBehandling = rettighetstypeTidslinje
-            )
-
-            val gjeldendeSluttdato = sisteVedtatteUnderveisperiode.periode.tom
-
-            log.info("Sak $sakId har harFremtidigRettBistandsbehov=$harFremtidigRettBistandsbehov og gjeldendeSluttdato=$gjeldendeSluttdato")
-            return gjeldendeSluttdato.isBefore(datoForUtvidelse) && harFremtidigRettBistandsbehov
-        }
-        log.info("Sak $sakId har ingen vedtatte underveisperioder")
-        return false
-    }
-
     private fun kunSakerUtenÅpneYtelsesbehandlinger(id: SakId): Boolean {
         val sisteBehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(id)
         return sisteBehandling?.status() in setOf(Status.AVSLUTTET, Status.IVERKSETTES)
+    }
+
+    private fun harBehovForUtvidetVedtakslengde(
+        behandlingId: BehandlingId,
+        sakId: SakId,
+        datoForUtvidelse: LocalDate
+    ): Boolean {
+        val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandlingId)
+        if (underveisGrunnlag != null) {
+            val sisteVedtatteUnderveisperiode = underveisGrunnlag.perioder.maxByOrNull { it.periode.tom }
+            val rettighetstypeTidslinje = vilkårsresultatRepository.hent(behandlingId).rettighetstypeTidslinje()
+
+            if (sisteVedtatteUnderveisperiode != null) {
+                val harFremtidigRettBistandsbehov = skalUtvide(
+                    forrigeSluttdato = sisteVedtatteUnderveisperiode.periode.tom,
+                    rettighetstypeTidslinjeForInneværendeBehandling = rettighetstypeTidslinje
+                )
+
+                val gjeldendeSluttdato = sisteVedtatteUnderveisperiode.periode.tom
+
+                log.info("Sak $sakId har harFremtidigRettBistandsbehov=$harFremtidigRettBistandsbehov og gjeldendeSluttdato=$gjeldendeSluttdato")
+                return gjeldendeSluttdato.isBefore(datoForUtvidelse) && harFremtidigRettBistandsbehov
+            } else {
+                log.info("Sak $sakId har ingen vedtatte underveisperioder")
+            }
+        } else {
+            log.info("Sak $sakId har ikke underveisgrunnlag")
+        }
+        return false
     }
 
     fun skalUtvide(
