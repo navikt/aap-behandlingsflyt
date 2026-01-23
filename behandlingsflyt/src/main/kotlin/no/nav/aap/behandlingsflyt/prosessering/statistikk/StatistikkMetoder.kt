@@ -113,13 +113,13 @@ class StatistikkMetoder(
         log.info("Oversetter hendelse for behandling ${hendelse.referanse} og saksnr ${hendelse.saksnummer}")
         val behandling = behandlingRepository.hent(hendelse.referanse)
         val sisteEndring = behandlingRepository.hentStegHistorikk(behandling.id).lastOrNull()?.tidspunkt()
-        val søknaderForSak = hentSøknaderForSak(behandling)
-        val mottattTidspunkt = utledMottattTidspunkt(behandling, søknaderForSak)
-        val søknadIder = søknaderForSak
+        val relevanteDokumenter = hentRelevanteDokumenterForBehandling(behandling)
+        val mottattTidspunkt = utledMottattTidspunkt(behandling, relevanteDokumenter)
+        val søknadIder = relevanteDokumenter
             .filter { it.type == InnsendingType.SØKNAD }
             .map { it.referanse.asJournalpostId }
 
-        val kanal = hentSøknadsKanal(behandling, søknaderForSak)
+        val kanal = hentSøknadsKanal(behandling, relevanteDokumenter)
 
         val sak = sakService.hent(hendelse.saksnummer)
 
@@ -246,6 +246,8 @@ class StatistikkMetoder(
                 Vurderingsbehov.DØDSFALL_BRUKER -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.DØDSFALL_BRUKER
                 Vurderingsbehov.DØDSFALL_BARN -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.DØDSFALL_BARN
                 Vurderingsbehov.UTVID_VEDTAKSLENGDE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.UTVID_VEDTAKSLENGDE
+                Vurderingsbehov.MIGRER_RETTIGHETSPERIODE -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.MIGRER_RETTIGHETSPERIODE
+                Vurderingsbehov.REVURDER_SYKESTIPEND -> no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_SYKESTIPEND
             }
         }.distinct()
 
@@ -266,10 +268,10 @@ class StatistikkMetoder(
     }
 
     private fun utledMottattTidspunkt(
-        behandling: Behandling, hentDokumenterAvType: Set<MottattDokument>
+        behandling: Behandling, mottatteDokumenter: Set<MottattDokument>
     ): LocalDateTime {
         val mottattTidspunkt =
-            hentDokumenterAvType.filter { it.behandlingId == behandling.id }.minOfOrNull { it.mottattTidspunkt }
+            mottatteDokumenter.filter { it.behandlingId == behandling.id }.minOfOrNull { it.mottattTidspunkt }
 
         if (mottattTidspunkt == null) {
             log.info("Ingen søknader funnet for behandling ${behandling.referanse} av type ${behandling.typeBehandling()}.")
@@ -278,9 +280,10 @@ class StatistikkMetoder(
         return mottattTidspunkt
     }
 
-    private fun hentSøknaderForSak(behandling: Behandling): Set<MottattDokument> {
+    private fun hentRelevanteDokumenterForBehandling(behandling: Behandling): Set<MottattDokument> {
         val hentDokumenterAvType = dokumentRepository.hentDokumenterAvType(
-            behandling.sakId, InnsendingType.SØKNAD
+            behandling.id,
+            listOf(InnsendingType.SØKNAD, InnsendingType.LEGEERKLÆRING, InnsendingType.ANNET_RELEVANT_DOKUMENT)
         )
         return hentDokumenterAvType
     }

@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt
 
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AndreUtbetalingerDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AndreUtbetalingerYtelserDto
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.JaNei
 
 data class AndreYtelserSøknad(
     val ekstraLønn: Boolean?,
@@ -20,14 +21,10 @@ enum class AndreUtbetalingerYtelser {
     STIPEND_FRA_LÅNEKASSEN,
     LÅN_FRA_LÅNEKASSEN,
     INGEN_AV_DISSE;
-
-     companion object {
-         fun fromString(value: String): AndreUtbetalingerYtelser? =
-             runCatching { valueOf(value.uppercase()) }.getOrNull()}
 }
 
 
-private fun mapYtelseEnum(eksternType : AndreUtbetalingerYtelserDto): AndreUtbetalingerYtelser {
+private fun mapYtelseEnum(eksternType: AndreUtbetalingerYtelserDto): AndreUtbetalingerYtelser {
     return when (eksternType) {
         AndreUtbetalingerYtelserDto.OMSORGSSTØNAD -> AndreUtbetalingerYtelser.OMSORGSSTØNAD
         AndreUtbetalingerYtelserDto.ØKONOMISK_SOSIALHJELP -> AndreUtbetalingerYtelser.ØKONOMISK_SOSIALHJELP
@@ -42,15 +39,12 @@ private fun mapYtelseEnum(eksternType : AndreUtbetalingerYtelserDto): AndreUtbet
     }
 }
 
-
-
-
 fun mapOppgitteYtelser(ytelser: AndreUtbetalingerDto): AndreYtelserSøknad {
 
-    val lønn = when (ytelser.lønn?.lowercase()) {
-        "ja" -> true
-        "nei" -> false
-        else -> null
+    val lønn = when (ytelser.lønn) {
+        JaNei.Ja -> true
+        JaNei.Nei -> false
+        null -> null
     }
 
     return AndreYtelserSøknad(

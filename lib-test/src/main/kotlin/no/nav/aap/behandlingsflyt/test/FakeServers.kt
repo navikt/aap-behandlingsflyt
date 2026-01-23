@@ -129,7 +129,6 @@ import no.nav.aap.utbetal.trekk.TrekkPosteringDto
 import no.nav.aap.utbetal.trekk.TrekkResponsDto
 import org.intellij.lang.annotations.Language
 import org.slf4j.LoggerFactory
-import java.io.ByteArrayInputStream
 import java.math.MathContext
 import java.math.RoundingMode
 import java.time.LocalDate
@@ -149,7 +148,6 @@ object FakeServers : AutoCloseable {
     private val yrkesskade = embeddedServer(Netty, port = 0, module = { yrkesskadeFake() })
     private val inntekt = embeddedServer(Netty, port = 0, module = { poppFake() })
     private val oppgavestyring = embeddedServer(Netty, port = 0, module = { oppgavestyringFake() })
-    private val saf = embeddedServer(Netty, port = 0, module = { safFake() })
     private val inst2 = embeddedServer(Netty, port = 0, module = { inst2Fake() })
     private val medl = embeddedServer(Netty, port = 0, module = { medlFake() })
     private val pesysFake = embeddedServer(Netty, port = 0, module = { pesysFake() })
@@ -1118,148 +1116,6 @@ object FakeServers : AutoCloseable {
         }
     }
 
-    private fun Application.safFake() {
-        installerContentNegotiation()
-        routing {
-            get("/rest/hentdokument/{journalpostId}/{dokumentInfoId}/{variantFormat}") {
-                call.response.header(
-                    HttpHeaders.ContentDisposition,
-                    ContentDisposition.Attachment.withParameter(
-                        ContentDisposition.Parameters.FileName,
-                        "ktor_logo.pdf"
-                    )
-                        .toString()
-                )
-                call.response.header(HttpHeaders.ContentType, ContentType.Application.Pdf.toString())
-                // Smallest possible PDF
-                // https://stackoverflow.com/a/17280876/1013553
-                val base64Pdf =
-                    "JVBERi0xLjAKMSAwIG9iajw8L1BhZ2VzIDIgMCBSPj5lbmRvYmogMiAwIG9iajw8L0tpZHNbMyAwIFJdL0NvdW50IDE+PmVuZG9iaiAzIDAgb2JqPDwvTWVkaWFCb3hbMCAwIDMgM10+PmVuZG9iagp0cmFpbGVyPDwvUm9vdCAxIDAgUj4+Cg=="
-                call.respondOutputStream {
-                    val decode = Base64.getDecoder().decode(base64Pdf)
-                    ByteArrayInputStream(decode).copyTo(this)
-                }
-            }
-            post("/graphql") {
-                val body = call.receive<String>()
-
-                if ("dokumentoversiktFagsak" in body) {
-                    @Language("JSON")
-                    val expression = """
-                            {
-                              "data": {
-                                "dokumentoversiktFagsak": {
-                                  "journalposter": [
-                                    {
-                                      "journalpostId": "453877977",
-                                      "journalstatus": "FERDIGSTILT",
-                                      "journalposttype": "I",
-                                      "behandlingstema": null,
-                                      "antallRetur": null,
-                                      "kanal": "NAV_NO",
-                                      "innsynsregelBeskrivelse": "Standardreglene avgjør om dokumentet vises",
-                                      "datoOpprettet": "2024-10-07T12:39:27",
-                                      "relevanteDatoer": [],
-                                      "dokumenter": [
-                                        {
-                                          "dokumentInfoId": "454273798",
-                                          "tittel": "Søknad om Arbeidsavklaringspenger",
-                                          "brevkode": "NAV 11-13.05",
-                                          "dokumentstatus": null,
-                                          "datoFerdigstilt": null,
-                                          "originalJournalpostId": "453877971",
-                                          "skjerming": null,
-                                          "logiskeVedlegg": [],
-                                          "dokumentvarianter": [
-                                            {
-                                              "variantformat": "ARKIV",
-                                              "saksbehandlerHarTilgang": true,
-                                              "skjerming": null
-                                            },
-                                            {
-                                              "variantformat": "ORIGINAL",
-                                              "saksbehandlerHarTilgang": true,
-                                              "skjerming": null
-                                            }
-                                          ]
-                                        },
-                                        {
-                                          "dokumentInfoId": "454273829",
-                                          "tittel": "Annen dokumentasjon",
-                                          "brevkode": null,
-                                          "dokumentstatus": null,
-                                          "datoFerdigstilt": null,
-                                          "originalJournalpostId": "453877977",
-                                          "skjerming": null,
-                                          "logiskeVedlegg": [],
-                                          "dokumentvarianter": [
-                                            {
-                                              "variantformat": "ARKIV",
-                                              "saksbehandlerHarTilgang": true,
-                                              "skjerming": null
-                                            }
-                                          ]
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "journalpostId": "453873496",
-                                      "journalstatus": "FERDIGSTILT",
-                                      "journalposttype": "I",
-                                      "behandlingstema": null,
-                                      "antallRetur": null,
-                                      "kanal": "NAV_NO",
-                                      "innsynsregelBeskrivelse": "Standardreglene avgjør om dokumentet vises",
-                                      "datoOpprettet": "2024-10-07T12:39:27",
-                                      "relevanteDatoer": [],
-                                      "dokumenter": [
-                                        {
-                                          "dokumentInfoId": "454268545",
-                                          "tittel": "Søknad om Arbeidsavklaringspenger",
-                                          "brevkode": "NAV 11-13.05",
-                                          "dokumentstatus": null,
-                                          "datoFerdigstilt": null,
-                                          "originalJournalpostId": "453873496",
-                                          "skjerming": null,
-                                          "logiskeVedlegg": [],
-                                          "dokumentvarianter": [
-                                            {
-                                              "variantformat": "ARKIV",
-                                              "saksbehandlerHarTilgang": true,
-                                              "skjerming": null
-                                            },
-                                            {
-                                              "variantformat": "ORIGINAL",
-                                              "saksbehandlerHarTilgang": true,
-                                              "skjerming": null
-                                            }
-                                          ]
-                                        }
-                                      ]
-                                    }
-                                  ],
-                                  "sideInfo": {
-                                    "sluttpeker": "NDUzODczNDk2",
-                                    "finnesNesteSide": false,
-                                    "antall": 2,
-                                    "totaltAntall": 2
-                                  }
-                                }
-                              }
-                            }
-                """
-                    call.respondText(
-                        expression.trimIndent(),
-                        contentType = ContentType.Application.Json
-                    )
-                } else {
-                    print("FEIL KALL")
-                    call.respond(HttpStatusCode.BadRequest)
-                }
-            }
-        }
-    }
-
     private fun Application.inst2Fake() {
         install(ContentNegotiation) {
             jackson {
@@ -2035,7 +1891,6 @@ object FakeServers : AutoCloseable {
         pdl.start()
         inntekt.start()
         oppgavestyring.start()
-        saf.start()
         inst2.start()
         sam.start()
         medl.start()
@@ -2099,10 +1954,7 @@ object FakeServers : AutoCloseable {
         System.setProperty("integrasjon.oppgavestyring.scope", "oppgavestyring")
         System.setProperty("integrasjon.oppgavestyring.url", "http://localhost:${oppgavestyring.port()}")
 
-        // Saf
-        System.setProperty("integrasjon.saf.url.graphql", "http://localhost:${saf.port()}/graphql")
-        System.setProperty("integrasjon.saf.scope", "saf")
-        System.setProperty("integrasjon.saf.url.rest", "http://localhost:${saf.port()}/rest")
+
 
         // MEDL
         System.setProperty("integrasjon.medl.url", "http://localhost:${medl.port()}")
@@ -2215,7 +2067,6 @@ object FakeServers : AutoCloseable {
         brev.stop(0L, 0L)
         inntekt.stop(0L, 0L)
         oppgavestyring.stop(0L, 0L)
-        saf.stop(0L, 0L)
         inst2.stop(0L, 0L)
         medl.stop(0L, 0L)
         tilgang.stop(0L, 0L)

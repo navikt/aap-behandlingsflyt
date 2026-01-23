@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt
 
-import no.nav.aap.behandlingsflyt.PdlHendelseKafkaKonsumentTest.Companion.repositoryRegistry
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovHendelseHåndterer
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
@@ -274,7 +273,7 @@ class TestScenarioOrkestrator(
         // Henter ut ident,fødselsdato og navn fra db.
         var vurderteBarnListe = listOf<VurdertBarnDto>()
         datasource.transaction { connection ->
-            val repositoryProvider = repositoryRegistry.provider(connection)
+            val repositoryProvider = postgresRepositoryRegistry.provider(connection)
             val barnRepository = repositoryProvider.provide<BarnRepository>()
             val barnGrunnlag = barnRepository.hent(behandling.id)
             val oppgitteBarnListe = barnGrunnlag.oppgitteBarn?.oppgitteBarn ?: emptyList()
@@ -479,7 +478,7 @@ class TestScenarioOrkestrator(
     private fun hentFørsteYrkesskadeMedSkadeDato(behandlingId: BehandlingId): Yrkesskade? {
         var yrkesskadeUtenSkadedato: Yrkesskade? = null
         datasource.transaction { connection ->
-            val repositoryProvider = repositoryRegistry.provider(connection)
+            val repositoryProvider = postgresRepositoryRegistry.provider(connection)
             val yrkesskadeRepository = repositoryProvider.provide<YrkesskadeRepository>()
             yrkesskadeUtenSkadedato =
                 yrkesskadeRepository.hentHvisEksisterer(behandlingId)?.yrkesskader?.yrkesskader?.first { it.skadedato != null }

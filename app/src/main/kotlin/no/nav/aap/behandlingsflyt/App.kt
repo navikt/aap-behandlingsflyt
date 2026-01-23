@@ -77,7 +77,7 @@ import no.nav.aap.behandlingsflyt.flyt.flytApi
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.kafka.inst2.INSTITUSJONSOPPHOLD_EVENT_TOPIC
-import no.nav.aap.behandlingsflyt.hendelse.kafka.inst2.Inst2KafkaKonsument
+import no.nav.aap.behandlingsflyt.hendelse.kafka.inst2.InstitusjonsOppholdKafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KABAL_EVENT_TOPIC
 import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KabalKafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PDL_HENDELSE_TOPIC
@@ -225,7 +225,7 @@ internal fun Application.server(
     }
 
     if (!Miljø.erLokal() && !Miljø.erProd()) {
-        startInstitusjonsOppholdKonsument(dataSource, repositoryRegistry, gatewayProvider)
+        startInstitusjonsOppholdKonsument(dataSource, repositoryRegistry)
     }
 
     monitor.subscribe(ApplicationStopPreparing) { environment ->
@@ -286,7 +286,7 @@ internal fun Application.server(
                 behandlingsflytPipApi(dataSource, repositoryRegistry)
                 auditlogApi(dataSource, repositoryRegistry)
                 refusjonGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                manglendeGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                manglendeGrunnlagApi(dataSource, repositoryRegistry)
                 mellomlagretVurderingApi(dataSource, repositoryRegistry, gatewayProvider)
                 // Klage
                 påklagetBehandlingGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
@@ -483,9 +483,8 @@ fun Application.startPDLHendelseKonsument(
 fun Application.startInstitusjonsOppholdKonsument(
     dataSource: DataSource,
     repositoryRegistry: RepositoryRegistry,
-    gatewayProvider: GatewayProvider,
 ): KafkaKonsument<String, InstitusjonsOppholdHendelseKafkaMelding> {
-    val konsument = Inst2KafkaKonsument(
+    val konsument = InstitusjonsOppholdKafkaKonsument(
         config = KafkaConsumerConfig(
             keyDeserializer = org.apache.kafka.common.serialization.StringDeserializer::class.java,
             valueDeserializer = JsonDeserializer::class.java,
@@ -493,7 +492,6 @@ fun Application.startInstitusjonsOppholdKonsument(
         closeTimeout = AppConfig.stansArbeidTimeout,
         dataSource = dataSource,
         repositoryRegistry = repositoryRegistry,
-        gatewayProvider = gatewayProvider
     )
     monitor.subscribe(ApplicationStarted) {
         val t = Thread {

@@ -8,6 +8,8 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovServ
 import no.nav.aap.behandlingsflyt.behandling.samordning.AvklaringsType
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningService
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadVurdering
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
@@ -37,17 +39,21 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningVurderingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySamordningYtelseRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemorySakOgBehandlingService
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import java.time.Instant
 import java.time.LocalDate
 import java.util.stream.Stream
 
@@ -66,6 +72,7 @@ class SamordningStegTest {
 
     private val tidligereVurderinger = mockk<TidligereVurderinger>()
     private val avbrytRevurderingRepository = mockk<AvbrytRevurderingRepository>()
+    private val trukketSøknadRepository = InMemoryTrukketSøknadRepository
 
     private val steg = SamordningSteg(
         samordningService = SamordningService(
@@ -84,6 +91,9 @@ class SamordningStegTest {
             InMemoryAvklaringsbehovRepository,
             InMemoryBehandlingRepository,
             InMemoryVilkårsresultatRepository,
+            trukketSøknadService = TrukketSøknadService(
+                trukketSøknadRepository
+            ),
         ),
     )
 
@@ -239,6 +249,16 @@ class SamordningStegTest {
 
         // Simler trekk av søknad
         simulerTrekkAvSøknad()
+        trukketSøknadRepository.lagreTrukketSøknadVurdering(
+            behandling.id,
+            TrukketSøknadVurdering(
+                journalpostId = JournalpostId("12344321"),
+                begrunnelse = "en grunn",
+                vurdertAv = Bruker("Z00000"),
+                skalTrekkes = true,
+                vurdert = Instant.parse("2020-01-01T12:12:12Z"),
+            )
+        )
 
         // skal tilbakefølre
         steg.utfør(flytKontekstMedPerioder(behandling))

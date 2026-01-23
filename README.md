@@ -20,7 +20,7 @@ Inneholder domeneobjekter som brukes i kommunikasjon med Behandlingsflyt sine tj
 
 ### sbom/sbom.xml
 Dependency-liste (software bill of materials, sbom). 
-Filen viser avhengigheter til tredjeparts- og NAV-artefakter for hver modul i dette prosjektet. 
+Filen viser avhengigheter til tredjeparts- og NAV-artefakter for hver modul i dette prosjektet. Publiseres til Github Packages, på https://github.com/navikt/aap-behandlingsflyt/packages/2754153
 
 ## Lokalt utviklingsmiljø:
 

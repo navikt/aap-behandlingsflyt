@@ -30,10 +30,16 @@ class SykepengeerstatningVilkår(vilkårsresultat: Vilkårsresultat) :
             sisteMuligDagMedYtelse = grunnlag.rettighetsperiode.tom
         ).orEmpty()
 
-        val tidslinje = Tidslinje.zip3(sykdomsvurderingTidslinje, sykepengeerstatningTidslinje, yrkesskadevurderingTidslinje)
-            .mapValue { (sykdomsvurdering, sykepengeerstatningVurdering, yrkesskadevurdering) ->
-                opprettVilkårsvurdering(sykdomsvurdering, sykepengeerstatningVurdering, yrkesskadevurdering, grunnlag)
-            }
+        val tidslinje =
+            Tidslinje.zip3(sykdomsvurderingTidslinje, sykepengeerstatningTidslinje, yrkesskadevurderingTidslinje)
+                .mapValue { (sykdomsvurdering, sykepengeerstatningVurdering, yrkesskadevurdering) ->
+                    opprettVilkårsvurdering(
+                        sykdomsvurdering,
+                        sykepengeerstatningVurdering,
+                        yrkesskadevurdering,
+                        grunnlag
+                    )
+                }
         vilkår.leggTilVurderinger(tidslinje)
     }
 

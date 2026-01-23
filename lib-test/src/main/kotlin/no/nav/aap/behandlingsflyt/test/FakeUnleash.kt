@@ -26,13 +26,10 @@ object FakeUnleash : FakeUnleashBase(
         BehandlingsflytFeature.OverforingsdatoNullForAvregning to true,
         BehandlingsflytFeature.OvergangArbeid to true,
         BehandlingsflytFeature.KvalitetssikringsSteg to true,
-        BehandlingsflytFeature.EOSBeregning to true,
         BehandlingsflytFeature.NyBrevbyggerV3 to false,
-        BehandlingsflytFeature.BedreUttrekkAvSakerMedFritakMeldeplikt to false,
         BehandlingsflytFeature.LagreVedtakIFatteVedtak to true,
         BehandlingsflytFeature.PeriodisertSykepengeErstatningNyAvklaringsbehovService to true,
         BehandlingsflytFeature.ValiderOvergangUfore to true,
-        BehandlingsflytFeature.KravOmInntektsbortfall to true,
         BehandlingsflytFeature.Under18 to true,
         BehandlingsflytFeature.MigrerMeldepliktFritak to true,
         BehandlingsflytFeature.SosialRefusjon to true,
@@ -44,7 +41,10 @@ object FakeUnleash : FakeUnleashBase(
         BehandlingsflytFeature.Forlengelse to true,
         BehandlingsflytFeature.ForlengelseIManuellBehandling to false,
         BehandlingsflytFeature.UtvidVedtakslengdeJobb to true,
-    )
+        BehandlingsflytFeature.InstitusjonsoppholdJobb to true,
+        BehandlingsflytFeature.TrekkSoeknadOpprettetFraLegeerklaering to true,
+
+        )
 )
 
 object LokalUnleash : FakeUnleashBase(
@@ -54,13 +54,10 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.OverforingsdatoNullForAvregning to true,
         BehandlingsflytFeature.OvergangArbeid to true,
         BehandlingsflytFeature.KvalitetssikringsSteg to true,
-        BehandlingsflytFeature.EOSBeregning to true,
         BehandlingsflytFeature.NyBrevbyggerV3 to false,
-        BehandlingsflytFeature.BedreUttrekkAvSakerMedFritakMeldeplikt to true,
         BehandlingsflytFeature.LagreVedtakIFatteVedtak to true,
         BehandlingsflytFeature.PeriodisertSykepengeErstatningNyAvklaringsbehovService to true,
         BehandlingsflytFeature.ValiderOvergangUfore to true,
-        BehandlingsflytFeature.KravOmInntektsbortfall to true,
         BehandlingsflytFeature.Under18 to true,
         BehandlingsflytFeature.MigrerMeldepliktFritak to true,
         BehandlingsflytFeature.SosialRefusjon to true,
@@ -71,5 +68,8 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.Forlengelse to true,
         BehandlingsflytFeature.ForlengelseIManuellBehandling to true,
         BehandlingsflytFeature.UtvidVedtakslengdeJobb to true,
-    )
+        BehandlingsflytFeature.InstitusjonsoppholdJobb to true,
+        BehandlingsflytFeature.TrekkSoeknadOpprettetFraLegeerklaering to true,
+
+        )
 )
