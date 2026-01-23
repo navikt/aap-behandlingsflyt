@@ -16,7 +16,15 @@ class HarTilgangOgKanSaksbehandleTest {
     }
 
     @Test
-    fun `Når det ikke er løftet et avklaringsbehov for kvalitetssikring ennå`() {
+    fun `Når det finnes åpne avklaringsbehov som trenger kvalitetssikring`() {
+        InMemoryAvklaringsbehovRepository.opprett(
+            BehandlingId(1),
+            definisjon = Definisjon.AVKLAR_SYKDOM,
+            funnetISteg = StegType.AVKLAR_SYKDOM,
+            begrunnelse = "Begrunnelse",
+            endretAv = "Ident",
+        )
+
         val avklaringsbehovene = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(BehandlingId(1))
         val harTilgangTilÅSaksbehandle =
             harTilgangOgKanSaksbehandle(harTilgang = true, avklaringsbehovene = avklaringsbehovene)
