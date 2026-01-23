@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.prosessering
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.meldeperiode.MeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.Fritaksvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktGrunnlag
@@ -149,10 +150,12 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
             typeBehandling = TypeBehandling.Revurdering,
             status = Status.AVSLUTTET,
             opprettetTidspunkt = LocalDateTime.now(),
+            vedtakId = VedtakId(0),
             vedtakstidspunkt = LocalDateTime.now(),
             virkningstidspunkt = LocalDate.now(),
             vurderingsbehov = setOf(),
-            årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD
+            årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
+            forrigeBehandlingId = null,
         )
 
 

@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
+import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import java.time.LocalDate
@@ -16,9 +17,17 @@ object InMemoryVedtakRepository : VedtakRepository {
         vedtakstidspunkt: LocalDateTime,
         virkningstidspunkt: LocalDate?
     ) {
+        val vedtakId = id.incrementAndGet()
         grunnlag.putIfAbsent(
             behandlingId,
-            Pair(id.incrementAndGet(), Vedtak(behandlingId, vedtakstidspunkt, virkningstidspunkt))
+            Pair(
+                vedtakId, Vedtak(
+                    VedtakId(vedtakId),
+                    behandlingId,
+                    vedtakstidspunkt,
+                    virkningstidspunkt,
+                )
+            )
         )
     }
 
