@@ -49,7 +49,7 @@ fun NormalOpenAPIRoute.rettighetApi(
                 )
 
                 if (behandling == null) {
-                    null
+                    return@transaction null
                 }
 
                 val underveisgrunnlagRepository = repositoryProvider.provide<UnderveisRepository>()
@@ -57,10 +57,10 @@ fun NormalOpenAPIRoute.rettighetApi(
                 val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
                 val vilkårsresultat = vilkårsresultatRepository.hent(behandling.id)
                 val avslagForTapAvAAP = avslagsårsakerVedTapAvRettPåAAP(vilkårsresultat)
-                val rettighetstyper = underveisgrunnlag.perioder.map { it.rettighetsType }.distinct()
+                val rettighetstyper = underveisgrunnlag.perioder.mapNotNull { it.rettighetsType }.distinct()
 
                 val rettighetDtoListe = rettighetstyper.map { rettighet ->
-                    val rettighetKvoter = underveisgrunnlag.utledKvoterForRettighetstype(rettighet!!)
+                    val rettighetKvoter = underveisgrunnlag.utledKvoterForRettighetstype(rettighet)
                     val startdato = underveisgrunnlag.utledStartdatoForRettighet(rettighet)
                     val gjenværendeKvote = rettighetKvoter.gjenværendeKvote
                     val perioderForOpphør = hentPerioderForAvslag(avslagForTapAvAAP, Avslagstype.OPPHØR)

@@ -28,17 +28,18 @@ data class UnderveisGrunnlag(
         return perioder.filter { it.rettighetsType == rettighetsType && it.avslagsårsak == null }
     }
 
-    fun utledStartdatoForRettighet(rettighetsType: RettighetsType): LocalDate {
-        return utledInnfriddePerioderForRettighet(rettighetsType).first().periode.fom
+    fun utledStartdatoForRettighet(rettighetsType: RettighetsType): LocalDate? {
+        return utledInnfriddePerioderForRettighet(rettighetsType).firstOrNull()?.periode?.fom
     }
 
     fun utledMaksdatoForRettighet(type: RettighetsType): LocalDate? {
         val gjenværendeKvote = utledKvoterForRettighetstype(type).gjenværendeKvote
+        val periodeForOppbruktKvote = perioder.firstOrNull { it.rettighetsType == type && it.avslagsårsak === UnderveisÅrsak.VARIGHETSKVOTE_BRUKT_OPP }?.periode
 
-        if (gjenværendeKvote > 0) {
-            return Hverdager(gjenværendeKvote).fraOgMed(dagensDato)
+        if (periodeForOppbruktKvote != null) {
+            return periodeForOppbruktKvote.fom.minusDays(1)
         }
-        return perioder.firstOrNull { it.rettighetsType == type && it.avslagsårsak === UnderveisÅrsak.VARIGHETSKVOTE_BRUKT_OPP }?.periode?.fom
+        return Hverdager(gjenværendeKvote).fraOgMed(dagensDato)
     }
 
     fun utledKvoterForRettighetstype(rettighetsType: RettighetsType): RettighetKvoter {

@@ -13,7 +13,10 @@ class RettighetsperiodeService {
         )
     }
 
-    fun utledMaksdatoForRettighet(rettighetstype: RettighetsType, startDato: LocalDate): LocalDate? {
+    fun utledMaksdatoForRettighet(rettighetstype: RettighetsType, startDato: LocalDate?): LocalDate? {
+        if (startDato == null) {
+            return null
+        }
         return beregn(startDato).hentPeriodeForRettighetstype(rettighetstype)?.tom
     }
 }
