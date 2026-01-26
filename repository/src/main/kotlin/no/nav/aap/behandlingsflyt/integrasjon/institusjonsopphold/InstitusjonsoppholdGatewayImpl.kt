@@ -10,6 +10,7 @@ import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
+import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
@@ -95,8 +96,7 @@ object InstitusjonsoppholdGatewayImpl : InstitusjonsoppholdGateway {
     }
 
     private fun query(request: InstitusjonoppholdEnkelt): InstitusjonsoppholdJSON {
-        val httpRequest = PostRequest(
-            body = request,
+        val httpRequest = GetRequest(
             additionalHeaders = listOfNotNull(
                 Header("Nav-Consumer-Id", "aap-behandlingsflyt"),
                 Header("Nav-Formaal", "ARBEIDSAVKLARINGSPENGER"),
@@ -108,7 +108,7 @@ object InstitusjonsoppholdGatewayImpl : InstitusjonsoppholdGateway {
             "$enkeltOppholdURL/${request.oppholdId}?Med-Institusjonsinformasjon=true"
         )
 
-        return requireNotNull(client.post(uri = enkeltOppholdUrlMedOppholdId, request = httpRequest, mapper = { body, _ ->
+        return requireNotNull(client.get(uri = enkeltOppholdUrlMedOppholdId, request = httpRequest, mapper = { body, _ ->
             DefaultJsonMapper.fromJson(body)
         }))
     }
