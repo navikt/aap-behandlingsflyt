@@ -19,7 +19,7 @@ data class UnderveisGrunnlag(
     private val dagensDato = LocalDate.now(Clock.systemDefaultZone())
 
     fun somTidslinje(): Tidslinje<Underveisperiode> {
-        return perioder.somTidslinje { it.periode  }
+        return perioder.somTidslinje { it.periode }
     }
 
     fun sisteDagMedYtelse() = perioder.last { it.utfall == Utfall.OPPFYLT }.periode.tom
@@ -33,8 +33,9 @@ data class UnderveisGrunnlag(
     }
 
     fun utledMaksdatoForRettighet(type: RettighetsType): LocalDate? {
+        val periodeForOppbruktKvote =
+            perioder.firstOrNull { it.rettighetsType == type && it.avslagsårsak === UnderveisÅrsak.VARIGHETSKVOTE_BRUKT_OPP }?.periode
         val gjenværendeKvote = utledKvoterForRettighetstype(type).gjenværendeKvote
-        val periodeForOppbruktKvote = perioder.firstOrNull { it.rettighetsType == type && it.avslagsårsak === UnderveisÅrsak.VARIGHETSKVOTE_BRUKT_OPP }?.periode
 
         if (periodeForOppbruktKvote != null) {
             return periodeForOppbruktKvote.fom.minusDays(1)
@@ -43,7 +44,9 @@ data class UnderveisGrunnlag(
     }
 
     fun utledKvoterForRettighetstype(rettighetsType: RettighetsType): RettighetKvoter {
-        val bruktKvote = utledInnfriddePerioderForRettighet(rettighetsType).somTidslinje { it.periode }.begrensetTil(Periode(Tid.MIN, dagensDato)).segmenter().sumOf { it.periode.antallHverdager().asInt }
+        val bruktKvote = utledInnfriddePerioderForRettighet(rettighetsType)
+            .somTidslinje { it.periode }.begrensetTil(Periode(Tid.MIN, dagensDato)).segmenter()
+            .sumOf { it.periode.antallHverdager().asInt }
         val totalKvote = KvoteService().beregn().hentKvoteForRettighetstype(rettighetsType)?.asInt
         val gjenværendeKvote = totalKvote?.minus(bruktKvote) ?: 0
 
