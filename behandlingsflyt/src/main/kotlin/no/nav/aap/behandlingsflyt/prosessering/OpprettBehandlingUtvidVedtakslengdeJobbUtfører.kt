@@ -28,7 +28,6 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
-import no.nav.aap.motor.cron.CronExpression
 import org.slf4j.LoggerFactory
 import java.time.Clock
 import java.time.LocalDate
@@ -173,10 +172,5 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
         override val navn = "Utvid vedtakslengde for saker"
 
         override val beskrivelse = "Skal trigge behandling som utvider vedtakslengde for saker som er i ferd med å nå sluttdato"
-
-        /**
-         * Kjøres hver dag kl 05:00
-         */
-        override val cron = CronExpression.createWithoutSeconds("0 5 * * *")
     }
 }
