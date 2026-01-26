@@ -65,8 +65,10 @@ data class InstitusjonsoppholdJSON(
 )
 
 object InstitusjonsoppholdGatewayImpl : InstitusjonsoppholdGateway {
-    private val url =
+    private val personOppholdUrl =
         URI.create(requiredConfigForKey("integrasjon.institusjonsopphold.url") + "?Med-Institusjonsinformasjon=true")
+    private val enkeltOppholdURL =
+        URI.create(requiredConfigForKey("integrasjon.institusjonsoppholdenkelt.url") + "?Med-Institusjonsinformasjon=true")
     private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.institusjonsopphold.scope"))
     private val client = RestClient.withDefaultResponseHandler(
         config = config,
@@ -86,7 +88,8 @@ object InstitusjonsoppholdGatewayImpl : InstitusjonsoppholdGateway {
                 Header("Accept", "application/json")
             )
         )
-        return requireNotNull(client.post(uri = url, request = httpRequest, mapper = { body, _ ->
+
+        return requireNotNull(client.post(uri = personOppholdUrl, request = httpRequest, mapper = { body, _ ->
             DefaultJsonMapper.fromJson(body)
         }))
     }
@@ -100,7 +103,12 @@ object InstitusjonsoppholdGatewayImpl : InstitusjonsoppholdGateway {
                 Header("Accept", "application/json")
             )
         )
-        return requireNotNull(client.post(uri = url, request = httpRequest, mapper = { body, _ ->
+
+        val enkeltOppholdUrlMedOppholdId = URI.create(
+            "$enkeltOppholdURL/${request.oppholdId}?Med-Institusjonsinformasjon=true"
+        )
+
+        return requireNotNull(client.post(uri = enkeltOppholdUrlMedOppholdId, request = httpRequest, mapper = { body, _ ->
             DefaultJsonMapper.fromJson(body)
         }))
     }
@@ -139,5 +147,4 @@ object InstitusjonsoppholdGatewayImpl : InstitusjonsoppholdGateway {
 
         return institusjonsopphold
     }
-
 }
