@@ -7,13 +7,13 @@ import no.nav.aap.komponenter.type.Periode
 
 enum class Kvote(val avslagsårsak: VarighetVurdering.Avslagsårsak, val tellerMotKvote: (Vurdering) -> Boolean) {
     ORDINÆR(VarighetVurdering.Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP, ::skalTelleMotOrdinærKvote),
-    STUDENT(VarighetVurdering.Avslagsårsak.STUDENTKVOTE_BRUKT_OPP, { false }),
-    ETABLERINGSFASE(VarighetVurdering.Avslagsårsak.ETABLERINGSFASEKVOTE_BRUKT_OPP, { false }),
-    UTVIKLINGSFASE(VarighetVurdering.Avslagsårsak.UTVIKLINGSFASEKVOTE_BRUKT_OPP, { false }),
     SYKEPENGEERSTATNING(
         VarighetVurdering.Avslagsårsak.SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP,
         ::skalTelleMotSykepengeKvote
-    );
+    ),
+    @Deprecated("Student er ikke kvote, men dato-til-dato. Finnes sansynligivs ingen treff i prod-databasen på denne, men i dev-databasen.")
+    STUDENT(VarighetVurdering.Avslagsårsak.STUDENTKVOTE_BRUKT_OPP, { false }),
+    ;
 }
 
 private fun skalTelleMotOrdinærKvote(vurdering: Vurdering): Boolean {
@@ -50,22 +50,12 @@ data class KvoteTilstand(
 
 class Telleverk private constructor(
     private val ordinærkvote: KvoteTilstand,
-    private val utviklingsfasekvote: KvoteTilstand,
-    private val etableringsfasekvote: KvoteTilstand,
     private val sykepengeerstatningkvote: KvoteTilstand
 ) {
     constructor(kvoter: Kvoter) : this(
         ordinærkvote = KvoteTilstand(
             kvote = Kvote.ORDINÆR,
             hverdagerTilgjengelig = kvoter.ordinærkvote,
-        ),
-        utviklingsfasekvote = KvoteTilstand(
-            kvote = Kvote.UTVIKLINGSFASE,
-            hverdagerTilgjengelig = Hverdager(0),
-        ),
-        etableringsfasekvote = KvoteTilstand(
-            kvote = Kvote.ETABLERINGSFASE,
-            hverdagerTilgjengelig = Hverdager(0),
         ),
         sykepengeerstatningkvote = KvoteTilstand(
             kvote = Kvote.SYKEPENGEERSTATNING,
@@ -76,8 +66,6 @@ class Telleverk private constructor(
     private fun <T> map(relevanteKvoter: Set<Kvote>, action: (KvoteTilstand) -> T): List<T> {
         return listOfNotNull(
             if (Kvote.ORDINÆR in relevanteKvoter) action(ordinærkvote) else null,
-            if (Kvote.ETABLERINGSFASE in relevanteKvoter) action(etableringsfasekvote) else null,
-            if (Kvote.UTVIKLINGSFASE in relevanteKvoter) action(utviklingsfasekvote) else null,
             if (Kvote.SYKEPENGEERSTATNING in relevanteKvoter) action(sykepengeerstatningkvote) else null,
         )
     }
