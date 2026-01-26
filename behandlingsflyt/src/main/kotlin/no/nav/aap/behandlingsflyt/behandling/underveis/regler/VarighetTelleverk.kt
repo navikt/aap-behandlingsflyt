@@ -11,8 +11,6 @@ enum class Kvote(val avslagsårsak: VarighetVurdering.Avslagsårsak, val tellerM
         VarighetVurdering.Avslagsårsak.SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP,
         ::skalTelleMotSykepengeKvote
     ),
-    @Deprecated("Student er ikke kvote, men dato-til-dato. Finnes sansynligivs ingen treff i prod-databasen på denne, men i dev-databasen.")
-    STUDENT(VarighetVurdering.Avslagsårsak.STUDENTKVOTE_BRUKT_OPP, { false }),
     ;
 }
 
