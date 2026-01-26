@@ -43,7 +43,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
                 .filter {
                     if (erDev()) it.id == 4243L
                     else if (erProd()) it.id == 1100L
-                    else if (erLokal()) true
+                    else if (erLokal()) it.id == 11006L
                     else false
                 }
                 .also { log.info("Oppretter jobber for alle saker som er aktuelle kandidator for utvidelse av vedtakslengde. Antall = ${it.size}") }
@@ -56,12 +56,12 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
     // TODO: Må filtrere vekk de som allerede har blitt kjørt, men ikke kvalifiserte til reell utvidelse av vedtakslengde
     private fun hentKandidaterForUtvidelseAvVedtakslengde(datoForUtvidelse: LocalDate): Set<SakId> {
         return vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(datoForUtvidelse)
-            .filter { kunSakerUtenÅpneYtelsesbehandlinger(it) }
+            .filter { erSisteYtelsesbehandlingAvsluttet(it) }
             .filter { kunSakerMedBehovForUtvidelseAvVedtakslengde(it, datoForUtvidelse) }
             .toSet()
     }
 
-    private fun kunSakerUtenÅpneYtelsesbehandlinger(id: SakId): Boolean {
+    private fun erSisteYtelsesbehandlingAvsluttet(id: SakId): Boolean {
         val sisteBehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(id)
         return sisteBehandling?.status() in setOf(Status.AVSLUTTET, Status.IVERKSETTES)
     }

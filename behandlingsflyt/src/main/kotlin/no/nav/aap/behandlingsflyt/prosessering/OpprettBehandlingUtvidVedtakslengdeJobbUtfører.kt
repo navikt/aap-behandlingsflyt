@@ -31,8 +31,8 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
         val sakId = SakId(input.sakId())
 
         // I tilfellet en behandling har blitt opprettet i tiden mellom jobben ble opprettet til den ble startet
-        if (!kunSakerUtenÅpneYtelsesbehandlinger(sakId)) {
-            log.info("Sak med id $sakId har åpne ytelsesbehandlinger, hopper over")
+        if (!erSisteYtelsesbehandlingAvsluttet(sakId)) {
+            log.info("Sak med id $sakId er ikke avsluttet, hopper over")
             return
         }
 
@@ -51,7 +51,7 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
         }
     }
 
-    private fun kunSakerUtenÅpneYtelsesbehandlinger(id: SakId): Boolean {
+    private fun erSisteYtelsesbehandlingAvsluttet(id: SakId): Boolean {
         val sisteBehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(id)
         return sisteBehandling?.status() in setOf(Status.AVSLUTTET, Status.IVERKSETTES)
     }
