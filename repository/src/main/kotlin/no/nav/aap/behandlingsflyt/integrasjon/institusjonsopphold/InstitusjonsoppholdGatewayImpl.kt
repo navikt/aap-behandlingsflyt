@@ -66,7 +66,7 @@ data class InstitusjonsoppholdJSON(
 
 object InstitusjonsoppholdGatewayImpl : InstitusjonsoppholdGateway {
     private val url =
-        URI.create(requiredConfigForKey("integrasjon.institusjonsopphold.url") + "?Med-Institusjonsinformasjon=true")
+        URI.create(requiredConfigForKey("integrasjon.institusjonsopphold.url"))
     private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.institusjonsopphold.scope"))
     private val client = RestClient.withDefaultResponseHandler(
         config = config,
@@ -86,7 +86,17 @@ object InstitusjonsoppholdGatewayImpl : InstitusjonsoppholdGateway {
                 Header("Accept", "application/json")
             )
         )
-        return requireNotNull(client.post(uri = url, request = httpRequest, mapper = { body, _ ->
+
+        val baseUri = url // e.g., http://localhost:52570/institusjonsopphold
+        val uri = URI(
+            baseUri.scheme,
+            baseUri.authority,
+            baseUri.path + "/soek",  // append the path correctly
+            "Med-Institusjonsinformasjon=true", // query
+            null
+        )
+
+        return requireNotNull(client.post(uri = uri, request = httpRequest, mapper = { body, _ ->
             DefaultJsonMapper.fromJson(body)
         }))
     }
@@ -100,7 +110,12 @@ object InstitusjonsoppholdGatewayImpl : InstitusjonsoppholdGateway {
                 Header("Accept", "application/json")
             )
         )
-        return requireNotNull(client.post(uri = url, request = httpRequest, mapper = { body, _ ->
+
+        val uri = URI.create(
+            "$url/${request.oppholdId}?Med-Institusjonsinformasjon=true"
+        )
+
+        return requireNotNull(client.post(uri = uri, request = httpRequest, mapper = { body, _ ->
             DefaultJsonMapper.fromJson(body)
         }))
     }
