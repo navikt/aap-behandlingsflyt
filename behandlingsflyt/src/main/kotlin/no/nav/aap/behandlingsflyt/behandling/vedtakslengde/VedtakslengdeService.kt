@@ -61,7 +61,7 @@ class VedtakslengdeService(
         vedtattSluttdato: LocalDate,
         rettighetstypeTidslinjeForInneværendeBehandling: Tidslinje<RettighetsType>
     ): Boolean {
-        val varighetstidslinje = VarighetRegel().simluer(rettighetstypeTidslinjeForInneværendeBehandling)
+        val varighetstidslinje = VarighetRegel().simuler(rettighetstypeTidslinjeForInneværendeBehandling)
         return varighetstidslinje.begrensetTil(Periode(vedtattSluttdato.plusDays(1), Tid.MAKS))
             .segmenter()
             .any { varighetSegment ->
