@@ -65,8 +65,6 @@ data class InstitusjonsoppholdJSON(
 )
 
 object InstitusjonsoppholdGatewayImpl : InstitusjonsoppholdGateway {
-    private val institusjonsOppholdUrl =
-        URI.create(requiredConfigForKey("integrasjon.institusjonsopphold.url"))
     private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.institusjonsopphold.scope"))
     private val client = RestClient.withDefaultResponseHandler(
         config = config,
@@ -86,10 +84,10 @@ object InstitusjonsoppholdGatewayImpl : InstitusjonsoppholdGateway {
                 Header("Accept", "application/json")
             )
         )
-        val personOppholdUrlMedSoek = URI.create(
-            "$institusjonsOppholdUrl/soek?Med-Institusjonsinformasjon=true"
-        )
-        return requireNotNull(client.post(uri = personOppholdUrlMedSoek, request = httpRequest, mapper = { body, _ ->
+
+        val personOppholdUri = InstitusjonsOppholdUrlBuilder.personUrl()
+
+        return requireNotNull(client.post(uri = personOppholdUri, request = httpRequest, mapper = { body, _ ->
             DefaultJsonMapper.fromJson(body)
         }))
     }
@@ -103,10 +101,10 @@ object InstitusjonsoppholdGatewayImpl : InstitusjonsoppholdGateway {
                 Header("Accept", "application/json")
             )
         )
-        val enkeltOppholdUrlMedOppholdId = URI.create(
-            "$institusjonsOppholdUrl/${request.oppholdId}?Med-Institusjonsinformasjon=true"
-        )
-        return requireNotNull(client.post(uri = enkeltOppholdUrlMedOppholdId, request = httpRequest, mapper = { body, _ ->
+
+        val enkeltOppholdUri = InstitusjonsOppholdUrlBuilder.enkeltUrl(request.oppholdId)
+
+        return requireNotNull(client.post(uri = enkeltOppholdUri, request = httpRequest, mapper = { body, _ ->
             DefaultJsonMapper.fromJson(body)
         }))
     }
@@ -144,6 +142,22 @@ object InstitusjonsoppholdGatewayImpl : InstitusjonsoppholdGateway {
             )
 
         return institusjonsopphold
+    }
+
+    object InstitusjonsOppholdUrlBuilder {
+        private val baseUrl: String =
+            requiredConfigForKey("integrasjon.institusjonsopphold.url")
+
+        fun personUrl(): URI =
+            appendPathAndQuery("soek")
+
+        fun enkeltUrl(oppholdId: Long): URI =
+            appendPathAndQuery(oppholdId.toString())
+
+        private fun appendPathAndQuery(path: String): URI {
+            val uriString = "$baseUrl/$path?Med-Institusjonsinformasjon=true"
+            return URI.create(uriString)
+        }
     }
 
 }
