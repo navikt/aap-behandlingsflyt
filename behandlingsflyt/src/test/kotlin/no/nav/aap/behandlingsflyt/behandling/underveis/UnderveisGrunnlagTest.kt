@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis
 
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
@@ -56,7 +57,7 @@ class UnderveisGrunnlagTest {
     }
 
     @Test
-    fun `skal utlede maksdato 2 år, 11 måneder og 15 dager frem i tid for rettighet bistandsbehov ved brukt kvote på 2 uker`() {
+    fun `skal utlede maksdato 773 hverdager frem i tid for rettighet bistandsbehov ved brukt kvote på 2 uker`() {
         val perioder = listOf(
             underveisperiode(
                 Periode(FØRSTE_JAN_2026.minusWeeks(3), FØRSTE_JAN_2026.minusWeeks(1)),
@@ -65,13 +66,13 @@ class UnderveisGrunnlagTest {
 
         val underveisGrunnlag = UnderveisGrunnlag(1234, perioder)
         val maksdato = underveisGrunnlag.utledMaksdatoForRettighet(RettighetsType.BISTANDSBEHOV)
-        val forventetMaksdato = dagensDato.plusYears(2).plusMonths(11).plusDays(15)
+        val forventetMaksdato = Hverdager(773).fraOgMed(dagensDato)
 
         assertThat(maksdato).isEqualTo(forventetMaksdato)
     }
 
     @Test
-    fun `skal utlede maksdato 5 måneder og 6 dager frem i tid for rettighet sykepengeerstatning ved brukt kvote på 3 uker`() {
+    fun `skal utlede maksdato 114 hverdager frem i tid for rettighet sykepengeerstatning ved brukt kvote på 3 uker`() {
         val perioder = listOf(
             underveisperiode(
                 Periode(FØRSTE_JAN_2026.minusWeeks(5), FØRSTE_JAN_2026.minusWeeks(2)),
@@ -80,7 +81,7 @@ class UnderveisGrunnlagTest {
 
         val underveisGrunnlag = UnderveisGrunnlag(1234, perioder)
         val maksdato = underveisGrunnlag.utledMaksdatoForRettighet(RettighetsType.SYKEPENGEERSTATNING)
-        val forventetMaksdato = dagensDato.plusMonths(5).plusDays(6)
+        val forventetMaksdato = Hverdager(114).fraOgMed(dagensDato)
 
         assertThat(maksdato).isEqualTo(forventetMaksdato)
     }
