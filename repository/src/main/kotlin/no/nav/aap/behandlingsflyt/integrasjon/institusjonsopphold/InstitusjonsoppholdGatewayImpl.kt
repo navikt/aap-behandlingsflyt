@@ -63,6 +63,7 @@ data class InstitusjonsoppholdJSON(
     val institusjonsnavn: String? = null,
 
     private val avdelingsnavn: String? = null,
+
 )
 
 object InstitusjonsoppholdGatewayImpl : InstitusjonsoppholdGateway {
@@ -116,14 +117,13 @@ object InstitusjonsoppholdGatewayImpl : InstitusjonsoppholdGateway {
     override fun innhent(person: Person): List<Institusjonsopphold> {
         val request = InstitusjonoppholdRequest(person.aktivIdent().identifikator)
         val oppholdRes = query(request)
-
         val institusjonsopphold = oppholdRes.map { opphold ->
             Institusjonsopphold.nyttOpphold(
                 requireNotNull(opphold.institusjonstype) { "Institusjonstype på institusjonsopphold må være satt." },
                 opphold.kategori,
                 requireNotNull(opphold.startdato) { "Startdato på institusjonsopphold må være satt." },
                 opphold.faktiskSluttdato ?: opphold.forventetSluttdato,
-                opphold.organisasjonsnummer,
+                opphold.organisasjonsnummer ?: "XXXXXXXXX",
                 opphold.institusjonsnavn ?: "Ukjent institusjon"
             )
         }
@@ -133,7 +133,6 @@ object InstitusjonsoppholdGatewayImpl : InstitusjonsoppholdGateway {
     override fun hentDataForHendelse(oppholdId: Long): Institusjonsopphold {
         val request = InstitusjonoppholdEnkelt(oppholdId)
         val oppholdRes = query(request)
-
         val institusjonsopphold =
 
             Institusjonsopphold.nyttOpphold(
