@@ -66,9 +66,9 @@ data class InstitusjonsoppholdJSON(
 
 object InstitusjonsoppholdGatewayImpl : InstitusjonsoppholdGateway {
     private val personOppholdUrl =
-        URI.create(requiredConfigForKey("integrasjon.institusjonsopphold.url") + "?Med-Institusjonsinformasjon=true")
+        URI.create(requiredConfigForKey("integrasjon.institusjonsopphold.url"))
     private val enkeltOppholdURL =
-        URI.create(requiredConfigForKey("integrasjon.institusjonsoppholdenkelt.url") + "?Med-Institusjonsinformasjon=true")
+        URI.create(requiredConfigForKey("integrasjon.institusjonsoppholdenkelt.url"))
     private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.institusjonsopphold.scope"))
     private val client = RestClient.withDefaultResponseHandler(
         config = config,
