@@ -77,7 +77,7 @@ testcontainersKafka = { module = "org.testcontainers:testcontainers-kafka", vers
 mockOauth2Server = { module = "no.nav.security:mock-oauth2-server", version = "3.0.1" }
 mockk = { module = "io.mockk:mockk", version = "1.14.6" }
 
-ktorOpenApiGenerator = { module = "no.nav:ktor-openapi-generator", version = "1.0.136" }
+ktorOpenApiGenerator = { module = "no.nav:ktor-openapi-generator", version = "1.0.137" }
 
 [bundles]
 junit = ["junitApi", "junitJupiterEngine", "junitJupiterParams", "assertJ"]
