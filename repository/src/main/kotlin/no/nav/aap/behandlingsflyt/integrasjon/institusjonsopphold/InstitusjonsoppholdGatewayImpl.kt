@@ -10,6 +10,7 @@ import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
+import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
@@ -65,8 +66,10 @@ data class InstitusjonsoppholdJSON(
 )
 
 object InstitusjonsoppholdGatewayImpl : InstitusjonsoppholdGateway {
-    private val url =
-        URI.create(requiredConfigForKey("integrasjon.institusjonsopphold.url") + "?Med-Institusjonsinformasjon=true")
+    private val personOppholdUrl =
+        URI.create(requiredConfigForKey("integrasjon.institusjonsopphold.url"))
+    private val enkeltOppholdURL =
+        URI.create(requiredConfigForKey("integrasjon.institusjonsoppholdenkelt.url"))
     private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.institusjonsopphold.scope"))
     private val client = RestClient.withDefaultResponseHandler(
         config = config,
@@ -86,21 +89,26 @@ object InstitusjonsoppholdGatewayImpl : InstitusjonsoppholdGateway {
                 Header("Accept", "application/json")
             )
         )
-        return requireNotNull(client.post(uri = url, request = httpRequest, mapper = { body, _ ->
+
+        return requireNotNull(client.post(uri = personOppholdUrl, request = httpRequest, mapper = { body, _ ->
             DefaultJsonMapper.fromJson(body)
         }))
     }
 
     private fun query(request: InstitusjonoppholdEnkelt): InstitusjonsoppholdJSON {
-        val httpRequest = PostRequest(
-            body = request,
+        val httpRequest = GetRequest(
             additionalHeaders = listOfNotNull(
                 Header("Nav-Consumer-Id", "aap-behandlingsflyt"),
                 Header("Nav-Formaal", "ARBEIDSAVKLARINGSPENGER"),
                 Header("Accept", "application/json")
             )
         )
-        return requireNotNull(client.post(uri = url, request = httpRequest, mapper = { body, _ ->
+
+        val enkeltOppholdUrlMedOppholdId = URI.create(
+            "$enkeltOppholdURL/${request.oppholdId}?Med-Institusjonsinformasjon=true"
+        )
+
+        return requireNotNull(client.get(uri = enkeltOppholdUrlMedOppholdId, request = httpRequest, mapper = { body, _ ->
             DefaultJsonMapper.fromJson(body)
         }))
     }
@@ -139,5 +147,4 @@ object InstitusjonsoppholdGatewayImpl : InstitusjonsoppholdGateway {
 
         return institusjonsopphold
     }
-
 }

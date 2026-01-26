@@ -24,6 +24,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtle
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Opprettholdes
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.innvilgedePerioder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrevRepository
@@ -82,9 +83,13 @@ class BrevUtlederService(
     fun utledBehovForMeldingOmVedtak(behandlingId: BehandlingId): BrevBehov? {
         val behandling = behandlingRepository.hent(behandlingId)
         val forrigeBehandlingId = behandling.forrigeBehandlingId
-        var harBehandlingenArbeidsopptrapping = arbeidsopptrappingRepository.hentPerioder(behandlingId).isNotEmpty()
-        var harForrigeBehandlingArbeidsopptrapping = forrigeBehandlingId != null && arbeidsopptrappingRepository.hentPerioder(forrigeBehandlingId).isNotEmpty()
-        var skalSendeVedtakForArbeidsopptrapping = harBehandlingenArbeidsopptrapping && !harForrigeBehandlingArbeidsopptrapping
+        val harBehandlingenArbeidsopptrapping =
+            arbeidsopptrappingRepository.hentHvisEksisterer(behandlingId).innvilgedePerioder().isNotEmpty()
+        val harForrigeBehandlingArbeidsopptrapping =
+            forrigeBehandlingId != null && arbeidsopptrappingRepository.hentHvisEksisterer(forrigeBehandlingId)
+                .innvilgedePerioder().isNotEmpty()
+        val skalSendeVedtakForArbeidsopptrapping =
+            harBehandlingenArbeidsopptrapping && !harForrigeBehandlingArbeidsopptrapping
 
         when (behandling.typeBehandling()) {
             TypeBehandling.Førstegangsbehandling -> {
