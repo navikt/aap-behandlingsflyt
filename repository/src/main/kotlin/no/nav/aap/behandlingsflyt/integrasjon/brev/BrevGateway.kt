@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.integrasjon.brev
 
+import no.nav.aap.behandlingsflyt.behandling.brev.Avslag
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevBehov
 import no.nav.aap.behandlingsflyt.behandling.brev.GrunnlagBeregning
 import no.nav.aap.behandlingsflyt.behandling.brev.Innvilgelse
@@ -321,7 +322,8 @@ class BrevGateway : BrevbestillingGateway {
                                 minsteÅrligYtelse = brevBehov.tilkjentYtelse?.minsteÅrligYtelse?.heltallverdi(),
                                 minsteÅrligYtelseUnder25 = brevBehov.tilkjentYtelse?.minsteÅrligYtelseUnder25?.heltallverdi(),
                                 årligYtelse = brevBehov.tilkjentYtelse?.årligYtelse?.heltallverdi(),
-                                sisteDagMedYtelse = brevBehov.tilkjentYtelse?.sisteDagMedYtelse
+                                sisteDagMedYtelse = brevBehov.tilkjentYtelse?.sisteDagMedYtelse,
+                                kravdatoUføretrygd = null
                             )
                         )
                     }
@@ -329,6 +331,10 @@ class BrevGateway : BrevbestillingGateway {
                         add(
                             grunnlagBeregningTilFaktagrunnlag(brevBehov.grunnlagBeregning!!)
                         )
+                    }
+
+                    if(brevBehov.sykdomsvurdering != null) {
+                        add(Faktagrunnlag.Sykdomsvurdering(brevBehov.sykdomsvurdering!!))
                     }
                 }
 
@@ -338,6 +344,14 @@ class BrevGateway : BrevbestillingGateway {
                         add(
                             grunnlagBeregningTilFaktagrunnlag(brevBehov.grunnlagBeregning!!)
                         )
+                    }
+                }
+            }
+
+            is Avslag -> {
+                buildSet {
+                    if(brevBehov.sykdomsvurdering != null) {
+                        add(Faktagrunnlag.Sykdomsvurdering(brevBehov.sykdomsvurdering!!))
                     }
                 }
             }

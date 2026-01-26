@@ -57,12 +57,25 @@ class OpprettJobbForMigrereRettighetsperiodeJobbUtfører(
      */
     fun erForhåndskvalifisertSak(sak: Sak): Boolean {
         val forhåndskvalifisertDev = listOf(
-            "4QZGD4W", // Rent avslag - skal migreres "ok"
-            "4V4JB0G", // Trukket søknad - skal ikke migreres
-            "4R4NWoG", // Åpen behandling - skal ikke migreres
-            "4NTL7oW", // Vanlig 11-6
-            "4SMNX8W", // 11-18 med stans
-        )
+            "4oJFFCG",
+            "4oJFFCG",
+            "4oMUo2o",
+            "4P4BQoG",
+            "4QH354G",
+            "4QLP928",
+            "4UHL1N4",
+            "4NR36Y8",
+            "4NRCU68",
+            "4NREZC0",
+            "4NRG1WW",
+            "4NRi72o",
+            "4NRoMK0",
+            "4NRV21C",
+            "4NRW4M8",
+            "4NRY9S0",
+            "4NS6UF4",
+            "4NYVYZ4",
+            )
         val forhåndskvalifisertProd = emptyList<String>()
         return when (Miljø.er()) {
             MiljøKode.DEV -> forhåndskvalifisertDev.contains(sak.saksnummer.toString())
