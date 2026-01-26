@@ -18,32 +18,6 @@ class ArbeidsopptrappingRepositoryImpl(private val connection: DBConnection) : A
         }
     }
 
-    override fun hentPerioder(behandlingId: BehandlingId): List<Periode> {
-        val grunnlag = hentHvisEksisterer(behandlingId) ?: return emptyList()
-
-        val vurderinger = grunnlag.vurderinger
-            .sortedBy { it.vurderingenGjelderFra }
-
-        val vurderingMedPerioder = vurderinger.mapIndexed { index, vurdering ->
-            val fom = vurdering.vurderingenGjelderFra
-            val tom = when {
-                vurdering.vurderingenGjelderTil != null ->
-                    vurdering.vurderingenGjelderTil!!
-
-                index < vurderinger.lastIndex ->
-                    vurderinger[index + 1].vurderingenGjelderFra
-
-                else ->
-                    vurdering.vurderingenGjelderFra.plusMonths(12)
-            }
-            vurdering to Periode(fom, tom)
-        }
-
-        return vurderingMedPerioder
-            .filter { (v) -> v.rettPaaAAPIOpptrapping && v.reellMulighetTilOpptrapping }
-            .map { (_, periode) -> periode }
-    }
-
     override fun hentHvisEksisterer(behandlingId: BehandlingId): ArbeidsopptrappingGrunnlag? {
         val query = """
             SELECT * FROM ARBEIDSOPPTRAPPING_GRUNNLAG WHERE behandling_id = ? and aktiv = true

@@ -45,7 +45,7 @@ class VarighetRegel : UnderveisRegel {
         return resultat.leggTilVurderinger(varighetTidslinje, Vurdering::leggTilVarighetVurdering)
     }
     
-    fun simluer(rettighetstidslinje: Tidslinje<RettighetsType>): Tidslinje<VarighetVurdering> {
+    fun simuler(rettighetstidslinje: Tidslinje<RettighetsType>): Tidslinje<VarighetVurdering> {
         val telleverk = Telleverk(KvoteService().beregn())
 
         val varighetTidslinje = rettighetstidslinje.flatMap {
