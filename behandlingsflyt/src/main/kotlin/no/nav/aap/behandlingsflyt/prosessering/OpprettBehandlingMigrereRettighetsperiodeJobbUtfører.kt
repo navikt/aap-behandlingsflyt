@@ -54,6 +54,9 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
             }
             val behandlingFørMigrering = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
                 ?: error("Fant ikke behandling for sak=${sakId}")
+            if (behandlingFørMigrering.status().erÅpen()) {
+                throw IllegalArgumentException("Kan ikke migrere sak når det finnes en åpen behandling")
+            }
             sakOgBehandlingService.overstyrRettighetsperioden(sak.id, sak.rettighetsperiode.fom, Tid.MAKS)
             val utvidVedtakslengdeBehandling = opprettNyBehandling(sak)
             prosesserBehandlingService.triggProsesserBehandling(utvidVedtakslengdeBehandling)
