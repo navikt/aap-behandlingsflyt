@@ -249,7 +249,7 @@ class BrevUtlederServiceTest {
         every { behandlingRepository.hent(any<BehandlingId>()) } returns førstegangsbehandling
         every { trukketSøknadService.søknadErTrukket(any<BehandlingId>()) } returns false
         every { underveisRepository.hent(førstegangsbehandling.id) } returns underveisGrunnlag()
-        every { arbeidsopptrappingRepository.hentPerioder(any<BehandlingId>()) } returns emptyList()
+        every { arbeidsopptrappingRepository.hentHvisEksisterer(any<BehandlingId>()) } returns null
 
         val dagsats = Beløp("1000.00")
         every { tilkjentYtelseRepository.hentHvisEksisterer(førstegangsbehandling.id)} returns tilkjentYtelseForFørstegangsbehandling(dagsats)
@@ -294,7 +294,7 @@ class BrevUtlederServiceTest {
         every { behandlingRepository.hent(any<BehandlingId>()) } returns førstegangsbehandling
         every { trukketSøknadService.søknadErTrukket(any<BehandlingId>()) } returns false
         every { underveisRepository.hentHvisEksisterer(any<BehandlingId>()) } returns underveisgrunnlagAvslag()
-        every { arbeidsopptrappingRepository.hentPerioder(any<BehandlingId>()) } returns emptyList()
+        every { arbeidsopptrappingRepository.hentHvisEksisterer(any<BehandlingId>()) } returns null
 
         every { sykdomsvurderingForBrevRepository.hent(any<BehandlingId>())} returns sykdomsvurderingForBrevGrunnlag()
 
@@ -336,7 +336,7 @@ class BrevUtlederServiceTest {
         every { behandlingRepository.hent(any<BehandlingId>()) } returns førstegangsbehandling
         every { trukketSøknadService.søknadErTrukket(any<BehandlingId>()) } returns false
         every { underveisRepository.hentHvisEksisterer(any<BehandlingId>()) } returns underveisgrunnlagAvslag()
-        every { arbeidsopptrappingRepository.hentPerioder(any<BehandlingId>()) } returns emptyList()
+        every { arbeidsopptrappingRepository.hentHvisEksisterer(any<BehandlingId>()) } returns null
 
         every { sykdomsvurderingForBrevRepository.hent(any<BehandlingId>())} returns null
 
