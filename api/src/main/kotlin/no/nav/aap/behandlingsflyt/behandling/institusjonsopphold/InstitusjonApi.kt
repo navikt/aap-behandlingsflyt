@@ -171,6 +171,7 @@ fun NormalOpenAPIRoute.institusjonApi(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         opphold = oppholdInfo.segmenter().map { InstitusjonsoppholdDto.institusjonToDto(it) },
                         vurderinger = manglendePerioder,
+                        vedtatteVurderinger = emptyList(), // TODO Legg til vedtatte vurderinger her
                         vurdertAv =
                             grunnlag?.helseoppholdvurderinger?.let {
                                 VurdertAvResponse(
@@ -271,6 +272,7 @@ fun NormalOpenAPIRoute.institusjonApi(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         opphold = oppholdInfo.segmenter().map { InstitusjonsoppholdDto.institusjonToDto(it) },
                         vurderinger = vurderinger,
+                        vedtatteVurderinger = emptyList(), // TODO Legg til vedtatte vurderinger her
                         vurdertAv = grunnlag?.helseoppholdvurderinger?.let {
                             VurdertAvResponse(
                                 ident = it.vurdertAv,
