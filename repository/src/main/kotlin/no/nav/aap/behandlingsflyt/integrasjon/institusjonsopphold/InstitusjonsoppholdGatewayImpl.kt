@@ -10,6 +10,7 @@ import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
+import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
@@ -19,6 +20,10 @@ import java.time.LocalDateTime
 
 data class InstitusjonoppholdRequest(
     val personident: String
+)
+
+data class InstitusjonoppholdEnkelt(
+    val oppholdId: Long
 )
 
 /**
@@ -58,11 +63,14 @@ data class InstitusjonsoppholdJSON(
     val institusjonsnavn: String? = null,
 
     private val avdelingsnavn: String? = null,
+
 )
 
 object InstitusjonsoppholdGatewayImpl : InstitusjonsoppholdGateway {
-    private val url =
-        URI.create(requiredConfigForKey("integrasjon.institusjonsopphold.url") + "?Med-Institusjonsinformasjon=true")
+    private val personOppholdUrl =
+        URI.create(requiredConfigForKey("integrasjon.institusjonsopphold.url"))
+    private val enkeltOppholdURL =
+        URI.create(requiredConfigForKey("integrasjon.institusjonsoppholdenkelt.url"))
     private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.institusjonsopphold.scope"))
     private val client = RestClient.withDefaultResponseHandler(
         config = config,
@@ -82,7 +90,26 @@ object InstitusjonsoppholdGatewayImpl : InstitusjonsoppholdGateway {
                 Header("Accept", "application/json")
             )
         )
-        return requireNotNull(client.post(uri = url, request = httpRequest, mapper = { body, _ ->
+
+        return requireNotNull(client.post(uri = personOppholdUrl, request = httpRequest, mapper = { body, _ ->
+            DefaultJsonMapper.fromJson(body)
+        }))
+    }
+
+    private fun query(request: InstitusjonoppholdEnkelt): InstitusjonsoppholdJSON {
+        val httpRequest = GetRequest(
+            additionalHeaders = listOfNotNull(
+                Header("Nav-Consumer-Id", "aap-behandlingsflyt"),
+                Header("Nav-Formaal", "ARBEIDSAVKLARINGSPENGER"),
+                Header("Accept", "application/json")
+            )
+        )
+
+        val enkeltOppholdUrlMedOppholdId = URI.create(
+            "$enkeltOppholdURL/${request.oppholdId}?Med-Institusjonsinformasjon=true"
+        )
+
+        return requireNotNull(client.get(uri = enkeltOppholdUrlMedOppholdId, request = httpRequest, mapper = { body, _ ->
             DefaultJsonMapper.fromJson(body)
         }))
     }
@@ -90,17 +117,33 @@ object InstitusjonsoppholdGatewayImpl : InstitusjonsoppholdGateway {
     override fun innhent(person: Person): List<Institusjonsopphold> {
         val request = InstitusjonoppholdRequest(person.aktivIdent().identifikator)
         val oppholdRes = query(request)
-
         val institusjonsopphold = oppholdRes.map { opphold ->
             Institusjonsopphold.nyttOpphold(
                 requireNotNull(opphold.institusjonstype) { "Institusjonstype på institusjonsopphold må være satt." },
                 opphold.kategori,
                 requireNotNull(opphold.startdato) { "Startdato på institusjonsopphold må være satt." },
                 opphold.faktiskSluttdato ?: opphold.forventetSluttdato,
-                opphold.organisasjonsnummer,
+                opphold.organisasjonsnummer ?: "XXXXXXXXX",
                 opphold.institusjonsnavn ?: "Ukjent institusjon"
             )
         }
+        return institusjonsopphold
+    }
+
+    override fun hentDataForHendelse(oppholdId: Long): Institusjonsopphold {
+        val request = InstitusjonoppholdEnkelt(oppholdId)
+        val oppholdRes = query(request)
+        val institusjonsopphold =
+
+            Institusjonsopphold.nyttOpphold(
+                requireNotNull(oppholdRes.institusjonstype) { "Institusjonstype på institusjonsopphold må være satt." },
+                oppholdRes.kategori,
+                requireNotNull(oppholdRes.startdato) { "Startdato på institusjonsopphold må være satt." },
+                oppholdRes.faktiskSluttdato ?: oppholdRes.forventetSluttdato,
+                oppholdRes.organisasjonsnummer,
+                oppholdRes.institusjonsnavn ?: "Ukjent institusjon"
+            )
+
         return institusjonsopphold
     }
 }

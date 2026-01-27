@@ -24,8 +24,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtle
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Opprettholdes
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.innvilgedePerioder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrevRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -60,6 +62,7 @@ class BrevUtlederService(
     private val underveisRepository: UnderveisRepository,
     private val aktivitetsplikt11_7Repository: Aktivitetsplikt11_7Repository,
     private val arbeidsopptrappingRepository: ArbeidsopptrappingRepository,
+    private val sykdomsvurderingForBrevRepository: SykdomsvurderingForBrevRepository,
     private val unleashGateway: UnleashGateway
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
@@ -73,15 +76,20 @@ class BrevUtlederService(
         underveisRepository = repositoryProvider.provide(),
         aktivitetsplikt11_7Repository = repositoryProvider.provide(),
         arbeidsopptrappingRepository = repositoryProvider.provide(),
+        sykdomsvurderingForBrevRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide()
     )
 
     fun utledBehovForMeldingOmVedtak(behandlingId: BehandlingId): BrevBehov? {
         val behandling = behandlingRepository.hent(behandlingId)
         val forrigeBehandlingId = behandling.forrigeBehandlingId
-        var harBehandlingenArbeidsopptrapping = arbeidsopptrappingRepository.hentPerioder(behandlingId).isNotEmpty()
-        var harForrigeBehandlingArbeidsopptrapping = forrigeBehandlingId != null && arbeidsopptrappingRepository.hentPerioder(forrigeBehandlingId).isNotEmpty()
-        var skalSendeVedtakForArbeidsopptrapping = harBehandlingenArbeidsopptrapping && !harForrigeBehandlingArbeidsopptrapping
+        val harBehandlingenArbeidsopptrapping =
+            arbeidsopptrappingRepository.hentHvisEksisterer(behandlingId).innvilgedePerioder().isNotEmpty()
+        val harForrigeBehandlingArbeidsopptrapping =
+            forrigeBehandlingId != null && arbeidsopptrappingRepository.hentHvisEksisterer(forrigeBehandlingId)
+                .innvilgedePerioder().isNotEmpty()
+        val skalSendeVedtakForArbeidsopptrapping =
+            harBehandlingenArbeidsopptrapping && !harForrigeBehandlingArbeidsopptrapping
 
         when (behandling.typeBehandling()) {
             TypeBehandling.Førstegangsbehandling -> {
@@ -101,7 +109,9 @@ class BrevUtlederService(
                         }
                     }
 
-                    Resultat.AVSLAG -> Avslag
+                    Resultat.AVSLAG -> {
+                        brevBehovAvslag(behandling)
+                    }
                     Resultat.TRUKKET -> null
                     Resultat.AVBRUTT -> null
                 }
@@ -197,12 +207,20 @@ class BrevUtlederService(
 
         val tilkjentYtelse = utledTilkjentYtelse(behandling.id, vedtak.virkningstidspunkt)
 
+        val sykdomsvurdering = hentSykdomsvurdering(behandling.id)
+
 
         return Innvilgelse(
             virkningstidspunkt = vedtak.virkningstidspunkt,
             grunnlagBeregning = grunnlagBeregning,
             tilkjentYtelse = tilkjentYtelse,
+            sykdomsvurdering = sykdomsvurdering,
         )
+    }
+
+    private fun brevBehovAvslag(behandling: Behandling): Avslag {
+        val sykdomsvurdering = hentSykdomsvurdering(behandling.id)
+        return Avslag(sykdomsvurdering = sykdomsvurdering)
     }
 
     private fun brevBehovVurderesForUføretrygd(behandling: Behandling): VurderesForUføretrygd {
@@ -248,6 +266,11 @@ class BrevUtlederService(
 
             null -> GrunnlagBeregning(null, emptyList(), beregningsgrunnlag)
         }
+    }
+
+    private fun hentSykdomsvurdering(behandlingId: BehandlingId): String? {
+        val grunnlag = sykdomsvurderingForBrevRepository.hent(behandlingId)
+        return grunnlag?.vurdering
     }
 
     private fun utledGrunnlagBeregning11_9(

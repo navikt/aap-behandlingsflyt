@@ -215,19 +215,37 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
 
     override fun finnSakerMedInstitusjonsOpphold(): List<Sak> {
         val sql = """
-            select s.id from sak s, behandling b where s.id = b.sak_id and  b.id in (
+        select 
+       s.id,
+       s.person_id,
+       s.rettighetsperiode,
+       s.saksnummer,
+       s.status,
+       s.opprettet_tid
+            from sak s
+            join behandling b on s.id = b.sak_id
+            where b.id in (
                 select g.behandling_id
-                from opphold_grunnlag g, public.helseopphold_vurderinger v
-                where g.helseopphold_vurderinger_id  = v.id and g.aktiv = true and g.id in (
-                    select id
-                    from opphold_grunnlag
-                    where aktiv = true and behandling_id in (
-                        select id from behandling where id not in (
-                            select forrige_id from behandling where forrige_id is not null
-                        )
-                    )
+                from opphold_grunnlag g
+                join helseopphold_vurderinger v
+                      on g.helseopphold_vurderinger_id = v.id
+                         where g.aktiv = true
+                         and g.id in (
+                              select id
+                              from opphold_grunnlag
+                                  where aktiv = true
+                                  and behandling_id in (
+                                    select id
+                                       from behandling
+                                       where id not in (
+                                              select forrige_id
+                                              from behandling
+                                              where forrige_id is not null
                 )
             )
+      )
+)
+
         """.trimIndent()
 
         return connection.queryList(sql) {
