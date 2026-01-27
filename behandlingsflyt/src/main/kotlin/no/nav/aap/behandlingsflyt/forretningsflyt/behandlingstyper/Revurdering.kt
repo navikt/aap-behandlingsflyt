@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurdering
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgInformasjonskrav
 import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.VurderRettighetsperiodeInformasjonskrav
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadInformasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.AndreStatligeYtelserInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Aktivitetsplikt11_7Informasjonskrav
@@ -28,7 +29,6 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BarnetilleggSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BeregnTilkjentYtelseSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BeregningAvklarFaktaSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.Effektuer11_7Steg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.InstitusjonsoppholdSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettArbeidsevneSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettGrunnlagSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FastsettMeldeperiodeSteg
@@ -38,6 +38,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.ForeslåVedtakSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.FritakMeldepliktSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.IkkeOppfyltMeldepliktSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.InntektsbortfallSteg
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.InstitusjonsoppholdSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.IverksettVedtakSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.KvalitetssikringsSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.ManglendeLigningGrunnlagSteg
@@ -393,6 +394,7 @@ object Revurdering : BehandlingType {
             )
             .medSteg(
                 steg = SamordningAndreStatligeYtelserSteg,
+                informasjonskrav = listOf(AndreStatligeYtelserInformasjonskrav),
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
                     Vurderingsbehov.SAMORDNING_OG_AVREGNING,

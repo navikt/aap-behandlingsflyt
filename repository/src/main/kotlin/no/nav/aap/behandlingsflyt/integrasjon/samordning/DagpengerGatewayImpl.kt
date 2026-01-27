@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.integrasjon.samordning
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.DagpengerGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.DagpengerPeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.DagpengerResponse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerResponse
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory
@@ -40,12 +40,12 @@ class DagpengerGatewayImpl: DagpengerGateway {
     }
 
     override fun hentYtelseDagpenger(
-        personidentifikatorer: Set<String>,
+        personidentifikatorer: String,
         fom: String,
         tom: String
     ): List<DagpengerPeriode> {
         return query(DagpengerRequest(
-            personIdent = personidentifikatorer.first(),
+            personIdent = personidentifikatorer,
             fraOgMedDato = fom,
             tilOgMedDato = tom
         )).perioder

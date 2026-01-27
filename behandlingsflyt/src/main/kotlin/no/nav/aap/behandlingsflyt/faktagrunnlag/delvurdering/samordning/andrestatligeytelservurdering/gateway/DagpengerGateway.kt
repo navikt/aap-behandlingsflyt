@@ -1,10 +1,10 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway
+package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway
 
 import no.nav.aap.komponenter.gateway.Gateway
 
 interface DagpengerGateway : Gateway {
     fun hentYtelseDagpenger(
-        personidentifikatorer: Set<String>,
+        personidentifikatorer: String,
         fom: String,
         tom: String
     ): List<DagpengerPeriode>
