@@ -13,7 +13,11 @@ data class Innvilgelse(
 ) : BrevBehov(TypeBrev.VEDTAK_INNVILGELSE) {
 }
 
-data class VurderesForUføretrygd(val grunnlagBeregning: GrunnlagBeregning?) : BrevBehov(TypeBrev.VEDTAK_11_18)
+data class VurderesForUføretrygd(
+    val grunnlagBeregning: GrunnlagBeregning?,
+    val tilkjentYtelse: TilkjentYtelse?
+) : BrevBehov(TypeBrev.VEDTAK_11_18)
+
 data class Avslag(val sykdomsvurdering: String?): BrevBehov(TypeBrev.VEDTAK_AVSLAG)
 
 object Arbeidssøker : BrevBehov(TypeBrev.VEDTAK_11_17)

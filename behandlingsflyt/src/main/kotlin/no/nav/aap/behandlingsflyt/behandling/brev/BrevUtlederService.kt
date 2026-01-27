@@ -28,6 +28,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrevRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -63,6 +64,7 @@ class BrevUtlederService(
     private val aktivitetsplikt11_7Repository: Aktivitetsplikt11_7Repository,
     private val arbeidsopptrappingRepository: ArbeidsopptrappingRepository,
     private val sykdomsvurderingForBrevRepository: SykdomsvurderingForBrevRepository,
+    private val overgangUføreRepository: OvergangUføreRepository,
     private val unleashGateway: UnleashGateway
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
@@ -77,6 +79,7 @@ class BrevUtlederService(
         aktivitetsplikt11_7Repository = repositoryProvider.provide(),
         arbeidsopptrappingRepository = repositoryProvider.provide(),
         sykdomsvurderingForBrevRepository = repositoryProvider.provide(),
+        overgangUføreRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide()
     )
 
@@ -227,8 +230,14 @@ class BrevUtlederService(
         // Sender per nå ikke med dato som betyr at beregningsgrunnlag (beløp) blir null
         val grunnlagBeregning = hentGrunnlagBeregning(behandling.id, null)
 
+        val vedtak = vedtakRepository.hent(behandling.id)
+        val tilkjentYtelse = vedtak?.virkningstidspunkt?.let {
+            utledTilkjentYtelse(behandling.id, vedtak.virkningstidspunkt)
+        }
+
         return VurderesForUføretrygd(
-            grunnlagBeregning = grunnlagBeregning
+            grunnlagBeregning = grunnlagBeregning,
+            tilkjentYtelse = tilkjentYtelse
         )
     }
 
@@ -349,6 +358,8 @@ class BrevUtlederService(
                         .setScale(0, RoundingMode.HALF_UP)
                 )
 
+            val kravdatoUføretrygd = overgangUføreRepository.hentHvisEksisterer(behandlingId)?.kravdatoUføretrygd()
+
             TilkjentYtelse(
                 dagsats = tilkjent.dagsats,
                 gradertDagsats = gradertDagsats,
@@ -360,7 +371,8 @@ class BrevUtlederService(
                 minsteÅrligYtelse = minsteÅrligYtelse,
                 minsteÅrligYtelseUnder25 = Beløp(minsteÅrligYtelse.toTredjedeler()),
                 årligYtelse = tilkjent.dagsats.multiplisert(ANTALL_ÅRLIGE_ARBEIDSDAGER),
-                sisteDagMedYtelse = underveidGrunnlag.sisteDagMedYtelse()
+                sisteDagMedYtelse = underveidGrunnlag.sisteDagMedYtelse(),
+                kravdatoUføretrygd = kravdatoUføretrygd
             )
         }.segment(virkningstidspunkt)?.verdi
     }
