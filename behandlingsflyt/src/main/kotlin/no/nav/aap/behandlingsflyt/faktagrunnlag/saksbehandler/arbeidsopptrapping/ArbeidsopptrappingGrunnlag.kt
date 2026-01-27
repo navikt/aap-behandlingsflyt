@@ -1,6 +1,10 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping
 
+import no.nav.aap.behandlingsflyt.behandling.vilkår.Varighetsvurdering
+import no.nav.aap.behandlingsflyt.behandling.vilkår.mapMedDatoTilDatoVarighet
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.filterNotNull
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
@@ -16,29 +20,29 @@ data class ArbeidsopptrappingGrunnlag(
             .sortedBy { it[0].opprettetTid }
             .flatMap { it.sortedBy { it.vurderingenGjelderFra } }
             .somTidslinje { Periode(it.vurderingenGjelderFra, it.vurderingenGjelderTil ?: maksDato) }
+            .komprimer()
     }
 }
 
-fun ArbeidsopptrappingGrunnlag?.innvilgedePerioder(): List<Periode> {
-    val vurderinger = this?.vurderinger.orEmpty()
-        .sortedBy { it.vurderingenGjelderFra }
+fun ArbeidsopptrappingGrunnlag?.gjeldendeVurderinger() = this?.gjeldendeVurderinger().orEmpty()
 
-    val vurderingMedPerioder = vurderinger.mapIndexed { index, vurdering ->
-        val fom = vurdering.vurderingenGjelderFra
-        val tom = when {
-            vurdering.vurderingenGjelderTil != null ->
-                vurdering.vurderingenGjelderTil
+fun ArbeidsopptrappingGrunnlag?.perioderMedArbeidsopptrapping(): List<Periode> {
+    val gjeldendeVurderinger = this.gjeldendeVurderinger()
 
-            index < vurderinger.lastIndex ->
-                vurderinger[index + 1].vurderingenGjelderFra
-
-            else ->
-                vurdering.vurderingenGjelderFra.plusMonths(12)
+    return gjeldendeVurderinger.mapMedDatoTilDatoVarighet(
+        harBegrensetVarighet = { it.rettPaaAAPIOpptrapping && it.reellMulighetTilOpptrapping },
+        varighet = {
+            /* Vilkåret har en begrensning på maks 12 måneder.
+             */
+            it.plusYears(1).minusDays(1)
+        },
+        body = { varighet, vurdering ->
+            when {
+                !vurdering.rettPaaAAPIOpptrapping || !vurdering.reellMulighetTilOpptrapping -> null
+                varighet == Varighetsvurdering.VARIGHET_OK -> true
+                varighet == Varighetsvurdering.VARIGHET_OVERSKREDET -> null
+                else -> null
+            }
         }
-        vurdering to Periode(fom, tom)
-    }
-
-    return vurderingMedPerioder
-        .filter { (v) -> v.rettPaaAAPIOpptrapping && v.reellMulighetTilOpptrapping }
-        .map { (_, periode) -> periode }
+    ).filterNotNull().komprimer().perioder().toList()
 }
