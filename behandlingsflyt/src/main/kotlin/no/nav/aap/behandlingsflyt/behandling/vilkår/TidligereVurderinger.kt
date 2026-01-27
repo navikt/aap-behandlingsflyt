@@ -216,19 +216,12 @@ class TidligereVurderingerImpl(
                         !sykdomOppfylt
                                 && sykdomErstating1113VilkårSegment?.utfall == IKKE_OPPFYLT
                                 && overgangArbeid1117VilkårSegment?.utfall != Utfall.OPPFYLT -> true
-
-
                         else -> false
                     }
-
                     if (førerTilAvslag) UUNGÅELIG_AVSLAG else UKJENT
                 }
-
-
                 //ikkeOppfyltFørerTilAvslag(Vilkårtype.SYKEPENGEERSTATNING, vilkårsresultat)
             },
-
-
 
             Sjekk(StegType.FASTSETT_SYKDOMSVILKÅRET) { _, _ ->
                 /* Det finnes unntak til sykdomsvilkåret, så selv om vilkåret ikke er oppfylt, så
@@ -236,12 +229,6 @@ class TidligereVurderingerImpl(
                 Tidslinje()
 
             },
-
-
-
-
-
-
 
             Sjekk(StegType.FASTSETT_GRUNNLAG) { vilkårsresultat, _ ->
                 ikkeOppfyltFørerTilAvslag(Vilkårtype.GRUNNLAGET, vilkårsresultat)
