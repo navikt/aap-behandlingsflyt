@@ -2,8 +2,9 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.miljo.Miljø.erProd
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
@@ -14,16 +15,16 @@ import org.slf4j.LoggerFactory
 
 class HåndterUbehandledeDokumenterJobbUtfører(
     private val mottattDokumentRepository: MottattDokumentRepository,
-    private val flytJobbRepository: FlytJobbRepository
+    private val flytJobbRepository: FlytJobbRepository,
+    private val unleashGateway: UnleashGateway
 ) : JobbUtfører {
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(input: JobbInput) {
-
-        if (erProd()) {
+        if (unleashGateway.isDisabled(BehandlingsflytFeature.UbehandledeMeldekortJobb)) {
             return
         }
-
+        
         val ubehandledeDokumenter = mottattDokumentRepository.hentAlleUbehandledeDokumenter()
 
         var hoppetOver = 0
@@ -48,7 +49,8 @@ class HåndterUbehandledeDokumenterJobbUtfører(
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
             return HåndterUbehandledeDokumenterJobbUtfører(
                 mottattDokumentRepository = repositoryProvider.provide(),
-                flytJobbRepository = repositoryProvider.provide()
+                flytJobbRepository = repositoryProvider.provide(),
+                unleashGateway = gatewayProvider.provide()
             )
         }
 
