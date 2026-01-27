@@ -6,8 +6,8 @@ import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.flyt.AvklaringsbehovDTO
-import no.nav.aap.behandlingsflyt.flyt.EndringDTO
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -22,8 +22,8 @@ import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.authorizedPost
+import java.time.LocalDateTime
 import javax.sql.DataSource
-import kotlin.collections.map
 
 /**
  * API for å utføre manuelle operasjoner med forsøk på å rette opp i låste saker av varierende grunn.
@@ -73,20 +73,16 @@ fun NormalOpenAPIRoute.driftApi(
                     val avklaringsbehovene = repositoryProvider.provide<AvklaringsbehovRepository>()
                         .hentAvklaringsbehovene(behandling.id)
                         .alle()
-                        .map { avklaringsbehov ->
-                            AvklaringsbehovDTO(
-                                definisjon = avklaringsbehov.definisjon,
-                                status = avklaringsbehov.status(),
-                                endringer = avklaringsbehov.historikk.map { endring ->
-                                    EndringDTO(
-                                        status = endring.status,
-                                        tidsstempel = endring.tidsstempel,
-                                        begrunnelse = endring.begrunnelse,
-                                        endretAv = endring.endretAv
-                                    )
-                                }
-                            )
-                        }
+                        .flatMap { avklaringsbehov ->
+                            avklaringsbehov.historikk.map { endring ->
+                                ForenkletAvklaringsbehov(
+                                    definisjon = avklaringsbehov.definisjon,
+                                    status = endring.status,
+                                    tidsstempel = endring.tidsstempel,
+                                    endretAv = endring.endretAv
+                                )
+                            }
+                        }.sortedByDescending { it.tidsstempel }
 
                     BehandlingDriftsinfoDTO(
                         behandling = behandling.tilDTO(),
@@ -106,7 +102,7 @@ fun NormalOpenAPIRoute.driftApi(
 
 private data class BehandlingDriftsinfoDTO(
     val behandling: BehandlinginfoDTO,
-    val avklaringsbehov: List<AvklaringsbehovDTO>,
+    val avklaringsbehov: List<ForenkletAvklaringsbehov>,
 )
 
 private fun Behandling.tilDTO() = BehandlinginfoDTO(
@@ -117,4 +113,11 @@ private fun Behandling.tilDTO() = BehandlinginfoDTO(
     årsakTilOpprettelse = this.årsakTilOpprettelse,
     opprettet = this.opprettetTidspunkt,
     eksternSaksbehandlingsløsningUrl = null,
+)
+
+private data class ForenkletAvklaringsbehov(
+    val definisjon: Definisjon,
+    val status: Status,
+    val tidsstempel: LocalDateTime = LocalDateTime.now(),
+    val endretAv: String
 )
