@@ -135,7 +135,7 @@ class HåndterMottattDokumentService(
         brevkategori: InnsendingType,
         melding: OmgjøringKlageRevurdering,
     ) {
-        log.info("Mottok dokument på sak-id $sakId, og referanse $referanse, med brevkategori $brevkategori")
+        log.info("Håndterer dokument på sak-id $sakId, og referanse $referanse, med brevkategori $brevkategori")
 
         val sak = sakService.hent(sakId)
         val årsakTilOpprettelse = utledÅrsakTilOpprettelse(brevkategori, melding)

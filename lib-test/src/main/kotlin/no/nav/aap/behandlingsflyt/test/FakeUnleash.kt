@@ -8,6 +8,8 @@ import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 open class FakeUnleashBase(
     private val flags: Map<BehandlingsflytFeature, Boolean>,
 ) : UnleashGateway {
+    fun hentFlagg() = flags
+    
     override fun isEnabled(featureToggle: FeatureToggle) = requireNotNull(flags[featureToggle]) {
         "feature toggle $featureToggle ikke definert for fake"
     }
@@ -16,7 +18,6 @@ open class FakeUnleashBase(
 
     override fun isEnabled(featureToggle: FeatureToggle, ident: String, typeBrev: TypeBrev) = isEnabled(featureToggle)
 }
-
 
 /** Devlik unleash. */
 object FakeUnleash : FakeUnleashBase(
@@ -43,7 +44,7 @@ object FakeUnleash : FakeUnleashBase(
         BehandlingsflytFeature.UtvidVedtakslengdeJobb to true,
         BehandlingsflytFeature.InstitusjonsoppholdJobb to true,
         BehandlingsflytFeature.TrekkSoeknadOpprettetFraLegeerklaering to true,
-
+        BehandlingsflytFeature.UbehandledeMeldekortJobb to true,
         )
 )
 
@@ -70,6 +71,7 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.UtvidVedtakslengdeJobb to true,
         BehandlingsflytFeature.InstitusjonsoppholdJobb to true,
         BehandlingsflytFeature.TrekkSoeknadOpprettetFraLegeerklaering to true,
+        BehandlingsflytFeature.UbehandledeMeldekortJobb to true,
 
         )
 )
@@ -93,5 +95,6 @@ object AlleAvskrudd: FakeUnleashBase(
         BehandlingsflytFeature.Sykestipend to false,
         BehandlingsflytFeature.Forlengelse to false,
         BehandlingsflytFeature.ForlengelseIManuellBehandling to false,
-    )
+        BehandlingsflytFeature.UbehandledeMeldekortJobb to false,
+        )
 )
