@@ -34,7 +34,6 @@ object LokalUnleash : FakeUnleashBase(
     mapOf(
         BehandlingsflytFeature.IngenValidering to true,
         BehandlingsflytFeature.NyBrevtype11_17 to true,
-        BehandlingsflytFeature.OverforingsdatoNullForAvregning to true,
         BehandlingsflytFeature.OvergangArbeid to true,
         BehandlingsflytFeature.KvalitetssikringsSteg to true,
         BehandlingsflytFeature.NyBrevbyggerV3 to false,
