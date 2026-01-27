@@ -104,8 +104,8 @@ class SjekkInstitusjonsOppholdJobbUtfører(
         override val beskrivelse = "Skal trigge behandling som vurderer institusjonsopphold"
 
         /**
-         * Kjøres hver dag kl 02:00
+         * Kjøres hver time enn så lenge, slås av og på med Feature Toggle
          */
-        override val cron = CronExpression.createWithoutSeconds("0 2 * * *")
+        override val cron = CronExpression.createWithoutSeconds("0 * * * *")
     }
 }
