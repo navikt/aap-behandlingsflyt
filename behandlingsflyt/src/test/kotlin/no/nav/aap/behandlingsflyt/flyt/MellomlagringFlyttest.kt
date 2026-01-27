@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.mellomlagring.MellomlagretVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Tag
@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 @Tag("motor")
-class MellomlagringFlyttest() : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
+class MellomlagringFlyttest() : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
 
     @Test
     fun `skal nullstille mellomlagret verdi når avklaringsbehov løses - og nullstille hengende mellomlagrede verdier ved iverksettelse`() {

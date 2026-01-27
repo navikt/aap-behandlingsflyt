@@ -32,7 +32,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -65,7 +65,7 @@ class BistandsvilkåretTest {
     }
 
     private val gatewayProvider = createGatewayProvider {
-        register<FakeUnleash>()
+        register<AlleAvskruddUnleash>()
     }
 
     @Test
@@ -231,7 +231,7 @@ class BistandsvilkåretTest {
         dataSource.transaction { connection ->
             val avklaringsbehovene = AvklaringsbehovRepositoryImpl(connection).hentAvklaringsbehovene(revurdering.id)
             avklaringsbehovene.leggTil(
-                definisjoner = listOf(Definisjon.AVKLAR_BISTANDSBEHOV), funnetISteg = AVKLAR_SYKDOM, null, null
+                definisjon = Definisjon.AVKLAR_BISTANDSBEHOV, funnetISteg = AVKLAR_SYKDOM, null, null
             )
             avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_BISTANDSBEHOV, "", "", false)
 

@@ -41,6 +41,22 @@ class MottattDokumentRepositoryImpl(private val connection: DBConnection) : Mott
         }
     }
 
+    override fun hent(innsendingsreferanse: InnsendingReferanse): MottattDokument {
+        val query = """
+            SELECT * FROM MOTTATT_DOKUMENT WHERE referanse = ? and referanse_type = ?
+        """.trimIndent()
+        
+        return connection.queryFirst(query) {
+            setParams {
+                setString(1, innsendingsreferanse.verdi)
+                setEnumName(2, innsendingsreferanse.type)
+            }
+            setRowMapper { row ->
+                mapMottattDokument(row)
+            }
+        }
+    }
+
     override fun oppdaterStatus(
         dokumentReferanse: InnsendingReferanse,
         behandlingId: BehandlingId,
@@ -203,6 +219,22 @@ class MottattDokumentRepositoryImpl(private val connection: DBConnection) : Mott
             }
         }
     }
+
+    override fun hentAlleUbehandledeDokumenter(): Set<MottattDokument> {
+        val query = """
+            SELECT * FROM MOTTATT_DOKUMENT WHERE status = ?
+        """.trimIndent()
+
+        return connection.queryList(query) {
+            setParams {
+                setEnumName(1, Status.MOTTATT)
+            }
+            setRowMapper { row ->
+                mapMottattDokument(row)
+            }
+        }.toSet()
+    }
+
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         // Denne trengs ikke implementeres

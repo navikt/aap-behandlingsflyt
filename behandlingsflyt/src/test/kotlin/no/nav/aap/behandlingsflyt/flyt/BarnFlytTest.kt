@@ -41,7 +41,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.FakePersoner
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.PersonNavn
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
@@ -58,7 +58,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import kotlin.test.assertTrue
 
-class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
+class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     val periode = Periode(LocalDate.now(), Tid.MAKS)
 
     @Test

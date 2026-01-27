@@ -56,17 +56,23 @@ class OpprettJobbForMigrereRettighetsperiodeJobbUtfører(
      * Før vi skrur på for fullt ønsker vi å teste enkeltsaker i hvert miljø
      */
     fun erForhåndskvalifisertSak(sak: Sak): Boolean {
-        val forhåndskvalifisertDev = listOf(
-            "4QZGD4W", // Rent avslag - skal migreres "ok"
-            "4V4JB0G", // Trukket søknad - skal ikke migreres
-            "4R4NWoG", // Åpen behandling - skal ikke migreres
-            "4NTL7oW", // Vanlig 11-6
-            "4SMNX8W", // 11-18 med stans
+        val forhåndskvalifisertDev = listOf<String>()
+        val forhåndskvalifisertProd = listOf<String>(
+                    "4LFDNAo",
+                    "4LFY0BK",
+                    "4LG2AN4",
+                    "4LG8Q4G",
+                    "4LGiDCG",
+                    "4LGPVEo",
+                    "4LGQXZK",
+                    "4LGS0KG",
+                    "4LGT35C",
+                    "4LGWAW0",
+
         )
-        val forhåndskvalifisertProd = emptyList<String>()
         return when (Miljø.er()) {
             MiljøKode.DEV -> forhåndskvalifisertDev.contains(sak.saksnummer.toString())
-            MiljøKode.PROD -> false
+            MiljøKode.PROD -> forhåndskvalifisertProd.contains(sak.saksnummer.toString())
             MiljøKode.LOKALT -> true
         }
     }

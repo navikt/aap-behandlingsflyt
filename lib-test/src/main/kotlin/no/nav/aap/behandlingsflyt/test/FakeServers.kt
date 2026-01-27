@@ -1987,6 +1987,7 @@ object FakeServers : AutoCloseable {
 
         // Inst
         System.setProperty("integrasjon.institusjonsopphold.url", "http://localhost:${inst2.port()}")
+        System.setProperty("integrasjon.institusjonsoppholdenkelt.url", "http://localhost:${inst2.port()}")
         System.setProperty("integrasjon.institusjonsopphold.scope", "inst2")
 
         // Statistikk-app
