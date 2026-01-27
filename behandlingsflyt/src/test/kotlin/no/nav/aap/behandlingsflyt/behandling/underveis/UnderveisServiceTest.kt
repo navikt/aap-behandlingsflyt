@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.MockDataSource
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
@@ -27,7 +27,7 @@ class UnderveisServiceTest {
             val underveisService = UnderveisService(
                 postgresRepositoryRegistry.provider(connection),
                 createGatewayProvider {
-                    register<FakeUnleash>()
+                    register<AlleAvskruddUnleash>()
                 }
             )
             val søknadsdato = LocalDate.now().minusDays(29)

@@ -17,7 +17,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.MockDataSource
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
@@ -70,7 +70,7 @@ class FatteVedtakLøserTest {
         )
 
         val fatteVedtakLøser = MockDataSource().transaction {
-            FatteVedtakLøser(repositoryRegistry.provider(it), createGatewayProvider {register<FakeUnleash>() })
+            FatteVedtakLøser(repositoryRegistry.provider(it), createGatewayProvider {register<AlleAvskruddUnleash>() })
         }
 
         // Totrinnsvurdering ikke godkjent.

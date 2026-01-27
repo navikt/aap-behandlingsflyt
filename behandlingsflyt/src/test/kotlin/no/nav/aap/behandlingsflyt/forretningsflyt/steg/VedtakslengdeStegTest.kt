@@ -28,7 +28,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
@@ -37,6 +37,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVedtakslengdeReposit
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -57,6 +58,12 @@ class VedtakslengdeStegTest {
 
     private val sakRepository = InMemorySakRepository
     private val behandlingRepository = InMemoryBehandlingRepository
+    private val unleashGateway = FakeUnleashBaseWithDefaultDisabled(
+        enabledFlags = listOf(
+            BehandlingsflytFeature.Forlengelse,
+            BehandlingsflytFeature.ForlengelseIManuellBehandling
+        )
+    )
 
     @Test
     fun `Skal forlenge sluttdato med 261 dager for fremtidig rett på ordinær`() {
@@ -118,7 +125,7 @@ class VedtakslengdeStegTest {
             underveisRepository = InMemoryUnderveisRepository,
             vilkårsresultatRepository = InMemoryVilkårsresultatRepository,
             vedtakslengdeRepository = vedtakslengdeRepository,
-            unleashGateway = FakeUnleash,
+            unleashGateway = unleashGateway,
             clock = Clock.fixed(dagensDato.atStartOfDay().atZone(zone).toInstant(), zone)
         )
 
