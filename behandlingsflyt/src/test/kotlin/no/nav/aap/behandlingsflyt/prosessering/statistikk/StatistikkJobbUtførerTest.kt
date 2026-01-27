@@ -507,7 +507,8 @@ class StatistikkJobbUtførerTest {
                 ),
                 resultat = ResultatKode.INNVILGET,
                 vedtakstidspunkt = vedtakstidspunkt,
-                fritaksvurderinger = emptyList()
+                fritaksvurderinger = emptyList(),
+                perioderMedArbeidsopptrapping = emptyList()
             )
         )
     }

@@ -19,7 +19,7 @@ public data class AvsluttetBehandlingDTO(
     val resultat: ResultatKode?,
     val vedtakstidspunkt: LocalDateTime?,
     val fritaksvurderinger: Iterable<Fritakvurdering>? = null,
-    val perioderMedArbeidsopptrapping: List<PeriodeDTO>? = null
+    val perioderMedArbeidsopptrapping: List<PeriodeDTO>
 )
 
 public data class PeriodeDTO(val fom: LocalDate, val tom: LocalDate)
