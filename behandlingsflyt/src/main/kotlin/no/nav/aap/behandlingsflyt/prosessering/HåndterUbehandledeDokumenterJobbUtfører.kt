@@ -24,25 +24,19 @@ class HåndterUbehandledeDokumenterJobbUtfører(
         if (unleashGateway.isDisabled(BehandlingsflytFeature.UbehandledeMeldekortJobb)) {
             return
         }
-        
-        val ubehandledeDokumenter = mottattDokumentRepository.hentAlleUbehandledeDokumenter()
 
-        var hoppetOver = 0
+        val ubehandledeDokumenter =
+            mottattDokumentRepository.hentAlleUbehandledeDokumenterAvType(InnsendingType.MELDEKORT)
+
+        log.info("Fant ${ubehandledeDokumenter.size} ubehandlede meldekort")
         ubehandledeDokumenter.forEach { dokument ->
-            when (dokument.type) {
-                InnsendingType.MELDEKORT -> flytJobbRepository.leggTil(
-                    HåndterUbehandletDokumentJobbUtfører.nyJobb(
-                        dokument.sakId,
-                        dokument.referanse
-                    )
+            flytJobbRepository.leggTil(
+                HåndterUbehandletDokumentJobbUtfører.nyJobb(
+                    dokument.sakId,
+                    dokument.referanse
                 )
-
-                else -> {
-                    hoppetOver++
-                }
-            }
+            )
         }
-        log.info("Håndterte ${ubehandledeDokumenter.size - hoppetOver} dokumenter, hoppet over $hoppetOver dokumenter")
     }
 
     companion object : ProvidersJobbSpesifikasjon {
