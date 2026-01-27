@@ -22,7 +22,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.type.Periode
@@ -32,7 +34,13 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
+object OvergangArbeidEnabledUnleash : FakeUnleashBaseWithDefaultDisabled(
+    enabledFlags = listOf(
+        BehandlingsflytFeature.OvergangArbeid
+    )
+)
+
+class OvergangUføreFlytTest: AbstraktFlytOrkestratorTest(OvergangArbeidEnabledUnleash::class) {
     @Test
     fun `11-18 uføre underveis i en behandling`() {
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
