@@ -16,11 +16,13 @@ import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.AlleAvskrudd
+import no.nav.aap.behandlingsflyt.test.FakeUnleashBase
 import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.dbtest.TestDatabase
+import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.JobbInput
@@ -28,8 +30,10 @@ import no.nav.aap.motor.JobbType
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import java.time.LocalDateTime
-import javax.sql.DataSource
+import kotlin.collections.set
 import kotlin.test.Test
 
 class HåndterUbehandledeDokumenterJobbUtførerTest {
@@ -38,10 +42,27 @@ class HåndterUbehandledeDokumenterJobbUtførerTest {
         JobbType.leggTil(HåndterUbehandletDokumentJobbUtfører)
     }
 
-    @TestDatabase
-    lateinit var dataSource: DataSource
+    companion object {
+        object JobbPåskrudd : FakeUnleashBase(
+            AlleAvskrudd.hentFlagg().toMutableMap().apply {
+                this[BehandlingsflytFeature.UbehandledeMeldekortJobb] = true
+            })
 
-    private val gatewayProvider = createGatewayProvider { FakeUnleash }
+        private val gatewayProvider = createGatewayProvider {
+            register<JobbPåskrudd>()
+        }
+        private lateinit var dataSource: TestDataSource
+
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            dataSource = TestDataSource()
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun tearDown() = dataSource.close()
+    }
 
     @Test
     fun `Skal opprette håndteringsjobb for ubehandlede meldekort`() {

@@ -8,6 +8,8 @@ import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 open class FakeUnleashBase(
     private val flags: Map<BehandlingsflytFeature, Boolean>,
 ) : UnleashGateway {
+    fun hentFlagg() = flags
+    
     override fun isEnabled(featureToggle: FeatureToggle) = requireNotNull(flags[featureToggle]) {
         "feature toggle $featureToggle ikke definert for fake"
     }
@@ -16,7 +18,6 @@ open class FakeUnleashBase(
 
     override fun isEnabled(featureToggle: FeatureToggle, ident: String, typeBrev: TypeBrev) = isEnabled(featureToggle)
 }
-
 
 /** Devlik unleash. */
 object FakeUnleash : FakeUnleashBase(
