@@ -107,7 +107,7 @@ class FormkravSteg (
             return false
         } else if (grunnlag.vurdering.erOppfylt()) {
             return true
-        } else if (erTattAvVentFørFristenPåForhåndsvarsel( grunnlag, venteBehov)) {
+        } else if (erTilstrekkeligVurdertForhåndsvarsel(kontekst) && erTattAvVentFørFristenPåForhåndsvarsel( grunnlag, venteBehov)) {
             return false
         }
         return true
