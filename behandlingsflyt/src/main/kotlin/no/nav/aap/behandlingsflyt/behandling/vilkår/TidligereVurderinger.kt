@@ -5,10 +5,12 @@ import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger.Behandlingsutfall.IKKE_BEHANDLINGSGRUNNLAG
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger.Behandlingsutfall.UKJENT
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger.Behandlingsutfall.UUNGÅELIG_AVSLAG
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall.IKKE_OPPFYLT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -65,7 +67,7 @@ class TidligereVurderingerImpl(
     private val avbrytRevurderingService: AvbrytRevurderingService,
     private val sykdomRepository: SykdomRepository,
     private val studentRepository: StudentRepository,
-    private val unleashGateway: UnleashGateway
+    private val bistandRepository: BistandRepository
 ) : TidligereVurderinger {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -73,15 +75,15 @@ class TidligereVurderingerImpl(
 
     constructor(
         repositoryProvider: RepositoryProvider,
-        unleashGateway: UnleashGateway
     ) : this(
         trukketSøknadService = TrukketSøknadService(repositoryProvider),
         vilkårsresultatRepository = repositoryProvider.provide(),
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
         sykdomRepository = repositoryProvider.provide(),
         studentRepository = repositoryProvider.provide(),
-        unleashGateway = unleashGateway
+        bistandRepository = repositoryProvider.provide()
     )
+
     data class Sjekk(
         val steg: StegType,
         val sjekk: (vilkårsresultat: Vilkårsresultat, kontekst: FlytKontekstMedPerioder) -> Tidslinje<TidligereVurderinger.Behandlingsutfall>
@@ -164,11 +166,80 @@ class TidligereVurderingerImpl(
             },
 
 
-            if (unleashGateway.isEnabled(BehandlingsflytFeature.VURDER_SYKEPENGEERSTATNING_SJEKK)) {
-                Sjekk(StegType.VURDER_SYKEPENGEERSTATNING) { vilkårsresultat, _ ->
-                    ikkeOppfyltFørerTilAvslag(Vilkårtype.SYKEPENGEERSTATNING, vilkårsresultat)
+            Sjekk(StegType.VURDER_SYKEPENGEERSTATNING) { vilkårsresultat, kontekst ->
+
+                val periode = kontekst.rettighetsperiode
+                val sykdomstidslinje = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)
+                    ?.somSykdomsvurderingstidslinje().orEmpty()
+
+                val bistandTidslinje = bistandRepository.hentHvisEksisterer(kontekst.behandlingId)?.somBistandsvurderingstidslinje().orEmpty()
+
+
+
+
+                val sykdomVurdering115 = vilkårsresultat.tidslinjeFor(Vilkårtype.SYKDOMSVILKÅRET)
+                val bistandsvurdering116 = vilkårsresultat.tidslinjeFor(Vilkårtype.BISTANDSVILKÅRET)
+                val overgangUføre1118 = vilkårsresultat.tidslinjeFor(Vilkårtype.OVERGANGUFØREVILKÅRET)
+                val overgangArbeid1117 = vilkårsresultat.tidslinjeFor(Vilkårtype.OVERGANGARBEIDVILKÅRET)
+                val sykdomErstating1113 = vilkårsresultat.tidslinjeFor(Vilkårtype.SYKEPENGEERSTATNING)
+
+
+                Tidslinje.map5(sykdomstidslinje,bistandTidslinje ,overgangUføre1118,overgangArbeid1117,sykdomErstating1113){
+                        sykdomVurdering115VurderingSegment,
+                        bistandsvurdering116VurderingSegment,
+                        overgangUføre1118VilkårsSegment,
+                        overgangArbeid1117VilkårSegment,
+                        sykdomErstating1113VilkårSegment ->
+
+
+                    val sykdomOppfylt = if (sykdomVurdering115VurderingSegment?.harSkadeSykdomEllerLyte == true
+                            && sykdomVurdering115VurderingSegment.erArbeidsevnenNedsatt == true
+                            && sykdomVurdering115VurderingSegment.erNedsettelseIArbeidsevneMerEnnHalvparten == true
+                            && sykdomVurdering115VurderingSegment.erSkadeSykdomEllerLyteVesentligdel == true
+                            && sykdomVurdering115VurderingSegment.erNedsettelseIArbeidsevneAvEnVissVarighet == true
+                    ) true else false
+
+                    val bistandOppfylt =  if( (bistandsvurdering116VurderingSegment?.erBehovForAktivBehandling == true
+                        || bistandsvurdering116VurderingSegment?.erBehovForArbeidsrettetTiltak == true) ||
+                        (bistandsvurdering116VurderingSegment?.erBehovForAnnenOppfølging == true)) true else false
+
+
+
+                    val førerTilAvslag = when {
+
+                        sykdomOppfylt == true
+                                && bistandOppfylt == false
+                                && overgangUføre1118VilkårsSegment?.utfall == IKKE_OPPFYLT
+                                && overgangArbeid1117VilkårSegment?.utfall == IKKE_OPPFYLT
+                                && sykdomErstating1113VilkårSegment?.utfall == IKKE_OPPFYLT -> true
+
+
+
+
+                        sykdomVurdering115VurderingSegment?.harSkadeSykdomEllerLyte == true
+                                && sykdomVurdering115VurderingSegment.erArbeidsevnenNedsatt == true
+                                && sykdomVurdering115VurderingSegment.erNedsettelseIArbeidsevneMerEnnHalvparten == true
+                                && sykdomVurdering115VurderingSegment.erSkadeSykdomEllerLyteVesentligdel == true
+                                && sykdomVurdering115VurderingSegment.erNedsettelseIArbeidsevneAvEnVissVarighet == false
+                                && sykdomErstating1113VilkårSegment?.utfall == IKKE_OPPFYLT -> true
+
+
+
+                        sykdomOppfylt == false -> true
+
+
+
+
+
+                        else -> false
+                    }
+
+                    if (førerTilAvslag) UUNGÅELIG_AVSLAG else UKJENT
                 }
-            } else null,
+
+
+                ikkeOppfyltFørerTilAvslag(Vilkårtype.SYKEPENGEERSTATNING, vilkårsresultat)
+            },
 
 
 
@@ -178,6 +249,13 @@ class TidligereVurderingerImpl(
                 Tidslinje()
 
             },
+
+
+
+
+
+
+
             Sjekk(StegType.FASTSETT_GRUNNLAG) { vilkårsresultat, _ ->
                 ikkeOppfyltFørerTilAvslag(Vilkårtype.GRUNNLAGET, vilkårsresultat)
             },
@@ -203,7 +281,7 @@ class TidligereVurderingerImpl(
 
 
 
-        return spesifikkeSjekker + fellesSjekker.filterNotNull()
+        return spesifikkeSjekker + fellesSjekker
     }
 
     init {
