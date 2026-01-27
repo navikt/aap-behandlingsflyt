@@ -168,17 +168,11 @@ class TidligereVurderingerImpl(
 
             Sjekk(StegType.VURDER_SYKEPENGEERSTATNING) { vilkårsresultat, kontekst ->
 
-                val periode = kontekst.rettighetsperiode
+
                 val sykdomstidslinje = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)
                     ?.somSykdomsvurderingstidslinje().orEmpty()
 
                 val bistandTidslinje = bistandRepository.hentHvisEksisterer(kontekst.behandlingId)?.somBistandsvurderingstidslinje().orEmpty()
-
-
-
-
-                val sykdomVurdering115 = vilkårsresultat.tidslinjeFor(Vilkårtype.SYKDOMSVILKÅRET)
-                val bistandsvurdering116 = vilkårsresultat.tidslinjeFor(Vilkårtype.BISTANDSVILKÅRET)
                 val overgangUføre1118 = vilkårsresultat.tidslinjeFor(Vilkårtype.OVERGANGUFØREVILKÅRET)
                 val overgangArbeid1117 = vilkårsresultat.tidslinjeFor(Vilkårtype.OVERGANGARBEIDVILKÅRET)
                 val sykdomErstating1113 = vilkårsresultat.tidslinjeFor(Vilkårtype.SYKEPENGEERSTATNING)
@@ -192,30 +186,25 @@ class TidligereVurderingerImpl(
                         sykdomErstating1113VilkårSegment ->
 
 
-                    val sykdomOppfylt = if (sykdomVurdering115VurderingSegment?.harSkadeSykdomEllerLyte == true
+                    val sykdomOppfylt = (sykdomVurdering115VurderingSegment?.harSkadeSykdomEllerLyte == true
                             && sykdomVurdering115VurderingSegment.erArbeidsevnenNedsatt == true
                             && sykdomVurdering115VurderingSegment.erNedsettelseIArbeidsevneMerEnnHalvparten == true
                             && sykdomVurdering115VurderingSegment.erSkadeSykdomEllerLyteVesentligdel == true
-                            && sykdomVurdering115VurderingSegment.erNedsettelseIArbeidsevneAvEnVissVarighet == true
-                    ) true else false
+                            && sykdomVurdering115VurderingSegment.erNedsettelseIArbeidsevneAvEnVissVarighet == true)
 
-                    val bistandOppfylt =  if( (bistandsvurdering116VurderingSegment?.erBehovForAktivBehandling == true
+                    val bistandOppfylt = (bistandsvurdering116VurderingSegment?.erBehovForAktivBehandling == true
                         || bistandsvurdering116VurderingSegment?.erBehovForArbeidsrettetTiltak == true) ||
-                        (bistandsvurdering116VurderingSegment?.erBehovForAnnenOppfølging == true)) true else false
-
-
+                        (bistandsvurdering116VurderingSegment?.erBehovForAnnenOppfølging == true)
 
                     val førerTilAvslag = when {
-
-                        sykdomOppfylt == true
-                                && bistandOppfylt == false
+                        // ja 115, nei 116, nei 1118, nei/ikke vudert 1117, nei 1113
+                        sykdomOppfylt
+                                && !bistandOppfylt
                                 && overgangUføre1118VilkårsSegment?.utfall == IKKE_OPPFYLT
-                                && overgangArbeid1117VilkårSegment?.utfall == IKKE_OPPFYLT
+                                && overgangArbeid1117VilkårSegment?.utfall != Utfall.OPPFYLT
                                 && sykdomErstating1113VilkårSegment?.utfall == IKKE_OPPFYLT -> true
 
-
-
-
+                        //nei,vis varigghet
                         sykdomVurdering115VurderingSegment?.harSkadeSykdomEllerLyte == true
                                 && sykdomVurdering115VurderingSegment.erArbeidsevnenNedsatt == true
                                 && sykdomVurdering115VurderingSegment.erNedsettelseIArbeidsevneMerEnnHalvparten == true
@@ -224,11 +213,9 @@ class TidligereVurderingerImpl(
                                 && sykdomErstating1113VilkårSegment?.utfall == IKKE_OPPFYLT -> true
 
 
-
-                        sykdomOppfylt == false -> true
-
-
-
+                        !sykdomOppfylt
+                                && sykdomErstating1113VilkårSegment?.utfall == IKKE_OPPFYLT
+                                && overgangArbeid1117VilkårSegment?.utfall != Utfall.OPPFYLT -> true
 
 
                         else -> false
@@ -238,7 +225,7 @@ class TidligereVurderingerImpl(
                 }
 
 
-                ikkeOppfyltFørerTilAvslag(Vilkårtype.SYKEPENGEERSTATNING, vilkårsresultat)
+                //ikkeOppfyltFørerTilAvslag(Vilkårtype.SYKEPENGEERSTATNING, vilkårsresultat)
             },
 
 
