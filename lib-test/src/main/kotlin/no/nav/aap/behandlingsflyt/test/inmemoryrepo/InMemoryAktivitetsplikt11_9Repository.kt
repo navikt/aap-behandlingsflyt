@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt1
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_9Vurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 
+@Suppress("ClassName")
 object InMemoryAktivitetsplikt11_9Repository : Aktivitetsplikt11_9Repository {
 
     private val memory = HashMap<BehandlingId, Aktivitetsplikt11_9Grunnlag>()

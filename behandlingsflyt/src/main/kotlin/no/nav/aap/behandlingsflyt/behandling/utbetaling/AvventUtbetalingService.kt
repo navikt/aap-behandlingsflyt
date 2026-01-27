@@ -184,11 +184,8 @@ class AvventUtbetalingService(
             .coerceAtMost(førsteVedtaksdato.minusDays(1))
             .coerceAtLeast(fom)
 
-        val overføres = if (unleashGateway.isEnabled(BehandlingsflytFeature.OverforingsdatoNullForAvregning)) {
-            null
-        } else {
-            førsteVedtaksdato.plusDays(42)
-        }
+        val overføres = førsteVedtaksdato.plusDays(42)
+
         return TilkjentYtelseAvventDto(
             fom = fom,
             tom = tom,
@@ -212,11 +209,7 @@ class AvventUtbetalingService(
         val harKrav = perioder.any { tilkjentYtelseHelePerioden.overlapper(tilPeriode(it.fom, it.tom)) }
 
         if (harKrav) {
-            val overføres = if (unleashGateway.isEnabled(BehandlingsflytFeature.OverforingsdatoNullForAvregning)) {
-                null
-            } else {
-                førsteVedtaksdato.plusDays(42)
-            }
+            val overføres = førsteVedtaksdato.plusDays(42)
 
             val periodeMedKravFom = perioder
                 .map { it.fom }

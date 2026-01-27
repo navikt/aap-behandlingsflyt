@@ -329,7 +329,7 @@ class AvventUtbetalingServiceTest {
         assertNotNull(avventUtbetaling)
         assertThat(avventUtbetaling?.fom).isEqualTo(LocalDate.parse("2025-01-04"))
         assertThat(avventUtbetaling?.tom).isEqualTo(LocalDate.parse("2025-01-12"))
-        assertThat(avventUtbetaling?.overføres).isNull()
+        assertThat(avventUtbetaling?.overføres).isEqualTo(vedtak.vedtakstidspunkt.toLocalDate().plusDays(42))
         assertThat(avventUtbetaling?.årsak).isEqualTo(AvventÅrsak.AVVENT_AVREGNING)
         assertThat(avventUtbetaling?.feilregistrering).isFalse()
     }
@@ -360,7 +360,7 @@ class AvventUtbetalingServiceTest {
         assertNotNull(avventUtbetaling)
         assertThat(avventUtbetaling?.fom).isEqualTo(LocalDate.parse("2025-01-04"))
         assertThat(avventUtbetaling?.tom).isEqualTo(LocalDate.parse("2025-01-12"))
-        assertThat(avventUtbetaling?.overføres).isNull()
+        assertThat(avventUtbetaling?.overføres).isEqualTo(vedtak.vedtakstidspunkt.toLocalDate().plusDays(42))
         assertThat(avventUtbetaling?.årsak).isEqualTo(AvventÅrsak.AVVENT_AVREGNING)
         assertThat(avventUtbetaling?.feilregistrering).isFalse()
     }
