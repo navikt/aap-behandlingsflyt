@@ -5,6 +5,7 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
+import java.time.Instant
 import java.time.LocalDate
 
 data class OvergangUføreGrunnlag(
@@ -52,7 +53,7 @@ data class OvergangUføreGrunnlag(
             .filter(filter)
             .groupBy { it.vurdertIBehandling }
             .values
-            .sortedBy { it[0].opprettet }
+            .sortedBy { it[0].opprettet ?: Instant.now() }
             .flatMap { it.sortedBy { it.fom } }
             .somTidslinje { Periode(it.fom, it.tom ?: maksDato) }
             .komprimer()
