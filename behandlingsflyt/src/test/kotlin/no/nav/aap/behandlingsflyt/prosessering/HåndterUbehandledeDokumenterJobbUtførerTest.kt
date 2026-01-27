@@ -16,8 +16,7 @@ import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.test.AlleAvskrudd
-import no.nav.aap.behandlingsflyt.test.FakeUnleashBase
+import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -33,8 +32,13 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import java.time.LocalDateTime
-import kotlin.collections.set
 import kotlin.test.Test
+
+object JobbPåskruddUnleash : FakeUnleashBaseWithDefaultDisabled(
+    enabledFlags = listOf(
+        BehandlingsflytFeature.UbehandledeMeldekortJobb
+    )
+)
 
 class HåndterUbehandledeDokumenterJobbUtførerTest {
     init {
@@ -43,13 +47,8 @@ class HåndterUbehandledeDokumenterJobbUtførerTest {
     }
 
     companion object {
-        object JobbPåskrudd : FakeUnleashBase(
-            AlleAvskrudd.hentFlagg().toMutableMap().apply {
-                this[BehandlingsflytFeature.UbehandledeMeldekortJobb] = true
-            })
-
         private val gatewayProvider = createGatewayProvider {
-            register<JobbPåskrudd>()
+            register<JobbPåskruddUnleash>()
         }
         private lateinit var dataSource: TestDataSource
 
