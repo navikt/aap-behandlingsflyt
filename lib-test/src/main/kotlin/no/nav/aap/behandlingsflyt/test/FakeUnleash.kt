@@ -24,7 +24,6 @@ object FakeUnleash : FakeUnleashBase(
     mapOf(
         BehandlingsflytFeature.IngenValidering to false,
         BehandlingsflytFeature.NyBrevtype11_17 to true,
-        BehandlingsflytFeature.OverforingsdatoNullForAvregning to true,
         BehandlingsflytFeature.OvergangArbeid to true,
         BehandlingsflytFeature.KvalitetssikringsSteg to true,
         BehandlingsflytFeature.NyBrevbyggerV3 to false,
@@ -52,7 +51,6 @@ object LokalUnleash : FakeUnleashBase(
     mapOf(
         BehandlingsflytFeature.IngenValidering to true,
         BehandlingsflytFeature.NyBrevtype11_17 to true,
-        BehandlingsflytFeature.OverforingsdatoNullForAvregning to true,
         BehandlingsflytFeature.OvergangArbeid to true,
         BehandlingsflytFeature.KvalitetssikringsSteg to true,
         BehandlingsflytFeature.NyBrevbyggerV3 to false,
@@ -80,7 +78,6 @@ object AlleAvskrudd: FakeUnleashBase(
     mapOf(
         BehandlingsflytFeature.IngenValidering to true, // Denne er default på
         BehandlingsflytFeature.NyBrevtype11_17 to false,
-        BehandlingsflytFeature.OverforingsdatoNullForAvregning to false,
         BehandlingsflytFeature.OvergangArbeid to false,
         BehandlingsflytFeature.KvalitetssikringsSteg to false,
         BehandlingsflytFeature.NyBrevbyggerV3 to false,
