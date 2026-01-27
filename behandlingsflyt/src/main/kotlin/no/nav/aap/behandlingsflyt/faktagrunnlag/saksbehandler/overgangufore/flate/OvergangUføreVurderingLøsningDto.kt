@@ -5,6 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.Periodiser
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.verdityper.Bruker
+import java.time.Instant
 import java.time.LocalDate
 
 data class OvergangUføreVurderingLøsningDto(
@@ -27,7 +28,9 @@ data class OvergangUføreVurderingLøsningDto(
             vurdertIBehandling = vurdertIBehandling,
             fom = fom ?: virkningsdato ?: defaultFom,
             tom = tom,
-            vurdertAv = bruker.ident
+            vurdertAv = bruker.ident,
+            opprettet = Instant.now(),
+
         )
 }
 
