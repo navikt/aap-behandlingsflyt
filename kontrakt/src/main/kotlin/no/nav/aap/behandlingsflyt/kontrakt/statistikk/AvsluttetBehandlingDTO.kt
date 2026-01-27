@@ -6,6 +6,8 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 /**
+ * Sendes til statistikkappen når en behandling avsluttes.
+ *
  * @param beregningsGrunnlag Beregningsgrunnlag. Kan være null om behandlingen avsluttes før inntekt hentes inn.
  */
 public data class AvsluttetBehandlingDTO(
@@ -16,8 +18,11 @@ public data class AvsluttetBehandlingDTO(
     val rettighetstypePerioder: List<RettighetstypePeriode>,
     val resultat: ResultatKode?,
     val vedtakstidspunkt: LocalDateTime?,
-    val fritaksvurderinger: Iterable<Fritakvurdering>? = null
+    val fritaksvurderinger: Iterable<Fritakvurdering>? = null,
+    val perioderMedArbeidsopptrapping: List<PeriodeDTO>? = null
 )
+
+public data class PeriodeDTO(val fom: LocalDate, val tom: LocalDate)
 
 public data class Fritakvurdering(
     val harFritak: Boolean,

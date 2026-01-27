@@ -50,13 +50,13 @@ private fun bestemAntallTestTråder(): Int {
     val processors = Runtime.getRuntime().availableProcessors()
     val antallTråder =
         if (isCiBuild) {
-            (processors * 1.5).toInt() // vi har mye io-wait under testene våre
+            processors
         } else {
             /**
              * Begrens antall tråder ved lokal kjøring for å unngå at utvikler-maskinen blir for treg
              * Mer enn 6 tråder krasjer lokal kjøring for M3 Max
              */
-            min(6, max(processors / 2, processors - 4))
+            min(4, max(processors / 2, processors - 4))
         }
     return antallTråder
 }

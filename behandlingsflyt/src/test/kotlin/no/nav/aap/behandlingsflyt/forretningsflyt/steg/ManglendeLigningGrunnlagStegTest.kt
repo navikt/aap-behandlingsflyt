@@ -32,8 +32,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
 import no.nav.aap.komponenter.type.Periode
@@ -277,7 +277,7 @@ class ManglendeLigningGrunnlagStegTest {
     }
 
     private fun leggTilLøstOgAvsluttetAvklaringsbehov(avklaringsbehovene: Avklaringsbehovene) {
-        avklaringsbehovene.leggTil(listOf(Definisjon.FASTSETT_MANUELL_INNTEKT), StegType.MANGLENDE_LIGNING, null, null)
+        avklaringsbehovene.leggTil(Definisjon.FASTSETT_MANUELL_INNTEKT, StegType.MANGLENDE_LIGNING, null, null)
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.FASTSETT_MANUELL_INNTEKT, "begrunnelse", "saksbehandler")
         avklaringsbehovene.avslutt(Definisjon.FASTSETT_MANUELL_INNTEKT)
     }

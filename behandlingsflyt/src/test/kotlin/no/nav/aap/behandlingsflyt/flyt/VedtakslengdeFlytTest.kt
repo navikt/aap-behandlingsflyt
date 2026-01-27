@@ -15,22 +15,22 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.undervei
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.motor.JobbInput
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
-class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
+object VedtakslengdeUnleash : FakeUnleashBaseWithDefaultDisabled(
+    enabledFlags = listOf(
+        BehandlingsflytFeature.Forlengelse,
+        BehandlingsflytFeature.UtvidVedtakslengdeJobb,
+    )
+)
 
-    // TODO kan fjernes når vi ikke lenger har miljøspesifikke filter i OpprettBehandlingUtvidVedtakslengdeJobbUtfører
-    @BeforeEach
-    fun setup() {
-        System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
-    }
-
+class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeUnleash::class) {
     @Test
     fun `forleng vedtak med passert slutt uten eksplisitt sluttdato`() {
         val søknadstidspunkt = LocalDateTime.of(2024, 12, 1, 12, 0)
@@ -83,7 +83,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 underveisRepository = UnderveisRepositoryImpl(connection),
                 sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
                 vilkårsresultatRepository = VilkårsresultatRepositoryImpl(connection),
-                unleashGateway = FakeUnleash
+                unleashGateway = VedtakslengdeUnleash
             )
 
             opprettBehandlingUtvidVedtakslengdeJobbUtfører.utfør(JobbInput(OpprettBehandlingUtvidVedtakslengdeJobbUtfører))
