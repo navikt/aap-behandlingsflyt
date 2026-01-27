@@ -18,9 +18,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.fixedClock
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import org.assertj.core.api.Assertions.assertThat
@@ -28,6 +29,12 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDateTime
+
+object VedtakslengdeUnleash : FakeUnleashBaseWithDefaultDisabled(
+    enabledFlags = listOf(
+        BehandlingsflytFeature.UtvidVedtakslengdeJobb,
+    )
+)
 
 @ExtendWith(MockKExtension::class)
 class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
@@ -46,7 +53,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
             sakOgBehandlingService = sakOgBehandlingService,
             vedtakslengdeService = vedtakslengdeService,
             flytJobbRepository = flytJobbRepository,
-            unleashGateway = FakeUnleash,
+            unleashGateway = VedtakslengdeUnleash,
             clock = clock
         )
 
