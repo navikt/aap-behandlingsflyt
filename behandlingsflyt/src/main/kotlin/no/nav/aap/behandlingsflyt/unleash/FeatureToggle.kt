@@ -22,7 +22,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     SendBrevVedMottattKlage,
     PeriodisertSykdom,
     Sykestipend,
-    Forlengelse,
     ForlengelseIManuellBehandling,
     UtvidVedtakslengdeJobb,
     InstitusjonsoppholdJobb,
