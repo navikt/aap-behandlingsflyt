@@ -49,10 +49,6 @@ class VedtakslengdeSteg(
 
     private val log = LoggerFactory.getLogger(javaClass)
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (unleashGateway.isDisabled(BehandlingsflytFeature.Forlengelse)) {
-            return Fullført
-        }
-
         val vedtattUnderveis = kontekst.forrigeBehandlingId?.let { underveisRepository.hentHvisEksisterer(it) }
         val sisteVedtatteUnderveisperiode = vedtattUnderveis?.perioder?.maxByOrNull { it.periode.tom }
         val rettighetstypeTidslinje = vilkårsresultatRepository.hent(kontekst.behandlingId).rettighetstypeTidslinje()
