@@ -43,7 +43,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
                 .filter {
                     if (erDev()) it.id == 4243L
                     else if (erProd()) it.id == 1100L
-                    else if (erLokal()) it.id == 11006L
+                    else if (erLokal()) true
                     else false
                 }
                 .also { log.info("Oppretter jobber for alle saker som er aktuelle kandidator for utvidelse av vedtakslengde. Antall = ${it.size}") }
