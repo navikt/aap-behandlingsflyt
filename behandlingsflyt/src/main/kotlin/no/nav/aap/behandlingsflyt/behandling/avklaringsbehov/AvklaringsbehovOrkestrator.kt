@@ -132,7 +132,7 @@ class AvklaringsbehovOrkestrator(
         avklaringsbehovene.validerTilstand(behandling = behandling)
 
         avklaringsbehovene.leggTil(
-            definisjoner = listOf(Definisjon.MANUELT_SATT_PÅ_VENT),
+            definisjon = Definisjon.MANUELT_SATT_PÅ_VENT,
             funnetISteg = behandling.aktivtSteg(),
             frist = hendelse.frist,
             begrunnelse = hendelse.begrunnelse,
@@ -154,7 +154,7 @@ class AvklaringsbehovOrkestrator(
         avklaringsbehovene.validerTilstand(behandling = behandling)
 
         avklaringsbehovene.leggTil(
-            definisjoner = listOf(Definisjon.BESTILL_LEGEERKLÆRING),
+            definisjon = Definisjon.BESTILL_LEGEERKLÆRING,
             funnetISteg = behandling.aktivtSteg(),
             grunn = ÅrsakTilSettPåVent.VENTER_PÅ_MEDISINSKE_OPPLYSNINGER,
             bruker = bruker,

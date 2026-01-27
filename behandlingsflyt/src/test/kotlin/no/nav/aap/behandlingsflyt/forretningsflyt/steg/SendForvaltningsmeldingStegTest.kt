@@ -23,13 +23,15 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBrevbestillingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMottattDokumentRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
@@ -42,13 +44,18 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
-class SendForvaltningsmeldingStegTest {
+object SendKlagebrevEnabledOgAltAnnetAvskruddUnleash : FakeUnleashBaseWithDefaultDisabled(
+    enabledFlags = listOf(
+        BehandlingsflytFeature.SendBrevVedMottattKlage
+    )
+)
 
+class SendForvaltningsmeldingStegTest {
     private val sendForvaltningsmeldingSteg = SendForvaltningsmeldingSteg.konstruer(
         inMemoryRepositoryProvider,
         createGatewayProvider {
             register<FakeBrevbestillingGateway>()
-            register<FakeUnleash>()
+            register<SendKlagebrevEnabledOgAltAnnetAvskruddUnleash>()
         }
     )
 
@@ -128,7 +135,6 @@ class SendForvaltningsmeldingStegTest {
             val flytkontekst = flytkontekstForBehandlingForKlageMottatt(behandling, Vurderingsbehov.MOTATT_KLAGE)
             opprettKlageDokument(behandling.sakId, behandling.id, InnsendingReferanse.Type.JOURNALPOST)
 
-            sendForvaltningsmeldingSteg.utfør(flytkontekst)
             sendForvaltningsmeldingSteg.utfør(flytkontekst)
 
             val brevbestillinger = InMemoryBrevbestillingRepository.hent(behandling.id)

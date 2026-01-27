@@ -38,6 +38,8 @@ object ProsesseringsJobber {
             OpprettBehandlingMigrereRettighetsperiodeJobbUtfører,
             SendFagsysteminfoBehovTilTilbakekrevingUtfører,
             SjekkInstitusjonsOppholdJobbUtfører,
+            HåndterUbehandledeDokumenterJobbUtfører,
+            HåndterUbehandletDokumentJobbUtfører
         )
     }
 }

@@ -22,7 +22,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.type.Periode
@@ -32,7 +34,13 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class OvergangUføreFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
+object OvergangArbeidEnabledUnleash : FakeUnleashBaseWithDefaultDisabled(
+    enabledFlags = listOf(
+        BehandlingsflytFeature.OvergangArbeid
+    )
+)
+
+class OvergangUføreFlytTest: AbstraktFlytOrkestratorTest(OvergangArbeidEnabledUnleash::class) {
     @Test
     fun `11-18 uføre underveis i en behandling`() {
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
@@ -217,4 +225,129 @@ class OvergangUføreFlytTest: AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         )
     }
 
+    @Test
+    fun `11-18 uføre underveis i en behandling - deretter ikke syk`() {
+        val fom = LocalDate.of(2026, 1, 1)
+        val periode = Periode(fom, fom.plusYears(3))
+        val overgangUførDato = periode.fom.plusDays(10)
+        val ikkeLengerSykDato = periode.fom.plusDays(20)
+
+        val (sak, behandling) = sendInnFørsteSøknad(periode = periode)
+        behandling
+            .løsSykdom(periode.fom)
+            .løsAvklaringsBehov(
+                AvklarBistandsbehovLøsning(
+                    løsningerForPerioder = listOf(
+                        BistandLøsningDto(
+                            begrunnelse = "Overgang uføre",
+                            erBehovForAktivBehandling = true,
+                            erBehovForArbeidsrettetTiltak = false,
+                            erBehovForAnnenOppfølging = null,
+                            skalVurdereAapIOvergangTilArbeid = null,
+                            overgangBegrunnelse = "Yep",
+                            fom = periode.fom,
+                            tom = null
+                        ),
+                        BistandLøsningDto(
+                            begrunnelse = "Overgang uføre2",
+                            erBehovForAktivBehandling = false,
+                            erBehovForArbeidsrettetTiltak = false,
+                            erBehovForAnnenOppfølging = false,
+                            skalVurdereAapIOvergangTilArbeid = null,
+                            overgangBegrunnelse = "Yep",
+                            fom = overgangUførDato,
+                            tom = null
+                        )
+                    ),
+                ),
+            )
+            .løsAvklaringsBehov(
+                AvklarOvergangUføreLøsning(
+                    listOf(
+                        OvergangUføreLøsningDto(
+                            begrunnelse = "Løsning",
+                            brukerHarSøktOmUføretrygd = true,
+                            brukerHarFåttVedtakOmUføretrygd = "NEI",
+                            brukerRettPåAAP = true,
+                            fom = overgangUførDato,
+                            tom = null,
+                            overgangBegrunnelse = null
+                        )
+                    )
+                )
+            )
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .kvalitetssikreOk()
+            .løsAvklaringsBehov(
+                AvklarSykepengerErstatningLøsning(
+                    sykepengeerstatningVurdering = SykepengerVurderingDto(
+                        begrunnelse = "...",
+                        dokumenterBruktIVurdering = emptyList(),
+                        harRettPå = false,
+                        grunn = null,
+                        gjelderFra = LocalDate.now()
+                    ),
+                )
+            )
+            .løsBeregningstidspunkt()
+            .løsOppholdskrav(periode.fom)
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+
+        val revurdering =
+            sak.opprettManuellRevurdering(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
+        revurdering
+            .løsAvklaringsBehov(
+                AvklarSykdomLøsning(
+                    løsningerForPerioder = listOf(
+                        SykdomsvurderingLøsningDto(
+                            begrunnelse = "ok",
+                            fom = ikkeLengerSykDato,
+                            tom = null,
+                            dokumenterBruktIVurdering = emptyList(),
+                            erArbeidsevnenNedsatt = false,
+                            harSkadeSykdomEllerLyte = false,
+                            erSkadeSykdomEllerLyteVesentligdel = null,
+                            erNedsettelseIArbeidsevneAvEnVissVarighet = null,
+                            erNedsettelseIArbeidsevneMerEnnHalvparten = null,
+                            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+                            yrkesskadeBegrunnelse = null,
+                            kodeverk = null,
+                            hoveddiagnose = null,
+                            bidiagnoser = null
+                        )
+                    ),
+                )
+            )
+            .løsAvklaringsBehov(
+                AvklarBistandsbehovLøsning(løsningerForPerioder = listOf())
+            )
+            .løsAvklaringsBehov(
+                AvklarOvergangUføreLøsning(
+                    løsningerForPerioder = listOf(
+                        OvergangUføreLøsningDto(
+                            begrunnelse = "Løsning",
+                            brukerHarSøktOmUføretrygd = true,
+                            brukerHarFåttVedtakOmUføretrygd = "NEI",
+                            brukerRettPåAAP = false,
+                            fom = ikkeLengerSykDato,
+                            tom = null,
+                            overgangBegrunnelse = null
+                        )
+                    )
+                )
+            )
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).hasSize(1)
+                assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.AVKLAR_OVERGANG_ARBEID)
+            }
+            .løsOvergangArbeid(utfall = Utfall.IKKE_OPPFYLT, fom = ikkeLengerSykDato)
+            .løsSykdomsvurderingBrev()
+            .medKontekst {
+                assertThat(åpneAvklaringsbehov).hasSize(1)
+                assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.FATTE_VEDTAK)
+            }
+    }
 }

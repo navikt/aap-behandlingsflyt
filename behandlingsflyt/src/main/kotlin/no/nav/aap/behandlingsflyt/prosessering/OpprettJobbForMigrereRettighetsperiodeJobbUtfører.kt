@@ -56,30 +56,23 @@ class OpprettJobbForMigrereRettighetsperiodeJobbUtfører(
      * Før vi skrur på for fullt ønsker vi å teste enkeltsaker i hvert miljø
      */
     fun erForhåndskvalifisertSak(sak: Sak): Boolean {
-        val forhåndskvalifisertDev = listOf(
-            "4oJFFCG",
-            "4oJFFCG",
-            "4oMUo2o",
-            "4P4BQoG",
-            "4QH354G",
-            "4QLP928",
-            "4UHL1N4",
-            "4NR36Y8",
-            "4NRCU68",
-            "4NREZC0",
-            "4NRG1WW",
-            "4NRi72o",
-            "4NRoMK0",
-            "4NRV21C",
-            "4NRW4M8",
-            "4NRY9S0",
-            "4NS6UF4",
-            "4NYVYZ4",
-            )
-        val forhåndskvalifisertProd = emptyList<String>()
+        val forhåndskvalifisertDev = listOf<String>()
+        val forhåndskvalifisertProd = listOf<String>(
+                    "4LFDNAo",
+                    "4LFY0BK",
+                    "4LG2AN4",
+                    "4LG8Q4G",
+                    "4LGiDCG",
+                    "4LGPVEo",
+                    "4LGQXZK",
+                    "4LGS0KG",
+                    "4LGT35C",
+                    "4LGWAW0",
+
+        )
         return when (Miljø.er()) {
             MiljøKode.DEV -> forhåndskvalifisertDev.contains(sak.saksnummer.toString())
-            MiljøKode.PROD -> false
+            MiljøKode.PROD -> forhåndskvalifisertProd.contains(sak.saksnummer.toString())
             MiljøKode.LOKALT -> true
         }
     }
