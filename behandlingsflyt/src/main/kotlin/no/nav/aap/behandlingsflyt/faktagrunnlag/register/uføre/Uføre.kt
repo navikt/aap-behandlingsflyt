@@ -10,7 +10,7 @@ import java.time.LocalDate
 data class Uføre(
     val virkningstidspunkt: LocalDate,
     val uføregrad: Prosent,
-    val uføregradTom: LocalDate?,
+    val uføregradTom: LocalDate? = null,
 )
 
 fun Collection<Uføre>.tilTidslinje(): Tidslinje<Prosent> {
