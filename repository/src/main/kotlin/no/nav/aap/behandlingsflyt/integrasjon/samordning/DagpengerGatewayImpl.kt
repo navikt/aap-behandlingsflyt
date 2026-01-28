@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.integrasjon.samordning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerPeriodeResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerResponse
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.komponenter.config.requiredConfigForKey
@@ -43,7 +43,7 @@ class DagpengerGatewayImpl: DagpengerGateway {
         personidentifikatorer: String,
         fom: String,
         tom: String
-    ): List<DagpengerPeriode> {
+    ): List<DagpengerPeriodeResponse> {
         return query(DagpengerRequest(
             personIdent = personidentifikatorer,
             fraOgMedDato = fom,

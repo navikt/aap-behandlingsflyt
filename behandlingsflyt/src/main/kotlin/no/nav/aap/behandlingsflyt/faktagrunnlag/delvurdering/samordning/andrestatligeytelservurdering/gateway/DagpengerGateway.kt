@@ -7,5 +7,5 @@ interface DagpengerGateway : Gateway {
         personidentifikatorer: String,
         fom: String,
         tom: String
-    ): List<DagpengerPeriode>
+    ): List<DagpengerPeriodeResponse>
 }

@@ -1,18 +1,26 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway
 
+import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
 
 class DagpengerResponse(
     val personIdent: String,
-    val perioder: List<DagpengerPeriode>
+    val perioder: List<DagpengerPeriodeResponse>
 )
 
-class DagpengerPeriode(
+class DagpengerPeriodeResponse(
     val fraOgMedDato: LocalDate,
     val tilOgMedDato: LocalDate,
     val kilde: DagpengerKilde,
     val ytelseType: DagpengerYtelseType
 )
+
+data class DagpengerPeriode(
+    val periode: Periode,
+    val kilde: DagpengerKilde,
+    val dagpengerYtelseType: DagpengerYtelseType
+)
+
 
 enum class DagpengerYtelseType{
     DAGPENGER_ARBEIDSSOKER_ORDINAER, DAGPENGER_PERMITTERING_ORDINAER, DAGPENGER_PERMITTERING_FISKEINDUSTRI
