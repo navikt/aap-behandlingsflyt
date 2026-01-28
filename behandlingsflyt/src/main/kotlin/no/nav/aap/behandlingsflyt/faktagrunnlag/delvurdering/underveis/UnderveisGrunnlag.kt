@@ -9,15 +9,12 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
-import java.time.Clock
 import java.time.LocalDate
 
 data class UnderveisGrunnlag(
     val id: Long,
     val perioder: List<Underveisperiode>
 ) {
-    private val dagensDato = LocalDate.now(Clock.systemDefaultZone())
-
     fun somTidslinje(): Tidslinje<Underveisperiode> {
         return perioder.somTidslinje { it.periode }
     }
@@ -33,19 +30,17 @@ data class UnderveisGrunnlag(
     }
 
     fun utledMaksdatoForRettighet(type: RettighetsType): LocalDate? {
-        val periodeForOppbruktKvote =
-            perioder.firstOrNull { it.rettighetsType == type && it.avslagsårsak === UnderveisÅrsak.VARIGHETSKVOTE_BRUKT_OPP }?.periode
         val gjenværendeKvote = utledKvoterForRettighetstype(type).gjenværendeKvote
 
-        if (periodeForOppbruktKvote != null) {
-            return periodeForOppbruktKvote.fom.minusDays(1)
+        if (gjenværendeKvote == 0) {
+            return utledInnfriddePerioderForRettighet(type).last().periode.tom
         }
-        return Hverdager(gjenværendeKvote).fraOgMed(dagensDato)
+        return Hverdager(utledKvoterForRettighetstype(type).gjenværendeKvote).fraOgMed(LocalDate.now())
     }
 
     fun utledKvoterForRettighetstype(rettighetsType: RettighetsType): RettighetKvoter {
         val bruktKvote = utledInnfriddePerioderForRettighet(rettighetsType)
-            .somTidslinje { it.periode }.begrensetTil(Periode(Tid.MIN, dagensDato)).segmenter()
+            .somTidslinje { it.periode }.begrensetTil(Periode(Tid.MIN, LocalDate.now())).segmenter()
             .sumOf { it.periode.antallHverdager().asInt }
         val totalKvote = KvoteService().beregn().hentKvoteForRettighetstype(rettighetsType)?.asInt
         val gjenværendeKvote = totalKvote?.minus(bruktKvote) ?: 0

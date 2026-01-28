@@ -14,12 +14,11 @@ import no.nav.aap.komponenter.verdityper.TimerArbeid
 import org.junit.jupiter.api.Test
 import org.assertj.core.api.Assertions.assertThat
 import java.math.BigDecimal
-import java.time.Clock
 import java.time.LocalDate
 
 private val FØRSTE_JAN_2026 = LocalDate.of(2026, 1, 1)
 private val TOM_PERIODE = Periode(FØRSTE_JAN_2026, FØRSTE_JAN_2026)
-private val dagensDato = LocalDate.now(Clock.systemDefaultZone())
+private val dagensDato = LocalDate.now()
 
 class UnderveisGrunnlagTest {
     @Test
