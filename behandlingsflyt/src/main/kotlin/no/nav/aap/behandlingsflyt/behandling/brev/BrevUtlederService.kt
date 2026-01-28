@@ -128,7 +128,6 @@ class BrevUtlederService(
                         FRITAK_MELDEPLIKT,
                         MOTTATT_MELDEKORT,
                         FASTSATT_PERIODE_PASSERT,
-                        UTVID_VEDTAKSLENGDE,
                         MIGRER_RETTIGHETSPERIODE,
                         EFFEKTUER_AKTIVITETSPLIKT,
                         EFFEKTUER_AKTIVITETSPLIKT_11_9,
@@ -141,6 +140,10 @@ class BrevUtlederService(
 
                 if (vurderingsbehov == setOf(BARNETILLEGG_SATS_REGULERING)) {
                     return BarnetilleggSatsRegulering
+                }
+
+                if (vurderingsbehov == setOf(UTVID_VEDTAKSLENGDE)) {
+                    return brevBehovUtvidVedtakslengde(behandling)
                 }
 
                 if (resultat == Resultat.AVBRUTT) {
@@ -194,6 +197,11 @@ class BrevUtlederService(
             TypeBehandling.Tilbakekreving, TypeBehandling.SvarFraAndreinstans, TypeBehandling.OppfølgingsBehandling, TypeBehandling.Aktivitetsplikt11_9 ->
                 return null // TODO
         }
+    }
+
+    private fun brevBehovUtvidVedtakslengde(behandling: Behandling): UtvidVedtakslengde {
+        val underveisGrunnlag = underveisRepository.hent(behandling.id)
+        return UtvidVedtakslengde(sluttdato = underveisGrunnlag.sisteDagMedYtelse())
     }
 
     private fun brevBehovInnvilgelse(behandling: Behandling): Innvilgelse {

@@ -12,6 +12,7 @@ import no.nav.aap.brev.kontrakt.MottakerDto
 import no.nav.aap.brev.kontrakt.Vedlegg
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
+import no.nav.aap.komponenter.httpklient.exception.VerdiIkkeFunnetException
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.util.*
@@ -73,7 +74,10 @@ class BrevbestillingService(
             ferdigstillAutomatisk = ferdigstillAutomatisk,
             brukApiV3 = brukApiV3,
         )
-
+        val alleredeLagretBestilling = brevbestillingRepository.hent(bestillingReferanse)
+        if (alleredeLagretBestilling != null) {
+            throw IllegalStateException("Bestilling med referanse $bestillingReferanse er allerede lagret.")
+        }
         val status = if (ferdigstillAutomatisk) {
             Status.FULLFØRT
         } else {
@@ -112,6 +116,7 @@ class BrevbestillingService(
         mottakere: List<MottakerDto> = emptyList()
     ) {
         val brevbestilling = brevbestillingRepository.hent(brevbestillingReferanse)
+            ?: throw VerdiIkkeFunnetException("Fant ikke brevbestilling med referanse $brevbestillingReferanse")
         val signaturer = signaturService.finnSignaturGrunnlag(brevbestilling, bruker)
         val ferdigstilt = brevbestillingGateway.ferdigstill(brevbestillingReferanse, signaturer, mottakere)
         if (!ferdigstilt) {
