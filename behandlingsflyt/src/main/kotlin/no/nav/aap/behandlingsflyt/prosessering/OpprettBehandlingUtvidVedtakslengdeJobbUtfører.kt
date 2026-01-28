@@ -31,10 +31,10 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
         val sakId = SakId(input.sakId())
 
         // I tilfellet en behandling har blitt opprettet i tiden mellom jobben ble opprettet til den ble startet
-        if (!erSisteYtelsesbehandlingAvsluttet(sakId)) {
+        /*if (!erSisteYtelsesbehandlingAvsluttet(sakId)) {
             log.info("Sak med id $sakId er ikke avsluttet, hopper over")
             return
-        }
+        }*/
 
         val sisteGjeldendeBehandling = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId)
         if (sisteGjeldendeBehandling != null) {

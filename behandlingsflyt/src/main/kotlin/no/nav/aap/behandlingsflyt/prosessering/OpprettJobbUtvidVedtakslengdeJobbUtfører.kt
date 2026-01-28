@@ -56,7 +56,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
     // TODO: Må filtrere vekk de som allerede har blitt kjørt, men ikke kvalifiserte til reell utvidelse av vedtakslengde
     private fun hentKandidaterForUtvidelseAvVedtakslengde(datoForUtvidelse: LocalDate): Set<SakId> {
         return vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(datoForUtvidelse)
-            .filter { erSisteYtelsesbehandlingAvsluttet(it) }
+            //.filter { erSisteYtelsesbehandlingAvsluttet(it) }
             .filter { kunSakerMedBehovForUtvidelseAvVedtakslengde(it, datoForUtvidelse) }
             .toSet()
     }
