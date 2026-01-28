@@ -64,7 +64,7 @@ class GrunnlagetForBeregningenTest {
                     GrunnlagInntekt(
                         år = Year.of(2022),
                         inntektIKroner = Beløp(0),
-                       grunnbeløp = Beløp(109_784),
+                        grunnbeløp = Beløp(109_784),
                         inntektIG = GUnit(0),
                         inntekt6GBegrenset = GUnit(0),
                         er6GBegrenset = false
@@ -72,7 +72,7 @@ class GrunnlagetForBeregningenTest {
                     GrunnlagInntekt(
                         år = Year.of(2021),
                         inntektIKroner = Beløp(0),
-                       grunnbeløp = Beløp(104_716),
+                        grunnbeløp = Beløp(104_716),
                         inntektIG = GUnit(0),
                         inntekt6GBegrenset = GUnit(0),
                         er6GBegrenset = false
@@ -470,5 +470,23 @@ class GrunnlagetForBeregningenTest {
                 )
             )
         )
+    }
+
+    /*
+     * Eksempel 6 https://navno.sharepoint.com/:w:/r/sites/POAAP/Shared%20Documents/Regelverk/Regelverksavklaringer/Juridiske%20avklaringer/Beregningscaser.docx?d=w1a906e20ac954ee0841cd5d722fd0dd0&csf=1&web=1&e=qCWSsm
+     */
+    @Test
+    fun `avrunding for eksem`() {
+        val inntekterPerÅr = setOf(
+            InntektPerÅr(Year.of(2024), Beløp(654_150)),
+            InntektPerÅr(Year.of(2023), Beløp(0)),
+            InntektPerÅr(Year.of(2022), Beløp(0))
+        )
+
+        val grunnlaget = GrunnlagetForBeregningen(inntekterPerÅr)
+            .beregnGrunnlaget()
+            .grunnlaget()
+
+        assertThat(grunnlaget).isEqualTo(GUnit("5.3520147269"))
     }
 }

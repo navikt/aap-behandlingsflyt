@@ -42,7 +42,6 @@ class KlagebehandlingNaySteg private constructor(
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
             definisjon = Definisjon.VURDER_KLAGE_NAY,
-            avklaringsbehovene = avklaringsbehov,
             kontekst = kontekst,
             vedtakBehøverVurdering = {
                 if (klageErTrukket || erKlageResultatAvslått || !skalBehandlesAvNay) false else true

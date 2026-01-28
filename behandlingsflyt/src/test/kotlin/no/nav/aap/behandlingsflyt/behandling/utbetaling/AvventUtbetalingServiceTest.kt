@@ -23,7 +23,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.utbetal.kodeverk.AvventÅrsak
 import org.assertj.core.api.Assertions.assertThat
@@ -38,6 +39,7 @@ import kotlin.test.Test
 
 @ExtendWith(MockKExtension::class)
 @MockKExtension.CheckUnnecessaryStub
+@MockKExtension.RequireParallelTesting
 @Execution(ExecutionMode.SAME_THREAD)
 class AvventUtbetalingServiceTest {
 
@@ -64,6 +66,7 @@ class AvventUtbetalingServiceTest {
     private lateinit var vedtakServiceMock: VedtakService
     private lateinit var behandlingRepositoryMock: BehandlingRepository
     private lateinit var service: AvventUtbetalingService
+    private lateinit var unleashMock: UnleashGateway
 
     @BeforeEach
     fun setup() {
@@ -73,6 +76,7 @@ class AvventUtbetalingServiceTest {
         samordningArbeidsgiverRepositoryMock = mockk<SamordningArbeidsgiverRepository>()
         vedtakServiceMock = mockk<VedtakService>()
         behandlingRepositoryMock = mockk<BehandlingRepository>()
+        unleashMock = mockk<UnleashGateway>()
 
         service = AvventUtbetalingService(
             refusjonkravRepositoryMock,
@@ -81,8 +85,10 @@ class AvventUtbetalingServiceTest {
             samordningArbeidsgiverRepositoryMock,
             vedtakServiceMock,
             behandlingRepositoryMock,
-            FakeUnleash
+            unleashMock
         )
+
+        every { unleashMock.isEnabled(any()) } returns true
     }
 
 
@@ -323,7 +329,7 @@ class AvventUtbetalingServiceTest {
         assertNotNull(avventUtbetaling)
         assertThat(avventUtbetaling?.fom).isEqualTo(LocalDate.parse("2025-01-04"))
         assertThat(avventUtbetaling?.tom).isEqualTo(LocalDate.parse("2025-01-12"))
-        assertThat(avventUtbetaling?.overføres).isNull()
+        assertThat(avventUtbetaling?.overføres).isEqualTo(vedtak.vedtakstidspunkt.toLocalDate().plusDays(42))
         assertThat(avventUtbetaling?.årsak).isEqualTo(AvventÅrsak.AVVENT_AVREGNING)
         assertThat(avventUtbetaling?.feilregistrering).isFalse()
     }
@@ -354,7 +360,7 @@ class AvventUtbetalingServiceTest {
         assertNotNull(avventUtbetaling)
         assertThat(avventUtbetaling?.fom).isEqualTo(LocalDate.parse("2025-01-04"))
         assertThat(avventUtbetaling?.tom).isEqualTo(LocalDate.parse("2025-01-12"))
-        assertThat(avventUtbetaling?.overføres).isNull()
+        assertThat(avventUtbetaling?.overføres).isEqualTo(vedtak.vedtakstidspunkt.toLocalDate().plusDays(42))
         assertThat(avventUtbetaling?.årsak).isEqualTo(AvventÅrsak.AVVENT_AVREGNING)
         assertThat(avventUtbetaling?.feilregistrering).isFalse()
     }

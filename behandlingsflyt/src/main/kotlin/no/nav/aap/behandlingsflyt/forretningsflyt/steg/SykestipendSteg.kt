@@ -44,7 +44,6 @@ class SykestipendSteg private constructor(
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val studentGrunnlag = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
         val sykestipendGrunnlag = sykestipendRepository.hentHvisEksisterer(kontekst.behandlingId)
 
@@ -53,7 +52,6 @@ class SykestipendSteg private constructor(
         }
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.AVKLAR_SAMORDNING_SYKESTIPEND,
             vedtakBehøverVurdering = {
                 when (kontekst.vurderingType) {
@@ -69,6 +67,7 @@ class SykestipendSteg private constructor(
                                 && kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty()
 
                     VurderingType.UTVID_VEDTAKSLENGDE,
+                    VurderingType.MIGRER_RETTIGHETSPERIODE,
                     VurderingType.MELDEKORT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
@@ -81,15 +80,7 @@ class SykestipendSteg private constructor(
                 sykestipendGrunnlag != null
             },
             tilbakestillGrunnlag = {
-                val vedtatteVurdering = kontekst.forrigeBehandlingId
-                    ?.let { sykestipendRepository.hentHvisEksisterer(it) }
-                    ?.vurdering
-                if (vedtatteVurdering != null) {
-                    sykestipendRepository.lagre(kontekst.behandlingId, vedtatteVurdering)
-                } else {
-                    sykestipendRepository.deaktiverGrunnlag(kontekst.behandlingId)
-                }
-
+                // Manuelt frivillige skal ikke tilbakestilles
             },
             kontekst
         )

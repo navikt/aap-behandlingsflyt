@@ -22,6 +22,7 @@ object ProsesseringsJobber {
             MeldeperiodeTilMeldekortBackendJobbUtfører,
             OpprettJobbForFastsattPeriodeJobbUtfører,
             OpprettJobbForFritakMeldepliktJobbUtfører,
+            OpprettJobbUtvidVedtakslengdeJobbUtfører,
             OpprettBehandlingFritakMeldepliktJobbUtfører,
             OpprettBehandlingFastsattPeriodePassertJobbUtfører,
             OpprettBehandlingUtvidVedtakslengdeJobbUtfører,
@@ -32,7 +33,13 @@ object ProsesseringsJobber {
             KafkaFeilJobbUtfører,
             TriggBarnetilleggSatsJobbUtfører,
             OpprettJobbForTriggBarnetilleggSatsJobbUtfører,
-            SendFagsysteminfoBehovTilTilbakekrevingUtfører
+            OpprettJobbForMigrereRettighetsperiodeJobbUtfører,
+            OppdaterOppgaveMedTilbakekrevingsbehandlingUtfører,
+            OpprettBehandlingMigrereRettighetsperiodeJobbUtfører,
+            SendFagsysteminfoBehovTilTilbakekrevingUtfører,
+            SjekkInstitusjonsOppholdJobbUtfører,
+            HåndterUbehandledeDokumenterJobbUtfører,
+            HåndterUbehandletDokumentJobbUtfører
         )
     }
 }

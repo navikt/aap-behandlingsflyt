@@ -23,7 +23,7 @@ class Effektuer11_7Steg(
         when (kontekst.vurderingType) {
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
             VurderingType.FØRSTEGANGSBEHANDLING,
-            VurderingType.UTVID_VEDTAKSLENGDE,
+            VurderingType.MIGRER_RETTIGHETSPERIODE,
             VurderingType.REVURDERING -> {
                 val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
                 Aktivitetspliktvilkåret(vilkårsresultat).vurder(
@@ -35,7 +35,7 @@ class Effektuer11_7Steg(
                 )
                 vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
             }
-
+            VurderingType.UTVID_VEDTAKSLENGDE,
             VurderingType.MELDEKORT,
             VurderingType.AUTOMATISK_BREV,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,

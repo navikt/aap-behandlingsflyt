@@ -21,7 +21,7 @@ data class UføreInntekt(
     val inntektJustertForUføregrad: Beløp,
     val inntektIGJustertForUføregrad: GUnit,
     val grunnbeløp: Beløp,
-    val inntektsPerioder: List<UføreInntektPeriodisert> = emptyList()
+    val inntektsPerioder: List<UføreInntektPeriodisert>,
 )
 
 /**

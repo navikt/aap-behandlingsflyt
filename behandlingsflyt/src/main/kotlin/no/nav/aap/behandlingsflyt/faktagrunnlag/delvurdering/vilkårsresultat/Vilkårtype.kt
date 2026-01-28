@@ -36,9 +36,9 @@ enum class Vilkårtype(
     SYKDOMSVILKÅRET(
         kode = "AAP-5",
         spesielleInnvilgelsesÅrsaker = listOf(
+            Innvilgelsesårsak.STUDENT, // Denne er kun for bakoverkompatibilitet,
             Innvilgelsesårsak.SYKEPENGEERSTATNING,
             Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG,
-            Innvilgelsesårsak.STUDENT,
         ),
         avslagsårsaker = listOf(
             Avslagsårsak.MANGLENDE_DOKUMENTASJON,
@@ -127,6 +127,17 @@ enum class Vilkårtype(
             Avslagsårsak.IKKE_RETT_PA_SYKEPENGEERSTATNING
         ),
         hjemmel = "§ 11-13",
+        obligatorisk = false
+    ),
+    STUDENT(
+        kode = "AAP-14",
+        spesielleInnvilgelsesÅrsaker = emptyList(),
+        avslagsårsaker = listOf(
+            Avslagsårsak.MANGLENDE_DOKUMENTASJON,
+            Avslagsårsak.IKKE_RETT_PA_STUDENT,
+            Avslagsårsak.VARIGHET_OVERSKREDET_STUDENT
+        ),
+        hjemmel = "§ 11-14",
         obligatorisk = false
     ),
     STRAFFEGJENNOMFØRING(

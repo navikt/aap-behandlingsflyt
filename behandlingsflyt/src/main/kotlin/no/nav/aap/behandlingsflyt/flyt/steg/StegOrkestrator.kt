@@ -214,9 +214,9 @@ class StegOrkestrator(
                 resultat.ventebehov()
             )
             val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekstMedPerioder.behandlingId)
-            resultat.ventebehov().forEach {
+            resultat.ventebehov().let {
                 avklaringsbehovene.leggTil(
-                    definisjoner = listOf(it.definisjon),
+                    definisjon = it.definisjon,
                     funnetISteg = aktivtSteg.type(),
                     frist = it.frist,
                     grunn = it.grunn,

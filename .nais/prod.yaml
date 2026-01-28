@@ -136,18 +136,14 @@ spec:
       value: https://pdl-api.prod-fss-pub.nais.io/graphql
     - name: INTEGRASJON_PDL_SCOPE
       value: api://prod-fss.pdl.pdl-api/.default
-    - name: INTEGRASJON_SAF_URL_GRAPHQL
-      value: https://saf.prod-fss-pub.nais.io/graphql
-    - name: INTEGRASJON_SAF_URL_REST
-      value: https://saf.prod-fss-pub.nais.io/rest
-    - name: INTEGRASJON_SAF_SCOPE
-      value: api://prod-fss.teamdokumenthandtering.saf/.default
     - name: INTEGRASJON_YRKESSKADE_URL
       value: http://yrkesskade-saker.yrkesskade/api/v1/saker/
     - name: INTEGRASJON_YRKESSKADE_SCOPE
       value: api://prod-gcp.yrkesskade.yrkesskade-saker/.default
     - name: INTEGRASJON_INSTITUSJONSOPPHOLD_URL
       value: https://inst2.prod-fss-pub.nais.io/api/v1/person/institusjonsopphold/soek
+    - name: INTEGRASJON_INSTITUSJONSOPPHOLDENKELT_URL
+      value: https://inst2.prod-fss-pub.nais.io/api/v1/person/institusjonsopphold
     - name: INTEGRASJON_INSTITUSJONSOPPHOLD_SCOPE
       value: api://prod-fss.team-rocket.inst2/.default
     - name: INTEGRASJON_INSTITUSJONSOPPHOLD_EVENT_TOPIC

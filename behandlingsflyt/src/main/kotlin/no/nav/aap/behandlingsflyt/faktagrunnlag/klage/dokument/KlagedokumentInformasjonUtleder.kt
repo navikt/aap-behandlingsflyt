@@ -22,7 +22,7 @@ class KlagedokumentInformasjonUtleder(private val mottattDokumentRepository: Mot
         return førsteKlageDokument?.strukturerteData<KlageV0>()?.data?.kravMottatt
     }
 
-    fun utledKlagebehandlingForSvar(svarFraKabalBehandlingId: BehandlingId): BehandlingReferanse? {
+    fun utledKlagebehandlingForSvar(svarFraKabalBehandlingId: BehandlingId): BehandlingReferanse {
         val kabalHendelseDokumenter = mottattDokumentRepository.hentDokumenterAvType(
             behandlingId = svarFraKabalBehandlingId,
             InnsendingType.KABAL_HENDELSE

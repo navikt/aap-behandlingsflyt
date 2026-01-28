@@ -122,8 +122,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.Fakes
+import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
@@ -147,6 +149,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.params.provider.Arguments
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -171,6 +174,15 @@ open class AbstraktFlytOrkestratorTest(unleashGateway: KClass<out UnleashGateway
         @AfterAll
         @JvmStatic
         fun tearDown() = dataSource.close()
+
+        @Suppress("unused")
+        @JvmStatic
+        fun unleashTestDataSource(): List<Arguments> {
+            return listOf(
+                Arguments.of(LokalUnleash::class),
+                Arguments.of(AlleAvskruddUnleash::class),
+            )
+        }
     }
 
     protected val motor by lazy {

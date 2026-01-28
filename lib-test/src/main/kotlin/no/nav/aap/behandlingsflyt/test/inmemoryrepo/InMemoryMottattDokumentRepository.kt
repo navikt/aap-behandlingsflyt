@@ -148,4 +148,22 @@ object InMemoryMottattDokumentRepository : MottattDokumentRepository {
             return memory.filter { it.type in typer && it.behandlingId == behandlingId }.toSet()
         }
     }
+
+    override fun hentAlleUbehandledeDokumenter(): Set<MottattDokument> {
+        synchronized(lock) {
+            return memory.filter { it.status == Status.MOTTATT }.toSet()
+        }
+    }
+
+    override fun hent(innsendingsreferanse: InnsendingReferanse): MottattDokument {
+        synchronized(lock) {
+            return memory.first { it.referanse == innsendingsreferanse }
+        }
+    }
+
+    override fun hentAlleUbehandledeDokumenterAvType(type: InnsendingType): Set<MottattDokument> {
+        synchronized(lock) {
+            return memory.filter { it.status == Status.MOTTATT && it.type == type }.toSet()
+        }
+    }
 }

@@ -48,7 +48,7 @@ public enum class StegType(
         status = Status.UTREDES
     ),
     SAMORDNING_SYKESTIPEND(
-        gruppe = StegGruppe.STUDENT,
+        gruppe = StegGruppe.SAMORDNING,
         status = Status.UTREDES
     ),
     VURDER_BISTANDSBEHOV(

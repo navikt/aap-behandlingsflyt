@@ -18,7 +18,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
@@ -28,7 +28,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDate
 
 @ExtendWith(MockKExtension::class)
-@MockKExtension.CheckUnnecessaryStub
+@MockKExtension.RequireParallelTesting
 class FatteVedtakStegTest {
 
     val klageresultatUtleder = mockk<KlageresultatUtleder>(relaxed = true)
@@ -38,7 +38,7 @@ class FatteVedtakStegTest {
     val avbrytRevurderingService = mockk<AvbrytRevurderingService>()
     val trukketSøknadService = mockk<TrukketSøknadService>()
     val gatewayProvider = createGatewayProvider {
-        register<FakeUnleash>()
+        register<AlleAvskruddUnleash>()
     }
 
     @BeforeEach
@@ -46,7 +46,7 @@ class FatteVedtakStegTest {
         every { trekkKlageService.klageErTrukket(any()) } returns false
         every {
             avklaringsbehovService.oppdaterAvklaringsbehov(
-                any(), any(), any(), any(), any(), any()
+                any(), any(), any(), any(), any()
             )
         } returns Unit
     }
@@ -71,7 +71,7 @@ class FatteVedtakStegTest {
         trukketSøknadService = trukketSøknadService,
         vedtakService = mockk(relaxed = true),
         virkningstidspunktUtleder = mockk(relaxed = true),
-        unleashGateway = FakeUnleash,
+        unleashGateway = AlleAvskruddUnleash,
     )
 
     @Test

@@ -39,7 +39,6 @@ class RettighetsperiodeSteg(
         val rettighetsperiodeVurdering = rettighetsperiodeRepository.hentVurdering(kontekst.behandlingId)
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovene,
             kontekst = kontekst,
             definisjon = Definisjon.VURDER_RETTIGHETSPERIODE,
             vedtakBehøverVurdering = {
@@ -52,6 +51,7 @@ class RettighetsperiodeSteg(
                     VurderingType.MELDEKORT,
                     VurderingType.AUTOMATISK_BREV,
                     VurderingType.UTVID_VEDTAKSLENGDE,
+                    VurderingType.MIGRER_RETTIGHETSPERIODE,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
                     VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
                     VurderingType.IKKE_RELEVANT ->
@@ -80,6 +80,7 @@ class RettighetsperiodeSteg(
                 }
             }
             VurderingType.UTVID_VEDTAKSLENGDE,
+            VurderingType.MIGRER_RETTIGHETSPERIODE,
             VurderingType.IKKE_RELEVANT,
             VurderingType.MELDEKORT,
             VurderingType.AUTOMATISK_BREV,

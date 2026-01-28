@@ -41,7 +41,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.FakePersoner
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.PersonNavn
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.genererIdent
@@ -58,7 +58,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import kotlin.test.assertTrue
 
-class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
+class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     val periode = Periode(LocalDate.now(), Tid.MAKS)
 
     @Test
@@ -300,7 +300,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
         FakePersoner.leggTil(manueltBarnIPDL)
 
         val barnNavn = "Gregor Gorgh"
-        val barnAlder = LocalDate.now().minusYears(17)
+        val barnAlder = LocalDate.now().minusYears(17).minusMonths(1)
         val søknad = TestSøknader.SØKNAD_MED_BARN(
             listOf(
                 Pair(
@@ -407,14 +407,14 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(FakeUnleash::class) {
                 assertThat(periodeMedBarneTilleggForToBarn).isEqualTo(
                     Periode(
                         periode.fom,
-                        periode.fom.plusYears(1).minusDays(1)
+                        periode.fom.plusYears(1).minusMonths(1).minusDays(1)
                     )
                 )
                 val underveisPeriode =
                     repositoryProvider.provide<UnderveisRepository>().hent(behandling.id).somTidslinje().helePerioden()
                 assertThat(periodeMedBarneTilleggForEttBarn).isEqualTo(
                     Periode(
-                        periode.fom.plusYears(1),
+                        periode.fom.plusYears(1).minusMonths(1),
                         underveisPeriode.tom
                     )
                 )

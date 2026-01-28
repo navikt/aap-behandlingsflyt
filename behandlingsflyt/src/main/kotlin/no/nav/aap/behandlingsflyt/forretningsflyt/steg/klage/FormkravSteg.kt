@@ -48,7 +48,6 @@ class FormkravSteg (
         val grunnlag = formkravRepository.hentHvisEksisterer(kontekst.behandlingId)
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.VURDER_FORMKRAV,
             vedtakBehøverVurdering = { vedtakBehøverVurderingFormkrav(kontekst) },
             erTilstrekkeligVurdert = { erTilstrekkeligVurdertFormkrav(kontekst, grunnlag, venteBehov)},
@@ -57,7 +56,6 @@ class FormkravSteg (
         )
 
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV,
             vedtakBehøverVurdering = { vedtakBehøverVurderingForhåndsvarsel(kontekst, grunnlag?.vurdering)},
             erTilstrekkeligVurdert = { erTilstrekkeligVurdertForhåndsvarsel(kontekst) },
@@ -109,7 +107,7 @@ class FormkravSteg (
             return false
         } else if (grunnlag.vurdering.erOppfylt()) {
             return true
-        } else if (erTattAvVentFørFristenPåForhåndsvarsel( grunnlag, venteBehov)) {
+        } else if (erTilstrekkeligVurdertForhåndsvarsel(kontekst) && erTattAvVentFørFristenPåForhåndsvarsel( grunnlag, venteBehov)) {
             return false
         }
         return true

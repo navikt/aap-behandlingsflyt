@@ -2,21 +2,27 @@ package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentEnkelLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plusHverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurderingDTO
+import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakeUnleashBase
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.test.november
+import no.nav.aap.behandlingsflyt.test.oktober
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedClass
@@ -25,12 +31,14 @@ import org.junit.jupiter.params.provider.MethodSource
 import kotlin.reflect.KClass
 
 @ParameterizedClass
-@MethodSource("testData")
+@MethodSource("unleashTestDataSource")
 class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlytOrkestratorTest(unleashGateway) {
     @Test
     fun `innvilge som student, revurdering ordinær`() {
         val fom = 24 november 2025
         val periode = Periode(fom, fom.plusYears(3))
+
+        val sykestipendPeriode = Periode(fom, fom.plusDays(14))
 
         val person = TestPersoner.STANDARD_PERSON()
 
@@ -41,6 +49,8 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             søknad = TestSøknader.SØKNAD_STUDENT
         )
 
+        val avbruttStudieDato = 1 oktober 2025
+
         behandling = behandling
             .løsAvklaringsBehov(
                 AvklarStudentEnkelLøsning(
@@ -50,46 +60,73 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                         godkjentStudieAvLånekassen = true,
                         avbruttPgaSykdomEllerSkade = true,
                         harBehovForBehandling = true,
-                        avbruttStudieDato = fom,
+                        avbruttStudieDato = avbruttStudieDato,
                         avbruddMerEnn6Måneder = true
                     ),
                 )
             )
             .medKontekst {
-                if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.Sykestipend)) {
-                    this.behandling.løsSykestipend(listOf(Periode(fom, fom.plusDays(14))))
+                val vilkår = repositoryProvider.provide<VilkårsresultatRepository>().hent(this.behandling.id)
 
-                    val vilkår = repositoryProvider.provide<VilkårsresultatRepository>().hent(this.behandling.id)
-                    val v = vilkår.finnVilkår(Vilkårtype.SAMORDNING_ANNEN_LOVGIVNING)
-                    assertThat(v.harPerioderMedIkkeOppfylt()).isTrue
-                }
+                val studentVilkår = vilkår.finnVilkår(Vilkårtype.STUDENT)
+                studentVilkår.tidslinje().assertTidslinje(
+                    Segment(Periode(fom, avbruttStudieDato.plusMonths(6).minusDays(1))) { vurdering ->
+                        assertThat(vurdering.utfall).isEqualTo(Utfall.OPPFYLT)
+                    },
+                    Segment(Periode(avbruttStudieDato.plusMonths(6), Tid.MAKS)) { vurdering ->
+                        assertThat(vurdering.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
+                        assertThat(vurdering.avslagsårsak).isEqualTo(Avslagsårsak.VARIGHET_OVERSKREDET_STUDENT)
+                    }
+                )
             }
             .løsRefusjonskrav()
             .løsBeregningstidspunkt()
             .løsOppholdskrav(fom)
+            .medKontekst {
+                if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.Sykestipend)) {
+                    this.behandling.løsSykestipend(listOf(sykestipendPeriode))
+
+                    val vilkår = repositoryProvider.provide<VilkårsresultatRepository>().hent(this.behandling.id)
+                    val syksetipendVilkår = vilkår.finnVilkår(Vilkårtype.SAMORDNING_ANNEN_LOVGIVNING)
+                    assertThat(syksetipendVilkår.harPerioderMedIkkeOppfylt()).isTrue
+                }
+            }
             .løsAndreStatligeYtelser()
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
             .medKontekst {
                 val vilkår = repositoryProvider.provide<VilkårsresultatRepository>().hent(behandling.id)
                 val v = vilkår.finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
-                assertThat(v.harPerioderSomErOppfylt()).isTrue
+                assertThat(v.harPerioderSomErOppfylt()).isFalse
             }
             .assertRettighetstype(
                 if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.Sykestipend)) {
-                    val virkningstidspunkt = fom.plusDays(15)
+                    val virkningstidspunkt = sykestipendPeriode.tom.plusDays(1)
                     Periode(
                         virkningstidspunkt,
-                        virkningstidspunkt.plusHverdager(Hverdager(130)).minusDays(1)
+                        avbruttStudieDato.plusMonths(6).minusDays(1)
                     ) to RettighetsType.STUDENT
                 } else {
-                    Periode(fom, fom.plusHverdager(Hverdager(130)).minusDays(1)) to RettighetsType.STUDENT
+                    Periode(fom, avbruttStudieDato.plusMonths(6).minusDays(1)) to RettighetsType.STUDENT
                 }
             )
 
         // Revurdering
+        val relevanteVurderingsbehov =
+            unleashGateway.objectInstance!!.isDisabled(BehandlingsflytFeature.PeriodisertSykdom)
+                .let {
+                    if (it) {
+                        listOf(
+                            Vurderingsbehov.REVURDER_STUDENT,
+                            Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
+                        ) // Vi kan ikke detektere behovet for ikke-perodisert sykdom, og må derfor eksplisitt revurdere på sykdom også
+                    } else {
+                        listOf(Vurderingsbehov.REVURDER_STUDENT)
+                    }
+                }
+
         sak.opprettManuellRevurdering(
-            listOf(no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov.REVURDER_STUDENT),
+            relevanteVurderingsbehov,
         )
             .løsAvklaringsBehov(
                 AvklarStudentEnkelLøsning(
@@ -105,13 +142,16 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 )
             )
             .medKontekst {
-                if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.Sykestipend)) {
-                    this.behandling.løsSykestipend()
+                val vilkår = repositoryProvider.provide<VilkårsresultatRepository>().hent(this.behandling.id)
 
-                    val vilkår = repositoryProvider.provide<VilkårsresultatRepository>().hent(this.behandling.id)
-                    val v = vilkår.finnVilkår(Vilkårtype.SAMORDNING_ANNEN_LOVGIVNING)
-                    assertThat(v.harPerioderMedIkkeOppfylt()).isFalse
-                }
+                val studentVilkår = vilkår.finnVilkår(Vilkårtype.STUDENT)
+                studentVilkår.tidslinje().assertTidslinje(
+                    Segment(Periode(fom, Tid.MAKS)) { vurdering ->
+                        assertThat(vurdering.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
+                        assertThat(vurdering.avslagsårsak).isEqualTo(Avslagsårsak.IKKE_RETT_PA_STUDENT)
+                    }
+                )
+
             }
             .medKontekst {
                 assertThat(this.åpneAvklaringsbehov).extracting<Definisjon> { it.definisjon }
@@ -128,7 +168,11 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             .løsSykdomsvurderingBrev()
             .medKontekst {
                 if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.Sykestipend)) {
-                    this.behandling.løsOppholdskrav(fom) // TODO: Det er en bug i steget der dette behovet blir løftet på nytt 
+                    this.behandling.løsSykestipend()
+
+                    val vilkår = repositoryProvider.provide<VilkårsresultatRepository>().hent(this.behandling.id)
+                    val v = vilkår.finnVilkår(Vilkårtype.SAMORDNING_ANNEN_LOVGIVNING)
+                    assertThat(v.harPerioderMedIkkeOppfylt()).isFalse
                 }
             }
             .foreslåVedtak()
@@ -143,48 +187,21 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
                 assertThat(v.harPerioderSomErOppfylt()).isTrue
             }
             .assertRettighetstype(
-                Periode(
-                    fom,
-                    fom.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
-                ) to RettighetsType.BISTANDSBEHOV,
+                if (unleashGateway.objectInstance!!.isEnabled(BehandlingsflytFeature.Sykestipend)) {
+                    val gammeltVirkningstidspunkt = fom.plusDays(15)
+                    Periode(
+                        fom,
+                        gammeltVirkningstidspunkt.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
+                    ) to RettighetsType.BISTANDSBEHOV
+                } else {
+                    Periode(
+                        fom,
+                        fom.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
+                    ) to RettighetsType.BISTANDSBEHOV
+                }
+
             )
 
     }
-
-    companion object {
-        @Suppress("unused")
-        @JvmStatic
-        fun testData(): List<Arguments> {
-            return listOf(
-                Arguments.of(FakeUnleash::class),
-                Arguments.of(SykestipendAktivert::class),
-            )
-        }
-    }
-
 }
 
-object SykestipendAktivert : FakeUnleashBase(
-    mapOf(
-        BehandlingsflytFeature.IngenValidering to false,
-        BehandlingsflytFeature.NyBrevtype11_17 to true,
-        BehandlingsflytFeature.OverforingsdatoNullForAvregning to true,
-        BehandlingsflytFeature.OvergangArbeid to true,
-        BehandlingsflytFeature.KvalitetssikringsSteg to true,
-        BehandlingsflytFeature.EOSBeregning to true,
-        BehandlingsflytFeature.NyBrevbyggerV3 to false,
-        BehandlingsflytFeature.BedreUttrekkAvSakerMedFritakMeldeplikt to false,
-        BehandlingsflytFeature.LagreVedtakIFatteVedtak to true,
-        BehandlingsflytFeature.PeriodisertSykepengeErstatningNyAvklaringsbehovService to true,
-        BehandlingsflytFeature.ValiderOvergangUfore to true,
-        BehandlingsflytFeature.KravOmInntektsbortfall to true,
-        BehandlingsflytFeature.Under18 to true,
-        BehandlingsflytFeature.SosialRefusjon to true,
-        BehandlingsflytFeature.HentSykepengerVedOverlapp to true,
-        BehandlingsflytFeature.MigrerRettighetsperiode to true,
-        BehandlingsflytFeature.PeriodisertSykdom to true,
-        BehandlingsflytFeature.Sykestipend to true,
-        BehandlingsflytFeature.Forlengelse to true,
-        BehandlingsflytFeature.ForlengelseIManuellBehandling to false,
-    )
-)

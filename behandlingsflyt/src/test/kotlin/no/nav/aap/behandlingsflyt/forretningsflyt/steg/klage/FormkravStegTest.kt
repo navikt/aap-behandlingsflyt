@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRefer
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravRepository
@@ -30,8 +31,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -53,8 +56,9 @@ class FormkravStegTest {
     val brevbestillingServiceMock = mockk<BrevbestillingService>()
     val avklaringsbehovServiceMock = mockk<AvklaringsbehovService>()
     val avbrytRevurderingServiceMock = mockk<AvbrytRevurderingService>()
+    val trukketSøknadRepository = InMemoryTrukketSøknadRepository
     val gatewayProvider = createGatewayProvider {
-        register<FakeUnleash>()
+        register<AlleAvskruddUnleash>()
     }
 
     @BeforeEach
@@ -63,8 +67,7 @@ class FormkravStegTest {
         every { formkravRepositoryMock.hentHvisEksisterer(any()) } returns null
         every { avbrytRevurderingServiceMock.revurderingErAvbrutt(any()) } returns true
         every { avklaringsbehovServiceMock.oppdaterAvklaringsbehov(
-            avklaringsbehovene = any(),
-             definisjon = Definisjon.VURDER_FORMKRAV,
+            definisjon = Definisjon.VURDER_FORMKRAV,
             vedtakBehøverVurdering = any(),
             erTilstrekkeligVurdert = any(),
             tilbakestillGrunnlag = any(),
@@ -103,6 +106,10 @@ class FormkravStegTest {
             trekkKlageService = trekkKlageServiceMock,
             avklaringsbehovService = AvklaringsbehovService(
                 avbrytRevurderingService = avbrytRevurderingServiceMock,
+                InMemoryAvklaringsbehovRepository,
+                behandlingRepositoryMock,
+                InMemoryVilkårsresultatRepository,
+                trukketSøknadService = TrukketSøknadService(trukketSøknadRepository)
             ),
             unleashGateway = gatewayProvider.provide()
         )
@@ -160,6 +167,10 @@ class FormkravStegTest {
             trekkKlageService = trekkKlageServiceMock,
             avklaringsbehovService = AvklaringsbehovService(
                 avbrytRevurderingService = avbrytRevurderingServiceMock,
+                InMemoryAvklaringsbehovRepository,
+                behandlingRepositoryMock,
+                InMemoryVilkårsresultatRepository,
+                trukketSøknadService = TrukketSøknadService(trukketSøknadRepository)
             ),
             unleashGateway = gatewayProvider.provide()
         )
@@ -222,6 +233,10 @@ class FormkravStegTest {
             trekkKlageService = trekkKlageServiceMock,
             avklaringsbehovService = AvklaringsbehovService(
                 avbrytRevurderingService = avbrytRevurderingServiceMock,
+                InMemoryAvklaringsbehovRepository,
+                behandlingRepositoryMock,
+                InMemoryVilkårsresultatRepository,
+                trukketSøknadService = TrukketSøknadService(trukketSøknadRepository)
             ),
             unleashGateway = gatewayProvider.provide()
         )
@@ -287,6 +302,10 @@ class FormkravStegTest {
             trekkKlageService = trekkKlageServiceMock,
             avklaringsbehovService = AvklaringsbehovService(
                 avbrytRevurderingService = avbrytRevurderingServiceMock,
+                InMemoryAvklaringsbehovRepository,
+                behandlingRepositoryMock,
+                InMemoryVilkårsresultatRepository,
+                trukketSøknadService = TrukketSøknadService(trukketSøknadRepository)
             ),
             unleashGateway = gatewayProvider.provide()
         )
@@ -392,6 +411,10 @@ class FormkravStegTest {
             trekkKlageService = trekkKlageServiceMock,
             avklaringsbehovService = AvklaringsbehovService(
                 avbrytRevurderingService = avbrytRevurderingServiceMock,
+                InMemoryAvklaringsbehovRepository,
+                behandlingRepositoryMock,
+                InMemoryVilkårsresultatRepository,
+                trukketSøknadService = TrukketSøknadService(trukketSøknadRepository)
             ),
             unleashGateway = gatewayProvider.provide()
         )
@@ -438,6 +461,10 @@ class FormkravStegTest {
             trekkKlageService = trekkKlageServiceMock,
             avklaringsbehovService = AvklaringsbehovService(
                 avbrytRevurderingService = avbrytRevurderingServiceMock,
+                InMemoryAvklaringsbehovRepository,
+                behandlingRepositoryMock,
+                InMemoryVilkårsresultatRepository,
+                trukketSøknadService = TrukketSøknadService(trukketSøknadRepository)
             ),
             unleashGateway = gatewayProvider.provide()
         )
@@ -509,6 +536,10 @@ class FormkravStegTest {
             trekkKlageService = trekkKlageServiceMock,
             avklaringsbehovService = AvklaringsbehovService(
                 avbrytRevurderingService = avbrytRevurderingServiceMock,
+                InMemoryAvklaringsbehovRepository,
+                behandlingRepositoryMock,
+                InMemoryVilkårsresultatRepository,
+                trukketSøknadService = TrukketSøknadService(trukketSøknadRepository)
             ),
             unleashGateway = gatewayProvider.provide()
         )

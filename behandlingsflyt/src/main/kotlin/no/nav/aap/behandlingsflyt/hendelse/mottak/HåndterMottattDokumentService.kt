@@ -135,7 +135,7 @@ class HåndterMottattDokumentService(
         brevkategori: InnsendingType,
         melding: OmgjøringKlageRevurdering,
     ) {
-        log.info("Mottok dokument på sak-id $sakId, og referanse $referanse, med brevkategori $brevkategori")
+        log.info("Håndterer dokument på sak-id $sakId, og referanse $referanse, med brevkategori $brevkategori")
 
         val sak = sakService.hent(sakId)
         val årsakTilOpprettelse = utledÅrsakTilOpprettelse(brevkategori, melding)
@@ -333,7 +333,8 @@ class HåndterMottattDokumentService(
             ÅrsakTilOpprettelse.OPPFØLGINGSOPPGAVE_SAMORDNING_GRADERING,
             ÅrsakTilOpprettelse.AKTIVITETSPLIKT,
             ÅrsakTilOpprettelse.AKTIVITETSPLIKT_11_9,
-            ÅrsakTilOpprettelse.UTVID_VEDTAKSLENGDE -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
+            ÅrsakTilOpprettelse.UTVID_VEDTAKSLENGDE,
+            ÅrsakTilOpprettelse.MIGRER_RETTIGHETSPERIODE-> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
 
             ÅrsakTilOpprettelse.MELDEKORT,
             ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.KORRIGERING
@@ -346,7 +347,6 @@ class HåndterMottattDokumentService(
 
             ÅrsakTilOpprettelse.TILBAKEKREVING_HENDELSE,
             ÅrsakTilOpprettelse.FAGSYSTEMINFO_BEHOV_HENDELSE,
-            ÅrsakTilOpprettelse.INSTITUSJONSOPPHOLD -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.NYE_OPPLYSNINGER
 
             null -> FagsysteminfoSvarHendelse.RevurderingDto.Årsak.UKJENT // Ikke relevant
         }
@@ -451,7 +451,7 @@ class HåndterMottattDokumentService(
             InnsendingType.PDL_HENDELSE_DODSFALL_BARN -> ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA
             InnsendingType.OMGJØRING_KLAGE_REVURDERING -> utledÅrsakEtterOmgjøringAvKlage(melding)
             InnsendingType.TILBAKEKREVING_HENDELSE -> ÅrsakTilOpprettelse.TILBAKEKREVING_HENDELSE
-            InnsendingType.INSTITUSJONSOPPHOLD -> ÅrsakTilOpprettelse.INSTITUSJONSOPPHOLD
+            InnsendingType.INSTITUSJONSOPPHOLD -> ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA
             InnsendingType.FAGSYSTEMINFO_BEHOV_HENDELSE -> ÅrsakTilOpprettelse.FAGSYSTEMINFO_BEHOV_HENDELSE
         }
     }

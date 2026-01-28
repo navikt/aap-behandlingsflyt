@@ -34,7 +34,6 @@ class SykdomsvurderingBrevSteg internal constructor(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         avklaringsbehovService.oppdaterAvklaringsbehov(
-            avklaringsbehovene = avklaringsbehovene,
             definisjon = Definisjon.SKRIV_SYKDOMSVURDERING_BREV,
             vedtakBehøverVurdering = {
                 when (kontekst.vurderingType) {

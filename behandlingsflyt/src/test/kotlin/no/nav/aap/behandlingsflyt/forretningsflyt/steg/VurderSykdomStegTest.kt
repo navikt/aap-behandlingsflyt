@@ -19,13 +19,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepos
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.januar
@@ -34,16 +34,25 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import java.time.LocalDateTime
 
 class VurderSykdomStegTest {
     @Test
     fun `Sykdom skal vurderes når studentvurderinger går fra oppfylt til ikke-oppfylt`() {
-        val behandlingId = BehandlingId(1)
-        val revurderingId = BehandlingId(2)
+        val sakId = SakId(1)
+        val behandlingId = InMemoryBehandlingRepository.opprettBehandling(
+            sakId,
+            TypeBehandling.Førstegangsbehandling,
+            null,
+            mockk(relaxed = true)
+        ).id
+        val revurderingId = InMemoryBehandlingRepository.opprettBehandling(
+            sakId,
+            TypeBehandling.Revurdering,
+            behandlingId,
+            mockk(relaxed = true)
+        ).id
 
-        val behandlingRepository = mockk<BehandlingRepository>() {
-            every { hent(behandlingId) } returns mockk(relaxed = true)
-        }
 
         val sykdomRepository = mockk<SykdomRepository> {
             every { hentHvisEksisterer(any()) } returns null
@@ -65,7 +74,8 @@ class VurderSykdomStegTest {
                         harBehovForBehandling = true,
                         avbruttStudieDato = 1 desember 2024,
                         avbruddMerEnn6Måneder = true,
-                        vurdertIBehandling = behandlingId
+                        vurdertIBehandling = behandlingId,
+                        vurdertTidspunkt = LocalDateTime.now()
                     )
                 ),
                 oppgittStudent = OppgittStudent(erStudentStatus = ErStudentStatus.AVBRUTT)
@@ -81,7 +91,8 @@ class VurderSykdomStegTest {
                         harBehovForBehandling = true,
                         avbruttStudieDato = 1 desember 2024,
                         avbruddMerEnn6Måneder = true,
-                        vurdertIBehandling = revurderingId
+                        vurdertIBehandling = revurderingId,
+                        vurdertTidspunkt = LocalDateTime.now()
                     )
                 ),
                 oppgittStudent = OppgittStudent(erStudentStatus = ErStudentStatus.AVBRUTT)
@@ -94,7 +105,7 @@ class VurderSykdomStegTest {
             avklaringsbehovRepository,
             FakeTidligereVurderinger(),
             avklaringsbehovService,
-            behandlingRepository,
+            InMemoryBehandlingRepository,
             vilkårsresultatRepository,
             unleashGateway = mockk {
                 every { isDisabled(BehandlingsflytFeature.PeriodisertSykdom) } returns false

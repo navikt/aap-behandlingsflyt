@@ -15,7 +15,9 @@ data class TilkjentYtelse(
     val barnetilleggsats: Beløp,
     val minsteÅrligYtelse: Beløp,
     val minsteÅrligYtelseUnder25: Beløp,
-    val årligYtelse: Beløp
+    val årligYtelse: Beløp,
+    val sisteDagMedYtelse: LocalDate,
+    val kravdatoUføretrygd: LocalDate?
 )
 
 data class GrunnlagBeregning(

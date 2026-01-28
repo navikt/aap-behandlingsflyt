@@ -2,75 +2,25 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.Kvoter
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.komponenter.type.Periode
-import java.time.DayOfWeek
-import java.time.LocalDate
 
-@JvmInline
-value class Hverdager(val asInt: Int) : Comparable<Hverdager> {
-    operator fun plus(other: Hverdager) = Hverdager(this.asInt + other.asInt)
-    operator fun minus(other: Hverdager) = Hverdager(this.asInt - other.asInt)
-    override fun compareTo(other: Hverdager) = asInt.compareTo(other.asInt)
-
-    companion object {
-        fun LocalDate.plusHverdager(hverdager: Hverdager): LocalDate {
-            return hverdagerFraOgMed(this).elementAt(hverdager.asInt)
-        }
-
-        fun LocalDate.plussEtÅrMedHverdager(årMedHverdager: ÅrMedHverdager): LocalDate {
-            return hverdagerFraOgMed(this).elementAt(årMedHverdager.hverdagerIÅret.asInt)
-        }
-
-        private val hverdagene = listOf(
-            DayOfWeek.MONDAY,
-            DayOfWeek.TUESDAY,
-            DayOfWeek.WEDNESDAY,
-            DayOfWeek.THURSDAY,
-            DayOfWeek.FRIDAY
-        )
-
-        private val LocalDate.erHverdag: Boolean
-            get() = dayOfWeek in hverdagene
-
-        fun Periode.antallHverdager(): Hverdager {
-            return Hverdager(this.antallDager(*hverdagene.toTypedArray()))
-        }
-
-        private fun hverdagerFraOgMed(start: LocalDate): Sequence<LocalDate> {
-            var dag = start
-            return sequence {
-                while (true) {
-                    if (dag.erHverdag) {
-                        yield(dag)
-                    }
-                    dag = dag.plusDays(1)
-                }
-            }
-        }
-    }
-}
-
-/**
- * Antall mandag-fredager per år er bestemt til å være 261 + 261 + 262 for at kvoten skal bli riktig.
- * https://confluence.adeo.no/spaces/PAAP/pages/739025519/Kvoter+og+overganger+mellom+bestemmelser
- */
-enum class ÅrMedHverdager(val hverdagerIÅret: Hverdager){
-    FØRSTE_ÅR(Hverdager(261)),
-    ANDRE_ÅR(Hverdager(261)),
-    TREDJE_ÅR(Hverdager(262)),
-    ANNET(Hverdager(261))
-}
-
-enum class Kvote(val avslagsårsak: VarighetVurdering.Avslagsårsak, val tellerMotKvote: (Vurdering) -> Boolean) {
-    ORDINÆR(VarighetVurdering.Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP, ::skalTelleMotOrdinærKvote),
-    STUDENT(VarighetVurdering.Avslagsårsak.STUDENTKVOTE_BRUKT_OPP, ::skalTelleMotStudentKvote),
-    ETABLERINGSFASE(VarighetVurdering.Avslagsårsak.ETABLERINGSFASEKVOTE_BRUKT_OPP, { false }),
-    UTVIKLINGSFASE(VarighetVurdering.Avslagsårsak.UTVIKLINGSFASEKVOTE_BRUKT_OPP, { false }),
+enum class Kvote(
+    val avslagsårsak: VarighetVurdering.Avslagsårsak,
+    val nyAvslagsårsak: Avslagsårsak,
+    val tellerMotKvote: (Vurdering) -> Boolean
+) {
+    ORDINÆR(
+        avslagsårsak = VarighetVurdering.Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP,
+        nyAvslagsårsak = Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP,
+        tellerMotKvote = ::skalTelleMotOrdinærKvote
+    ),
     SYKEPENGEERSTATNING(
-        VarighetVurdering.Avslagsårsak.SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP,
-        ::skalTelleMotSykepengeKvote
-    );
+        avslagsårsak = VarighetVurdering.Avslagsårsak.SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP,
+        nyAvslagsårsak = Avslagsårsak.SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP,
+        tellerMotKvote = ::skalTelleMotSykepengeKvote
+    ),
 }
 
 private fun skalTelleMotOrdinærKvote(vurdering: Vurdering): Boolean {
@@ -78,10 +28,6 @@ private fun skalTelleMotOrdinærKvote(vurdering: Vurdering): Boolean {
         RettighetsType.BISTANDSBEHOV,
         RettighetsType.STUDENT
     ) && !skalTelleMotSykepengeKvote(vurdering)
-}
-
-private fun skalTelleMotStudentKvote(vurdering: Vurdering): Boolean {
-    return vurdering.harRett() && vurdering.preliminærRettighetsType() == RettighetsType.STUDENT
 }
 
 private fun skalTelleMotSykepengeKvote(vurdering: Vurdering): Boolean {
@@ -111,27 +57,12 @@ data class KvoteTilstand(
 
 class Telleverk private constructor(
     private val ordinærkvote: KvoteTilstand,
-    private val studentkvote: KvoteTilstand,
-    private val utviklingsfasekvote: KvoteTilstand,
-    private val etableringsfasekvote: KvoteTilstand,
     private val sykepengeerstatningkvote: KvoteTilstand
 ) {
     constructor(kvoter: Kvoter) : this(
         ordinærkvote = KvoteTilstand(
             kvote = Kvote.ORDINÆR,
             hverdagerTilgjengelig = kvoter.ordinærkvote,
-        ),
-        studentkvote = KvoteTilstand(
-            kvote = Kvote.STUDENT,
-            hverdagerTilgjengelig = kvoter.studentkvote,
-        ),
-        utviklingsfasekvote = KvoteTilstand(
-            kvote = Kvote.UTVIKLINGSFASE,
-            hverdagerTilgjengelig = Hverdager(0),
-        ),
-        etableringsfasekvote = KvoteTilstand(
-            kvote = Kvote.ETABLERINGSFASE,
-            hverdagerTilgjengelig = Hverdager(0),
         ),
         sykepengeerstatningkvote = KvoteTilstand(
             kvote = Kvote.SYKEPENGEERSTATNING,
@@ -142,9 +73,6 @@ class Telleverk private constructor(
     private fun <T> map(relevanteKvoter: Set<Kvote>, action: (KvoteTilstand) -> T): List<T> {
         return listOfNotNull(
             if (Kvote.ORDINÆR in relevanteKvoter) action(ordinærkvote) else null,
-            if (Kvote.STUDENT in relevanteKvoter) action(studentkvote) else null,
-            if (Kvote.ETABLERINGSFASE in relevanteKvoter) action(etableringsfasekvote) else null,
-            if (Kvote.UTVIKLINGSFASE in relevanteKvoter) action(utviklingsfasekvote) else null,
             if (Kvote.SYKEPENGEERSTATNING in relevanteKvoter) action(sykepengeerstatningkvote) else null,
         )
     }

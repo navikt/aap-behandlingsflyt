@@ -11,7 +11,7 @@ import java.time.LocalDateTime
  * @param endringer Alle endringer som har skjedd på en gitt behandling.
  */
 public data class AvklaringsbehovHendelseDto(
-    val id: Long,
+    val id: Long? = null,
     val avklaringsbehovDefinisjon: Definisjon,
     val status: Status,
     val endringer: List<EndringDTO>
