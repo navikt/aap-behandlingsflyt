@@ -175,7 +175,6 @@ private fun inntekterTilUføreDTO(uføreInntekt: UføreInntekt, grunnlagInntekt:
         justertTilMaks6G = grunnlagInntekt.inntekt6GBegrenset.verdi(),
         justertForUføreGrad = grunnlagInntekt.inntektIKroner.verdi(),
         justertForUføreGradiG = grunnlagInntekt.inntektIG.verdi(),
-        uføreGrad = uføreInntekt.inntektsPerioder.maxBy { it.periode.fom }.uføregrad.prosentverdi(),
         inntektsPerioder = uføreInntekt.inntektsPerioder
             .somTidslinje({ it.periode }, { Triple(it.inntektIKroner, it.uføregrad, it.inntektJustertForUføregrad) })
             .komprimer()
