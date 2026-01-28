@@ -72,7 +72,13 @@ class VurderYrkesskadeSteg private constructor(
                 ) && flytKontekstMedPerioder.vurderingsbehovRelevanteForSteg.isNotEmpty() && yrkesskadeGrunnlag?.yrkesskader?.harYrkesskade() == true
             }
 
-            VurderingType.UTVID_VEDTAKSLENGDE, VurderingType.MIGRER_RETTIGHETSPERIODE, VurderingType.MELDEKORT, VurderingType.AUTOMATISK_BREV, VurderingType.EFFEKTUER_AKTIVITETSPLIKT, VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9, VurderingType.IKKE_RELEVANT -> false
+            VurderingType.MELDEKORT,
+            VurderingType.UTVID_VEDTAKSLENGDE,
+            VurderingType.MIGRER_RETTIGHETSPERIODE,
+            VurderingType.AUTOMATISK_BREV,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
+            VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
+            VurderingType.IKKE_RELEVANT -> false
         }
     }
 

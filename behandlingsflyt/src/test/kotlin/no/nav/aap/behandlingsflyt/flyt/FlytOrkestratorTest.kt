@@ -10,7 +10,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.VURDER_RETTIGHETSPERIOD
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import org.assertj.core.api.Assertions.assertThat
@@ -23,18 +23,8 @@ import kotlin.reflect.KClass
 
 @Tag("motor")
 @ParameterizedClass
-@MethodSource("testData")
+@MethodSource("unleashTestDataSource")
 class FlytOrkestratorTest(unleashGateway: KClass<UnleashGateway>) : AbstraktFlytOrkestratorTest(unleashGateway) {
-    companion object {
-        @Suppress("unused")
-        @JvmStatic
-        fun testData(): List<Arguments> {
-            return listOf(
-                Arguments.of(FakeUnleash::class),
-            )
-        }
-    }
-
     @Test
     fun `hopper over foreslå vedtak-steg når revurdering ikke skal innom NAY`() {
         val sak = happyCaseFørstegangsbehandling()

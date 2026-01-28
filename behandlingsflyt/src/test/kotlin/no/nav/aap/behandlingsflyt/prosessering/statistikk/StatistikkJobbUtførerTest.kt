@@ -1,7 +1,5 @@
 package no.nav.aap.behandlingsflyt.prosessering.statistikk
 
-import io.mockk.every
-import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
@@ -25,7 +23,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.dokument.KlagedokumentInformasjonUtleder
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.IKlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
@@ -79,11 +76,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.Fakes
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryArbeidsopptrappingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMeldekortRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMeldepliktRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMottattDokumentRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPåklagetBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
@@ -416,7 +415,7 @@ class StatistikkJobbUtførerTest {
                             opplysningerMottatt = null,
                         ),
                         trekk = Dagsatser(0),
-                        brukerAvKvoter = setOf(Kvote.STUDENT, Kvote.ORDINÆR),
+                        brukerAvKvoter = setOf(Kvote.ORDINÆR),
                         avslagsårsak = null,
                         institusjonsoppholdReduksjon = Prosent.`0_PROSENT`,
                         meldepliktStatus = MeldepliktStatus.MELDT_SEG,
@@ -508,7 +507,8 @@ class StatistikkJobbUtførerTest {
                 ),
                 resultat = ResultatKode.INNVILGET,
                 vedtakstidspunkt = vedtakstidspunkt,
-                fritaksvurderinger = emptyList()
+                fritaksvurderinger = emptyList(),
+                perioderMedArbeidsopptrapping = emptyList()
             )
         )
     }
@@ -607,8 +607,6 @@ class StatistikkJobbUtførerTest {
             }
         }
 
-        val påklagetBehandlingRepository = mockk<PåklagetBehandlingRepository>()
-        every { påklagetBehandlingRepository.hentGjeldendeVurderingMedReferanse(any()) } returns null
         val utfører = StatistikkJobbUtfører(
             statistikkGateway = StatistikkGatewayImpl(), statistikkMetoder = StatistikkMetoder(
                 vilkårsresultatRepository = vilkårsResultatRepository,
@@ -623,13 +621,14 @@ class StatistikkJobbUtførerTest {
                 trukketSøknadService = TrukketSøknadService(
                     trukketSøknadRepository = InMemoryTrukketSøknadRepository
                 ),
-                påklagetBehandlingRepository = påklagetBehandlingRepository,
+                påklagetBehandlingRepository = InMemoryPåklagetBehandlingRepository,
                 klageresultatUtleder = DummyKlageresultatUtleder(),
                 avbrytRevurderingService = AvbrytRevurderingService(inMemoryRepositoryProvider),
                 meldekortRepository = InMemoryMeldekortRepository,
                 klagedokumentInformasjonUtleder = KlagedokumentInformasjonUtleder(inMemoryRepositoryProvider),
                 vedtakService = VedtakService(inMemoryRepositoryProvider),
                 meldepliktRepository = InMemoryMeldepliktRepository,
+                arbeidsopptrappingRepository = InMemoryArbeidsopptrappingRepository,
             )
         )
 

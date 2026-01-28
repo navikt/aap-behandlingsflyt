@@ -70,7 +70,6 @@ class VurderForutgåendeMedlemskapSteg private constructor(
 
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING,
-            VurderingType.UTVID_VEDTAKSLENGDE,
             VurderingType.MIGRER_RETTIGHETSPERIODE,
             VurderingType.REVURDERING -> {
                 vurderVilkår(kontekst, grunnlag.value)
@@ -78,6 +77,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
             VurderingType.MELDEKORT,
+            VurderingType.UTVID_VEDTAKSLENGDE,
             VurderingType.AUTOMATISK_BREV,
             VurderingType.IKKE_RELEVANT -> {}
         }

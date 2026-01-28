@@ -28,7 +28,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
@@ -118,7 +118,7 @@ class VedtakslengdeStegTest {
             underveisRepository = InMemoryUnderveisRepository,
             vilkårsresultatRepository = InMemoryVilkårsresultatRepository,
             vedtakslengdeRepository = vedtakslengdeRepository,
-            unleashGateway = FakeUnleash,
+            unleashGateway = AlleAvskruddUnleash,
             clock = Clock.fixed(dagensDato.atStartOfDay().atZone(zone).toInstant(), zone)
         )
 

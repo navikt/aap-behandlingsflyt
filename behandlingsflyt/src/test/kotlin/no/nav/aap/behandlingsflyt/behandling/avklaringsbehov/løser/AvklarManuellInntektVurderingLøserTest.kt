@@ -11,7 +11,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.junit.jupiter.api.Test
@@ -29,8 +28,7 @@ class AvklarManuellInntektVurderingLøserTest {
 
         val løser = AvklarManuellInntektVurderingLøser(
             manuellInntektGrunnlagRepository = manuellInntektGrunnlagRepository,
-            beregningService = beregningService,
-            unleashGateway = FakeUnleash
+            beregningService = beregningService
         )
 
         val kontekst = AvklaringsbehovKontekst(

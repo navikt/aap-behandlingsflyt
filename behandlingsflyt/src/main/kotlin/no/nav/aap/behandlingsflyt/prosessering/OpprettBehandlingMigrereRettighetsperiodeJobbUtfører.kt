@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -15,7 +16,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.tidslinje.somTidslinje
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
@@ -45,22 +48,37 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
 
 
         if (unleashGateway.isEnabled(BehandlingsflytFeature.MigrerRettighetsperiode)) {
+            if (sak.rettighetsperiode.tom == Tid.MAKS) {
+                log.info("Har allerede tid maks som rettighetsperiode - lager ikke en ny behandling")
+                return
+            }
             val behandlingFørMigrering = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
                 ?: error("Fant ikke behandling for sak=${sakId}")
+            if (behandlingFørMigrering.status().erÅpen()) {
+                throw IllegalArgumentException("Kan ikke migrere sak når det finnes en åpen behandling")
+            }
             sakOgBehandlingService.overstyrRettighetsperioden(sak.id, sak.rettighetsperiode.fom, Tid.MAKS)
             val utvidVedtakslengdeBehandling = opprettNyBehandling(sak)
             prosesserBehandlingService.triggProsesserBehandling(utvidVedtakslengdeBehandling)
-            val behandlingEtterMigrering = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
-                ?: error("Fant ikke behandling for sak=${sakId}")
-            validerBehandlingerErUlike(behandlingFørMigrering, behandlingEtterMigrering)
-            validerRettighetstype(behandlingFørMigrering, behandlingEtterMigrering)
-            validerTilkjentYtelse(behandlingFørMigrering, behandlingEtterMigrering)
-            validerUnderveisPerioder(behandlingFørMigrering, behandlingEtterMigrering)
+            validerTilstandEtterMigrering(sak, sakId, behandlingFørMigrering)
 
             log.info("Jobb for migrering av rettighetsperiode fullført for sak ${sakId}")
         } else {
             log.info("Featuretoggle er skrudd av - migrerer ikke")
         }
+    }
+
+    private fun validerTilstandEtterMigrering(
+        sak: Sak,
+        sakId: Long,
+        behandlingFørMigrering: Behandling
+    ) {
+        val behandlingEtterMigrering = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
+            ?: error("Fant ikke behandling for sak=${sakId}")
+        validerBehandlingerErUlike(behandlingFørMigrering, behandlingEtterMigrering)
+        validerRettighetstype(behandlingFørMigrering, behandlingEtterMigrering)
+        validerTilkjentYtelse(behandlingFørMigrering, behandlingEtterMigrering)
+        validerUnderveisPerioder(behandlingFørMigrering, behandlingEtterMigrering, sak)
     }
 
     private fun validerRettighetstype(
@@ -74,6 +92,9 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         if (rettighetstypeFør.isEmpty() && rettighetstypeEtter.isEmpty()) {
             log.info("Rettighetstypen er tom før og etter migrering - totalt avslag")
             return
+        } else if(rettighetstypeFør.isEmpty()) {
+            log.warn("Rettighetstypen er tom før migrering, men finnes etter migrering - bør følges opp")
+            return
         }
         val rettighetstypeEtterBegrenset = rettighetstypeEtter.begrensetTil(rettighetstypeFør.helePerioden())
         secureLogger.info("Migrering vilkår før=${rettighetstypeFør} og etter=$rettighetstypeEtter")
@@ -85,30 +106,99 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
 
     private fun validerUnderveisPerioder(
         behandlingFørMigrering: Behandling,
-        behandlingEtterMigrering: Behandling
+        behandlingEtterMigrering: Behandling,
+        sak: Sak
     ) {
+        /**
+         * Må nulle ut periode og id for å kunne komprimere og se reelle forskjeller på underveisperiodene
+         */
         val underveisFør =
-            underveisRepository.hentHvisEksisterer(behandlingFørMigrering.id)?.perioder?.map { it.copy(id = null) }
-                ?.somTidslinje { it.periode }?.komprimer()
+            underveisRepository.hentHvisEksisterer(behandlingFørMigrering.id)?.somTidslinje()
+                ?.map { it.copy(periode = Periode(Tid.MIN, Tid.MAKS), id = null) }?.komprimer()
                 ?.segmenter()?.toList()
                 ?: error("Fant ikke underveis for behandling ${behandlingFørMigrering.id}")
         val underveisEtter =
-            underveisRepository.hentHvisEksisterer(behandlingEtterMigrering.id)?.perioder?.map { it.copy(id = null) }
-                ?.somTidslinje { it.periode }?.komprimer()
+            underveisRepository.hentHvisEksisterer(behandlingEtterMigrering.id)?.somTidslinje()
+                ?.map { it.copy(periode = Periode(Tid.MIN, Tid.MAKS), id = null) }?.komprimer()
                 ?.segmenter()?.toList()
                 ?: error("Fant ikke underveis for behandling ${behandlingEtterMigrering.id}")
         secureLogger.info("Migrering underveis før=$underveisFør og etter=$underveisEtter")
-        if (underveisFør.size != underveisEtter.size) {
-            throw IllegalStateException("Ulikt antall underveisperioder før ${underveisFør.size} og etter migrering ${underveisEtter.size}")
-        }
-        underveisFør.forEachIndexed { index, periodeFør ->
-            val periodeEtter = underveisEtter.find { it.periode == periodeFør.periode }
-                ?: error("Fant ikke underveisperiode for ny behandling for indeks: ${index}")
-            if (periodeFør != periodeEtter) {
-                secureLogger.info("Migrering underveis før=$periodeFør og etter=$periodeEtter")
-                throw IllegalStateException("Ulike underveisperioder mellom ny og gammel behandling for indeks: ${index}")
+
+        if (skalValidereUnderveis(sak, behandlingFørMigrering)) {
+            if (underveisFør.size != underveisEtter.size) {
+                log.info("Ulikt antall underveisperioder før ${underveisFør.size} og etter migrering ${underveisEtter.size}")
+            }
+            underveisFør.forEachIndexed { index, periodeFør ->
+                val periodeEtter = underveisEtter.find { it.periode == periodeFør.periode }
+                    ?: error("Fant ikke underveisperiode for ny behandling for indeks: ${index}")
+                val verdiFør = periodeFør.verdi
+                val verdiEtter = periodeEtter.verdi
+                if (verdiFør.meldePeriode != verdiEtter.meldePeriode
+                    || verdiFør.avslagsårsak != verdiEtter.avslagsårsak
+                    || verdiFør.brukerAvKvoter != verdiEtter.brukerAvKvoter
+                    || verdiFør.grenseverdi != verdiEtter.grenseverdi
+                    || verdiFør.arbeidsgradering.opplysningerMottatt != verdiEtter.arbeidsgradering.opplysningerMottatt
+                    || verdiFør.arbeidsgradering.fastsattArbeidsevne != verdiEtter.arbeidsgradering.fastsattArbeidsevne
+                    || verdiFør.arbeidsgradering.totaltAntallTimer != verdiEtter.arbeidsgradering.totaltAntallTimer
+                    || verdiFør.rettighetsType != verdiEtter.rettighetsType
+                    || verdiFør.utfall != verdiEtter.utfall
+                    || verdiFør.trekk != verdiEtter.trekk
+                    || verdiFør.institusjonsoppholdReduksjon != verdiEtter.institusjonsoppholdReduksjon
+                    || !likArbeidsgradering(verdiFør.arbeidsgradering, verdiEtter.arbeidsgradering)
+                ) {
+                    // Spesialsjekk på meldeplitstatus, gradering,
+                    secureLogger.info("Migrering underveis før=$periodeFør og etter=$periodeEtter")
+                    throw IllegalStateException("Ulike underveisperioder mellom ny og gammel behandling for indeks: ${index}")
+                }
             }
         }
+    }
+
+    /**
+     * Kan ikke validere underveis hvis siste behandling er fastsatt periode passert - da vil de av natur bli splittet ulikt og være ulike
+     */
+    private fun skalValidereUnderveis(sak: Sak, behandlingFørMigrering: Behandling): Boolean {
+        val erForrigeBehandlingFastsattPeriodePassert =
+            behandlingFørMigrering.vurderingsbehov().map { it.type }.contains(Vurderingsbehov.FASTSATT_PERIODE_PASSERT)
+        val forhåndsgodkjenteSaksnummerMedPotensiellEndringIUnderveis = listOf(
+            "4LMTKCW",
+            "4LK1WE8",
+            "4LQNT7K",
+            "4LVWFC0",
+            "4LH0L7K",
+            "4MAiM8G",
+            "4LRiW1C",
+            "4LEJN1S",
+            "4LED7KG",
+            "4LMVPio",
+            "4LZTVXC",
+        )
+        val skalIgnoreres =
+            forhåndsgodkjenteSaksnummerMedPotensiellEndringIUnderveis.contains(sak.saksnummer.toString())
+        return !(erForrigeBehandlingFastsattPeriodePassert || skalIgnoreres)
+    }
+
+
+    /**
+     * På grunn av endring i logisk oppbygging av underveisperioder har vi flippet arbeidsgradering andel arbeid og gradering
+     * i løpet av 2025 for å ikke innvilge fremtidige perioder
+     */
+    fun likArbeidsgradering(
+        arbeidsgraderingFør: ArbeidsGradering,
+        arbeidsgraderingEtter: ArbeidsGradering
+    ): Boolean {
+        if (arbeidsgraderingFør.gradering != arbeidsgraderingEtter.gradering) {
+            if (arbeidsgraderingFør.gradering.komplement() != arbeidsgraderingEtter.gradering) {
+                return false
+            }
+        }
+        if (arbeidsgraderingFør.andelArbeid != arbeidsgraderingEtter.andelArbeid) {
+            if (arbeidsgraderingFør.andelArbeid.komplement() != arbeidsgraderingEtter.andelArbeid) {
+                return false
+            }
+        }
+
+        return true
     }
 
     private fun validerTilkjentYtelse(
@@ -136,8 +226,10 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
                 if (tilkjentYtelseEffektivDagsatsEtter.any { it.verdi.verdi() > BigDecimal.ZERO }) {
                     throw IllegalStateException("Har gått fra totalt avslag til å få tilkjent ytelse med mulig utbetaling siden redusert dagsats ikke er 0")
                 }
-            } else {
+            } else if (Miljø.erProd()) {
                 throw IllegalStateException("Ulikt antall tilkjent ytelseperioder mellom ny ${tilkjentYtelseEffektivDagsatsEtter.size} og gammel behandling ${tilkjentYtelseEffektivDagsatsFør.size}")
+            } else {
+                log.warn("Ulikt antall tilkjent ytelseperioder ved migrering - godtas i dev pga gammel data")
             }
         }
         tilkjentYtelseEffektivDagsatsFør.forEachIndexed { index, periodeFør ->
@@ -146,7 +238,10 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
                 throw IllegalStateException("Mangler periode ${periodeFør} med tilkjent ytelse i ny behandling - indeks: $index")
             } else if (periodeEtter != periodeFør) {
                 secureLogger.info("Migrering tilkjent ytelse før=$periodeFør og etter=$periodeEtter")
-                throw IllegalStateException("Ulike perioder i tilkjent ytelse mellom ny og gammel behandling - indeks: $index")
+                log.warn("Ulik tilkjent ytelseperiode ved migrering - godtas i dev pga gammel data")
+                if (Miljø.erProd()) {
+                    throw IllegalStateException("Ulike perioder i tilkjent ytelse mellom ny og gammel behandling - indeks: $index")
+                }
             }
         }
     }
@@ -155,7 +250,7 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         behandlingFørMigrering: Behandling,
         behandlingEtterMigrering: Behandling,
     ) {
-        if (behandlingEtterMigrering.id == `behandlingFørMigrering`.id) {
+        if (behandlingEtterMigrering.id == behandlingFørMigrering.id) {
             throw IllegalStateException("Skal ha ulik behandling før og etter migrering av rettighetsperiode")
         }
     }

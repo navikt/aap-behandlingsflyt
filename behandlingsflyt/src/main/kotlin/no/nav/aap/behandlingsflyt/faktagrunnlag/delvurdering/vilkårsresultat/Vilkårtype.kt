@@ -36,9 +36,9 @@ enum class Vilkårtype(
     SYKDOMSVILKÅRET(
         kode = "AAP-5",
         spesielleInnvilgelsesÅrsaker = listOf(
+            Innvilgelsesårsak.STUDENT, // Denne er kun for bakoverkompatibilitet,
             Innvilgelsesårsak.SYKEPENGEERSTATNING,
             Innvilgelsesårsak.YRKESSKADE_ÅRSAKSSAMMENHENG,
-            Innvilgelsesårsak.STUDENT,
         ),
         avslagsårsaker = listOf(
             Avslagsårsak.MANGLENDE_DOKUMENTASJON,

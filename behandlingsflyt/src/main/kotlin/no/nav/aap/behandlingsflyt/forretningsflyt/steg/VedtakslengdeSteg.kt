@@ -49,10 +49,6 @@ class VedtakslengdeSteg(
 
     private val log = LoggerFactory.getLogger(javaClass)
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (unleashGateway.isDisabled(BehandlingsflytFeature.Forlengelse)) {
-            return Fullført
-        }
-
         val vedtattUnderveis = kontekst.forrigeBehandlingId?.let { underveisRepository.hentHvisEksisterer(it) }
         val sisteVedtatteUnderveisperiode = vedtattUnderveis?.perioder?.maxByOrNull { it.periode.tom }
         val rettighetstypeTidslinje = vilkårsresultatRepository.hent(kontekst.behandlingId).rettighetstypeTidslinje()
@@ -137,7 +133,7 @@ class VedtakslengdeSteg(
         vedtattSluttdato: LocalDate,
         rettighetstypeTidslinjeForInneværendeBehandling: Tidslinje<RettighetsType>
     ): Boolean {
-        val varighetstidslinje = VarighetRegel().simluer(rettighetstypeTidslinjeForInneværendeBehandling)
+        val varighetstidslinje = VarighetRegel().simuler(rettighetstypeTidslinjeForInneværendeBehandling)
         return varighetstidslinje.begrensetTil(Periode(vedtattSluttdato.plusDays(1), Tid.MAKS))
             .segmenter()
             .any { varighetSegment ->

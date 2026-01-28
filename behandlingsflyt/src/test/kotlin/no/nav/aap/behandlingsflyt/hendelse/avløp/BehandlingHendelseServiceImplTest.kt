@@ -37,13 +37,13 @@ class BehandlingHendelseServiceImplTest {
         val avklaringsbehovene = Avklaringsbehovene(InMemoryAvklaringsbehovRepository, behandling.id)
 
         avklaringsbehovene.leggTil(
-            listOf(Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP),
+            Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP,
             StegType.VURDER_MEDLEMSKAP,
             null,
             null
         )
-        avklaringsbehovene.leggTil(listOf(Definisjon.AVKLAR_STUDENT), StegType.AVKLAR_STUDENT, null, null)
-        avklaringsbehovene.leggTil(listOf(Definisjon.AVKLAR_SYKDOM), StegType.AVKLAR_SYKDOM, null, null)
+        avklaringsbehovene.leggTil(Definisjon.AVKLAR_STUDENT, StegType.AVKLAR_STUDENT, null, null)
+        avklaringsbehovene.leggTil(Definisjon.AVKLAR_SYKDOM, StegType.AVKLAR_SYKDOM, null, null)
 
         behandlingHendelseSerice.stoppet(behandling, avklaringsbehovene)
 
