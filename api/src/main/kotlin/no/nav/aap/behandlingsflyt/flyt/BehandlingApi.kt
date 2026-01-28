@@ -10,7 +10,6 @@ import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.FrivilligeAvklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
@@ -122,10 +121,7 @@ fun NormalOpenAPIRoute.behandlingApi(
                         skalForberede = behandling.harIkkeVærtAktivitetIDetSiste() && !behandling.status()
                             .erAvsluttet(),
                         avklaringsbehov = FrivilligeAvklaringsbehov(
-                            avklaringsbehov(
-                                avklaringsbehovRepository,
-                                behandling.id
-                            ),
+                            avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id),
                             flyt,
                             behandling.aktivtSteg()
                         ).alle().map { avklaringsbehov ->
@@ -229,13 +225,6 @@ fun NormalOpenAPIRoute.behandlingApi(
 
 private fun behandling(behandlingRepository: BehandlingRepository, req: BehandlingReferanse): Behandling {
     return BehandlingReferanseService(behandlingRepository).behandling(req)
-}
-
-private fun avklaringsbehov(
-    avklaringsbehovRepository: AvklaringsbehovRepository,
-    behandlingId: BehandlingId
-): Avklaringsbehovene {
-    return avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
 }
 
 private fun vilkårResultat(
