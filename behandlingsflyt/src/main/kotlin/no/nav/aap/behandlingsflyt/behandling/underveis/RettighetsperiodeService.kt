@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis
 
+import no.nav.aap.behandlingsflyt.behandling.vilkår.overganguføre.OvergangUføreVilkår
+import no.nav.aap.behandlingsflyt.behandling.vilkår.student.StudentVilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
@@ -7,9 +9,9 @@ import java.time.LocalDate
 class RettighetsperiodeService {
     fun beregn(startDato: LocalDate): Rettighetsperioder {
         return Rettighetsperioder(
-            arbeidssøkerPeriode = Periode(startDato, startDato.plusMonths(6)),
-            studentPeriode = Periode(startDato, startDato.plusMonths(6)),
-            overgangUførePeriode = Periode(startDato, startDato.plusMonths(8)),
+            arbeidssøkerPeriode = Periode(startDato, OvergangUføreVilkår.utledVarighetSluttdato(startDato)),
+            studentPeriode = Periode(startDato, StudentVilkår.utledVarighetSluttdato(startDato)),
+            overgangUførePeriode = Periode(startDato, OvergangUføreVilkår.utledVarighetSluttdato(startDato)),
         )
     }
 
