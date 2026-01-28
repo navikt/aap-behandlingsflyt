@@ -13,7 +13,7 @@ class RettighetsperiodeServiceTest {
     @Test
     fun `skal utlede rettighetsperiode på 6 måneder for arbeidssøker`() {
         val rettighetsperioder = RettighetsperiodeService().beregn(dagensDato)
-        val forventetPeriode = Periode(dagensDato, dagensDato.plusMonths(6))
+        val forventetPeriode = Periode(dagensDato, dagensDato.plusMonths(6).minusDays(1))
 
         assertThat(rettighetsperioder.arbeidssøkerPeriode).isEqualTo(forventetPeriode)
     }
@@ -21,7 +21,7 @@ class RettighetsperiodeServiceTest {
     @Test
     fun `skal utlede rettighetsperiode på 6 måneder for student`() {
         val rettighetsperioder = RettighetsperiodeService().beregn(dagensDato)
-        val forventetPeriode = Periode(dagensDato, dagensDato.plusMonths(6))
+        val forventetPeriode = Periode(dagensDato, dagensDato.plusMonths(6).minusDays(1))
 
         assertThat(rettighetsperioder.studentPeriode).isEqualTo(forventetPeriode)
     }
@@ -29,7 +29,7 @@ class RettighetsperiodeServiceTest {
     @Test
     fun `skal utlede rettighetsperiode på 8 måneder for overgang til uføre`() {
         val rettighetsperioder = RettighetsperiodeService().beregn(dagensDato)
-        val forventetPeriode = Periode(dagensDato, dagensDato.plusMonths(8))
+        val forventetPeriode = Periode(dagensDato, dagensDato.plusMonths(8).minusDays(1))
 
         assertThat(rettighetsperioder.overgangUførePeriode).isEqualTo(forventetPeriode)
     }
@@ -37,7 +37,7 @@ class RettighetsperiodeServiceTest {
     @Test
     fun `skal utlede maksdato 6 måneder frem i tid for rettighet arbeidssøker`() {
         val maksdatoForArbeidssøker = RettighetsperiodeService().utledMaksdatoForRettighet(RettighetsType.ARBEIDSSØKER, dagensDato)
-        val forventetMaksdato = dagensDato.plusMonths(6)
+        val forventetMaksdato = dagensDato.plusMonths(6).minusDays(1)
 
         assertThat(maksdatoForArbeidssøker).isEqualTo(forventetMaksdato)
     }
@@ -45,7 +45,7 @@ class RettighetsperiodeServiceTest {
     @Test
     fun `skal utlede maksdato 6 måneder frem i tid for rettighet student`() {
         val maksdatoForStudent = RettighetsperiodeService().utledMaksdatoForRettighet(RettighetsType.STUDENT, dagensDato)
-        val forventetMaksdato = dagensDato.plusMonths(6)
+        val forventetMaksdato = dagensDato.plusMonths(6).minusDays(1)
 
         assertThat(maksdatoForStudent).isEqualTo(forventetMaksdato)
     }
@@ -53,7 +53,7 @@ class RettighetsperiodeServiceTest {
     @Test
     fun `skal utlede maksdato 8 måneder frem i tid for rettighet overgang til uføre`() {
         val maksdatoForOvergangUføre = RettighetsperiodeService().utledMaksdatoForRettighet(RettighetsType.VURDERES_FOR_UFØRETRYGD, dagensDato)
-        val forventetMaksdato = dagensDato.plusMonths(8)
+        val forventetMaksdato = dagensDato.plusMonths(8).minusDays(1)
 
         assertThat(maksdatoForOvergangUføre).isEqualTo(forventetMaksdato)
     }
