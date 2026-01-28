@@ -78,7 +78,7 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         validerBehandlingerErUlike(behandlingFørMigrering, behandlingEtterMigrering)
         validerRettighetstype(behandlingFørMigrering, behandlingEtterMigrering)
         validerTilkjentYtelse(behandlingFørMigrering, behandlingEtterMigrering)
-        validerUnderveisPerioder(behandlingFørMigrering, behandlingEtterMigrering)
+        validerUnderveisPerioder(behandlingFørMigrering, behandlingEtterMigrering, sak)
     }
 
     private fun validerRettighetstype(
@@ -92,6 +92,9 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         if (rettighetstypeFør.isEmpty() && rettighetstypeEtter.isEmpty()) {
             log.info("Rettighetstypen er tom før og etter migrering - totalt avslag")
             return
+        } else if(rettighetstypeFør.isEmpty()) {
+            log.warn("Rettighetstypen er tom før migrering, men finnes etter migrering - bør følges opp")
+            return
         }
         val rettighetstypeEtterBegrenset = rettighetstypeEtter.begrensetTil(rettighetstypeFør.helePerioden())
         secureLogger.info("Migrering vilkår før=${rettighetstypeFør} og etter=$rettighetstypeEtter")
@@ -103,7 +106,8 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
 
     private fun validerUnderveisPerioder(
         behandlingFørMigrering: Behandling,
-        behandlingEtterMigrering: Behandling
+        behandlingEtterMigrering: Behandling,
+        sak: Sak
     ) {
         /**
          * Må nulle ut periode og id for å kunne komprimere og se reelle forskjeller på underveisperiodene
@@ -119,33 +123,61 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
                 ?.segmenter()?.toList()
                 ?: error("Fant ikke underveis for behandling ${behandlingEtterMigrering.id}")
         secureLogger.info("Migrering underveis før=$underveisFør og etter=$underveisEtter")
-        if (underveisFør.size != underveisEtter.size) {
-            throw IllegalStateException("Ulikt antall underveisperioder før ${underveisFør.size} og etter migrering ${underveisEtter.size}")
-        }
-        underveisFør.forEachIndexed { index, periodeFør ->
-            val periodeEtter = underveisEtter.find { it.periode == periodeFør.periode }
-                ?: error("Fant ikke underveisperiode for ny behandling for indeks: ${index}")
-            val verdiFør = periodeFør.verdi
-            val verdiEtter = periodeEtter.verdi
-            if (verdiFør.meldePeriode != verdiEtter.meldePeriode
-                || verdiFør.avslagsårsak != verdiEtter.avslagsårsak
-                || verdiFør.brukerAvKvoter != verdiEtter.brukerAvKvoter
-                || verdiFør.grenseverdi != verdiEtter.grenseverdi
-                || verdiFør.arbeidsgradering.opplysningerMottatt != verdiEtter.arbeidsgradering.opplysningerMottatt
-                || verdiFør.arbeidsgradering.fastsattArbeidsevne != verdiEtter.arbeidsgradering.fastsattArbeidsevne
-                || verdiFør.arbeidsgradering.totaltAntallTimer != verdiEtter.arbeidsgradering.totaltAntallTimer
-                || verdiFør.rettighetsType != verdiEtter.rettighetsType
-                || verdiFør.utfall != verdiEtter.utfall
-                || verdiFør.trekk != verdiEtter.trekk
-                || verdiFør.institusjonsoppholdReduksjon != verdiEtter.institusjonsoppholdReduksjon
-                || !likArbeidsgradering(verdiFør.arbeidsgradering, verdiEtter.arbeidsgradering)
-            ) {
-                // Spesialsjekk på meldeplitstatus, gradering,
-                secureLogger.info("Migrering underveis før=$periodeFør og etter=$periodeEtter")
-                throw IllegalStateException("Ulike underveisperioder mellom ny og gammel behandling for indeks: ${index}")
+
+        if (skalValidereUnderveis(sak, behandlingFørMigrering)) {
+            if (underveisFør.size != underveisEtter.size) {
+                log.info("Ulikt antall underveisperioder før ${underveisFør.size} og etter migrering ${underveisEtter.size}")
+            }
+            underveisFør.forEachIndexed { index, periodeFør ->
+                val periodeEtter = underveisEtter.find { it.periode == periodeFør.periode }
+                    ?: error("Fant ikke underveisperiode for ny behandling for indeks: ${index}")
+                val verdiFør = periodeFør.verdi
+                val verdiEtter = periodeEtter.verdi
+                if (verdiFør.meldePeriode != verdiEtter.meldePeriode
+                    || verdiFør.avslagsårsak != verdiEtter.avslagsårsak
+                    || verdiFør.brukerAvKvoter != verdiEtter.brukerAvKvoter
+                    || verdiFør.grenseverdi != verdiEtter.grenseverdi
+                    || verdiFør.arbeidsgradering.opplysningerMottatt != verdiEtter.arbeidsgradering.opplysningerMottatt
+                    || verdiFør.arbeidsgradering.fastsattArbeidsevne != verdiEtter.arbeidsgradering.fastsattArbeidsevne
+                    || verdiFør.arbeidsgradering.totaltAntallTimer != verdiEtter.arbeidsgradering.totaltAntallTimer
+                    || verdiFør.rettighetsType != verdiEtter.rettighetsType
+                    || verdiFør.utfall != verdiEtter.utfall
+                    || verdiFør.trekk != verdiEtter.trekk
+                    || verdiFør.institusjonsoppholdReduksjon != verdiEtter.institusjonsoppholdReduksjon
+                    || !likArbeidsgradering(verdiFør.arbeidsgradering, verdiEtter.arbeidsgradering)
+                ) {
+                    // Spesialsjekk på meldeplitstatus, gradering,
+                    secureLogger.info("Migrering underveis før=$periodeFør og etter=$periodeEtter")
+                    throw IllegalStateException("Ulike underveisperioder mellom ny og gammel behandling for indeks: ${index}")
+                }
             }
         }
     }
+
+    /**
+     * Kan ikke validere underveis hvis siste behandling er fastsatt periode passert - da vil de av natur bli splittet ulikt og være ulike
+     */
+    private fun skalValidereUnderveis(sak: Sak, behandlingFørMigrering: Behandling): Boolean {
+        val erForrigeBehandlingFastsattPeriodePassert =
+            behandlingFørMigrering.vurderingsbehov().map { it.type }.contains(Vurderingsbehov.FASTSATT_PERIODE_PASSERT)
+        val forhåndsgodkjenteSaksnummerMedPotensiellEndringIUnderveis = listOf(
+            "4LMTKCW",
+            "4LK1WE8",
+            "4LQNT7K",
+            "4LVWFC0",
+            "4LH0L7K",
+            "4MAiM8G",
+            "4LRiW1C",
+            "4LEJN1S",
+            "4LED7KG",
+            "4LMVPio",
+            "4LZTVXC",
+        )
+        val skalIgnoreres =
+            forhåndsgodkjenteSaksnummerMedPotensiellEndringIUnderveis.contains(sak.saksnummer.toString())
+        return !(erForrigeBehandlingFastsattPeriodePassert || skalIgnoreres)
+    }
+
 
     /**
      * På grunn av endring i logisk oppbygging av underveisperioder har vi flippet arbeidsgradering andel arbeid og gradering
