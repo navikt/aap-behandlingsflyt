@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -16,7 +17,7 @@ import org.slf4j.LoggerFactory
 class HåndterUbehandledeDokumenterJobbUtfører(
     private val mottattDokumentRepository: MottattDokumentRepository,
     private val flytJobbRepository: FlytJobbRepository,
-    private val unleashGateway: UnleashGateway
+    private val unleashGateway: UnleashGateway,
 ) : JobbUtfører {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -25,8 +26,10 @@ class HåndterUbehandledeDokumenterJobbUtfører(
             return
         }
 
+        val sakId = SakId(2309) // Kun kjør jobb for hastesak 4NAG4LC
+        
         val ubehandledeDokumenter =
-            mottattDokumentRepository.hentAlleUbehandledeDokumenterAvType(InnsendingType.MELDEKORT)
+            mottattDokumentRepository.hentUbehandledeDokumenterAvType(sakId, InnsendingType.MELDEKORT)
 
         log.info("Fant ${ubehandledeDokumenter.size} ubehandlede meldekort")
         ubehandledeDokumenter.forEach { dokument ->
