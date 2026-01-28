@@ -10,6 +10,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.Yrkesskader
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.bistand.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
@@ -67,7 +69,8 @@ class TidligereVurderingerImpl(
     private val avbrytRevurderingService: AvbrytRevurderingService,
     private val sykdomRepository: SykdomRepository,
     private val studentRepository: StudentRepository,
-    private val bistandRepository: BistandRepository
+    private val bistandRepository: BistandRepository,
+    private val yrkesskadeRepository: YrkesskadeRepository,
 ) : TidligereVurderinger {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -81,7 +84,8 @@ class TidligereVurderingerImpl(
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
         sykdomRepository = repositoryProvider.provide(),
         studentRepository = repositoryProvider.provide(),
-        bistandRepository = repositoryProvider.provide()
+        bistandRepository = repositoryProvider.provide(),
+        yrkesskadeRepository = repositoryProvider.provide(),
     )
 
     data class Sjekk(
@@ -168,34 +172,32 @@ class TidligereVurderingerImpl(
 
             Sjekk(StegType.VURDER_SYKEPENGEERSTATNING) { vilkårsresultat, kontekst ->
 
-
-                val sykdomstidslinje = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)
-                    ?.somSykdomsvurderingstidslinje().orEmpty()
-
+                val sykdomVurdering = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)
+                val sykdomstidslinje = sykdomVurdering?.somSykdomsvurderingstidslinje().orEmpty()
+                val yrkesskaderTidslinje = sykdomVurdering?.yrkesskadevurdringTidslinje(kontekst.rettighetsperiode).orEmpty()
                 val bistandTidslinje = bistandRepository.hentHvisEksisterer(kontekst.behandlingId)?.somBistandsvurderingstidslinje().orEmpty()
                 val overgangUføre1118 = vilkårsresultat.tidslinjeFor(Vilkårtype.OVERGANGUFØREVILKÅRET)
                 val overgangArbeid1117 = vilkårsresultat.tidslinjeFor(Vilkårtype.OVERGANGARBEIDVILKÅRET)
                 val sykdomErstating1113 = vilkårsresultat.tidslinjeFor(Vilkårtype.SYKEPENGEERSTATNING)
 
-
-                Tidslinje.map5(sykdomstidslinje,bistandTidslinje ,overgangUføre1118,overgangArbeid1117,sykdomErstating1113){
-                        sykdomVurdering115VurderingSegment,
-                        bistandsvurdering116VurderingSegment,
+                Tidslinje.map6(sykdomstidslinje,yrkesskaderTidslinje,bistandTidslinje ,overgangUføre1118,overgangArbeid1117,sykdomErstating1113){
+                        sykdomVurdering115Segment,
+                        yrkesskaderVudering1122Segment,
+                        bistandsVurdering116Segment,
                         overgangUføre1118VilkårsSegment,
                         overgangArbeid1117VilkårSegment,
                         sykdomErstating1113VilkårSegment ->
 
+                    val sykdomOppfylt = (sykdomVurdering115Segment?.harSkadeSykdomEllerLyte == true
+                            && sykdomVurdering115Segment.erArbeidsevnenNedsatt == true
+                            && (sykdomVurdering115Segment.erNedsettelseIArbeidsevneMerEnnHalvparten == true
+                            || sykdomVurdering115Segment.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true)
+                            && sykdomVurdering115Segment.erSkadeSykdomEllerLyteVesentligdel == true
+                            && sykdomVurdering115Segment.erNedsettelseIArbeidsevneAvEnVissVarighet == true)
 
-                    val sykdomOppfylt = (sykdomVurdering115VurderingSegment?.harSkadeSykdomEllerLyte == true
-                            && sykdomVurdering115VurderingSegment.erArbeidsevnenNedsatt == true
-                            && (sykdomVurdering115VurderingSegment.erNedsettelseIArbeidsevneMerEnnHalvparten == true
-                            || sykdomVurdering115VurderingSegment.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true)
-                            && sykdomVurdering115VurderingSegment.erSkadeSykdomEllerLyteVesentligdel == true
-                            && sykdomVurdering115VurderingSegment.erNedsettelseIArbeidsevneAvEnVissVarighet == true)
-
-                    val bistandOppfylt = (bistandsvurdering116VurderingSegment?.erBehovForAktivBehandling == true
-                        || bistandsvurdering116VurderingSegment?.erBehovForArbeidsrettetTiltak == true) ||
-                        (bistandsvurdering116VurderingSegment?.erBehovForAnnenOppfølging == true)
+                    val bistandOppfylt = (bistandsVurdering116Segment?.erBehovForAktivBehandling == true
+                        || bistandsVurdering116Segment?.erBehovForArbeidsrettetTiltak == true) ||
+                        (bistandsVurdering116Segment?.erBehovForAnnenOppfølging == true)
 
                     val førerTilAvslag = when {
                         // ja 115, nei 116, nei 1118, nei/ikke vudert 1117, nei 1113
@@ -206,12 +208,19 @@ class TidligereVurderingerImpl(
                                 && sykdomErstating1113VilkårSegment?.utfall == IKKE_OPPFYLT -> true
 
                         //nei,vis varigghet
-                        sykdomVurdering115VurderingSegment?.harSkadeSykdomEllerLyte == true
-                                && sykdomVurdering115VurderingSegment.erArbeidsevnenNedsatt == true
-                                && sykdomVurdering115VurderingSegment.erNedsettelseIArbeidsevneMerEnnHalvparten == true
-                                && sykdomVurdering115VurderingSegment.erSkadeSykdomEllerLyteVesentligdel == true
-                                && sykdomVurdering115VurderingSegment.erNedsettelseIArbeidsevneAvEnVissVarighet == false
+                        sykdomVurdering115Segment?.harSkadeSykdomEllerLyte == true
+                                && sykdomVurdering115Segment.erArbeidsevnenNedsatt == true
+                                && sykdomVurdering115Segment.erNedsettelseIArbeidsevneMerEnnHalvparten == true
+                                && sykdomVurdering115Segment.erSkadeSykdomEllerLyteVesentligdel == true
+                                && sykdomVurdering115Segment.erNedsettelseIArbeidsevneAvEnVissVarighet == false
                                 && sykdomErstating1113VilkårSegment?.utfall == IKKE_OPPFYLT -> true
+
+
+                        //YS veien til avslag
+                        sykdomOppfylt && sykdomVurdering115Segment.erNedsettelseIArbeidsevneMerEnnHalvparten == false
+                                && sykdomVurdering115Segment.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true
+                                && bistandOppfylt && yrkesskaderTidslinje.filter { it.verdi.erÅrsakssammenheng }.isEmpty()
+                                     -> true
 
 
                         !sykdomOppfylt
