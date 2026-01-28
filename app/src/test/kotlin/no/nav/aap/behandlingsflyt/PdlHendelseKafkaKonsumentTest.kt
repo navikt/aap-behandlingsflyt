@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PdlHendelseKafkaKonsumen
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.test.FakeOppgavestyringGateway
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.person.pdl.leesah.Endringstype
 import no.nav.person.pdl.leesah.Personhendelse
@@ -67,7 +67,7 @@ PdlHendelseKafkaKonsumentTest {
         dataSource = dataSource,
         repositoryRegistry = repositoryRegistry,
         gatewayProvider = createGatewayProvider {
-            register<FakeUnleash>()
+            register<AlleAvskruddUnleash>()
             register<FakeOppgavestyringGateway>()
         },
         pollTimeout = 50.milliseconds,

@@ -56,7 +56,7 @@ class `SjekkInstitusjonsoppholdJobbUtførerTest` {
 
         utfører.utfør(JobbInput(SjekkInstitusjonsOppholdJobbUtfører).forSak(sakId.id))
 
-        verify { sakOgBehandlingServiceMock.finnEllerOpprettBehandling(any<SakId>(), any()) }
+        verify { sakOgBehandlingServiceMock.finnEllerOpprettOrdinærBehandling(any<SakId>(), any()) }
     }
 
     @Test
@@ -68,7 +68,7 @@ class `SjekkInstitusjonsoppholdJobbUtførerTest` {
 
         utfører.utfør(JobbInput(SjekkInstitusjonsOppholdJobbUtfører).forSak(sakId.id))
 
-        verify(exactly = 0) { sakOgBehandlingServiceMock.finnEllerOpprettBehandling(any<SakId>(), any()) }
+        verify(exactly = 0) { sakOgBehandlingServiceMock.finnEllerOpprettOrdinærBehandling(any<SakId>(), any()) }
     }
 
     private fun mockAvhengigheterForInstitusjonsoppholdJobbUtfører(
@@ -136,18 +136,31 @@ class `SjekkInstitusjonsoppholdJobbUtførerTest` {
             versjon = 0L
         )
 
+        val fakeOpprettetBehandling = Behandling(
+            id = BehandlingId(457L),
+            forrigeBehandlingId = BehandlingId(454L),
+            referanse = BehandlingReferanse(UUID.randomUUID()),
+            sakId = sakId,
+            typeBehandling = TypeBehandling.Revurdering,
+            status = Status.OPPRETTET,
+            årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
+            vurderingsbehov = årsakerPåTidligereBehandling,
+            stegTilstand = StegTilstand(
+                stegStatus = StegStatus.AVKLARINGSPUNKT,
+                stegType = StegType.FORESLÅ_VEDTAK,
+                aktiv = true
+            ),
+            opprettetTidspunkt = LocalDateTime.now(),
+            versjon = 0L
+        )
+
         every { sakOgBehandlingServiceMock.finnSisteYtelsesbehandlingFor(sakId) } returns fakeBehandling
 
-        every {
-            sakOgBehandlingServiceMock.finnEllerOpprettBehandling(
-                sakId,
-                any()
-            )
-        } returns SakOgBehandlingService.Ordinær(fakeBehandling)
+        every { sakOgBehandlingServiceMock.finnEllerOpprettOrdinærBehandling(any<SakId>(), any()) } returns fakeOpprettetBehandling
 
         every {
             prosesserBehandlingServiceMock.triggProsesserBehandling(
-                any<SakOgBehandlingService.OpprettetBehandling>(),
+                fakeOpprettetBehandling,
                 any(),
                 any()
             )

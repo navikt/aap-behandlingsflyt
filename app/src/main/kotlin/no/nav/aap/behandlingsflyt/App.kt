@@ -7,6 +7,7 @@ import com.papsign.ktor.openapigen.model.info.InfoModel
 import com.papsign.ktor.openapigen.route.apiRouting
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import io.confluent.kafka.serializers.KafkaAvroDeserializer
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.engine.*
@@ -86,6 +87,7 @@ import no.nav.aap.behandlingsflyt.hendelse.kafka.tilbakekreving.TILBAKEKREVING_E
 import no.nav.aap.behandlingsflyt.hendelse.kafka.tilbakekreving.TilbakekrevingKafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.mottattHendelseApi
 import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
+import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.InstitusjonsoppholdGatewayImpl
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.InstitusjonsOppholdHendelseKafkaMelding
 import no.nav.aap.behandlingsflyt.pip.behandlingsflytPipApi
@@ -110,6 +112,8 @@ import no.nav.aap.motor.Motor
 import no.nav.aap.motor.api.motorApi
 import no.nav.aap.motor.retry.RetryService
 import no.nav.person.pdl.leesah.Personhendelse
+import org.apache.kafka.common.serialization.Deserializer
+import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.LoggerFactory
 import org.slf4j.bridge.SLF4JBridgeHandler
 import java.net.InetAddress
@@ -286,7 +290,7 @@ internal fun Application.server(
                 behandlingsflytPipApi(dataSource, repositoryRegistry)
                 auditlogApi(dataSource, repositoryRegistry)
                 refusjonGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
-                manglendeGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
+                manglendeGrunnlagApi(dataSource, repositoryRegistry)
                 mellomlagretVurderingApi(dataSource, repositoryRegistry, gatewayProvider)
                 // Klage
                 påklagetBehandlingGrunnlagApi(dataSource, repositoryRegistry, gatewayProvider)
@@ -453,8 +457,8 @@ fun Application.startPDLHendelseKonsument(
 ): KafkaKonsument<String, Personhendelse> {
     val konsument = PdlHendelseKafkaKonsument(
         config = KafkaConsumerConfig(
-            keyDeserializer = org.apache.kafka.common.serialization.StringDeserializer::class.java,
-            valueDeserializer = io.confluent.kafka.serializers.KafkaAvroDeserializer::class.java
+            keyDeserializer = StringDeserializer::class.java,
+            valueDeserializer = KafkaAvroDeserializer::class.java
         ),
         closeTimeout = AppConfig.stansArbeidTimeout,
         dataSource = dataSource,
@@ -484,14 +488,16 @@ fun Application.startInstitusjonsOppholdKonsument(
     dataSource: DataSource,
     repositoryRegistry: RepositoryRegistry,
 ): KafkaKonsument<String, InstitusjonsOppholdHendelseKafkaMelding> {
+
     val konsument = InstitusjonsOppholdKafkaKonsument(
         config = KafkaConsumerConfig(
-            keyDeserializer = org.apache.kafka.common.serialization.StringDeserializer::class.java,
+            keyDeserializer = StringDeserializer::class.java,
             valueDeserializer = JsonDeserializer::class.java,
         ),
         closeTimeout = AppConfig.stansArbeidTimeout,
         dataSource = dataSource,
         repositoryRegistry = repositoryRegistry,
+        institusjonsoppholdKlient = InstitusjonsoppholdGatewayImpl
     )
     monitor.subscribe(ApplicationStarted) {
         val t = Thread {
@@ -542,7 +548,7 @@ fun initDatasource(dbConfig: DbConfig): HikariDataSource = HikariDataSource(Hika
     metricRegistry = prometheus
 })
 
-class JsonDeserializer : org.apache.kafka.common.serialization.Deserializer<InstitusjonsOppholdHendelseKafkaMelding> {
+class JsonDeserializer : Deserializer<InstitusjonsOppholdHendelseKafkaMelding> {
     private val mapper = jacksonObjectMapper()
 
     override fun deserialize(

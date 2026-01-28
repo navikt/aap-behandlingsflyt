@@ -214,7 +214,7 @@ class RettighetsperiodeStegTest {
 
         // Dette er nok litt søkt scenario, men legger til et tidligere avklaringsbehov med status OPPRETTET
         avklaringsbehovene.leggTil(
-            listOf(Definisjon.VURDER_RETTIGHETSPERIODE),
+            Definisjon.VURDER_RETTIGHETSPERIODE,
             StegType.VURDER_RETTIGHETSPERIODE,
             null,
             null
@@ -231,7 +231,7 @@ class RettighetsperiodeStegTest {
 
     private fun leggTilLøstOgAvsluttetAvklaringsbehov(avklaringsbehovene: Avklaringsbehovene) {
         avklaringsbehovene.leggTil(
-            listOf(Definisjon.VURDER_RETTIGHETSPERIODE),
+            Definisjon.VURDER_RETTIGHETSPERIODE,
             StegType.VURDER_RETTIGHETSPERIODE,
             null,
             null

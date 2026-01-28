@@ -16,7 +16,8 @@ data class TilkjentYtelse(
     val minsteÅrligYtelse: Beløp,
     val minsteÅrligYtelseUnder25: Beløp,
     val årligYtelse: Beløp,
-    val sisteDagMedYtelse: LocalDate
+    val sisteDagMedYtelse: LocalDate,
+    val kravdatoUføretrygd: LocalDate?
 )
 
 data class GrunnlagBeregning(

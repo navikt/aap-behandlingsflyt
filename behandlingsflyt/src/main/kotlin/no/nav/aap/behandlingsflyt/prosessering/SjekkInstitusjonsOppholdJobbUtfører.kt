@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
@@ -38,16 +39,19 @@ class SjekkInstitusjonsOppholdJobbUtfører(
 
         log.info("Fant ${sakerMedInstitusjonsOpphold.size} kandidater for institusjonsopphold")
 
+
         if (unleashGateway.isEnabled(BehandlingsflytFeature.InstitusjonsoppholdJobb)) {
             val resultat = sakerMedInstitusjonsOpphold
                 .map { sak ->
                     val sisteGjeldendeBehandling = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sak.id)
+                    //TODO får vel kanskje sjekke vurderingsbehov, om det finnes fra før
                     if (sisteGjeldendeBehandling != null) {
                         val sak = sakRepository.hent(sak.id)
                         log.info("Gjeldende behandling for sak $sak.id (${sak.saksnummer}) er ${sisteGjeldendeBehandling.id}")
                         if (erKandidatForVurderingAvInstitusjonsopphold(sisteGjeldendeBehandling.id)) {
                             val opprettInstitusjonsOppholdBehandling = opprettNyBehandling(sak)
                             log.info("Fant sak med institusjonsopphold $sak.id")
+                            log.info("Opprettet behandling for instopphold for ${opprettInstitusjonsOppholdBehandling.id} og ${opprettInstitusjonsOppholdBehandling.forrigeBehandlingId}")
                             prosesserBehandlingService.triggProsesserBehandling(opprettInstitusjonsOppholdBehandling)
                         }
                     } else {
@@ -75,11 +79,11 @@ class SjekkInstitusjonsOppholdJobbUtfører(
         return periode.tom.isBefore(LocalDate.now().withDayOfMonth(1).plusMonths(4))
     }
 
-    private fun opprettNyBehandling(sak: Sak): SakOgBehandlingService.OpprettetBehandling =
-        sakOgBehandlingService.finnEllerOpprettBehandling(
+    private fun opprettNyBehandling(sak: Sak): Behandling =
+        sakOgBehandlingService.finnEllerOpprettOrdinærBehandling(
             sakId = sak.id,
             vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
-                årsak = ÅrsakTilOpprettelse.INSTITUSJONSOPPHOLD,
+                årsak = ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA,
                 vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.INSTITUSJONSOPPHOLD))
             ),
         )
@@ -102,8 +106,8 @@ class SjekkInstitusjonsOppholdJobbUtfører(
         override val beskrivelse = "Skal trigge behandling som vurderer institusjonsopphold"
 
         /**
-         * Kjøres hver dag kl 02:00
+         * Kjøres hver time enn så lenge, slås av og på med Feature Toggle
          */
-        override val cron = CronExpression.createWithoutSeconds("0 2 * * *")
+        override val cron = CronExpression.createWithoutSeconds("0 * * * *")
     }
 }

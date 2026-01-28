@@ -129,7 +129,6 @@ import no.nav.aap.utbetal.trekk.TrekkPosteringDto
 import no.nav.aap.utbetal.trekk.TrekkResponsDto
 import org.intellij.lang.annotations.Language
 import org.slf4j.LoggerFactory
-import java.io.ByteArrayInputStream
 import java.math.MathContext
 import java.math.RoundingMode
 import java.time.LocalDate
@@ -149,7 +148,6 @@ object FakeServers : AutoCloseable {
     private val yrkesskade = embeddedServer(Netty, port = 0, module = { yrkesskadeFake() })
     private val inntekt = embeddedServer(Netty, port = 0, module = { poppFake() })
     private val oppgavestyring = embeddedServer(Netty, port = 0, module = { oppgavestyringFake() })
-    private val saf = embeddedServer(Netty, port = 0, module = { safFake() })
     private val inst2 = embeddedServer(Netty, port = 0, module = { inst2Fake() })
     private val medl = embeddedServer(Netty, port = 0, module = { medlFake() })
     private val pesysFake = embeddedServer(Netty, port = 0, module = { pesysFake() })
@@ -1118,148 +1116,6 @@ object FakeServers : AutoCloseable {
         }
     }
 
-    private fun Application.safFake() {
-        installerContentNegotiation()
-        routing {
-            get("/rest/hentdokument/{journalpostId}/{dokumentInfoId}/{variantFormat}") {
-                call.response.header(
-                    HttpHeaders.ContentDisposition,
-                    ContentDisposition.Attachment.withParameter(
-                        ContentDisposition.Parameters.FileName,
-                        "ktor_logo.pdf"
-                    )
-                        .toString()
-                )
-                call.response.header(HttpHeaders.ContentType, ContentType.Application.Pdf.toString())
-                // Smallest possible PDF
-                // https://stackoverflow.com/a/17280876/1013553
-                val base64Pdf =
-                    "JVBERi0xLjAKMSAwIG9iajw8L1BhZ2VzIDIgMCBSPj5lbmRvYmogMiAwIG9iajw8L0tpZHNbMyAwIFJdL0NvdW50IDE+PmVuZG9iaiAzIDAgb2JqPDwvTWVkaWFCb3hbMCAwIDMgM10+PmVuZG9iagp0cmFpbGVyPDwvUm9vdCAxIDAgUj4+Cg=="
-                call.respondOutputStream {
-                    val decode = Base64.getDecoder().decode(base64Pdf)
-                    ByteArrayInputStream(decode).copyTo(this)
-                }
-            }
-            post("/graphql") {
-                val body = call.receive<String>()
-
-                if ("dokumentoversiktFagsak" in body) {
-                    @Language("JSON")
-                    val expression = """
-                            {
-                              "data": {
-                                "dokumentoversiktFagsak": {
-                                  "journalposter": [
-                                    {
-                                      "journalpostId": "453877977",
-                                      "journalstatus": "FERDIGSTILT",
-                                      "journalposttype": "I",
-                                      "behandlingstema": null,
-                                      "antallRetur": null,
-                                      "kanal": "NAV_NO",
-                                      "innsynsregelBeskrivelse": "Standardreglene avgjør om dokumentet vises",
-                                      "datoOpprettet": "2024-10-07T12:39:27",
-                                      "relevanteDatoer": [],
-                                      "dokumenter": [
-                                        {
-                                          "dokumentInfoId": "454273798",
-                                          "tittel": "Søknad om Arbeidsavklaringspenger",
-                                          "brevkode": "NAV 11-13.05",
-                                          "dokumentstatus": null,
-                                          "datoFerdigstilt": null,
-                                          "originalJournalpostId": "453877971",
-                                          "skjerming": null,
-                                          "logiskeVedlegg": [],
-                                          "dokumentvarianter": [
-                                            {
-                                              "variantformat": "ARKIV",
-                                              "saksbehandlerHarTilgang": true,
-                                              "skjerming": null
-                                            },
-                                            {
-                                              "variantformat": "ORIGINAL",
-                                              "saksbehandlerHarTilgang": true,
-                                              "skjerming": null
-                                            }
-                                          ]
-                                        },
-                                        {
-                                          "dokumentInfoId": "454273829",
-                                          "tittel": "Annen dokumentasjon",
-                                          "brevkode": null,
-                                          "dokumentstatus": null,
-                                          "datoFerdigstilt": null,
-                                          "originalJournalpostId": "453877977",
-                                          "skjerming": null,
-                                          "logiskeVedlegg": [],
-                                          "dokumentvarianter": [
-                                            {
-                                              "variantformat": "ARKIV",
-                                              "saksbehandlerHarTilgang": true,
-                                              "skjerming": null
-                                            }
-                                          ]
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "journalpostId": "453873496",
-                                      "journalstatus": "FERDIGSTILT",
-                                      "journalposttype": "I",
-                                      "behandlingstema": null,
-                                      "antallRetur": null,
-                                      "kanal": "NAV_NO",
-                                      "innsynsregelBeskrivelse": "Standardreglene avgjør om dokumentet vises",
-                                      "datoOpprettet": "2024-10-07T12:39:27",
-                                      "relevanteDatoer": [],
-                                      "dokumenter": [
-                                        {
-                                          "dokumentInfoId": "454268545",
-                                          "tittel": "Søknad om Arbeidsavklaringspenger",
-                                          "brevkode": "NAV 11-13.05",
-                                          "dokumentstatus": null,
-                                          "datoFerdigstilt": null,
-                                          "originalJournalpostId": "453873496",
-                                          "skjerming": null,
-                                          "logiskeVedlegg": [],
-                                          "dokumentvarianter": [
-                                            {
-                                              "variantformat": "ARKIV",
-                                              "saksbehandlerHarTilgang": true,
-                                              "skjerming": null
-                                            },
-                                            {
-                                              "variantformat": "ORIGINAL",
-                                              "saksbehandlerHarTilgang": true,
-                                              "skjerming": null
-                                            }
-                                          ]
-                                        }
-                                      ]
-                                    }
-                                  ],
-                                  "sideInfo": {
-                                    "sluttpeker": "NDUzODczNDk2",
-                                    "finnesNesteSide": false,
-                                    "antall": 2,
-                                    "totaltAntall": 2
-                                  }
-                                }
-                              }
-                            }
-                """
-                    call.respondText(
-                        expression.trimIndent(),
-                        contentType = ContentType.Application.Json
-                    )
-                } else {
-                    print("FEIL KALL")
-                    call.respond(HttpStatusCode.BadRequest)
-                }
-            }
-        }
-    }
-
     private fun Application.inst2Fake() {
         install(ContentNegotiation) {
             jackson {
@@ -1795,7 +1651,7 @@ object FakeServers : AutoCloseable {
             }
         }
 
-        val brevStore = mutableListOf<BrevbestillingResponse>()
+        val brevStore = mutableMapOf<String, BrevbestillingResponse>()
         val mutex = Any()
         fun brevbestilling(
             brevbestillingReferanse: UUID,
@@ -1822,34 +1678,41 @@ object FakeServers : AutoCloseable {
             route("/api") {
                 post("/v2/bestill") {
                     val request = call.receive<BestillBrevV2Request>()
-                    val brevbestillingReferanse = UUID.randomUUID()
+                    val eksisterende = brevStore[request.unikReferanse]
+                    if (eksisterende != null) {
+                        call.respond(status = HttpStatusCode.Conflict, BestillBrevResponse(eksisterende.referanse))
+                        return@post
+                    }
 
+                    val brevbestillingReferanse = UUID.randomUUID()
                     val status = if (request.ferdigstillAutomatisk) {
                         Status.FERDIGSTILT
                     } else {
                         Status.UNDER_ARBEID
                     }
                     synchronized(mutex) {
-                        brevStore += brevbestilling(
-                            brevbestillingReferanse = brevbestillingReferanse,
-                            status = status,
-                            brevtype = request.brevtype,
-                            brev = Brev(
-                                kanSendesAutomatisk = false,
-                                journalpostTittel = "En tittel",
-                                overskrift = "Overskrift H1",
-                                kanOverstyreBrevtittel = false,
-                                tekstbolker = listOf(
-                                    Tekstbolk(
-                                        id = UUID.randomUUID(),
-                                        overskrift = "Overskrift H2",
-                                        innhold = listOf(
-                                            Innhold(
-                                                id = UUID.randomUUID(),
-                                                overskrift = "Overskrift H3",
-                                                blokker = emptyList(),
-                                                kanRedigeres = true,
-                                                erFullstendig = false
+                        brevStore.put(
+                            request.unikReferanse, brevbestilling(
+                                brevbestillingReferanse = brevbestillingReferanse,
+                                status = status,
+                                brevtype = request.brevtype,
+                                brev = Brev(
+                                    kanSendesAutomatisk = false,
+                                    journalpostTittel = "En tittel",
+                                    overskrift = "Overskrift H1",
+                                    kanOverstyreBrevtittel = false,
+                                    tekstbolker = listOf(
+                                        Tekstbolk(
+                                            id = UUID.randomUUID(),
+                                            overskrift = "Overskrift H2",
+                                            innhold = listOf(
+                                                Innhold(
+                                                    id = UUID.randomUUID(),
+                                                    overskrift = "Overskrift H3",
+                                                    blokker = emptyList(),
+                                                    kanRedigeres = true,
+                                                    erFullstendig = false
+                                                )
                                             )
                                         )
                                     )
@@ -1861,8 +1724,13 @@ object FakeServers : AutoCloseable {
                 }
                 post("/v3/bestill") {
                     val request = call.receive<BestillBrevV2Request>()
-                    val brevbestillingReferanse = UUID.randomUUID()
+                    val eksisterende = brevStore[request.unikReferanse]
+                    if (eksisterende != null) {
+                        call.respond(status = HttpStatusCode.Conflict, BestillBrevResponse(eksisterende.referanse))
+                        return@post
+                    }
 
+                    val brevbestillingReferanse = UUID.randomUUID()
                     val status = if (request.ferdigstillAutomatisk) {
                         Status.FERDIGSTILT
                     } else {
@@ -1908,18 +1776,20 @@ object FakeServers : AutoCloseable {
                         }
                     """.trimIndent()
                     synchronized(mutex) {
-                        brevStore += brevbestilling(
-                            brevbestillingReferanse = brevbestillingReferanse,
-                            status = status,
-                            brevtype = request.brevtype,
-                            brevmal = brevmal,
-                            brevdata = BrevdataDto(
-                                delmaler = emptyList(),
-                                faktagrunnlag = emptyList(),
-                                periodetekster = emptyList(),
-                                valg = emptyList(),
-                                betingetTekst = emptyList(),
-                                fritekster = emptyList(),
+                        brevStore.put(
+                            request.unikReferanse, brevbestilling(
+                                brevbestillingReferanse = brevbestillingReferanse,
+                                status = status,
+                                brevtype = request.brevtype,
+                                brevmal = brevmal,
+                                brevdata = BrevdataDto(
+                                    delmaler = emptyList(),
+                                    faktagrunnlag = emptyList(),
+                                    periodetekster = emptyList(),
+                                    valg = emptyList(),
+                                    betingetTekst = emptyList(),
+                                    fritekster = emptyList(),
+                                )
                             )
                         )
                     }
@@ -1931,7 +1801,7 @@ object FakeServers : AutoCloseable {
 
                         call.respond(
                             synchronized(mutex) {
-                                brevStore.find { it.referanse == ref }!!
+                                brevStore.values.find { it.referanse == ref }!!
                             }
                         )
                     }
@@ -1944,12 +1814,15 @@ object FakeServers : AutoCloseable {
                         val ref = UUID.fromString(call.pathParameters["referanse"])!!
                         val brev = call.receive<Brev>()
 
-                        val i = brevStore.indexOfFirst { it.referanse == ref }
-                        if (brevStore[i].status != Status.UNDER_ARBEID) {
+                        val key = brevStore.entries.find { it.value.referanse == ref }?.key ?: return@put call.respond(
+                            HttpStatusCode.BadRequest
+                        )
+                        val value = brevStore.getValue(key)
+                        if (value.status != Status.UNDER_ARBEID) {
                             call.respond(HttpStatusCode.BadRequest)
                         } else {
                             synchronized(mutex) {
-                                brevStore[i] = brevStore[i].copy(brev = brev)
+                                brevStore.replace(key, value.copy(brev = brev))
                             }
                             call.respond(HttpStatusCode.NoContent, Unit)
                         }
@@ -1958,12 +1831,15 @@ object FakeServers : AutoCloseable {
                         val ref = UUID.fromString(call.pathParameters["referanse"])!!
                         val brevdata = call.receive<BrevdataDto>()
 
-                        val i = brevStore.indexOfFirst { it.referanse == ref }
-                        if (brevStore[i].status != Status.UNDER_ARBEID) {
+                        val key = brevStore.entries.find { it.value.referanse == ref }?.key ?: return@put call.respond(
+                            HttpStatusCode.BadRequest
+                        )
+                        val value = brevStore.getValue(key)
+                        if (value.status != Status.UNDER_ARBEID) {
                             call.respond(HttpStatusCode.BadRequest)
                         } else {
                             synchronized(mutex) {
-                                brevStore[i] = brevStore[i].copy(brevdata = brevdata)
+                                brevStore.replace(key, value.copy(brevdata = brevdata))
                             }
                             call.respond(HttpStatusCode.NoContent, Unit)
                         }
@@ -1971,17 +1847,23 @@ object FakeServers : AutoCloseable {
                 }
                 post("/avbryt") {
                     val ref = call.receive<AvbrytBrevbestillingRequest>().referanse
+                    val key = brevStore.entries.find { it.value.referanse == ref }?.key ?: return@post call.respond(
+                        HttpStatusCode.BadRequest
+                    )
                     synchronized(mutex) {
-                        val i = brevStore.indexOfFirst { it.referanse == ref }
-                        brevStore[i] = brevStore[i].copy(status = Status.AVBRUTT)
+                        val value = brevStore.getValue(key)
+                        brevStore.replace(key, value.copy(status = Status.AVBRUTT))
                     }
                     call.respond(HttpStatusCode.Accepted, Unit)
                 }
                 post("/ferdigstill") {
                     val ref = call.receive<FerdigstillBrevRequest>().referanse
+                    val key = brevStore.entries.find { it.value.referanse == ref }?.key ?: return@post call.respond(
+                        HttpStatusCode.BadRequest
+                    )
                     synchronized(mutex) {
-                        val i = brevStore.indexOfFirst { it.referanse == ref }
-                        brevStore[i] = brevStore[i].copy(status = Status.FERDIGSTILT)
+                        val value = brevStore.getValue(key)
+                        brevStore.replace(key, value.copy(status = Status.FERDIGSTILT))
                     }
                     call.respond(HttpStatusCode.Accepted, Unit)
                 }
@@ -2035,7 +1917,6 @@ object FakeServers : AutoCloseable {
         pdl.start()
         inntekt.start()
         oppgavestyring.start()
-        saf.start()
         inst2.start()
         sam.start()
         medl.start()
@@ -2099,10 +1980,6 @@ object FakeServers : AutoCloseable {
         System.setProperty("integrasjon.oppgavestyring.scope", "oppgavestyring")
         System.setProperty("integrasjon.oppgavestyring.url", "http://localhost:${oppgavestyring.port()}")
 
-        // Saf
-        System.setProperty("integrasjon.saf.url.graphql", "http://localhost:${saf.port()}/graphql")
-        System.setProperty("integrasjon.saf.scope", "saf")
-        System.setProperty("integrasjon.saf.url.rest", "http://localhost:${saf.port()}/rest")
 
         // MEDL
         System.setProperty("integrasjon.medl.url", "http://localhost:${medl.port()}")
@@ -2110,6 +1987,7 @@ object FakeServers : AutoCloseable {
 
         // Inst
         System.setProperty("integrasjon.institusjonsopphold.url", "http://localhost:${inst2.port()}")
+        System.setProperty("integrasjon.institusjonsoppholdenkelt.url", "http://localhost:${inst2.port()}")
         System.setProperty("integrasjon.institusjonsopphold.scope", "inst2")
 
         // Statistikk-app
@@ -2215,7 +2093,6 @@ object FakeServers : AutoCloseable {
         brev.stop(0L, 0L)
         inntekt.stop(0L, 0L)
         oppgavestyring.stop(0L, 0L)
-        saf.stop(0L, 0L)
         inst2.stop(0L, 0L)
         medl.stop(0L, 0L)
         tilgang.stop(0L, 0L)

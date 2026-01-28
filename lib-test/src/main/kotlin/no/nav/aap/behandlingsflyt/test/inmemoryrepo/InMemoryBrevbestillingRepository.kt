@@ -26,9 +26,9 @@ object InMemoryBrevbestillingRepository: BrevbestillingRepository {
         }
     }
 
-    override fun hent(brevbestillingReferanse: BrevbestillingReferanse): Brevbestilling {
+    override fun hent(brevbestillingReferanse: BrevbestillingReferanse): Brevbestilling? {
         synchronized(lock) {
-            return bestilling.first { it.referanse == brevbestillingReferanse }
+            return bestilling.firstOrNull { it.referanse == brevbestillingReferanse }
         }
     }
 

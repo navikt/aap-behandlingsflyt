@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.periodisering
 
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
@@ -11,9 +12,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.EFFEKTUER_A
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.FØRSTEGANGSBEHANDLING
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.IKKE_RELEVANT
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.MELDEKORT
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.MIGRER_RETTIGHETSPERIODE
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.REVURDERING
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.UTVID_VEDTAKSLENGDE
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType.MIGRER_RETTIGHETSPERIODE
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -45,14 +46,19 @@ class FlytKontekstMedPeriodeService(
             behandlingId = kontekst.behandlingId,
             forrigeBehandlingId = kontekst.forrigeBehandlingId,
             behandlingType = kontekst.behandlingType,
-            vurderingType = prioritertType(behandling.vurderingsbehov().map { vurderingsbehovTilType(it.type) }
-                .toSet()),
+            vurderingType = prioritertType(
+                vurderingTyper = behandling.vurderingsbehov().map { vurderingsbehovTilType(it.type) }.toSet(),
+                typeBehandling = kontekst.behandlingType
+            ),
             rettighetsperiode = sak.rettighetsperiode,
             vurderingsbehovRelevanteForSteg = relevanteVurderingsbehov
         )
     }
 
-    private fun prioritertType(vurderingTyper: Set<VurderingType>): VurderingType {
+    private fun prioritertType(vurderingTyper: Set<VurderingType>, typeBehandling: TypeBehandling): VurderingType {
+        if (typeBehandling == TypeBehandling.Førstegangsbehandling) {
+            return FØRSTEGANGSBEHANDLING
+        }
         return when {
             FØRSTEGANGSBEHANDLING in vurderingTyper -> FØRSTEGANGSBEHANDLING
             REVURDERING in vurderingTyper -> REVURDERING
@@ -95,6 +101,7 @@ class FlytKontekstMedPeriodeService(
             Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER,
             Vurderingsbehov.REVURDER_SAMORDNING_ARBEIDSGIVER,
             Vurderingsbehov.REVURDER_SAMORDNING_TJENESTEPENSJON,
+            Vurderingsbehov.REVURDER_SYKESTIPEND,
             Vurderingsbehov.REFUSJONSKRAV,
             Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
             Vurderingsbehov.SØKNAD_TRUKKET,

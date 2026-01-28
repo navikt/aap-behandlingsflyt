@@ -141,7 +141,7 @@ class VurderAktivitetsplikt11_7Steg(
             return false
         } else if (vurderingForBehandling.erOppfylt) {
             return true
-        } else if (erTattAvVentFørFristenPåForhåndsvarsel(kontekst, vurderingForBehandling, venteBehov)) {
+        } else if (erForhåndsvarselTilstrekkeligVurdert(kontekst)  && erTattAvVentFørFristenPåForhåndsvarsel(kontekst, vurderingForBehandling, venteBehov)) {
             return false
         }
         return true

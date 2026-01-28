@@ -42,28 +42,6 @@ class VilkårsresultatTest {
         }
 
         @Test
-        fun `om sykdomsvilkåret er innvilget som student, så er rettighetstype 11-5_11-14`() {
-            val v = tomVurdering()
-            val periode = Periode(LocalDate.now(), LocalDate.now().plusDays(10))
-            Vilkårtype.entries.forEach {
-                val vilkår = v.leggTilHvisIkkeEksisterer(it)
-                vilkår.leggTilVurdering(
-                    Vilkårsperiode(
-                        periode,
-                        utfall = Utfall.OPPFYLT,
-                        begrunnelse = null,
-                        innvilgelsesårsak = if (it in listOf(SYKDOMSVILKÅRET)) Innvilgelsesårsak.STUDENT else null,
-                    )
-                )
-            }
-
-            val tidslinje = v.rettighetstypeTidslinje()
-            assertThat(tidslinje.segmenter()).hasSize(1)
-            assertThat(tidslinje.segmenter().first().verdi).isEqualTo(RettighetsType.STUDENT)
-            assertThat(tidslinje.helePerioden()).isEqualTo(periode)
-        }
-
-        @Test
         fun `avslag på Inntektsbortfall gir avslag`() {
             val v = tomVurdering()
             val startDag = LocalDate.now()
@@ -92,7 +70,7 @@ class VilkårsresultatTest {
 
             val tidslinje = v.rettighetstypeTidslinje()
             assertThat(tidslinje.segmenter()).hasSize(1)
-            assertThat(tidslinje.segmenter().first().verdi).isEqualTo(RettighetsType.BISTANDSBEHOV)
+            assertThat(tidslinje.segmenter().first().verdi).isEqualTo(RettighetsType.STUDENT)
             assertThat(tidslinje.helePerioden()).isEqualTo(Periode(startDag, startDag.plusDays(4)))
         }
 
@@ -155,11 +133,10 @@ class VilkårsresultatTest {
                 )
             )
             val andrePeriode = Periode(dagensDato.plusDays(1), dagensDato.plusDays(15))
-            v.leggTilHvisIkkeEksisterer(SYKDOMSVILKÅRET).leggTilVurdering(
+            v.leggTilHvisIkkeEksisterer(Vilkårtype.STUDENT).leggTilVurdering(
                 Vilkårsperiode(
                     andrePeriode,
                     utfall = Utfall.OPPFYLT,
-                    innvilgelsesårsak = Innvilgelsesårsak.STUDENT,
                     begrunnelse = null,
                 )
             )

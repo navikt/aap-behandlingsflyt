@@ -24,7 +24,6 @@ class Effektuer11_7Steg(
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
             VurderingType.FØRSTEGANGSBEHANDLING,
             VurderingType.MIGRER_RETTIGHETSPERIODE,
-            VurderingType.UTVID_VEDTAKSLENGDE,
             VurderingType.REVURDERING -> {
                 val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
                 Aktivitetspliktvilkåret(vilkårsresultat).vurder(
@@ -36,7 +35,7 @@ class Effektuer11_7Steg(
                 )
                 vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
             }
-
+            VurderingType.UTVID_VEDTAKSLENGDE,
             VurderingType.MELDEKORT,
             VurderingType.AUTOMATISK_BREV,
             VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,

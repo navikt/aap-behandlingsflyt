@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.behandling.beregning
 
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
-import no.nav.aap.komponenter.verdityper.Prosent
 import java.math.BigDecimal
 import java.time.LocalDate
 
@@ -97,9 +96,7 @@ data class UføreInntektDTO(
     val inntektIG: BigDecimal,
     val justertTilMaks6G: BigDecimal, // Denne er feil
     val justertForUføreGrad: BigDecimal,
-    val justertForUføreGradiG: BigDecimal, //samme som over bare i g¢
-    @Deprecated("Bruk periodisert uføregrad i inntektsPerioder.")
-    val uføreGrad: Int,
+    val justertForUføreGradiG: BigDecimal, //samme som over bare i G
     val inntektsPerioder: List<UføreInntektPeriodisertDTO>
 )
 

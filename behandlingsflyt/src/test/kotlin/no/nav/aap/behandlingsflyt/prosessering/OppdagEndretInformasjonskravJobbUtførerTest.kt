@@ -45,7 +45,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
@@ -109,6 +109,9 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
     object FakeInstitusjonsoppholdGateway : InstitusjonsoppholdGateway {
         var response: List<Institusjonsopphold> = emptyList()
         override fun innhent(person: Person) = response
+        override fun hentDataForHendelse(oppholdId: Long): Institusjonsopphold {
+            TODO("Not yet implemented")
+        }
     }
 
     object FakePersonopplysningGateway : PersonopplysningGateway {
@@ -132,7 +135,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
         register<FakeUføreRegisterGateway>()
         register<FakeInstitusjonsoppholdGateway>()
         register<FakePersonopplysningGateway>()
-        register<FakeUnleash>()
+        register<AlleAvskruddUnleash>()
     }
 
     companion object {
