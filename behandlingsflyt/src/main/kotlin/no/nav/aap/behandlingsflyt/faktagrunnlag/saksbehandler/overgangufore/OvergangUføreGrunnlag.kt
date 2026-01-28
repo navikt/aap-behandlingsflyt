@@ -48,4 +48,11 @@ data class OvergangUføreGrunnlag(
             .komprimer()
     }
 
+    fun kravdatoUføretrygd() : LocalDate? {
+        return somOvergangUforevurderingstidslinje()
+            ?.segmenter()
+            ?.firstOrNull()
+            ?.fom()
+    }
+
 }
