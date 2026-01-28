@@ -66,7 +66,7 @@ class BeregningTest {
             BeregningInput(
                 nedsettelsesDato = LocalDate.of(2015, 1, 1),
                 årsInntekter = årsInntekter,
-                uføregrad = setOf(Uføre(LocalDate.now().minusYears(5), Prosent(30))),
+                uføregrad = setOf(Uføre(LocalDate.now().minusYears(5), Prosent(30), null)),
                 yrkesskadevurdering = null,
                 beregningGrunnlag = BeregningGrunnlag(
                     tidspunktVurdering = BeregningstidspunktVurdering(
@@ -156,7 +156,7 @@ class BeregningTest {
             BeregningInput(
                 nedsettelsesDato = LocalDate.of(2023, 1, 1),
                 årsInntekter = årsInntekter,
-                uføregrad = setOf(Uføre(LocalDate.of(2023, 1, 1), Prosent(50))),
+                uføregrad = setOf(Uføre(LocalDate.of(2023, 1, 1), Prosent(50), null)),
                 yrkesskadevurdering = Yrkesskadevurdering(
                     begrunnelse = "en begrunnelse",
                     andelAvNedsettelsen = Prosent(30),
@@ -220,7 +220,7 @@ class BeregningTest {
             BeregningInput(
                 nedsettelsesDato = LocalDate.of(2023, 1, 1),
                 årsInntekter = årsInntekter,
-                uføregrad = setOf(Uføre(LocalDate.now(), Prosent(0))),
+                uføregrad = setOf(Uføre(LocalDate.now(), Prosent(0), null)),
                 yrkesskadevurdering = null,
                 beregningGrunnlag = BeregningGrunnlag(
                     tidspunktVurdering = BeregningstidspunktVurdering(
