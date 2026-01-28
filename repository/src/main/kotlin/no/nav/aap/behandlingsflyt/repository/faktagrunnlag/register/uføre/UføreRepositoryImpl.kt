@@ -110,7 +110,6 @@ class UføreRepositoryImpl(private val connection: DBConnection) : UføreReposit
                 Uføre(
                     virkningstidspunkt = row.getLocalDate("virkningstidspunkt"),
                     uføregrad = Prosent(row.getInt("uforegrad")),
-                    uføregradTom = row.getLocalDate("uforegrad_tom")
                 )
             }
         }

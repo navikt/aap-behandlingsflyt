@@ -223,7 +223,6 @@ WHERE BEREGNING_ID = ?
                         Uføre(
                             uføregrad = Prosent(row.getInt("uforegrad")),
                             virkningstidspunkt = ytterligereNedsattArbeidsevneAr.atDay(1),
-                            uføregradTom = row.getLocalDateOrNull("uforegrad_tom")
                         )
                     ),
                     uføreInntekterFraForegåendeÅr = hentUføreInntekt(row.getLong("ID")),
