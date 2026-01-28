@@ -760,7 +760,7 @@ class BrevUtlederServiceTest {
         )
     }
 
-    private fun stubBeregningGrunnlag(): BeregningGrunnlag? {
+    private fun stubBeregningGrunnlag(): BeregningGrunnlag {
         return BeregningGrunnlag(
             tidspunktVurdering = BeregningstidspunktVurdering(
                 begrunnelse = "",
