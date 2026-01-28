@@ -7,7 +7,7 @@
       <env name="NAIS_DATABASE_BEHANDLINGSFLYT_BEHANDLINGSFLYT_PASSWORD" value="" />
     </envs>
     <option name="MAIN_CLASS_NAME" value="no.nav.aap.behandlingsflyt.TestAppKt" />
-    <module name="aap-behandlingsflyt.app.test" />
+    <module name="behandlingsflyt.app.test" />
     <extension name="coverage">
       <pattern>
         <option name="PATTERN" value="no.nav.aap.behandlingsflyt.*" />
