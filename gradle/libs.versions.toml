@@ -1,6 +1,6 @@
 [versions]
 ktor = "3.3.3"
-komponenter = "1.0.933"
+komponenter = "1.0.934"
 tilgang = "1.0.178"
 utbetaling = "0.0.73"
 brev = "0.0.223"
