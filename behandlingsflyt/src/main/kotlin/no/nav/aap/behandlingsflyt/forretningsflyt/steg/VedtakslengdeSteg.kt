@@ -1,7 +1,9 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.behandling.rettighetstype.vurderRettighetstypeOgKvoter
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktUtleder
+import no.nav.aap.behandlingsflyt.behandling.underveis.KvoteService
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Avslag
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
@@ -9,7 +11,6 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetRegel
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurdering
@@ -24,7 +25,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -51,7 +51,6 @@ class VedtakslengdeSteg(
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val vedtattUnderveis = kontekst.forrigeBehandlingId?.let { underveisRepository.hentHvisEksisterer(it) }
         val sisteVedtatteUnderveisperiode = vedtattUnderveis?.perioder?.maxByOrNull { it.periode.tom }
-        val rettighetstypeTidslinje = vilkårsresultatRepository.hent(kontekst.behandlingId).rettighetstypeTidslinje()
 
         when (kontekst.vurderingType) {
             VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.REVURDERING -> {
@@ -74,7 +73,7 @@ class VedtakslengdeSteg(
                 if (
                     skalUtvide(
                         forrigeSluttdato = sisteVedtatteUnderveisperiode.periode.tom,
-                        rettighetstypeTidslinjeForInneværendeBehandling = rettighetstypeTidslinje
+                        behandlingId = kontekst.behandlingId,
                     )
                 ) {
                     utvidSluttdato(
@@ -97,9 +96,9 @@ class VedtakslengdeSteg(
 
     fun skalUtvide(
         forrigeSluttdato: LocalDate,
-        rettighetstypeTidslinjeForInneværendeBehandling: Tidslinje<RettighetsType>
+        behandlingId: BehandlingId,
     ): Boolean {
-        return harFremtidigRettOrdinær(forrigeSluttdato, rettighetstypeTidslinjeForInneværendeBehandling)
+        return harFremtidigRettOrdinær(forrigeSluttdato, behandlingId)
                 && LocalDate.now(clock).plusDays(28) >= forrigeSluttdato
 
     }
@@ -131,16 +130,26 @@ class VedtakslengdeSteg(
     // Det finnes en fremtidig periode med ordinær rett og gjenværende kvote
     fun harFremtidigRettOrdinær(
         vedtattSluttdato: LocalDate,
-        rettighetstypeTidslinjeForInneværendeBehandling: Tidslinje<RettighetsType>
+        behandlingId: BehandlingId,
     ): Boolean {
-        val varighetstidslinje = VarighetRegel().simuler(rettighetstypeTidslinjeForInneværendeBehandling)
-        return varighetstidslinje.begrensetTil(Periode(vedtattSluttdato.plusDays(1), Tid.MAKS))
-            .segmenter()
-            .any { varighetSegment ->
-                varighetSegment.verdi.brukerAvKvoter.any { kvote -> kvote == Kvote.ORDINÆR }
-                        && varighetSegment.verdi !is Avslag
-            }
-
+        if (unleashGateway.isEnabled(BehandlingsflytFeature.ForenkletKvote)) {
+            val rettighetstypeTidslinjeForInneværendeBehandling = vurderRettighetstypeOgKvoter(
+                vilkårsresultatRepository.hent(behandlingId),
+                KvoteService().beregn()
+            )
+            return rettighetstypeTidslinjeForInneværendeBehandling.begrensetTil(Periode(vedtattSluttdato.plusDays(1), Tid.MAKS))
+                .segmenter()
+                .any { varighetSegment -> Kvote.ORDINÆR in varighetSegment.verdi.brukerAvKvoter()  }
+        } else {
+            val rettighetstypeTidslinjeForInneværendeBehandling = vilkårsresultatRepository.hent(behandlingId).rettighetstypeTidslinje()
+            val varighetstidslinje = VarighetRegel().simuler(rettighetstypeTidslinjeForInneværendeBehandling)
+            return varighetstidslinje.begrensetTil(Periode(vedtattSluttdato.plusDays(1), Tid.MAKS))
+                .segmenter()
+                .any { varighetSegment ->
+                    varighetSegment.verdi.brukerAvKvoter.any { kvote -> kvote == Kvote.ORDINÆR }
+                            && varighetSegment.verdi !is Avslag
+                }
+        }
     }
 
     private fun utledInitiellSluttdato(

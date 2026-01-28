@@ -78,7 +78,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtfører(
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider): JobbUtfører {
             return OpprettJobbUtvidVedtakslengdeJobbUtfører(
                 sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider),
-                vedtakslengdeService = VedtakslengdeService(repositoryProvider),
+                vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
                 flytJobbRepository = repositoryProvider.provide(),
                 unleashGateway = gatewayProvider.provide(),
             )

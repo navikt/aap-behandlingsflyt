@@ -52,6 +52,7 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.InstitusjonsoppholdJobb to true,
         BehandlingsflytFeature.TrekkSoeknadOpprettetFraLegeerklaering to true,
         BehandlingsflytFeature.UbehandledeMeldekortJobb to true,
+        BehandlingsflytFeature.ForenkletKvote to false,
         )
 )
 

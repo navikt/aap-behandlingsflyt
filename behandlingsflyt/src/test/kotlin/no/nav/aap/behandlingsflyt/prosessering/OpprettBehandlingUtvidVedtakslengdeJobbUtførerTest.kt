@@ -29,6 +29,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.fixedClock
 import no.nav.aap.komponenter.type.Periode
@@ -57,7 +58,12 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtførerTest {
         OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
             prosesserBehandlingService = prosesserBehandlingService,
             sakOgBehandlingService = sakOgBehandlingService,
-            vedtakslengdeService = VedtakslengdeService(underveisRepository, vilkårsresultatRepository, fixedClock(dagensDato)),
+            vedtakslengdeService = VedtakslengdeService(
+                underveisRepository,
+                vilkårsresultatRepository,
+                AlleAvskruddUnleash,
+                fixedClock(dagensDato)
+            ),
             clock = fixedClock(dagensDato)
         )
 
