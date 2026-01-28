@@ -112,7 +112,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) : 
             .assertRettighetstype(
                 Periode(
                     sak.rettighetsperiode.fom,
-                    sak.rettighetsperiode.fom.plusHverdager(Hverdager(130)).minusDays(1),
+                    sak.rettighetsperiode.fom.plusHverdager(Hverdager(131)).minusDays(1),
                 ) to RettighetsType.SYKEPENGEERSTATNING,
             )
             .medKontekst {
@@ -467,7 +467,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) : 
                 Periode(
                     periode.fom.plusMonths(2),
                     periode.fom.plusMonths(2).plusHverdager(
-                        Hverdager(130) - førstePeriodeSykepengeerstatning.antallHverdager()
+                        Hverdager(131) - førstePeriodeSykepengeerstatning.antallHverdager()
                     ).minusDays(1)
                 ) to
                         RettighetsType.SYKEPENGEERSTATNING,
@@ -566,7 +566,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) : 
             .assertRettighetstype(
                 Periode(
                     sak.rettighetsperiode.fom,
-                    sak.rettighetsperiode.fom.plusHverdager(Hverdager(130)).minusDays(1)
+                    sak.rettighetsperiode.fom.plusHverdager(Hverdager(131)).minusDays(1)
                 ) to
                         RettighetsType.SYKEPENGEERSTATNING
             )
