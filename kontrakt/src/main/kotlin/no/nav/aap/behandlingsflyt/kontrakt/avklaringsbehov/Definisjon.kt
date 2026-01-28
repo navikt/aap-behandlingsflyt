@@ -665,6 +665,32 @@ public enum class Definisjon(
             return entries.filter { it.løsesISteg == steg }
         }
 
+        /** I første versjon av behandlingsflyt, så håndteres frivillige
+         * avklaringsbehov automatisk av backend: (1) avklaringsbehovet blir
+         * automatisk løftet når man kommer til steget, (2) avklaringsbehovet
+         * blir automatisk opprettet når løsning sendes inn, (3) validering
+         * om det er lov og løse avklaringsbehovet skrus av.
+         *
+         * Ulemper er:
+         * - frontend har logikk for når frivillige avklaringsbehov kan løses
+         * - backend holder ikke styr på når avklaringsbehovet virkelig kan løses, og
+         *   har derfor ikke implementert tilbakestilling.
+         */
+        public val legacyAutomatiskFrivillgeAvklaringsbehov: Set<Definisjon> = setOf(
+            ARBEIDSOPPTRAPPING,
+            AVKLAR_SAMORDNING_GRADERING,
+            AVKLAR_SAMORDNING_SYKESTIPEND,
+            AVKLAR_SAMORDNING_UFØRE,
+            AVKLAR_VEDTAKSLENGDE,
+            ETABLERING_EGEN_VIRKSOMHET,
+            FASTSETT_ARBEIDSEVNE,
+            FRITAK_MELDEPLIKT,
+            SAMORDNING_ANDRE_STATLIGE_YTELSER,
+            SAMORDNING_ARBEIDSGIVER,
+            SAMORDNING_BARNEPENSJON,
+            SAMORDNING_REFUSJONS_KRAV,
+        )
+
         init {
             val unikeKoder =
                 Arrays.stream(entries.toTypedArray())

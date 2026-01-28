@@ -235,7 +235,8 @@ class AvklaringsbehovService(
                             avklaringsbehovene.avbryt(definisjon)
                         }
 
-                        avklaringsbehov.definisjon.erFrivillig() -> {
+                        avklaringsbehov.definisjon.erFrivillig()
+                                && avklaringsbehov.definisjon in Definisjon.legacyAutomatiskFrivillgeAvklaringsbehov -> {
                             // Skal ikke avbryte og tilbakestille frivillige behov
                             return
                         }
@@ -245,7 +246,6 @@ class AvklaringsbehovService(
                             tilbakestillGrunnlag()
                         }
                     }
-
                 }
             }
         }

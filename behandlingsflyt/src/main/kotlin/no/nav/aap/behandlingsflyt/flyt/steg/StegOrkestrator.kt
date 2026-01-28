@@ -226,9 +226,6 @@ class StegOrkestrator(
     ): Transisjon {
         val relevanteAvklaringsbehov =
             avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId).alle()
-                .filter { it.erÅpent() }
-                .filter { behov -> behov.skalLøsesISteg(aktivtSteg.type()) }
-
 
         if (relevanteAvklaringsbehov.any { behov -> behov.skalStoppeHer(aktivtSteg.type()) }) {
             return Stopp
