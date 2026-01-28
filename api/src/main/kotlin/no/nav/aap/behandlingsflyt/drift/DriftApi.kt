@@ -98,7 +98,7 @@ fun NormalOpenAPIRoute.driftApi(
                                             endretAv = endring.endretAv
                                         )
                                     }
-                                }.sortedBy { it.tidsstempel }
+                                }.sortedByDescending { it.tidsstempel }
 
                             BehandlingDriftsinfo.fra(behandling, avklaringsbehovene)
                         }
