@@ -350,7 +350,6 @@ class BrevUtlederServiceTest {
         )
     }
 
-    // TODO: Feiler fordi forrigeBehandling for revurdering == ARBEIDSSØKER -- hvorfor er det endret nå?
     @Test
     fun `skal utlede brev etter rettighetstype § 11-17 ved innvilgelse av revurdering`() {
         val førstegangsbehandling = stubBehandling(TypeBehandling.Førstegangsbehandling)
