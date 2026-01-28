@@ -174,19 +174,28 @@ class TidligereVurderingerImpl(
 
                 val sykdomVurdering = sykdomRepository.hentHvisEksisterer(kontekst.behandlingId)
                 val sykdomstidslinje = sykdomVurdering?.somSykdomsvurderingstidslinje().orEmpty()
-                val yrkesskaderTidslinje = sykdomVurdering?.yrkesskadevurdringTidslinje(kontekst.rettighetsperiode).orEmpty()
-                val bistandTidslinje = bistandRepository.hentHvisEksisterer(kontekst.behandlingId)?.somBistandsvurderingstidslinje().orEmpty()
+                val yrkesskaderTidslinje =
+                    sykdomVurdering?.yrkesskadevurdringTidslinje(kontekst.rettighetsperiode).orEmpty()
+                val bistandTidslinje =
+                    bistandRepository.hentHvisEksisterer(kontekst.behandlingId)?.somBistandsvurderingstidslinje()
+                        .orEmpty()
                 val overgangUføre1118 = vilkårsresultat.tidslinjeFor(Vilkårtype.OVERGANGUFØREVILKÅRET)
                 val overgangArbeid1117 = vilkårsresultat.tidslinjeFor(Vilkårtype.OVERGANGARBEIDVILKÅRET)
                 val sykdomErstating1113 = vilkårsresultat.tidslinjeFor(Vilkårtype.SYKEPENGEERSTATNING)
 
-                Tidslinje.map6(sykdomstidslinje,yrkesskaderTidslinje,bistandTidslinje ,overgangUføre1118,overgangArbeid1117,sykdomErstating1113){
-                        sykdomVurdering115Segment,
-                        yrkesskaderVudering1122Segment,
-                        bistandsVurdering116Segment,
-                        overgangUføre1118VilkårsSegment,
-                        overgangArbeid1117VilkårSegment,
-                        sykdomErstating1113VilkårSegment ->
+                Tidslinje.map6(
+                    sykdomstidslinje,
+                    yrkesskaderTidslinje,
+                    bistandTidslinje,
+                    overgangUføre1118,
+                    overgangArbeid1117,
+                    sykdomErstating1113
+                ) { sykdomVurdering115Segment,
+                    yrkesskaderVudering1122Segment,
+                    bistandsVurdering116Segment,
+                    overgangUføre1118VilkårsSegment,
+                    overgangArbeid1117VilkårSegment,
+                    sykdomErstating1113VilkårSegment ->
 
                     val sykdomOppfylt = (sykdomVurdering115Segment?.harSkadeSykdomEllerLyte == true
                             && sykdomVurdering115Segment.erArbeidsevnenNedsatt == true
@@ -196,8 +205,8 @@ class TidligereVurderingerImpl(
                             && sykdomVurdering115Segment.erNedsettelseIArbeidsevneAvEnVissVarighet == true)
 
                     val bistandOppfylt = (bistandsVurdering116Segment?.erBehovForAktivBehandling == true
-                        || bistandsVurdering116Segment?.erBehovForArbeidsrettetTiltak == true) ||
-                        (bistandsVurdering116Segment?.erBehovForAnnenOppfølging == true)
+                            || bistandsVurdering116Segment?.erBehovForArbeidsrettetTiltak == true) ||
+                            (bistandsVurdering116Segment?.erBehovForAnnenOppfølging == true)
 
                     val førerTilAvslag = when {
                         // ja 115, nei 116, nei 1118, nei/ikke vudert 1117, nei 1113
@@ -215,22 +224,21 @@ class TidligereVurderingerImpl(
                                 && sykdomVurdering115Segment.erNedsettelseIArbeidsevneAvEnVissVarighet == false
                                 && sykdomErstating1113VilkårSegment?.utfall == IKKE_OPPFYLT -> true
 
-
-                        //YS veien til avslag
+                        //YS 11-22 veien til avslag
                         sykdomOppfylt && sykdomVurdering115Segment.erNedsettelseIArbeidsevneMerEnnHalvparten == false
                                 && sykdomVurdering115Segment.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true
-                                && bistandOppfylt && yrkesskaderTidslinje.filter { it.verdi.erÅrsakssammenheng }.isEmpty()
-                                     -> true
-
-
+                                && bistandOppfylt && yrkesskaderTidslinje.filter { it.verdi.erÅrsakssammenheng }
+                            .isEmpty()
+                            -> true
+                        // nei 115, ikke vurdert/ikke oppfylt1117, nei 1113
                         !sykdomOppfylt
                                 && sykdomErstating1113VilkårSegment?.utfall == IKKE_OPPFYLT
                                 && overgangArbeid1117VilkårSegment?.utfall != Utfall.OPPFYLT -> true
+
                         else -> false
                     }
                     if (førerTilAvslag) UUNGÅELIG_AVSLAG else UKJENT
                 }
-                //ikkeOppfyltFørerTilAvslag(Vilkårtype.SYKEPENGEERSTATNING, vilkårsresultat)
             },
 
             Sjekk(StegType.FASTSETT_SYKDOMSVILKÅRET) { _, _ ->
