@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dagpenger.DagpengerRepository
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
@@ -23,6 +24,7 @@ import org.slf4j.LoggerFactory
 class AndreStatligeYtelserInformasjonskrav(
     private val tidligereVurderinger: TidligereVurderinger,
     private val dagpengerGateway: DagpengerGateway,
+    private val dagpengerRepository: DagpengerRepository,
     private val sakService: SakService,
 ): Informasjonskrav<AndreStatligeYtelserInformasjonskrav.DagpengerInput, AndreStatligeYtelserInformasjonskrav.DagpengerRegisterdata> {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -39,9 +41,11 @@ class AndreStatligeYtelserInformasjonskrav(
 
     override fun klargjør(kontekst: FlytKontekstMedPerioder): DagpengerInput {
         val sak = sakService.hentSakFor(kontekst.behandlingId)
+        val eksisterendeData = dagpengerRepository.hent(kontekst.behandlingId)
         return DagpengerInput(
             person = sak.person,
-            rettighetsperiode = sak.rettighetsperiode
+            rettighetsperiode = sak.rettighetsperiode,
+            eksisterendeData = eksisterendeData.toSet()
         )
     }
 
@@ -68,12 +72,32 @@ class AndreStatligeYtelserInformasjonskrav(
         registerdata: DagpengerRegisterdata,
         kontekst: FlytKontekstMedPerioder
     ): Informasjonskrav.Endret {
-        TODO("Not yet implemented")
+        val (dagpenger) = registerdata
+
+        return if (harEndringerIDagpenger(input.eksisterendeData, dagpenger)) {
+            dagpengerRepository.lagre(
+                kontekst.behandlingId,
+                dagpenger.toList()
+            )
+            Informasjonskrav.Endret.ENDRET
+        } else {
+            Informasjonskrav.Endret.IKKE_ENDRET
+        }
+
     }
+
+    fun harEndringerIDagpenger(
+        eksisterendeData: Set<DagpengerPeriode>?,
+        dagpenger: Set<DagpengerPeriode>
+    ): Boolean {
+        return eksisterendeData == null || eksisterendeData != dagpenger
+    }
+
 
     data class DagpengerInput(
         val person: Person,
         val rettighetsperiode: Periode,
+        val eksisterendeData: Set<DagpengerPeriode>? = null
     ) : InformasjonskravInput
 
     data class DagpengerRegisterdata(
@@ -92,6 +116,7 @@ class AndreStatligeYtelserInformasjonskrav(
             return AndreStatligeYtelserInformasjonskrav(
                 TidligereVurderingerImpl(repositoryProvider),
                 gatewayProvider.provide(),
+                repositoryProvider.provide(),
                 SakService(repositoryProvider),
             )
         }
