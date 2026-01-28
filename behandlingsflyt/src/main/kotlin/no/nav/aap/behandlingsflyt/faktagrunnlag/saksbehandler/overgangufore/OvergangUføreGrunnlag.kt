@@ -19,10 +19,6 @@ data class OvergangUføreGrunnlag(
         return filtrertOvergangUføreTidslinje(maksdato) { true }
     }
 
-    fun gjeldendeOvergangUførevurderinger(maksDato: LocalDate = Tid.MAKS): List<OvergangUføreVurdering> {
-        return somOvergangUforevurderingstidslinje(maksDato).segmenter().map { it.verdi }
-    }
-
     fun overgangUføreVurderingerVurdertIBehandling(behandlingId: BehandlingId): List<OvergangUføreVurdering> {
         return vurderinger.filter { it.vurdertIBehandling == behandlingId }
     }
@@ -36,13 +32,6 @@ data class OvergangUføreGrunnlag(
         maksDato: LocalDate = Tid.MAKS
     ): Tidslinje<OvergangUføreVurdering> {
         return filtrertOvergangUføreTidslinje(maksDato) { it.vurdertIBehandling != behandlingId }
-    }
-
-    fun gjeldendeVedtatteOvergangUførevurderinger(
-        behandlingId: BehandlingId,
-        maksDato: LocalDate = Tid.MAKS
-    ): List<OvergangUføreVurdering> {
-        return vedtattOvergangUførevurderingstidslinje(behandlingId, maksDato).segmenter().map { it.verdi }
     }
 
     private fun filtrertOvergangUføreTidslinje(

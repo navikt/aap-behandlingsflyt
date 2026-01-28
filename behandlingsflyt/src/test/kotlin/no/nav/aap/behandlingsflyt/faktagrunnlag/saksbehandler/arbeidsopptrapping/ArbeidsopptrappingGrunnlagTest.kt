@@ -29,17 +29,17 @@ class ArbeidsopptrappingGrunnlagTest {
                     reellMulighetTilOpptrapping = true,
                     rettPaaAAPIOpptrapping = true,
                     vurdertAv = "bb",
-                    opprettetTid = Instant.now(),
+                    opprettetTid = Instant.now().plusNanos(123),
                     vurdertIBehandling = BehandlingId(1L)
                 )
             )
         )
 
-        val perioder = grunnlag.innvilgedePerioder()
+        val perioder = grunnlag.perioderMedArbeidsopptrapping()
 
         assertThat(perioder).hasSize(1)
         assertThat(perioder.first().fom).isEqualTo(LocalDate.of(2024, 2, 1))
-        assertThat(perioder.first().tom).isEqualTo(LocalDate.of(2024, 2, 1).plusYears(1))
+        assertThat(perioder.first().tom).isEqualTo(LocalDate.of(2024, 2, 1).plusYears(1).minusDays(1))
     }
 
     @Test
@@ -69,11 +69,10 @@ class ArbeidsopptrappingGrunnlagTest {
             )
         )
 
-        val perioder = grunnlag.innvilgedePerioder()
+        val perioder = grunnlag.perioderMedArbeidsopptrapping()
 
         assertThat(perioder).containsExactly(
-            Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 3, 1)),
-            Periode(LocalDate.of(2024, 3, 1), LocalDate.of(2025, 3, 1))
+            Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 12, 31)),
         )
     }
 
@@ -94,9 +93,9 @@ class ArbeidsopptrappingGrunnlagTest {
             )
         )
 
-        val perioder = grunnlag.innvilgedePerioder()
+        val perioder = grunnlag.perioderMedArbeidsopptrapping()
 
         assertThat(perioder.single())
-            .isEqualTo(Periode(LocalDate.of(2024, 6, 1), LocalDate.of(2025, 6, 1)))
+            .isEqualTo(Periode(LocalDate.of(2024, 6, 1), LocalDate.of(2025, 5, 31)))
     }
 }
