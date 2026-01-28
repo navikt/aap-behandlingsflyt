@@ -202,7 +202,8 @@ class TidligereVurderingerImpl(
                             && (sykdomVurdering115Segment.erNedsettelseIArbeidsevneMerEnnHalvparten == true
                             || sykdomVurdering115Segment.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true)
                             && sykdomVurdering115Segment.erSkadeSykdomEllerLyteVesentligdel == true
-                            && sykdomVurdering115Segment.erNedsettelseIArbeidsevneAvEnVissVarighet == true)
+                            && (sykdomVurdering115Segment.erNedsettelseIArbeidsevneAvEnVissVarighet == true
+                            || sykdomVurdering115Segment.erNedsettelseIArbeidsevneAvEnVissVarighet == null))
 
                     val bistandOppfylt = (bistandsVurdering116Segment?.erBehovForAktivBehandling == true
                             || bistandsVurdering116Segment?.erBehovForArbeidsrettetTiltak == true) ||
