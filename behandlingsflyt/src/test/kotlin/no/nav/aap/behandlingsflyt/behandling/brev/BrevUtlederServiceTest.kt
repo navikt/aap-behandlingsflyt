@@ -164,7 +164,7 @@ class BrevUtlederServiceTest {
     }
 
     @Test
-    fun `utledBehov legger ved kravdatoUføretrygd som faktagrunnlag i Tilkjentytelse`() {
+    fun `utledBehov legger ved kravdatoUføretrygd som faktagrunnlag i Tilkjentytelse for 11-18 brev`() {
         val behandling = stubBehandling(TypeBehandling.Førstegangsbehandling)
         every { behandlingRepository.hent(behandling.id) } returns behandling
         every { vedtakRepository.hent(behandling.id) } returns stubVedtak(behandling.id)
@@ -184,13 +184,13 @@ class BrevUtlederServiceTest {
                 )
             )
         )
-        val underveisGrunnlag = stubUnderveisGrunnlag()
+        val underveisGrunnlag = stubUnderveisGrunnlag(rettighetsType = RettighetsType.VURDERES_FOR_UFØRETRYGD)
         every { underveisRepository.hent(behandling.id) } returns underveisGrunnlag
         every { underveisRepository.hentHvisEksisterer(behandling.id) } returns underveisGrunnlag
 
         val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
 
-        assertIs<Innvilgelse>(resultat, "forventer brevbehov er av typen Innvilgelse")
+        assertIs<VurderesForUføretrygd>(resultat, "forventer brevbehov er av typen 11-18")
         assertNotNull(resultat.tilkjentYtelse, "tilkjent ytelse må eksistere")
         assertEquals(gittKravDatoUføretrygd, resultat.tilkjentYtelse.kravdatoUføretrygd)
     }
