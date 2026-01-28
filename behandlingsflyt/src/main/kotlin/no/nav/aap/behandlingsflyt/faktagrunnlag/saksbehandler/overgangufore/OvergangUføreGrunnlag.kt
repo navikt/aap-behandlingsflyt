@@ -5,6 +5,7 @@ import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
+import java.time.Instant
 import java.time.LocalDate
 
 data class OvergangUføreGrunnlag(
@@ -16,10 +17,6 @@ data class OvergangUføreGrunnlag(
 
     fun somOvergangUforevurderingstidslinje(maksdato: LocalDate = Tid.MAKS): Tidslinje<OvergangUføreVurdering> {
         return filtrertOvergangUføreTidslinje(maksdato) { true }
-    }
-
-    fun gjeldendeOvergangUførevurderinger(maksDato: LocalDate = Tid.MAKS): List<OvergangUføreVurdering> {
-        return somOvergangUforevurderingstidslinje(maksDato).segmenter().map { it.verdi }
     }
 
     fun overgangUføreVurderingerVurdertIBehandling(behandlingId: BehandlingId): List<OvergangUføreVurdering> {
@@ -37,13 +34,6 @@ data class OvergangUføreGrunnlag(
         return filtrertOvergangUføreTidslinje(maksDato) { it.vurdertIBehandling != behandlingId }
     }
 
-    fun gjeldendeVedtatteOvergangUførevurderinger(
-        behandlingId: BehandlingId,
-        maksDato: LocalDate = Tid.MAKS
-    ): List<OvergangUføreVurdering> {
-        return vedtattOvergangUførevurderingstidslinje(behandlingId, maksDato).segmenter().map { it.verdi }
-    }
-
     private fun filtrertOvergangUføreTidslinje(
         maksDato: LocalDate = Tid.MAKS,
         filter: (vurdering: OvergangUføreVurdering) -> Boolean
@@ -52,7 +42,7 @@ data class OvergangUføreGrunnlag(
             .filter(filter)
             .groupBy { it.vurdertIBehandling }
             .values
-            .sortedBy { it[0].opprettet }
+            .sortedBy { it[0].opprettet ?: Instant.now() }
             .flatMap { it.sortedBy { it.fom } }
             .somTidslinje { Periode(it.fom, it.tom ?: maksDato) }
             .komprimer()
