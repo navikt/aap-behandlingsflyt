@@ -9,11 +9,12 @@ import java.time.LocalDate
 
 data class Uføre(
     val virkningstidspunkt: LocalDate,
-    val uføregrad: Prosent
+    val uføregrad: Prosent,
+    val uføregradTom: LocalDate?,
 )
 
 fun Collection<Uføre>.tilTidslinje(): Tidslinje<Prosent> {
     return this
         .sortedBy { it.virkningstidspunkt }
-        .somTidslinje({ Periode(it.virkningstidspunkt, Tid.MAKS) }, { it.uføregrad })
+        .somTidslinje({ Periode(it.virkningstidspunkt, it.uføregradTom ?: Tid.MAKS) }, { it.uføregrad })
 }

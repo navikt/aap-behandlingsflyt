@@ -196,10 +196,12 @@ class BeregningsgrunnlagRepositoryImpl(private val connection: DBConnection) : B
        uforegrader,
        UFORE_YTTERLIGERE_NEDSATT_ARBEIDSEVNE_AR
 FROM BEREGNING_UFORE bu
-         left JOIN lateral (select buu.beregning_ufore_id                 as bu_id,
-                                   json_agg(json_build_object('virkningstidspunkt',
-                                                              virkningstidspunkt, 'uføregrad',
-                                                              uforegrad)) as uforegrader
+         left JOIN lateral (select buu.beregning_ufore_id as bu_id,
+                                   json_agg(json_build_object(
+                                        'virkningstidspunkt', virkningstidspunkt,
+                                        'uføregrad', uforegrad,
+                                        'uføregradTom', uforegrad_tom
+                                   )) as uforegrader
                             from beregning_ufore_uforegrader buu
                             where bu.id = buu.BEREGNING_UFORE_ID
                             group by buu.beregning_ufore_id) buu on bu.id = buu.bu_id
@@ -221,6 +223,7 @@ WHERE BEREGNING_ID = ?
                         Uføre(
                             uføregrad = Prosent(row.getInt("uforegrad")),
                             virkningstidspunkt = ytterligereNedsattArbeidsevneAr.atDay(1),
+                            uføregradTom = row.getLocalDateOrNull("uforegrad_tom")
                         )
                     ),
                     uføreInntekterFraForegåendeÅr = hentUføreInntekt(row.getLong("ID")),
