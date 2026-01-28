@@ -13,6 +13,7 @@ import java.time.LocalDate
 
 @Fakes
 class DagpengerGatewayImplTest {
+
     @Test
     fun `Kan hente data fra Dagpenger`() {
         val person = TestPerson(
