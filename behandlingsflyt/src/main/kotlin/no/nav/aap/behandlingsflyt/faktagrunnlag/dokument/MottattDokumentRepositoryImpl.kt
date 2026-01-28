@@ -235,6 +235,22 @@ class MottattDokumentRepositoryImpl(private val connection: DBConnection) : Mott
         }.toSet()
     }
 
+    override fun hentAlleUbehandledeDokumenterAvType(type: InnsendingType): Set<MottattDokument> {
+        val query = """
+            SELECT * FROM MOTTATT_DOKUMENT WHERE status = ? and type = ?
+        """.trimIndent()
+
+        return connection.queryList(query) {
+            setParams {
+                setEnumName(1, Status.MOTTATT)
+                setEnumName(2, type)
+            }
+            setRowMapper { row ->
+                mapMottattDokument(row)
+            }
+        }.toSet()
+    }
+
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         // Denne trengs ikke implementeres

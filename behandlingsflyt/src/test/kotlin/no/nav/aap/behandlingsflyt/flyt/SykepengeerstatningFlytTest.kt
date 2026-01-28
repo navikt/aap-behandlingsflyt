@@ -40,10 +40,14 @@ import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedClass
+import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDate
+import kotlin.reflect.KClass
 
-class SykepengeerstatningFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
-
+@ParameterizedClass
+@MethodSource("unleashTestDataSource")
+class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlytOrkestratorTest(unleashGateway) {
     @Test
     fun `Sykepengeerstatning med yrkesskade`() {
         val fom = 1 april 2025

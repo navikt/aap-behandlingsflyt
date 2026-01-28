@@ -28,7 +28,6 @@ import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDate
 
 @ExtendWith(MockKExtension::class)
-@MockKExtension.CheckUnnecessaryStub
 @MockKExtension.RequireParallelTesting
 class FatteVedtakStegTest {
 

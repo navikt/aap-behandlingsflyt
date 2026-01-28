@@ -24,7 +24,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.IKlageresultatUtl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageResultatType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.innvilgedePerioder
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.perioderMedArbeidsopptrapping
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.AVSLUTTET
@@ -360,7 +360,7 @@ class StatistikkMetoder(
                 }.verdier()
 
         val perioderMedArbeidsopptrapping =
-            arbeidsopptrappingRepository.hentHvisEksisterer(behandling.id)?.innvilgedePerioder()
+            arbeidsopptrappingRepository.hentHvisEksisterer(behandling.id).perioderMedArbeidsopptrapping()
 
         return AvsluttetBehandlingDTO(
             vilkårsResultat = VilkårsResultatDTO(
@@ -385,7 +385,7 @@ class StatistikkMetoder(
             resultat = hentResultat(behandling),
             vedtakstidspunkt = vedtakTidspunkt,
             fritaksvurderinger = fritaksvurderinger,
-            perioderMedArbeidsopptrapping = perioderMedArbeidsopptrapping?.map { PeriodeDTO(it.fom, it.tom) }
+            perioderMedArbeidsopptrapping = perioderMedArbeidsopptrapping.map { PeriodeDTO(it.fom, it.tom) }
         )
     }
 

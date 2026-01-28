@@ -24,6 +24,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.undervei
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
+import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
@@ -32,15 +33,28 @@ import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedClass
+import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDate
 
-object OvergangArbeidEnabledUnleash : FakeUnleashBaseWithDefaultDisabled(
-    enabledFlags = listOf(
-        BehandlingsflytFeature.OvergangArbeid
-    )
-)
 
+@ParameterizedClass
+@MethodSource("unleashTestDataSource")
 class OvergangUføreFlytTest: AbstraktFlytOrkestratorTest(OvergangArbeidEnabledUnleash::class) {
+    companion object {
+        object OvergangArbeidEnabledUnleash : FakeUnleashBaseWithDefaultDisabled(
+            enabledFlags = listOf(
+                BehandlingsflytFeature.OvergangArbeid
+            )
+        )
+
+        @JvmStatic
+        fun unleashTestDataSource() = listOf(
+            OvergangArbeidEnabledUnleash::class,
+            LokalUnleash::class,
+        )
+    }
+
     @Test
     fun `11-18 uføre underveis i en behandling`() {
         val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
