@@ -12,9 +12,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurderingDTO
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.test.FakeUnleashBase
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.test.AlleAvskrudd
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.behandlingsflyt.test.oktober
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
@@ -30,7 +31,7 @@ import org.junit.jupiter.params.provider.MethodSource
 import kotlin.reflect.KClass
 
 @ParameterizedClass
-@MethodSource("testData")
+@MethodSource("unleashTestDataSource")
 class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlytOrkestratorTest(unleashGateway) {
     @Test
     fun `innvilge som student, revurdering ordinær`() {
@@ -202,17 +203,5 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             )
 
     }
-
-    companion object {
-        @Suppress("unused")
-        @JvmStatic
-        fun testData(): List<Arguments> {
-            return listOf(
-                Arguments.of(FakeUnleash::class),
-                Arguments.of(AlleAvskrudd::class),
-            )
-        }
-    }
-
 }
 

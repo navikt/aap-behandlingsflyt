@@ -7,7 +7,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
-import org.slf4j.LoggerFactory
 
 /**
  * Håndterer varighetsbestemmelsene (11-12 + unntak fra denne). Sjekker uttak mot kvoten etablert i saken.
@@ -23,9 +22,12 @@ import org.slf4j.LoggerFactory
  */
 //WIP
 class VarighetRegel : UnderveisRegel {
-    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
+        if (input.forenkletKvoteFeature) {
+            return resultat
+        }
+
         val telleverk = Telleverk(input.kvoter)
 
         val varighetTidslinje = resultat.flatMap {
@@ -45,7 +47,7 @@ class VarighetRegel : UnderveisRegel {
         return resultat.leggTilVurderinger(varighetTidslinje, Vurdering::leggTilVarighetVurdering)
     }
     
-    fun simluer(rettighetstidslinje: Tidslinje<RettighetsType>): Tidslinje<VarighetVurdering> {
+    fun simuler(rettighetstidslinje: Tidslinje<RettighetsType>): Tidslinje<VarighetVurdering> {
         val telleverk = Telleverk(KvoteService().beregn())
 
         val varighetTidslinje = rettighetstidslinje.flatMap {
@@ -74,9 +76,6 @@ class VarighetRegel : UnderveisRegel {
         telleverk: Telleverk,
     ): Tidslinje<VarighetVurdering> {
         require(relevanteKvoter.isNotEmpty())
-        if (Kvote.SYKEPENGEERSTATNING in relevanteKvoter && Kvote.STUDENT in relevanteKvoter) {
-            log.warn("sykepengeerstatning -og student-vilkår er oppfylt på samme vurdering")
-        }
 
         val dagerTilStans = telleverk.minsteUbrukteKvote(relevanteKvoter)
         val kvoterStansesIPeriode = dagerTilStans < periode.antallHverdager()

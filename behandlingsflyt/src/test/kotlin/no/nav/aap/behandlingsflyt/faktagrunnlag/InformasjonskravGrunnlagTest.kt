@@ -30,7 +30,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.test.FakePersoner
-import no.nav.aap.behandlingsflyt.test.FakeUnleash
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.ident
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
@@ -70,7 +70,7 @@ class InformasjonskravGrunnlagTest {
         register<YrkesskadeRegisterGatewayImpl>()
         register<PdlBarnGateway>()
         register<PdlIdentGateway>()
-        register<FakeUnleash>()
+        register<AlleAvskruddUnleash>()
         register<InntektkomponentenGatewayImpl>()
     }
 

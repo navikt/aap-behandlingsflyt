@@ -200,13 +200,7 @@ class IverksettVedtakSteg private constructor(
             }
         }
 
-        if (kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING && trukketSøknadService.søknadErTrukket(
-                kontekst.behandlingId
-            )
-            || kontekst.vurderingType == VurderingType.REVURDERING && avbrytRevurderingService.revurderingErAvbrutt(
-                kontekst.behandlingId
-            )
-        ) {
+        if (harTrukketSøknadIBehandlingen(kontekst) || harAvbruttRevurderingIBehandlingen(kontekst)) {
             return Fullført
         }
 
@@ -277,13 +271,7 @@ class IverksettVedtakSteg private constructor(
             }
         }
 
-        if (kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING && trukketSøknadService.søknadErTrukket(
-                kontekst.behandlingId
-            )
-            || kontekst.vurderingType == VurderingType.REVURDERING && avbrytRevurderingService.revurderingErAvbrutt(
-                kontekst.behandlingId
-            )
-        ) {
+        if (harTrukketSøknadIBehandlingen(kontekst) || harAvbruttRevurderingIBehandlingen(kontekst)) {
             return Fullført
         }
 
@@ -313,7 +301,15 @@ class IverksettVedtakSteg private constructor(
         return Fullført
 }
 
+    private fun harAvbruttRevurderingIBehandlingen(kontekst: FlytKontekstMedPerioder): Boolean =
+        kontekst.vurderingType == VurderingType.REVURDERING && avbrytRevurderingService.revurderingErAvbrutt(
+            kontekst.behandlingId
+        )
 
+    private fun harTrukketSøknadIBehandlingen(kontekst: FlytKontekstMedPerioder): Boolean =
+        kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING && trukketSøknadService.søknadErTrukket(
+            kontekst.behandlingId
+        )
 
 
     companion object : FlytSteg {

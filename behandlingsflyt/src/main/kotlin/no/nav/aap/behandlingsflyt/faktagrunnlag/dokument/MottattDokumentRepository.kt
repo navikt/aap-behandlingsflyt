@@ -10,6 +10,7 @@ import no.nav.aap.lookup.repository.Repository
 
 interface MottattDokumentRepository : Repository {
     fun lagre(mottattDokument: MottattDokument)
+    fun hent(innsendingsreferanse: InnsendingReferanse): MottattDokument
     fun oppdaterStatus(
         dokumentReferanse: InnsendingReferanse,
         behandlingId: BehandlingId,
@@ -28,4 +29,6 @@ interface MottattDokumentRepository : Repository {
     fun hentDokumenterAvType(sakId: SakId, type: InnsendingType): Set<MottattDokument>
     fun hentDokumenterAvType(behandlingId: BehandlingId, type: InnsendingType): Set<MottattDokument>
     fun hentDokumenterAvType(behandlingId: BehandlingId, typer: List<InnsendingType>): Set<MottattDokument>
+    fun hentAlleUbehandledeDokumenter(): Set<MottattDokument>
+    fun hentAlleUbehandledeDokumenterAvType(type: InnsendingType): Set<MottattDokument>
 }

@@ -1651,7 +1651,7 @@ object FakeServers : AutoCloseable {
             }
         }
 
-        val brevStore = mutableListOf<BrevbestillingResponse>()
+        val brevStore = mutableMapOf<String, BrevbestillingResponse>()
         val mutex = Any()
         fun brevbestilling(
             brevbestillingReferanse: UUID,
@@ -1678,34 +1678,41 @@ object FakeServers : AutoCloseable {
             route("/api") {
                 post("/v2/bestill") {
                     val request = call.receive<BestillBrevV2Request>()
-                    val brevbestillingReferanse = UUID.randomUUID()
+                    val eksisterende = brevStore[request.unikReferanse]
+                    if (eksisterende != null) {
+                        call.respond(status = HttpStatusCode.Conflict, BestillBrevResponse(eksisterende.referanse))
+                        return@post
+                    }
 
+                    val brevbestillingReferanse = UUID.randomUUID()
                     val status = if (request.ferdigstillAutomatisk) {
                         Status.FERDIGSTILT
                     } else {
                         Status.UNDER_ARBEID
                     }
                     synchronized(mutex) {
-                        brevStore += brevbestilling(
-                            brevbestillingReferanse = brevbestillingReferanse,
-                            status = status,
-                            brevtype = request.brevtype,
-                            brev = Brev(
-                                kanSendesAutomatisk = false,
-                                journalpostTittel = "En tittel",
-                                overskrift = "Overskrift H1",
-                                kanOverstyreBrevtittel = false,
-                                tekstbolker = listOf(
-                                    Tekstbolk(
-                                        id = UUID.randomUUID(),
-                                        overskrift = "Overskrift H2",
-                                        innhold = listOf(
-                                            Innhold(
-                                                id = UUID.randomUUID(),
-                                                overskrift = "Overskrift H3",
-                                                blokker = emptyList(),
-                                                kanRedigeres = true,
-                                                erFullstendig = false
+                        brevStore.put(
+                            request.unikReferanse, brevbestilling(
+                                brevbestillingReferanse = brevbestillingReferanse,
+                                status = status,
+                                brevtype = request.brevtype,
+                                brev = Brev(
+                                    kanSendesAutomatisk = false,
+                                    journalpostTittel = "En tittel",
+                                    overskrift = "Overskrift H1",
+                                    kanOverstyreBrevtittel = false,
+                                    tekstbolker = listOf(
+                                        Tekstbolk(
+                                            id = UUID.randomUUID(),
+                                            overskrift = "Overskrift H2",
+                                            innhold = listOf(
+                                                Innhold(
+                                                    id = UUID.randomUUID(),
+                                                    overskrift = "Overskrift H3",
+                                                    blokker = emptyList(),
+                                                    kanRedigeres = true,
+                                                    erFullstendig = false
+                                                )
                                             )
                                         )
                                     )
@@ -1717,8 +1724,13 @@ object FakeServers : AutoCloseable {
                 }
                 post("/v3/bestill") {
                     val request = call.receive<BestillBrevV2Request>()
-                    val brevbestillingReferanse = UUID.randomUUID()
+                    val eksisterende = brevStore[request.unikReferanse]
+                    if (eksisterende != null) {
+                        call.respond(status = HttpStatusCode.Conflict, BestillBrevResponse(eksisterende.referanse))
+                        return@post
+                    }
 
+                    val brevbestillingReferanse = UUID.randomUUID()
                     val status = if (request.ferdigstillAutomatisk) {
                         Status.FERDIGSTILT
                     } else {
@@ -1764,18 +1776,20 @@ object FakeServers : AutoCloseable {
                         }
                     """.trimIndent()
                     synchronized(mutex) {
-                        brevStore += brevbestilling(
-                            brevbestillingReferanse = brevbestillingReferanse,
-                            status = status,
-                            brevtype = request.brevtype,
-                            brevmal = brevmal,
-                            brevdata = BrevdataDto(
-                                delmaler = emptyList(),
-                                faktagrunnlag = emptyList(),
-                                periodetekster = emptyList(),
-                                valg = emptyList(),
-                                betingetTekst = emptyList(),
-                                fritekster = emptyList(),
+                        brevStore.put(
+                            request.unikReferanse, brevbestilling(
+                                brevbestillingReferanse = brevbestillingReferanse,
+                                status = status,
+                                brevtype = request.brevtype,
+                                brevmal = brevmal,
+                                brevdata = BrevdataDto(
+                                    delmaler = emptyList(),
+                                    faktagrunnlag = emptyList(),
+                                    periodetekster = emptyList(),
+                                    valg = emptyList(),
+                                    betingetTekst = emptyList(),
+                                    fritekster = emptyList(),
+                                )
                             )
                         )
                     }
@@ -1787,7 +1801,7 @@ object FakeServers : AutoCloseable {
 
                         call.respond(
                             synchronized(mutex) {
-                                brevStore.find { it.referanse == ref }!!
+                                brevStore.values.find { it.referanse == ref }!!
                             }
                         )
                     }
@@ -1800,12 +1814,15 @@ object FakeServers : AutoCloseable {
                         val ref = UUID.fromString(call.pathParameters["referanse"])!!
                         val brev = call.receive<Brev>()
 
-                        val i = brevStore.indexOfFirst { it.referanse == ref }
-                        if (brevStore[i].status != Status.UNDER_ARBEID) {
+                        val key = brevStore.entries.find { it.value.referanse == ref }?.key ?: return@put call.respond(
+                            HttpStatusCode.BadRequest
+                        )
+                        val value = brevStore.getValue(key)
+                        if (value.status != Status.UNDER_ARBEID) {
                             call.respond(HttpStatusCode.BadRequest)
                         } else {
                             synchronized(mutex) {
-                                brevStore[i] = brevStore[i].copy(brev = brev)
+                                brevStore.replace(key, value.copy(brev = brev))
                             }
                             call.respond(HttpStatusCode.NoContent, Unit)
                         }
@@ -1814,12 +1831,15 @@ object FakeServers : AutoCloseable {
                         val ref = UUID.fromString(call.pathParameters["referanse"])!!
                         val brevdata = call.receive<BrevdataDto>()
 
-                        val i = brevStore.indexOfFirst { it.referanse == ref }
-                        if (brevStore[i].status != Status.UNDER_ARBEID) {
+                        val key = brevStore.entries.find { it.value.referanse == ref }?.key ?: return@put call.respond(
+                            HttpStatusCode.BadRequest
+                        )
+                        val value = brevStore.getValue(key)
+                        if (value.status != Status.UNDER_ARBEID) {
                             call.respond(HttpStatusCode.BadRequest)
                         } else {
                             synchronized(mutex) {
-                                brevStore[i] = brevStore[i].copy(brevdata = brevdata)
+                                brevStore.replace(key, value.copy(brevdata = brevdata))
                             }
                             call.respond(HttpStatusCode.NoContent, Unit)
                         }
@@ -1827,17 +1847,23 @@ object FakeServers : AutoCloseable {
                 }
                 post("/avbryt") {
                     val ref = call.receive<AvbrytBrevbestillingRequest>().referanse
+                    val key = brevStore.entries.find { it.value.referanse == ref }?.key ?: return@post call.respond(
+                        HttpStatusCode.BadRequest
+                    )
                     synchronized(mutex) {
-                        val i = brevStore.indexOfFirst { it.referanse == ref }
-                        brevStore[i] = brevStore[i].copy(status = Status.AVBRUTT)
+                        val value = brevStore.getValue(key)
+                        brevStore.replace(key, value.copy(status = Status.AVBRUTT))
                     }
                     call.respond(HttpStatusCode.Accepted, Unit)
                 }
                 post("/ferdigstill") {
                     val ref = call.receive<FerdigstillBrevRequest>().referanse
+                    val key = brevStore.entries.find { it.value.referanse == ref }?.key ?: return@post call.respond(
+                        HttpStatusCode.BadRequest
+                    )
                     synchronized(mutex) {
-                        val i = brevStore.indexOfFirst { it.referanse == ref }
-                        brevStore[i] = brevStore[i].copy(status = Status.FERDIGSTILT)
+                        val value = brevStore.getValue(key)
+                        brevStore.replace(key, value.copy(status = Status.FERDIGSTILT))
                     }
                     call.respond(HttpStatusCode.Accepted, Unit)
                 }
@@ -1955,13 +1981,13 @@ object FakeServers : AutoCloseable {
         System.setProperty("integrasjon.oppgavestyring.url", "http://localhost:${oppgavestyring.port()}")
 
 
-
         // MEDL
         System.setProperty("integrasjon.medl.url", "http://localhost:${medl.port()}")
         System.setProperty("integrasjon.medl.scope", "medl")
 
         // Inst
         System.setProperty("integrasjon.institusjonsopphold.url", "http://localhost:${inst2.port()}")
+        System.setProperty("integrasjon.institusjonsoppholdenkelt.url", "http://localhost:${inst2.port()}")
         System.setProperty("integrasjon.institusjonsopphold.scope", "inst2")
 
         // Statistikk-app

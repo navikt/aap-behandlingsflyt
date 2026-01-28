@@ -1,5 +1,12 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
+import no.nav.aap.behandlingsflyt.behandling.rettighetstype.KravForOrdinærAap
+import no.nav.aap.behandlingsflyt.behandling.rettighetstype.KravForOvergangArbeid
+import no.nav.aap.behandlingsflyt.behandling.rettighetstype.KravForOvergangUføretrygd
+import no.nav.aap.behandlingsflyt.behandling.rettighetstype.KravForStudent
+import no.nav.aap.behandlingsflyt.behandling.rettighetstype.KravForSykepengeerstatning
+import no.nav.aap.behandlingsflyt.behandling.rettighetstype.RettighetstypeVurdering
+import no.nav.aap.behandlingsflyt.behandling.rettighetstype.vurderKvoter
 import no.nav.aap.behandlingsflyt.behandling.underveis.Kvoter
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetVurdering.Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.VarighetVurdering.Avslagsårsak.SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP
@@ -19,12 +26,10 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class VarighetRegelTest {
-    private val regel = VarighetRegel()
-
     @Test
     fun `rett alle dager, innenfor en uke, men kvoten blir brukt opp`() {
         val rettighetsperiode = Periode(18 november 2024, 22 november 2024)
-        val vurderinger = regel.vurder(
+        val vurderinger = vurder(
             tomUnderveisInput.copy(
                 periodeForVurdering = rettighetsperiode,
                 kvoter = Kvoter.create(4, 0)
@@ -53,7 +58,7 @@ class VarighetRegelTest {
     @Test
     fun `Kvote blir brukt opp på fredag, stans skjer førstkommende mandag`() {
         val rettighetsperiode = Periode(18 november 2024, 25 november 2024)
-        val vurderinger = regel.vurder(
+        val vurderinger = vurder(
             tomUnderveisInput.copy(
                 periodeForVurdering = rettighetsperiode,
                 kvoter = Kvoter.create(5, 0)
@@ -82,7 +87,7 @@ class VarighetRegelTest {
     @Test
     fun `Helg teller ikke på kvote`() {
         val rettighetsperiode = Periode(22 november 2024, 26 november 2024)
-        val vurderinger = regel.vurder(
+        val vurderinger = vurder(
             tomUnderveisInput.copy(
                 periodeForVurdering = rettighetsperiode,
                 kvoter = Kvoter.create(2, 0)
@@ -111,7 +116,7 @@ class VarighetRegelTest {
     @Test
     fun `Helger etter brukt opp kvote får stans`() {
         val rettighetsperiode = Periode(18 november 2024, 26 januar 2025)
-        val vurderinger = regel.vurder(
+        val vurderinger = vurder(
             tomUnderveisInput.copy(
                 periodeForVurdering = rettighetsperiode,
                 kvoter = Kvoter.create(2, 0)
@@ -141,7 +146,7 @@ class VarighetRegelTest {
     @Test
     fun `Stans teller ikke på kvote`() {
         val rettighetsperiode = Periode(18 november 2024, 22 november 2024)
-        val vurderinger = regel.vurder(
+        val vurderinger = vurder(
             tomUnderveisInput.copy(
                 periodeForVurdering = rettighetsperiode,
                 kvoter = Kvoter.create(2, 0)
@@ -194,7 +199,7 @@ class VarighetRegelTest {
     @Test
     fun `rett grunnet sykepengeerstatning, så ordinær-kvoten brukes ikke`() {
         val rettighetsperiode = Periode(18 november 2024, 22 november 2024)
-        val vurderinger = regel.vurder(
+        val vurderinger = vurder(
             tomUnderveisInput.copy(
                 periodeForVurdering = rettighetsperiode,
                 kvoter = Kvoter.create(2, 2)
@@ -241,7 +246,7 @@ class VarighetRegelTest {
     @Test
     fun `stans grunnet sykepengeerstatning, så ordinær-kvoten brukes ikke`() {
         val rettighetsperiode = Periode(18 november 2024, 22 november 2024)
-        val vurderinger = regel.vurder(
+        val vurderinger = vurder(
             tomUnderveisInput.copy(
                 periodeForVurdering = rettighetsperiode,
                 kvoter = Kvoter.create(2, 0)
@@ -288,7 +293,7 @@ class VarighetRegelTest {
     @Test
     fun `kvote brukes ikke ved ingen grunnleggende rett`() {
         val rettighetsperiode = Periode(18 november 2024, 22 november 2024)
-        val vurderinger = regel.vurder(
+        val vurderinger = vurder(
             tomUnderveisInput.copy(
                 periodeForVurdering = rettighetsperiode,
                 kvoter = Kvoter.create(2, 0)
@@ -333,7 +338,7 @@ class VarighetRegelTest {
     @Test
     fun `teller kvote riktig hvis input-vurderinger er segmentert opp og stans først dag i et segment`() {
         val rettighetsperiode = Periode(18 november 2024, 22 november 2024)
-        val vurderinger = regel.vurder(
+        val vurderinger = vurder(
             tomUnderveisInput.copy(
                 periodeForVurdering = rettighetsperiode,
                 kvoter = Kvoter.create(3, 0)
@@ -377,7 +382,7 @@ class VarighetRegelTest {
     @Test
     fun `teller kvote riktig hvis input-vurderinger er segmentert opp og stans siste dag i et segment`() {
         val rettighetsperiode = Periode(18 november 2024, 22 november 2024)
-        val vurderinger = regel.vurder(
+        val vurderinger = vurder(
             tomUnderveisInput.copy(
                 periodeForVurdering = rettighetsperiode,
                 kvoter = Kvoter.create(4, 0)
@@ -430,7 +435,7 @@ class VarighetRegelTest {
     @Test
     fun `stans grunnet student-kvote, får dermed vanlig 11-5 innvilget`() {
         val rettighetsperiode = Periode(18 november 2024, 26 november 2024)
-        val vurderinger = regel.vurder(
+        val vurderinger = vurder(
             tomUnderveisInput.copy(
                 periodeForVurdering = rettighetsperiode,
                 kvoter = Kvoter.create(4, 0)
@@ -480,7 +485,7 @@ class VarighetRegelTest {
     @Test
     fun `brukt opp ordinær kvote, kan ikke bruke student-kvote alene`() {
         val rettighetsperiode = Periode(18 november 2024, 26 november 2024)
-        val vurderinger = regel.vurder(
+        val vurderinger = vurder(
             tomUnderveisInput.copy(
                 periodeForVurdering = rettighetsperiode,
                 kvoter = Kvoter.create(2, 0)
@@ -525,7 +530,7 @@ class VarighetRegelTest {
     @Test
     fun `ordinær kvote brukt opp på siste hverdag i uka med påfølgende helg i samme segment`() {
         val rettighetsperiode = Periode(8 november 2024, 10 november 2024)
-        val vurderinger = regel.vurder(
+        val vurderinger = vurder(
             tomUnderveisInput.copy(
                 periodeForVurdering = rettighetsperiode,
                 kvoter = Kvoter.create(ordinærkvote = 1, 0)
@@ -559,7 +564,7 @@ class VarighetRegelTest {
     fun `alle måter å dele opp periode i to`() {
         val rettighetsperiode = Periode(11 november 2024, 26 november 2024)
         Periode(rettighetsperiode.fom.plusDays(1), rettighetsperiode.tom).dager().forEach {
-            val vurderinger = regel.vurder(
+            val vurderinger = vurder(
                 tomUnderveisInput.copy(
                     periodeForVurdering = rettighetsperiode,
                     kvoter = Kvoter.create(4, 0)
@@ -607,7 +612,7 @@ class VarighetRegelTest {
     fun `alle måter å dele opp periode i to hvor antall dager i kvote er lik hverdagene`() {
         val rettighetsperiode = Periode(11 november 2024, 26 november 2024)
         Periode(rettighetsperiode.fom.plusDays(1), rettighetsperiode.tom).dager().forEach {
-            val vurderinger = regel.vurder(
+            val vurderinger = vurder(
                 tomUnderveisInput.copy(
                     periodeForVurdering = rettighetsperiode,
                     kvoter = Kvoter.create(5, 0)
@@ -654,7 +659,7 @@ class VarighetRegelTest {
     @Test
     fun `Veksler mellom ordinær, student -og sykepengeerstatning-kvote`() {
         val rettighetsperiode = Periode(11 november 2024, 26 november 2024)
-        val vurderinger = regel.vurder(
+        val vurderinger = vurder(
             tomUnderveisInput.copy(
                 periodeForVurdering = rettighetsperiode,
                 kvoter = Kvoter.create(ordinærkvote = 6, 3)
@@ -725,6 +730,24 @@ class VarighetRegelTest {
                 assertStansGrunnet(vurdering, VARIGHETSKVOTE_BRUKT_OPP, SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP)
             },
         )
+    }
+
+    private fun vurder(underveisInput: UnderveisInput, vurderinger: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
+        val kvoteVurderinger = vurderKvoter(underveisInput.kvoter, vurderinger.map {
+            RettighetstypeVurdering(
+                kravspesifikasjonForRettighetsType = when (it.fårAapEtter) {
+                    null -> null
+                    RettighetsType.BISTANDSBEHOV -> KravForOrdinærAap
+                    RettighetsType.SYKEPENGEERSTATNING -> KravForSykepengeerstatning
+                    RettighetsType.STUDENT -> KravForStudent
+                    RettighetsType.ARBEIDSSØKER -> KravForOvergangArbeid
+                    RettighetsType.VURDERES_FOR_UFØRETRYGD -> KravForOvergangUføretrygd
+                },
+                vilkårsvurderinger = emptyMap(),
+            )
+        })
+
+        return vurderinger.leggTilVurderinger(kvoteVurderinger, Vurdering::leggTilVarighetVurdering)
     }
 }
 

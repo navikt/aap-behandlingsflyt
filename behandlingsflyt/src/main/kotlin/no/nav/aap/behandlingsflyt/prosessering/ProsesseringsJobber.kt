@@ -22,6 +22,7 @@ object ProsesseringsJobber {
             MeldeperiodeTilMeldekortBackendJobbUtfører,
             OpprettJobbForFastsattPeriodeJobbUtfører,
             OpprettJobbForFritakMeldepliktJobbUtfører,
+            OpprettJobbUtvidVedtakslengdeJobbUtfører,
             OpprettBehandlingFritakMeldepliktJobbUtfører,
             OpprettBehandlingFastsattPeriodePassertJobbUtfører,
             OpprettBehandlingUtvidVedtakslengdeJobbUtfører,
@@ -36,7 +37,9 @@ object ProsesseringsJobber {
             OppdaterOppgaveMedTilbakekrevingsbehandlingUtfører,
             OpprettBehandlingMigrereRettighetsperiodeJobbUtfører,
             SendFagsysteminfoBehovTilTilbakekrevingUtfører,
-//            SjekkInstitusjonsOppholdJobbUtfører,
+            SjekkInstitusjonsOppholdJobbUtfører,
+            HåndterUbehandledeDokumenterJobbUtfører,
+            HåndterUbehandletDokumentJobbUtfører
         )
     }
 }

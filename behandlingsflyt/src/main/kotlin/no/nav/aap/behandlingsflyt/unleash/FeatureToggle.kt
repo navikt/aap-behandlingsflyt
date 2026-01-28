@@ -8,7 +8,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     // Se: https://aap-unleash-web.iap.nav.cloud.nais.io/projects/default
     IngenValidering,
     NyBrevtype11_17,
-    OverforingsdatoNullForAvregning,
     OvergangArbeid,
     KvalitetssikringsSteg,
     NyBrevbyggerV3,
@@ -23,12 +22,13 @@ enum class BehandlingsflytFeature : FeatureToggle {
     SendBrevVedMottattKlage,
     PeriodisertSykdom,
     Sykestipend,
-    Forlengelse,
     ForlengelseIManuellBehandling,
     UtvidVedtakslengdeJobb,
     InstitusjonsoppholdJobb,
     TrekkSoeknadOpprettetFraLegeerklaering,
     ArbeidssokerBrevMedFaktagrunnlag,
+    UbehandledeMeldekortJobb,
+    ForenkletKvote,
     ;
 
     override fun key(): String = name
