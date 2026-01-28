@@ -188,7 +188,8 @@ class TidligereVurderingerImpl(
 
                     val sykdomOppfylt = (sykdomVurdering115VurderingSegment?.harSkadeSykdomEllerLyte == true
                             && sykdomVurdering115VurderingSegment.erArbeidsevnenNedsatt == true
-                            && sykdomVurdering115VurderingSegment.erNedsettelseIArbeidsevneMerEnnHalvparten == true
+                            && (sykdomVurdering115VurderingSegment.erNedsettelseIArbeidsevneMerEnnHalvparten == true
+                            || sykdomVurdering115VurderingSegment.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense == true)
                             && sykdomVurdering115VurderingSegment.erSkadeSykdomEllerLyteVesentligdel == true
                             && sykdomVurdering115VurderingSegment.erNedsettelseIArbeidsevneAvEnVissVarighet == true)
 
@@ -250,11 +251,6 @@ class TidligereVurderingerImpl(
                 ikkeOppfyltFørerTilAvslag(Vilkårtype.SAMORDNING_ANNEN_LOVGIVNING, vilkårsresultat)
             },
         )
-
-
-
-
-
         return spesifikkeSjekker + fellesSjekker
     }
 
