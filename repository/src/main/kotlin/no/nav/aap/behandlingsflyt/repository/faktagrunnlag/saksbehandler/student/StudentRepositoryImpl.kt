@@ -33,7 +33,7 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
             }
 
             val oppgittStudentId = lagreOppgittStudent(oppgittStudent)
-            
+
             lagreGrunnlag(behandlingId, eksisterendeGrunnlag?.vurderinger, oppgittStudentId)
         }
     }
@@ -67,7 +67,7 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
             eksisterendeGrunnlag?.let {
                 deaktiverGrunnlag(behandlingId)
             }
-       
+
             lagreGrunnlag(behandlingId, vurderinger, eksisterendeGrunnlag?.oppgittStudent?.id)
         }
     }
@@ -95,15 +95,14 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
 
     private fun getStudentIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
         """
-                    SELECT student_id
-                    FROM STUDENT_GRUNNLAG
-                    WHERE behandling_id = ? AND student_id is not null
-                 
+                    SELECT id
+                    FROM student_vurdering
+                    WHERE vurdert_i_behandling = ?
                 """.trimIndent()
     ) {
         setParams { setLong(1, behandlingId.id) }
         setRowMapper { row ->
-            row.getLong("student_id")
+            row.getLong("id")
         }
     }
 
@@ -130,12 +129,16 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
         }
     }
 
-    private fun lagreGrunnlag(behandlingId: BehandlingId, vurderinger: Set<StudentVurdering>?, oppgittStudentId: Long?) {
+    private fun lagreGrunnlag(
+        behandlingId: BehandlingId,
+        vurderinger: Set<StudentVurdering>?,
+        oppgittStudentId: Long?
+    ) {
         val (vurderingId, vurderingerId) = when {
             vurderinger.isNullOrEmpty() -> Pair(null, null)
             else -> lagreVurdering(vurderinger.single())
         }
-        
+
         val query = """
             INSERT INTO STUDENT_GRUNNLAG (behandling_id, student_id, student_vurderinger_id, oppgitt_student_id) VALUES (?, ?, ?, ?)
         """.trimIndent()
@@ -143,7 +146,7 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
         connection.execute(query) {
             setParams {
                 setLong(1, behandlingId.toLong())
-                setLong(2, vurderingId)
+                setLong(2, vurderingId) // TODO: Fjern etter at kolonnen er slsettet
                 setLong(3, vurderingerId)
                 setLong(4, oppgittStudentId)
             }
@@ -215,7 +218,7 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
 
     private fun mapGrunnlag(row: Row): StudentGrunnlag {
         return StudentGrunnlag(
-            row.getLongOrNull("student_id")?.let(::mapStudentVurdering),
+            row.getLongOrNull("student_vurderinger_id")?.let(::mapStudentVurderinger),
             row.getLongOrNull("oppgitt_student_id")?.let(::mapOppgittStudent)
         )
     }
@@ -241,34 +244,34 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
         }
     }
 
-    private fun mapStudentVurdering(studentId: Long): Set<StudentVurdering>? {
+    private fun mapStudentVurderinger(studentVurderingerId: Long): Set<StudentVurdering>? {
         val query = """
             SELECT * FROM STUDENT_VURDERING WHERE id = ?
         """.trimIndent()
 
-        val vurdering = connection.queryFirstOrNull(query) {
+        return connection.queryList(query) {
             setParams {
-                setLong(1, studentId)
+                setLong(1, studentVurderingerId)
             }
-            setRowMapper {
-                StudentVurdering(
-                    it.getLocalDateOrNull("fom"),
-                    it.getLocalDateOrNull("tom"),
-                    it.getString("begrunnelse"),
-                    it.getBoolean("avbrutt_studie"),
-                    it.getBooleanOrNull("godkjent_studie_av_laanekassen"),
-                    it.getBooleanOrNull("avbrutt_pga_sykdom_eller_skade"),
-                    it.getBooleanOrNull("har_behov_for_behandling"),
-                    it.getLocalDateOrNull("avbrutt_dato"),
-                    it.getBooleanOrNull("avbrudd_mer_enn_6_maaneder"),
-                    it.getString("vurdert_av"),
-                    it.getLocalDateTime("vurdert_tidspunkt"),
-                    it.getLongOrNull("vurdert_i_behandling")?.let(::BehandlingId),
-                )
-            }
-        }
-        
-        return vurdering?.let { setOf(it) }
+            setRowMapper(::studentvurderingRowMapper)
+        }.toSet()
+    }
+
+    private fun studentvurderingRowMapper(row: Row): StudentVurdering {
+        return StudentVurdering(
+            row.getLocalDate("fom"),
+            row.getLocalDateOrNull("tom"),
+            row.getString("begrunnelse"),
+            row.getBoolean("avbrutt_studie"),
+            row.getBooleanOrNull("godkjent_studie_av_laanekassen"),
+            row.getBooleanOrNull("avbrutt_pga_sykdom_eller_skade"),
+            row.getBooleanOrNull("har_behov_for_behandling"),
+            row.getLocalDateOrNull("avbrutt_dato"),
+            row.getBooleanOrNull("avbrudd_mer_enn_6_maaneder"),
+            row.getString("vurdert_av"),
+            row.getLocalDateTime("vurdert_tidspunkt"),
+            row.getLong("vurdert_i_behandling").let(::BehandlingId),
+        )
     }
 
     override fun hent(behandlingId: BehandlingId): StudentGrunnlag {
