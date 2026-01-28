@@ -209,8 +209,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                             BehandlingReferanseService(
                                 repositoryProvider.provide<BehandlingRepository>()
                             ).behandling(req)
-                        val tp = requireNotNull(tjenestePensjonRepository.hentHvisEksisterer(behandling.id))
-                            "Finner ikke tjenestepensjon for behandling ${behandling.id}"
+                        val tp = tjenestePensjonRepository.hentHvisEksisterer(behandling.id)?:emptyList()
 
                         val vurdering =
                             tjenestepensjonRefusjonsKravVurderingRepository.hentHvisEksisterer(
