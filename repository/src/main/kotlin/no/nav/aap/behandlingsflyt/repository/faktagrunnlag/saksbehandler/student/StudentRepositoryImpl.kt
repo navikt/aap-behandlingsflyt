@@ -140,15 +140,14 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
         }
 
         val query = """
-            INSERT INTO STUDENT_GRUNNLAG (behandling_id, student_id, student_vurderinger_id, oppgitt_student_id) VALUES (?, ?, ?, ?)
+            INSERT INTO STUDENT_GRUNNLAG (behandling_id, student_vurderinger_id, oppgitt_student_id) VALUES (?, ?, ?)
         """.trimIndent()
 
         connection.execute(query) {
             setParams {
                 setLong(1, behandlingId.toLong())
-                setLong(2, vurderingId) // TODO: Fjern etter at kolonnen er slsettet
-                setLong(3, vurderingerId)
-                setLong(4, oppgittStudentId)
+                setLong(2, vurderingerId)
+                setLong(3, oppgittStudentId)
             }
         }
     }
@@ -189,8 +188,8 @@ class StudentRepositoryImpl(private val connection: DBConnection) : StudentRepos
         }
 
         val query = """
-            INSERT INTO STUDENT_GRUNNLAG (behandling_id, student_id, oppgitt_student_id, student_vurderinger_id) 
-            SELECT ?, student_id, oppgitt_student_id, student_vurderinger_id from STUDENT_GRUNNLAG where behandling_id = ? and aktiv
+            INSERT INTO STUDENT_GRUNNLAG (behandling_id, oppgitt_student_id, student_vurderinger_id) 
+            SELECT ?, oppgitt_student_id, student_vurderinger_id from STUDENT_GRUNNLAG where behandling_id = ? and aktiv
         """.trimIndent()
 
         connection.execute(query) {
