@@ -27,6 +27,7 @@ import no.nav.aap.behandlingsflyt.datadeling.sam.HentSamIdResponse
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamordneVedtakRequest
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamordneVedtakRespons
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamordningsmeldingApi
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TjenestePensjonRespons
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Anvist
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerRequest
@@ -170,6 +171,7 @@ object FakeServers : AutoCloseable {
     private val sam = embeddedServer(Netty, port = 0, module = { sam() })
     private val gosys = embeddedServer(Netty, port = 0, module = { gosysFake() })
     private val leaderElector = embeddedServer(Netty, port = 0, module = { leaderElectorFake() })
+    private val dagpenger = embeddedServer(Netty, port = 0, module = { dagpengerFake() })
 
     internal val statistikkHendelser = mutableListOf<StoppetBehandling>()
     internal val legeerklæringStatuser = mutableListOf<LegeerklæringStatusResponse>()
@@ -340,6 +342,28 @@ object FakeServers : AutoCloseable {
                             success = true
                         )
                     )
+                }
+            }
+        }
+    }
+
+    private fun Application.dagpengerFake() {
+        installerContentNegotiation()
+        routing {
+            route("/dagpenger/datadeling/v1/perioder"){
+                post{
+                    val body = call.receive<DagpengerRequest>()
+                    val hentPerson = fakePersoner.hentPerson(body.personIdent)
+                    if (hentPerson == null) {
+                        call.respond(HttpStatusCode.NotFound, "Fant ikke person med fnr ${body.personIdent}")
+                        return@post
+                    }
+                    val dagpenger = hentPerson.dagpenger
+                    if (dagpenger == null) {
+                        call.respond(HttpStatusCode.NotFound)
+                    } else {
+                        call.respond(dagpenger)
+                    }
                 }
             }
         }
@@ -1988,6 +2012,10 @@ object FakeServers : AutoCloseable {
         // Dokumentinnhenting
         System.setProperty("integrasjon.dokumentinnhenting.url", "http://localhost:${dokumentinnhenting.port()}")
         System.setProperty("integrasjon.dokumentinnhenting.scope", "scope")
+
+        // Dagpenger
+        System.setProperty("integrasjon.dagpenger.url", "http://localhost:${dagpenger.port()}")
+        System.setProperty("integrasjon.dagpenger.scope", "scope")
 
         // AAregisteret
         System.setProperty("integrasjon.aareg.url", "http://localhost:${aareg.port()}")

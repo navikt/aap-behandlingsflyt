@@ -3,6 +3,12 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrest
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
 
+data class DagpengerRequest(
+    val personIdent: String,
+    val fraOgMedDato: String,
+    val tilOgMedDato: String
+)
+
 class DagpengerResponse(
     val personIdent: String,
     val perioder: List<DagpengerPeriodeResponse>
