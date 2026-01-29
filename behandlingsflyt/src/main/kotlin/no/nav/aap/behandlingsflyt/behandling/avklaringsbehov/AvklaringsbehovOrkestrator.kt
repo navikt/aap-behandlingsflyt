@@ -89,7 +89,7 @@ class AvklaringsbehovOrkestrator(
         bruker: Bruker,
         behandling: Behandling
     ) {
-        val definisjoner = `avklaringsbehovLøsning`.definisjon()
+        val definisjoner = avklaringsbehovLøsning.definisjon()
         log.info("Forsøker å løse avklaringsbehov[${definisjoner}] på behandling[${behandling.referanse}]")
 
         avklaringsbehovene.validerTilstand(
@@ -104,7 +104,7 @@ class AvklaringsbehovOrkestrator(
         flytOrkestrator.forberedLøsingAvBehov(definisjoner, behandling, kontekst, bruker)
 
         // Bør ideelt kalle på
-        løsFaktiskAvklaringsbehov(kontekst, avklaringsbehovene, `avklaringsbehovLøsning`, bruker)
+        løsFaktiskAvklaringsbehov(kontekst, avklaringsbehovene, avklaringsbehovLøsning, bruker)
         log.info("Løste avklaringsbehov[${definisjoner}] på behandling[${behandling.referanse}]")
     }
 
