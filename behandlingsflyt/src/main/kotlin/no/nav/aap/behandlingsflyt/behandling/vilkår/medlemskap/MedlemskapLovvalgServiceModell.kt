@@ -95,7 +95,7 @@ enum class Indikasjon {
 }
 
 enum class VurdertPeriode(val beskrivelse: String) {
-    INNEVÆRENDE_OG_FORRIGE_MND("Inneværende og forrige måned"),
+    INNEVÆRENDE_OG_FORRIGE_MND("Inneværende og to forrige måneder"),
     SØKNADSTIDSPUNKT("Søknadstidspunkt"),
     SISTE_5_ÅR("Siste 5 år")
 }
