@@ -15,7 +15,7 @@ data class UnderveisperiodeDto(
     val periode: Periode,
     val meldePeriode: Periode,
     val utfall: Utfall,
-    val rettighetsType: RettighetsTypeDto,
+    val rettighetsType: RettighetsTypeDto?,
     val avslagsårsak: UnderveisÅrsak?,
     val gradering: GraderingDto,
     val trekk: Dagsatser,
@@ -25,7 +25,9 @@ data class UnderveisperiodeDto(
         periode = underveisperiode.periode,
         meldePeriode = underveisperiode.meldePeriode,
         utfall = underveisperiode.utfall,
-        rettighetsType = RettighetsTypeDto(underveisperiode.rettighetsType),
+        rettighetsType = underveisperiode.rettighetsType?.let {
+            RettighetsTypeDto(it)
+        },
         avslagsårsak = underveisperiode.avslagsårsak,
         gradering = GraderingDto(underveisperiode.arbeidsgradering, underveisperiode.grenseverdi),
         trekk = Dagsatser(underveisperiode.trekk.antall * underveisperiode.periode.antallDager()),
@@ -52,10 +54,10 @@ data class GraderingDto(
 }
 
 data class RettighetsTypeDto(
-    val rettighetsType: RettighetsType?,
-    val hjemmel: String?
+    val rettighetsType: RettighetsType,
+    val hjemmel: String
 ) {
-    constructor(rettighetsType: RettighetsType?) : this(
+    constructor(rettighetsType: RettighetsType) : this(
         rettighetsType = rettighetsType,
-        hjemmel = rettighetsType?.hjemmel)
+        hjemmel = rettighetsType.hjemmel)
 }
