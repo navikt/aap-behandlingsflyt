@@ -49,8 +49,7 @@ data class HelseinstitusjonGrunnlagDto(
 data class HelseoppholdDto(
     val periode: Periode,
     val oppholdId: String,
-    val vurderinger: List<HelseinstitusjonVurderingDto>?,
-    val status: OppholdVurderingDto
+    val vurderinger: List<HelseinstitusjonVurderingDto>?
 )
 
 data class HelseinstitusjonVurderingDto(

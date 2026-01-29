@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon
 
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.type.Periode
 
 data class HelseinstitusjonVurdering(
@@ -8,4 +9,5 @@ data class HelseinstitusjonVurdering(
     val forsoergerEktefelle: Boolean? = null,
     val harFasteUtgifter: Boolean? = null,
     val periode: Periode,
+    val vurdertIBehandling: BehandlingId,
 )

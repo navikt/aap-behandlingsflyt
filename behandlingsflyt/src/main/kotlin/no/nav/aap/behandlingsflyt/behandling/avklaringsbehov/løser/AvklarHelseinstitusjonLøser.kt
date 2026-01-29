@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Ins
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.HelseinstitusjonVurderingDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
@@ -36,7 +37,8 @@ class AvklarHelseinstitusjonLøser(
         val oppdaterteVurderinger =
             slåSammenMedNyeVurderinger(
                 vedtatteVurderinger,
-                løsning.helseinstitusjonVurdering.vurderinger
+                løsning.helseinstitusjonVurdering.vurderinger,
+                behandling.id
             )
         helseinstitusjonRepository.lagreHelseVurdering(
             kontekst.kontekst.behandlingId,
@@ -50,6 +52,7 @@ class AvklarHelseinstitusjonLøser(
     private fun slåSammenMedNyeVurderinger(
         grunnlag: InstitusjonsoppholdGrunnlag?,
         nyeVurderinger: List<HelseinstitusjonVurderingDto>,
+        behandlingId: BehandlingId
     ): List<HelseinstitusjonVurdering> {
         val eksisterendeTidslinje = byggTidslinjeForHelseoppholdvurderinger(grunnlag)
 
@@ -75,7 +78,8 @@ class AvklarHelseinstitusjonLøser(
                 faarFriKostOgLosji = it.verdi.faarFriKostOgLosji,
                 forsoergerEktefelle = it.verdi.forsoergerEktefelle,
                 harFasteUtgifter = it.verdi.harFasteUtgifter,
-                periode = it.periode
+                periode = it.periode,
+                vurdertIBehandling = behandlingId
             )
         }
     }

@@ -78,42 +78,6 @@ class InstitusjonsoppholdUtlederService(
                     Segment(periode, verdi)
                 })
 
-        /*val helseOppholdTidslinje = opprettTidslinje(helseopphold)
-
-        val barnetilleggTidslinje = barnetillegg.tilTidslinje()
-
-        //fjern perioder hvor bruker har barnetillegg gjennom hele helseinstitusjonsoppholdet
-        val oppholdUtenBarnetillegg =
-            helseOppholdTidslinje.disjoint(barnetilleggTidslinje) { p, v -> Segment(p, v.verdi) }
-
-        // Oppholdet må være lengre enn 3 måneder for å være aktuelt for avklaring og må ha vart i minimum 2 måneder for å være klar for avklaring
-        val oppholdSomKanGiReduksjon = harOppholdSomKreverAvklaring(oppholdUtenBarnetillegg)
-
-        perioderSomTrengerVurdering = perioderSomTrengerVurdering.kombiner(oppholdSomKanGiReduksjon.mapValue {
-            InstitusjonsoppholdVurdering(helse = HelseOpphold(vurdering = OppholdVurdering.UAVKLART))
-        }, sammenslåer()).kombiner(helsevurderingerTidslinje, helsevurderingSammenslåer()).komprimer()
-
-        // Hvis det er mindre en 3 måneder siden sist opphold og bruker er nå innlagt
-        val helseoppholdUtenBarnetillegg = helseOppholdTidslinje.disjoint(
-            barnetilleggTidslinje
-        ) { p, v ->
-            Segment(
-                p,
-                v.verdi
-            )
-        }.komprimer()
-
-        val oppholdSomLiggerMindreEnnTreMånederFraForrigeSomGaReduksjon =
-            regnUtTidslinjeOverOppholdSomErMindreEnnTreMånederFraForrigeSomGaReduksjon(
-                perioderSomTrengerVurdering,
-                helseoppholdUtenBarnetillegg, helsevurderingerTidslinje
-            )
-
-        perioderSomTrengerVurdering = perioderSomTrengerVurdering.kombiner(
-            oppholdSomLiggerMindreEnnTreMånederFraForrigeSomGaReduksjon,
-            sammenslåer()
-        ).komprimer()*/
-
         if (helseopphold.isNotEmpty()) {
             val helseOppholdTidslinje = opprettTidslinje(helseopphold)
             val barnetilleggTidslinje = barnetillegg.tilTidslinje()
@@ -138,9 +102,6 @@ class InstitusjonsoppholdUtlederService(
                 helsevurderingerTidslinje.mapValue { InstitusjonsoppholdVurdering(helse = it) },
                 sammenslåer()
             ).komprimer()
-
-            // FJERNET: regnUtTidslinjeOverOppholdSomErMindreEnnTreMånederFraForrigeSomGaReduksjon
-            // Dette overstyrer saksbehandlers valgte dato
         }
 
         if (begrensetTilRettighetsperiode == true) {

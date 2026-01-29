@@ -29,9 +29,6 @@ class InstitusjonRegel : UnderveisRegel {
         //Fyll inn gaps med "ingen reduksjon" for beregning
         institusjonTidslinje = fyllInnGapsMedIngenReduksjon(institusjonTidslinje, input.institusjonsopphold)
 
-        val reduksjonsTidslinje = utledTidslinjeHvorDetKanGisReduksjon(input)
-        institusjonTidslinje = institusjonTidslinje.kombiner(reduksjonsTidslinje, sammenslåer())
-
         return resultat.kombiner(
             institusjonTidslinje,
             JoinStyle.LEFT_JOIN { periode, venstreSegment, høyreSegment ->
@@ -159,6 +156,7 @@ class InstitusjonRegel : UnderveisRegel {
         ).komprimer()
     }
 
+    // FIXME Thao: Bruk denne i validering istedenfor.
     private fun utledTidslinjeHvorDetKanGisReduksjon(input: UnderveisInput): Tidslinje<Boolean> {
         val tidslinjeOverInnleggelser = Tidslinje(
             input.institusjonsopphold.filter {
@@ -166,7 +164,7 @@ class InstitusjonRegel : UnderveisRegel {
             }.map {
                 Segment(
                     it.periode,
-                    it.institusjon?.skalGiUmiddelbarReduksjon == true
+                    it.institusjon?.skalGiUmiddelbarReduksjon == true && it.institusjon.skalGiReduksjon
                 )
             }
         ).komprimer()
