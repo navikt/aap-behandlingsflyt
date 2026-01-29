@@ -7,9 +7,12 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarPeriodisertOverstyrtLovvalgMedlemskapLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForLovvalgMedlemskapDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.MANUELL_OVERSTYRING_LOVVALG
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -24,5 +27,13 @@ class AvklarPeriodisertOverstyrtLovvalgMedlemskapLøsning(
 ) : PeriodisertAvklaringsbehovLøsning<PeriodisertManuellVurderingForLovvalgMedlemskapDto> {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return AvklarPeriodisertOverstyrtLovvalgMedlemskapLøser(repositoryProvider).løs(kontekst, this)
+    }
+
+    override fun hentTidligereLøstePerioder(
+        behandlingId: BehandlingId,
+        repositoryProvider: RepositoryProvider
+    ): Tidslinje<*> {
+        val repository = repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
+        return repository.hentHvisEksisterer(behandlingId)?.gjeldendeVurderinger() ?: Tidslinje<Unit>()
     }
 }

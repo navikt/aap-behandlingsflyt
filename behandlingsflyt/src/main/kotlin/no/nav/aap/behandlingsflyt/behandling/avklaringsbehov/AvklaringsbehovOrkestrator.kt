@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.PeriodisertAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseService
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
@@ -84,26 +85,26 @@ class AvklaringsbehovOrkestrator(
     private fun løsAvklaringsbehov(
         kontekst: FlytKontekst,
         avklaringsbehovene: Avklaringsbehovene,
-        avklaringsbehov: AvklaringsbehovLøsning,
+        avklaringsbehovLøsning: AvklaringsbehovLøsning,
         bruker: Bruker,
         behandling: Behandling
     ) {
-        val definisjoner = avklaringsbehov.definisjon()
+        val definisjoner = `avklaringsbehovLøsning`.definisjon()
         log.info("Forsøker å løse avklaringsbehov[${definisjoner}] på behandling[${behandling.referanse}]")
 
         avklaringsbehovene.validerTilstand(
             behandling = behandling, avklaringsbehov = definisjoner
         )
 
-        avklaringsbehovene.validerPerioder(
-            avklaringsbehov
-        )
+        if (avklaringsbehovLøsning is PeriodisertAvklaringsbehovLøsning<*>) {
+            avklaringsbehovene.validerPerioder(avklaringsbehovLøsning, kontekst, repositoryProvider)
+        }
 
         // løses det behov som fremtvinger tilbakehopp?
         flytOrkestrator.forberedLøsingAvBehov(definisjoner, behandling, kontekst, bruker)
 
         // Bør ideelt kalle på
-        løsFaktiskAvklaringsbehov(kontekst, avklaringsbehovene, avklaringsbehov, bruker)
+        løsFaktiskAvklaringsbehov(kontekst, avklaringsbehovene, `avklaringsbehovLøsning`, bruker)
         log.info("Løste avklaringsbehov[${definisjoner}] på behandling[${behandling.referanse}]")
     }
 

@@ -9,11 +9,14 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
+import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Tid
+import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.Rolle
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
@@ -295,12 +298,6 @@ class Avklaringsbehovene(
         return alle().any { it.erIkkeAvbrutt() && it.erTotrinn() }
     }
 
-    fun harHattAvklaringsbehovSomHarKrevdToTrinn(): Boolean {
-        return alle()
-            .filter { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
-            .any { avklaringsbehov -> avklaringsbehov.erTotrinn() && !avklaringsbehov.erTotrinnsVurdert() }
-    }
-
     fun harAvklaringsbehovSomKreverToTrinnMenIkkeErVurdert(): Boolean {
         return alle().any { it.erIkkeAvbrutt() && it.erTotrinn() && !it.erTotrinnsVurdert() }
     }
@@ -340,24 +337,28 @@ class Avklaringsbehovene(
         )
     }
 
-    fun validerPerioder(løsning: AvklaringsbehovLøsning) {
-        if (løsning is PeriodisertAvklaringsbehovLøsning<*>) {
-            val perioderDekketAvLøsning = løsning.løsningerForPerioder.sortedBy { it.fom }
-                .somTidslinje { Periode(fom = it.fom, tom = it.tom ?: Tid.MAKS) }.map { true }.komprimer()
+    fun validerPerioder(løsning: PeriodisertAvklaringsbehovLøsning<*>, kontekst: FlytKontekst, repositoryProvider: RepositoryProvider) {
+        val perioderDekketAvLøsning = løsning.løsningerForPerioder.sortedBy { it.fom }
+            .somTidslinje { Periode(fom = it.fom, tom = it.tom ?: Tid.MAKS) }
+            .map { true }.komprimer()
 
-            val behovForDefinisjon = this.hentBehovForDefinisjon(løsning.definisjon())
-            if (behovForDefinisjon != null) {
-                val perioderSomSkalLøses =
-                    behovForDefinisjon.perioderVedtaketBehøverVurdering().orEmpty().somTidslinje { it }
+        val perioderDekkerAvTidligereVurderinger = løsning.hentTidligereLøstePerioder(kontekst.behandlingId, repositoryProvider)
+            .map { true }.komprimer()
 
-                val perioderSomManglerLøsning =
-                    perioderSomSkalLøses.leftJoin(perioderDekketAvLøsning) { _, periodeILøsning ->
-                        periodeILøsning != null
-                    }.filter { !it.verdi }.perioder().toSet()
+        val perioderDekket = perioderDekkerAvTidligereVurderinger.kombiner(perioderDekketAvLøsning, StandardSammenslåere.prioriterHøyreSideCrossJoin()).komprimer()
 
-                if (perioderSomManglerLøsning.isNotEmpty()) {
-                    throw UgyldigForespørselException("Løsning mangler vurdering for perioder: $perioderSomManglerLøsning")
-                }
+        val behovForDefinisjon = this.hentBehovForDefinisjon(løsning.definisjon())
+        if (behovForDefinisjon != null) {
+            val perioderSomSkalLøses =
+                behovForDefinisjon.perioderVedtaketBehøverVurdering().orEmpty().somTidslinje { it }
+
+            val perioderSomManglerLøsning =
+                perioderSomSkalLøses.leftJoin(perioderDekket) { _, periodeILøsning ->
+                    periodeILøsning != null
+                }.filter { !it.verdi }.perioder().toSet()
+
+            if (perioderSomManglerLøsning.isNotEmpty()) {
+                throw UgyldigForespørselException("Løsning mangler vurdering for perioder: $perioderSomManglerLøsning")
             }
         }
     }
