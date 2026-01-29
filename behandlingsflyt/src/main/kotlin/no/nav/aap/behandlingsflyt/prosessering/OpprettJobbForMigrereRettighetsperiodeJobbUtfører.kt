@@ -45,7 +45,7 @@ class OpprettJobbForMigrereRettighetsperiodeJobbUtfører(
 
             }
             .filter { erForhåndskvalifisertSak(it) }
-            .take(25)
+            .take(75)
 
         log.info("Fant ${saker.size} migrering av rettighetsperiode. Antall iverksatte/avsluttede kandidater: ${sakerForMigrering.size}")
 
