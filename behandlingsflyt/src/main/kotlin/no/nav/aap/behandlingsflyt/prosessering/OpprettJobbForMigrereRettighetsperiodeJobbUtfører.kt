@@ -28,7 +28,7 @@ class OpprettJobbForMigrereRettighetsperiodeJobbUtfører(
 ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
-    private val førsteJanuar2026 = LocalDate.of(2026, 1, 1).atStartOfDay()
+    private val grenseForSisteYtelsesbehandling = LocalDate.of(2025, 11, 1).atStartOfDay()
 
     override fun utfør(input: JobbInput) {
 
@@ -60,8 +60,8 @@ class OpprettJobbForMigrereRettighetsperiodeJobbUtfører(
 
     /**
      * Kan kun behandle de som er avsluttet og ønsker ikke å migrere de som er trukket
-     * For første gjennomkjøring ønsker vi kun å behandle de sakene hvor det finnes en
-     * behandling ila 2026 - disse har størst sjanse for å ikke ha diff i tilkjent ytelse, underveis eller vilkår
+     * Ønsker å begrense utplukket og øke intervall gradvis de nyeste har minst sjanse for
+     * diff i tilkjent ytelse, underveis eller vilkår
      */
     private fun erAktuellForMigrering(sisteYtelsesbehandling: Behandling): Boolean =
         sisteYtelsesbehandling.status().erAvsluttet()
@@ -69,7 +69,7 @@ class OpprettJobbForMigrereRettighetsperiodeJobbUtfører(
                 && erOpprettetI2026(sisteYtelsesbehandling)
 
     private fun erOpprettetI2026(sisteYtelsesbehandling: Behandling): Boolean =
-        sisteYtelsesbehandling.opprettetTidspunkt.isAfter(førsteJanuar2026)
+        sisteYtelsesbehandling.opprettetTidspunkt.isAfter(grenseForSisteYtelsesbehandling)
 
     private fun harSøknadTrukket(sisteYtelsesbehandling: Behandling): Boolean =
         trukketSøknadService.søknadErTrukket(sisteYtelsesbehandling.id)
