@@ -109,7 +109,7 @@ class UføreRepositoryImpl(private val connection: DBConnection) : UføreReposit
             setRowMapper { row ->
                 Uføre(
                     virkningstidspunkt = row.getLocalDate("virkningstidspunkt"),
-                    uføregrad = Prosent(row.getInt("uforegrad"))
+                    uføregrad = Prosent(row.getInt("uforegrad")),
                 )
             }
         }

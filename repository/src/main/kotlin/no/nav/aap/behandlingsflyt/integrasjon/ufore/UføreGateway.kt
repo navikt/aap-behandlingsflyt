@@ -79,7 +79,8 @@ object UføreGateway : UføreRegisterGateway {
         return uføreperioder.map {
             Uføre(
                 virkningstidspunkt = it.virkningstidspunkt,
-                uføregrad = Prosent(it.uforegrad)
+                uføregrad = Prosent(it.uforegrad),
+                uføregradTom = it.uforegradTom
             )
         }.toSet()
     }

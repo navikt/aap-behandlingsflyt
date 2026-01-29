@@ -162,9 +162,7 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         val erForrigeBehandlingFastsattPeriodePassert =
             behandlingFørMigrering.vurderingsbehov().map { it.type }.contains(Vurderingsbehov.FASTSATT_PERIODE_PASSERT)
         val forhåndsgodkjenteSaksnummerMedPotensiellEndringIUnderveis = listOf(
-            "4LEVFFK",
-            "4M8DGGG",
-            "4M5FD0G",
+            "4oA3ZQ8",
         )
         val skalIgnoreres =
             forhåndsgodkjenteSaksnummerMedPotensiellEndringIUnderveis.contains(sak.saksnummer.toString())

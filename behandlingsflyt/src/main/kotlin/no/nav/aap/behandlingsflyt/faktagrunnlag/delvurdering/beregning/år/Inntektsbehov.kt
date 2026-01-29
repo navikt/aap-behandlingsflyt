@@ -76,6 +76,7 @@ class Inntektsbehov(private val beregningInput: BeregningInput) {
         return ytterligereNedsattArbeidsevneDato != null
                 && beregningInput.uføregrad.isNotEmpty()
                 && beregningInput.uføregrad.tilTidslinje().minDato() <= ytterligereNedsattArbeidsevneDato
+                && beregningInput.uføregrad.tilTidslinje().maxDato() >= ytterligereNedsattArbeidsevneDato
     }
 
     /**

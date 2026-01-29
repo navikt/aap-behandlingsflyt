@@ -1,9 +1,12 @@
 package no.nav.aap.behandlingsflyt.drift
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
@@ -26,7 +29,8 @@ class Driftfunksjoner(
     private val flytOrkestrator: FlytOrkestrator,
     private val brevbestillingService: BrevbestillingService,
     private val brevbestillingRepository: BrevbestillingRepository,
-    private val prosesserBehandlingService: ProsesserBehandlingService
+    private val prosesserBehandlingService: ProsesserBehandlingService,
+    private val avklaringsbehovRepository: AvklaringsbehovRepository
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
@@ -34,7 +38,8 @@ class Driftfunksjoner(
         flytOrkestrator = FlytOrkestrator(repositoryProvider, gatewayProvider),
         brevbestillingService = BrevbestillingService(repositoryProvider, gatewayProvider),
         brevbestillingRepository = repositoryProvider.provide(),
-        prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider)
+        prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider),
+        avklaringsbehovRepository = repositoryProvider.provide(),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -79,6 +84,9 @@ class Driftfunksjoner(
                 bestilling.behandlingId,
                 bestilling.referanse
             )
+            
+            val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+            avklaringsbehovene.avbryt(Definisjon.SKRIV_VEDTAKSBREV)
 
             prosesserBehandlingService.triggProsesserBehandling(
                 sakId = behandling.sakId,

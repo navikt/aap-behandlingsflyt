@@ -117,6 +117,12 @@ class VedtakslengdeRepositoryImpl(private val connection: DBConnection) : Vedtak
         tilBehandling: BehandlingId
     ) {
         require(fraBehandling != tilBehandling)
+
+        val eksisterendeGrunnlag = hentHvisEksisterer(tilBehandling)
+        if (eksisterendeGrunnlag != null) {
+            deaktiverGrunnlag(tilBehandling)
+        }
+
         connection.execute(
             """
                 insert into vedtakslengde_grunnlag (behandling_id, vurdering_id)
