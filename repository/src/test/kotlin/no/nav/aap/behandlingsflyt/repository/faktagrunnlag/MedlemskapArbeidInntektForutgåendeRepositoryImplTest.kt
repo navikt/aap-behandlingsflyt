@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalg.EnhetGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektInformasjon
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMaaned
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMåned
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.Inntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.Virksomhet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemKode
@@ -43,7 +43,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
@@ -397,13 +396,13 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
         )
     )
 
-    private fun inntektGrunnlag(): List<ArbeidsInntektMaaned> = listOf(
-        ArbeidsInntektMaaned(
-            aarMaaned = YearMonth.now(),
+    private fun inntektGrunnlag(): List<ArbeidsInntektMåned> = listOf(
+        ArbeidsInntektMåned(
+            årMåned = YearMonth.now(),
             arbeidsInntektInformasjon = ArbeidsInntektInformasjon(
                 listOf(
                     Inntekt(
-                        beloep = 1.0,
+                        beløp = 1.0,
                         opptjeningsland = null,
                         skattemessigBosattLand = null,
                         opptjeningsperiodeFom = null,
@@ -414,7 +413,7 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
                         beskrivelse = null
                     ),
                     Inntekt(
-                        beloep = 1.0,
+                        beløp = 1.0,
                         opptjeningsland = null,
                         skattemessigBosattLand = null,
                         opptjeningsperiodeFom = null,
@@ -493,12 +492,12 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
         forutgåendeRepository.lagreArbeidsforholdOgInntektINorge(
             behandlingId, emptyList(),
             listOf(
-                ArbeidsInntektMaaned(
-                    aarMaaned = YearMonth.now(),
+                ArbeidsInntektMåned(
+                    årMåned = YearMonth.now(),
                     arbeidsInntektInformasjon = ArbeidsInntektInformasjon(
                         listOf(
                             Inntekt(
-                                beloep = 1.0,
+                                beløp = 1.0,
                                 opptjeningsland = null,
                                 skattemessigBosattLand = null,
                                 opptjeningsperiodeFom = null,
@@ -509,7 +508,7 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
                                 beskrivelse = null
                             ),
                             Inntekt(
-                                beloep = 1.0,
+                                beløp = 1.0,
                                 opptjeningsland = null,
                                 skattemessigBosattLand = null,
                                 opptjeningsperiodeFom = null,

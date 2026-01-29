@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.integrasjon.aordning
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektInformasjon
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMaaned
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMåned
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.Inntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.InntektkomponentenGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.InntektskomponentData
@@ -71,12 +71,12 @@ private fun mapFraRespons(response: InntektskomponentResponse): Inntektskomponen
 
     return InntektskomponentData(
         rensetInntektliste.map {
-            ArbeidsInntektMaaned(
-                aarMaaned = it.aarMaaned,
+            ArbeidsInntektMåned(
+                årMåned = it.aarMaaned,
                 arbeidsInntektInformasjon = ArbeidsInntektInformasjon(
                     inntektListe = it.arbeidsInntektInformasjon.inntektListe?.map { inntekt ->
                         Inntekt(
-                            beloep = inntekt.beloep,
+                            beløp = inntekt.beloep,
                             opptjeningsland = inntekt.opptjeningsland,
                             skattemessigBosattLand = inntekt.skattemessigBosattLand,
                             opptjeningsperiodeFom = inntekt.opptjeningsperiodeFom,
