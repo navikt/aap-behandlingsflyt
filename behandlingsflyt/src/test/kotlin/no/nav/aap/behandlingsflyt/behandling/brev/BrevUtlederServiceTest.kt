@@ -128,6 +128,42 @@ class BrevUtlederServiceTest {
         every { trukketSøknadService.søknadErTrukket(any<BehandlingId>()) } returns false
     }
 
+    @Test
+    fun `utledBehov legger ved sisteDagMedYtelse i TilkjentYtelse faktagrunnlag for 11-17 brev ved revurdering`() {
+        val førstegangsbehandling = stubBehandling(
+            typeBehandling = TypeBehandling.Førstegangsbehandling,
+            status = Status.AVSLUTTET,
+            årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
+            vurderingsbehov = emptyList()
+        )
+        every { vedtakRepository.hent(førstegangsbehandling.id) } returns stubVedtak(førstegangsbehandling.id)
+        every { behandlingRepository.hent(førstegangsbehandling.id) } returns førstegangsbehandling
+        every { underveisRepository.hent(førstegangsbehandling.id) } returns stubUnderveisGrunnlag(rettighetsType = RettighetsType.BISTANDSBEHOV)
+        every { underveisRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns stubUnderveisGrunnlag(rettighetsType = RettighetsType.BISTANDSBEHOV)
+        val revurdering = stubBehandling(
+            typeBehandling = TypeBehandling.Revurdering,
+            status = Status.OPPRETTET,
+            årsakTilOpprettelse = ÅrsakTilOpprettelse.HELSEOPPLYSNINGER,
+            vurderingsbehov = listOf(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND),
+            forrigeBehandlingId = førstegangsbehandling.id
+        )
+        every { vedtakRepository.hent(revurdering.id) } returns stubVedtak(revurdering.id)
+        every { behandlingRepository.hent(revurdering.id) } returns revurdering
+        val gittSisteDagMedYtelse = 31 august 2025
+        val underveisGrunnlag = stubUnderveisGrunnlag(gittSisteDagMedYtelse, RettighetsType.ARBEIDSSØKER)
+        every { underveisRepository.hent(revurdering.id) } returns underveisGrunnlag
+        every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns underveisGrunnlag
+
+        every { avbrytRevurderingService.revurderingErAvbrutt(any<BehandlingId>()) } returns false
+        every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
+        every { unleashGateway.isEnabled(BehandlingsflytFeature.ArbeidssokerBrevMedFaktagrunnlag) } returns true
+
+        val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
+
+        assertIs<Arbeidssøker>(resultat, "forventer brevbehov er av typen Arbeidssøker (11-17)")
+        assertThat(resultat).hasFieldOrProperty("tilkjentYtelse")
+        assertEquals(gittSisteDagMedYtelse, resultat.tilkjentYtelse!!.sisteDagMedYtelse)
+    }
 
     @Test
     fun `utledBehov legger ved sisteDagMedYtelse fra underveisTidslinje i TilkjentYtelse for 11-18 brev`() {
@@ -384,7 +420,9 @@ class BrevUtlederServiceTest {
             )
         )
 
-        assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)).isEqualTo(Arbeidssøker)
+        val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
+
+        assertIs<Arbeidssøker>(resultat, "brevbehov er av type Arbeidssøker")
     }
 
     @Test
