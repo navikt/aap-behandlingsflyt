@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
@@ -30,12 +29,6 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
         val datoForUtvidelse = now(clock).plusDays(28)
         val sakId = SakId(input.sakId())
 
-        // I tilfellet en behandling har blitt opprettet i tiden mellom jobben ble opprettet til den ble startet
-        /*if (!erSisteYtelsesbehandlingAvsluttet(sakId)) {
-            log.info("Sak med id $sakId er ikke avsluttet, hopper over")
-            return
-        }*/
-
         val sisteGjeldendeBehandling = sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId)
         if (sisteGjeldendeBehandling != null) {
             log.info("Gjeldende behandling for sak $sakId er ${sisteGjeldendeBehandling.id}")
@@ -49,11 +42,6 @@ class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
         } else {
             log.info("Sak med id $sakId har ingen gjeldende behandlinger, hopper over")
         }
-    }
-
-    private fun erSisteYtelsesbehandlingAvsluttet(id: SakId): Boolean {
-        val sisteBehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(id)
-        return sisteBehandling?.status() in setOf(Status.AVSLUTTET, Status.IVERKSETTES)
     }
 
     private fun opprettNyBehandling(sakId: SakId): SakOgBehandlingService.OpprettetBehandling =
