@@ -469,14 +469,15 @@ VALUES (?, ?, ?, ?, ?, ?, ?)"""
 
         connection.executeBatch(
             """
-            INSERT INTO beregning_ufore_uforegrader (beregning_ufore_id, uforegrad, virkningstidspunkt)
-            values  (?, ?, ?)
+            INSERT INTO beregning_ufore_uforegrader (beregning_ufore_id, uforegrad, virkningstidspunkt, uforegrad_tom)
+            values  (?, ?, ?, ?)
         """.trimIndent(), beregningsgrunnlag.uføregrader()
         ) {
             setParams {
                 setLong(1, uføreId)
                 setInt(2, it.uføregrad.prosentverdi())
                 setLocalDate(3, it.virkningstidspunkt)
+                setLocalDate(4, it.uføregradTom)
             }
         }
 
