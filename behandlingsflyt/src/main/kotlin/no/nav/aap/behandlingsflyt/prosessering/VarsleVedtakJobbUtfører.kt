@@ -78,12 +78,12 @@ class VarsleVedtakJobbUtfører(
             utvidetFrist = null,
         )
 
-        val relevantPeriode = Periode(virkFom, sak.rettighetsperiode.tom.coerceAtMost(LocalDate.now().minusWeeks(2)))
+        //val relevantPeriode = Periode(virkFom, sak.rettighetsperiode.tom.coerceAtMost(LocalDate.now().minusWeeks(2)))
 
         val relevantEndring =
             listOf(
                 behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling,
-                endringITilkjentYtelseTidslinje(forrigeTilkjentYtelse?.begrensetTil(relevantPeriode), nåværendeTilkjentYtelse?.begrensetTil(relevantPeriode)),
+                //endringITilkjentYtelseTidslinje(forrigeTilkjentYtelse?.begrensetTil(relevantPeriode), nåværendeTilkjentYtelse?.begrensetTil(relevantPeriode)),
                 endringIRettighetstypeTidslinje(
                     forrigeUnderveisGrunnlag,
                     nåværendeUnderveisGrunnlag!!
