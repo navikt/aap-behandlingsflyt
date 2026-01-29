@@ -395,7 +395,7 @@ class AvklaringsbehoveneTest {
         assertThat(avklaringsbehov.erÅpent()).isTrue
 
         every { løsningMock.definisjon() } returns Definisjon.AVKLAR_OVERGANG_ARBEID
-        every { løsningMock.hentLagredeLøstePerioder(any(), any()) } returns Tidslinje<Unit>(
+        every { løsningMock.hentLagredeLøstePerioder(any(), any()) } returns Tidslinje(
             initSegmenter = listOf(
                 Segment(periode = Periode(1 januar 2021, 1 februar 2021), verdi = Unit),
                 Segment(periode = Periode(1 mars 2021, Tid.MAKS), verdi = Unit),
@@ -417,7 +417,7 @@ class AvklaringsbehoveneTest {
         FlytKontekst(
             behandlingId = behandlingId,
             sakId = SakId(1L),
-            forrigeBehandlingId = null,
+            forrigeBehandlingId = behandlingId,
             behandlingType = TypeBehandling.Førstegangsbehandling
         )
 }
