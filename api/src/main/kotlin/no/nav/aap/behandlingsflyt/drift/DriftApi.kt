@@ -6,6 +6,8 @@ import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -18,17 +20,21 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SaksnummerParameter
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.VerdiIkkeFunnetException
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.server.auth.bruker
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedPost
+import no.nav.aap.tilgang.plugin.kontrakt.BehandlingreferanseResolver
+import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.util.*
 import javax.sql.DataSource
@@ -41,6 +47,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Status as SakStatus
  * Med tid kan vi ha et admin-verktøy for alle disse.
  * */
 
+private val log = LoggerFactory.getLogger("driftApi")
 fun NormalOpenAPIRoute.driftApi(
     dataSource: DataSource,
     repositoryRegistry: RepositoryRegistry,
@@ -67,11 +74,34 @@ fun NormalOpenAPIRoute.driftApi(
             }
         }
 
+        route("/brev/{referanse}/avbryt") {
+            authorizedPost<BrevbestillingReferanse, Unit, Unit>(
+                AuthorizationParamPathConfig(
+                    operasjon = Operasjon.DRIFTE,
+                    relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                    behandlingPathParam = BehandlingPathParam(
+                        "bestillingsreferanse",
+                        behandlingFraBrevbestilling(repositoryRegistry, dataSource)
+                    )
+                )
+            ) { param, _ ->
+                dataSource.transaction { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val driftsfunksjoner = Driftfunksjoner(repositoryProvider, gatewayProvider)
+                   
+                    driftsfunksjoner.avbrytBrevbestilling(param)
+                    
+                    log.info("Brevbestilling med referanse ${param} er avbrutt av ${bruker()}.")
+                }
+                respondWithStatus(HttpStatusCode.NoContent)
+            }
+        }
+
         route("/sak/{saksnummer}/info") {
             authorizedPost<SaksnummerParameter, SakDriftsinfoDTO, Unit>(
                 AuthorizationParamPathConfig(
                     sakPathParam = SakPathParam("saksnummer"),
-                    operasjon = Operasjon.DRIFTE
+                    operasjon = Operasjon.DRIFTE,
                 ),
             ) { params, _ ->
                 val sakDriftsinfoDTO = dataSource.transaction { connection ->
@@ -159,3 +189,15 @@ private data class ForenkletAvklaringsbehov(
     val tidsstempel: LocalDateTime = LocalDateTime.now(),
     val endretAv: String
 )
+
+fun behandlingFraBrevbestilling(
+    repositoryRegistry: RepositoryRegistry,
+    dataSource: DataSource
+): BehandlingreferanseResolver {
+    return BehandlingreferanseResolver { referanse ->
+        dataSource.transaction(readOnly = true) {
+            repositoryRegistry.provider(it).provide(BrevbestillingRepository::class)
+                .hentBehandlingsreferanseForBestilling(BrevbestillingReferanse(UUID.fromString(referanse))).referanse
+        }
+    }
+}

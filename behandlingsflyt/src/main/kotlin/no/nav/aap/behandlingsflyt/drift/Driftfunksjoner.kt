@@ -1,8 +1,12 @@
 package no.nav.aap.behandlingsflyt.drift
 
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
@@ -20,11 +24,17 @@ class Driftfunksjoner(
     private val behandlingRepository: BehandlingRepository,
     private val taSkriveLåsRepository: TaSkriveLåsRepository,
     private val flytOrkestrator: FlytOrkestrator,
+    private val brevbestillingService: BrevbestillingService,
+    private val brevbestillingRepository: BrevbestillingRepository,
+    private val prosesserBehandlingService: ProsesserBehandlingService
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
         taSkriveLåsRepository = repositoryProvider.provide(),
         flytOrkestrator = FlytOrkestrator(repositoryProvider, gatewayProvider),
+        brevbestillingService = BrevbestillingService(repositoryProvider, gatewayProvider),
+        brevbestillingRepository = repositoryProvider.provide(),
+        prosesserBehandlingService = ProsesserBehandlingService(repositoryProvider, gatewayProvider)
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -56,6 +66,24 @@ class Driftfunksjoner(
             )
 
             flytOrkestrator.prosesserBehandling(flytOrkestrator.opprettKontekst(behandling))
+        }
+    }
+
+    fun avbrytBrevbestilling(brevbestillingReferanse: BrevbestillingReferanse) {
+        val bestilling = brevbestillingRepository.hent(brevbestillingReferanse)
+            ?: throw UgyldigForespørselException("Fant ingen brevbestilling med referanse $brevbestillingReferanse")
+
+        val behandling = behandlingRepository.hent(bestilling.behandlingId)
+        taSkriveLåsRepository.withLåstBehandling(behandling.id) {
+            brevbestillingService.avbryt(
+                bestilling.behandlingId,
+                bestilling.referanse
+            )
+
+            prosesserBehandlingService.triggProsesserBehandling(
+                sakId = behandling.sakId,
+                behandlingId = behandling.id,
+            )
         }
     }
 }
