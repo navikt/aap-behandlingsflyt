@@ -100,6 +100,7 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         secureLogger.info("Migrering vilkår før=${rettighetstypeFør} og etter=$rettighetstypeEtter")
         if (rettighetstypeEtterBegrenset != rettighetstypeFør) {
             secureLogger.info("Migrering vilkår før=${rettighetstypeFør} og etter=$rettighetstypeEtterBegrenset")
+            secureLogger.info("Vilkår før=$vilkårFør og etter=$vilkårEtter")
             throw IllegalStateException("Vilkår før og etter migrering er ulik i den ")
         }
     }
@@ -161,17 +162,9 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         val erForrigeBehandlingFastsattPeriodePassert =
             behandlingFørMigrering.vurderingsbehov().map { it.type }.contains(Vurderingsbehov.FASTSATT_PERIODE_PASSERT)
         val forhåndsgodkjenteSaksnummerMedPotensiellEndringIUnderveis = listOf(
-            "4LMTKCW",
-            "4LK1WE8",
-            "4LQNT7K",
-            "4LVWFC0",
-            "4LH0L7K",
-            "4MAiM8G",
-            "4LRiW1C",
-            "4LEJN1S",
-            "4LED7KG",
-            "4LMVPio",
-            "4LZTVXC",
+            "4LEVFFK",
+            "4M8DGGG",
+            "4M5FD0G",
         )
         val skalIgnoreres =
             forhåndsgodkjenteSaksnummerMedPotensiellEndringIUnderveis.contains(sak.saksnummer.toString())

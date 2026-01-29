@@ -33,16 +33,19 @@ class OpprettJobbForMigrereRettighetsperiodeJobbUtfører(
     override fun utfør(input: JobbInput) {
 
         val saker = sakRepository.finnSakerMedUtenRiktigSluttdatoPåRettighetsperiode()
-        val sakerForMigrering = saker.filter { sak ->
-            val sisteYtelsesbehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
-            if (sisteYtelsesbehandling != null) {
-                erAktuellForMigrering(sisteYtelsesbehandling)
-            } else {
-                log.info("Fant ikke ytelsesbehandlinger for sak ${sak.id} ")
-                false
-            }
+        val sakerForMigrering = saker
+            .filter { sak ->
+                val sisteYtelsesbehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
+                if (sisteYtelsesbehandling != null) {
+                    erAktuellForMigrering(sisteYtelsesbehandling)
+                } else {
+                    log.info("Fant ikke ytelsesbehandlinger for sak ${sak.id} ")
+                    false
+                }
 
-        }.filter { erForhåndskvalifisertSak(it) }
+            }
+            .filter { erForhåndskvalifisertSak(it) }
+            .take(25)
 
         log.info("Fant ${saker.size} migrering av rettighetsperiode. Antall iverksatte/avsluttede kandidater: ${sakerForMigrering.size}")
 
