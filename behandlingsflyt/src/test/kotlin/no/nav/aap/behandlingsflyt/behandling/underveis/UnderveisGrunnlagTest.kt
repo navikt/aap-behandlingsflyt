@@ -52,7 +52,7 @@ class UnderveisGrunnlagTest {
         val forventetBruktKvote = 14
 
         assertThat(kvoter.bruktKvote).isEqualTo(forventetBruktKvote)
-        assertThat(kvoter.gjenværendeKvote).isEqualTo(totalKvoteForSykepengeErstatning.minus(forventetBruktKvote))
+        assertThat(kvoter.gjenværendeKvote).isEqualTo(totalKvoteForSykepengeErstatning.minus(forventetBruktKvote.minus(1)))
     }
 
     @Test
@@ -71,7 +71,7 @@ class UnderveisGrunnlagTest {
     }
 
     @Test
-    fun `skal utlede maksdato 114 hverdager frem i tid for rettighet sykepengeerstatning ved brukt kvote på 3 uker`() {
+    fun `skal utlede maksdato 115 hverdager frem i tid for rettighet sykepengeerstatning ved brukt kvote på 3 uker`() {
         val perioder = listOf(
             underveisperiode(
                 Periode(FØRSTE_JAN_2026.minusWeeks(5), FØRSTE_JAN_2026.minusWeeks(2)),
@@ -80,7 +80,7 @@ class UnderveisGrunnlagTest {
 
         val underveisGrunnlag = UnderveisGrunnlag(1234, perioder)
         val maksdato = underveisGrunnlag.utledMaksdatoForRettighet(RettighetsType.SYKEPENGEERSTATNING)
-        val forventetMaksdato = Hverdager(114).fraOgMed(dagensDato)
+        val forventetMaksdato = Hverdager(115).fraOgMed(dagensDato)
 
         assertThat(maksdato).isEqualTo(forventetMaksdato)
     }
