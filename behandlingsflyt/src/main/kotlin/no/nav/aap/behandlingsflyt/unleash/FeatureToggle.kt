@@ -29,6 +29,7 @@ enum class BehandlingsflytFeature : FeatureToggle {
     UbehandledeMeldekortJobb,
     ForenkletKvote,
     ArbeidssokerBrevMedFaktagrunnlag,
+    PapirMeldekortFraBehandingsflyt
     ;
 
     override fun key(): String = name
