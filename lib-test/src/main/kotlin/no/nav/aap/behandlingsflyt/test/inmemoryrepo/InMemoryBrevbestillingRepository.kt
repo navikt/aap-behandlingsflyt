@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.*
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import java.time.LocalDateTime
@@ -67,5 +68,9 @@ object InMemoryBrevbestillingRepository: BrevbestillingRepository {
 
     fun clearMemory() {
         bestilling.clear()
+    }
+
+    override fun hentBehandlingsreferanseForBestilling(referanse: BrevbestillingReferanse): BehandlingReferanse {
+        TODO("Not yet implemented")
     }
 }
