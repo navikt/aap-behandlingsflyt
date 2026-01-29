@@ -27,6 +27,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 object VedtakslengdeUnleash : FakeUnleashBaseWithDefaultDisabled(
@@ -67,7 +68,7 @@ class OpprettJobbUtvidVedtakslengdeJobbUtførerTest {
         val jobbInputSak = JobbInput(OpprettBehandlingUtvidVedtakslengdeJobbUtfører).forSak(sakId.id)
 
         every { vedtakslengdeService.hentSakerAktuelleForUtvidelseAvVedtakslengde(any()) } returns setOf(sakId)
-        every { vedtakslengdeService.skalUtvideVedtakslengde(behandlingId, any())} returns true
+        every { vedtakslengdeService.skalUtvideVedtakslengde(behandlingId, behandlingId, any<LocalDate>())} returns true
         every { sakOgBehandlingService.finnBehandlingMedSisteFattedeVedtak(sakId) } returns behandlingMedVedtak()
         every { flytJobbRepository.leggTil(match { it.sakId() == sakId.id }) } just Runs
 
