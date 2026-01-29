@@ -74,13 +74,13 @@ fun NormalOpenAPIRoute.driftApi(
             }
         }
 
-        route("/brev/{referanse}/avbryt") {
+        route("/brev/{brevbestillingReferanse}/avbryt") {
             authorizedPost<BrevbestillingReferanse, Unit, Unit>(
                 AuthorizationParamPathConfig(
                     operasjon = Operasjon.DRIFTE,
                     relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                     behandlingPathParam = BehandlingPathParam(
-                        "bestillingsreferanse",
+                        "brevbestillingReferanse",
                         behandlingFraBrevbestilling(repositoryRegistry, dataSource)
                     )
                 )
