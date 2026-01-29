@@ -30,7 +30,7 @@ class AvklarSykdomLøsning(
         return AvklarSykdomLøser(repositoryProvider).løs(kontekst, this)
     }
 
-    override fun hentTidligereLøstePerioder(
+    override fun hentLagredeLøstePerioder(
         behandlingId: BehandlingId,
         repositoryProvider: RepositoryProvider
     ): Tidslinje<*> {

@@ -26,7 +26,7 @@ sealed interface PeriodisertAvklaringsbehovLøsning<LøsningPeriode: LøsningFor
      * som er definert i tidslinjen vil være regnet som løst. Dette bruke blandt annet for å validere at løsningen
      * sammen med tidligere vurderinger faktisk løser periodene som ble løftet av avklaringsbehovet.
      */
-    fun hentTidligereLøstePerioder(behandlingId: BehandlingId, repositoryProvider: RepositoryProvider): Tidslinje<*>
+    fun hentLagredeLøstePerioder(behandlingId: BehandlingId, repositoryProvider: RepositoryProvider): Tidslinje<*>
 }
 
 /** En ny vurdering gjort av innlogget saksbehandler for en avgrenset periode. */

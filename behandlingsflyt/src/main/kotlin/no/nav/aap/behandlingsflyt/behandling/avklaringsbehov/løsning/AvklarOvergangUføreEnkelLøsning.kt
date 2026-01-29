@@ -75,7 +75,7 @@ class AvklarOvergangUføreLøsning(
         )
     }
 
-    override fun hentTidligereLøstePerioder(
+    override fun hentLagredeLøstePerioder(
         behandlingId: BehandlingId,
         repositoryProvider: RepositoryProvider
     ): Tidslinje<*> {

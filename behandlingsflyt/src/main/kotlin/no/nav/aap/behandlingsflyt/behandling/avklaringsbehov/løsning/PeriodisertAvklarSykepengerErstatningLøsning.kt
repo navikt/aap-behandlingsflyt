@@ -68,7 +68,7 @@ class PeriodisertAvklarSykepengerErstatningLøsning(
         return AvklarSykepengerErstatningLøser(repositoryProvider, gatewayProvider).løs(kontekst, this)
     }
 
-    override fun hentTidligereLøstePerioder(
+    override fun hentLagredeLøstePerioder(
         behandlingId: BehandlingId,
         repositoryProvider: RepositoryProvider
     ): Tidslinje<*> {

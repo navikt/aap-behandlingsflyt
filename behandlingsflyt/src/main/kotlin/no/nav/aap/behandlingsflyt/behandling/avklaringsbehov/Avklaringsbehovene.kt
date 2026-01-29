@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.PeriodisertAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
@@ -12,6 +11,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -342,8 +342,10 @@ class Avklaringsbehovene(
             .somTidslinje { Periode(fom = it.fom, tom = it.tom ?: Tid.MAKS) }
             .map { true }.komprimer()
 
-        val perioderDekkerAvTidligereVurderinger = løsning.hentTidligereLøstePerioder(kontekst.behandlingId, repositoryProvider)
-            .map { true }.komprimer()
+        val perioderDekkerAvTidligereVurderinger = kontekst.forrigeBehandlingId?.let {
+            løsning.hentLagredeLøstePerioder(it, repositoryProvider)
+                .map { true }.komprimer()
+        } ?: Tidslinje()
 
         val perioderDekket = perioderDekkerAvTidligereVurderinger.kombiner(perioderDekketAvLøsning, StandardSammenslåere.prioriterHøyreSideCrossJoin()).komprimer()
 
