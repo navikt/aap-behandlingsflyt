@@ -52,7 +52,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeUnleash::
 
     @Test
     fun `forleng vedtak med passert slutt uten eksplisitt sluttdato`() {
-        val søknadstidspunkt = LocalDateTime.of(1 desember 2024, LocalTime.NOON)
+        val søknadstidspunkt = LocalDateTime.now(clock).minusYears(1)
         val (sak, førstegangsbehandling) = sendInnFørsteSøknad(mottattTidspunkt = søknadstidspunkt)
         val rettighetsperiode = sak.rettighetsperiode
         val startDato = sak.rettighetsperiode.fom
@@ -145,7 +145,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeUnleash::
 
     @Test
     fun `forleng også vedtak i åpen behandling dersom vedtaksutvidelse-jobb kjører`() {
-        val søknadstidspunkt = LocalDateTime.of(1 desember 2024, LocalTime.NOON)
+        val søknadstidspunkt = LocalDateTime.now(clock).minusYears(1)
         val (sak, førstegangsbehandling) = sendInnFørsteSøknad(mottattTidspunkt = søknadstidspunkt)
         val rettighetsperiode = sak.rettighetsperiode
         val startDato = sak.rettighetsperiode.fom
