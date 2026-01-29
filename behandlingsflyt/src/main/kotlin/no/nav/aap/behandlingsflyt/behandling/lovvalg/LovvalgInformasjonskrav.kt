@@ -159,9 +159,9 @@ class LovvalgInformasjonskrav private constructor(
 
     private fun innhentAInntektGrunnlag(sak: Sak): List<ArbeidsInntektMaaned> {
         return inntektskomponentenGateway.hentAInntekt(
-            sak.person.aktivIdent().identifikator,
-            YearMonth.from(sak.rettighetsperiode.fom.minusMonths(1)),
-            YearMonth.from(sak.rettighetsperiode.fom)
+            fnr = sak.person.aktivIdent().identifikator,
+            fom = YearMonth.from(sak.rettighetsperiode.fom.minusMonths(2)),
+            tom = YearMonth.from(sak.rettighetsperiode.fom)
         ).arbeidsInntektMaaned
     }
 
