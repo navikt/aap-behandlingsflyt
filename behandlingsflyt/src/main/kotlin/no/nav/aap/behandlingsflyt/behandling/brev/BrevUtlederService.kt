@@ -24,10 +24,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtle
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Opprettholdes
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.innvilgedePerioder
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.perioderMedArbeidsopptrapping
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrevRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -63,6 +64,7 @@ class BrevUtlederService(
     private val aktivitetsplikt11_7Repository: Aktivitetsplikt11_7Repository,
     private val arbeidsopptrappingRepository: ArbeidsopptrappingRepository,
     private val sykdomsvurderingForBrevRepository: SykdomsvurderingForBrevRepository,
+    private val overgangUføreRepository: OvergangUføreRepository,
     private val unleashGateway: UnleashGateway
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
@@ -77,6 +79,7 @@ class BrevUtlederService(
         aktivitetsplikt11_7Repository = repositoryProvider.provide(),
         arbeidsopptrappingRepository = repositoryProvider.provide(),
         sykdomsvurderingForBrevRepository = repositoryProvider.provide(),
+        overgangUføreRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide()
     )
 
@@ -84,10 +87,10 @@ class BrevUtlederService(
         val behandling = behandlingRepository.hent(behandlingId)
         val forrigeBehandlingId = behandling.forrigeBehandlingId
         val harBehandlingenArbeidsopptrapping =
-            arbeidsopptrappingRepository.hentHvisEksisterer(behandlingId).innvilgedePerioder().isNotEmpty()
+            arbeidsopptrappingRepository.hentHvisEksisterer(behandlingId).perioderMedArbeidsopptrapping().isNotEmpty()
         val harForrigeBehandlingArbeidsopptrapping =
             forrigeBehandlingId != null && arbeidsopptrappingRepository.hentHvisEksisterer(forrigeBehandlingId)
-                .innvilgedePerioder().isNotEmpty()
+                .perioderMedArbeidsopptrapping().isNotEmpty()
         val skalSendeVedtakForArbeidsopptrapping =
             harBehandlingenArbeidsopptrapping && !harForrigeBehandlingArbeidsopptrapping
 
@@ -128,7 +131,6 @@ class BrevUtlederService(
                         FRITAK_MELDEPLIKT,
                         MOTTATT_MELDEKORT,
                         FASTSATT_PERIODE_PASSERT,
-                        UTVID_VEDTAKSLENGDE,
                         MIGRER_RETTIGHETSPERIODE,
                         EFFEKTUER_AKTIVITETSPLIKT,
                         EFFEKTUER_AKTIVITETSPLIKT_11_9,
@@ -141,6 +143,10 @@ class BrevUtlederService(
 
                 if (vurderingsbehov == setOf(BARNETILLEGG_SATS_REGULERING)) {
                     return BarnetilleggSatsRegulering
+                }
+
+                if (vurderingsbehov == setOf(UTVID_VEDTAKSLENGDE)) {
+                    return brevBehovUtvidVedtakslengde(behandling)
                 }
 
                 if (resultat == Resultat.AVBRUTT) {
@@ -196,6 +202,11 @@ class BrevUtlederService(
         }
     }
 
+    private fun brevBehovUtvidVedtakslengde(behandling: Behandling): UtvidVedtakslengde {
+        val underveisGrunnlag = underveisRepository.hent(behandling.id)
+        return UtvidVedtakslengde(sluttdato = underveisGrunnlag.sisteDagMedYtelse())
+    }
+
     private fun brevBehovInnvilgelse(behandling: Behandling): Innvilgelse {
         val vedtak = checkNotNull(vedtakRepository.hent(behandling.id)) {
             "Fant ikke vedtak for behandling med innvilgelse"
@@ -227,8 +238,14 @@ class BrevUtlederService(
         // Sender per nå ikke med dato som betyr at beregningsgrunnlag (beløp) blir null
         val grunnlagBeregning = hentGrunnlagBeregning(behandling.id, null)
 
+        val vedtak = vedtakRepository.hent(behandling.id)
+        val tilkjentYtelse = vedtak?.virkningstidspunkt?.let {
+            utledTilkjentYtelse(behandling.id, vedtak.virkningstidspunkt)
+        }
+
         return VurderesForUføretrygd(
-            grunnlagBeregning = grunnlagBeregning
+            grunnlagBeregning = grunnlagBeregning,
+            tilkjentYtelse = tilkjentYtelse
         )
     }
 
@@ -349,6 +366,8 @@ class BrevUtlederService(
                         .setScale(0, RoundingMode.HALF_UP)
                 )
 
+            val kravdatoUføretrygd = overgangUføreRepository.hentHvisEksisterer(behandlingId)?.kravdatoUføretrygd()
+
             TilkjentYtelse(
                 dagsats = tilkjent.dagsats,
                 gradertDagsats = gradertDagsats,
@@ -360,7 +379,8 @@ class BrevUtlederService(
                 minsteÅrligYtelse = minsteÅrligYtelse,
                 minsteÅrligYtelseUnder25 = Beløp(minsteÅrligYtelse.toTredjedeler()),
                 årligYtelse = tilkjent.dagsats.multiplisert(ANTALL_ÅRLIGE_ARBEIDSDAGER),
-                sisteDagMedYtelse = underveidGrunnlag.sisteDagMedYtelse()
+                sisteDagMedYtelse = underveidGrunnlag.sisteDagMedYtelse(),
+                kravdatoUføretrygd = kravdatoUføretrygd
             )
         }.segment(virkningstidspunkt)?.verdi
     }

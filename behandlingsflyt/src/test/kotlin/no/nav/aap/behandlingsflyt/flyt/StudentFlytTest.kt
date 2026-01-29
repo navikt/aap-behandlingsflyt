@@ -31,7 +31,7 @@ import org.junit.jupiter.params.provider.MethodSource
 import kotlin.reflect.KClass
 
 @ParameterizedClass
-@MethodSource("testData")
+@MethodSource("unleashTestDataSource")
 class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlytOrkestratorTest(unleashGateway) {
     @Test
     fun `innvilge som student, revurdering ordinær`() {
@@ -203,17 +203,5 @@ class StudentFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlyt
             )
 
     }
-
-    companion object {
-        @Suppress("unused")
-        @JvmStatic
-        fun testData(): List<Arguments> {
-            return listOf(
-                Arguments.of(LokalUnleash::class),
-                Arguments.of(AlleAvskruddUnleash::class),
-            )
-        }
-    }
-
 }
 

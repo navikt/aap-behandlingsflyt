@@ -30,4 +30,5 @@ interface MottattDokumentRepository : Repository {
     fun hentDokumenterAvType(behandlingId: BehandlingId, type: InnsendingType): Set<MottattDokument>
     fun hentDokumenterAvType(behandlingId: BehandlingId, typer: List<InnsendingType>): Set<MottattDokument>
     fun hentAlleUbehandledeDokumenter(): Set<MottattDokument>
+    fun hentAlleUbehandledeDokumenterAvType(type: InnsendingType): Set<MottattDokument>
 }

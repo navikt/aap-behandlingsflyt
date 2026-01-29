@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -16,7 +17,7 @@ import org.slf4j.LoggerFactory
 class HåndterUbehandledeDokumenterJobbUtfører(
     private val mottattDokumentRepository: MottattDokumentRepository,
     private val flytJobbRepository: FlytJobbRepository,
-    private val unleashGateway: UnleashGateway
+    private val unleashGateway: UnleashGateway,
 ) : JobbUtfører {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -24,25 +25,21 @@ class HåndterUbehandledeDokumenterJobbUtfører(
         if (unleashGateway.isDisabled(BehandlingsflytFeature.UbehandledeMeldekortJobb)) {
             return
         }
+
+        val sakId = SakId(2309) // Kun kjør jobb for hastesak 4NAG4LC
         
-        val ubehandledeDokumenter = mottattDokumentRepository.hentAlleUbehandledeDokumenter()
+        val ubehandledeDokumenter =
+            mottattDokumentRepository.hentUbehandledeDokumenterAvType(sakId, InnsendingType.MELDEKORT)
 
-        var hoppetOver = 0
+        log.info("Fant ${ubehandledeDokumenter.size} ubehandlede meldekort")
         ubehandledeDokumenter.forEach { dokument ->
-            when (dokument.type) {
-                InnsendingType.MELDEKORT -> flytJobbRepository.leggTil(
-                    HåndterUbehandletDokumentJobbUtfører.nyJobb(
-                        dokument.sakId,
-                        dokument.referanse
-                    )
+            flytJobbRepository.leggTil(
+                HåndterUbehandletDokumentJobbUtfører.nyJobb(
+                    dokument.sakId,
+                    dokument.referanse
                 )
-
-                else -> {
-                    hoppetOver++
-                }
-            }
+            )
         }
-        log.info("Håndterte ${ubehandledeDokumenter.size - hoppetOver} dokumenter, hoppet over $hoppetOver dokumenter")
     }
 
     companion object : ProvidersJobbSpesifikasjon {

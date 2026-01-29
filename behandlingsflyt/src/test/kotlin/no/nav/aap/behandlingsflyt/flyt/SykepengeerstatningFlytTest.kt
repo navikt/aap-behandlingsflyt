@@ -40,10 +40,14 @@ import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedClass
+import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDate
+import kotlin.reflect.KClass
 
-class SykepengeerstatningFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
-
+@ParameterizedClass
+@MethodSource("unleashTestDataSource")
+class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlytOrkestratorTest(unleashGateway) {
     @Test
     fun `Sykepengeerstatning med yrkesskade`() {
         val fom = 1 april 2025
@@ -108,7 +112,7 @@ class SykepengeerstatningFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
             .assertRettighetstype(
                 Periode(
                     sak.rettighetsperiode.fom,
-                    sak.rettighetsperiode.fom.plusHverdager(Hverdager(130)).minusDays(1),
+                    sak.rettighetsperiode.fom.plusHverdager(Hverdager(131)).minusDays(1),
                 ) to RettighetsType.SYKEPENGEERSTATNING,
             )
             .medKontekst {
@@ -463,7 +467,7 @@ class SykepengeerstatningFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
                 Periode(
                     periode.fom.plusMonths(2),
                     periode.fom.plusMonths(2).plusHverdager(
-                        Hverdager(130) - førstePeriodeSykepengeerstatning.antallHverdager()
+                        Hverdager(131) - førstePeriodeSykepengeerstatning.antallHverdager()
                     ).minusDays(1)
                 ) to
                         RettighetsType.SYKEPENGEERSTATNING,
@@ -562,7 +566,7 @@ class SykepengeerstatningFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
             .assertRettighetstype(
                 Periode(
                     sak.rettighetsperiode.fom,
-                    sak.rettighetsperiode.fom.plusHverdager(Hverdager(130)).minusDays(1)
+                    sak.rettighetsperiode.fom.plusHverdager(Hverdager(131)).minusDays(1)
                 ) to
                         RettighetsType.SYKEPENGEERSTATNING
             )

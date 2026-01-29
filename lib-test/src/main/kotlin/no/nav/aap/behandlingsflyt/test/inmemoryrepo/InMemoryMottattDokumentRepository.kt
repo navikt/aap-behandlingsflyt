@@ -160,4 +160,10 @@ object InMemoryMottattDokumentRepository : MottattDokumentRepository {
             return memory.first { it.referanse == innsendingsreferanse }
         }
     }
+
+    override fun hentAlleUbehandledeDokumenterAvType(type: InnsendingType): Set<MottattDokument> {
+        synchronized(lock) {
+            return memory.filter { it.status == Status.MOTTATT && it.type == type }.toSet()
+        }
+    }
 }

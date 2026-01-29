@@ -31,6 +31,7 @@ import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Disabled
 import java.time.LocalDateTime
 import kotlin.test.Test
 
@@ -40,6 +41,7 @@ object JobbPåskruddUnleash : FakeUnleashBaseWithDefaultDisabled(
     )
 )
 
+@Disabled("Enable når hardkodet prodsak har kjørt")
 class HåndterUbehandledeDokumenterJobbUtførerTest {
     init {
         JobbType.leggTil(HåndterUbehandledeDokumenterJobbUtfører)

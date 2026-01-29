@@ -27,6 +27,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.undervei
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.type.Periode
@@ -35,10 +36,15 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedClass
+import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDate
 import java.time.LocalDateTime
+import kotlin.reflect.KClass
 
-class YrkesskadeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
+@ParameterizedClass
+@MethodSource("unleashTestDataSource")
+class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
     fun `skal ikke vise avklaringsbehov for yrkesskade ved avslag i tidligere steg`() {
         val personMedYrkesskade = TestPersoner.PERSON_MED_YRKESSKADE()

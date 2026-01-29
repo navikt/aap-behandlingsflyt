@@ -184,5 +184,4 @@ class MellomlagretVurderingApiTest : BaseApiTest() {
             assertThat(oppdatertVerdi).isNull()
         }
     }
-
 }

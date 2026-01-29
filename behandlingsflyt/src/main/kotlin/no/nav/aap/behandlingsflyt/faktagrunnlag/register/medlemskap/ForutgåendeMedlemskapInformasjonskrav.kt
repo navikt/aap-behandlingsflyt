@@ -15,7 +15,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdRequest
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMaaned
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMåned
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.InntektkomponentenGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.ereg.EnhetsregisteretGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.ereg.Organisasjonsnummer
@@ -60,7 +60,7 @@ class ForutgåendeMedlemskapInformasjonskrav private constructor(
     data class MedlemsskapReggisterdata(
         val medlemskapPerioder: List<MedlemskapDataIntern>,
         val arbeidGrunnlag: List<ArbeidINorgeGrunnlag>,
-        val inntektGrunnlag: List<ArbeidsInntektMaaned>,
+        val inntektGrunnlag: List<ArbeidsInntektMåned>,
         val enhetGrunnlag: List<EnhetGrunnlag>
     ) : InformasjonskravRegisterdata
 
@@ -115,15 +115,15 @@ class ForutgåendeMedlemskapInformasjonskrav private constructor(
         return arbeidsforholdGateway.hentAARegisterData(request)
     }
 
-    private fun innhentAInntektGrunnlag5år(sak: Sak): List<ArbeidsInntektMaaned> {
+    private fun innhentAInntektGrunnlag5år(sak: Sak): List<ArbeidsInntektMåned> {
         return inntektkomponentenGateway.hentAInntekt(
             sak.person.aktivIdent().identifikator,
             YearMonth.from(sak.rettighetsperiode.fom.minusYears(5)),
             YearMonth.from(sak.rettighetsperiode.fom)
-        ).arbeidsInntektMaaned
+        ).arbeidsInntektMåned
     }
 
-    private fun innhentEREGGrunnlag(inntektGrunnlag: List<ArbeidsInntektMaaned>): List<EnhetGrunnlag> {
+    private fun innhentEREGGrunnlag(inntektGrunnlag: List<ArbeidsInntektMåned>): List<EnhetGrunnlag> {
         if (inntektGrunnlag.isEmpty()) return emptyList()
 
         val orgnumre = inntektGrunnlag.flatMap {
@@ -151,7 +151,7 @@ class ForutgåendeMedlemskapInformasjonskrav private constructor(
         behandlingId: BehandlingId,
         medlemskapGrunnlag: List<MedlemskapDataIntern>,
         arbeidGrunnlag: List<ArbeidINorgeGrunnlag>,
-        inntektGrunnlag: List<ArbeidsInntektMaaned>,
+        inntektGrunnlag: List<ArbeidsInntektMåned>,
         enhetGrunnlag: List<EnhetGrunnlag>
     ) {
         val medlId = if (medlemskapGrunnlag.isNotEmpty()) medlemskapForutgåendeRepository.lagreUnntakMedlemskap(

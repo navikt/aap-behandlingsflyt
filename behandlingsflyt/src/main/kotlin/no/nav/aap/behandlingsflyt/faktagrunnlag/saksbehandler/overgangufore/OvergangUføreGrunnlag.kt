@@ -19,10 +19,6 @@ data class OvergangUføreGrunnlag(
         return filtrertOvergangUføreTidslinje(maksdato) { true }
     }
 
-    fun gjeldendeOvergangUførevurderinger(maksDato: LocalDate = Tid.MAKS): List<OvergangUføreVurdering> {
-        return somOvergangUforevurderingstidslinje(maksDato).segmenter().map { it.verdi }
-    }
-
     fun overgangUføreVurderingerVurdertIBehandling(behandlingId: BehandlingId): List<OvergangUføreVurdering> {
         return vurderinger.filter { it.vurdertIBehandling == behandlingId }
     }
@@ -38,13 +34,6 @@ data class OvergangUføreGrunnlag(
         return filtrertOvergangUføreTidslinje(maksDato) { it.vurdertIBehandling != behandlingId }
     }
 
-    fun gjeldendeVedtatteOvergangUførevurderinger(
-        behandlingId: BehandlingId,
-        maksDato: LocalDate = Tid.MAKS
-    ): List<OvergangUføreVurdering> {
-        return vedtattOvergangUførevurderingstidslinje(behandlingId, maksDato).segmenter().map { it.verdi }
-    }
-
     private fun filtrertOvergangUføreTidslinje(
         maksDato: LocalDate = Tid.MAKS,
         filter: (vurdering: OvergangUføreVurdering) -> Boolean
@@ -57,6 +46,13 @@ data class OvergangUføreGrunnlag(
             .flatMap { it.sortedBy { it.fom } }
             .somTidslinje { Periode(it.fom, it.tom ?: maksDato) }
             .komprimer()
+    }
+
+    fun kravdatoUføretrygd() : LocalDate? {
+        return somOvergangUforevurderingstidslinje()
+            ?.segmenter()
+            ?.firstOrNull()
+            ?.fom()
     }
 
 }

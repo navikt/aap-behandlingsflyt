@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
@@ -16,6 +17,7 @@ import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import no.nav.aap.motor.cron.CronExpression
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
 
 class OpprettJobbForMigrereRettighetsperiodeJobbUtfører(
     private val flytJobbRepository: FlytJobbRepository,
@@ -26,20 +28,24 @@ class OpprettJobbForMigrereRettighetsperiodeJobbUtfører(
 ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
+    private val førsteJanuar2026 = LocalDate.of(2026, 1, 1).atStartOfDay()
 
     override fun utfør(input: JobbInput) {
 
         val saker = sakRepository.finnSakerMedUtenRiktigSluttdatoPåRettighetsperiode()
-        val sakerForMigrering = saker.filter { sak ->
-            val sisteYtelsesbehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
-            if (sisteYtelsesbehandling != null) {
-                val erTrukket = trukketSøknadService.søknadErTrukket(sisteYtelsesbehandling.id)
-                sisteYtelsesbehandling.status().erAvsluttet() && !erTrukket
-            } else {
-                log.info("Fant ikke ytelsesbehandlinger for sak ${sak.id} ")
-                false
+        val sakerForMigrering = saker
+            .filter { sak ->
+                val sisteYtelsesbehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
+                if (sisteYtelsesbehandling != null) {
+                    erAktuellForMigrering(sisteYtelsesbehandling)
+                } else {
+                    log.info("Fant ikke ytelsesbehandlinger for sak ${sak.id} ")
+                    false
+                }
+
             }
-        }.filter { erForhåndskvalifisertSak(it) }
+            .filter { erForhåndskvalifisertSak(it) }
+            .take(25)
 
         log.info("Fant ${saker.size} migrering av rettighetsperiode. Antall iverksatte/avsluttede kandidater: ${sakerForMigrering.size}")
 
@@ -53,26 +59,29 @@ class OpprettJobbForMigrereRettighetsperiodeJobbUtfører(
     }
 
     /**
+     * Kan kun behandle de som er avsluttet og ønsker ikke å migrere de som er trukket
+     * For første gjennomkjøring ønsker vi kun å behandle de sakene hvor det finnes en
+     * behandling ila 2026 - disse har størst sjanse for å ikke ha diff i tilkjent ytelse, underveis eller vilkår
+     */
+    private fun erAktuellForMigrering(sisteYtelsesbehandling: Behandling): Boolean =
+        sisteYtelsesbehandling.status().erAvsluttet()
+                && !harSøknadTrukket(sisteYtelsesbehandling)
+                && erOpprettetI2026(sisteYtelsesbehandling)
+
+    private fun erOpprettetI2026(sisteYtelsesbehandling: Behandling): Boolean =
+        sisteYtelsesbehandling.opprettetTidspunkt.isAfter(førsteJanuar2026)
+
+    private fun harSøknadTrukket(sisteYtelsesbehandling: Behandling): Boolean =
+        trukketSøknadService.søknadErTrukket(sisteYtelsesbehandling.id)
+
+    /**
      * Før vi skrur på for fullt ønsker vi å teste enkeltsaker i hvert miljø
      */
     fun erForhåndskvalifisertSak(sak: Sak): Boolean {
         val forhåndskvalifisertDev = listOf<String>()
-        val forhåndskvalifisertProd = listOf<String>(
-                    "4LFDNAo",
-                    "4LFY0BK",
-                    "4LG2AN4",
-                    "4LG8Q4G",
-                    "4LGiDCG",
-                    "4LGPVEo",
-                    "4LGQXZK",
-                    "4LGS0KG",
-                    "4LGT35C",
-                    "4LGWAW0",
-
-        )
         return when (Miljø.er()) {
-            MiljøKode.DEV -> forhåndskvalifisertDev.contains(sak.saksnummer.toString())
-            MiljøKode.PROD -> forhåndskvalifisertProd.contains(sak.saksnummer.toString())
+            MiljøKode.DEV -> false
+            MiljøKode.PROD -> true // forhåndskvalifisertProd.contains(sak.saksnummer.toString())
             MiljøKode.LOKALT -> true
         }
     }
