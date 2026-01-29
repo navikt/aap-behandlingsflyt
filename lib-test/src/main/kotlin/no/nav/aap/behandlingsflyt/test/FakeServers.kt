@@ -1935,6 +1935,7 @@ object FakeServers : AutoCloseable {
         norg.start()
         kabal.start()
         ereg.start()
+        dagpenger.start()
         gosys.start()
         leaderElector.start()
 
@@ -2113,6 +2114,7 @@ object FakeServers : AutoCloseable {
         norg.stop(0L, 0L)
         kabal.stop(0L, 0L)
         ereg.stop(0L, 0L)
+        dagpenger.stop(0L, 0L)
         leaderElector.stop(0L, 0L)
     }
 }
