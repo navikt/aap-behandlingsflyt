@@ -126,6 +126,8 @@ class BrevUtlederServiceTest {
         every { sykdomsvurderingForBrevRepository.hent(any<BehandlingId>())} returns sykdomsvurderingForBrevGrunnlag()
         every { tilkjentYtelseRepository.hentHvisEksisterer(any<BehandlingId>()) } returns stubTilkjentYtelse()
         every { trukketSøknadService.søknadErTrukket(any<BehandlingId>()) } returns false
+        every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
+        every { unleashGateway.isEnabled(BehandlingsflytFeature.ArbeidssokerBrevMedFaktagrunnlag) } returns true
     }
 
     @Test
@@ -409,16 +411,19 @@ class BrevUtlederServiceTest {
             )
         )
         every { behandlingRepository.hent(revurdering.id) } returns revurdering
+        every { vedtakRepository.hent(revurdering.id) } returns stubVedtak(revurdering.id)
         every { avbrytRevurderingService.revurderingErAvbrutt(revurdering.id) } returns false
         every { arbeidsopptrappingRepository.hentHvisEksisterer(revurdering.id) } returns null
         every { arbeidsopptrappingRepository.hentHvisEksisterer(revurdering.forrigeBehandlingId!!) } returns null
-        every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns underveisGrunnlag(
+        val underveisGrunnlag = underveisGrunnlag(
             underveisperiode(
                 periode = Periode(1 januar 2023, 31 desember 2023),
                 rettighetsType = RettighetsType.ARBEIDSSØKER,
                 utfall = Utfall.OPPFYLT,
             )
         )
+        every { underveisRepository.hent(revurdering.id) } returns underveisGrunnlag
+        every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns underveisGrunnlag
 
         val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
 
