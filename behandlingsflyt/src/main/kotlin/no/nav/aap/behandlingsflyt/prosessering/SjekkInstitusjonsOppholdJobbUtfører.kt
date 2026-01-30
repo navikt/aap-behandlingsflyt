@@ -67,7 +67,7 @@ class SjekkInstitusjonsOppholdJobbUtfører(
                             if (vurderingsbehovOgÅrsaker.any { it.vurderingsbehov.any { vurderingsbehovMedPeriode -> vurderingsbehovMedPeriode.type == Vurderingsbehov.INSTITUSJONSOPPHOLD } }) {
                                 log.info("Vurderingsbehov for institusjonsopphold finnes allerede")
                             } else if (alleIkkeOppfylt) {
-                                log.info("Vurderingsbehov for institusjonsopphold opprettes ike, da det er avslag overalt")
+                                log.info("Vurderingsbehov for institusjonsopphold opprettes ikke, da det er avslag overalt")
                             } else {
                                 val opprettInstitusjonsOppholdBehandling = opprettNyBehandling(sak)
                                 log.info("Fant sak med institusjonsopphold $sak.id")
