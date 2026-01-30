@@ -21,6 +21,6 @@ enum class InformasjonskravNavn {
     TRUKKET_SØKNAD,
     TRUKKET_KLAGE,
     AVBRYT_REVURDERING,
-    ANDRE_STATLIGE_YTELSER,
+    DAGPENGER,
     VEDTAKSLENGDE
 }

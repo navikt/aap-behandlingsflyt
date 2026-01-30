@@ -125,8 +125,9 @@ class DagpengerRepositoryImpl(private val connection: DBConnection) : DagpengerR
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
-        val dagpengerPerioder = hent(fraBehandling)
-
+        require(fraBehandling != tilBehandling) {
+            "Kan ikke kopiere dagpengergrunnlag til samme behandling"
+        }
         connection.execute("""INSERT INTO DAGPENGER_GRUNNLAG (BEHANDLING_ID, DAGPENGER_PERIODER_ID) 
                 SELECT ?, DAGPENGER_PERIODER_ID 
                 FROM DAGPENGER_GRUNNLAG 

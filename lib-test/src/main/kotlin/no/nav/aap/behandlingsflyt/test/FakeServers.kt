@@ -27,8 +27,8 @@ import no.nav.aap.behandlingsflyt.datadeling.sam.HentSamIdResponse
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamordneVedtakRequest
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamordneVedtakRespons
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamordningsmeldingApi
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerRequest
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerResponse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerKilde
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerYtelseType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TjenestePensjonRespons
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Anvist
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerRequest
@@ -350,6 +350,24 @@ object FakeServers : AutoCloseable {
     }
 
     private fun Application.dagpengerFake() {
+        data class DagpengerRequest(
+            val personIdent: String,
+            val fraOgMedDato: String,
+            val tilOgMedDato: String
+        )
+
+        data class DagpengerPeriodeResponse(
+            val fraOgMedDato: LocalDate,
+            val tilOgMedDato: LocalDate,
+            val kilde: DagpengerKilde,
+            val ytelseType: DagpengerYtelseType
+        )
+
+        data class DagpengerResponse(
+            val personIdent: String,
+            val perioder: List<DagpengerPeriodeResponse>
+        )
+
         installerContentNegotiation()
         routing {
             route("/dagpenger/datadeling/v1/perioder") {
@@ -358,7 +376,17 @@ object FakeServers : AutoCloseable {
                     val hentPerson = fakePersoner.hentPerson(body.personIdent)
                     val dagpenger = hentPerson?.dagpenger
                     if (hentPerson != null && dagpenger != null) {
-                        call.respond(dagpenger)
+                        call.respond(DagpengerResponse(
+                            personIdent = body.personIdent,
+                            perioder = dagpenger.map { dp ->
+                            DagpengerPeriodeResponse(
+                                fraOgMedDato = dp.periode.fom,
+                                tilOgMedDato = dp.periode.tom,
+                                kilde = dp.kilde,
+                                ytelseType = dp.dagpengerYtelseType
+                            )
+                            }.toList()
+                        ))
                         return@post
                     }
 

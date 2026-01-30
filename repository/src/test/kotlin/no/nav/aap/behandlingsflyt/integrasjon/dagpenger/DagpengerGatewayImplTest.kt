@@ -1,11 +1,13 @@
 package no.nav.aap.behandlingsflyt.integrasjon.dagpenger
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerPeriodeResponse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerResponse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerKilde
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerYtelseType
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.DagpengerGatewayImpl
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
+import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -17,26 +19,27 @@ class DagpengerGatewayImplTest {
     @Test
     fun `Kan hente data fra Dagpenger`() {
         val person = TestPerson(
-            dagpenger = DagpengerResponse(
-               personIdent = "12345",
-                perioder = listOf(
-                    DagpengerPeriodeResponse(
-                        fraOgMedDato = LocalDate.now(),
-                        tilOgMedDato = LocalDate.now().minusYears(1),
-                        kilde = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerKilde.ARENA,
-                        ytelseType = no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerYtelseType.DAGPENGER_ARBEIDSSOKER_ORDINAER
-                    )
+            dagpenger = listOf(
+                DagpengerPeriode(
+                    Periode(
+                        LocalDate.now(),
+                        LocalDate.now().minusYears(1)
+                    ),
+                    kilde = DagpengerKilde.ARENA,
+                    dagpengerYtelseType = DagpengerYtelseType.DAGPENGER_ARBEIDSSOKER_ORDINAER
                 )
             )
         )
 
+
+
         FakePersoner.leggTil(person)
         val dpGateway = DagpengerGatewayImpl()
 
-        val response: List<DagpengerPeriodeResponse> = dpGateway.hentYtelseDagpenger(
+        val response: List<DagpengerPeriode> = dpGateway.hentYtelseDagpenger(
             personidentifikatorer = person.identer.first().identifikator,
-            fom = LocalDate.now().minusYears(1).toString(),
-            tom = LocalDate.now().toString()
+            fom = LocalDate.now().minusYears(1),
+            tom = LocalDate.now()
         )
 
         assertThat(response).isNotEmpty()

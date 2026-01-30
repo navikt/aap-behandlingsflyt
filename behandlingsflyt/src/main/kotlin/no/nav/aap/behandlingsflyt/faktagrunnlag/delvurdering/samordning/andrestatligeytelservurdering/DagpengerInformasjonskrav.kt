@@ -21,12 +21,12 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
-class AndreStatligeYtelserInformasjonskrav(
+class DagpengerInformasjonskrav(
     private val tidligereVurderinger: TidligereVurderinger,
     private val dagpengerGateway: DagpengerGateway,
     private val dagpengerRepository: DagpengerRepository,
     private val sakService: SakService,
-): Informasjonskrav<AndreStatligeYtelserInformasjonskrav.DagpengerInput, AndreStatligeYtelserInformasjonskrav.DagpengerRegisterdata> {
+): Informasjonskrav<DagpengerInformasjonskrav.DagpengerInput, DagpengerInformasjonskrav.DagpengerRegisterdata> {
     private val log = LoggerFactory.getLogger(javaClass)
 
     override val navn = Companion.navn
@@ -53,18 +53,13 @@ class AndreStatligeYtelserInformasjonskrav(
         val (person, rettighetsperiode) = input
         val dagpengerPerioder = dagpengerGateway.hentYtelseDagpenger(
             personidentifikatorer = person.aktivIdent().identifikator,
-            fom = rettighetsperiode.fom.toString(),
-            tom = rettighetsperiode.tom.toString()
+            fom = rettighetsperiode.fom,
+            tom = rettighetsperiode.tom
         ).toSet()
 
         return DagpengerRegisterdata(
-            dagpengerPerioder.map {
-                DagpengerPeriode(
-                    Periode(it.fraOgMedDato, it.tilOgMedDato),
-                    it.kilde,
-                    it.ytelseType
-                )
-            }.toSet())
+            dagpengerPerioder
+        )
     }
 
     override fun oppdater(
@@ -108,12 +103,12 @@ class AndreStatligeYtelserInformasjonskrav(
     companion object : Informasjonskravkonstruktør{
 
         private val secureLogger = LoggerFactory.getLogger("team-logs")
-        override val navn = InformasjonskravNavn.ANDRE_STATLIGE_YTELSER
+        override val navn = InformasjonskravNavn.DAGPENGER
 
         override fun konstruer(
             repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider
-        ): AndreStatligeYtelserInformasjonskrav{
-            return AndreStatligeYtelserInformasjonskrav(
+        ): DagpengerInformasjonskrav{
+            return DagpengerInformasjonskrav(
                 TidligereVurderingerImpl(repositoryProvider),
                 gatewayProvider.provide(),
                 repositoryProvider.provide(),

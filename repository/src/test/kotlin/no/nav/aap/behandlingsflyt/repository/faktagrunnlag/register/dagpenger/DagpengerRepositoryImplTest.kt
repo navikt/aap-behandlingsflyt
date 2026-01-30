@@ -3,6 +3,8 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.dagpenger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerPeriode
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
+import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import org.assertj.core.api.Assertions.assertThat
@@ -81,9 +83,7 @@ class DagpengerRepositoryImplTest {
     fun kopier() {
         dataSource.transaction { connection ->
             val sak = sak(connection)
-            val sak2 = sak(connection)
             val behandlingFra = finnEllerOpprettBehandling(connection, sak)
-            val behandlingTil = finnEllerOpprettBehandling(connection, sak2)
 
             val dagpengerRepo = DagpengerRepositoryImpl(connection = connection)
 
@@ -100,6 +100,9 @@ class DagpengerRepositoryImplTest {
                 )
 
             dagpengerRepo.lagre(behandlingFra.id, dagpengerList)
+            BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandlingFra.id, Status.AVSLUTTET)
+
+            val behandlingTil = finnEllerOpprettBehandling(connection, sak)
 
             dagpengerRepo.kopier(fraBehandling = behandlingFra.id, tilBehandling = behandlingTil.id)
 
