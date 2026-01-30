@@ -142,9 +142,13 @@ fun NormalOpenAPIRoute.institusjonApi(
                     val helseoppholdPerioder = behov.perioderTilVurdering.mapValue { it.helse }.komprimer()
 
                     val nyeVurderingerForOpphold =
-                        vurderingerGruppertPerOpphold.filter { it.value.any { hv -> hv.vurdertIBehandling == behandling.id } }
-                    val vedtatteVurderingerForOpphold =
-                        vurderingerGruppertPerOpphold.filter { it.value.none { hv -> hv.vurdertIBehandling == behandling.id } }
+                        vurderingerGruppertPerOpphold.mapValues { (_, vurderinger) ->
+                            vurderinger.filter { it.vurdertIBehandling == behandling.id }
+                        }.filterValues { it.isNotEmpty() }
+
+                    val vedtatteVurderingerForOpphold = vurderingerGruppertPerOpphold
+                        .mapValues { it.value.filterNot { vurdering -> vurdering.vurdertIBehandling == behandling.id } }
+                        .filterValues { it.isNotEmpty() }
 
 
                     val vedtatteVurderingerDto = mapVurderingerToDto(vedtatteVurderingerForOpphold, oppholdInfo)

@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Ins
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.HelseinstitusjonVurderingDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.tidslinje.Segment
@@ -29,16 +30,18 @@ class AvklarHelseinstitusjonLøser(
         kontekst: AvklaringsbehovKontekst,
         løsning: AvklarHelseinstitusjonLøsning
     ): LøsningsResultat {
+        // FIXME Thao validerGyldigVurderinger. Valider tidligste reduksjonsdato og periode er riktig etter hverandre. Se eksempel i AvklarForutgåendeMedlemskapLøser
+
         val behandling = behandlingRepository.hent(kontekst.behandlingId())
 
-        val vedtatteVurderinger =
+        val vedtatteVurderinger = //TODO Thao: Tar denne hensyn til avbryt revurdering? Forrige behandling kan være avbrutt og vurderinger fra den skal ikke være med.
             behandling.forrigeBehandlingId?.let { helseinstitusjonRepository.hentHvisEksisterer(it) }
 
         val oppdaterteVurderinger =
             slåSammenMedNyeVurderinger(
                 vedtatteVurderinger,
                 løsning.helseinstitusjonVurdering.vurderinger,
-                behandling.id
+                behandling
             )
         helseinstitusjonRepository.lagreHelseVurdering(
             kontekst.kontekst.behandlingId,
@@ -52,9 +55,9 @@ class AvklarHelseinstitusjonLøser(
     private fun slåSammenMedNyeVurderinger(
         grunnlag: InstitusjonsoppholdGrunnlag?,
         nyeVurderinger: List<HelseinstitusjonVurderingDto>,
-        behandlingId: BehandlingId
+        behandling: Behandling
     ): List<HelseinstitusjonVurdering> {
-        val eksisterendeTidslinje = byggTidslinjeForHelseoppholdvurderinger(grunnlag)
+        val eksisterendeTidslinje = byggTidslinjeForHelseoppholdvurderinger(grunnlag, behandling.forrigeBehandlingId)
 
         val nyeVurderingerTidslinje = Tidslinje(nyeVurderinger.sortedBy { it.periode }
             .map {
@@ -65,11 +68,12 @@ class AvklarHelseinstitusjonLøser(
                         faarFriKostOgLosji = it.faarFriKostOgLosji,
                         forsoergerEktefelle = it.forsoergerEktefelle,
                         harFasteUtgifter = it.harFasteUtgifter,
+                        behandlingId = behandling.id
                     )
                 )
             }).komprimer()
 
-        return eksisterendeTidslinje.kombiner(
+        val kombinert = eksisterendeTidslinje.kombiner(
             nyeVurderingerTidslinje,
             StandardSammenslåere.prioriterHøyreSideCrossJoin()
         ).segmenter().map {
@@ -79,13 +83,34 @@ class AvklarHelseinstitusjonLøser(
                 forsoergerEktefelle = it.verdi.forsoergerEktefelle,
                 harFasteUtgifter = it.verdi.harFasteUtgifter,
                 periode = it.periode,
-                vurdertIBehandling = behandlingId
+                vurdertIBehandling = it.verdi.behandlingId
             )
+        }.toMutableList()
+
+        // Legg til manglende segmenter fra eksisterendeTidslinje
+        eksisterendeTidslinje.segmenter().forEach { eksisterende ->
+            val finnes = kombinert.any {
+                it.periode == eksisterende.periode &&
+                it.vurdertIBehandling == eksisterende.verdi.behandlingId
+            }
+            if (!finnes) {
+                kombinert.add(
+                    HelseinstitusjonVurdering(
+                        begrunnelse = eksisterende.verdi.begrunnelse,
+                        faarFriKostOgLosji = eksisterende.verdi.faarFriKostOgLosji,
+                        forsoergerEktefelle = eksisterende.verdi.forsoergerEktefelle,
+                        harFasteUtgifter = eksisterende.verdi.harFasteUtgifter,
+                        periode = eksisterende.periode,
+                        vurdertIBehandling = eksisterende.verdi.behandlingId
+                    )
+                )
+            }
         }
+        return kombinert
     }
 
-    private fun byggTidslinjeForHelseoppholdvurderinger(grunnlag: InstitusjonsoppholdGrunnlag?): Tidslinje<HelseoppholdVurderingData> {
-        if (grunnlag == null) {
+    private fun byggTidslinjeForHelseoppholdvurderinger(grunnlag: InstitusjonsoppholdGrunnlag?, behandlingId: BehandlingId?): Tidslinje<HelseoppholdVurderingData> {
+        if (grunnlag == null || behandlingId == null) {
             return Tidslinje()
         }
         return grunnlag.helseoppholdvurderinger?.tilTidslinje()
@@ -94,7 +119,8 @@ class AvklarHelseinstitusjonLøser(
                     begrunnelse = it.begrunnelse,
                     faarFriKostOgLosji = it.faarFriKostOgLosji,
                     forsoergerEktefelle = it.forsoergerEktefelle,
-                    harFasteUtgifter = it.harFasteUtgifter
+                    harFasteUtgifter = it.harFasteUtgifter,
+                    behandlingId = behandlingId
                 )
             }.orEmpty()
     }
@@ -108,5 +134,6 @@ class AvklarHelseinstitusjonLøser(
         val faarFriKostOgLosji: Boolean,
         val forsoergerEktefelle: Boolean? = null,
         val harFasteUtgifter: Boolean? = null,
+        val behandlingId: BehandlingId,
     )
 }
