@@ -276,7 +276,7 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO): Sak {
                 if (dto.institusjoner.fengsel == true) genererFengselsopphold() else null,
                 if (dto.institusjoner.sykehus == true) genererSykehusopphold() else null,
             ),
-            inntekter = dto.inntekterPerAr?.map { inn -> inn.to() } ?: defaultInntekt(),
+            inntekter = dto.inntekterPerAr.orEmpty().map { inn -> inn.to() },
             sykepenger = dto.sykepenger.map {
                 TestPerson.Sykepenger(
                     grad = it.grad,
