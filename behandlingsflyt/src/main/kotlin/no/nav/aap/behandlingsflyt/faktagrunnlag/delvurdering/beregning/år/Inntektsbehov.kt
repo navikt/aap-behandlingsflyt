@@ -10,7 +10,7 @@ import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.slf4j.LoggerFactory
-import java.math.RoundingMode
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.Year
 import java.util.SortedSet
@@ -51,11 +51,10 @@ class Inntektsbehov(private val beregningInput: BeregningInput) {
             .mapValues { (_, value) -> value.sumOf { it.beløp.verdi }.let(::Beløp) }
 
         inntektPerÅrFraPerioder.forEach { (år, sum) ->
+            // Forskjell på inntektene kan ikke være større enn 1 kr
+            val differanse = (beregningInput.årsInntekter.first { it.år == år }.beløp.verdi.stripTrailingZeros() - sum.verdi.stripTrailingZeros()).abs()
             require(
-                beregningInput.årsInntekter.first { it.år == år }.beløp.verdi.stripTrailingZeros().setScale(
-                    0,
-                    RoundingMode.HALF_UP
-                ) == sum.verdi.stripTrailingZeros().setScale(0, RoundingMode.HALF_UP)
+                differanse < BigDecimal.ONE
             )
             { "Håndterer ikke å støtte forskjellig inntekt fra A-Inntekt og PESYS. Fikk $sum for år $år, men fant ${beregningInput.årsInntekter.filter { it.år == år }}" }
         }
@@ -77,6 +76,7 @@ class Inntektsbehov(private val beregningInput: BeregningInput) {
         return ytterligereNedsattArbeidsevneDato != null
                 && beregningInput.uføregrad.isNotEmpty()
                 && beregningInput.uføregrad.tilTidslinje().minDato() <= ytterligereNedsattArbeidsevneDato
+                && beregningInput.uføregrad.tilTidslinje().maxDato() >= ytterligereNedsattArbeidsevneDato
     }
 
     /**

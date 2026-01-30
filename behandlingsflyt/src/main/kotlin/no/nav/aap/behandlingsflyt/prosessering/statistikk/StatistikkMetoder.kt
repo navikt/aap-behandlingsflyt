@@ -23,6 +23,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.Påkla
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.IKlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageResultatType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.perioderMedArbeidsopptrapping
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.AVSLUTTET
@@ -38,6 +40,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Grunnlag11_19DTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.GrunnlagUføreDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.GrunnlagYrkesskadeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.MeldekortDTO
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.PeriodeDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ResultatKode
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.RettighetstypePeriode
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
@@ -82,6 +85,7 @@ class StatistikkMetoder(
     private val klageresultatUtleder: IKlageresultatUtleder,
     avbrytRevurderingService: AvbrytRevurderingService,
     private val meldepliktRepository: MeldepliktRepository,
+    private val arbeidsopptrappingRepository: ArbeidsopptrappingRepository,
 ) {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
@@ -101,7 +105,8 @@ class StatistikkMetoder(
         klagedokumentInformasjonUtleder = KlagedokumentInformasjonUtleder(repositoryProvider),
         klageresultatUtleder = KlageresultatUtleder(repositoryProvider),
         avbrytRevurderingService = AvbrytRevurderingService(repositoryProvider),
-        meldepliktRepository = repositoryProvider.provide()
+        meldepliktRepository = repositoryProvider.provide(),
+        arbeidsopptrappingRepository = repositoryProvider.provide()
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -354,6 +359,9 @@ class StatistikkMetoder(
                     Fritakvurdering(data.harFritak, periode.fom, periode.tom)
                 }.verdier()
 
+        val perioderMedArbeidsopptrapping =
+            arbeidsopptrappingRepository.hentHvisEksisterer(behandling.id).perioderMedArbeidsopptrapping()
+
         return AvsluttetBehandlingDTO(
             vilkårsResultat = VilkårsResultatDTO(
                 typeBehandling = behandling.typeBehandling(), vilkår = vilkårsresultat.alle().map { res ->
@@ -376,7 +384,8 @@ class StatistikkMetoder(
             rettighetstypePerioder = rettighetstypePerioder,
             resultat = hentResultat(behandling),
             vedtakstidspunkt = vedtakTidspunkt,
-            fritaksvurderinger = fritaksvurderinger
+            fritaksvurderinger = fritaksvurderinger,
+            perioderMedArbeidsopptrapping = perioderMedArbeidsopptrapping.map { PeriodeDTO(it.fom, it.tom) }
         )
     }
 

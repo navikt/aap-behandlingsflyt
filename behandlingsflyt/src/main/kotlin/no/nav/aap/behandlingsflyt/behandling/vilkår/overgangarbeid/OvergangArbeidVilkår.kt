@@ -9,8 +9,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import java.time.LocalDate
 
 class OvergangArbeidVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurderer<OvergangArbeidFaktagrunnlag> {
+    companion object {
+        fun utledVarighetSluttdato(fraDato: LocalDate) = fraDato.plusMonths(6).minusDays(1)
+    }
+
     private val vilkår: Vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.OVERGANGARBEIDVILKÅRET)
 
     override fun vurder(grunnlag: OvergangArbeidFaktagrunnlag) {
@@ -22,7 +27,7 @@ class OvergangArbeidVilkår(vilkårsresultat: Vilkårsresultat) : Vilkårsvurder
                     varighet = {
                         /* Vilkåret har en begrensning på maks 6 måneder. Eksempel på 6-måneders-periode
                          * fra regelspesifiseringen: 01.02.23 - 31.07.23 */
-                        it.plusMonths(6).minusDays(1)
+                        utledVarighetSluttdato(it)
                     },
                 ) { varighetsvurdering, vurdering ->
                     when (varighetsvurdering) {

@@ -267,7 +267,8 @@ private fun sendInnSøknad(dto: OpprettTestcaseDTO): Sak {
             uføre = dto.uføre?.let {
                 Uføre(
                     virkningstidspunkt = dto.uføreTidspunkt!!,
-                    uføregrad = Prosent(it)
+                    uføregrad = Prosent(it),
+                    uføregradTom = dto.uføregradTom,
                 )
             },
             barn = barn,

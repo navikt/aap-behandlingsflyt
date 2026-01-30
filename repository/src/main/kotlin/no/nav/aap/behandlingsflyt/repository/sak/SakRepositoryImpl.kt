@@ -227,7 +227,7 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
             where b.id in (
                 select g.behandling_id
                 from opphold_grunnlag g
-                join helseopphold_vurderinger v
+                left join helseopphold_vurderinger v
                       on g.helseopphold_vurderinger_id = v.id
                          where g.aktiv = true
                          and g.id in (

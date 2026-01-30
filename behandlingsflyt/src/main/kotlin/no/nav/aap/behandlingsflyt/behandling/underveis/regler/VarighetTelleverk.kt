@@ -2,16 +2,25 @@ package no.nav.aap.behandlingsflyt.behandling.underveis.regler
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.Kvoter
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.komponenter.type.Periode
 
-enum class Kvote(val avslagsårsak: VarighetVurdering.Avslagsårsak, val tellerMotKvote: (Vurdering) -> Boolean) {
-    ORDINÆR(VarighetVurdering.Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP, ::skalTelleMotOrdinærKvote),
-    SYKEPENGEERSTATNING(
-        VarighetVurdering.Avslagsårsak.SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP,
-        ::skalTelleMotSykepengeKvote
+enum class Kvote(
+    val avslagsårsak: VarighetVurdering.Avslagsårsak,
+    val nyAvslagsårsak: Avslagsårsak,
+    val tellerMotKvote: (Vurdering) -> Boolean
+) {
+    ORDINÆR(
+        avslagsårsak = VarighetVurdering.Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP,
+        nyAvslagsårsak = Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP,
+        tellerMotKvote = ::skalTelleMotOrdinærKvote
     ),
-    ;
+    SYKEPENGEERSTATNING(
+        avslagsårsak = VarighetVurdering.Avslagsårsak.SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP,
+        nyAvslagsårsak = Avslagsårsak.SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP,
+        tellerMotKvote = ::skalTelleMotSykepengeKvote
+    ),
 }
 
 private fun skalTelleMotOrdinærKvote(vurdering: Vurdering): Boolean {
