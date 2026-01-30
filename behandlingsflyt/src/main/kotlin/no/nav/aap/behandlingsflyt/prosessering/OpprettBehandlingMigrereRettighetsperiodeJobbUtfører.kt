@@ -202,7 +202,7 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
                 ?.somTidslinje({ it.periode }, {
                     // Tidligere i Kelvin ble dagsats satt til en verdi frem i tid, dette er feil og skjer ikke lenger.
                     // Da må vi sammenligne med det som BURDE vært dagsats
-                    if (it.periode.fom > LocalDate.now()) it.tilkjent.redusertDagsats() else Beløp(0)
+                    if (it.periode.fom > LocalDate.now()) Beløp(0) else it.tilkjent.redusertDagsats()
                 })?.komprimer()
                 ?.segmenter()?.toList()
                 ?: emptyList()
