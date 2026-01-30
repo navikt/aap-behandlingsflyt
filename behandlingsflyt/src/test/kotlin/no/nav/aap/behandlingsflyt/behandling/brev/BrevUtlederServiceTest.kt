@@ -162,7 +162,7 @@ class BrevUtlederServiceTest {
 
         assertIs<Arbeidssøker>(resultat, "forventer brevbehov er av typen Arbeidssøker (11-17)")
         assertThat(resultat).hasFieldOrProperty("tilkjentYtelse")
-        assertEquals(gittSisteDagMedYtelse, resultat.tilkjentYtelse!!.sisteDagMedYtelse)
+        assertEquals(gittSisteDagMedYtelse, resultat.sisteDagMedYtelse)
     }
 
     @Test
@@ -179,7 +179,7 @@ class BrevUtlederServiceTest {
 
         assertIs<VurderesForUføretrygd>(resultat, "forventer brevbehov er av typen 11-18")
         assertNotNull(resultat.tilkjentYtelse, "tilkjent ytelse må eksistere")
-        assertEquals(gittSisteDagMedYtelse, resultat.tilkjentYtelse.sisteDagMedYtelse)
+        assertEquals(gittSisteDagMedYtelse, resultat.sisteDagMedYtelse)
     }
 
     @Test
@@ -196,7 +196,7 @@ class BrevUtlederServiceTest {
 
         assertIs<Innvilgelse>(resultat, "forventer brevbehov er av typen Innvilgelse")
         assertNotNull(resultat.tilkjentYtelse, "tilkjent ytelse må eksistere")
-        assertEquals(gittSisteDagMedYtelse, resultat.tilkjentYtelse.sisteDagMedYtelse)
+        assertEquals(gittSisteDagMedYtelse, resultat.sisteDagMedYtelse)
     }
 
     @Test

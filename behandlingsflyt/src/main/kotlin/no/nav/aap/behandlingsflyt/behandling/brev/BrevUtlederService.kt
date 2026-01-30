@@ -400,7 +400,6 @@ class BrevUtlederService(
                 minsteÅrligYtelse = minsteÅrligYtelse,
                 minsteÅrligYtelseUnder25 = Beløp(minsteÅrligYtelse.toTredjedeler()),
                 årligYtelse = tilkjent.dagsats.multiplisert(ANTALL_ÅRLIGE_ARBEIDSDAGER),
-                sisteDagMedYtelse = underveidGrunnlag.sisteDagMedYtelse(),
                 kravdatoUføretrygd = kravdatoUføretrygd
             )
         }.segment(virkningstidspunkt)?.verdi

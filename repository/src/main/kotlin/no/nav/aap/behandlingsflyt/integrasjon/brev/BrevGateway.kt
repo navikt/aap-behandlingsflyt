@@ -389,7 +389,7 @@ class BrevGateway : BrevbestillingGateway {
             minsteÅrligYtelse = tilkjentYtelse.minsteÅrligYtelse?.heltallverdi(),
             minsteÅrligYtelseUnder25 = tilkjentYtelse.minsteÅrligYtelseUnder25?.heltallverdi(),
             årligYtelse = tilkjentYtelse.årligYtelse?.heltallverdi(),
-            sisteDagMedYtelse = tilkjentYtelse.sisteDagMedYtelse,
+            sisteDagMedYtelse = null,
             kravdatoUføretrygd = tilkjentYtelse.kravdatoUføretrygd
         )
     }
