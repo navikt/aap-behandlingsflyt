@@ -22,8 +22,8 @@ class DagpengerGatewayImplTest {
             dagpenger = listOf(
                 DagpengerPeriode(
                     Periode(
-                        LocalDate.now(),
-                        LocalDate.now().minusYears(1)
+                        LocalDate.now().minusYears(1),
+                        LocalDate.now()
                     ),
                     kilde = DagpengerKilde.ARENA,
                     dagpengerYtelseType = DagpengerYtelseType.DAGPENGER_ARBEIDSSOKER_ORDINAER
