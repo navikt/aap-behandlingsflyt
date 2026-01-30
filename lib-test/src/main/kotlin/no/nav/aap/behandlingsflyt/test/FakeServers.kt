@@ -28,6 +28,7 @@ import no.nav.aap.behandlingsflyt.datadeling.sam.SamordneVedtakRequest
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamordneVedtakRespons
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamordningsmeldingApi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerRequest
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.DagpengerResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TjenestePensjonRespons
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Anvist
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerRequest
@@ -139,6 +140,7 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.collections.emptyList
 
 object FakeServers : AutoCloseable {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -350,20 +352,23 @@ object FakeServers : AutoCloseable {
     private fun Application.dagpengerFake() {
         installerContentNegotiation()
         routing {
-            route("/dagpenger/datadeling/v1/perioder"){
-                post{
+            route("/dagpenger/datadeling/v1/perioder") {
+                post {
                     val body = call.receive<DagpengerRequest>()
                     val hentPerson = fakePersoner.hentPerson(body.personIdent)
-                    if (hentPerson == null) {
-                        call.respond(HttpStatusCode.NotFound, "Fant ikke person med fnr ${body.personIdent}")
+                    val dagpenger = hentPerson?.dagpenger
+                    if (hentPerson != null && dagpenger != null) {
+                        call.respond(dagpenger)
                         return@post
                     }
-                    val dagpenger = hentPerson.dagpenger
-                    if (dagpenger == null) {
-                        call.respond(HttpStatusCode.NotFound)
-                    } else {
-                        call.respond(dagpenger)
-                    }
+
+                    call.respond(
+                        DagpengerResponse(
+                            perioder = emptyList(),
+                            personIdent = body.personIdent
+                        )
+                    )
+
                 }
             }
         }
@@ -1978,7 +1983,6 @@ object FakeServers : AutoCloseable {
         // Oppgavestyring
         System.setProperty("integrasjon.oppgavestyring.scope", "oppgavestyring")
         System.setProperty("integrasjon.oppgavestyring.url", "http://localhost:${oppgavestyring.port()}")
-
 
 
         // MEDL
