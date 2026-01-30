@@ -8,4 +8,5 @@ interface DagpengerRepository : Repository {
     fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
     fun hent(behandlingId: BehandlingId) : List<DagpengerPeriode>
     fun lagre(behandlingId: BehandlingId, dagpengerPeriode: List<DagpengerPeriode>)
+    fun slett(behandlingId: BehandlingId)
 }

@@ -47,6 +47,24 @@ class DagpengerRepositoryImpl(private val connection: DBConnection) : DagpengerR
 
     }
 
+    override fun slett(behandlingId: BehandlingId) {
+        val perioderId = connection.executeReturnKey(
+            """SELECT DG.DAGPENGER_PERIODER_ID
+            FROM DAGPENGER_GRUNNLAG DG
+            WHERE DG.BEHANDLING_ID = ? AND DG.AKTIV = TRUE"""
+        ){
+            setParams {
+                setLong(1, behandlingId.id)
+            }
+        }
+
+        connection.execute("""DELETE FROM DAGPENGER_PERIODE WHERE DAGPENGER_PERIODER_ID = ?""".trimIndent()){
+            setParams{
+                setLong(1, perioderId)
+            }
+        }
+    }
+
     override fun hent(
         behandlingId: BehandlingId,
     ) : List<DagpengerPeriode>{
