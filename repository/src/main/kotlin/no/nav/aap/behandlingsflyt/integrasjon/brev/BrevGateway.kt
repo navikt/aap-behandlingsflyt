@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.integrasjon.brev
 
+import no.nav.aap.behandlingsflyt.behandling.brev.Arbeidssøker
 import no.nav.aap.behandlingsflyt.behandling.brev.Avslag
 import no.nav.aap.behandlingsflyt.behandling.brev.BrevBehov
 import no.nav.aap.behandlingsflyt.behandling.brev.GrunnlagBeregning
@@ -312,6 +313,7 @@ class BrevGateway : BrevbestillingGateway {
             is Innvilgelse ->
                 buildSet {
                     add(Faktagrunnlag.AapFomDato(brevBehov.virkningstidspunkt))
+                    add(Faktagrunnlag.SisteDagMedYtelse(brevBehov.sisteDagMedYtelse))
                     if (brevBehov.tilkjentYtelse != null) {
                         add(
                             tilkjentYtelseTilFaktagrunnlag(brevBehov.tilkjentYtelse!!)
@@ -340,6 +342,18 @@ class BrevGateway : BrevbestillingGateway {
                             tilkjentYtelseTilFaktagrunnlag(brevBehov.tilkjentYtelse!!)
                         )
                     }
+                    add(Faktagrunnlag.SisteDagMedYtelse(brevBehov.sisteDagMedYtelse))
+                }
+            }
+
+            is Arbeidssøker -> {
+                buildSet {
+                    if (brevBehov.tilkjentYtelse != null) {
+                        add(
+                            tilkjentYtelseTilFaktagrunnlag(brevBehov.tilkjentYtelse!!)
+                        )
+                    }
+                    add(Faktagrunnlag.SisteDagMedYtelse(brevBehov.sisteDagMedYtelse))
                 }
             }
 
@@ -354,7 +368,7 @@ class BrevGateway : BrevbestillingGateway {
             is UtvidVedtakslengde -> {
                 buildSet {
                     add(
-                        Faktagrunnlag.SisteDagMedYtelse(brevBehov.sluttdato)
+                        Faktagrunnlag.SisteDagMedYtelse(brevBehov.sisteDagMedYtelse)
                     )
                 }
             }

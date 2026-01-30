@@ -204,10 +204,11 @@ class BrevUtlederService(
 
     private fun brevBehovUtvidVedtakslengde(behandling: Behandling): UtvidVedtakslengde {
         val underveisGrunnlag = underveisRepository.hent(behandling.id)
-        return UtvidVedtakslengde(sluttdato = underveisGrunnlag.sisteDagMedYtelse())
+        return UtvidVedtakslengde(sisteDagMedYtelse = underveisGrunnlag.sisteDagMedYtelse())
     }
 
     private fun brevBehovArbeidssøker(behandling: Behandling): Arbeidssøker {
+        val underveisGrunnlag = underveisRepository.hent(behandling.id)
         val vedtak = checkNotNull(vedtakRepository.hent(behandling.id)) {
             "Fant ikke vedtak for behandling med arbeidssøker"
         }
@@ -215,15 +216,10 @@ class BrevUtlederService(
             "Vedtak for behandling for arbeidssøker mangler virkningstidspunkt"
         }
 
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.ArbeidssokerBrevMedFaktagrunnlag)) {
-            return Arbeidssøker(
-                tilkjentYtelse = utledTilkjentYtelse(behandling.id, vedtak.virkningstidspunkt)
-            )
-        } else {
-            return Arbeidssøker(
-                tilkjentYtelse = null
-            )
-        }
+        return Arbeidssøker(
+            sisteDagMedYtelse = underveisGrunnlag.sisteDagMedYtelse(),
+            tilkjentYtelse = utledTilkjentYtelse(behandling.id, vedtak.virkningstidspunkt)
+        )
     }
 
 
@@ -240,9 +236,12 @@ class BrevUtlederService(
 
         val sykdomsvurdering = hentSykdomsvurdering(behandling.id)
 
+        val underveisGrunnlag = underveisRepository.hent(behandling.id)
+
 
         return Innvilgelse(
             virkningstidspunkt = vedtak.virkningstidspunkt,
+            sisteDagMedYtelse = underveisGrunnlag.sisteDagMedYtelse(),
             grunnlagBeregning = grunnlagBeregning,
             tilkjentYtelse = tilkjentYtelse,
             sykdomsvurdering = sykdomsvurdering,
@@ -263,7 +262,9 @@ class BrevUtlederService(
             utledTilkjentYtelse(behandling.id, vedtak.virkningstidspunkt)
         }
 
+        val underveisGrunnlag = underveisRepository.hent(behandling.id)
         return VurderesForUføretrygd(
+            sisteDagMedYtelse = underveisGrunnlag.sisteDagMedYtelse(),
             grunnlagBeregning = grunnlagBeregning,
             tilkjentYtelse = tilkjentYtelse
         )

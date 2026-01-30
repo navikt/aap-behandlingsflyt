@@ -28,7 +28,6 @@ enum class BehandlingsflytFeature : FeatureToggle {
     TrekkSoeknadOpprettetFraLegeerklaering,
     UbehandledeMeldekortJobb,
     ForenkletKvote,
-    ArbeidssokerBrevMedFaktagrunnlag,
     PapirMeldekortFraBehandingsflyt
     ;
 

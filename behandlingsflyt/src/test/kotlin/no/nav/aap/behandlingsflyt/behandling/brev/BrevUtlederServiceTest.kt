@@ -127,7 +127,6 @@ class BrevUtlederServiceTest {
         every { tilkjentYtelseRepository.hentHvisEksisterer(any<BehandlingId>()) } returns stubTilkjentYtelse()
         every { trukketSøknadService.søknadErTrukket(any<BehandlingId>()) } returns false
         every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.ArbeidssokerBrevMedFaktagrunnlag) } returns true
     }
 
     @Test
@@ -158,7 +157,6 @@ class BrevUtlederServiceTest {
 
         every { avbrytRevurderingService.revurderingErAvbrutt(any<BehandlingId>()) } returns false
         every { unleashGateway.isEnabled(BehandlingsflytFeature.NyBrevtype11_17) } returns true
-        every { unleashGateway.isEnabled(BehandlingsflytFeature.ArbeidssokerBrevMedFaktagrunnlag) } returns true
 
         val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
 
@@ -547,13 +545,16 @@ class BrevUtlederServiceTest {
         every { arbeidsopptrappingRepository.hentHvisEksisterer(revurdering.id) } returns null
         every { arbeidsopptrappingRepository.hentHvisEksisterer(revurdering.forrigeBehandlingId!!) } returns null
         every { avbrytRevurderingService.revurderingErAvbrutt(revurdering.id) } returns false
-        every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns underveisGrunnlag(
+        val sisteDagMedYtelse = 31 desember 2023
+        val underveisGrunnlag = underveisGrunnlag(
             underveisperiode(
-                periode = Periode(1 januar 2023, 31 desember 2023),
+                periode = Periode(1 januar 2023, sisteDagMedYtelse),
                 rettighetsType = RettighetsType.VURDERES_FOR_UFØRETRYGD,
                 utfall = Utfall.OPPFYLT,
             )
         )
+        every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns underveisGrunnlag
+        every { underveisRepository.hent(revurdering.id) } returns underveisGrunnlag
         every { beregningsgrunnlagRepository.hentHvisEksisterer(revurdering.id) } returns Grunnlag11_19(
             grunnlaget = GUnit(2),
             erGjennomsnitt = false,
@@ -580,6 +581,7 @@ class BrevUtlederServiceTest {
 
         assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)).isEqualTo(
             VurderesForUføretrygd(
+                sisteDagMedYtelse = sisteDagMedYtelse,
                 grunnlagBeregning = GrunnlagBeregning(
                     beregningstidspunkt = LocalDate.of(2023, 2, 20),
                     inntekterPerÅr = listOf(

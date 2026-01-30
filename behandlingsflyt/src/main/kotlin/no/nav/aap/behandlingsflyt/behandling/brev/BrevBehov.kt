@@ -7,6 +7,7 @@ sealed class BrevBehov(val typeBrev: TypeBrev)
 
 data class Innvilgelse(
     val virkningstidspunkt: LocalDate,
+    val sisteDagMedYtelse: LocalDate,
     val grunnlagBeregning: GrunnlagBeregning?,
     val tilkjentYtelse: TilkjentYtelse?,
     val sykdomsvurdering: String?
@@ -14,16 +15,18 @@ data class Innvilgelse(
 }
 
 data class VurderesForUføretrygd(
+    val sisteDagMedYtelse: LocalDate,
     val grunnlagBeregning: GrunnlagBeregning?,
     val tilkjentYtelse: TilkjentYtelse?
 ) : BrevBehov(TypeBrev.VEDTAK_11_18)
 
 data class Arbeidssøker(
+    val sisteDagMedYtelse: LocalDate,
     val tilkjentYtelse: TilkjentYtelse?,
 ) : BrevBehov(TypeBrev.VEDTAK_11_17)
 
 data class Avslag(val sykdomsvurdering: String?): BrevBehov(TypeBrev.VEDTAK_AVSLAG)
-data class UtvidVedtakslengde(val sluttdato: LocalDate) : BrevBehov(TypeBrev.VEDTAK_UTVID_VEDTAKSLENGDE)
+data class UtvidVedtakslengde(val sisteDagMedYtelse: LocalDate) : BrevBehov(TypeBrev.VEDTAK_UTVID_VEDTAKSLENGDE)
 object VedtakEndring : BrevBehov(TypeBrev.VEDTAK_ENDRING)
 object BarnetilleggSatsRegulering : BrevBehov(TypeBrev.BARNETILLEGG_SATS_REGULERING)
 object VarselOmBestilling : BrevBehov(TypeBrev.VARSEL_OM_BESTILLING)
