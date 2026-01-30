@@ -27,8 +27,6 @@ class DagpengerInformasjonskrav(
     private val dagpengerRepository: DagpengerRepository,
     private val sakService: SakService,
 ): Informasjonskrav<DagpengerInformasjonskrav.DagpengerInput, DagpengerInformasjonskrav.DagpengerRegisterdata> {
-    private val log = LoggerFactory.getLogger(javaClass)
-
     override val navn = Companion.navn
 
     override fun erRelevant(

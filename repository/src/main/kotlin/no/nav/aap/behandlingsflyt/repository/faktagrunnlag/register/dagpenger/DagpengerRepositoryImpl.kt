@@ -7,11 +7,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dagpenger.DagpengerRepo
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
-import org.slf4j.LoggerFactory
 
 class DagpengerRepositoryImpl(private val connection: DBConnection) : DagpengerRepository {
-
-    private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<DagpengerRepositoryImpl>{
         override fun konstruer(connection: DBConnection): DagpengerRepositoryImpl {
