@@ -23,9 +23,15 @@ class DagpengerRepositoryImpl(private val connection: DBConnection) : DagpengerR
         behandlingId: BehandlingId,
         dagpengerPeriode: List<DagpengerPeriode>
     ) {
+        val eksisterendeDagpengerGrunnlag = hent(behandlingId)
+
+        if (eksisterendeDagpengerGrunnlag.isNotEmpty()) {
+            deaktiverEkstisterende(behandlingId)
+        }
+
        val dpPeriode = connection.executeReturnKey("""INSERT INTO DAGPENGER_PERIODER DEFAULT VALUES""")
 
-        val dagpengerGrunnlag = connection.executeReturnKey(
+        connection.execute(
             """INSERT INTO DAGPENGER_GRUNNLAG (AKTIV, BEHANDLING_ID, DAGPENGER_PERIODER_ID)
             VALUES (TRUE, ?, ?)"""
         ){
@@ -44,25 +50,25 @@ class DagpengerRepositoryImpl(private val connection: DBConnection) : DagpengerR
                 setString(4, periode.kilde.name)
             }
         }
-
     }
 
     override fun slett(behandlingId: BehandlingId) {
-        val perioderId = connection.executeReturnKey(
-            """SELECT DG.DAGPENGER_PERIODER_ID
-            FROM DAGPENGER_GRUNNLAG DG
-            WHERE DG.BEHANDLING_ID = ? AND DG.AKTIV = TRUE"""
-        ){
+        val perioderIds= getPerioderId(behandlingId)
+
+
+        connection.execute("""
+            DELETE FROM DAGPENGER_GRUNNLAG WHERE BEHANDLING_ID = ?;
+            DELETE FROM DAGPENGER_PERIODE WHERE DAGPENGER_PERIODER_ID IN ANY(?::BigInt[]);
+            DELETE FROM DAGPENGER_PERIODER WHERE ID = ANY(?::BigInt[]);
+            """.trimIndent()){
             setParams {
                 setLong(1, behandlingId.id)
-            }
+                setLongArray(2, perioderIds)
+                setLongArray(3, perioderIds)
         }
 
-        connection.execute("""DELETE FROM DAGPENGER_PERIODE WHERE DAGPENGER_PERIODER_ID = ?""".trimIndent()){
-            setParams{
-                setLong(1, perioderId)
-            }
         }
+
     }
 
     override fun hent(
@@ -89,51 +95,47 @@ class DagpengerRepositoryImpl(private val connection: DBConnection) : DagpengerR
 
     }
 
-    override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
-        val dagpengerPerioder = hent(fraBehandling)
-
-        connection.queryFirstOrNull("""
-            SELECT DG.DAGPENGER_PERIODER_ID
-            FROM DAGPENGER_GRUNNLAG DG
-            WHERE DG.BEHANDLING_ID = ? AND DG.AKTIV = TRUE
-        """.trimIndent()){
+    private fun deaktiverEkstisterende(behandlingId: BehandlingId){
+        connection.execute(
+            """UPDATE DAGPENGER_GRUNNLAG SET AKTIV = FALSE WHERE BEHANDLING_ID = ? AND AKTIV = TRUE"""
+        ) {
             setParams {
-                setLong(1, fraBehandling.id)
+                setLong(1, behandlingId.id)
+            }
+            setResultValidator { rowsUpdated ->
+                require(rowsUpdated==1)
+
+            }
+        }
+    }
+
+    private fun getPerioderId(behandlingId: BehandlingId):List<Long>{
+        return connection.queryList(
+            """SELECT DAGPENGER_PERIODER_ID
+            FROM DAGPENGER_GRUNNLAG
+            WHERE BEHANDLING_ID = ? AND AKTIV""".trimIndent()
+        ){
+            setParams {
+                setLong(1, behandlingId.id)
             }
             setRowMapper { row ->
                 row.getLong("DAGPENGER_PERIODER_ID")
             }
-        }?.let { dpPerioderId ->
-            val nyttDpPerioderId = connection.executeReturnKey("""INSERT INTO DAGPENGER_PERIODER DEFAULT VALUES""")
+        }
+    }
 
-            connection.executeBatch("""INSERT INTO DAGPENGER_PERIODE (DAGPENGER_PERIODER_ID, PERIODE, YTELSE_TYPE, KILDE) 
-                VALUES (?, ?::daterange, ?, ?)""".trimIndent(), dagpengerPerioder) {
-                setParams { periode ->
-                    setLong(1, nyttDpPerioderId)
-                    setPeriode(2, periode.periode)
-                    setString(3, periode.dagpengerYtelseType.name)
-                    setString(4, periode.kilde.name)
-                }
-            }
+    override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
+        val dagpengerPerioder = hent(fraBehandling)
 
-            connection.execute(
-                """UPDATE DAGPENGER_GRUNNLAG SET AKTIV = FALSE WHERE BEHANDLING_ID = ? AND AKTIV = TRUE"""
-            ) {
-                setParams {
-                    setLong(1, tilBehandling.id)
-                }
-            }
-
-            connection.execute(
-                """INSERT INTO DAGPENGER_GRUNNLAG (AKTIV, BEHANDLING_ID, DAGPENGER_PERIODER_ID)
-                VALUES (TRUE, ?, ?)"""
-            ){
-                setParams {
-                    setLong(1, tilBehandling.id)
-                    setLong(2, nyttDpPerioderId)
-                }
+        connection.execute("""INSERT INTO DAGPENGER_GRUNNLAG (BEHANDLING_ID, DAGPENGER_PERIODER_ID) 
+                SELECT ?, DAGPENGER_PERIODER_ID 
+                FROM DAGPENGER_GRUNNLAG 
+                WHERE AKTIV AND BEHANDLING_ID = ?
+            """.trimIndent()) {
+            setParams {
+                setLong(1, tilBehandling.id)
+                setLong(2, fraBehandling.id)
             }
         }
-
     }
 }
