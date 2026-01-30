@@ -10,7 +10,8 @@ import java.time.LocalDateTime
 data class UbehandletMeldekort(
     val journalpostId: JournalpostId,
     val timerArbeidPerPeriode: Set<ArbeidIPeriode>,
-    val mottattTidspunkt: LocalDateTime
+    val mottattTidspunkt: LocalDateTime,
+    val harDuArbeidet: Boolean
 ) {
     companion object {
         fun fraKontrakt(
@@ -27,7 +28,8 @@ data class UbehandletMeldekort(
                             timerArbeid = TimerArbeid(it.timerArbeid.toBigDecimal())
                         )
                     }.toSet(),
-                    mottattTidspunkt = mottattTidspunkt
+                    mottattTidspunkt = mottattTidspunkt,
+                    harDuArbeidet = meldekort.harDuArbeidet
                 )
             }
         }
