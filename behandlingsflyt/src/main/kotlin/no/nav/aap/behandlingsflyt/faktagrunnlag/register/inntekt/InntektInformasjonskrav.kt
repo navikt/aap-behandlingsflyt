@@ -89,10 +89,10 @@ class InntektInformasjonskrav(
     }
 
     private fun summerArbeidsinntektPerMåned(inntekter: InntektskomponentData): Set<Månedsinntekt> {
-        return inntekter.arbeidsInntektMaaned.map {
+        return inntekter.arbeidsInntektMåned.map {
             Pair(
                 it.arbeidsInntektInformasjon.inntektListe,
-                it.aarMaaned
+                it.årMåned
             )
         }
             .groupBy { (_, årMåned) -> årMåned }
@@ -104,7 +104,7 @@ class InntektInformasjonskrav(
                             log.info("Fant færre enn 12 inntekter for år ${årMåned.year}. Fant ${it.size}.")
                         }
                     }
-                    .sumOf { it.beloep }
+                    .sumOf { it.beløp }
             }
             .map { (årMåned, beløp) ->
                 Månedsinntekt(

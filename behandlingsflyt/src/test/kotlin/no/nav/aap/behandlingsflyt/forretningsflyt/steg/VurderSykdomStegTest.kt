@@ -102,11 +102,8 @@ class VurderSykdomStegTest {
         val steg = VurderSykdomSteg(
             studentRepository,
             sykdomRepository,
-            avklaringsbehovRepository,
             FakeTidligereVurderinger(),
             avklaringsbehovService,
-            InMemoryBehandlingRepository,
-            vilkårsresultatRepository,
             unleashGateway = mockk {
                 every { isDisabled(BehandlingsflytFeature.PeriodisertSykdom) } returns false
             },

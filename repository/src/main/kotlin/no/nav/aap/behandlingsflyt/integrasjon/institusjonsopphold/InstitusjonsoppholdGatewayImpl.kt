@@ -123,7 +123,7 @@ object InstitusjonsoppholdGatewayImpl : InstitusjonsoppholdGateway {
                 opphold.kategori,
                 requireNotNull(opphold.startdato) { "Startdato på institusjonsopphold må være satt." },
                 opphold.faktiskSluttdato ?: opphold.forventetSluttdato,
-                opphold.organisasjonsnummer ?: "XXXXXXXXX",
+                opphold.organisasjonsnummer ?: "Ukjent",
                 opphold.institusjonsnavn ?: "Ukjent institusjon"
             )
         }
@@ -140,7 +140,7 @@ object InstitusjonsoppholdGatewayImpl : InstitusjonsoppholdGateway {
                 oppholdRes.kategori,
                 requireNotNull(oppholdRes.startdato) { "Startdato på institusjonsopphold må være satt." },
                 oppholdRes.faktiskSluttdato ?: oppholdRes.forventetSluttdato,
-                oppholdRes.organisasjonsnummer,
+                oppholdRes.organisasjonsnummer ?: "Ukjent",
                 oppholdRes.institusjonsnavn ?: "Ukjent institusjon"
             )
 

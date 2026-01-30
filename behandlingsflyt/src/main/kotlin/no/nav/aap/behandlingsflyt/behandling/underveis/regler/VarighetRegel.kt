@@ -24,6 +24,10 @@ import no.nav.aap.komponenter.type.Periode
 class VarighetRegel : UnderveisRegel {
 
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
+        if (input.forenkletKvoteFeature) {
+            return resultat
+        }
+
         val telleverk = Telleverk(input.kvoter)
 
         val varighetTidslinje = resultat.flatMap {

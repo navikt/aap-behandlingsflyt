@@ -28,21 +28,24 @@ class OpprettJobbForMigrereRettighetsperiodeJobbUtfører(
 ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
-    private val førsteJanuar2026 = LocalDate.of(2026, 1, 1).atStartOfDay()
 
     override fun utfør(input: JobbInput) {
 
         val saker = sakRepository.finnSakerMedUtenRiktigSluttdatoPåRettighetsperiode()
-        val sakerForMigrering = saker.filter { sak ->
-            val sisteYtelsesbehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
-            if (sisteYtelsesbehandling != null) {
-                erAktuellForMigrering(sisteYtelsesbehandling)
-            } else {
-                log.info("Fant ikke ytelsesbehandlinger for sak ${sak.id} ")
-                false
-            }
+        val sakerForMigrering = saker
+            .filter { sak ->
+                val sisteYtelsesbehandling = sakOgBehandlingService.finnSisteYtelsesbehandlingFor(sak.id)
+                if (sisteYtelsesbehandling != null) {
+                    erAktuellForMigrering(sisteYtelsesbehandling)
+                } else {
+                    log.info("Fant ikke ytelsesbehandlinger for sak ${sak.id} ")
+                    false
+                }
 
-        }.filter { erForhåndskvalifisertSak(it) }
+            }
+            .filter { erForhåndskvalifisertSak(it) }
+            .sortedByDescending { it.opprettetTidspunkt }
+            .take(75)
 
         log.info("Fant ${saker.size} migrering av rettighetsperiode. Antall iverksatte/avsluttede kandidater: ${sakerForMigrering.size}")
 
@@ -57,16 +60,12 @@ class OpprettJobbForMigrereRettighetsperiodeJobbUtfører(
 
     /**
      * Kan kun behandle de som er avsluttet og ønsker ikke å migrere de som er trukket
-     * For første gjennomkjøring ønsker vi kun å behandle de sakene hvor det finnes en
-     * behandling ila 2026 - disse har størst sjanse for å ikke ha diff i tilkjent ytelse, underveis eller vilkår
+     * Ønsker å begrense utplukket og øke intervall gradvis de nyeste har minst sjanse for
+     * diff i tilkjent ytelse, underveis eller vilkår
      */
     private fun erAktuellForMigrering(sisteYtelsesbehandling: Behandling): Boolean =
         sisteYtelsesbehandling.status().erAvsluttet()
                 && !harSøknadTrukket(sisteYtelsesbehandling)
-                && erOpprettetI2026(sisteYtelsesbehandling)
-
-    private fun erOpprettetI2026(sisteYtelsesbehandling: Behandling): Boolean =
-        sisteYtelsesbehandling.opprettetTidspunkt.isAfter(førsteJanuar2026)
 
     private fun harSøknadTrukket(sisteYtelsesbehandling: Behandling): Boolean =
         trukketSøknadService.søknadErTrukket(sisteYtelsesbehandling.id)
