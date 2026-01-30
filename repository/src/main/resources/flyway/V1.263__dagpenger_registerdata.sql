@@ -7,7 +7,7 @@ CREATE TABLE DAGPENGER_PERIODER
 CREATE TABLE DAGPENGER_GRUNNLAG
 (
     ID                    BIGSERIAL PRIMARY KEY,
-    AKTIV                 bool                                   NOT NULL,
+    AKTIV                 bool         DEFAULT TRUE              NOT NULL,
     BEHANDLING_ID         BIGINT                                 NOT NULL REFERENCES BEHANDLING (ID),
     DAGPENGER_PERIODER_ID BIGINT                                 NOT NULL REFERENCES DAGPENGER_PERIODER (ID),
     OPPRETTET_TID         TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL

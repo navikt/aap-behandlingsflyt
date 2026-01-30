@@ -81,8 +81,9 @@ class DagpengerRepositoryImplTest {
     fun kopier() {
         dataSource.transaction { connection ->
             val sak = sak(connection)
+            val sak2 = sak(connection)
             val behandlingFra = finnEllerOpprettBehandling(connection, sak)
-            val behandlingTil = finnEllerOpprettBehandling(connection, sak)
+            val behandlingTil = finnEllerOpprettBehandling(connection, sak2)
 
             val dagpengerRepo = DagpengerRepositoryImpl(connection = connection)
 
@@ -103,7 +104,6 @@ class DagpengerRepositoryImplTest {
             dagpengerRepo.kopier(fraBehandling = behandlingFra.id, tilBehandling = behandlingTil.id)
 
             assertThat(dagpengerRepo.hent(behandlingTil.id)).isEqualTo(dagpengerList)
-
         }
     }
 
