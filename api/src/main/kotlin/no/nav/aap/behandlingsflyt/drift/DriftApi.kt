@@ -90,7 +90,7 @@ fun NormalOpenAPIRoute.driftApi(
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val driftsfunksjoner = Driftfunksjoner(repositoryProvider, gatewayProvider)
 
-                    driftsfunksjoner.avbrytBrevbestilling(bruker(), param, req.begrunnelse)
+                    driftsfunksjoner.avbrytVedtsaksbrevBestilling(bruker(), param, req.begrunnelse)
 
                     log.info("Brevbestilling med referanse ${param} er avbrutt av ${bruker()}.")
                 }

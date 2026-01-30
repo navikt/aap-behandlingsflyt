@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.drift
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovHendelseHåndterer
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.LøsAvklaringsbehovHendelse
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedtaksbrevLøsning
@@ -81,7 +80,7 @@ class Driftfunksjoner(
         }
     }
 
-    fun avbrytBrevbestilling(bruker: Bruker, brevbestillingReferanse: BrevbestillingReferanse, begrunnelse: String) {
+    fun avbrytVedtsaksbrevBestilling(bruker: Bruker, brevbestillingReferanse: BrevbestillingReferanse, begrunnelse: String) {
         val bestilling = brevbestillingRepository.hent(brevbestillingReferanse)
             ?: throw UgyldigForespørselException("Fant ingen brevbestilling med referanse $brevbestillingReferanse")
 
