@@ -176,7 +176,12 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
     private fun skalValidereUnderveis(sak: Sak, behandlingFørMigrering: Behandling): Boolean {
         val erForrigeBehandlingFastsattPeriodePassert =
             behandlingFørMigrering.vurderingsbehov().map { it.type }.contains(Vurderingsbehov.FASTSATT_PERIODE_PASSERT)
-        val forhåndsgodkjenteSaksnummerMedPotensiellEndringIUnderveis = emptyList<String>()
+        val forhåndsgodkjenteSaksnummerMedPotensiellEndringIUnderveis = listOf<String>(
+            "4NMNiHS",
+            "4NTPi0G",
+            "4NS3MoG",
+            "4NPBYPS",
+        )
         val skalIgnoreres =
             forhåndsgodkjenteSaksnummerMedPotensiellEndringIUnderveis.contains(sak.saksnummer.toString())
         return !(erForrigeBehandlingFastsattPeriodePassert || skalIgnoreres)
