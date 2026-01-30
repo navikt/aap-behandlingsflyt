@@ -17,8 +17,10 @@ import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.miljo.Miljø
+import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
@@ -26,6 +28,7 @@ import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import org.slf4j.LoggerFactory
 import java.math.BigDecimal
+import java.time.LocalDate
 
 class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
     private val prosesserBehandlingService: ProsesserBehandlingService,
@@ -92,7 +95,7 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
         if (rettighetstypeFør.isEmpty() && rettighetstypeEtter.isEmpty()) {
             log.info("Rettighetstypen er tom før og etter migrering - totalt avslag")
             return
-        } else if(rettighetstypeFør.isEmpty()) {
+        } else if (rettighetstypeFør.isEmpty()) {
             log.warn("Rettighetstypen er tom før migrering, men finnes etter migrering - bør følges opp")
             return
         }
@@ -161,11 +164,7 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
     private fun skalValidereUnderveis(sak: Sak, behandlingFørMigrering: Behandling): Boolean {
         val erForrigeBehandlingFastsattPeriodePassert =
             behandlingFørMigrering.vurderingsbehov().map { it.type }.contains(Vurderingsbehov.FASTSATT_PERIODE_PASSERT)
-        val forhåndsgodkjenteSaksnummerMedPotensiellEndringIUnderveis = listOf(
-            "4LWL2oG",
-            "4LQVB9S",
-            "4LJ2J8W",
-        )
+        val forhåndsgodkjenteSaksnummerMedPotensiellEndringIUnderveis = emptyList<String>()
         val skalIgnoreres =
             forhåndsgodkjenteSaksnummerMedPotensiellEndringIUnderveis.contains(sak.saksnummer.toString())
         return !(erForrigeBehandlingFastsattPeriodePassert || skalIgnoreres)
@@ -200,9 +199,14 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
     ) {
         val tilkjentYtelseEffektivDagsatsFør =
             tilkjentYtelseRepository.hentHvisEksisterer(behandlingFørMigrering.id)
-                ?.somTidslinje({ it.periode }, { it.tilkjent.redusertDagsats() })?.komprimer()
+                ?.somTidslinje({ it.periode }, {
+                    // Tidligere i Kelvin ble dagsats satt til en verdi frem i tid, dette er feil og skjer ikke lenger.
+                    // Da må vi sammenligne med det som BURDE vært dagsats
+                    if (it.periode.fom > LocalDate.now()) it.tilkjent.redusertDagsats() else Beløp(0)
+                })?.komprimer()
                 ?.segmenter()?.toList()
                 ?: emptyList()
+        // Før fikk man satt dagsats i tilkjent ytelse frem i tid - dette bør ikke skje
         val tilkjentYtelseEffektivDagsatsEtter =
             tilkjentYtelseRepository.hentHvisEksisterer(behandlingEtterMigrering.id)
                 ?.somTidslinje({ it.periode }, { it.tilkjent.redusertDagsats() })?.komprimer()
