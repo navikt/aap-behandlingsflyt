@@ -21,7 +21,7 @@ class SkrivVedtaksbrevLøser(
     ): LøsningsResultat {
         return skrivBrevAvklaringsbehovLøser.løs(
             kontekst,
-            SkrivBrevAvklaringsbehovLøsning(løsning.brevbestillingReferanse, løsning.handling, løsning.mottakere)
+            SkrivBrevAvklaringsbehovLøsning(løsning.brevbestillingReferanse, løsning.handling, løsning.mottakere, løsning.begrunnelse)
         )
     }
 
