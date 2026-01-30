@@ -78,21 +78,23 @@ class VarsleVedtakJobbUtfører(
             utvidetFrist = null,
         )
 
-        //val relevantPeriode = Periode(virkFom, sak.rettighetsperiode.tom.coerceAtMost(LocalDate.now().minusWeeks(2)))
 
+        //val relevantPeriode = Periode(virkFom, sak.rettighetsperiode.tom.coerceAtMost(LocalDate.now().minusWeeks(2)))
+        val førstegangsbehandling = behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling
+        val endringIRettighetsTypeTidslinje = endringIRettighetstypeTidslinje(
+            forrigeUnderveisGrunnlag,
+            nåværendeUnderveisGrunnlag!!
+        )
         val relevantEndring =
             listOf(
-                behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling,
+                førstegangsbehandling,
                 //endringITilkjentYtelseTidslinje(forrigeTilkjentYtelse?.begrensetTil(relevantPeriode), nåværendeTilkjentYtelse?.begrensetTil(relevantPeriode)),
-                endringIRettighetstypeTidslinje(
-                    forrigeUnderveisGrunnlag,
-                    nåværendeUnderveisGrunnlag!!
-                )
+                endringIRettighetsTypeTidslinje
             )
 
 
         if (relevantEndring.any()) {
-//            log.info("Varsler SAM for behandling med referanse ${behandling.referanse} og saksnummer ${sak.saksnummer}. Årsak: førstegangsbehandling=${relevantEndring[0]}, endringITilkjentYtelse=${relevantEndring[1]}, endringIRettighetstype=${relevantEndring[2]}")
+            log.info("Varsler SAM for behandling med referanse ${behandling.referanse} og saksnummer ${sak.saksnummer}. Årsak: førstegangsbehandling=${førstegangsbehandling}, endringIRettighetstype=${endringIRettighetsTypeTidslinje}")
             samGateway.varsleVedtak(request)
         }
 
