@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -17,7 +16,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.JobbInput
@@ -68,12 +66,9 @@ class SjekkInstitusjonsOppholdJobbUtfører(
                                     .all { it.verdi.utfall == Utfall.IKKE_OPPFYLT }
                             if (vurderingsbehovOgÅrsaker.any { it.vurderingsbehov.any { vurderingsbehovMedPeriode -> vurderingsbehovMedPeriode.type == Vurderingsbehov.INSTITUSJONSOPPHOLD } }) {
                                 log.info("Vurderingsbehov for institusjonsopphold finnes allerede")
-                            }
-                            else if (alleIkkeOppfylt)
-                            {
+                            } else if (alleIkkeOppfylt) {
                                 log.info("Vurderingsbehov for institusjonsopphold opprettes ike, da det er avslag overalt")
-                            }
-                            else {
+                            } else {
                                 val opprettInstitusjonsOppholdBehandling = opprettNyBehandling(sak)
                                 log.info("Fant sak med institusjonsopphold $sak.id")
                                 log.info("Opprettet behandling for instopphold for ${opprettInstitusjonsOppholdBehandling.id} og ${opprettInstitusjonsOppholdBehandling.forrigeBehandlingId}")
