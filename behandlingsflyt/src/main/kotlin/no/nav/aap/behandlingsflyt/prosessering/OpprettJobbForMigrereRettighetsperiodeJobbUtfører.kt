@@ -28,7 +28,6 @@ class OpprettJobbForMigrereRettighetsperiodeJobbUtfører(
 ) : JobbUtfører {
 
     private val log = LoggerFactory.getLogger(javaClass)
-    private val grenseForSisteYtelsesbehandling = LocalDate.of(2025, 11, 1).atStartOfDay()
 
     override fun utfør(input: JobbInput) {
 
@@ -45,6 +44,7 @@ class OpprettJobbForMigrereRettighetsperiodeJobbUtfører(
 
             }
             .filter { erForhåndskvalifisertSak(it) }
+            .sortedByDescending { it.opprettetTidspunkt }
             .take(75)
 
         log.info("Fant ${saker.size} migrering av rettighetsperiode. Antall iverksatte/avsluttede kandidater: ${sakerForMigrering.size}")
@@ -66,10 +66,6 @@ class OpprettJobbForMigrereRettighetsperiodeJobbUtfører(
     private fun erAktuellForMigrering(sisteYtelsesbehandling: Behandling): Boolean =
         sisteYtelsesbehandling.status().erAvsluttet()
                 && !harSøknadTrukket(sisteYtelsesbehandling)
-                && erOpprettetI2026(sisteYtelsesbehandling)
-
-    private fun erOpprettetI2026(sisteYtelsesbehandling: Behandling): Boolean =
-        sisteYtelsesbehandling.opprettetTidspunkt.isAfter(grenseForSisteYtelsesbehandling)
 
     private fun harSøknadTrukket(sisteYtelsesbehandling: Behandling): Boolean =
         trukketSøknadService.søknadErTrukket(sisteYtelsesbehandling.id)
