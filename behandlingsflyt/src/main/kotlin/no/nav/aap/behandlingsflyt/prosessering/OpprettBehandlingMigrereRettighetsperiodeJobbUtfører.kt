@@ -1,10 +1,13 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
@@ -115,15 +118,24 @@ class OpprettBehandlingMigrereRettighetsperiodeJobbUtfører(
     ) {
         /**
          * Må nulle ut periode og id for å kunne komprimere og se reelle forskjeller på underveisperiodene
+         * Hvis forrige var førstegangsbehandling vil meldepliktstatus naturlig endre seg
          */
+        val forrigeBehandlingFørstegangsbehandling = behandlingFørMigrering.typeBehandling() == TypeBehandling.Førstegangsbehandling
+        fun overstyrVerdierForPeriode(underveisperiode: Underveisperiode): Underveisperiode =
+            underveisperiode.copy(
+                periode = Periode(Tid.MIN, Tid.MAKS),
+                id = null,
+                meldepliktStatus = if (forrigeBehandlingFørstegangsbehandling) null else underveisperiode.meldepliktStatus
+            )
+
         val underveisFør =
             underveisRepository.hentHvisEksisterer(behandlingFørMigrering.id)?.somTidslinje()
-                ?.map { it.copy(periode = Periode(Tid.MIN, Tid.MAKS), id = null) }?.komprimer()
+                ?.map { overstyrVerdierForPeriode(it) }?.komprimer()
                 ?.segmenter()?.toList()
                 ?: error("Fant ikke underveis for behandling ${behandlingFørMigrering.id}")
         val underveisEtter =
             underveisRepository.hentHvisEksisterer(behandlingEtterMigrering.id)?.somTidslinje()
-                ?.map { it.copy(periode = Periode(Tid.MIN, Tid.MAKS), id = null) }?.komprimer()
+                ?.map { overstyrVerdierForPeriode(it) }?.komprimer()
                 ?.segmenter()?.toList()
                 ?: error("Fant ikke underveis for behandling ${behandlingEtterMigrering.id}")
         secureLogger.info("Migrering underveis før=$underveisFør og etter=$underveisEtter")
