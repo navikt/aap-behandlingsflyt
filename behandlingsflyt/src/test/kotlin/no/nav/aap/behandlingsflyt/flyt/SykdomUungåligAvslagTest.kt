@@ -485,12 +485,11 @@ class SykdomUungåligAvslagTest : AbstraktFlytOrkestratorTest(LokalUnleash::clas
             .medKontekst {
                 val underveisGrunnlag = repositoryProvider.provide<UnderveisRepository>()
                     .hent(this.behandling.id)
-
-
-                assertThat(underveisGrunnlag.perioder).isNotEmpty
-                assertThat(underveisGrunnlag.perioder).extracting<RettighetsType>(Underveisperiode::rettighetsType)
-
                 
+                assertThat(underveisGrunnlag.perioder).isNotEmpty
+                assertThat(underveisGrunnlag.perioder.filter { it.utfall == Utfall.OPPFYLT }.size).isEqualTo(3)
+                assertThat(underveisGrunnlag.perioder.filter { it.utfall == Utfall.IKKE_OPPFYLT }.size).isEqualTo(underveisGrunnlag.perioder.size.minus(3))
+
             }
 
 
