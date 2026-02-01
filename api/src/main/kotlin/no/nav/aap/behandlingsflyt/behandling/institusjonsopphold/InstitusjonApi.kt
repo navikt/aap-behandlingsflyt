@@ -88,7 +88,6 @@ fun NormalOpenAPIRoute.institusjonApi(
                     val ansattNavnOgEnhet =
                         grunnlag?.soningsVurderinger?.let { ansattInfoService.hentAnsattNavnOgEnhet(it.vurdertAv) }
 
-
                     SoningsGrunnlagDto(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         soningsforholdInfo.segmenter().map { InstitusjonsoppholdDto.institusjonToDto(it) },
@@ -135,25 +134,18 @@ fun NormalOpenAPIRoute.institusjonApi(
                     val grunnlag = institusjonsoppholdRepository.hentHvisEksisterer(behandling.id)
                     val oppholdInfo = byggTidslinjeAvType(grunnlag, Institusjonstype.HS)
 
-                    // Hent alle vurderinger gruppert per opphold fra repository
-                    val vurderingerGruppertPerOpphold =
+                    val nyeVurderingerForOpphold =
                         institusjonsoppholdRepository.hentVurderingerGruppertPerOpphold(behandling.id)
+
+                    val vedtatteVurderingerForOpphold = behandling.forrigeBehandlingId?.let {
+                        institusjonsoppholdRepository.hentVurderingerGruppertPerOpphold(it)
+                    } ?: emptyMap()
 
                     val helseoppholdPerioder = behov.perioderTilVurdering.mapValue { it.helse }.komprimer()
 
-                    val nyeVurderingerForOpphold =
-                        vurderingerGruppertPerOpphold.mapValues { (_, vurderinger) ->
-                            vurderinger.filter { it.vurdertIBehandling == behandling.id }
-                        }.filterValues { it.isNotEmpty() }
-
-                    val vedtatteVurderingerForOpphold = vurderingerGruppertPerOpphold
-                        .mapValues { it.value.filterNot { vurdering -> vurdering.vurdertIBehandling == behandling.id } }
-                        .filterValues { it.isNotEmpty() }
-
-
                     val vedtatteVurderingerDto = mapVurderingerToDto(vedtatteVurderingerForOpphold, oppholdInfo)
 
-                    val vurderingerDto = if (vurderingerGruppertPerOpphold.isEmpty()) {
+                    val vurderingerDto = if (nyeVurderingerForOpphold.isEmpty()) {
                         helseoppholdPerioder.segmenter()
                             .mapNotNull { segment ->
                                 val verdi = segment.verdi

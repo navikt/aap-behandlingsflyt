@@ -61,11 +61,15 @@ class InstitusjonsoppholdUtlederService(
         val helseoppholdPerioder = helseopphold.map { it.periode }
         var helseoppholdvurderinger = input.helsevurderinger
 
-        // Filtrere vekk allerede vedtatte vurderinger, men behold alle hvis ingen matcher
-        val vurderingerMedBehandling = helseoppholdvurderinger.filter { it.vurdertIBehandling == behandlingId }
+        // Filtrer vurderinger: bruk kun de som er vurdert i denne behandlingen hvis de finnes,
+        // ellers bruk vurderinger fra behandlingen med høyest id (som er forrige behandling)
+        /*val vurderingerMedBehandling = helseoppholdvurderinger.filter { it.vurdertIBehandling == behandlingId }
         if (vurderingerMedBehandling.isNotEmpty()) {
             helseoppholdvurderinger = vurderingerMedBehandling
-        }
+        } else {
+            val maxId = helseoppholdvurderinger.maxOfOrNull { it.vurdertIBehandling.id }
+            helseoppholdvurderinger = helseoppholdvurderinger.filter { it.vurdertIBehandling.id == maxId }
+        }*/
 
         val helsevurderingerTidslinje = byggHelsevurderingTidslinje(
             helseoppholdvurderinger,

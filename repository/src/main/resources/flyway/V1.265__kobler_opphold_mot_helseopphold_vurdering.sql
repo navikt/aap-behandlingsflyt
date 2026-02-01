@@ -1,16 +1,7 @@
 ALTER TABLE HELSEOPPHOLD_VURDERING
     ADD COLUMN OPPHOLD_ID BIGINT REFERENCES OPPHOLD (ID);
 
-ALTER TABLE HELSEOPPHOLD_VURDERING
-    ADD COLUMN VURDERT_I_BEHANDLING BIGINT NOT NULL REFERENCES BEHANDLING (ID);
-
--- Sett vurdert_i_behandling for eksisterende rader
-UPDATE HELSEOPPHOLD_VURDERING hv
-SET vurdert_i_behandling = g.behandling_id
-FROM opphold_grunnlag g
-WHERE g.helseopphold_vurderinger_id = hv.id AND hv.vurdert_i_behandling IS NULL;
-
--- TODO Thao: Husk håntering av migrering av eksisterende vurdering som ikke hadde opphold.id fra før
+-- TODO Thao: Husk migrering av eksisterende vurdering som ikke har opphold.id fra før
 -- Migrering:  Legg til OPPHOLD_ID i HELSEOPPHOLD_VURDERING
 
 -- -- Steg 1: Legg til kolonnen som nullable først
