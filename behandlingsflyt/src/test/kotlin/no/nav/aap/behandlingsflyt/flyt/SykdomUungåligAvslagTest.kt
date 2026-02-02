@@ -83,7 +83,7 @@ class SykdomUungåligAvslagTest : AbstraktFlytOrkestratorTest(LokalUnleash::clas
                         erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
                         erArbeidsevnenNedsatt = null,
                         yrkesskadeBegrunnelse = null,
-                        fom = periode.fom,
+                        fom = fom,
                         tom = null
                     )
                 )
