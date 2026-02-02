@@ -40,15 +40,24 @@ class SkrivBrevAvklaringsbehovLøser(
             sakRepository = sakRepository
         )
         val brevbestillingReferanse = BrevbestillingReferanse(løsning.brevbestillingReferanse)
+
+        val begrunnelse = løsning.begrunnelse?.let { ".\n $it" } ?: ""
+
         return when (løsning.handling) {
             SkrivBrevAvklaringsbehovLøsning.Handling.FERDIGSTILL -> {
-                brevbestillingService.ferdigstill(kontekst.behandlingId(), brevbestillingReferanse, kontekst.bruker, løsning.mottakere)
-                LøsningsResultat("Brev ferdig")
+                brevbestillingService.ferdigstill(
+                    kontekst.behandlingId(),
+                    brevbestillingReferanse,
+                    kontekst.bruker,
+                    løsning.mottakere
+                )
+                
+                LøsningsResultat("Brev ferdig${begrunnelse}")
             }
 
             SkrivBrevAvklaringsbehovLøsning.Handling.AVBRYT -> {
                 brevbestillingService.avbryt(kontekst.behandlingId(), brevbestillingReferanse)
-                LøsningsResultat("Brev avbrutt")
+                LøsningsResultat("Brev avbrutt${begrunnelse}")
             }
         }
     }
