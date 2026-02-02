@@ -31,7 +31,7 @@ object YrkesskadeRegisterGatewayImpl : YrkesskadeRegisterGateway {
         prometheus = prometheus
     )
 
-    private val secureLogger = LoggerFactory.getLogger("secureLog")
+    private val secureLogger = LoggerFactory.getLogger("team-logs")
 
     override fun innhent(person: Person, fødselsdato: Fødselsdato): List<Yrkesskade> {
         val identer = person.identer().map(Ident::identifikator)
