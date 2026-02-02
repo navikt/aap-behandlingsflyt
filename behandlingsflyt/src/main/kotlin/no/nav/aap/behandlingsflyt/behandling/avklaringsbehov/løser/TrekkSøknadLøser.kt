@@ -47,6 +47,11 @@ class TrekkSøknadLøser(
         }
 
         val søknader = mottattDokumentRepository.hentDokumenterAvType(kontekst.behandlingId(), InnsendingType.SØKNAD)
+        log.info(
+            "Startet trekk av søknad (sakId=${kontekst.sakId()}, behandlingId=${kontekst.behandlingId()}). " +
+                    "Fant ${søknader.size} søknader knyttet til behandlingen."
+        )
+
         if (søknader.isEmpty()) {
             if (unleashGateway.isEnabled(
                     BehandlingsflytFeature.TrekkSoeknadOpprettetFraLegeerklaering,
@@ -57,11 +62,12 @@ class TrekkSøknadLøser(
             } else {
                 log.error(
                     "Prøver å trekke søknad, men det finnes ingen søknad knyttet til behandlingen. " +
-                            "Sak=${kontekst.kontekst.sakId.id}, behandling=${kontekst.behandlingId().id}"
+                            "Sak=${kontekst.sakId()}, behandling=${kontekst.behandlingId()}"
                 )
             }
         } else {
             søknader.forEach { søknad ->
+                log.info("Trekker søknad (sakId=${søknad.sakId}, behandlingId=${søknad.behandlingId})")
                 trekkSøknadRepository.lagreTrukketSøknadVurdering(
                     kontekst.behandlingId(),
                     TrukketSøknadVurdering(

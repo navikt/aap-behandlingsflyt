@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.komponenter.verdityper.GUnit
 import java.math.BigDecimal
+import kotlin.Boolean
 
 /**
  * Grunnlag-data relatert til §11-19.
@@ -33,7 +34,10 @@ data class Grunnlag11_19(
 
     override fun faktagrunnlag(): Faktagrunnlag {
         return Fakta(
-            grunnlaget = grunnlaget.verdi()
+            grunnlaget = grunnlaget.verdi(),
+            erGjennomsnitt = erGjennomsnitt,
+            gjennomsnittligInntektIG = gjennomsnittligInntektIG,
+            inntekter = inntekter,
         )
     }
 
@@ -42,7 +46,9 @@ data class Grunnlag11_19(
     }
 
     internal class Fakta(
-        // FIXME: BigDecimal serialiseres til JSON på standardform
-        val grunnlaget: BigDecimal
+        val grunnlaget: BigDecimal,
+        val erGjennomsnitt: Boolean,
+        val gjennomsnittligInntektIG: GUnit,
+        val inntekter: List<GrunnlagInntekt>,
     ) : Faktagrunnlag
 }
