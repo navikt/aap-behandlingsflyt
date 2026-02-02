@@ -138,6 +138,7 @@ class MottattDokumentRepositoryImpl(private val connection: DBConnection) : Mott
             sakId = SakId(row.getLong("sak_id")),
             behandlingId = row.getLongOrNull("BEHANDLING_ID")?.let { BehandlingId(it) },
             mottattTidspunkt = row.getLocalDateTime("MOTTATT_TID"),
+            opprettetTid = row.getLocalDateTime("OPPRETTET_TID"),
             type = brevkategori,
             kanal = row.getEnum("kanal"),
             status = row.getEnum("status"),
