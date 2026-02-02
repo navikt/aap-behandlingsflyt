@@ -22,6 +22,13 @@ class FlytKontekstMedPerioderBuilder {
     var vurderingsbehovRelevanteForStegMedPerioder: Set<VurderingsbehovMedPeriode>? = null
 
     var behandling: Behandling? = null
+        set(value) {
+            sakId = value?.sakId
+            behandlingId = value?.id
+            behandlingType = value?.typeBehandling() ?: behandlingType
+            forrigeBehandlingId = value?.forrigeBehandlingId
+            field = value
+        }
 
     fun build(): FlytKontekstMedPerioder {
         val typeBehandling = behandling?.typeBehandling() ?: behandlingType
@@ -31,20 +38,6 @@ class FlytKontekstMedPerioderBuilder {
                 TypeBehandling.Revurdering -> VurderingType.REVURDERING
                 else -> VurderingType.IKKE_RELEVANT
             }
-        if (behandling != null) {
-            val behandling1 = behandling!!
-            return FlytKontekstMedPerioder(
-                sakId = behandling1.sakId,
-                behandlingId = behandling1.id,
-                forrigeBehandlingId = behandling1.forrigeBehandlingId,
-                behandlingType = behandling1.typeBehandling(),
-                vurderingType = vurderingType,
-                rettighetsperiode = rettighetsperiode,
-                vurderingsbehovRelevanteForSteg = vurderingsbehovRelevanteForSteg,
-                vurderingsbehovRelevanteForStegMedPerioder = vurderingsbehovRelevanteForStegMedPerioder
-                    ?: vurderingsbehovRelevanteForSteg.map { VurderingsbehovMedPeriode(it) }.toSet()
-            )
-        }
         return FlytKontekstMedPerioder(
             sakId = sakId!!,
             behandlingId = behandlingId!!,
