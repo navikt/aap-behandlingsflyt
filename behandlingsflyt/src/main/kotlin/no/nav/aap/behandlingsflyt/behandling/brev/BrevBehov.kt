@@ -11,16 +11,17 @@ data class Innvilgelse(
     val grunnlagBeregning: GrunnlagBeregning?,
     val tilkjentYtelse: TilkjentYtelse?,
     val sykdomsvurdering: String?
-) : BrevBehov(TypeBrev.VEDTAK_INNVILGELSE) {
-}
+) : BrevBehov(TypeBrev.VEDTAK_INNVILGELSE)
 
 data class VurderesForUføretrygd(
+    val kravdatoUføretrygd: LocalDate,
     val sisteDagMedYtelse: LocalDate,
     val grunnlagBeregning: GrunnlagBeregning?,
     val tilkjentYtelse: TilkjentYtelse?
 ) : BrevBehov(TypeBrev.VEDTAK_11_18)
 
 data class Arbeidssøker(
+    val datoAvklartForJobbsøk: LocalDate,
     val sisteDagMedYtelse: LocalDate,
     val tilkjentYtelse: TilkjentYtelse?,
 ) : BrevBehov(TypeBrev.VEDTAK_11_17)

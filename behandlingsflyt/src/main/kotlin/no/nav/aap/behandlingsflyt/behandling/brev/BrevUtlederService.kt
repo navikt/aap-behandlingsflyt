@@ -209,19 +209,16 @@ class BrevUtlederService(
 
     private fun brevBehovArbeidssøker(behandling: Behandling): Arbeidssøker {
         val underveisGrunnlag = underveisRepository.hent(behandling.id)
-        val vedtak = checkNotNull(vedtakRepository.hent(behandling.id)) {
-            "Fant ikke vedtak for behandling med arbeidssøker"
+        val datoAvklartForJobbsøk = underveisGrunnlag.utledStartdatoForRettighet(RettighetsType.ARBEIDSSØKER)
+        checkNotNull(datoAvklartForJobbsøk) {
+            "Vedtak for behandling for arbeidssøker mangler datoAvklartForJobbsøk"
         }
-        checkNotNull(vedtak.virkningstidspunkt) {
-            "Vedtak for behandling for arbeidssøker mangler virkningstidspunkt"
-        }
-
         return Arbeidssøker(
+            datoAvklartForJobbsøk = datoAvklartForJobbsøk,
             sisteDagMedYtelse = underveisGrunnlag.sisteDagMedYtelse(),
-            tilkjentYtelse = utledTilkjentYtelse(behandling.id, vedtak.virkningstidspunkt)
+            tilkjentYtelse = utledTilkjentYtelse(behandling.id, datoAvklartForJobbsøk)
         )
     }
-
 
     private fun brevBehovInnvilgelse(behandling: Behandling): Innvilgelse {
         val vedtak = checkNotNull(vedtakRepository.hent(behandling.id)) {
@@ -256,14 +253,14 @@ class BrevUtlederService(
     private fun brevBehovVurderesForUføretrygd(behandling: Behandling): VurderesForUføretrygd {
         // Sender per nå ikke med dato som betyr at beregningsgrunnlag (beløp) blir null
         val grunnlagBeregning = hentGrunnlagBeregning(behandling.id, null)
-
-        val vedtak = vedtakRepository.hent(behandling.id)
-        val tilkjentYtelse = vedtak?.virkningstidspunkt?.let {
-            utledTilkjentYtelse(behandling.id, vedtak.virkningstidspunkt)
+        val kravdatoUføretrygd = overgangUføreRepository.hentHvisEksisterer(behandling.id)?.kravdatoUføretrygd()
+        checkNotNull(kravdatoUføretrygd) {
+            "Vedtak vurdert for uføretrygd mangler kravdato"
         }
-
+        val tilkjentYtelse = utledTilkjentYtelse(behandling.id, kravdatoUføretrygd)
         val underveisGrunnlag = underveisRepository.hent(behandling.id)
         return VurderesForUføretrygd(
+            kravdatoUføretrygd = kravdatoUføretrygd,
             sisteDagMedYtelse = underveisGrunnlag.sisteDagMedYtelse(),
             grunnlagBeregning = grunnlagBeregning,
             tilkjentYtelse = tilkjentYtelse
@@ -339,7 +336,7 @@ class BrevUtlederService(
         )
     }
 
-    private fun utledTilkjentYtelse(behandlingId: BehandlingId, virkningstidspunkt: LocalDate): TilkjentYtelse? {
+    private fun utledTilkjentYtelse(behandlingId: BehandlingId, oppslagsDato: LocalDate): TilkjentYtelse? {
         /**
          * Henter data basert på virkningstidspunkt.
          */
@@ -387,8 +384,6 @@ class BrevUtlederService(
                         .setScale(0, RoundingMode.HALF_UP)
                 )
 
-            val kravdatoUføretrygd = overgangUføreRepository.hentHvisEksisterer(behandlingId)?.kravdatoUføretrygd()
-
             TilkjentYtelse(
                 dagsats = tilkjent.dagsats,
                 gradertDagsats = gradertDagsats,
@@ -400,9 +395,9 @@ class BrevUtlederService(
                 minsteÅrligYtelse = minsteÅrligYtelse,
                 minsteÅrligYtelseUnder25 = Beløp(minsteÅrligYtelse.toTredjedeler()),
                 årligYtelse = tilkjent.dagsats.multiplisert(ANTALL_ÅRLIGE_ARBEIDSDAGER),
-                kravdatoUføretrygd = kravdatoUføretrygd
+                kravdatoUføretrygd = null
             )
-        }.segment(virkningstidspunkt)?.verdi
+        }.segment(oppslagsDato)?.verdi
     }
 
     private fun utledBeregningstidspunktUføre(
