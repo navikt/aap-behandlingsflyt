@@ -27,7 +27,7 @@ jobs:
           uses: gradle/actions/setup-gradle@v5
           with:
             gradle-version: wrapper
-        - name: Bygg & test
+        - name: Finn tasks
           id: set-matrix
           run: |
             TASKS=$(./gradlew -q testMatrix | jq 'del(.[] | select(. == startswith(":docs:")))' --compact-output)
@@ -45,10 +45,7 @@ jobs:
             checks: write
         strategy:
           fail-fast: false
-          matrix:
-            # For nå må alle moduler med tester skrives manuelt.
-            # Kan sikkert gjøre noe Gradle-magi for å gjøre dette automatisk.
-            matrix: ${{ fromJson(needs.find_gradle_jobs.outputs.matrix) }}
+          matrix: ${{ fromJson(needs.find_gradle_jobs.outputs.matrix) }}
         steps:
             -   uses: actions/checkout@v6
             -   uses: actions/setup-java@v5
