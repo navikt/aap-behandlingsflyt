@@ -246,7 +246,6 @@ class TidligereVurderingerImpl(
                 /* Det finnes unntak til sykdomsvilkåret, så selv om vilkåret ikke er oppfylt, så
                  * vet vi ikke her om det blir avslag eller ei. */
                 Tidslinje()
-
             },
 
             Sjekk(StegType.FASTSETT_GRUNNLAG) { vilkårsresultat, _ ->
