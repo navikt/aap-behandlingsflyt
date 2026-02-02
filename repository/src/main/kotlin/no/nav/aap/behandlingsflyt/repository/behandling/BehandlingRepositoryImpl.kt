@@ -460,7 +460,7 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         }
     }
 
-    override fun finnFørstegangsbehandling(sakId: SakId): Behandling? {
+    override fun finnFørstegangsbehandling(sakId: SakId): Behandling {
         val query = """
             SELECT * FROM BEHANDLING WHERE sak_id = ? AND type = ?
             """.trimIndent()
