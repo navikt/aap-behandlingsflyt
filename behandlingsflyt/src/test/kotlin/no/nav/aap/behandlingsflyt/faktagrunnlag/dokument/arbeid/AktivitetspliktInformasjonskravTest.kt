@@ -21,7 +21,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -168,15 +167,12 @@ class AktivitetspliktInformasjonskravTest {
     }
 
     private fun flytKontekstMedPerioder(behandling: Behandling, sak: Sak) =
-        FlytKontekstMedPerioder(
-            sakId = behandling.sakId,
-            behandlingId = behandling.id,
-            forrigeBehandlingId = behandling.forrigeBehandlingId,
-            behandlingType = TypeBehandling.Førstegangsbehandling,
-            vurderingType = VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
-            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT),
+        no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder {
+            this.behandling = behandling
+            vurderingType = VurderingType.EFFEKTUER_AKTIVITETSPLIKT
             rettighetsperiode = sak.rettighetsperiode
-        )
+            vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.EFFEKTUER_AKTIVITETSPLIKT)
+        }
 
     private fun opprettAktivitetspliktBehandlingMedVurdering(
         sak: Sak,
