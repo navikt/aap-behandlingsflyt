@@ -30,7 +30,7 @@ jobs:
         - name: Bygg & test
           id: set-matrix
           run: |
-            TASKS=$(./gradlew --no-daemon --parallel -q testMatrix | jq 'del(.[] | select(. == startswith(":docs:")))' --compact-output)
+            TASKS=$(./gradlew -q testMatrix | jq 'del(.[] | select(. == startswith(":docs:")))' --compact-output)
             echo $TASKS
             echo "matrix={\"gradle_args\":$TASKS}" >> $GITHUB_OUTPUT
 
