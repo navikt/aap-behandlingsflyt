@@ -26,10 +26,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -137,15 +135,10 @@ class SamordningYtelseVurderingInformasjonskrav(
     }
 
     private fun hentYtelseSykepenger(personIdent: String, oppslagsPeriode: Periode): List<UtbetaltePerioder> {
-        return if (unleashGateway.isEnabled(BehandlingsflytFeature.HentSykepengerVedOverlapp)) {
-            spGateway.hentYtelseSykepenger(
+        return spGateway.hentYtelseSykepenger(
                 setOf(personIdent), oppslagsPeriode.fom, oppslagsPeriode.tom
             ).filter { oppslagsPeriode.overlapper((Periode(it.fom, it.tom))) }
-        } else {
-            spGateway.hentYtelseSykepenger(
-                setOf(personIdent), oppslagsPeriode.fom, oppslagsPeriode.tom
-            ).filter { oppslagsPeriode.inneholder((Periode(it.fom, it.tom))) }
-        }
+
     }
 
     private fun mapTilSamordningYtelse(
