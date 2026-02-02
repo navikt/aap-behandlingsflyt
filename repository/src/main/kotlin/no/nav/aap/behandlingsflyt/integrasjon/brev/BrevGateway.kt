@@ -54,6 +54,7 @@ import no.nav.aap.komponenter.json.DefaultJsonMapper
 import org.slf4j.LoggerFactory
 import java.io.InputStream
 import java.net.URI
+import java.time.LocalDate
 import kotlin.collections.orEmpty
 
 class BrevGateway : BrevbestillingGateway {
@@ -332,6 +333,8 @@ class BrevGateway : BrevbestillingGateway {
 
             is VurderesForUføretrygd -> {
                 buildSet {
+                    add(Faktagrunnlag.KravdatoUføretrygd(brevBehov.kravdatoUføretrygd))
+                    add(Faktagrunnlag.SisteDagMedYtelse(brevBehov.sisteDagMedYtelse))
                     if (brevBehov.grunnlagBeregning != null) {
                         add(
                             grunnlagBeregningTilFaktagrunnlag(brevBehov.grunnlagBeregning!!)
@@ -342,18 +345,18 @@ class BrevGateway : BrevbestillingGateway {
                             tilkjentYtelseTilFaktagrunnlag(brevBehov.tilkjentYtelse!!)
                         )
                     }
-                    add(Faktagrunnlag.SisteDagMedYtelse(brevBehov.sisteDagMedYtelse))
                 }
             }
 
             is Arbeidssøker -> {
                 buildSet {
+                    add(Faktagrunnlag.DatoAvklartForJobbsøk(brevBehov.datoAvklartForJobbsøk))
+                    add(Faktagrunnlag.SisteDagMedYtelse(brevBehov.sisteDagMedYtelse))
                     if (brevBehov.tilkjentYtelse != null) {
                         add(
                             tilkjentYtelseTilFaktagrunnlag(brevBehov.tilkjentYtelse!!)
                         )
                     }
-                    add(Faktagrunnlag.SisteDagMedYtelse(brevBehov.sisteDagMedYtelse))
                 }
             }
 
