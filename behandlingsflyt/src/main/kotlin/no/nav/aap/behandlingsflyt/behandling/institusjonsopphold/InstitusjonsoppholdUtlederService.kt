@@ -43,13 +43,12 @@ class InstitusjonsoppholdUtlederService(
     ): BehovForAvklaringer {
         val input = konstruerInput(behandlingId, basertPåVurderingerFørDenneBehandlingen)
 
-        return utledBehov(input, begrensetTilRettighetsperiode, behandlingId)
+        return utledBehov(input, begrensetTilRettighetsperiode)
     }
 
     internal fun utledBehov(
         input: InstitusjonsoppholdInput,
-        begrensetTilRettighetsperiode: Boolean? = true,
-        behandlingId: BehandlingId
+        begrensetTilRettighetsperiode: Boolean? = true
     ): BehovForAvklaringer {
         val opphold = input.institusjonsOpphold
         val soningsOpphold = opphold.filter { segment -> segment.verdi.type == Institusjonstype.FO }
@@ -60,16 +59,6 @@ class InstitusjonsoppholdUtlederService(
         // Fyll inn gaps med GODKJENT slik at de ikke krever vurdering
         val helseoppholdPerioder = helseopphold.map { it.periode }
         var helseoppholdvurderinger = input.helsevurderinger
-
-        // Filtrer vurderinger: bruk kun de som er vurdert i denne behandlingen hvis de finnes,
-        // ellers bruk vurderinger fra behandlingen med høyest id (som er forrige behandling)
-        /*val vurderingerMedBehandling = helseoppholdvurderinger.filter { it.vurdertIBehandling == behandlingId }
-        if (vurderingerMedBehandling.isNotEmpty()) {
-            helseoppholdvurderinger = vurderingerMedBehandling
-        } else {
-            val maxId = helseoppholdvurderinger.maxOfOrNull { it.vurdertIBehandling.id }
-            helseoppholdvurderinger = helseoppholdvurderinger.filter { it.vurdertIBehandling.id == maxId }
-        }*/
 
         val helsevurderingerTidslinje = byggHelsevurderingTidslinje(
             helseoppholdvurderinger,

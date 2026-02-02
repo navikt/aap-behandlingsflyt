@@ -103,35 +103,6 @@ class InstitusjonRegel : UnderveisRegel {
         }
     }
 
-    private fun sammenslåer(): JoinStyle<InstitusjonVurdering, Boolean, InstitusjonVurdering> {
-        return JoinStyle.LEFT_JOIN { periode, venstreSegment, høyreSegment ->
-            val venstreVerdi = venstreSegment.verdi
-            val høyreVerdi = høyreSegment?.verdi
-
-            val skalRedusere = venstreVerdi.skalReduseres && høyreVerdi == true
-            var årsak: Årsak? = utledÅrsak(venstreVerdi.skalReduseres)
-            var grad = Prosent.`100_PROSENT`
-            if (skalRedusere) {
-                årsak = requireNotNull(venstreVerdi.årsak)
-                grad = Prosent.`50_PROSENT`
-            }
-
-            val verdi = InstitusjonVurdering(skalRedusere, årsak, grad)
-            Segment(periode, verdi)
-        }
-    }
-
-    private fun utledÅrsak(skalReduseres: Boolean?): Årsak? {
-        if (skalReduseres == null) {
-            return null
-        }
-        return if (skalReduseres) {
-            Årsak.UTEN_REDUKSJON
-        } else {
-            null
-        }
-    }
-
     private fun konstruerTidslinje(input: UnderveisInput): Tidslinje<InstitusjonVurdering> {
         return Tidslinje(
             input.institusjonsopphold.filter {
@@ -154,30 +125,5 @@ class InstitusjonRegel : UnderveisRegel {
                 }
             }
         ).komprimer()
-    }
-
-    // FIXME Thao: Bruk denne i validering istedenfor.
-    private fun utledTidslinjeHvorDetKanGisReduksjon(input: UnderveisInput): Tidslinje<Boolean> {
-        val tidslinjeOverInnleggelser = Tidslinje(
-            input.institusjonsopphold.filter {
-                it.institusjon?.erPåInstitusjon == true
-            }.map {
-                Segment(
-                    it.periode,
-                    it.institusjon?.skalGiUmiddelbarReduksjon == true && it.institusjon.skalGiReduksjon
-                )
-            }
-        ).komprimer()
-        return Tidslinje(
-            tidslinjeOverInnleggelser
-                .segmenter()
-                .map { Segment(utledMuligReduksjonsPeriode(it.periode, it.verdi), true) })
-    }
-
-    private fun utledMuligReduksjonsPeriode(periode: Periode, skalgiUmiddelbarReduksjon: Boolean): Periode {
-        if (skalgiUmiddelbarReduksjon) {
-            return Periode(periode.fom.withDayOfMonth(1).plusMonths(1), periode.tom)
-        }
-        return Periode(periode.fom.withDayOfMonth(1).plusMonths(1).plusMonths(3), periode.tom)
     }
 }
