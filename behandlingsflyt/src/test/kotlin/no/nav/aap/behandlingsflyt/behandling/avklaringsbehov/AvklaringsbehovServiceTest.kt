@@ -57,7 +57,9 @@ class AvklaringsbehovServiceTest {
         val erTilstrekkeligVurdert = { false }
         val tilbakestillGrunnlag = mockk<() -> Unit>(relaxed = true)
         val kontekst = flytKontekstMedPerioder {
-
+            this.behandlingId = behandlingId
+            this.rettighetsperiode = Periode(LocalDate.now(), Tid.MAKS)
+            this.vurderingsbehovRelevanteForSteg = emptySet()
         }
 
         // Act
