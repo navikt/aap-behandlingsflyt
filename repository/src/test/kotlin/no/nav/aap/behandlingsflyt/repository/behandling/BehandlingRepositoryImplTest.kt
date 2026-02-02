@@ -64,6 +64,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
+import kotlin.math.abs
 
 internal class BehandlingRepositoryImplTest {
     companion object {
@@ -113,11 +114,9 @@ internal class BehandlingRepositoryImplTest {
 
             assertThat(hententMedReferanse.referanse).isEqualTo(skapt.referanse)
             assertThat(hententMedReferanse.vurderingsbehov()).containsExactlyElementsOf(skapt.vurderingsbehov())
-            assertThat(hententMedReferanse.vurderingsbehov()).containsExactlyElementsOf(
+            assertThat(hententMedReferanse.vurderingsbehov().map { it.type }).containsExactlyElementsOf(
                 listOf(
-                    VurderingsbehovMedPeriode(
-                        type = Vurderingsbehov.MOTTATT_SØKNAD
-                    )
+                    Vurderingsbehov.MOTTATT_SØKNAD
                 )
             )
             assertThat(hententMedReferanse.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
@@ -219,7 +218,7 @@ internal class BehandlingRepositoryImplTest {
         val virkningstidspunkt = LocalDate.now().plusMonths(1)
 
 
-        val (sak, førstegang, klage) = dataSource.transaction { connection ->
+        val (sak, førstegang, _) = dataSource.transaction { connection ->
             val sak = PersonOgSakService(
                 FakePdlGateway,
                 PersonRepositoryImpl(connection),
@@ -364,17 +363,25 @@ internal class BehandlingRepositoryImplTest {
             val vurderingsbehovOgÅrsaker = behandlingRepository.hentVurderingsbehovOgÅrsaker(behandling.id)
             assertThat(vurderingsbehovOgÅrsaker).hasSize(2)
             assertThat(vurderingsbehovOgÅrsaker.map { Pair(it.årsak, it.vurderingsbehov) })
-                .containsExactlyInAnyOrder(
-                    ÅrsakTilOpprettelse.SØKNAD to listOf(
-                        VurderingsbehovMedPeriode(
-                            type = Vurderingsbehov.MOTTATT_SØKNAD,
-                            periode = null
-                        )
-                    ),
-                    ÅrsakTilOpprettelse.MELDEKORT to listOf(
-                        VurderingsbehovMedPeriode(
-                            type = Vurderingsbehov.MOTTATT_MELDEKORT,
-                            periode = sak.rettighetsperiode
+                .usingRecursiveComparison()
+                .ignoringCollectionOrder()
+                .withEqualsForType({ a: LocalDateTime, b: LocalDateTime ->
+                    abs(ChronoUnit.MILLIS.between(b, a)) < 100000
+                }, LocalDateTime::class.java)
+                .isEqualTo(
+                    listOf(
+                        ÅrsakTilOpprettelse.SØKNAD to listOf(
+                            VurderingsbehovMedPeriode(
+                                type = Vurderingsbehov.MOTTATT_SØKNAD,
+                                periode = null
+                            )
+                        ),
+                        ÅrsakTilOpprettelse.MELDEKORT to listOf(
+                            VurderingsbehovMedPeriode(
+                                type = Vurderingsbehov.MOTTATT_MELDEKORT,
+                                periode = sak.rettighetsperiode,
+                                oppdatertTid = LocalDateTime.now()
+                            )
                         )
                     )
                 )
@@ -442,7 +449,12 @@ internal class BehandlingRepositoryImplTest {
             BehandlingRepositoryImpl(it).oppdaterVurderingsbehovOgÅrsak(
                 behandling,
                 VurderingsbehovOgÅrsak(
-                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.REVURDER_MEDLEMSKAP, periode = periode)),
+                    vurderingsbehov = listOf(
+                        VurderingsbehovMedPeriode(
+                            type = Vurderingsbehov.REVURDER_MEDLEMSKAP,
+                            periode = periode
+                        )
+                    ),
                     årsak = ÅrsakTilOpprettelse.SØKNAD
                 )
             )
@@ -460,7 +472,12 @@ internal class BehandlingRepositoryImplTest {
             BehandlingRepositoryImpl(it).oppdaterVurderingsbehovOgÅrsak(
                 behandling,
                 VurderingsbehovOgÅrsak(
-                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.REVURDER_MEDLEMSKAP, periode)),
+                    vurderingsbehov = listOf(
+                        VurderingsbehovMedPeriode(
+                            type = Vurderingsbehov.REVURDER_MEDLEMSKAP,
+                            periode
+                        )
+                    ),
                     årsak = ÅrsakTilOpprettelse.SØKNAD
                 )
             )

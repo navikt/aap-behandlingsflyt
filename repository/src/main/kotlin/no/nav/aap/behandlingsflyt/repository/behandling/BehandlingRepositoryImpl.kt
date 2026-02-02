@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.repository.behandling
 
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -12,6 +11,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
@@ -69,8 +69,8 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         })
 
         val vurderingsbehovQuery = """
-            INSERT INTO vurderingsbehov (behandling_id, aarsak, periode, behandling_aarsak_id)
-            VALUES (?, ?, ?::daterange, ?)
+            INSERT INTO vurderingsbehov (behandling_id, aarsak, periode, behandling_aarsak_id, opprettet_tid, oppdatert_tid)
+            VALUES (?, ?, ?::daterange, ?, ?, ?)
         """.trimIndent()
 
         connection.executeBatch(vurderingsbehovQuery, vurderingsbehovOgÅrsak.vurderingsbehov) {
@@ -79,6 +79,8 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                 setEnumName(2, it.type)
                 setPeriode(3, it.periode)
                 setLong(4, behandlingÅrsakId)
+                setLocalDateTime(5, LocalDateTime.now())
+                setLocalDateTime(6, LocalDateTime.now())
             }
         }
 
@@ -504,9 +506,9 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         })
 
         val vurderingsbehovQuery = """
-            INSERT INTO vurderingsbehov (behandling_id, aarsak, periode, behandling_aarsak_id)
-            VALUES (?, ?, ?::daterange, ?)
-            ON CONFLICT (behandling_id, aarsak, periode) DO UPDATE SET oppdatert_tid = CURRENT_TIMESTAMP
+            INSERT INTO vurderingsbehov (behandling_id, aarsak, periode, behandling_aarsak_id, oppdatert_tid)
+            VALUES (?, ?, ?::daterange, ?, ?)
+            ON CONFLICT (behandling_id, aarsak, periode) DO UPDATE SET oppdatert_tid = ?
         """.trimIndent()
 
         connection.executeBatch(vurderingsbehovQuery, vurderingsbehovOgÅrsak.vurderingsbehov) {
@@ -515,6 +517,8 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
                 setEnumName(2, it.type)
                 setPeriode(3, it.periode)
                 setLong(4, behandlingÅrsakId)
+                setLocalDateTime(5, LocalDateTime.now())
+                setLocalDateTime(6, LocalDateTime.now())
             }
         }
     }
