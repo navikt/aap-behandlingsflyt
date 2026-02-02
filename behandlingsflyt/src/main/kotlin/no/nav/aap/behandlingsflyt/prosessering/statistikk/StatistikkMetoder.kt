@@ -288,7 +288,7 @@ class StatistikkMetoder(
     private fun hentRelevanteDokumenterForBehandling(behandling: Behandling): Set<MottattDokument> {
         val hentDokumenterAvType = dokumentRepository.hentDokumenterAvType(
             behandling.id,
-            listOf(InnsendingType.SØKNAD, InnsendingType.LEGEERKLÆRING, InnsendingType.ANNET_RELEVANT_DOKUMENT)
+            InnsendingType.entries
         )
         return hentDokumenterAvType
     }
