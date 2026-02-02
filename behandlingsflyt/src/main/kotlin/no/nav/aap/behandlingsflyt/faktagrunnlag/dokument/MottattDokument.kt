@@ -15,6 +15,7 @@ class MottattDokument(
     val sakId: SakId,
     val behandlingId: BehandlingId?,
     val mottattTidspunkt: LocalDateTime,
+    val opprettetTid: LocalDateTime = LocalDateTime.now(),
     val type: InnsendingType,
     val kanal: Kanal,
     val status: Status = Status.MOTTATT,

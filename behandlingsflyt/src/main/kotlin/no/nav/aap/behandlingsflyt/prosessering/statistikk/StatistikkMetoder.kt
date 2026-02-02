@@ -276,7 +276,7 @@ class StatistikkMetoder(
         behandling: Behandling, mottatteDokumenter: Set<MottattDokument>
     ): LocalDateTime {
         val mottattTidspunkt =
-            mottatteDokumenter.filter { it.behandlingId == behandling.id }.minOfOrNull { it.mottattTidspunkt }
+            mottatteDokumenter.filter { it.behandlingId == behandling.id }.minByOrNull { it.opprettetTid }?.mottattTidspunkt
 
         if (mottattTidspunkt == null) {
             log.info("Ingen søknader funnet for behandling ${behandling.referanse} av type ${behandling.typeBehandling()}.")
