@@ -5,7 +5,6 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
 import no.nav.aap.behandlingsflyt.Tags
-import no.nav.aap.behandlingsflyt.integrasjon.ident.PdlIdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -26,7 +25,7 @@ fun NormalOpenAPIRoute.personApi(
     val pdlGateway = gatewayProvider.provide(PdlIdentGateway::class)
 
     route("/api/person").tag(Tags.Sak) {
-        route("/eksisterer").authorizedPost<Unit, FinnesIKelvinDTO, SøkPåPersonDTO>(
+        route("/eksisterer").authorizedPost<Unit, PersonEksistererIKelvin, SøkPåPersonDTO>(
             AuthorizationMachineToMachineConfig(authorizedRoles = listOf("hent-personinfo"))
         ) { _, dto ->
             val identMedEttFnr = Ident(dto.ident)
@@ -36,7 +35,7 @@ fun NormalOpenAPIRoute.personApi(
                 val repositoryProvider = repositoryRegistry.provider(connection)
                 repositoryProvider.provide<PersonRepository>().eksisterer(identliste.toSet())
             }
-            respond(FinnesIKelvinDTO(eksisterer))
+            respond(PersonEksistererIKelvin(eksisterer))
         }
 
     }
