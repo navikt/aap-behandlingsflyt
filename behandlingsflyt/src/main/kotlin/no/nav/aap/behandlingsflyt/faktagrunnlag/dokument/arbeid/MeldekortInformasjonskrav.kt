@@ -96,8 +96,7 @@ class MeldekortInformasjonskrav private constructor(
             allePlussNye.add(nyttMeldekort)
 
             if (unleashGateway.isEnabled(BehandlingsflytFeature.PapirMeldekortFraBehandingsflyt)) {
-                val erDigitalisert = finnUtOmDetErDigitalisert ??? // Dette må komme fra postmottak
-                if (erDigitalisert) {
+                if (ubehandletMeldekort.digitalisertAvPostmottak == true) {
                     flytJobbRepository.leggTil(
                         JobbInput(jobb = DigitaliserteMeldekortTilMeldekortBackendJobbUtfører).medPayload(
                             ubehandletMeldekort

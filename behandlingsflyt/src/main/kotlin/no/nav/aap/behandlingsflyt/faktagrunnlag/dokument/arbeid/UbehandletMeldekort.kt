@@ -11,13 +11,15 @@ data class UbehandletMeldekort(
     val journalpostId: JournalpostId,
     val timerArbeidPerPeriode: Set<ArbeidIPeriode>,
     val mottattTidspunkt: LocalDateTime,
-    val harDuArbeidet: Boolean
+    val harDuArbeidet: Boolean,
+    val digitalisertAvPostmottak: Boolean?
 ) {
     companion object {
         fun fraKontrakt(
             meldekort: Meldekort,
             journalpostId: JournalpostId,
-            mottattTidspunkt: LocalDateTime
+            mottattTidspunkt: LocalDateTime,
+            digitalisertAvPostmottak: Boolean?
         ): UbehandletMeldekort {
             return when (meldekort) {
                 is MeldekortV0 -> UbehandletMeldekort(
@@ -29,7 +31,8 @@ data class UbehandletMeldekort(
                         )
                     }.toSet(),
                     mottattTidspunkt = mottattTidspunkt,
-                    harDuArbeidet = meldekort.harDuArbeidet
+                    harDuArbeidet = meldekort.harDuArbeidet,
+                    digitalisertAvPostmottak = digitalisertAvPostmottak
                 )
             }
         }

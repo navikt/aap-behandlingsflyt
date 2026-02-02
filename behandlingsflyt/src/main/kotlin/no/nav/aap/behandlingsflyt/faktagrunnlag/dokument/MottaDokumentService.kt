@@ -61,7 +61,8 @@ class MottaDokumentService(
                 UbehandletMeldekort.fraKontrakt(
                     meldekort = meldekort(it),
                     journalpostId = it.referanse.asJournalpostId,
-                    mottattTidspunkt = it.mottattTidspunkt
+                    mottattTidspunkt = it.mottattTidspunkt,
+                    digitalisertAvPostmottak = it.digitalisertAvPostmottak
                 )
             }
             .toSet()
