@@ -10,7 +10,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
@@ -46,7 +45,7 @@ class SykdomsvurderingBrevStegTest {
         val person = person()
         val sak = sak(person)
         val behandling = behandling(sak, typeBehandling = TypeBehandling.Førstegangsbehandling)
-        val kontekstMedPerioder = flytKontekstMedPerioder(sak, behandling, VurderingType.FØRSTEGANGSBEHANDLING)
+        val kontekstMedPerioder = flytKontekstMedPerioder(behandling)
 
         opprettOgLøsSykdombehov(behandling)
 
@@ -82,9 +81,7 @@ class SykdomsvurderingBrevStegTest {
         val sak = sak(person)
         val behandling = behandling(sak, typeBehandling = TypeBehandling.Revurdering)
         val kontekstMedPerioder = flytKontekstMedPerioder(
-            sak,
             behandling,
-            VurderingType.REVURDERING,
             setOf(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
         )
 
@@ -114,16 +111,13 @@ class SykdomsvurderingBrevStegTest {
     }
 
     private fun flytKontekstMedPerioder(
-        sak: Sak,
         behandling: Behandling,
-        vurderingType: VurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
         vurderingsbehov: Set<Vurderingsbehov> = setOf(Vurderingsbehov.MOTTATT_SØKNAD)
-    ): FlytKontekstMedPerioder = FlytKontekstMedPerioder(
-        sak.id, behandling.id, behandling.forrigeBehandlingId, behandling.typeBehandling(),
-        vurderingType = vurderingType,
-        vurderingsbehovRelevanteForSteg = vurderingsbehov,
-        rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
-    )
+    ): FlytKontekstMedPerioder = no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder {
+        this.behandling = behandling
+        this.vurderingsbehovRelevanteForSteg = vurderingsbehov
+        this.rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
+    }
 
     private fun behandling(sak: Sak, typeBehandling: TypeBehandling): Behandling =
         behandlingRepository.opprettBehandling(

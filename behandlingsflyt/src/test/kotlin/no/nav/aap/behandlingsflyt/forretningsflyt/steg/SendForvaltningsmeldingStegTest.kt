@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
 import no.nav.aap.behandlingsflyt.flyt.testutil.FakeBrevbestillingGateway
 import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Førstegangsbehandling
 import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Revurdering
+import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -18,12 +19,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBrevbestillingRepository
@@ -216,15 +215,11 @@ class SendForvaltningsmeldingStegTest {
         behandling: Behandling,
         vurderingsbehov: Vurderingsbehov
     ): FlytKontekstMedPerioder {
-        return FlytKontekstMedPerioder(
-            sakId = behandling.sakId,
-            behandlingId = behandling.id,
-            forrigeBehandlingId = behandling.forrigeBehandlingId,
-            behandlingType = behandling.typeBehandling(),
-            vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-            vurderingsbehovRelevanteForSteg = setOf(vurderingsbehov),
-            rettighetsperiode = periode,
-        )
+        return flytKontekstMedPerioder {
+            this.behandling = behandling
+            vurderingsbehovRelevanteForSteg = setOf(vurderingsbehov)
+            this.rettighetsperiode = periode
+        }
     }
 
     private fun opprettSakOgbehandlingForKlageMottatt(typeBehandling: TypeBehandling): Behandling {
@@ -241,7 +236,11 @@ class SendForvaltningsmeldingStegTest {
         )
     }
 
-    private fun opprettKlageDokument(sakId: SakId, behandlingId: BehandlingId, typeInnsendingReferanse: InnsendingReferanse.Type) {
+    private fun opprettKlageDokument(
+        sakId: SakId,
+        behandlingId: BehandlingId,
+        typeInnsendingReferanse: InnsendingReferanse.Type
+    ) {
         InMemoryMottattDokumentRepository.lagre(
             MottattDokument(
                 referanse = InnsendingReferanse(typeInnsendingReferanse, "uuid-referanse"),
@@ -259,14 +258,10 @@ class SendForvaltningsmeldingStegTest {
         behandling: Behandling,
         vurderingsbehov: Vurderingsbehov
     ): FlytKontekstMedPerioder {
-        return FlytKontekstMedPerioder(
-            sakId = behandling.sakId,
-            behandlingId = behandling.id,
-            forrigeBehandlingId = behandling.forrigeBehandlingId,
-            behandlingType = behandling.typeBehandling(),
-            vurderingType = VurderingType.IKKE_RELEVANT,
-            vurderingsbehovRelevanteForSteg = setOf(vurderingsbehov),
-            rettighetsperiode = periode,
-        )
+        return flytKontekstMedPerioder {
+            this.behandling = behandling
+            this.vurderingsbehovRelevanteForSteg = setOf(vurderingsbehov)
+            this.rettighetsperiode = periode
+        }
     }
 }

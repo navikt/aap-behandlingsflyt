@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepos
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderBistandsbehovSteg
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
+import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -28,7 +29,6 @@ import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -172,15 +172,12 @@ class BistandsvilkåretTest {
 
         dataSource.transaction { connection ->
             VurderBistandsbehovSteg.konstruer(postgresRepositoryRegistry.provider(connection), gatewayProvider).utfør(
-                FlytKontekstMedPerioder(
-                    sakId = sak.id,
-                    behandlingId = førstegangsbehandling.id,
-                    forrigeBehandlingId = førstegangsbehandling.forrigeBehandlingId,
-                    behandlingType = TypeBehandling.Førstegangsbehandling,
-                    vurderingType = VurderingType.FØRSTEGANGSBEHANDLING,
-                    vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD),
-                    rettighetsperiode = sak.rettighetsperiode,
-                )
+                flytKontekstMedPerioder {
+                    behandling = førstegangsbehandling
+                    vurderingType = VurderingType.FØRSTEGANGSBEHANDLING
+                    vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD)
+                    rettighetsperiode = sak.rettighetsperiode
+                }
             )
 
             val vilkåret = VilkårsresultatRepositoryImpl(connection).hent(førstegangsbehandling.id)
@@ -236,15 +233,12 @@ class BistandsvilkåretTest {
             avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_BISTANDSBEHOV, "", "", false)
 
             VurderBistandsbehovSteg.konstruer(postgresRepositoryRegistry.provider(connection), gatewayProvider).utfør(
-                FlytKontekstMedPerioder(
-                    sakId = sak.id,
-                    behandlingId = revurdering.id,
-                    forrigeBehandlingId = revurdering.forrigeBehandlingId,
-                    behandlingType = TypeBehandling.Revurdering,
-                    vurderingType = VurderingType.REVURDERING,
-                    vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_LEGEERKLÆRING),
-                    rettighetsperiode = sak.rettighetsperiode,
-                )
+                flytKontekstMedPerioder {
+                    behandling = revurdering
+                    vurderingType = VurderingType.REVURDERING
+                    vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_LEGEERKLÆRING)
+                    rettighetsperiode = sak.rettighetsperiode
+                }
             )
         }
 
