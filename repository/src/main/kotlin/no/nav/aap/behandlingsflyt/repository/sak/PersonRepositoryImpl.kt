@@ -163,21 +163,6 @@ class PersonRepositoryImpl(private val connection: DBConnection) : PersonReposit
         return Person(PersonId(personId), identifikator, identer)
     }
 
-    override fun eksisterer(identer: Set<Ident>): Boolean {
-        val identer = identer.map { it.identifikator }
-        val funnet = connection.queryFirstOrNull(
-            """SELECT pi.person_id from PERSON_IDENT pi where pi.ident in ?"""
-        ) {
-            setParams {
-                setArray(1, identer)
-            }
-            setRowMapper { row ->
-                mapPerson(row)
-            }
-        }
-        return funnet != null
-    }
-
     override fun finn(ident: Ident): Person? {
         return connection.queryFirstOrNull(
             """SELECT DISTINCT p.id, p.referanse FROM PERSON p INNER JOIN PERSON_IDENT pi ON pi.person_id = p.id WHERE pi.ident = ?"""
