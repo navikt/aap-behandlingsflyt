@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.hendelse.kafka.person
 
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.SakOgBehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
@@ -71,6 +72,7 @@ class PdlHendelseKafkaKonsument(
             val barnRepository: BarnRepository = repositoryProvider.provide()
             val underveisRepository: UnderveisRepository = repositoryProvider.provide()
             val hendelseService = MottattHendelseService(repositoryProvider)
+            val trukketSøknadService = TrukketSøknadService(repositoryProvider)
             val sakOgBehandlingService = SakOgBehandlingService(repositoryProvider, gatewayProvider)
             if (personHendelse.opplysningstype == Opplysningstype.DOEDSFALL_V1 && personHendelse.endringstype == Endringstype.OPPRETTET) {
                 log.info("Håndterer hendelse med ${personHendelse.opplysningstype} og ${personHendelse.endringstype}")
@@ -97,6 +99,7 @@ class PdlHendelseKafkaKonsument(
                     sakRepository,
                     sakOgBehandlingService,
                     underveisRepository,
+                    trukketSøknadService,
                     personHendelse,
                     hendelseService
                 )
@@ -110,6 +113,7 @@ class PdlHendelseKafkaKonsument(
                     sakRepository,
                     sakOgBehandlingService,
                     underveisRepository,
+                    trukketSøknadService,
                     personHendelse,
                     hendelseService
                 )
@@ -127,6 +131,7 @@ class PdlHendelseKafkaKonsument(
         sakRepository: SakRepository,
         sakOgBehandlingService: SakOgBehandlingService,
         underveisRepository: UnderveisRepository,
+        trukketSøknadService: TrukketSøknadService,
         personHendelse: PdlPersonHendelse,
         hendelseService: MottattHendelseService
     ) {
@@ -158,6 +163,7 @@ class PdlHendelseKafkaKonsument(
                             personHendelse,
                             sak,
                             hendelseService,
+                            trukketSøknadService,
                             sisteOpprettedeBehandling,
                             Dødsfalltype.DODSFALL_BARN
                         )
@@ -183,6 +189,7 @@ class PdlHendelseKafkaKonsument(
                     personHendelse,
                     sak,
                     hendelseService,
+                    trukketSøknadService,
                     sisteOpprettedeBehandling,
                     Dødsfalltype.DODSFALL_BRUKER
                 )
@@ -198,6 +205,7 @@ class PdlHendelseKafkaKonsument(
         sakRepository: SakRepository,
         sakOgBehandlingService: SakOgBehandlingService,
         underveisRepository: UnderveisRepository,
+        trukketSøknadService: TrukketSøknadService,
         personHendelse: PdlPersonHendelse,
         hendelseService: MottattHendelseService
     ) {
@@ -227,6 +235,7 @@ class PdlHendelseKafkaKonsument(
                             personHendelse,
                             sak,
                             hendelseService,
+                            trukketSøknadService,
                             sisteOpprettedeBehandling,
                             Dødsfalltype.DODSFALL_BARN
                         )
@@ -242,25 +251,54 @@ class PdlHendelseKafkaKonsument(
         personHendelse: PdlPersonHendelse,
         sak: Sak,
         hendelseService: MottattHendelseService,
+        trukketSøknadService: TrukketSøknadService,
         sisteOpprettedeBehandling: Behandling?,
         hendelseType: Dødsfalltype
     ) {
         val vedtakBehandling = behandlingMedSistFattedeVedtak
         val underveisGrunnlag = vedtakBehandling?.let { underveisRepository.hentHvisEksisterer(it.id) }
 
-        if (underveisGrunnlag != null) {
-            val personHarBareAvslagFremover =
-                utfallOppfyltUtils.alleEventuellePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(
-                    opprettetTidspunkt = personHendelse.opprettet,
-                    underveisGrunnlag = underveisGrunnlag
-                )
+        if (sisteOpprettedeBehandling != null && trukketSøknadService.søknadErTrukket(sisteOpprettedeBehandling.id)) {
+            log.info("Ignorerer dødsfallhendelse fordi søknaden er trukket ${sak.saksnummer}")
+        } else {
+            if (underveisGrunnlag != null) {
+                val personHarBareAvslagFremover =
+                    utfallOppfyltUtils.alleEventuellePerioderEtterOpprettetTidspunktHarUtfallIkkeOppfylt(
+                        opprettetTidspunkt = personHendelse.opprettet,
+                        underveisGrunnlag = underveisGrunnlag
+                    )
 
-            if (personHarBareAvslagFremover) {
-                log.info("Ignorerer dødsfallhendelse fordi bruker har fått avslag på alle perioder fremover ${sak.saksnummer}")
-            } else {
+                if (personHarBareAvslagFremover) {
+                    log.info("Ignorerer dødsfallhendelse fordi bruker har fått avslag på alle perioder fremover ${sak.saksnummer}")
+                } else {
+                    when (hendelseType) {
+                        Dødsfalltype.DODSFALL_BRUKER -> {
+                            log.info("Registrerer mottatt hendelse fordi dødsfall på bruker. Bruker har iverksatte vedtak der minst en fremtidig periode er oppfylt ${sak.saksnummer}")
+                            hendelseService.registrerMottattHendelse(
+                                personHendelse.tilInnsendingDødsfallBruker(
+                                    sak.saksnummer,
+                                    personHendelse.navn,
+                                    personHendelse.personidenter
+                                )
+                            )
+                        }
+
+                        Dødsfalltype.DODSFALL_BARN -> {
+                            log.info("Registrerer mottatt hendelse fordi dødsfall på barn. Bruker har iverksatte vedtak der minst en fremtidig periode er oppfylt ${sak.saksnummer}")
+                            hendelseService.registrerMottattHendelse(
+                                personHendelse.tilInnsendingDødsfallBarn(
+                                    sak.saksnummer,
+                                    personHendelse.navn,
+                                    personHendelse.personidenter
+                                )
+                            )
+                        }
+                    }
+                }
+            } else if (sisteOpprettedeBehandling != null) {
                 when (hendelseType) {
                     Dødsfalltype.DODSFALL_BRUKER -> {
-                        log.info("Registrerer mottatt hendelse fordi dødsfall på bruker. Bruker har iverksatte vedtak der minst en fremtidig periode er oppfylt ${sak.saksnummer}")
+                        log.info("Registrerer mottatt hendelse fordi dødsfall på bruker. Bruker har ingen iverksatte vedtak ${sak.saksnummer}")
                         hendelseService.registrerMottattHendelse(
                             personHendelse.tilInnsendingDødsfallBruker(
                                 sak.saksnummer,
@@ -271,7 +309,7 @@ class PdlHendelseKafkaKonsument(
                     }
 
                     Dødsfalltype.DODSFALL_BARN -> {
-                        log.info("Registrerer mottatt hendelse fordi dødsfall på barn. Bruker har iverksatte vedtak der minst en fremtidig periode er oppfylt ${sak.saksnummer}")
+                        log.info("Registrerer mottatt hendelse fordi dødsfall på barn. Bruker har ingen iverksatte vedtak ${sak.saksnummer}")
                         hendelseService.registrerMottattHendelse(
                             personHendelse.tilInnsendingDødsfallBarn(
                                 sak.saksnummer,
@@ -282,32 +320,8 @@ class PdlHendelseKafkaKonsument(
                     }
                 }
             }
-        } else if (sisteOpprettedeBehandling != null) {
-            when (hendelseType) {
-                Dødsfalltype.DODSFALL_BRUKER -> {
-                    log.info("Registrerer mottatt hendelse fordi dødsfall på bruker. Bruker har ingen iverksatte vedtak ${sak.saksnummer}")
-                    hendelseService.registrerMottattHendelse(
-                        personHendelse.tilInnsendingDødsfallBruker(
-                            sak.saksnummer,
-                            personHendelse.navn,
-                            personHendelse.personidenter
-                        )
-                    )
-                }
 
-                Dødsfalltype.DODSFALL_BARN -> {
-                    log.info("Registrerer mottatt hendelse fordi dødsfall på barn. Bruker har ingen iverksatte vedtak ${sak.saksnummer}")
-                    hendelseService.registrerMottattHendelse(
-                        personHendelse.tilInnsendingDødsfallBarn(
-                            sak.saksnummer,
-                            personHendelse.navn,
-                            personHendelse.personidenter
-                        )
-                    )
-                }
-            }
         }
-
     }
 
 

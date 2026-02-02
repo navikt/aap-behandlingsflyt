@@ -230,7 +230,7 @@ internal fun Application.server(
     }
 
     if (!Miljø.erLokal() && !Miljø.erProd()) {
-        startInstitusjonsOppholdKonsument(dataSource, repositoryRegistry)
+        // startInstitusjonsOppholdKonsument(dataSource, repositoryRegistry)
     }
 
     monitor.subscribe(ApplicationStopPreparing) { environment ->

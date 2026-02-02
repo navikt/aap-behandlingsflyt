@@ -17,8 +17,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.flate.SaksnummerParameter
-import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
+import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForSakResolver
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.httpklient.exception.VerdiIkkeFunnetException
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -29,19 +30,20 @@ import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.rettighetApi(
     dataSource: DataSource,
-    repositoryRegistry: RepositoryRegistry,
+    repositoryRegistry: RepositoryRegistry
 ) {
     route("/api/sak/{saksnummer}/rettighet") {
         authorizedGet<SaksnummerParameter, List<RettighetDto>>(
             AuthorizationParamPathConfig(
-                relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
                 sakPathParam = SakPathParam("saksnummer")
             )
         ) { saksnummer ->
             val respons: List<RettighetDto>? = dataSource.transaction(readOnly = true) { connection ->
                 val repositoryProvider = repositoryRegistry.provider(connection)
                 val sakRepository = repositoryProvider.provide<SakRepository>()
-                val sak = sakRepository.hent(Saksnummer(saksnummer.saksnummer))
+                val sak = sakRepository.hentHvisFinnes(Saksnummer(saksnummer.saksnummer))
+                    ?: throw VerdiIkkeFunnetException("Sak med saksnummer ${saksnummer.saksnummer} finnes ikke")
                 val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                 val behandling = behandlingRepository.finnSisteOpprettedeBehandlingFor(
                     sak.id,
@@ -53,7 +55,12 @@ fun NormalOpenAPIRoute.rettighetApi(
                 }
 
                 val underveisgrunnlagRepository = repositoryProvider.provide<UnderveisRepository>()
-                val underveisgrunnlag = underveisgrunnlagRepository.hent(behandling!!.id)
+                val underveisgrunnlag = underveisgrunnlagRepository.hentHvisEksisterer(behandling.id)
+
+                if (underveisgrunnlag == null) {
+                    return@transaction null
+                }
+
                 val vilkårsresultatRepository = repositoryProvider.provide<VilkårsresultatRepository>()
                 val vilkårsresultat = vilkårsresultatRepository.hent(behandling.id)
                 val avslagForTapAvAAP = avslagsårsakerVedTapAvRettPåAAP(vilkårsresultat)
