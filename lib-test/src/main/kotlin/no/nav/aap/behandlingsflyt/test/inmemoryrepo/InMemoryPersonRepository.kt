@@ -22,6 +22,10 @@ object InMemoryPersonRepository : PersonRepository {
         return personer[personId]!!
     }
 
+    override fun eksisterer(identer: Set<Ident>): Boolean {
+        return personer.values.find { it.identer().intersect(identer).isNotEmpty() } != null
+    }
+
     override fun finn(ident: Ident): Person? {
         return personer.values.find { it.identer().contains(ident) }
     }
