@@ -15,6 +15,8 @@ jobs:
         strategy:
           fail-fast: false
           matrix:
+            # For nå må alle moduler med tester skrives manuelt.
+            # Kan sikkert gjøre noe Gradle-magi for å gjøre dette automatisk.
             modul: [api, app, behandlingsflyt, kontrakt, lib-test, repository]
         steps:
             -   uses: actions/checkout@v6
@@ -41,3 +43,4 @@ jobs:
               if: success() || failure() # always run even if the previous step fails
               with:
                 report_paths: '**/build/test-results/test/TEST-*.xml'
+                check_name: 'JUnit Test Report for ${{ matrix.java }}'
