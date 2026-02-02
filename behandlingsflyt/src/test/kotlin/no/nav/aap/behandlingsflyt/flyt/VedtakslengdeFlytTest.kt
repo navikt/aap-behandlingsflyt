@@ -32,7 +32,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.LocalTime
 
 object VedtakslengdeUnleash : FakeUnleashBaseWithDefaultDisabled(
     enabledFlags = listOf(
@@ -72,7 +71,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeUnleash::
 
 
         val sluttdatoFørstegangsbehandling = dataSource.transaction { connection ->
-            val førstegangsbehandling = BehandlingRepositoryImpl(connection).finnFørstegangsbehandling(sak.id)!!
+            val førstegangsbehandling = BehandlingRepositoryImpl(connection).finnFørstegangsbehandling(sak.id)
 
             val underveisGrunnlag = UnderveisRepositoryImpl(connection).hentHvisEksisterer(førstegangsbehandling.id)
             val sisteUnderveisperiode = underveisGrunnlag?.perioder?.maxBy { it.periode.fom }!!
@@ -182,7 +181,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(VedtakslengdeUnleash::
             }
 
         val sluttdatoFørstegangsbehandling = dataSource.transaction { connection ->
-            val førstegangsbehandling = BehandlingRepositoryImpl(connection).finnFørstegangsbehandling(sak.id)!!
+            val førstegangsbehandling = BehandlingRepositoryImpl(connection).finnFørstegangsbehandling(sak.id)
             val underveisGrunnlag = UnderveisRepositoryImpl(connection).hentHvisEksisterer(førstegangsbehandling.id)
             val vedtakslengdeVurdering =
                 VedtakslengdeRepositoryImpl(connection).hentHvisEksisterer(førstegangsbehandling.id)

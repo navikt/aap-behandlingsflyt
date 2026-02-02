@@ -204,7 +204,6 @@ class SakOgBehandlingService(
         }
 
         val førstegangsbehandling = behandlingRepository.finnFørstegangsbehandling(sakId)
-            ?: throw UgyldigForespørselException("Kan ikke opprette aktiviterspliktbehandling uten en førstegangsbehandling")
 
         if (!førstegangsbehandling.status().erAvsluttet()) {
             throw UgyldigForespørselException("Førstegangsbehandling må være avsluttet før man kan opprette en aktivitetspliktbehandling")
