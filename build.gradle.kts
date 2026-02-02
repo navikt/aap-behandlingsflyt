@@ -51,3 +51,41 @@ for (taskName in listOf<String>("clean", "build", "check")) {
         dependsOn(subprojects.map { it.path + ":$taskName" })
     }
 }
+
+// Emit a JSON-formatted list of check tasks to be run in CI
+val testMatrixTask = tasks.register("testMatrix") {
+    val checkTaskPathsProvider = provider {
+        subprojects.mapNotNull {
+            it.tasks.findByName("check")?.path
+        }
+    }
+
+    doLast {
+        val checkTaskPaths = checkTaskPathsProvider.get()
+        val json = checkTaskPaths.joinToString(separator = ",", prefix = "[", postfix = "]") { "\"$it\"" }
+        println(json)
+    }
+}
+
+afterEvaluate {
+    val checkTasks = subprojects.mapNotNull {
+        it.tasks.findByName("check")
+    }
+    testMatrixTask.configure {
+        dependsOn(checkTasks)
+    }
+}
+
+// If we're executing the `testMatrix` task, disable tests and other slow tasks
+// so that we can get a result quickly.
+gradle.taskGraph.whenReady {
+    if (hasTask(tasks.named("testMatrix").get())) {
+        subprojects.forEach { subproject ->
+            subproject.tasks.withType<Test>().configureEach {
+                enabled = false
+            }
+            subproject.tasks.findByName("shadowJar")?.enabled = false
+            subproject.tasks.findByName("javadoc")?.enabled = false
+        }
+    }
+}
