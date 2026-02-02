@@ -53,26 +53,14 @@ for (taskName in listOf<String>("clean", "build", "check")) {
 }
 
 // Emit a JSON-formatted list of check tasks to be run in CI
-val testMatrixTask = tasks.register("testMatrix") {
-    val checkTaskPathsProvider = provider {
-        subprojects.mapNotNull {
+tasks.register("testMatrix") {
+    notCompatibleWithConfigurationCache("Accesses project at execution time")
+    doLast {
+        val checkTaskPaths = subprojects.mapNotNull {
             it.tasks.findByName("check")?.path
         }
-    }
-
-    doLast {
-        val checkTaskPaths = checkTaskPathsProvider.get()
         val json = checkTaskPaths.joinToString(separator = ",", prefix = "[", postfix = "]") { "\"$it\"" }
         println(json)
-    }
-}
-
-afterEvaluate {
-    val checkTasks = subprojects.mapNotNull {
-        it.tasks.findByName("check")
-    }
-    testMatrixTask.configure {
-        dependsOn(checkTasks)
     }
 }
 
