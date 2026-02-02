@@ -53,15 +53,23 @@ for (taskName in listOf<String>("clean", "build", "check")) {
 }
 
 // Emit a JSON-formatted list of check tasks to be run in CI
-tasks.register("testMatrix") {
-    notCompatibleWithConfigurationCache("Accesses project at execution time")
-    doLast {
-        val checkTaskPaths = subprojects
-            .filter { it.name != "docs" }
-            .mapNotNull { it.tasks.findByName("check")?.path }
-        val json = checkTaskPaths.joinToString(separator = ",", prefix = "[", postfix = "]") { "\"$it\"" }
+abstract class TestMatrixTask : DefaultTask() {
+    @get:Input
+    abstract val checkTaskPaths: ListProperty<String>
+
+    @TaskAction
+    fun printMatrix() {
+        val json = checkTaskPaths.get().joinToString(separator = ",", prefix = "[", postfix = "]") { "\"$it\"" }
         println(json)
     }
+}
+
+tasks.register<TestMatrixTask>("testMatrix") {
+    checkTaskPaths.set(provider {
+        subprojects
+            .filter { it.name != "docs" }
+            .map { it.path + ":check" }
+    })
 }
 
 // If we're executing the `testMatrix` task, disable tests and other slow tasks
