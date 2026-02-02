@@ -12,9 +12,7 @@ class PersonOgSakService(
 
     fun finnEllerOpprett(ident: Ident, periode: Periode): Sak {
         val identliste = pdlGateway.hentAlleIdenterForPerson(ident)
-        if (identliste.isEmpty()) {
-            throw IllegalStateException("Fikk ingen treff på ident i PDL")
-        }
+        require(identliste.isNotEmpty()) { "Fikk ingen treff på ident i PDL" }
 
         val person = personRepository.finnEllerOpprett(identliste)
 
@@ -23,9 +21,7 @@ class PersonOgSakService(
 
     fun finnSakerFor(ident: Ident): List<Sak> {
         val identliste = pdlGateway.hentAlleIdenterForPerson(ident)
-        if (identliste.isEmpty()) {
-            throw IllegalStateException("Fikk ingen treff på ident i PDL")
-        }
+        require(identliste.isNotEmpty()) { "Fikk ingen treff på ident i PDL" }
 
         val person = personRepository.finnEllerOpprett(identliste)
 

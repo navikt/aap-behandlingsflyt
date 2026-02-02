@@ -33,9 +33,7 @@ class PersonRepositoryImpl(private val connection: DBConnection) : PersonReposit
             setRowMapper(::mapPerson)
         }
         return if (relevantePersoner.isNotEmpty()) {
-            if (relevantePersoner.size > 1) {
-                throw IllegalStateException("Har flere personer knyttet til denne identen")
-            }
+            require(relevantePersoner.size > 1) { "Har flere personer knyttet til denne identen" }
             val person = relevantePersoner.first()
             oppdater(person, identer)
             // Henter på nytt etter oppdatering
