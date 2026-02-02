@@ -3,7 +3,10 @@ package no.nav.aap.behandlingsflyt.flyt
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderRettighetsperiodeLøsning
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.komponenter.type.Periode
@@ -297,8 +300,10 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
         assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.SKRIV_VEDTAKSBREV)
     }
 
+    // AVKLARING_SYKDOM får AVSLUTTET som siste status her i kvalitetssikringssteget,
+    // uten at avklaringsbehovet er vurdert på nytt.
     @Test
-    fun `Beslutter underkjenner VURDER_RETTIGHETSPERIODE, ingen ny kvalitetssikring, beslutter fatter vedtak`() {
+    fun `Beslutter underkjenner kun VURDER_RETTIGHETSPERIODE, ingen ny kvalitetssikring, beslutter fatter vedtak`() {
         val fom = LocalDate.now().minusMonths(3)
         val periode = Periode(fom, fom.plusYears(3))
 
@@ -331,5 +336,52 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash
         val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(behandling)
         assertThat(åpneAvklaringsbehov).hasSize(1)
         assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.SKRIV_VEDTAKSBREV)
+    }
+
+    @Test
+    fun `Ny kvalitetssikring skal skje dersom behandlingen blir dratt tilbake til 22-13 og ny startdato settes`() {
+        val fom = LocalDate.now().minusMonths(3)
+        val periode = Periode(fom, fom.plusYears(3))
+
+        val person = TestPersoner.STANDARD_PERSON()
+
+        val (sak, behandling) = sendInnFørsteSøknad(
+            person = person,
+            periode = periode,
+        )
+        behandling
+            .løsSykdom(fom)
+            .løsBistand(fom)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .kvalitetssikreOk()
+
+        val oppdatertBehandling = sak.opprettManuellRevurdering(
+            listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE),
+        ).medKontekst {
+            assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
+            assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
+        }
+
+        val nyStartdato = LocalDate.now().minusMonths(5)
+        oppdatertBehandling
+            .løsRettighetsperiode(nyStartdato)
+            .medKontekst {
+                val åpneAvklaringsbehov = hentÅpneAvklaringsbehov(oppdatertBehandling.id)
+                assertThat(åpneAvklaringsbehov).hasSize(2)
+                assertThat(åpneAvklaringsbehov.first().definisjon).isEqualTo(Definisjon.AVKLAR_SYKDOM)
+
+            }
+            .løsSykdom(nyStartdato)
+            .løsBistand(nyStartdato)
+
+        val stegetsEgetBehov = hentAlleAvklaringsbehov(oppdatertBehandling)
+            .filter { behov -> behov.definisjon == Definisjon.KVALITETSSIKRING }
+        assertThat(stegetsEgetBehov.first().status()).isEqualTo(AvklaringsbehovStatus.OPPRETTET)
+    }
+
+    @Test
+    fun `Ny kvalitetssikring skal IKKE skje dersom behandlingen blir dratt tilbake til 22-13 og ingen ny startdato settes`() {
+        //
     }
 }
