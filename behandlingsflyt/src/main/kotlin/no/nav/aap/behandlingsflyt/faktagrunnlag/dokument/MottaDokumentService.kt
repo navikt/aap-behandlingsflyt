@@ -33,9 +33,10 @@ class MottaDokumentService(
         mottattTidspunkt: LocalDateTime,
         brevkategori: InnsendingType,
         kanal: Kanal,
-        strukturertDokument: StrukturerteData?
+        strukturertDokument: StrukturerteData?,
+        digitalisertAvPostmottak: Boolean?
     ) {
-        log.info("Lagrer mottatt dokument. Referanse: ${referanse}, SakId: $sakId, Brevkategori: $brevkategori, MottattTidspunkt: $mottattTidspunkt, Kanal: $kanal")
+        log.info("Lagrer mottatt dokument. Referanse: ${referanse}, SakId: $sakId, Brevkategori: $brevkategori, MottattTidspunkt: $mottattTidspunkt, Kanal: $kanal, DigitalisertAvPostmottak: $digitalisertAvPostmottak")
         mottattDokumentRepository.lagre(
             MottattDokument(
                 referanse = referanse,
@@ -45,7 +46,8 @@ class MottaDokumentService(
                 kanal = kanal,
                 status = Status.MOTTATT,
                 behandlingId = null,
-                strukturertDokument = strukturertDokument
+                strukturertDokument = strukturertDokument,
+                digitalisertAvPostmottak = digitalisertAvPostmottak
             )
         )
     }

@@ -48,6 +48,7 @@ internal class MottattDokumentRepositoryImplTest {
             kanal = Kanal.PAPIR,
             status = Status.MOTTATT,
             strukturertDokument = null,
+            digitalisertAvPostmottak = true
         )
 
         // ACT
@@ -64,6 +65,7 @@ internal class MottattDokumentRepositoryImplTest {
         ).containsExactly(
             mottattDokument.behandlingId, mottattDokument.sakId, mottattDokument.kanal
         )
+        assertThat(res.first().digitalisertAvPostmottak).isTrue()
     }
 
     @Test
