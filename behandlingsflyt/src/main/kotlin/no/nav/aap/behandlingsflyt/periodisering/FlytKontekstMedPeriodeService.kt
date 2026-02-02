@@ -41,10 +41,6 @@ class FlytKontekstMedPeriodeService(
             .filter { vurderingsbehov -> vurderingsbehovRelevanteForSteg.contains(vurderingsbehov) }
             .toSet()
 
-        val relevanteVurderingsbehovMedPerioder = behandling.vurderingsbehov()
-            .filter { vurderingsbehov -> vurderingsbehovRelevanteForSteg.contains(vurderingsbehov.type) }
-            .toSet()
-
         return FlytKontekstMedPerioder(
             sakId = kontekst.sakId,
             behandlingId = kontekst.behandlingId,
@@ -55,8 +51,7 @@ class FlytKontekstMedPeriodeService(
                 typeBehandling = kontekst.behandlingType
             ),
             rettighetsperiode = sak.rettighetsperiode,
-            vurderingsbehovRelevanteForSteg = relevanteVurderingsbehov,
-            vurderingsbehovRelevanteForStegMedPerioder = relevanteVurderingsbehovMedPerioder
+            vurderingsbehovRelevanteForSteg = relevanteVurderingsbehov
         )
     }
 

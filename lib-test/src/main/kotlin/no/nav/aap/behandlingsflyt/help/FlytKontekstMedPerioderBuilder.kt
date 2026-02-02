@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.help
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
@@ -19,7 +18,6 @@ class FlytKontekstMedPerioderBuilder {
     var vurderingType: VurderingType? = null
     var rettighetsperiode: Periode = Periode(LocalDate.now().minusDays(1), LocalDate.now().plusYears(1))
     var vurderingsbehovRelevanteForSteg: Set<Vurderingsbehov> = setOf(Vurderingsbehov.MOTTATT_MELDEKORT)
-    var vurderingsbehovRelevanteForStegMedPerioder: Set<VurderingsbehovMedPeriode>? = null
 
     var behandling: Behandling? = null
         set(value) {
@@ -46,8 +44,6 @@ class FlytKontekstMedPerioderBuilder {
             vurderingType = vurderingType,
             rettighetsperiode = rettighetsperiode,
             vurderingsbehovRelevanteForSteg = vurderingsbehovRelevanteForSteg,
-            vurderingsbehovRelevanteForStegMedPerioder = vurderingsbehovRelevanteForStegMedPerioder
-                ?: vurderingsbehovRelevanteForSteg.map { VurderingsbehovMedPeriode(it) }.toSet()
         )
     }
 }
